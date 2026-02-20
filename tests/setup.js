@@ -25,6 +25,10 @@ if (typeof globalThis.sessionStorage === 'undefined') {
   globalThis.sessionStorage = new MockSessionStorage();
 }
 
+if (typeof globalThis.localStorage === 'undefined') {
+  globalThis.localStorage = new MockSessionStorage();
+}
+
 beforeEach(() => {
   resetData();
   resetCrm();
@@ -38,5 +42,8 @@ beforeEach(() => {
   resetSite();
   if (globalThis.sessionStorage && globalThis.sessionStorage.clear) {
     globalThis.sessionStorage.clear();
+  }
+  if (globalThis.localStorage && globalThis.localStorage.clear) {
+    globalThis.localStorage.clear();
   }
 });
