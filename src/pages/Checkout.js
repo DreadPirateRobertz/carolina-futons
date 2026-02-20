@@ -1,4 +1,4 @@
-// Checkout.psuom.js - Checkout Page
+// Checkout.js - Checkout Page
 // Trust signals, order notes, engagement tracking, delivery estimate
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD } from 'public/cartService';

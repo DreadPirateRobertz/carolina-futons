@@ -206,7 +206,7 @@ Upload real product images to Wix Media Manager:
 | Mobile menu opens/closes | Hamburger shows overlay, X closes | [ ] |
 | Business schema HTML injected | Check `#businessSchemaHtml` in inspector | [ ] |
 
-#### 1.2 Home Page (Home.c1dmp.js)
+#### 1.2 Home Page (Home.js)
 | Test | Expected Result | Pass? |
 |------|----------------|-------|
 | Hero section loads | Title, subtitle, CTA button visible | [ ] |
@@ -216,7 +216,7 @@ Upload real product images to Wix Media Manager:
 | Trust signals display | "Family Owned Since 1991", etc. | [ ] |
 | Category cards link to category pages | Clicking navigates correctly | [ ] |
 
-#### 1.3 Category Page (Category Page.u0gn0.js)
+#### 1.3 Category Page (Category Page.js)
 | Test | Expected Result | Pass? |
 |------|----------------|-------|
 | Visit /futon-frames | Hero shows "Futon Frames" + subtitle | [ ] |
@@ -228,7 +228,7 @@ Upload real product images to Wix Media Manager:
 | Product badges display | Sale/New/Featured badges on products | [ ] |
 | Click product → Product Page | Navigation works | [ ] |
 
-#### 1.4 Product Page (Product Page.ve2z7.js)
+#### 1.4 Product Page (Product Page.js)
 | Test | Expected Result | Pass? |
 |------|----------------|-------|
 | Product loads with image and price | Main image, name, price, description | [ ] |

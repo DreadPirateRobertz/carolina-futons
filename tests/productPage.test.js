@@ -62,19 +62,21 @@ const mockCollection = [
 vi.mock('backend/productRecommendations.web', () => ({
   getRelatedProducts: vi.fn().mockResolvedValue(mockRelated),
   getSameCollection: vi.fn().mockResolvedValue(mockCollection),
+  getBundleSuggestion: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('backend/seoHelpers.web', () => ({
   getProductSchema: vi.fn().mockReturnValue('{"@type":"Product"}'),
   generateAltText: vi.fn().mockResolvedValue('Eureka Futon Frame - Night & Day - Carolina Futons'),
   getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList"}'),
+  getProductOgTags: vi.fn().mockResolvedValue(null),
 }));
 
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Product Page', () => {
   beforeAll(async () => {
-    await import('../src/pages/Product Page.ve2z7.js');
+    await import('../src/pages/Product Page.js');
   });
 
   beforeEach(() => {

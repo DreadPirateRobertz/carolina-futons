@@ -20,25 +20,25 @@ src/
 │
 ├── pages/                   # Page-specific frontend code (one per Wix page)
 │   ├── masterPage.js                # Global: nav, announcement bar, search, SEO
-│   ├── Home.c1dmp.js                # Homepage: hero, featured products, categories
-│   ├── Product Page.ve2z7.js        # PDP: variants, gallery, cross-sell, schema
-│   ├── Category Page.u0gn0.js       # PLP: filters, sort, grid, quick view
-│   ├── Cart Page.mqi5m.js           # Cart: shipping threshold, suggestions
-│   ├── Side Cart.ego5s.js           # Slide-out mini cart panel
-│   ├── Checkout.psuom.js            # Checkout: trust signals, order notes
-│   ├── Thank You Page.dk9x8.js      # Post-purchase: sharing, newsletter, recs
-│   ├── About.gar3e.js               # Our Story: timeline, team photos
-│   ├── Contact.k14wx.js             # Contact form with validation
-│   ├── FAQ.s2c5g.js                 # Accordion FAQ with schema markup
-│   ├── Search Results.evr2j.js      # Product search results
-│   ├── Search Suggestions Box.gg5mx.js  # Live search autocomplete
-│   ├── Fullscreen Page.vu50r.js     # Product videos gallery
-│   ├── Shipping Policy.ype8c.js     # Shipping calculator & delivery info
-│   ├── Member Page.f00pg.js         # Account: orders, wishlist, settings
-│   ├── Accessibility Statement.di5bl.js  # Static accessibility page
-│   ├── Privacy Policy.pcvmd.js      # Privacy policy with TOC navigation
-│   ├── Refund Policy.jmwgj.js       # Return policy accordion
-│   └── Terms & Conditions.z0xvf.js  # Terms with TOC navigation
+│   ├── Home.js                      # Homepage: hero, featured products, categories
+│   ├── Product Page.js              # PDP: variants, gallery, cross-sell, schema
+│   ├── Category Page.js             # PLP: filters, sort, grid, quick view
+│   ├── Cart Page.js                 # Cart: shipping threshold, suggestions
+│   ├── Side Cart.js                 # Slide-out mini cart panel
+│   ├── Checkout.js                  # Checkout: trust signals, order notes
+│   ├── Thank You Page.js            # Post-purchase: sharing, newsletter, recs
+│   ├── About.js                     # Our Story: timeline, team photos
+│   ├── Contact.js                   # Contact form with validation
+│   ├── FAQ.js                       # Accordion FAQ with schema markup
+│   ├── Search Results.js            # Product search results
+│   ├── Search Suggestions Box.js    # Live search autocomplete
+│   ├── Fullscreen Page.js           # Product videos gallery
+│   ├── Shipping Policy.js           # Shipping calculator & delivery info
+│   ├── Member Page.js               # Account: orders, wishlist, settings
+│   ├── Accessibility Statement.js   # Static accessibility page
+│   ├── Privacy Policy.js            # Privacy policy with TOC navigation
+│   ├── Refund Policy.js             # Return policy accordion
+│   └── Terms & Conditions.js        # Terms with TOC navigation
 │
 └── public/                  # Shared frontend modules (importable from pages)
     ├── designTokens.js              # Design system: colors, typography, spacing

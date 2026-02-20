@@ -1,4 +1,4 @@
-// Thank You Page.dk9x8.js - Order Confirmation & Post-Purchase Engagement
+// Thank You Page.js - Order Confirmation & Post-Purchase Engagement
 // Personalized order summary, Brenda's message, social sharing, newsletter,
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';

@@ -65,7 +65,7 @@ vi.mock('backend/seoHelpers.web', () => ({
 
 describe('Home Page', () => {
   beforeAll(async () => {
-    await import('../src/pages/Home.c1dmp.js');
+    await import('../src/pages/Home.js');
   });
 
   beforeEach(() => {

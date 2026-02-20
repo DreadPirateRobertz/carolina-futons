@@ -1,4 +1,4 @@
-// Contact.k14wx.js - Contact Page
+// Contact.js - Contact Page
 // Contact form with validation, illustrated map section,
 // business hours, and local SEO schema
 import { getBusinessSchema } from 'backend/seoHelpers.web';

@@ -1,4 +1,4 @@
-// Member Page.f00pg.js - Customer Account Page
+// Member Page.js - Customer Account Page
 // Account dashboard, order history, wishlist, and account settings
 import { trackEvent } from 'public/engagementTracker';
 

@@ -61,7 +61,7 @@ vi.mock('backend/seoHelpers.web', () => ({
 
 describe('Category Page', () => {
   beforeAll(async () => {
-    await import('../src/pages/Category Page.u0gn0.js');
+    await import('../src/pages/Category Page.js');
   });
 
   beforeEach(() => {

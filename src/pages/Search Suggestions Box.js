@@ -1,4 +1,4 @@
-// Search Suggestions Box.gg5mx.js - Search Autocomplete
+// Search Suggestions Box.js - Search Autocomplete
 // Live search suggestions as user types
 import wixData from 'wix-data';
 import { trackEvent } from 'public/engagementTracker';

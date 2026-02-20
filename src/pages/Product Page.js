@@ -1,4 +1,4 @@
-// Product Page.ve2z7.js - Individual Product Display
+// Product Page.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
 // gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
@@ -54,9 +54,16 @@ async function initProductPage() {
       initAddToCartEnhancements(),
       initProductBadge(),
       initProductVideo(),
+      initBundleSection(),
+      initStockUrgency(),
+      initBackInStockNotification(),
+      initWishlistButton(),
     ]);
 
     initSocialShare();
+    initStickyCartBar();
+    initDeliveryEstimate();
+    initSwatchRequest();
 
     // Mobile: collapse non-essential sections, add back-to-top
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);

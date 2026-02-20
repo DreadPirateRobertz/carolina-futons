@@ -1,4 +1,4 @@
-// Accessibility Statement.di5bl.js - Accessibility Page
+// Accessibility Statement.js - Accessibility Page
 // No custom code needed - content is managed through Wix editor
 // Keep minimal to let Wix's built-in accessibility features work
 

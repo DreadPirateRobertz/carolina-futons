@@ -1,4 +1,4 @@
-// Search Results.evr2j.js - Search Results Page
+// Search Results.js - Search Results Page
 // Displays search results with product cards, highlighting, and suggestions
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';

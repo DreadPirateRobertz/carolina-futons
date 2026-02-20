@@ -1,4 +1,4 @@
-// FAQ.s2c5g.js - Frequently Asked Questions
+// FAQ.js - Frequently Asked Questions
 // Accordion-style FAQ with search filtering, SEO schema markup, and engagement tracking
 import { getFaqSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';

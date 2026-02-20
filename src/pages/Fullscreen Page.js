@@ -1,4 +1,4 @@
-// Fullscreen Page.vu50r.js - Product Videos / Gallery Fullscreen View
+// Fullscreen Page.js - Product Videos / Gallery Fullscreen View
 // Full-screen product video and image gallery with engagement features
 import wixData from 'wix-data';
 import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';

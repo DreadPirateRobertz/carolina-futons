@@ -1,4 +1,4 @@
-// Shipping Policy.ype8c.js - "Getting It Home" / Shipping Info
+// Shipping Policy.js - "Getting It Home" / Shipping Info
 // Shipping calculator, delivery zones, and FAQ
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';

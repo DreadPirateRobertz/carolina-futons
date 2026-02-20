@@ -1,10 +1,10 @@
-// Home.c1dmp.js - Homepage
+// Home.js - Homepage
 // "Handcrafted Comfort, Mountain Inspired."
 // Featured products, category showcase, recently viewed, trust signals, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
+import { getCategoryHeroImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import wixData from 'wix-data';
@@ -371,30 +371,13 @@ function initSmoothScroll() {
 
   Object.entries(scrollTargets).forEach(([triggerId, targetId]) => {
     try {
-      $w(elementId).onClick(() => {
-        import('wix-location-frontend').then(({ to }) => to(path));
+      $w(triggerId).onClick(() => {
+        try { $w(targetId).scrollTo(); } catch (e) {}
       });
-
-      // Set category card background image from placeholders
-      if (slug) {
-        try {
-          const imgId = elementId.replace('#category', '#categoryImg');
-          $w(imgId).src = getCategoryCardImage(slug);
-        } catch (e) {
-          // Image element may not exist or use different naming
-        }
-      }
     } catch (e) {
       // Scroll trigger may not exist
     }
   });
-
-  // Set hero section background image
-  try {
-    $w('#heroBackground').src = getCategoryHeroImage('futon-frames');
-  } catch (e) {
-    // Hero background element may not exist
-  }
 }
 
 // ── Hero Animation ──────────────────────────────────────────────────
@@ -406,7 +389,7 @@ function initHeroAnimation() {
     try {
       const heroBg = $w('#heroBg');
       if (heroBg) {
-        heroBg.src = HERO_CABIN_SCENE;
+        heroBg.src = getCategoryHeroImage('futon-frames');
         heroBg.alt = 'Handcrafted Comfort, Mountain Inspired - Carolina Futons Hendersonville NC';
       }
     } catch (e) {}

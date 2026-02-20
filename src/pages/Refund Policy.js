@@ -1,4 +1,4 @@
-// Refund Policy.jmwgj.js - Return & Refund Policy Page
+// Refund Policy.js - Return & Refund Policy Page
 // Clean display with accordion sections for easy scanning
 
 $w.onReady(function () {

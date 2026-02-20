@@ -1,4 +1,4 @@
-// Side Cart.ego5s.js - Slide-Out Mini Cart
+// Side Cart.js - Slide-Out Mini Cart
 // Modern slide-out cart panel with tiered incentives, multiple cross-sell
 // suggestions, enhanced item display, and animated interactions
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';

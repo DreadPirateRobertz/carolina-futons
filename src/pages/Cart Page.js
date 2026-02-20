@@ -1,4 +1,4 @@
-// Cart Page.mqi5m.js - Shopping Cart
+// Cart Page.js - Shopping Cart
 // Modern cart with cross-sell suggestions, shipping threshold,
 // tiered discount incentives, recently viewed, and "Complete Your Futon" bundling
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';

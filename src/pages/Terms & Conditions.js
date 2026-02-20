@@ -1,4 +1,4 @@
-// Terms & Conditions.z0xvf.js - Terms of Service Page
+// Terms & Conditions.js - Terms of Service Page
 // Standard legal page with table of contents navigation
 
 $w.onReady(function () {

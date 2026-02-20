@@ -49,32 +49,32 @@ src/
 ├── pages/                                # One JS file per Wix page (21 files)
 │   ├── masterPage.js                     # Global: nav, announcement, search, SEO, exit-intent,
 │   │                                     #   side cart auto-open, compare bar, promo lightbox
-│   ├── Home.c1dmp.js                     # Hero, 8 categories, featured, sale, recently viewed,
+│   ├── Home.js                           # Hero, 8 categories, featured, sale, recently viewed,
 │   │                                     #   trust signals, testimonials, smooth scroll
-│   ├── Product Page.ve2z7.js             # PDP: variants, gallery, lightbox, zoom, swatch visualizer,
+│   ├── Product Page.js                   # PDP: variants, gallery, lightbox, zoom, swatch visualizer,
 │   │                                     #   cross-sell, bundles, sticky cart, urgency, delivery
 │   │                                     #   estimate, wishlist, back-in-stock, breadcrumbs
-│   ├── Category Page.u0gn0.js            # PLP: all 8 category heroes, filters, sort, grid, badges,
+│   ├── Category Page.js                  # PLP: all 8 category heroes, filters, sort, grid, badges,
 │   │                                     #   swatch preview dots, quick view, compare, recently viewed
-│   ├── Cart Page.mqi5m.js                # Cart: shipping progress, tiered discounts, recently viewed,
+│   ├── Cart Page.js                      # Cart: shipping progress, tiered discounts, recently viewed,
 │   │                                     #   intelligent cross-sell, qty controls
-│   ├── Side Cart.ego5s.js                # Slide-out: auto-open, tiered incentives, multi-suggest,
+│   ├── Side Cart.js                      # Slide-out: auto-open, tiered incentives, multi-suggest,
 │   │                                     #   variant details, animated removal
-│   ├── Checkout.psuom.js                 # Checkout: address validation, trust signals
-│   ├── Thank You Page.dk9x8.js           # Post-purchase: social sharing, newsletter, recommendations
-│   ├── Member Page.f00pg.js              # Account: dashboard, orders with track/reorder, wishlist
+│   ├── Checkout.js                       # Checkout: address validation, trust signals
+│   ├── Thank You Page.js                 # Post-purchase: social sharing, newsletter, recommendations
+│   ├── Member Page.js                    # Account: dashboard, orders with track/reorder, wishlist
 │   │                                     #   with sort/share, address book, comm prefs, logout
-│   ├── About.gar3e.js                    # Our Story: timeline, team gallery, JSON-LD
-│   ├── Contact.k14wx.js                  # Contact form with validation → emailService backend
-│   ├── FAQ.s2c5g.js                      # Accordion FAQ with FAQPage schema
-│   ├── Search Results.evr2j.js           # Product search with no-results handling
-│   ├── Search Suggestions Box.gg5mx.js   # Live search autocomplete
-│   ├── Fullscreen Page.vu50r.js          # Product video gallery with category filters
-│   ├── Shipping Policy.ype8c.js          # Shipping calculator + delivery zones
-│   ├── Accessibility Statement.di5bl.js
-│   ├── Privacy Policy.pcvmd.js
-│   ├── Refund Policy.jmwgj.js
-│   └── Terms & Conditions.z0xvf.js
+│   ├── About.js                          # Our Story: timeline, team gallery, JSON-LD
+│   ├── Contact.js                        # Contact form with validation → emailService backend
+│   ├── FAQ.js                            # Accordion FAQ with FAQPage schema
+│   ├── Search Results.js                 # Product search with no-results handling
+│   ├── Search Suggestions Box.js         # Live search autocomplete
+│   ├── Fullscreen Page.js                # Product video gallery with category filters
+│   ├── Shipping Policy.js                # Shipping calculator + delivery zones
+│   ├── Accessibility Statement.js
+│   ├── Privacy Policy.js
+│   ├── Refund Policy.js
+│   └── Terms & Conditions.js
 │
 └── public/                               # Shared frontend modules (3 files)
     ├── designTokens.js                   # Colors, typography, spacing, shadows
@@ -141,7 +141,7 @@ src/
 
 **Illustration strategy**: Use Wix Studio's built-in AI illustration tools (available as halworker85) to generate on-brand mountain/cabin artwork. Supplement with custom SVGs per ILLUSTRATION-ASSET-SPEC.md.
 
-**Video content strategy**: Weave product demo videos throughout — Product Videos page coded (Fullscreen Page.vu50r.js), video embeds planned for product pages and homepage.
+**Video content strategy**: Weave product demo videos throughout — Product Videos page coded (Fullscreen Page.js), video embeds planned for product pages and homepage.
 
 ---
 

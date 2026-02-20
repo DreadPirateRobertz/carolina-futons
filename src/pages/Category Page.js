@@ -1,14 +1,15 @@
-// Category Page.u0gn0.js - Product Category / Collection Pages
+// Category Page.js - Product Category / Collection Pages
 // Handles filtering, sorting, product grid with engagement features,
 // category hero content, product badges, recently viewed, and SEO meta
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags } from 'backend/seoHelpers.web';
-import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
+import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, getCompareList } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
+import { trackEvent } from 'public/engagementTracker';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -69,9 +70,11 @@ $w.onReady(async function () {
   initProductGrid();
   updateResultCount(currentPath);
   initRecentlyViewed();
+  initQuickViewHandlers();
   injectCategoryMeta(currentPath);
   await injectCategorySchema();
   initBackToTop($w);
+  trackEvent('page_view', { page: 'category', category: currentPath });
 });
 
 // ── Category Hero ────────────────────────────────────────────────────

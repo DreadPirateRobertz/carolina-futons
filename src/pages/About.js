@@ -1,4 +1,4 @@
-// About.gar3e.js - "Our Story" Page
+// About.js - "Our Story" Page
 // Polaroid-style team photos, business history timeline,
 // and trust-building content with local SEO signals
 import { getBusinessSchema } from 'backend/seoHelpers.web';

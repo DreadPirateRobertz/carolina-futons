@@ -1,4 +1,4 @@
-// Privacy Policy.pcvmd.js - Privacy Policy Page
+// Privacy Policy.js - Privacy Policy Page
 // Wix handles the privacy policy content via their legal pages system
 // This adds table of contents navigation for long policy text
 
