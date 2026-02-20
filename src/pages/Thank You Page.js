@@ -4,8 +4,10 @@
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
+import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   await Promise.all([
     initOrderSummary(),
     initBrendaMessage(),
@@ -280,7 +282,7 @@ async function loadPostPurchaseSuggestions() {
         });
       });
     });
-    repeater.data = products;
+    repeater.data = limitForViewport(products, { mobile: 2, tablet: 3, desktop: 4 });
   } catch (err) {
     console.error('Error loading post-purchase suggestions:', err);
   }
