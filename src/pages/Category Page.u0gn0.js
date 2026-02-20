@@ -615,7 +615,8 @@ async function injectCategorySchema() {
     const products = [];
     const total = Math.min(dataset.getTotalCount(), 30);
     for (let i = 0; i < total; i++) {
-      const item = dataset.getItems(i, 1)?.items?.[0];
+      const result = await dataset.getItems(i, 1);
+      const item = result?.items?.[0];
       if (item) {
         products.push({
           slug: item.slug,

@@ -260,6 +260,11 @@ async function loadSideCartSuggestions(lineItems) {
         $w('#sideSugName').text = product.name;
         $w('#sideSugPrice').text = product.formattedPrice;
 
+        // Reset button state for new suggestion
+        $w('#sideSugAdd').label = 'Add to Cart';
+        $w('#sideSugAdd').enable();
+
+        // Remove previous handler before adding new one
         $w('#sideSugAdd').onClick(async () => {
           await wixStoresFrontend.cart.addProducts([{
             productId: product._id,

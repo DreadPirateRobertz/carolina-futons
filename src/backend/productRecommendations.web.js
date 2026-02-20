@@ -202,12 +202,18 @@ export const getSaleProducts = webMethod(
   async (limit = 12) => {
     try {
       const results = await wixData.query('Stores/Products')
-        .gt('discount', 0)
-        .descending('discount')
+        .gt('discountedPrice', 0)
         .limit(limit)
         .find();
 
-      return results.items.map(formatProduct);
+      // Sort by discount amount (price - discountedPrice) descending
+      return results.items
+        .map(formatProduct)
+        .sort((a, b) => {
+          const discountA = (a.price || 0) - (a.discountedPrice || a.price || 0);
+          const discountB = (b.price || 0) - (b.discountedPrice || b.price || 0);
+          return discountB - discountA;
+        });
     } catch (err) {
       console.error('Error fetching sale products:', err);
       return [];
