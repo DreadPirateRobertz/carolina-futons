@@ -11,6 +11,7 @@ import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
+import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -605,8 +606,21 @@ function showEmptyState(currentPath) {
 
 function initRecentlyViewed() {
   try {
-    const recentItems = getRecentlyViewed();
-    if (!recentItems || recentItems.length === 0) {
+    // Merge session-based (galleryHelpers) and cross-session (productCache) sources
+    const sessionItems = getRecentlyViewed() || [];
+    const cachedItems = getCachedRecentlyViewed(4) || [];
+
+    // Deduplicate by slug, session items take priority (fresher)
+    const seen = new Set();
+    const recentItems = [];
+    for (const item of [...sessionItems, ...cachedItems]) {
+      if (item.slug && !seen.has(item.slug)) {
+        seen.add(item.slug);
+        recentItems.push(item);
+      }
+    }
+
+    if (recentItems.length === 0) {
       try { $w('#recentlyViewedSection').hide(); } catch (e) {}
       return;
     }
