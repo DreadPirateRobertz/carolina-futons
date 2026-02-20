@@ -170,24 +170,24 @@ describe('getFeaturedProducts', () => {
 // ── getSaleProducts ────────────────────────────────────────────────
 
 describe('getSaleProducts', () => {
-  it('returns products with discount > 0', async () => {
+  it('returns products with discountedPrice > 0', async () => {
     const results = await getSaleProducts(12);
     expect(results.length).toBeGreaterThan(0);
-    // futonMattress (discount: 50) and saleProduct (discount: 150) should appear
+    // futonMattress (discountedPrice: 299) and saleProduct (discountedPrice: 349) should appear
   });
 
-  it('sorts by discount descending', async () => {
+  it('sorts by discount amount descending', async () => {
     const results = await getSaleProducts(12);
     if (results.length >= 2) {
-      // saleProduct has higher discount (150) than futonMattress (50)
+      // saleProduct has higher discount ($150 off) than futonMattress ($50 off)
       expect(results[0]._id).toBe('prod-sale-001');
     }
   });
 
   it('returns empty when no products are on sale', async () => {
     __seed('Stores/Products', [
-      { ...futonFrame, discount: 0 },
-      { ...platformBed, discount: 0 },
+      { ...futonFrame, discountedPrice: null },
+      { ...platformBed, discountedPrice: null },
     ]);
     const results = await getSaleProducts(12);
     expect(results).toEqual([]);

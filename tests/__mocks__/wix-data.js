@@ -76,9 +76,42 @@ function createQueryBuilder(collection) {
   return builder;
 }
 
+// Sort builder factory — used by Category Page for dataset.setSort(wixData.sort().ascending('name'))
+function createSortBuilder() {
+  const builder = {
+    ascending(field) { return builder; },
+    descending(field) { return builder; },
+  };
+  return builder;
+}
+
+// Filter builder factory — used by Category Page for dataset.setFilter(wixData.filter().contains(...))
+function createFilterBuilder() {
+  const builder = {
+    contains(field, value) { return builder; },
+    eq(field, value) { return builder; },
+    ne(field, value) { return builder; },
+    gt(field, value) { return builder; },
+    ge(field, value) { return builder; },
+    lt(field, value) { return builder; },
+    le(field, value) { return builder; },
+    hasSome(field, values) { return builder; },
+    not(subBuilder) { return builder; },
+  };
+  return builder;
+}
+
 const wixData = {
   query(collection) {
     return createQueryBuilder(collection);
+  },
+
+  sort() {
+    return createSortBuilder();
+  },
+
+  filter() {
+    return createFilterBuilder();
   },
 
   async get(collection, id) {
