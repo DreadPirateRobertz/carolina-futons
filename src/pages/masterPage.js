@@ -1,8 +1,8 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
-// and product comparison bar
+// promotional lightbox
 import { getBusinessSchema } from 'backend/seoHelpers.web';
-import { getCompareList, removeFromCompare } from 'public/galleryHelpers';
+import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
