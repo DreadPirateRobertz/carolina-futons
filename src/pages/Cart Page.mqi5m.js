@@ -11,6 +11,7 @@ import {
   getTierProgress,
 } from 'public/cartService';
 import { initBackToTop } from 'public/mobileHelpers';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -26,6 +27,7 @@ async function initCartPage() {
     initQuantityControls();
     initCartListeners();
     initBackToTop($w);
+    trackEvent('page_view', { page: 'cart' });
   } catch (err) {
     console.error('Error initializing cart page:', err);
   }

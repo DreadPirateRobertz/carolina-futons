@@ -6,6 +6,7 @@ import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
 import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
+import { trackEvent } from 'public/engagementTracker';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────
@@ -35,6 +36,7 @@ $w.onReady(async function () {
   ]);
   initSmoothScroll();
   initBackToTop($w);
+  trackEvent('page_view', { page: 'home' });
 
   // On mobile: defer non-critical sections for faster first paint
   collapseOnMobile($w, ['#testimonialSection', '#videoShowcaseSection']);
