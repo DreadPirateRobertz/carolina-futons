@@ -13,6 +13,7 @@ import {
   initImageZoom,
 } from 'public/galleryHelpers.js';
 import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
+import { colors } from 'public/designTokens.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
 import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
@@ -142,10 +143,10 @@ function updateStockStatus(variant) {
 
     if (variant.inStock) {
       stockBadge.text = 'In Stock';
-      stockBadge.style.color = '#4A7C59'; // Forest green
+      stockBadge.style.color = colors.success;
     } else {
       stockBadge.text = 'Special Order';
-      stockBadge.style.color = '#E8845C'; // Sunset coral
+      stockBadge.style.color = colors.sunsetCoral;
     }
     stockBadge.show();
   } catch (e) {}
@@ -323,10 +324,10 @@ function renderSwatchGrid(swatches) {
       // Highlight the currently selected swatch
       try {
         if (selectedSwatchId === itemData._id) {
-          $item('#swatchThumb').style.borderColor = '#5B8FA8'; // Mountain blue
+          $item('#swatchThumb').style.borderColor = colors.mountainBlue;
           $item('#swatchThumb').style.borderWidth = '3px';
         } else {
-          $item('#swatchThumb').style.borderColor = '#D4BC96'; // Sand dark
+          $item('#swatchThumb').style.borderColor = colors.sandDark;
           $item('#swatchThumb').style.borderWidth = '1px';
         }
       } catch (e) {}
@@ -457,10 +458,10 @@ function renderSwatchGalleryGrid(swatches) {
       // Selection highlight
       try {
         if (selectedSwatchId === itemData._id) {
-          $item('#sgThumb').style.borderColor = '#5B8FA8';
+          $item('#sgThumb').style.borderColor = colors.mountainBlue;
           $item('#sgThumb').style.borderWidth = '3px';
         } else {
-          $item('#sgThumb').style.borderColor = '#D4BC96';
+          $item('#sgThumb').style.borderColor = colors.sandDark;
           $item('#sgThumb').style.borderWidth = '1px';
         }
       } catch (e) {}
@@ -1587,8 +1588,8 @@ async function initWishlistButton() {
 
 // SVG data URI heart icons — filled (coral) and outline (espresso)
 // Uses design system colors instead of external wixstatic.com URLs
-const HEART_FILLED_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#E8845C"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>')}`;
-const HEART_OUTLINE_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3A2518" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>')}`;
+const HEART_FILLED_SVG = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${colors.sunsetCoral}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`)}`;
+const HEART_OUTLINE_SVG = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${colors.espresso}" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`)}`;
 
 function setWishlistActive(active) {
   try {

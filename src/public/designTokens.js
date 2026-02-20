@@ -20,6 +20,10 @@ export const colors = {
   skyGradientBottom: '#F0C87A', // Bottom of sky gradient (sunset glow)
   white: '#FFFFFF',
   overlay: 'rgba(58, 37, 24, 0.6)', // Espresso overlay for modals
+  // Semantic / status colors
+  success: '#4A7C59',           // Forest green - in stock, delivered, success states
+  error: '#E8845C',             // Reuses sunset coral - low stock, errors, warnings
+  muted: '#999999',             // Grey - cancelled, disabled, inactive
 };
 
 export const typography = {
