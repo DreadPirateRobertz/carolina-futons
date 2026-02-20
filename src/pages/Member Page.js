@@ -1,13 +1,14 @@
 // Member Page.js - Customer Account Page
 // Account dashboard, order history, wishlist, and account settings
 import { trackEvent } from 'public/engagementTracker';
+import { colors } from 'public/designTokens.js';
 
 // Status badge color mapping
 const STATUS_COLORS = {
-  Processing: '#5B8FA8',  // Mountain blue
-  Shipped: '#E8845C',     // Sunset coral
-  Delivered: '#4A7C59',   // Forest green
-  Cancelled: '#999999',
+  Processing: colors.mountainBlue,
+  Shipped: colors.sunsetCoral,
+  Delivered: colors.success,
+  Cancelled: colors.muted,
 };
 
 let currentMember = null;
@@ -157,7 +158,7 @@ function initOrderHistory() {
         const badgeEl = $item('#orderStatusBadge');
         if (badgeEl) {
           badgeEl.text = status;
-          badgeEl.style.color = STATUS_COLORS[status] || '#5B8FA8';
+          badgeEl.style.color = STATUS_COLORS[status] || colors.mountainBlue;
         } else {
           $item('#orderStatus').text = status;
         }
@@ -341,10 +342,10 @@ async function initWishlist() {
         if (stockEl) {
           if (itemData.inStock !== false) {
             stockEl.text = 'In Stock';
-            stockEl.style.color = '#4A7C59';
+            stockEl.style.color = colors.success;
           } else {
             stockEl.text = 'Special Order';
-            stockEl.style.color = '#E8845C';
+            stockEl.style.color = colors.sunsetCoral;
           }
         }
       } catch (e) {}
