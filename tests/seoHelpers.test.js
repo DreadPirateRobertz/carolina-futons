@@ -6,6 +6,13 @@ import {
   getBreadcrumbSchema,
   getFaqSchema,
   generateAltText,
+  getWebSiteSchema,
+  getCollectionSchema,
+  getCategoryMetaDescription,
+  getProductOgTags,
+  getCategoryOgTags,
+  getProductMetaTags,
+  getCategoryMetaTags,
 } from '../src/backend/seoHelpers.web.js';
 
 // ── getProductSchema ────────────────────────────────────────────────
@@ -215,5 +222,216 @@ describe('generateAltText', () => {
 
     const mattressAlt = generateAltText(futonMattress, 'main');
     expect(mattressAlt).toContain('Futon Mattress');
+  });
+});
+
+// ── getWebSiteSchema ────────────────────────────────────────────────
+
+describe('getWebSiteSchema', () => {
+  it('generates valid WebSite schema', () => {
+    const schema = JSON.parse(getWebSiteSchema());
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema['@type']).toBe('WebSite');
+    expect(schema.name).toBe('Carolina Futons');
+  });
+
+  it('includes SearchAction for sitelinks', () => {
+    const schema = JSON.parse(getWebSiteSchema());
+    expect(schema.potentialAction['@type']).toBe('SearchAction');
+    expect(schema.potentialAction.target.urlTemplate).toContain('search-results');
+    expect(schema.potentialAction['query-input']).toContain('search_term_string');
+  });
+
+  it('references business as publisher', () => {
+    const schema = JSON.parse(getWebSiteSchema());
+    expect(schema.publisher['@id']).toContain('#business');
+  });
+});
+
+// ── getCollectionSchema ─────────────────────────────────────────────
+
+describe('getCollectionSchema', () => {
+  it('generates CollectionPage schema with ItemList', () => {
+    const categoryInfo = { title: 'Futon Frames', slug: 'futon-frames', description: 'Shop futon frames.' };
+    const products = [futonFrame, wallHuggerFrame];
+    const schema = JSON.parse(getCollectionSchema(categoryInfo, products));
+    expect(schema['@type']).toBe('CollectionPage');
+    expect(schema.name).toBe('Futon Frames');
+    expect(schema.mainEntity['@type']).toBe('ItemList');
+    expect(schema.mainEntity.numberOfItems).toBe(2);
+  });
+
+  it('includes breadcrumb with category', () => {
+    const categoryInfo = { title: 'Mattresses', slug: 'mattresses' };
+    const schema = JSON.parse(getCollectionSchema(categoryInfo, [futonMattress]));
+    expect(schema.breadcrumb['@type']).toBe('BreadcrumbList');
+    expect(schema.breadcrumb.itemListElement).toHaveLength(2);
+    expect(schema.breadcrumb.itemListElement[1].name).toBe('Mattresses');
+  });
+
+  it('limits ItemList to 30 products', () => {
+    const categoryInfo = { title: 'Test', slug: 'test' };
+    const manyProducts = Array.from({ length: 35 }, (_, i) => ({
+      ...futonFrame,
+      _id: `prod-${i}`,
+      slug: `product-${i}`,
+      name: `Product ${i}`,
+    }));
+    const schema = JSON.parse(getCollectionSchema(categoryInfo, manyProducts));
+    expect(schema.mainEntity.itemListElement).toHaveLength(30);
+  });
+
+  it('returns null for missing category or empty products', () => {
+    expect(getCollectionSchema(null, [futonFrame])).toBeNull();
+    expect(getCollectionSchema({ title: 'Test', slug: 'test' }, [])).toBeNull();
+    expect(getCollectionSchema({ title: 'Test', slug: 'test' }, null)).toBeNull();
+  });
+});
+
+// ── getCategoryMetaDescription ──────────────────────────────────────
+
+describe('getCategoryMetaDescription', () => {
+  it('returns category-specific description for futon-frames', () => {
+    const desc = getCategoryMetaDescription('futon-frames');
+    expect(desc).toContain('futon frames');
+    expect(desc).toContain('Night & Day Furniture');
+  });
+
+  it('returns category-specific description for mattresses', () => {
+    const desc = getCategoryMetaDescription('mattresses');
+    expect(desc).toContain('Otis Bed');
+    expect(desc).toContain('CertiPUR-US');
+  });
+
+  it('returns default description for unknown category', () => {
+    const desc = getCategoryMetaDescription('nonexistent');
+    expect(desc).toContain('futon furniture');
+    expect(desc).toContain('Carolinas');
+  });
+});
+
+// ── getProductOgTags ────────────────────────────────────────────────
+
+describe('getProductOgTags', () => {
+  it('generates OG and Twitter Card tags for product', () => {
+    const tags = JSON.parse(getProductOgTags(futonFrame));
+    expect(tags['og:type']).toBe('product');
+    expect(tags['og:title']).toContain('Eureka Futon Frame');
+    expect(tags['og:title']).toContain('Carolina Futons');
+    expect(tags['og:url']).toContain('/product-page/eureka-futon-frame');
+    expect(tags['og:image']).toBe('https://example.com/eureka.jpg');
+  });
+
+  it('includes price and availability', () => {
+    const tags = JSON.parse(getProductOgTags(futonFrame));
+    expect(tags['product:price:amount']).toBe('499');
+    expect(tags['product:price:currency']).toBe('USD');
+    expect(tags['product:availability']).toBe('in stock');
+  });
+
+  it('marks out-of-stock availability', () => {
+    const oos = { ...futonFrame, inStock: false };
+    const tags = JSON.parse(getProductOgTags(oos));
+    expect(tags['product:availability']).toBe('out of stock');
+  });
+
+  it('includes Twitter Card tags', () => {
+    const tags = JSON.parse(getProductOgTags(futonFrame));
+    expect(tags['twitter:card']).toBe('summary_large_image');
+    expect(tags['twitter:title']).toContain('Eureka Futon Frame');
+  });
+
+  it('returns empty string for null product', () => {
+    expect(getProductOgTags(null)).toBe('');
+  });
+});
+
+// ── getCategoryOgTags ───────────────────────────────────────────────
+
+describe('getCategoryOgTags', () => {
+  it('generates OG tags for known category', () => {
+    const tags = JSON.parse(getCategoryOgTags('futon-frames'));
+    expect(tags['og:type']).toBe('website');
+    expect(tags['og:title']).toContain('Futon Frames');
+    expect(tags['og:url']).toContain('/futon-frames');
+  });
+
+  it('includes Twitter Card tags', () => {
+    const tags = JSON.parse(getCategoryOgTags('mattresses'));
+    expect(tags['twitter:card']).toBe('summary');
+    expect(tags['twitter:title']).toContain('Futon Mattresses');
+  });
+
+  it('falls back to Shop for unknown slug', () => {
+    const tags = JSON.parse(getCategoryOgTags('unknown'));
+    expect(tags['og:title']).toContain('Shop');
+  });
+});
+
+// ── getProductMetaTags ──────────────────────────────────────────────
+
+describe('getProductMetaTags', () => {
+  it('generates HTML meta tags for product', async () => {
+    const html = await getProductMetaTags(futonFrame);
+    expect(html).toContain('<meta property="og:type" content="product"');
+    expect(html).toContain('Eureka Futon Frame');
+    expect(html).toContain('og:image');
+  });
+
+  it('includes Twitter Card meta tags', async () => {
+    const html = await getProductMetaTags(futonFrame);
+    expect(html).toContain('twitter:card');
+    expect(html).toContain('summary_large_image');
+  });
+
+  it('includes Pinterest Rich Pin price tags', async () => {
+    const html = await getProductMetaTags(futonFrame);
+    expect(html).toContain('og:price:amount');
+    expect(html).toContain('og:price:currency');
+    expect(html).toContain('USD');
+  });
+
+  it('includes product availability', async () => {
+    const html = await getProductMetaTags(futonFrame);
+    expect(html).toContain('product:availability');
+    expect(html).toContain('instock');
+  });
+
+  it('shows oos for out-of-stock product', async () => {
+    const oos = { ...futonFrame, inStock: false };
+    const html = await getProductMetaTags(oos);
+    expect(html).toContain('"oos"');
+  });
+
+  it('returns empty string for null product', async () => {
+    expect(await getProductMetaTags(null)).toBe('');
+  });
+
+  it('escapes HTML entities in attributes', async () => {
+    const xss = { ...futonFrame, name: 'Frame "Special" <Edition>' };
+    const html = await getProductMetaTags(xss);
+    expect(html).not.toContain('"Special"');
+    expect(html).toContain('&quot;Special&quot;');
+  });
+});
+
+// ── getCategoryMetaTags ─────────────────────────────────────────────
+
+describe('getCategoryMetaTags', () => {
+  it('generates HTML meta tags for category page', async () => {
+    const html = await getCategoryMetaTags('futon-frames', 'Futon Frames');
+    expect(html).toContain('<meta property="og:type" content="website"');
+    expect(html).toContain('Futon Frames');
+  });
+
+  it('includes Twitter Card tags', async () => {
+    const html = await getCategoryMetaTags('mattresses', 'Mattresses');
+    expect(html).toContain('twitter:card');
+    expect(html).toContain('twitter:title');
+  });
+
+  it('uses provided image URL', async () => {
+    const html = await getCategoryMetaTags('sales', 'Sale', 'https://example.com/sale.jpg');
+    expect(html).toContain('https://example.com/sale.jpg');
   });
 });
