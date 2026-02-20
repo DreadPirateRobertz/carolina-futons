@@ -1,8 +1,8 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 457 tests across 22 files (all passing)
-**Last Push**: c43e029
+**Test Suite**: 479 tests across 23 files (all passing)
+**Last Push**: 5123617
 
 ---
 
@@ -35,7 +35,7 @@
 ### P0 — Test Coverage (Radahn)
 - [x] tests/seoHelpers.test.js (+29 tests: OG, Twitter Card, Rich Pin, WebSite, Collection schemas)
 - [x] tests/shippingRates.test.js (+8 tests: white-glove tiers, local delivery pricing)
-- [ ] tests/httpFunctions.test.js (feed endpoints, sitemap) — IN PROGRESS
+- [x] tests/httpFunctions.test.js (+22 tests: feeds, sitemap, health endpoint)
 - [ ] tests/promotions.test.js (lightbox campaign engine)
 - [ ] tests/styleQuiz.test.js (recommendation engine)
 - [ ] tests/swatchService.test.js (swatch queries)
