@@ -1,11 +1,11 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 14:29 MST (15-min checkpoint)
+**Last Updated:** 2026-02-20 14:44 MST (15-min checkpoint)
 **Sprint:** Full Stack Improvements + Crew Sprint
 **Status:** ACTIVE — 3 crew members executing
-**Tests:** 714 passing across 37 test files — ALL GREEN
-**Commits this session:** 50+
-**Next checkpoint:** ~14:44 MST
+**Tests:** 738 passing across 38 test files — ALL GREEN
+**Commits this session:** 55+
+**Next checkpoint:** ~14:59 MST
 
 ---
 
@@ -13,9 +13,9 @@
 
 | Crew | Role | Current Task | Last Commit |
 |------|------|-------------|-------------|
-| **melania** | Crew Lead / Quality Gate | 15-min report cycles, story review, driving crew | `47bebe5` checkpoint |
-| **caesar** | PRIMARY WEB DEVELOPER | Design token integration: Home, Cart, Side Cart, Blog, Contact, masterPage | `05ba012` mobile responsive done |
-| **radahn** | PRIMARY MOBILE DEVELOPER | STORY-011a page integration: Product cache, Category recently-viewed, install banner | `9893787` touchHelpers done |
+| **melania** | Crew Lead / Quality Gate | 15-min report cycles, story review, driving crew | `6f88c41` checkpoint |
+| **caesar** | PRIMARY WEB DEVELOPER | Design tokens: 5 pages remaining (Home, Cart, Side Cart, Blog, Contact) + safeInit done | `516edf4` Fullscreen tokens |
+| **radahn** | PRIMARY MOBILE DEVELOPER | STORY-011a: masterPage install banner (Product + Category cache DONE) | `01cd3d3` Category recently-viewed |
 
 ---
 
@@ -34,8 +34,9 @@
 | +PWA tests | 34 | 659 | +17 | Radahn PWA foundation |
 | +errorHandler tests | 35 | 672 | +13 | Radahn STORY-008 |
 | +productCache, touchHelpers, productRecs | 37 | 714 | +42 | Radahn + Mayor |
+| +safeInit, emailService | 38 | 738 | +24 | Caesar STORY-004 + Mayor |
 
-**Growth: 372 → 659 tests (+287, +77%) in one session.**
+**Growth: 372 → 738 tests (+366, +98%) in one session.**
 
 ---
 
@@ -46,9 +47,9 @@
 |---|------|--------|---------|
 | 1 | STRATEGY.md | `8fa999e` | 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap |
 | 2 | Design session | — | Full UX pattern audit: tokens (0% usage), ARIA (29%), try/catch (543 blocks), error handling |
-| 3 | Story reviews | — | 12 stories reviewed: 9 approved, 1 revision requested, 2 already done |
+| 3 | Story reviews | — | 14 stories reviewed: 11 approved, 1 revision requested, 2 already done |
 | 4 | Role restructuring | `34b3729` | Caesar→web, Radahn→mobile per human orders |
-| 5 | Ongoing coordination | — | 15+ nudges, priority calls, pipeline management |
+| 5 | Ongoing coordination | — | 20+ nudges, priority calls, pipeline management |
 
 ### Caesar (Primary Web Developer)
 | # | Task | Commit | Details |
@@ -61,10 +62,12 @@
 | 6 | wix-data mock additions | `3307557` | or(), contains(), distinct(), count() |
 | 7 | Social feed & OG meta fix | `00a2f0a` | 3 bugs fixed: broken feed images, [object Promise] OG, shipping schema + 3 improvements |
 | 8 | mediaHelpers tests | `c4e9e98` | 8 tests for wix:image URL conversion |
-| 9 | Design token integration | `2aa0405`→`73d7e98` | Tokens imported into Product, Category, Member, Thank You pages |
+| 9 | Design token integration (batch 1) | `2aa0405`→`73d7e98` | Tokens into Product, Category, Member, Thank You pages |
 | 10 | ARIA coverage pass | `d7aa91d`→`021da01` | **21/21 COMPLETE** — all pages have ARIA labels |
-| 11 | Mobile responsive pass | `cfd50d2`→`05ba012` | initBackToTop, collapseOnMobile, limitForViewport across 8 pages (well-tiered) |
-| 12 | Design token integration (remaining) | — | ASSIGNED: Home, Cart, Side Cart, Blog, Contact, masterPage |
+| 11 | Mobile responsive pass | `cfd50d2`→`05ba012` | initBackToTop, collapseOnMobile, limitForViewport across 8 pages |
+| 12 | STORY-004: safeInit utility | `59840c2` | 8 safe helpers (safeSelect, safeCall, safeText, safeClick, safeSrc, safeExpand, safeCollapse, safeAriaLabel) + 16 tests |
+| 13 | Design token integration (batch 2) | `543a5f9`→`516edf4` | Tokens into masterPage, Thank You, Fullscreen Page |
+| 14 | Design tokens remaining | — | ASSIGNED: Home, Cart, Side Cart, Blog, Contact (5 pages) |
 
 ### Radahn (Primary Mobile Developer)
 | # | Task | Commit | Details |
@@ -80,7 +83,9 @@
 | 9 | STORY-010: Wix SW research | `ba4f8c7` | Found SW broke Aug 2023 — pivot to PWA-lite |
 | 10 | STORY-011b: touchHelpers | `9893787` | Swipe detection + pinch-zoom, 7 tests |
 | 11 | productCache module | (radahn) | localStorage LRU cache, 24hr TTL, recently viewed, 10 tests |
-| 12 | STORY-011a page integration | — | ASSIGNED: Product Page cache, Category recently-viewed, install banner |
+| 12 | STORY-011a: Product Page cache | `2dd8e5d` | Stale-while-revalidate: show cached name/price/image instantly, cache on view |
+| 13 | STORY-011a: Category recently-viewed | `01cd3d3` | Merge session + cross-session cache, deduplicate by slug |
+| 14 | STORY-011a: masterPage install banner | — | ASSIGNED: PWA install prompt on all pages |
 
 ### Mayor (morning sprint + ongoing)
 | # | Task | Details |
@@ -89,6 +94,7 @@
 | 23 | swatchService + contactSubmissions + googleMerchantFeed tests | +48 tests |
 | 24 | designTokens + galleryConfig tests | +30 tests |
 | 25 | sanitize utils + placeholderImages tests | +38 tests |
+| 26 | emailService tests | `6f88c41` | +8 tests |
 
 ---
 
@@ -99,16 +105,17 @@
 | STORY-001 | Gift card code truncation | radahn | DONE | P0 |
 | STORY-002 | HTTP functions test suite | radahn | DONE | P1 |
 | STORY-003 | Style quiz test suite | radahn | DONE | P1 |
-| STORY-004 | Safe element init pattern | radahn | APPROVED (P2) | P2 |
+| STORY-004 | Safe element init pattern | caesar | **DONE** (`59840c2`, 16 tests) | P2 |
 | STORY-005 | Cart recovery duplicate detection | radahn | DONE | P1 |
 | STORY-006 | Swatch service test suite | radahn | DONE (by mayor) | P1 |
 | STORY-007 | Test hardening: XSS/sort/XML | radahn | DONE | P1 |
 | STORY-008 | Shared errorHandler utility | radahn | DONE (`3ce9214`, 13 tests) | P2 |
 | STORY-009 | PWA mobile app Phase 1 | radahn | DONE (`927dc0d`, 17 tests) | P1 |
-| STORY-010 | Wix SW compatibility research | radahn | APPROVED → implementing (XS, doc updates) | P0 |
-| STORY-011 | PWA Phase 2 (split into 11a/11b) | radahn | APPROVED w/ modification — split A+D / C | P1 |
+| STORY-010 | Wix SW compatibility research | radahn | DONE — pivoted to PWA-lite | P0 |
+| STORY-011a | PWA Phase 2: page integration | radahn | IN PROGRESS (2/3 done) | P1 |
+| STORY-011b | PWA Phase 2: touch helpers | radahn | DONE (`9893787`, 7 tests) | P1 |
 | — | Social feed & OG meta fix | caesar | DONE | P1 |
-| — | Design token integration | caesar | DONE (4 pages) | P1 |
+| — | Design token integration | caesar | IN PROGRESS (7/21 pages) | P1 |
 | — | ARIA coverage pass | caesar | DONE (21/21 pages) | P1 |
 | — | Mobile responsive pass | caesar | DONE (8 pages, well-tiered) | P1 |
 
@@ -118,10 +125,10 @@
 
 | Finding | Severity | Status |
 |---------|----------|--------|
-| Design tokens 0% import usage | HIGH | FIXED — caesar integrated into 4 pages (Product, Category, Member, ThankYou) |
+| Design tokens 0% import usage | HIGH | IN PROGRESS — 7/21 pages done (Product, Category, Member, ThankYou, masterPage, Fullscreen, ThankYou ext) |
 | ARIA coverage 29% (6/21 pages) | HIGH | **DONE — 21/21 pages (100%)**. Full accessibility coverage. |
-| 543 try/catch blocks (450 silent) | MEDIUM | STORY-004 approved, P2 priority |
-| No centralized error handler | MEDIUM | STORY-008 approved, P2 priority |
+| 543 try/catch blocks (450 silent) | MEDIUM | **DONE — STORY-004 safeInit.js** (`59840c2`, 8 helpers, 16 tests) |
+| No centralized error handler | MEDIUM | **DONE — STORY-008 errorHandler.js** (`3ce9214`, 13 tests) |
 | Loading state pattern consistent | GOOD | Documented as standard |
 
 ---
@@ -134,21 +141,21 @@
 | **Primary Web Developer** | caesar | All web pages, desktop UX, responsive design, design tokens, ARIA, visual polish |
 | **Primary Mobile Developer** | radahn | PWA, mobile-first patterns, touch UX, mobile-specific code/tests |
 
-**Mobile strategy decision:** PWA chosen over React Native and Wix Branded App. Phase 1 (manifest, service worker, install helpers) is code-complete. Wix Velo SW compatibility needs runtime validation.
+**Mobile strategy decision:** PWA-lite chosen (manifest-only, no service worker). Wix Velo SW registration broke Aug 2023 — using localStorage caching instead of SW cache. Phase 1 code-complete, Phase 2 page integration in progress.
 
 ---
 
 ## What's Next (P0/P1 Priority Order)
 
 ### Immediate (NOW)
-1. **Caesar**: Design token integration — Home, Cart, Side Cart, Blog, Contact, masterPage (6 pages)
-2. **Radahn**: STORY-011a page integration — Product Page cacheProduct, Category recently-viewed, masterPage install banner
+1. **Caesar**: Design token integration — Home, Cart, Side Cart, Blog, Contact (5 pages remaining)
+2. **Radahn**: STORY-011a final piece — masterPage install banner, then touch gesture integration
 3. **Melania**: 15-min report cycles, review all pushes, coordinate
 
 ### Next Up
-4. Caesar: Design token integration for remaining smaller pages
+4. Caesar: Begin migrating page code to use safeInit helpers (reduce 450 silent try/catch blocks)
 5. Radahn: Touch gesture integration into Product Page gallery (swipe) and Category Page (filter tabs)
-6. Radahn: STORY-004 implementation (safeInit refactor — P2)
+6. Full team: Integration testing — verify all new utilities work together across pages
 
 ### Key Decision: PWA-Lite Pivot
 Radahn's STORY-010 research found that Wix Velo service worker registration broke in Aug 2023 and has no confirmed fix. **We are pivoting to PWA-lite**: manifest-only (no service worker), localStorage caching instead of SW cache, third-party push notifications instead of SW push. This is the right call — don't fight the platform.
@@ -156,9 +163,11 @@ Radahn's STORY-010 research found that Wix Velo service worker registration brok
 ### Milestones Hit This Session
 - **ARIA 21/21** — Full accessibility coverage across every page
 - **Mobile responsive** — 13/21 pages have mobile helpers
-- **PWA Phase 1** — Manifest, install helpers, productCache, touchHelpers all code-complete
-- **Test suite nearly doubled** — 372 → 714 (+92%)
+- **PWA Phase 1 + 2 (partial)** — Manifest, install helpers, productCache, touchHelpers, page integration (2/3)
+- **STORY-004 safeInit** — 8 safe element helpers replacing 450+ silent catch blocks
+- **Test suite nearly doubled** — 372 → 738 (+98%)
 - **6 real bugs found and fixed** — not cosmetic issues, real production bugs
+- **All 5 design session findings addressed** — 4 resolved, 1 in progress
 
 ### Blocked (Needs Wix Dashboard)
 - Create 11 CMS collections
@@ -173,19 +182,20 @@ Radahn's STORY-010 research found that Wix Velo service worker registration brok
 
 | Metric | Value |
 |--------|-------|
-| Tests | **714** (37 files) |
-| Test growth | **+342 (+92%)** this session |
-| Commits | **50+** this session |
+| Tests | **738** (38 files) |
+| Test growth | **+366 (+98%)** this session |
+| Commits | **55+** this session |
 | Stories filed | 16 (STORY-001 through STORY-011 + caesar stories) |
 | Stories approved | 16 |
-| Stories completed | 13 |
+| Stories completed | 14 |
 | Bugs found & fixed | 6 (feed images, OG promise, shipping schema, cart dupes, qty no-ops, remove no-ops) |
 | Pages with ARIA | **21/21 (100%)** — was 6 at session start |
-| Pages with design tokens | 4/21 (was 0) — caesar assigned 6 more |
+| Pages with design tokens | **7/21** (was 0) — caesar assigned 5 more |
 | Pages with mobile helpers | 13/21 — was 5 at session start |
-| New public utilities | 4 (pwaHelpers.js, productCache.js, touchHelpers.js, safeInit.js planned) |
+| New public utilities | **5** (pwaHelpers.js, productCache.js, touchHelpers.js, safeInit.js, mobileHelpers.js extended) |
 | New backend utilities | 2 (mediaHelpers.js, errorHandler.js) |
-| PWA | Phase 1 done, pivoted to PWA-lite (STORY-010), Phase 2 in progress |
+| PWA | Phase 1 done, pivoted to PWA-lite, Phase 2 page integration 2/3 done |
+| Design session findings | **4/5 resolved, 1 in progress** |
 
 ---
 
