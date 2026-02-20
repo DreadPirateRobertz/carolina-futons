@@ -5,6 +5,7 @@ import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import wixStoresFrontend from 'wix-stores-frontend';
 
 const FREE_SHIPPING_THRESHOLD = 999;
+let currentSideSugProduct = null;
 
 $w.onReady(function () {
   initSideCart();
@@ -33,14 +34,27 @@ function initSideCart() {
   // View full cart button
   try {
     $w('#viewFullCart').onClick(() => {
-      import('wix-location').then(({ to }) => to('/cart-page'));
+      import('wix-location-frontend').then(({ to }) => to('/cart-page'));
     });
   } catch (e) {}
 
   // Checkout button
   try {
     $w('#sideCartCheckout').onClick(() => {
-      import('wix-location').then(({ to }) => to('/checkout'));
+      import('wix-location-frontend').then(({ to }) => to('/checkout'));
+    });
+  } catch (e) {}
+
+  // Cross-sell add button (registered once, uses currentSideSugProduct)
+  try {
+    $w('#sideSugAdd').onClick(async () => {
+      if (!currentSideSugProduct) return;
+      await wixStoresFrontend.cart.addProducts([{
+        productId: currentSideSugProduct._id,
+        quantity: 1,
+      }]);
+      $w('#sideSugAdd').label = 'Added!';
+      $w('#sideSugAdd').disable();
     });
   } catch (e) {}
 }
@@ -73,15 +87,6 @@ async function refreshSideCart() {
     // Update cart items in repeater
     const repeater = $w('#sideCartRepeater');
     if (repeater) {
-      repeater.data = currentCart.lineItems.map(item => ({
-        _id: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.mediaItem?.src || '',
-        variantName: item.options?.map(o => o.value).join(', ') || '',
-      }));
-
       repeater.onItemReady(($item, itemData) => {
         $item('#sideItemImage').src = itemData.image;
         $item('#sideItemName').text = itemData.name;
@@ -100,6 +105,14 @@ async function refreshSideCart() {
           await refreshSideCart();
         });
       });
+      repeater.data = currentCart.lineItems.map(item => ({
+        _id: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.mediaItem?.src || '',
+        variantName: item.options?.map(o => o.value).join(', ') || '',
+      }));
     }
 
     // Update totals
@@ -153,21 +166,15 @@ async function loadSideCartSuggestion(lineItems) {
     const topSuggestion = suggestions[0];
     if (topSuggestion.products.length > 0) {
       const product = topSuggestion.products[0];
+      currentSideSugProduct = product;
       try {
         $w('#sideSugLabel').text = topSuggestion.heading;
         $w('#sideSugImage').src = product.mainMedia;
         $w('#sideSugName').text = product.name;
         $w('#sideSugPrice').text = product.formattedPrice;
+        $w('#sideSugAdd').enable();
+        $w('#sideSugAdd').label = 'Add to Cart';
         $w('#sideCartSuggestion').expand();
-
-        $w('#sideSugAdd').onClick(async () => {
-          await wixStoresFrontend.cart.addProducts([{
-            productId: product._id,
-            quantity: 1,
-          }]);
-          $w('#sideSugAdd').label = 'Added!';
-          $w('#sideSugAdd').disable();
-        });
       } catch (e) {}
     }
   } catch (e) {}

@@ -67,8 +67,6 @@ function initFaqAccordion() {
     const repeater = $w('#faqRepeater');
     if (!repeater) return;
 
-    repeater.data = FAQ_DATA;
-
     repeater.onItemReady(($item, itemData) => {
       $item('#faqQuestion').text = itemData.question;
       $item('#faqAnswer').text = itemData.answer;
@@ -85,6 +83,7 @@ function initFaqAccordion() {
         toggleFaqItem($item);
       });
     });
+    repeater.data = FAQ_DATA;
   } catch (e) {}
 }
 

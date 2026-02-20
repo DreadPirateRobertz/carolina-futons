@@ -23,7 +23,6 @@ async function loadFeaturedProducts() {
     const repeater = $w('#featuredRepeater');
     if (!repeater || featured.length === 0) return;
 
-    repeater.data = featured;
     repeater.onItemReady(($item, itemData) => {
       $item('#featuredImage').src = itemData.mainMedia;
       $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
@@ -42,17 +41,18 @@ async function loadFeaturedProducts() {
 
       // Navigate to product page on click
       $item('#featuredImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
 
       $item('#featuredName').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
     });
+    repeater.data = featured;
   } catch (err) {
     console.error('Error loading featured products:', err);
   }
@@ -70,7 +70,6 @@ async function loadSaleHighlights() {
       return;
     }
 
-    repeater.data = saleItems;
     repeater.onItemReady(($item, itemData) => {
       $item('#saleImage').src = itemData.mainMedia;
       $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
@@ -81,11 +80,12 @@ async function loadSaleHighlights() {
       } catch (e) {}
 
       $item('#saleImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
     });
+    repeater.data = saleItems;
   } catch (err) {
     console.error('Error loading sale highlights:', err);
   }
@@ -107,7 +107,7 @@ function initCategoryShowcase() {
   Object.entries(categoryLinks).forEach(([elementId, path]) => {
     try {
       $w(elementId).onClick(() => {
-        import('wix-location').then(({ to }) => to(path));
+        import('wix-location-frontend').then(({ to }) => to(path));
       });
     } catch (e) {
       // Category card may not exist
@@ -134,7 +134,7 @@ function initHeroAnimation() {
     if (heroCta) {
       heroCta.show('fade', { duration: 400, delay: 800 });
       heroCta.onClick(() => {
-        import('wix-location').then(({ to }) => to('/shop-main'));
+        import('wix-location-frontend').then(({ to }) => to('/shop-main'));
       });
     }
   } catch (e) {

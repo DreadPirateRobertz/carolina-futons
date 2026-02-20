@@ -98,7 +98,8 @@ export function getCompareList() {
 }
 
 // Smooth scroll to element (for in-page navigation)
-export function scrollToElement(selector, offset = 80) {
+// Caller must pass $w from page context since public modules don't have access to $w
+export function scrollToElement($w, selector) {
   try {
     const element = $w(selector);
     if (element) {

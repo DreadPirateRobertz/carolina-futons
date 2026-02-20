@@ -112,14 +112,14 @@ function initBusinessInfo() {
   // Phone click-to-call
   try {
     $w('#infoPhoneLink').onClick(() => {
-      import('wix-location').then(({ to }) => to('tel:+18282529449'));
+      import('wix-location-frontend').then(({ to }) => to('tel:+18282529449'));
     });
   } catch (e) {}
 
   // Directions button
   try {
     $w('#directionsBtn').onClick(() => {
-      import('wix-location').then(({ to }) => {
+      import('wix-location-frontend').then(({ to }) => {
         to('https://maps.google.com/?q=824+Locust+St+Ste+200+Hendersonville+NC+28792');
       });
     });

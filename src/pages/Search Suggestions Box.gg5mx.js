@@ -16,6 +16,16 @@ function initSearchSuggestions() {
 
     let debounceTimer;
 
+    // Register onItemReady once, before any data assignment
+    suggestionsRepeater.onItemReady(($item, itemData) => {
+      $item('#sugImage').src = itemData.image;
+      $item('#sugName').text = itemData.name;
+      $item('#sugPrice').text = itemData.price;
+
+      $item('#sugImage').onClick(() => navigateTo(itemData.slug));
+      $item('#sugName').onClick(() => navigateTo(itemData.slug));
+    });
+
     searchInput.onKeyPress((event) => {
       clearTimeout(debounceTimer);
       const query = searchInput.value?.trim();
@@ -29,14 +39,6 @@ function initSearchSuggestions() {
         const results = await searchProducts(query);
         if (results.length > 0) {
           suggestionsRepeater.data = results;
-          suggestionsRepeater.onItemReady(($item, itemData) => {
-            $item('#sugImage').src = itemData.image;
-            $item('#sugName').text = itemData.name;
-            $item('#sugPrice').text = itemData.price;
-
-            $item('#sugImage').onClick(() => navigateTo(itemData.slug));
-            $item('#sugName').onClick(() => navigateTo(itemData.slug));
-          });
           try { suggestionsBox.expand(); } catch (e) {}
         } else {
           try { suggestionsBox.collapse(); } catch (e) {}
@@ -47,7 +49,7 @@ function initSearchSuggestions() {
       if (event.key === 'Enter') {
         clearTimeout(debounceTimer);
         try { suggestionsBox.collapse(); } catch (e) {}
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/search-results?q=${encodeURIComponent(query)}`);
         });
       }
@@ -82,7 +84,7 @@ async function searchProducts(query) {
 }
 
 function navigateTo(slug) {
-  import('wix-location').then(({ to }) => {
+  import('wix-location-frontend').then(({ to }) => {
     to(`/product-page/${slug}`);
   });
 }

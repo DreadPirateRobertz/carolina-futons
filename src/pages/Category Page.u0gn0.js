@@ -7,11 +7,13 @@ import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web
 
 let currentSort = 'name-asc';
 let currentFilters = {};
+let currentQuickViewProduct = null;
 
 $w.onReady(async function () {
   initSortControls();
   initFilterControls();
   initProductGrid();
+  initQuickViewHandlers();
   updateResultCount();
   await injectCategorySchema();
 });
@@ -45,26 +47,27 @@ function applySort() {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
 
-    // Reset sort
-    dataset.setSort(wixData.sort());
-
+    let sort;
     switch (currentSort) {
       case 'name-asc':
-        dataset.setSort(wixData.sort().ascending('name'));
+        sort = wixData.sort().ascending('name');
         break;
       case 'name-desc':
-        dataset.setSort(wixData.sort().descending('name'));
+        sort = wixData.sort().descending('name');
         break;
       case 'price-asc':
-        dataset.setSort(wixData.sort().ascending('price'));
+        sort = wixData.sort().ascending('price');
         break;
       case 'price-desc':
-        dataset.setSort(wixData.sort().descending('price'));
+        sort = wixData.sort().descending('price');
         break;
       case 'date-desc':
-        dataset.setSort(wixData.sort().descending('_createdDate'));
+        sort = wixData.sort().descending('_createdDate');
         break;
+      default:
+        sort = wixData.sort();
     }
+    dataset.setSort(sort);
   } catch (e) {
     console.error('Error applying sort:', e);
   }
@@ -216,7 +219,7 @@ function initProductGrid() {
 
       // Click to product page
       const navigateToProduct = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
@@ -238,24 +241,22 @@ function initProductGrid() {
 
 // ── Quick View Modal ────────────────────────────────────────────────
 
-function openQuickView(product) {
+// Register quick view handlers once to avoid accumulation
+function initQuickViewHandlers() {
   try {
-    $w('#qvImage').src = product.mainMedia;
-    $w('#qvImage').alt = buildAltText(product);
-    $w('#qvName').text = product.name;
-    $w('#qvPrice').text = product.formattedPrice;
-    $w('#qvDescription').text = stripHtml(product.description || '');
-
     $w('#qvViewFull').onClick(() => {
-      import('wix-location').then(({ to }) => {
-        to(`/product-page/${product.slug}`);
-      });
+      if (currentQuickViewProduct) {
+        import('wix-location-frontend').then(({ to }) => {
+          to(`/product-page/${currentQuickViewProduct.slug}`);
+        });
+      }
     });
 
     $w('#qvAddToCart').onClick(async () => {
+      if (!currentQuickViewProduct) return;
       try {
         const { default: wixStoresFrontend } = await import('wix-stores-frontend');
-        await wixStoresFrontend.cart.addProducts([{ productId: product._id, quantity: 1 }]);
+        await wixStoresFrontend.cart.addProducts([{ productId: currentQuickViewProduct._id, quantity: 1 }]);
         $w('#qvAddToCart').label = 'Added!';
         setTimeout(() => {
           $w('#quickViewModal').hide('fade', { duration: 200 });
@@ -268,7 +269,18 @@ function openQuickView(product) {
     $w('#qvClose').onClick(() => {
       $w('#quickViewModal').hide('fade', { duration: 200 });
     });
+  } catch (e) {}
+}
 
+function openQuickView(product) {
+  try {
+    currentQuickViewProduct = product;
+    $w('#qvImage').src = product.mainMedia;
+    $w('#qvImage').alt = buildAltText(product);
+    $w('#qvName').text = product.name;
+    $w('#qvPrice').text = product.formattedPrice;
+    $w('#qvDescription').text = stripHtml(product.description || '');
+    $w('#qvAddToCart').label = 'Add to Cart';
     $w('#quickViewModal').show('fade', { duration: 200 });
   } catch (e) {}
 }
@@ -355,7 +367,8 @@ async function injectCategorySchema() {
     const products = [];
     const total = Math.min(dataset.getTotalCount(), 30);
     for (let i = 0; i < total; i++) {
-      const item = dataset.getItems(i, 1)?.items?.[0];
+      const result = await dataset.getItems(i, 1);
+      const item = result?.items?.[0];
       if (item) {
         products.push({
           slug: item.slug,

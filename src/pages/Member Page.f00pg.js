@@ -45,7 +45,7 @@ function initWishlist() {
       $item('#wishPrice').text = itemData.formattedPrice;
 
       $item('#wishViewBtn').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
