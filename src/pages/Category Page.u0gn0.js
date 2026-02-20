@@ -5,6 +5,7 @@
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } from 'backend/seoHelpers.web';
+import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { getProductBadge, getRecentlyViewed, addToCompare, getCompareList, removeFromCompare } from 'public/galleryHelpers';
 
 let currentSort = 'name-asc';
@@ -339,6 +340,25 @@ function initProductGrid() {
       $item('#gridImage').onClick(navigateToProduct);
       $item('#gridName').onClick(navigateToProduct);
 
+      // Fabric swatch preview dots (3-4 color circles)
+      initGridSwatchPreview($item, itemData);
+
+      // "Available in 700+ fabrics" badge
+      try {
+        // Show badge for products that have fabric options (frames, not mattresses)
+        const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
+        const hasFabricOptions = colls.some(c =>
+          c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
+          c.includes('unfinished') || c.includes('platform')
+        );
+        if (hasFabricOptions) {
+          $item('#gridFabricBadge').text = 'Available in 700+ fabrics';
+          $item('#gridFabricBadge').show();
+        } else {
+          $item('#gridFabricBadge').hide();
+        }
+      } catch (e) {}
+
       // Quick view button
       try {
         $item('#quickViewBtn').onClick(() => {
@@ -383,6 +403,52 @@ function initProductGrid() {
     });
   } catch (e) {
     console.error('Error initializing product grid:', e);
+  }
+}
+
+// ── Grid Swatch Preview Dots ────────────────────────────────────────
+// Shows 3-4 small color circles on product cards for items with fabric options
+
+async function initGridSwatchPreview($item, itemData) {
+  try {
+    const preview = $item('#gridSwatchPreview');
+    if (!preview) return;
+
+    // Only load swatches for products that likely have fabric options
+    const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
+    const hasFabricOptions = colls.some(c =>
+      c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
+      c.includes('unfinished') || c.includes('platform')
+    );
+
+    if (!hasFabricOptions) {
+      preview.collapse();
+      return;
+    }
+
+    const swatchColors = await getSwatchPreviewColors(itemData._id, 4);
+    if (!swatchColors || swatchColors.length === 0) {
+      preview.collapse();
+      return;
+    }
+
+    // Set color dots (up to 4 pre-placed dot elements in the editor)
+    const dotIds = ['#swatchDot1', '#swatchDot2', '#swatchDot3', '#swatchDot4'];
+    dotIds.forEach((dotId, i) => {
+      try {
+        const dot = $item(dotId);
+        if (i < swatchColors.length) {
+          dot.style.backgroundColor = swatchColors[i].colorHex;
+          dot.show();
+        } else {
+          dot.hide();
+        }
+      } catch (e) {}
+    });
+
+    preview.expand();
+  } catch (e) {
+    try { $item('#gridSwatchPreview').collapse(); } catch (e2) {}
   }
 }
 

@@ -55,6 +55,15 @@ globalThis.$w = Object.assign(
 vi.mock('backend/seoHelpers.web', () => ({
   getCollectionSchema: vi.fn().mockResolvedValue('{"@type":"ItemList"}'),
   getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList"}'),
+  getCategoryMetaDescription: vi.fn().mockResolvedValue('Quality futon frames from Carolina Futons'),
+}));
+
+vi.mock('backend/swatchService.web', () => ({
+  getSwatchPreviewColors: vi.fn().mockResolvedValue([
+    { colorHex: '#4A7C9B', swatchName: 'Coastal Blue' },
+    { colorHex: '#D4BC96', swatchName: 'Sand Dune' },
+    { colorHex: '#5C4033', swatchName: 'Espresso' },
+  ]),
 }));
 
 // ── Import Page ─────────────────────────────────────────────────────
@@ -108,15 +117,17 @@ describe('Category Page', () => {
   // ── Filter Controls ───────────────────────────────────────────────
 
   describe('filter controls', () => {
-    it('initializes brand filter with 5 options', async () => {
+    it('initializes brand filter with 7 options', async () => {
       await onReadyHandler();
       const brandFilter = getEl('#filterBrand');
-      expect(brandFilter.options).toHaveLength(5);
+      expect(brandFilter.options).toHaveLength(7);
       expect(brandFilter.options[0]).toEqual({ label: 'All Brands', value: '' });
       expect(brandFilter.options[1].label).toContain('Night & Day');
       expect(brandFilter.options[2].label).toContain('Strata');
-      expect(brandFilter.options[3].label).toContain('KD Frames');
-      expect(brandFilter.options[4].label).toContain('Otis');
+      expect(brandFilter.options[3].label).toContain('Wall Hugger');
+      expect(brandFilter.options[4].label).toContain('KD Frames');
+      expect(brandFilter.options[5].label).toContain('Unfinished');
+      expect(brandFilter.options[6].label).toContain('Otis');
     });
 
     it('initializes price filter with 6 range options', async () => {

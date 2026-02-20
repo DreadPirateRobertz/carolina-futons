@@ -22,6 +22,11 @@ export default defineConfig({
       'backend/ups-shipping.web': path.resolve(__dirname, 'src/backend/ups-shipping.web.js'),
       'backend/productRecommendations.web': path.resolve(__dirname, 'src/backend/productRecommendations.web.js'),
       'backend/seoHelpers.web': path.resolve(__dirname, 'src/backend/seoHelpers.web.js'),
+      'backend/swatchService.web': path.resolve(__dirname, 'src/backend/swatchService.web.js'),
+      'public/galleryHelpers.js': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
+      'public/galleryHelpers': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
+      'public/designTokens.js': path.resolve(__dirname, 'src/public/designTokens.js'),
+      'public/designTokens': path.resolve(__dirname, 'src/public/designTokens.js'),
     },
   },
 });
