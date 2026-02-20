@@ -64,6 +64,15 @@ vi.mock('backend/productRecommendations.web', () => ({
   getSameCollection: vi.fn().mockResolvedValue(mockCollection),
 }));
 
+vi.mock('backend/swatchService.web', () => ({
+  getProductSwatches: vi.fn().mockResolvedValue([
+    { _id: 'sw-1', swatchId: 'coastal-blue', swatchName: 'Coastal Blue Tweed', swatchImage: 'https://example.com/swatch1.jpg', colorFamily: 'blue', colorHex: '#4A7C9B', material: 'cotton' },
+    { _id: 'sw-2', swatchId: 'sand-dune', swatchName: 'Sand Dune', swatchImage: 'https://example.com/swatch2.jpg', colorFamily: 'neutral', colorHex: '#D4BC96', material: 'linen blend' },
+  ]),
+  getAllSwatchFamilies: vi.fn().mockResolvedValue(['blue', 'neutral', 'green', 'red', 'earth']),
+  getSwatchCount: vi.fn().mockResolvedValue(42),
+}));
+
 vi.mock('backend/seoHelpers.web', () => ({
   getProductSchema: vi.fn().mockReturnValue('{"@type":"Product"}'),
   generateAltText: vi.fn().mockResolvedValue('Eureka Futon Frame - Night & Day - Carolina Futons'),
@@ -230,6 +239,57 @@ describe('Product Page', () => {
       // Simulate thumbnail click
       clickCb({ item: { src: 'https://example.com/thumb2.jpg' } });
       expect(getEl('#productMainImage').src).toBe('https://example.com/thumb2.jpg');
+    });
+  });
+
+  // ── Fabric Swatch Selector ──────────────────────────────────────────
+
+  describe('fabric swatch selector', () => {
+    it('accesses swatchSection and swatchGrid elements', async () => {
+      await onReadyHandler();
+      expect(elements.has('#swatchSection')).toBe(true);
+      expect(elements.has('#swatchGrid')).toBe(true);
+    });
+
+    it('populates swatch grid with data from backend', async () => {
+      await onReadyHandler();
+      const grid = getEl('#swatchGrid');
+      expect(grid.data.length).toBe(2);
+      expect(grid.data[0].swatchName).toBe('Coastal Blue Tweed');
+    });
+
+    it('displays swatch count text', async () => {
+      await onReadyHandler();
+      expect(getEl('#swatchCount').text).toContain('42');
+    });
+
+    it('sets up color filter dropdown with families', async () => {
+      await onReadyHandler();
+      const filter = getEl('#swatchColorFilter');
+      expect(filter.options.length).toBeGreaterThan(1);
+      expect(filter.options[0].label).toBe('All');
+      expect(filter.onChange).toHaveBeenCalled();
+    });
+
+    it('registers onItemReady handler on swatch grid', async () => {
+      await onReadyHandler();
+      const grid = getEl('#swatchGrid');
+      expect(grid.onItemReady).toHaveBeenCalled();
+    });
+
+    it('sets up View All Swatches click handler', async () => {
+      await onReadyHandler();
+      expect(getEl('#swatchViewAll').onClick).toHaveBeenCalled();
+    });
+
+    it('sets up Request Free Swatches click handler', async () => {
+      await onReadyHandler();
+      expect(getEl('#swatchRequestLink').onClick).toHaveBeenCalled();
+    });
+
+    it('expands swatch section when swatches are available', async () => {
+      await onReadyHandler();
+      expect(getEl('#swatchSection').expand).toHaveBeenCalled();
     });
   });
 
