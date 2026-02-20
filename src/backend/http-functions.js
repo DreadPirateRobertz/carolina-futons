@@ -266,9 +266,10 @@ export function get_manifest() {
   });
 }
 
-// PWA Service Worker
+// PWA Service Worker (EXPERIMENTAL — see STORY-010)
+// Wix Velo SW support is undocumented and appears broken since Aug 2023.
+// Kept for testing; do NOT register in production until Wix confirms support.
 // URL: GET https://www.carolinafutons.com/_functions/serviceWorker
-// Registered via: navigator.serviceWorker.register('/_functions/serviceWorker', { scope: '/' })
 export function get_serviceWorker() {
   const CACHE_NAME = 'cf-v1';
   const OFFLINE_URL = '/offline';
