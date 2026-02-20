@@ -66,6 +66,7 @@ function initProductVideoGrid() {
       }
 
       // Click to play
+      try { $item('#videoThumb').accessibility.ariaLabel = `Play ${itemData.title} video`; } catch (e) {}
       $item('#videoThumb').onClick(() => {
         playVideo(itemData);
       });
@@ -73,6 +74,7 @@ function initProductVideoGrid() {
 
     // Register product link handler once (slug updated via playVideo)
     try {
+      try { $w('#videoProductLink').accessibility.ariaLabel = 'Shop this product'; } catch (e) {}
       $w('#videoProductLink').onClick(() => {
         if (currentVideoProductSlug) {
           import('wix-location-frontend').then(({ to }) => {
@@ -90,14 +92,15 @@ function initProductVideoGrid() {
 function initVideoFilters() {
   try {
     const filterBtns = {
-      '#videoFilterAll': '',
-      '#videoFilterFutons': 'futon',
-      '#videoFilterMurphy': 'murphy',
-      '#videoFilterPlatform': 'platform',
+      '#videoFilterAll': { category: '', label: 'Show all videos' },
+      '#videoFilterFutons': { category: 'futon', label: 'Filter futon videos' },
+      '#videoFilterMurphy': { category: 'murphy', label: 'Filter Murphy bed videos' },
+      '#videoFilterPlatform': { category: 'platform', label: 'Filter platform bed videos' },
     };
 
-    Object.entries(filterBtns).forEach(([btnId, category]) => {
+    Object.entries(filterBtns).forEach(([btnId, { category, label }]) => {
       try {
+        try { $w(btnId).accessibility.ariaLabel = label; } catch (e) {}
         $w(btnId).onClick(() => {
           filterVideosByCategory(category);
           // Highlight active filter
