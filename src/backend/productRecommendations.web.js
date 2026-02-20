@@ -15,6 +15,8 @@ export const getRelatedProducts = webMethod(
         'murphy-cabinet-beds': ['casegoods-accessories', 'platform-beds'],
         'platform-beds': ['casegoods-accessories', 'mattresses'],
         'casegoods-accessories': ['platform-beds', 'futon-frames'],
+        'wall-huggers': ['mattresses', 'casegoods-accessories'],
+        'unfinished-wood': ['mattresses', 'casegoods-accessories'],
       };
 
       const relatedCategories = crossSellCategories[categorySlug] || [];
