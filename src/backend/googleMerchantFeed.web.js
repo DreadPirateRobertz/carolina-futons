@@ -2,6 +2,7 @@
 // Queries Wix Stores products and formats them for GMC XML/RSS feed
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { getImageUrl } from 'backend/utils/mediaHelpers';
 
 const SITE_URL = 'https://www.carolinafutons.com';
 const STORE_NAME = 'Carolina Futons';
@@ -113,22 +114,7 @@ function formatPrice(price) {
   return `${Number(price).toFixed(2)} USD`;
 }
 
-// Get Wix image URL, ensuring it's an absolute URL
-function getImageUrl(media) {
-  if (!media) return '';
-  if (typeof media === 'string') {
-    if (media.startsWith('http')) return media;
-    if (media.startsWith('wix:image:')) {
-      // Convert Wix media URL to static URL
-      const mediaId = media.replace('wix:image://v1/', '').split('/')[0].split('#')[0];
-      return `https://static.wixstatic.com/media/${mediaId}`;
-    }
-    return media;
-  }
-  if (media.src) return getImageUrl(media.src);
-  if (media.url) return media.url;
-  return '';
-}
+// getImageUrl imported from backend/utils/mediaHelpers
 
 // Format a single product as XML item for the feed
 function formatProductItem(product) {

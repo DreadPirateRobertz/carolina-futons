@@ -92,7 +92,7 @@ export const getProductSchema = webMethod(
           },
           shippingRate: {
             '@type': 'MonetaryAmount',
-            value: 0,
+            value: product.price >= 999 ? 0 : 49.99,
             currency: 'USD',
           },
         },
@@ -625,9 +625,7 @@ export const getProductMetaTags = webMethod(
       `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
       `<meta name="twitter:image" content="${escapeAttr(image)}" />`,
 
-      // Pinterest Rich Pin
-      `<meta property="og:price:amount" content="${price}" />`,
-      `<meta property="og:price:currency" content="USD" />`,
+      // Pinterest Rich Pin (uses product: namespace, same as OG product tags above)
     ];
 
     return tags.join('\n');
@@ -649,7 +647,7 @@ export const getCategoryMetaTags = webMethod(
   async (categorySlug, categoryName, imageUrl) => {
     const url = `${BUSINESS_INFO.url}/${categorySlug || ''}`;
     const title = `${categoryName || 'Shop'} | Carolina Futons`;
-    const description = getCategoryMetaDescription(categorySlug);
+    const description = getCategoryMetaDescriptionSync(categorySlug);
     const image = imageUrl || BUSINESS_INFO.logo;
 
     const tags = [

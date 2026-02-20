@@ -2,6 +2,7 @@
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
 import { ok, serverError } from 'wix-http-functions';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
+import { getImageUrl } from 'backend/utils/mediaHelpers';
 import wixData from 'wix-data';
 
 // Google Merchant Center product feed endpoint
@@ -58,7 +59,11 @@ export async function get_productSitemap() {
       { loc: '/mattresses', priority: '0.8', changefreq: 'weekly' },
       { loc: '/murphy-cabinet-beds', priority: '0.8', changefreq: 'weekly' },
       { loc: '/platform-beds', priority: '0.8', changefreq: 'weekly' },
+      { loc: '/wall-huggers', priority: '0.8', changefreq: 'weekly' },
+      { loc: '/unfinished-wood', priority: '0.8', changefreq: 'weekly' },
+      { loc: '/casegoods-accessories', priority: '0.7', changefreq: 'weekly' },
       { loc: '/sales', priority: '0.7', changefreq: 'daily' },
+      { loc: '/blog', priority: '0.6', changefreq: 'weekly' },
       { loc: '/product-videos', priority: '0.6', changefreq: 'weekly' },
       { loc: '/getting-it-home', priority: '0.5', changefreq: 'monthly' },
       { loc: '/contact', priority: '0.5', changefreq: 'monthly' },
@@ -123,7 +128,7 @@ export async function get_facebookCatalogFeed() {
     // Facebook catalog TSV format (tab-separated values)
     const headers = ['id', 'title', 'description', 'availability', 'condition', 'price',
       'link', 'image_link', 'brand', 'google_product_category', 'fb_product_category',
-      'sale_price', 'item_group_id'].join('\t');
+      'sale_price', 'item_group_id', 'content_type'].join('\t');
 
     const rows = products.items.map(p => {
       const availability = p.inStock !== false ? 'in stock' : 'out of stock';
@@ -132,6 +137,7 @@ export async function get_facebookCatalogFeed() {
       const brand = detectBrandFromProduct(p);
       const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
       const category = detectGoogleCategory(p);
+      const imageUrl = getImageUrl(p.mainMedia);
 
       return [
         p._id || '',
@@ -141,12 +147,13 @@ export async function get_facebookCatalogFeed() {
         'new',
         price,
         `${SITE_URL}/product-page/${p.slug}`,
-        p.mainMedia || '',
+        imageUrl,
         brand,
         category,
         'furniture > bedroom furniture',
         salePrice,
         (p.collections || [])[0] || '',
+        'product',
       ].join('\t');
     });
 
@@ -191,14 +198,16 @@ export async function get_pinterestProductFeed() {
       const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
       const category = detectGoogleCategory(p);
       const productType = detectProductType(p);
-      const additionalImages = (p.mediaItems || []).slice(1, 5).map(m => m.src || '').join(',');
+      const imageUrl = getImageUrl(p.mainMedia);
+      const additionalImages = (p.mediaItems || []).slice(1, 5)
+        .map(m => getImageUrl(m.src || m)).filter(Boolean).join(',');
 
       return [
         p._id || '',
         (p.name || '').replace(/[\t\n\r]/g, ' '),
         description,
         `${SITE_URL}/product-page/${p.slug}`,
-        p.mainMedia || '',
+        imageUrl,
         price,
         availability,
         brand,

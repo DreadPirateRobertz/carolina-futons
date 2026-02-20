@@ -386,8 +386,8 @@ describe('getProductMetaTags', () => {
 
   it('includes Pinterest Rich Pin price tags', async () => {
     const html = await getProductMetaTags(futonFrame);
-    expect(html).toContain('og:price:amount');
-    expect(html).toContain('og:price:currency');
+    expect(html).toContain('product:price:amount');
+    expect(html).toContain('product:price:currency');
     expect(html).toContain('USD');
   });
 
