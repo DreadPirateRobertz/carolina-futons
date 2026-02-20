@@ -1,6 +1,6 @@
 # Carolina Futons - Project Memory
 
-**Last updated**: 2026-02-20 (mayor session: 6 bugs fixed, 2 modules created, 248 tests green)
+**Last updated**: 2026-02-20 (sprint session: 6 new backend modules, 3 page updates, 372 tests green)
 **Repo**: `git@github.com:DreadPirateRobertz/carolina-futons.git`
 **Local path**: `/Users/hal/Projects/carolina-futons/`
 **Gas Town rig**: `cfutons` (prefix: `cf`)
@@ -26,27 +26,33 @@ See `src/public/designTokens.js` and `WIX-STUDIO-BUILD-SPEC.md` for full tokens.
 
 ---
 
-## Codebase Structure (37 source files)
+## Codebase Structure (43+ source files)
 
 ```
 src/
-├── backend/                              # Server-side Velo web modules (14 files)
-│   ├── analyticsHelpers.web.js           # Product view/cart tracking → ProductAnalytics CMS
+├── backend/                              # Server-side Velo web modules (20 files)
+│   ├── analyticsHelpers.web.js           # Product view/cart tracking + GA4 event builders
+│   ├── assemblyGuides.web.js             # Per-SKU assembly guides + category care tips (NEW)
+│   ├── cartRecovery.web.js               # Abandoned cart event handlers + recovery stats (NEW)
+│   ├── contactSubmissions.web.js          # Lead capture → ContactSubmissions CMS
+│   ├── couponsService.web.js             # Marketing coupons: welcome, birthday, tier (NEW)
 │   ├── dataService.web.js                # Centralized CMS data service (+1054 lines)
-│   ├── contactSubmissions.web.js          # Lead capture → ContactSubmissions CMS (back-in-stock, exit-intent)
+│   ├── deliveryScheduling.web.js         # Slot-based delivery scheduling Wed-Sat (NEW)
 │   ├── emailService.web.js               # Contact form + order notifications + swatch requests
 │   ├── fulfillment.web.js                # Order fulfillment: UPS shipments, labels, tracking
+│   ├── giftCards.web.js                  # Custom gift card system: codes, balance, redeem (NEW)
 │   ├── googleMerchantFeed.web.js         # Google Merchant Center XML feed
-│   ├── http-functions.js                 # HTTP endpoints for merchant feed
+│   ├── http-functions.js                 # HTTP endpoints: merchant feed, sitemap, FB/Pinterest feeds
+│   ├── loyaltyService.web.js             # Bronze/Silver/Gold loyalty tiers + rewards (NEW)
 │   ├── productRecommendations.web.js     # Cross-sell engine, featured/sale, bundles (all 8 cats)
 │   ├── promotions.web.js                 # Holiday/event promotional lightbox engine
-│   ├── seoHelpers.web.js                 # JSON-LD schemas (Product, LocalBusiness, FAQ, Breadcrumb)
-│   ├── shipping-rates-plugin.js          # Wix eCommerce SPI: checkout shipping options
+│   ├── seoHelpers.web.js                 # JSON-LD schemas + Open Graph + Pinterest Rich Pin meta
+│   ├── shipping-rates-plugin.js          # Wix eCommerce SPI: checkout + white-glove delivery
 │   ├── styleQuiz.web.js                  # "Find Your Perfect Futon" recommendation engine
 │   ├── swatchService.web.js              # Fabric swatch queries (FabricSwatches CMS)
 │   └── ups-shipping.web.js              # UPS REST API: OAuth, rates, labels, tracking, validation
 │
-├── pages/                                # One JS file per Wix page (21 files)
+├── pages/                                # One JS file per Wix page (22 files)
 │   ├── masterPage.js                     # Global: nav, announcement, search, SEO, exit-intent,
 │   │                                     #   side cart auto-open, compare bar, promo lightbox
 │   ├── Home.js                           # Hero, 8 categories, featured, sale, recently viewed,
@@ -61,9 +67,11 @@ src/
 │   ├── Side Cart.js                      # Slide-out: auto-open, tiered incentives, multi-suggest,
 │   │                                     #   variant details, animated removal
 │   ├── Checkout.js                       # Checkout: address validation, trust signals
-│   ├── Thank You Page.js                 # Post-purchase: social sharing, newsletter, recommendations
-│   ├── Member Page.js                    # Account: dashboard, orders with track/reorder, wishlist
-│   │                                     #   with sort/share, address book, comm prefs, logout
+│   ├── Thank You Page.js                 # Post-purchase: social share, newsletter, referral,
+│   │                                     #   care sequence enrollment, assembly guides
+│   ├── Member Page.js                    # Account: dashboard, orders, wishlist (sort/share 4 channels),
+│   │                                     #   loyalty points, address book, comm prefs
+│   ├── Blog.js                           # Blog: SEO schema, product sidebar, social share, newsletter (NEW)
 │   ├── About.js                          # Our Story: timeline, team gallery, JSON-LD
 │   ├── Contact.js                        # Contact form with validation → emailService backend
 │   ├── FAQ.js                            # Accordion FAQ with FAQPage schema
@@ -84,7 +92,8 @@ src/
                                           #   images (heroes, cards, about, contact, decorative)
 ```
 
-**Tests** (19 files in `tests/`): Vitest + Wix mocks, suites for gallery, product page, category page, home page, data service, analytics, email, fulfillment, recommendations, SEO, shipping. **All 248 tests passing** as of 2026-02-20.
+**Tests** (19 files in `tests/`): Vitest + Wix mocks. **372 tests passing** as of 2026-02-20 sprint.
+New test files: `loyaltyService.test.js` (12), `couponsService.test.js` (9), `cartRecovery.test.js` (7).
 
 ---
 
@@ -171,6 +180,10 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 | `FabricSwatches` | swatchId, swatchName, swatchImage, colorFamily, colorHex, material, careInstructions, availableForProducts, sortOrder | swatchService.web.js |
 | `Promotions` | title, subtitle, theme, heroImage, startDate, endDate, discountCode, discountPercent, ctaUrl, ctaText, productIds, isActive | promotions.web.js |
 | `MemberPreferences` | memberId, newsletter, saleAlerts, backInStock | Member Page |
+| `AbandonedCarts` | checkoutId, buyerEmail, cartTotal, itemCount, status, abandonedAt, recoveredAt | cartRecovery.web.js |
+| `DeliverySchedule` | orderId, date, timeWindow, type, status, notes | deliveryScheduling.web.js |
+| `AssemblyGuides` | sku, title, pdfUrl, videoUrl, estimatedTime, category | assemblyGuides.web.js |
+| `GiftCards` | code, initialBalance, currentBalance, purchaserEmail, recipientEmail, status, expiresAt | giftCards.web.js |
 
 ---
 
@@ -254,8 +267,9 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 | cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs Wix Dashboard |
 | cf-6wc | P2 | Metric tracking and customer engagement strategy | IN PROGRESS |
 
-### Features Completed This Session (2026-02-20)
+### Features Completed This Session (2026-02-20 — Sprint)
 
+**Previous session work:**
 - **contactSubmissions.web.js** — Lead capture backend (was import error)
 - **styleQuiz.web.js** — "Find Your Perfect Futon" recommendation engine
 - **Enhanced Thank You page** — Order summary, Brenda's message, delivery timeline, referral
@@ -263,9 +277,38 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 - **Wishlist SVG hearts** — Inline SVGs replacing broken wixstatic.com URLs
 - **getBestsellers()** — Added to productRecommendations.web.js
 
+**Sprint session (8-hour sprint):**
+- **Security remediation** — `backend/utils/sanitize.js`, admin auth checks, rate limiting (38 tests)
+- **loyaltyService.web.js** — Bronze/Silver/Gold tier system, points, rewards
+- **couponsService.web.js** — Welcome, birthday, tier upgrade coupons
+- **cartRecovery.web.js** — Abandoned cart event handlers, recovery stats
+- **deliveryScheduling.web.js** — Slot-based delivery scheduling (Wed-Sat)
+- **assemblyGuides.web.js** — Per-SKU guides + category care tips
+- **giftCards.web.js** — Custom gift card codes, balance tracking, redemption
+- **analyticsHelpers.web.js** — GA4 enhanced e-commerce event builders (ViewContent, AddToCart, etc.)
+- **shipping-rates-plugin.js** — White-glove delivery tier ($149 local, $249 regional, free >$1999)
+- **http-functions.js** — Facebook catalog feed + Pinterest product feed endpoints
+- **seoHelpers.web.js** — Open Graph, Pinterest Rich Pin, Twitter Card meta generators
+- **Blog.js** — New page: SEO schema, product sidebar, social share, newsletter
+- **Member Page.js** — Wishlist share (link/Pinterest/Facebook/Email), loyalty points display
+- **Thank You Page.js** — Post-purchase care sequence, assembly guide links
+- **PLUGIN-RECOMMENDATIONS.md** — Comprehensive Wix App Market plugin guide
+- **SOCIAL-MEDIA-STRATEGY.md** — Multi-platform social media playbook
+
+### Feed Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/_functions/googleShoppingFeed` | Google Merchant Center XML |
+| `/_functions/facebookCatalogFeed` | Facebook/Instagram Commerce TSV |
+| `/_functions/pinterestProductFeed` | Pinterest Catalogs TSV |
+| `/_functions/productSitemap` | Dynamic XML sitemap |
+| `/_functions/health` | Health check |
+
 ### Features Not Yet Implemented
 
 - **App development** (Wix Branded App)
+- **Wix Automations** — Email trigger configuration for care sequence (Day 3/7/30)
 
 ---
 
@@ -294,6 +337,9 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 | `WIX-BACKUP-PROCEDURE.md` | Pre-modification backup checklist |
 | `API-REFERENCE.md` | Backend API documentation (all web methods) |
 | `ARCHITECTURE.md` | System architecture guide |
+| `PLUGIN-RECOMMENDATIONS.md` | Wix App Market plugin guide (Must/Should/Nice-to-Have) |
+| `SOCIAL-MEDIA-STRATEGY.md` | Pinterest, Instagram, Facebook, TikTok playbook |
+| `report_to_human.md` | Sprint progress report |
 | `design.jpeg` | 6-page visual mockup |
 
 ---
