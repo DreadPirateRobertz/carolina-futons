@@ -35,6 +35,86 @@ export function trackProductView(product) {
   } catch (e) {
     // Session storage may not be available
   }
+
+  // Start enriched browse tracking for this product view
+  startBrowseTracking(product._id);
+}
+
+// ── Abandoned Browse Data Capture ─────────────────────────────────
+// Tracks engagement signals: time on page, scroll to pricing, variant interactions
+
+const BROWSE_DATA_KEY = 'cf_browse_data';
+
+function startBrowseTracking(productId) {
+  try {
+    const startTime = Date.now();
+    let scrolledToPricing = false;
+    let variantInteractions = 0;
+
+    // Track scroll to pricing section
+    const checkPricingScroll = () => {
+      try {
+        const pricingEl = typeof $w !== 'undefined' ? $w('#productPrice') : null;
+        if (pricingEl) {
+          scrolledToPricing = true;
+          window.removeEventListener('scroll', checkPricingScroll);
+        }
+      } catch (e) {}
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', checkPricingScroll, { passive: true });
+    }
+
+    // Track variant selector interactions
+    if (typeof $w !== 'undefined') {
+      try {
+        const sizeDropdown = $w('#sizeDropdown');
+        const finishDropdown = $w('#finishDropdown');
+        if (sizeDropdown) sizeDropdown.onChange(() => { variantInteractions++; });
+        if (finishDropdown) finishDropdown.onChange(() => { variantInteractions++; });
+      } catch (e) {}
+    }
+
+    // Record enriched data on page leave
+    const recordBrowseData = () => {
+      try {
+        const timeSpentMs = Date.now() - startTime;
+        const stored = sessionStorage.getItem(BROWSE_DATA_KEY);
+        let browseData = stored ? JSON.parse(stored) : {};
+
+        browseData[productId] = {
+          timeSpentMs,
+          scrolledToPricing,
+          variantInteractions,
+          timestamp: new Date().toISOString(),
+        };
+
+        sessionStorage.setItem(BROWSE_DATA_KEY, JSON.stringify(browseData));
+      } catch (e) {}
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', recordBrowseData);
+      // Also capture on visibility change (mobile tab switches)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          recordBrowseData();
+        }
+      });
+    }
+  } catch (e) {
+    // Browse tracking is non-critical
+  }
+}
+
+export function getBrowseData() {
+  try {
+    const stored = sessionStorage.getItem(BROWSE_DATA_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch (e) {
+    return {};
+  }
 }
 
 export function getRecentlyViewed(excludeId = null) {
