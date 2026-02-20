@@ -1,14 +1,12 @@
 // Product Page.ve2z7.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
-// gallery enhancement, lightbox, zoom, recently viewed, fabric swatch
-// visualizer, and SEO schema injection
+// gallery enhancement, and SEO schema injection
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
-import { getProductSwatches, getAllSwatchFamilies, getSwatchCount } from 'backend/swatchService.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
 import { submitSwatchRequest } from 'backend/emailService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
-import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages';
+import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
 let productVariants = [];
@@ -41,7 +39,11 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
-      initBackInStockNotification(),
+      initBundleSection(),
+      initStickyCartBar(),
+      initStockUrgency(),
+      initDeliveryEstimate(),
+      initWishlistButton(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
