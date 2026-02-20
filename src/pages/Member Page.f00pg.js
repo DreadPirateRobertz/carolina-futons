@@ -102,6 +102,20 @@ async function initDashboard() {
     if (pointsEl) {
       pointsEl.text = 'Coming Soon';
     }
+
+    // Quick links - scroll to page sections
+    const quickLinks = [
+      { id: '#dashQuickOrders', target: '#ordersRepeater' },
+      { id: '#dashQuickWishlist', target: '#wishlistRepeater' },
+      { id: '#dashQuickSettings', target: '#accountSettings' },
+    ];
+    for (const link of quickLinks) {
+      try {
+        $w(link.id).onClick(() => {
+          try { $w(link.target).scrollTo(); } catch (e) {}
+        });
+      } catch (e) {}
+    }
   } catch (e) {
     console.error('[MemberPage] Error initializing dashboard:', e);
   }
