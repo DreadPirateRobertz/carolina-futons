@@ -4,6 +4,8 @@ import { session } from 'wix-storage-frontend';
 
 import { colors, transitions } from 'public/designTokens.js';
 
+import { colors, transitions } from 'public/designTokens.js';
+
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
 const MAX_RECENT = 12;
