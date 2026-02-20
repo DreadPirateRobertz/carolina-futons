@@ -21,6 +21,13 @@ function initContactForm() {
     const submitBtn = $w('#contactSubmit');
     if (!submitBtn) return;
 
+    try { $w('#contactName').accessibility.ariaLabel = 'Your name'; } catch (e) {}
+    try { $w('#contactEmail').accessibility.ariaLabel = 'Your email address'; } catch (e) {}
+    try { $w('#contactPhone').accessibility.ariaLabel = 'Your phone number (optional)'; } catch (e) {}
+    try { $w('#contactSubject').accessibility.ariaLabel = 'Message subject (optional)'; } catch (e) {}
+    try { $w('#contactMessage').accessibility.ariaLabel = 'Your message'; } catch (e) {}
+    try { submitBtn.accessibility.ariaLabel = 'Send message to Carolina Futons'; } catch (e) {}
+
     submitBtn.onClick(async () => {
       // Validate required fields
       const name = $w('#contactName').value?.trim();
@@ -129,6 +136,7 @@ function initBusinessInfo() {
     $w('#infoPhoneLink').onClick(() => {
       import('wix-window-frontend').then(({ openUrl }) => openUrl('tel:+18282529449'));
     });
+    try { $w('#infoPhoneLink').accessibility.ariaLabel = 'Call Carolina Futons at (828) 252-9449'; } catch (e) {}
   } catch (e) {}
 
   // Directions button
@@ -138,6 +146,7 @@ function initBusinessInfo() {
         openUrl('https://maps.google.com/?q=824+Locust+St+Ste+200+Hendersonville+NC+28792');
       });
     });
+    try { $w('#directionsBtn').accessibility.ariaLabel = 'Get directions to our showroom'; } catch (e) {}
   } catch (e) {}
 }
 
