@@ -35,6 +35,7 @@ function initAccessibility() {
   try {
     const skipLink = $w('#skipToContent');
     if (skipLink) {
+      try { skipLink.accessibility.ariaLabel = 'Skip to main content'; } catch (e) {}
       skipLink.onClick(() => {
         try { $w('#mainContent').scrollTo(); } catch (e) {}
       });
@@ -112,11 +113,13 @@ function initNavigation() {
     const menuClose = $w('#mobileMenuClose');
 
     if (menuButton && mobileMenu) {
+      try { menuButton.accessibility.ariaLabel = 'Open navigation menu'; } catch (e) {}
       menuButton.onClick(() => {
         mobileMenu.show('fade', { duration: 200 });
       });
     }
     if (menuClose && mobileMenu) {
+      try { menuClose.accessibility.ariaLabel = 'Close navigation menu'; } catch (e) {}
       menuClose.onClick(() => {
         mobileMenu.hide('fade', { duration: 200 });
       });
@@ -165,6 +168,8 @@ function initSearch() {
   try {
     const searchInput = $w('#headerSearchInput');
     if (!searchInput) return;
+
+    try { searchInput.accessibility.ariaLabel = 'Search Carolina Futons'; } catch (e) {}
 
     searchInput.onKeyPress((event) => {
       if (event.key === 'Enter') {
@@ -240,6 +245,9 @@ function initFooterNewsletter() {
     const emailInput = $w('#footerEmailInput');
     const submitBtn = $w('#footerEmailSubmit');
     if (!emailInput || !submitBtn) return;
+
+    try { emailInput.accessibility.ariaLabel = 'Enter your email for newsletter'; } catch (e) {}
+    try { submitBtn.accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
 
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
@@ -443,6 +451,7 @@ function dismissLightbox(dismissKey) {
 function initPromoDismiss(promoId, dismissKey) {
   try {
     $w('#promoClose').onClick(() => dismissLightbox(dismissKey));
+    try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
   } catch (e) {}
   try {
     $w('#promoDismiss').onClick(() => dismissLightbox(dismissKey));
@@ -455,6 +464,7 @@ function initPromoDismiss(promoId, dismissKey) {
 function initPromoCopyCode(code) {
   try {
     if (!code) return;
+    try { $w('#promoCopyCode').accessibility.ariaLabel = 'Copy discount code'; } catch (e) {}
     $w('#promoCopyCode').onClick(() => {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         navigator.clipboard.writeText(code).then(() => {
@@ -473,6 +483,9 @@ function initPromoEmailCapture() {
     const emailInput = $w('#promoEmailInput');
     const emailSubmit = $w('#promoEmailSubmit');
     if (!emailInput || !emailSubmit) return;
+
+    try { emailInput.accessibility.ariaLabel = 'Enter your email for promotion'; } catch (e) {}
+    try { emailSubmit.accessibility.ariaLabel = 'Subscribe for promotion'; } catch (e) {}
 
     emailSubmit.onClick(async () => {
       const email = emailInput.value.trim();
@@ -561,6 +574,7 @@ function showExitPopup() {
     // Close handlers
     try {
       $w('#exitClose').onClick(() => dismissExitPopup());
+      try { $w('#exitClose').accessibility.ariaLabel = 'Close popup'; } catch (e) {}
     } catch (e) {}
     try {
       $w('#exitOverlay').onClick(() => dismissExitPopup());
@@ -568,6 +582,8 @@ function showExitPopup() {
 
     // Email capture form
     try {
+      try { $w('#exitEmailInput').accessibility.ariaLabel = 'Enter your email for offer'; } catch (e) {}
+      try { $w('#exitEmailSubmit').accessibility.ariaLabel = 'Get my offer'; } catch (e) {}
       $w('#exitEmailSubmit').onClick(async () => {
         const email = $w('#exitEmailInput').value?.trim();
         if (!email || !email.includes('@')) return;
@@ -608,6 +624,7 @@ function showExitPopup() {
 
     // "Request Swatches Instead" link → navigate to contact
     try {
+      try { $w('#exitSwatchLink').accessibility.ariaLabel = 'Request free fabric swatches'; } catch (e) {}
       $w('#exitSwatchLink').onClick(() => {
         dismissExitPopup();
         import('wix-location-frontend').then(({ to }) => to('/contact'));
