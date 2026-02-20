@@ -1,6 +1,7 @@
 // Fullscreen Page.vu50r.js - Product Videos / Gallery Fullscreen View
 // Full-screen product video and image gallery with engagement features
 import { getRelatedProducts } from 'backend/productRecommendations.web';
+import wixData from 'wix-data';
 
 $w.onReady(function () {
   initVideoGallery();
@@ -105,7 +106,6 @@ function filterVideosByCategory(category) {
     if (!category) {
       dataset.setFilter(null);
     } else {
-      const wixData = require('wix-data');
       dataset.setFilter(wixData.filter().contains('category', category));
     }
   } catch (e) {}

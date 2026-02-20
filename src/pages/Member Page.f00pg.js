@@ -52,9 +52,9 @@ function initWishlist() {
 
       $item('#wishRemoveBtn').onClick(() => {
         // Remove from wishlist via CMS
-        import('wix-data').then(async (wixData) => {
+        import('wix-data').then(async (mod) => {
           try {
-            await wixData.remove('Wishlist', itemData._id);
+            await mod.default.remove('Wishlist', itemData._id);
             $item('#wishCard').collapse();
           } catch (e) {}
         });

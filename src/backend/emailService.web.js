@@ -2,6 +2,7 @@
 // Handles contact form submissions and order notifications
 import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
+import wixData from 'wix-data';
 
 // Send contact form email to store
 export const sendEmail = webMethod(
@@ -31,7 +32,6 @@ export const sendEmail = webMethod(
       );
 
       // Also save to a CMS collection for record keeping
-      const wixData = await import('wix-data');
       await wixData.insert('ContactSubmissions', {
         name,
         email,

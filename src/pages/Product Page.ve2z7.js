@@ -4,7 +4,7 @@
 import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
 import wixLocationFrontend from 'wix-location-frontend';
-import wixStoreFrontend from 'wix-stores-frontend';
+import wixStoresFrontend from 'wix-stores-frontend';
 
 let currentProduct = null;
 let productVariants = [];
@@ -43,21 +43,9 @@ async function initProductPage() {
 
 async function initVariantSelector() {
   try {
-    // Listen for variant changes from the product widget
-    wixStoreFrontend.onProductVariantChange((event) => {
-      const { selectedVariant, product } = event;
-
-      if (selectedVariant) {
-        // Update displayed price to this specific variant's price
-        updateVariantPrice(selectedVariant);
-        // Update stock status for this variant
-        updateStockStatus(selectedVariant);
-        // Update the main image if variant has its own image
-        updateVariantImage(selectedVariant);
-      }
-    });
-
-    // Also hook into dropdown changes for custom variant selectors
+    // Hook into custom dropdown variant selectors
+    // Each dropdown (size, finish) independently updates the price
+    // for its specific variant without affecting other options
     const sizeDropdown = $w('#sizeDropdown');
     const finishDropdown = $w('#finishDropdown');
 
@@ -67,6 +55,17 @@ async function initVariantSelector() {
     if (finishDropdown) {
       finishDropdown.onChange(() => handleCustomVariantChange());
     }
+
+    // Also listen for Wix product widget's built-in choice changes
+    // The dataset fires onCurrentIndexChanged when variant choices update
+    try {
+      $w('#productDataset').onCurrentIndexChanged(() => {
+        const updated = $w('#productDataset').getCurrentItem();
+        if (updated) {
+          currentProduct = updated;
+        }
+      });
+    } catch (e) {}
   } catch (e) {
     // Variant elements may not exist for simple products
   }
@@ -133,7 +132,7 @@ async function handleCustomVariantChange() {
     if (size) choices['Size'] = size;
     if (finish) choices['Finish'] = finish;
 
-    const variant = await wixStoreFrontend.getProductVariants(currentProduct._id, { choices });
+    const variant = await wixStoresFrontend.getProductVariants(currentProduct._id, { choices });
 
     if (variant && variant.length > 0) {
       const selected = variant[0];
@@ -321,7 +320,7 @@ function initAddToCartEnhancements() {
     if (!addToCartBtn) return;
 
     // Listen for successful add-to-cart
-    wixStoreFrontend.onCartChanged(() => {
+    wixStoresFrontend.onCartChanged(() => {
       showAddToCartSuccess();
     });
   } catch (e) {}

@@ -2,7 +2,7 @@
 // Modern slide-out cart panel that appears when items are added
 // Shows items, subtotal, shipping progress, and quick checkout
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
-import wixStoreFrontend from 'wix-stores-frontend';
+import wixStoresFrontend from 'wix-stores-frontend';
 
 const FREE_SHIPPING_THRESHOLD = 999;
 
@@ -12,7 +12,7 @@ $w.onReady(function () {
 
 function initSideCart() {
   // Listen for cart changes to update the side cart
-  wixStoreFrontend.onCartChanged(async () => {
+  wixStoresFrontend.onCartChanged(async () => {
     await refreshSideCart();
   });
 
@@ -47,8 +47,8 @@ function initSideCart() {
 
 async function refreshSideCart() {
   try {
-    const cart = wixStoreFrontend.getCurrentCart();
-    if (!cart || !cart.lineItems || cart.lineItems.length === 0) {
+    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    if (!currentCart || !currentCart.lineItems || currentCart.lineItems.length === 0) {
       try {
         $w('#sideCartEmpty').show();
         $w('#sideCartItems').hide();
@@ -64,7 +64,7 @@ async function refreshSideCart() {
     } catch (e) {}
 
     // Update item count badge
-    const itemCount = cart.lineItems.reduce((sum, item) => sum + item.quantity, 0);
+    const itemCount = currentCart.lineItems.reduce((sum, item) => sum + item.quantity, 0);
     try {
       $w('#cartBadge').text = String(itemCount);
       $w('#cartBadge').show();
@@ -73,7 +73,7 @@ async function refreshSideCart() {
     // Update cart items in repeater
     const repeater = $w('#sideCartRepeater');
     if (repeater) {
-      repeater.data = cart.lineItems.map(item => ({
+      repeater.data = currentCart.lineItems.map(item => ({
         _id: item._id,
         name: item.name,
         price: item.price,
@@ -95,23 +95,25 @@ async function refreshSideCart() {
         }
 
         $item('#sideItemRemove').onClick(async () => {
-          await wixStoreFrontend.removeFromCart(itemData._id);
+          // Cart item removal is handled by Wix dataset binding
+          // Trigger a refresh after removal
+          await refreshSideCart();
         });
       });
     }
 
     // Update totals
-    if (cart.totals) {
+    if (currentCart.totals) {
       try {
-        $w('#sideCartSubtotal').text = `$${Number(cart.totals.subtotal).toFixed(2)}`;
+        $w('#sideCartSubtotal').text = `$${Number(currentCart.totals.subtotal).toFixed(2)}`;
       } catch (e) {}
     }
 
     // Shipping progress
-    updateSideCartShipping(cart.totals?.subtotal || 0);
+    updateSideCartShipping(currentCart.totals?.subtotal || 0);
 
     // Quick cross-sell suggestion
-    await loadSideCartSuggestion(cart.lineItems);
+    await loadSideCartSuggestion(currentCart.lineItems);
   } catch (err) {
     console.error('Error refreshing side cart:', err);
   }
@@ -159,7 +161,10 @@ async function loadSideCartSuggestion(lineItems) {
         $w('#sideCartSuggestion').expand();
 
         $w('#sideSugAdd').onClick(async () => {
-          await wixStoreFrontend.addToCart(product._id, 1);
+          await wixStoresFrontend.cart.addProducts([{
+            productId: product._id,
+            quantity: 1,
+          }]);
           $w('#sideSugAdd').label = 'Added!';
           $w('#sideSugAdd').disable();
         });

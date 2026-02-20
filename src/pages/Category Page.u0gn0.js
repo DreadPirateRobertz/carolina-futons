@@ -252,8 +252,8 @@ function openQuickView(product) {
 
     $w('#qvAddToCart').onClick(async () => {
       try {
-        const wixStoreFrontend = await import('wix-stores-frontend');
-        await wixStoreFrontend.addToCart(product._id, 1);
+        const { default: wixStoresFrontend } = await import('wix-stores-frontend');
+        await wixStoresFrontend.cart.addProducts([{ productId: product._id, quantity: 1 }]);
         $w('#qvAddToCart').label = 'Added!';
         setTimeout(() => {
           $w('#quickViewModal').hide('fade', { duration: 200 });

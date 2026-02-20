@@ -125,10 +125,9 @@ export const getCompletionSuggestions = webMethod(
       // Fallback: suggest bestsellers if no specific match
       if (suggestions.length === 0) {
         const popular = await wixData.query('Stores/Products')
-          .hasSome('_id', cartProductIds)
-          .not()
+          .not(wixData.query('Stores/Products').hasSome('_id', cartProductIds))
           .limit(4)
-          .descending('numericRating')
+          .descending('_createdDate')
           .find();
         if (popular.items.length > 0) {
           suggestions.push({
