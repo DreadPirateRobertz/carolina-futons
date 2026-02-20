@@ -22,6 +22,7 @@ import wixWindowFrontend from 'wix-window-frontend';
 let currentProduct = null;
 let productVariants = [];
 let selectedSwatchId = null;
+let selectedQuantity = 1;
 
 $w.onReady(async function () {
   await initProductPage();
@@ -52,6 +53,7 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
+      initQuantitySelector(),
       initProductBadge(),
       initProductVideo(),
       initBundleSection(),
@@ -64,6 +66,7 @@ async function initProductPage() {
     initStickyCartBar();
     initDeliveryEstimate();
     initSwatchRequest();
+    initProductInfoAccordion();
 
     // Mobile: collapse non-essential sections, add back-to-top
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
@@ -188,6 +191,9 @@ async function handleCustomVariantChange() {
       const selected = variant[0];
       updateVariantPrice({ variant: selected });
       updateStockStatus(selected);
+      updateVariantImage(selected);
+      // Sync sticky cart bar price with new variant
+      updateStickyPrice(selected);
     }
   } catch (e) {
     console.error('Error handling variant change:', e);
@@ -552,11 +558,13 @@ async function loadCollectionProducts() {
       $item('#collectionName').text = itemData.name;
       $item('#collectionPrice').text = itemData.formattedPrice;
 
-      $item('#collectionImage').onClick(() => {
+      const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
-      });
+      };
+      $item('#collectionImage').onClick(navigateToProduct);
+      $item('#collectionName').onClick(navigateToProduct);
     });
     repeater.data = collectionProducts;
   } catch (err) {
@@ -683,20 +691,12 @@ function initProductBadge() {
 }
 
 // ── Image Preloading ────────────────────────────────────────────────
-// Preload gallery thumbnails for smoother browsing
+// Gallery images are preloaded by Wix's built-in gallery component.
+// No manual preloading needed — Wix Velo doesn't support new Image().
 
 function preloadGalleryThumbnails() {
-  try {
-    const gallery = $w('#productGallery');
-    if (!gallery || !gallery.items) return;
-
-    gallery.items.forEach(item => {
-      if (item.src) {
-        const img = new Image();
-        img.src = item.src;
-      }
-    });
-  } catch (e) {}
+  // Intentional no-op: Wix gallery handles its own image loading.
+  // Kept as stub in case future Wix API exposes preload controls.
 }
 
 // ── Breadcrumbs ─────────────────────────────────────────────────────
@@ -870,6 +870,56 @@ async function updateBackInStockVisibility(section) {
   }
 }
 
+// ── Quantity Selector ──────────────────────────────────────────────
+// +/- buttons to set quantity before add-to-cart
+
+function initQuantitySelector() {
+  try {
+    const qtyInput = $w('#quantityInput');
+    const qtyMinus = $w('#quantityMinus');
+    const qtyPlus = $w('#quantityPlus');
+    if (!qtyInput) return;
+
+    qtyInput.value = '1';
+    selectedQuantity = 1;
+
+    // Accessibility: label the quantity controls
+    try { qtyInput.accessibility.ariaLabel = 'Product quantity'; } catch (e) {}
+    try { qtyMinus.accessibility.ariaLabel = 'Decrease quantity'; } catch (e) {}
+    try { qtyPlus.accessibility.ariaLabel = 'Increase quantity'; } catch (e) {}
+
+    qtyInput.onInput(() => {
+      const val = parseInt(qtyInput.value, 10);
+      if (val > 0 && val <= 99) {
+        selectedQuantity = val;
+      } else {
+        selectedQuantity = 1;
+        qtyInput.value = '1';
+      }
+    });
+
+    if (qtyMinus) {
+      qtyMinus.onClick(() => {
+        if (selectedQuantity > 1) {
+          selectedQuantity--;
+          qtyInput.value = String(selectedQuantity);
+        }
+      });
+    }
+
+    if (qtyPlus) {
+      qtyPlus.onClick(() => {
+        if (selectedQuantity < 99) {
+          selectedQuantity++;
+          qtyInput.value = String(selectedQuantity);
+        }
+      });
+    }
+  } catch (e) {
+    // Quantity selector elements may not exist — default to 1
+  }
+}
+
 // ── Add to Cart Enhancements ────────────────────────────────────────
 // Success feedback and cross-sell prompt after adding to cart
 
@@ -878,7 +928,28 @@ function initAddToCartEnhancements() {
     const addToCartBtn = $w('#addToCartButton');
     if (!addToCartBtn) return;
 
-    // Listen for successful add-to-cart
+    // Override default add-to-cart to support quantity selection
+    addToCartBtn.onClick(async () => {
+      if (!currentProduct) return;
+      try {
+        addToCartBtn.disable();
+        addToCartBtn.label = 'Adding...';
+        await addToCart(currentProduct._id, selectedQuantity);
+        trackCartAdd(currentProduct, selectedQuantity);
+        addToCartBtn.label = 'Added!';
+      } catch (err) {
+        console.error('Error adding to cart:', err);
+        addToCartBtn.label = 'Error — Try Again';
+      }
+      setTimeout(() => {
+        try {
+          addToCartBtn.label = 'Add to Cart';
+          addToCartBtn.enable();
+        } catch (e) {}
+      }, 2000);
+    });
+
+    // Listen for successful add-to-cart (covers side cart trigger)
     onCartChanged(() => {
       showAddToCartSuccess();
     });
@@ -1024,7 +1095,14 @@ async function handleSwatchSubmit() {
     }, 3000);
   } catch (err) {
     console.error('Error submitting swatch request:', err);
-    try { $w('#swatchSubmit').enable(); } catch (e) {}
+    try {
+      $w('#swatchSubmit').enable();
+      const errorMsg = $w('#swatchError');
+      if (errorMsg) {
+        errorMsg.text = 'Something went wrong. Please call us at (828) 252-9449.';
+        errorMsg.show('fade', { duration: 300 });
+      }
+    } catch (e) {}
   }
 }
 
@@ -1080,6 +1158,70 @@ function initProductVideo() {
   }
 }
 
+// ── Product Info Accordion ─────────────────────────────────────────
+// Collapsible sections for Description, Dimensions, Care, Shipping
+
+function initProductInfoAccordion() {
+  try {
+    // Each accordion section has a header button and content box:
+    //   #infoHeaderDescription / #infoContentDescription
+    //   #infoHeaderDimensions  / #infoContentDimensions
+    //   #infoHeaderCare        / #infoContentCare
+    //   #infoHeaderShipping    / #infoContentShipping
+    const sections = ['Description', 'Dimensions', 'Care', 'Shipping'];
+    const openStates = {};
+
+    sections.forEach(section => {
+      try {
+        const header = $w(`#infoHeader${section}`);
+        const content = $w(`#infoContent${section}`);
+        if (!header || !content) return;
+
+        // Accessibility: mark headers as expandable controls
+        try { header.accessibility.ariaLabel = `${section} section`; } catch (e) {}
+
+        // Start with Description expanded, others collapsed
+        if (section === 'Description') {
+          content.expand();
+          openStates[section] = true;
+          try { $w(`#infoArrow${section}`).text = '−'; } catch (e) {}
+          try { header.accessibility.ariaExpanded = true; } catch (e) {}
+        } else {
+          content.collapse();
+          openStates[section] = false;
+          try { $w(`#infoArrow${section}`).text = '+'; } catch (e) {}
+          try { header.accessibility.ariaExpanded = false; } catch (e) {}
+        }
+
+        header.onClick(() => {
+          if (openStates[section]) {
+            content.collapse();
+            openStates[section] = false;
+            try { $w(`#infoArrow${section}`).text = '+'; } catch (e) {}
+            try { header.accessibility.ariaExpanded = false; } catch (e) {}
+          } else {
+            content.expand();
+            openStates[section] = true;
+            try { $w(`#infoArrow${section}`).text = '−'; } catch (e) {}
+            try { header.accessibility.ariaExpanded = true; } catch (e) {}
+          }
+        });
+      } catch (e) {}
+    });
+
+    // Populate shipping info from store constants
+    try {
+      $w('#infoContentShipping').text =
+        'Free standard shipping on orders over $999. ' +
+        'White-glove delivery available: $149 local (WNC), $249 regional, free on orders over $1,999. ' +
+        'Standard delivery: 5–10 business days. ' +
+        'Local customers: call (828) 252-9449 to schedule Wed–Sat delivery.';
+    } catch (e) {}
+  } catch (e) {
+    // Accordion elements may not exist — non-critical
+  }
+}
+
 // ── Social Share Buttons ────────────────────────────────────────────
 // Share product on Facebook, Pinterest, and copy link
 
@@ -1089,6 +1231,12 @@ function initSocialShare() {
     const url = `https://www.carolinafutons.com/product-page/${currentProduct.slug}`;
     const title = currentProduct.name;
     const image = currentProduct.mainMedia || '';
+
+    // Accessibility: label share buttons
+    try { $w('#shareFacebook').accessibility.ariaLabel = 'Share on Facebook'; } catch (e) {}
+    try { $w('#sharePinterest').accessibility.ariaLabel = 'Share on Pinterest'; } catch (e) {}
+    try { $w('#shareEmail').accessibility.ariaLabel = 'Share via email'; } catch (e) {}
+    try { $w('#shareCopyLink').accessibility.ariaLabel = 'Copy product link'; } catch (e) {}
 
     // Facebook
     try {
@@ -1106,6 +1254,18 @@ function initSocialShare() {
         trackSocialShare('pinterest', 'product');
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(image)}&description=${encodeURIComponent(title)}`);
+        });
+      });
+    } catch (e) {}
+
+    // Email share
+    try {
+      $w('#shareEmail').onClick(() => {
+        trackSocialShare('email', 'product');
+        const subject = encodeURIComponent(`Check out ${title} from Carolina Futons`);
+        const body = encodeURIComponent(`I thought you might like this: ${title}\n\n${url}`);
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(`mailto:?subject=${subject}&body=${body}`);
         });
       });
     } catch (e) {}
@@ -1174,11 +1334,23 @@ async function initBundleSection() {
 
     try {
       $w('#addBundleBtn').onClick(async () => {
-        $w('#addBundleBtn').disable();
-        $w('#addBundleBtn').label = 'Adding...';
-        await addToCart(currentProduct._id);
-        await addToCart(bundle.product._id);
-        $w('#addBundleBtn').label = 'Bundle Added!';
+        try {
+          $w('#addBundleBtn').disable();
+          $w('#addBundleBtn').label = 'Adding...';
+          await addToCart(currentProduct._id, selectedQuantity);
+          await addToCart(bundle.product._id, 1);
+          $w('#addBundleBtn').label = 'Bundle Added!';
+          trackCartAdd(currentProduct, selectedQuantity);
+        } catch (err) {
+          console.error('Error adding bundle to cart:', err);
+          $w('#addBundleBtn').label = 'Error — Try Again';
+        }
+        setTimeout(() => {
+          try {
+            $w('#addBundleBtn').label = 'Add Both to Cart';
+            $w('#addBundleBtn').enable();
+          } catch (e) {}
+        }, 3000);
       });
     } catch (e) {}
 
@@ -1198,6 +1370,14 @@ async function initBundleSection() {
 // ── Sticky Add-to-Cart Bar ───────────────────────────────────────
 // Fixed bottom bar appears when main Add to Cart scrolls out of view
 
+function updateStickyPrice(variant) {
+  try {
+    if (variant && variant.price) {
+      $w('#stickyPrice').text = formatCurrency(variant.price);
+    }
+  } catch (e) {}
+}
+
 function initStickyCartBar() {
   try {
     const stickyBar = $w('#stickyCartBar');
@@ -1212,16 +1392,23 @@ function initStickyCartBar() {
       try { $w('#stickyPrice').text = currentProduct.formattedPrice; } catch (e) {}
     }
 
-    // Sticky Add to Cart mirrors the main button
+    // Sticky Add to Cart mirrors the main button (respects quantity)
     try {
       $w('#stickyAddBtn').onClick(async () => {
-        $w('#stickyAddBtn').disable();
-        $w('#stickyAddBtn').label = 'Adding...';
-        await addToCart(currentProduct._id);
-        $w('#stickyAddBtn').label = 'Added!';
+        try {
+          $w('#stickyAddBtn').disable();
+          $w('#stickyAddBtn').label = 'Adding...';
+          await addToCart(currentProduct._id, selectedQuantity);
+          trackCartAdd(currentProduct, selectedQuantity);
+          $w('#stickyAddBtn').label = 'Added!';
+        } catch (err) {
+          $w('#stickyAddBtn').label = 'Error — Try Again';
+        }
         setTimeout(() => {
-          $w('#stickyAddBtn').label = 'Add to Cart';
-          $w('#stickyAddBtn').enable();
+          try {
+            $w('#stickyAddBtn').label = 'Add to Cart';
+            $w('#stickyAddBtn').enable();
+          } catch (e) {}
         }, 2000);
       });
     } catch (e) {}
@@ -1308,14 +1495,17 @@ function initDeliveryEstimate() {
     el.text = `Estimated delivery: ${minStr} – ${maxStr}`;
     el.show();
 
-    // Local delivery for Asheville-area ZIPs (287-289 prefix)
+    // White-glove delivery note for furniture items
     try {
-      import('wix-site-frontend').then(site => {
-        const zip = site.currentPage?.visitorZip || '';
-        if (/^28[789]/.test(zip)) {
-          el.text = `Local delivery available — call for scheduling`;
+      const isLargeItem = currentProduct.weight > 50 ||
+        (currentProduct.collections || []).some(c => /murphy|platform|futon|frame/i.test(c));
+      if (isLargeItem) {
+        const whiteGloveEl = $w('#whiteGloveNote');
+        if (whiteGloveEl) {
+          whiteGloveEl.text = 'White-glove delivery available — call (828) 252-9449 to schedule';
+          whiteGloveEl.show();
         }
-      });
+      }
     } catch (e) {}
   } catch (e) {}
 }
@@ -1406,5 +1596,10 @@ function setWishlistActive(active) {
     if (icon) {
       icon.src = active ? HEART_FILLED_SVG : HEART_OUTLINE_SVG;
     }
+    // Update ARIA label to reflect current state
+    try {
+      const btn = $w('#wishlistBtn');
+      btn.accessibility.ariaLabel = active ? 'Remove from wishlist' : 'Add to wishlist';
+    } catch (e) {}
   } catch (e) {}
 }
