@@ -1,9 +1,9 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 13:48 MST
+**Last Updated:** 2026-02-20 13:53 MST
 **Sprint:** Full Stack Improvements + Crew Sprint
-**Status:** ACTIVE — 3 crew members executing
-**Tests:** 505 passing across 25 test files
+**Status:** ACTIVE — 3 crew members executing (roles restructured)
+**Tests:** 587 passing across 30 test files
 **All tests green.**
 
 ---
@@ -12,9 +12,9 @@
 
 | Crew | Role | Current Task | Last Commit |
 |------|------|-------------|-------------|
-| **melania** | Lead / Strategy | Reviewing stories, updating plans/reports | `a517cfb` report + SPRINT-PLAN |
-| **caesar** | UX / Design | Implementing social-feed-og-audit (3 bugs found) | `1347f61` feed audit story |
-| **radahn** | Tests / Stories | STORY-005 cart recovery dupes → STORY-006 swatchService tests | `440ae7a` STORY-006 submitted |
+| **melania** | Crew Lead / Quality Gate | Design sessions, story review, driving crew | `3c92d91` sprint plan + report |
+| **caesar** | PRIMARY WEB DEVELOPER | Feed bug fixes → design token + ARIA stories | `1347f61` feed audit story |
+| **radahn** | PRIMARY MOBILE DEVELOPER | Mobile app proposal → STORY revisions | `6a3317d` STORY-005 fix |
 
 ---
 
@@ -89,7 +89,9 @@
 | Pre-sprint baseline | 19 | 372 | — |
 | After sprint (morning) | 22 | 421 | +49 |
 | After crew session start | 23 | 479 | +58 |
-| Current (13:48 MST) | 25 | 505 | +26 (promotions +9, styleQuiz +17) |
+| +promotions, styleQuiz | 25 | 505 | +26 |
+| +swatchSvc, contactSub, merchantFeed | 28 | 553 | +48 |
+| +designTokens, galleryConfig + STORY-005 | 30 | 587 | +34 |
 
 **New test files this crew session:**
 - `tests/seoHelpers.test.js` — expanded +29 tests (Radahn)
@@ -170,4 +172,32 @@
 
 ---
 
-*Report maintained by melania (crew lead). Updated after each crew commit.*
+---
+
+## Design Session Results (13:50 MST)
+
+melania conducted a full UX pattern audit across all 21 page files. Key findings:
+
+| Finding | Severity | Action |
+|---------|----------|--------|
+| **Design tokens defined but 0% import usage** | HIGH | Caesar to write story: import tokens into top 5 pages |
+| **ARIA coverage only 29% (6/21 pages)** | HIGH | Caesar to write story: ARIA pass on remaining 15 pages |
+| **230 try/catch blocks in Product Page** | MEDIUM | Radahn to revise STORY-004 with exact counts per file |
+| **80% of catches are silent `catch(e){}`** | MEDIUM | Radahn to write STORY-008: shared errorHandler.js |
+| **Loading state pattern is consistent** | GOOD | Document as standard — no action needed |
+
+---
+
+## Role Restructuring (13:52 MST — per human orders)
+
+| Before | After |
+|--------|-------|
+| Caesar: UX / Design generalist | Caesar: **PRIMARY WEBSITE DEVELOPER** — owns all web pages, desktop UX, responsive design, design tokens, ARIA |
+| Radahn: Tests / Stories generalist | Radahn: **PRIMARY MOBILE APP DEVELOPER** — owns mobile-first patterns, mobile app features, touch UX |
+| Both report to melania | Both submit stories to melania for approval. Nothing ships without review. |
+
+**Mobile app evaluation in progress**: Radahn is writing a proposal evaluating Wix Branded App vs PWA vs React Native.
+
+---
+
+*Report maintained by melania (crew lead). Updated after each crew commit and design session.*

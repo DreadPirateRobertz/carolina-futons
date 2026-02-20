@@ -1,19 +1,48 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 553 tests across 28 files (all passing)
-**Last Push**: 7f5ecaa
-**Updated by**: melania (crew lead) — 2026-02-20 13:48 MST
+**Test Suite**: 587 tests across 30 files (all passing)
+**Last Push**: f0cf4c5
+**Updated by**: melania (crew lead) — 2026-02-20 13:53 MST
 
 ---
 
-## Active Crew
+## Crew Roles (Restructured per Human Orders)
 
-| Crew | Focus | Current Task |
-|------|-------|-------------|
-| **melania** | Crew Lead & Strategist | Reviewing stories, updating plans/reports, driving crew |
-| **caesar** | Design, UX, social/marketing | Implementing social-feed-og-audit (3 bugs + 3 improvements) |
-| **radahn** | Code quality, TDD, stories | STORY-005 (cart recovery dupes) → STORY-006 (swatchService tests) |
+| Crew | Role | Owns | Current Task |
+|------|------|------|-------------|
+| **melania** | Crew Lead / Quality Gate / Strategist | Sprint plan, report, story approval, design sessions | Updating docs, reviewing stories, driving crew |
+| **caesar** | PRIMARY WEBSITE DEVELOPER | All web pages, desktop UX, responsive design, design tokens, ARIA, visual polish | Feed bug fixes → design token + ARIA stories |
+| **radahn** | PRIMARY MOBILE APP DEVELOPER | Mobile-first patterns, mobile app features, touch UX, mobile-specific code/tests | Mobile app proposal → STORY-004/007/008 revisions |
+
+**Workflow**: Both submit SHORT stories to melania for approval before implementing. Nothing ships without review.
+
+---
+
+## Design Session Findings (2026-02-20 13:50 MST)
+
+### Critical Issues Identified
+
+| Issue | Severity | Owner | Action |
+|-------|----------|-------|--------|
+| Design tokens defined but 0% import usage | HIGH | caesar | Write story to import tokens into top 5 pages |
+| ARIA coverage only 29% (6/21 pages) | HIGH | caesar | Write story for ARIA pass on remaining 15 pages |
+| 230 try/catch blocks in Product Page alone | MEDIUM | radahn | Revise STORY-004 with hard numbers per file |
+| 80% of catch blocks are silent `catch(e){}` | MEDIUM | radahn | Write STORY-008 for shared errorHandler.js |
+| No centralized error boundary | MEDIUM | radahn | Part of STORY-008 |
+| Loading state pattern is excellent and consistent | — | — | Document as standard (no action needed) |
+
+### UX Patterns Audit Summary
+
+| Pattern | Consistency | Coverage | Status |
+|---------|-------------|----------|--------|
+| Loading states (Adding.../Added!/Error) | HIGH | 71% | Standard — document and maintain |
+| Error messaging | MODERATE | 58% | Needs centralization (STORY-008) |
+| ARIA labels | LOW | 29% | Needs expansion (caesar story) |
+| Design token usage | NONE | 0% | Critical — tokens exist, not imported (caesar story) |
+| Try/catch defensive coding | HIGH | 100% | Needs rationalization (STORY-004 rev) |
+
+---
 
 ## Mayor Completed This Sprint
 
@@ -29,59 +58,62 @@
 10. Post-purchase care sequence on Thank You Page
 11. PLUGIN-RECOMMENDATIONS.md + SOCIAL-MEDIA-STRATEGY.md
 12. 3 new test suites: giftCards (18), deliveryScheduling (16), assemblyGuides (15)
-13. Bug fix: gift card code sanitize truncation
-14. swatchService tests (16 tests): product swatches, color families, count, preview colors
-15. contactSubmissions tests (11 tests): form submit, sanitization, rate limiting, validation
-16. googleMerchantFeed tests (21 tests): XML feed generation, pricing, brands, categories, JSON feed
-17. wix-data mock: added skip() method
+13. Gift card code sanitize truncation fix
+14. 3 more test suites: swatchService (16), contactSubmissions (11), googleMerchantFeed (20)
+15. 2 more test suites: designTokens (18), galleryConfig (12)
 
 ## Crew Completed This Session
 
-### Caesar — UX Audit (P0) COMPLETE
-- [x] Product Page audit: 9 improvements — variant image sync, bundle button fix, quantity selector, accordion, ARIA (`6650a90`)
-- [x] Category Page audit: N+1 query fix, bestselling sort, breadcrumbs, quick view states, ARIA (`c43e029`)
-- [x] Cart Page audit: quantity/remove wired to API (were no-ops), empty state, 4→1 cart fetches (`dd893da`)
-- [x] Side Cart audit: remove wired to API (was animation-only), dedup handlers, error states, ARIA (`6462f12`)
-- [x] Checkout audit: ARIA labels on order notes (`125aa37`)
-- [x] wix-data mock: added or(), contains(), distinct(), count() (`3307557`)
+### Caesar — UX Audit (P0) COMPLETE + Social Audit IN PROGRESS
+- [x] Product Page UX audit: 9 improvements (`6650a90`)
+- [x] Category Page UX audit: N+1 fix, sort, breadcrumbs, ARIA (`c43e029`)
+- [x] Cart Page UX audit: quantity/remove API, empty state, 4→1 fetches (`dd893da`)
+- [x] Side Cart UX audit: remove API, dedup handlers, ARIA (`6462f12`)
+- [x] Checkout ARIA labels (`125aa37`)
+- [x] wix-data mock: or(), contains(), distinct(), count() (`3307557`)
+- [x] Social feed & OG meta audit story filed (`1347f61`)
+- [ ] Feed bug fixes: broken wix:image URLs, [object Promise] OG, shipping schema (IN PROGRESS)
+- [ ] Design token import story (PENDING)
+- [ ] ARIA expansion story (PENDING)
 
-### Radahn — Test Coverage (P0) + Stories
-- [x] seoHelpers tests: +29 tests — OG, Twitter Card, Rich Pin, WebSite, Collection schemas (`017600b`)
-- [x] shipping-rates-plugin tests: +8 tests — white-glove tiers, local delivery (`84e231e`)
-- [x] httpFunctions tests: +22 tests — feeds, sitemap, health endpoint + new mock (`80cf2f4`)
-- [x] promotions tests: +9 tests — active/inactive/expired campaigns (`de8aaf8`)
-- [x] styleQuiz tests: +17 tests — scoring, collection matching, budget filtering (`de8aaf8`)
-- [x] 5 stories filed: STORY-001 through STORY-005 (`24b4fd0`)
-- [x] STORY-006 filed: swatchService tests (`440ae7a`)
+### Radahn — Tests (P0) COMPLETE + STORY-005 DONE
+- [x] seoHelpers +29 tests (`017600b`)
+- [x] shipping-rates-plugin +8 tests (`84e231e`)
+- [x] httpFunctions +22 tests (`80cf2f4`)
+- [x] promotions +9 tests, styleQuiz +17 tests (`de8aaf8`)
+- [x] 6 stories filed (STORY-001 through STORY-006)
+- [x] STORY-005: Cart recovery dupe fix + 4 tests (`6a3317d`)
+- [ ] Mobile app proposal story (ASSIGNED)
+- [ ] STORY-004 revision with hard numbers (ASSIGNED)
+- [ ] STORY-007: Test hardening story (ASSIGNED)
+- [ ] STORY-008: Shared errorHandler.js story (ASSIGNED)
 
 ### Melania — Strategy & Coordination
-- [x] STRATEGY.md: 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap (`8fa999e`)
-- [x] Story reviews: 4 approved, 1 needs revision (STORY-004)
+- [x] STRATEGY.md written and pushed (`8fa999e`)
+- [x] 6 stories reviewed: 4 approved, 1 revision needed, 1 done
+- [x] Design session: full UX pattern audit across 21 page files
+- [x] Role restructuring: caesar→web, radahn→mobile
+- [ ] Mobile app proposal review (WAITING)
+- [ ] Ongoing: report updates after every crew commit
+
+---
 
 ## Remaining Work — Priority Order
 
-### P0 — Critical Bug Fixes (Caesar — NOW)
-- [ ] Fix Facebook + Pinterest feed broken wix:image:// URLs (extract shared wixImageToUrl)
-- [ ] Fix category OG meta `[object Promise]` bug (sync vs async)
-- [ ] Fix product schema shipping rate (conditional on $999 threshold)
-- [ ] Add missing sitemap pages (Wall Huggers, Unfinished Wood, Blog)
-- [ ] Fix Pinterest `og:price:amount` tag
-- [ ] Add Facebook `content_type` column
+### P0 — Active Now
+- [ ] Caesar: Push feed bug fixes (3 bugs + 3 improvements)
+- [ ] Radahn: Write mobile app proposal story
 
-### P0 — Bug Fixes (Radahn — NOW)
-- [ ] STORY-005: Cart recovery duplicate detection (checkoutId dedup + line item validation)
-
-### P1 — Test Coverage (Mayor — DONE)
-- [x] STORY-006: swatchService.test.js (16 tests — mayor completed)
-- [x] contactSubmissions.test.js (11 tests — mayor completed)
-- [x] googleMerchantFeed.test.js (21 tests — mayor completed)
-
-### P1 — Stories Pending Review
-- [ ] STORY-004: Safe element init pattern — NEEDS REVISION (too vague on scope)
-
-### P1 — Remaining UX
-- [ ] Mobile responsive patterns across all pages
-- [ ] Design token consistency check
+### P1 — Stories Pending
+| Story | Author | Status | Reviewer |
+|-------|--------|--------|----------|
+| social-feed-og-audit | caesar | APPROVED → implementing | melania |
+| Design token imports | caesar | NOT YET SUBMITTED | melania |
+| ARIA expansion | caesar | NOT YET SUBMITTED | melania |
+| STORY-004 rev: safe-element-init | radahn | REVISION NEEDED | melania |
+| STORY-007: test hardening | radahn | NOT YET SUBMITTED | melania |
+| STORY-008: shared errorHandler | radahn | NOT YET SUBMITTED | melania |
+| Mobile app proposal | radahn | NOT YET SUBMITTED | melania |
 
 ### P2 — Needs Wix Dashboard
 - [ ] Create 11 CMS collections (see memory.md)
@@ -92,26 +124,26 @@
 
 ---
 
-## Story Tracker
+## Story Tracker (All Stories)
 
 | ID | Title | Author | Status | Priority |
 |----|-------|--------|--------|----------|
 | STORY-001 | Gift card code truncation | radahn | DONE (already fixed) | P0 |
 | STORY-002 | HTTP functions test suite | radahn | DONE (implemented) | P1 |
 | STORY-003 | Style quiz test suite | radahn | DONE (implemented) | P1 |
-| STORY-004 | Safe element init pattern | radahn | REVISION NEEDED | P2 |
-| STORY-005 | Cart recovery duplicate detection | radahn | APPROVED → implementing | P1 |
-| STORY-006 | Swatch service test suite | radahn | APPROVED → next | P1 |
+| STORY-004 | Safe element init pattern | radahn | REVISION NEEDED (add hard numbers) | P2 |
+| STORY-005 | Cart recovery duplicate detection | radahn | DONE (`6a3317d`) | P1 |
+| STORY-006 | Swatch service test suite | radahn | DONE (implemented by mayor) | P1 |
 | social-feed-og-audit | Feed bugs + OG meta fixes | caesar | APPROVED → implementing | P1 |
 
 ---
 
 ## Orchestration Rules
 
-1. **Stories go through melania** — submit for review, wait for approval before implementing
-2. **Always pull before starting** — `git pull` to get latest
-3. **Always test before pushing** — `npx vitest run` must pass
+1. **All stories go through melania** — submit for review, wait for approval
+2. **Run `npx vitest run` BEFORE EVERY COMMIT** — no exceptions, human's direct order
+3. **Always pull before starting** — `git pull`
 4. **Small commits** — one logical change per commit
-5. **Push to main** — no feature branches for crew (direct to main)
-6. **Conflict resolution** — pull, rebase, fix, push
-7. **Communication** — use `gt nudge` for coordination between workers
+5. **Push to main** — no feature branches
+6. **Caesar owns web, Radahn owns mobile** — coordinate via melania
+7. **Design sessions** — melania calls sessions to ensure web+mobile cohesion
