@@ -122,6 +122,7 @@ describe('getBreadcrumbSchema', () => {
   it('includes full URLs with base domain', () => {
     const crumbs = [{ name: 'Home', url: '/' }, { name: 'Current Page' }];
     const schema = JSON.parse(getBreadcrumbSchema(crumbs));
+    // First item (non-last) should have full URL
     expect(schema.itemListElement[0].item).toContain('carolinafutons.com');
   });
 

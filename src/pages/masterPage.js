@@ -1,13 +1,25 @@
 // masterPage.js - Global site code
-// Runs on every page: navigation behavior, announcement bar, SEO injection
+// Runs on every page: navigation behavior, announcement bar, SEO injection,
+// side cart auto-open on add-to-cart, exit-intent popup, product comparison bar, and promotional lightbox
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { getCompareList, removeFromCompare } from 'public/galleryHelpers';
+import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
+import wixStoresFrontend from 'wix-stores-frontend';
+
+let _previousCartItemCount = null;
 
 $w.onReady(async function () {
   initNavigation();
   initAnnouncementBar();
   initSearch();
+  initSideCartAutoOpen();
+  initExitIntentPopup();
+  initCompareBar();
   await injectBusinessSchema();
+
+  // Promotional lightbox — delayed 3s so page renders first
+  setTimeout(() => initPromoLightbox(), 3000);
 });
 
 // ── Navigation ──────────────────────────────────────────────────────
@@ -77,6 +89,7 @@ function initAnnouncementBar() {
     'Free Shipping on Orders Over $999!',
     'Visit Our Showroom: 824 Locust St, Hendersonville NC',
     'Over 700 Fabric Swatches Available In-Store',
+    'Request FREE fabric swatches — shipped to your door!',
     'Family Owned Since 1991 — Now Carolina Futons',
   ];
 
@@ -123,6 +136,301 @@ function initSearch() {
   }
 }
 
+// ── Side Cart Auto-Open ─────────────────────────────────────────────
+// Automatically opens the side cart when a new item is added to cart
+
+function initSideCartAutoOpen() {
+  // Capture initial cart count so we can detect additions
+  wixStoresFrontend.cart.getCurrentCart().then((cart) => {
+    _previousCartItemCount = cart
+      ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
+      : 0;
+  }).catch(() => {
+    _previousCartItemCount = 0;
+  });
+
+  wixStoresFrontend.onCartChanged(async () => {
+    try {
+      const cart = await wixStoresFrontend.cart.getCurrentCart();
+      const newCount = cart
+        ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
+        : 0;
+
+      // Only auto-open when item count increased (add, not remove)
+      if (_previousCartItemCount !== null && newCount > _previousCartItemCount) {
+        openSideCart(cart);
+      }
+      _previousCartItemCount = newCount;
+    } catch (e) {
+      // Non-critical — side cart just won't auto-open
+    }
+  });
+}
+
+function openSideCart(cart) {
+  try {
+    const panel = $w('#sideCartPanel');
+    if (panel) {
+      panel.show('slide', { direction: 'right', duration: 300 });
+    }
+  } catch (e) {}
+
+  // Highlight the just-added item
+  try {
+    const highlight = $w('#justAddedHighlight');
+    if (highlight && cart && cart.lineItems.length > 0) {
+      const lastItem = cart.lineItems[cart.lineItems.length - 1];
+      highlight.show('fade', { duration: 200 });
+      // Auto-hide highlight after 3 seconds
+      setTimeout(() => {
+        try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
+      }, 3000);
+    }
+  } catch (e) {}
+}
+
+// ── Exit-Intent Popup ──────────────────────────────────────────────
+// Detects mouse leaving viewport (desktop) or back-button intent (mobile)
+// Shows 10% discount offer for first-time visitors with email capture
+
+function initExitIntentPopup() {
+  try {
+    const modal = $w('#exitIntentModal');
+    const overlay = $w('#exitIntentOverlay');
+    if (!modal || !overlay) return;
+
+    // Check if user has already seen the popup (not a first-time visitor)
+    const hasSeenPopup = local.get('cf_has_seen_popup');
+    if (hasSeenPopup) return;
+
+    // Check if already dismissed this session
+    const dismissedThisSession = session.get('cf_exit_dismissed');
+    if (dismissedThisSession) return;
+
+    let popupShown = false;
+
+    // Desktop: detect mouse leaving viewport (mouseleave on document)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mouseleave', (e) => {
+        if (e.clientY <= 0 && !popupShown) {
+          showExitPopup();
+        }
+      });
+    }
+
+    // Mobile: detect back-button intent via popstate
+    if (typeof window !== 'undefined') {
+      // Push a state so we can intercept back button
+      window.history.pushState({ exitIntent: true }, '');
+      window.addEventListener('popstate', (e) => {
+        if (!popupShown) {
+          showExitPopup();
+          // Re-push state to keep them on page
+          window.history.pushState({ exitIntent: true }, '');
+        }
+      });
+    }
+
+    function showExitPopup() {
+      popupShown = true;
+      overlay.show('fade', { duration: 200 });
+      modal.show('fade', { duration: 300 });
+    }
+
+    function hideExitPopup() {
+      modal.hide('fade', { duration: 200 });
+      overlay.hide('fade', { duration: 200 });
+      session.set('cf_exit_dismissed', 'true');
+      local.set('cf_has_seen_popup', 'true');
+    }
+
+    // Overlay click dismisses
+    overlay.onClick(() => hideExitPopup());
+
+    // Dismiss link
+    try {
+      const dismissBtn = $w('#exitDismiss');
+      if (dismissBtn) {
+        dismissBtn.onClick(() => hideExitPopup());
+      }
+    } catch (e) {}
+
+    // Email submit
+    try {
+      const submitBtn = $w('#exitSubmit');
+      const emailInput = $w('#exitEmail');
+      if (submitBtn && emailInput) {
+        submitBtn.onClick(async () => {
+          const email = emailInput.value?.trim();
+          if (!email || !email.includes('@')) return;
+
+          try {
+            // Store email capture via backend
+            const { submitContactForm } = await import('backend/contactSubmissions.web');
+            await submitContactForm({
+              email,
+              source: 'exit_intent_popup',
+              status: 'exit_intent_signup',
+              notes: '10% discount offer',
+            });
+
+            // Show success state
+            submitBtn.label = 'Check Your Email!';
+            submitBtn.disable();
+            setTimeout(() => hideExitPopup(), 2000);
+          } catch (err) {
+            console.error('Exit intent email submit error:', err);
+          }
+        });
+      }
+    } catch (e) {}
+
+    // Load bestseller carousel
+    try {
+      const carousel = $w('#exitProductCarousel');
+      if (carousel) {
+        loadExitCarouselProducts(carousel);
+      }
+    } catch (e) {}
+  } catch (e) {
+    // Exit intent popup is non-critical
+  }
+}
+
+async function loadExitCarouselProducts(carousel) {
+  try {
+    const { getBestsellers } = await import('backend/productRecommendations.web');
+    const bestsellers = await getBestsellers(3);
+    if (!bestsellers || bestsellers.length === 0) return;
+
+    carousel.data = bestsellers;
+    carousel.onItemReady(($item, itemData) => {
+      try {
+        $item('#exitProductImage').src = itemData.mainMedia;
+        $item('#exitProductName').text = itemData.name;
+        $item('#exitProductPrice').text = itemData.formattedPrice;
+        $item('#exitProductImage').onClick(() => {
+          import('wix-location').then(({ to }) => {
+            to(`/product-page/${itemData.slug}`);
+          });
+        });
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+// Session and local storage wrappers (Wix Velo API)
+const session = {
+  get(key) { try { return sessionStorage.getItem(key); } catch (e) { return null; } },
+  set(key, val) { try { sessionStorage.setItem(key, val); } catch (e) {} },
+};
+const local = {
+  get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+  set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+};
+
+// ── Product Comparison Bar ──────────────────────────────────────────
+// Floating bottom bar showing products selected for comparison
+
+function initCompareBar() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    // Render current state on page load
+    refreshCompareBar();
+
+    // "Compare Now" opens comparison lightbox
+    try {
+      $w('#compareNowBtn').onClick(() => openComparisonModal());
+    } catch (e) {}
+  } catch (e) {
+    // Compare bar elements may not exist on all pages
+  }
+}
+
+// Re-render the compare bar from session storage state.
+// Called from this page and also exported-style via global for category page use.
+function refreshCompareBar() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    const items = getCompareList();
+
+    if (items.length === 0) {
+      compareBar.hide('slide', { duration: 200, direction: 'bottom' });
+      return;
+    }
+
+    const repeater = $w('#compareRepeater');
+    if (repeater) {
+      repeater.data = items.map(p => ({ ...p, _id: p._id }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compareName').text = itemData.name; } catch (e) {}
+        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compareRemove').onClick(() => {
+            removeFromCompare(itemData._id);
+            refreshCompareBar();
+          });
+        } catch (e) {}
+      });
+    }
+
+    compareBar.show('slide', { duration: 200, direction: 'bottom' });
+  } catch (e) {}
+}
+
+// Comparison lightbox — side-by-side product details
+function openComparisonModal() {
+  try {
+    const items = getCompareList();
+    if (items.length < 2) return;
+
+    const modal = $w('#comparisonModal');
+    if (!modal) return;
+
+    const grid = $w('#comparisonGrid');
+    if (grid) {
+      grid.data = items.map(p => ({ ...p, _id: p._id }));
+      grid.onItemReady(($item, itemData) => {
+        try { $item('#compImage').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compName').text = itemData.name; } catch (e) {}
+        try { $item('#compPrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compAddToCart').onClick(async () => {
+            try {
+              const { default: wixStoresFrontend } = await import('wix-stores-frontend');
+              await wixStoresFrontend.cart.addProducts([{ productId: itemData._id, quantity: 1 }]);
+              $item('#compAddToCart').label = 'Added!';
+            } catch (err) {
+              console.error('Error adding comparison item to cart:', err);
+            }
+          });
+        } catch (e) {}
+        try {
+          $item('#compViewBtn').onClick(() => {
+            import('wix-location').then(({ to }) => {
+              to(`/product-page/${itemData.slug}`);
+            });
+          });
+        } catch (e) {}
+      });
+    }
+
+    // Close button
+    try {
+      $w('#comparisonClose').onClick(() => {
+        modal.hide('fade', { duration: 200 });
+      });
+    } catch (e) {}
+
+    modal.show('fade', { duration: 200 });
+  } catch (e) {}
+}
+
 // ── SEO Schema Injection ────────────────────────────────────────────
 // Injects LocalBusiness JSON-LD on every page
 
@@ -135,4 +443,211 @@ async function injectBusinessSchema() {
   } catch (e) {
     // Schema injection is non-critical
   }
+}
+
+// ── Promotional Lightbox ────────────────────────────────────────────
+// Shows active campaign lightbox with products, countdown, and discount code
+
+async function initPromoLightbox() {
+  try {
+    const lightbox = $w('#promoLightbox');
+    if (!lightbox) return;
+
+    const promo = await getActivePromotion();
+    if (!promo) return;
+
+    // Check if user already dismissed this promotion in this session
+    const dismissKey = `promo_dismissed_${promo._id}`;
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        if (sessionStorage.getItem(dismissKey)) return;
+      } catch (e) {
+        // sessionStorage may not be available
+      }
+    }
+
+    populatePromoLightbox(promo);
+    initPromoCountdown(promo.endDate);
+    initPromoProducts(promo.products);
+    initPromoDismiss(promo._id, dismissKey);
+    initPromoCopyCode(promo.discountCode);
+    initPromoEmailCapture();
+    initPromoCTA(promo.ctaUrl);
+
+    // Show the lightbox
+    $w('#promoOverlay').show('fade', { duration: 300 });
+    lightbox.show('fade', { duration: 300 });
+  } catch (e) {
+    // Promo lightbox is non-critical — never block the page
+  }
+}
+
+function populatePromoLightbox(promo) {
+  try { $w('#promoTitle').text = promo.title || ''; } catch (e) {}
+  try { $w('#promoSubtitle').text = promo.subtitle || ''; } catch (e) {}
+  try {
+    if (promo.heroImage) {
+      $w('#promoHeroImage').src = promo.heroImage;
+    }
+  } catch (e) {}
+  try {
+    if (promo.discountCode) {
+      $w('#promoCode').text = promo.discountCode;
+    } else {
+      $w('#promoCode').hide();
+      $w('#promoCopyCode').hide();
+    }
+  } catch (e) {}
+  try {
+    if (promo.ctaText) {
+      $w('#promoCTA').label = promo.ctaText;
+    }
+  } catch (e) {}
+}
+
+function initPromoCountdown(endDate) {
+  try {
+    const countdownEl = $w('#promoCountdown');
+    if (!countdownEl || !endDate) {
+      try { countdownEl.hide(); } catch (e) {}
+      return;
+    }
+
+    const end = new Date(endDate).getTime();
+
+    function updateCountdown() {
+      const now = Date.now();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        countdownEl.text = 'Sale Ended';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      countdownEl.text = `${pad(days)}:${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  } catch (e) {
+    // Countdown is optional
+  }
+}
+
+function initPromoProducts(products) {
+  try {
+    const repeater = $w('#promoRepeater');
+    if (!repeater || !products || products.length === 0) {
+      try { repeater.hide(); } catch (e) {}
+      return;
+    }
+
+    repeater.data = products.map(p => ({ ...p, _id: p._id }));
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#promoImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#promoName').text = itemData.name; } catch (e) {}
+      try {
+        $item('#promoPrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
+      } catch (e) {}
+      try {
+        if (itemData.formattedDiscountedPrice && itemData.formattedDiscountedPrice !== itemData.formattedPrice) {
+          $item('#promoOrigPrice').text = itemData.formattedPrice;
+          $item('#promoOrigPrice').show();
+        } else {
+          $item('#promoOrigPrice').hide();
+        }
+      } catch (e) {}
+      try {
+        $item('#promoQuickAdd').onClick(() => {
+          import('wix-location').then(({ to }) => {
+            to(`/product-page/${itemData.slug}`);
+          });
+        });
+      } catch (e) {}
+    });
+  } catch (e) {
+    // Product carousel is optional
+  }
+}
+
+function dismissLightbox(dismissKey) {
+  try {
+    $w('#promoLightbox').hide('fade', { duration: 200 });
+    $w('#promoOverlay').hide('fade', { duration: 200 });
+  } catch (e) {}
+
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      sessionStorage.setItem(dismissKey, '1');
+    } catch (e) {}
+  }
+}
+
+function initPromoDismiss(promoId, dismissKey) {
+  try {
+    $w('#promoClose').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+  try {
+    $w('#promoDismiss').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+  try {
+    $w('#promoOverlay').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+}
+
+function initPromoCopyCode(code) {
+  try {
+    if (!code) return;
+    $w('#promoCopyCode').onClick(() => {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          $w('#promoCopyCode').label = 'Copied!';
+          setTimeout(() => {
+            try { $w('#promoCopyCode').label = 'Copy Code'; } catch (e) {}
+          }, 2000);
+        });
+      }
+    });
+  } catch (e) {}
+}
+
+function initPromoEmailCapture() {
+  try {
+    const emailInput = $w('#promoEmailInput');
+    const emailSubmit = $w('#promoEmailSubmit');
+    if (!emailInput || !emailSubmit) return;
+
+    emailSubmit.onClick(async () => {
+      const email = emailInput.value.trim();
+      if (!email || !email.includes('@')) return;
+
+      try {
+        const wixCrm = await import('wix-crm');
+        await wixCrm.createContact({ emails: [email] });
+        emailInput.value = '';
+        emailSubmit.label = 'Subscribed!';
+        emailSubmit.disable();
+      } catch (e) {
+        // Email capture is best-effort
+      }
+    });
+  } catch (e) {}
+}
+
+function initPromoCTA(ctaUrl) {
+  try {
+    if (!ctaUrl) return;
+    $w('#promoCTA').onClick(() => {
+      import('wix-location').then(({ to }) => {
+        to(ctaUrl);
+      });
+    });
+  } catch (e) {}
 }

@@ -1,6 +1,6 @@
 // Home.c1dmp.js - Homepage
 // "Handcrafted Comfort, Mountain Inspired."
-// Featured products grid, category showcases, and testimonials
+// Featured products, category showcase, recently viewed, trust signals, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages';
@@ -12,7 +12,11 @@ $w.onReady(async function () {
     initCategoryShowcase(),
     initHeroAnimation(),
     injectHomeSchemas(),
+    initRecentlyViewed(),
+    initTrustBar(),
+    initTestimonials(),
   ]);
+  initSmoothScroll();
 });
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
@@ -122,7 +126,7 @@ function initCategoryShowcase() {
         }
       }
     } catch (e) {
-      // Category card may not exist
+      // Scroll trigger may not exist
     }
   });
 
@@ -139,6 +143,15 @@ function initCategoryShowcase() {
 
 function initHeroAnimation() {
   try {
+    // Set hero background from Media Manager
+    try {
+      const heroBg = $w('#heroBg');
+      if (heroBg) {
+        heroBg.src = HERO_CABIN_SCENE;
+        heroBg.alt = 'Handcrafted Comfort, Mountain Inspired - Carolina Futons Hendersonville NC';
+      }
+    } catch (e) {}
+
     const heroTitle = $w('#heroTitle');
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');

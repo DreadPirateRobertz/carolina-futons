@@ -48,7 +48,7 @@ function getShippingZone(zip) {
   }
 
   // Southeast US
-  if ((prefix >= 270 && prefix <= 299) || // NC
+  if ((prefix >= 270 && prefix <= 289) || // NC (non-local)
       (prefix >= 290 && prefix <= 299) || // SC
       (prefix >= 300 && prefix <= 319) || // GA
       (prefix >= 320 && prefix <= 339) || // FL
