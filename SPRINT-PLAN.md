@@ -1,8 +1,8 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 421 tests across 22 files (all passing)
-**Last Push**: aa2c42f
+**Test Suite**: 457 tests across 22 files (all passing)
+**Last Push**: c43e029
 
 ---
 
@@ -10,8 +10,9 @@
 
 | Crew | Focus | Current Task |
 |------|-------|-------------|
-| **caesar** | Design, logistics, e-commerce, social | Audit Product Page UX → Category Page UX |
-| **radahn** | Code quality, TDD, feature proposals | Write seoHelpers tests → shippingRates tests → stories/ |
+| **melania** | Crew Lead & Strategist | STRATEGY.md (done) → coordinating crew |
+| **caesar** | Design, logistics, e-commerce, social | ✅ Product Page UX, ✅ Category Page → Cart flow audit |
+| **radahn** | Code quality, TDD, feature proposals | ✅ seoHelpers, ✅ shippingRates, ✅ 5 stories → httpFunctions tests |
 
 ## Mayor Completed This Sprint
 
@@ -32,24 +33,24 @@
 ## Remaining Work — Priority Order
 
 ### P0 — Test Coverage (Radahn)
-- [ ] tests/seoHelpers.test.js (schema generation, OG meta, Rich Pins)
-- [ ] tests/shippingRates.test.js (shipping plugin, white-glove, fallbacks)
-- [ ] tests/httpFunctions.test.js (feed endpoints, sitemap)
+- [x] tests/seoHelpers.test.js (+29 tests: OG, Twitter Card, Rich Pin, WebSite, Collection schemas)
+- [x] tests/shippingRates.test.js (+8 tests: white-glove tiers, local delivery pricing)
+- [ ] tests/httpFunctions.test.js (feed endpoints, sitemap) — IN PROGRESS
 - [ ] tests/promotions.test.js (lightbox campaign engine)
 - [ ] tests/styleQuiz.test.js (recommendation engine)
 - [ ] tests/swatchService.test.js (swatch queries)
 
 ### P0 — UX Polish (Caesar)
-- [ ] Product Page audit: loading states, error messages, accessibility
-- [ ] Category Page audit: same
-- [ ] Cart flow audit: Cart Page → Side Cart → Checkout
+- [x] Product Page audit: 9 improvements (loading states, error messages, accessibility)
+- [x] Category Page audit: sort/filter/breadcrumbs/accessibility/performance
+- [ ] Cart flow audit: Cart Page → Side Cart → Checkout — NEXT
 - [ ] Mobile responsive patterns across all pages
 - [ ] Design token consistency check
 
 ### P1 — Feature Stories (Radahn)
-- [ ] Create stories/ directory structure
-- [ ] Write 5-10 bite-size story files for next sprint
-- [ ] Categories: code-quality, tests, features, bugs
+- [x] Create stories/ directory structure
+- [x] Write 5 story files (bugs/001, bugs/005, code-quality/004, tests/002, tests/003)
+- [ ] Write 5 more stories (features, additional bugs/tests)
 
 ### P1 — Social & Marketing (Caesar)
 - [ ] Audit feed endpoint output quality
