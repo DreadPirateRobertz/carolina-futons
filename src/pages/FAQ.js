@@ -78,6 +78,11 @@ function initFaqAccordion() {
       $item('#faqAnswer').collapse();
       $item('#faqToggle').text = '+';
 
+      // ARIA for accordion
+      try { $item('#faqQuestion').accessibility.ariaLabel = `Toggle answer: ${itemData.question}`; } catch (e) {}
+      try { $item('#faqToggle').accessibility.ariaLabel = `Toggle answer: ${itemData.question}`; } catch (e) {}
+      try { $item('#faqToggle').accessibility.ariaExpanded = false; } catch (e) {}
+
       // Toggle on click
       $item('#faqQuestion').onClick(() => {
         toggleFaqItem($item, itemData.question);
@@ -95,10 +100,12 @@ function toggleFaqItem($item, question) {
     if ($item('#faqAnswer').collapsed) {
       $item('#faqAnswer').expand();
       $item('#faqToggle').text = '\u2212';
+      try { $item('#faqToggle').accessibility.ariaExpanded = true; } catch (e) {}
       if (question) trackEvent('faq_expand', { question });
     } else {
       $item('#faqAnswer').collapse();
       $item('#faqToggle').text = '+';
+      try { $item('#faqToggle').accessibility.ariaExpanded = false; } catch (e) {}
     }
   } catch (e) {}
 }
@@ -110,6 +117,8 @@ function initFaqSearch() {
   try {
     const searchInput = $w('#faqSearchInput');
     if (!searchInput) return;
+
+    try { searchInput.accessibility.ariaLabel = 'Search frequently asked questions'; } catch (e) {}
 
     let debounceTimer;
     searchInput.onKeyPress(() => {
