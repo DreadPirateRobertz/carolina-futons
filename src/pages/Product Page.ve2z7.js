@@ -16,7 +16,7 @@ import { getProductFallbackImage, getPlaceholderProductImages } from 'public/pla
 import wixLocationFrontend from 'wix-location-frontend';
 import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
 import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
-import { trackProductPageView, trackCartAdd, trackGalleryInteraction, trackSwatchView } from 'public/engagementTracker';
+import { trackProductPageView, trackCartAdd, trackGalleryInteraction, trackSwatchView, trackSocialShare } from 'public/engagementTracker';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
@@ -55,6 +55,8 @@ async function initProductPage() {
       initProductBadge(),
       initProductVideo(),
     ]);
+
+    initSocialShare();
 
     // Mobile: collapse non-essential sections, add back-to-top
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
@@ -1069,6 +1071,53 @@ function initProductVideo() {
     // Video section is optional — collapse if any error
     try { $w('#productVideoSection').collapse(); } catch (e2) {}
   }
+}
+
+// ── Social Share Buttons ────────────────────────────────────────────
+// Share product on Facebook, Pinterest, and copy link
+
+function initSocialShare() {
+  try {
+    if (!currentProduct) return;
+    const url = `https://www.carolinafutons.com/product-page/${currentProduct.slug}`;
+    const title = currentProduct.name;
+    const image = currentProduct.mainMedia || '';
+
+    // Facebook
+    try {
+      $w('#shareFacebook').onClick(() => {
+        trackSocialShare('facebook', 'product');
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+        });
+      });
+    } catch (e) {}
+
+    // Pinterest
+    try {
+      $w('#sharePinterest').onClick(() => {
+        trackSocialShare('pinterest', 'product');
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(image)}&description=${encodeURIComponent(title)}`);
+        });
+      });
+    } catch (e) {}
+
+    // Copy link
+    try {
+      $w('#shareCopyLink').onClick(() => {
+        trackSocialShare('copy_link', 'product');
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(url).then(() => {
+            $w('#shareCopyLink').label = 'Copied!';
+            setTimeout(() => {
+              try { $w('#shareCopyLink').label = 'Copy Link'; } catch (e) {}
+            }, 2000);
+          });
+        }
+      });
+    } catch (e) {}
+  } catch (e) {}
 }
 
 // ── Product Schema Injection ────────────────────────────────────────
