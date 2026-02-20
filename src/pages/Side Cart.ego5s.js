@@ -125,14 +125,19 @@ async function refreshSideCart() {
           setTimeout(() => refreshSideCart(), 250);
         });
       });
-      repeater.data = currentCart.lineItems.map(item => ({
-        _id: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.mediaItem?.src || '',
-        variantName: item.options?.map(o => o.value).join(', ') || '',
-      }));
+      repeater.data = currentCart.lineItems.map(item => {
+        const variantDetails = item.options?.map(o => `${o.option}: ${o.value}`).join(' · ') || '';
+        return {
+          _id: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.mediaItem?.src || '',
+          lineTotal: (item.price || 0) * (item.quantity || 1),
+          variantName: item.options?.map(o => o.value).join(', ') || '',
+          variantDetails,
+        };
+      });
     }
 
     // Update totals

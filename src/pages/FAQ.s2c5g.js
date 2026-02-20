@@ -1,6 +1,7 @@
 // FAQ.s2c5g.js - Frequently Asked Questions
-// Accordion-style FAQ with SEO schema markup
+// Accordion-style FAQ with search filtering, SEO schema markup, and engagement tracking
 import { getFaqSchema } from 'backend/seoHelpers.web';
+import { trackEvent } from 'public/engagementTracker';
 
 const FAQ_DATA = [
   {
@@ -57,7 +58,9 @@ const FAQ_DATA = [
 
 $w.onReady(async function () {
   initFaqAccordion();
+  initFaqSearch();
   await injectFaqSchema();
+  trackEvent('page_view', { page: 'faq' });
 });
 
 // ── FAQ Accordion ───────────────────────────────────────────────────
@@ -77,25 +80,75 @@ function initFaqAccordion() {
 
       // Toggle on click
       $item('#faqQuestion').onClick(() => {
-        toggleFaqItem($item);
+        toggleFaqItem($item, itemData.question);
       });
       $item('#faqToggle').onClick(() => {
-        toggleFaqItem($item);
+        toggleFaqItem($item, itemData.question);
       });
     });
     repeater.data = FAQ_DATA;
   } catch (e) {}
 }
 
-function toggleFaqItem($item) {
+function toggleFaqItem($item, question) {
   try {
     if ($item('#faqAnswer').collapsed) {
       $item('#faqAnswer').expand();
       $item('#faqToggle').text = '\u2212';
+      if (question) trackEvent('faq_expand', { question });
     } else {
       $item('#faqAnswer').collapse();
       $item('#faqToggle').text = '+';
     }
+  } catch (e) {}
+}
+
+// ── FAQ Search / Filter ────────────────────────────────────────────
+// Lets users filter FAQs by keyword to quickly find answers
+
+function initFaqSearch() {
+  try {
+    const searchInput = $w('#faqSearchInput');
+    if (!searchInput) return;
+
+    let debounceTimer;
+    searchInput.onKeyPress(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const query = searchInput.value?.trim().toLowerCase();
+        filterFaqs(query);
+      }, 300);
+    });
+  } catch (e) {}
+}
+
+function filterFaqs(query) {
+  try {
+    const repeater = $w('#faqRepeater');
+    if (!repeater) return;
+
+    if (!query) {
+      repeater.data = FAQ_DATA;
+      try { $w('#faqNoResults').collapse(); } catch (e) {}
+      return;
+    }
+
+    const filtered = FAQ_DATA.filter(
+      f => f.question.toLowerCase().includes(query)
+        || f.answer.toLowerCase().includes(query)
+    );
+
+    if (filtered.length === 0) {
+      try {
+        $w('#faqNoResults').text = `No FAQs match "${query}". Try a different search or contact us!`;
+        $w('#faqNoResults').expand();
+      } catch (e) {}
+    } else {
+      try { $w('#faqNoResults').collapse(); } catch (e) {}
+    }
+
+    repeater.data = filtered;
+    trackEvent('faq_search', { query, resultCount: filtered.length });
   } catch (e) {}
 }
 

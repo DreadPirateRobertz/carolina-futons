@@ -1,10 +1,12 @@
 // Fullscreen Page.vu50r.js - Product Videos / Gallery Fullscreen View
 // Full-screen product video and image gallery with engagement features
 import wixData from 'wix-data';
+import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
 
 $w.onReady(function () {
   initVideoGallery();
   initProductVideoGrid();
+  trackEvent('page_view', { page: 'product_videos' });
 });
 
 // ── Product Video Gallery ───────────────────────────────────────────
@@ -129,6 +131,8 @@ function playVideo(videoData) {
     if (player && videoData.videoUrl) {
       player.src = videoData.videoUrl;
       player.play();
+      trackGalleryInteraction('video_play');
+      trackEvent('video_play', { title: videoData.title, category: videoData.category });
 
       // Update product link slug (handler registered once in initProductVideoGrid)
       if (videoData.productSlug) {

@@ -2,11 +2,13 @@
 // Polaroid-style team photos, business history timeline,
 // and trust-building content with local SEO signals
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   initPhotoGallery();
   initTimeline();
   await injectLocalSchema();
+  trackEvent('page_view', { page: 'about' });
 });
 
 // ── Polaroid Photo Gallery ──────────────────────────────────────────

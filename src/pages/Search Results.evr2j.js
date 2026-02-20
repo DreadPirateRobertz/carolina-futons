@@ -2,9 +2,12 @@
 // Displays search results with product cards, highlighting, and suggestions
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
+import { trackEvent } from 'public/engagementTracker';
+import { addToCart } from 'public/cartService';
 
 $w.onReady(async function () {
   const query = wixLocationFrontend.query?.q || '';
+  trackEvent('page_view', { page: 'search', query });
   if (query) {
     await performSearch(query);
   } else {
@@ -24,9 +27,12 @@ async function performSearch(query) {
       .find();
 
     if (results.items.length === 0) {
+      trackEvent('search_no_results', { query });
       showNoResults(query);
       return;
     }
+
+    trackEvent('search_results', { query, resultCount: results.totalCount });
 
     try {
       $w('#resultCount').text = `${results.totalCount} product${results.totalCount !== 1 ? 's' : ''} found`;
@@ -43,12 +49,27 @@ async function performSearch(query) {
       try { $item('#searchDesc').text = itemData.description; } catch (e) {}
 
       const navigate = () => {
+        trackEvent('search_click', { query, productId: itemData._id, productName: itemData.name });
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
       $item('#searchImage').onClick(navigate);
       $item('#searchName').onClick(navigate);
+
+      // Quick add to cart from search results
+      try {
+        $item('#searchAddBtn').onClick(async () => {
+          try {
+            await addToCart(itemData._id);
+            $item('#searchAddBtn').label = 'Added!';
+            $item('#searchAddBtn').disable();
+            trackEvent('add_to_cart', { productId: itemData._id, source: 'search' });
+          } catch (err) {
+            console.error('Error adding from search:', err);
+          }
+        });
+      } catch (e) {}
     });
     repeater.data = results.items.map(item => ({
       _id: item._id,

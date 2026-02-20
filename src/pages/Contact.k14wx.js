@@ -3,11 +3,14 @@
 // business hours, and local SEO schema
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { sendEmail } from 'backend/emailService.web';
+import { submitContactForm } from 'backend/contactSubmissions.web';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   initContactForm();
   initBusinessInfo();
   await injectContactSchema();
+  trackEvent('page_view', { page: 'contact' });
 });
 
 // ── Contact Form ────────────────────────────────────────────────────
@@ -58,6 +61,18 @@ function initContactForm() {
           subject: subject || 'Website Contact Form',
           message,
         });
+
+        // Also save to CMS for dashboard review
+        submitContactForm({
+          name,
+          email,
+          phone: phone || '',
+          source: 'contact_page',
+          status: 'new',
+          notes: `Subject: ${subject || 'General'}\n\n${message}`,
+        }).catch(() => {});
+
+        trackEvent('contact_form_submit', { subject: subject || 'general' });
 
         // Show success message
         try {

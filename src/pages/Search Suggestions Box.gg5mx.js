@@ -1,6 +1,7 @@
 // Search Suggestions Box.gg5mx.js - Search Autocomplete
 // Live search suggestions as user types
 import wixData from 'wix-data';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(function () {
   initSearchSuggestions();
@@ -84,6 +85,7 @@ async function searchProducts(query) {
 }
 
 function navigateTo(slug) {
+  trackEvent('search_suggestion_click', { slug });
   import('wix-location-frontend').then(({ to }) => {
     to(`/product-page/${slug}`);
   });

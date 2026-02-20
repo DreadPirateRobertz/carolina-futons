@@ -1,11 +1,13 @@
 // Shipping Policy.ype8c.js - "Getting It Home" / Shipping Info
 // Shipping calculator, delivery zones, and FAQ
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   initShippingCalculator();
   initDeliveryInfo();
   await injectShippingSchema();
+  trackEvent('page_view', { page: 'shipping_policy' });
 });
 
 // ── Shipping Cost Estimator ─────────────────────────────────────────
@@ -28,6 +30,7 @@ function initShippingCalculator() {
 
       // Determine shipping zone based on ZIP prefix
       const zone = getShippingZone(zip);
+      trackEvent('shipping_calculator', { zip, zone: zone.zone });
       try {
         resultText.text = zone.message;
         resultText.show('fade', { duration: 200 });
