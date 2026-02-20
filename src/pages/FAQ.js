@@ -2,6 +2,7 @@
 // Accordion-style FAQ with search filtering, SEO schema markup, and engagement tracking
 import { getFaqSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
+import { initBackToTop } from 'public/mobileHelpers';
 
 const FAQ_DATA = [
   {
@@ -57,6 +58,7 @@ const FAQ_DATA = [
 ];
 
 $w.onReady(async function () {
+  initBackToTop($w);
   initFaqAccordion();
   initFaqSearch();
   await injectFaqSchema();
