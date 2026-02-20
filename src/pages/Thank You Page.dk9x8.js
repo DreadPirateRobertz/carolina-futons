@@ -25,16 +25,16 @@ function initThankYou() {
     $w('#shareFacebook').onClick(() => {
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const text = encodeURIComponent('Just ordered beautiful furniture from Carolina Futons in Hendersonville, NC!');
-      import('wix-location-frontend').then(({ to }) => {
-        to(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
+      import('wix-window-frontend').then(({ openUrl }) => {
+        openUrl(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
       });
     });
 
     $w('#sharePinterest').onClick(() => {
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const desc = encodeURIComponent('Quality futon furniture from Carolina Futons - Hendersonville, NC');
-      import('wix-location-frontend').then(({ to }) => {
-        to(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
+      import('wix-window-frontend').then(({ openUrl }) => {
+        openUrl(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
       });
     });
   } catch (e) {}
