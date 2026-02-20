@@ -18,6 +18,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
 import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackProductPageView, trackCartAdd, trackGalleryInteraction, trackSwatchView, trackSocialShare } from 'public/engagementTracker';
+import { cacheProduct, getCachedProduct } from 'public/productCache';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
@@ -33,6 +34,15 @@ $w.onReady(async function () {
 
 async function initProductPage() {
   try {
+    // Show cached product data instantly while dataset loads
+    const slug = wixLocationFrontend.path?.[1] || '';
+    const cached = slug ? getCachedProduct(slug) : null;
+    if (cached) {
+      try { $w('#productName').text = cached.name; } catch (e) {}
+      try { $w('#productPrice').text = cached.formattedPrice; } catch (e) {}
+      try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) {}
+    }
+
     // Get the current product from the dataset
     await $w('#productDataset').onReady();
     currentProduct = $w('#productDataset').getCurrentItem();
@@ -41,6 +51,8 @@ async function initProductPage() {
 
     // Track this product view in session storage for "Recently Viewed"
     trackProductView(currentProduct);
+    // Cache product for cross-session recently viewed and instant display
+    cacheProduct(currentProduct);
     // Track in engagement funnel
     trackProductPageView(currentProduct);
 
