@@ -1,9 +1,9 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 633 tests across 33 files (all passing)
-**Last Push**: e248645
-**Updated by**: melania (crew lead) — 2026-02-20 13:56 MST
+**Test Suite**: 672 tests across 35 files (all passing)
+**Last Push**: 021da01
+**Updated by**: melania (crew lead) — 2026-02-20 14:06 MST
 
 ---
 
@@ -12,7 +12,7 @@
 | Crew | Role | Owns | Current Task |
 |------|------|------|-------------|
 | **melania** | Crew Lead / Quality Gate / Strategist | Sprint plan, report, story approval, design sessions | Updating docs, reviewing stories, driving crew |
-| **caesar** | PRIMARY WEBSITE DEVELOPER | All web pages, desktop UX, responsive design, design tokens, ARIA, visual polish | Feed bug fixes → design token + ARIA stories |
+| **caesar** | PRIMARY WEBSITE DEVELOPER | All web pages, desktop UX, responsive design, design tokens, ARIA, visual polish | ARIA pass (15/21 done) → 6 policy pages → mobile responsive |
 | **radahn** | PRIMARY MOBILE APP DEVELOPER | Mobile-first patterns, mobile app features, touch UX, mobile-specific code/tests | Mobile app proposal → STORY-004/007/008 revisions |
 
 **Workflow**: Both submit SHORT stories to melania for approval before implementing. Nothing ships without review.
@@ -108,12 +108,12 @@
 | Story | Author | Status | Reviewer |
 |-------|--------|--------|----------|
 | social-feed-og-audit | caesar | DONE (`00a2f0a`) | melania |
-| Design token integration | caesar | APPROVED → implementing | melania |
-| ARIA coverage pass | caesar | APPROVED → after tokens | melania |
+| Design token integration | caesar | DONE (4 pages: Product, Category, Member, ThankYou) | melania |
+| ARIA coverage pass | caesar | IN PROGRESS (15/21 pages done, 6 policy pages remain) | melania |
 | STORY-004 rev: safe-element-init | radahn | APPROVED (P2 — after PWA) | melania |
-| STORY-007: test hardening | radahn | APPROVED → implementing FIRST | melania |
-| STORY-008: shared errorHandler | radahn | APPROVED (P2 — after PWA) | melania |
-| STORY-009: PWA mobile app | radahn | APPROVED → after STORY-007 | melania |
+| STORY-007: test hardening | radahn | DONE (`8cd2944`) | melania |
+| STORY-008: shared errorHandler | radahn | DONE (`3ce9214`) | melania |
+| STORY-009: PWA mobile app | radahn | DONE Phase 1 (`927dc0d`) | melania |
 
 ### P2 — Needs Wix Dashboard
 - [ ] Create 11 CMS collections (see memory.md)
@@ -138,8 +138,8 @@
 | STORY-008 | Shared errorHandler utility | radahn | APPROVED (P2 — after PWA) | P2 |
 | STORY-009 | PWA mobile app (Phase 1) | radahn | APPROVED → after STORY-007 | P1 |
 | social-feed-og-audit | Feed bugs + OG meta fixes | caesar | DONE (`00a2f0a`) | P1 |
-| design-token-integration | Import tokens into 5 pages | caesar | APPROVED → implementing now | P1 |
-| aria-coverage-pass | ARIA on remaining 15 pages | caesar | APPROVED → after tokens | P1 |
+| design-token-integration | Import tokens into 5 pages | caesar | DONE (4 pages) | P1 |
+| aria-coverage-pass | ARIA on all pages | caesar | IN PROGRESS (15/21 done) | P1 |
 
 ---
 

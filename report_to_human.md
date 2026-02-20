@@ -1,10 +1,10 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 14:04 MST
+**Last Updated:** 2026-02-20 14:06 MST
 **Sprint:** Full Stack Improvements + Crew Sprint
 **Status:** ACTIVE — 3 crew members executing
-**Tests:** 659 passing across 34 test files — ALL GREEN
-**Commits this session:** 36+
+**Tests:** 672 passing across 35 test files — ALL GREEN
+**Commits this session:** 40+
 
 ---
 
@@ -12,9 +12,9 @@
 
 | Crew | Role | Current Task | Last Commit |
 |------|------|-------------|-------------|
-| **melania** | Crew Lead / Quality Gate | Story review, design sessions, report updates | `6d87102` sprint plan |
-| **caesar** | PRIMARY WEB DEVELOPER | ARIA coverage pass (5 pages done, ~10 remaining) | `f296eaf` Contact ARIA (unpushed) |
-| **radahn** | PRIMARY MOBILE DEVELOPER | PWA Phase 1 DONE — researching Wix SW compatibility | `927dc0d` PWA foundation |
+| **melania** | Crew Lead / Quality Gate | 15-min report cycles, story review, coordination | `957b99a` report update |
+| **caesar** | PRIMARY WEB DEVELOPER | ARIA pass 15/21 done — 6 policy pages remain, then mobile responsive | `021da01` Fullscreen ARIA |
+| **radahn** | PRIMARY MOBILE DEVELOPER | STORY-008 done, PWA Phase 1 done — awaiting next assignment | `3ce9214` errorHandler |
 
 ---
 
@@ -30,7 +30,8 @@
 | +designTokens, galleryConfig, STORY-005 | 30 | 587 | +34 | Mayor + Radahn dupe fix |
 | +mediaHelpers, feed fixes | 31 | 595 | +8 | Caesar feed bugs |
 | +STORY-007 test hardening | 33 | 633 | +38 | XSS, sort, XML escaping + mayor tests |
-| **+PWA tests (current)** | **34** | **659** | **+17** | **Radahn PWA foundation** |
+| +PWA tests | 34 | 659 | +17 | Radahn PWA foundation |
+| **+errorHandler tests (current)** | **35** | **672** | **+13** | **Radahn STORY-008** |
 
 **Growth: 372 → 659 tests (+287, +77%) in one session.**
 
@@ -59,7 +60,7 @@
 | 7 | Social feed & OG meta fix | `00a2f0a` | 3 bugs fixed: broken feed images, [object Promise] OG, shipping schema + 3 improvements |
 | 8 | mediaHelpers tests | `c4e9e98` | 8 tests for wix:image URL conversion |
 | 9 | Design token integration | `2aa0405`→`73d7e98` | Tokens imported into Product, Category, Member, Thank You pages |
-| 10 | ARIA coverage pass | `b0161fc`→`f296eaf` | Labels added to Home, Member, Blog, FAQ, Contact (5 done, ~10 remaining) |
+| 10 | ARIA coverage pass | `d7aa91d`→`021da01` | 15/21 pages done: Home, Member, Blog, FAQ, Contact, Search Results, Thank You, masterPage, Search Suggestions, Fullscreen. 6 policy pages remain. |
 
 ### Radahn (Primary Mobile Developer)
 | # | Task | Commit | Details |
@@ -94,11 +95,11 @@
 | STORY-005 | Cart recovery duplicate detection | radahn | DONE | P1 |
 | STORY-006 | Swatch service test suite | radahn | DONE (by mayor) | P1 |
 | STORY-007 | Test hardening: XSS/sort/XML | radahn | DONE | P1 |
-| STORY-008 | Shared errorHandler utility | radahn | APPROVED (P2) | P2 |
-| STORY-009 | PWA mobile app Phase 1 | radahn | DONE (foundation) | P1 |
+| STORY-008 | Shared errorHandler utility | radahn | DONE (`3ce9214`, 13 tests) | P2 |
+| STORY-009 | PWA mobile app Phase 1 | radahn | DONE (`927dc0d`, 17 tests) | P1 |
 | — | Social feed & OG meta fix | caesar | DONE | P1 |
 | — | Design token integration | caesar | DONE (4 pages) | P1 |
-| — | ARIA coverage pass | caesar | IN PROGRESS (5/16 pages) | P1 |
+| — | ARIA coverage pass | caesar | IN PROGRESS (15/21 pages pushed) | P1 |
 
 ---
 
@@ -106,8 +107,8 @@
 
 | Finding | Severity | Status |
 |---------|----------|--------|
-| Design tokens 0% import usage | HIGH | FIXED — caesar integrated into 4 pages, ongoing |
-| ARIA coverage 29% (6/21 pages) | HIGH | IN PROGRESS — caesar added 5 more pages, ~10 remaining |
+| Design tokens 0% import usage | HIGH | FIXED — caesar integrated into 4 pages (Product, Category, Member, ThankYou) |
+| ARIA coverage 29% (6/21 pages) | HIGH | MOSTLY DONE — now 15/21 pages (71%). 6 policy pages remain. |
 | 543 try/catch blocks (450 silent) | MEDIUM | STORY-004 approved, P2 priority |
 | No centralized error handler | MEDIUM | STORY-008 approved, P2 priority |
 | Loading state pattern consistent | GOOD | Documented as standard |
@@ -129,14 +130,15 @@
 ## What's Next (P0/P1 Priority Order)
 
 ### Immediate
-1. **Caesar**: Finish ARIA coverage pass (10 remaining pages), then push
-2. **Radahn**: Research Wix SW compatibility, file findings story
-3. **Melania**: Continue reviewing all pushes, update report
+1. **Caesar**: Finish ARIA on 6 remaining policy pages (About, Shipping, Accessibility, Privacy, Refund, Terms)
+2. **Radahn**: Research Wix Velo service worker compatibility, file findings story
+3. **Melania**: 15-min report cycles, review all pushes, coordinate
 
 ### Next Up
 4. Caesar: Mobile responsive patterns (after ARIA complete)
-5. Radahn: masterPage.js PWA integration (if SW works in Wix)
-6. Both: Design token integration for remaining pages (Home, Cart, Side Cart)
+5. Caesar: Design token integration for remaining pages (Home, Cart, Side Cart, Blog, etc.)
+6. Radahn: masterPage.js PWA integration (if SW works in Wix) or PWA-lite pivot
+7. Radahn: STORY-004 implementation (safeInit refactor — 3 phases)
 
 ### Blocked (Needs Wix Dashboard)
 - Create 11 CMS collections
@@ -151,16 +153,17 @@
 
 | Metric | Value |
 |--------|-------|
-| Tests | 659 (34 files) |
-| Test growth | +287 (+77%) this session |
-| Commits | 36+ this session |
+| Tests | 672 (35 files) |
+| Test growth | +300 (+81%) this session |
+| Commits | 40+ this session |
 | Stories filed | 12 |
-| Stories approved | 9 |
-| Stories completed | 8 |
+| Stories approved | 12 |
+| Stories completed | 10 |
 | Bugs found & fixed | 6 (feed images, OG promise, shipping schema, cart dupes, qty no-ops, remove no-ops) |
-| Pages with ARIA | 11/21 (was 6, +5 this session) |
+| Pages with ARIA | 15/21 (was 6, +9 this session) — 71% coverage |
 | Pages with design tokens | 4/21 (was 0) |
-| New backend utilities | 2 (mediaHelpers.js, pwaHelpers.js) |
+| New backend utilities | 3 (mediaHelpers.js, pwaHelpers.js, errorHandler.js) |
+| PWA | Phase 1 complete (manifest, service worker, install helpers) |
 
 ---
 
