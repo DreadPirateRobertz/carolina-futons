@@ -2,8 +2,10 @@
 // Shipping calculator, delivery zones, and FAQ
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
+import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   initShippingCalculator();
   initDeliveryInfo();
   await injectShippingSchema();
