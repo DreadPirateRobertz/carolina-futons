@@ -3,6 +3,7 @@
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
+import { colors } from 'public/designTokens.js';
 
 $w.onReady(async function () {
   await Promise.all([
@@ -115,12 +116,12 @@ function initDeliveryTimeline() {
         if (el) {
           el.text = step.text;
           if (step.status === 'complete') {
-            el.style.color = '#4A7C59'; // Forest green
+            el.style.color = colors.success;
           } else if (step.status === 'active') {
-            el.style.color = '#5B8FA8'; // Mountain blue
+            el.style.color = colors.mountainBlue;
             el.style.fontWeight = '700';
           } else {
-            el.style.color = '#8B7355'; // Muted
+            el.style.color = colors.mutedBrown;
           }
         }
       } catch (e) {}

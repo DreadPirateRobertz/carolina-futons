@@ -24,6 +24,7 @@ export const colors = {
   success: '#4A7C59',           // Forest green - in stock, delivered, success states
   error: '#E8845C',             // Reuses sunset coral - low stock, errors, warnings
   muted: '#999999',             // Grey - cancelled, disabled, inactive
+  mutedBrown: '#8B7355',        // Warm muted brown - pending/upcoming steps
 };
 
 export const typography = {
