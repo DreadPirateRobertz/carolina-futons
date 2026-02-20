@@ -65,6 +65,8 @@ export default defineConfig({
       'public/engagementTracker': path.resolve(__dirname, 'src/public/engagementTracker.js'),
       'public/pwaHelpers.js': path.resolve(__dirname, 'src/public/pwaHelpers.js'),
       'public/pwaHelpers': path.resolve(__dirname, 'src/public/pwaHelpers.js'),
+      'public/productCache.js': path.resolve(__dirname, 'src/public/productCache.js'),
+      'public/productCache': path.resolve(__dirname, 'src/public/productCache.js'),
     },
   },
 });

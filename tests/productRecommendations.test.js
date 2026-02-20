@@ -7,6 +7,8 @@ import {
   getSameCollection,
   getFeaturedProducts,
   getSaleProducts,
+  getBundleSuggestion,
+  getBestsellers,
 } from '../src/backend/productRecommendations.web.js';
 
 beforeEach(() => {
@@ -191,5 +193,89 @@ describe('getSaleProducts', () => {
     ]);
     const results = await getSaleProducts(12);
     expect(results).toEqual([]);
+  });
+});
+
+// ── getBundleSuggestion ─────────────────────────────────────────────
+
+describe('getBundleSuggestion', () => {
+  it('suggests mattress bundle for futon frame', async () => {
+    const bundle = await getBundleSuggestion('prod-frame-001');
+    expect(bundle).not.toBeNull();
+    expect(bundle.heading).toContain('Complete Your Futon');
+    expect(bundle.product).toBeDefined();
+    expect(bundle.product.collections).toEqual(expect.arrayContaining(['mattresses']));
+  });
+
+  it('suggests frame bundle for mattress', async () => {
+    const bundle = await getBundleSuggestion('prod-matt-001');
+    expect(bundle).not.toBeNull();
+    expect(bundle.heading).toContain('Futon');
+    expect(bundle.product.collections).toEqual(expect.arrayContaining(['futon-frames']));
+  });
+
+  it('suggests casegoods for murphy bed', async () => {
+    const bundle = await getBundleSuggestion('prod-murphy-001');
+    expect(bundle).not.toBeNull();
+    expect(bundle.heading).toContain('Bedroom');
+  });
+
+  it('suggests casegoods for platform bed', async () => {
+    const bundle = await getBundleSuggestion('prod-plat-001');
+    expect(bundle).not.toBeNull();
+    expect(bundle.heading).toContain('Furniture');
+  });
+
+  it('calculates 5% bundle discount correctly', async () => {
+    const bundle = await getBundleSuggestion('prod-frame-001');
+    if (bundle) {
+      const expectedSavings = bundle.originalTotal * 0.05;
+      expect(bundle.savings).toBeCloseTo(expectedSavings, 2);
+      expect(bundle.bundlePrice).toBeCloseTo(bundle.originalTotal - expectedSavings, 2);
+    }
+  });
+
+  it('returns null for casegoods (no bundle target)', async () => {
+    const bundle = await getBundleSuggestion('prod-case-001');
+    expect(bundle).toBeNull();
+  });
+
+  it('picks cheapest bundle partner (ascending price)', async () => {
+    const bundle = await getBundleSuggestion('prod-frame-001');
+    if (bundle) {
+      // Cheapest mattress is futonMattress at $349 (or discounted)
+      expect(bundle.product.price).toBeLessThanOrEqual(349);
+    }
+  });
+});
+
+// ── getBestsellers ──────────────────────────────────────────────────
+
+describe('getBestsellers', () => {
+  it('returns products with Bestseller ribbon as fallback', async () => {
+    const results = await getBestsellers(4);
+    expect(results.length).toBeGreaterThan(0);
+  });
+
+  it('uses ProductAnalytics weekSales when collection exists', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'pa-1', productId: 'prod-frame-001', weekSales: 15 },
+      { _id: 'pa-2', productId: 'prod-matt-001', weekSales: 10 },
+    ]);
+    const results = await getBestsellers(4);
+    expect(results.length).toBeGreaterThan(0);
+    const ids = results.map(r => r._id);
+    expect(ids).toContain('prod-frame-001');
+  });
+
+  it('falls back to newest products when no analytics or ribbon', async () => {
+    __seed('Stores/Products', allProducts.map(p => ({ ...p, ribbon: '' })));
+    const results = await getBestsellers(4);
+    expect(results.length).toBeGreaterThan(0);
+  });
+
+  it('respects limit parameter', async () => {
+    const results = await getBestsellers(2);
+    expect(results.length).toBeLessThanOrEqual(2);
   });
 });
