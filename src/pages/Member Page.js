@@ -120,15 +120,16 @@ async function initDashboard() {
 
     // Quick links - scroll to page sections
     const quickLinks = [
-      { id: '#dashQuickOrders', target: '#ordersRepeater' },
-      { id: '#dashQuickWishlist', target: '#wishlistRepeater' },
-      { id: '#dashQuickSettings', target: '#accountSettings' },
+      { id: '#dashQuickOrders', target: '#ordersRepeater', label: 'Jump to your orders' },
+      { id: '#dashQuickWishlist', target: '#wishlistRepeater', label: 'Jump to your wishlist' },
+      { id: '#dashQuickSettings', target: '#accountSettings', label: 'Jump to account settings' },
     ];
     for (const link of quickLinks) {
       try {
         $w(link.id).onClick(() => {
           try { $w(link.target).scrollTo(); } catch (e) {}
         });
+        try { $w(link.id).accessibility.ariaLabel = link.label; } catch (e) {}
       } catch (e) {}
     }
   } catch (e) {
@@ -176,6 +177,7 @@ function initOrderHistory() {
             });
           }
         });
+        try { $item('#orderTrackBtn').accessibility.ariaLabel = `Track order ${itemData.number}`; } catch (e) {}
 
         // Hide track button if no tracking info
         if (!itemData.shippingInfo?.trackingNumber) {
@@ -185,6 +187,7 @@ function initOrderHistory() {
 
       // Reorder button - adds all items from past order to cart
       try {
+        try { $item('#orderReorderBtn').accessibility.ariaLabel = `Reorder items from order ${itemData.number}`; } catch (e) {}
         $item('#orderReorderBtn').onClick(async () => {
           try {
             const { addToCart } = await import('public/cartService');
@@ -256,11 +259,13 @@ async function initWishlist() {
           wishlistSortOrder = sortDropdown.value;
           applyWishlistSort();
         });
+        try { sortDropdown.accessibility.ariaLabel = 'Sort wishlist items'; } catch (e) {}
       }
     } catch (e) {}
 
     // Share Wishlist — copy link button
     try {
+      try { $w('#wishShareBtn').accessibility.ariaLabel = 'Copy wishlist link'; } catch (e) {}
       $w('#wishShareBtn').onClick(async () => {
         try {
           const shareUrl = await getWishlistShareUrl();
@@ -278,6 +283,7 @@ async function initWishlist() {
 
     // Share Wishlist — Pinterest board
     try {
+      try { $w('#wishSharePinterest').accessibility.ariaLabel = 'Share wishlist on Pinterest'; } catch (e) {}
       $w('#wishSharePinterest').onClick(async () => {
         try {
           const shareUrl = await getWishlistShareUrl();
@@ -296,6 +302,7 @@ async function initWishlist() {
 
     // Share Wishlist — Email
     try {
+      try { $w('#wishShareEmail').accessibility.ariaLabel = 'Share wishlist via email'; } catch (e) {}
       $w('#wishShareEmail').onClick(async () => {
         try {
           const shareUrl = await getWishlistShareUrl();
@@ -315,6 +322,7 @@ async function initWishlist() {
 
     // Share Wishlist — Facebook
     try {
+      try { $w('#wishShareFacebook').accessibility.ariaLabel = 'Share wishlist on Facebook'; } catch (e) {}
       $w('#wishShareFacebook').onClick(async () => {
         try {
           const shareUrl = await getWishlistShareUrl();
@@ -363,6 +371,7 @@ async function initWishlist() {
 
       // Add to Cart button
       try {
+        try { $item('#wishAddToCartBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
         $item('#wishAddToCartBtn').onClick(async () => {
           try {
             const { addToCart } = await import('public/cartService');
@@ -380,6 +389,7 @@ async function initWishlist() {
       } catch (e) {}
 
       // View product
+      try { $item('#wishViewBtn').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       $item('#wishViewBtn').onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
@@ -387,6 +397,7 @@ async function initWishlist() {
       });
 
       // Remove from wishlist
+      try { $item('#wishRemoveBtn').accessibility.ariaLabel = `Remove ${itemData.name} from wishlist`; } catch (e) {}
       $item('#wishRemoveBtn').onClick(() => {
         import('wix-data').then(async (mod) => {
           try {
@@ -464,6 +475,7 @@ function initAccountSettings() {
         authentication.logout();
       });
     });
+    try { $w('#logoutBtn').accessibility.ariaLabel = 'Log out of your account'; } catch (e) {}
 
   } catch (e) {
     console.error('[MemberPage] Error initializing account settings:', e);
@@ -539,9 +551,9 @@ async function initCommunicationPrefs() {
 
       // Bind toggles to saved prefs
       const toggleIds = [
-        { id: '#prefNewsletter', key: 'newsletter' },
-        { id: '#prefSaleAlerts', key: 'saleAlerts' },
-        { id: '#prefBackInStock', key: 'backInStock' },
+        { id: '#prefNewsletter', key: 'newsletter', label: 'Receive newsletter emails' },
+        { id: '#prefSaleAlerts', key: 'saleAlerts', label: 'Receive sale alerts' },
+        { id: '#prefBackInStock', key: 'backInStock', label: 'Receive back-in-stock notifications' },
       ];
 
       for (const toggle of toggleIds) {
@@ -549,6 +561,7 @@ async function initCommunicationPrefs() {
           const el = $w(toggle.id);
           if (el) {
             el.checked = prefs[toggle.key] !== false;
+            try { el.accessibility.ariaLabel = toggle.label; } catch (e) {}
             el.onChange(async () => {
               try {
                 prefs[toggle.key] = el.checked;
