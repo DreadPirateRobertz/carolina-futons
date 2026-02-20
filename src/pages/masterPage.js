@@ -1,12 +1,17 @@
 // masterPage.js - Global site code
-// Runs on every page: navigation behavior, announcement bar, SEO injection
+// Runs on every page: navigation behavior, announcement bar, SEO injection,
+// and side cart auto-open on add-to-cart
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import wixLocationFrontend from 'wix-location-frontend';
+import wixStoresFrontend from 'wix-stores-frontend';
+
+let _previousCartItemCount = null;
 
 $w.onReady(async function () {
   initNavigation();
   initAnnouncementBar();
   initSearch();
+  initSideCartAutoOpen();
   await injectBusinessSchema();
 });
 
@@ -121,6 +126,59 @@ function initSearch() {
   } catch (e) {
     // Search may not be on all pages
   }
+}
+
+// ── Side Cart Auto-Open ─────────────────────────────────────────────
+// Automatically opens the side cart when a new item is added to cart
+
+function initSideCartAutoOpen() {
+  // Capture initial cart count so we can detect additions
+  wixStoresFrontend.cart.getCurrentCart().then((cart) => {
+    _previousCartItemCount = cart
+      ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
+      : 0;
+  }).catch(() => {
+    _previousCartItemCount = 0;
+  });
+
+  wixStoresFrontend.onCartChanged(async () => {
+    try {
+      const cart = await wixStoresFrontend.cart.getCurrentCart();
+      const newCount = cart
+        ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
+        : 0;
+
+      // Only auto-open when item count increased (add, not remove)
+      if (_previousCartItemCount !== null && newCount > _previousCartItemCount) {
+        openSideCart(cart);
+      }
+      _previousCartItemCount = newCount;
+    } catch (e) {
+      // Non-critical — side cart just won't auto-open
+    }
+  });
+}
+
+function openSideCart(cart) {
+  try {
+    const panel = $w('#sideCartPanel');
+    if (panel) {
+      panel.show('slide', { direction: 'right', duration: 300 });
+    }
+  } catch (e) {}
+
+  // Highlight the just-added item
+  try {
+    const highlight = $w('#justAddedHighlight');
+    if (highlight && cart && cart.lineItems.length > 0) {
+      const lastItem = cart.lineItems[cart.lineItems.length - 1];
+      highlight.show('fade', { duration: 200 });
+      // Auto-hide highlight after 3 seconds
+      setTimeout(() => {
+        try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
+      }, 3000);
+    }
+  } catch (e) {}
 }
 
 // ── SEO Schema Injection ────────────────────────────────────────────
