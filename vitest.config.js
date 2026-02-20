@@ -67,6 +67,8 @@ export default defineConfig({
       'public/pwaHelpers': path.resolve(__dirname, 'src/public/pwaHelpers.js'),
       'public/productCache.js': path.resolve(__dirname, 'src/public/productCache.js'),
       'public/productCache': path.resolve(__dirname, 'src/public/productCache.js'),
+      'public/touchHelpers.js': path.resolve(__dirname, 'src/public/touchHelpers.js'),
+      'public/touchHelpers': path.resolve(__dirname, 'src/public/touchHelpers.js'),
       'public/safeInit.js': path.resolve(__dirname, 'src/public/safeInit.js'),
       'public/safeInit': path.resolve(__dirname, 'src/public/safeInit.js'),
     },

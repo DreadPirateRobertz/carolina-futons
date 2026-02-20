@@ -19,6 +19,7 @@ import { getProductVariants, addToCart, onCartChanged } from 'public/cartService
 import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackProductPageView, trackCartAdd, trackGalleryInteraction, trackSwatchView, trackSocialShare } from 'public/engagementTracker';
 import { cacheProduct, getCachedProduct } from 'public/productCache';
+import { enableSwipe } from 'public/touchHelpers';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
@@ -635,6 +636,27 @@ function initImageGallery() {
         } catch (e) {}
       });
     }
+
+    // Mobile swipe navigation on product gallery
+    try {
+      const galleryEl = gallery?.getElement?.() || (typeof document !== 'undefined' ? document.querySelector('[id*="productGallery"]') : null);
+      if (galleryEl) {
+        let currentGalleryIndex = 0;
+        enableSwipe(galleryEl, (direction) => {
+          try {
+            const items = gallery.items || [];
+            if (items.length === 0) return;
+            if (direction === 'left') {
+              currentGalleryIndex = Math.min(currentGalleryIndex + 1, items.length - 1);
+            } else if (direction === 'right') {
+              currentGalleryIndex = Math.max(currentGalleryIndex - 1, 0);
+            }
+            $w('#productMainImage').src = items[currentGalleryIndex].src;
+            trackGalleryInteraction('swipe', direction);
+          } catch (e) {}
+        }, { threshold: 40 });
+      }
+    } catch (e) {}
 
     // Fullscreen lightbox on main image click
     initImageLightbox('#productGallery', '#productMainImage');
