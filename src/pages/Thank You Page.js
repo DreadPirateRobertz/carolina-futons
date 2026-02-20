@@ -137,6 +137,10 @@ function initSocialSharing() {
   try {
     $w('#shareText').text = 'Love your new furniture? Share with friends!';
 
+    try { $w('#shareFacebook').accessibility.ariaLabel = 'Share on Facebook'; } catch (e) {}
+    try { $w('#sharePinterest').accessibility.ariaLabel = 'Share on Pinterest'; } catch (e) {}
+    try { $w('#shareInstagram').accessibility.ariaLabel = 'Follow us on Instagram'; } catch (e) {}
+
     $w('#shareFacebook').onClick(() => {
       trackSocialShare('facebook', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
@@ -172,6 +176,8 @@ function initSocialSharing() {
 function initNewsletterSignup() {
   try {
     $w('#newsletterPrompt').text = 'Get updates on new products and exclusive deals';
+    try { $w('#newsletterEmail').accessibility.ariaLabel = 'Enter your email for newsletter'; } catch (e) {}
+    try { $w('#newsletterSignup').accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
     $w('#newsletterSignup').onClick(async () => {
       const email = $w('#newsletterEmail').value;
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -213,6 +219,7 @@ function initReferralSection() {
 
     // Copy referral link
     try {
+      try { $w('#referralCopyBtn').accessibility.ariaLabel = 'Copy referral link'; } catch (e) {}
       $w('#referralCopyBtn').onClick(() => {
         trackReferralAction('copy_link');
         const link = 'https://www.carolinafutons.com?ref=friend';
@@ -229,6 +236,7 @@ function initReferralSection() {
 
     // Email share
     try {
+      try { $w('#referralEmailBtn').accessibility.ariaLabel = 'Share referral via email'; } catch (e) {}
       $w('#referralEmailBtn').onClick(() => {
         trackReferralAction('email_share');
         const subject = encodeURIComponent('Check out Carolina Futons!');
@@ -265,6 +273,7 @@ async function loadPostPurchaseSuggestions() {
       $item('#ppName').text = itemData.name;
       $item('#ppPrice').text = itemData.formattedPrice;
 
+      try { $item('#ppImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       $item('#ppImage').onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
@@ -353,6 +362,7 @@ async function initAssemblyGuideLink() {
     } catch (e) {}
 
     try {
+      try { $w('#assemblyGuideBtn').accessibility.ariaLabel = 'View assembly and care guides'; } catch (e) {}
       $w('#assemblyGuideBtn').onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
           to('/getting-it-home');
