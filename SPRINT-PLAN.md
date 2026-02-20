@@ -1,9 +1,9 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 672 tests across 35 files (all passing)
-**Last Push**: 021da01
-**Updated by**: melania (crew lead) — 2026-02-20 14:06 MST
+**Test Suite**: 714 tests across 37 files (all passing)
+**Last Push**: e8a267d
+**Updated by**: mayor — 2026-02-20 14:22 MST
 
 ---
 
@@ -109,7 +109,7 @@
 |-------|--------|--------|----------|
 | social-feed-og-audit | caesar | DONE (`00a2f0a`) | melania |
 | Design token integration | caesar | DONE (4 pages: Product, Category, Member, ThankYou) | melania |
-| ARIA coverage pass | caesar | IN PROGRESS (15/21 pages done, 6 policy pages remain) | melania |
+| ARIA coverage pass | caesar | DONE (21/21 pages) | melania |
 | STORY-004 rev: safe-element-init | radahn | APPROVED (P2 — after PWA) | melania |
 | STORY-007: test hardening | radahn | DONE (`8cd2944`) | melania |
 | STORY-008: shared errorHandler | radahn | DONE (`3ce9214`) | melania |
@@ -142,7 +142,7 @@
 | STORY-009 | PWA mobile app (Phase 1) | radahn | APPROVED → after STORY-007 | P1 |
 | social-feed-og-audit | Feed bugs + OG meta fixes | caesar | DONE (`00a2f0a`) | P1 |
 | design-token-integration | Import tokens into 5 pages | caesar | DONE (4 pages) | P1 |
-| aria-coverage-pass | ARIA on all pages | caesar | IN PROGRESS (15/21 done) | P1 |
+| aria-coverage-pass | ARIA on all pages | caesar | DONE (21/21 pages) | P1 |
 
 ---
 
