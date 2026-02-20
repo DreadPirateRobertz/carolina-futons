@@ -1,8 +1,15 @@
 // Product Page.ve2z7.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
-// gallery enhancement, and SEO schema injection
+// gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
 import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import {
+  trackProductView,
+  getRecentlyViewed,
+  getProductBadge,
+  initImageLightbox,
+  initImageZoom,
+} from 'public/galleryHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
@@ -23,14 +30,19 @@ async function initProductPage() {
 
     if (!currentProduct) return;
 
+    // Track this product view in session storage for "Recently Viewed"
+    trackProductView(currentProduct);
+
     await Promise.all([
       initVariantSelector(),
       loadRelatedProducts(),
       loadCollectionProducts(),
+      loadRecentlyViewed(),
       injectProductSchema(),
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
+      initProductBadge(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
@@ -116,6 +128,20 @@ function updateVariantImage(variant) {
   try {
     if (variant.imageSrc) {
       $w('#productMainImage').src = variant.imageSrc;
+    }
+
+    // Update gallery thumbnails for this variant's media set
+    if (variant.mediaItems && variant.mediaItems.length > 0) {
+      try {
+        const gallery = $w('#productGallery');
+        if (gallery) {
+          gallery.items = variant.mediaItems.map(item => ({
+            type: 'image',
+            src: item.src || item.url,
+            alt: item.alt || currentProduct?.name || '',
+          }));
+        }
+      } catch (e) {}
     }
   } catch (e) {}
 }
@@ -247,7 +273,7 @@ function initImageGallery() {
       }
     }
 
-    // Gallery thumbnail click handling
+    // Gallery thumbnail click handling with active-state highlighting
     const gallery = $w('#productGallery');
     if (gallery) {
       gallery.onItemClicked((event) => {
@@ -256,6 +282,88 @@ function initImageGallery() {
         } catch (e) {}
       });
     }
+
+    // Fullscreen lightbox on main image click
+    initImageLightbox('#productGallery', '#productMainImage');
+
+    // Hover zoom on main product image
+    initImageZoom('#productMainImage');
+
+    // Preload gallery thumbnail images for smoother browsing
+    preloadGalleryThumbnails();
+  } catch (e) {}
+}
+
+// ── Recently Viewed Products ────────────────────────────────────────
+// Horizontal section below cross-sell showing products viewed this session
+
+async function loadRecentlyViewed() {
+  try {
+    const recentProducts = getRecentlyViewed(currentProduct?._id);
+
+    if (!recentProducts || recentProducts.length === 0) {
+      try { $w('#recentlyViewedSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const repeater = $w('#recentlyViewedRepeater');
+    if (!repeater) {
+      try { $w('#recentlyViewedSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    $w('#recentlyViewedSection').expand();
+    repeater.data = recentProducts;
+    repeater.onItemReady(($item, itemData) => {
+      $item('#recentImage').src = itemData.mainMedia;
+      $item('#recentImage').alt = buildGridAlt(itemData);
+      $item('#recentName').text = itemData.name;
+      $item('#recentPrice').text = itemData.price;
+
+      // Click to navigate to product
+      const navigateToProduct = () => {
+        import('wix-location').then(({ to }) => {
+          to(`/product-page/${itemData.slug}`);
+        });
+      };
+      $item('#recentImage').onClick(navigateToProduct);
+      $item('#recentName').onClick(navigateToProduct);
+    });
+  } catch (e) {}
+}
+
+// ── Product Badge Overlay ───────────────────────────────────────────
+// Shows sale/new/featured badge on main image area
+
+function initProductBadge() {
+  try {
+    const badge = getProductBadge(currentProduct);
+    const badgeOverlay = $w('#productBadgeOverlay');
+    if (!badgeOverlay) return;
+
+    if (badge) {
+      badgeOverlay.text = badge;
+      badgeOverlay.show();
+    } else {
+      badgeOverlay.hide();
+    }
+  } catch (e) {}
+}
+
+// ── Image Preloading ────────────────────────────────────────────────
+// Preload gallery thumbnails for smoother browsing
+
+function preloadGalleryThumbnails() {
+  try {
+    const gallery = $w('#productGallery');
+    if (!gallery || !gallery.items) return;
+
+    gallery.items.forEach(item => {
+      if (item.src) {
+        const img = new Image();
+        img.src = item.src;
+      }
+    });
   } catch (e) {}
 }
 
