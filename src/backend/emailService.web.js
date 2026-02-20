@@ -86,6 +86,66 @@ export const sendEmail = webMethod(
 );
 
 /**
+ * Submit a fabric swatch request. Stores in ContactSubmissions CMS and
+ * notifies the store owner via triggered email.
+ *
+ * @function submitSwatchRequest
+ * @param {Object} params
+ * @param {string} params.name - Customer's name.
+ * @param {string} params.email - Customer's email address.
+ * @param {string} params.address - Customer's mailing address for swatches.
+ * @param {string} params.productId - The product ID swatches are requested for.
+ * @param {string} params.productName - Display name of the product.
+ * @param {string[]} params.swatchNames - Array of selected swatch/fabric names.
+ * @returns {Promise<{success: true}>}
+ * @throws {Error} On failure with fallback contact info.
+ * @permission Anyone
+ */
+export const submitSwatchRequest = webMethod(
+  Permissions.Anyone,
+  async ({ name, email, address, productId, productName, swatchNames }) => {
+    try {
+      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+
+      // Persist to CMS for record-keeping
+      await wixData.insert('ContactSubmissions', {
+        name,
+        email,
+        subject: `Swatch Request: ${productName}`,
+        message: `Swatches: ${swatchNames.join(', ')}\nMailing Address: ${address}\nProduct: ${productName} (${productId})`,
+        submittedAt: new Date(),
+        status: 'swatch_request',
+      });
+
+      // Notify store owner
+      await triggeredEmails.emailContact(
+        'contact_form_submission',
+        siteOwnerContactId,
+        {
+          variables: {
+            customerName: name,
+            customerEmail: email,
+            customerPhone: '',
+            subject: `Fabric Swatch Request — ${productName}`,
+            message: `Swatches requested: ${swatchNames.join(', ')}\n\nShip to:\n${name}\n${address}`,
+            submittedAt: new Date().toLocaleString('en-US', {
+              timeZone: 'America/New_York',
+              dateStyle: 'full',
+              timeStyle: 'short',
+            }),
+          },
+        }
+      );
+
+      return { success: true };
+    } catch (err) {
+      console.error('Error submitting swatch request:', err);
+      throw new Error('Failed to submit swatch request. Please try calling us at (828) 252-9449.');
+    }
+  }
+);
+
+/**
  * Send a new order notification to the store owner.
  * Non-critical — returns `{ success: false }` on failure rather than throwing.
  *
