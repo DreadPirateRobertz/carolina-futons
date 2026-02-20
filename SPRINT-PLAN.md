@@ -114,6 +114,9 @@
 | STORY-007: test hardening | radahn | DONE (`8cd2944`) | melania |
 | STORY-008: shared errorHandler | radahn | DONE (`3ce9214`) | melania |
 | STORY-009: PWA mobile app | radahn | DONE Phase 1 (`927dc0d`) | melania |
+| STORY-010: Wix SW research (pivot to PWA-lite) | radahn | APPROVED → implementing | melania |
+| STORY-011a: productCache + install banner | radahn | APPROVED → after STORY-010 | melania |
+| STORY-011b: touch helpers (swipe/pinch) | radahn | APPROVED → after STORY-011a | melania |
 
 ### P2 — Needs Wix Dashboard
 - [ ] Create 11 CMS collections (see memory.md)
