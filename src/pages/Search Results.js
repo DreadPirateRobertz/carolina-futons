@@ -4,8 +4,10 @@ import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { trackEvent } from 'public/engagementTracker';
 import { addToCart } from 'public/cartService';
+import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   const query = wixLocationFrontend.query?.q || '';
   trackEvent('page_view', { page: 'search', query });
   if (query) {
@@ -74,7 +76,7 @@ async function performSearch(query) {
         });
       } catch (e) {}
     });
-    repeater.data = results.items.map(item => ({
+    const mapped = results.items.map(item => ({
       _id: item._id,
       name: item.name,
       slug: item.slug,
@@ -82,6 +84,7 @@ async function performSearch(query) {
       image: item.mainMedia,
       description: stripHtml(item.description || '').substring(0, 120) + '...',
     }));
+    repeater.data = limitForViewport(mapped, { mobile: 8, tablet: 12, desktop: 24 });
   } catch (err) {
     console.error('Search error:', err);
     showNoResults(query);
