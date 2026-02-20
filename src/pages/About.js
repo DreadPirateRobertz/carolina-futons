@@ -20,6 +20,7 @@ function initPhotoGallery() {
     if (!gallery) return;
 
     // Apply random slight rotations to gallery items for polaroid effect
+    try { gallery.accessibility.ariaLabel = 'Team photo gallery'; } catch (e) {}
     gallery.onItemReady(($item, itemData) => {
       $item('#polaroidImage').alt = itemData.title || 'The Carolina Futons team in Hendersonville, NC';
 
@@ -48,6 +49,7 @@ function initTimeline() {
     const repeater = $w('#timelineRepeater');
     if (!repeater) return;
 
+    try { repeater.accessibility.ariaLabel = 'Business history timeline'; } catch (e) {}
     repeater.onItemReady(($item, itemData) => {
       $item('#timelineYear').text = itemData.year;
       $item('#timelineTitle').text = itemData.title;
