@@ -4,6 +4,7 @@
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { addToCompare, getCompareList, removeFromCompare } from 'public/galleryHelpers';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -230,6 +231,41 @@ function initProductGrid() {
           openQuickView(itemData);
         });
       } catch (e) {}
+
+      // Compare button
+      try {
+        const compareBtn = $item('#gridCompareBtn');
+        if (compareBtn) {
+          // Set initial state
+          const currentList = getCompareList();
+          const isInList = currentList.some(p => p._id === itemData._id);
+          compareBtn.label = isInList ? 'Remove from Compare' : 'Compare';
+
+          compareBtn.onClick(() => {
+            const list = getCompareList();
+            const alreadyComparing = list.some(p => p._id === itemData._id);
+
+            if (alreadyComparing) {
+              removeFromCompare(itemData._id);
+              compareBtn.label = 'Compare';
+            } else {
+              const added = addToCompare({
+                _id: itemData._id,
+                name: itemData.name,
+                slug: itemData.slug,
+                formattedPrice: itemData.formattedPrice,
+                mainMedia: itemData.mainMedia,
+              });
+              if (added) {
+                compareBtn.label = 'Remove from Compare';
+              }
+            }
+
+            // Refresh the global compare bar on masterPage
+            refreshCompareBarUI();
+          });
+        }
+      } catch (e) {}
     });
   } catch (e) {
     console.error('Error initializing product grid:', e);
@@ -327,6 +363,41 @@ function detectCategory(product) {
 
 function stripHtml(html) {
   return html.replace(/<[^>]*>/g, '').trim();
+}
+
+// ── Compare Bar Refresh ──────────────────────────────────────────
+// Updates the masterPage compare bar from this page context
+
+function refreshCompareBarUI() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    const items = getCompareList();
+
+    if (items.length === 0) {
+      compareBar.hide('slide', { duration: 200, direction: 'bottom' });
+      return;
+    }
+
+    const repeater = $w('#compareRepeater');
+    if (repeater) {
+      repeater.data = items.map(p => ({ ...p, _id: p._id }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compareName').text = itemData.name; } catch (e) {}
+        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compareRemove').onClick(() => {
+            removeFromCompare(itemData._id);
+            refreshCompareBarUI();
+          });
+        } catch (e) {}
+      });
+    }
+
+    compareBar.show('slide', { duration: 200, direction: 'bottom' });
+  } catch (e) {}
 }
 
 // ── Category Schema Injection ─────────────────────────────────────
