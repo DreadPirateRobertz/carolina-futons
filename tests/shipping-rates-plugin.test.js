@@ -198,4 +198,118 @@ describe('getShippingRates', () => {
 
     expect(result.shippingRates.length).toBeGreaterThan(0);
   });
+
+  // ── White Glove Delivery ────────────────────────────────────────────
+
+  it('adds white-glove option for Southeast ZIP codes', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '28801', city: 'Asheville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).toContain('white-glove');
+  });
+
+  it('charges $149 for local white-glove (ZIP 287-289)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '28792', city: 'Hendersonville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const wg = result.shippingRates.find(r => r.code === 'white-glove');
+    expect(wg).toBeDefined();
+    expect(wg.cost.price).toBe('149.00');
+  });
+
+  it('charges $249 for regional white-glove (ZIP 270-286, 290-399)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '30301', city: 'Atlanta', subdivision: 'GA', country: 'US' },
+      },
+    });
+
+    const wg = result.shippingRates.find(r => r.code === 'white-glove');
+    expect(wg).toBeDefined();
+    expect(wg.cost.price).toBe('249.00');
+  });
+
+  it('offers free white-glove for orders >= $1999', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '2100' }],
+      shippingDestination: {
+        address: { postalCode: '28801', city: 'Asheville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const wg = result.shippingRates.find(r => r.code === 'white-glove');
+    expect(wg).toBeDefined();
+    expect(wg.cost.price).toBe('0.00');
+    expect(wg.title).toContain('Free');
+  });
+
+  it('does NOT offer white-glove for non-Southeast ZIP codes', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '10001', city: 'New York', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('offers free local delivery for orders >= $999', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1899' }],
+      shippingDestination: {
+        address: { postalCode: '28801', city: 'Asheville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const local = result.shippingRates.find(r => r.code === 'local-delivery');
+    expect(local).toBeDefined();
+    expect(local.cost.price).toBe('0.00');
+    expect(local.title).toContain('Free');
+  });
+
+  it('charges $49.99 local delivery for orders < $999', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '28801', city: 'Asheville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const local = result.shippingRates.find(r => r.code === 'local-delivery');
+    expect(local).toBeDefined();
+    expect(local.cost.price).toBe('49.99');
+  });
+
+  it('white-glove has shorter delivery time for local ZIP codes', async () => {
+    const localResult = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '28792', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const regionalResult = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '30301', subdivision: 'GA', country: 'US' },
+      },
+    });
+
+    const localWg = localResult.shippingRates.find(r => r.code === 'white-glove');
+    const regionalWg = regionalResult.shippingRates.find(r => r.code === 'white-glove');
+    expect(localWg.logistics.deliveryTime).toBe('3-5 business days');
+    expect(regionalWg.logistics.deliveryTime).toBe('5-10 business days');
+  });
 });
