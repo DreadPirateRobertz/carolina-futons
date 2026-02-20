@@ -17,6 +17,7 @@ $w.onReady(async function () {
   initAnnouncementBar();
   initSearch();
   initSideCartAutoOpen();
+  initFooterNewsletter();
   await injectBusinessSchema();
 
   // Promotional lightbox — delayed 3s so page renders first
@@ -228,6 +229,55 @@ function openSideCart(cart) {
         try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
       }, 3000);
     }
+  } catch (e) {}
+}
+
+// ── Footer Newsletter Signup ────────────────────────────────────────
+// Email capture in footer — saves to CMS and Wix contacts
+
+function initFooterNewsletter() {
+  try {
+    const emailInput = $w('#footerEmailInput');
+    const submitBtn = $w('#footerEmailSubmit');
+    if (!emailInput || !submitBtn) return;
+
+    submitBtn.onClick(async () => {
+      const email = emailInput.value?.trim();
+      if (!email || !email.includes('@')) {
+        try { $w('#footerEmailError').text = 'Please enter a valid email'; } catch (e) {}
+        try { $w('#footerEmailError').show(); } catch (e) {}
+        return;
+      }
+
+      try { $w('#footerEmailError').hide(); } catch (e) {}
+      submitBtn.disable();
+      submitBtn.label = 'Subscribing...';
+
+      try {
+        // Save to CMS for record-keeping
+        await submitContactForm({
+          email,
+          source: 'footer_newsletter',
+          status: 'newsletter_signup',
+          notes: 'Subscribed via site footer',
+        });
+
+        // Also add to Wix contacts for email marketing
+        try {
+          const wixCrm = await import('wix-crm-frontend');
+          await wixCrm.createContact({ emails: [email] });
+        } catch (e) {}
+
+        trackEvent('newsletter_signup', { source: 'footer' });
+
+        emailInput.value = '';
+        submitBtn.label = 'Subscribed!';
+        try { $w('#footerEmailSuccess').show('fade', { duration: 300 }); } catch (e) {}
+      } catch (err) {
+        submitBtn.enable();
+        submitBtn.label = 'Subscribe';
+      }
+    });
   } catch (e) {}
 }
 
