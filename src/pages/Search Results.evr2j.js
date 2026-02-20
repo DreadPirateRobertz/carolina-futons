@@ -35,15 +35,6 @@ async function performSearch(query) {
     const repeater = $w('#searchRepeater');
     if (!repeater) return;
 
-    repeater.data = results.items.map(item => ({
-      _id: item._id,
-      name: item.name,
-      slug: item.slug,
-      price: item.formattedPrice,
-      image: item.mainMedia,
-      description: stripHtml(item.description || '').substring(0, 120) + '...',
-    }));
-
     repeater.onItemReady(($item, itemData) => {
       $item('#searchImage').src = itemData.image;
       $item('#searchImage').alt = `${itemData.name} - Carolina Futons`;
@@ -52,13 +43,21 @@ async function performSearch(query) {
       try { $item('#searchDesc').text = itemData.description; } catch (e) {}
 
       const navigate = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
       $item('#searchImage').onClick(navigate);
       $item('#searchName').onClick(navigate);
     });
+    repeater.data = results.items.map(item => ({
+      _id: item._id,
+      name: item.name,
+      slug: item.slug,
+      price: item.formattedPrice,
+      image: item.mainMedia,
+      description: stripHtml(item.description || '').substring(0, 120) + '...',
+    }));
   } catch (err) {
     console.error('Search error:', err);
     showNoResults(query);

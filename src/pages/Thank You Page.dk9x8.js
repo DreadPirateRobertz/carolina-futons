@@ -74,7 +74,6 @@ async function loadPostPurchaseSuggestions() {
       $w('#postPurchaseHeading').text = 'You Might Also Love';
     } catch (e) {}
 
-    repeater.data = products;
     repeater.onItemReady(($item, itemData) => {
       $item('#ppImage').src = itemData.mainMedia;
       $item('#ppImage').alt = `${itemData.name} - Carolina Futons`;
@@ -82,11 +81,12 @@ async function loadPostPurchaseSuggestions() {
       $item('#ppPrice').text = itemData.formattedPrice;
 
       $item('#ppImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
     });
+    repeater.data = products;
   } catch (err) {
     console.error('Error loading post-purchase suggestions:', err);
   }

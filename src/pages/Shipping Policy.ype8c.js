@@ -101,11 +101,11 @@ function initDeliveryInfo() {
     const repeater = $w('#deliveryRepeater');
     if (!repeater) return;
 
-    repeater.data = deliveryMethods;
     repeater.onItemReady(($item, itemData) => {
       $item('#deliveryTitle').text = itemData.title;
       $item('#deliveryDesc').text = itemData.description;
     });
+    repeater.data = deliveryMethods;
   } catch (e) {}
 
   // Assembly tips section

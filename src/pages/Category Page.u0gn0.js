@@ -1,20 +1,169 @@
 // Category Page.u0gn0.js - Product Category / Collection Pages
-// Handles filtering, sorting, and product grid with engagement features
+// Handles filtering, sorting, product grid with engagement features,
+// category hero content, product badges, recently viewed, and SEO meta
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } from 'backend/seoHelpers.web';
+import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
+let currentQuickViewProduct = null;
+
+// ── Category Content Map ─────────────────────────────────────────────
+// Marketing copy and hero config for each category
+
+const CATEGORY_CONTENT = {
+  'futon-frames': {
+    title: 'Futon Frames',
+    subtitle: 'Handcrafted frames for every room — from classic hardwood to contemporary designs',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #D4BC96 100%)',
+  },
+  'mattresses': {
+    title: 'Mattresses',
+    subtitle: 'Premium mattresses crafted for comfort — find your perfect sleep surface',
+    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #E8D5B7 100%)',
+  },
+  'murphy-cabinet-beds': {
+    title: 'Murphy Cabinet Beds',
+    subtitle: 'Space-saving elegance — beautiful cabinet beds that transform any room',
+    heroGradient: 'linear-gradient(135deg, #A8CCD8 0%, #5B8FA8 100%)',
+  },
+  'platform-beds': {
+    title: 'Platform Beds',
+    subtitle: 'Modern simplicity meets mountain craftsmanship',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #C9A0A0 100%)',
+  },
+  'casegoods-accessories': {
+    title: 'Casegoods & Accessories',
+    subtitle: 'Complete your space with matching nightstands, dressers, and storage',
+    heroGradient: 'linear-gradient(135deg, #D4BC96 0%, #E8D5B7 100%)',
+  },
+  'wall-huggers': {
+    title: 'Wall Hugger Frames',
+    subtitle: 'Space-efficient frames designed to sit close to your wall',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #A8CCD8 100%)',
+  },
+  'unfinished-wood': {
+    title: 'Unfinished Wood',
+    subtitle: 'Raw hardwood frames ready for your personal finish',
+    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #D4BC96 100%)',
+  },
+  'sales': {
+    title: 'Sale',
+    subtitle: 'Current deals on quality furniture — limited time savings',
+    heroGradient: 'linear-gradient(135deg, #F2A882 0%, #E8845C 100%)',
+  },
+};
+
+// ── Category Content Map ─────────────────────────────────────────────
+// Marketing copy and hero config for each category
+
+const CATEGORY_CONTENT = {
+  'futon-frames': {
+    title: 'Futon Frames',
+    subtitle: 'Handcrafted frames for every room — from classic hardwood to contemporary designs',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #D4BC96 100%)',
+  },
+  'mattresses': {
+    title: 'Mattresses',
+    subtitle: 'Premium mattresses crafted for comfort — find your perfect sleep surface',
+    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #E8D5B7 100%)',
+  },
+  'murphy-cabinet-beds': {
+    title: 'Murphy Cabinet Beds',
+    subtitle: 'Space-saving elegance — beautiful cabinet beds that transform any room',
+    heroGradient: 'linear-gradient(135deg, #A8CCD8 0%, #5B8FA8 100%)',
+  },
+  'platform-beds': {
+    title: 'Platform Beds',
+    subtitle: 'Modern simplicity meets mountain craftsmanship',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #C9A0A0 100%)',
+  },
+  'casegoods-accessories': {
+    title: 'Casegoods & Accessories',
+    subtitle: 'Complete your space with matching nightstands, dressers, and storage',
+    heroGradient: 'linear-gradient(135deg, #D4BC96 0%, #E8D5B7 100%)',
+  },
+  'wall-huggers': {
+    title: 'Wall Hugger Frames',
+    subtitle: 'Space-efficient frames designed to sit close to your wall',
+    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #A8CCD8 100%)',
+  },
+  'unfinished-wood': {
+    title: 'Unfinished Wood',
+    subtitle: 'Raw hardwood frames ready for your personal finish',
+    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #D4BC96 100%)',
+  },
+  'sales': {
+    title: 'Sale',
+    subtitle: 'Current deals on quality furniture — limited time savings',
+    heroGradient: 'linear-gradient(135deg, #F2A882 0%, #E8845C 100%)',
+  },
+};
 
 $w.onReady(async function () {
+  const currentPath = wixLocationFrontend.path?.[0] || '';
+
+  initCategoryHero(currentPath);
   initSortControls();
   initFilterControls();
   initProductGrid();
-  updateResultCount();
+  updateResultCount(currentPath);
+  initRecentlyViewed();
+  injectCategoryMeta(currentPath);
   await injectCategorySchema();
 });
+
+// ── Category Hero ────────────────────────────────────────────────────
+
+function initCategoryHero(currentPath) {
+  const content = CATEGORY_CONTENT[currentPath];
+  if (!content) return;
+
+  try {
+    $w('#categoryHeroTitle').text = content.title;
+  } catch (e) {}
+
+  try {
+    $w('#categoryHeroSubtitle').text = content.subtitle;
+  } catch (e) {}
+
+  try {
+    $w('#categoryHeroSection').style.backgroundColor = '';
+    $w('#categoryHeroSection').style.backgroundImage = content.heroGradient;
+  } catch (e) {
+    // backgroundImage may not be supported on all element types;
+    // fall back to a solid color from the gradient start
+    try {
+      const solidColor = content.heroGradient.match(/#[A-Fa-f0-9]{6}/)?.[0] || '#E8D5B7';
+      $w('#categoryHeroSection').style.backgroundColor = solidColor;
+    } catch (e2) {}
+  }
+}
+
+// ── SEO Meta Description ─────────────────────────────────────────────
+
+async function injectCategoryMeta(currentPath) {
+  try {
+    const metaDescription = await getCategoryMetaDescription(currentPath);
+    if (metaDescription) {
+      const { head } = await import('wix-seo-frontend');
+      head.setMetaTag('description', metaDescription);
+
+      // Also set OG description
+      head.setMetaTag('og:description', metaDescription);
+
+      // Set title from category content if available
+      const content = CATEGORY_CONTENT[currentPath];
+      if (content) {
+        head.setTitle(`${content.title} | Carolina Futons - Hendersonville, NC`);
+        head.setMetaTag('og:title', `${content.title} | Carolina Futons`);
+      }
+    }
+  } catch (e) {}
+}
 
 // ── Sort Controls ───────────────────────────────────────────────────
 
@@ -45,26 +194,27 @@ function applySort() {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
 
-    // Reset sort
-    dataset.setSort(wixData.sort());
-
+    let sort;
     switch (currentSort) {
       case 'name-asc':
-        dataset.setSort(wixData.sort().ascending('name'));
+        sort = wixData.sort().ascending('name');
         break;
       case 'name-desc':
-        dataset.setSort(wixData.sort().descending('name'));
+        sort = wixData.sort().descending('name');
         break;
       case 'price-asc':
-        dataset.setSort(wixData.sort().ascending('price'));
+        sort = wixData.sort().ascending('price');
         break;
       case 'price-desc':
-        dataset.setSort(wixData.sort().descending('price'));
+        sort = wixData.sort().descending('price');
         break;
       case 'date-desc':
-        dataset.setSort(wixData.sort().descending('_createdDate'));
+        sort = wixData.sort().descending('_createdDate');
         break;
+      default:
+        sort = wixData.sort();
     }
+    dataset.setSort(sort);
   } catch (e) {
     console.error('Error applying sort:', e);
   }
@@ -74,7 +224,7 @@ function applySort() {
 // Filter by brand, price range, size, finish
 
 function initFilterControls() {
-  // Brand filter
+  // Brand filter — includes Wall Hugger and Unfinished Wood brands
   try {
     const brandFilter = $w('#filterBrand');
     if (brandFilter) {
@@ -82,7 +232,9 @@ function initFilterControls() {
         { label: 'All Brands', value: '' },
         { label: 'Night & Day Furniture', value: 'Night & Day' },
         { label: 'Strata Furniture', value: 'Strata' },
+        { label: 'Wall Hugger Frames', value: 'Wall Hugger' },
         { label: 'KD Frames', value: 'KD Frames' },
+        { label: 'Unfinished Wood', value: 'Unfinished' },
         { label: 'Otis Bed', value: 'Otis' },
       ];
       brandFilter.value = '';
@@ -171,7 +323,7 @@ function applyFilters() {
 }
 
 // ── Product Grid ────────────────────────────────────────────────────
-// Enhanced product cards with hover effects and quick-view
+// Enhanced product cards with hover effects, quick-view, and badges
 
 function initProductGrid() {
   try {
@@ -179,8 +331,9 @@ function initProductGrid() {
     if (!repeater) return;
 
     repeater.onItemReady(($item, itemData) => {
-      // Set product image with SEO alt text
-      $item('#gridImage').src = itemData.mainMedia;
+      // Set product image with SEO alt text (fallback to placeholder if no image)
+      const category = wixLocationFrontend.path?.[0] || '';
+      $item('#gridImage').src = itemData.mainMedia || getProductFallbackImage(category);
       $item('#gridImage').alt = buildAltText(itemData);
 
       // Product info
@@ -196,6 +349,17 @@ function initProductGrid() {
           $item('#gridSaleBadge').show();
         } catch (e) {}
       }
+
+      // Product badge from galleryHelpers (Sale, New, Featured, In-Store Only)
+      try {
+        const badge = getProductBadge(itemData);
+        if (badge) {
+          $item('#gridBadge').text = badge;
+          $item('#gridBadge').show();
+        } else {
+          $item('#gridBadge').hide();
+        }
+      } catch (e) {}
 
       // Brand label
       try {
@@ -216,7 +380,7 @@ function initProductGrid() {
 
       // Click to product page
       const navigateToProduct = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
@@ -224,11 +388,65 @@ function initProductGrid() {
       $item('#gridImage').onClick(navigateToProduct);
       $item('#gridName').onClick(navigateToProduct);
 
+      // Fabric swatch preview dots (3-4 color circles)
+      initGridSwatchPreview($item, itemData);
+
+      // "Available in 700+ fabrics" badge
+      try {
+        // Show badge for products that have fabric options (frames, not mattresses)
+        const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
+        const hasFabricOptions = colls.some(c =>
+          c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
+          c.includes('unfinished') || c.includes('platform')
+        );
+        if (hasFabricOptions) {
+          $item('#gridFabricBadge').text = 'Available in 700+ fabrics';
+          $item('#gridFabricBadge').show();
+        } else {
+          $item('#gridFabricBadge').hide();
+        }
+      } catch (e) {}
+
       // Quick view button
       try {
         $item('#quickViewBtn').onClick(() => {
           openQuickView(itemData);
         });
+      } catch (e) {}
+
+      // Compare button
+      try {
+        const compareBtn = $item('#gridCompareBtn');
+        if (compareBtn) {
+          // Set initial state
+          const currentList = getCompareList();
+          const isInList = currentList.some(p => p._id === itemData._id);
+          compareBtn.label = isInList ? 'Remove from Compare' : 'Compare';
+
+          compareBtn.onClick(() => {
+            const list = getCompareList();
+            const alreadyComparing = list.some(p => p._id === itemData._id);
+
+            if (alreadyComparing) {
+              removeFromCompare(itemData._id);
+              compareBtn.label = 'Compare';
+            } else {
+              const added = addToCompare({
+                _id: itemData._id,
+                name: itemData.name,
+                slug: itemData.slug,
+                formattedPrice: itemData.formattedPrice,
+                mainMedia: itemData.mainMedia,
+              });
+              if (added) {
+                compareBtn.label = 'Remove from Compare';
+              }
+            }
+
+            // Refresh the global compare bar on masterPage
+            refreshCompareBarUI();
+          });
+        }
       } catch (e) {}
     });
   } catch (e) {
@@ -236,26 +454,70 @@ function initProductGrid() {
   }
 }
 
+// ── Grid Swatch Preview Dots ────────────────────────────────────────
+// Shows 3-4 small color circles on product cards for items with fabric options
+
+async function initGridSwatchPreview($item, itemData) {
+  try {
+    const preview = $item('#gridSwatchPreview');
+    if (!preview) return;
+
+    // Only load swatches for products that likely have fabric options
+    const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
+    const hasFabricOptions = colls.some(c =>
+      c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
+      c.includes('unfinished') || c.includes('platform')
+    );
+
+    if (!hasFabricOptions) {
+      preview.collapse();
+      return;
+    }
+
+    const swatchColors = await getSwatchPreviewColors(itemData._id, 4);
+    if (!swatchColors || swatchColors.length === 0) {
+      preview.collapse();
+      return;
+    }
+
+    // Set color dots (up to 4 pre-placed dot elements in the editor)
+    const dotIds = ['#swatchDot1', '#swatchDot2', '#swatchDot3', '#swatchDot4'];
+    dotIds.forEach((dotId, i) => {
+      try {
+        const dot = $item(dotId);
+        if (i < swatchColors.length) {
+          dot.style.backgroundColor = swatchColors[i].colorHex;
+          dot.show();
+        } else {
+          dot.hide();
+        }
+      } catch (e) {}
+    });
+
+    preview.expand();
+  } catch (e) {
+    try { $item('#gridSwatchPreview').collapse(); } catch (e2) {}
+  }
+}
+
 // ── Quick View Modal ────────────────────────────────────────────────
 
-function openQuickView(product) {
+// Register quick view handlers once to avoid accumulation
+function initQuickViewHandlers() {
   try {
-    $w('#qvImage').src = product.mainMedia;
-    $w('#qvImage').alt = buildAltText(product);
-    $w('#qvName').text = product.name;
-    $w('#qvPrice').text = product.formattedPrice;
-    $w('#qvDescription').text = stripHtml(product.description || '');
-
     $w('#qvViewFull').onClick(() => {
-      import('wix-location').then(({ to }) => {
-        to(`/product-page/${product.slug}`);
-      });
+      if (currentQuickViewProduct) {
+        import('wix-location-frontend').then(({ to }) => {
+          to(`/product-page/${currentQuickViewProduct.slug}`);
+        });
+      }
     });
 
     $w('#qvAddToCart').onClick(async () => {
+      if (!currentQuickViewProduct) return;
       try {
         const { default: wixStoresFrontend } = await import('wix-stores-frontend');
-        await wixStoresFrontend.cart.addProducts([{ productId: product._id, quantity: 1 }]);
+        await wixStoresFrontend.cart.addProducts([{ productId: currentQuickViewProduct._id, quantity: 1 }]);
         $w('#qvAddToCart').label = 'Added!';
         setTimeout(() => {
           $w('#quickViewModal').hide('fade', { duration: 200 });
@@ -268,14 +530,25 @@ function openQuickView(product) {
     $w('#qvClose').onClick(() => {
       $w('#quickViewModal').hide('fade', { duration: 200 });
     });
+  } catch (e) {}
+}
 
+function openQuickView(product) {
+  try {
+    currentQuickViewProduct = product;
+    $w('#qvImage').src = product.mainMedia;
+    $w('#qvImage').alt = buildAltText(product);
+    $w('#qvName').text = product.name;
+    $w('#qvPrice').text = product.formattedPrice;
+    $w('#qvDescription').text = stripHtml(product.description || '');
+    $w('#qvAddToCart').label = 'Add to Cart';
     $w('#quickViewModal').show('fade', { duration: 200 });
   } catch (e) {}
 }
 
-// ── Result Count ────────────────────────────────────────────────────
+// ── Result Count & Empty State ──────────────────────────────────────
 
-function updateResultCount() {
+function updateResultCount(currentPath) {
   try {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
@@ -285,8 +558,83 @@ function updateResultCount() {
       try {
         $w('#resultCount').text = `${count} product${count !== 1 ? 's' : ''}`;
       } catch (e) {}
+
+      // Show empty state if no products found
+      if (count === 0) {
+        showEmptyState(currentPath);
+      } else {
+        try { $w('#emptyStateSection').hide(); } catch (e) {}
+      }
     });
   } catch (e) {}
+}
+
+function showEmptyState(currentPath) {
+  try {
+    const content = CATEGORY_CONTENT[currentPath];
+    const categoryName = content ? content.title : 'this category';
+
+    try {
+      $w('#emptyStateTitle').text = `No products found`;
+    } catch (e) {}
+
+    try {
+      $w('#emptyStateMessage').text =
+        `We're updating our ${categoryName} collection. Check back soon or visit our Hendersonville showroom to see what's available in store.`;
+    } catch (e) {}
+
+    // Show illustration placeholder
+    try { $w('#emptyStateIllustration').show(); } catch (e) {}
+
+    $w('#emptyStateSection').show();
+  } catch (e) {}
+}
+
+// ── Recently Viewed ─────────────────────────────────────────────────
+
+function initRecentlyViewed() {
+  try {
+    const recentItems = getRecentlyViewed();
+    if (!recentItems || recentItems.length === 0) {
+      try { $w('#recentlyViewedSection').hide(); } catch (e) {}
+      return;
+    }
+
+    try {
+      $w('#recentlyViewedTitle').text = 'Recently Viewed';
+    } catch (e) {}
+
+    const repeater = $w('#recentlyViewedRepeater');
+    if (!repeater) {
+      try { $w('#recentlyViewedSection').hide(); } catch (e) {}
+      return;
+    }
+
+    repeater.data = recentItems.slice(0, 6);
+
+    repeater.onItemReady(($item, itemData) => {
+      try {
+        $item('#recentImage').src = itemData.mainMedia;
+        $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
+      } catch (e) {}
+
+      try { $item('#recentName').text = itemData.name; } catch (e) {}
+      try { $item('#recentPrice').text = itemData.price; } catch (e) {}
+
+      const navigateToProduct = () => {
+        import('wix-location').then(({ to }) => {
+          to(`/product-page/${itemData.slug}`);
+        });
+      };
+
+      try { $item('#recentImage').onClick(navigateToProduct); } catch (e) {}
+      try { $item('#recentName').onClick(navigateToProduct); } catch (e) {}
+    });
+
+    $w('#recentlyViewedSection').show();
+  } catch (e) {
+    try { $w('#recentlyViewedSection').hide(); } catch (e2) {}
+  }
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -327,6 +675,41 @@ function detectCategory(product) {
 
 function stripHtml(html) {
   return html.replace(/<[^>]*>/g, '').trim();
+}
+
+// ── Compare Bar Refresh ──────────────────────────────────────────
+// Updates the masterPage compare bar from this page context
+
+function refreshCompareBarUI() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    const items = getCompareList();
+
+    if (items.length === 0) {
+      compareBar.hide('slide', { duration: 200, direction: 'bottom' });
+      return;
+    }
+
+    const repeater = $w('#compareRepeater');
+    if (repeater) {
+      repeater.data = items.map(p => ({ ...p, _id: p._id }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compareName').text = itemData.name; } catch (e) {}
+        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compareRemove').onClick(() => {
+            removeFromCompare(itemData._id);
+            refreshCompareBarUI();
+          });
+        } catch (e) {}
+      });
+    }
+
+    compareBar.show('slide', { duration: 200, direction: 'bottom' });
+  } catch (e) {}
 }
 
 // ── Category Schema Injection ─────────────────────────────────────
