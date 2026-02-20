@@ -49,20 +49,6 @@ export const submitContactForm = webMethod(
         throw new Error('Email is required');
       }
 
-<<<<<<< HEAD
-      await wixData.insert('ContactSubmissions', {
-        email: data.email,
-        name: data.name || '',
-        phone: data.phone || '',
-        subject: data.source || 'lead_capture',
-        message: data.notes || '',
-        submittedAt: new Date(),
-        status: data.status || 'new',
-        source: data.source || 'unknown',
-        notes: data.notes || '',
-        productId: data.productId || '',
-        productName: data.productName || '',
-=======
       const email = sanitize(data.email, 254).toLowerCase();
       if (!validateEmail(email)) {
         throw new Error('Invalid email format');
@@ -93,7 +79,6 @@ export const submitContactForm = webMethod(
         notes: sanitize(data.notes || '', 2000),
         productId: sanitize(data.productId || '', 50),
         productName: sanitize(data.productName || '', 200),
->>>>>>> 25c305a (Add security remediation: input sanitization, admin auth, rate limiting)
       });
 
       return { success: true };

@@ -1,16 +1,16 @@
-// Mock for wix-window-frontend
-export function openUrl() { return Promise.resolve(); }
-export function scrollTo() { return Promise.resolve(); }
-export function onScroll() {}
-export const lightbox = { getContext: () => null };
-export const formFactor = 'Desktop';
+// Mock wix-window-frontend for vitest
+import { vi } from 'vitest';
 
-export default {
-  openUrl,
-  scrollTo,
-  onScroll,
-  lightbox,
-  formFactor,
+const wixWindowFrontend = {
+  openLightbox: vi.fn(() => Promise.resolve()),
+  scrollTo: vi.fn(() => Promise.resolve()),
+  trackEvent: vi.fn(),
+  copyToClipboard: vi.fn(() => Promise.resolve()),
+  getBoundingRect: vi.fn(() => Promise.resolve({ window: { width: 1024, height: 768 } })),
+  formFactor: 'Desktop',
+  viewMode: 'Site',
+  rendering: { env: 'browser' },
+  locale: 'en',
 };
 
-export function __reset() {}
+export default wixWindowFrontend;

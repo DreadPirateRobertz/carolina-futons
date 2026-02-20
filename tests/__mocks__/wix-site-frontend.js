@@ -1,9 +1,10 @@
-// Mock for wix-site-frontend
+// Mock wix-site-frontend for vitest
 export const currentPage = {
   visitorZip: '',
-  name: 'Mock Page',
+  name: 'Test Page',
+  url: '/test',
 };
 
-export default { currentPage };
-
-export function __reset() {}
+export function __reset() {
+  currentPage.visitorZip = '';
+}
