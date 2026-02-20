@@ -1,10 +1,33 @@
-// API Reference: https://www.wix.com/velo/reference/api-overview/introduction
-// “Hello, World!” Example: https://learn-code.wix.com/en/article/hello-world
+// Privacy Policy.pcvmd.js - Privacy Policy Page
+// Wix handles the privacy policy content via their legal pages system
+// This adds table of contents navigation for long policy text
 
 $w.onReady(function () {
-    // Write your JavaScript here
-
-    // To select an element by ID use: $w('#elementID')
-
-    // Click 'Preview' to run your code
+  initPolicyNavigation();
 });
+
+function initPolicyNavigation() {
+  // Quick-jump links for policy sections
+  const sections = [
+    { label: 'Information We Collect', anchor: '#policyCollect' },
+    { label: 'How We Use Information', anchor: '#policyUse' },
+    { label: 'Information Sharing', anchor: '#policySharing' },
+    { label: 'Your Rights', anchor: '#policyRights' },
+    { label: 'Contact Us', anchor: '#policyContact' },
+  ];
+
+  try {
+    const tocRepeater = $w('#policyTocRepeater');
+    if (!tocRepeater) return;
+
+    tocRepeater.data = sections.map((s, i) => ({ ...s, _id: String(i) }));
+    tocRepeater.onItemReady(($item, itemData) => {
+      $item('#tocLink').text = itemData.label;
+      $item('#tocLink').onClick(() => {
+        try {
+          $w(itemData.anchor).scrollTo();
+        } catch (e) {}
+      });
+    });
+  } catch (e) {}
+}

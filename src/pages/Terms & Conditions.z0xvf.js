@@ -1,10 +1,34 @@
-// API Reference: https://www.wix.com/velo/reference/api-overview/introduction
-// “Hello, World!” Example: https://learn-code.wix.com/en/article/hello-world
+// Terms & Conditions.z0xvf.js - Terms of Service Page
+// Standard legal page with table of contents navigation
 
 $w.onReady(function () {
-    // Write your JavaScript here
-
-    // To select an element by ID use: $w('#elementID')
-
-    // Click 'Preview' to run your code
+  initTermsNavigation();
 });
+
+function initTermsNavigation() {
+  const sections = [
+    { label: 'Acceptance of Terms', anchor: '#termsAcceptance' },
+    { label: 'Products & Pricing', anchor: '#termsProducts' },
+    { label: 'Orders & Payment', anchor: '#termsOrders' },
+    { label: 'Shipping & Delivery', anchor: '#termsShipping' },
+    { label: 'Returns & Refunds', anchor: '#termsReturns' },
+    { label: 'Warranties', anchor: '#termsWarranties' },
+    { label: 'Limitation of Liability', anchor: '#termsLiability' },
+    { label: 'Contact Information', anchor: '#termsContact' },
+  ];
+
+  try {
+    const tocRepeater = $w('#termsTocRepeater');
+    if (!tocRepeater) return;
+
+    tocRepeater.data = sections.map((s, i) => ({ ...s, _id: String(i) }));
+    tocRepeater.onItemReady(($item, itemData) => {
+      $item('#tocLink').text = itemData.label;
+      $item('#tocLink').onClick(() => {
+        try {
+          $w(itemData.anchor).scrollTo();
+        } catch (e) {}
+      });
+    });
+  } catch (e) {}
+}

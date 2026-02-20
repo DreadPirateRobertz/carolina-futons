@@ -1,10 +1,8 @@
-// API Reference: https://www.wix.com/velo/reference/api-overview/introduction
-// “Hello, World!” Example: https://learn-code.wix.com/en/article/hello-world
+// Accessibility Statement.di5bl.js - Accessibility Page
+// No custom code needed - content is managed through Wix editor
+// Keep minimal to let Wix's built-in accessibility features work
 
 $w.onReady(function () {
-    // Write your JavaScript here
-
-    // To select an element by ID use: $w('#elementID')
-
-    // Click 'Preview' to run your code
+  // Accessibility statement content is static, managed in editor
+  // This page exists for WCAG compliance
 });
