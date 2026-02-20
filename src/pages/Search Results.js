@@ -56,9 +56,12 @@ async function performSearch(query) {
       };
       $item('#searchImage').onClick(navigate);
       $item('#searchName').onClick(navigate);
+      try { $item('#searchImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
+      try { $item('#searchName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
       // Quick add to cart from search results
       try {
+        try { $item('#searchAddBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
         $item('#searchAddBtn').onClick(async () => {
           try {
             await addToCart(itemData._id);
