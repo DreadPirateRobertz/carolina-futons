@@ -31,6 +31,7 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
+      initBackInStockNotification(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
@@ -342,6 +343,92 @@ function getCategoryFromCollections(collections) {
   if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return { label: 'Futon Frames', path: '/futon-frames' };
 
   return { label: 'Shop', path: '/shop-main' };
+}
+
+// ── Back-in-Stock Notification ──────────────────────────────────────
+// Shows email signup when a variant is out of stock / special order
+
+async function initBackInStockNotification() {
+  try {
+    const section = $w('#backInStockSection');
+    const emailInput = $w('#backInStockEmail');
+    const submitBtn = $w('#backInStockBtn');
+    const successMsg = $w('#backInStockSuccess');
+
+    if (!section || !emailInput || !submitBtn) return;
+
+    // Initially hide - only show when variant is out of stock
+    section.collapse();
+    if (successMsg) successMsg.hide();
+
+    // Check initial stock status
+    updateBackInStockVisibility(section);
+
+    // Re-check when variant changes
+    const sizeDropdown = $w('#sizeDropdown');
+    const finishDropdown = $w('#finishDropdown');
+    if (sizeDropdown) sizeDropdown.onChange(() => updateBackInStockVisibility(section));
+    if (finishDropdown) finishDropdown.onChange(() => updateBackInStockVisibility(section));
+
+    // Handle email submission
+    submitBtn.onClick(async () => {
+      const email = emailInput.value?.trim();
+      if (!email || !email.includes('@')) return;
+
+      try {
+        const { submitContactForm } = await import('backend/contactSubmissions.web');
+        await submitContactForm({
+          email,
+          source: 'back_in_stock',
+          status: 'back_in_stock_request',
+          productId: currentProduct?._id || '',
+          productName: currentProduct?.name || '',
+          notes: `Back in stock request for ${currentProduct?.name || 'unknown product'}`,
+        });
+
+        // Show success
+        submitBtn.hide();
+        emailInput.hide();
+        if (successMsg) {
+          successMsg.text = "We'll email you when this item is back in stock!";
+          successMsg.show('fade', { duration: 300 });
+        }
+      } catch (err) {
+        console.error('Back in stock submission error:', err);
+      }
+    });
+  } catch (e) {
+    // Back-in-stock is non-critical
+  }
+}
+
+async function updateBackInStockVisibility(section) {
+  try {
+    const size = $w('#sizeDropdown')?.value;
+    const finish = $w('#finishDropdown')?.value;
+
+    if (!size && !finish) {
+      // Check base product stock
+      const stockBadge = $w('#stockStatus');
+      if (stockBadge && stockBadge.text === 'Special Order') {
+        section.expand();
+      }
+      return;
+    }
+
+    const choices = {};
+    if (size) choices['Size'] = size;
+    if (finish) choices['Finish'] = finish;
+
+    const variants = await wixStoresFrontend.getProductVariants(currentProduct._id, { choices });
+    if (variants && variants.length > 0 && !variants[0].inStock) {
+      section.expand();
+    } else {
+      section.collapse();
+    }
+  } catch (e) {
+    // Default to hidden if we can't check stock
+  }
 }
 
 // ── Add to Cart Enhancements ────────────────────────────────────────
