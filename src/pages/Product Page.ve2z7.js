@@ -3,12 +3,14 @@
 // gallery enhancement, and SEO schema injection
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { submitSwatchRequest } from 'backend/emailService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
 let productVariants = [];
+let selectedSwatchId = null;
 
 $w.onReady(async function () {
   await initProductPage();
@@ -24,10 +26,15 @@ async function initProductPage() {
 
     if (!currentProduct) return;
 
+    // Track this product view in session storage for "Recently Viewed"
+    trackProductView(currentProduct);
+
     await Promise.all([
       initVariantSelector(),
+      initSwatchSelector(),
       loadRelatedProducts(),
       loadCollectionProducts(),
+      loadRecentlyViewed(),
       injectProductSchema(),
       initImageGallery(),
       initBreadcrumbs(),
@@ -123,6 +130,20 @@ function updateVariantImage(variant) {
     if (variant.imageSrc) {
       $w('#productMainImage').src = variant.imageSrc;
     }
+
+    // Update gallery thumbnails for this variant's media set
+    if (variant.mediaItems && variant.mediaItems.length > 0) {
+      try {
+        const gallery = $w('#productGallery');
+        if (gallery) {
+          gallery.items = variant.mediaItems.map(item => ({
+            type: 'image',
+            src: item.src || item.url,
+            alt: item.alt || currentProduct?.name || '',
+          }));
+        }
+      } catch (e) {}
+    }
   } catch (e) {}
 }
 
@@ -155,6 +176,288 @@ function formatCurrency(amount) {
     style: 'currency',
     currency: 'USD',
   }).format(amount);
+}
+
+// ── Fabric Swatch Selector ───────────────────────────────────────────
+// Displays available fabric swatches below the gallery. Clicking a swatch
+// either switches to that variant's images (Approach 1) or applies a color
+// tint overlay to the main product image (Approach 2 fallback).
+
+async function initSwatchSelector() {
+  try {
+    const swatchSection = $w('#swatchSection');
+    if (!swatchSection || !currentProduct) {
+      try { $w('#swatchSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    // Fetch swatches and total count in parallel
+    const [swatches, totalCount, families] = await Promise.all([
+      getProductSwatches(currentProduct._id),
+      getSwatchCount(currentProduct._id),
+      getAllSwatchFamilies(),
+    ]);
+
+    if (!swatches || swatches.length === 0) {
+      swatchSection.collapse();
+      return;
+    }
+
+    // Update swatch count display
+    try {
+      $w('#swatchCount').text = `Showing ${swatches.length} of ${totalCount}+ available fabrics`;
+    } catch (e) {}
+
+    // Set up color family filter
+    initSwatchColorFilter(families);
+
+    // Render swatch grid
+    renderSwatchGrid(swatches);
+
+    // Set up "View All Swatches" button → opens full swatch gallery lightbox
+    try {
+      $w('#swatchViewAll').onClick(() => openSwatchGallery());
+    } catch (e) {}
+
+    // Set up "Request Free Swatches" link
+    try {
+      $w('#swatchRequestLink').onClick(() => {
+        import('wix-location').then(({ to }) => {
+          to('/request-swatches');
+        });
+      });
+    } catch (e) {}
+
+    swatchSection.expand();
+  } catch (e) {
+    console.error('Error initializing swatch selector:', e);
+    try { $w('#swatchSection').collapse(); } catch (e2) {}
+  }
+}
+
+function initSwatchColorFilter(families) {
+  try {
+    const filter = $w('#swatchColorFilter');
+    if (!filter || !families || families.length === 0) return;
+
+    const options = [{ label: 'All', value: '' }];
+    families.forEach(family => {
+      if (family) {
+        const label = family.charAt(0).toUpperCase() + family.slice(1);
+        options.push({ label, value: family });
+      }
+    });
+
+    filter.options = options;
+    filter.value = '';
+
+    filter.onChange(async () => {
+      const colorFamily = filter.value || null;
+      const filtered = await getProductSwatches(currentProduct._id, colorFamily);
+      renderSwatchGrid(filtered);
+    });
+  } catch (e) {}
+}
+
+function renderSwatchGrid(swatches) {
+  try {
+    const grid = $w('#swatchGrid');
+    if (!grid) return;
+
+    grid.data = swatches.map((s, i) => ({
+      ...s,
+      _id: s._id || `swatch-${i}`,
+    }));
+
+    grid.onItemReady(($item, itemData) => {
+      // Swatch thumbnail image
+      try {
+        if (itemData.swatchImage) {
+          $item('#swatchThumb').src = itemData.swatchImage;
+          $item('#swatchThumb').alt = itemData.swatchName || 'Fabric swatch';
+        } else if (itemData.colorHex) {
+          // Fallback: use color hex as background for a colored box
+          $item('#swatchThumb').style.backgroundColor = itemData.colorHex;
+        }
+      } catch (e) {}
+
+      // Swatch name tooltip (show on hover via text element)
+      try {
+        $item('#swatchLabel').text = itemData.swatchName || '';
+      } catch (e) {}
+
+      // Click handler: select this swatch
+      try {
+        $item('#swatchThumb').onClick(() => selectSwatch(itemData));
+      } catch (e) {}
+
+      // Highlight the currently selected swatch
+      try {
+        if (selectedSwatchId === itemData._id) {
+          $item('#swatchThumb').style.borderColor = '#5B8FA8'; // Mountain blue
+          $item('#swatchThumb').style.borderWidth = '3px';
+        } else {
+          $item('#swatchThumb').style.borderColor = '#D4BC96'; // Sand dark
+          $item('#swatchThumb').style.borderWidth = '1px';
+        }
+      } catch (e) {}
+    });
+  } catch (e) {
+    console.error('Error rendering swatch grid:', e);
+  }
+}
+
+async function selectSwatch(swatch) {
+  selectedSwatchId = swatch._id;
+
+  // Re-render grid to update selection highlight
+  try {
+    const grid = $w('#swatchGrid');
+    if (grid && grid.data) {
+      // Trigger re-render by reassigning data
+      grid.data = [...grid.data];
+    }
+  } catch (e) {}
+
+  // Approach 1: Try to match a product variant with this fabric/finish name
+  try {
+    const finishDropdown = $w('#finishDropdown');
+    if (finishDropdown && finishDropdown.options) {
+      const matchingOption = finishDropdown.options.find(
+        opt => opt.label.toLowerCase() === swatch.swatchName.toLowerCase()
+      );
+      if (matchingOption) {
+        finishDropdown.value = matchingOption.value;
+        await handleCustomVariantChange();
+        return; // Variant matched — gallery will update via variant images
+      }
+    }
+  } catch (e) {}
+
+  // Approach 2 fallback: Apply color tint overlay to the main product image
+  applySwatchTint(swatch.colorHex);
+}
+
+function applySwatchTint(colorHex) {
+  if (!colorHex) return;
+
+  try {
+    const tintOverlay = $w('#swatchTintOverlay');
+    if (tintOverlay) {
+      tintOverlay.style.backgroundColor = colorHex;
+      tintOverlay.style.opacity = 0.25;
+      tintOverlay.show('fade', { duration: 200 });
+    }
+  } catch (e) {}
+}
+
+// ── Full Swatch Gallery Lightbox ──────────────────────────────────────
+// Grid of all available swatches in a modal overlay with search and detail view
+
+async function openSwatchGallery() {
+  try {
+    const modal = $w('#swatchGalleryModal');
+    if (!modal) return;
+
+    // Load all swatches (no limit) for the full gallery
+    const allSwatches = await getProductSwatches(currentProduct._id, null, 500);
+    if (!allSwatches || allSwatches.length === 0) return;
+
+    renderSwatchGalleryGrid(allSwatches);
+
+    // Search filter within the lightbox
+    try {
+      $w('#swatchSearch').onInput((event) => {
+        const query = (event.target.value || '').toLowerCase();
+        const filtered = allSwatches.filter(s =>
+          (s.swatchName || '').toLowerCase().includes(query) ||
+          (s.colorFamily || '').toLowerCase().includes(query) ||
+          (s.material || '').toLowerCase().includes(query)
+        );
+        renderSwatchGalleryGrid(filtered);
+      });
+    } catch (e) {}
+
+    // Close button
+    try {
+      $w('#swatchGalleryClose').onClick(() => {
+        modal.hide('fade', { duration: 200 });
+      });
+    } catch (e) {}
+
+    modal.show('fade', { duration: 250 });
+  } catch (e) {
+    console.error('Error opening swatch gallery:', e);
+  }
+}
+
+function renderSwatchGalleryGrid(swatches) {
+  try {
+    const grid = $w('#swatchGalleryGrid');
+    if (!grid) return;
+
+    grid.data = swatches.map((s, i) => ({
+      ...s,
+      _id: s._id || `sg-${i}`,
+    }));
+
+    grid.onItemReady(($item, itemData) => {
+      // Larger swatch thumbnail (120x120)
+      try {
+        if (itemData.swatchImage) {
+          $item('#sgThumb').src = itemData.swatchImage;
+          $item('#sgThumb').alt = itemData.swatchName || 'Fabric swatch';
+        } else if (itemData.colorHex) {
+          $item('#sgThumb').style.backgroundColor = itemData.colorHex;
+        }
+      } catch (e) {}
+
+      // Swatch name and details
+      try { $item('#sgName').text = itemData.swatchName || ''; } catch (e) {}
+      try { $item('#sgMaterial').text = itemData.material || ''; } catch (e) {}
+
+      // Click to select and apply to product
+      try {
+        $item('#sgThumb').onClick(() => {
+          selectSwatch(itemData);
+          // Show detail panel
+          showSwatchDetail(itemData);
+        });
+      } catch (e) {}
+
+      // Selection highlight
+      try {
+        if (selectedSwatchId === itemData._id) {
+          $item('#sgThumb').style.borderColor = '#5B8FA8';
+          $item('#sgThumb').style.borderWidth = '3px';
+        } else {
+          $item('#sgThumb').style.borderColor = '#D4BC96';
+          $item('#sgThumb').style.borderWidth = '1px';
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+function showSwatchDetail(swatch) {
+  try {
+    const detail = $w('#swatchDetail');
+    if (!detail) return;
+
+    try { $w('#swatchDetailName').text = swatch.swatchName || ''; } catch (e) {}
+    try { $w('#swatchDetailMaterial').text = swatch.material ? `Material: ${swatch.material}` : ''; } catch (e) {}
+    try { $w('#swatchDetailCare').text = swatch.careInstructions ? `Care: ${swatch.careInstructions}` : ''; } catch (e) {}
+    try { $w('#swatchDetailFamily').text = swatch.colorFamily ? `Color Family: ${swatch.colorFamily.charAt(0).toUpperCase() + swatch.colorFamily.slice(1)}` : ''; } catch (e) {}
+
+    if (swatch.swatchImage) {
+      try {
+        $w('#swatchDetailImage').src = swatch.swatchImage;
+        $w('#swatchDetailImage').show();
+      } catch (e) {}
+    }
+
+    detail.expand();
+  } catch (e) {}
 }
 
 // ── Related Products ("You Might Also Like") ────────────────────────
@@ -247,13 +550,39 @@ function initImageGallery() {
     if (currentProduct) {
       const mainImage = $w('#productMainImage');
       if (mainImage) {
+        // Fallback image when product has no mainMedia
+        if (!currentProduct.mainMedia) {
+          const category = currentProduct.collections?.[0] || '';
+          mainImage.src = getProductFallbackImage(category);
+        }
         generateAltText(currentProduct, 'main').then(alt => {
           mainImage.alt = alt;
         });
       }
+
+      // Fill gallery with placeholders when fewer than expected thumbnails
+      const gallery = $w('#productGallery');
+      if (gallery) {
+        const mediaItems = currentProduct.mediaItems || [];
+        if (mediaItems.length < 3) {
+          const category = currentProduct.collections?.[0] || '';
+          const placeholders = getPlaceholderProductImages(category, 4);
+          const combined = [
+            ...mediaItems,
+            ...placeholders.slice(mediaItems.length).map(src => ({
+              src,
+              type: 'image',
+              title: currentProduct.name || 'Product image',
+            })),
+          ];
+          try {
+            gallery.items = combined;
+          } catch (e) {}
+        }
+      }
     }
 
-    // Gallery thumbnail click handling
+    // Gallery thumbnail click handling with active-state highlighting
     const gallery = $w('#productGallery');
     if (gallery) {
       gallery.onItemClicked((event) => {
@@ -262,6 +591,88 @@ function initImageGallery() {
         } catch (e) {}
       });
     }
+
+    // Fullscreen lightbox on main image click
+    initImageLightbox('#productGallery', '#productMainImage');
+
+    // Hover zoom on main product image
+    initImageZoom('#productMainImage');
+
+    // Preload gallery thumbnail images for smoother browsing
+    preloadGalleryThumbnails();
+  } catch (e) {}
+}
+
+// ── Recently Viewed Products ────────────────────────────────────────
+// Horizontal section below cross-sell showing products viewed this session
+
+async function loadRecentlyViewed() {
+  try {
+    const recentProducts = getRecentlyViewed(currentProduct?._id);
+
+    if (!recentProducts || recentProducts.length === 0) {
+      try { $w('#recentlyViewedSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const repeater = $w('#recentlyViewedRepeater');
+    if (!repeater) {
+      try { $w('#recentlyViewedSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    $w('#recentlyViewedSection').expand();
+    repeater.data = recentProducts;
+    repeater.onItemReady(($item, itemData) => {
+      $item('#recentImage').src = itemData.mainMedia;
+      $item('#recentImage').alt = buildGridAlt(itemData);
+      $item('#recentName').text = itemData.name;
+      $item('#recentPrice').text = itemData.price;
+
+      // Click to navigate to product
+      const navigateToProduct = () => {
+        import('wix-location').then(({ to }) => {
+          to(`/product-page/${itemData.slug}`);
+        });
+      };
+      $item('#recentImage').onClick(navigateToProduct);
+      $item('#recentName').onClick(navigateToProduct);
+    });
+  } catch (e) {}
+}
+
+// ── Product Badge Overlay ───────────────────────────────────────────
+// Shows sale/new/featured badge on main image area
+
+function initProductBadge() {
+  try {
+    const badge = getProductBadge(currentProduct);
+    const badgeOverlay = $w('#productBadgeOverlay');
+    if (!badgeOverlay) return;
+
+    if (badge) {
+      badgeOverlay.text = badge;
+      badgeOverlay.show();
+    } else {
+      badgeOverlay.hide();
+    }
+  } catch (e) {}
+}
+
+// ── Image Preloading ────────────────────────────────────────────────
+// Preload gallery thumbnails for smoother browsing
+
+function preloadGalleryThumbnails() {
+  try {
+    const gallery = $w('#productGallery');
+    if (!gallery || !gallery.items) return;
+
+    gallery.items.forEach(item => {
+      if (item.src) {
+        const img = new Image();
+        img.src = item.src;
+      }
+    });
   } catch (e) {}
 }
 
@@ -350,6 +761,92 @@ function getCategoryFromCollections(collections) {
   return { label: 'Shop', path: '/shop-main' };
 }
 
+// ── Back-in-Stock Notification ──────────────────────────────────────
+// Shows email signup when a variant is out of stock / special order
+
+async function initBackInStockNotification() {
+  try {
+    const section = $w('#backInStockSection');
+    const emailInput = $w('#backInStockEmail');
+    const submitBtn = $w('#backInStockBtn');
+    const successMsg = $w('#backInStockSuccess');
+
+    if (!section || !emailInput || !submitBtn) return;
+
+    // Initially hide - only show when variant is out of stock
+    section.collapse();
+    if (successMsg) successMsg.hide();
+
+    // Check initial stock status
+    updateBackInStockVisibility(section);
+
+    // Re-check when variant changes
+    const sizeDropdown = $w('#sizeDropdown');
+    const finishDropdown = $w('#finishDropdown');
+    if (sizeDropdown) sizeDropdown.onChange(() => updateBackInStockVisibility(section));
+    if (finishDropdown) finishDropdown.onChange(() => updateBackInStockVisibility(section));
+
+    // Handle email submission
+    submitBtn.onClick(async () => {
+      const email = emailInput.value?.trim();
+      if (!email || !email.includes('@')) return;
+
+      try {
+        const { submitContactForm } = await import('backend/contactSubmissions.web');
+        await submitContactForm({
+          email,
+          source: 'back_in_stock',
+          status: 'back_in_stock_request',
+          productId: currentProduct?._id || '',
+          productName: currentProduct?.name || '',
+          notes: `Back in stock request for ${currentProduct?.name || 'unknown product'}`,
+        });
+
+        // Show success
+        submitBtn.hide();
+        emailInput.hide();
+        if (successMsg) {
+          successMsg.text = "We'll email you when this item is back in stock!";
+          successMsg.show('fade', { duration: 300 });
+        }
+      } catch (err) {
+        console.error('Back in stock submission error:', err);
+      }
+    });
+  } catch (e) {
+    // Back-in-stock is non-critical
+  }
+}
+
+async function updateBackInStockVisibility(section) {
+  try {
+    const size = $w('#sizeDropdown')?.value;
+    const finish = $w('#finishDropdown')?.value;
+
+    if (!size && !finish) {
+      // Check base product stock
+      const stockBadge = $w('#stockStatus');
+      if (stockBadge && stockBadge.text === 'Special Order') {
+        section.expand();
+      }
+      return;
+    }
+
+    const choices = {};
+    if (size) choices['Size'] = size;
+    if (finish) choices['Finish'] = finish;
+
+    const variants = await wixStoresFrontend.getProductVariants(currentProduct._id, { choices });
+    if (variants && variants.length > 0 && !variants[0].inStock) {
+      section.expand();
+    } else {
+      section.collapse();
+    }
+  } catch (e) {
+    // Default to hidden if we can't check stock
+  }
+}
+
 // ── Add to Cart Enhancements ────────────────────────────────────────
 // Success feedback and cross-sell prompt after adding to cart
 
@@ -375,6 +872,137 @@ function showAddToCartSuccess() {
       }, 4000);
     }
   } catch (e) {}
+}
+
+// ── Fabric Swatch Request ───────────────────────────────────────────
+// "Request Free Swatches" button + modal for products with fabric options
+
+function initSwatchRequest() {
+  try {
+    const swatchBtn = $w('#swatchRequestBtn');
+    if (!swatchBtn || !currentProduct) return;
+
+    // Only show for products that have fabric/finish options
+    const hasOptions = currentProduct.productOptions?.some(
+      opt => /finish|fabric|color|cover/i.test(opt.name)
+    );
+
+    if (!hasOptions) {
+      swatchBtn.hide();
+      return;
+    }
+
+    swatchBtn.show();
+
+    swatchBtn.onClick(() => {
+      openSwatchModal();
+    });
+
+    // Wire up submit
+    try {
+      $w('#swatchSubmit').onClick(() => handleSwatchSubmit());
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function openSwatchModal() {
+  try {
+    const modal = $w('#swatchModal');
+    if (!modal) return;
+
+    // Display product name
+    try {
+      $w('#swatchProductName').text = currentProduct.name;
+    } catch (e) {}
+
+    // Populate checkbox options from product's fabric/finish choices
+    try {
+      const optionsRepeater = $w('#swatchOptions');
+      if (optionsRepeater) {
+        const fabricOptions = [];
+        (currentProduct.productOptions || []).forEach(opt => {
+          if (/finish|fabric|color|cover/i.test(opt.name)) {
+            (opt.choices || []).forEach(choice => {
+              fabricOptions.push({
+                _id: choice.value,
+                label: choice.description || choice.value,
+                optionName: opt.name,
+                checked: false,
+              });
+            });
+          }
+        });
+
+        optionsRepeater.data = fabricOptions;
+        optionsRepeater.onItemReady(($item, itemData) => {
+          try {
+            $item('#swatchCheckbox').label = itemData.label;
+            $item('#swatchCheckbox').checked = false;
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Reset form fields
+    try { $w('#swatchName').value = ''; } catch (e) {}
+    try { $w('#swatchEmail').value = ''; } catch (e) {}
+    try { $w('#swatchAddress').value = ''; } catch (e) {}
+    try { $w('#swatchSuccess').hide(); } catch (e) {}
+
+    modal.show('fade', { duration: 200 });
+  } catch (e) {}
+}
+
+async function handleSwatchSubmit() {
+  try {
+    const name = $w('#swatchName').value?.trim();
+    const email = $w('#swatchEmail').value?.trim();
+    const address = $w('#swatchAddress').value?.trim();
+
+    if (!name || !email || !address) return;
+
+    // Collect selected swatches from repeater checkboxes
+    const selectedSwatches = [];
+    try {
+      const optionsRepeater = $w('#swatchOptions');
+      optionsRepeater.forEachItem(($item, itemData) => {
+        try {
+          if ($item('#swatchCheckbox').checked) {
+            selectedSwatches.push(itemData.label);
+          }
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    if (selectedSwatches.length === 0) return;
+
+    $w('#swatchSubmit').disable();
+
+    await submitSwatchRequest({
+      name,
+      email,
+      address,
+      productId: currentProduct._id,
+      productName: currentProduct.name,
+      swatchNames: selectedSwatches,
+    });
+
+    // Show success state
+    try {
+      $w('#swatchSuccess').show('fade', { duration: 300 });
+    } catch (e) {}
+
+    // Auto-close after a moment
+    setTimeout(() => {
+      try {
+        $w('#swatchModal').hide('fade', { duration: 200 });
+        $w('#swatchSubmit').enable();
+      } catch (e) {}
+    }, 3000);
+  } catch (err) {
+    console.error('Error submitting swatch request:', err);
+    try { $w('#swatchSubmit').enable(); } catch (e) {}
+  }
 }
 
 // ── Product Schema Injection ────────────────────────────────────────

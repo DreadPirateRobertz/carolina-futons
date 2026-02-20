@@ -91,6 +91,32 @@ Every page gets this header. Create in Wix Studio as a fixed header section.
 | Copyright | Text | — | "© 2026 Carolina Futons" |
 | Legal Links | Text/Links | — | Privacy, Terms, Accessibility, Refund, Shipping |
 
+### Promotional Lightbox Elements
+Full-screen overlay modal for holiday/event/seasonal campaigns.
+Controlled by the Promotions CMS collection; auto-shows 3s after page load.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Overlay | Box | `#promoOverlay` | Semi-transparent bg, full-screen, hidden default |
+| Lightbox Container | Box | `#promoLightbox` | Centered modal, white bg, hidden default |
+| Hero Image | Image | `#promoHeroImage` | Top of modal, campaign artwork |
+| Title | Text (H2) | `#promoTitle` | Playfair Display, seasonal theming |
+| Subtitle | Text | `#promoSubtitle` | Offer details |
+| Countdown | Text | `#promoCountdown` | dd:hh:mm:ss format, hidden if no endDate |
+| Product Repeater | Repeater | `#promoRepeater` | 3-4 featured sale items |
+| → Product Image | Image | `#promoImage` | Inside repeater |
+| → Product Name | Text | `#promoName` | Inside repeater |
+| → Product Price | Text | `#promoPrice` | Current/discounted price |
+| → Original Price | Text | `#promoOrigPrice` | Strikethrough, hidden default |
+| → Quick Add | Button | `#promoQuickAdd` | Links to product page |
+| Discount Code | Text | `#promoCode` | The coupon code text |
+| Copy Code Button | Button | `#promoCopyCode` | Copies code to clipboard |
+| Email Input | Input | `#promoEmailInput` | "Get early access" capture |
+| Email Submit | Button | `#promoEmailSubmit` | Subscribe button |
+| CTA Button | Button | `#promoCTA` | Primary action, coral bg |
+| Close Button | Button | `#promoClose` | X icon, top right |
+| Dismiss Link | Text/Button | `#promoDismiss` | "Maybe later" text link |
+
 ### Illustrated Header Decoration
 The mountain ridgeline illustration goes behind/above the nav bar.
 - Create as a vector/SVG image element layered behind the header
@@ -491,6 +517,22 @@ Horizontal strip with key differentiators:
 | mainMedia | Image |
 | formattedPrice | Text |
 | addedAt | DateTime |
+
+### 4. Promotions (for holiday/event promotional lightboxes)
+| Field | Type | Notes |
+|-------|------|-------|
+| title | Text | Headline shown in lightbox |
+| subtitle | Text | Offer details / subhead |
+| theme | Text | holiday / sale / event / seasonal |
+| heroImage | Image | Hero image at top of lightbox |
+| startDate | DateTime | Campaign start (inclusive) |
+| endDate | DateTime | Campaign end (inclusive) |
+| discountCode | Text | Coupon code to display |
+| discountPercent | Number | Discount percentage |
+| ctaUrl | Text | Where "Shop the Sale" links to |
+| ctaText | Text | CTA button label (default: "Shop the Sale") |
+| productIds | Text | Comma-separated product IDs for carousel |
+| isActive | Boolean | Master on/off switch |
 
 ---
 
