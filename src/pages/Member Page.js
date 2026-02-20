@@ -2,6 +2,7 @@
 // Account dashboard, order history, wishlist, and account settings
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
+import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 
 // Status badge color mapping
 const STATUS_COLORS = {
@@ -16,6 +17,8 @@ let wishlistData = [];
 let wishlistSortOrder = 'date-desc';
 
 $w.onReady(async function () {
+  collapseOnMobile($w, ['#ordersRepeater', '#wishlistRepeater', '#addressBook']);
+  initBackToTop($w);
   await initMemberPage();
   trackEvent('page_view', { page: 'member_account' });
 });
