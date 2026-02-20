@@ -57,6 +57,8 @@ async function loadFeaturedProducts() {
       $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
       $item('#featuredName').text = itemData.name;
       $item('#featuredPrice').text = itemData.formattedPrice;
+      try { $item('#featuredImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
+      try { $item('#featuredName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
       // Show sale badge if discounted
       if (itemData.formattedDiscountedPrice) {
@@ -104,6 +106,7 @@ async function loadSaleHighlights() {
       $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
       $item('#saleName').text = itemData.name;
       $item('#salePrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
+      try { $item('#saleImage').accessibility.ariaLabel = `View ${itemData.name} on sale`; } catch (e) {}
       try {
         $item('#saleOrigPrice').text = itemData.formattedPrice;
       } catch (e) {}
@@ -151,6 +154,7 @@ async function initCategoryShowcase() {
           $item('#categoryCardCount').text = itemData.count != null
             ? `${itemData.count} Products` : '';
         } catch (e) {}
+        try { $item('#categoryCardTitle').accessibility.ariaLabel = `Browse ${itemData.name}`; } catch (e) {}
         $item('#categoryCardTitle').onClick(() => {
           import('wix-location-frontend').then(({ to }) => to(itemData.path));
         });
@@ -189,6 +193,8 @@ async function initRecentlyViewed() {
       $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
       $item('#recentName').text = itemData.name;
       $item('#recentPrice').text = itemData.price;
+      try { $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
+      try { $item('#recentName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
       $item('#recentImage').onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
@@ -301,13 +307,14 @@ function initVideoShowcase() {
 
     // Video thumbnails link to the Product Videos page
     const videoLinks = ['#videoThumb1', '#videoThumb2', '#videoThumb3'];
-    videoLinks.forEach(id => {
+    videoLinks.forEach((id, i) => {
       try {
         $w(id).onClick(() => {
           import('wix-location-frontend').then(({ to }) => {
             to('/product-videos');
           });
         });
+        try { $w(id).accessibility.ariaLabel = `Watch product video ${i + 1}`; } catch (e) {}
       } catch (e) {}
     });
 
@@ -318,6 +325,7 @@ function initVideoShowcase() {
           to('/product-videos');
         });
       });
+      try { $w('#viewAllVideosCTA').accessibility.ariaLabel = 'View all product videos'; } catch (e) {}
     } catch (e) {}
 
     section.expand();
@@ -350,6 +358,7 @@ function initQuizCTA() {
           to('/style-quiz');
         });
       });
+      try { $w('#quizCTAButton').accessibility.ariaLabel = 'Take the style quiz'; } catch (e) {}
     } catch (e) {}
 
     section.expand();
@@ -363,17 +372,18 @@ function initQuizCTA() {
 
 function initSmoothScroll() {
   const scrollTargets = {
-    '#scrollToFeatured': '#featuredRepeater',
-    '#scrollToCategories': '#categoryRepeater',
-    '#scrollToSale': '#saleSection',
-    '#scrollToReviews': '#testimonialRepeater',
+    '#scrollToFeatured': { target: '#featuredRepeater', label: 'Scroll to featured products' },
+    '#scrollToCategories': { target: '#categoryRepeater', label: 'Scroll to categories' },
+    '#scrollToSale': { target: '#saleSection', label: 'Scroll to sale items' },
+    '#scrollToReviews': { target: '#testimonialRepeater', label: 'Scroll to reviews' },
   };
 
-  Object.entries(scrollTargets).forEach(([triggerId, targetId]) => {
+  Object.entries(scrollTargets).forEach(([triggerId, { target, label }]) => {
     try {
       $w(triggerId).onClick(() => {
-        try { $w(targetId).scrollTo(); } catch (e) {}
+        try { $w(target).scrollTo(); } catch (e) {}
       });
+      try { $w(triggerId).accessibility.ariaLabel = label; } catch (e) {}
     } catch (e) {
       // Scroll trigger may not exist
     }
@@ -407,6 +417,7 @@ function initHeroAnimation() {
     }
     if (heroCta) {
       heroCta.show('fade', { duration: 400, delay: 800 });
+      try { heroCta.accessibility.ariaLabel = 'Shop all furniture'; } catch (e) {}
       heroCta.onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/shop-main'));
       });
