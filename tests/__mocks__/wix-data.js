@@ -42,6 +42,25 @@ function createQueryBuilder(collection) {
       });
       return builder;
     },
+    contains(field, value) {
+      filters.push(item => {
+        const v = item[field];
+        if (typeof v === 'string') return v.includes(value);
+        if (Array.isArray(v)) return v.some(x => String(x).includes(value));
+        return false;
+      });
+      return builder;
+    },
+    or(subQuery1, subQuery2) {
+      // .or() combines two sub-query builders — item passes if either matches
+      const f1 = subQuery1 && subQuery1.__getFilters ? subQuery1.__getFilters() : [];
+      const f2 = subQuery2 && subQuery2.__getFilters ? subQuery2.__getFilters() : [];
+      filters.push(item =>
+        (f1.length === 0 || f1.every(f => f(item))) ||
+        (f2.length === 0 || f2.every(f => f(item)))
+      );
+      return builder;
+    },
     not(subQuery) {
       // .not() takes a sub-query builder; we extract its filters and negate
       if (subQuery && subQuery.__getFilters) {
@@ -70,6 +89,19 @@ function createQueryBuilder(collection) {
 
       items = items.slice(0, limitVal);
       return { items, totalCount: items.length, length: items.length };
+    },
+    async distinct(field) {
+      const items = (_store[collection] || []).filter(item =>
+        filters.every(f => f(item))
+      );
+      const values = [...new Set(items.map(item => item[field]).filter(Boolean))];
+      return { items: values, totalCount: values.length, length: values.length };
+    },
+    async count() {
+      const items = (_store[collection] || []).filter(item =>
+        filters.every(f => f(item))
+      );
+      return items.length;
     },
   };
 
