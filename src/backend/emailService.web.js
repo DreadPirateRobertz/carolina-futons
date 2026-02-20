@@ -2,6 +2,7 @@
 // Handles contact form submissions and order notifications
 import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
+import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 
 // Send contact form email to store
@@ -12,9 +13,12 @@ export const sendEmail = webMethod(
       // Use Wix Triggered Emails to send to store owner
       // The triggered email template "contact_form_submission" must be
       // created in the Wix Dashboard > Marketing > Triggered Emails
-      await triggeredEmails.emailMembers(
+      // IMPORTANT: Replace SITE_OWNER_MEMBER_ID with the actual site owner's
+      // member ID from Wix Dashboard > Contacts > Site Members
+      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+      await triggeredEmails.emailContact(
         'contact_form_submission',
-        ['site-owner'], // Sends to site owner
+        siteOwnerContactId,
         {
           variables: {
             customerName: name,
@@ -55,9 +59,10 @@ export const sendOrderNotification = webMethod(
   Permissions.Anyone,
   async (orderDetails) => {
     try {
-      await triggeredEmails.emailMembers(
+      const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+      await triggeredEmails.emailContact(
         'new_order_notification',
-        ['site-owner'],
+        siteOwnerContactId,
         {
           variables: {
             orderNumber: orderDetails.number,

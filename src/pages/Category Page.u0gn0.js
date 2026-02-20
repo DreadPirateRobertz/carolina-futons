@@ -42,26 +42,27 @@ function applySort() {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
 
-    // Reset sort
-    dataset.setSort(wixData.sort());
-
+    let sort;
     switch (currentSort) {
       case 'name-asc':
-        dataset.setSort(wixData.sort().ascending('name'));
+        sort = wixData.sort().ascending('name');
         break;
       case 'name-desc':
-        dataset.setSort(wixData.sort().descending('name'));
+        sort = wixData.sort().descending('name');
         break;
       case 'price-asc':
-        dataset.setSort(wixData.sort().ascending('price'));
+        sort = wixData.sort().ascending('price');
         break;
       case 'price-desc':
-        dataset.setSort(wixData.sort().descending('price'));
+        sort = wixData.sort().descending('price');
         break;
       case 'date-desc':
-        dataset.setSort(wixData.sort().descending('_createdDate'));
+        sort = wixData.sort().descending('_createdDate');
         break;
+      default:
+        sort = wixData.sort().ascending('name');
     }
+    dataset.setSort(sort);
   } catch (e) {
     console.error('Error applying sort:', e);
   }

@@ -46,11 +46,16 @@ function initThankYou() {
       const email = $w('#newsletterEmail').value;
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         try {
-          const { emailContact } = await import('wix-crm-frontend');
-          await emailContact(email);
+          const { contacts } = await import('wix-crm-frontend');
+          await contacts.appendOrCreateContact({
+            emails: [email],
+            labelKeys: ['custom.newsletter'],
+          });
           $w('#newsletterSuccess').text = 'You\'re subscribed!';
           $w('#newsletterSuccess').show();
-        } catch (e) {}
+        } catch (e) {
+          console.error('Newsletter signup error:', e);
+        }
       }
     });
   } catch (e) {}

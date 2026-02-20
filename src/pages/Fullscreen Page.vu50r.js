@@ -103,7 +103,7 @@ function filterVideosByCategory(category) {
     if (!dataset) return;
 
     if (!category) {
-      dataset.setFilter(null);
+      dataset.setFilter(wixData.filter());
     } else {
       dataset.setFilter(wixData.filter().contains('category', category));
     }

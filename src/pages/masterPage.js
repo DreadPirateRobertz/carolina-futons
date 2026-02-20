@@ -1,6 +1,7 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import wixLocationFrontend from 'wix-location-frontend';
 
 $w.onReady(async function () {
   initNavigation();
@@ -14,7 +15,7 @@ $w.onReady(async function () {
 
 function initNavigation() {
   // Highlight active nav link based on current page
-  const currentPath = new URL(window.location.href).pathname;
+  const currentPath = '/' + (wixLocationFrontend.path || []).join('/');
 
   // Map nav element IDs to their paths
   // Element IDs must match what's set in Wix Studio editor
