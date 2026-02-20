@@ -22,6 +22,12 @@ const BUSINESS_INFO = {
     latitude: 35.3187,
     longitude: -82.4612,
   },
+  foundingDate: '1991',
+  areaServed: [
+    { '@type': 'State', name: 'North Carolina' },
+    { '@type': 'State', name: 'South Carolina' },
+    { '@type': 'Country', name: 'US' },
+  ],
 };
 
 // Generate JSON-LD Product schema for a product page
@@ -30,37 +36,117 @@ export const getProductSchema = webMethod(
   (product) => {
     if (!product) return null;
 
+    const productUrl = `${BUSINESS_INFO.url}/product-page/${product.slug}`;
+    const brand = getBrandName(product);
+    const category = getCategoryLabel(product);
+
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'Product',
+      '@id': productUrl,
       name: product.name,
-      description: product.description || '',
-      image: product.mainMedia || '',
+      url: productUrl,
+      description: stripHtml(product.description || ''),
+      image: buildImageArray(product),
       sku: product.sku || '',
+      category: category,
       brand: {
         '@type': 'Brand',
-        name: getBrandName(product),
+        name: brand,
       },
       offers: {
         '@type': 'Offer',
-        url: `${BUSINESS_INFO.url}/product-page/${product.slug}`,
+        '@id': `${productUrl}#offer`,
+        url: productUrl,
         priceCurrency: 'USD',
         price: product.discountedPrice || product.price,
         availability: product.inStock !== false
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
         seller: {
           '@type': 'Organization',
           name: BUSINESS_INFO.name,
+          url: BUSINESS_INFO.url,
+        },
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingDestination: {
+            '@type': 'DefinedRegion',
+            addressCountry: 'US',
+          },
+          deliveryTime: {
+            '@type': 'ShippingDeliveryTime',
+            handlingTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 3,
+              maxValue: 5,
+              unitCode: 'DAY',
+            },
+            transitTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 5,
+              maxValue: 14,
+              unitCode: 'DAY',
+            },
+          },
+          shippingRate: {
+            '@type': 'MonetaryAmount',
+            value: 0,
+            currency: 'USD',
+          },
+        },
+        hasMerchantReturnPolicy: {
+          '@type': 'MerchantReturnPolicy',
+          applicableCountry: 'US',
+          returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+          merchantReturnDays: 30,
+          returnMethod: 'https://schema.org/ReturnByMail',
         },
       },
     };
+
+    // Add material if detectable from product data
+    const material = detectMaterial(product);
+    if (material) {
+      schema.material = material;
+    }
+
+    // Add color/finish if available
+    const finish = product.options?.finish || product.options?.color || '';
+    if (finish) {
+      schema.color = finish;
+    }
+
+    // Add size/dimensions as additional properties
+    const size = product.options?.size || '';
+    if (size) {
+      schema.size = size;
+      schema.additionalProperty = [
+        {
+          '@type': 'PropertyValue',
+          name: 'Size',
+          value: size,
+        },
+      ];
+    }
+
+    // Add weight if available
+    if (product.weight) {
+      schema.weight = {
+        '@type': 'QuantitativeValue',
+        value: product.weight,
+        unitCode: 'LBR',
+      };
+    }
 
     // Add aggregate rating if available
     if (product.numericRating && product.numericRating > 0) {
       schema.aggregateRating = {
         '@type': 'AggregateRating',
         ratingValue: product.numericRating,
+        bestRating: 5,
+        worstRating: 1,
         reviewCount: product.numReviews || 1,
       };
     }
@@ -76,9 +162,13 @@ export const getBusinessSchema = webMethod(
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'FurnitureStore',
+      '@id': `${BUSINESS_INFO.url}/#business`,
       name: BUSINESS_INFO.name,
       url: BUSINESS_INFO.url,
-      logo: BUSINESS_INFO.logo,
+      logo: {
+        '@type': 'ImageObject',
+        url: BUSINESS_INFO.logo,
+      },
       image: BUSINESS_INFO.logo,
       address: BUSINESS_INFO.address,
       telephone: BUSINESS_INFO.telephone,
@@ -92,10 +182,89 @@ export const getBusinessSchema = webMethod(
       ],
       geo: BUSINESS_INFO.geo,
       priceRange: BUSINESS_INFO.priceRange,
+      foundingDate: BUSINESS_INFO.foundingDate,
       description: 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.',
+      areaServed: BUSINESS_INFO.areaServed,
+      paymentAccepted: ['Cash', 'Credit Card', 'Debit Card'],
+      currenciesAccepted: 'USD',
+      hasMap: 'https://maps.google.com/?q=824+Locust+St+Ste+200+Hendersonville+NC+28792',
       sameAs: [
-        // Add social media URLs when available
+        'https://www.facebook.com/carolinafutons',
+        'https://www.instagram.com/carolinafutons',
       ],
+      knowsAbout: [
+        'Futon Frames',
+        'Futon Mattresses',
+        'Murphy Cabinet Beds',
+        'Platform Beds',
+        'Convertible Furniture',
+      ],
+    };
+
+    return JSON.stringify(schema);
+  }
+);
+
+// Generate JSON-LD WebSite schema with SearchAction for sitelinks searchbox
+export const getWebSiteSchema = webMethod(
+  Permissions.Anyone,
+  () => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${BUSINESS_INFO.url}/#website`,
+      name: BUSINESS_INFO.name,
+      url: BUSINESS_INFO.url,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${BUSINESS_INFO.url}/search-results?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+      publisher: {
+        '@id': `${BUSINESS_INFO.url}/#business`,
+      },
+    };
+
+    return JSON.stringify(schema);
+  }
+);
+
+// Generate JSON-LD CollectionPage + ItemList for category pages
+export const getCollectionSchema = webMethod(
+  Permissions.Anyone,
+  (categoryInfo, products) => {
+    if (!categoryInfo || !products || products.length === 0) return null;
+
+    const categoryUrl = `${BUSINESS_INFO.url}/${categoryInfo.slug}`;
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': categoryUrl,
+      name: categoryInfo.title,
+      url: categoryUrl,
+      description: categoryInfo.description || `Shop ${categoryInfo.title} at Carolina Futons. The largest selection in the Carolinas. Family-owned in Hendersonville, NC since 1991.`,
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BUSINESS_INFO.url },
+          { '@type': 'ListItem', position: 2, name: categoryInfo.title, item: categoryUrl },
+        ],
+      },
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: products.length,
+        itemListElement: products.slice(0, 30).map((product, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: `${BUSINESS_INFO.url}/product-page/${product.slug}`,
+          name: product.name,
+          image: product.mainMedia || '',
+        })),
+      },
     };
 
     return JSON.stringify(schema);
@@ -111,12 +280,18 @@ export const getBreadcrumbSchema = webMethod(
     const schema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: breadcrumbs.map((crumb, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: crumb.name,
-        item: crumb.url ? `${BUSINESS_INFO.url}${crumb.url}` : undefined,
-      })),
+      itemListElement: breadcrumbs.map((crumb, index) => {
+        const item = {
+          '@type': 'ListItem',
+          position: index + 1,
+          name: crumb.name,
+        };
+        // Last breadcrumb item should not have a URL per Google guidelines
+        if (crumb.url && index < breadcrumbs.length - 1) {
+          item.item = `${BUSINESS_INFO.url}${crumb.url}`;
+        }
+        return item;
+      }),
     };
 
     return JSON.stringify(schema);
@@ -146,7 +321,7 @@ export const getFaqSchema = webMethod(
   }
 );
 
-// Generate smart alt text for product images
+// Generate smart, keyword-rich alt text for product images
 export const generateAltText = webMethod(
   Permissions.Anyone,
   (product, imageType = 'main') => {
@@ -154,36 +329,73 @@ export const generateAltText = webMethod(
 
     const brand = getBrandName(product);
     const category = getCategoryLabel(product);
-    const finish = product.options?.finish || '';
+    const material = detectMaterial(product);
+    const finish = product.options?.finish || product.options?.color || '';
     const size = product.options?.size || '';
 
-    // Main product image
+    // Main product image - keyword-rich, descriptive
     if (imageType === 'main') {
-      let alt = product.name;
-      if (brand) alt += ` by ${brand}`;
-      if (finish) alt += ` in ${finish} finish`;
-      if (size) alt += `, ${size} size`;
-      alt += ` - ${category}`;
-      alt += ' | Carolina Futons, Hendersonville NC';
-      return alt;
+      const parts = [product.name];
+      if (brand && brand !== product.name) parts.push(`by ${brand}`);
+      if (material) parts.push(`${material}`);
+      if (finish) parts.push(`in ${finish}`);
+      if (size) parts.push(`${size} size`);
+      parts.push(category);
+      parts.push('- Carolina Futons, Hendersonville NC');
+      return truncateAlt(parts.join(' '));
     }
 
     // Lifestyle/room context image
     if (imageType === 'lifestyle') {
-      return `${product.name} ${category.toLowerCase()} styled in a modern living space - Carolina Futons`;
+      return truncateAlt(`${product.name} ${category.toLowerCase()} styled in a living room setting - shop at Carolina Futons`);
     }
 
     // Detail/closeup image
     if (imageType === 'detail') {
-      return `Close-up detail of ${product.name} ${finish ? `${finish} finish` : ''} craftsmanship - ${brand}`;
+      const finishText = finish ? `${finish} finish` : 'construction';
+      return truncateAlt(`Close-up of ${product.name} ${finishText} detail${brand ? ` by ${brand}` : ''}`);
     }
 
     // Open/bed position (for futons and murphy beds)
     if (imageType === 'open') {
-      return `${product.name} shown in open bed position${size ? `, ${size} size` : ''} - ${brand}`;
+      return truncateAlt(`${product.name} in open bed position${size ? ` ${size}` : ''}${brand ? ` by ${brand}` : ''} - convertible furniture`);
     }
 
-    return `${product.name} - Carolina Futons`;
+    // Folded/sofa position
+    if (imageType === 'sofa') {
+      return truncateAlt(`${product.name} in upright sofa position${finish ? ` ${finish}` : ''} - ${category}`);
+    }
+
+    // Gallery/additional angle
+    if (imageType === 'gallery') {
+      return truncateAlt(`${product.name} ${category.toLowerCase()} additional view - ${brand || 'Carolina Futons'}`);
+    }
+
+    // Thumbnail in product grid
+    if (imageType === 'grid') {
+      const parts = [product.name];
+      if (brand) parts.push(brand);
+      parts.push(category);
+      parts.push('Carolina Futons');
+      return truncateAlt(parts.join(' - '));
+    }
+
+    return truncateAlt(`${product.name} ${category.toLowerCase()} - Carolina Futons Hendersonville NC`);
+  }
+);
+
+// Generate category-specific meta description
+export const getCategoryMetaDescription = webMethod(
+  Permissions.Anyone,
+  (categorySlug) => {
+    const descriptions = {
+      'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Full and Queen sizes with solid hardwood construction. Free shipping over $999. Visit our Hendersonville, NC showroom.',
+      'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. No turning required, 10-15 year lifespan. Free shipping over $999. Carolina Futons, Hendersonville NC.',
+      'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed - sets up in under 2 minutes. Space-saving bedroom furniture. Free shipping over $999.',
+      'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Designed for memory foam and latex mattresses. American-made options available. Free shipping over $999.',
+      'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Nightstands, dressers, and storage to complete your bedroom set. Free shipping over $999.',
+    };
+    return descriptions[categorySlug] || 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.';
   }
 );
 
@@ -217,4 +429,58 @@ function getCategoryLabel(product) {
   if (collections.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
   if (collections.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
   return 'Furniture';
+}
+
+// Helper: detect material from product data or collections
+function detectMaterial(product) {
+  if (!product) return '';
+
+  // Check product name or description for material keywords
+  const text = `${product.name || ''} ${product.description || ''}`.toLowerCase();
+
+  if (text.includes('solid wood') || text.includes('hardwood')) return 'solid hardwood';
+  if (text.includes('tulip poplar') || text.includes('poplar')) return 'Tulip Poplar wood';
+  if (text.includes('rubberwood')) return 'rubberwood';
+  if (text.includes('parawood')) return 'parawood';
+  if (text.includes('memory foam')) return 'memory foam';
+  if (text.includes('latex')) return 'latex foam';
+  if (text.includes('foam')) return 'high-density foam';
+  if (text.includes('metal') || text.includes('steel')) return 'steel';
+  if (text.includes('log') || text.includes('rustic')) return 'natural log wood';
+
+  // Infer from brand/collection
+  const collections = Array.isArray(product.collections) ? product.collections : [product.collections || ''];
+  if (collections.some(c => c.includes('unfinished'))) return 'unfinished Tulip Poplar';
+  if (collections.some(c => c.includes('otis'))) return 'CertiPUR-US certified foam';
+
+  return '';
+}
+
+// Helper: build image array from product media
+function buildImageArray(product) {
+  if (!product) return [];
+
+  const images = [];
+  if (product.mainMedia) images.push(product.mainMedia);
+
+  if (product.mediaItems && Array.isArray(product.mediaItems)) {
+    product.mediaItems.forEach(item => {
+      if (item.src && !images.includes(item.src)) {
+        images.push(item.src);
+      }
+    });
+  }
+
+  return images.length > 0 ? images : (product.mainMedia ? [product.mainMedia] : []);
+}
+
+// Helper: strip HTML tags from text
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, '').trim();
+}
+
+// Helper: truncate alt text to 125 chars for accessibility
+function truncateAlt(text) {
+  if (text.length <= 125) return text;
+  return text.substring(0, 122) + '...';
 }

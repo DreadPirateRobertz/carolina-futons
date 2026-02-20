@@ -112,7 +112,6 @@ export const seo = {
   siteName: 'Carolina Futons',
   titleSuffix: ' | Carolina Futons - Hendersonville, NC',
   defaultDescription: 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.',
-  defaultKeywords: 'futons, futon frames, futon mattresses, murphy beds, murphy cabinet beds, platform beds, hendersonville nc, asheville furniture, night and day furniture, otis bed, strata furniture, kd frames',
   locale: 'en_US',
   businessAddress: {
     street: '824 Locust St, Ste 200',
@@ -121,6 +120,40 @@ export const seo = {
     zip: '28792',
     phone: '(828) 252-9449',
     hours: 'Wed-Sat 10am-5pm',
+  },
+  // Category-specific SEO titles
+  categoryTitles: {
+    'futon-frames': 'Futon Frames - Solid Wood Frames from Night & Day, Strata & KD Frames',
+    'mattresses': 'Futon Mattresses - Otis Bed Hypoallergenic Foam Mattresses',
+    'murphy-cabinet-beds': 'Murphy Cabinet Beds - Freestanding, No Wall Mount Needed',
+    'platform-beds': 'Platform Beds - Solid Wood by Night & Day Furniture & KD Frames',
+    'casegoods-accessories': 'Bedroom Furniture & Accessories - Night & Day Furniture',
+    'wall-huggers': 'Wall Hugger Futon Frames - Strata Furniture Patented Design',
+    'unfinished-wood': 'Unfinished Wood Futon Frames - KD Frames Made in USA',
+  },
+  // Category-specific keywords grouped by intent
+  categoryKeywords: {
+    'futon-frames': 'futon frames, solid wood futon frame, hardwood futon frame, night and day furniture, front loading futon, nesting futon, full size futon frame, queen futon frame',
+    'mattresses': 'futon mattress, otis bed mattress, hypoallergenic futon mattress, foam futon mattress, CertiPUR-US mattress, full futon mattress, queen futon mattress',
+    'murphy-cabinet-beds': 'murphy cabinet bed, freestanding murphy bed, cabinet bed, no wall mount murphy bed, night and day murphy bed, guest bed solution',
+    'platform-beds': 'platform bed, solid wood platform bed, low profile bed frame, bed frame for memory foam, kd frames platform bed, night and day platform bed',
+    'casegoods-accessories': 'bedroom furniture, nightstand, dresser, futon accessories, matching bedroom set, night and day furniture casegoods',
+    'wall-huggers': 'wall hugger futon, strata furniture, space saving futon, futon for small rooms, wall hugger futon frame',
+    'unfinished-wood': 'unfinished futon frame, kd frames, unfinished wood furniture, paintable futon frame, DIY futon frame, made in usa futon',
+  },
+  // Sitewide keyword groups
+  keywords: {
+    primary: 'futons, futon frames, futon mattresses, murphy beds, murphy cabinet beds, platform beds',
+    geographic: 'hendersonville nc furniture, asheville furniture store, western nc furniture, carolina futons',
+    brand: 'night and day furniture, otis bed, strata furniture, kd frames, arizona mattress',
+    intent: 'buy futon online, futon store near me, best futon mattress, convertible furniture, space saving bed',
+  },
+  // Open Graph defaults
+  og: {
+    type: 'website',
+    siteName: 'Carolina Futons',
+    locale: 'en_US',
+    defaultImage: 'https://www.carolinafutons.com/og-image.jpg', // Update with actual OG image
   },
 };
 

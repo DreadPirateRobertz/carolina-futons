@@ -1,9 +1,11 @@
 // Shipping Policy.ype8c.js - "Getting It Home" / Shipping Info
 // Shipping calculator, delivery zones, and FAQ
+import { getBusinessSchema } from 'backend/seoHelpers.web';
 
-$w.onReady(function () {
+$w.onReady(async function () {
   initShippingCalculator();
   initDeliveryInfo();
+  await injectShippingSchema();
 });
 
 // ── Shipping Cost Estimator ─────────────────────────────────────────
@@ -46,7 +48,7 @@ function getShippingZone(zip) {
   }
 
   // Southeast US
-  if ((prefix >= 270 && prefix <= 289) || // NC
+  if ((prefix >= 270 && prefix <= 299) || // NC
       (prefix >= 290 && prefix <= 299) || // SC
       (prefix >= 300 && prefix <= 319) || // GA
       (prefix >= 320 && prefix <= 339) || // FL
@@ -112,5 +114,16 @@ function initDeliveryInfo() {
       'Most of our furniture arrives ready to assemble with clear instructions and all hardware included. ' +
       'KD Frames products typically assemble in under an hour. Night & Day futon frames include illustrated ' +
       'step-by-step guides. Need help? Our local delivery team can handle assembly for you.';
+  } catch (e) {}
+}
+
+// ── Schema Injection ────────────────────────────────────────────────
+
+async function injectShippingSchema() {
+  try {
+    const schema = await getBusinessSchema();
+    if (schema) {
+      $w('#shippingSchemaHtml').postMessage(schema);
+    }
   } catch (e) {}
 }

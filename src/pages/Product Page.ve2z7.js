@@ -3,6 +3,7 @@
 // gallery enhancement, and SEO schema injection
 import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
 let currentProduct = null;
@@ -169,7 +170,7 @@ async function loadRelatedProducts() {
     repeater.data = related;
     repeater.onItemReady(($item, itemData) => {
       $item('#relatedImage').src = itemData.mainMedia;
-      $item('#relatedImage').alt = `${itemData.name} - Carolina Futons`;
+      $item('#relatedImage').alt = buildGridAlt(itemData);
       $item('#relatedName').text = itemData.name;
       $item('#relatedPrice').text = itemData.formattedPrice;
 
@@ -216,7 +217,7 @@ async function loadCollectionProducts() {
     repeater.data = collectionProducts;
     repeater.onItemReady(($item, itemData) => {
       $item('#collectionImage').src = itemData.mainMedia;
-      $item('#collectionImage').alt = `${itemData.name} - Carolina Futons`;
+      $item('#collectionImage').alt = buildGridAlt(itemData);
       $item('#collectionName').text = itemData.name;
       $item('#collectionPrice').text = itemData.formattedPrice;
 
@@ -292,6 +293,39 @@ async function initBreadcrumbs() {
       } catch (e) {}
     }
   } catch (e) {}
+}
+
+// Build keyword-rich alt text for product grid thumbnails
+function buildGridAlt(product) {
+  const brand = detectProductBrand(product);
+  const category = detectProductCategory(product);
+  const parts = [product.name];
+  if (brand) parts.push(brand);
+  if (category) parts.push(category);
+  parts.push('Carolina Futons');
+  const alt = parts.join(' - ');
+  return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
+}
+
+function detectProductBrand(product) {
+  if (!product.collections) return '';
+  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
+  if (colls.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
+  if (colls.some(c => c.includes('unfinished'))) return 'KD Frames';
+  if (colls.some(c => c.includes('mattress'))) return 'Otis Bed';
+  return 'Night & Day Furniture';
+}
+
+function detectProductCategory(product) {
+  if (!product.collections) return '';
+  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
+  if (colls.some(c => c.includes('murphy'))) return 'Murphy Cabinet Bed';
+  if (colls.some(c => c.includes('platform'))) return 'Platform Bed';
+  if (colls.some(c => c.includes('mattress'))) return 'Futon Mattress';
+  if (colls.some(c => c.includes('wall-hugger'))) return 'Wall Hugger Futon Frame';
+  if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
+  if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
+  return 'Furniture';
 }
 
 function getCategoryFromCollections(collections) {

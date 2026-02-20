@@ -2,6 +2,8 @@
 // Handles filtering, sorting, and product grid with engagement features
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
+import wixLocationFrontend from 'wix-location-frontend';
+import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -11,6 +13,7 @@ $w.onReady(async function () {
   initFilterControls();
   initProductGrid();
   updateResultCount();
+  await injectCategorySchema();
 });
 
 // ── Sort Controls ───────────────────────────────────────────────────
@@ -42,27 +45,26 @@ function applySort() {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
 
-    let sort;
+    // Reset sort
+    dataset.setSort(wixData.sort());
+
     switch (currentSort) {
       case 'name-asc':
-        sort = wixData.sort().ascending('name');
+        dataset.setSort(wixData.sort().ascending('name'));
         break;
       case 'name-desc':
-        sort = wixData.sort().descending('name');
+        dataset.setSort(wixData.sort().descending('name'));
         break;
       case 'price-asc':
-        sort = wixData.sort().ascending('price');
+        dataset.setSort(wixData.sort().ascending('price'));
         break;
       case 'price-desc':
-        sort = wixData.sort().descending('price');
+        dataset.setSort(wixData.sort().descending('price'));
         break;
       case 'date-desc':
-        sort = wixData.sort().descending('_createdDate');
+        dataset.setSort(wixData.sort().descending('_createdDate'));
         break;
-      default:
-        sort = wixData.sort().ascending('name');
     }
-    dataset.setSort(sort);
   } catch (e) {
     console.error('Error applying sort:', e);
   }
@@ -291,10 +293,13 @@ function updateResultCount() {
 
 function buildAltText(product) {
   const brand = detectBrand(product);
-  let alt = product.name;
-  if (brand) alt += ` by ${brand}`;
-  alt += ' - Carolina Futons, Hendersonville NC';
-  return alt;
+  const category = detectCategory(product);
+  const parts = [product.name];
+  if (brand) parts.push(brand);
+  if (category) parts.push(category);
+  parts.push('Carolina Futons Hendersonville NC');
+  const alt = parts.join(' - ');
+  return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
 }
 
 function detectBrand(product) {
@@ -307,6 +312,76 @@ function detectBrand(product) {
   return 'Night & Day Furniture';
 }
 
+function detectCategory(product) {
+  if (!product.collections) return '';
+  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
+
+  if (colls.some(c => c.includes('murphy'))) return 'Murphy Cabinet Bed';
+  if (colls.some(c => c.includes('platform'))) return 'Platform Bed';
+  if (colls.some(c => c.includes('mattress'))) return 'Futon Mattress';
+  if (colls.some(c => c.includes('wall-hugger'))) return 'Wall Hugger Futon Frame';
+  if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
+  if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
+  return '';
+}
+
 function stripHtml(html) {
   return html.replace(/<[^>]*>/g, '').trim();
+}
+
+// ── Category Schema Injection ─────────────────────────────────────
+
+async function injectCategorySchema() {
+  try {
+    const currentPath = wixLocationFrontend.path?.[0] || '';
+    const categoryMap = {
+      'futon-frames': { slug: 'futon-frames', title: 'Futon Frames' },
+      'mattresses': { slug: 'mattresses', title: 'Futon Mattresses' },
+      'murphy-cabinet-beds': { slug: 'murphy-cabinet-beds', title: 'Murphy Cabinet Beds' },
+      'platform-beds': { slug: 'platform-beds', title: 'Platform Beds' },
+      'casegoods-accessories': { slug: 'casegoods-accessories', title: 'Casegoods & Accessories' },
+      'wall-huggers': { slug: 'wall-huggers', title: 'Wall Hugger Futon Frames' },
+      'unfinished-wood': { slug: 'unfinished-wood', title: 'Unfinished Wood Futon Frames' },
+    };
+
+    const categoryInfo = categoryMap[currentPath];
+    if (!categoryInfo) return;
+
+    // Collect visible products from the dataset for ItemList
+    const dataset = $w('#categoryDataset');
+    if (!dataset) return;
+
+    await dataset.onReady();
+    const products = [];
+    const total = Math.min(dataset.getTotalCount(), 30);
+    for (let i = 0; i < total; i++) {
+      const item = dataset.getItems(i, 1)?.items?.[0];
+      if (item) {
+        products.push({
+          slug: item.slug,
+          name: item.name,
+          mainMedia: item.mainMedia,
+        });
+      }
+    }
+
+    const schema = await getCollectionSchema(categoryInfo, products);
+    if (schema) {
+      try {
+        $w('#categorySchemaHtml').postMessage(schema);
+      } catch (e) {}
+    }
+
+    // Inject breadcrumb schema
+    const breadcrumbs = [
+      { name: 'Home', url: '/' },
+      { name: categoryInfo.title, url: null },
+    ];
+    const breadcrumbSchema = await getBreadcrumbSchema(breadcrumbs);
+    if (breadcrumbSchema) {
+      try {
+        $w('#categoryBreadcrumbSchemaHtml').postMessage(breadcrumbSchema);
+      } catch (e) {}
+    }
+  } catch (e) {}
 }

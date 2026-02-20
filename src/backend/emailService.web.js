@@ -1,20 +1,51 @@
-// Backend web module for email functionality
-// Handles contact form submissions and order notifications
+/**
+ * @module emailService
+ * @description Backend web module for email notifications.
+ * Handles contact form submissions (via Wix Triggered Emails) and order
+ * notifications to the store owner. Also persists contact form data to the
+ * `ContactSubmissions` CMS collection for record-keeping.
+ *
+ * @requires wix-web-module
+ * @requires wix-crm-backend - Wix Triggered Emails API
+ * @requires wix-secrets-backend - Retrieves SITE_OWNER_CONTACT_ID secret
+ * @requires wix-data
+ *
+ * @setup
+ * 1. In Wix Dashboard > Secrets Manager, add `SITE_OWNER_CONTACT_ID` with the
+ *    site owner's Wix contact ID (found in Dashboard > Contacts > Site Members).
+ * 2. Create triggered email template `contact_form_submission` in
+ *    Dashboard > Marketing > Triggered Emails with variables:
+ *    customerName, customerEmail, customerPhone, subject, message, submittedAt.
+ * 3. Create triggered email template `new_order_notification` with variables:
+ *    orderNumber, customerName, total, itemCount.
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 
-// Send contact form email to store
+/**
+ * Send a contact form submission to the store owner via triggered email.
+ * Also saves the submission to the `ContactSubmissions` CMS collection.
+ *
+ * @function sendEmail
+ * @param {Object} formData - The contact form data.
+ * @param {string} formData.name - Customer's name (required).
+ * @param {string} formData.email - Customer's email address (required).
+ * @param {string} [formData.phone] - Customer's phone number.
+ * @param {string} [formData.subject] - Message subject.
+ * @param {string} formData.message - The message body (required).
+ * @returns {Promise<{success: true}>} Resolves on successful send.
+ * @throws {Error} Throws with a user-facing message including the store phone
+ *   number as a fallback contact method.
+ * @permission Anyone — public form submissions don't require authentication.
+ */
 export const sendEmail = webMethod(
   Permissions.Anyone,
   async ({ name, email, phone, subject, message }) => {
     try {
-      // Use Wix Triggered Emails to send to store owner
-      // The triggered email template "contact_form_submission" must be
-      // created in the Wix Dashboard > Marketing > Triggered Emails
-      // IMPORTANT: Replace SITE_OWNER_MEMBER_ID with the actual site owner's
-      // member ID from Wix Dashboard > Contacts > Site Members
+      // Retrieve the site owner's Wix contact ID from Secrets Manager.
+      // This is the recipient of all contact form notifications.
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
       await triggeredEmails.emailContact(
         'contact_form_submission',
@@ -35,7 +66,7 @@ export const sendEmail = webMethod(
         }
       );
 
-      // Also save to a CMS collection for record keeping
+      // Persist the submission to CMS for record-keeping and dashboard access
       await wixData.insert('ContactSubmissions', {
         name,
         email,
@@ -54,7 +85,19 @@ export const sendEmail = webMethod(
   }
 );
 
-// Send order notification to store
+/**
+ * Send a new order notification to the store owner.
+ * Non-critical — returns `{ success: false }` on failure rather than throwing.
+ *
+ * @function sendOrderNotification
+ * @param {Object} orderDetails - Order data from Wix Stores.
+ * @param {string} orderDetails.number - The order number.
+ * @param {string} orderDetails.buyerName - Customer's full name.
+ * @param {string} orderDetails.total - Formatted order total (e.g., "$1,299.00").
+ * @param {Array} [orderDetails.lineItems] - Array of line items (used for item count).
+ * @returns {Promise<{success: boolean}>} Success status.
+ * @permission Anyone
+ */
 export const sendOrderNotification = webMethod(
   Permissions.Anyone,
   async (orderDetails) => {
