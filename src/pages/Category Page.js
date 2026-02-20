@@ -10,6 +10,7 @@ import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { colors } from 'public/designTokens.js';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -22,42 +23,42 @@ const CATEGORY_CONTENT = {
   'futon-frames': {
     title: 'Futon Frames',
     subtitle: 'Handcrafted frames for every room — from classic hardwood to contemporary designs',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #D4BC96 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandBase} 0%, ${colors.sandDark} 100%)`,
   },
   'mattresses': {
     title: 'Mattresses',
     subtitle: 'Premium mattresses crafted for comfort — find your perfect sleep surface',
-    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #E8D5B7 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandLight} 0%, ${colors.sandBase} 100%)`,
   },
   'murphy-cabinet-beds': {
     title: 'Murphy Cabinet Beds',
     subtitle: 'Space-saving elegance — beautiful cabinet beds that transform any room',
-    heroGradient: 'linear-gradient(135deg, #A8CCD8 0%, #5B8FA8 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.mountainBlueLight} 0%, ${colors.mountainBlue} 100%)`,
   },
   'platform-beds': {
     title: 'Platform Beds',
     subtitle: 'Modern simplicity meets mountain craftsmanship',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #C9A0A0 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandBase} 0%, ${colors.mauve} 100%)`,
   },
   'casegoods-accessories': {
     title: 'Casegoods & Accessories',
     subtitle: 'Complete your space with matching nightstands, dressers, and storage',
-    heroGradient: 'linear-gradient(135deg, #D4BC96 0%, #E8D5B7 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandDark} 0%, ${colors.sandBase} 100%)`,
   },
   'wall-huggers': {
     title: 'Wall Hugger Frames',
     subtitle: 'Space-efficient frames designed to sit close to your wall',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #A8CCD8 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandBase} 0%, ${colors.mountainBlueLight} 100%)`,
   },
   'unfinished-wood': {
     title: 'Unfinished Wood',
     subtitle: 'Raw hardwood frames ready for your personal finish',
-    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #D4BC96 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sandLight} 0%, ${colors.sandDark} 100%)`,
   },
   'sales': {
     title: 'Sale',
     subtitle: 'Current deals on quality furniture — limited time savings',
-    heroGradient: 'linear-gradient(135deg, #F2A882 0%, #E8845C 100%)',
+    heroGradient: `linear-gradient(135deg, ${colors.sunsetCoralLight} 0%, ${colors.sunsetCoral} 100%)`,
   },
 };
 
@@ -107,7 +108,7 @@ function initCategoryHero(currentPath) {
     // backgroundImage may not be supported on all element types;
     // fall back to a solid color from the gradient start
     try {
-      const solidColor = content.heroGradient.match(/#[A-Fa-f0-9]{6}/)?.[0] || '#E8D5B7';
+      const solidColor = content.heroGradient.match(/#[A-Fa-f0-9]{6}/)?.[0] || colors.sandBase;
       $w('#categoryHeroSection').style.backgroundColor = solidColor;
     } catch (e2) {}
   }
