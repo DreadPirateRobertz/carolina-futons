@@ -5,6 +5,7 @@ import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import {
   getCurrentCart,
   addToCart,
+  removeCartItem,
   onCartChanged,
   getShippingProgress,
   getTierProgress,
@@ -28,6 +29,7 @@ function initSideCart() {
     $w('#sideCartClose').onClick(() => {
       $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
     });
+    $w('#sideCartClose').accessibility.ariaLabel = 'Close cart';
   } catch (e) {}
 
   // Overlay click to close
@@ -51,13 +53,56 @@ function initSideCart() {
     });
   } catch (e) {}
 
-  // Cross-sell add button (registered once, uses currentSideSugProduct)
+  // Register repeater handlers once (not on every refresh)
+  initSideCartRepeater();
+}
+
+// Register repeater item handlers once to avoid accumulation
+function initSideCartRepeater() {
   try {
-    $w('#sideSugAdd').onClick(async () => {
-      if (!currentSideSugProduct) return;
-      await addToCart(currentSideSugProduct._id);
-      $w('#sideSugAdd').label = 'Added!';
-      $w('#sideSugAdd').disable();
+    const repeater = $w('#sideCartRepeater');
+    if (!repeater) return;
+
+    repeater.onItemReady(($item, itemData) => {
+      $item('#sideItemImage').src = itemData.image;
+      $item('#sideItemName').text = itemData.name;
+      $item('#sideItemPrice').text = `$${Number(itemData.price).toFixed(2)}`;
+      $item('#sideItemQty').text = `Qty: ${itemData.quantity}`;
+
+      // Line item total (price × qty)
+      try {
+        $item('#sideItemLineTotal').text = `$${Number(itemData.lineTotal).toFixed(2)}`;
+      } catch (e) {}
+
+      // Variant details (e.g., "Size: Queen · Finish: Honey Oak")
+      if (itemData.variantDetails) {
+        try {
+          $item('#sideItemVariant').text = itemData.variantDetails;
+          $item('#sideItemVariant').show();
+        } catch (e) {}
+      } else if (itemData.variantName) {
+        try {
+          $item('#sideItemVariant').text = itemData.variantName;
+          $item('#sideItemVariant').show();
+        } catch (e) {}
+      }
+
+      // ARIA label for remove button
+      try { $item('#sideItemRemove').accessibility.ariaLabel = `Remove ${itemData.name} from cart`; } catch (e) {}
+
+      // Remove: animated slide-out + actual cart removal
+      $item('#sideItemRemove').onClick(async () => {
+        try {
+          $item('#sideItemImage').hide('slide', { direction: 'right', duration: 200 });
+          $item('#sideItemName').hide('fade', { duration: 200 });
+        } catch (e) {}
+        try {
+          await removeCartItem(itemData._id);
+        } catch (err) {
+          console.error('Error removing item from cart:', err);
+        }
+        setTimeout(() => refreshSideCart(), 250);
+      });
     });
   } catch (e) {}
 }
@@ -71,6 +116,7 @@ async function refreshSideCart() {
         $w('#sideCartItems').hide();
         $w('#sideCartFooter').hide();
       } catch (e) {}
+      try { $w('#cartBadge').hide(); } catch (e) {}
       return;
     }
 
@@ -87,44 +133,9 @@ async function refreshSideCart() {
       $w('#cartBadge').show();
     } catch (e) {}
 
-    // Update cart items in repeater — enhanced with variant details and line totals
+    // Update repeater data (handler registered once in initSideCartRepeater)
     const repeater = $w('#sideCartRepeater');
     if (repeater) {
-      repeater.onItemReady(($item, itemData) => {
-        $item('#sideItemImage').src = itemData.image;
-        $item('#sideItemName').text = itemData.name;
-        $item('#sideItemPrice').text = `$${Number(itemData.price).toFixed(2)}`;
-        $item('#sideItemQty').text = `Qty: ${itemData.quantity}`;
-
-        // Enhanced: show line item total (price × qty)
-        try {
-          $item('#sideItemLineTotal').text = `$${Number(itemData.lineTotal).toFixed(2)}`;
-        } catch (e) {}
-
-        // Enhanced: show variant details prominently (e.g., "Size: Queen · Finish: Honey Oak")
-        if (itemData.variantDetails) {
-          try {
-            $item('#sideItemVariant').text = itemData.variantDetails;
-            $item('#sideItemVariant').show();
-          } catch (e) {}
-        } else if (itemData.variantName) {
-          try {
-            $item('#sideItemVariant').text = itemData.variantName;
-            $item('#sideItemVariant').show();
-          } catch (e) {}
-        }
-
-        // Animated removal with slide-out effect
-        $item('#sideItemRemove').onClick(async () => {
-          try {
-            // Slide the item out before refreshing
-            $item('#sideItemImage').hide('slide', { direction: 'right', duration: 200 });
-            $item('#sideItemName').hide('fade', { duration: 200 });
-          } catch (e) {}
-          // Brief delay for animation, then refresh
-          setTimeout(() => refreshSideCart(), 250);
-        });
-      });
       repeater.data = currentCart.lineItems.map(item => {
         const variantDetails = item.options?.map(o => `${o.option}: ${o.value}`).join(' · ') || '';
         return {
@@ -240,9 +251,16 @@ async function loadSideCartSuggestions(lineItems) {
 
         try {
           $item('#sideSugAdd').onClick(async () => {
-            await addToCart(product._id);
-            $item('#sideSugAdd').label = 'Added!';
-            $item('#sideSugAdd').disable();
+            try {
+              $item('#sideSugAdd').disable();
+              $item('#sideSugAdd').label = 'Adding...';
+              await addToCart(product._id);
+              $item('#sideSugAdd').label = 'Added!';
+            } catch (err) {
+              console.error('Error adding suggestion:', err);
+              $item('#sideSugAdd').label = 'Error';
+              $item('#sideSugAdd').enable();
+            }
           });
         } catch (e) {}
 
@@ -260,6 +278,7 @@ async function loadSideCartSuggestions(lineItems) {
       const product = topSuggestion.products[0];
       currentSideSugProduct = product;
       try {
+        currentSideSugProduct = product;
         $w('#sideSugImage').src = product.mainMedia;
         $w('#sideSugName').text = product.name;
         $w('#sideSugPrice').text = product.formattedPrice;
@@ -267,15 +286,17 @@ async function loadSideCartSuggestions(lineItems) {
         $w('#sideSugAdd').label = 'Add to Cart';
         $w('#sideCartSuggestion').expand();
 
-        // Reset button state for new suggestion
-        $w('#sideSugAdd').label = 'Add to Cart';
-        $w('#sideSugAdd').enable();
-
-        // Remove previous handler before adding new one
         $w('#sideSugAdd').onClick(async () => {
-          await addToCart(product._id);
-          $w('#sideSugAdd').label = 'Added!';
-          $w('#sideSugAdd').disable();
+          try {
+            $w('#sideSugAdd').disable();
+            $w('#sideSugAdd').label = 'Adding...';
+            await addToCart(product._id);
+            $w('#sideSugAdd').label = 'Added!';
+          } catch (err) {
+            console.error('Error adding suggestion:', err);
+            $w('#sideSugAdd').label = 'Error';
+            $w('#sideSugAdd').enable();
+          }
         });
       } catch (e) {}
     }
