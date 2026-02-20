@@ -9,3 +9,10 @@ jsconfig.json
 .runtime/
 .claude/commands/
 .logs/
+
+# Secrets - NEVER commit
+*.conf
+*.env
+*.secret
+credentials*
+package-lock.json
