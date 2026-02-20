@@ -4,8 +4,10 @@
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import wixLocationFrontend from 'wix-location-frontend';
+import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   try {
     // ── SEO Schema Injection ───────────────────────────────────────────
     const businessSchema = await getBusinessSchema();
@@ -45,7 +47,8 @@ async function initRelatedProductsSidebar() {
       return;
     }
 
-    sidebarRepeater.data = featured.map((p, i) => ({
+    const visibleProducts = limitForViewport(featured, { mobile: 2, tablet: 3, desktop: 4 });
+    sidebarRepeater.data = visibleProducts.map((p, i) => ({
       ...p,
       _id: p._id || `bp-${i}`,
     }));
