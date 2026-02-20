@@ -59,6 +59,7 @@ async function initRelatedProductsSidebar() {
         $item('#sidebarProductLink').onClick(() => {
           wixLocationFrontend.to(`/product-page/${itemData.slug}`);
         });
+        try { $item('#sidebarProductLink').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       } catch (e) {}
     });
 
@@ -81,6 +82,7 @@ function initSocialShareButtons() {
           openUrl(`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`, '_blank');
         });
       });
+      try { $w('#shareFacebook').accessibility.ariaLabel = 'Share this article on Facebook'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -89,6 +91,7 @@ function initSocialShareButtons() {
           openUrl(`https://pinterest.com/pin/create/button/?url=${currentUrl}&description=${pageTitle}`, '_blank');
         });
       });
+      try { $w('#sharePinterest').accessibility.ariaLabel = 'Share this article on Pinterest'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -97,6 +100,7 @@ function initSocialShareButtons() {
           openUrl(`https://twitter.com/intent/tweet?url=${currentUrl}&text=${pageTitle}`, '_blank');
         });
       });
+      try { $w('#shareTwitter').accessibility.ariaLabel = 'Share this article on Twitter'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -105,6 +109,7 @@ function initSocialShareButtons() {
           openUrl(`mailto:?subject=${pageTitle}&body=Check out this article: ${currentUrl}`, '_self');
         });
       });
+      try { $w('#shareEmail').accessibility.ariaLabel = 'Share this article via email'; } catch (e) {}
     } catch (e) {}
   } catch (err) {
     console.error('Social share init error:', err);
@@ -118,6 +123,9 @@ function initBlogNewsletter() {
     const submitBtn = $w('#blogNewsletterSubmit');
     const emailInput = $w('#blogNewsletterEmail');
     if (!submitBtn || !emailInput) return;
+
+    try { emailInput.accessibility.ariaLabel = 'Enter your email for newsletter'; } catch (e) {}
+    try { submitBtn.accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
 
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
