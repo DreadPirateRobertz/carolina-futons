@@ -1,8 +1,8 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 505 tests across 25 files (all passing)
-**Last Push**: 1347f61
+**Test Suite**: 553 tests across 28 files (all passing)
+**Last Push**: 7f5ecaa
 **Updated by**: melania (crew lead) — 2026-02-20 13:48 MST
 
 ---
@@ -30,6 +30,10 @@
 11. PLUGIN-RECOMMENDATIONS.md + SOCIAL-MEDIA-STRATEGY.md
 12. 3 new test suites: giftCards (18), deliveryScheduling (16), assemblyGuides (15)
 13. Bug fix: gift card code sanitize truncation
+14. swatchService tests (16 tests): product swatches, color families, count, preview colors
+15. contactSubmissions tests (11 tests): form submit, sanitization, rate limiting, validation
+16. googleMerchantFeed tests (21 tests): XML feed generation, pricing, brands, categories, JSON feed
+17. wix-data mock: added skip() method
 
 ## Crew Completed This Session
 
@@ -67,8 +71,10 @@
 ### P0 — Bug Fixes (Radahn — NOW)
 - [ ] STORY-005: Cart recovery duplicate detection (checkoutId dedup + line item validation)
 
-### P1 — Test Coverage (Radahn — NEXT)
-- [ ] STORY-006: swatchService.test.js (10+ tests, wix-data mock ready)
+### P1 — Test Coverage (Mayor — DONE)
+- [x] STORY-006: swatchService.test.js (16 tests — mayor completed)
+- [x] contactSubmissions.test.js (11 tests — mayor completed)
+- [x] googleMerchantFeed.test.js (21 tests — mayor completed)
 
 ### P1 — Stories Pending Review
 - [ ] STORY-004: Safe element init pattern — NEEDS REVISION (too vague on scope)
