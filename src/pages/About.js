@@ -3,8 +3,10 @@
 // and trust-building content with local SEO signals
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
+import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   initPhotoGallery();
   initTimeline();
   await injectLocalSchema();
