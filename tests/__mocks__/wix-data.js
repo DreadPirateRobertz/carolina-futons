@@ -71,6 +71,7 @@ function createQueryBuilder(collection) {
     },
     ascending(field) { sortField = field; sortDir = 'asc'; return builder; },
     descending(field) { sortField = field; sortDir = 'desc'; return builder; },
+    skip(n) { return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
     async find() {
