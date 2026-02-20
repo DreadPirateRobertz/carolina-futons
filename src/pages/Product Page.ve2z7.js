@@ -476,7 +476,6 @@ async function loadRelatedProducts() {
       return;
     }
 
-    repeater.data = related;
     repeater.onItemReady(($item, itemData) => {
       $item('#relatedImage').src = itemData.mainMedia;
       $item('#relatedImage').alt = buildGridAlt(itemData);
@@ -492,13 +491,14 @@ async function loadRelatedProducts() {
 
       // Click to navigate
       const navigateToProduct = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
       $item('#relatedImage').onClick(navigateToProduct);
       $item('#relatedName').onClick(navigateToProduct);
     });
+    repeater.data = related;
   } catch (err) {
     console.error('Error loading related products:', err);
   }
@@ -523,7 +523,6 @@ async function loadCollectionProducts() {
       return;
     }
 
-    repeater.data = collectionProducts;
     repeater.onItemReady(($item, itemData) => {
       $item('#collectionImage').src = itemData.mainMedia;
       $item('#collectionImage').alt = buildGridAlt(itemData);
@@ -531,11 +530,12 @@ async function loadCollectionProducts() {
       $item('#collectionPrice').text = itemData.formattedPrice;
 
       $item('#collectionImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
     });
+    repeater.data = collectionProducts;
   } catch (err) {
     console.error('Error loading collection products:', err);
   }
@@ -693,11 +693,11 @@ async function initBreadcrumbs() {
     try {
       $w('#breadcrumb1').text = 'Home';
       $w('#breadcrumb1').onClick(() => {
-        import('wix-location').then(({ to }) => to('/'));
+        import('wix-location-frontend').then(({ to }) => to('/'));
       });
       $w('#breadcrumb2').text = category.label;
       $w('#breadcrumb2').onClick(() => {
-        import('wix-location').then(({ to }) => to(category.path));
+        import('wix-location-frontend').then(({ to }) => to(category.path));
       });
       $w('#breadcrumb3').text = currentProduct.name;
     } catch (e) {}

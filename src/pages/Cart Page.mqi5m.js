@@ -165,7 +165,6 @@ async function loadCartSuggestions() {
     const repeater = $w('#suggestionsRepeater');
     if (!repeater) return;
 
-    repeater.data = suggestion.products;
     repeater.onItemReady(($item, itemData) => {
       $item('#sugImage').src = itemData.mainMedia;
       $item('#sugImage').alt = `${itemData.name} - add to cart`;
@@ -192,13 +191,14 @@ async function loadCartSuggestions() {
 
       // Click image/name to view product
       const navigate = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
       $item('#sugImage').onClick(navigate);
       $item('#sugName').onClick(navigate);
     });
+    repeater.data = suggestion.products;
   } catch (err) {
     console.error('Error loading cart suggestions:', err);
   }

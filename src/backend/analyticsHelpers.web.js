@@ -121,10 +121,8 @@ export const getMostViewedProducts = webMethod(
         .hasSome('_id', productIds)
         .find();
 
-      // Build a lookup map for quick product access
-      const productMap = new Map(products.items.map(p => [p._id, p]));
-
-      // Merge product data with view counts, preserving analytics sort order
+      // Merge product data with view counts, preserving viewCount sort order
+      const productMap = new Map(products.items.map(item => [item._id, item]));
       return analytics.items
         .map(a => {
           const item = productMap.get(a.productId);
@@ -179,9 +177,8 @@ export const getTrendingProducts = webMethod(
         .hasSome('_id', productIds)
         .find();
 
-      // Build a lookup map and preserve analytics sort order
-      const productMap = new Map(products.items.map(p => [p._id, p]));
-
+      // Preserve trending sort order by iterating analytics first
+      const productMap = new Map(products.items.map(item => [item._id, item]));
       return analytics.items
         .map(a => {
           const item = productMap.get(a.productId);

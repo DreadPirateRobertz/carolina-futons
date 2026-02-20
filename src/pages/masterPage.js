@@ -122,9 +122,7 @@ function initSearch() {
       if (event.key === 'Enter') {
         const query = searchInput.value.trim();
         if (query) {
-          import('wix-location').then(({ to }) => {
-            to(`/search-results?q=${encodeURIComponent(query)}`);
-          });
+          wixLocationFrontend.to(`/search-results?q=${encodeURIComponent(query)}`);
         }
       }
     });

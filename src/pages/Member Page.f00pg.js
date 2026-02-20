@@ -328,7 +328,7 @@ async function initWishlist() {
 
       // View product
       $item('#wishViewBtn').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });

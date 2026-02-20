@@ -48,7 +48,7 @@ function getShippingZone(zip) {
   }
 
   // Southeast US
-  if ((prefix >= 270 && prefix <= 289) || // NC (non-local)
+  if ((prefix >= 270 && prefix <= 289) || // NC
       (prefix >= 290 && prefix <= 299) || // SC
       (prefix >= 300 && prefix <= 319) || // GA
       (prefix >= 320 && prefix <= 339) || // FL
@@ -101,11 +101,11 @@ function initDeliveryInfo() {
     const repeater = $w('#deliveryRepeater');
     if (!repeater) return;
 
-    repeater.data = deliveryMethods;
     repeater.onItemReady(($item, itemData) => {
       $item('#deliveryTitle').text = itemData.title;
       $item('#deliveryDesc').text = itemData.description;
     });
+    repeater.data = deliveryMethods;
   } catch (e) {}
 
   // Assembly tips section

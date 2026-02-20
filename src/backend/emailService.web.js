@@ -159,7 +159,7 @@ export const submitSwatchRequest = webMethod(
  * @permission Anyone
  */
 export const sendOrderNotification = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (orderDetails) => {
     try {
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');

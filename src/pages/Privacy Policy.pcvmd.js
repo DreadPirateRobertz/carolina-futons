@@ -20,7 +20,6 @@ function initPolicyNavigation() {
     const tocRepeater = $w('#policyTocRepeater');
     if (!tocRepeater) return;
 
-    tocRepeater.data = sections.map((s, i) => ({ ...s, _id: String(i) }));
     tocRepeater.onItemReady(($item, itemData) => {
       $item('#tocLink').text = itemData.label;
       $item('#tocLink').onClick(() => {
@@ -29,5 +28,6 @@ function initPolicyNavigation() {
         } catch (e) {}
       });
     });
+    tocRepeater.data = sections.map((s, i) => ({ ...s, _id: String(i) }));
   } catch (e) {}
 }

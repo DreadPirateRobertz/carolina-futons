@@ -46,12 +46,12 @@ function initTimeline() {
     const repeater = $w('#timelineRepeater');
     if (!repeater) return;
 
-    repeater.data = milestones.map((m, i) => ({ ...m, _id: String(i) }));
     repeater.onItemReady(($item, itemData) => {
       $item('#timelineYear').text = itemData.year;
       $item('#timelineTitle').text = itemData.title;
       $item('#timelineDesc').text = itemData.description;
     });
+    repeater.data = milestones.map((m, i) => ({ ...m, _id: String(i) }));
   } catch (e) {}
 }
 

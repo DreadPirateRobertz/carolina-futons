@@ -25,16 +25,16 @@ function initThankYou() {
     $w('#shareFacebook').onClick(() => {
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const text = encodeURIComponent('Just ordered beautiful furniture from Carolina Futons in Hendersonville, NC!');
-      import('wix-window-frontend').then(({ openUrl }) => {
-        openUrl(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
+      import('wix-location-frontend').then(({ to }) => {
+        to(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
       });
     });
 
     $w('#sharePinterest').onClick(() => {
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const desc = encodeURIComponent('Quality futon furniture from Carolina Futons - Hendersonville, NC');
-      import('wix-window-frontend').then(({ openUrl }) => {
-        openUrl(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
+      import('wix-location-frontend').then(({ to }) => {
+        to(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
       });
     });
   } catch (e) {}
@@ -74,7 +74,6 @@ async function loadPostPurchaseSuggestions() {
       $w('#postPurchaseHeading').text = 'You Might Also Love';
     } catch (e) {}
 
-    repeater.data = products;
     repeater.onItemReady(($item, itemData) => {
       $item('#ppImage').src = itemData.mainMedia;
       $item('#ppImage').alt = `${itemData.name} - Carolina Futons`;
@@ -82,11 +81,12 @@ async function loadPostPurchaseSuggestions() {
       $item('#ppPrice').text = itemData.formattedPrice;
 
       $item('#ppImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
     });
+    repeater.data = products;
   } catch (err) {
     console.error('Error loading post-purchase suggestions:', err);
   }
