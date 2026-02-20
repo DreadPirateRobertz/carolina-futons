@@ -18,6 +18,7 @@ export default defineConfig({
       'wix-location-frontend': path.resolve(__dirname, 'tests/__mocks__/wix-location-frontend.js'),
       'wix-stores-frontend': path.resolve(__dirname, 'tests/__mocks__/wix-stores-frontend.js'),
       'wix-location': path.resolve(__dirname, 'tests/__mocks__/wix-location.js'),
+      'wix-members-backend': path.resolve(__dirname, 'tests/__mocks__/wix-members-backend.js'),
       'backend/ups-shipping.web': path.resolve(__dirname, 'src/backend/ups-shipping.web.js'),
       'backend/productRecommendations.web': path.resolve(__dirname, 'src/backend/productRecommendations.web.js'),
       'backend/seoHelpers.web': path.resolve(__dirname, 'src/backend/seoHelpers.web.js'),
