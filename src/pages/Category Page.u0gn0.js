@@ -2,7 +2,6 @@
 // Handles filtering, sorting, and product grid with engagement features
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
-import wixLocationFrontend from 'wix-location-frontend';
 
 let currentSort = 'name-asc';
 let currentFilters = {};

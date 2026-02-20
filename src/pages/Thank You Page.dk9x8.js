@@ -42,16 +42,15 @@ function initThankYou() {
   // Newsletter signup prompt
   try {
     $w('#newsletterPrompt').text = 'Get updates on new products and exclusive deals';
-    $w('#newsletterSignup').onClick(() => {
+    $w('#newsletterSignup').onClick(async () => {
       const email = $w('#newsletterEmail').value;
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        import('wix-crm-frontend').then(({ emailContact }) => {
-          // Trigger through Wix CRM
-          try {
-            $w('#newsletterSuccess').text = 'You\'re subscribed!';
-            $w('#newsletterSuccess').show();
-          } catch (e) {}
-        });
+        try {
+          const { emailContact } = await import('wix-crm-frontend');
+          await emailContact(email);
+          $w('#newsletterSuccess').text = 'You\'re subscribed!';
+          $w('#newsletterSuccess').show();
+        } catch (e) {}
       }
     });
   } catch (e) {}

@@ -3,7 +3,6 @@
 // gallery enhancement, and SEO schema injection
 import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
-import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
 let currentProduct = null;

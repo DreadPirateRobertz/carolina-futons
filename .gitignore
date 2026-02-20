@@ -4,3 +4,8 @@ node_modules/
 .idea/
 .wix/
 jsconfig.json
+
+# Gas Town (added by gt)
+.runtime/
+.claude/commands/
+.logs/
