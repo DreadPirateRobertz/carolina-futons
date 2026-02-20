@@ -3,16 +3,14 @@
 // tiered discount incentives, recently viewed, and "Complete Your Futon" bundling
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import { getRecentlyViewed } from 'public/galleryHelpers';
-import wixStoresFrontend from 'wix-stores-frontend';
-
-const FREE_SHIPPING_THRESHOLD = 999;
-
-// Tiered discount thresholds
-const TIER_THRESHOLDS = [
-  { min: 0, max: 500, discount: 5, label: pct => `Spend $${pct} more for 5% off your order` },
-  { min: 500, max: 1000, discount: 10, label: pct => `Spend $${pct} more for 10% off your order` },
-  { min: 1000, max: Infinity, discount: 10, label: () => 'You qualify for 10% off — applied at checkout!' },
-];
+import {
+  getCurrentCart,
+  addToCart,
+  onCartChanged,
+  getShippingProgress,
+  getTierProgress,
+} from 'public/cartService';
+import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -27,6 +25,7 @@ async function initCartPage() {
     await loadRecentlyViewed();
     initQuantityControls();
     initCartListeners();
+    initBackToTop($w);
   } catch (err) {
     console.error('Error initializing cart page:', err);
   }
@@ -37,12 +36,11 @@ async function initCartPage() {
 
 async function updateShippingProgress() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     if (!currentCart) return;
 
     const subtotal = currentCart.totals?.subtotal || 0;
-    const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
-    const progressPct = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+    const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
 
     const progressBar = $w('#shippingProgressBar');
     const progressText = $w('#shippingProgressText');
@@ -52,7 +50,7 @@ async function updateShippingProgress() {
     }
 
     if (progressText) {
-      if (remaining > 0) {
+      if (!qualifies) {
         progressText.text = `You're $${remaining.toFixed(2)} away from free shipping!`;
       } else {
         progressText.text = 'You qualify for FREE shipping!';
@@ -69,27 +67,20 @@ async function updateShippingProgress() {
 
 async function updateTierProgress() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     if (!currentCart) return;
 
     const subtotal = currentCart.totals?.subtotal || 0;
-    const tier = TIER_THRESHOLDS.find(t => subtotal >= t.min && subtotal < t.max)
-      || TIER_THRESHOLDS[TIER_THRESHOLDS.length - 1];
+    const { tier, remaining, progressPct } = getTierProgress(subtotal);
 
     const progressBar = $w('#tierProgressBar');
     const progressText = $w('#tierProgressText');
 
     if (progressBar) {
-      // Progress within current tier toward next threshold
-      if (tier.max === Infinity) {
-        progressBar.value = 100;
-      } else {
-        progressBar.value = Math.min((subtotal / tier.max) * 100, 100);
-      }
+      progressBar.value = progressPct;
     }
 
     if (progressText) {
-      const remaining = tier.max === Infinity ? 0 : (tier.max - subtotal);
       progressText.text = tier.label(remaining.toFixed(2));
     }
   } catch (e) {}
@@ -100,7 +91,7 @@ async function updateTierProgress() {
 
 async function loadRecentlyViewed() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     const cartProductIds = currentCart?.lineItems?.map(item => item.productId) || [];
 
     // Get recently viewed, excluding items already in cart
@@ -142,7 +133,7 @@ async function loadRecentlyViewed() {
 
 async function loadCartSuggestions() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     if (!currentCart || !currentCart.lineItems || currentCart.lineItems.length === 0) {
       try { $w('#suggestionsSection').collapse(); } catch (e) {}
       return;
@@ -174,10 +165,7 @@ async function loadCartSuggestions() {
       // Quick add to cart button
       $item('#sugAddBtn').onClick(async () => {
         try {
-          await wixStoresFrontend.cart.addProducts([{
-            productId: itemData._id,
-            quantity: 1,
-          }]);
+          await addToCart(itemData._id);
           $item('#sugAddBtn').label = 'Added!';
           $item('#sugAddBtn').disable();
           setTimeout(() => {
@@ -239,7 +227,7 @@ function initQuantityControls() {
 // ── Cart Change Listeners ───────────────────────────────────────────
 
 function initCartListeners() {
-  wixStoresFrontend.onCartChanged(() => {
+  onCartChanged(() => {
     updateShippingProgress();
     updateTierProgress();
     loadCartSuggestions();
@@ -249,7 +237,7 @@ function initCartListeners() {
 
 async function refreshCartTotals() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     if (currentCart && currentCart.totals) {
       const fmt = (n) => `$${Number(n).toFixed(2)}`;
       try { $w('#cartSubtotal').text = fmt(currentCart.totals.subtotal); } catch (e) {}

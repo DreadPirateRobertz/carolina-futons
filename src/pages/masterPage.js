@@ -4,7 +4,8 @@
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
-import wixStoresFrontend from 'wix-stores-frontend';
+import { getCurrentCart, onCartChanged } from 'public/cartService';
+import { isMobile } from 'public/mobileHelpers';
 
 let _previousCartItemCount = null;
 
@@ -136,7 +137,7 @@ function initSearch() {
 
 function initSideCartAutoOpen() {
   // Capture initial cart count so we can detect additions
-  wixStoresFrontend.cart.getCurrentCart().then((cart) => {
+  getCurrentCart().then((cart) => {
     _previousCartItemCount = cart
       ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
@@ -144,9 +145,9 @@ function initSideCartAutoOpen() {
     _previousCartItemCount = 0;
   });
 
-  wixStoresFrontend.onCartChanged(async () => {
+  onCartChanged(async () => {
     try {
-      const cart = await wixStoresFrontend.cart.getCurrentCart();
+      const cart = await getCurrentCart();
       const newCount = cart
         ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
         : 0;

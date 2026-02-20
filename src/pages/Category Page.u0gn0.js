@@ -8,6 +8,7 @@ import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } 
 import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
+import { isMobile, initBackToTop } from 'public/mobileHelpers';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -70,6 +71,7 @@ $w.onReady(async function () {
   initRecentlyViewed();
   injectCategoryMeta(currentPath);
   await injectCategorySchema();
+  initBackToTop($w);
 });
 
 // ── Category Hero ────────────────────────────────────────────────────
@@ -472,8 +474,8 @@ function initQuickViewHandlers() {
     $w('#qvAddToCart').onClick(async () => {
       if (!currentQuickViewProduct) return;
       try {
-        const { default: wixStoresFrontend } = await import('wix-stores-frontend');
-        await wixStoresFrontend.cart.addProducts([{ productId: currentQuickViewProduct._id, quantity: 1 }]);
+        const { addToCart } = await import('public/cartService');
+        await addToCart(currentQuickViewProduct._id);
         $w('#qvAddToCart').label = 'Added!';
         setTimeout(() => {
           $w('#quickViewModal').hide('fade', { duration: 200 });

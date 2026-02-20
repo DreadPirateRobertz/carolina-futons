@@ -172,16 +172,13 @@ function initOrderHistory() {
       try {
         $item('#orderReorderBtn').onClick(async () => {
           try {
-            const wixStores = (await import('wix-stores-frontend')).default;
+            const { addToCart } = await import('public/cartService');
             const lineItems = itemData.lineItems || [];
             if (lineItems.length === 0) return;
 
-            const cartItems = lineItems.map(item => ({
-              productId: item.productId,
-              quantity: item.quantity || 1,
-            }));
-
-            await wixStores.cart.addProducts(cartItems);
+            for (const item of lineItems) {
+              await addToCart(item.productId, item.quantity || 1);
+            }
             $item('#orderReorderBtn').label = 'Added to Cart!';
             $item('#orderReorderBtn').disable();
             setTimeout(() => {
@@ -309,11 +306,8 @@ async function initWishlist() {
       try {
         $item('#wishAddToCartBtn').onClick(async () => {
           try {
-            const wixStores = (await import('wix-stores-frontend')).default;
-            await wixStores.cart.addProducts([{
-              productId: itemData.productId || itemData._id,
-              quantity: 1,
-            }]);
+            const { addToCart } = await import('public/cartService');
+            await addToCart(itemData.productId || itemData._id);
             $item('#wishAddToCartBtn').label = 'Added!';
             $item('#wishAddToCartBtn').disable();
             setTimeout(() => {

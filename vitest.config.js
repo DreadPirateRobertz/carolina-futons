@@ -51,6 +51,10 @@ export default defineConfig({
       'public/galleryConfig': path.resolve(__dirname, 'src/public/galleryConfig.js'),
       'public/testProducts.js': path.resolve(__dirname, 'src/public/testProducts.js'),
       'public/testProducts': path.resolve(__dirname, 'src/public/testProducts.js'),
+      'public/cartService.js': path.resolve(__dirname, 'src/public/cartService.js'),
+      'public/cartService': path.resolve(__dirname, 'src/public/cartService.js'),
+      'public/mobileHelpers.js': path.resolve(__dirname, 'src/public/mobileHelpers.js'),
+      'public/mobileHelpers': path.resolve(__dirname, 'src/public/mobileHelpers.js'),
     },
   },
 });

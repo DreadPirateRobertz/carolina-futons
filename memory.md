@@ -1,6 +1,6 @@
 # Carolina Futons - Project Memory
 
-**Last updated**: 2026-02-20 (all polecats completed, 7 convoys closed)
+**Last updated**: 2026-02-20 (mayor session: 6 bugs fixed, 2 modules created, 248 tests green)
 **Repo**: `git@github.com:DreadPirateRobertz/carolina-futons.git`
 **Local path**: `/Users/hal/Projects/carolina-futons/`
 **Gas Town rig**: `cfutons` (prefix: `cf`)
@@ -26,13 +26,14 @@ See `src/public/designTokens.js` and `WIX-STUDIO-BUILD-SPEC.md` for full tokens.
 
 ---
 
-## Codebase Structure (35 source files)
+## Codebase Structure (37 source files)
 
 ```
 src/
-├── backend/                              # Server-side Velo web modules (12 files)
+├── backend/                              # Server-side Velo web modules (14 files)
 │   ├── analyticsHelpers.web.js           # Product view/cart tracking → ProductAnalytics CMS
 │   ├── dataService.web.js                # Centralized CMS data service (+1054 lines)
+│   ├── contactSubmissions.web.js          # Lead capture → ContactSubmissions CMS (back-in-stock, exit-intent)
 │   ├── emailService.web.js               # Contact form + order notifications + swatch requests
 │   ├── fulfillment.web.js                # Order fulfillment: UPS shipments, labels, tracking
 │   ├── googleMerchantFeed.web.js         # Google Merchant Center XML feed
@@ -41,6 +42,7 @@ src/
 │   ├── promotions.web.js                 # Holiday/event promotional lightbox engine
 │   ├── seoHelpers.web.js                 # JSON-LD schemas (Product, LocalBusiness, FAQ, Breadcrumb)
 │   ├── shipping-rates-plugin.js          # Wix eCommerce SPI: checkout shipping options
+│   ├── styleQuiz.web.js                  # "Find Your Perfect Futon" recommendation engine
 │   ├── swatchService.web.js              # Fabric swatch queries (FabricSwatches CMS)
 │   └── ups-shipping.web.js              # UPS REST API: OAuth, rates, labels, tracking, validation
 │
@@ -82,7 +84,7 @@ src/
                                           #   images (heroes, cards, about, contact, decorative)
 ```
 
-**Tests** (19 files in `tests/`): Vitest + Wix mocks, suites for gallery, product page, category page, home page, data service, analytics, email, fulfillment, recommendations, SEO, shipping.
+**Tests** (19 files in `tests/`): Vitest + Wix mocks, suites for gallery, product page, category page, home page, data service, analytics, email, fulfillment, recommendations, SEO, shipping. **All 248 tests passing** as of 2026-02-20.
 
 ---
 
@@ -242,21 +244,27 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 
 | Bead | Priority | Title | Status |
 |------|----------|-------|--------|
-| cf-6ub | P0 | Store secrets in Wix Secrets Manager + delete .conf files | NOT STARTED — ask user first |
-| cf-69b | P1 | Wix Editor visual layout buildout | NOT STARTED |
-| cf-xv3 | P1 | Create CMS collections in Wix Dashboard | NOT STARTED — blocked on backup |
-| cf-8gu | P1 | Set up UPS Developer Portal credentials | NOT STARTED |
+| cf-6ub | P0 | Store secrets in Wix Secrets Manager + delete .conf files | NOT STARTED — needs Wix Dashboard |
+| cf-69b | P1 | Wix Editor visual layout buildout | NOT STARTED — needs Wix Studio |
+| cf-xv3 | P1 | Create CMS collections in Wix Dashboard | NOT STARTED — needs Wix Dashboard |
+| cf-8gu | P1 | Set up UPS Developer Portal credentials | NOT STARTED — needs UPS portal |
 | cf-e3o | P1 | Commission illustration assets | Spec ready (`ILLUSTRATION-ASSET-SPEC.md`) |
-| cf-mnh | P1 | Mobile-first responsive optimization + Wix Mobile App | NOT STARTED |
-| cf-295 | P2 | Migrate wix-stores-frontend to wix-ecom for cart operations | NOT STARTED |
-| cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs dashboard access |
-| cf-6wc | P2 | Metric tracking and customer engagement strategy | NOT STARTED |
+| cf-mnh | P1 | Mobile-first responsive optimization + Wix Mobile App | IN PROGRESS |
+| cf-295 | P2 | Migrate wix-stores-frontend to wix-ecom for cart operations | IN PROGRESS |
+| cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs Wix Dashboard |
+| cf-6wc | P2 | Metric tracking and customer engagement strategy | IN PROGRESS |
 
-### Features Not Yet Implemented (need new beads)
+### Features Completed This Session (2026-02-20)
 
-- **Style quiz** ("Find Your Perfect Futon") — minuteman didn't complete
-- **Enhanced post-purchase** (review requests, referral program) — deathclaw didn't complete
-- **Video content integration** (product demos on PDP, category heroes, homepage)
+- **contactSubmissions.web.js** — Lead capture backend (was import error)
+- **styleQuiz.web.js** — "Find Your Perfect Futon" recommendation engine
+- **Enhanced Thank You page** — Order summary, Brenda's message, delivery timeline, referral
+- **Video embeds** — Product Page + Home page video showcase
+- **Wishlist SVG hearts** — Inline SVGs replacing broken wixstatic.com URLs
+- **getBestsellers()** — Added to productRecommendations.web.js
+
+### Features Not Yet Implemented
+
 - **App development** (Wix Branded App)
 
 ---
@@ -273,6 +281,7 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 8. **Use wix:image:// format** — all non-product images must use Wix Media Manager URIs
 9. **gt sling needs `--hook-raw-bead`** — mol-polecat-work formula missing in cfutons rig
 10. **gt session start** required after sling — sessions don't always auto-start
+11. **All workers MUST update memory before death or kill** — no exceptions
 
 ---
 
@@ -329,7 +338,7 @@ These collections MUST exist before code will work:
 - UPS secrets not stored → shipping calculator will use flat-rate fallback (safe)
 - Missing editor elements → try/catch blocks will suppress errors (safe)
 - `swatchService.web.js` import will fail if FabricSwatches collection doesn't exist
-- `contactSubmissions.web` import in exit-intent popup references a module that may not exist yet (check)
+- `contactSubmissions.web` — module now exists (created 2026-02-20)
 
 ### 2. Store Secrets (cf-6ub — P0)
 Store UPS credentials in Wix Secrets Manager, then DELETE local .conf files.
@@ -346,35 +355,19 @@ Reference: `WIX-STUDIO-BUILD-SPEC.md` has the complete element ID spec.
 
 ## Known Issues & What Needs Improvement
 
-1. **Missing backend module**: `contactSubmissions.web` imported by exit-intent popup and
-   back-in-stock notification but doesn't exist as a standalone file. These functions should
-   either use `emailService.web.js` or a new module needs creating.
-
-2. **Thank You page is basic**: Only has social sharing + newsletter + product suggestions.
-   Missing: personalized order details, review request scheduling, referral program, Brenda's
-   personal message. (deathclaw didn't implement these.)
-
-3. **Style quiz not implemented**: "Find Your Perfect Futon" interactive quiz for product
-   recommendations. (minuteman didn't implement.)
-
-4. **Video content not integrated**: Product Videos page (Fullscreen Page) exists but video
-   embeds aren't woven into PDP, category heroes, or homepage yet.
-
-5. **Wishlist heart icon**: Uses `wixstatic.com` URL for heart icons instead of proper Wix
-   media. Should use SVG icons or Wix icon element.
-
+1. ~~**Missing backend module**: contactSubmissions.web~~ **FIXED** (2026-02-20) — Created `contactSubmissions.web.js`
+2. ~~**Thank You page is basic**~~ **FIXED** (2026-02-20) — Enhanced with order summary, Brenda's message, delivery timeline, referral, Instagram share
+3. ~~**Style quiz not implemented**~~ **FIXED** (2026-02-20) — Created `styleQuiz.web.js` with recommendation engine + quiz CTA on Home page
+4. ~~**Video content not integrated**~~ **FIXED** (2026-02-20) — Video embeds on Product Page (if product has video media) + video showcase on Home page
+5. ~~**Wishlist heart icon**~~ **FIXED** (2026-02-20) — Replaced wixstatic.com URLs with inline SVG data URIs using design system colors
 6. **placeholderImages.js URIs are synthetic**: The `wix:image://v1/cf0000_...` file IDs are
    placeholder patterns — actual images need to be uploaded to Wix Media Manager and the
    real URIs swapped in.
-
 7. **Mobile responsiveness**: No mobile-specific code yet (cf-mnh bead). Wix Studio handles
    some responsive behavior but needs testing and tuning.
-
 8. **wix-stores-frontend API**: Some cart operations may need migration to newer `wix-ecom`
    API (cf-295 bead). Test current implementation first.
-
-9. **getBestsellers()**: Referenced in exit-intent popup but not defined in
-   `productRecommendations.web.js`. Needs implementing or fallback to `getFeaturedProducts`.
+9. ~~**getBestsellers()**~~ **FIXED** (2026-02-20) — Added to `productRecommendations.web.js` with 3-tier fallback
 
 ---
 
@@ -390,5 +383,5 @@ When resuming work on this project:
 6. THEN: Store secrets (cf-6ub) so shipping works
 7. THEN: Live test — publish to Wix, test incrementally per Testing Order above
 8. Remember: Experiment_2 site, ask before dashboard changes, backup first
-9. All 24 polecats are DONE — no active workers
-10. Fix known issues (contactSubmissions import, getBestsellers, placeholder URIs)
+9. All polecats are DONE — no active workers
+10. Remaining code work: wix-stores-frontend→wix-ecom migration, mobile responsive, metric tracking

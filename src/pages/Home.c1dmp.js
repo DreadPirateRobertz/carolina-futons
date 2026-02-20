@@ -5,6 +5,7 @@ import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendat
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
 import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
+import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────
@@ -33,6 +34,10 @@ $w.onReady(async function () {
     initQuizCTA(),
   ]);
   initSmoothScroll();
+  initBackToTop($w);
+
+  // On mobile: defer non-critical sections for faster first paint
+  collapseOnMobile($w, ['#testimonialSection', '#videoShowcaseSection']);
 });
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
@@ -40,7 +45,8 @@ $w.onReady(async function () {
 
 async function loadFeaturedProducts() {
   try {
-    const featured = await getFeaturedProducts(8);
+    const allFeatured = await getFeaturedProducts(8);
+    const featured = limitForViewport(allFeatured, { mobile: 4, tablet: 6, desktop: 8 });
     const repeater = $w('#featuredRepeater');
     if (!repeater || featured.length === 0) return;
 

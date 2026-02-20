@@ -2,17 +2,16 @@
 // Modern slide-out cart panel with tiered incentives, multiple cross-sell
 // suggestions, enhanced item display, and animated interactions
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
-import wixStoresFrontend from 'wix-stores-frontend';
+import {
+  getCurrentCart,
+  addToCart,
+  onCartChanged,
+  getShippingProgress,
+  getTierProgress,
+  FREE_SHIPPING_THRESHOLD,
+} from 'public/cartService';
 
-const FREE_SHIPPING_THRESHOLD = 999;
 let currentSideSugProduct = null;
-
-// Tiered discount thresholds (matches Cart Page)
-const TIER_THRESHOLDS = [
-  { min: 0, max: 500, discount: 5, label: pct => `Spend $${pct} more for 5% off your order` },
-  { min: 500, max: 1000, discount: 10, label: pct => `Spend $${pct} more for 10% off your order` },
-  { min: 1000, max: Infinity, discount: 10, label: () => 'You qualify for 10% off — applied at checkout!' },
-];
 
 $w.onReady(function () {
   initSideCart();
@@ -20,7 +19,7 @@ $w.onReady(function () {
 
 function initSideCart() {
   // Listen for cart changes to update the side cart
-  wixStoresFrontend.onCartChanged(async () => {
+  onCartChanged(async () => {
     await refreshSideCart();
   });
 
@@ -56,10 +55,7 @@ function initSideCart() {
   try {
     $w('#sideSugAdd').onClick(async () => {
       if (!currentSideSugProduct) return;
-      await wixStoresFrontend.cart.addProducts([{
-        productId: currentSideSugProduct._id,
-        quantity: 1,
-      }]);
+      await addToCart(currentSideSugProduct._id);
       $w('#sideSugAdd').label = 'Added!';
       $w('#sideSugAdd').disable();
     });
@@ -68,7 +64,7 @@ function initSideCart() {
 
 async function refreshSideCart() {
   try {
-    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const currentCart = await getCurrentCart();
     if (!currentCart || !currentCart.lineItems || currentCart.lineItems.length === 0) {
       try {
         $w('#sideCartEmpty').show();
@@ -162,18 +158,18 @@ async function refreshSideCart() {
 }
 
 function updateSideCartShipping(subtotal) {
-  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
 
   try {
     const bar = $w('#sideShippingBar');
     const text = $w('#sideShippingText');
 
     if (bar) {
-      bar.value = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+      bar.value = progressPct;
     }
 
     if (text) {
-      if (remaining > 0) {
+      if (!qualifies) {
         text.text = `$${remaining.toFixed(2)} away from free shipping`;
       } else {
         text.text = 'FREE shipping!';
@@ -186,22 +182,16 @@ function updateSideCartShipping(subtotal) {
 
 function updateSideTierProgress(subtotal) {
   try {
-    const tier = TIER_THRESHOLDS.find(t => subtotal >= t.min && subtotal < t.max)
-      || TIER_THRESHOLDS[TIER_THRESHOLDS.length - 1];
+    const { tier, remaining, progressPct } = getTierProgress(subtotal);
 
     const bar = $w('#sideTierBar');
     const text = $w('#sideTierText');
 
     if (bar) {
-      if (tier.max === Infinity) {
-        bar.value = 100;
-      } else {
-        bar.value = Math.min((subtotal / tier.max) * 100, 100);
-      }
+      bar.value = progressPct;
     }
 
     if (text) {
-      const remaining = tier.max === Infinity ? 0 : (tier.max - subtotal);
       text.text = tier.label(remaining.toFixed(2));
     }
   } catch (e) {}
@@ -245,10 +235,7 @@ async function loadSideCartSuggestions(lineItems) {
 
         try {
           $item('#sideSugAdd').onClick(async () => {
-            await wixStoresFrontend.cart.addProducts([{
-              productId: product._id,
-              quantity: 1,
-            }]);
+            await addToCart(product._id);
             $item('#sideSugAdd').label = 'Added!';
             $item('#sideSugAdd').disable();
           });
@@ -281,10 +268,7 @@ async function loadSideCartSuggestions(lineItems) {
 
         // Remove previous handler before adding new one
         $w('#sideSugAdd').onClick(async () => {
-          await wixStoresFrontend.cart.addProducts([{
-            productId: product._id,
-            quantity: 1,
-          }]);
+          await addToCart(product._id);
           $w('#sideSugAdd').label = 'Added!';
           $w('#sideSugAdd').disable();
         });

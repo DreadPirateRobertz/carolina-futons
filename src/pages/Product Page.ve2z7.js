@@ -14,7 +14,8 @@ import {
 } from 'public/galleryHelpers.js';
 import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
 import wixLocationFrontend from 'wix-location-frontend';
-import wixStoresFrontend from 'wix-stores-frontend';
+import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
+import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
@@ -51,6 +52,10 @@ async function initProductPage() {
       initProductBadge(),
       initProductVideo(),
     ]);
+
+    // Mobile: collapse non-essential sections, add back-to-top
+    collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
+    initBackToTop($w);
   } catch (err) {
     console.error('Error initializing product page:', err);
   }
@@ -165,7 +170,7 @@ async function handleCustomVariantChange() {
     if (size) choices['Size'] = size;
     if (finish) choices['Finish'] = finish;
 
-    const variant = await wixStoresFrontend.getProductVariants(currentProduct._id, { choices });
+    const variant = await getProductVariants(currentProduct._id, choices);
 
     if (variant && variant.length > 0) {
       const selected = variant[0];
@@ -842,7 +847,7 @@ async function updateBackInStockVisibility(section) {
     if (size) choices['Size'] = size;
     if (finish) choices['Finish'] = finish;
 
-    const variants = await wixStoresFrontend.getProductVariants(currentProduct._id, { choices });
+    const variants = await getProductVariants(currentProduct._id, choices);
     if (variants && variants.length > 0 && !variants[0].inStock) {
       section.expand();
     } else {
@@ -862,7 +867,7 @@ function initAddToCartEnhancements() {
     if (!addToCartBtn) return;
 
     // Listen for successful add-to-cart
-    wixStoresFrontend.onCartChanged(() => {
+    onCartChanged(() => {
       showAddToCartSuccess();
     });
   } catch (e) {}
@@ -1106,10 +1111,8 @@ async function initBundleSection() {
       $w('#addBundleBtn').onClick(async () => {
         $w('#addBundleBtn').disable();
         $w('#addBundleBtn').label = 'Adding...';
-        await wixStoresFrontend.cart.addProducts([
-          { productId: currentProduct._id, quantity: 1 },
-          { productId: bundle.product._id, quantity: 1 },
-        ]);
+        await addToCart(currentProduct._id);
+        await addToCart(bundle.product._id);
         $w('#addBundleBtn').label = 'Bundle Added!';
       });
     } catch (e) {}
@@ -1149,9 +1152,7 @@ function initStickyCartBar() {
       $w('#stickyAddBtn').onClick(async () => {
         $w('#stickyAddBtn').disable();
         $w('#stickyAddBtn').label = 'Adding...';
-        await wixStoresFrontend.cart.addProducts([
-          { productId: currentProduct._id, quantity: 1 },
-        ]);
+        await addToCart(currentProduct._id);
         $w('#stickyAddBtn').label = 'Added!';
         setTimeout(() => {
           $w('#stickyAddBtn').label = 'Add to Cart';
