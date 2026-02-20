@@ -3,9 +3,11 @@
 // and side cart auto-open on add-to-cart
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
+import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
+import { trackEvent } from 'public/engagementTracker';
 
 let _previousCartItemCount = null;
 
@@ -19,6 +21,9 @@ $w.onReady(async function () {
 
   // Promotional lightbox — delayed 3s so page renders first
   setTimeout(() => initPromoLightbox(), 3000);
+
+  // Exit-intent lead capture — delayed 10s to avoid premature trigger
+  setTimeout(() => initExitIntent(), 10000);
 });
 
 // ── Accessibility ───────────────────────────────────────────────────
@@ -445,4 +450,123 @@ function initPromoCTA(ctaUrl) {
       });
     });
   } catch (e) {}
+}
+
+// ── Exit-Intent Lead Capture ──────────────────────────────────────
+// Detects when user is about to leave and shows a lead capture popup.
+// Only shows once per session, doesn't interrupt checkout/cart pages,
+// and respects promo lightbox (only shows if promo didn't fire).
+
+function initExitIntent() {
+  try {
+    const popup = $w('#exitIntentPopup');
+    if (!popup) return;
+
+    // Don't show on cart, checkout, or thank-you pages
+    const path = wixLocationFrontend.path?.join('/') || '';
+    if (['cart', 'checkout', 'thank-you'].some(p => path.includes(p))) return;
+
+    // Only show once per session
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('cf_exit_shown')) return;
+      } catch (e) {}
+    }
+
+    // Don't show if promo lightbox is already visible
+    try {
+      if (!$w('#promoLightbox').hidden) return;
+    } catch (e) {}
+
+    // Mouse leave detection (desktop only — moves cursor above viewport)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mouseleave', (e) => {
+        if (e.clientY <= 0) {
+          showExitPopup();
+        }
+      }, { once: true });
+    }
+  } catch (e) {}
+}
+
+function showExitPopup() {
+  try {
+    // Mark as shown for this session
+    if (typeof sessionStorage !== 'undefined') {
+      try { sessionStorage.setItem('cf_exit_shown', '1'); } catch (e) {}
+    }
+
+    const popup = $w('#exitIntentPopup');
+    if (!popup) return;
+
+    // Populate content
+    try { $w('#exitTitle').text = 'Wait — Before You Go!'; } catch (e) {}
+    try { $w('#exitSubtitle').text = 'Get free fabric swatches shipped to your door, or save 5% on your first order.'; } catch (e) {}
+
+    popup.show('fade', { duration: 300 });
+    try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
+
+    trackEvent('exit_intent_shown', { page: wixLocationFrontend.path?.join('/') || '' });
+
+    // Close handlers
+    try {
+      $w('#exitClose').onClick(() => dismissExitPopup());
+    } catch (e) {}
+    try {
+      $w('#exitOverlay').onClick(() => dismissExitPopup());
+    } catch (e) {}
+
+    // Email capture form
+    try {
+      $w('#exitEmailSubmit').onClick(async () => {
+        const email = $w('#exitEmailInput').value?.trim();
+        if (!email || !email.includes('@')) return;
+
+        try {
+          $w('#exitEmailSubmit').disable();
+          $w('#exitEmailSubmit').label = 'Sending...';
+
+          await submitContactForm({
+            email,
+            source: 'exit_intent_popup',
+            status: 'exit_intent_signup',
+            notes: 'Exit intent capture — interested in swatches/discount',
+          });
+
+          // Also add to Wix contacts for email marketing
+          try {
+            const wixCrm = await import('wix-crm-frontend');
+            await wixCrm.createContact({ emails: [email] });
+          } catch (e) {}
+
+          trackEvent('exit_intent_capture', { email: 'captured' });
+
+          $w('#exitEmailInput').value = '';
+          $w('#exitEmailSubmit').label = 'Sent!';
+          try {
+            $w('#exitSuccess').text = 'Check your inbox! Use code WELCOME5 for 5% off.';
+            $w('#exitSuccess').show('fade', { duration: 300 });
+          } catch (e) {}
+
+          setTimeout(() => dismissExitPopup(), 4000);
+        } catch (err) {
+          $w('#exitEmailSubmit').enable();
+          $w('#exitEmailSubmit').label = 'Get My Offer';
+        }
+      });
+    } catch (e) {}
+
+    // "Request Swatches Instead" link → navigate to contact
+    try {
+      $w('#exitSwatchLink').onClick(() => {
+        dismissExitPopup();
+        import('wix-location-frontend').then(({ to }) => to('/contact'));
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function dismissExitPopup() {
+  try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
+  try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
 }
