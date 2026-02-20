@@ -149,23 +149,20 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 
 ---
 
-## Polecat Work (In Progress / Completed — Not Yet Merged to Main)
+## Completed Beads (Merged to Main)
 
-### Completed (have commits, need PR/merge):
+| Bead | Title | What Was Done |
+|------|-------|---------------|
+| cf-v00 | Second pass bug audit | 8 bugs fixed across Velo files |
+| cf-f1d | Cross-file consistency review | Dead imports removed, newsletter signup fixed |
+| cf-n40 | Wix Dashboard backup procedure | `WIX-BACKUP-PROCEDURE.md` (457-line checklist) |
+| cf-z3e | SEO refinement | Enhanced schemas, keyword-rich alt text, category SEO (6 files) |
+| cf-46t | Google Merchant Center feed | `googleMerchantFeed.web.js` + `http-functions.js` |
+| cf-zdc | Code comments + API docs | `API-REFERENCE.md`, `ARCHITECTURE.md`, commented code |
+| cf-543 | TDD framework | Vitest + 7 test suites + Wix mocks in `tests/` |
+| cf-0u7 | Social media strategy | Pinterest + Instagram strategy |
 
-| Polecat | Bead | Work | Branch/Location |
-|---------|------|------|-----------------|
-| **guzzle** | cf-n40 | Wix Dashboard backup procedure (457-line doc) | `polecats/guzzle/cfutons/` |
-| **nitro** | cf-46t | Google Merchant Center feed + http-functions.js | `polecats/nitro/cfutons/` |
-| **rust** | cf-z3e | SEO refinement: enhanced schemas, keyword-rich alt text, category SEO | `polecats/rust/cfutons/` |
-
-### Still Working (uncommitted changes):
-
-| Polecat | Bead | Work | Status |
-|---------|------|------|--------|
-| **shiny** | cf-zdc | API reference + architecture docs + code comments | Has `API-REFERENCE.md`, `ARCHITECTURE.md`, modified `analyticsHelpers.web.js` + `emailService.web.js` |
-| **fury** | cf-543 | TDD framework: vitest + 6 test files + mocks + fixtures | Has `tests/` dir, `vitest.config.js`, modified `package.json` |
-| **chrome** | cf-0u7 | Social media strategy | No new commits (may be stalled) |
+All merged in commit `1a5414f` on 2026-02-20.
 
 ---
 
@@ -173,23 +170,16 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 
 | Bead | Priority | Title | Status |
 |------|----------|-------|--------|
-| cf-n40 | P0 | Wix Dashboard backup procedure | Polecat done, needs merge |
-| cf-xv3 | P1 | Create CMS collections in Wix Dashboard | Not started — blocked on backup |
-| cf-8gu | P1 | Set up UPS Developer Portal credentials | Not started |
-| cf-1ur | P2 | Create Triggered Email templates | Not started — blocked on dashboard access |
+| cf-6ub | P0 | Store secrets in Wix Secrets Manager + delete .conf files | NOT STARTED — ask user first |
+| cf-xv3 | P1 | Create CMS collections in Wix Dashboard | NOT STARTED — blocked on backup |
+| cf-8gu | P1 | Set up UPS Developer Portal credentials | NOT STARTED |
 | cf-e3o | P1 | Commission illustration assets | Spec ready (`ILLUSTRATION-ASSET-SPEC.md`) |
-| cf-h8f | P1 | Wire up product photo galleries | Not started |
-| cf-z3e | P1 | SEO refinement | Polecat done, needs merge |
-| cf-zdc | P1 | Code comments + API documentation | Polecat working |
-| cf-543 | P1 | Test harness + TDD framework | Polecat working |
-| cf-46t | P2 | Google Merchant Center / Shopping feed | Polecat done, needs merge |
-| cf-0u7 | P2 | Social media strategy | Polecat working (possibly stalled) |
+| cf-h8f | P1 | Wire up product photo galleries | NOT STARTED |
+| cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs dashboard access |
+| cf-6wc | P2 | Metric tracking + customer engagement strategy | NOT STARTED |
 
 ### Beads Not Yet Created:
 
-- Metric tracking and customer engagement strategy
-- Cohesive social marketing strategy (post-launch)
-- Store secrets in Wix Secrets Manager + delete .conf files
 - Wix Editor visual layout buildout (connecting Velo code to actual editor elements)
 
 ---
@@ -212,9 +202,9 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 |------|---------|
 | `WIX-STUDIO-BUILD-SPEC.md` | Full build spec: element IDs, page layouts, editor config |
 | `ILLUSTRATION-ASSET-SPEC.md` | Illustrator brief: 7 asset types, color palette, dimensions |
-| `WIX-BACKUP-PROCEDURE.md` | Pre-modification backup checklist (polecat output, needs merge) |
-| `API-REFERENCE.md` | Backend API documentation (polecat output, needs merge) |
-| `ARCHITECTURE.md` | System architecture guide (polecat output, needs merge) |
+| `WIX-BACKUP-PROCEDURE.md` | Pre-modification backup checklist |
+| `API-REFERENCE.md` | Backend API documentation (all web methods) |
+| `ARCHITECTURE.md` | System architecture guide |
 
 ---
 
@@ -226,5 +216,5 @@ When resuming work on this project:
 2. Read this `memory.md` for full context
 3. Check `bd list` in the cfutons rig for open beads
 4. Check polecat status: `gt polecat list cfutons`
-5. Priority: merge completed polecat work → store secrets → create CMS collections
+5. Priority: store secrets (cf-6ub, P0) → create CMS collections (cf-xv3) → UPS portal (cf-8gu)
 6. Remember: Experiment_2 site, ask before dashboard changes, backup first
