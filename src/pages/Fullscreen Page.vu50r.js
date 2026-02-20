@@ -69,6 +69,17 @@ function initProductVideoGrid() {
       });
     });
 
+    // Register product link handler once (slug updated via playVideo)
+    try {
+      $w('#videoProductLink').onClick(() => {
+        if (currentVideoProductSlug) {
+          import('wix-location-frontend').then(({ to }) => {
+            to(`/product-page/${currentVideoProductSlug}`);
+          });
+        }
+      });
+    } catch (e) {}
+
     // Category filter for videos
     initVideoFilters();
   } catch (e) {}
@@ -110,6 +121,8 @@ function filterVideosByCategory(category) {
   } catch (e) {}
 }
 
+let currentVideoProductSlug = null;
+
 function playVideo(videoData) {
   try {
     const player = $w('#videoPlayer');
@@ -117,13 +130,9 @@ function playVideo(videoData) {
       player.src = videoData.videoUrl;
       player.play();
 
-      // Show product link
+      // Update product link slug (handler registered once in initProductVideoGrid)
       if (videoData.productSlug) {
-        $w('#videoProductLink').onClick(() => {
-          import('wix-location').then(({ to }) => {
-            to(`/product-page/${videoData.productSlug}`);
-          });
-        });
+        currentVideoProductSlug = videoData.productSlug;
         $w('#videoProductLink').show();
       }
     }

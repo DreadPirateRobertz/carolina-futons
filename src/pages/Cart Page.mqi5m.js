@@ -1,10 +1,18 @@
 // Cart Page.mqi5m.js - Shopping Cart
 // Modern cart with cross-sell suggestions, shipping threshold,
-// and "Complete Your Futon" intelligent bundling
+// tiered discount incentives, recently viewed, and "Complete Your Futon" bundling
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
+import { getRecentlyViewed } from 'public/galleryHelpers';
 import wixStoresFrontend from 'wix-stores-frontend';
 
 const FREE_SHIPPING_THRESHOLD = 999;
+
+// Tiered discount thresholds
+const TIER_THRESHOLDS = [
+  { min: 0, max: 500, discount: 5, label: pct => `Spend $${pct} more for 5% off your order` },
+  { min: 500, max: 1000, discount: 10, label: pct => `Spend $${pct} more for 10% off your order` },
+  { min: 1000, max: Infinity, discount: 10, label: () => 'You qualify for 10% off — applied at checkout!' },
+];
 
 $w.onReady(async function () {
   await initCartPage();
@@ -14,7 +22,9 @@ async function initCartPage() {
   try {
     await $w('#cartDataset').onReady();
     await updateShippingProgress();
+    await updateTierProgress();
     await loadCartSuggestions();
+    await loadRecentlyViewed();
     initQuantityControls();
     initCartListeners();
   } catch (err) {
@@ -54,6 +64,79 @@ async function updateShippingProgress() {
   } catch (e) {}
 }
 
+// ── Tiered Discount Progress Bar ────────────────────────────────────
+// "Spend $X more for Y% off!" with coral progress bar
+
+async function updateTierProgress() {
+  try {
+    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    if (!currentCart) return;
+
+    const subtotal = currentCart.totals?.subtotal || 0;
+    const tier = TIER_THRESHOLDS.find(t => subtotal >= t.min && subtotal < t.max)
+      || TIER_THRESHOLDS[TIER_THRESHOLDS.length - 1];
+
+    const progressBar = $w('#tierProgressBar');
+    const progressText = $w('#tierProgressText');
+
+    if (progressBar) {
+      // Progress within current tier toward next threshold
+      if (tier.max === Infinity) {
+        progressBar.value = 100;
+      } else {
+        progressBar.value = Math.min((subtotal / tier.max) * 100, 100);
+      }
+    }
+
+    if (progressText) {
+      const remaining = tier.max === Infinity ? 0 : (tier.max - subtotal);
+      progressText.text = tier.label(remaining.toFixed(2));
+    }
+  } catch (e) {}
+}
+
+// ── Recently Viewed Products ────────────────────────────────────────
+// Horizontal scroll of products the user has viewed this session
+
+async function loadRecentlyViewed() {
+  try {
+    const currentCart = await wixStoresFrontend.cart.getCurrentCart();
+    const cartProductIds = currentCart?.lineItems?.map(item => item.productId) || [];
+
+    // Get recently viewed, excluding items already in cart
+    let recentProducts = getRecentlyViewed();
+    recentProducts = recentProducts.filter(p => !cartProductIds.includes(p._id));
+
+    const section = $w('#cartRecentSection');
+    const repeater = $w('#cartRecentRepeater');
+
+    if (!recentProducts || recentProducts.length === 0) {
+      if (section) section.collapse();
+      return;
+    }
+
+    if (section) section.expand();
+
+    if (repeater) {
+      repeater.data = recentProducts.map(p => ({ ...p, _id: p._id }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#cartRecentImage').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#cartRecentImage').alt = `${itemData.name} - recently viewed`; } catch (e) {}
+        try { $item('#cartRecentName').text = itemData.name; } catch (e) {}
+        try { $item('#cartRecentPrice').text = itemData.price; } catch (e) {}
+
+        const navigate = () => {
+          import('wix-location').then(({ to }) => {
+            to(`/product-page/${itemData.slug}`);
+          });
+        };
+        try { $item('#cartRecentImage').onClick(navigate); } catch (e) {}
+        try { $item('#cartRecentName').onClick(navigate); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+}
+
 // ── Intelligent Cross-Sell ("Complete Your Futon") ──────────────────
 // Analyzes cart contents and suggests complementary products
 
@@ -82,7 +165,6 @@ async function loadCartSuggestions() {
     const repeater = $w('#suggestionsRepeater');
     if (!repeater) return;
 
-    repeater.data = suggestion.products;
     repeater.onItemReady(($item, itemData) => {
       $item('#sugImage').src = itemData.mainMedia;
       $item('#sugImage').alt = `${itemData.name} - add to cart`;
@@ -109,13 +191,14 @@ async function loadCartSuggestions() {
 
       // Click image/name to view product
       const navigate = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
       $item('#sugImage').onClick(navigate);
       $item('#sugName').onClick(navigate);
     });
+    repeater.data = suggestion.products;
   } catch (err) {
     console.error('Error loading cart suggestions:', err);
   }
@@ -158,7 +241,9 @@ function initQuantityControls() {
 function initCartListeners() {
   wixStoresFrontend.onCartChanged(() => {
     updateShippingProgress();
+    updateTierProgress();
     loadCartSuggestions();
+    loadRecentlyViewed();
   });
 }
 

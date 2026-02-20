@@ -15,6 +15,8 @@ export const getRelatedProducts = webMethod(
         'murphy-cabinet-beds': ['casegoods-accessories', 'platform-beds'],
         'platform-beds': ['casegoods-accessories', 'mattresses'],
         'casegoods-accessories': ['platform-beds', 'futon-frames'],
+        'wall-huggers': ['mattresses', 'casegoods-accessories'],
+        'unfinished-wood': ['mattresses', 'casegoods-accessories'],
       };
 
       const relatedCategories = crossSellCategories[categorySlug] || [];
@@ -200,15 +202,90 @@ export const getSaleProducts = webMethod(
   async (limit = 12) => {
     try {
       const results = await wixData.query('Stores/Products')
-        .gt('discount', 0)
-        .descending('discount')
+        .gt('discountedPrice', 0)
         .limit(limit)
         .find();
 
-      return results.items.map(formatProduct);
+      // Sort by discount amount (price - discountedPrice) descending
+      return results.items
+        .map(formatProduct)
+        .sort((a, b) => {
+          const discountA = (a.price || 0) - (a.discountedPrice || a.price || 0);
+          const discountB = (b.price || 0) - (b.discountedPrice || b.price || 0);
+          return discountB - discountA;
+        });
     } catch (err) {
       console.error('Error fetching sale products:', err);
       return [];
+    }
+  }
+);
+
+// Get bundle suggestion for a product on PDP
+// Pairs frames with mattresses, Murphy beds with casegoods
+export const getBundleSuggestion = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    try {
+      const product = await wixData.get('Stores/Products', productId);
+      if (!product || !product.collections) return null;
+
+      const colls = Array.isArray(product.collections)
+        ? product.collections
+        : [product.collections];
+
+      const isFrame = colls.some(c =>
+        c.includes('futon') || c.includes('frame') ||
+        c.includes('wall-hugger') || c.includes('unfinished') ||
+        c.includes('front-loading') || c.includes('nesting')
+      );
+      const isMattress = colls.some(c => c.includes('mattress'));
+      const isMurphy = colls.some(c => c.includes('murphy'));
+      const isPlatform = colls.some(c => c.includes('platform'));
+
+      let targetCollections = [];
+      let heading = 'Complete Your Futon — Save 5%';
+
+      if (isFrame && !isMurphy && !isPlatform) {
+        targetCollections = ['mattresses'];
+        heading = 'Complete Your Futon — Save 5%';
+      } else if (isMattress) {
+        targetCollections = ['futon-frames'];
+        heading = 'Complete Your Futon — Save 5%';
+      } else if (isMurphy) {
+        targetCollections = ['casegoods-accessories'];
+        heading = 'Complete the Bedroom — Save 5%';
+      } else if (isPlatform) {
+        targetCollections = ['casegoods-accessories'];
+        heading = 'Add Matching Furniture — Save 5%';
+      }
+
+      if (targetCollections.length === 0) return null;
+
+      const results = await wixData.query('Stores/Products')
+        .hasSome('collections', targetCollections)
+        .ne('_id', productId)
+        .ascending('price')
+        .limit(1)
+        .find();
+
+      if (results.items.length === 0) return null;
+
+      const bundleItem = results.items[0];
+      const combinedPrice = (product.price || 0) + (bundleItem.price || 0);
+      const discount = combinedPrice * 0.05;
+      const bundlePrice = combinedPrice - discount;
+
+      return {
+        heading,
+        product: formatProduct(bundleItem),
+        originalTotal: combinedPrice,
+        bundlePrice,
+        savings: discount,
+      };
+    } catch (err) {
+      console.error('Error fetching bundle suggestion:', err);
+      return null;
     }
   }
 );

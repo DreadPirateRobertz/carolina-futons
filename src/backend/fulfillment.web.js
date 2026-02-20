@@ -154,6 +154,7 @@ export const updateAllTracking = webMethod(
       const active = await wixData.query('Fulfillments')
         .ne('status', 'DELIVERED')
         .ne('status', 'RETURNED')
+        .limit(1000)
         .find();
 
       const updates = [];

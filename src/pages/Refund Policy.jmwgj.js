@@ -38,7 +38,6 @@ function initPolicyAccordion() {
     const repeater = $w('#policyRepeater');
     if (!repeater) return;
 
-    repeater.data = sections;
     repeater.onItemReady(($item, itemData) => {
       $item('#policyTitle').text = itemData.title;
       $item('#policyContent').text = itemData.content;
@@ -57,5 +56,6 @@ function initPolicyAccordion() {
         }
       });
     });
+    repeater.data = sections;
   } catch (e) {}
 }
