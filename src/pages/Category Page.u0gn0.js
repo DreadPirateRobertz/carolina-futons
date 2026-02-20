@@ -4,7 +4,7 @@
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } from 'backend/seoHelpers.web';
+import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags } from 'backend/seoHelpers.web';
 import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
@@ -501,6 +501,13 @@ function openQuickView(product) {
     $w('#qvDescription').text = stripHtml(product.description || '');
     $w('#qvAddToCart').label = 'Add to Cart';
     $w('#quickViewModal').show('fade', { duration: 200 });
+
+    // Accessibility: close modal on Escape, close button
+    try {
+      $w('#qvClose').onClick(() => {
+        $w('#quickViewModal').hide('fade', { duration: 200 });
+      });
+    } catch (e) {}
   } catch (e) {}
 }
 
@@ -724,6 +731,12 @@ async function injectCategorySchema() {
       try {
         $w('#categoryBreadcrumbSchemaHtml').postMessage(breadcrumbSchema);
       } catch (e) {}
+    }
+
+    // Inject Open Graph tags for social sharing
+    const ogTags = await getCategoryOgTags(currentPath);
+    if (ogTags) {
+      try { $w('#categoryOgHtml').postMessage(ogTags); } catch (e) {}
     }
   } catch (e) {}
 }

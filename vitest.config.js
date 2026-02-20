@@ -55,6 +55,8 @@ export default defineConfig({
       'public/cartService': path.resolve(__dirname, 'src/public/cartService.js'),
       'public/mobileHelpers.js': path.resolve(__dirname, 'src/public/mobileHelpers.js'),
       'public/mobileHelpers': path.resolve(__dirname, 'src/public/mobileHelpers.js'),
+      'public/engagementTracker.js': path.resolve(__dirname, 'src/public/engagementTracker.js'),
+      'public/engagementTracker': path.resolve(__dirname, 'src/public/engagementTracker.js'),
     },
   },
 });

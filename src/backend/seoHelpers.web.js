@@ -487,3 +487,95 @@ function truncateAlt(text) {
   if (text.length <= 125) return text;
   return text.substring(0, 122) + '...';
 }
+
+// ── Open Graph & Twitter Card Meta ──────────────────────────────────
+// Returns JSON string of OG/Twitter meta tags for injection via head.js or HtmlComponent
+
+/**
+ * Generate Open Graph and Twitter Card meta tags for a product page.
+ * @param {Object} product - Wix product object
+ * @returns {string} HTML meta tag string for injection
+ */
+export const getProductOgTags = webMethod(
+  Permissions.Anyone,
+  (product) => {
+    if (!product) return '';
+
+    const title = `${product.name} | Carolina Futons`;
+    const description = product.description
+      ? stripHtml(product.description).substring(0, 200)
+      : `Shop ${product.name} at Carolina Futons. Quality furniture since 1991.`;
+    const image = product.mainMedia || '';
+    const url = `https://www.carolinafutons.com/product-page/${product.slug || ''}`;
+    const price = product.price || 0;
+
+    return JSON.stringify({
+      'og:type': 'product',
+      'og:title': title,
+      'og:description': description,
+      'og:image': image,
+      'og:url': url,
+      'og:site_name': 'Carolina Futons',
+      'og:locale': 'en_US',
+      'product:price:amount': String(price),
+      'product:price:currency': 'USD',
+      'product:availability': product.inStock !== false ? 'in stock' : 'out of stock',
+      'twitter:card': 'summary_large_image',
+      'twitter:title': title,
+      'twitter:description': description,
+      'twitter:image': image,
+    });
+  }
+);
+
+/**
+ * Generate Open Graph meta tags for a category page.
+ * @param {string} categorySlug - Category URL slug
+ * @returns {string} JSON string of OG meta tags
+ */
+export const getCategoryOgTags = webMethod(
+  Permissions.Anyone,
+  (categorySlug) => {
+    const titles = {
+      'futon-frames': 'Futon Frames',
+      'mattresses': 'Futon Mattresses',
+      'murphy-cabinet-beds': 'Murphy Cabinet Beds',
+      'platform-beds': 'Platform Beds',
+      'casegoods-accessories': 'Casegoods & Accessories',
+      'wall-huggers': 'Wall Hugger Frames',
+      'unfinished-wood': 'Unfinished Wood Furniture',
+      'sales': 'Sale & Clearance',
+    };
+
+    const title = `${titles[categorySlug] || 'Shop'} | Carolina Futons`;
+    const description = getCategoryMetaDescriptionSync(categorySlug);
+    const url = `https://www.carolinafutons.com/${categorySlug}`;
+
+    return JSON.stringify({
+      'og:type': 'website',
+      'og:title': title,
+      'og:description': description,
+      'og:url': url,
+      'og:site_name': 'Carolina Futons',
+      'og:locale': 'en_US',
+      'twitter:card': 'summary',
+      'twitter:title': title,
+      'twitter:description': description,
+    });
+  }
+);
+
+// Sync version of getCategoryMetaDescription for internal use
+function getCategoryMetaDescriptionSync(slug) {
+  const descriptions = {
+    'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Free shipping over $999.',
+    'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. Free shipping over $999.',
+    'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed. Free shipping over $999.',
+    'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Free shipping over $999.',
+    'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Free shipping over $999.',
+    'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design. Free shipping over $999.',
+    'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA. Free shipping over $999.',
+    'sales': 'Current deals and clearance on quality futon furniture at Carolina Futons.',
+  };
+  return descriptions[slug] || 'Quality futon furniture since 1991. Carolina Futons, Hendersonville NC.';
+}

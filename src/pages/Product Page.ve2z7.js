@@ -2,7 +2,7 @@
 // Handles variant selection with independent pricing, cross-sell,
 // gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
-import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { getProductSchema, generateAltText, getBreadcrumbSchema, getProductOgTags } from 'backend/seoHelpers.web';
 import { getProductSwatches, getSwatchCount, getAllSwatchFamilies } from 'backend/swatchService.web';
 import { submitSwatchRequest } from 'backend/emailService.web';
 import {
@@ -16,6 +16,7 @@ import { getProductFallbackImage, getPlaceholderProductImages } from 'public/pla
 import wixLocationFrontend from 'wix-location-frontend';
 import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
 import { isMobile, collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
+import { trackProductPageView, trackCartAdd, trackGalleryInteraction, trackSwatchView } from 'public/engagementTracker';
 import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
@@ -38,6 +39,8 @@ async function initProductPage() {
 
     // Track this product view in session storage for "Recently Viewed"
     trackProductView(currentProduct);
+    // Track in engagement funnel
+    trackProductPageView(currentProduct);
 
     await Promise.all([
       initVariantSelector(),
@@ -1077,6 +1080,12 @@ async function injectProductSchema() {
     const schema = await getProductSchema(currentProduct);
     if (schema) {
       $w('#productSchemaHtml').postMessage(schema);
+    }
+
+    // Inject Open Graph tags for social sharing
+    const ogTags = await getProductOgTags(currentProduct);
+    if (ogTags) {
+      try { $w('#productOgHtml').postMessage(ogTags); } catch (e) {}
     }
   } catch (e) {}
 }

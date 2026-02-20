@@ -10,6 +10,7 @@ import { isMobile } from 'public/mobileHelpers';
 let _previousCartItemCount = null;
 
 $w.onReady(async function () {
+  initAccessibility();
   initNavigation();
   initAnnouncementBar();
   initSearch();
@@ -19,6 +20,46 @@ $w.onReady(async function () {
   // Promotional lightbox — delayed 3s so page renders first
   setTimeout(() => initPromoLightbox(), 3000);
 });
+
+// ── Accessibility ───────────────────────────────────────────────────
+// Skip-to-content link, keyboard Escape for modals, focus management
+
+function initAccessibility() {
+  // Skip-to-content link — visible on Tab focus for keyboard users
+  try {
+    const skipLink = $w('#skipToContent');
+    if (skipLink) {
+      skipLink.onClick(() => {
+        try { $w('#mainContent').scrollTo(); } catch (e) {}
+      });
+    }
+  } catch (e) {}
+
+  // Global Escape key handler — closes any open overlay
+  try {
+    if (typeof document !== 'undefined') {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          // Close side cart
+          try { $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 200 }); } catch (e) {}
+          // Close promo lightbox
+          try { $w('#promoLightbox').hide('fade', { duration: 200 }); } catch (e) {}
+          try { $w('#promoOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          // Close mobile menu
+          try { $w('#mobileMenuOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+        }
+      });
+    }
+  } catch (e) {}
+
+  // Set ARIA roles on key interactive elements
+  try {
+    $w('#announcementText').role = 'status';
+  } catch (e) {}
+  try {
+    $w('#headerSearchInput').role = 'search';
+  } catch (e) {}
+}
 
 // ── Navigation ──────────────────────────────────────────────────────
 // Handles sticky nav, mobile menu, and active state highlighting

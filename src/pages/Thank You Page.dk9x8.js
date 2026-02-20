@@ -2,6 +2,7 @@
 // Personalized order summary, Brenda's message, social sharing, newsletter,
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
+import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   await Promise.all([
@@ -13,6 +14,8 @@ $w.onReady(async function () {
     initReferralSection(),
     loadPostPurchaseSuggestions(),
   ]);
+  // Track purchase completion in engagement funnel
+  trackPurchaseComplete('', 0);
 });
 
 // ── Order Summary ──────────────────────────────────────────────────
@@ -132,6 +135,7 @@ function initSocialSharing() {
     $w('#shareText').text = 'Love your new furniture? Share with friends!';
 
     $w('#shareFacebook').onClick(() => {
+      trackSocialShare('facebook', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const text = encodeURIComponent('Just ordered beautiful furniture from Carolina Futons in Hendersonville, NC!');
       import('wix-window-frontend').then(({ openUrl }) => {
@@ -140,6 +144,7 @@ function initSocialSharing() {
     });
 
     $w('#sharePinterest').onClick(() => {
+      trackSocialShare('pinterest', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const desc = encodeURIComponent('Quality futon furniture from Carolina Futons - Hendersonville, NC');
       import('wix-window-frontend').then(({ openUrl }) => {
@@ -150,6 +155,7 @@ function initSocialSharing() {
     // Instagram share prompt (no direct share API — link to profile)
     try {
       $w('#shareInstagram').onClick(() => {
+        trackSocialShare('instagram', 'purchase');
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl('https://www.instagram.com/carolinafutons/');
         });
@@ -172,6 +178,7 @@ function initNewsletterSignup() {
             emails: [email],
             labelKeys: ['custom.newsletter'],
           });
+          trackNewsletterSignup('thank_you_page');
           $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
           $w('#newsletterSuccess').show();
           $w('#newsletterSignup').disable();
@@ -204,6 +211,7 @@ function initReferralSection() {
     // Copy referral link
     try {
       $w('#referralCopyBtn').onClick(() => {
+        trackReferralAction('copy_link');
         const link = 'https://www.carolinafutons.com?ref=friend';
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
           navigator.clipboard.writeText(link).then(() => {
@@ -219,6 +227,7 @@ function initReferralSection() {
     // Email share
     try {
       $w('#referralEmailBtn').onClick(() => {
+        trackReferralAction('email_share');
         const subject = encodeURIComponent('Check out Carolina Futons!');
         const body = encodeURIComponent(
           'I just ordered from Carolina Futons — great handcrafted furniture at mountain-town prices. ' +
