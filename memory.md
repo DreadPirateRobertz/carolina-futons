@@ -1,11 +1,13 @@
 # Carolina Futons - Project Memory
 
-**Last updated**: 2026-02-20
+**Last updated**: 2026-02-20 (2 convoys active)
 **Repo**: `git@github.com:DreadPirateRobertz/carolina-futons.git`
 **Local path**: `/Users/hal/Projects/carolina-futons/`
 **Gas Town rig**: `cfutons` (prefix: `cf`)
 **Wix site**: Experiment_2 (NOT the live site)
 **Wix login**: `halworker85@gmail.com` (Google login) — creds in `wix.conf` (gitignored)
+**Design reference**: `design.jpeg` in repo root — 6-page mockup (committed `015cf57`)
+**Wix Studio AI tools**: Available as halworker — illustrative AI agents within Wix Studio for generating on-brand artwork
 
 ---
 
@@ -92,6 +94,25 @@ src/
 
 ---
 
+## Design Reference (`design.jpeg`)
+
+6-page mockup showing the full visual identity. Key design elements:
+
+1. **Illustrated cabin/wood frame** — THE signature element. Hero content sits inside a hand-drawn wooden cabin/A-frame illustration. Mountain ridgeline with sunrise (coral/blue gradient) spans the header.
+2. **Warm sand palette** — Sand (#E8D5B7) backgrounds throughout, espresso (#3A2518) text, coral (#E8845C) CTAs.
+3. **Polaroid-style team photos** — About/Our Story page uses tilted polaroid frames for team images.
+4. **Hand-drawn map** — Contact page features an illustrated map of Hendersonville area.
+5. **Clean product grid** — Category pages use consistent card layout with images, names, prices.
+6. **Modern cart** — Summary sidebar with subtotal/shipping/total, Checkout + G-Pay buttons.
+7. **Mountain header decoration** — Blue Ridge mountain silhouette runs behind/above nav on every page.
+8. **Nav bar**: Home, Shop, Product Videos, Sale, Getting It Home, Contact, FAQ, About, Blog.
+
+**Illustration strategy**: Use Wix Studio's built-in AI illustration tools (available as halworker85) to generate on-brand mountain/cabin artwork. Supplement with custom SVGs per ILLUSTRATION-ASSET-SPEC.md.
+
+**Video content strategy**: Weave product demo videos throughout — Product Videos page already coded (Fullscreen Page.vu50r.js), need video embeds on product pages, category hero sections, and homepage.
+
+---
+
 ## Wix Secrets Manager (Required)
 
 | Secret Key | Value | Status |
@@ -166,21 +187,51 @@ All merged in commit `1a5414f` on 2026-02-20.
 
 ---
 
+## Convoy 1: Gallery & Category Beautification (hq-cv-rrz7y)
+
+Status: 4/5 polecats COMPLETED, ghoul (tests) still grinding.
+
+| Bead | Polecat | Status | Commit |
+|------|---------|--------|--------|
+| cf-vw0 | thunder | DONE | `a8b0c38` +284 lines to galleryHelpers.js |
+| cf-qom | dust | DONE | `ff3dde1` +110 lines to Product Page |
+| cf-rmz | scavenger | DONE | `688aa4d` +204 lines across 4 files |
+| cf-1xd | radrat | DONE | `2b3888a` +190 lines to Home page |
+| cf-dlx | ghoul | WORKING | Writing test suite |
+
+Awaiting refinery merge to main.
+
+---
+
+## Convoy 2: Customer Engagement & Conversion (hq-cv-qoikg)
+
+9 beads, 4 polecats active:
+
+| Bead | Priority | Polecat | Title |
+|------|----------|---------|-------|
+| cf-pfk | P0 | mutant | Photo gallery placeholders for layout testing |
+| cf-rbu | P0 | raider | Product Page engagement: bundles, sticky cart, urgency, wishlist |
+| cf-ovl | P0 | vault | Smart cart & side cart: auto-open, tiered incentives |
+| cf-exz | P0 | pipboy | Member/Account page for Velo integration |
+| cf-iuw | P1 | — | Exit-intent popup, back-in-stock alerts |
+| cf-8vr | P1 | — | Fabric swatch request + product comparison UI |
+| cf-6zx | P1 | — | Post-purchase: Thank You, reviews, referral |
+| cf-387 | P1 | — | Holiday/event promotional lightboxes |
+| cf-no5 | P2 | — | Style quiz + social proof notifications |
+
+---
+
 ## Open Beads (Remaining Work)
 
 | Bead | Priority | Title | Status |
 |------|----------|-------|--------|
 | cf-6ub | P0 | Store secrets in Wix Secrets Manager + delete .conf files | NOT STARTED — ask user first |
+| cf-69b | P1 | Wix Editor visual layout buildout | NOT STARTED |
 | cf-xv3 | P1 | Create CMS collections in Wix Dashboard | NOT STARTED — blocked on backup |
 | cf-8gu | P1 | Set up UPS Developer Portal credentials | NOT STARTED |
 | cf-e3o | P1 | Commission illustration assets | Spec ready (`ILLUSTRATION-ASSET-SPEC.md`) |
-| cf-h8f | P1 | Wire up product photo galleries | NOT STARTED |
 | cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs dashboard access |
 | cf-6wc | P2 | Metric tracking + customer engagement strategy | NOT STARTED |
-
-### Beads Not Yet Created:
-
-- Wix Editor visual layout buildout (connecting Velo code to actual editor elements)
 
 ---
 
