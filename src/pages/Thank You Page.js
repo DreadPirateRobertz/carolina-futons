@@ -3,7 +3,7 @@
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
-import { colors } from 'public/designTokens.js';
+import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
@@ -121,7 +121,7 @@ function initDeliveryTimeline() {
             el.style.color = colors.success;
           } else if (step.status === 'active') {
             el.style.color = colors.mountainBlue;
-            el.style.fontWeight = '700';
+            el.style.fontWeight = String(typography.h2.weight);
           } else {
             el.style.color = colors.mutedBrown;
           }
