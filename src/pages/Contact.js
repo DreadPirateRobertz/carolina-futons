@@ -5,8 +5,10 @@ import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { sendEmail } from 'backend/emailService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import { trackEvent } from 'public/engagementTracker';
+import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
+  initBackToTop($w);
   initContactForm();
   initBusinessInfo();
   await injectContactSchema();
