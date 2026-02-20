@@ -4,6 +4,7 @@
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
+import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────

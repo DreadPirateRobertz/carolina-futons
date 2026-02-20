@@ -1,24 +1,133 @@
-// Thank You Page.dk9x8.js - Order Confirmation
-// Post-purchase engagement: thank you message, order summary,
-// social sharing prompts, and related product suggestions
+// Thank You Page.dk9x8.js - Order Confirmation & Post-Purchase Engagement
+// Personalized order summary, Brenda's message, social sharing, newsletter,
+// delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 
 $w.onReady(async function () {
-  initThankYou();
-  await loadPostPurchaseSuggestions();
+  await Promise.all([
+    initOrderSummary(),
+    initBrendaMessage(),
+    initDeliveryTimeline(),
+    initSocialSharing(),
+    initNewsletterSignup(),
+    initReferralSection(),
+    loadPostPurchaseSuggestions(),
+  ]);
 });
 
-// ── Thank You Message ───────────────────────────────────────────────
+// ── Order Summary ──────────────────────────────────────────────────
+// Pulls order details from the Thank You page context
 
-function initThankYou() {
+async function initOrderSummary() {
   try {
     $w('#thankYouTitle').text = 'Thank You for Your Order!';
-    $w('#thankYouMessage').text =
-      'Your order has been confirmed. We\'ll send you a shipping confirmation email once your items are on their way. ' +
-      'If you have any questions, don\'t hesitate to reach out at (828) 252-9449.';
-  } catch (e) {}
 
-  // Social sharing
+    // Wix passes order data via the page's Thank You context
+    const wixWindow = await import('wix-window-frontend');
+    const orderData = wixWindow.lightbox?.getContext?.() || null;
+
+    // Try to get order info from the thank you page's built-in data
+    try {
+      const orderNumber = $w('#orderNumber');
+      if (orderNumber) {
+        // The element may be auto-populated by Wix Stores
+        // If not, try to set it from context
+        if (orderData && orderData.orderId) {
+          orderNumber.text = `Order #${orderData.orderId}`;
+        }
+      }
+    } catch (e) {}
+
+    // Order confirmation message
+    $w('#thankYouMessage').text =
+      'Your order has been confirmed and is being prepared with care. ' +
+      'We\'ll send you a shipping confirmation email with tracking info once your items are on their way.';
+
+    // Contact info for questions
+    try {
+      $w('#orderContactInfo').text =
+        'Questions about your order? Call us at (828) 252-9449 ' +
+        '(Wed-Sat, 10am-5pm) or email through our contact page.';
+    } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Brenda's Personal Message ──────────────────────────────────────
+// Warm, personal thank-you from the store owner
+
+function initBrendaMessage() {
+  try {
+    const messageSection = $w('#brendaMessageSection');
+    if (!messageSection) return;
+
+    try {
+      $w('#brendaTitle').text = 'A Note from Brenda';
+    } catch (e) {}
+
+    try {
+      $w('#brendaMessage').text =
+        'Thank you for choosing Carolina Futons! Every piece we sell is one I\'d be proud to have in my own home. ' +
+        'We\'ve been helping families find quality furniture since 1991, and it means the world to have you as part of ' +
+        'our Carolina Futons family. If you\'re ever in Hendersonville, stop by our showroom — I\'d love to meet you!\n\n' +
+        '— Brenda Deal, Owner';
+    } catch (e) {}
+
+    messageSection.expand();
+  } catch (e) {
+    // Brenda's message section is optional
+  }
+}
+
+// ── Delivery Timeline ──────────────────────────────────────────────
+// Estimated delivery range and what to expect next
+
+function initDeliveryTimeline() {
+  try {
+    const timeline = $w('#deliveryTimeline');
+    if (!timeline) return;
+
+    const today = new Date();
+    const minDate = addBusinessDays(today, 5);
+    const maxDate = addBusinessDays(today, 10);
+    const opts = { month: 'long', day: 'numeric' };
+
+    try {
+      $w('#deliveryEstimateText').text =
+        `Estimated delivery: ${minDate.toLocaleDateString('en-US', opts)} – ${maxDate.toLocaleDateString('en-US', opts)}`;
+    } catch (e) {}
+
+    // Delivery steps
+    const steps = [
+      { id: '#step1', text: 'Order confirmed', status: 'complete' },
+      { id: '#step2', text: 'Preparing your items', status: 'active' },
+      { id: '#step3', text: 'Shipped with tracking', status: 'pending' },
+      { id: '#step4', text: 'Delivered to your door', status: 'pending' },
+    ];
+
+    steps.forEach(step => {
+      try {
+        const el = $w(step.id);
+        if (el) {
+          el.text = step.text;
+          if (step.status === 'complete') {
+            el.style.color = '#4A7C59'; // Forest green
+          } else if (step.status === 'active') {
+            el.style.color = '#5B8FA8'; // Mountain blue
+            el.style.fontWeight = '700';
+          } else {
+            el.style.color = '#8B7355'; // Muted
+          }
+        }
+      } catch (e) {}
+    });
+
+    timeline.expand();
+  } catch (e) {}
+}
+
+// ── Social Sharing ─────────────────────────────────────────────────
+
+function initSocialSharing() {
   try {
     $w('#shareText').text = 'Love your new furniture? Share with friends!';
 
@@ -37,9 +146,21 @@ function initThankYou() {
         openUrl(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
       });
     });
-  } catch (e) {}
 
-  // Newsletter signup prompt
+    // Instagram share prompt (no direct share API — link to profile)
+    try {
+      $w('#shareInstagram').onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl('https://www.instagram.com/carolinafutons/');
+        });
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Newsletter Signup ──────────────────────────────────────────────
+
+function initNewsletterSignup() {
   try {
     $w('#newsletterPrompt').text = 'Get updates on new products and exclusive deals';
     $w('#newsletterSignup').onClick(async () => {
@@ -51,8 +172,9 @@ function initThankYou() {
             emails: [email],
             labelKeys: ['custom.newsletter'],
           });
-          $w('#newsletterSuccess').text = 'You\'re subscribed!';
+          $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
           $w('#newsletterSuccess').show();
+          $w('#newsletterSignup').disable();
         } catch (e) {
           console.error('Newsletter signup error:', e);
         }
@@ -61,7 +183,58 @@ function initThankYou() {
   } catch (e) {}
 }
 
-// ── Post-Purchase Suggestions ───────────────────────────────────────
+// ── Referral Section ───────────────────────────────────────────────
+// Encourage customers to share with friends
+
+function initReferralSection() {
+  try {
+    const section = $w('#referralSection');
+    if (!section) return;
+
+    try {
+      $w('#referralTitle').text = 'Share the Love';
+    } catch (e) {}
+
+    try {
+      $w('#referralMessage').text =
+        'Know someone who\'d love our furniture? Tell a friend about Carolina Futons ' +
+        'and help them discover handcrafted comfort at mountain-town prices.';
+    } catch (e) {}
+
+    // Copy referral link
+    try {
+      $w('#referralCopyBtn').onClick(() => {
+        const link = 'https://www.carolinafutons.com?ref=friend';
+        if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          navigator.clipboard.writeText(link).then(() => {
+            $w('#referralCopyBtn').label = 'Link Copied!';
+            setTimeout(() => {
+              try { $w('#referralCopyBtn').label = 'Copy Link'; } catch (e) {}
+            }, 2000);
+          });
+        }
+      });
+    } catch (e) {}
+
+    // Email share
+    try {
+      $w('#referralEmailBtn').onClick(() => {
+        const subject = encodeURIComponent('Check out Carolina Futons!');
+        const body = encodeURIComponent(
+          'I just ordered from Carolina Futons — great handcrafted furniture at mountain-town prices. ' +
+          'Check them out: https://www.carolinafutons.com'
+        );
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(`mailto:?subject=${subject}&body=${body}`);
+        });
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {}
+}
+
+// ── Post-Purchase Suggestions ──────────────────────────────────────
 // "Customers also love" section to drive repeat visits
 
 async function loadPostPurchaseSuggestions() {
@@ -90,4 +263,17 @@ async function loadPostPurchaseSuggestions() {
   } catch (err) {
     console.error('Error loading post-purchase suggestions:', err);
   }
+}
+
+// ── Utility ─────────────────────────────────────────────────────────
+
+function addBusinessDays(startDate, days) {
+  const result = new Date(startDate);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const dow = result.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return result;
 }

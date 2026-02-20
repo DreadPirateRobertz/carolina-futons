@@ -6,56 +6,12 @@ import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } from 'backend/seoHelpers.web';
 import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
+import { getProductFallbackImage } from 'public/placeholderImages.js';
+import { getSwatchPreviewColors } from 'backend/swatchService.web';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
 let currentQuickViewProduct = null;
-
-// ── Category Content Map ─────────────────────────────────────────────
-// Marketing copy and hero config for each category
-
-const CATEGORY_CONTENT = {
-  'futon-frames': {
-    title: 'Futon Frames',
-    subtitle: 'Handcrafted frames for every room — from classic hardwood to contemporary designs',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #D4BC96 100%)',
-  },
-  'mattresses': {
-    title: 'Mattresses',
-    subtitle: 'Premium mattresses crafted for comfort — find your perfect sleep surface',
-    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #E8D5B7 100%)',
-  },
-  'murphy-cabinet-beds': {
-    title: 'Murphy Cabinet Beds',
-    subtitle: 'Space-saving elegance — beautiful cabinet beds that transform any room',
-    heroGradient: 'linear-gradient(135deg, #A8CCD8 0%, #5B8FA8 100%)',
-  },
-  'platform-beds': {
-    title: 'Platform Beds',
-    subtitle: 'Modern simplicity meets mountain craftsmanship',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #C9A0A0 100%)',
-  },
-  'casegoods-accessories': {
-    title: 'Casegoods & Accessories',
-    subtitle: 'Complete your space with matching nightstands, dressers, and storage',
-    heroGradient: 'linear-gradient(135deg, #D4BC96 0%, #E8D5B7 100%)',
-  },
-  'wall-huggers': {
-    title: 'Wall Hugger Frames',
-    subtitle: 'Space-efficient frames designed to sit close to your wall',
-    heroGradient: 'linear-gradient(135deg, #E8D5B7 0%, #A8CCD8 100%)',
-  },
-  'unfinished-wood': {
-    title: 'Unfinished Wood',
-    subtitle: 'Raw hardwood frames ready for your personal finish',
-    heroGradient: 'linear-gradient(135deg, #F2E8D5 0%, #D4BC96 100%)',
-  },
-  'sales': {
-    title: 'Sale',
-    subtitle: 'Current deals on quality furniture — limited time savings',
-    heroGradient: 'linear-gradient(135deg, #F2A882 0%, #E8845C 100%)',
-  },
-};
 
 // ── Category Content Map ─────────────────────────────────────────────
 // Marketing copy and hero config for each category

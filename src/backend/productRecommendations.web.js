@@ -290,6 +290,58 @@ export const getBundleSuggestion = webMethod(
   }
 );
 
+// Get bestselling products based on analytics data
+// Falls back to featured ribbon, then newest products
+export const getBestsellers = webMethod(
+  Permissions.Anyone,
+  async (limit = 4) => {
+    try {
+      // Try ProductAnalytics CMS first (weekSales descending)
+      try {
+        const analytics = await wixData.query('ProductAnalytics')
+          .gt('weekSales', 0)
+          .descending('weekSales')
+          .limit(limit)
+          .find();
+
+        if (analytics.items.length > 0) {
+          const productIds = analytics.items.map(a => a.productId);
+          const products = await wixData.query('Stores/Products')
+            .hasSome('_id', productIds)
+            .find();
+
+          if (products.items.length > 0) {
+            return products.items.map(formatProduct);
+          }
+        }
+      } catch (e) {
+        // ProductAnalytics collection may not exist yet — fall through
+      }
+
+      // Fallback: products with "Bestseller" ribbon
+      let results = await wixData.query('Stores/Products')
+        .eq('ribbon', 'Bestseller')
+        .limit(limit)
+        .find();
+
+      if (results.items.length > 0) {
+        return results.items.map(formatProduct);
+      }
+
+      // Final fallback: newest products
+      results = await wixData.query('Stores/Products')
+        .descending('_createdDate')
+        .limit(limit)
+        .find();
+
+      return results.items.map(formatProduct);
+    } catch (err) {
+      console.error('Error fetching bestsellers:', err);
+      return [];
+    }
+  }
+);
+
 function formatProduct(item) {
   return {
     _id: item._id,

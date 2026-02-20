@@ -1,8 +1,10 @@
 // Product Page.ve2z7.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
 // gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
-import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
+import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { getProductSwatches, getSwatchCount, getAllSwatchFamilies } from 'backend/swatchService.web';
+import { submitSwatchRequest } from 'backend/emailService.web';
 import {
   trackProductView,
   getRecentlyViewed,
@@ -10,6 +12,7 @@ import {
   initImageLightbox,
   initImageZoom,
 } from 'public/galleryHelpers.js';
+import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
@@ -1273,14 +1276,16 @@ async function initWishlistButton() {
   }
 }
 
+// SVG data URI heart icons — filled (coral) and outline (espresso)
+// Uses design system colors instead of external wixstatic.com URLs
+const HEART_FILLED_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#E8845C"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>')}`;
+const HEART_OUTLINE_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3A2518" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>')}`;
+
 function setWishlistActive(active) {
   try {
     const icon = $w('#wishlistIcon');
     if (icon) {
-      // Toggle filled/unfilled heart via CSS class or src swap
-      icon.src = active
-        ? 'https://static.wixstatic.com/media/heart-filled.png'
-        : 'https://static.wixstatic.com/media/heart-outline.png';
+      icon.src = active ? HEART_FILLED_SVG : HEART_OUTLINE_SVG;
     }
   } catch (e) {}
 }
