@@ -10,6 +10,7 @@ import {
   initImageLightbox,
   initImageZoom,
 } from 'public/galleryHelpers.js';
+import { submitSwatchRequest } from 'backend/emailService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
@@ -50,6 +51,7 @@ async function initProductPage() {
       initDeliveryEstimate(),
       initWishlistButton(),
       initBackInStockNotification(),
+      initSwatchRequest(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
@@ -570,6 +572,137 @@ function showAddToCartSuccess() {
       }, 4000);
     }
   } catch (e) {}
+}
+
+// ── Fabric Swatch Request ───────────────────────────────────────────
+// "Request Free Swatches" button + modal for products with fabric options
+
+function initSwatchRequest() {
+  try {
+    const swatchBtn = $w('#swatchRequestBtn');
+    if (!swatchBtn || !currentProduct) return;
+
+    // Only show for products that have fabric/finish options
+    const hasOptions = currentProduct.productOptions?.some(
+      opt => /finish|fabric|color|cover/i.test(opt.name)
+    );
+
+    if (!hasOptions) {
+      swatchBtn.hide();
+      return;
+    }
+
+    swatchBtn.show();
+
+    swatchBtn.onClick(() => {
+      openSwatchModal();
+    });
+
+    // Wire up submit
+    try {
+      $w('#swatchSubmit').onClick(() => handleSwatchSubmit());
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function openSwatchModal() {
+  try {
+    const modal = $w('#swatchModal');
+    if (!modal) return;
+
+    // Display product name
+    try {
+      $w('#swatchProductName').text = currentProduct.name;
+    } catch (e) {}
+
+    // Populate checkbox options from product's fabric/finish choices
+    try {
+      const optionsRepeater = $w('#swatchOptions');
+      if (optionsRepeater) {
+        const fabricOptions = [];
+        (currentProduct.productOptions || []).forEach(opt => {
+          if (/finish|fabric|color|cover/i.test(opt.name)) {
+            (opt.choices || []).forEach(choice => {
+              fabricOptions.push({
+                _id: choice.value,
+                label: choice.description || choice.value,
+                optionName: opt.name,
+                checked: false,
+              });
+            });
+          }
+        });
+
+        optionsRepeater.data = fabricOptions;
+        optionsRepeater.onItemReady(($item, itemData) => {
+          try {
+            $item('#swatchCheckbox').label = itemData.label;
+            $item('#swatchCheckbox').checked = false;
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Reset form fields
+    try { $w('#swatchName').value = ''; } catch (e) {}
+    try { $w('#swatchEmail').value = ''; } catch (e) {}
+    try { $w('#swatchAddress').value = ''; } catch (e) {}
+    try { $w('#swatchSuccess').hide(); } catch (e) {}
+
+    modal.show('fade', { duration: 200 });
+  } catch (e) {}
+}
+
+async function handleSwatchSubmit() {
+  try {
+    const name = $w('#swatchName').value?.trim();
+    const email = $w('#swatchEmail').value?.trim();
+    const address = $w('#swatchAddress').value?.trim();
+
+    if (!name || !email || !address) return;
+
+    // Collect selected swatches from repeater checkboxes
+    const selectedSwatches = [];
+    try {
+      const optionsRepeater = $w('#swatchOptions');
+      optionsRepeater.forEachItem(($item, itemData) => {
+        try {
+          if ($item('#swatchCheckbox').checked) {
+            selectedSwatches.push(itemData.label);
+          }
+        } catch (e) {}
+      });
+    } catch (e) {}
+
+    if (selectedSwatches.length === 0) return;
+
+    $w('#swatchSubmit').disable();
+
+    await submitSwatchRequest({
+      name,
+      email,
+      address,
+      productId: currentProduct._id,
+      productName: currentProduct.name,
+      swatchNames: selectedSwatches,
+    });
+
+    // Show success state
+    try {
+      $w('#swatchSuccess').show('fade', { duration: 300 });
+    } catch (e) {}
+
+    // Auto-close after a moment
+    setTimeout(() => {
+      try {
+        $w('#swatchModal').hide('fade', { duration: 200 });
+        $w('#swatchSubmit').enable();
+      } catch (e) {}
+    }, 3000);
+  } catch (err) {
+    console.error('Error submitting swatch request:', err);
+    try { $w('#swatchSubmit').enable(); } catch (e) {}
+  }
 }
 
 // ── Product Schema Injection ────────────────────────────────────────

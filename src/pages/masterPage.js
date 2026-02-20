@@ -1,7 +1,8 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
-// side cart auto-open on add-to-cart, and exit-intent popup
+// side cart auto-open on add-to-cart, exit-intent popup, and product comparison bar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { getCompareList, removeFromCompare } from 'public/galleryHelpers';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
@@ -13,6 +14,7 @@ $w.onReady(async function () {
   initSearch();
   initSideCartAutoOpen();
   initExitIntentPopup();
+  initCompareBar();
   await injectBusinessSchema();
 });
 
@@ -83,6 +85,7 @@ function initAnnouncementBar() {
     'Free Shipping on Orders Over $999!',
     'Visit Our Showroom: 824 Locust St, Hendersonville NC',
     'Over 700 Fabric Swatches Available In-Store',
+    'Request FREE fabric swatches — shipped to your door!',
     'Family Owned Since 1991 — Now Carolina Futons',
   ];
 
@@ -321,6 +324,108 @@ const local = {
   get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
   set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
 };
+
+// ── Product Comparison Bar ──────────────────────────────────────────
+// Floating bottom bar showing products selected for comparison
+
+function initCompareBar() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    // Render current state on page load
+    refreshCompareBar();
+
+    // "Compare Now" opens comparison lightbox
+    try {
+      $w('#compareNowBtn').onClick(() => openComparisonModal());
+    } catch (e) {}
+  } catch (e) {
+    // Compare bar elements may not exist on all pages
+  }
+}
+
+// Re-render the compare bar from session storage state.
+// Called from this page and also exported-style via global for category page use.
+function refreshCompareBar() {
+  try {
+    const compareBar = $w('#compareBar');
+    if (!compareBar) return;
+
+    const items = getCompareList();
+
+    if (items.length === 0) {
+      compareBar.hide('slide', { duration: 200, direction: 'bottom' });
+      return;
+    }
+
+    const repeater = $w('#compareRepeater');
+    if (repeater) {
+      repeater.data = items.map(p => ({ ...p, _id: p._id }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compareName').text = itemData.name; } catch (e) {}
+        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compareRemove').onClick(() => {
+            removeFromCompare(itemData._id);
+            refreshCompareBar();
+          });
+        } catch (e) {}
+      });
+    }
+
+    compareBar.show('slide', { duration: 200, direction: 'bottom' });
+  } catch (e) {}
+}
+
+// Comparison lightbox — side-by-side product details
+function openComparisonModal() {
+  try {
+    const items = getCompareList();
+    if (items.length < 2) return;
+
+    const modal = $w('#comparisonModal');
+    if (!modal) return;
+
+    const grid = $w('#comparisonGrid');
+    if (grid) {
+      grid.data = items.map(p => ({ ...p, _id: p._id }));
+      grid.onItemReady(($item, itemData) => {
+        try { $item('#compImage').src = itemData.mainMedia; } catch (e) {}
+        try { $item('#compName').text = itemData.name; } catch (e) {}
+        try { $item('#compPrice').text = itemData.price; } catch (e) {}
+        try {
+          $item('#compAddToCart').onClick(async () => {
+            try {
+              const { default: wixStoresFrontend } = await import('wix-stores-frontend');
+              await wixStoresFrontend.cart.addProducts([{ productId: itemData._id, quantity: 1 }]);
+              $item('#compAddToCart').label = 'Added!';
+            } catch (err) {
+              console.error('Error adding comparison item to cart:', err);
+            }
+          });
+        } catch (e) {}
+        try {
+          $item('#compViewBtn').onClick(() => {
+            import('wix-location').then(({ to }) => {
+              to(`/product-page/${itemData.slug}`);
+            });
+          });
+        } catch (e) {}
+      });
+    }
+
+    // Close button
+    try {
+      $w('#comparisonClose').onClick(() => {
+        modal.hide('fade', { duration: 200 });
+      });
+    } catch (e) {}
+
+    modal.show('fade', { duration: 200 });
+  } catch (e) {}
+}
 
 // ── SEO Schema Injection ────────────────────────────────────────────
 // Injects LocalBusiness JSON-LD on every page
