@@ -8,6 +8,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { typography } from 'public/designTokens.js';
 
 let _previousCartItemCount = null;
 
@@ -98,7 +99,7 @@ function initNavigation() {
       const el = $w(elementId);
       if (el) {
         if (currentPath === path || (path !== '/' && currentPath.startsWith(path))) {
-          el.style.fontWeight = '700';
+          el.style.fontWeight = String(typography.h2.weight);
         }
       }
     } catch (e) {
