@@ -1,16 +1,54 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 09:06 MST
-**Sprint:** Full Stack Improvements (8-Hour Sprint)
-**Status:** NEARING COMPLETION
+**Last Updated:** 2026-02-20 13:45 MST
+**Sprint:** Full Stack Improvements + Crew Sprint
+**Status:** ACTIVE — 3 crew members executing
+**Tests:** 479 passing across 23 test files
+**All tests green.**
 
 ---
 
-## Overview
+## Live Crew Status
 
-**372 tests passing** across **19 test files**. All major sprint items complete. Security audit committed. 6 new backend modules, 3 page updates, 3 feed endpoints, comprehensive documentation.
+| Crew | Role | Current Task | Last Commit |
+|------|------|-------------|-------------|
+| **melania** | Lead / Strategy | Reviewing output, driving crew, updating reports | `8fa999e` STRATEGY.md |
+| **caesar** | UX / Design | Side Cart audit (Cart Page done, pushing shortly) | `dd893da` Cart Page UX |
+| **radahn** | Tests / Stories | Writing promotions.test.js (httpFunctions done) | `80cf2f4` httpFunctions tests |
 
-## Completed
+---
+
+## Session Progress (Crew Sprint — 2026-02-20 afternoon)
+
+### Melania (Crew Lead)
+| # | Task | Status | Commit | Details |
+|---|------|--------|--------|---------|
+| 1 | Product strategy document | DONE | `8fa999e` | `STRATEGY.md` — 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap |
+| 2 | Crew coordination | ONGOING | — | Reviewing all output, sending targeted nudges, directing workflow |
+| 3 | Report maintenance | ONGOING | — | Keeping this file updated with real-time progress |
+
+### Caesar (UX / Design)
+| # | Task | Status | Commit | Details |
+|---|------|--------|--------|---------|
+| 1 | Product Page UX audit | DONE | `6650a90` | 9 improvements: variant image sync, bundle button fix, quantity selector, product accordion, ARIA labels, removed broken APIs |
+| 2 | Category Page UX audit | DONE | `c43e029` | N+1 query fix, "Best Selling" default sort, breadcrumbs, quick view error states, ARIA labels, result count refresh |
+| 3 | Cart Page UX audit | DONE | `dd893da` | Quantity/remove buttons were no-ops — now wired to real API. Empty cart state. Reduced 4 redundant cart fetches to 1. ARIA labels. |
+| 4 | Side Cart audit | IN PROGRESS | — | Refactoring repeater handlers, adding remove functionality, accessibility |
+| 5 | P1: Social/marketing audit | NEXT | — | Feed endpoint quality, OG meta completeness, engagement tracking |
+
+### Radahn (Tests / Stories)
+| # | Task | Status | Commit | Details |
+|---|------|--------|--------|---------|
+| 1 | seoHelpers tests | DONE | `017600b` | +29 tests: OG meta, Twitter Card, Rich Pin, WebSite schema, Collection schema |
+| 2 | shipping-rates-plugin tests | DONE | `84e231e` | +8 tests: white-glove tiers, local delivery pricing, fallbacks |
+| 3 | httpFunctions tests | DONE | `80cf2f4` | +22 tests: 4 feed endpoints (Google XML, Facebook TSV, Pinterest TSV), sitemap, health check. New wix-http-functions mock. |
+| 4 | Feature stories | DONE | `24b4fd0` | 5 stories filed: gift card bug, http-functions tests, style quiz tests, safe init pattern, cart recovery dupes |
+| 5 | promotions.test.js | IN PROGRESS | — | Lightbox campaign engine test suite |
+| 6 | styleQuiz.test.js | NEXT | — | Recommendation engine test suite |
+
+---
+
+## Earlier Sprint Completions (Mayor — morning session)
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
@@ -34,80 +72,96 @@
 | 18 | Loyalty integration | DONE | `Member Page.js` — Live loyalty points + tier display |
 | 19 | Plugin recommendations | DONE | `PLUGIN-RECOMMENDATIONS.md` — Must/Should/Nice-to-Have/Pure Velo |
 | 20 | Social media strategy | DONE | `SOCIAL-MEDIA-STRATEGY.md` — Pinterest, Instagram, Facebook, TikTok playbook |
-| 21 | Sprint report | DONE | `report_to_human.md` — This file |
-
-## New Files Created This Sprint
-
-| File | Type | Purpose |
-|------|------|---------|
-| `src/backend/loyaltyService.web.js` | Backend | Loyalty points, tiers, rewards |
-| `src/backend/couponsService.web.js` | Backend | Marketing coupon generation |
-| `src/backend/cartRecovery.web.js` | Backend | Abandoned cart event handlers |
-| `src/backend/deliveryScheduling.web.js` | Backend | Delivery slot scheduling |
-| `src/backend/assemblyGuides.web.js` | Backend | Assembly guides per SKU |
-| `src/backend/giftCards.web.js` | Backend | Custom gift card system |
-| `src/pages/Blog.js` | Page | Blog page enhancements |
-| `tests/loyaltyService.test.js` | Test | 12 tests |
-| `tests/couponsService.test.js` | Test | 9 tests |
-| `tests/cartRecovery.test.js` | Test | 7 tests |
-| `tests/__mocks__/wix-loyalty.v2.js` | Mock | Loyalty API mock |
-| `tests/__mocks__/wix-marketing-backend.js` | Mock | Coupons API mock |
-| `PLUGIN-RECOMMENDATIONS.md` | Doc | App Market plugin guide |
-| `SOCIAL-MEDIA-STRATEGY.md` | Doc | Multi-platform social playbook |
-
-## Updated Files This Sprint
-
-| File | Changes |
-|------|---------|
-| `src/backend/analyticsHelpers.web.js` | Added 5 GA4 event builder functions |
-| `src/backend/shipping-rates-plugin.js` | Added white-glove delivery tier |
-| `src/backend/http-functions.js` | Added Facebook + Pinterest feed endpoints |
-| `src/backend/seoHelpers.web.js` | Added OG, Rich Pin, Twitter Card meta |
-| `src/pages/Member Page.js` | Wishlist sharing (4 channels), loyalty points display |
-| `src/pages/Thank You Page.js` | Post-purchase care sequence, assembly guide link |
-| `vitest.config.js` | New aliases for added modules |
-| `tests/setup.js` | New mock resets |
-
-## New CMS Collections Needed
-
-| Collection | Purpose | Created By |
-|------------|---------|------------|
-| `ProductAnalytics` | View/cart/purchase counts | analyticsHelpers.web |
-| `AbandonedCarts` | Abandoned checkout tracking | cartRecovery.web |
-| `DeliverySchedule` | Scheduled delivery slots | deliveryScheduling.web |
-| `AssemblyGuides` | Per-SKU assembly PDFs/videos | assemblyGuides.web |
-| `GiftCards` | Gift card codes and balances | giftCards.web |
-| `MemberPreferences` | Newsletter/alert preferences | Member Page |
-
-## Feed Endpoints Ready to Connect
-
-| Endpoint | Configure In | URL |
-|----------|-------------|-----|
-| `/_functions/googleShoppingFeed` | Google Merchant Center | Already built (previous sprint) |
-| `/_functions/facebookCatalogFeed` | Facebook Commerce Manager → Catalogs | New |
-| `/_functions/pinterestProductFeed` | Pinterest Business → Catalogs | New |
-| `/_functions/productSitemap` | Google Search Console | Already built |
-
-## Test Suite Summary
-
-- **19 test files**, **372 tests passing**
-- New tests: loyaltyService (12), couponsService (9), cartRecovery (7)
-- All existing tests remain green
-
-## Blockers
-
-None. All items requiring Wix Dashboard access noted below.
-
-## Requires Wix Dashboard Setup
-
-These items are code-complete but need Dashboard configuration:
-1. **CMS collections** — Create the 6 new collections listed above
-2. **Feed connections** — Configure Facebook/Pinterest catalog data sources
-3. **Pinterest Rich Pins** — Validate at developers.pinterest.com
-4. **TikTok Pixel** — Add custom embed code via Wix Dashboard
-5. **Loyalty program** — Enable in Wix Dashboard → Loyalty
-6. **Wix Automations** — Configure email triggers for care sequence (Day 3, 7, 30)
+| 21 | 3 new test suites | DONE | giftCards (18), deliveryScheduling (16), assemblyGuides (15) — 49 tests total |
+| 22 | Gift card bug fix | DONE | Code truncation in sanitize function |
 
 ---
 
-*Report by Mayor. All code committed and pushed to `main` branch.*
+## Test Suite Growth
+
+| Checkpoint | Files | Tests | Delta |
+|-----------|-------|-------|-------|
+| Pre-sprint baseline | 19 | 372 | — |
+| After sprint (morning) | 22 | 421 | +49 |
+| After crew session (now) | 23 | 479 | +58 |
+
+**New test files this crew session:**
+- `tests/seoHelpers.test.js` — expanded +29 tests (Radahn)
+- `tests/shipping-rates-plugin.test.js` — expanded +8 tests (Radahn)
+- `tests/httpFunctions.test.js` — 22 tests, new file (Radahn)
+- `tests/__mocks__/wix-http-functions.js` — new mock (Radahn)
+
+**In progress:**
+- `tests/promotions.test.js` — Radahn working now
+- `tests/styleQuiz.test.js` — Radahn next
+
+---
+
+## Code Quality Review (Melania's Assessment)
+
+### Caesar — Grade: A-
+- Finding real bugs, not cosmetic issues (quantity/remove no-ops, N+1 query, variant image not updating)
+- Consistent accessibility additions (ARIA labels on every interactive element)
+- Error states with retry affordance follow a pattern across all pages
+- One minor note: `preloadGalleryThumbnails()` left as no-op stub — could be deleted entirely
+
+### Radahn — Grade: A
+- Thorough test coverage: testing happy path, edge cases, output format, error handling
+- Realistic test data (3 products across different categories)
+- Good mock design (wix-http-functions mock is clean and reusable)
+- Testing actual business logic (brand detection, product type mapping, price formatting)
+
+---
+
+## New Files This Crew Session
+
+| File | Author | Type | Purpose |
+|------|--------|------|---------|
+| `STRATEGY.md` | melania | Doc | High-level product strategy, personas, roadmap |
+| `tests/httpFunctions.test.js` | radahn | Test | 22 tests for feed endpoints |
+| `tests/__mocks__/wix-http-functions.js` | radahn | Mock | HTTP functions mock |
+| `stories/gift-card-sanitize-bug.md` | radahn | Story | Gift card truncation bug write-up |
+| `stories/http-functions-tests.md` | radahn | Story | Feed endpoint test coverage story |
+| `stories/style-quiz-tests.md` | radahn | Story | Quiz engine test story |
+| `stories/safe-init-pattern.md` | radahn | Story | Safe initialization pattern |
+| `stories/cart-recovery-dupes.md` | radahn | Story | Cart recovery deduplication story |
+
+## Updated Files This Crew Session
+
+| File | Author | Changes |
+|------|--------|---------|
+| `src/pages/Product Page.js` | caesar | +229/-34: 9 UX improvements |
+| `src/pages/Category Page.js` | caesar | +81/-41: perf fix, sort, accessibility |
+| `src/pages/Cart Page.js` | caesar | +107/-22: quantity/remove API, empty state |
+| `src/public/cartService.js` | caesar | +35/-5: updateQuantity, removeItem APIs |
+| `tests/categoryPage.test.js` | caesar | Updated for new sort options |
+| `tests/seoHelpers.test.js` | radahn | +29 tests for social meta schemas |
+| `tests/shipping-rates-plugin.test.js` | radahn | +8 tests for white-glove |
+| `SPRINT-PLAN.md` | radahn | Updated completion status |
+
+---
+
+## Remaining Work
+
+### Active (Crew doing now)
+- Caesar: Side Cart audit → P1 social/marketing audit
+- Radahn: promotions.test.js → styleQuiz.test.js → swatchService.test.js
+
+### Blocked (Needs Wix Dashboard)
+1. Create 11 CMS collections
+2. Store UPS secrets in Wix Secrets Manager
+3. Configure feed URLs in Facebook/Pinterest/Google
+4. Set up Wix Automations for care sequence emails
+5. Editor layout buildout (element IDs)
+6. Pinterest Rich Pin validation
+7. TikTok Pixel embed
+
+### Future (Post-launch)
+- wix-stores-frontend → wix-ecom migration
+- Mobile responsive optimization
+- A/B testing setup
+- Paid advertising campaigns
+
+---
+
+*Report maintained by melania (crew lead). Updated after each crew commit.*
