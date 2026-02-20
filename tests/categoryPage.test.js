@@ -16,10 +16,13 @@ function createMockElement() {
     options: [],
     data: [],
     style: { color: '' },
+    accessibility: {},
     show: vi.fn(() => Promise.resolve()),
     hide: vi.fn(() => Promise.resolve()),
     collapse: vi.fn(),
     expand: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
     scrollTo: vi.fn(),
     postMessage: vi.fn(),
     onClick: vi.fn(),
@@ -71,20 +74,21 @@ describe('Category Page', () => {
   // ── Sort Controls ─────────────────────────────────────────────────
 
   describe('sort controls', () => {
-    it('initializes sort dropdown with 5 options', async () => {
+    it('initializes sort dropdown with 6 options including Best Selling', async () => {
       await onReadyHandler();
       const dropdown = getEl('#sortDropdown');
-      expect(dropdown.options).toHaveLength(5);
-      expect(dropdown.options[0]).toEqual({ label: 'Name (A-Z)', value: 'name-asc' });
-      expect(dropdown.options[1]).toEqual({ label: 'Name (Z-A)', value: 'name-desc' });
-      expect(dropdown.options[2]).toEqual({ label: 'Price: Low to High', value: 'price-asc' });
-      expect(dropdown.options[3]).toEqual({ label: 'Price: High to Low', value: 'price-desc' });
-      expect(dropdown.options[4]).toEqual({ label: 'Newest First', value: 'date-desc' });
+      expect(dropdown.options).toHaveLength(6);
+      expect(dropdown.options[0]).toEqual({ label: 'Best Selling', value: 'bestselling' });
+      expect(dropdown.options[1]).toEqual({ label: 'Name (A-Z)', value: 'name-asc' });
+      expect(dropdown.options[2]).toEqual({ label: 'Name (Z-A)', value: 'name-desc' });
+      expect(dropdown.options[3]).toEqual({ label: 'Price: Low to High', value: 'price-asc' });
+      expect(dropdown.options[4]).toEqual({ label: 'Price: High to Low', value: 'price-desc' });
+      expect(dropdown.options[5]).toEqual({ label: 'Newest First', value: 'date-desc' });
     });
 
-    it('defaults to name-asc sort', async () => {
+    it('defaults to bestselling sort', async () => {
       await onReadyHandler();
-      expect(getEl('#sortDropdown').value).toBe('name-asc');
+      expect(getEl('#sortDropdown').value).toBe('bestselling');
     });
 
     it('registers onChange handler on sort dropdown', async () => {

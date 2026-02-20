@@ -11,7 +11,7 @@ import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 
-let currentSort = 'name-asc';
+let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
 
@@ -91,6 +91,15 @@ function initCategoryHero(currentPath) {
     $w('#categoryHeroSubtitle').text = content.subtitle;
   } catch (e) {}
 
+  // Visible breadcrumb row: Home > Category
+  try {
+    $w('#breadcrumbHome').text = 'Home';
+    $w('#breadcrumbHome').onClick(() => {
+      import('wix-location-frontend').then(({ to }) => to('/'));
+    });
+    $w('#breadcrumbCurrent').text = content.title;
+  } catch (e) {}
+
   try {
     $w('#categoryHeroSection').style.backgroundColor = '';
     $w('#categoryHeroSection').style.backgroundImage = content.heroGradient;
@@ -134,6 +143,7 @@ function initSortControls() {
     if (!sortDropdown) return;
 
     sortDropdown.options = [
+      { label: 'Best Selling', value: 'bestselling' },
       { label: 'Name (A-Z)', value: 'name-asc' },
       { label: 'Name (Z-A)', value: 'name-desc' },
       { label: 'Price: Low to High', value: 'price-asc' },
@@ -141,7 +151,10 @@ function initSortControls() {
       { label: 'Newest First', value: 'date-desc' },
     ];
 
-    sortDropdown.value = 'name-asc';
+    sortDropdown.value = 'bestselling';
+
+    // Accessibility
+    try { sortDropdown.accessibility.ariaLabel = 'Sort products by'; } catch (e) {}
 
     sortDropdown.onChange(() => {
       currentSort = sortDropdown.value;
@@ -157,6 +170,9 @@ function applySort() {
 
     let sort;
     switch (currentSort) {
+      case 'bestselling':
+        sort = wixData.sort().descending('numericRating');
+        break;
       case 'name-asc':
         sort = wixData.sort().ascending('name');
         break;
@@ -185,6 +201,12 @@ function applySort() {
 // Filter by brand, price range, size, finish
 
 function initFilterControls() {
+  // Accessibility: label filter controls
+  try { $w('#filterBrand').accessibility.ariaLabel = 'Filter by brand'; } catch (e) {}
+  try { $w('#filterPrice').accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
+  try { $w('#filterSize').accessibility.ariaLabel = 'Filter by size'; } catch (e) {}
+  try { $w('#clearFilters').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
+
   // Brand filter — includes Wall Hugger and Unfinished Wood brands
   try {
     const brandFilter = $w('#filterBrand');
@@ -277,7 +299,18 @@ function applyFilters() {
     }
 
     dataset.setFilter(filter);
-    updateResultCount();
+    // Refresh result count after filter applies
+    setTimeout(() => {
+      try {
+        const count = dataset.getTotalCount();
+        $w('#resultCount').text = `${count} product${count !== 1 ? 's' : ''}`;
+        if (count === 0) {
+          showEmptyState(wixLocationFrontend.path?.[0] || '');
+        } else {
+          try { $w('#emptyStateSection').hide(); } catch (e) {}
+        }
+      } catch (e) {}
+    }, 300);
   } catch (e) {
     console.error('Error applying filters:', e);
   }
@@ -477,14 +510,18 @@ function initQuickViewHandlers() {
     $w('#qvAddToCart').onClick(async () => {
       if (!currentQuickViewProduct) return;
       try {
+        $w('#qvAddToCart').disable();
+        $w('#qvAddToCart').label = 'Adding...';
         const { addToCart } = await import('public/cartService');
         await addToCart(currentQuickViewProduct._id);
         $w('#qvAddToCart').label = 'Added!';
         setTimeout(() => {
-          $w('#quickViewModal').hide('fade', { duration: 200 });
+          try { $w('#quickViewModal').hide('fade', { duration: 200 }); } catch (e) {}
         }, 1000);
       } catch (err) {
         console.error('Error adding to cart from quick view:', err);
+        $w('#qvAddToCart').label = 'Error — Try Again';
+        $w('#qvAddToCart').enable();
       }
     });
 
@@ -503,14 +540,9 @@ function openQuickView(product) {
     $w('#qvPrice').text = product.formattedPrice;
     $w('#qvDescription').text = stripHtml(product.description || '');
     $w('#qvAddToCart').label = 'Add to Cart';
+    $w('#qvAddToCart').enable();
     $w('#quickViewModal').show('fade', { duration: 200 });
-
-    // Accessibility: close modal on Escape, close button
-    try {
-      $w('#qvClose').onClick(() => {
-        $w('#quickViewModal').hide('fade', { duration: 200 });
-      });
-    } catch (e) {}
+    // Close handler is registered once in initQuickViewHandlers — not here
   } catch (e) {}
 }
 
@@ -521,18 +553,28 @@ function updateResultCount(currentPath) {
     const dataset = $w('#categoryDataset');
     if (!dataset) return;
 
-    dataset.onReady(() => {
-      const count = dataset.getTotalCount();
+    // Use onReady for initial load, then refresh count directly
+    const refreshCount = () => {
       try {
-        $w('#resultCount').text = `${count} product${count !== 1 ? 's' : ''}`;
-      } catch (e) {}
+        const count = dataset.getTotalCount();
+        try {
+          $w('#resultCount').text = `${count} product${count !== 1 ? 's' : ''}`;
+        } catch (e) {}
 
-      // Show empty state if no products found
-      if (count === 0) {
-        showEmptyState(currentPath);
-      } else {
-        try { $w('#emptyStateSection').hide(); } catch (e) {}
-      }
+        if (count === 0) {
+          showEmptyState(currentPath);
+        } else {
+          try { $w('#emptyStateSection').hide(); } catch (e) {}
+        }
+      } catch (e) {}
+    };
+
+    dataset.onReady(() => {
+      refreshCount();
+      // Re-count when dataset content changes (after filter/sort)
+      try {
+        dataset.onCurrentIndexChanged(() => refreshCount());
+      } catch (e) {}
     });
   } catch (e) {}
 }
@@ -703,19 +745,13 @@ async function injectCategorySchema() {
     if (!dataset) return;
 
     await dataset.onReady();
-    const products = [];
     const total = Math.min(dataset.getTotalCount(), 30);
-    for (let i = 0; i < total; i++) {
-      const result = await dataset.getItems(i, 1);
-      const item = result?.items?.[0];
-      if (item) {
-        products.push({
-          slug: item.slug,
-          name: item.name,
-          mainMedia: item.mainMedia,
-        });
-      }
-    }
+    const result = await dataset.getItems(0, total);
+    const products = (result?.items || []).map(item => ({
+      slug: item.slug,
+      name: item.name,
+      mainMedia: item.mainMedia,
+    }));
 
     const schema = await getCollectionSchema(categoryInfo, products);
     if (schema) {
