@@ -27,6 +27,8 @@ export default defineConfig({
       'wix-site-frontend': path.resolve(__dirname, 'tests/__mocks__/wix-site-frontend.js'),
       'wix-crm': path.resolve(__dirname, 'tests/__mocks__/wix-crm.js'),
       'wix-ecom-backend': path.resolve(__dirname, 'tests/__mocks__/wix-ecom-backend.js'),
+      'wix-loyalty.v2': path.resolve(__dirname, 'tests/__mocks__/wix-loyalty.v2.js'),
+      'wix-marketing-backend': path.resolve(__dirname, 'tests/__mocks__/wix-marketing-backend.js'),
       // Backend modules
       'backend/ups-shipping.web': path.resolve(__dirname, 'src/backend/ups-shipping.web.js'),
       'backend/productRecommendations.web': path.resolve(__dirname, 'src/backend/productRecommendations.web.js'),
