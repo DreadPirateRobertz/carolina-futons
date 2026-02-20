@@ -46,13 +46,19 @@ function initPolicyAccordion() {
       $item('#policyContent').collapse();
       $item('#policyToggle').text = '+';
 
+      // ARIA for accordion
+      try { $item('#policyTitle').accessibility.ariaLabel = `Toggle ${itemData.title}`; } catch (e) {}
+      try { $item('#policyToggle').accessibility.ariaExpanded = false; } catch (e) {}
+
       $item('#policyTitle').onClick(() => {
         if ($item('#policyContent').collapsed) {
           $item('#policyContent').expand();
           $item('#policyToggle').text = '\u2212';
+          try { $item('#policyToggle').accessibility.ariaExpanded = true; } catch (e) {}
         } else {
           $item('#policyContent').collapse();
           $item('#policyToggle').text = '+';
+          try { $item('#policyToggle').accessibility.ariaExpanded = false; } catch (e) {}
         }
       });
     });
