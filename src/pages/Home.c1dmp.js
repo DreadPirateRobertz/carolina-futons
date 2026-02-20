@@ -4,6 +4,7 @@
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
+import { HERO_CABIN_SCENE, getCategoryCardImage } from 'public/placeholderImages.js';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────
@@ -140,6 +141,17 @@ async function initCategoryShowcase() {
           $item('#categoryCardCount').text = itemData.count != null
             ? `${itemData.count} Products` : '';
         } catch (e) {}
+
+        // Set category card image from Media Manager
+        const cardSlug = itemData.collection || itemData.path.replace(/^\//, '');
+        const cardImage = getCategoryCardImage(cardSlug);
+        if (cardImage) {
+          try {
+            $item('#categoryCardImage').src = cardImage;
+            $item('#categoryCardImage').alt = `${itemData.name} - Carolina Futons`;
+          } catch (e) {}
+        }
+
         $item('#categoryCardTitle').onClick(() => {
           import('wix-location').then(({ to }) => to(itemData.path));
         });
@@ -295,6 +307,15 @@ function initSmoothScroll() {
 
 function initHeroAnimation() {
   try {
+    // Set hero background from Media Manager
+    try {
+      const heroBg = $w('#heroBg');
+      if (heroBg) {
+        heroBg.src = HERO_CABIN_SCENE;
+        heroBg.alt = 'Handcrafted Comfort, Mountain Inspired - Carolina Futons Hendersonville NC';
+      }
+    } catch (e) {}
+
     const heroTitle = $w('#heroTitle');
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');

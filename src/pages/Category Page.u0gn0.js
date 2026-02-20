@@ -6,6 +6,7 @@ import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription } from 'backend/seoHelpers.web';
 import { getProductBadge, getRecentlyViewed } from 'public/galleryHelpers';
+import { getCategoryHeroImage } from 'public/placeholderImages';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -83,12 +84,22 @@ function initCategoryHero(currentPath) {
     $w('#categoryHeroSubtitle').text = content.subtitle;
   } catch (e) {}
 
+  // Set hero image from Media Manager if available
+  const heroImage = getCategoryHeroImage(currentPath);
+  if (heroImage) {
+    try {
+      $w('#categoryHeroImage').src = heroImage;
+      $w('#categoryHeroImage').alt = `${content.title} - Carolina Futons Hendersonville NC`;
+    } catch (e) {
+      // Hero image element may not exist yet; fall through to gradient
+    }
+  }
+
+  // Gradient fallback for sections without a hero image element
   try {
     $w('#categoryHeroSection').style.backgroundColor = '';
     $w('#categoryHeroSection').style.backgroundImage = content.heroGradient;
   } catch (e) {
-    // backgroundImage may not be supported on all element types;
-    // fall back to a solid color from the gradient start
     try {
       const solidColor = content.heroGradient.match(/#[A-Fa-f0-9]{6}/)?.[0] || '#E8D5B7';
       $w('#categoryHeroSection').style.backgroundColor = solidColor;
