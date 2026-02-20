@@ -97,7 +97,7 @@ export const checkBalance = webMethod(
   async (code) => {
     try {
       if (!code) return { found: false };
-      const cleanCode = sanitize(code, 20).toUpperCase();
+      const cleanCode = sanitize(code, 30).toUpperCase();
 
       const result = await wixData.query('GiftCards')
         .eq('code', cleanCode)
@@ -148,7 +148,7 @@ export const redeemGiftCard = webMethod(
         return { success: false, message: 'Code and amount required' };
       }
 
-      const cleanCode = sanitize(code, 20).toUpperCase();
+      const cleanCode = sanitize(code, 30).toUpperCase();
       const redeemAmount = Math.abs(Number(amount));
 
       if (isNaN(redeemAmount) || redeemAmount <= 0) {
