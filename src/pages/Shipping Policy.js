@@ -21,6 +21,9 @@ function initShippingCalculator() {
 
     if (!zipInput || !calcBtn) return;
 
+    try { zipInput.accessibility.ariaLabel = 'Enter your ZIP code for shipping estimate'; } catch (e) {}
+    try { calcBtn.accessibility.ariaLabel = 'Calculate shipping cost'; } catch (e) {}
+
     calcBtn.onClick(() => {
       const zip = zipInput.value?.trim();
       if (!zip || !/^\d{5}$/.test(zip)) {
