@@ -3,13 +3,15 @@
 // When Wix migrates to wix-ecom-frontend, update only this file.
 //
 // Exports:
-//   addToCart(productId, quantity, options) - Add item to cart
-//   getCurrentCart()                       - Get full cart object
-//   getCartItemCount()                     - Get total item quantity
-//   onCartChanged(callback)               - Register cart change listener
-//   getProductVariants(productId, choices) - Get product variant pricing
-//   FREE_SHIPPING_THRESHOLD               - $999 threshold
-//   TIER_THRESHOLDS                        - Tiered discount brackets
+//   addToCart(productId, quantity, options)   - Add item to cart
+//   getCurrentCart()                         - Get full cart object
+//   getCartItemCount()                       - Get total item quantity
+//   updateCartItemQuantity(cartItemId, qty)  - Update line item quantity
+//   removeCartItem(cartItemId)               - Remove line item from cart
+//   onCartChanged(callback)                  - Register cart change listener
+//   getProductVariants(productId, choices)   - Get product variant pricing
+//   FREE_SHIPPING_THRESHOLD                  - $999 threshold
+//   TIER_THRESHOLDS                          - Tiered discount brackets
 
 import wixStoresFrontend from 'wix-stores-frontend';
 
@@ -66,6 +68,25 @@ export async function getCartItemCount() {
  */
 export function onCartChanged(callback) {
   wixStoresFrontend.onCartChanged(callback);
+}
+
+/**
+ * Update the quantity of a specific line item in the cart.
+ * @param {string} cartItemId - The cart line item ID
+ * @param {number} quantity - New quantity (must be >= 1)
+ * @returns {Promise<Object>} Updated cart
+ */
+export async function updateCartItemQuantity(cartItemId, quantity) {
+  return wixStoresFrontend.cart.updateLineItemQuantity(cartItemId, quantity);
+}
+
+/**
+ * Remove a line item from the cart.
+ * @param {string} cartItemId - The cart line item ID to remove
+ * @returns {Promise<Object>} Updated cart
+ */
+export async function removeCartItem(cartItemId) {
+  return wixStoresFrontend.cart.removeProduct(cartItemId);
 }
 
 // ── Product Variant Lookup ───────────────────────────────────────────

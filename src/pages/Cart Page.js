@@ -6,6 +6,8 @@ import { getRecentlyViewed } from 'public/galleryHelpers';
 import {
   getCurrentCart,
   addToCart,
+  updateCartItemQuantity,
+  removeCartItem,
   onCartChanged,
   getShippingProgress,
   getTierProgress,
@@ -20,27 +22,65 @@ $w.onReady(async function () {
 async function initCartPage() {
   try {
     await $w('#cartDataset').onReady();
-    await updateShippingProgress();
-    await updateTierProgress();
-    await loadCartSuggestions();
-    await loadRecentlyViewed();
+    const cart = await getCurrentCart();
+
+    // Empty cart state
+    if (!cart || !cart.lineItems || cart.lineItems.length === 0) {
+      showEmptyCart();
+      trackEvent('page_view', { page: 'cart', empty: true });
+      initBackToTop($w);
+      return;
+    }
+
+    trackEvent('page_view', { page: 'cart', itemCount: cart.lineItems.length });
+
+    // Pass fetched cart to avoid redundant API calls
+    updateShippingProgressFromCart(cart);
+    updateTierProgressFromCart(cart);
+    await loadCartSuggestions(cart);
+    loadRecentlyViewedFromCart(cart);
     initQuantityControls();
     initCartListeners();
     initBackToTop($w);
-    trackEvent('page_view', { page: 'cart' });
   } catch (err) {
     console.error('Error initializing cart page:', err);
   }
 }
 
+function showEmptyCart() {
+  try {
+    try { $w('#emptyCartSection').expand(); } catch (e) {}
+    try { $w('#emptyCartTitle').text = 'Your cart is empty'; } catch (e) {}
+    try {
+      $w('#emptyCartMessage').text = 'Browse our collection to find the perfect futon for your home.';
+    } catch (e) {}
+    try {
+      $w('#continueShoppingBtn').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => to('/'));
+      });
+    } catch (e) {}
+    // Collapse sections that don't apply for empty carts
+    try { $w('#suggestionsSection').collapse(); } catch (e) {}
+    try { $w('#cartRecentSection').collapse(); } catch (e) {}
+    try { $w('#shippingProgressBar').hide(); } catch (e) {}
+    try { $w('#tierProgressBar').hide(); } catch (e) {}
+  } catch (e) {}
+}
+
 // ── Shipping Threshold Progress Bar ─────────────────────────────────
 // "You're $X away from free shipping!" with visual progress bar
 
-async function updateShippingProgress() {
+// Accept optional cart param to avoid redundant getCurrentCart() calls
+async function updateShippingProgress(cart) {
   try {
-    const currentCart = await getCurrentCart();
+    const currentCart = cart || await getCurrentCart();
     if (!currentCart) return;
+    updateShippingProgressFromCart(currentCart);
+  } catch (e) {}
+}
 
+function updateShippingProgressFromCart(currentCart) {
+  try {
     const subtotal = currentCart.totals?.subtotal || 0;
     const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
 
@@ -67,11 +107,16 @@ async function updateShippingProgress() {
 // ── Tiered Discount Progress Bar ────────────────────────────────────
 // "Spend $X more for Y% off!" with coral progress bar
 
-async function updateTierProgress() {
+async function updateTierProgress(cart) {
   try {
-    const currentCart = await getCurrentCart();
+    const currentCart = cart || await getCurrentCart();
     if (!currentCart) return;
+    updateTierProgressFromCart(currentCart);
+  } catch (e) {}
+}
 
+function updateTierProgressFromCart(currentCart) {
+  try {
     const subtotal = currentCart.totals?.subtotal || 0;
     const { tier, remaining, progressPct } = getTierProgress(subtotal);
 
@@ -91,9 +136,15 @@ async function updateTierProgress() {
 // ── Recently Viewed Products ────────────────────────────────────────
 // Horizontal scroll of products the user has viewed this session
 
-async function loadRecentlyViewed() {
+function loadRecentlyViewedFromCart(cart) {
   try {
-    const currentCart = await getCurrentCart();
+    loadRecentlyViewed(cart);
+  } catch (e) {}
+}
+
+async function loadRecentlyViewed(cart) {
+  try {
+    const currentCart = cart || await getCurrentCart();
     const cartProductIds = currentCart?.lineItems?.map(item => item.productId) || [];
 
     // Get recently viewed, excluding items already in cart
@@ -133,9 +184,9 @@ async function loadRecentlyViewed() {
 // ── Intelligent Cross-Sell ("Complete Your Futon") ──────────────────
 // Analyzes cart contents and suggests complementary products
 
-async function loadCartSuggestions() {
+async function loadCartSuggestions(cart) {
   try {
-    const currentCart = await getCurrentCart();
+    const currentCart = cart || await getCurrentCart();
     if (!currentCart || !currentCart.lineItems || currentCart.lineItems.length === 0) {
       try { $w('#suggestionsSection').collapse(); } catch (e) {}
       return;
@@ -203,22 +254,48 @@ function initQuantityControls() {
     if (!cartRepeater) return;
 
     cartRepeater.onItemReady(($item, itemData) => {
+      // ARIA labels for cart item controls
+      try { $item('#qtyMinus').accessibility.ariaLabel = `Decrease quantity of ${itemData.name}`; } catch (e) {}
+      try { $item('#qtyPlus').accessibility.ariaLabel = `Increase quantity of ${itemData.name}`; } catch (e) {}
+      try { $item('#qtyInput').accessibility.ariaLabel = `Quantity of ${itemData.name}`; } catch (e) {}
+      try { $item('#removeItem').accessibility.ariaLabel = `Remove ${itemData.name} from cart`; } catch (e) {}
+
       try {
         $item('#qtyMinus').onClick(async () => {
           const currentQty = parseInt($item('#qtyInput').value) || 1;
           if (currentQty > 1) {
-            $item('#qtyInput').value = String(currentQty - 1);
+            const newQty = currentQty - 1;
+            $item('#qtyInput').value = String(newQty);
+            try {
+              await updateCartItemQuantity(itemData._id, newQty);
+            } catch (err) {
+              // Revert on error
+              $item('#qtyInput').value = String(currentQty);
+              console.error('Error updating quantity:', err);
+            }
             await refreshCartTotals();
           }
         });
 
         $item('#qtyPlus').onClick(async () => {
           const currentQty = parseInt($item('#qtyInput').value) || 1;
-          $item('#qtyInput').value = String(currentQty + 1);
+          const newQty = currentQty + 1;
+          $item('#qtyInput').value = String(newQty);
+          try {
+            await updateCartItemQuantity(itemData._id, newQty);
+          } catch (err) {
+            $item('#qtyInput').value = String(currentQty);
+            console.error('Error updating quantity:', err);
+          }
           await refreshCartTotals();
         });
 
         $item('#removeItem').onClick(async () => {
+          try {
+            await removeCartItem(itemData._id);
+          } catch (err) {
+            console.error('Error removing item:', err);
+          }
           await refreshCartTotals();
         });
       } catch (e) {}
