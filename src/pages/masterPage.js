@@ -9,16 +9,19 @@ import { getCurrentCart, onCartChanged } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { typography } from 'public/designTokens.js';
+import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 
 let _previousCartItemCount = null;
 
 $w.onReady(async function () {
+  captureInstallPrompt();
   initAccessibility();
   initNavigation();
   initAnnouncementBar();
   initSearch();
   initSideCartAutoOpen();
   initFooterNewsletter();
+  initInstallBanner();
   await injectBusinessSchema();
 
   // Promotional lightbox — delayed 3s so page renders first
@@ -513,6 +516,64 @@ function initPromoCTA(ctaUrl) {
         to(ctaUrl);
       });
     });
+  } catch (e) {}
+}
+
+// ── PWA Install Banner ───────────────────────────────────────────
+// Shows install prompt after 2+ page views, only on mobile, only if not already installed
+
+function initInstallBanner() {
+  try {
+    if (isInstalledPWA()) return;
+
+    // Track page views in sessionStorage
+    let views = 1;
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        views = parseInt(sessionStorage.getItem('cf_page_views') || '0', 10) + 1;
+        sessionStorage.setItem('cf_page_views', String(views));
+      } catch (e) {}
+    }
+
+    if (views < 2) return;
+
+    // Wait a moment for the install prompt event to fire
+    setTimeout(() => {
+      try {
+        if (!canShowInstallPrompt()) return;
+
+        const banner = $w('#installBanner');
+        if (!banner) return;
+
+        try { $w('#installBannerText').text = 'Add Carolina Futons to your home screen for quick access'; } catch (e) {}
+        try { $w('#installBannerBtn').accessibility.ariaLabel = 'Install Carolina Futons app'; } catch (e) {}
+
+        $w('#installBannerBtn').onClick(async () => {
+          const outcome = await showInstallPrompt();
+          trackEvent('pwa_install_prompt', { outcome });
+          banner.hide('fade', { duration: 200 });
+        });
+
+        try {
+          $w('#installBannerDismiss').onClick(() => {
+            banner.hide('fade', { duration: 200 });
+            if (typeof sessionStorage !== 'undefined') {
+              try { sessionStorage.setItem('cf_install_dismissed', '1'); } catch (e) {}
+            }
+          });
+        } catch (e) {}
+
+        // Don't show if already dismissed this session
+        if (typeof sessionStorage !== 'undefined') {
+          try {
+            if (sessionStorage.getItem('cf_install_dismissed')) return;
+          } catch (e) {}
+        }
+
+        banner.show('slide', { direction: 'bottom', duration: 300 });
+        trackEvent('pwa_install_banner_shown', {});
+      } catch (e) {}
+    }, 2000);
   } catch (e) {}
 }
 
