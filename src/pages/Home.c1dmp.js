@@ -284,10 +284,27 @@ function initSmoothScroll() {
       $w(triggerId).onClick(() => {
         try { $w(targetId).scrollTo(); } catch (e) {}
       });
+
+      // Set category card background image from placeholders
+      if (slug) {
+        try {
+          const imgId = elementId.replace('#category', '#categoryImg');
+          $w(imgId).src = getCategoryCardImage(slug);
+        } catch (e) {
+          // Image element may not exist or use different naming
+        }
+      }
     } catch (e) {
       // Scroll trigger may not exist
     }
   });
+
+  // Set hero section background image
+  try {
+    $w('#heroBackground').src = getCategoryHeroImage('futon-frames');
+  } catch (e) {
+    // Hero background element may not exist
+  }
 }
 
 // ── Hero Animation ──────────────────────────────────────────────────
@@ -295,6 +312,15 @@ function initSmoothScroll() {
 
 function initHeroAnimation() {
   try {
+    // Set hero background from Media Manager
+    try {
+      const heroBg = $w('#heroBg');
+      if (heroBg) {
+        heroBg.src = HERO_CABIN_SCENE;
+        heroBg.alt = 'Handcrafted Comfort, Mountain Inspired - Carolina Futons Hendersonville NC';
+      }
+    } catch (e) {}
+
     const heroTitle = $w('#heroTitle');
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');
