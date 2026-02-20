@@ -1,6 +1,5 @@
 // masterPage.js - Global site code
-// Runs on every page: navigation behavior, announcement bar, SEO injection,
-// promotional lightbox
+// Runs on every page: navigation behavior, announcement bar, SEO injection, exit-intent popup
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
@@ -12,7 +11,7 @@ $w.onReady(async function () {
   initNavigation();
   initAnnouncementBar();
   initSearch();
-  initCompareBar();
+  initExitIntentPopup();
   await injectBusinessSchema();
 
   // Promotional lightbox — delayed 3s so page renders first
@@ -133,107 +132,145 @@ function initSearch() {
   }
 }
 
-// ── Product Comparison Bar ──────────────────────────────────────────
-// Floating bottom bar showing products selected for comparison
+// ── Exit-Intent Popup ──────────────────────────────────────────────
+// Detects mouse leaving viewport (desktop) or back-button intent (mobile)
+// Shows 10% discount offer for first-time visitors with email capture
 
-function initCompareBar() {
+function initExitIntentPopup() {
   try {
-    const compareBar = $w('#compareBar');
-    if (!compareBar) return;
+    const modal = $w('#exitIntentModal');
+    const overlay = $w('#exitIntentOverlay');
+    if (!modal || !overlay) return;
 
-    // Render current state on page load
-    refreshCompareBar();
+    // Check if user has already seen the popup (not a first-time visitor)
+    const hasSeenPopup = local.get('cf_has_seen_popup');
+    if (hasSeenPopup) return;
 
-    // "Compare Now" opens comparison lightbox
+    // Check if already dismissed this session
+    const dismissedThisSession = session.get('cf_exit_dismissed');
+    if (dismissedThisSession) return;
+
+    let popupShown = false;
+
+    // Desktop: detect mouse leaving viewport (mouseleave on document)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mouseleave', (e) => {
+        if (e.clientY <= 0 && !popupShown) {
+          showExitPopup();
+        }
+      });
+    }
+
+    // Mobile: detect back-button intent via popstate
+    if (typeof window !== 'undefined') {
+      // Push a state so we can intercept back button
+      window.history.pushState({ exitIntent: true }, '');
+      window.addEventListener('popstate', (e) => {
+        if (!popupShown) {
+          showExitPopup();
+          // Re-push state to keep them on page
+          window.history.pushState({ exitIntent: true }, '');
+        }
+      });
+    }
+
+    function showExitPopup() {
+      popupShown = true;
+      overlay.show('fade', { duration: 200 });
+      modal.show('fade', { duration: 300 });
+    }
+
+    function hideExitPopup() {
+      modal.hide('fade', { duration: 200 });
+      overlay.hide('fade', { duration: 200 });
+      session.set('cf_exit_dismissed', 'true');
+      local.set('cf_has_seen_popup', 'true');
+    }
+
+    // Overlay click dismisses
+    overlay.onClick(() => hideExitPopup());
+
+    // Dismiss link
     try {
-      $w('#compareNowBtn').onClick(() => openComparisonModal());
+      const dismissBtn = $w('#exitDismiss');
+      if (dismissBtn) {
+        dismissBtn.onClick(() => hideExitPopup());
+      }
+    } catch (e) {}
+
+    // Email submit
+    try {
+      const submitBtn = $w('#exitSubmit');
+      const emailInput = $w('#exitEmail');
+      if (submitBtn && emailInput) {
+        submitBtn.onClick(async () => {
+          const email = emailInput.value?.trim();
+          if (!email || !email.includes('@')) return;
+
+          try {
+            // Store email capture via backend
+            const { submitContactForm } = await import('backend/contactSubmissions.web');
+            await submitContactForm({
+              email,
+              source: 'exit_intent_popup',
+              status: 'exit_intent_signup',
+              notes: '10% discount offer',
+            });
+
+            // Show success state
+            submitBtn.label = 'Check Your Email!';
+            submitBtn.disable();
+            setTimeout(() => hideExitPopup(), 2000);
+          } catch (err) {
+            console.error('Exit intent email submit error:', err);
+          }
+        });
+      }
+    } catch (e) {}
+
+    // Load bestseller carousel
+    try {
+      const carousel = $w('#exitProductCarousel');
+      if (carousel) {
+        loadExitCarouselProducts(carousel);
+      }
     } catch (e) {}
   } catch (e) {
-    // Compare bar elements may not exist on all pages
+    // Exit intent popup is non-critical
   }
 }
 
-// Re-render the compare bar from session storage state.
-// Called from this page and also exported-style via global for category page use.
-function refreshCompareBar() {
+async function loadExitCarouselProducts(carousel) {
   try {
-    const compareBar = $w('#compareBar');
-    if (!compareBar) return;
+    const { getBestsellers } = await import('backend/productRecommendations.web');
+    const bestsellers = await getBestsellers(3);
+    if (!bestsellers || bestsellers.length === 0) return;
 
-    const items = getCompareList();
-
-    if (items.length === 0) {
-      compareBar.hide('slide', { duration: 200, direction: 'bottom' });
-      return;
-    }
-
-    const repeater = $w('#compareRepeater');
-    if (repeater) {
-      repeater.data = items.map(p => ({ ...p, _id: p._id }));
-      repeater.onItemReady(($item, itemData) => {
-        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
-        try { $item('#compareName').text = itemData.name; } catch (e) {}
-        try { $item('#comparePrice').text = itemData.price; } catch (e) {}
-        try {
-          $item('#compareRemove').onClick(() => {
-            removeFromCompare(itemData._id);
-            refreshCompareBar();
+    carousel.data = bestsellers;
+    carousel.onItemReady(($item, itemData) => {
+      try {
+        $item('#exitProductImage').src = itemData.mainMedia;
+        $item('#exitProductName').text = itemData.name;
+        $item('#exitProductPrice').text = itemData.formattedPrice;
+        $item('#exitProductImage').onClick(() => {
+          import('wix-location').then(({ to }) => {
+            to(`/product-page/${itemData.slug}`);
           });
-        } catch (e) {}
-      });
-    }
-
-    compareBar.show('slide', { duration: 200, direction: 'bottom' });
+        });
+      } catch (e) {}
+    });
   } catch (e) {}
 }
 
-// Comparison lightbox — side-by-side product details
-function openComparisonModal() {
-  try {
-    const items = getCompareList();
-    if (items.length < 2) return;
-
-    const modal = $w('#comparisonModal');
-    if (!modal) return;
-
-    const grid = $w('#comparisonGrid');
-    if (grid) {
-      grid.data = items.map(p => ({ ...p, _id: p._id }));
-      grid.onItemReady(($item, itemData) => {
-        try { $item('#compImage').src = itemData.mainMedia; } catch (e) {}
-        try { $item('#compName').text = itemData.name; } catch (e) {}
-        try { $item('#compPrice').text = itemData.price; } catch (e) {}
-        try {
-          $item('#compAddToCart').onClick(async () => {
-            try {
-              const { default: wixStoresFrontend } = await import('wix-stores-frontend');
-              await wixStoresFrontend.cart.addProducts([{ productId: itemData._id, quantity: 1 }]);
-              $item('#compAddToCart').label = 'Added!';
-            } catch (err) {
-              console.error('Error adding comparison item to cart:', err);
-            }
-          });
-        } catch (e) {}
-        try {
-          $item('#compViewBtn').onClick(() => {
-            import('wix-location').then(({ to }) => {
-              to(`/product-page/${itemData.slug}`);
-            });
-          });
-        } catch (e) {}
-      });
-    }
-
-    // Close button
-    try {
-      $w('#comparisonClose').onClick(() => {
-        modal.hide('fade', { duration: 200 });
-      });
-    } catch (e) {}
-
-    modal.show('fade', { duration: 200 });
-  } catch (e) {}
-}
+// Session and local storage wrappers (Wix Velo API)
+const session = {
+  get(key) { try { return sessionStorage.getItem(key); } catch (e) { return null; } },
+  set(key, val) { try { sessionStorage.setItem(key, val); } catch (e) {} },
+};
+const local = {
+  get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+  set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
+};
 
 // ── SEO Schema Injection ────────────────────────────────────────────
 // Injects LocalBusiness JSON-LD on every page

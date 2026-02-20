@@ -41,7 +41,7 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
-      initSwatchRequest(),
+      initBackInStockNotification(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
