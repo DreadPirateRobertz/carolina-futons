@@ -1,10 +1,11 @@
 // Product Page.ve2z7.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
 // gallery enhancement, and SEO schema injection
-import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
+import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
+import wixWindowFrontend from 'wix-window-frontend';
 
 let currentProduct = null;
 let productVariants = [];
@@ -31,6 +32,11 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
+      initBundleSection(),
+      initStickyCartBar(),
+      initStockUrgency(),
+      initDeliveryEstimate(),
+      initWishlistButton(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
@@ -380,6 +386,271 @@ async function injectProductSchema() {
     const schema = await getProductSchema(currentProduct);
     if (schema) {
       $w('#productSchemaHtml').postMessage(schema);
+    }
+  } catch (e) {}
+}
+
+// ── Frequently Bought Together Bundle ─────────────────────────────
+// Shows complementary product with 5% bundle discount
+
+let bundleProduct = null;
+
+async function initBundleSection() {
+  try {
+    if (!currentProduct) return;
+
+    const bundle = await getBundleSuggestion(currentProduct._id);
+    if (!bundle || !bundle.product) {
+      try { $w('#bundleSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    bundleProduct = bundle.product;
+
+    try {
+      $w('#bundleSection').expand();
+      $w('#bundleImage').src = bundle.product.mainMedia;
+      $w('#bundleImage').alt = bundle.product.name + ' — bundle suggestion';
+      $w('#bundleName').text = bundle.product.name;
+      $w('#bundlePrice').text = formatCurrency(bundle.bundlePrice);
+      $w('#bundleSavings').text = `Save ${formatCurrency(bundle.savings)}`;
+    } catch (e) {}
+
+    try {
+      $w('#addBundleBtn').onClick(async () => {
+        $w('#addBundleBtn').disable();
+        $w('#addBundleBtn').label = 'Adding...';
+        await wixStoresFrontend.cart.addProducts([
+          { productId: currentProduct._id, quantity: 1 },
+          { productId: bundle.product._id, quantity: 1 },
+        ]);
+        $w('#addBundleBtn').label = 'Bundle Added!';
+      });
+    } catch (e) {}
+
+    // Click bundle image/name to navigate to that product
+    const navigateToBundle = () => {
+      import('wix-location').then(({ to }) => {
+        to(`/product-page/${bundle.product.slug}`);
+      });
+    };
+    try { $w('#bundleImage').onClick(navigateToBundle); } catch (e) {}
+    try { $w('#bundleName').onClick(navigateToBundle); } catch (e) {}
+  } catch (err) {
+    console.error('Error loading bundle section:', err);
+  }
+}
+
+// ── Sticky Add-to-Cart Bar ───────────────────────────────────────
+// Fixed bottom bar appears when main Add to Cart scrolls out of view
+
+function initStickyCartBar() {
+  try {
+    const stickyBar = $w('#stickyCartBar');
+    if (!stickyBar) return;
+
+    // Initially hidden
+    stickyBar.hide();
+
+    // Set product info in sticky bar
+    if (currentProduct) {
+      try { $w('#stickyProductName').text = currentProduct.name; } catch (e) {}
+      try { $w('#stickyPrice').text = currentProduct.formattedPrice; } catch (e) {}
+    }
+
+    // Sticky Add to Cart mirrors the main button
+    try {
+      $w('#stickyAddBtn').onClick(async () => {
+        $w('#stickyAddBtn').disable();
+        $w('#stickyAddBtn').label = 'Adding...';
+        await wixStoresFrontend.cart.addProducts([
+          { productId: currentProduct._id, quantity: 1 },
+        ]);
+        $w('#stickyAddBtn').label = 'Added!';
+        setTimeout(() => {
+          $w('#stickyAddBtn').label = 'Add to Cart';
+          $w('#stickyAddBtn').enable();
+        }, 2000);
+      });
+    } catch (e) {}
+
+    // Monitor scroll to show/hide sticky bar
+    let stickyVisible = false;
+    wixWindowFrontend.onScroll(async (event) => {
+      try {
+        const btnBounds = await $w('#addToCartButton').getBoundingRect();
+        const shouldShow = btnBounds.top < 0;
+
+        if (shouldShow && !stickyVisible) {
+          stickyVisible = true;
+          stickyBar.show('slide', { direction: 'bottom', duration: 250 });
+        } else if (!shouldShow && stickyVisible) {
+          stickyVisible = false;
+          stickyBar.hide('slide', { direction: 'bottom', duration: 250 });
+        }
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+// ── Stock Urgency Indicators ─────────────────────────────────────
+// "Only X left" warning and popularity badge
+
+async function initStockUrgency() {
+  try {
+    if (!currentProduct) return;
+
+    // Stock urgency: show when quantity < 5
+    try {
+      const stockUrgency = $w('#stockUrgency');
+      if (stockUrgency) {
+        if (currentProduct.quantityInStock != null && currentProduct.quantityInStock < 5 && currentProduct.quantityInStock > 0) {
+          stockUrgency.text = `Only ${currentProduct.quantityInStock} left in stock`;
+          stockUrgency.show();
+        } else {
+          stockUrgency.hide();
+        }
+      }
+    } catch (e) {}
+
+    // Popularity badge: check ProductAnalytics CMS for recent sales data
+    try {
+      const badge = $w('#popularityBadge');
+      if (badge) {
+        const analytics = await import('wix-data').then(mod =>
+          mod.default.query('ProductAnalytics')
+            .eq('productId', currentProduct._id)
+            .find()
+        );
+
+        if (analytics.items.length > 0 && analytics.items[0].weekSales > 0) {
+          badge.text = `Popular — ${analytics.items[0].weekSales} sold this week`;
+          badge.show();
+        } else {
+          badge.hide();
+        }
+      }
+    } catch (e) {
+      // ProductAnalytics collection may not exist — skip gracefully
+      try { $w('#popularityBadge').hide(); } catch (e2) {}
+    }
+  } catch (e) {}
+}
+
+// ── Delivery Estimate ────────────────────────────────────────────
+// Shows estimated delivery range (5-10 business days from today)
+
+function initDeliveryEstimate() {
+  try {
+    const el = $w('#deliveryEstimate');
+    if (!el || !currentProduct) return;
+
+    const today = new Date();
+    const minDate = addBusinessDays(today, 5);
+    const maxDate = addBusinessDays(today, 10);
+
+    const opts = { month: 'short', day: 'numeric', year: 'numeric' };
+    const minStr = minDate.toLocaleDateString('en-US', opts);
+    const maxStr = maxDate.toLocaleDateString('en-US', opts);
+
+    el.text = `Estimated delivery: ${minStr} – ${maxStr}`;
+    el.show();
+
+    // Local delivery for Asheville-area ZIPs (287-289 prefix)
+    try {
+      import('wix-site-frontend').then(site => {
+        const zip = site.currentPage?.visitorZip || '';
+        if (/^28[789]/.test(zip)) {
+          el.text = `Local delivery available — call for scheduling`;
+        }
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function addBusinessDays(startDate, days) {
+  const result = new Date(startDate);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const dow = result.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return result;
+}
+
+// ── Wishlist / Save Button ───────────────────────────────────────
+// Heart icon to save product to Wishlist CMS collection
+
+async function initWishlistButton() {
+  try {
+    const btn = $w('#wishlistBtn');
+    if (!btn || !currentProduct) return;
+
+    const { currentMember } = await import('wix-members-frontend');
+    const member = await currentMember.getMember();
+
+    // Check if already wishlisted
+    if (member) {
+      try {
+        const wixData = (await import('wix-data')).default;
+        const existing = await wixData.query('Wishlist')
+          .eq('memberId', member._id)
+          .eq('productId', currentProduct._id)
+          .find();
+
+        if (existing.items.length > 0) {
+          setWishlistActive(true);
+        }
+      } catch (e) {}
+    }
+
+    btn.onClick(async () => {
+      // Check login first
+      const { currentMember: cm, authentication } = await import('wix-members-frontend');
+      const m = await cm.getMember();
+
+      if (!m) {
+        authentication.promptLogin();
+        return;
+      }
+
+      const wixData = (await import('wix-data')).default;
+      const existing = await wixData.query('Wishlist')
+        .eq('memberId', m._id)
+        .eq('productId', currentProduct._id)
+        .find();
+
+      if (existing.items.length > 0) {
+        // Remove from wishlist
+        await wixData.remove('Wishlist', existing.items[0]._id);
+        setWishlistActive(false);
+      } else {
+        // Add to wishlist
+        await wixData.insert('Wishlist', {
+          memberId: m._id,
+          productId: currentProduct._id,
+          productName: currentProduct.name,
+          productImage: currentProduct.mainMedia,
+          addedDate: new Date(),
+        });
+        setWishlistActive(true);
+      }
+    });
+  } catch (e) {
+    // Members API unavailable — hide wishlist button
+    try { $w('#wishlistBtn').hide(); } catch (e2) {}
+  }
+}
+
+function setWishlistActive(active) {
+  try {
+    const icon = $w('#wishlistIcon');
+    if (icon) {
+      // Toggle filled/unfilled heart via CSS class or src swap
+      icon.src = active
+        ? 'https://static.wixstatic.com/media/heart-filled.png'
+        : 'https://static.wixstatic.com/media/heart-outline.png';
     }
   } catch (e) {}
 }
