@@ -1,9 +1,15 @@
 // Product Page.ve2z7.js - Individual Product Display
 // Handles variant selection with independent pricing, cross-sell,
-// gallery enhancement, and SEO schema injection
-import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
+// gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
+import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
-import { submitSwatchRequest } from 'backend/emailService.web';
+import {
+  trackProductView,
+  getRecentlyViewed,
+  getProductBadge,
+  initImageLightbox,
+  initImageZoom,
+} from 'public/galleryHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 import wixWindowFrontend from 'wix-window-frontend';
@@ -39,11 +45,7 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
-      initBundleSection(),
-      initStickyCartBar(),
-      initStockUrgency(),
-      initDeliveryEstimate(),
-      initWishlistButton(),
+      initProductBadge(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
