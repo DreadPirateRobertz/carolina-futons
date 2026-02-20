@@ -2,6 +2,7 @@
 // Full-screen product video and image gallery with engagement features
 import wixData from 'wix-data';
 import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
+import { typography } from 'public/designTokens.js';
 
 $w.onReady(function () {
   initVideoGallery();
@@ -105,7 +106,7 @@ function initVideoFilters() {
           filterVideosByCategory(category);
           // Highlight active filter
           Object.keys(filterBtns).forEach(id => {
-            try { $w(id).style.fontWeight = id === btnId ? '700' : '400'; } catch (e) {}
+            try { $w(id).style.fontWeight = id === btnId ? String(typography.h2.weight) : String(typography.body.weight); } catch (e) {}
           });
         });
       } catch (e) {}
