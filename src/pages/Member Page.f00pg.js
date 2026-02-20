@@ -1,6 +1,6 @@
 // Member Page.f00pg.js - Customer Account Page
 // Account dashboard, order history, wishlist, and account settings
-// Enhanced for Wix Velo integration readiness
+import { trackEvent } from 'public/engagementTracker';
 
 // Status badge color mapping
 const STATUS_COLORS = {
@@ -15,8 +15,8 @@ let wishlistData = [];
 let wishlistSortOrder = 'date-desc';
 
 $w.onReady(async function () {
-  console.log('[MemberPage] onReady - initializing');
   await initMemberPage();
+  trackEvent('page_view', { page: 'member_account' });
 });
 
 // ── Main Initialization ─────────────────────────────────────────────
@@ -24,7 +24,6 @@ $w.onReady(async function () {
 async function initMemberPage() {
   try {
     currentMember = await loadCurrentMember();
-    console.log('[MemberPage] Member loaded:', currentMember ? 'yes' : 'no');
 
     await Promise.all([
       initDashboard(),
@@ -35,7 +34,6 @@ async function initMemberPage() {
       initCommunicationPrefs(),
     ]);
 
-    console.log('[MemberPage] All sections initialized');
   } catch (err) {
     console.error('[MemberPage] Initialization error:', err);
     showErrorFallback('We had trouble loading your account. Please refresh the page.');
@@ -48,7 +46,6 @@ async function loadCurrentMember() {
   try {
     const { currentMember: memberApi } = await import('wix-members-frontend');
     const member = await memberApi.getMember();
-    console.log('[MemberPage] Member API response received');
     return member;
   } catch (err) {
     console.error('[MemberPage] Error loading member:', err);
@@ -209,7 +206,6 @@ function initOrderHistory() {
       } catch (e) {}
     });
 
-    console.log('[MemberPage] Order history initialized');
   } catch (e) {
     console.error('[MemberPage] Error initializing order history:', e);
   }
@@ -348,7 +344,6 @@ async function initWishlist() {
       });
     });
 
-    console.log('[MemberPage] Wishlist initialized');
   } catch (e) {
     console.error('[MemberPage] Error initializing wishlist:', e);
   }
@@ -365,7 +360,6 @@ async function loadWishlistData() {
       .find();
 
     wishlistData = result.items || [];
-    console.log('[MemberPage] Wishlist loaded:', wishlistData.length, 'items');
   } catch (e) {
     console.error('[MemberPage] Error loading wishlist data:', e);
   }
@@ -408,7 +402,6 @@ function initAccountSettings() {
       });
     });
 
-    console.log('[MemberPage] Account settings initialized');
   } catch (e) {
     console.error('[MemberPage] Error initializing account settings:', e);
   }
@@ -453,7 +446,6 @@ async function initAddressBook() {
       }
     } catch (e) {}
 
-    console.log('[MemberPage] Address book initialized');
   } catch (e) {
     console.error('[MemberPage] Error initializing address book:', e);
   }
@@ -515,7 +507,6 @@ async function initCommunicationPrefs() {
       console.error('[MemberPage] Error loading comm prefs:', e);
     }
 
-    console.log('[MemberPage] Communication prefs initialized');
   } catch (e) {
     console.error('[MemberPage] Error initializing comm prefs:', e);
   }
