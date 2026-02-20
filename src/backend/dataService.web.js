@@ -292,11 +292,16 @@ export const submitReview = webMethod(
   async (requestId, rating, reviewText) => {
     try {
       if (!requestId) throw new Error('requestId is required.');
+
+      // Sanitize requestId — only allow valid Wix ID characters
+      const cleanId = sanitize(requestId, 50).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!cleanId) throw new Error('Invalid requestId format.');
+
       if (typeof rating !== 'number' || rating < 1 || rating > 5) {
         throw new Error('Rating must be between 1 and 5.');
       }
 
-      const record = await wixData.get('ReviewRequests', requestId);
+      const record = await wixData.get('ReviewRequests', cleanId);
       if (!record) throw new Error('Review request not found.');
 
       record.status = 'completed';

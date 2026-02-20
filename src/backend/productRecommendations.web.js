@@ -2,6 +2,7 @@
 // Handles cross-sell, related products, and "Complete Your Futon" bundles
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { sanitize, validateSlug } from 'backend/utils/sanitize';
 
 // Get related products for cross-selling on product pages
 // Returns products from complementary categories
@@ -9,6 +10,9 @@ export const getRelatedProducts = webMethod(
   Permissions.Anyone,
   async (productId, categorySlug, limit = 4) => {
     try {
+      const cleanProductId = sanitize(productId, 50);
+      const cleanSlug = validateSlug(categorySlug) || sanitize(categorySlug, 100);
+
       const crossSellCategories = {
         'futon-frames': ['mattresses', 'casegoods-accessories'],
         'mattresses': ['futon-frames'],
@@ -19,12 +23,12 @@ export const getRelatedProducts = webMethod(
         'unfinished-wood': ['mattresses', 'casegoods-accessories'],
       };
 
-      const relatedCategories = crossSellCategories[categorySlug] || [];
+      const relatedCategories = crossSellCategories[cleanSlug] || [];
       if (relatedCategories.length === 0) return [];
 
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', relatedCategories)
-        .ne('_id', productId)
+        .ne('_id', cleanProductId)
         .limit(limit)
         .find();
 
@@ -157,7 +161,7 @@ export const getSameCollection = webMethod(
 
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', collections)
-        .ne('_id', productId)
+        .ne('_id', sanitize(productId, 50))
         .limit(limit)
         .find();
 
@@ -227,7 +231,8 @@ export const getBundleSuggestion = webMethod(
   Permissions.Anyone,
   async (productId) => {
     try {
-      const product = await wixData.get('Stores/Products', productId);
+      const cleanProductId = sanitize(productId, 50);
+      const product = await wixData.get('Stores/Products', cleanProductId);
       if (!product || !product.collections) return null;
 
       const colls = Array.isArray(product.collections)
@@ -264,7 +269,7 @@ export const getBundleSuggestion = webMethod(
 
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', targetCollections)
-        .ne('_id', productId)
+        .ne('_id', cleanProductId)
         .ascending('price')
         .limit(1)
         .find();

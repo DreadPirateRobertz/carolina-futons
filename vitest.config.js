@@ -40,6 +40,7 @@ export default defineConfig({
       'backend/fulfillment.web': path.resolve(__dirname, 'src/backend/fulfillment.web.js'),
       'backend/googleMerchantFeed.web': path.resolve(__dirname, 'src/backend/googleMerchantFeed.web.js'),
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
+      'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
       // Public modules
       'public/galleryHelpers.js': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
       'public/galleryHelpers': path.resolve(__dirname, 'src/public/galleryHelpers.js'),

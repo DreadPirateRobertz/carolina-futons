@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
+import { __setMember, __setRoles } from './__mocks__/wix-members-backend.js';
 import { sampleOrder } from './fixtures/products.js';
 import {
   getPendingOrders,
@@ -11,7 +12,13 @@ import {
   getFulfillmentHistory,
 } from '../src/backend/fulfillment.web.js';
 
+function loginAsAdmin() {
+  __setMember({ _id: 'admin-001' });
+  __setRoles([{ _id: 'admin', title: 'Admin' }]);
+}
+
 beforeEach(() => {
+  loginAsAdmin();
   __seed('Stores/Orders', [sampleOrder]);
   __seed('Fulfillments', []);
 

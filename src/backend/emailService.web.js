@@ -23,6 +23,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
+import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 /**
  * Send a contact form submission to the store owner via triggered email.
@@ -44,6 +45,16 @@ export const sendEmail = webMethod(
   Permissions.Anyone,
   async ({ name, email, phone, subject, message }) => {
     try {
+      const cleanName = sanitize(name, 200);
+      const cleanEmail = sanitize(email, 254);
+      const cleanPhone = sanitize(phone, 20);
+      const cleanSubject = sanitize(subject, 300);
+      const cleanMessage = sanitize(message, 2000);
+
+      if (!validateEmail(cleanEmail)) {
+        throw new Error('Invalid email address.');
+      }
+
       // Retrieve the site owner's Wix contact ID from Secrets Manager.
       // This is the recipient of all contact form notifications.
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
@@ -52,11 +63,11 @@ export const sendEmail = webMethod(
         siteOwnerContactId,
         {
           variables: {
-            customerName: name,
-            customerEmail: email,
-            customerPhone: phone,
-            subject: subject,
-            message: message,
+            customerName: cleanName,
+            customerEmail: cleanEmail,
+            customerPhone: cleanPhone,
+            subject: cleanSubject,
+            message: cleanMessage,
             submittedAt: new Date().toLocaleString('en-US', {
               timeZone: 'America/New_York',
               dateStyle: 'full',
@@ -68,11 +79,11 @@ export const sendEmail = webMethod(
 
       // Persist the submission to CMS for record-keeping and dashboard access
       await wixData.insert('ContactSubmissions', {
-        name,
-        email,
-        phone,
-        subject,
-        message,
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        subject: cleanSubject,
+        message: cleanMessage,
         submittedAt: new Date(),
         status: 'new',
       });
@@ -105,14 +116,27 @@ export const submitSwatchRequest = webMethod(
   Permissions.Anyone,
   async ({ name, email, address, productId, productName, swatchNames }) => {
     try {
+      const cleanName = sanitize(name, 200);
+      const cleanEmail = sanitize(email, 254);
+      const cleanAddress = sanitize(address, 500);
+      const cleanProductId = sanitize(productId, 50);
+      const cleanProductName = sanitize(productName, 200);
+      const cleanSwatches = Array.isArray(swatchNames)
+        ? swatchNames.map(s => sanitize(s, 100))
+        : [];
+
+      if (!validateEmail(cleanEmail)) {
+        throw new Error('Invalid email address.');
+      }
+
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
 
       // Persist to CMS for record-keeping
       await wixData.insert('ContactSubmissions', {
-        name,
-        email,
-        subject: `Swatch Request: ${productName}`,
-        message: `Swatches: ${swatchNames.join(', ')}\nMailing Address: ${address}\nProduct: ${productName} (${productId})`,
+        name: cleanName,
+        email: cleanEmail,
+        subject: `Swatch Request: ${cleanProductName}`,
+        message: `Swatches: ${cleanSwatches.join(', ')}\nMailing Address: ${cleanAddress}\nProduct: ${cleanProductName} (${cleanProductId})`,
         submittedAt: new Date(),
         status: 'swatch_request',
       });
@@ -123,11 +147,11 @@ export const submitSwatchRequest = webMethod(
         siteOwnerContactId,
         {
           variables: {
-            customerName: name,
-            customerEmail: email,
+            customerName: cleanName,
+            customerEmail: cleanEmail,
             customerPhone: '',
-            subject: `Fabric Swatch Request — ${productName}`,
-            message: `Swatches requested: ${swatchNames.join(', ')}\n\nShip to:\n${name}\n${address}`,
+            subject: `Fabric Swatch Request — ${cleanProductName}`,
+            message: `Swatches requested: ${cleanSwatches.join(', ')}\n\nShip to:\n${cleanName}\n${cleanAddress}`,
             submittedAt: new Date().toLocaleString('en-US', {
               timeZone: 'America/New_York',
               dateStyle: 'full',

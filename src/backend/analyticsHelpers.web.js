@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { sanitize } from 'backend/utils/sanitize';
 
 /**
  * Track a product page view for analytics and "popular products" features.
@@ -32,9 +33,13 @@ export const trackProductView = webMethod(
   Permissions.Anyone,
   async (productId, productName, category) => {
     try {
+      const cleanId = sanitize(productId, 50);
+      const cleanName = sanitize(productName, 200);
+      const cleanCategory = sanitize(category, 100);
+
       // Check if we already have an analytics record for this product
       const existing = await wixData.query('ProductAnalytics')
-        .eq('productId', productId)
+        .eq('productId', cleanId)
         .find();
 
       if (existing.items.length > 0) {
@@ -46,9 +51,9 @@ export const trackProductView = webMethod(
       } else {
         // Create new analytics record for first-time viewed product
         await wixData.insert('ProductAnalytics', {
-          productId,
-          productName,
-          category,
+          productId: cleanId,
+          productName: cleanName,
+          category: cleanCategory,
           viewCount: 1,
           lastViewed: new Date(),
           addToCartCount: 0,
@@ -77,7 +82,7 @@ export const trackAddToCart = webMethod(
   async (productId) => {
     try {
       const existing = await wixData.query('ProductAnalytics')
-        .eq('productId', productId)
+        .eq('productId', sanitize(productId, 50))
         .find();
 
       if (existing.items.length > 0) {

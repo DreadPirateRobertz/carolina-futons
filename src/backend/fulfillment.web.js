@@ -3,7 +3,25 @@
 // Integrates with UPS shipping and Wix Stores orders
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
+
+/**
+ * Check if the current member has the Admin role.
+ * Throws if not authenticated or not an admin.
+ */
+async function requireAdmin() {
+  const member = await currentMember.getMember();
+  if (!member || !member._id) {
+    throw new Error('Authentication required.');
+  }
+  const roles = await currentMember.getRoles();
+  const isAdmin = roles.some(r => r.title === 'Admin' || r._id === 'admin');
+  if (!isAdmin) {
+    throw new Error('Admin access required.');
+  }
+  return member._id;
+}
 
 // ── Order Processing ────────────────────────────────────────────────
 
@@ -12,6 +30,8 @@ export const getPendingOrders = webMethod(
   Permissions.SiteMember,
   async (limit = 50) => {
     try {
+      await requireAdmin();
+
       const orders = await wixData.query('Stores/Orders')
         .eq('paymentStatus', 'PAID')
         .ne('fulfillmentStatus', 'FULFILLED')
@@ -52,6 +72,8 @@ export const fulfillOrder = webMethod(
   Permissions.SiteMember,
   async (orderId, packageDetails) => {
     try {
+      await requireAdmin();
+
       // Get the order
       const order = await wixData.get('Stores/Orders', orderId);
       if (!order) throw new Error('Order not found');
@@ -115,11 +137,12 @@ export const fulfillOrder = webMethod(
 
 // ── Tracking Updates ────────────────────────────────────────────────
 
-// Get tracking status for a fulfillment record
+// Get tracking status for a fulfillment record (admin only — writes to CMS)
 export const getTrackingUpdate = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (trackingNumber) => {
     try {
+      await requireAdmin();
       const tracking = await trackShipment(trackingNumber);
       if (!tracking.success) {
         return tracking;
@@ -151,6 +174,8 @@ export const updateAllTracking = webMethod(
   Permissions.SiteMember,
   async () => {
     try {
+      await requireAdmin();
+
       const active = await wixData.query('Fulfillments')
         .ne('status', 'DELIVERED')
         .ne('status', 'RETURNED')
@@ -186,6 +211,8 @@ export const getFulfillmentHistory = webMethod(
   Permissions.SiteMember,
   async (limit = 100) => {
     try {
+      await requireAdmin();
+
       const records = await wixData.query('Fulfillments')
         .descending('createdDate')
         .limit(limit)
