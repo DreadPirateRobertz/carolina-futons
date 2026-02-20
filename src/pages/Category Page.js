@@ -12,6 +12,7 @@ import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
+import { enableSwipe } from 'public/touchHelpers';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -75,6 +76,7 @@ $w.onReady(async function () {
   initQuickViewHandlers();
   injectCategoryMeta(currentPath);
   await injectCategorySchema();
+  initCategorySwipe(currentPath);
   initBackToTop($w);
   trackEvent('page_view', { page: 'category', category: currentPath });
 });
@@ -660,6 +662,42 @@ function initRecentlyViewed() {
   } catch (e) {
     try { $w('#recentlyViewedSection').hide(); } catch (e2) {}
   }
+}
+
+// ── Category Swipe Navigation ────────────────────────────────────────
+// Swipe left/right on the product grid to navigate between categories
+
+const CATEGORY_ORDER = [
+  'futon-frames', 'mattresses', 'murphy-cabinet-beds',
+  'platform-beds', 'casegoods-accessories', 'wall-huggers',
+  'unfinished-wood', 'sales',
+];
+
+function initCategorySwipe(currentPath) {
+  try {
+    const gridEl = typeof document !== 'undefined'
+      ? document.querySelector('[id*="productGridRepeater"]')
+      : null;
+    if (!gridEl) return;
+
+    const currentIndex = CATEGORY_ORDER.indexOf(currentPath);
+    if (currentIndex === -1) return;
+
+    enableSwipe(gridEl, (direction) => {
+      let nextIndex;
+      if (direction === 'left') {
+        nextIndex = currentIndex + 1;
+      } else if (direction === 'right') {
+        nextIndex = currentIndex - 1;
+      } else {
+        return;
+      }
+      if (nextIndex < 0 || nextIndex >= CATEGORY_ORDER.length) return;
+      const nextCategory = CATEGORY_ORDER[nextIndex];
+      trackEvent('category_swipe', { from: currentPath, to: nextCategory, direction });
+      wixLocationFrontend.to(`/${nextCategory}`);
+    }, { threshold: 60 });
+  } catch (e) {}
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
