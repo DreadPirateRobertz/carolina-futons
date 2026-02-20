@@ -157,6 +157,67 @@ describe('generateFeed', () => {
     const xml = await generateFeed();
     expect(xml).toContain('<rss');
   });
+
+  it('escapes XML special characters in product name', async () => {
+    __seed('Stores/Products', [{
+      _id: 'prod-xml',
+      name: 'Tom & Jerry\'s <Special> "Futon"',
+      slug: 'tom-jerry-futon',
+      description: 'Sizes: 6" x 8\' & more',
+      price: 299,
+      inStock: true,
+      visible: true,
+      collections: ['futon-frames'],
+      mainMedia: 'https://example.com/tom.jpg',
+    }]);
+
+    const xml = await generateFeed();
+    expect(xml).toContain('&amp;');
+    expect(xml).toContain('&lt;');
+    expect(xml).toContain('&gt;');
+    expect(xml).toContain('&quot;');
+    expect(xml).toContain('&apos;');
+    // Raw unescaped & should not appear (only &amp; &lt; &gt; &quot; &apos;)
+    expect(xml).not.toContain('<g:title>Tom & ');
+  });
+
+  it('escapes ampersands in descriptions', async () => {
+    __seed('Stores/Products', [{
+      _id: 'prod-amp',
+      name: 'Test Frame',
+      slug: 'test-frame',
+      description: 'Solid wood & steel construction with <b>bolts</b>',
+      price: 499,
+      inStock: true,
+      visible: true,
+      collections: ['futon-frames'],
+      mainMedia: 'https://example.com/test.jpg',
+    }]);
+
+    const xml = await generateFeed();
+    // Description should have HTML stripped AND XML escaped
+    expect(xml).not.toContain('<b>bolts</b>');
+    expect(xml).toContain('wood &amp; steel');
+  });
+
+  it('handles product with empty description', async () => {
+    __seed('Stores/Products', [{
+      _id: 'prod-empty',
+      name: 'No Description Frame',
+      slug: 'no-desc',
+      description: '',
+      price: 199,
+      inStock: true,
+      visible: true,
+      collections: ['futon-frames'],
+      mainMedia: 'https://example.com/nodesc.jpg',
+    }]);
+
+    const xml = await generateFeed();
+    // Should fall back to product name for description
+    expect(xml).toContain('No Description Frame');
+    expect(xml).toContain('<g:description>');
+  });
 });
 
 // ── getFeedData ─────────────────────────────────────────────────────

@@ -110,6 +110,21 @@ describe('getProductSwatches', () => {
     const results = await getProductSwatches('prod-1', null, 1);
     expect(results.length).toBeLessThanOrEqual(1);
   });
+
+  it('returns swatches sorted by sortOrder ascending', async () => {
+    // Seed with deliberately unsorted data
+    __seed('FabricSwatches', [
+      { _id: 'sw-c', swatchId: 'third', swatchName: 'Third', colorFamily: 'Reds', colorHex: '#FF0000', availableForProducts: 'prod-sort', sortOrder: 3 },
+      { _id: 'sw-a', swatchId: 'first', swatchName: 'First', colorFamily: 'Blues', colorHex: '#0000FF', availableForProducts: 'prod-sort', sortOrder: 1 },
+      { _id: 'sw-b', swatchId: 'second', swatchName: 'Second', colorFamily: 'Greens', colorHex: '#00FF00', availableForProducts: 'prod-sort', sortOrder: 2 },
+    ]);
+
+    const results = await getProductSwatches('prod-sort');
+    expect(results).toHaveLength(3);
+    expect(results[0].swatchName).toBe('First');
+    expect(results[1].swatchName).toBe('Second');
+    expect(results[2].swatchName).toBe('Third');
+  });
 });
 
 // ── getAllSwatchFamilies ─────────────────────────────────────────────
@@ -190,5 +205,18 @@ describe('getSwatchPreviewColors', () => {
   it('returns empty array for unknown product', async () => {
     const colors = await getSwatchPreviewColors('nonexistent');
     expect(Array.isArray(colors)).toBe(true);
+  });
+
+  it('returns preview colors in sortOrder ascending', async () => {
+    __seed('FabricSwatches', [
+      { _id: 'sw-z', swatchName: 'Zulu', colorHex: '#333', availableForProducts: 'prod-prev', sortOrder: 3 },
+      { _id: 'sw-a', swatchName: 'Alpha', colorHex: '#111', availableForProducts: 'prod-prev', sortOrder: 1 },
+      { _id: 'sw-m', swatchName: 'Mike', colorHex: '#222', availableForProducts: 'prod-prev', sortOrder: 2 },
+    ]);
+
+    const colors = await getSwatchPreviewColors('prod-prev');
+    expect(colors[0].swatchName).toBe('Alpha');
+    expect(colors[1].swatchName).toBe('Mike');
+    expect(colors[2].swatchName).toBe('Zulu');
   });
 });

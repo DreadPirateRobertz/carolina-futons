@@ -101,6 +101,59 @@ describe('submitContactForm', () => {
     expect(inserted.item.productName).toBe('Kodiak Futon Frame');
   });
 
+  it('strips img tag XSS vectors from name', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => { inserted = { collection, item }; });
+
+    await submitContactForm({
+      email: 'user@test.com',
+      name: '<img src=x onerror=alert(1)>John',
+    });
+    expect(inserted.item.name).not.toContain('<img');
+    expect(inserted.item.name).not.toContain('onerror');
+    expect(inserted.item.name).toBe('John');
+  });
+
+  it('strips nested/malformed HTML tags from name', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => { inserted = { collection, item }; });
+
+    await submitContactForm({
+      email: 'user@test.com',
+      name: '<div><script>alert("xss")</script></div>Safe',
+    });
+    expect(inserted.item.name).not.toContain('<div');
+    expect(inserted.item.name).not.toContain('<script');
+    expect(inserted.item.name).toContain('Safe');
+  });
+
+  it('strips event handler XSS from notes field', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => { inserted = { collection, item }; });
+
+    await submitContactForm({
+      email: 'user@test.com',
+      notes: 'Hello <iframe src="javascript:alert(1)">click</iframe> world',
+    });
+    expect(inserted.item.notes).not.toContain('<iframe');
+    expect(inserted.item.notes).not.toContain('javascript:');
+    expect(inserted.item.notes).toContain('Hello');
+    expect(inserted.item.notes).toContain('world');
+  });
+
+  it('strips SVG-based XSS vectors', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => { inserted = { collection, item }; });
+
+    await submitContactForm({
+      email: 'user@test.com',
+      name: '<svg onload=alert(1)>Bob</svg>',
+    });
+    expect(inserted.item.name).not.toContain('<svg');
+    expect(inserted.item.name).not.toContain('onload');
+    expect(inserted.item.name).toContain('Bob');
+  });
+
   it('defaults source to "unknown" when not provided', async () => {
     let inserted = null;
     __onInsert((collection, item) => { inserted = { collection, item }; });
