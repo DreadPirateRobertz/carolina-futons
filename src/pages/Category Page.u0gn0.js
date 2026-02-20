@@ -6,8 +6,7 @@ import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 
 import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web';
-import { getCategoryHeroImage, getProductFallbackImage } from 'public/placeholderImages';
-
+import { addToCompare, getCompareList, removeFromCompare } from 'public/galleryHelpers';
 
 let currentSort = 'name-asc';
 let currentFilters = {};

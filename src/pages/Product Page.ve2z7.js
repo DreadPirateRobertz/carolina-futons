@@ -5,13 +5,6 @@
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
 import { getProductSwatches, getAllSwatchFamilies, getSwatchCount } from 'backend/swatchService.web';
 import { getProductSchema, generateAltText, getBreadcrumbSchema } from 'backend/seoHelpers.web';
-import {
-  trackProductView,
-  getRecentlyViewed,
-  getProductBadge,
-  initImageLightbox,
-  initImageZoom,
-} from 'public/galleryHelpers.js';
 import { submitSwatchRequest } from 'backend/emailService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
@@ -48,13 +41,6 @@ async function initProductPage() {
       initImageGallery(),
       initBreadcrumbs(),
       initAddToCartEnhancements(),
-      initProductBadge(),
-      initBundleSection(),
-      initStickyCartBar(),
-      initStockUrgency(),
-      initDeliveryEstimate(),
-      initWishlistButton(),
-      initBackInStockNotification(),
       initSwatchRequest(),
     ]);
   } catch (err) {

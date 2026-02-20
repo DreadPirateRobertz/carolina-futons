@@ -1,9 +1,8 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
-// side cart auto-open on add-to-cart, exit-intent popup, product comparison bar, and promotional lightbox
+// and product comparison bar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getCompareList, removeFromCompare } from 'public/galleryHelpers';
-import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
@@ -13,8 +12,6 @@ $w.onReady(async function () {
   initNavigation();
   initAnnouncementBar();
   initSearch();
-  initSideCartAutoOpen();
-  initExitIntentPopup();
   initCompareBar();
   await injectBusinessSchema();
 
@@ -135,199 +132,6 @@ function initSearch() {
     // Search may not be on all pages
   }
 }
-
-// ── Side Cart Auto-Open ─────────────────────────────────────────────
-// Automatically opens the side cart when a new item is added to cart
-
-function initSideCartAutoOpen() {
-  // Capture initial cart count so we can detect additions
-  wixStoresFrontend.cart.getCurrentCart().then((cart) => {
-    _previousCartItemCount = cart
-      ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
-      : 0;
-  }).catch(() => {
-    _previousCartItemCount = 0;
-  });
-
-  wixStoresFrontend.onCartChanged(async () => {
-    try {
-      const cart = await wixStoresFrontend.cart.getCurrentCart();
-      const newCount = cart
-        ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
-        : 0;
-
-      // Only auto-open when item count increased (add, not remove)
-      if (_previousCartItemCount !== null && newCount > _previousCartItemCount) {
-        openSideCart(cart);
-      }
-      _previousCartItemCount = newCount;
-    } catch (e) {
-      // Non-critical — side cart just won't auto-open
-    }
-  });
-}
-
-function openSideCart(cart) {
-  try {
-    const panel = $w('#sideCartPanel');
-    if (panel) {
-      panel.show('slide', { direction: 'right', duration: 300 });
-    }
-  } catch (e) {}
-
-  // Highlight the just-added item
-  try {
-    const highlight = $w('#justAddedHighlight');
-    if (highlight && cart && cart.lineItems.length > 0) {
-      const lastItem = cart.lineItems[cart.lineItems.length - 1];
-      highlight.show('fade', { duration: 200 });
-      // Auto-hide highlight after 3 seconds
-      setTimeout(() => {
-        try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
-      }, 3000);
-    }
-  } catch (e) {}
-}
-
-// ── Exit-Intent Popup ──────────────────────────────────────────────
-// Detects mouse leaving viewport (desktop) or back-button intent (mobile)
-// Shows 10% discount offer for first-time visitors with email capture
-
-function initExitIntentPopup() {
-  try {
-    const modal = $w('#exitIntentModal');
-    const overlay = $w('#exitIntentOverlay');
-    if (!modal || !overlay) return;
-
-    // Check if user has already seen the popup (not a first-time visitor)
-    const hasSeenPopup = local.get('cf_has_seen_popup');
-    if (hasSeenPopup) return;
-
-    // Check if already dismissed this session
-    const dismissedThisSession = session.get('cf_exit_dismissed');
-    if (dismissedThisSession) return;
-
-    let popupShown = false;
-
-    // Desktop: detect mouse leaving viewport (mouseleave on document)
-    if (typeof document !== 'undefined') {
-      document.addEventListener('mouseleave', (e) => {
-        if (e.clientY <= 0 && !popupShown) {
-          showExitPopup();
-        }
-      });
-    }
-
-    // Mobile: detect back-button intent via popstate
-    if (typeof window !== 'undefined') {
-      // Push a state so we can intercept back button
-      window.history.pushState({ exitIntent: true }, '');
-      window.addEventListener('popstate', (e) => {
-        if (!popupShown) {
-          showExitPopup();
-          // Re-push state to keep them on page
-          window.history.pushState({ exitIntent: true }, '');
-        }
-      });
-    }
-
-    function showExitPopup() {
-      popupShown = true;
-      overlay.show('fade', { duration: 200 });
-      modal.show('fade', { duration: 300 });
-    }
-
-    function hideExitPopup() {
-      modal.hide('fade', { duration: 200 });
-      overlay.hide('fade', { duration: 200 });
-      session.set('cf_exit_dismissed', 'true');
-      local.set('cf_has_seen_popup', 'true');
-    }
-
-    // Overlay click dismisses
-    overlay.onClick(() => hideExitPopup());
-
-    // Dismiss link
-    try {
-      const dismissBtn = $w('#exitDismiss');
-      if (dismissBtn) {
-        dismissBtn.onClick(() => hideExitPopup());
-      }
-    } catch (e) {}
-
-    // Email submit
-    try {
-      const submitBtn = $w('#exitSubmit');
-      const emailInput = $w('#exitEmail');
-      if (submitBtn && emailInput) {
-        submitBtn.onClick(async () => {
-          const email = emailInput.value?.trim();
-          if (!email || !email.includes('@')) return;
-
-          try {
-            // Store email capture via backend
-            const { submitContactForm } = await import('backend/contactSubmissions.web');
-            await submitContactForm({
-              email,
-              source: 'exit_intent_popup',
-              status: 'exit_intent_signup',
-              notes: '10% discount offer',
-            });
-
-            // Show success state
-            submitBtn.label = 'Check Your Email!';
-            submitBtn.disable();
-            setTimeout(() => hideExitPopup(), 2000);
-          } catch (err) {
-            console.error('Exit intent email submit error:', err);
-          }
-        });
-      }
-    } catch (e) {}
-
-    // Load bestseller carousel
-    try {
-      const carousel = $w('#exitProductCarousel');
-      if (carousel) {
-        loadExitCarouselProducts(carousel);
-      }
-    } catch (e) {}
-  } catch (e) {
-    // Exit intent popup is non-critical
-  }
-}
-
-async function loadExitCarouselProducts(carousel) {
-  try {
-    const { getBestsellers } = await import('backend/productRecommendations.web');
-    const bestsellers = await getBestsellers(3);
-    if (!bestsellers || bestsellers.length === 0) return;
-
-    carousel.data = bestsellers;
-    carousel.onItemReady(($item, itemData) => {
-      try {
-        $item('#exitProductImage').src = itemData.mainMedia;
-        $item('#exitProductName').text = itemData.name;
-        $item('#exitProductPrice').text = itemData.formattedPrice;
-        $item('#exitProductImage').onClick(() => {
-          import('wix-location').then(({ to }) => {
-            to(`/product-page/${itemData.slug}`);
-          });
-        });
-      } catch (e) {}
-    });
-  } catch (e) {}
-}
-
-// Session and local storage wrappers (Wix Velo API)
-const session = {
-  get(key) { try { return sessionStorage.getItem(key); } catch (e) { return null; } },
-  set(key, val) { try { sessionStorage.setItem(key, val); } catch (e) {} },
-};
-const local = {
-  get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
-  set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} },
-};
 
 // ── Product Comparison Bar ──────────────────────────────────────────
 // Floating bottom bar showing products selected for comparison
