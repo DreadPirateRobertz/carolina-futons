@@ -1,8 +1,9 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
-// side cart auto-open on add-to-cart, exit-intent popup, and product comparison bar
+// side cart auto-open on add-to-cart, exit-intent popup, product comparison bar, and promotional lightbox
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getCompareList, removeFromCompare } from 'public/galleryHelpers';
+import { getActivePromotion } from 'backend/promotions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
 
@@ -16,6 +17,9 @@ $w.onReady(async function () {
   initExitIntentPopup();
   initCompareBar();
   await injectBusinessSchema();
+
+  // Promotional lightbox — delayed 3s so page renders first
+  setTimeout(() => initPromoLightbox(), 3000);
 });
 
 // ── Navigation ──────────────────────────────────────────────────────
@@ -439,4 +443,211 @@ async function injectBusinessSchema() {
   } catch (e) {
     // Schema injection is non-critical
   }
+}
+
+// ── Promotional Lightbox ────────────────────────────────────────────
+// Shows active campaign lightbox with products, countdown, and discount code
+
+async function initPromoLightbox() {
+  try {
+    const lightbox = $w('#promoLightbox');
+    if (!lightbox) return;
+
+    const promo = await getActivePromotion();
+    if (!promo) return;
+
+    // Check if user already dismissed this promotion in this session
+    const dismissKey = `promo_dismissed_${promo._id}`;
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        if (sessionStorage.getItem(dismissKey)) return;
+      } catch (e) {
+        // sessionStorage may not be available
+      }
+    }
+
+    populatePromoLightbox(promo);
+    initPromoCountdown(promo.endDate);
+    initPromoProducts(promo.products);
+    initPromoDismiss(promo._id, dismissKey);
+    initPromoCopyCode(promo.discountCode);
+    initPromoEmailCapture();
+    initPromoCTA(promo.ctaUrl);
+
+    // Show the lightbox
+    $w('#promoOverlay').show('fade', { duration: 300 });
+    lightbox.show('fade', { duration: 300 });
+  } catch (e) {
+    // Promo lightbox is non-critical — never block the page
+  }
+}
+
+function populatePromoLightbox(promo) {
+  try { $w('#promoTitle').text = promo.title || ''; } catch (e) {}
+  try { $w('#promoSubtitle').text = promo.subtitle || ''; } catch (e) {}
+  try {
+    if (promo.heroImage) {
+      $w('#promoHeroImage').src = promo.heroImage;
+    }
+  } catch (e) {}
+  try {
+    if (promo.discountCode) {
+      $w('#promoCode').text = promo.discountCode;
+    } else {
+      $w('#promoCode').hide();
+      $w('#promoCopyCode').hide();
+    }
+  } catch (e) {}
+  try {
+    if (promo.ctaText) {
+      $w('#promoCTA').label = promo.ctaText;
+    }
+  } catch (e) {}
+}
+
+function initPromoCountdown(endDate) {
+  try {
+    const countdownEl = $w('#promoCountdown');
+    if (!countdownEl || !endDate) {
+      try { countdownEl.hide(); } catch (e) {}
+      return;
+    }
+
+    const end = new Date(endDate).getTime();
+
+    function updateCountdown() {
+      const now = Date.now();
+      const diff = end - now;
+
+      if (diff <= 0) {
+        countdownEl.text = 'Sale Ended';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      countdownEl.text = `${pad(days)}:${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  } catch (e) {
+    // Countdown is optional
+  }
+}
+
+function initPromoProducts(products) {
+  try {
+    const repeater = $w('#promoRepeater');
+    if (!repeater || !products || products.length === 0) {
+      try { repeater.hide(); } catch (e) {}
+      return;
+    }
+
+    repeater.data = products.map(p => ({ ...p, _id: p._id }));
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#promoImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#promoName').text = itemData.name; } catch (e) {}
+      try {
+        $item('#promoPrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
+      } catch (e) {}
+      try {
+        if (itemData.formattedDiscountedPrice && itemData.formattedDiscountedPrice !== itemData.formattedPrice) {
+          $item('#promoOrigPrice').text = itemData.formattedPrice;
+          $item('#promoOrigPrice').show();
+        } else {
+          $item('#promoOrigPrice').hide();
+        }
+      } catch (e) {}
+      try {
+        $item('#promoQuickAdd').onClick(() => {
+          import('wix-location').then(({ to }) => {
+            to(`/product-page/${itemData.slug}`);
+          });
+        });
+      } catch (e) {}
+    });
+  } catch (e) {
+    // Product carousel is optional
+  }
+}
+
+function dismissLightbox(dismissKey) {
+  try {
+    $w('#promoLightbox').hide('fade', { duration: 200 });
+    $w('#promoOverlay').hide('fade', { duration: 200 });
+  } catch (e) {}
+
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      sessionStorage.setItem(dismissKey, '1');
+    } catch (e) {}
+  }
+}
+
+function initPromoDismiss(promoId, dismissKey) {
+  try {
+    $w('#promoClose').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+  try {
+    $w('#promoDismiss').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+  try {
+    $w('#promoOverlay').onClick(() => dismissLightbox(dismissKey));
+  } catch (e) {}
+}
+
+function initPromoCopyCode(code) {
+  try {
+    if (!code) return;
+    $w('#promoCopyCode').onClick(() => {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          $w('#promoCopyCode').label = 'Copied!';
+          setTimeout(() => {
+            try { $w('#promoCopyCode').label = 'Copy Code'; } catch (e) {}
+          }, 2000);
+        });
+      }
+    });
+  } catch (e) {}
+}
+
+function initPromoEmailCapture() {
+  try {
+    const emailInput = $w('#promoEmailInput');
+    const emailSubmit = $w('#promoEmailSubmit');
+    if (!emailInput || !emailSubmit) return;
+
+    emailSubmit.onClick(async () => {
+      const email = emailInput.value.trim();
+      if (!email || !email.includes('@')) return;
+
+      try {
+        const wixCrm = await import('wix-crm');
+        await wixCrm.createContact({ emails: [email] });
+        emailInput.value = '';
+        emailSubmit.label = 'Subscribed!';
+        emailSubmit.disable();
+      } catch (e) {
+        // Email capture is best-effort
+      }
+    });
+  } catch (e) {}
+}
+
+function initPromoCTA(ctaUrl) {
+  try {
+    if (!ctaUrl) return;
+    $w('#promoCTA').onClick(() => {
+      import('wix-location').then(({ to }) => {
+        to(ctaUrl);
+      });
+    });
+  } catch (e) {}
 }
