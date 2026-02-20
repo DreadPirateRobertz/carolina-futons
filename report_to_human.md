@@ -1,10 +1,10 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 13:53 MST
+**Last Updated:** 2026-02-20 14:04 MST
 **Sprint:** Full Stack Improvements + Crew Sprint
-**Status:** ACTIVE — 3 crew members executing (roles restructured)
-**Tests:** 587 passing across 30 test files
-**All tests green.**
+**Status:** ACTIVE — 3 crew members executing
+**Tests:** 659 passing across 34 test files — ALL GREEN
+**Commits this session:** 36+
 
 ---
 
@@ -12,194 +12,155 @@
 
 | Crew | Role | Current Task | Last Commit |
 |------|------|-------------|-------------|
-| **melania** | Crew Lead / Quality Gate | Design sessions, story review, driving crew | `3c92d91` sprint plan + report |
-| **caesar** | PRIMARY WEB DEVELOPER | Feed bug fixes → design token + ARIA stories | `1347f61` feed audit story |
-| **radahn** | PRIMARY MOBILE DEVELOPER | Mobile app proposal → STORY revisions | `6a3317d` STORY-005 fix |
-
----
-
-## Session Progress (Crew Sprint — 2026-02-20 afternoon)
-
-### Melania (Crew Lead)
-| # | Task | Status | Commit | Details |
-|---|------|--------|--------|---------|
-| 1 | Product strategy document | DONE | `8fa999e` | `STRATEGY.md` — 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap |
-| 2 | Crew coordination | ONGOING | — | Reviewing all output, sending targeted nudges, directing workflow |
-| 3 | Report maintenance | ONGOING | — | Keeping this file updated with real-time progress |
-
-### Caesar (UX / Design)
-| # | Task | Status | Commit | Details |
-|---|------|--------|--------|---------|
-| 1 | Product Page UX audit | DONE | `6650a90` | 9 improvements: variant image sync, bundle button fix, quantity selector, product accordion, ARIA labels, removed broken APIs |
-| 2 | Category Page UX audit | DONE | `c43e029` | N+1 query fix, "Best Selling" default sort, breadcrumbs, quick view error states, ARIA labels, result count refresh |
-| 3 | Cart Page UX audit | DONE | `dd893da` | Quantity/remove buttons were no-ops — now wired to real API. Empty cart state. Reduced 4 redundant cart fetches to 1. ARIA labels. |
-| 4 | Side Cart UX audit | DONE | `6462f12` | Remove was animation-only (never removed item), dedup handlers, error states, ARIA |
-| 5 | Checkout ARIA | DONE | `125aa37` | ARIA labels on order notes toggle and field |
-| 6 | wix-data mock improvements | DONE | `3307557` | Added or(), contains(), distinct(), count() for swatch tests |
-| 7 | Social feed & OG meta audit | DONE | `00a2f0a` | Fixed: broken feed images (shared mediaHelpers.js), [object Promise] OG tags, shipping schema, missing sitemap pages, Pinterest tags, Facebook content_type |
-| 8 | mediaHelpers tests | DONE | `c4e9e98` | 8 tests for wix:image URL conversion |
-| 9 | Design token + ARIA stories | SUBMITTED | `7a0bef0` | Both APPROVED by melania — implementing now |
-
-### Radahn (Tests / Stories)
-| # | Task | Status | Commit | Details |
-|---|------|--------|--------|---------|
-| 1 | seoHelpers tests | DONE | `017600b` | +29 tests: OG meta, Twitter Card, Rich Pin, WebSite schema, Collection schema |
-| 2 | shipping-rates-plugin tests | DONE | `84e231e` | +8 tests: white-glove tiers, local delivery pricing, fallbacks |
-| 3 | httpFunctions tests | DONE | `80cf2f4` | +22 tests: 4 feed endpoints (Google XML, Facebook TSV, Pinterest TSV), sitemap, health check. New wix-http-functions mock. |
-| 4 | Feature stories | DONE | `24b4fd0` | 5 stories filed: gift card bug, http-functions tests, style quiz tests, safe init pattern, cart recovery dupes |
-| 5 | promotions.test.js | DONE | `de8aaf8` | +9 tests: active/inactive/expired/future campaigns, product fetching |
-| 6 | styleQuiz.test.js | DONE | `de8aaf8` | +17 tests: scoring, collection matching, budget filtering, fallbacks |
-| 7 | STORY-006 submitted | DONE | `440ae7a` | swatchService test suite story — APPROVED by melania |
-| 8 | STORY-005 implementation | IN PROGRESS | — | Cart recovery duplicate detection |
-| 9 | STORY-006 implementation | NEXT | — | swatchService test suite |
-
----
-
-## Earlier Sprint Completions (Mayor — morning session)
-
-| # | Task | Status | Details |
-|---|------|--------|---------|
-| 1 | Security remediation | DONE | Sanitization utility, admin auth, rate limiting — 38 security tests |
-| 2 | Test infrastructure fixes | DONE | 6 new Wix module mocks, vitest aliases, brand filter fix |
-| 3 | Merge security to main | DONE | Rebased on remote, resolved conflicts, pushed |
-| 4 | Loyalty program backend | DONE | `loyaltyService.web.js` — Bronze/Silver/Gold tiers, points, rewards (12 tests) |
-| 5 | Marketing coupons backend | DONE | `couponsService.web.js` — Welcome, birthday, tier coupons (9 tests) |
-| 6 | Abandoned cart recovery | DONE | `cartRecovery.web.js` — Event handlers, stats tracking (7 tests) |
-| 7 | Delivery scheduling backend | DONE | `deliveryScheduling.web.js` — Slot-based Wed-Sat scheduling |
-| 8 | Assembly guides backend | DONE | `assemblyGuides.web.js` — Per-SKU guides, category care tips |
-| 9 | Gift card support | DONE | `giftCards.web.js` — Custom codes, balance, redemption |
-| 10 | GA4 enhanced analytics | DONE | `analyticsHelpers.web.js` — ViewContent, AddToCart, Checkout, Purchase, Wishlist events |
-| 11 | White-glove delivery tier | DONE | `shipping-rates-plugin.js` — $149 local, $249 regional, free over $1,999 |
-| 12 | Facebook catalog feed | DONE | `http-functions.js` → `get_facebookCatalogFeed` (TSV format) |
-| 13 | Pinterest product feed | DONE | `http-functions.js` → `get_pinterestProductFeed` (TSV format) |
-| 14 | Open Graph / social meta | DONE | `seoHelpers.web.js` — OG, Pinterest Rich Pin, Twitter Card meta generators |
-| 15 | Blog page | DONE | `Blog.js` — SEO schema, product sidebar, social share, newsletter |
-| 16 | Wishlist sharing | DONE | `Member Page.js` — Share via copy link, Pinterest, Facebook, Email |
-| 17 | Post-purchase care | DONE | `Thank You Page.js` — Care sequence enrollment, assembly guide links |
-| 18 | Loyalty integration | DONE | `Member Page.js` — Live loyalty points + tier display |
-| 19 | Plugin recommendations | DONE | `PLUGIN-RECOMMENDATIONS.md` — Must/Should/Nice-to-Have/Pure Velo |
-| 20 | Social media strategy | DONE | `SOCIAL-MEDIA-STRATEGY.md` — Pinterest, Instagram, Facebook, TikTok playbook |
-| 21 | 3 new test suites | DONE | giftCards (18), deliveryScheduling (16), assemblyGuides (15) — 49 tests total |
-| 22 | Gift card bug fix | DONE | Code truncation in sanitize function |
+| **melania** | Crew Lead / Quality Gate | Story review, design sessions, report updates | `6d87102` sprint plan |
+| **caesar** | PRIMARY WEB DEVELOPER | ARIA coverage pass (5 pages done, ~10 remaining) | `f296eaf` Contact ARIA (unpushed) |
+| **radahn** | PRIMARY MOBILE DEVELOPER | PWA Phase 1 DONE — researching Wix SW compatibility | `927dc0d` PWA foundation |
 
 ---
 
 ## Test Suite Growth
 
-| Checkpoint | Files | Tests | Delta |
-|-----------|-------|-------|-------|
-| Pre-sprint baseline | 19 | 372 | — |
-| After sprint (morning) | 22 | 421 | +49 |
-| After crew session start | 23 | 479 | +58 |
-| +promotions, styleQuiz | 25 | 505 | +26 |
-| +swatchSvc, contactSub, merchantFeed | 28 | 553 | +48 |
-| +designTokens, galleryConfig + STORY-005 | 30 | 587 | +34 |
-| +mediaHelpers tests + feed fixes | 31 | 595 | +8 |
+| Checkpoint | Files | Tests | Delta | Notable |
+|-----------|-------|-------|-------|---------|
+| Pre-sprint baseline | 19 | 372 | — | Starting point |
+| After sprint (morning) | 22 | 421 | +49 | giftCards, deliveryScheduling, assemblyGuides |
+| Crew session start | 23 | 479 | +58 | seoHelpers, shipping, httpFunctions |
+| +promotions, styleQuiz | 25 | 505 | +26 | Radahn test blitz |
+| +swatchSvc, contactSub, merchantFeed | 28 | 553 | +48 | Mayor + Radahn |
+| +designTokens, galleryConfig, STORY-005 | 30 | 587 | +34 | Mayor + Radahn dupe fix |
+| +mediaHelpers, feed fixes | 31 | 595 | +8 | Caesar feed bugs |
+| +STORY-007 test hardening | 33 | 633 | +38 | XSS, sort, XML escaping + mayor tests |
+| **+PWA tests (current)** | **34** | **659** | **+17** | **Radahn PWA foundation** |
 
-**New test files this crew session:**
-- `tests/seoHelpers.test.js` — expanded +29 tests (Radahn)
-- `tests/shipping-rates-plugin.test.js` — expanded +8 tests (Radahn)
-- `tests/httpFunctions.test.js` — 22 tests, new file (Radahn)
-- `tests/__mocks__/wix-http-functions.js` — new mock (Radahn)
-
-**In progress:**
-- `tests/promotions.test.js` — Radahn working now
-- `tests/styleQuiz.test.js` — Radahn next
+**Growth: 372 → 659 tests (+287, +77%) in one session.**
 
 ---
 
-## Code Quality Review (Melania's Assessment)
+## Completed Work — All Crew Members
 
-### Caesar — Grade: A-
-- Finding real bugs, not cosmetic issues (quantity/remove no-ops, N+1 query, variant image not updating)
-- Consistent accessibility additions (ARIA labels on every interactive element)
-- Error states with retry affordance follow a pattern across all pages
-- One minor note: `preloadGalleryThumbnails()` left as no-op stub — could be deleted entirely
+### Melania (Crew Lead)
+| # | Task | Commit | Details |
+|---|------|--------|---------|
+| 1 | STRATEGY.md | `8fa999e` | 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap |
+| 2 | Design session | — | Full UX pattern audit: tokens (0% usage), ARIA (29%), try/catch (543 blocks), error handling |
+| 3 | Story reviews | — | 12 stories reviewed: 9 approved, 1 revision requested, 2 already done |
+| 4 | Role restructuring | `34b3729` | Caesar→web, Radahn→mobile per human orders |
+| 5 | Ongoing coordination | — | 15+ nudges, priority calls, pipeline management |
 
-### Radahn — Grade: A
-- Thorough test coverage: testing happy path, edge cases, output format, error handling
-- Realistic test data (3 products across different categories)
-- Good mock design (wix-http-functions mock is clean and reusable)
-- Testing actual business logic (brand detection, product type mapping, price formatting)
+### Caesar (Primary Web Developer)
+| # | Task | Commit | Details |
+|---|------|--------|---------|
+| 1 | Product Page UX audit | `6650a90` | 9 improvements: variant image sync, bundle button fix, qty selector, accordion, ARIA |
+| 2 | Category Page UX audit | `c43e029` | N+1 query fix, "Best Selling" sort, breadcrumbs, quick view states, ARIA |
+| 3 | Cart Page UX audit | `dd893da` | Qty/remove wired to real API (were no-ops), empty state, 4→1 fetches |
+| 4 | Side Cart UX audit | `6462f12` | Remove wired to API (was animation-only), dedup handlers, ARIA |
+| 5 | Checkout ARIA | `125aa37` | ARIA labels on order notes toggle |
+| 6 | wix-data mock additions | `3307557` | or(), contains(), distinct(), count() |
+| 7 | Social feed & OG meta fix | `00a2f0a` | 3 bugs fixed: broken feed images, [object Promise] OG, shipping schema + 3 improvements |
+| 8 | mediaHelpers tests | `c4e9e98` | 8 tests for wix:image URL conversion |
+| 9 | Design token integration | `2aa0405`→`73d7e98` | Tokens imported into Product, Category, Member, Thank You pages |
+| 10 | ARIA coverage pass | `b0161fc`→`f296eaf` | Labels added to Home, Member, Blog, FAQ, Contact (5 done, ~10 remaining) |
+
+### Radahn (Primary Mobile Developer)
+| # | Task | Commit | Details |
+|---|------|--------|---------|
+| 1 | seoHelpers tests | `017600b` | +29 tests: OG, Twitter Card, Rich Pin, WebSite, Collection schemas |
+| 2 | shipping-rates-plugin tests | `84e231e` | +8 tests: white-glove tiers, local delivery |
+| 3 | httpFunctions tests | `80cf2f4` | +22 tests: feeds, sitemap, health endpoint + mock |
+| 4 | promotions + styleQuiz tests | `de8aaf8` | +9 and +17 tests |
+| 5 | 7 stories filed | various | STORY-001 through STORY-009 |
+| 6 | STORY-005: cart recovery dupes | `6a3317d` | checkoutId dedup + line item validation + 4 tests |
+| 7 | STORY-007: test hardening | `8cd2944` | XSS vectors, sort order, XML escaping across 3 test files |
+| 8 | STORY-009: PWA foundation | `927dc0d` | Manifest endpoint, service worker, install helpers, 17 tests |
+
+### Mayor (morning sprint + ongoing)
+| # | Task | Details |
+|---|------|---------|
+| 1-22 | Full sprint (see SPRINT-PLAN.md) | Security, 6 backend modules, feeds, SEO, blog, loyalty, docs |
+| 23 | swatchService + contactSubmissions + googleMerchantFeed tests | +48 tests |
+| 24 | designTokens + galleryConfig tests | +30 tests |
+| 25 | sanitize utils + placeholderImages tests | +38 tests |
 
 ---
 
-## New Files This Crew Session
+## Story Pipeline
 
-| File | Author | Type | Purpose |
-|------|--------|------|---------|
-| `STRATEGY.md` | melania | Doc | High-level product strategy, personas, roadmap |
-| `tests/httpFunctions.test.js` | radahn | Test | 22 tests for feed endpoints |
-| `tests/__mocks__/wix-http-functions.js` | radahn | Mock | HTTP functions mock |
-| `stories/gift-card-sanitize-bug.md` | radahn | Story | Gift card truncation bug write-up |
-| `stories/http-functions-tests.md` | radahn | Story | Feed endpoint test coverage story |
-| `stories/style-quiz-tests.md` | radahn | Story | Quiz engine test story |
-| `stories/safe-init-pattern.md` | radahn | Story | Safe initialization pattern |
-| `stories/cart-recovery-dupes.md` | radahn | Story | Cart recovery deduplication story |
-
-## Updated Files This Crew Session
-
-| File | Author | Changes |
-|------|--------|---------|
-| `src/pages/Product Page.js` | caesar | +229/-34: 9 UX improvements |
-| `src/pages/Category Page.js` | caesar | +81/-41: perf fix, sort, accessibility |
-| `src/pages/Cart Page.js` | caesar | +107/-22: quantity/remove API, empty state |
-| `src/public/cartService.js` | caesar | +35/-5: updateQuantity, removeItem APIs |
-| `tests/categoryPage.test.js` | caesar | Updated for new sort options |
-| `tests/seoHelpers.test.js` | radahn | +29 tests for social meta schemas |
-| `tests/shipping-rates-plugin.test.js` | radahn | +8 tests for white-glove |
-| `SPRINT-PLAN.md` | radahn | Updated completion status |
+| ID | Title | Author | Status | Priority |
+|----|-------|--------|--------|----------|
+| STORY-001 | Gift card code truncation | radahn | DONE | P0 |
+| STORY-002 | HTTP functions test suite | radahn | DONE | P1 |
+| STORY-003 | Style quiz test suite | radahn | DONE | P1 |
+| STORY-004 | Safe element init pattern | radahn | APPROVED (P2) | P2 |
+| STORY-005 | Cart recovery duplicate detection | radahn | DONE | P1 |
+| STORY-006 | Swatch service test suite | radahn | DONE (by mayor) | P1 |
+| STORY-007 | Test hardening: XSS/sort/XML | radahn | DONE | P1 |
+| STORY-008 | Shared errorHandler utility | radahn | APPROVED (P2) | P2 |
+| STORY-009 | PWA mobile app Phase 1 | radahn | DONE (foundation) | P1 |
+| — | Social feed & OG meta fix | caesar | DONE | P1 |
+| — | Design token integration | caesar | DONE (4 pages) | P1 |
+| — | ARIA coverage pass | caesar | IN PROGRESS (5/16 pages) | P1 |
 
 ---
 
-## Remaining Work
+## Design Session Findings (13:50 MST)
 
-### Active (Crew doing now)
-- Caesar: Side Cart audit → P1 social/marketing audit
-- Radahn: promotions.test.js → styleQuiz.test.js → swatchService.test.js
+| Finding | Severity | Status |
+|---------|----------|--------|
+| Design tokens 0% import usage | HIGH | FIXED — caesar integrated into 4 pages, ongoing |
+| ARIA coverage 29% (6/21 pages) | HIGH | IN PROGRESS — caesar added 5 more pages, ~10 remaining |
+| 543 try/catch blocks (450 silent) | MEDIUM | STORY-004 approved, P2 priority |
+| No centralized error handler | MEDIUM | STORY-008 approved, P2 priority |
+| Loading state pattern consistent | GOOD | Documented as standard |
+
+---
+
+## Role Assignments (per human orders)
+
+| Role | Crew | Owns |
+|------|------|------|
+| **Crew Lead / Quality Gate** | melania | Sprint plan, report, story approval, design sessions, coordination |
+| **Primary Web Developer** | caesar | All web pages, desktop UX, responsive design, design tokens, ARIA, visual polish |
+| **Primary Mobile Developer** | radahn | PWA, mobile-first patterns, touch UX, mobile-specific code/tests |
+
+**Mobile strategy decision:** PWA chosen over React Native and Wix Branded App. Phase 1 (manifest, service worker, install helpers) is code-complete. Wix Velo SW compatibility needs runtime validation.
+
+---
+
+## What's Next (P0/P1 Priority Order)
+
+### Immediate
+1. **Caesar**: Finish ARIA coverage pass (10 remaining pages), then push
+2. **Radahn**: Research Wix SW compatibility, file findings story
+3. **Melania**: Continue reviewing all pushes, update report
+
+### Next Up
+4. Caesar: Mobile responsive patterns (after ARIA complete)
+5. Radahn: masterPage.js PWA integration (if SW works in Wix)
+6. Both: Design token integration for remaining pages (Home, Cart, Side Cart)
 
 ### Blocked (Needs Wix Dashboard)
-1. Create 11 CMS collections
-2. Store UPS secrets in Wix Secrets Manager
-3. Configure feed URLs in Facebook/Pinterest/Google
-4. Set up Wix Automations for care sequence emails
-5. Editor layout buildout (element IDs)
-6. Pinterest Rich Pin validation
-7. TikTok Pixel embed
-
-### Future (Post-launch)
-- wix-stores-frontend → wix-ecom migration
-- Mobile responsive optimization
-- A/B testing setup
-- Paid advertising campaigns
+- Create 11 CMS collections
+- Store UPS secrets
+- Configure feed URLs
+- Wix Automations for email triggers
+- Editor layout buildout
 
 ---
 
----
+## Key Metrics
 
-## Design Session Results (13:50 MST)
-
-melania conducted a full UX pattern audit across all 21 page files. Key findings:
-
-| Finding | Severity | Action |
-|---------|----------|--------|
-| **Design tokens defined but 0% import usage** | HIGH | Caesar to write story: import tokens into top 5 pages |
-| **ARIA coverage only 29% (6/21 pages)** | HIGH | Caesar to write story: ARIA pass on remaining 15 pages |
-| **230 try/catch blocks in Product Page** | MEDIUM | Radahn to revise STORY-004 with exact counts per file |
-| **80% of catches are silent `catch(e){}`** | MEDIUM | Radahn to write STORY-008: shared errorHandler.js |
-| **Loading state pattern is consistent** | GOOD | Document as standard — no action needed |
-
----
-
-## Role Restructuring (13:52 MST — per human orders)
-
-| Before | After |
+| Metric | Value |
 |--------|-------|
-| Caesar: UX / Design generalist | Caesar: **PRIMARY WEBSITE DEVELOPER** — owns all web pages, desktop UX, responsive design, design tokens, ARIA |
-| Radahn: Tests / Stories generalist | Radahn: **PRIMARY MOBILE APP DEVELOPER** — owns mobile-first patterns, mobile app features, touch UX |
-| Both report to melania | Both submit stories to melania for approval. Nothing ships without review. |
-
-**Mobile app evaluation in progress**: Radahn is writing a proposal evaluating Wix Branded App vs PWA vs React Native.
+| Tests | 659 (34 files) |
+| Test growth | +287 (+77%) this session |
+| Commits | 36+ this session |
+| Stories filed | 12 |
+| Stories approved | 9 |
+| Stories completed | 8 |
+| Bugs found & fixed | 6 (feed images, OG promise, shipping schema, cart dupes, qty no-ops, remove no-ops) |
+| Pages with ARIA | 11/21 (was 6, +5 this session) |
+| Pages with design tokens | 4/21 (was 0) |
+| New backend utilities | 2 (mediaHelpers.js, pwaHelpers.js) |
 
 ---
 
