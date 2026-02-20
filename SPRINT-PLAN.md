@@ -1,9 +1,9 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 587 tests across 30 files (all passing)
-**Last Push**: f0cf4c5
-**Updated by**: melania (crew lead) — 2026-02-20 13:53 MST
+**Test Suite**: 633 tests across 33 files (all passing)
+**Last Push**: e248645
+**Updated by**: melania (crew lead) — 2026-02-20 13:56 MST
 
 ---
 
@@ -107,13 +107,13 @@
 ### P1 — Stories Pending
 | Story | Author | Status | Reviewer |
 |-------|--------|--------|----------|
-| social-feed-og-audit | caesar | APPROVED → implementing | melania |
-| Design token imports | caesar | NOT YET SUBMITTED | melania |
-| ARIA expansion | caesar | NOT YET SUBMITTED | melania |
-| STORY-004 rev: safe-element-init | radahn | REVISION NEEDED | melania |
-| STORY-007: test hardening | radahn | NOT YET SUBMITTED | melania |
-| STORY-008: shared errorHandler | radahn | NOT YET SUBMITTED | melania |
-| Mobile app proposal | radahn | NOT YET SUBMITTED | melania |
+| social-feed-og-audit | caesar | DONE (`00a2f0a`) | melania |
+| Design token integration | caesar | APPROVED → implementing | melania |
+| ARIA coverage pass | caesar | APPROVED → after tokens | melania |
+| STORY-004 rev: safe-element-init | radahn | APPROVED (P2 — after PWA) | melania |
+| STORY-007: test hardening | radahn | APPROVED → implementing FIRST | melania |
+| STORY-008: shared errorHandler | radahn | APPROVED (P2 — after PWA) | melania |
+| STORY-009: PWA mobile app | radahn | APPROVED → after STORY-007 | melania |
 
 ### P2 — Needs Wix Dashboard
 - [ ] Create 11 CMS collections (see memory.md)
@@ -131,10 +131,15 @@
 | STORY-001 | Gift card code truncation | radahn | DONE (already fixed) | P0 |
 | STORY-002 | HTTP functions test suite | radahn | DONE (implemented) | P1 |
 | STORY-003 | Style quiz test suite | radahn | DONE (implemented) | P1 |
-| STORY-004 | Safe element init pattern | radahn | REVISION NEEDED (add hard numbers) | P2 |
+| STORY-004 | Safe element init pattern (revised) | radahn | APPROVED (P2 — after PWA) | P2 |
 | STORY-005 | Cart recovery duplicate detection | radahn | DONE (`6a3317d`) | P1 |
 | STORY-006 | Swatch service test suite | radahn | DONE (implemented by mayor) | P1 |
-| social-feed-og-audit | Feed bugs + OG meta fixes | caesar | APPROVED → implementing | P1 |
+| STORY-007 | Test hardening: XSS, sort, XML | radahn | APPROVED → implementing now | P1 |
+| STORY-008 | Shared errorHandler utility | radahn | APPROVED (P2 — after PWA) | P2 |
+| STORY-009 | PWA mobile app (Phase 1) | radahn | APPROVED → after STORY-007 | P1 |
+| social-feed-og-audit | Feed bugs + OG meta fixes | caesar | DONE (`00a2f0a`) | P1 |
+| design-token-integration | Import tokens into 5 pages | caesar | APPROVED → implementing now | P1 |
+| aria-coverage-pass | ARIA on remaining 15 pages | caesar | APPROVED → after tokens | P1 |
 
 ---
 
