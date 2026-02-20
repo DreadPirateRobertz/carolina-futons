@@ -20,8 +20,10 @@ function initPolicyNavigation() {
     const tocRepeater = $w('#policyTocRepeater');
     if (!tocRepeater) return;
 
+    try { tocRepeater.accessibility.ariaLabel = 'Privacy policy table of contents'; } catch (e) {}
     tocRepeater.onItemReady(($item, itemData) => {
       $item('#tocLink').text = itemData.label;
+      try { $item('#tocLink').accessibility.ariaLabel = `Jump to ${itemData.label}`; } catch (e) {}
       $item('#tocLink').onClick(() => {
         try {
           $w(itemData.anchor).scrollTo();
