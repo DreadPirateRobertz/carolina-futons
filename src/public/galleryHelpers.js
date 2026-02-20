@@ -473,7 +473,7 @@ export function buildComparisonBar() {
     try {
       $w('#compareButton').onClick(() => {
         const ids = compareList.map(p => p._id).join(',');
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/compare?products=${ids}`);
         });
       });

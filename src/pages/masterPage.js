@@ -361,7 +361,7 @@ function initPromoProducts(products) {
       } catch (e) {}
       try {
         $item('#promoQuickAdd').onClick(() => {
-          import('wix-location').then(({ to }) => {
+          import('wix-location-frontend').then(({ to }) => {
             to(`/product-page/${itemData.slug}`);
           });
         });
@@ -424,7 +424,7 @@ function initPromoEmailCapture() {
       if (!email || !email.includes('@')) return;
 
       try {
-        const wixCrm = await import('wix-crm');
+        const wixCrm = await import('wix-crm-frontend');
         await wixCrm.createContact({ emails: [email] });
         emailInput.value = '';
         emailSubmit.label = 'Subscribed!';
@@ -440,7 +440,7 @@ function initPromoCTA(ctaUrl) {
   try {
     if (!ctaUrl) return;
     $w('#promoCTA').onClick(() => {
-      import('wix-location').then(({ to }) => {
+      import('wix-location-frontend').then(({ to }) => {
         to(ctaUrl);
       });
     });

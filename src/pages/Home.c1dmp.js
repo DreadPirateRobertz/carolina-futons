@@ -152,7 +152,7 @@ async function initCategoryShowcase() {
             ? `${itemData.count} Products` : '';
         } catch (e) {}
         $item('#categoryCardTitle').onClick(() => {
-          import('wix-location').then(({ to }) => to(itemData.path));
+          import('wix-location-frontend').then(({ to }) => to(itemData.path));
         });
       });
     }
@@ -164,7 +164,7 @@ async function initCategoryShowcase() {
   categoriesWithCounts.forEach((cat) => {
     try {
       $w(cat.elementId).onClick(() => {
-        import('wix-location').then(({ to }) => to(cat.path));
+        import('wix-location-frontend').then(({ to }) => to(cat.path));
       });
     } catch (e) {
       // Card element may not exist in editor
@@ -191,12 +191,12 @@ async function initRecentlyViewed() {
       $item('#recentPrice').text = itemData.price;
 
       $item('#recentImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });
       $item('#recentName').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       });

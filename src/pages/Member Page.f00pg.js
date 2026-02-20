@@ -156,7 +156,7 @@ function initOrderHistory() {
         $item('#orderTrackBtn').onClick(() => {
           const trackingNumber = itemData.shippingInfo?.trackingNumber;
           if (trackingNumber) {
-            import('wix-location').then(({ to }) => {
+            import('wix-location-frontend').then(({ to }) => {
               to(`/tracking?order=${itemData.number}&tracking=${trackingNumber}`);
             });
           }

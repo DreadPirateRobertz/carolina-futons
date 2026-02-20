@@ -119,7 +119,7 @@ async function loadRecentlyViewed() {
         try { $item('#cartRecentPrice').text = itemData.price; } catch (e) {}
 
         const navigate = () => {
-          import('wix-location').then(({ to }) => {
+          import('wix-location-frontend').then(({ to }) => {
             to(`/product-page/${itemData.slug}`);
           });
         };

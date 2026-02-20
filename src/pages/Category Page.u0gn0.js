@@ -587,7 +587,7 @@ function initRecentlyViewed() {
       try { $item('#recentPrice').text = itemData.price; } catch (e) {}
 
       const navigateToProduct = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };

@@ -248,7 +248,7 @@ async function loadSideCartSuggestions(lineItems) {
 
         // Click image/name to navigate to product
         const navigate = () => {
-          import('wix-location').then(({ to }) => {
+          import('wix-location-frontend').then(({ to }) => {
             to(`/product-page/${product.slug}`);
           });
         };

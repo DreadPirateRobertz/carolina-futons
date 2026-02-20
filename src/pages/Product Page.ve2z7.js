@@ -236,7 +236,7 @@ async function initSwatchSelector() {
     // Set up "Request Free Swatches" link
     try {
       $w('#swatchRequestLink').onClick(() => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to('/request-swatches');
         });
       });
@@ -645,7 +645,7 @@ async function loadRecentlyViewed() {
 
       // Click to navigate to product
       const navigateToProduct = () => {
-        import('wix-location').then(({ to }) => {
+        import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
       };
@@ -1128,7 +1128,7 @@ async function initBundleSection() {
 
     // Click bundle image/name to navigate to that product
     const navigateToBundle = () => {
-      import('wix-location').then(({ to }) => {
+      import('wix-location-frontend').then(({ to }) => {
         to(`/product-page/${bundle.product.slug}`);
       });
     };
