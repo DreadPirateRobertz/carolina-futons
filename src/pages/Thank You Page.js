@@ -13,6 +13,8 @@ $w.onReady(async function () {
     initNewsletterSignup(),
     initReferralSection(),
     loadPostPurchaseSuggestions(),
+    initPostPurchaseCareSequence(),
+    initAssemblyGuideLink(),
   ]);
   // Track purchase completion in engagement funnel
   trackPurchaseComplete('', 0);
@@ -271,6 +273,95 @@ async function loadPostPurchaseSuggestions() {
     repeater.data = products;
   } catch (err) {
     console.error('Error loading post-purchase suggestions:', err);
+  }
+}
+
+// ── Post-Purchase Care Sequence ──────────────────────────────────
+// Registers the customer for a multi-touch care email sequence:
+// Day 0: Order confirmation (handled by Wix Stores)
+// Day 3: Delivery preparation tips (scheduled trigger)
+// Day 7: Review request (existing scheduleReviewRequest)
+// Day 30: Care guide + accessory recommendations
+
+async function initPostPurchaseCareSequence() {
+  try {
+    const wixWindow = await import('wix-window-frontend');
+    const orderData = wixWindow.lightbox?.getContext?.() || null;
+    const orderId = orderData?.orderId;
+    if (!orderId) return;
+
+    // Register the care sequence in backend
+    const { submitContactForm } = await import('backend/contactSubmissions.web');
+
+    // Get buyer email if available
+    let buyerEmail = '';
+    try {
+      const { currentMember } = await import('wix-members-frontend');
+      const member = await currentMember.getMember();
+      buyerEmail = member?.loginEmail || member?.contactDetails?.emails?.[0] || '';
+    } catch (e) {}
+
+    if (!buyerEmail) return;
+
+    // Schedule post-purchase care touchpoints
+    await submitContactForm({
+      email: buyerEmail,
+      source: 'post_purchase_care',
+      status: 'care_sequence_enrolled',
+      orderId,
+      enrolledDate: new Date().toISOString(),
+    });
+
+    // Also schedule a review request via existing system
+    try {
+      const { scheduleReviewRequest } = await import('backend/dataService.web');
+      await scheduleReviewRequest(orderId);
+    } catch (e) {}
+
+    // Show care sequence info to customer
+    try {
+      const careSection = $w('#careSequenceInfo');
+      if (careSection) {
+        $w('#careSequenceText').text =
+          'We\'ll follow up to make sure everything goes smoothly:\n' +
+          '• Delivery prep tips before your items arrive\n' +
+          '• Setup & care guide after delivery\n' +
+          '• Personalized accessory recommendations';
+        careSection.expand();
+      }
+    } catch (e) {}
+  } catch (err) {
+    // Care sequence enrollment is non-critical
+    console.error('Care sequence enrollment error:', err);
+  }
+}
+
+// ── Assembly Guide Link ─────────────────────────────────────────────
+// Shows relevant assembly guides for purchased products
+
+async function initAssemblyGuideLink() {
+  try {
+    const guideSection = $w('#assemblyGuideSection');
+    if (!guideSection) return;
+
+    try {
+      $w('#assemblyGuideTitle').text = 'Assembly & Care Guides';
+      $w('#assemblyGuideText').text =
+        'Need help setting up your new furniture? Visit our assembly guides ' +
+        'for step-by-step instructions and video walkthroughs.';
+    } catch (e) {}
+
+    try {
+      $w('#assemblyGuideBtn').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => {
+          to('/getting-it-home');
+        });
+      });
+    } catch (e) {}
+
+    guideSection.expand();
+  } catch (err) {
+    // Assembly guide section is optional
   }
 }
 

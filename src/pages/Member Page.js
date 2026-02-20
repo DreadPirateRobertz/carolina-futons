@@ -94,10 +94,27 @@ async function initDashboard() {
       console.error('[MemberPage] Error loading dashboard counts:', e);
     }
 
-    // Loyalty points placeholder
-    const pointsEl = $w('#memberPointsDisplay');
-    if (pointsEl) {
-      pointsEl.text = 'Coming Soon';
+    // Loyalty points display
+    try {
+      const pointsEl = $w('#memberPointsDisplay');
+      if (pointsEl) {
+        const { getMyLoyaltyAccount } = await import('backend/loyaltyService.web');
+        const account = await getMyLoyaltyAccount();
+        if (account && account.points !== undefined) {
+          pointsEl.text = `${account.points.toLocaleString()} pts`;
+          // Show tier if available
+          try {
+            const tierEl = $w('#memberTierDisplay');
+            if (tierEl && account.tier) {
+              tierEl.text = account.tier;
+            }
+          } catch (e) {}
+        } else {
+          pointsEl.text = 'Join Rewards';
+        }
+      }
+    } catch (e) {
+      try { $w('#memberPointsDisplay').text = 'Join Rewards'; } catch (e2) {}
     }
 
     // Quick links - scroll to page sections
@@ -241,28 +258,73 @@ async function initWishlist() {
       }
     } catch (e) {}
 
-    // Share Wishlist button
+    // Share Wishlist — copy link button
     try {
       $w('#wishShareBtn').onClick(async () => {
         try {
-          const wixLocation = await import('wix-location-frontend');
-          const baseUrl = wixLocation.baseUrl;
-          const memberId = currentMember?._id || '';
-          const shareUrl = `${baseUrl}/wishlist?member=${memberId}`;
-
-          // Copy to clipboard via Wix window API
-          try {
-            const wixWindow = await import('wix-window-frontend');
-            await wixWindow.copyToClipboard(shareUrl);
-            $w('#wishShareBtn').label = 'Link Copied!';
-            setTimeout(() => {
-              $w('#wishShareBtn').label = 'Share Wishlist';
-            }, 3000);
-          } catch (clipErr) {
-            console.error('[MemberPage] Clipboard copy failed:', clipErr);
-          }
+          const shareUrl = await getWishlistShareUrl();
+          const wixWindow = await import('wix-window-frontend');
+          await wixWindow.copyToClipboard(shareUrl);
+          $w('#wishShareBtn').label = 'Link Copied!';
+          setTimeout(() => {
+            $w('#wishShareBtn').label = 'Share Wishlist';
+          }, 3000);
         } catch (err) {
           console.error('[MemberPage] Share wishlist error:', err);
+        }
+      });
+    } catch (e) {}
+
+    // Share Wishlist — Pinterest board
+    try {
+      $w('#wishSharePinterest').onClick(async () => {
+        try {
+          const shareUrl = await getWishlistShareUrl();
+          const desc = encodeURIComponent('My furniture wishlist from Carolina Futons — Hendersonville, NC');
+          const wixWindow = await import('wix-window-frontend');
+          wixWindow.openUrl(
+            `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=${desc}`,
+            '_blank'
+          );
+          trackEvent('social_share', { platform: 'pinterest', context: 'wishlist' });
+        } catch (err) {
+          console.error('[MemberPage] Pinterest share error:', err);
+        }
+      });
+    } catch (e) {}
+
+    // Share Wishlist — Email
+    try {
+      $w('#wishShareEmail').onClick(async () => {
+        try {
+          const shareUrl = await getWishlistShareUrl();
+          const subject = encodeURIComponent('Check out my furniture wishlist!');
+          const body = encodeURIComponent(
+            `I've been putting together a furniture wishlist at Carolina Futons. ` +
+            `Take a look and let me know what you think!\n\n${shareUrl}`
+          );
+          const wixWindow = await import('wix-window-frontend');
+          wixWindow.openUrl(`mailto:?subject=${subject}&body=${body}`, '_self');
+          trackEvent('social_share', { platform: 'email', context: 'wishlist' });
+        } catch (err) {
+          console.error('[MemberPage] Email share error:', err);
+        }
+      });
+    } catch (e) {}
+
+    // Share Wishlist — Facebook
+    try {
+      $w('#wishShareFacebook').onClick(async () => {
+        try {
+          const shareUrl = await getWishlistShareUrl();
+          const wixWindow = await import('wix-window-frontend');
+          wixWindow.openUrl(
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+            '_blank'
+          );
+          trackEvent('social_share', { platform: 'facebook', context: 'wishlist' });
+        } catch (err) {
+          console.error('[MemberPage] Facebook share error:', err);
         }
       });
     } catch (e) {}
@@ -510,6 +572,15 @@ async function initCommunicationPrefs() {
   } catch (e) {
     console.error('[MemberPage] Error initializing comm prefs:', e);
   }
+}
+
+// ── Wishlist Share URL Builder ────────────────────────────────────────
+
+async function getWishlistShareUrl() {
+  const wixLocation = await import('wix-location-frontend');
+  const baseUrl = wixLocation.baseUrl;
+  const memberId = currentMember?._id || '';
+  return `${baseUrl}/wishlist?member=${memberId}`;
 }
 
 // ── Error Fallback ──────────────────────────────────────────────────
