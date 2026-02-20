@@ -394,6 +394,9 @@ export const getCategoryMetaDescription = webMethod(
       'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed - sets up in under 2 minutes. Space-saving bedroom furniture. Free shipping over $999.',
       'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Designed for memory foam and latex mattresses. American-made options available. Free shipping over $999.',
       'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Nightstands, dressers, and storage to complete your bedroom set. Free shipping over $999.',
+      'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design sits close to your wall. Perfect for small rooms and apartments. Free shipping over $999.',
+      'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA from Tulip Poplar hardwood. Ready for your personal stain or paint finish. Free shipping over $999.',
+      'sales': 'Current deals and clearance on quality futon furniture. Save on frames, mattresses, Murphy beds, and more. Carolina Futons, Hendersonville NC.',
     };
     return descriptions[categorySlug] || 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.';
   }

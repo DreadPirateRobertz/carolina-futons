@@ -121,16 +121,25 @@ export const getMostViewedProducts = webMethod(
         .hasSome('_id', productIds)
         .find();
 
-      // Merge product data with view counts
-      return products.items.map(item => ({
-        _id: item._id,
-        name: item.name,
-        slug: item.slug,
-        price: item.price,
-        formattedPrice: item.formattedPrice,
-        mainMedia: item.mainMedia,
-        viewCount: analytics.items.find(a => a.productId === item._id)?.viewCount || 0,
-      }));
+      // Build a lookup map for quick product access
+      const productMap = new Map(products.items.map(p => [p._id, p]));
+
+      // Merge product data with view counts, preserving analytics sort order
+      return analytics.items
+        .map(a => {
+          const item = productMap.get(a.productId);
+          if (!item) return null;
+          return {
+            _id: item._id,
+            name: item.name,
+            slug: item.slug,
+            price: item.price,
+            formattedPrice: item.formattedPrice,
+            mainMedia: item.mainMedia,
+            viewCount: a.viewCount || 0,
+          };
+        })
+        .filter(Boolean);
     } catch (err) {
       console.error('Error fetching most viewed:', err);
       return [];
@@ -170,13 +179,22 @@ export const getTrendingProducts = webMethod(
         .hasSome('_id', productIds)
         .find();
 
-      return products.items.map(item => ({
-        _id: item._id,
-        name: item.name,
-        slug: item.slug,
-        formattedPrice: item.formattedPrice,
-        mainMedia: item.mainMedia,
-      }));
+      // Build a lookup map and preserve analytics sort order
+      const productMap = new Map(products.items.map(p => [p._id, p]));
+
+      return analytics.items
+        .map(a => {
+          const item = productMap.get(a.productId);
+          if (!item) return null;
+          return {
+            _id: item._id,
+            name: item.name,
+            slug: item.slug,
+            formattedPrice: item.formattedPrice,
+            mainMedia: item.mainMedia,
+          };
+        })
+        .filter(Boolean);
     } catch (err) {
       console.error('Error fetching trending:', err);
       return [];
