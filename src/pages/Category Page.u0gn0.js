@@ -4,6 +4,7 @@
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCollectionSchema, getBreadcrumbSchema } from 'backend/seoHelpers.web';
+import { getCategoryHeroImage, getProductFallbackImage } from 'public/placeholderImages';
 
 let currentSort = 'name-asc';
 let currentFilters = {};
@@ -13,8 +14,24 @@ $w.onReady(async function () {
   initFilterControls();
   initProductGrid();
   updateResultCount();
+  initCategoryHeroImage();
   await injectCategorySchema();
 });
+
+// ── Category Hero Image ─────────────────────────────────────────────
+// Sets placeholder hero background for the category page header
+
+function initCategoryHeroImage() {
+  try {
+    const currentPath = wixLocationFrontend.path?.[0] || '';
+    if (currentPath) {
+      const heroImg = $w('#categoryHeroImage');
+      if (heroImg) {
+        heroImg.src = getCategoryHeroImage(currentPath);
+      }
+    }
+  } catch (e) {}
+}
 
 // ── Sort Controls ───────────────────────────────────────────────────
 
@@ -179,8 +196,9 @@ function initProductGrid() {
     if (!repeater) return;
 
     repeater.onItemReady(($item, itemData) => {
-      // Set product image with SEO alt text
-      $item('#gridImage').src = itemData.mainMedia;
+      // Set product image with SEO alt text (fallback to placeholder if no image)
+      const category = wixLocationFrontend.path?.[0] || '';
+      $item('#gridImage').src = itemData.mainMedia || getProductFallbackImage(category);
       $item('#gridImage').alt = buildAltText(itemData);
 
       // Product info

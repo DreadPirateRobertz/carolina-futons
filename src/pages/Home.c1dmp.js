@@ -3,6 +3,7 @@
 // Featured products grid, category showcases, and testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
+import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages';
 
 $w.onReady(async function () {
   await Promise.all([
@@ -96,23 +97,41 @@ async function loadSaleHighlights() {
 
 function initCategoryShowcase() {
   const categoryLinks = {
-    '#categoryFutonFrames': '/futon-frames',
-    '#categoryMattresses': '/mattresses',
-    '#categoryMurphy': '/murphy-cabinet-beds',
-    '#categoryPlatformBeds': '/platform-beds',
-    '#categoryCasegoods': '/casegoods-accessories',
-    '#categorySale': '/sales',
+    '#categoryFutonFrames': { path: '/futon-frames', slug: 'futon-frames' },
+    '#categoryMattresses': { path: '/mattresses', slug: 'mattresses' },
+    '#categoryMurphy': { path: '/murphy-cabinet-beds', slug: 'murphy-cabinet-beds' },
+    '#categoryPlatformBeds': { path: '/platform-beds', slug: 'platform-beds' },
+    '#categoryCasegoods': { path: '/casegoods-accessories', slug: 'casegoods-accessories' },
+    '#categorySale': { path: '/sales', slug: null },
   };
 
-  Object.entries(categoryLinks).forEach(([elementId, path]) => {
+  Object.entries(categoryLinks).forEach(([elementId, { path, slug }]) => {
     try {
-      $w(elementId).onClick(() => {
+      const el = $w(elementId);
+      el.onClick(() => {
         import('wix-location').then(({ to }) => to(path));
       });
+
+      // Set category card background image from placeholders
+      if (slug) {
+        try {
+          const imgId = elementId.replace('#category', '#categoryImg');
+          $w(imgId).src = getCategoryCardImage(slug);
+        } catch (e) {
+          // Image element may not exist or use different naming
+        }
+      }
     } catch (e) {
       // Category card may not exist
     }
   });
+
+  // Set hero section background image
+  try {
+    $w('#heroBackground').src = getCategoryHeroImage('futon-frames');
+  } catch (e) {
+    // Hero background element may not exist
+  }
 }
 
 // ── Hero Animation ──────────────────────────────────────────────────
