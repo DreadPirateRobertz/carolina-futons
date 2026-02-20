@@ -163,12 +163,27 @@ export const markRecoveryEmailSent = webMethod(
 // ── Internal helpers ──────────────────────────────────────────────────
 
 async function recordAbandonedCart(data) {
+  const cleanCheckoutId = sanitize(data.checkoutId, 50);
+
+  // Dedup: skip if this checkoutId already has an abandoned record
+  const existing = await wixData.query('AbandonedCarts')
+    .eq('checkoutId', cleanCheckoutId)
+    .eq('status', 'abandoned')
+    .find();
+
+  if (existing.items.length > 0) return;
+
+  // Validate line items: keep only items with a name and quantity > 0
+  const validLineItems = (data.lineItems || []).filter(
+    item => item.name && item.quantity > 0
+  );
+
   await wixData.insert('AbandonedCarts', {
-    checkoutId: sanitize(data.checkoutId, 50),
+    checkoutId: cleanCheckoutId,
     buyerEmail: sanitize(data.buyerEmail, 254),
     buyerName: sanitize(data.buyerName, 200),
     cartTotal: Number(data.cartTotal) || 0,
-    lineItems: data.lineItems || [],
+    lineItems: validLineItems,
     abandonedAt: data.abandonedAt,
     status: 'abandoned',
     recoveryEmailSent: false,
