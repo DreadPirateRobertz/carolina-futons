@@ -237,6 +237,95 @@ export async function get_pinterestProductFeed() {
   }
 }
 
+// PWA Web App Manifest
+// URL: GET https://www.carolinafutons.com/_functions/manifest
+// Link in site header: <link rel="manifest" href="/_functions/manifest">
+export function get_manifest() {
+  const manifest = {
+    name: 'Carolina Futons',
+    short_name: 'CF Futons',
+    description: 'Handcrafted futon frames, mattresses, Murphy beds & platform beds. Made in the USA.',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#2C5F2D',
+    orientation: 'any',
+    categories: ['shopping', 'lifestyle'],
+    icons: [
+      { src: '/favicon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: '/favicon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ],
+  };
+
+  return ok({
+    body: JSON.stringify(manifest),
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+}
+
+// PWA Service Worker
+// URL: GET https://www.carolinafutons.com/_functions/serviceWorker
+// Registered via: navigator.serviceWorker.register('/_functions/serviceWorker', { scope: '/' })
+export function get_serviceWorker() {
+  const CACHE_NAME = 'cf-v1';
+  const OFFLINE_URL = '/offline';
+
+  // Service worker source served as JavaScript
+  const swCode = `
+const CACHE_NAME = '${CACHE_NAME}';
+const OFFLINE_URL = '${OFFLINE_URL}';
+const PRECACHE_URLS = [
+  '/',
+  '/shop-main',
+  '/futon-frames',
+  '/mattresses',
+  '/murphy-cabinet-beds',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        caches.match(event.request).then((cached) => cached || caches.match(OFFLINE_URL))
+      )
+    );
+    return;
+  }
+  event.respondWith(
+    caches.match(event.request).then((cached) => cached || fetch(event.request))
+  );
+});
+`.trim();
+
+  return ok({
+    body: swCode,
+    headers: {
+      'Content-Type': 'application/javascript',
+      'Service-Worker-Allowed': '/',
+      'Cache-Control': 'no-cache',
+    },
+  });
+}
+
 // ── Feed helper functions ─────────────────────────────────────────────
 
 function detectBrandFromProduct(product) {
