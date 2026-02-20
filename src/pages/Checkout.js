@@ -46,6 +46,8 @@ function initOrderNotes() {
 
     if (notesToggle && notesField) {
       notesField.collapse();
+      try { notesToggle.accessibility.ariaLabel = 'Toggle order notes'; } catch (e) {}
+      try { notesField.accessibility.ariaLabel = 'Special delivery instructions'; } catch (e) {}
       notesToggle.onClick(() => {
         if (notesField.collapsed) {
           notesField.expand();
