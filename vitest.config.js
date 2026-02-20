@@ -45,6 +45,7 @@ export default defineConfig({
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
       'backend/utils/mediaHelpers': path.resolve(__dirname, 'src/backend/utils/mediaHelpers.js'),
+      'backend/utils/errorHandler': path.resolve(__dirname, 'src/backend/utils/errorHandler.js'),
       // Public modules
       'public/galleryHelpers.js': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
       'public/galleryHelpers': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
