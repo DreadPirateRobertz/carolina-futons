@@ -11,6 +11,9 @@
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 
 const FREE_SHIPPING_THRESHOLD = 999;
+const WHITE_GLOVE_FREE_THRESHOLD = 1999;
+const WHITE_GLOVE_LOCAL_PRICE = 149;  // ZIP 287-289 (Asheville/Hendersonville area)
+const WHITE_GLOVE_REGIONAL_PRICE = 249; // ZIP 270-399 (NC/SC/GA/TN)
 
 export const getShippingRates = async (options) => {
   const { lineItems, shippingDestination, shippingOrigin } = options;
@@ -101,13 +104,35 @@ export const getShippingRates = async (options) => {
       const localDeliveryPrice = orderSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 49.99;
       shippingRates.push({
         code: 'local-delivery',
-        title: localDeliveryPrice === 0 ? 'Local Delivery (Free)' : 'Local White Glove Delivery',
+        title: localDeliveryPrice === 0 ? 'Local Delivery (Free)' : 'Local Delivery',
         logistics: {
           deliveryTime: '3-7 business days',
-          instructions: 'We deliver and set up your furniture. Call (828) 252-9449 to schedule.',
+          instructions: 'Curbside delivery. Call (828) 252-9449 to schedule.',
         },
         cost: {
           price: String(localDeliveryPrice.toFixed(2)),
+          currency: 'USD',
+          additionalCharges: [],
+        },
+      });
+
+      // White Glove Delivery: in-home placement, packaging removal, basic assembly
+      const isLocal = zip3 >= 287 && zip3 <= 289;
+      const whiteGloveBase = isLocal ? WHITE_GLOVE_LOCAL_PRICE : WHITE_GLOVE_REGIONAL_PRICE;
+      const whiteGlovePrice = orderSubtotal >= WHITE_GLOVE_FREE_THRESHOLD ? 0 : whiteGloveBase;
+      const whiteGloveLabel = whiteGlovePrice === 0
+        ? 'White Glove Delivery (Free over $1,999)'
+        : `White Glove Delivery — In-Home Setup`;
+
+      shippingRates.push({
+        code: 'white-glove',
+        title: whiteGloveLabel,
+        logistics: {
+          deliveryTime: isLocal ? '3-5 business days' : '5-10 business days',
+          instructions: 'Includes in-home placement, packaging removal, and basic assembly. We\'ll call to schedule a delivery window (Wed-Sat, 9am-5pm).',
+        },
+        cost: {
+          price: String(whiteGlovePrice.toFixed(2)),
           currency: 'USD',
           additionalCharges: [],
         },

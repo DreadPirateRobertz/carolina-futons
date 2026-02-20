@@ -109,3 +109,154 @@ export async function get_productSitemap() {
     });
   }
 }
+
+// Facebook/Instagram Commerce Catalog Feed
+// URL: GET https://www.carolinafutons.com/_functions/facebookCatalogFeed
+// Configure in Facebook Commerce Manager as a scheduled data feed
+export async function get_facebookCatalogFeed() {
+  try {
+    const SITE_URL = 'https://www.carolinafutons.com';
+    const products = await wixData.query('Stores/Products')
+      .limit(200)
+      .find();
+
+    // Facebook catalog TSV format (tab-separated values)
+    const headers = ['id', 'title', 'description', 'availability', 'condition', 'price',
+      'link', 'image_link', 'brand', 'google_product_category', 'fb_product_category',
+      'sale_price', 'item_group_id'].join('\t');
+
+    const rows = products.items.map(p => {
+      const availability = p.inStock !== false ? 'in stock' : 'out of stock';
+      const price = `${(p.price || 0).toFixed(2)} USD`;
+      const salePrice = p.discountedPrice ? `${p.discountedPrice.toFixed(2)} USD` : '';
+      const brand = detectBrandFromProduct(p);
+      const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
+      const category = detectGoogleCategory(p);
+
+      return [
+        p._id || '',
+        (p.name || '').replace(/[\t\n\r]/g, ' '),
+        description,
+        availability,
+        'new',
+        price,
+        `${SITE_URL}/product-page/${p.slug}`,
+        p.mainMedia || '',
+        brand,
+        category,
+        'furniture > bedroom furniture',
+        salePrice,
+        (p.collections || [])[0] || '',
+      ].join('\t');
+    });
+
+    const tsv = [headers, ...rows].join('\n');
+
+    return ok({
+      body: tsv,
+      headers: {
+        'Content-Type': 'text/tab-separated-values; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (facebookCatalogFeed):', err);
+    return serverError({
+      body: 'Error generating Facebook catalog feed',
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// Pinterest Product Catalog Feed
+// URL: GET https://www.carolinafutons.com/_functions/pinterestProductFeed
+// Configure in Pinterest Business > Catalogs as a data source
+export async function get_pinterestProductFeed() {
+  try {
+    const SITE_URL = 'https://www.carolinafutons.com';
+    const products = await wixData.query('Stores/Products')
+      .limit(200)
+      .find();
+
+    // Pinterest catalog TSV format
+    const headers = ['id', 'title', 'description', 'link', 'image_link', 'price',
+      'availability', 'brand', 'google_product_category', 'condition',
+      'sale_price', 'product_type', 'additional_image_link'].join('\t');
+
+    const rows = products.items.map(p => {
+      const availability = p.inStock !== false ? 'in stock' : 'out of stock';
+      const price = `${(p.price || 0).toFixed(2)} USD`;
+      const salePrice = p.discountedPrice ? `${p.discountedPrice.toFixed(2)} USD` : '';
+      const brand = detectBrandFromProduct(p);
+      const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
+      const category = detectGoogleCategory(p);
+      const productType = detectProductType(p);
+      const additionalImages = (p.mediaItems || []).slice(1, 5).map(m => m.src || '').join(',');
+
+      return [
+        p._id || '',
+        (p.name || '').replace(/[\t\n\r]/g, ' '),
+        description,
+        `${SITE_URL}/product-page/${p.slug}`,
+        p.mainMedia || '',
+        price,
+        availability,
+        brand,
+        category,
+        'new',
+        salePrice,
+        productType,
+        additionalImages,
+      ].join('\t');
+    });
+
+    const tsv = [headers, ...rows].join('\n');
+
+    return ok({
+      body: tsv,
+      headers: {
+        'Content-Type': 'text/tab-separated-values; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (pinterestProductFeed):', err);
+    return serverError({
+      body: 'Error generating Pinterest product feed',
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// ── Feed helper functions ─────────────────────────────────────────────
+
+function detectBrandFromProduct(product) {
+  const name = (product.name || '').toLowerCase();
+  const collections = (product.collections || []).map(c => (typeof c === 'string' ? c : c.id || '').toLowerCase());
+
+  if (collections.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
+  if (collections.some(c => c.includes('unfinished'))) return 'KD Frames';
+  if (collections.some(c => c.includes('mattress'))) return 'Otis Bed';
+  if (name.includes('murphy') || name.includes('cabinet bed')) return 'Arason Enterprises';
+  return 'Night & Day Furniture';
+}
+
+function detectGoogleCategory(product) {
+  const collections = (product.collections || []).map(c => (typeof c === 'string' ? c : c.id || '').toLowerCase());
+
+  if (collections.some(c => c.includes('murphy'))) return '436 - Furniture > Beds & Accessories > Beds';
+  if (collections.some(c => c.includes('mattress'))) return '2462 - Furniture > Beds & Accessories > Mattresses';
+  if (collections.some(c => c.includes('platform'))) return '436 - Furniture > Beds & Accessories > Beds';
+  if (collections.some(c => c.includes('casegood') || c.includes('accessor'))) return '6356 - Furniture > Bedroom Furniture';
+  return '4295 - Furniture > Futons';
+}
+
+function detectProductType(product) {
+  const collections = (product.collections || []).map(c => (typeof c === 'string' ? c : c.id || '').toLowerCase());
+
+  if (collections.some(c => c.includes('murphy'))) return 'Bedroom > Murphy Cabinet Beds';
+  if (collections.some(c => c.includes('mattress'))) return 'Bedroom > Futon Mattresses';
+  if (collections.some(c => c.includes('platform'))) return 'Bedroom > Platform Beds';
+  if (collections.some(c => c.includes('casegood'))) return 'Bedroom > Casegoods & Accessories';
+  return 'Bedroom > Futon Frames';
+}

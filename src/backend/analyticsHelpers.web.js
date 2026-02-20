@@ -7,6 +7,14 @@
  *
  * @requires wix-web-module
  * @requires wix-data
+ *
+ * GA4 Enhanced E-Commerce Events (fired client-side via wixWindow.trackEvent):
+ * - ViewContent: Product page view
+ * - AddToCart: Item added to cart
+ * - InitiateCheckout: Checkout started
+ * - Purchase: Order completed
+ * - AddToWishlist: Saved to wishlist
+ * These fire to both GA4 and Facebook Pixel when those integrations are enabled.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -204,5 +212,126 @@ export const getTrendingProducts = webMethod(
       console.error('Error fetching trending:', err);
       return [];
     }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════════
+// GA4 Enhanced E-Commerce Event Helpers
+// These are CLIENT-SIDE helpers imported by page files.
+// They use wixWindow.trackEvent() which fires to GA4 + Facebook Pixel.
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Build GA4 enhanced e-commerce event payload for a product view.
+ * Call from page: `wixWindow.trackEvent('ViewContent', buildViewContentEvent(product))`
+ *
+ * @function buildViewContentEvent
+ * @param {Object} product - Wix product object
+ * @returns {Object} GA4-compatible event payload
+ * @permission Anyone
+ */
+export const buildViewContentEvent = webMethod(
+  Permissions.Anyone,
+  async (product) => {
+    if (!product) return {};
+    return {
+      content_name: sanitize(product.name || '', 200),
+      content_ids: [product._id || ''],
+      content_type: 'product',
+      value: product.price || 0,
+      currency: 'USD',
+      content_category: (product.collections || [])[0] || '',
+    };
+  }
+);
+
+/**
+ * Build GA4 event payload for add-to-cart.
+ *
+ * @function buildAddToCartEvent
+ * @param {Object} product - Wix product object
+ * @param {number} [quantity=1] - Quantity added
+ * @returns {Object} GA4-compatible event payload
+ * @permission Anyone
+ */
+export const buildAddToCartEvent = webMethod(
+  Permissions.Anyone,
+  async (product, quantity = 1) => {
+    if (!product) return {};
+    return {
+      content_name: sanitize(product.name || '', 200),
+      content_ids: [product._id || ''],
+      content_type: 'product',
+      value: (product.price || 0) * quantity,
+      currency: 'USD',
+      num_items: quantity,
+    };
+  }
+);
+
+/**
+ * Build GA4 event payload for checkout initiation.
+ *
+ * @function buildCheckoutEvent
+ * @param {Array} cartItems - Array of cart line items
+ * @param {number} cartTotal - Cart subtotal
+ * @returns {Object} GA4-compatible event payload
+ * @permission Anyone
+ */
+export const buildCheckoutEvent = webMethod(
+  Permissions.Anyone,
+  async (cartItems, cartTotal) => {
+    return {
+      content_ids: (cartItems || []).map(item => item.productId || item._id || ''),
+      content_type: 'product',
+      value: cartTotal || 0,
+      currency: 'USD',
+      num_items: (cartItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0),
+    };
+  }
+);
+
+/**
+ * Build GA4 event payload for completed purchase.
+ *
+ * @function buildPurchaseEvent
+ * @param {Object} order - Wix order object
+ * @returns {Object} GA4-compatible event payload
+ * @permission Anyone
+ */
+export const buildPurchaseEvent = webMethod(
+  Permissions.Anyone,
+  async (order) => {
+    if (!order) return {};
+    return {
+      content_ids: (order.lineItems || []).map(item => item.catalogItemId || item.sku || ''),
+      content_type: 'product',
+      value: order.totals?.total || 0,
+      currency: 'USD',
+      num_items: (order.lineItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0),
+      order_id: order._id || '',
+    };
+  }
+);
+
+/**
+ * Build GA4 event payload for wishlist addition.
+ *
+ * @function buildWishlistEvent
+ * @param {Object} product - Wix product object
+ * @returns {Object} GA4-compatible event payload
+ * @permission Anyone
+ */
+export const buildWishlistEvent = webMethod(
+  Permissions.Anyone,
+  async (product) => {
+    if (!product) return {};
+    return {
+      content_name: sanitize(product.name || '', 200),
+      content_ids: [product._id || ''],
+      content_type: 'product',
+      value: product.price || 0,
+      currency: 'USD',
+    };
   }
 );

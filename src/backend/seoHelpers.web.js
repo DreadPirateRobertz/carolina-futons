@@ -579,3 +579,96 @@ function getCategoryMetaDescriptionSync(slug) {
   };
   return descriptions[slug] || 'Quality futon furniture since 1991. Carolina Futons, Hendersonville NC.';
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// Open Graph, Pinterest Rich Pin, and Twitter Card Meta Tags
+// Inject these via $w('#html1').postMessage() from page files
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Generate Open Graph + Pinterest + Twitter meta tags for a product page.
+ * Returns HTML string for injection into HtmlComponent on the page.
+ *
+ * @function getProductMetaTags
+ * @param {Object} product - Wix product object
+ * @returns {Promise<string>} HTML meta tags string
+ * @permission Anyone
+ */
+export const getProductMetaTags = webMethod(
+  Permissions.Anyone,
+  async (product) => {
+    if (!product) return '';
+
+    const url = `${BUSINESS_INFO.url}/product-page/${product.slug || ''}`;
+    const title = `${product.name || 'Product'} | Carolina Futons`;
+    const description = (product.description || '').replace(/<[^>]*>/g, '').substring(0, 200);
+    const image = product.mainMedia || BUSINESS_INFO.logo;
+    const price = (product.price || 0).toFixed(2);
+    const availability = product.inStock !== false ? 'instock' : 'oos';
+
+    const tags = [
+      // Open Graph (Facebook/Instagram)
+      `<meta property="og:type" content="product" />`,
+      `<meta property="og:title" content="${escapeAttr(title)}" />`,
+      `<meta property="og:description" content="${escapeAttr(description)}" />`,
+      `<meta property="og:url" content="${escapeAttr(url)}" />`,
+      `<meta property="og:image" content="${escapeAttr(image)}" />`,
+      `<meta property="og:site_name" content="Carolina Futons" />`,
+      `<meta property="product:price:amount" content="${price}" />`,
+      `<meta property="product:price:currency" content="USD" />`,
+      `<meta property="product:availability" content="${availability}" />`,
+      `<meta property="product:brand" content="Carolina Futons" />`,
+
+      // Twitter Card
+      `<meta name="twitter:card" content="summary_large_image" />`,
+      `<meta name="twitter:title" content="${escapeAttr(title)}" />`,
+      `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
+      `<meta name="twitter:image" content="${escapeAttr(image)}" />`,
+
+      // Pinterest Rich Pin
+      `<meta property="og:price:amount" content="${price}" />`,
+      `<meta property="og:price:currency" content="USD" />`,
+    ];
+
+    return tags.join('\n');
+  }
+);
+
+/**
+ * Generate Open Graph meta tags for a category/collection page.
+ *
+ * @function getCategoryMetaTags
+ * @param {string} categorySlug - Category URL slug
+ * @param {string} categoryName - Category display name
+ * @param {string} [imageUrl] - Category hero image URL
+ * @returns {Promise<string>} HTML meta tags string
+ * @permission Anyone
+ */
+export const getCategoryMetaTags = webMethod(
+  Permissions.Anyone,
+  async (categorySlug, categoryName, imageUrl) => {
+    const url = `${BUSINESS_INFO.url}/${categorySlug || ''}`;
+    const title = `${categoryName || 'Shop'} | Carolina Futons`;
+    const description = getCategoryMetaDescription(categorySlug);
+    const image = imageUrl || BUSINESS_INFO.logo;
+
+    const tags = [
+      `<meta property="og:type" content="website" />`,
+      `<meta property="og:title" content="${escapeAttr(title)}" />`,
+      `<meta property="og:description" content="${escapeAttr(description)}" />`,
+      `<meta property="og:url" content="${escapeAttr(url)}" />`,
+      `<meta property="og:image" content="${escapeAttr(image)}" />`,
+      `<meta property="og:site_name" content="Carolina Futons" />`,
+      `<meta name="twitter:card" content="summary_large_image" />`,
+      `<meta name="twitter:title" content="${escapeAttr(title)}" />`,
+      `<meta name="twitter:description" content="${escapeAttr(description)}" />`,
+      `<meta name="twitter:image" content="${escapeAttr(image)}" />`,
+    ];
+
+    return tags.join('\n');
+  }
+);
+
+function escapeAttr(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
