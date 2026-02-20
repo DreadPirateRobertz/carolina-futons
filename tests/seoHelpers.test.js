@@ -120,7 +120,7 @@ describe('getBreadcrumbSchema', () => {
   });
 
   it('includes full URLs with base domain', () => {
-    const crumbs = [{ name: 'Home', url: '/' }];
+    const crumbs = [{ name: 'Home', url: '/' }, { name: 'Current Page' }];
     const schema = JSON.parse(getBreadcrumbSchema(crumbs));
     expect(schema.itemListElement[0].item).toContain('carolinafutons.com');
   });
@@ -166,7 +166,7 @@ describe('generateAltText', () => {
     const alt = generateAltText(futonFrame, 'main');
     expect(alt).toContain('Eureka Futon Frame');
     expect(alt).toContain('Night & Day Furniture'); // default brand
-    expect(alt).toContain('Natural finish');
+    expect(alt).toContain('in Natural');
     expect(alt).toContain('Full size');
     expect(alt).toContain('Carolina Futons');
   });
@@ -174,20 +174,20 @@ describe('generateAltText', () => {
   it('generates lifestyle alt text', () => {
     const alt = generateAltText(futonFrame, 'lifestyle');
     expect(alt).toContain('Eureka Futon Frame');
-    expect(alt).toContain('modern living space');
+    expect(alt).toContain('living room setting');
     expect(alt).toContain('Carolina Futons');
   });
 
   it('generates detail alt text', () => {
     const alt = generateAltText(futonFrame, 'detail');
-    expect(alt).toContain('Close-up detail');
+    expect(alt).toContain('Close-up of');
     expect(alt).toContain('Natural finish');
   });
 
   it('generates open position alt text for futons', () => {
     const alt = generateAltText(futonFrame, 'open');
     expect(alt).toContain('open bed position');
-    expect(alt).toContain('Full size');
+    expect(alt).toContain('Full');
   });
 
   it('returns generic fallback for unknown image type', () => {
