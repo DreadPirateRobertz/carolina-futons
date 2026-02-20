@@ -1,9 +1,9 @@
 # Carolina Futons — Sprint Report
 
-**Last Updated:** 2026-02-20 13:45 MST
+**Last Updated:** 2026-02-20 13:48 MST
 **Sprint:** Full Stack Improvements + Crew Sprint
 **Status:** ACTIVE — 3 crew members executing
-**Tests:** 479 passing across 23 test files
+**Tests:** 505 passing across 25 test files
 **All tests green.**
 
 ---
@@ -12,9 +12,9 @@
 
 | Crew | Role | Current Task | Last Commit |
 |------|------|-------------|-------------|
-| **melania** | Lead / Strategy | Reviewing output, driving crew, updating reports | `8fa999e` STRATEGY.md |
-| **caesar** | UX / Design | Side Cart audit (Cart Page done, pushing shortly) | `dd893da` Cart Page UX |
-| **radahn** | Tests / Stories | Writing promotions.test.js (httpFunctions done) | `80cf2f4` httpFunctions tests |
+| **melania** | Lead / Strategy | Reviewing stories, updating plans/reports | `a517cfb` report + SPRINT-PLAN |
+| **caesar** | UX / Design | Implementing social-feed-og-audit (3 bugs found) | `1347f61` feed audit story |
+| **radahn** | Tests / Stories | STORY-005 cart recovery dupes → STORY-006 swatchService tests | `440ae7a` STORY-006 submitted |
 
 ---
 
@@ -33,8 +33,10 @@
 | 1 | Product Page UX audit | DONE | `6650a90` | 9 improvements: variant image sync, bundle button fix, quantity selector, product accordion, ARIA labels, removed broken APIs |
 | 2 | Category Page UX audit | DONE | `c43e029` | N+1 query fix, "Best Selling" default sort, breadcrumbs, quick view error states, ARIA labels, result count refresh |
 | 3 | Cart Page UX audit | DONE | `dd893da` | Quantity/remove buttons were no-ops — now wired to real API. Empty cart state. Reduced 4 redundant cart fetches to 1. ARIA labels. |
-| 4 | Side Cart audit | IN PROGRESS | — | Refactoring repeater handlers, adding remove functionality, accessibility |
-| 5 | P1: Social/marketing audit | NEXT | — | Feed endpoint quality, OG meta completeness, engagement tracking |
+| 4 | Side Cart UX audit | DONE | `6462f12` | Remove was animation-only (never removed item), dedup handlers, error states, ARIA |
+| 5 | Checkout ARIA | DONE | `125aa37` | ARIA labels on order notes toggle and field |
+| 6 | wix-data mock improvements | DONE | `3307557` | Added or(), contains(), distinct(), count() for swatch tests |
+| 7 | Social feed & OG meta audit | IN PROGRESS | `1347f61` | Found 3 critical bugs: broken feed images, [object Promise] in OG tags, wrong shipping schema |
 
 ### Radahn (Tests / Stories)
 | # | Task | Status | Commit | Details |
@@ -43,8 +45,11 @@
 | 2 | shipping-rates-plugin tests | DONE | `84e231e` | +8 tests: white-glove tiers, local delivery pricing, fallbacks |
 | 3 | httpFunctions tests | DONE | `80cf2f4` | +22 tests: 4 feed endpoints (Google XML, Facebook TSV, Pinterest TSV), sitemap, health check. New wix-http-functions mock. |
 | 4 | Feature stories | DONE | `24b4fd0` | 5 stories filed: gift card bug, http-functions tests, style quiz tests, safe init pattern, cart recovery dupes |
-| 5 | promotions.test.js | IN PROGRESS | — | Lightbox campaign engine test suite |
-| 6 | styleQuiz.test.js | NEXT | — | Recommendation engine test suite |
+| 5 | promotions.test.js | DONE | `de8aaf8` | +9 tests: active/inactive/expired/future campaigns, product fetching |
+| 6 | styleQuiz.test.js | DONE | `de8aaf8` | +17 tests: scoring, collection matching, budget filtering, fallbacks |
+| 7 | STORY-006 submitted | DONE | `440ae7a` | swatchService test suite story — APPROVED by melania |
+| 8 | STORY-005 implementation | IN PROGRESS | — | Cart recovery duplicate detection |
+| 9 | STORY-006 implementation | NEXT | — | swatchService test suite |
 
 ---
 
@@ -83,7 +88,8 @@
 |-----------|-------|-------|-------|
 | Pre-sprint baseline | 19 | 372 | — |
 | After sprint (morning) | 22 | 421 | +49 |
-| After crew session (now) | 23 | 479 | +58 |
+| After crew session start | 23 | 479 | +58 |
+| Current (13:48 MST) | 25 | 505 | +26 (promotions +9, styleQuiz +17) |
 
 **New test files this crew session:**
 - `tests/seoHelpers.test.js` — expanded +29 tests (Radahn)

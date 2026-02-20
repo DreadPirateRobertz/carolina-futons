@@ -1,8 +1,9 @@
 # Carolina Futons — Active Sprint Plan
 
 **Status**: IN PROGRESS
-**Test Suite**: 479 tests across 23 files (all passing)
-**Last Push**: 5123617
+**Test Suite**: 505 tests across 25 files (all passing)
+**Last Push**: 1347f61
+**Updated by**: melania (crew lead) — 2026-02-20 13:48 MST
 
 ---
 
@@ -10,9 +11,9 @@
 
 | Crew | Focus | Current Task |
 |------|-------|-------------|
-| **melania** | Crew Lead & Strategist | STRATEGY.md (done) → coordinating crew |
-| **caesar** | Design, logistics, e-commerce, social | ✅ Product Page UX, ✅ Category Page → Cart flow audit |
-| **radahn** | Code quality, TDD, feature proposals | ✅ seoHelpers, ✅ shippingRates, ✅ 5 stories → httpFunctions tests |
+| **melania** | Crew Lead & Strategist | Reviewing stories, updating plans/reports, driving crew |
+| **caesar** | Design, UX, social/marketing | Implementing social-feed-og-audit (3 bugs + 3 improvements) |
+| **radahn** | Code quality, TDD, stories | STORY-005 (cart recovery dupes) → STORY-006 (swatchService tests) |
 
 ## Mayor Completed This Sprint
 
@@ -30,32 +31,51 @@
 12. 3 new test suites: giftCards (18), deliveryScheduling (16), assemblyGuides (15)
 13. Bug fix: gift card code sanitize truncation
 
+## Crew Completed This Session
+
+### Caesar — UX Audit (P0) COMPLETE
+- [x] Product Page audit: 9 improvements — variant image sync, bundle button fix, quantity selector, accordion, ARIA (`6650a90`)
+- [x] Category Page audit: N+1 query fix, bestselling sort, breadcrumbs, quick view states, ARIA (`c43e029`)
+- [x] Cart Page audit: quantity/remove wired to API (were no-ops), empty state, 4→1 cart fetches (`dd893da`)
+- [x] Side Cart audit: remove wired to API (was animation-only), dedup handlers, error states, ARIA (`6462f12`)
+- [x] Checkout audit: ARIA labels on order notes (`125aa37`)
+- [x] wix-data mock: added or(), contains(), distinct(), count() (`3307557`)
+
+### Radahn — Test Coverage (P0) + Stories
+- [x] seoHelpers tests: +29 tests — OG, Twitter Card, Rich Pin, WebSite, Collection schemas (`017600b`)
+- [x] shipping-rates-plugin tests: +8 tests — white-glove tiers, local delivery (`84e231e`)
+- [x] httpFunctions tests: +22 tests — feeds, sitemap, health endpoint + new mock (`80cf2f4`)
+- [x] promotions tests: +9 tests — active/inactive/expired campaigns (`de8aaf8`)
+- [x] styleQuiz tests: +17 tests — scoring, collection matching, budget filtering (`de8aaf8`)
+- [x] 5 stories filed: STORY-001 through STORY-005 (`24b4fd0`)
+- [x] STORY-006 filed: swatchService tests (`440ae7a`)
+
+### Melania — Strategy & Coordination
+- [x] STRATEGY.md: 4 personas, funnel analysis, revenue optimization, competitive positioning, 30/60/90 roadmap (`8fa999e`)
+- [x] Story reviews: 4 approved, 1 needs revision (STORY-004)
+
 ## Remaining Work — Priority Order
 
-### P0 — Test Coverage (Radahn)
-- [x] tests/seoHelpers.test.js (+29 tests: OG, Twitter Card, Rich Pin, WebSite, Collection schemas)
-- [x] tests/shippingRates.test.js (+8 tests: white-glove tiers, local delivery pricing)
-- [x] tests/httpFunctions.test.js (+22 tests: feeds, sitemap, health endpoint)
-- [ ] tests/promotions.test.js (lightbox campaign engine)
-- [ ] tests/styleQuiz.test.js (recommendation engine)
-- [ ] tests/swatchService.test.js (swatch queries)
+### P0 — Critical Bug Fixes (Caesar — NOW)
+- [ ] Fix Facebook + Pinterest feed broken wix:image:// URLs (extract shared wixImageToUrl)
+- [ ] Fix category OG meta `[object Promise]` bug (sync vs async)
+- [ ] Fix product schema shipping rate (conditional on $999 threshold)
+- [ ] Add missing sitemap pages (Wall Huggers, Unfinished Wood, Blog)
+- [ ] Fix Pinterest `og:price:amount` tag
+- [ ] Add Facebook `content_type` column
 
-### P0 — UX Polish (Caesar)
-- [x] Product Page audit: 9 improvements (loading states, error messages, accessibility)
-- [x] Category Page audit: sort/filter/breadcrumbs/accessibility/performance
-- [ ] Cart flow audit: Cart Page → Side Cart → Checkout — NEXT
+### P0 — Bug Fixes (Radahn — NOW)
+- [ ] STORY-005: Cart recovery duplicate detection (checkoutId dedup + line item validation)
+
+### P1 — Test Coverage (Radahn — NEXT)
+- [ ] STORY-006: swatchService.test.js (10+ tests, wix-data mock ready)
+
+### P1 — Stories Pending Review
+- [ ] STORY-004: Safe element init pattern — NEEDS REVISION (too vague on scope)
+
+### P1 — Remaining UX
 - [ ] Mobile responsive patterns across all pages
 - [ ] Design token consistency check
-
-### P1 — Feature Stories (Radahn)
-- [x] Create stories/ directory structure
-- [x] Write 5 story files (bugs/001, bugs/005, code-quality/004, tests/002, tests/003)
-- [ ] Write 5 more stories (features, additional bugs/tests)
-
-### P1 — Social & Marketing (Caesar)
-- [ ] Audit feed endpoint output quality
-- [ ] Verify OG meta completeness
-- [ ] Improve engagement tracking coverage
 
 ### P2 — Needs Wix Dashboard
 - [ ] Create 11 CMS collections (see memory.md)
@@ -66,11 +86,25 @@
 
 ---
 
+## Story Tracker
+
+| ID | Title | Author | Status | Priority |
+|----|-------|--------|--------|----------|
+| STORY-001 | Gift card code truncation | radahn | DONE (already fixed) | P0 |
+| STORY-002 | HTTP functions test suite | radahn | DONE (implemented) | P1 |
+| STORY-003 | Style quiz test suite | radahn | DONE (implemented) | P1 |
+| STORY-004 | Safe element init pattern | radahn | REVISION NEEDED | P2 |
+| STORY-005 | Cart recovery duplicate detection | radahn | APPROVED → implementing | P1 |
+| STORY-006 | Swatch service test suite | radahn | APPROVED → next | P1 |
+| social-feed-og-audit | Feed bugs + OG meta fixes | caesar | APPROVED → implementing | P1 |
+
+---
+
 ## Orchestration Rules
 
-1. **Crew members work autonomously** — no waiting for instructions
+1. **Stories go through melania** — submit for review, wait for approval before implementing
 2. **Always pull before starting** — `git pull` to get latest
-3. **Always test before pushing** — `npm test` must pass
+3. **Always test before pushing** — `npx vitest run` must pass
 4. **Small commits** — one logical change per commit
 5. **Push to main** — no feature branches for crew (direct to main)
 6. **Conflict resolution** — pull, rebase, fix, push
