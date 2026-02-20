@@ -49,6 +49,7 @@ async function initProductPage() {
       initBreadcrumbs(),
       initAddToCartEnhancements(),
       initProductBadge(),
+      initProductVideo(),
     ]);
   } catch (err) {
     console.error('Error initializing product page:', err);
@@ -1007,6 +1008,58 @@ async function handleSwatchSubmit() {
   } catch (err) {
     console.error('Error submitting swatch request:', err);
     try { $w('#swatchSubmit').enable(); } catch (e) {}
+  }
+}
+
+// ── Product Video ──────────────────────────────────────────────────
+// Shows product demo video if the product has video media items
+
+function initProductVideo() {
+  try {
+    const videoSection = $w('#productVideoSection');
+    if (!videoSection || !currentProduct) return;
+
+    // Check if product has video media
+    const mediaItems = currentProduct.mediaItems || [];
+    const videoItem = mediaItems.find(item =>
+      item.mediaType === 'video' || item.type === 'video'
+    );
+
+    if (!videoItem) {
+      videoSection.collapse();
+      return;
+    }
+
+    try {
+      $w('#productVideoTitle').text = 'See It In Action';
+    } catch (e) {}
+
+    // Set video source — Wix VideoPlayer or VideoBox element
+    try {
+      const player = $w('#productVideo');
+      if (player) {
+        if (videoItem.src) {
+          player.src = videoItem.src;
+        } else if (videoItem.url) {
+          player.src = videoItem.url;
+        }
+        player.mute();
+      }
+    } catch (e) {}
+
+    // Link to full product videos page
+    try {
+      $w('#viewAllVideosLink').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => {
+          to('/product-videos');
+        });
+      });
+    } catch (e) {}
+
+    videoSection.expand();
+  } catch (e) {
+    // Video section is optional — collapse if any error
+    try { $w('#productVideoSection').collapse(); } catch (e2) {}
   }
 }
 

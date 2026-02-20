@@ -9,6 +9,7 @@ import {
   getProductBadge,
 } from '../src/public/galleryHelpers.js';
 import { futonFrame, wallHuggerFrame, futonMattress, murphyBed } from './fixtures/products.js';
+import { session } from 'wix-storage-frontend';
 
 // ── trackProductView ────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ describe('getRecentlyViewed', () => {
   });
 
   it('handles corrupted JSON in session storage gracefully', () => {
-    sessionStorage.setItem('cf_recently_viewed', '{bad-json!!!');
+    session.setItem('cf_recently_viewed', '{bad-json!!!');
     expect(getRecentlyViewed()).toEqual([]);
   });
 
@@ -231,7 +232,7 @@ describe('getCompareList', () => {
   });
 
   it('handles corrupted JSON gracefully', () => {
-    sessionStorage.setItem('cf_compare_list', 'not-valid-json');
+    session.setItem('cf_compare_list', 'not-valid-json');
     expect(getCompareList()).toEqual([]);
   });
 });

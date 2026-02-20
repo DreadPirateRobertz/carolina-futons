@@ -29,6 +29,8 @@ $w.onReady(async function () {
     initRecentlyViewed(),
     initTrustBar(),
     initTestimonials(),
+    initVideoShowcase(),
+    initQuizCTA(),
   ]);
   initSmoothScroll();
 });
@@ -271,6 +273,85 @@ function initTestimonials() {
 
 // ── Smooth Scroll ───────────────────────────────────────────────────
 // Smooth scroll anchors for in-page navigation between sections
+
+// ── Video Showcase ──────────────────────────────────────────────────
+// "See Our Furniture in Action" — 3 featured video thumbnails
+
+function initVideoShowcase() {
+  try {
+    const section = $w('#videoShowcaseSection');
+    if (!section) return;
+
+    try {
+      $w('#videoShowcaseTitle').text = 'See Our Furniture in Action';
+    } catch (e) {}
+
+    try {
+      $w('#videoShowcaseSubtitle').text =
+        'Watch product demos and room inspiration videos';
+    } catch (e) {}
+
+    // Video thumbnails link to the Product Videos page
+    const videoLinks = ['#videoThumb1', '#videoThumb2', '#videoThumb3'];
+    videoLinks.forEach(id => {
+      try {
+        $w(id).onClick(() => {
+          import('wix-location-frontend').then(({ to }) => {
+            to('/product-videos');
+          });
+        });
+      } catch (e) {}
+    });
+
+    // "View All Videos" button
+    try {
+      $w('#viewAllVideosCTA').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => {
+          to('/product-videos');
+        });
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Video section is optional
+    try { $w('#videoShowcaseSection').collapse(); } catch (e2) {}
+  }
+}
+
+// ── Style Quiz CTA ────────────────────────────────────────────────
+// "Find Your Perfect Futon" call-to-action on homepage
+
+function initQuizCTA() {
+  try {
+    const section = $w('#quizCTASection');
+    if (!section) return;
+
+    try {
+      $w('#quizCTATitle').text = 'Not Sure Where to Start?';
+    } catch (e) {}
+
+    try {
+      $w('#quizCTASubtitle').text =
+        'Take our 60-second style quiz and we\'ll match you with the perfect futon.';
+    } catch (e) {}
+
+    try {
+      $w('#quizCTAButton').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => {
+          to('/style-quiz');
+        });
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Quiz CTA is optional
+    try { $w('#quizCTASection').collapse(); } catch (e2) {}
+  }
+}
+
+// ── Smooth Scroll ──────────────────────────────────────────────────
 
 function initSmoothScroll() {
   const scrollTargets = {

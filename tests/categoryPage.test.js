@@ -108,15 +108,17 @@ describe('Category Page', () => {
   // ── Filter Controls ───────────────────────────────────────────────
 
   describe('filter controls', () => {
-    it('initializes brand filter with 5 options', async () => {
+    it('initializes brand filter with 7 options', async () => {
       await onReadyHandler();
       const brandFilter = getEl('#filterBrand');
-      expect(brandFilter.options).toHaveLength(5);
+      expect(brandFilter.options).toHaveLength(7);
       expect(brandFilter.options[0]).toEqual({ label: 'All Brands', value: '' });
       expect(brandFilter.options[1].label).toContain('Night & Day');
       expect(brandFilter.options[2].label).toContain('Strata');
-      expect(brandFilter.options[3].label).toContain('KD Frames');
-      expect(brandFilter.options[4].label).toContain('Otis');
+      expect(brandFilter.options[3].label).toContain('Wall Hugger');
+      expect(brandFilter.options[4].label).toContain('KD Frames');
+      expect(brandFilter.options[5].label).toContain('Unfinished');
+      expect(brandFilter.options[6].label).toContain('Otis');
     });
 
     it('initializes price filter with 6 range options', async () => {
