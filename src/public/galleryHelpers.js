@@ -1,5 +1,6 @@
 // Gallery and product engagement helpers
 // Used across multiple pages for consistent product display behavior
+import { session } from 'wix-storage-frontend';
 
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
@@ -9,7 +10,7 @@ export function trackProductView(product) {
   if (!product || !product._id) return;
 
   try {
-    const stored = sessionStorage.getItem(RECENTLY_VIEWED_KEY);
+    const stored = session.getItem(RECENTLY_VIEWED_KEY);
     let recent = stored ? JSON.parse(stored) : [];
 
     // Remove if already in list (will re-add at front)
@@ -29,7 +30,7 @@ export function trackProductView(product) {
       recent = recent.slice(0, MAX_RECENT);
     }
 
-    sessionStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recent));
+    session.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recent));
   } catch (e) {
     // Session storage may not be available
   }
@@ -37,7 +38,7 @@ export function trackProductView(product) {
 
 export function getRecentlyViewed(excludeId = null) {
   try {
-    const stored = sessionStorage.getItem(RECENTLY_VIEWED_KEY);
+    const stored = session.getItem(RECENTLY_VIEWED_KEY);
     if (!stored) return [];
 
     let recent = JSON.parse(stored);
@@ -56,7 +57,7 @@ const MAX_COMPARE = 4;
 
 export function addToCompare(product) {
   try {
-    const stored = sessionStorage.getItem(COMPARE_KEY);
+    const stored = session.getItem(COMPARE_KEY);
     let compareList = stored ? JSON.parse(stored) : [];
 
     if (compareList.some(p => p._id === product._id)) return false; // Already in list
@@ -70,7 +71,7 @@ export function addToCompare(product) {
       mainMedia: product.mainMedia,
     });
 
-    sessionStorage.setItem(COMPARE_KEY, JSON.stringify(compareList));
+    session.setItem(COMPARE_KEY, JSON.stringify(compareList));
     return true;
   } catch (e) {
     return false;
@@ -79,18 +80,18 @@ export function addToCompare(product) {
 
 export function removeFromCompare(productId) {
   try {
-    const stored = sessionStorage.getItem(COMPARE_KEY);
+    const stored = session.getItem(COMPARE_KEY);
     if (!stored) return;
 
     let compareList = JSON.parse(stored);
     compareList = compareList.filter(p => p._id !== productId);
-    sessionStorage.setItem(COMPARE_KEY, JSON.stringify(compareList));
+    session.setItem(COMPARE_KEY, JSON.stringify(compareList));
   } catch (e) {}
 }
 
 export function getCompareList() {
   try {
-    const stored = sessionStorage.getItem(COMPARE_KEY);
+    const stored = session.getItem(COMPARE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (e) {
     return [];
