@@ -36,7 +36,9 @@
 | 4 | Side Cart UX audit | DONE | `6462f12` | Remove was animation-only (never removed item), dedup handlers, error states, ARIA |
 | 5 | Checkout ARIA | DONE | `125aa37` | ARIA labels on order notes toggle and field |
 | 6 | wix-data mock improvements | DONE | `3307557` | Added or(), contains(), distinct(), count() for swatch tests |
-| 7 | Social feed & OG meta audit | IN PROGRESS | `1347f61` | Found 3 critical bugs: broken feed images, [object Promise] in OG tags, wrong shipping schema |
+| 7 | Social feed & OG meta audit | DONE | `00a2f0a` | Fixed: broken feed images (shared mediaHelpers.js), [object Promise] OG tags, shipping schema, missing sitemap pages, Pinterest tags, Facebook content_type |
+| 8 | mediaHelpers tests | DONE | `c4e9e98` | 8 tests for wix:image URL conversion |
+| 9 | Design token + ARIA stories | SUBMITTED | `7a0bef0` | Both APPROVED by melania — implementing now |
 
 ### Radahn (Tests / Stories)
 | # | Task | Status | Commit | Details |
@@ -92,6 +94,7 @@
 | +promotions, styleQuiz | 25 | 505 | +26 |
 | +swatchSvc, contactSub, merchantFeed | 28 | 553 | +48 |
 | +designTokens, galleryConfig + STORY-005 | 30 | 587 | +34 |
+| +mediaHelpers tests + feed fixes | 31 | 595 | +8 |
 
 **New test files this crew session:**
 - `tests/seoHelpers.test.js` — expanded +29 tests (Radahn)
