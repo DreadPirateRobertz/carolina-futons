@@ -2,7 +2,7 @@
 
 **Author**: caesar
 **Priority**: P1
-**Status**: draft
+**Status**: complete
 
 ## Problem
 
@@ -28,11 +28,11 @@ Add targeted mobile optimizations to pages that benefit most. Not every page nee
 
 ## Acceptance Criteria
 
-- [ ] Member Page uses collapseOnMobile + initBackToTop
-- [ ] Blog uses limitForViewport + initBackToTop
-- [ ] Thank You Page uses limitForViewport + initBackToTop
-- [ ] Search Results uses limitForViewport + initBackToTop
-- [ ] FAQ uses initBackToTop
-- [ ] Contact, About, Shipping Policy use initBackToTop
-- [ ] Fullscreen Page uses limitForViewport
-- [ ] All tests pass
+- [x] Member Page uses collapseOnMobile + initBackToTop
+- [x] Blog uses limitForViewport + initBackToTop
+- [x] Thank You Page uses limitForViewport + initBackToTop
+- [x] Search Results uses limitForViewport + initBackToTop
+- [x] FAQ uses initBackToTop
+- [x] Contact, About, Shipping Policy use initBackToTop
+- [ ] Fullscreen Page uses limitForViewport — SKIPPED (uses dataset filter, not direct data array)
+- [x] All tests pass (714 green)
