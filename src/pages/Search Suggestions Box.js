@@ -18,11 +18,15 @@ function initSearchSuggestions() {
     let debounceTimer;
 
     // Register onItemReady once, before any data assignment
+    try { searchInput.accessibility.ariaLabel = 'Search products'; } catch (e) {}
+
     suggestionsRepeater.onItemReady(($item, itemData) => {
       $item('#sugImage').src = itemData.image;
       $item('#sugName').text = itemData.name;
       $item('#sugPrice').text = itemData.price;
 
+      try { $item('#sugImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
+      try { $item('#sugName').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       $item('#sugImage').onClick(() => navigateTo(itemData.slug));
       $item('#sugName').onClick(() => navigateTo(itemData.slug));
     });
