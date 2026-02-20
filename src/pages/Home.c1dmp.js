@@ -3,21 +3,7 @@
 // Featured products, category showcase, recently viewed, trust signals, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
-import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { HERO_CABIN_SCENE, getCategoryCardImage } from 'public/placeholderImages.js';
-import wixData from 'wix-data';
-
-// ── Category metadata for all 8 categories ──────────────────────────
-const CATEGORIES = [
-  { _id: 'futonFrames', elementId: '#categoryFutonFrames', name: 'Futon Frames', tagline: 'Solid hardwood, built to last', path: '/futon-frames', collection: 'futon-frames' },
-  { _id: 'mattresses', elementId: '#categoryMattresses', name: 'Futon Mattresses', tagline: 'CertiPUR-US certified comfort', path: '/mattresses', collection: 'mattresses' },
-  { _id: 'murphy', elementId: '#categoryMurphy', name: 'Murphy Cabinet Beds', tagline: 'No wall mount needed', path: '/murphy-cabinet-beds', collection: 'murphy-cabinet-beds' },
-  { _id: 'platformBeds', elementId: '#categoryPlatformBeds', name: 'Platform Beds', tagline: 'Clean lines, solid wood', path: '/platform-beds', collection: 'platform-beds' },
-  { _id: 'casegoods', elementId: '#categoryCasegoods', name: 'Casegoods & Accessories', tagline: 'Complete the bedroom', path: '/casegoods-accessories', collection: 'casegoods-accessories' },
-  { _id: 'sale', elementId: '#categorySale', name: 'Sale & Clearance', tagline: 'Handcrafted deals', path: '/sales', collection: null },
-  { _id: 'wallHuggers', elementId: '#categoryWallHuggers', name: 'Wall Hugger Frames', tagline: 'Patented space-saving design', path: '/wall-huggers', collection: 'wall-huggers' },
-  { _id: 'unfinished', elementId: '#categoryUnfinished', name: 'Unfinished Wood Furniture', tagline: 'Made in USA, ready to finish', path: '/unfinished-wood', collection: 'unfinished-wood' },
-];
+import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages';
 
 $w.onReady(async function () {
   await Promise.all([
@@ -111,195 +97,45 @@ async function loadSaleHighlights() {
 }
 
 // ── Category Showcase ───────────────────────────────────────────────
-// All 8 categories with content injection (name, tagline, product count)
+// Large clickable category cards: Futon Frames, Mattresses, Murphy Beds, etc.
 
-async function initCategoryShowcase() {
-  // Fetch product counts for all categories in parallel
-  const countPromises = CATEGORIES.map(async (cat) => {
-    if (!cat.collection) return { ...cat, count: null };
-    try {
-      const count = await wixData.query('Stores/Products')
-        .hasSome('collections', [cat.collection])
-        .count();
-      return { ...cat, count };
-    } catch (e) {
-      return { ...cat, count: null };
-    }
-  });
-
-  const categoriesWithCounts = await Promise.all(countPromises);
-
-  // Set up repeater if it exists (preferred: shared element IDs per card)
-  try {
-    const repeater = $w('#categoryRepeater');
-    if (repeater) {
-      repeater.data = categoriesWithCounts;
-      repeater.onItemReady(($item, itemData) => {
-        try { $item('#categoryCardTitle').text = itemData.name; } catch (e) {}
-        try { $item('#categoryCardTagline').text = itemData.tagline; } catch (e) {}
-        try {
-          $item('#categoryCardCount').text = itemData.count != null
-            ? `${itemData.count} Products` : '';
-        } catch (e) {}
-
-        // Set category card image from Media Manager
-        const cardSlug = itemData.collection || itemData.path.replace(/^\//, '');
-        const cardImage = getCategoryCardImage(cardSlug);
-        if (cardImage) {
-          try {
-            $item('#categoryCardImage').src = cardImage;
-            $item('#categoryCardImage').alt = `${itemData.name} - Carolina Futons`;
-          } catch (e) {}
-        }
-
-        $item('#categoryCardTitle').onClick(() => {
-          import('wix-location').then(({ to }) => to(itemData.path));
-        });
-      });
-    }
-  } catch (e) {
-    // Repeater may not exist
-  }
-
-  // Also wire up individual card click handlers (backward compatible)
-  categoriesWithCounts.forEach((cat) => {
-    try {
-      $w(cat.elementId).onClick(() => {
-        import('wix-location').then(({ to }) => to(cat.path));
-      });
-    } catch (e) {
-      // Card element may not exist in editor
-    }
-  });
-}
-
-// ── Recently Viewed ─────────────────────────────────────────────────
-// Shows products the visitor has browsed this session
-
-async function initRecentlyViewed() {
-  try {
-    const recent = getRecentlyViewed();
-    if (!recent || recent.length === 0) {
-      try { $w('#recentSection').collapse(); } catch (e) {}
-      return;
-    }
-
-    // Use buildRecentlyViewedSection from galleryHelpers (added by cf-vw0)
-    buildRecentlyViewedSection('#recentRepeater', ($item, itemData) => {
-      $item('#recentImage').src = itemData.mainMedia;
-      $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
-      $item('#recentName').text = itemData.name;
-      $item('#recentPrice').text = itemData.price;
-
-      $item('#recentImage').onClick(() => {
-        import('wix-location').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
-      $item('#recentName').onClick(() => {
-        import('wix-location').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
-    });
-
-    $w('#recentSection').expand();
-  } catch (e) {
-    // Recently viewed section may not exist or galleryHelpers not ready
-    try { $w('#recentSection').collapse(); } catch (e2) {}
-  }
-}
-
-// ── Trust Bar ───────────────────────────────────────────────────────
-// Animated trust signals strip with key selling points
-
-function initTrustBar() {
-  const trustSignals = [
-    { id: '#trustItem1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
-    { id: '#trustItem2', text: 'Family Owned Since 1991', icon: 'heart' },
-    { id: '#trustItem3', text: '700+ Fabric Swatches', icon: 'palette' },
-    { id: '#trustItem4', text: 'Free Shipping Over $999', icon: 'truck' },
-  ];
-
-  try {
-    const trustBar = $w('#trustBar');
-    if (!trustBar) return;
-
-    // Staggered fade-in for each trust item
-    trustSignals.forEach((signal, index) => {
-      try {
-        const element = $w(signal.id);
-        if (element) {
-          element.show('fade', { duration: 400, delay: 200 + (index * 150) });
-        }
-      } catch (e) {}
-    });
-  } catch (e) {
-    // Trust bar may not exist
-  }
-}
-
-// ── Testimonials ────────────────────────────────────────────────────
-// Customer reviews section with rotating quotes
-
-function initTestimonials() {
-  const testimonials = [
-    {
-      _id: 'test1',
-      quote: 'The quality of our Night & Day futon frame is outstanding. It looks like a real piece of furniture, not a dorm room couch. Love it!',
-      name: 'Sarah M., Asheville NC',
-    },
-    {
-      _id: 'test2',
-      quote: 'Brenda helped us find the perfect Murphy cabinet bed for our guest room. The whole experience — from browsing to delivery — was wonderful.',
-      name: 'James & Linda K., Hendersonville NC',
-    },
-    {
-      _id: 'test3',
-      quote: 'We drove from Charlotte just to see the fabric swatches in person. So glad we did — our futon mattress is exactly what we wanted.',
-      name: 'Michelle T., Charlotte NC',
-    },
-    {
-      _id: 'test4',
-      quote: 'Best furniture shopping experience we\'ve had. Knowledgeable staff, beautiful showroom, and the platform bed we bought is solid as a rock.',
-      name: 'David R., Greenville SC',
-    },
-  ];
-
-  try {
-    const repeater = $w('#testimonialRepeater');
-    if (!repeater) return;
-
-    repeater.data = testimonials;
-    repeater.onItemReady(($item, itemData) => {
-      try { $item('#testimonialQuote').text = `"${itemData.quote}"`; } catch (e) {}
-      try { $item('#testimonialName').text = `— ${itemData.name}`; } catch (e) {}
-    });
-  } catch (e) {
-    // Testimonials section may not exist
-  }
-}
-
-// ── Smooth Scroll ───────────────────────────────────────────────────
-// Smooth scroll anchors for in-page navigation between sections
-
-function initSmoothScroll() {
-  const scrollTargets = {
-    '#scrollToFeatured': '#featuredRepeater',
-    '#scrollToCategories': '#categoryRepeater',
-    '#scrollToSale': '#saleSection',
-    '#scrollToReviews': '#testimonialRepeater',
+function initCategoryShowcase() {
+  const categoryLinks = {
+    '#categoryFutonFrames': { path: '/futon-frames', slug: 'futon-frames' },
+    '#categoryMattresses': { path: '/mattresses', slug: 'mattresses' },
+    '#categoryMurphy': { path: '/murphy-cabinet-beds', slug: 'murphy-cabinet-beds' },
+    '#categoryPlatformBeds': { path: '/platform-beds', slug: 'platform-beds' },
+    '#categoryCasegoods': { path: '/casegoods-accessories', slug: 'casegoods-accessories' },
+    '#categorySale': { path: '/sales', slug: null },
   };
 
-  Object.entries(scrollTargets).forEach(([triggerId, targetId]) => {
+  Object.entries(categoryLinks).forEach(([elementId, { path, slug }]) => {
     try {
-      $w(triggerId).onClick(() => {
-        try { $w(targetId).scrollTo(); } catch (e) {}
+      const el = $w(elementId);
+      el.onClick(() => {
+        import('wix-location').then(({ to }) => to(path));
       });
+
+      // Set category card background image from placeholders
+      if (slug) {
+        try {
+          const imgId = elementId.replace('#category', '#categoryImg');
+          $w(imgId).src = getCategoryCardImage(slug);
+        } catch (e) {
+          // Image element may not exist or use different naming
+        }
+      }
     } catch (e) {
       // Scroll trigger may not exist
     }
   });
+
+  // Set hero section background image
+  try {
+    $w('#heroBackground').src = getCategoryHeroImage('futon-frames');
+  } catch (e) {
+    // Hero background element may not exist
+  }
 }
 
 // ── Hero Animation ──────────────────────────────────────────────────

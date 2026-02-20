@@ -15,7 +15,7 @@ import {
 import { submitSwatchRequest } from 'backend/emailService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixStoresFrontend from 'wix-stores-frontend';
-import wixWindowFrontend from 'wix-window-frontend';
+import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages';
 
 let currentProduct = null;
 let productVariants = [];
@@ -562,9 +562,35 @@ function initImageGallery() {
     if (currentProduct) {
       const mainImage = $w('#productMainImage');
       if (mainImage) {
+        // Fallback image when product has no mainMedia
+        if (!currentProduct.mainMedia) {
+          const category = currentProduct.collections?.[0] || '';
+          mainImage.src = getProductFallbackImage(category);
+        }
         generateAltText(currentProduct, 'main').then(alt => {
           mainImage.alt = alt;
         });
+      }
+
+      // Fill gallery with placeholders when fewer than expected thumbnails
+      const gallery = $w('#productGallery');
+      if (gallery) {
+        const mediaItems = currentProduct.mediaItems || [];
+        if (mediaItems.length < 3) {
+          const category = currentProduct.collections?.[0] || '';
+          const placeholders = getPlaceholderProductImages(category, 4);
+          const combined = [
+            ...mediaItems,
+            ...placeholders.slice(mediaItems.length).map(src => ({
+              src,
+              type: 'image',
+              title: currentProduct.name || 'Product image',
+            })),
+          ];
+          try {
+            gallery.items = combined;
+          } catch (e) {}
+        }
       }
     }
 
