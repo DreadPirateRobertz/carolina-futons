@@ -1,6 +1,7 @@
 // Backend web module for SEO utilities
 // Generates structured data, alt text, and meta tags
 import { Permissions, webMethod } from 'wix-web-module';
+import { getBlogFaqs } from 'backend/blogContent';
 
 const BUSINESS_INFO = {
   name: 'Carolina Futons',
@@ -794,6 +795,74 @@ export const getCategoryMetaTags = webMethod(
     ];
 
     return tags.join('\n');
+  }
+);
+
+// Generate Article JSON-LD schema for blog posts
+export const getBlogArticleSchema = webMethod(
+  Permissions.Anyone,
+  (post) => {
+    if (!post || !post.title) return null;
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      description: post.metaDescription || post.excerpt || '',
+      author: {
+        '@type': 'Organization',
+        name: BUSINESS_INFO.name,
+        url: BUSINESS_INFO.url,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: BUSINESS_INFO.name,
+        logo: {
+          '@type': 'ImageObject',
+          url: BUSINESS_INFO.logo,
+        },
+      },
+      datePublished: post.publishDate || new Date().toISOString().split('T')[0],
+      dateModified: post.modifiedDate || post.publishDate || new Date().toISOString().split('T')[0],
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': `${BUSINESS_INFO.url}/blog/${post.slug}`,
+      },
+    };
+
+    if (post.coverImage) {
+      schema.image = post.coverImage;
+    }
+
+    if (post.keywords && post.keywords.length > 0) {
+      schema.keywords = post.keywords.join(', ');
+    }
+
+    return JSON.stringify(schema);
+  }
+);
+
+// Generate FAQ schema for a blog post using blogContent data
+export const getBlogFaqSchema = webMethod(
+  Permissions.Anyone,
+  (slug) => {
+    const faqs = getBlogFaqs(slug);
+    if (!faqs || faqs.length === 0) return null;
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      })),
+    };
+
+    return JSON.stringify(schema);
   }
 );
 
