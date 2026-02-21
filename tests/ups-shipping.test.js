@@ -346,7 +346,7 @@ describe('validateAddress', () => {
     expect(result.candidates).toHaveLength(1);
   });
 
-  it('defaults to valid on API error (never blocks checkout)', async () => {
+  it('returns invalid with unavailable flag on API error', async () => {
     __setHandler(() => {
       throw new Error('Network down');
     });
@@ -357,7 +357,66 @@ describe('validateAddress', () => {
       state: 'NC',
       postalCode: '28801',
     });
-    expect(result.valid).toBe(true);
+    expect(result.valid).toBe(false);
+    expect(result.unavailable).toBe(true);
+    expect(result.error).toBe('validation unavailable');
+  });
+
+  it('returns invalid with unavailable flag on non-ok API response', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return {
+          ok: true,
+          async json() { return { access_token: 'tok', expires_in: '3600' }; },
+          async text() { return ''; },
+        };
+      }
+      return {
+        ok: false,
+        status: 503,
+        async json() { return {}; },
+        async text() { return 'Service Unavailable'; },
+      };
+    });
+
+    const result = await validateAddress({
+      addressLine1: '123 Main St',
+      city: 'Asheville',
+      state: 'NC',
+      postalCode: '28801',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.unavailable).toBe(true);
+    expect(result.error).toBe('validation unavailable');
+  });
+
+  it('returns invalid with unavailable flag on unrecognized response format', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return {
+          ok: true,
+          async json() { return { access_token: 'tok', expires_in: '3600' }; },
+          async text() { return ''; },
+        };
+      }
+      if (url.includes('/addressvalidation/')) {
+        return {
+          ok: true,
+          async json() { return { XAVResponse: { UnexpectedField: 'something' } }; },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await validateAddress({
+      addressLine1: '123 Main St',
+      city: 'Asheville',
+      state: 'NC',
+      postalCode: '28801',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.unavailable).toBe(true);
   });
 });
 

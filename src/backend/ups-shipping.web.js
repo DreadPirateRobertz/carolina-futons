@@ -504,7 +504,7 @@ export const validateAddress = webMethod(
 
       if (!response.ok) {
         console.error('UPS address validation API returned', response.status);
-        return { valid: true, candidates: [], unavailable: true };
+        return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
       }
 
       const data = await response.json();
@@ -528,10 +528,10 @@ export const validateAddress = webMethod(
         return { valid: false, ambiguous: false, candidates: [] };
       }
 
-      return { valid: true, candidates: [] };
+      return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
     } catch (err) {
       console.error('Address validation error:', err);
-      return { valid: true, candidates: [], unavailable: true };
+      return { valid: false, candidates: [], unavailable: true, error: 'validation unavailable' };
     }
   }
 );
