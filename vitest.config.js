@@ -52,6 +52,7 @@ export default defineConfig({
       'backend/liveChatService.web': path.resolve(__dirname, 'src/backend/liveChatService.web.js'),
       'backend/wishlistAlerts.web': path.resolve(__dirname, 'src/backend/wishlistAlerts.web.js'),
       'backend/inventoryService.web': path.resolve(__dirname, 'src/backend/inventoryService.web.js'),
+      'backend/comparisonService.web': path.resolve(__dirname, 'src/backend/comparisonService.web.js'),
       'backend/abTesting.web': path.resolve(__dirname, 'src/backend/abTesting.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
