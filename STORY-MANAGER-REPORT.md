@@ -1,6 +1,6 @@
 # Story Manager Report — Cross-Rig Status
 
-**Last Updated:** 2026-02-20 18:30 MST
+**Last Updated:** 2026-02-20 18:50 MST
 **Role:** Story Manager (all rigs: cfutons, cfutons_mobile, tradingbot, gastown)
 **Reporting to:** Mayor / Human
 
@@ -8,130 +8,151 @@
 
 ## Sprint Health Dashboard
 
-| Rig | Health | Open | In-Progress | Closed | P0 Status | Key Risk |
-|-----|--------|------|-------------|--------|-----------|----------|
-| **cfutons** | GREEN | 22 | 4 | 3 | cf-4aj: 2/4 done, 2 in-progress with active polecats | Brainstorm flooding backlog (18 new beads) |
-| **cfutons_mobile** | RED | 17 | 1 | 0 | cm-821: 0/4 done, furiosa nuked | No active workers, zero velocity |
-| **tradingbot** | GREEN | 14 | 2 | 6 | tb-ni1: tb-91k now in-progress, both deps merged | Good momentum |
-| **gastown** | YELLOW | 19 | 0 | 2 | No P0s, 5 P1 bugs (build/test/race) | Build broken by ICU dependency |
+| Rig | Health | Open | In-Progress | Closed | P0 Status | Key Change |
+|-----|--------|------|-------------|--------|-----------|------------|
+| **cfutons** | GREEN | 25 | 5 | 4 | cf-4aj: 2/4 done, 2 pending merge (polecats completed) | cf-b9o closed, 3 new architect beads, cf-d3u started |
+| **cfutons_mobile** | RED | 17 | 1 | 0 | cm-821: stalled, furiosa nuked | No change — still zero velocity |
+| **tradingbot** | GREEN | 14 | 2 | 8 | tb-ni1: ALL 3 blockers CLOSED — epic ready to close | tb-91k DONE, tb-1tl fixed |
+| **gastown** | YELLOW | 18 | 0 | 3 | gt-dvk (Dashboard P1) CLOSED | 1 more junk bead cleaned |
 
 ---
 
-## Active Assignments (Monitoring)
+## Significant Changes Since Last Report
 
-### Polecats
-| Agent | Bead | Status | Output Quality | Notes |
-|-------|------|--------|----------------|-------|
-| polecat-56 | cf-qxo (gallery audit) | WORKING | GOOD | Found real bug: `initImageLightbox`/`initImageZoom` called with string selectors instead of `$w()` elements. Branch pushed. AC items 1-2 addressed, 4-5-8 pending. |
-| polecat-57 | cf-o1a (lightbox test) | WORKING | Pending | No branch pushed yet. Monitoring. |
+### Completions
+| Bead | Rig | Impact |
+|------|-----|--------|
+| **tb-91k** (P0 ML model training) | tradingbot | P0 EPIC tb-ni1 now fully unblocked — all 3 deps closed |
+| **cf-b9o** (shared design tokens) | cfutons | Radahn delivered. Web/mobile token alignment done. |
+| **tb-1tl** (PaperTrader bug) | tradingbot | Position sizing edge case fixed |
+| **gt-dvk** (Dashboard Phase 1) | gastown | Crew+Polecats panel split done. PR #1837 merged. |
 
-### Crew
-| Agent | Bead | Status | AC Verified | Notes |
-|-------|------|--------|-------------|-------|
-| caesar | cf-l31 (structured data) | IN_PROGRESS | YES — strengthened: 8 testable criteria, review schema scoped out, files identified | Was brainstorm idea with vague AC. Now has clear scope: Product + FAQ schema only, no reviews until platform exists. |
-| radahn | cf-b9o (shared design tokens) | IN_PROGRESS | YES — strengthened: 9 testable criteria, architecture decided (plain JSON, not npm package) | Was brainstorm idea. Resolved open question: JSON file format, not git submodule. |
-| algo (tradingbot) | tb-91k (train ML model) | IN_PROGRESS | YES — excellent quantitative AC already (>55% directional accuracy) | P0 critical path — unblocked after tb-bel + tb-v8l merged. |
-| quant (tradingbot) | tb-nxs (mean reversion) | IN_PROGRESS | YES — strengthened: signal frequency target, profit factor > 1.0 | Using my strengthened AC with quantitative thresholds. |
+### Polecat Status Change
+| Agent | Previous | Current | Notes |
+|-------|----------|---------|-------|
+| polecat-56 | working | **done-intent:COMPLETED** | cf-qxo gallery audit — branch pushed, bug fixed, awaiting refinery merge |
+| polecat-57 | working | **done-intent:COMPLETED** | cf-o1a lightbox tests — 483-line test suite pushed, awaiting refinery merge |
 
----
+**cf-4aj epic will close once refinery merges both polecat branches.** All 4 blocking stories are either closed or done-pending-merge.
 
-## Brainstorm Triage (44 beads total)
+### Epic Close Recommendation
+**tb-ni1 (ML Decision Intelligence Engine)** — all 3 blocking stories closed with passing ACs:
+- tb-bel: OHLCV pipeline (merged by onyx)
+- tb-v8l: ML framework research (merged by jasper)
+- tb-91k: Signal prediction model (closed)
 
-### Priority Adjustments Made
-| Bead | Change | Rationale |
-|------|--------|-----------|
-| cf-d3u | P2 → **P1** | Abandoned cart recovery = highest-ROI action. 5-15% recovery rate. Backend already built. |
-| tb-f2i | P2 → **P1** | MCP server is force multiplier. Makes every tradingbot bead AI-manageable. |
-| cm-0au | P2 → **P3** | Mobile app has no screens yet. Offline catalog is premature optimization. |
-| cf-zl7 | P2 → **P3** | Blocked by physical video production. Not actionable until content exists. |
-
-### Dependencies Added
-| Bead | Now Depends On | Why |
-|------|---------------|-----|
-| cm-gmo (checkout) | cm-t3b (cart screen) | Cart must exist before checkout |
-| cm-ke0 (style quiz) | cm-w04 (product browsing) | Home screen must exist |
-| cm-qtp (push alerts) | cm-8u2 (product detail) | "Watch" button lives on product page |
-| cm-u59 (swatch viz) | cm-8u2 (product detail) | Component lives on product detail |
-
-### Cross-Rig Overlaps Flagged
-| Cluster | Beads | Action |
-|---------|-------|--------|
-| Swatch kit | cf-5w9 (web) + cm-u59 (mobile) | Both have $5 swatch purchase. Shared fulfillment backend needed. |
-| Mean reversion / pairs | tb-nxs (P1) + tb-1dt (P2) | Spread-based MR mentioned in both. tb-1dt may partially resolve tb-nxs. |
-| Regime + strategy | tb-zfw → tb-1dt | Regime detection should come first (affects all strategy weights). |
-| Email + reviews | cf-d3u (P1) + cf-g94 (P2) | Review request email is part of post-purchase sequence. Coordinate. |
-
-### AC Quality Issues Fixed
-| Bead | Issue | Fix |
-|------|-------|-----|
-| cf-tpy (AfterShip) | Vague on carriers, SMS ETA | Specified carriers (FedEx/UPS/USPS), removed vague SMS, added fallback |
-| cf-l31 (structured data) | Review schema mixed in | Scoped out reviews, identified files, added edge case tests |
-| cf-b9o (shared tokens) | Architecture undecided | Resolved: plain JSON, not npm/submodule |
-
-### Brainstorm Quality Assessment
-**Overall: GOOD.** Ideas are well-structured with AC, realistic cross-rig thinking. Two quality issues:
-1. Tendency to include future/aspirational features in otherwise scoped stories (cf-l31 reviews, cm-ke0 collaborative filtering)
-2. Some P2s should be P3 (physical content deps, premature optimization)
-
-Funnel working correctly. brainstorm is a net positive — just needs triage oversight.
+**Recommend mayor close tb-ni1.** AC items 1-8 should all be met.
 
 ---
 
-## Velocity Tracking
+## New Beads Reviewed This Cycle
 
-| Rig | Closed This Session | Merged | In-Progress | Ready |
-|-----|---------------------|--------|-------------|-------|
-| cfutons | 3 | direct push | 4 | 5 |
-| tradingbot | 6 | via refinery | 2 | 5 |
-| cfutons_mobile | 0 | — | 1 (orphaned) | 3 |
-| gastown | 2 | — | 0 | 0 (bugs need assignment) |
-| **Total** | **11** | | **7** | **13** |
+### cfutons — 3 new architect beads
+| Bead | Title | AC Status | Issue Found |
+|------|-------|-----------|-------------|
+| cf-evd | Extract hardcoded values to config | No AC | **DUPLICATE OVERLAP with cf-a9q** — cf-evd is broader (18 phone locations vs 5, adds domain URLs + magic numbers). Recommend consolidate. Notes added to both. |
+| cf-k22 | Centralized error handling | **AC ADDED** (8 criteria) | Was description-only. Now has: standard return type, structured logger, empty catch replacement, error boundary, migration guide. Sized L. |
+| cf-tbf | Product Page.js decomposition | **AC ADDED** (8 criteria) | Was description-only. Now has: <400 line target, 5+ extracted modules, independent testability, import direction constraint. Sized L. |
+
+### gastown — 1 junk bead cleaned
+| Bead | Action |
+|------|--------|
+| gt-626 | CLOSED — another accidental `--help` filing (4th one cleaned this session) |
+
+### Already-reviewed beads verified
+All previously triaged brainstorm beads (44 total) retain their ACs, priority adjustments, and dependency declarations. No drift.
+
+---
+
+## Active Assignments
+
+### In-Progress Work
+| Agent | Bead | Priority | AC Verified | Hill Position |
+|-------|------|----------|-------------|---------------|
+| polecat-56 | cf-qxo (gallery audit) | P0 | YES | 5/5 Done (pending merge) |
+| polecat-57 | cf-o1a (lightbox test) | P0 | YES | 5/5 Done (pending merge) |
+| architect | cf-evd (hardcoded values) | P2 | No formal AC (flagged) | 2-3/5 |
+| architect | cf-tbf (Product Page split) | P2 | YES (just added) | 1-2/5 |
+| — | cf-d3u (email automation) | P1 | YES (brainstorm AC, good) | 1/5 Started |
+| quant (tradingbot) | tb-nxs (mean reversion) | P1 | YES (my AC) | 2-3/5 |
+| quant (tradingbot) | tb-opn (trailing stops) | P1 | YES (my AC) | 2-3/5 |
+
+### Ready Work (Unassigned, No Blockers)
+| Rig | Bead | Priority | Notes |
+|-----|------|----------|-------|
+| cfutons | cf-072, cf-4ef, cf-a9q (extraction tasks) | P2 | cf-a9q may be superseded by cf-evd |
+| cfutons | cf-376 (Pinterest), cf-5w9 (swatches), cf-it6 (comparison) | P2 | Good brainstorm ideas, clean ACs |
+| cfutons | cf-ez0 (perf audit) | P2 | Blocks cf-47t epic |
+| tradingbot | tb-6ft (ML integration), tb-bz0 (Twitter API), tb-vwx (whale tracking) | P1 | Waiting for polecat assignment |
+| tradingbot | tb-f2i (MCP server) | P1 | Force multiplier — recommended next |
+| gastown | gt-0fz, gt-l0e, gt-tvl (race fixes) | P1-P2 | Block gt-bvk (race tests) |
+| gastown | gt-7px/gt-axm (ICU build), gt-0de, gt-xox (test failures) | P1 | Build broken |
+
+---
+
+## Velocity Tracking (Cumulative)
+
+| Rig | Closed Total | This Cycle | Merged | Key Deliverables |
+|-----|-------------|------------|--------|------------------|
+| cfutons | 4 | +1 (cf-b9o) | 3 direct, 2 pending refinery | Shared tokens, smoke tests, placeholders, design review |
+| tradingbot | 8 | +2 (tb-91k, tb-1tl) | 4 via refinery | ML pipeline complete, model trained, bug fixed |
+| cfutons_mobile | 0 | 0 | — | STALLED |
+| gastown | 3 | +1 (gt-dvk) | PR #1837 | Dashboard Phase 1 |
+| **Total** | **15** | **+4** | | |
+
+---
+
+## Quality Audit Summary (This Cycle)
+
+| Action | Count | Details |
+|--------|-------|---------|
+| Beads reviewed | 6 new | cf-evd, cf-k22, cf-tbf, gt-626, polecat completions |
+| ACs added/strengthened | 2 | cf-k22, cf-tbf |
+| Duplicates flagged | 1 | cf-evd overlaps cf-a9q |
+| Junk cleaned | 1 | gt-626 (--help) |
+| Polecat output reviewed | 2 | polecat-56 (bug fix quality: good), polecat-57 (483 tests: good) |
+| Epic close recommended | 1 | tb-ni1 (all deps done) |
+
+### Cumulative Session Totals
+- **63 beads under management** across 4 rigs
+- **29 ACs added or strengthened**
+- **6 dependencies fixed**
+- **4 junk beads cleaned**
+- **4 priority adjustments** (cf-d3u↑P1, tb-f2i↑P1, cm-0au↓P3, cf-zl7↓P3)
+- **1 epic close recommended** (tb-ni1)
 
 ---
 
 ## Risk Register
 
-| Risk | Prob | Impact | Mitigation | Status |
-|------|------|--------|------------|--------|
-| cfutons_mobile stalls (no workers) | HIGH | HIGH | Need polecat respawn for cm-vx9 | OPEN |
-| Brainstorm backlog grows faster than capacity | MEDIUM | MEDIUM | Triage protocol active, P3/P4 parked | MITIGATED |
-| gastown build broken (ICU dep) | MEDIUM | HIGH | Build tags or brew install | OPEN |
-| Cross-rig token divergence (web vs mobile) | MEDIUM | LOW | cf-b9o in progress (radahn) | MITIGATED |
-| report_to_human.md contention (brainstorm overwrites) | LOW | LOW | Separated to STORY-MANAGER-REPORT.md | RESOLVED |
-
----
-
-## Quality Gates Status
-
-| Gate | Status | Details |
-|------|--------|---------|
-| Definition of Ready | ACTIVE | Applied to cf-l31, cf-b9o (both failed initial DoR, now passing) |
-| Definition of Done | ACTIVE | Monitoring polecat-56/57 outputs against AC |
-| AC Standards | ACTIVE | 27+ stories strengthened, all P0/P1 stories have numbered testable AC |
-| Bug Report Standard | ACTIVE | All gastown bugs now have repro steps + AC |
-| Brainstorm Triage | ACTIVE | 44 beads triaged, 4 priority adjustments, 4 deps added, 3 ACs fixed |
+| Risk | Prob | Impact | Status |
+|------|------|--------|--------|
+| cfutons_mobile stalls (no workers) | HIGH | HIGH | OPEN — need polecat respawn |
+| cf-evd/cf-a9q duplicate work | HIGH | LOW | FLAGGED — notes added to both |
+| gastown build broken (ICU dep) | MEDIUM | HIGH | OPEN — no one assigned |
+| Refinery delay on polecat branches | LOW | MEDIUM | MONITORING — cf-4aj depends on merge |
+| Architect beads lack AC | MEDIUM | LOW | MITIGATED — AC added to cf-k22, cf-tbf |
 
 ---
 
 ## Recommended Actions
 
 ### Immediate
-1. **Respawn cfutons_mobile polecat** — cm-vx9 is orphaned, entire rig stalled
-2. **Monitor polecat-56 branch** for remaining AC items (pages 4-5, audit doc)
-3. **Monitor polecat-57** for first output
+1. **Close tb-ni1** — all 3 blocking stories done, epic AC met
+2. **Merge polecat branches** (cf-qxo, cf-o1a) → then close cf-4aj
+3. **Consolidate cf-evd/cf-a9q** — one story, not two
 
 ### This Sprint
-4. Assign gastown P1 bugs (gt-7px, gt-axm, gt-0fz, gt-0de, gt-xox)
-5. When cf-4aj closes: start cf-d3u (email automation, newly promoted P1)
-6. When cm-821 closes: start cm-hv9 stories
+4. Assign tb-f2i (MCP server, P1) and tb-6ft (ML integration, P1) to tradingbot workers
+5. Assign gastown P1 bugs to crew
+6. When cf-4aj closes: assign cf-d3u to crew (if not already fully in-progress)
 
 ### Next Sprint
-7. tb-zfw (regime detection) before tb-1dt (pairs trading)
-8. cfutons P2 extraction tasks (cf-072, cf-4ef, cf-a9q)
-9. gt-ar2 dashboard improvements (after bugs fixed)
+7. cfutons P2 extraction tasks (cf-072, cf-4ef)
+8. cfutons_mobile: respawn polecat for cm-vx9, then cm-330/cm-5wg/cm-wi5
+9. Tradingbot P2: tb-zfw (regime detection) before tb-1dt (pairs trading)
 
 ---
 
-*Story Manager: melania | 57 stories across 4 rigs under management*
-*Quality framework: STORY-MANAGEMENT.md | Brainstorm triage: active*
-*Next review: on polecat completion*
+*Story Manager: melania | 63 beads across 4 rigs | 29 ACs strengthened | Quality gates active*
+*Next review: on refinery merge or new bead filings*

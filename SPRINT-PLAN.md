@@ -1,15 +1,41 @@
 # Carolina Futons — Active Sprint Plan
 
-**Status**: COMPLETE — All P0/P1 stories done
-**Test Suite**: 738 tests across 38 files (all passing)
-**Last Push**: a203e97
-**Updated by**: melania — 2026-02-20 14:50 MST
+**Status**: IN PROGRESS — Sprint 2 (P1 features)
+**Test Suite**: 1,197 tests across 51 files (all passing)
+**Last Push**: 3a24262
+**Updated by**: melania — 2026-02-21 08:45 MST
 
 ---
 
-## Sprint Summary
+## Sprint 2 Summary
 
-All P0 and P1 work is complete. 16 stories filed, 16 stories done. Only P2 items remain — these require Wix Dashboard access and cannot be done in code.
+Sprint 1 complete (16/16 stories). Sprint 2 focuses on two P1 customer-facing features: advanced search/filtering and order tracking. Financing calculator (cf-2pj) code-complete and closed. Address validation bug (cf-2d3) fixed and closed.
+
+### Active Sprint 2 Assignments
+
+| Bead | Title | Priority | Assignee | Status |
+|------|-------|----------|----------|--------|
+| cf-f2z | Advanced search & filtering engine | P1 | caesar | IN_PROGRESS |
+| cf-qq9 | Order tracking page with UPS integration | P1 | radahn | IN_PROGRESS |
+
+### Recently Closed
+| Bead | Title | Closed By |
+|------|-------|-----------|
+| cf-2d3 | Address validation defaults to valid:true | radahn |
+| cf-2pj | Financing calculator with BNPL | code-complete (56 tests) |
+| cf-0xb | Brand name hardcoded in seoHelpers | radahn |
+
+### Sprint 2 Backlog (P2, assign when P1 clear)
+| Bead | Title | Priority | Best Fit |
+|------|-------|----------|----------|
+| cf-6es | Error monitoring dashboard | P2 | radahn |
+| cf-7t5 | Live chat widget | P2 | caesar |
+| cf-8su | Product dimension/size guide | P2 | caesar |
+| cf-cmi | EmailQueue ISO strings bug | P2 | radahn |
+| cf-cz4 | Self-service returns portal | P2 | caesar |
+| cf-yuc | WCAG 2.1 AA accessibility audit | P2 | caesar |
+| cf-514 | Extract time duration constants | P3 | radahn |
+| cf-g7e | AbandonedCarts JSON string | P3 | radahn |
 
 ---
 
