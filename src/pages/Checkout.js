@@ -17,7 +17,7 @@ function initTrustSignals() {
   const trustMessages = [
     { icon: 'lock', text: 'Secure SSL Checkout' },
     { icon: 'shield', text: 'Your information is protected' },
-    { icon: 'truck', text: 'Free shipping on orders over $999' },
+    { icon: 'truck', text: 'Free shipping on orders $999+' },
     { icon: 'phone', text: 'Questions? Call (828) 252-9449' },
   ];
 

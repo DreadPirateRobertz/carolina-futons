@@ -223,7 +223,7 @@ function initTrustBar() {
     { id: '#trustItem1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
     { id: '#trustItem2', text: 'Family Owned Since 1991', icon: 'heart' },
     { id: '#trustItem3', text: '700+ Fabric Swatches', icon: 'palette' },
-    { id: '#trustItem4', text: 'Free Shipping Over $999', icon: 'truck' },
+    { id: '#trustItem4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
   ];
 
   try {

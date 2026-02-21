@@ -1247,7 +1247,7 @@ function initProductInfoAccordion() {
     // Populate shipping info from store constants
     try {
       $w('#infoContentShipping').text =
-        'Free standard shipping on orders over $999. ' +
+        'Free standard shipping on orders $999+. ' +
         'White-glove delivery available: $149 local (WNC), $249 regional, free on orders over $1,999. ' +
         'Standard delivery: 5–10 business days. ' +
         'Local customers: call (828) 252-9449 to schedule Wed–Sat delivery.';
