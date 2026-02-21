@@ -1,40 +1,43 @@
 # Carolina Futons — Active Sprint Plan
 
-**Status**: IN PROGRESS — Sprint 2 (P2 features, P1s done)
-**Test Suite**: 1,637 tests across 56 files (all passing)
-**Last Push**: 8596543
-**Updated by**: melania — 2026-02-21 08:52 MST
+**Status**: IN PROGRESS — Sprint 2 (final 4 beads)
+**Test Suite**: 1,956 tests across 63 files (all passing)
+**Last Push**: 94d1f2e
+**Updated by**: melania — 2026-02-21 09:00 MST
 
 ---
 
 ## Sprint 2 Summary
 
-Both P1 features shipped. Now working P2 backlog. 5 beads closed this session.
+10 beads closed this session. 4 remaining (2 in progress, 2 P3 open). Team velocity is exceptional.
 
 ### Active Assignments
 
 | Bead | Title | Priority | Assignee | Status |
 |------|-------|----------|----------|--------|
-| cf-8su | Product dimension/size guide with room fit checker | P2 | caesar | IN_PROGRESS |
-| cf-6es | Error monitoring dashboard | P2 | radahn | IN_PROGRESS |
-| cf-cz4 | Self-service returns portal (frontend remaining) | P2 | — | IN_PROGRESS |
-
-### Closed This Session (5 beads)
-| Bead | Title | Priority | Closed By | Tests |
-|------|-------|----------|-----------|-------|
-| cf-f2z | Advanced search & filtering engine | P1 | caesar | 117 tests (79+38) |
-| cf-qq9 | Order tracking page with UPS | P1 | radahn | 48 tests |
-| cf-2d3 | Address validation bug fix | P1 | radahn | — |
-| cf-2pj | Financing calculator | P2 | code-complete | 56 tests |
-| cf-cmi | EmailQueue ISO strings bug | P2 | radahn | — |
+| cf-cz4 | Self-service returns portal (frontend) | P2 | caesar | IN_PROGRESS |
+| cf-cya | Blog buying guide content engine | P2 | radahn | IN_PROGRESS |
 
 ### Remaining Backlog
 | Bead | Title | Priority | Best Fit |
 |------|-------|----------|----------|
-| cf-7t5 | Live chat widget | P2 | caesar |
-| cf-yuc | WCAG 2.1 AA accessibility audit | P2 | caesar |
 | cf-514 | Extract time duration constants | P3 | radahn |
 | cf-g7e | AbandonedCarts JSON string | P3 | radahn |
+
+### Closed This Session (10 beads)
+| Bead | Title | Priority | Closed By | Tests |
+|------|-------|----------|-----------|-------|
+| cf-f2z | Advanced search & filtering engine | P1 | caesar | 117 (79+38) |
+| cf-qq9 | Order tracking page with UPS | P1 | radahn | 48 |
+| cf-2d3 | Address validation bug fix | P1 | radahn | — |
+| cf-8su | Size guide + room fit checker | P2 | caesar | 33 |
+| cf-7t5 | Live chat widget | P2 | caesar | 80 (48+32) |
+| cf-6es | Error monitoring dashboard | P2 | radahn | 58 |
+| cf-yuc | WCAG 2.1 AA accessibility audit | P2 | radahn | 59 |
+| cf-a1j | A/B testing framework | P2 | — | 40 |
+| cf-uqr | Referral tracking system | P2 | radahn | 49 |
+| cf-2pj | Financing calculator | P2 | code-complete | 56 |
+| cf-cmi | EmailQueue ISO strings bug | P2 | radahn | — |
 
 ---
 
