@@ -317,6 +317,50 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | → Name | Text | `#collectionName` | |
 | → Price | Text | `#collectionPrice` | |
 
+### Customer Reviews Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#reviewsSection` | Collapsible |
+| Average Rating | Text | `#reviewsAverage` | "4.5" |
+| Review Count | Text | `#reviewsCount` | "12 reviews" |
+| Stars Display | Text | `#reviewsStars` | ★★★★½ |
+| Rating Bar 5★ | ProgressBar | `#ratingBar5` | Breakdown bar |
+| Rating Count 5★ | Text | `#ratingCount5` | Count label |
+| Rating Bar 4★ | ProgressBar | `#ratingBar4` | |
+| Rating Count 4★ | Text | `#ratingCount4` | |
+| Rating Bar 3★ | ProgressBar | `#ratingBar3` | |
+| Rating Count 3★ | Text | `#ratingCount3` | |
+| Rating Bar 2★ | ProgressBar | `#ratingBar2` | |
+| Rating Count 2★ | Text | `#ratingCount2` | |
+| Rating Bar 1★ | ProgressBar | `#ratingBar1` | |
+| Rating Count 1★ | Text | `#ratingCount1` | |
+| Sort Dropdown | Dropdown | `#reviewsSortDropdown` | Newest, Highest, Lowest, Helpful |
+| Reviews Repeater | Repeater | `#reviewsRepeater` | Review cards |
+| → Author | Text | `#reviewAuthor` | "Jane S." |
+| → Date | Text | `#reviewDate` | "January 15, 2026" |
+| → Stars | Text | `#reviewStars` | ★★★★★ |
+| → Title | Text | `#reviewTitle` | Bold |
+| → Body | Text | `#reviewBody` | |
+| → Verified Badge | Text/Box | `#reviewVerified` | "Verified Purchase", hidden default |
+| → Photos | Gallery | `#reviewPhotos` | Up to 3 images, hidden default |
+| → Helpful Button | Button | `#reviewHelpfulBtn` | "Helpful (3)" |
+| → Helpful Count | Text | `#reviewHelpfulCount` | |
+| Empty State | Text | `#reviewsEmptyState` | "Be the first to review", hidden default |
+| Prev Page | Button | `#reviewsPrevBtn` | |
+| Next Page | Button | `#reviewsNextBtn` | |
+| Page Info | Text | `#reviewsPageInfo` | "Page 1 of 3" |
+
+### Review Submission Form
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Form Container | Box | `#reviewForm` | Collapsible |
+| Rating Input | Dropdown/Custom | `#reviewRatingInput` | Star selector 1-5 |
+| Title Input | Input | `#reviewTitleInput` | Optional |
+| Body Input | TextArea | `#reviewBodyInput` | Min 10 chars |
+| Submit Button | Button | `#reviewSubmitBtn` | |
+| Form Error | Text | `#reviewFormError` | Hidden default |
+| Form Success | Text | `#reviewFormSuccess` | Hidden default |
+
 ### Recently Viewed Products
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
@@ -946,7 +990,21 @@ Terms sections use anchor IDs for TOC navigation:
 | productIds | Text | Comma-separated product IDs for carousel |
 | isActive | Boolean | Master on/off switch |
 
-### 5. MemberPreferences (for communication opt-in/opt-out)
+### 5. Reviews (for customer product reviews)
+| Field | Type | Notes |
+|-------|------|-------|
+| productId | Text | Reference to Stores/Products |
+| memberId | Text | Reference to Members |
+| authorName | Text | "FirstName L." format |
+| rating | Number | 1-5 stars |
+| title | Text | Review title (optional) |
+| body | Text | Review text (min 10 chars) |
+| photos | MediaGallery | Up to 3 review photos |
+| verifiedPurchase | Boolean | Checked against order history |
+| helpful | Number | Helpful vote count |
+| status | Text | "pending" / "approved" / "rejected" |
+
+### 6. MemberPreferences (for communication opt-in/opt-out)
 | Field | Type | Notes |
 |-------|------|-------|
 | memberId | Text | Reference to Members |
