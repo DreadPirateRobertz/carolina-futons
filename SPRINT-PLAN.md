@@ -1,28 +1,38 @@
 # Carolina Futons — Active Sprint Plan
 
-**Status**: IN PROGRESS — Sprint 2 (final 4 beads)
-**Test Suite**: 1,956 tests across 63 files (all passing)
-**Last Push**: 94d1f2e
-**Updated by**: melania — 2026-02-21 09:00 MST
+**Status**: IN PROGRESS — Sprint 2 rolling + Marketing Epic
+**Test Suite**: 2,394 tests across 70 files (all passing)
+**Last Push**: 1ba3040
+**Updated by**: melania — 2026-02-21 14:00 MST
 
 ---
 
 ## Sprint 2 Summary
 
-10 beads closed this session. 4 remaining (2 in progress, 2 P3 open). Team velocity is exceptional.
+19 beads closed total. Test count: 1,197 → 2,394. Beads DB intermittently SEGVing (cfutons). Tonight: overseer live-testing Wix site.
 
 ### Active Assignments
 
 | Bead | Title | Priority | Assignee | Status |
 |------|-------|----------|----------|--------|
-| cf-cz4 | Self-service returns portal (frontend) | P2 | caesar | IN_PROGRESS |
-| cf-cya | Blog buying guide content engine | P2 | radahn | IN_PROGRESS |
+| cf-10x | Store locator with directions | P2 | radahn | IN_PROGRESS |
+| cf-1nb | Browse abandonment tracking | P2 | caesar | IN_PROGRESS |
+| cf-5ef | Marketing strategy: $15K/month | P1 | melania | IN_PROGRESS |
 
-### Remaining Backlog
+### Open Backlog
 | Bead | Title | Priority | Best Fit |
 |------|-------|----------|----------|
-| cf-514 | Extract time duration constants | P3 | radahn |
-| cf-g7e | AbandonedCarts JSON string | P3 | radahn |
+| cf-2in | Post-purchase care guides + upsell | P2 | caesar |
+| cf-48a | Product comparison page | P2 | caesar |
+| cf-doy | Bundle analytics | P2 | radahn |
+
+### Recently Closed (This Session)
+| Bead | Title | Closed By | Tests |
+|------|-------|-----------|-------|
+| cf-7bk | Inventory management | caesar | 37 |
+| cf-xfr | Customer testimonials | radahn | 30 |
+| cf-bkc | Wishlist price drop alerts | caesar | 15 |
+| cf-27q | Inventory threshold alerts | melania (superseded by cf-7bk) | — |
 
 ### Closed This Session (10 beads)
 | Bead | Title | Priority | Closed By | Tests |
