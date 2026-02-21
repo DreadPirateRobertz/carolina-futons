@@ -121,6 +121,7 @@ export default defineConfig({
       'backend/topicClusters.web': path.resolve(__dirname, 'src/backend/topicClusters.web.js'),
       'backend/mediaGallery.web': path.resolve(__dirname, 'src/backend/mediaGallery.web.js'),
       'backend/accountDashboard.web': path.resolve(__dirname, 'src/backend/accountDashboard.web.js'),
+      'backend/giftRegistry.web': path.resolve(__dirname, 'src/backend/giftRegistry.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
