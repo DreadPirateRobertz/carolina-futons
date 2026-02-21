@@ -30,6 +30,7 @@ export default defineConfig({
       'wix-loyalty.v2': path.resolve(__dirname, 'tests/__mocks__/wix-loyalty.v2.js'),
       'wix-marketing-backend': path.resolve(__dirname, 'tests/__mocks__/wix-marketing-backend.js'),
       'wix-http-functions': path.resolve(__dirname, 'tests/__mocks__/wix-http-functions.js'),
+      'wix-media-backend': path.resolve(__dirname, 'tests/__mocks__/wix-media-backend.js'),
       // Backend modules
       'backend/ups-shipping.web': path.resolve(__dirname, 'src/backend/ups-shipping.web.js'),
       'backend/productRecommendations.web': path.resolve(__dirname, 'src/backend/productRecommendations.web.js'),
@@ -118,6 +119,7 @@ export default defineConfig({
       'backend/sustainabilityService.web': path.resolve(__dirname, 'src/backend/sustainabilityService.web.js'),
       'backend/deliveryExperience.web': path.resolve(__dirname, 'src/backend/deliveryExperience.web.js'),
       'backend/topicClusters.web': path.resolve(__dirname, 'src/backend/topicClusters.web.js'),
+      'backend/mediaGallery.web': path.resolve(__dirname, 'src/backend/mediaGallery.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
