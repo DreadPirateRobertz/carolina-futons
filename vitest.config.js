@@ -54,6 +54,7 @@ export default defineConfig({
       'backend/inventoryService.web': path.resolve(__dirname, 'src/backend/inventoryService.web.js'),
       'backend/comparisonService.web': path.resolve(__dirname, 'src/backend/comparisonService.web.js'),
       'backend/browseAbandonment.web': path.resolve(__dirname, 'src/backend/browseAbandonment.web.js'),
+      'backend/inventoryAlerts.web': path.resolve(__dirname, 'src/backend/inventoryAlerts.web.js'),
       'backend/postPurchaseCare.web': path.resolve(__dirname, 'src/backend/postPurchaseCare.web.js'),
       'backend/bundleAnalytics.web': path.resolve(__dirname, 'src/backend/bundleAnalytics.web.js'),
       'backend/seoContentHub.web': path.resolve(__dirname, 'src/backend/seoContentHub.web.js'),
