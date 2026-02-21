@@ -270,9 +270,9 @@ export const createShipment = webMethod(
             },
           },
           Shipment: {
-            Description: 'Carolina Futons Order',
+            Description: `${brand.name} Order`,
             Shipper: {
-              Name: 'Carolina Futons',
+              Name: brand.name,
               AttentionName: 'Brenda Deal',
               ShipperNumber: accountNumber,
               Phone: { Number: business.phoneDigits },
