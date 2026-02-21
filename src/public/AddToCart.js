@@ -150,7 +150,7 @@ export async function initStockUrgency($w, state) {
 
 // ── Back-in-Stock Notification ────────────────────────────────────────
 
-export function initBackInStockNotification($w, state) {
+export async function initBackInStockNotification($w, state) {
   try {
     const section = $w('#backInStockSection');
     const emailInput = $w('#backInStockEmail');
@@ -162,6 +162,20 @@ export function initBackInStockNotification($w, state) {
     checkBackInStock($w, state, section);
     try { $w('#sizeDropdown').onChange(() => checkBackInStock($w, state, section)); } catch (e) {}
     try { $w('#finishDropdown').onChange(() => checkBackInStock($w, state, section)); } catch (e) {}
+    // For logged-in members with item in wishlist, show auto-enrolled message
+    try {
+      const { currentMember } = await import('wix-members-frontend');
+      const member = await currentMember.getMember();
+      if (member) {
+        const wixData = (await import('wix-data')).default;
+        const wishlistCheck = await wixData.query('Wishlist').eq('memberId', member._id).eq('productId', state.product?._id).find();
+        if (wishlistCheck.items.length > 0 && wishlistCheck.items[0].muteAlerts !== true) {
+          submitBtn.hide(); emailInput.hide();
+          if (successMsg) { successMsg.text = "You'll be notified when this item is back — it's in your wishlist."; successMsg.show(); }
+          return;
+        }
+      }
+    } catch (e) { /* Fall through to email form */ }
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
       if (!email || !email.includes('@')) return;

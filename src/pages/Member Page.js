@@ -415,6 +415,23 @@ async function initWishlist() {
         });
       });
 
+      // Per-product alert toggle (mute/unmute price drop & back-in-stock alerts)
+      try {
+        const alertToggle = $item('#wishAlertToggle');
+        if (alertToggle) {
+          alertToggle.checked = itemData.muteAlerts !== true;
+          try { alertToggle.accessibility.ariaLabel = `${itemData.muteAlerts ? 'Enable' : 'Disable'} alerts for ${itemData.name}`; } catch (e) {}
+          alertToggle.onChange(async () => {
+            try {
+              const { toggleProductAlerts } = await import('backend/notificationService.web');
+              await toggleProductAlerts(itemData._id, !alertToggle.checked);
+            } catch (err) {
+              console.error('[MemberPage] Alert toggle error:', err);
+            }
+          });
+        }
+      } catch (e) {}
+
       // Remove from wishlist
       try { $item('#wishRemoveBtn').accessibility.ariaLabel = `Remove ${itemData.name} from wishlist`; } catch (e) {}
       $item('#wishRemoveBtn').onClick(() => {

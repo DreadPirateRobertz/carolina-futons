@@ -171,13 +171,13 @@ describe('AddToCart', () => {
   });
 
   describe('initBackInStockNotification', () => {
-    it('initially collapses the section', () => {
-      initBackInStockNotification($w, state);
+    it('initially collapses the section', async () => {
+      await initBackInStockNotification($w, state);
       expect($w('#backInStockSection').collapse).toHaveBeenCalled();
     });
 
-    it('registers submit handler', () => {
-      initBackInStockNotification($w, state);
+    it('registers submit handler', async () => {
+      await initBackInStockNotification($w, state);
       expect($w('#backInStockBtn').onClick).toHaveBeenCalled();
     });
   });

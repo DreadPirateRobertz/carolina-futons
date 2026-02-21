@@ -1,8 +1,9 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, serverError } from 'wix-http-functions';
+import { ok, serverError, forbidden } from 'wix-http-functions';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
+import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import wixData from 'wix-data';
 
 // Google Merchant Center product feed endpoint
@@ -333,6 +334,51 @@ self.addEventListener('fetch', (event) => {
       'Cache-Control': 'no-cache',
     },
   });
+}
+
+// Wishlist Price Drop & Back-in-Stock Alert Checker
+// URL: GET https://www.carolinafutons.com/_functions/checkWishlistAlerts
+// Schedule daily via Wix Automations webhook or external cron service.
+// Pass ?key=<secret> for basic auth (set ALERT_CRON_KEY in Secrets Manager).
+export async function get_checkWishlistAlerts(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || requestKey !== cronKey) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Step 1: Record current price snapshots
+    const snapshots = await recordPriceSnapshots();
+
+    // Step 2: Check for price drops and back-in-stock events
+    const alerts = await checkWishlistAlerts();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        snapshotsRecorded: snapshots.recorded,
+        priceDropAlerts: alerts.priceDropAlerts,
+        backInStockAlerts: alerts.backInStockAlerts,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (checkWishlistAlerts):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 // ── Feed helper functions ─────────────────────────────────────────────
