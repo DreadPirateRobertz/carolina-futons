@@ -513,9 +513,11 @@ export const unsubscribeContact = webMethod(
   Permissions.Anyone,
   async (email, sequenceType = 'all') => {
     try {
-      if (!email || !validateEmail(email)) return { success: false };
+      if (!email) return { success: false };
 
       const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false };
+
       const cleanType = sanitize(sequenceType, 50);
 
       // Record unsubscribe
