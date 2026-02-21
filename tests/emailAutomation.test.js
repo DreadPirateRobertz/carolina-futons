@@ -134,7 +134,7 @@ describe('triggerWelcomeSequence', () => {
     __seed('Unsubscribes', [{
       email: 'alice@test.com',
       sequenceType: 'welcome',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
@@ -146,7 +146,7 @@ describe('triggerWelcomeSequence', () => {
     __seed('Unsubscribes', [{
       email: 'alice@test.com',
       sequenceType: 'all',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
@@ -236,7 +236,7 @@ describe('triggerPostPurchaseSequence', () => {
     __seed('Unsubscribes', [{
       email: 'buyer@test.com',
       sequenceType: 'post_purchase',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await triggerPostPurchaseSequence(
@@ -288,7 +288,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Shopper',
       cartTotal: 599,
       lineItems: [{ name: 'Eureka Frame', quantity: 1 }],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -306,7 +306,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Shopper',
       cartTotal: 599,
       lineItems: [{ name: 'Eureka Frame', quantity: 1 }],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -333,7 +333,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Shopper',
       cartTotal: 599,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -359,7 +359,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Shopper',
       cartTotal: 599,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -384,7 +384,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Bad',
       cartTotal: 100,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -401,14 +401,14 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Unsub',
       cartTotal: 100,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
     __seed('Unsubscribes', [{
       email: 'unsub@test.com',
       sequenceType: 'cart_recovery',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await triggerAbandonedCartRecovery();
@@ -423,7 +423,7 @@ describe('triggerAbandonedCartRecovery', () => {
       buyerName: 'Shopper',
       cartTotal: 599,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -458,7 +458,7 @@ describe('triggerReengagement', () => {
       sequenceType: 'post_purchase',
       sequenceStep: 1,
       status: 'sent',
-      sentAt: ninetyOneDaysAgo.toISOString(),
+      sentAt: ninetyOneDaysAgo,
       variables: { firstName: 'Dormant' },
     }]);
 
@@ -476,7 +476,7 @@ describe('triggerReengagement', () => {
       sequenceType: 'post_purchase',
       sequenceStep: 1,
       status: 'sent',
-      sentAt: ninetyOneDaysAgo.toISOString(),
+      sentAt: ninetyOneDaysAgo,
       variables: { firstName: 'Dormant' },
     }]);
 
@@ -500,7 +500,7 @@ describe('triggerReengagement', () => {
         sequenceType: 'post_purchase',
         sequenceStep: 1,
         status: 'sent',
-        sentAt: ninetyOneDaysAgo.toISOString(),
+        sentAt: ninetyOneDaysAgo,
         variables: { firstName: 'Dormant' },
       },
       {
@@ -525,13 +525,13 @@ describe('triggerReengagement', () => {
       sequenceType: 'post_purchase',
       sequenceStep: 1,
       status: 'sent',
-      sentAt: ninetyOneDaysAgo.toISOString(),
+      sentAt: ninetyOneDaysAgo,
       variables: { firstName: 'Unsub' },
     }]);
     __seed('Unsubscribes', [{
       email: 'unsub@test.com',
       sequenceType: 'reengagement',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await triggerReengagement();
@@ -558,7 +558,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
 
@@ -583,13 +583,13 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 2,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
     __seed('Unsubscribes', [{
       email: 'unsub@test.com',
       sequenceType: 'all',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     const result = await processEmailQueue();
@@ -607,7 +607,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'cart_recovery',
       sequenceStep: 2,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
     __seed('AbandonedCarts', [{
@@ -631,7 +631,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
 
@@ -659,7 +659,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 2, // Already retried twice
     }]);
 
@@ -686,7 +686,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
 
@@ -709,7 +709,7 @@ describe('processEmailQueue', () => {
       sequenceType: 'welcome',
       sequenceStep: 2,
       status: 'pending',
-      scheduledFor: new Date(Date.now() + 3600000).toISOString(),
+      scheduledFor: new Date(Date.now() + 3600000),
       attempt: 0,
     }]);
 
@@ -810,11 +810,11 @@ describe('unsubscribeContact', () => {
 describe('getEmailAutomationStats', () => {
   it('returns stats grouped by sequence type and status', async () => {
     __seed('EmailQueue', [
-      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', createdAt: new Date().toISOString() },
-      { _id: 'eq-2', sequenceType: 'welcome', status: 'sent', createdAt: new Date().toISOString() },
-      { _id: 'eq-3', sequenceType: 'welcome', status: 'pending', createdAt: new Date().toISOString() },
-      { _id: 'eq-4', sequenceType: 'cart_recovery', status: 'sent', createdAt: new Date().toISOString() },
-      { _id: 'eq-5', sequenceType: 'cart_recovery', status: 'cancelled', createdAt: new Date().toISOString() },
+      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-2', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-3', sequenceType: 'welcome', status: 'pending', createdAt: new Date() },
+      { _id: 'eq-4', sequenceType: 'cart_recovery', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-5', sequenceType: 'cart_recovery', status: 'cancelled', createdAt: new Date() },
     ]);
 
     const result = await getEmailAutomationStats();
@@ -827,9 +827,9 @@ describe('getEmailAutomationStats', () => {
 
   it('returns A/B test results for welcome series', async () => {
     __seed('EmailQueue', [
-      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', abVariant: 'A', createdAt: new Date().toISOString() },
-      { _id: 'eq-2', sequenceType: 'welcome', status: 'sent', abVariant: 'A', createdAt: new Date().toISOString() },
-      { _id: 'eq-3', sequenceType: 'welcome', status: 'sent', abVariant: 'B', createdAt: new Date().toISOString() },
+      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', abVariant: 'A', createdAt: new Date() },
+      { _id: 'eq-2', sequenceType: 'welcome', status: 'sent', abVariant: 'A', createdAt: new Date() },
+      { _id: 'eq-3', sequenceType: 'welcome', status: 'sent', abVariant: 'B', createdAt: new Date() },
     ]);
 
     const result = await getEmailAutomationStats();
@@ -846,10 +846,10 @@ describe('getEmailAutomationStats', () => {
   });
 
   it('excludes emails older than 30 days', async () => {
-    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+    const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
     __seed('EmailQueue', [
       { _id: 'eq-old', sequenceType: 'welcome', status: 'sent', createdAt: oldDate },
-      { _id: 'eq-new', sequenceType: 'welcome', status: 'sent', createdAt: new Date().toISOString() },
+      { _id: 'eq-new', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
     ]);
 
     const result = await getEmailAutomationStats();

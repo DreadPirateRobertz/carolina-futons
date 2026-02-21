@@ -60,7 +60,7 @@ describe('welcome sequence lifecycle', () => {
         sequenceType: 'welcome',
         sequenceStep: 1,
         status: 'pending',
-        scheduledFor: new Date(now.getTime() - 1000).toISOString(), // Due now
+        scheduledFor: new Date(now.getTime() - 1000), // Due now
         attempt: 0,
         abVariant: 'A',
       },
@@ -73,7 +73,7 @@ describe('welcome sequence lifecycle', () => {
         sequenceType: 'welcome',
         sequenceStep: 2,
         status: 'pending',
-        scheduledFor: new Date(now.getTime() + 72 * 3600000).toISOString(), // 72h future
+        scheduledFor: new Date(now.getTime() + 72 * 3600000), // 72h future
         attempt: 0,
         abVariant: null,
       },
@@ -86,7 +86,7 @@ describe('welcome sequence lifecycle', () => {
         sequenceType: 'welcome',
         sequenceStep: 3,
         status: 'pending',
-        scheduledFor: new Date(now.getTime() + 168 * 3600000).toISOString(), // 168h future
+        scheduledFor: new Date(now.getTime() + 168 * 3600000), // 168h future
         attempt: 0,
         abVariant: null,
       },
@@ -150,8 +150,7 @@ describe('welcome sequence lifecycle', () => {
       _id: `eq-int-${i}`,
       status: 'pending',
       scheduledFor: i === 0
-        ? new Date(Date.now() - 1000).toISOString()
-        : new Date(Date.now() + 72 * 3600000).toISOString(),
+        ? new Date(Date.now() - 1000)        : new Date(Date.now() + 72 * 3600000),
     })));
 
     // Process sends step 1
@@ -160,9 +159,9 @@ describe('welcome sequence lifecycle', () => {
 
     // Update step 1 status for stats
     __seed('EmailQueue', [
-      { _id: 'eq-int-0', sequenceType: 'welcome', status: 'sent', abVariant: welcomeEmails[0].abVariant, createdAt: new Date().toISOString() },
-      { _id: 'eq-int-1', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date().toISOString() },
-      { _id: 'eq-int-2', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date().toISOString() },
+      { _id: 'eq-int-0', sequenceType: 'welcome', status: 'sent', abVariant: welcomeEmails[0].abVariant, createdAt: new Date() },
+      { _id: 'eq-int-1', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date() },
+      { _id: 'eq-int-2', sequenceType: 'welcome', status: 'pending', abVariant: null, createdAt: new Date() },
     ]);
 
     // Stats reflect the state
@@ -185,7 +184,7 @@ describe('cart recovery lifecycle', () => {
       buyerName: 'Shopper',
       cartTotal: 799,
       lineItems: [{ name: 'Eureka Frame', quantity: 1 }],
-      abandonedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 3600000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -206,7 +205,7 @@ describe('cart recovery lifecycle', () => {
         sequenceType: 'cart_recovery',
         sequenceStep: 1,
         status: 'pending',
-        scheduledFor: new Date(abandonedAt.getTime() + 1 * 3600000).toISOString(), // 1h after abandon (past)
+        scheduledFor: new Date(abandonedAt.getTime() + 1 * 3600000), // 1h after abandon (past)
         attempt: 0,
       },
       {
@@ -218,7 +217,7 @@ describe('cart recovery lifecycle', () => {
         sequenceType: 'cart_recovery',
         sequenceStep: 2,
         status: 'pending',
-        scheduledFor: new Date(abandonedAt.getTime() + 24 * 3600000).toISOString(), // 24h future
+        scheduledFor: new Date(abandonedAt.getTime() + 24 * 3600000), // 24h future
         attempt: 0,
       },
       {
@@ -230,7 +229,7 @@ describe('cart recovery lifecycle', () => {
         sequenceType: 'cart_recovery',
         sequenceStep: 3,
         status: 'pending',
-        scheduledFor: new Date(abandonedAt.getTime() + 72 * 3600000).toISOString(), // 72h future
+        scheduledFor: new Date(abandonedAt.getTime() + 72 * 3600000), // 72h future
         attempt: 0,
       },
     ]);
@@ -252,7 +251,7 @@ describe('cart recovery lifecycle', () => {
       _id: 'ac-lifecycle',
       checkoutId: 'ck-lifecycle',
       status: 'recovered',
-      recoveredAt: new Date().toISOString(),
+      recoveredAt: new Date(),
     }]);
 
     // Re-seed remaining pending emails
@@ -266,7 +265,7 @@ describe('cart recovery lifecycle', () => {
         sequenceType: 'cart_recovery',
         sequenceStep: 2,
         status: 'pending',
-        scheduledFor: new Date(Date.now() - 1000).toISOString(), // Make it due now
+        scheduledFor: new Date(Date.now() - 1000), // Make it due now
         attempt: 0,
       },
     ]);
@@ -286,7 +285,7 @@ describe('cart recovery lifecycle', () => {
         buyerName: 'Shopper One',
         cartTotal: 599,
         lineItems: [{ name: 'Frame', quantity: 1 }],
-        abandonedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
+        abandonedAt: new Date(Date.now() - 3 * 3600000),
         status: 'abandoned',
         recoveryEmailSent: false,
       },
@@ -297,7 +296,7 @@ describe('cart recovery lifecycle', () => {
         buyerName: 'Shopper Two',
         cartTotal: 1299,
         lineItems: [{ name: 'Sofa', quantity: 1 }, { name: 'Mattress', quantity: 1 }],
-        abandonedAt: new Date(Date.now() - 5 * 3600000).toISOString(),
+        abandonedAt: new Date(Date.now() - 5 * 3600000),
         status: 'abandoned',
         recoveryEmailSent: false,
       },
@@ -384,7 +383,7 @@ describe('unsubscribe mid-sequence', () => {
     __seed('Unsubscribes', [{
       email: 'blocked@test.com',
       sequenceType: 'welcome',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     // Try to trigger welcome — should be blocked
@@ -397,7 +396,7 @@ describe('unsubscribe mid-sequence', () => {
     __seed('Unsubscribes', [{
       email: 'partial@test.com',
       sequenceType: 'welcome',
-      unsubscribedAt: new Date().toISOString(),
+      unsubscribedAt: new Date(),
     }]);
 
     // Welcome should be blocked
@@ -425,7 +424,7 @@ describe('retry exhaustion', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 0,
     }]);
 
@@ -440,14 +439,14 @@ describe('retry exhaustion', () => {
     expect(lastUpdate.status).toBe('pending'); // Will retry
 
     // Attempt 1: second try
-    __seed('EmailQueue', [{ ...lastUpdate, scheduledFor: new Date(Date.now() - 1000).toISOString() }]);
+    __seed('EmailQueue', [{ ...lastUpdate, scheduledFor: new Date(Date.now() - 1000) }]);
     __failNextEmail();
     await processEmailQueue();
     expect(lastUpdate.attempt).toBe(2);
     expect(lastUpdate.status).toBe('pending'); // Will retry once more
 
     // Attempt 2: third try (final)
-    __seed('EmailQueue', [{ ...lastUpdate, scheduledFor: new Date(Date.now() - 1000).toISOString() }]);
+    __seed('EmailQueue', [{ ...lastUpdate, scheduledFor: new Date(Date.now() - 1000) }]);
     __failNextEmail();
     await processEmailQueue();
     expect(lastUpdate.attempt).toBe(3);
@@ -466,7 +465,7 @@ describe('retry exhaustion', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'pending',
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 1, // Already failed once
       lastError: 'Previous failure',
     }]);
@@ -497,7 +496,7 @@ describe('re-engagement filtering', () => {
       sequenceType: 'post_purchase',
       sequenceStep: 1,
       status: 'sent',
-      sentAt: thirtyDaysAgo.toISOString(), // Only 30 days ago
+      sentAt: thirtyDaysAgo, // Only 30 days ago
       variables: { firstName: 'Recent' },
     }]);
 
@@ -514,7 +513,7 @@ describe('re-engagement filtering', () => {
       sequenceType: 'post_purchase',
       sequenceStep: 1,
       status: 'sent',
-      sentAt: hundredDaysAgo.toISOString(),
+      sentAt: hundredDaysAgo,
       variables: { firstName: 'Dormant' },
     }]);
 
@@ -540,7 +539,7 @@ describe('re-engagement filtering', () => {
         sequenceType: 'post_purchase',
         sequenceStep: 1,
         status: 'sent',
-        sentAt: hundredDaysAgo.toISOString(),
+        sentAt: hundredDaysAgo,
         variables: { firstName: 'Double' },
       },
       {
@@ -590,7 +589,7 @@ describe('post-purchase full flow', () => {
     __seed('EmailQueue', [{
       ...ppEmails[0],
       _id: 'eq-flow-1',
-      scheduledFor: new Date(Date.now() - 1000).toISOString(),
+      scheduledFor: new Date(Date.now() - 1000),
     }]);
 
     const processed = await processEmailQueue();
@@ -652,7 +651,7 @@ describe('edge cases', () => {
       buyerName: 'Empty',
       cartTotal: 0,
       lineItems: [],
-      abandonedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+      abandonedAt: new Date(Date.now() - 2 * 3600000),
       status: 'abandoned',
       recoveryEmailSent: false,
     }]);
@@ -670,8 +669,8 @@ describe('edge cases', () => {
 
   it('stats handle unknown sequence types gracefully', async () => {
     __seed('EmailQueue', [
-      { _id: 'eq-unknown', sequenceType: 'mystery', status: 'sent', createdAt: new Date().toISOString() },
-      { _id: 'eq-known', sequenceType: 'welcome', status: 'sent', createdAt: new Date().toISOString() },
+      { _id: 'eq-unknown', sequenceType: 'mystery', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-known', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
     ]);
 
     const stats = await getEmailAutomationStats();
@@ -691,7 +690,7 @@ describe('edge cases', () => {
       sequenceType: 'welcome',
       sequenceStep: 1,
       status: 'sent', // Already sent
-      scheduledFor: new Date(Date.now() - 60000).toISOString(),
+      scheduledFor: new Date(Date.now() - 60000),
       attempt: 1,
     }]);
 

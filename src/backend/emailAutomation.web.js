@@ -13,13 +13,13 @@
  * 1. Create `EmailQueue` CMS collection with fields:
  *    templateId (text), recipientEmail (text), recipientContactId (text),
  *    variables (object), sequenceType (text), sequenceStep (number),
- *    status (text: pending|sent|failed|cancelled), scheduledFor (text/ISO),
- *    sentAt (text/ISO), attempt (number), lastError (text),
- *    abVariant (text: A|B|null), createdAt (text/ISO)
+ *    status (text: pending|sent|failed|cancelled), scheduledFor (dateTime),
+ *    sentAt (dateTime), attempt (number), lastError (text),
+ *    abVariant (text: A|B|null), createdAt (dateTime)
  *
  * 2. Create `Unsubscribes` CMS collection with fields:
  *    email (text), sequenceType (text: all|welcome|cart_recovery|
- *    post_purchase|reengagement), unsubscribedAt (text/ISO)
+ *    post_purchase|reengagement), unsubscribedAt (dateTime)
  *
  * 3. Create triggered email templates in Dashboard > Marketing:
  *    welcome_series_1, welcome_series_2, welcome_series_3,
@@ -184,7 +184,7 @@ export const triggerWelcomeSequence = webMethod(
           variables,
           sequenceType: 'welcome',
           sequenceStep: step.step,
-          scheduledFor: scheduledFor.toISOString(),
+          scheduledFor,
           abVariant: step.step === SEQUENCES.welcome.abTestStep ? abVariant : null,
         });
         queued++;
@@ -252,7 +252,7 @@ export const triggerPostPurchaseSequence = webMethod(
           },
           sequenceType: 'post_purchase',
           sequenceStep: step.step,
-          scheduledFor: scheduledFor.toISOString(),
+          scheduledFor,
         });
         queued++;
       }
@@ -283,7 +283,7 @@ export const triggerAbandonedCartRecovery = webMethod(
       const result = await wixData.query('AbandonedCarts')
         .eq('status', 'abandoned')
         .eq('recoveryEmailSent', false)
-        .le('abandonedAt', oneHourAgo.toISOString())
+        .le('abandonedAt', oneHourAgo)
         .find();
 
       let cartsProcessed = 0;
@@ -325,7 +325,7 @@ export const triggerAbandonedCartRecovery = webMethod(
             },
             sequenceType: 'cart_recovery',
             sequenceStep: step.step,
-            scheduledFor: scheduledFor.toISOString(),
+            scheduledFor,
           });
         }
 
@@ -333,7 +333,7 @@ export const triggerAbandonedCartRecovery = webMethod(
         await wixData.update('AbandonedCarts', {
           ...cart,
           recoveryEmailSent: true,
-          recoveryEmailSentAt: new Date().toISOString(),
+          recoveryEmailSentAt: new Date(),
         });
 
         cartsProcessed++;
@@ -365,7 +365,7 @@ export const triggerReengagement = webMethod(
         .eq('sequenceType', 'post_purchase')
         .eq('sequenceStep', 1)
         .eq('status', 'sent')
-        .le('sentAt', ninetyDaysAgo.toISOString())
+        .le('sentAt', ninetyDaysAgo)
         .find();
 
       let contacted = 0;
@@ -396,7 +396,7 @@ export const triggerReengagement = webMethod(
           },
           sequenceType: 'reengagement',
           sequenceStep: 1,
-          scheduledFor: new Date().toISOString(),
+          scheduledFor: new Date(),
         });
 
         contacted++;
@@ -422,7 +422,7 @@ export const processEmailQueue = webMethod(
   Permissions.Admin,
   async () => {
     try {
-      const now = new Date().toISOString();
+      const now = new Date();
 
       const pending = await wixData.query('EmailQueue')
         .eq('status', 'pending')
@@ -469,7 +469,7 @@ export const processEmailQueue = webMethod(
           await wixData.update('EmailQueue', {
             ...item,
             status: 'sent',
-            sentAt: new Date().toISOString(),
+            sentAt: new Date(),
             attempt: (item.attempt || 0) + 1,
           });
           sent++;
@@ -478,7 +478,7 @@ export const processEmailQueue = webMethod(
           const newStatus = attempt >= MAX_RETRY_ATTEMPTS ? 'failed' : 'pending';
           // Exponential backoff: retry in 15min, then 1hr, then give up
           const backoffMs = attempt === 1 ? 15 * 60 * 1000 : 60 * 60 * 1000;
-          const retryAt = new Date(Date.now() + backoffMs).toISOString();
+          const retryAt = new Date(Date.now() + backoffMs);
 
           await wixData.update('EmailQueue', {
             ...item,
@@ -524,7 +524,7 @@ export const unsubscribeContact = webMethod(
       await wixData.insert('Unsubscribes', {
         email: cleanEmail,
         sequenceType: cleanType,
-        unsubscribedAt: new Date().toISOString(),
+        unsubscribedAt: new Date(),
       });
 
       // Cancel any pending emails for this recipient
@@ -565,7 +565,7 @@ export const getEmailAutomationStats = webMethod(
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
       const result = await wixData.query('EmailQueue')
-        .ge('createdAt', thirtyDaysAgo.toISOString())
+        .ge('createdAt', thirtyDaysAgo)
         .find();
 
       const stats = { welcome: {}, cart_recovery: {}, post_purchase: {}, reengagement: {} };
@@ -611,7 +611,7 @@ async function queueEmail({ templateId, recipientEmail, recipientContactId, vari
     attempt: 0,
     lastError: '',
     abVariant: abVariant || null,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   });
 }
 
