@@ -134,9 +134,11 @@ export const triggerWelcomeSequence = webMethod(
   Permissions.Admin,
   async (contactId, email, firstName) => {
     try {
-      if (!email || !validateEmail(email)) return { success: false, queued: 0 };
+      if (!email) return { success: false, queued: 0 };
 
       const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
       const cleanName = sanitize(firstName, 200);
       const cleanContactId = sanitize(contactId, 50);
 
@@ -213,9 +215,11 @@ export const triggerPostPurchaseSequence = webMethod(
   Permissions.Admin,
   async (contactId, email, firstName, orderNumber, total, lineItems) => {
     try {
-      if (!email || !validateEmail(email)) return { success: false, queued: 0 };
+      if (!email) return { success: false, queued: 0 };
 
       const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
       const cleanName = sanitize(firstName, 200);
       const cleanContactId = sanitize(contactId, 50);
       const cleanOrderNumber = sanitize(orderNumber, 20);
