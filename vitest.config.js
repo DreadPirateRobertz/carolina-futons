@@ -48,6 +48,7 @@ export default defineConfig({
       'backend/searchService.web': path.resolve(__dirname, 'src/backend/searchService.web.js'),
       'backend/sizeGuide.web': path.resolve(__dirname, 'src/backend/sizeGuide.web.js'),
       'backend/liveChatService.web': path.resolve(__dirname, 'src/backend/liveChatService.web.js'),
+      'backend/abTesting.web': path.resolve(__dirname, 'src/backend/abTesting.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
       'backend/utils/mediaHelpers': path.resolve(__dirname, 'src/backend/utils/mediaHelpers.js'),
