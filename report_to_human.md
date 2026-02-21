@@ -8,11 +8,11 @@
 
 ## Executive Summary
 
-**31 new beads filed** across 4 rigs. Research covered competitor analysis, trading bot innovations, Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
+**35 new beads filed** across 4 rigs. Research covered competitor analysis, trading bot innovations, Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
 
 | Rig | New Beads | P2 | P3 | P4 |
 |-----|-----------|----|----|-----|
-| cfutons | 9 | 5 | 4 | 0 |
+| cfutons | 13 | 7 | 6 | 0 |
 | cfutons_mobile | 8 | 5 | 3 | 0 |
 | tradingbot | 7 | 1 | 5 | 1 |
 | gastown | 7 | 0 | 4 | 3 |
@@ -69,6 +69,10 @@ Slack, Discord, email alerts for convoy completions, escalations, agent failures
 | cf-4es | Referral program with two-sided incentives | P3 |
 | cf-9xa | Furniture protection plan upsell at checkout | P3 |
 | cf-ugv | Assembly service upsell: TaskRabbit/Handy | P3 |
+| cf-l31 | Structured data enrichment: Product, FAQ, Review schema | P2 |
+| cf-376 | Pinterest discovery engine: Rich Pins, catalog sync | P2 |
+| cf-1vc | Exit-intent popup: tiered offers based on cart value | P3 |
+| cf-rc3 | Local SEO: Google Business Profile for showroom | P3 |
 
 ### cfutons_mobile (8 beads)
 | ID | Title | Priority |
