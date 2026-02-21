@@ -60,6 +60,7 @@ export default defineConfig({
       'backend/pinterestRichPins.web': path.resolve(__dirname, 'src/backend/pinterestRichPins.web.js'),
       'backend/photoReviews.web': path.resolve(__dirname, 'src/backend/photoReviews.web.js'),
       'backend/sustainability.web': path.resolve(__dirname, 'src/backend/sustainability.web.js'),
+      'backend/roomPlanner.web': path.resolve(__dirname, 'src/backend/roomPlanner.web.js'),
       'backend/abTesting.web': path.resolve(__dirname, 'src/backend/abTesting.web.js'),
       'backend/coreWebVitals.web': path.resolve(__dirname, 'src/backend/coreWebVitals.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
