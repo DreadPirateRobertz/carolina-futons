@@ -58,6 +58,7 @@ export default defineConfig({
       'backend/bundleAnalytics.web': path.resolve(__dirname, 'src/backend/bundleAnalytics.web.js'),
       'backend/seoContentHub.web': path.resolve(__dirname, 'src/backend/seoContentHub.web.js'),
       'backend/pinterestRichPins.web': path.resolve(__dirname, 'src/backend/pinterestRichPins.web.js'),
+      'backend/photoReviews.web': path.resolve(__dirname, 'src/backend/photoReviews.web.js'),
       'backend/abTesting.web': path.resolve(__dirname, 'src/backend/abTesting.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
