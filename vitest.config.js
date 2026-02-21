@@ -46,6 +46,7 @@ export default defineConfig({
       'backend/googleMerchantFeed.web': path.resolve(__dirname, 'src/backend/googleMerchantFeed.web.js'),
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
       'backend/searchService.web': path.resolve(__dirname, 'src/backend/searchService.web.js'),
+      'backend/sizeGuide.web': path.resolve(__dirname, 'src/backend/sizeGuide.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
       'backend/utils/mediaHelpers': path.resolve(__dirname, 'src/backend/utils/mediaHelpers.js'),
