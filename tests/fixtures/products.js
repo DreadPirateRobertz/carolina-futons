@@ -24,6 +24,11 @@ export const futonFrame = {
     { rating: 5, author: 'Sarah M.', body: 'Solid build quality, easy to assemble.', date: '2025-06-10' },
     { rating: 4, author: 'Tom B.', body: 'Great frame, finish is <b>beautiful</b>.', date: '2025-05-22' },
   ],
+  dimensions: { width: 54, depth: 38, height: 33 },
+  material: 'hardwood',
+  color: 'natural',
+  featureTags: ['sleeper'],
+  brand: 'Night & Day',
 };
 
 export const wallHuggerFrame = {
@@ -43,6 +48,11 @@ export const wallHuggerFrame = {
   _createdDate: new Date('2025-02-01'),
   discount: 0,
   options: { finish: 'Black Walnut' },
+  dimensions: { width: 54, depth: 10, height: 34 },
+  material: 'hardwood',
+  color: 'walnut',
+  featureTags: ['wall-hugger', 'sleeper'],
+  brand: 'Strata',
 };
 
 export const futonMattress = {
@@ -62,6 +72,11 @@ export const futonMattress = {
   _createdDate: new Date('2025-03-01'),
   discount: 50,
   options: { size: 'Full' },
+  dimensions: { width: 54, depth: 75, height: 8 },
+  material: 'fabric',
+  color: 'white',
+  featureTags: [],
+  brand: 'Otis',
 };
 
 export const murphyBed = {
@@ -80,6 +95,11 @@ export const murphyBed = {
   inStock: true,
   _createdDate: new Date('2025-04-01'),
   discount: 0,
+  dimensions: { width: 64, depth: 24, height: 42 },
+  material: 'hardwood',
+  color: 'espresso',
+  featureTags: ['sleeper'],
+  brand: 'Night & Day',
 };
 
 export const platformBed = {
@@ -98,6 +118,11 @@ export const platformBed = {
   inStock: true,
   _createdDate: new Date('2025-05-01'),
   discount: 0,
+  dimensions: { width: 63, depth: 83, height: 14 },
+  material: 'hardwood',
+  color: 'cherry',
+  featureTags: [],
+  brand: 'Night & Day',
 };
 
 export const casegoodsItem = {
@@ -116,6 +141,11 @@ export const casegoodsItem = {
   inStock: true,
   _createdDate: new Date('2025-06-01'),
   discount: 0,
+  dimensions: { width: 20, depth: 16, height: 24 },
+  material: 'hardwood',
+  color: 'natural',
+  featureTags: [],
+  brand: 'Night & Day',
 };
 
 export const saleProduct = {
@@ -134,6 +164,59 @@ export const saleProduct = {
   inStock: true,
   _createdDate: new Date('2024-12-01'),
   discount: 150,
+  dimensions: { width: 54, depth: 38, height: 33 },
+  material: 'hardwood',
+  color: 'natural',
+  featureTags: ['sleeper'],
+  brand: 'Night & Day',
+};
+
+export const metalFrame = {
+  _id: 'prod-frame-003',
+  name: 'Manila Metal Futon Frame',
+  slug: 'manila-metal-futon-frame',
+  price: 299,
+  formattedPrice: '$299.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/manila.jpg',
+  sku: 'MAN-MTL-001',
+  ribbon: '',
+  collections: ['futon-frames'],
+  description: 'Affordable metal futon frame with durable powder-coat finish.',
+  inStock: true,
+  _createdDate: new Date('2025-07-01'),
+  discount: 0,
+  dimensions: { width: 54, depth: 36, height: 30 },
+  material: 'metal',
+  color: 'black',
+  featureTags: ['sleeper'],
+  brand: 'KD Frames',
+  numericRating: 3.8,
+};
+
+export const outdoorFrame = {
+  _id: 'prod-frame-004',
+  name: 'Kodiak Outdoor Futon Frame',
+  slug: 'kodiak-outdoor-futon-frame',
+  price: 849,
+  formattedPrice: '$849.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/kodiak.jpg',
+  sku: 'KDK-OUT-001',
+  ribbon: 'New',
+  collections: ['futon-frames'],
+  description: 'Weather-resistant futon frame for porch and patio use.',
+  inStock: false,
+  _createdDate: new Date('2025-08-01'),
+  discount: 0,
+  dimensions: { width: 58, depth: 40, height: 35 },
+  material: 'hardwood',
+  color: 'teak',
+  featureTags: ['outdoor', 'sleeper'],
+  brand: 'Night & Day',
+  numericRating: 4.8,
 };
 
 // All products for seeding collections
@@ -145,6 +228,8 @@ export const allProducts = [
   platformBed,
   casegoodsItem,
   saleProduct,
+  metalFrame,
+  outdoorFrame,
 ];
 
 // Sample analytics records
