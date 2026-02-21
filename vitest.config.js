@@ -116,6 +116,7 @@ export default defineConfig({
       'backend/bundleBuilder.web': path.resolve(__dirname, 'src/backend/bundleBuilder.web.js'),
       'backend/checkoutOptimization.web': path.resolve(__dirname, 'src/backend/checkoutOptimization.web.js'),
       'backend/sustainabilityService.web': path.resolve(__dirname, 'src/backend/sustainabilityService.web.js'),
+      'backend/deliveryExperience.web': path.resolve(__dirname, 'src/backend/deliveryExperience.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
