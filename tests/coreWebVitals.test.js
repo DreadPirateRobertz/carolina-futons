@@ -1,398 +1,574 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData, __onInsert } from './__mocks__/wix-data.js';
+import { __reset, __seed, __onInsert } from './__mocks__/wix-data.js';
 import {
-  recordMetric,
+  reportMetrics,
+  getPerformanceSummary,
   getPagePerformance,
-  getImagePreset,
-  getAllImagePresets,
-  getPerformanceBudget,
-  getMetricThresholds,
-  evaluateMetric,
+  getImageOptimizationHints,
   getLazyLoadConfig,
+  checkPerformanceBudget,
+  DEFAULT_THRESHOLDS,
+  VALID_METRICS,
+  VALID_DEVICE_TYPES,
+  clampMetric,
+  percentile,
+  rateMetric,
+  getWorstRating,
+  checkBudgetViolations,
+  getTargetDimensions,
 } from '../src/backend/coreWebVitals.web.js';
 
+// ── Helpers ─────────────────────────────────────────────────────────
+
+const baseMetrics = {
+  sessionId: 'sess-001',
+  page: '/product/eureka-futon',
+  deviceType: 'desktop',
+  lcp: 1800,
+  fid: 50,
+  inp: 150,
+  cls: 0.05,
+  ttfb: 400,
+  fcp: 1200,
+  connectionType: '4g',
+};
+
+const sampleMetricRecords = [
+  { ...baseMetrics, _id: 'pm-001', timestamp: new Date(), deviceType: 'desktop', lcp: 2000, cls: 0.08, inp: 180 },
+  { ...baseMetrics, _id: 'pm-002', timestamp: new Date(), deviceType: 'desktop', lcp: 2500, cls: 0.12, inp: 220 },
+  { ...baseMetrics, _id: 'pm-003', timestamp: new Date(), deviceType: 'mobile', lcp: 3500, cls: 0.15, inp: 350 },
+  { ...baseMetrics, _id: 'pm-004', timestamp: new Date(), deviceType: 'mobile', lcp: 4200, cls: 0.30, inp: 600 },
+];
+
 beforeEach(() => {
-  resetData();
+  __reset();
+  __seed('PerformanceMetrics', []);
+  __seed('PerformanceBudgets', []);
 });
 
-// ── recordMetric ───────────────────────────────────────────────────
+// ── clampMetric ─────────────────────────────────────────────────────
 
-describe('recordMetric', () => {
-  it('records an LCP metric', async () => {
+describe('clampMetric', () => {
+  it('clamps within range', () => {
+    expect(clampMetric(500, 0, 1000)).toBe(500);
+  });
+
+  it('clamps below min', () => {
+    expect(clampMetric(-10, 0, 1000)).toBe(0);
+  });
+
+  it('clamps above max', () => {
+    expect(clampMetric(99999, 0, 60000)).toBe(60000);
+  });
+
+  it('returns 0 for non-number', () => {
+    expect(clampMetric('hello', 0, 1000)).toBe(0);
+    expect(clampMetric(null, 0, 1000)).toBe(0);
+    expect(clampMetric(undefined, 0, 1000)).toBe(0);
+  });
+
+  it('returns 0 for NaN', () => {
+    expect(clampMetric(NaN, 0, 1000)).toBe(0);
+  });
+});
+
+// ── percentile ──────────────────────────────────────────────────────
+
+describe('percentile', () => {
+  it('returns p75 of sorted values', () => {
+    const values = [100, 200, 300, 400, 500, 600, 700, 800];
+    expect(percentile(values, 75)).toBe(600);
+  });
+
+  it('returns p50 (median) correctly', () => {
+    const values = [100, 200, 300, 400];
+    expect(percentile(values, 50)).toBe(200);
+  });
+
+  it('returns 0 for empty array', () => {
+    expect(percentile([], 75)).toBe(0);
+  });
+
+  it('returns single value for array of one', () => {
+    expect(percentile([42], 75)).toBe(42);
+  });
+});
+
+// ── rateMetric ──────────────────────────────────────────────────────
+
+describe('rateMetric', () => {
+  it('rates LCP as good when under 2500', () => {
+    expect(rateMetric(2000, DEFAULT_THRESHOLDS.lcp)).toBe('good');
+  });
+
+  it('rates LCP as needs-improvement when between 2500-4000', () => {
+    expect(rateMetric(3000, DEFAULT_THRESHOLDS.lcp)).toBe('needs-improvement');
+  });
+
+  it('rates LCP as poor when over 4000', () => {
+    expect(rateMetric(5000, DEFAULT_THRESHOLDS.lcp)).toBe('poor');
+  });
+
+  it('rates CLS as good when under 0.1', () => {
+    expect(rateMetric(0.05, DEFAULT_THRESHOLDS.cls)).toBe('good');
+  });
+
+  it('rates CLS as poor when over 0.25', () => {
+    expect(rateMetric(0.5, DEFAULT_THRESHOLDS.cls)).toBe('poor');
+  });
+
+  it('returns no-data for null thresholds', () => {
+    expect(rateMetric(100, null)).toBe('no-data');
+  });
+
+  it('returns no-data for non-number value', () => {
+    expect(rateMetric('fast', DEFAULT_THRESHOLDS.lcp)).toBe('no-data');
+  });
+
+  it('rates at exactly the good threshold as good', () => {
+    expect(rateMetric(2500, DEFAULT_THRESHOLDS.lcp)).toBe('good');
+  });
+});
+
+// ── getWorstRating ──────────────────────────────────────────────────
+
+describe('getWorstRating', () => {
+  it('returns poor if any metric is poor', () => {
+    expect(getWorstRating(['good', 'poor', 'good'])).toBe('poor');
+  });
+
+  it('returns needs-improvement if worst is needs-improvement', () => {
+    expect(getWorstRating(['good', 'needs-improvement', 'good'])).toBe('needs-improvement');
+  });
+
+  it('returns good if all are good', () => {
+    expect(getWorstRating(['good', 'good', 'good'])).toBe('good');
+  });
+
+  it('returns no-data for empty array', () => {
+    expect(getWorstRating([])).toBe('no-data');
+  });
+});
+
+// ── checkBudgetViolations ───────────────────────────────────────────
+
+describe('checkBudgetViolations', () => {
+  it('returns no violations for good metrics', () => {
+    const record = { lcp: 1500, inp: 100, cls: 0.05 };
+    expect(checkBudgetViolations(record)).toHaveLength(0);
+  });
+
+  it('flags poor LCP', () => {
+    const record = { lcp: 5000, inp: 100, cls: 0.05 };
+    const violations = checkBudgetViolations(record);
+    expect(violations).toHaveLength(1);
+    expect(violations[0].metric).toBe('lcp');
+    expect(violations[0].severity).toBe('poor');
+  });
+
+  it('flags needs-improvement CLS', () => {
+    const record = { lcp: 1500, inp: 100, cls: 0.15 };
+    const violations = checkBudgetViolations(record);
+    expect(violations).toHaveLength(1);
+    expect(violations[0].metric).toBe('cls');
+    expect(violations[0].severity).toBe('needs-improvement');
+  });
+
+  it('flags multiple violations', () => {
+    const record = { lcp: 5000, inp: 600, cls: 0.5 };
+    const violations = checkBudgetViolations(record);
+    expect(violations).toHaveLength(3);
+  });
+
+  it('skips zero values', () => {
+    const record = { lcp: 0, inp: 0, cls: 0 };
+    expect(checkBudgetViolations(record)).toHaveLength(0);
+  });
+});
+
+// ── getTargetDimensions ─────────────────────────────────────────────
+
+describe('getTargetDimensions', () => {
+  it('returns hero dimensions', () => {
+    const dims = getTargetDimensions('hero');
+    expect(dims.maxWidth).toBe(1920);
+    expect(dims.maxHeight).toBe(800);
+  });
+
+  it('returns thumbnail dimensions', () => {
+    const dims = getTargetDimensions('thumbnail');
+    expect(dims.maxWidth).toBe(300);
+  });
+
+  it('returns product dimensions for unknown context', () => {
+    const dims = getTargetDimensions('unknown');
+    expect(dims.maxWidth).toBe(800);
+  });
+});
+
+// ── reportMetrics ───────────────────────────────────────────────────
+
+describe('reportMetrics', () => {
+  it('stores metrics successfully', async () => {
     let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
-
-    const result = await recordMetric({
-      pageUrl: '/product-page/eureka',
-      metric: 'LCP',
-      value: 2100,
-      device: 'mobile',
-      sessionId: 'sess-1',
+    __onInsert((col, item) => {
+      if (col === 'PerformanceMetrics') inserted = item;
     });
 
+    const result = await reportMetrics(baseMetrics);
     expect(result.success).toBe(true);
-    expect(inserted.metric).toBe('LCP');
-    expect(inserted.value).toBe(2100);
-    expect(inserted.rating).toBe('good');
-    expect(inserted.device).toBe('mobile');
+    expect(inserted).not.toBeNull();
+    expect(inserted.sessionId).toBe('sess-001');
+    expect(inserted.lcp).toBe(1800);
+    expect(inserted.cls).toBe(0.05);
   });
 
-  it('records CLS metric', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
-
-    await recordMetric({ pageUrl: '/', metric: 'CLS', value: 0.05 });
-    expect(inserted.rating).toBe('good');
-  });
-
-  it('rates poor LCP', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
-
-    await recordMetric({ pageUrl: '/', metric: 'LCP', value: 5000 });
-    expect(inserted.rating).toBe('poor');
-  });
-
-  it('rates needs-improvement FID', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
-
-    await recordMetric({ pageUrl: '/', metric: 'FID', value: 200 });
-    expect(inserted.rating).toBe('needs-improvement');
-  });
-
-  it('accepts TTFB metric', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'TTFB', value: 500 });
+  it('returns budget violations for poor metrics', async () => {
+    const result = await reportMetrics({
+      ...baseMetrics,
+      lcp: 5000,
+      cls: 0.5,
+    });
     expect(result.success).toBe(true);
+    expect(result.violations.length).toBeGreaterThan(0);
+    expect(result.violations.some(v => v.metric === 'lcp')).toBe(true);
   });
 
-  it('accepts INP metric', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'INP', value: 150 });
+  it('returns empty violations for good metrics', async () => {
+    const result = await reportMetrics(baseMetrics);
     expect(result.success).toBe(true);
+    expect(result.violations).toHaveLength(0);
   });
 
-  it('is case-insensitive for metric name', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'lcp', value: 2000 });
-    expect(result.success).toBe(true);
-  });
-
-  it('defaults device to desktop', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
-
-    await recordMetric({ pageUrl: '/', metric: 'LCP', value: 2000 });
-    expect(inserted.device).toBe('desktop');
-  });
-
-  it('rejects invalid metric name', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'INVALID', value: 100 });
+  it('rejects missing sessionId', async () => {
+    const result = await reportMetrics({ page: '/home' });
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Invalid metric');
+    expect(result.error).toContain('required');
   });
 
-  it('rejects negative value', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'LCP', value: -1 });
+  it('rejects missing page', async () => {
+    const result = await reportMetrics({ sessionId: 'sess-001' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('required');
+  });
+
+  it('rejects null data', async () => {
+    const result = await reportMetrics(null);
     expect(result.success).toBe(false);
   });
 
-  it('rejects NaN value', async () => {
-    const result = await recordMetric({ pageUrl: '/', metric: 'LCP', value: 'not a number' });
-    expect(result.success).toBe(false);
-  });
-
-  it('fails with null data', async () => {
-    const result = await recordMetric(null);
-    expect(result.success).toBe(false);
-  });
-
-  it('sanitizes page URL', async () => {
+  it('defaults deviceType to desktop for invalid value', async () => {
     let inserted = null;
-    __onInsert((col, item) => { inserted = item; });
+    __onInsert((col, item) => {
+      if (col === 'PerformanceMetrics') inserted = item;
+    });
 
-    await recordMetric({ pageUrl: '<script>alert(1)</script>/page', metric: 'LCP', value: 2000 });
-    expect(inserted.pageUrl).not.toContain('<script>');
+    await reportMetrics({ ...baseMetrics, deviceType: 'smartwatch' });
+    expect(inserted.deviceType).toBe('desktop');
+  });
+
+  it('clamps extreme LCP values', async () => {
+    let inserted = null;
+    __onInsert((col, item) => {
+      if (col === 'PerformanceMetrics') inserted = item;
+    });
+
+    await reportMetrics({ ...baseMetrics, lcp: 999999 });
+    expect(inserted.lcp).toBe(60000);
+  });
+
+  it('handles non-numeric metric values', async () => {
+    let inserted = null;
+    __onInsert((col, item) => {
+      if (col === 'PerformanceMetrics') inserted = item;
+    });
+
+    await reportMetrics({ ...baseMetrics, lcp: 'fast', cls: 'low' });
+    expect(inserted.lcp).toBe(0);
+    expect(inserted.cls).toBe(0);
+  });
+
+  it('sanitizes connection type', async () => {
+    let inserted = null;
+    __onInsert((col, item) => {
+      if (col === 'PerformanceMetrics') inserted = item;
+    });
+
+    await reportMetrics({ ...baseMetrics, connectionType: '<script>alert(1)</script>4g' });
+    expect(inserted.connectionType).not.toContain('<script>');
   });
 });
 
-// ── getPagePerformance ─────────────────────────────────────────────
+// ── getPerformanceSummary ───────────────────────────────────────────
+
+describe('getPerformanceSummary', () => {
+  it('returns summary with p75 values', async () => {
+    __seed('PerformanceMetrics', sampleMetricRecords);
+    const result = await getPerformanceSummary({ days: 7 });
+    expect(result.success).toBe(true);
+    expect(result.sampleCount).toBe(4);
+    expect(result.metrics.lcp).toBeDefined();
+    expect(result.metrics.lcp.p75).toBeGreaterThan(0);
+    expect(result.metrics.lcp.rating).toBeDefined();
+  });
+
+  it('returns no-data for empty collection', async () => {
+    const result = await getPerformanceSummary();
+    expect(result.success).toBe(true);
+    expect(result.sampleCount).toBe(0);
+    expect(result.rating).toBe('no-data');
+  });
+
+  it('includes device breakdown', async () => {
+    __seed('PerformanceMetrics', sampleMetricRecords);
+    const result = await getPerformanceSummary({ days: 7 });
+    expect(result.deviceBreakdown.desktop).toBe(2);
+    expect(result.deviceBreakdown.mobile).toBe(2);
+  });
+
+  it('returns overall rating based on worst core metric', async () => {
+    __seed('PerformanceMetrics', sampleMetricRecords);
+    const result = await getPerformanceSummary({ days: 7 });
+    expect(['good', 'needs-improvement', 'poor']).toContain(result.overallRating);
+  });
+
+  it('clamps days parameter', async () => {
+    __seed('PerformanceMetrics', sampleMetricRecords);
+    const result = await getPerformanceSummary({ days: 999 });
+    expect(result.success).toBe(true);
+    expect(result.period).toBe('90 days');
+  });
+});
+
+// ── getPagePerformance ──────────────────────────────────────────────
 
 describe('getPagePerformance', () => {
-  it('returns performance summary for a page', async () => {
-    __seed('WebVitalsMetrics', [
-      { _id: 'm1', pageUrl: '/', metric: 'LCP', value: 2000, rating: 'good', device: 'desktop', timestamp: new Date() },
-      { _id: 'm2', pageUrl: '/', metric: 'LCP', value: 3000, rating: 'needs-improvement', device: 'mobile', timestamp: new Date() },
-      { _id: 'm3', pageUrl: '/', metric: 'CLS', value: 0.05, rating: 'good', device: 'desktop', timestamp: new Date() },
+  it('returns per-page performance metrics', async () => {
+    __seed('PerformanceMetrics', [
+      ...sampleMetricRecords,
+      { ...baseMetrics, _id: 'pm-005', page: '/category/futons', timestamp: new Date(), lcp: 3000, cls: 0.2, inp: 300 },
     ]);
 
-    const result = await getPagePerformance('/');
+    const result = await getPagePerformance(7);
     expect(result.success).toBe(true);
-    expect(result.data.metrics.LCP).toBeDefined();
-    expect(result.data.metrics.LCP.sampleCount).toBe(2);
-    expect(result.data.metrics.CLS).toBeDefined();
-    expect(result.data.sampleCount).toBe(3);
+    expect(result.pages.length).toBeGreaterThanOrEqual(1);
+    expect(result.pages[0]).toHaveProperty('lcp');
+    expect(result.pages[0]).toHaveProperty('cls');
+    expect(result.pages[0]).toHaveProperty('sampleCount');
   });
 
-  it('calculates p75 correctly', async () => {
-    __seed('WebVitalsMetrics', [
-      { _id: 'm1', pageUrl: '/', metric: 'LCP', value: 1000, rating: 'good', timestamp: new Date() },
-      { _id: 'm2', pageUrl: '/', metric: 'LCP', value: 2000, rating: 'good', timestamp: new Date() },
-      { _id: 'm3', pageUrl: '/', metric: 'LCP', value: 3000, rating: 'needs-improvement', timestamp: new Date() },
-      { _id: 'm4', pageUrl: '/', metric: 'LCP', value: 4000, rating: 'needs-improvement', timestamp: new Date() },
+  it('returns empty for no data', async () => {
+    const result = await getPagePerformance(7);
+    expect(result.success).toBe(true);
+    expect(result.pages).toHaveLength(0);
+  });
+
+  it('sorts by worst LCP first', async () => {
+    __seed('PerformanceMetrics', [
+      { ...baseMetrics, _id: 'pm-a', page: '/fast-page', timestamp: new Date(), lcp: 1000 },
+      { ...baseMetrics, _id: 'pm-b', page: '/slow-page', timestamp: new Date(), lcp: 5000 },
     ]);
 
-    const result = await getPagePerformance('/');
-    // p75 of [1000, 2000, 3000, 4000] = value at index 3 (floor(4 * 0.75)) = 4000
-    expect(result.data.metrics.LCP.p75).toBe(4000);
+    const result = await getPagePerformance(7);
+    expect(result.pages[0].page).toBe('/slow-page');
+    expect(result.pages[1].page).toBe('/fast-page');
   });
+});
 
-  it('returns empty metrics for unknown page', async () => {
-    __seed('WebVitalsMetrics', []);
-    const result = await getPagePerformance('/unknown');
-    expect(result.success).toBe(true);
-    expect(result.data.sampleCount).toBe(0);
-  });
+// ── getImageOptimizationHints ───────────────────────────────────────
 
-  it('includes rating distribution', async () => {
-    __seed('WebVitalsMetrics', [
-      { _id: 'm1', pageUrl: '/', metric: 'LCP', value: 2000, rating: 'good', timestamp: new Date() },
-      { _id: 'm2', pageUrl: '/', metric: 'LCP', value: 5000, rating: 'poor', timestamp: new Date() },
+describe('getImageOptimizationHints', () => {
+  it('returns resize recommendation for oversized images', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/huge.jpg', width: 5000, height: 3000, context: 'product' },
     ]);
-
-    const result = await getPagePerformance('/');
-    expect(result.data.metrics.LCP.ratings.good).toBe(1);
-    expect(result.data.metrics.LCP.ratings.poor).toBe(1);
+    expect(result.hints).toHaveLength(1);
+    const resize = result.hints[0].recommendations.find(r => r.type === 'resize');
+    expect(resize).toBeDefined();
+    expect(resize.priority).toBe('high');
   });
 
-  it('clamps days to 1-90', async () => {
-    __seed('WebVitalsMetrics', []);
-    const result = await getPagePerformance('/', 200);
-    expect(result.data.period).toBe('90 days');
-  });
-});
-
-// ── getImagePreset ─────────────────────────────────────────────────
-
-describe('getImagePreset', () => {
-  it('returns hero preset', () => {
-    const result = getImagePreset('hero');
-    expect(result.success).toBe(true);
-    expect(result.data.maxWidth).toBe(1920);
-    expect(result.data.loading).toBe('eager');
-    expect(result.data.fetchPriority).toBe('high');
+  it('suggests WebP format for non-webp images', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/photo.jpg', width: 800, height: 600, context: 'product' },
+    ]);
+    const format = result.hints[0].recommendations.find(r => r.type === 'format');
+    expect(format).toBeDefined();
+    expect(format.message).toContain('WebP');
   });
 
-  it('returns product_main preset', () => {
-    const result = getImagePreset('product_main');
-    expect(result.success).toBe(true);
-    expect(result.data.maxWidth).toBe(800);
-    expect(result.data.format).toBe('webp');
+  it('does not suggest WebP for webp images', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/photo.webp', width: 800, height: 600, context: 'product' },
+    ]);
+    const format = result.hints[0].recommendations.find(r => r.type === 'format');
+    expect(format).toBeUndefined();
   });
 
-  it('returns product_thumbnail preset', () => {
-    const result = getImagePreset('product_thumbnail');
-    expect(result.success).toBe(true);
-    expect(result.data.loading).toBe('lazy');
-    expect(result.data.fetchPriority).toBe('low');
+  it('suggests eager loading for hero images', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/hero.jpg', width: 1920, height: 800, context: 'hero' },
+    ]);
+    const loading = result.hints[0].recommendations.find(r => r.type === 'loading');
+    expect(loading.loading).toBe('eager');
+    expect(loading.fetchPriority).toBe('high');
   });
 
-  it('returns category_card preset', () => {
-    const result = getImagePreset('category_card');
-    expect(result.success).toBe(true);
-    expect(result.data.maxWidth).toBe(400);
+  it('suggests lazy loading for product images', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/product.jpg', width: 800, height: 800, context: 'product' },
+    ]);
+    const loading = result.hints[0].recommendations.find(r => r.type === 'loading');
+    expect(loading.loading).toBe('lazy');
   });
 
-  it('returns blog preset', () => {
-    const result = getImagePreset('blog');
-    expect(result.success).toBe(true);
-    expect(result.data.maxWidth).toBe(1200);
+  it('suggests explicit dimensions when missing', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/photo.jpg', context: 'gallery' },
+    ]);
+    const dims = result.hints[0].recommendations.find(r => r.type === 'dimensions');
+    expect(dims).toBeDefined();
+    expect(dims.priority).toBe('high');
   });
 
-  it('fails for unknown preset', () => {
-    const result = getImagePreset('unknown');
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Available');
+  it('returns empty for non-array input', () => {
+    expect(getImageOptimizationHints(null).hints).toEqual([]);
+    expect(getImageOptimizationHints('string').hints).toEqual([]);
   });
 
-  it('handles case and spaces', () => {
-    const result = getImagePreset('Product Main');
-    expect(result.success).toBe(true);
-    expect(result.data.name).toBe('product_main');
+  it('limits batch size to 20', () => {
+    const images = Array.from({ length: 30 }, (_, i) => ({
+      src: `https://example.com/img${i}.jpg`, width: 800, height: 600, context: 'product',
+    }));
+    const result = getImageOptimizationHints(images);
+    expect(result.hints).toHaveLength(20);
   });
-});
 
-// ── getAllImagePresets ──────────────────────────────────────────────
-
-describe('getAllImagePresets', () => {
-  it('returns all presets', () => {
-    const result = getAllImagePresets();
-    expect(result.success).toBe(true);
-    expect(Object.keys(result.presets).length).toBeGreaterThanOrEqual(6);
-    expect(result.presets.hero).toBeDefined();
-    expect(result.presets.product_main).toBeDefined();
+  it('returns target dimensions for context', () => {
+    const result = getImageOptimizationHints([
+      { src: 'https://example.com/thumb.jpg', width: 300, height: 300, context: 'thumbnail' },
+    ]);
+    expect(result.hints[0].targetWidth).toBe(300);
   });
 });
 
-// ── getPerformanceBudget ───────────────────────────────────────────
-
-describe('getPerformanceBudget', () => {
-  it('returns homepage budget', () => {
-    const result = getPerformanceBudget('homepage');
-    expect(result.success).toBe(true);
-    expect(result.data.maxLCP).toBe(2500);
-    expect(result.data.maxCLS).toBe(0.1);
-    expect(result.data.maxImages).toBe(15);
-  });
-
-  it('returns product page budget', () => {
-    const result = getPerformanceBudget('product_page');
-    expect(result.success).toBe(true);
-    expect(result.data.maxImages).toBe(20);
-  });
-
-  it('returns checkout budget (stricter)', () => {
-    const result = getPerformanceBudget('checkout');
-    expect(result.success).toBe(true);
-    expect(result.data.maxLCP).toBe(2000);
-    expect(result.data.maxCLS).toBe(0.05);
-    expect(result.data.maxImages).toBe(5);
-  });
-
-  it('handles hyphens and spaces', () => {
-    const result = getPerformanceBudget('product-page');
-    expect(result.success).toBe(true);
-  });
-
-  it('fails for unknown page type', () => {
-    const result = getPerformanceBudget('unknown');
-    expect(result.success).toBe(false);
-  });
-});
-
-// ── getMetricThresholds ────────────────────────────────────────────
-
-describe('getMetricThresholds', () => {
-  it('returns all thresholds', () => {
-    const result = getMetricThresholds();
-    expect(result.success).toBe(true);
-    expect(result.thresholds.LCP).toBeDefined();
-    expect(result.thresholds.FID).toBeDefined();
-    expect(result.thresholds.CLS).toBeDefined();
-    expect(result.thresholds.TTFB).toBeDefined();
-    expect(result.thresholds.INP).toBeDefined();
-  });
-
-  it('LCP thresholds match Google standards', () => {
-    const { thresholds } = getMetricThresholds();
-    expect(thresholds.LCP.good).toBe(2500);
-    expect(thresholds.LCP.poor).toBe(4000);
-  });
-
-  it('CLS thresholds match Google standards', () => {
-    const { thresholds } = getMetricThresholds();
-    expect(thresholds.CLS.good).toBe(0.1);
-    expect(thresholds.CLS.poor).toBe(0.25);
-  });
-});
-
-// ── evaluateMetric ─────────────────────────────────────────────────
-
-describe('evaluateMetric', () => {
-  it('rates good LCP', () => {
-    const result = evaluateMetric('LCP', 2000);
-    expect(result.success).toBe(true);
-    expect(result.data.rating).toBe('good');
-  });
-
-  it('rates needs-improvement LCP', () => {
-    const result = evaluateMetric('LCP', 3000);
-    expect(result.data.rating).toBe('needs-improvement');
-  });
-
-  it('rates poor LCP', () => {
-    const result = evaluateMetric('LCP', 5000);
-    expect(result.data.rating).toBe('poor');
-  });
-
-  it('rates good CLS', () => {
-    const result = evaluateMetric('CLS', 0.05);
-    expect(result.data.rating).toBe('good');
-  });
-
-  it('rates poor CLS', () => {
-    const result = evaluateMetric('CLS', 0.3);
-    expect(result.data.rating).toBe('poor');
-  });
-
-  it('includes threshold info', () => {
-    const result = evaluateMetric('FID', 50);
-    expect(result.data.threshold.good).toBe(100);
-    expect(result.data.threshold.poor).toBe(300);
-  });
-
-  it('is case-insensitive', () => {
-    const result = evaluateMetric('lcp', 2000);
-    expect(result.success).toBe(true);
-  });
-
-  it('rejects invalid metric', () => {
-    const result = evaluateMetric('INVALID', 100);
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects negative value', () => {
-    const result = evaluateMetric('LCP', -1);
-    expect(result.success).toBe(false);
-  });
-
-  it('rates boundary values correctly', () => {
-    // Exactly at threshold boundary — should be "good"
-    const result = evaluateMetric('LCP', 2500);
-    expect(result.data.rating).toBe('good');
-  });
-});
-
-// ── getLazyLoadConfig ──────────────────────────────────────────────
+// ── getLazyLoadConfig ───────────────────────────────────────────────
 
 describe('getLazyLoadConfig', () => {
-  it('returns homepage config', () => {
-    const result = getLazyLoadConfig('homepage');
-    expect(result.success).toBe(true);
-    expect(result.data.eager).toContain('hero-image');
-    expect(result.data.lazy).toContain('featured-products');
-    expect(result.data.prefetch.length).toBeGreaterThan(0);
+  it('returns home page config', () => {
+    const { config } = getLazyLoadConfig('home');
+    expect(config.hero.loading).toBe('eager');
+    expect(config.hero.fetchPriority).toBe('high');
+    expect(config.featuredProducts.loading).toBe('lazy');
   });
 
   it('returns product page config', () => {
-    const result = getLazyLoadConfig('product_page');
-    expect(result.success).toBe(true);
-    expect(result.data.eager).toContain('product-main-image');
-    expect(result.data.lazy).toContain('related-products');
+    const { config } = getLazyLoadConfig('product');
+    expect(config.mainImage.loading).toBe('eager');
+    expect(config.gallery.loading).toBe('lazy');
+    expect(config.reviews.loading).toBe('lazy');
   });
 
-  it('returns checkout config', () => {
-    const result = getLazyLoadConfig('checkout');
-    expect(result.success).toBe(true);
-    expect(result.data.eager).toContain('order-summary');
-    expect(result.data.eager).toContain('trust-badges');
+  it('returns category page config', () => {
+    const { config } = getLazyLoadConfig('category');
+    expect(config.banner.loading).toBe('eager');
+    expect(config.productGrid.loading).toBe('lazy');
   });
 
-  it('prefetches cart from product page', () => {
-    const result = getLazyLoadConfig('product_page');
-    expect(result.data.prefetch).toContain('/cart');
+  it('returns blog page config', () => {
+    const { config } = getLazyLoadConfig('blog');
+    expect(config.featuredImage.loading).toBe('eager');
+    expect(config.inlineImages.loading).toBe('lazy');
   });
 
-  it('prefetches thank-you from checkout', () => {
-    const result = getLazyLoadConfig('checkout');
-    expect(result.data.prefetch).toContain('/thank-you');
+  it('returns fallback config for unknown page type', () => {
+    const { config } = getLazyLoadConfig('unknown');
+    expect(config.primaryImage.loading).toBe('eager');
+    expect(config.secondaryImages.loading).toBe('lazy');
+  });
+});
+
+// ── checkPerformanceBudget ──────────────────────────────────────────
+
+describe('checkPerformanceBudget', () => {
+  it('passes for good metrics', async () => {
+    const result = await checkPerformanceBudget({
+      lcp: 1500, fid: 50, inp: 100, cls: 0.05, ttfb: 400, fcp: 1000,
+    });
+    expect(result.pass).toBe(true);
+    expect(result.violations).toHaveLength(0);
+    expect(result.checked).toBe(6);
   });
 
-  it('handles hyphens in page type', () => {
-    const result = getLazyLoadConfig('product-page');
-    expect(result.success).toBe(true);
+  it('fails for poor LCP', async () => {
+    const result = await checkPerformanceBudget({ lcp: 5000 });
+    expect(result.pass).toBe(false);
+    expect(result.violations).toHaveLength(1);
+    expect(result.violations[0].severity).toBe('poor');
   });
 
-  it('fails for unknown page type', () => {
-    const result = getLazyLoadConfig('unknown');
-    expect(result.success).toBe(false);
+  it('passes with needs-improvement (not poor)', async () => {
+    const result = await checkPerformanceBudget({ lcp: 3000 });
+    expect(result.pass).toBe(true);
+    expect(result.violations).toHaveLength(1);
+    expect(result.violations[0].severity).toBe('needs-improvement');
+  });
+
+  it('uses custom budgets from CMS', async () => {
+    __seed('PerformanceBudgets', [{
+      _id: 'budget-1',
+      metricName: 'lcp',
+      goodThreshold: 1000,
+      needsImprovementThreshold: 2000,
+      page: '*',
+      enabled: true,
+    }]);
+
+    const result = await checkPerformanceBudget({ lcp: 1500 });
+    expect(result.violations).toHaveLength(1);
+    expect(result.violations[0].metric).toBe('lcp');
+    expect(result.violations[0].severity).toBe('needs-improvement');
+  });
+
+  it('rejects null metrics', async () => {
+    const result = await checkPerformanceBudget(null);
+    expect(result.error).toContain('required');
+  });
+
+  it('skips non-numeric metric values', async () => {
+    const result = await checkPerformanceBudget({ lcp: 'fast', cls: true });
+    expect(result.checked).toBe(0);
+  });
+
+  it('handles multiple violations', async () => {
+    const result = await checkPerformanceBudget({
+      lcp: 5000, inp: 600, cls: 0.5,
+    });
+    expect(result.pass).toBe(false);
+    expect(result.violations).toHaveLength(3);
+  });
+});
+
+// ── Constants ───────────────────────────────────────────────────────
+
+describe('constants', () => {
+  it('exports valid metrics list', () => {
+    expect(VALID_METRICS).toContain('lcp');
+    expect(VALID_METRICS).toContain('cls');
+    expect(VALID_METRICS).toContain('inp');
+    expect(VALID_METRICS).toHaveLength(6);
+  });
+
+  it('exports device types', () => {
+    expect(VALID_DEVICE_TYPES).toContain('mobile');
+    expect(VALID_DEVICE_TYPES).toContain('desktop');
+  });
+
+  it('has thresholds for all core metrics', () => {
+    expect(DEFAULT_THRESHOLDS.lcp).toBeDefined();
+    expect(DEFAULT_THRESHOLDS.cls).toBeDefined();
+    expect(DEFAULT_THRESHOLDS.inp).toBeDefined();
+    expect(DEFAULT_THRESHOLDS.lcp.good).toBe(2500);
+    expect(DEFAULT_THRESHOLDS.cls.good).toBe(0.1);
   });
 });

@@ -1,402 +1,554 @@
 /**
  * @module coreWebVitals
  * @description Core Web Vitals monitoring and performance optimization service.
- * Tracks LCP, FID, CLS metrics from real user monitoring (RUM).
- * Provides image optimization config, lazy loading rules, and performance budgets.
+ * Collects LCP, FID/INP, CLS metrics from frontend, stores in CMS for
+ * dashboarding, enforces performance budgets, and provides image
+ * optimization helpers for Wix media.
  *
  * @requires wix-web-module
  * @requires wix-data
  *
  * @setup
- * Create CMS collection `WebVitalsMetrics` with fields:
- *   pageUrl (Text, indexed) - Page URL path
- *   metric (Text, indexed) - 'LCP'|'FID'|'CLS'|'TTFB'|'INP'
- *   value (Number) - Metric value (ms for timing, score for CLS)
- *   rating (Text) - 'good'|'needs-improvement'|'poor'
- *   device (Text) - 'mobile'|'desktop'
- *   timestamp (Date, indexed) - When metric was recorded
- *   sessionId (Text) - Browser session
+ * Create CMS collection "PerformanceMetrics" in Wix Dashboard with fields:
+ * - sessionId (Text) - Unique session identifier
+ * - page (Text) - Page URL path
+ * - deviceType (Text) - "mobile" | "tablet" | "desktop"
+ * - lcp (Number) - Largest Contentful Paint in ms
+ * - fid (Number) - First Input Delay in ms
+ * - inp (Number) - Interaction to Next Paint in ms
+ * - cls (Number) - Cumulative Layout Shift score
+ * - ttfb (Number) - Time to First Byte in ms
+ * - fcp (Number) - First Contentful Paint in ms
+ * - connectionType (Text) - "4g" | "3g" | "2g" | "slow-2g" | "wifi" | "unknown"
+ * - timestamp (DateTime)
+ *
+ * Create CMS collection "PerformanceBudgets" with fields:
+ * - metricName (Text) - "lcp" | "fid" | "inp" | "cls" | "ttfb" | "fcp"
+ * - goodThreshold (Number) - "Good" upper bound
+ * - needsImprovementThreshold (Number) - "Needs Improvement" upper bound
+ * - page (Text) - Page pattern or "*" for all pages
+ * - enabled (Boolean)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 
-// ── Performance Thresholds (Google 2024 standards) ─────────────────
+const METRICS_COLLECTION = 'PerformanceMetrics';
+const BUDGETS_COLLECTION = 'PerformanceBudgets';
+const MAX_BATCH_SIZE = 20;
+const VALID_DEVICE_TYPES = ['mobile', 'tablet', 'desktop'];
+const VALID_METRICS = ['lcp', 'fid', 'inp', 'cls', 'ttfb', 'fcp'];
 
-const THRESHOLDS = {
-  LCP: { good: 2500, poor: 4000, unit: 'ms' },
-  FID: { good: 100, poor: 300, unit: 'ms' },
-  CLS: { good: 0.1, poor: 0.25, unit: 'score' },
-  TTFB: { good: 800, poor: 1800, unit: 'ms' },
-  INP: { good: 200, poor: 500, unit: 'ms' },
+// Google's Core Web Vitals thresholds (defaults if no custom budgets set)
+const DEFAULT_THRESHOLDS = {
+  lcp:  { good: 2500, needsImprovement: 4000 },
+  fid:  { good: 100,  needsImprovement: 300 },
+  inp:  { good: 200,  needsImprovement: 500 },
+  cls:  { good: 0.1,  needsImprovement: 0.25 },
+  ttfb: { good: 800,  needsImprovement: 1800 },
+  fcp:  { good: 1800, needsImprovement: 3000 },
 };
 
-const VALID_METRICS = Object.keys(THRESHOLDS);
-const VALID_DEVICES = ['mobile', 'desktop'];
-
-// ── Image Optimization Presets ─────────────────────────────────────
-
-const IMAGE_PRESETS = {
-  hero: {
-    maxWidth: 1920,
-    maxHeight: 800,
-    quality: 80,
-    format: 'webp',
-    loading: 'eager',
-    fetchPriority: 'high',
-    sizes: '100vw',
-  },
-  product_main: {
-    maxWidth: 800,
-    maxHeight: 800,
-    quality: 85,
-    format: 'webp',
-    loading: 'eager',
-    fetchPriority: 'high',
-    sizes: '(max-width: 768px) 100vw, 50vw',
-  },
-  product_thumbnail: {
-    maxWidth: 300,
-    maxHeight: 300,
-    quality: 75,
-    format: 'webp',
-    loading: 'lazy',
-    fetchPriority: 'low',
-    sizes: '150px',
-  },
-  product_gallery: {
-    maxWidth: 600,
-    maxHeight: 600,
-    quality: 80,
-    format: 'webp',
-    loading: 'lazy',
-    fetchPriority: 'auto',
-    sizes: '(max-width: 768px) 100vw, 400px',
-  },
-  category_card: {
-    maxWidth: 400,
-    maxHeight: 400,
-    quality: 75,
-    format: 'webp',
-    loading: 'lazy',
-    fetchPriority: 'auto',
-    sizes: '(max-width: 768px) 50vw, 25vw',
-  },
-  blog: {
-    maxWidth: 1200,
-    maxHeight: 675,
-    quality: 80,
-    format: 'webp',
-    loading: 'lazy',
-    fetchPriority: 'auto',
-    sizes: '(max-width: 768px) 100vw, 800px',
-  },
-};
-
-// ── Performance Budgets ────────────────────────────────────────────
-
-const PERFORMANCE_BUDGETS = {
-  homepage: {
-    maxLCP: 2500,
-    maxCLS: 0.1,
-    maxTTFB: 800,
-    maxImages: 15,
-    maxImageSizeKB: 200,
-    maxTotalSizeKB: 3000,
-  },
-  product_page: {
-    maxLCP: 2500,
-    maxCLS: 0.1,
-    maxTTFB: 800,
-    maxImages: 20,
-    maxImageSizeKB: 250,
-    maxTotalSizeKB: 3500,
-  },
-  category_page: {
-    maxLCP: 3000,
-    maxCLS: 0.1,
-    maxTTFB: 900,
-    maxImages: 30,
-    maxImageSizeKB: 150,
-    maxTotalSizeKB: 4000,
-  },
-  checkout: {
-    maxLCP: 2000,
-    maxCLS: 0.05,
-    maxTTFB: 600,
-    maxImages: 5,
-    maxImageSizeKB: 100,
-    maxTotalSizeKB: 1500,
-  },
-};
-
-// ── Public API ─────────────────────────────────────────────────────
+// ─── reportMetrics ─────────────────────────────────────────────────
 
 /**
- * Record a web vitals metric from real user monitoring.
+ * Report Core Web Vitals metrics from the frontend.
+ * Called after page load when metrics are available.
+ *
  * @param {Object} data
- * @param {string} data.pageUrl - Page URL path
- * @param {string} data.metric - Metric name (LCP, FID, CLS, TTFB, INP)
- * @param {number} data.value - Metric value
- * @param {string} [data.device] - 'mobile' or 'desktop'
- * @param {string} [data.sessionId] - Browser session ID
- * @returns {Promise<{ success: boolean }>}
+ * @param {string} data.sessionId - Unique session identifier
+ * @param {string} data.page - Page URL path
+ * @param {string} [data.deviceType="desktop"] - Device category
+ * @param {number} [data.lcp] - Largest Contentful Paint (ms)
+ * @param {number} [data.fid] - First Input Delay (ms)
+ * @param {number} [data.inp] - Interaction to Next Paint (ms)
+ * @param {number} [data.cls] - Cumulative Layout Shift
+ * @param {number} [data.ttfb] - Time to First Byte (ms)
+ * @param {number} [data.fcp] - First Contentful Paint (ms)
+ * @param {string} [data.connectionType] - Network connection type
+ * @returns {Promise<{success: boolean, violations?: Array}>}
  */
-export const recordMetric = webMethod(
+export const reportMetrics = webMethod(
   Permissions.Anyone,
   async (data) => {
     try {
-      if (!data || typeof data !== 'object') {
-        return { success: false, error: 'Metric data is required.' };
+      if (!data?.sessionId || !data?.page) {
+        return { success: false, error: 'sessionId and page are required' };
       }
 
-      const metric = (data.metric || '').toUpperCase().trim();
-      if (!VALID_METRICS.includes(metric)) {
-        return { success: false, error: `Invalid metric. Must be one of: ${VALID_METRICS.join(', ')}` };
+      const sessionId = sanitize(data.sessionId, 100);
+      const page = sanitize(data.page, 500);
+      if (!sessionId || !page) {
+        return { success: false, error: 'Invalid sessionId or page' };
       }
 
-      const value = Number(data.value);
-      if (isNaN(value) || value < 0) {
-        return { success: false, error: 'Metric value must be a non-negative number.' };
-      }
+      const deviceType = VALID_DEVICE_TYPES.includes(data.deviceType)
+        ? data.deviceType
+        : 'desktop';
 
-      const pageUrl = sanitize(data.pageUrl || '/', 500);
-      const device = VALID_DEVICES.includes(data.device) ? data.device : 'desktop';
-      const rating = getRating(metric, value);
-
-      await wixData.insert('WebVitalsMetrics', {
-        pageUrl,
-        metric,
-        value: Math.round(value * 1000) / 1000,
-        rating,
-        device,
+      const record = {
+        sessionId,
+        page,
+        deviceType,
+        lcp: clampMetric(data.lcp, 0, 60000),
+        fid: clampMetric(data.fid, 0, 10000),
+        inp: clampMetric(data.inp, 0, 10000),
+        cls: clampMetric(data.cls, 0, 10),
+        ttfb: clampMetric(data.ttfb, 0, 30000),
+        fcp: clampMetric(data.fcp, 0, 30000),
+        connectionType: sanitize(data.connectionType || 'unknown', 20),
         timestamp: new Date(),
-        sessionId: sanitize(data.sessionId || '', 100),
-      });
+      };
 
-      return { success: true };
+      await wixData.insert(METRICS_COLLECTION, record);
+
+      // Check against performance budgets
+      const violations = checkBudgetViolations(record);
+
+      return { success: true, violations };
     } catch (err) {
-      console.error('[coreWebVitals] Error recording metric:', err);
-      return { success: false, error: 'Failed to record metric.' };
+      console.error('[coreWebVitals] reportMetrics error:', err);
+      return { success: false, error: 'Failed to report metrics' };
     }
   }
 );
 
+// ─── getPerformanceSummary ────────────────────────────────────────
+
 /**
- * Get performance summary for a page.
- * Returns average metrics and ratings for the specified period.
- * @param {string} pageUrl - Page URL path
- * @param {number} [daysBack=7] - Look back period
- * @returns {Promise<{ success: boolean, data?: Object }>}
+ * Get performance summary with p75 values for each metric,
+ * broken down by device type and page.
+ *
+ * @param {Object} [options]
+ * @param {number} [options.days=7] - Number of days to analyze
+ * @param {string} [options.page] - Filter by page path
+ * @param {string} [options.deviceType] - Filter by device type
+ * @returns {Promise<Object>} Performance summary
  */
-export const getPagePerformance = webMethod(
+export const getPerformanceSummary = webMethod(
   Permissions.Admin,
-  async (pageUrl, daysBack = 7) => {
+  async (options = {}) => {
     try {
-      const url = sanitize(pageUrl || '/', 500);
-      const days = Math.max(1, Math.min(90, Math.round(Number(daysBack) || 7)));
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - days);
+      const days = Math.min(Math.max(1, options.days || 7), 90);
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const result = await wixData.query('WebVitalsMetrics')
-        .eq('pageUrl', url)
-        .ge('timestamp', cutoff)
-        .limit(1000)
-        .find();
+      let query = wixData.query(METRICS_COLLECTION)
+        .ge('timestamp', since);
 
-      if (result.items.length === 0) {
-        return { success: true, data: { pageUrl: url, metrics: {}, sampleCount: 0, period: `${days} days` } };
+      if (options.page) {
+        query = query.eq('page', sanitize(options.page, 500));
+      }
+      if (options.deviceType && VALID_DEVICE_TYPES.includes(options.deviceType)) {
+        query = query.eq('deviceType', options.deviceType);
+      }
+
+      const result = await query.limit(1000).find();
+      const items = result.items;
+
+      if (items.length === 0) {
+        return { success: true, sampleCount: 0, metrics: {}, rating: 'no-data' };
       }
 
       const metrics = {};
-      for (const item of result.items) {
-        if (!metrics[item.metric]) {
-          metrics[item.metric] = { values: [], ratings: { good: 0, 'needs-improvement': 0, poor: 0 } };
+      for (const metric of VALID_METRICS) {
+        const values = items
+          .map(item => item[metric])
+          .filter(v => typeof v === 'number' && v > 0)
+          .sort((a, b) => a - b);
+
+        if (values.length === 0) {
+          metrics[metric] = { p75: 0, median: 0, count: 0, rating: 'no-data' };
+          continue;
         }
-        metrics[item.metric].values.push(item.value);
-        metrics[item.metric].ratings[item.rating] = (metrics[item.metric].ratings[item.rating] || 0) + 1;
+
+        const p75 = percentile(values, 75);
+        const median = percentile(values, 50);
+        const thresholds = DEFAULT_THRESHOLDS[metric];
+        const rating = rateMetric(p75, thresholds);
+
+        metrics[metric] = { p75, median, count: values.length, rating };
       }
 
-      const summary = {};
-      for (const [name, data] of Object.entries(metrics)) {
-        const sorted = data.values.sort((a, b) => a - b);
-        const p75 = sorted[Math.floor(sorted.length * 0.75)] || 0;
-        const avg = sorted.reduce((s, v) => s + v, 0) / sorted.length;
+      // Overall rating: worst of LCP, INP, CLS (the 3 Core Web Vitals)
+      const coreRatings = ['lcp', 'inp', 'cls'].map(m => metrics[m]?.rating || 'no-data');
+      const overallRating = getWorstRating(coreRatings);
 
-        summary[name] = {
-          p75: Math.round(p75 * 1000) / 1000,
-          average: Math.round(avg * 1000) / 1000,
-          sampleCount: sorted.length,
-          rating: getRating(name, p75),
-          ratings: data.ratings,
-        };
+      // Device breakdown
+      const deviceBreakdown = {};
+      for (const dt of VALID_DEVICE_TYPES) {
+        const deviceItems = items.filter(i => i.deviceType === dt);
+        deviceBreakdown[dt] = deviceItems.length;
       }
 
       return {
         success: true,
-        data: {
-          pageUrl: url,
-          metrics: summary,
-          sampleCount: result.items.length,
-          period: `${days} days`,
-        },
+        period: `${days} days`,
+        sampleCount: items.length,
+        metrics,
+        overallRating,
+        deviceBreakdown,
       };
     } catch (err) {
-      console.error('[coreWebVitals] Error getting page performance:', err);
-      return { success: false, error: 'Failed to get performance data.' };
+      console.error('[coreWebVitals] getPerformanceSummary error:', err);
+      return { success: false, error: 'Failed to get performance summary' };
     }
   }
 );
 
-/**
- * Get image optimization preset for a given context.
- * @param {string} presetName - Preset name (hero, product_main, product_thumbnail, etc.)
- * @returns {{ success: boolean, data?: Object }}
- */
-export const getImagePreset = webMethod(
-  Permissions.Anyone,
-  (presetName) => {
-    const name = sanitize(presetName || '', 50).toLowerCase().replace(/\s+/g, '_');
-    const preset = IMAGE_PRESETS[name];
+// ─── getPagePerformance ──────────────────────────────────────────
 
-    if (!preset) {
+/**
+ * Get per-page performance comparison to identify slow pages.
+ *
+ * @param {number} [days=7] - Analysis period
+ * @returns {Promise<Object>} Pages ranked by performance
+ */
+export const getPagePerformance = webMethod(
+  Permissions.Admin,
+  async (days = 7) => {
+    try {
+      const safeDays = Math.min(Math.max(1, days), 90);
+      const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
+
+      const result = await wixData.query(METRICS_COLLECTION)
+        .ge('timestamp', since)
+        .limit(1000)
+        .find();
+
+      if (result.items.length === 0) {
+        return { success: true, pages: [] };
+      }
+
+      // Group by page
+      const pageMap = {};
+      for (const item of result.items) {
+        const page = item.page || 'unknown';
+        if (!pageMap[page]) {
+          pageMap[page] = { page, samples: [] };
+        }
+        pageMap[page].samples.push(item);
+      }
+
+      // Calculate p75 for each page
+      const pages = Object.values(pageMap).map(entry => {
+        const lcpValues = entry.samples.map(s => s.lcp).filter(v => v > 0).sort((a, b) => a - b);
+        const clsValues = entry.samples.map(s => s.cls).filter(v => typeof v === 'number').sort((a, b) => a - b);
+        const inpValues = entry.samples.map(s => s.inp).filter(v => v > 0).sort((a, b) => a - b);
+
+        const lcpP75 = percentile(lcpValues, 75);
+        const clsP75 = percentile(clsValues, 75);
+        const inpP75 = percentile(inpValues, 75);
+
+        return {
+          page: entry.page,
+          sampleCount: entry.samples.length,
+          lcp: { p75: lcpP75, rating: rateMetric(lcpP75, DEFAULT_THRESHOLDS.lcp) },
+          cls: { p75: clsP75, rating: rateMetric(clsP75, DEFAULT_THRESHOLDS.cls) },
+          inp: { p75: inpP75, rating: rateMetric(inpP75, DEFAULT_THRESHOLDS.inp) },
+        };
+      });
+
+      // Sort by worst LCP first
+      pages.sort((a, b) => b.lcp.p75 - a.lcp.p75);
+
+      return { success: true, pages };
+    } catch (err) {
+      console.error('[coreWebVitals] getPagePerformance error:', err);
+      return { success: false, error: 'Failed to get page performance' };
+    }
+  }
+);
+
+// ─── getImageOptimizationHints ────────────────────────────────────
+
+/**
+ * Generate image optimization recommendations based on image dimensions
+ * and usage context. Wix automatically serves responsive images, but
+ * this helps with explicit sizing and format hints.
+ *
+ * @param {Array<Object>} images - Array of {src, width, height, context}
+ *   context: "hero" | "product" | "thumbnail" | "gallery" | "icon"
+ * @returns {{hints: Array<Object>}}
+ */
+export const getImageOptimizationHints = webMethod(
+  Permissions.Anyone,
+  (images) => {
+    if (!Array.isArray(images)) return { hints: [] };
+
+    const hints = images.slice(0, MAX_BATCH_SIZE).map(img => {
+      const src = typeof img.src === 'string' ? img.src : '';
+      const width = typeof img.width === 'number' ? img.width : 0;
+      const height = typeof img.height === 'number' ? img.height : 0;
+      const context = img.context || 'product';
+
+      const recommendations = [];
+      const targetDimensions = getTargetDimensions(context);
+
+      // Check oversized images
+      if (width > targetDimensions.maxWidth * 2) {
+        recommendations.push({
+          type: 'resize',
+          message: `Image width ${width}px exceeds 2x target (${targetDimensions.maxWidth}px). Resize to reduce payload.`,
+          priority: 'high',
+        });
+      }
+
+      // Suggest format
+      if (src && !src.includes('.webp') && !src.includes('format/webp')) {
+        recommendations.push({
+          type: 'format',
+          message: 'Use WebP format for 25-35% smaller file sizes.',
+          priority: 'medium',
+        });
+      }
+
+      // Suggest lazy loading for below-the-fold contexts
+      const eagerContexts = ['hero'];
+      if (!eagerContexts.includes(context)) {
+        recommendations.push({
+          type: 'loading',
+          message: `Use lazy loading for ${context} images.`,
+          priority: 'low',
+          loading: 'lazy',
+        });
+      } else {
+        recommendations.push({
+          type: 'loading',
+          message: 'Use eager loading with fetchpriority="high" for hero images.',
+          priority: 'high',
+          loading: 'eager',
+          fetchPriority: 'high',
+        });
+      }
+
+      // Suggest dimensions for CLS prevention
+      if (!width || !height) {
+        recommendations.push({
+          type: 'dimensions',
+          message: 'Set explicit width and height to prevent CLS.',
+          priority: 'high',
+        });
+      }
+
       return {
-        success: false,
-        error: `Unknown preset. Available: ${Object.keys(IMAGE_PRESETS).join(', ')}`,
+        src: src.slice(0, 200),
+        context,
+        targetWidth: targetDimensions.maxWidth,
+        targetHeight: targetDimensions.maxHeight,
+        recommendations,
       };
-    }
+    });
 
-    return { success: true, data: { name, ...preset } };
+    return { hints };
   }
 );
 
-/**
- * Get all image optimization presets.
- * @returns {{ success: boolean, presets: Object }}
- */
-export const getAllImagePresets = webMethod(
-  Permissions.Anyone,
-  () => {
-    return { success: true, presets: { ...IMAGE_PRESETS } };
-  }
-);
+// ─── getLazyLoadConfig ────────────────────────────────────────────
 
 /**
- * Get performance budget for a page type.
- * @param {string} pageType - Page type (homepage, product_page, category_page, checkout)
- * @returns {{ success: boolean, data?: Object }}
- */
-export const getPerformanceBudget = webMethod(
-  Permissions.Anyone,
-  (pageType) => {
-    const type = sanitize(pageType || '', 50).toLowerCase().replace(/[\s-]+/g, '_');
-    const budget = PERFORMANCE_BUDGETS[type];
-
-    if (!budget) {
-      return {
-        success: false,
-        error: `Unknown page type. Available: ${Object.keys(PERFORMANCE_BUDGETS).join(', ')}`,
-      };
-    }
-
-    return { success: true, data: { pageType: type, ...budget } };
-  }
-);
-
-/**
- * Get metric thresholds for all web vitals.
- * @returns {{ success: boolean, thresholds: Object }}
- */
-export const getMetricThresholds = webMethod(
-  Permissions.Anyone,
-  () => {
-    return { success: true, thresholds: { ...THRESHOLDS } };
-  }
-);
-
-/**
- * Evaluate a metric value and return its rating.
- * @param {string} metric - Metric name
- * @param {number} value - Metric value
- * @returns {{ success: boolean, data?: { metric: string, value: number, rating: string, threshold: Object } }}
- */
-export const evaluateMetric = webMethod(
-  Permissions.Anyone,
-  (metric, value) => {
-    const name = (metric || '').toUpperCase().trim();
-    if (!VALID_METRICS.includes(name)) {
-      return { success: false, error: `Invalid metric. Must be one of: ${VALID_METRICS.join(', ')}` };
-    }
-
-    const val = Number(value);
-    if (isNaN(val) || val < 0) {
-      return { success: false, error: 'Value must be a non-negative number.' };
-    }
-
-    return {
-      success: true,
-      data: {
-        metric: name,
-        value: val,
-        rating: getRating(name, val),
-        threshold: THRESHOLDS[name],
-      },
-    };
-  }
-);
-
-/**
- * Get lazy loading configuration for page elements.
- * Above-the-fold elements load eagerly; below-the-fold elements load lazily.
- * @param {string} pageType - Page type
- * @returns {{ success: boolean, data?: Object }}
+ * Get lazy loading configuration for a page's images and sections.
+ * Returns which elements should be eager vs lazy loaded based on
+ * their position and importance.
+ *
+ * @param {string} pageType - "home" | "product" | "category" | "blog" | "other"
+ * @returns {{config: Object}}
  */
 export const getLazyLoadConfig = webMethod(
   Permissions.Anyone,
   (pageType) => {
     const configs = {
-      homepage: {
-        eager: ['hero-image', 'logo', 'nav-icons'],
-        lazy: ['category-cards', 'featured-products', 'testimonials', 'blog-previews', 'footer'],
-        prefetch: ['/futon-frames', '/mattresses', '/murphy-cabinet-beds'],
+      home: {
+        hero: { loading: 'eager', fetchPriority: 'high', decoding: 'sync' },
+        featuredProducts: { loading: 'lazy', decoding: 'async', rootMargin: '200px' },
+        testimonials: { loading: 'lazy', decoding: 'async', rootMargin: '300px' },
+        footer: { loading: 'lazy', decoding: 'async', rootMargin: '400px' },
       },
-      product_page: {
-        eager: ['product-main-image', 'product-title', 'add-to-cart'],
-        lazy: ['product-gallery', 'related-products', 'reviews', 'size-guide', 'financing-calc'],
-        prefetch: ['/cart'],
+      product: {
+        mainImage: { loading: 'eager', fetchPriority: 'high', decoding: 'sync' },
+        gallery: { loading: 'lazy', decoding: 'async', rootMargin: '100px' },
+        reviews: { loading: 'lazy', decoding: 'async', rootMargin: '300px' },
+        recommendations: { loading: 'lazy', decoding: 'async', rootMargin: '400px' },
       },
-      category_page: {
-        eager: ['category-title', 'first-row-products'],
-        lazy: ['remaining-products', 'filters', 'buying-guide-link'],
-        prefetch: [],
+      category: {
+        banner: { loading: 'eager', fetchPriority: 'high', decoding: 'sync' },
+        productGrid: { loading: 'lazy', decoding: 'async', rootMargin: '200px' },
+        filters: { loading: 'eager', decoding: 'async' },
       },
-      checkout: {
-        eager: ['order-summary', 'address-form', 'trust-badges'],
-        lazy: ['order-notes', 'delivery-estimate'],
-        prefetch: ['/thank-you'],
+      blog: {
+        featuredImage: { loading: 'eager', fetchPriority: 'high', decoding: 'sync' },
+        inlineImages: { loading: 'lazy', decoding: 'async', rootMargin: '200px' },
+        relatedPosts: { loading: 'lazy', decoding: 'async', rootMargin: '400px' },
+      },
+      other: {
+        primaryImage: { loading: 'eager', decoding: 'async' },
+        secondaryImages: { loading: 'lazy', decoding: 'async', rootMargin: '200px' },
       },
     };
 
-    const type = sanitize(pageType || '', 50).toLowerCase().replace(/[\s-]+/g, '_');
-    const config = configs[type];
-
-    if (!config) {
-      return {
-        success: false,
-        error: `Unknown page type. Available: ${Object.keys(configs).join(', ')}`,
-      };
-    }
-
-    return { success: true, data: { pageType: type, ...config } };
+    const config = configs[pageType] || configs.other;
+    return { config };
   }
 );
 
-// ── Internal Helpers ───────────────────────────────────────────────
+// ─── checkPerformanceBudget ──────────────────────────────────────
 
-function getRating(metric, value) {
-  const t = THRESHOLDS[metric];
-  if (!t) return 'unknown';
-  if (value <= t.good) return 'good';
-  if (value <= t.poor) return 'needs-improvement';
+/**
+ * Check if reported metrics violate configured performance budgets.
+ * Used by CI/CD or admin dashboard to enforce performance standards.
+ *
+ * @param {Object} metrics - Metric values to check
+ * @param {string} [page="*"] - Page to check budgets for
+ * @returns {Promise<{pass: boolean, violations: Array, checked: number}>}
+ */
+export const checkPerformanceBudget = webMethod(
+  Permissions.Admin,
+  async (metrics, page = '*') => {
+    try {
+      if (!metrics || typeof metrics !== 'object') {
+        return { pass: false, violations: [], checked: 0, error: 'Metrics object required' };
+      }
+
+      // Load custom budgets from CMS
+      const budgetResult = await wixData.query(BUDGETS_COLLECTION)
+        .eq('enabled', true)
+        .find();
+
+      const customBudgets = budgetResult.items;
+      const violations = [];
+      let checked = 0;
+
+      for (const metric of VALID_METRICS) {
+        const value = metrics[metric];
+        if (typeof value !== 'number') continue;
+
+        checked++;
+
+        // Find custom budget for this metric + page
+        const budget = customBudgets.find(
+          b => b.metricName === metric && (b.page === page || b.page === '*')
+        );
+
+        const thresholds = budget
+          ? { good: budget.goodThreshold, needsImprovement: budget.needsImprovementThreshold }
+          : DEFAULT_THRESHOLDS[metric];
+
+        if (!thresholds) continue;
+
+        if (value > thresholds.needsImprovement) {
+          violations.push({
+            metric,
+            value,
+            threshold: thresholds.needsImprovement,
+            severity: 'poor',
+            message: `${metric.toUpperCase()} of ${value} exceeds poor threshold (${thresholds.needsImprovement})`,
+          });
+        } else if (value > thresholds.good) {
+          violations.push({
+            metric,
+            value,
+            threshold: thresholds.good,
+            severity: 'needs-improvement',
+            message: `${metric.toUpperCase()} of ${value} exceeds good threshold (${thresholds.good})`,
+          });
+        }
+      }
+
+      return {
+        pass: violations.filter(v => v.severity === 'poor').length === 0,
+        violations,
+        checked,
+      };
+    } catch (err) {
+      console.error('[coreWebVitals] checkPerformanceBudget error:', err);
+      return { pass: false, violations: [], checked: 0, error: 'Failed to check budgets' };
+    }
+  }
+);
+
+// ─── Internal Helpers ──────────────────────────────────────────────
+
+/**
+ * Clamp a numeric metric value to a valid range.
+ * Returns 0 for non-numeric inputs.
+ */
+function clampMetric(value, min, max) {
+  if (typeof value !== 'number' || isNaN(value)) return 0;
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Calculate a percentile value from a sorted array.
+ */
+function percentile(sortedValues, p) {
+  if (sortedValues.length === 0) return 0;
+  const index = Math.ceil((p / 100) * sortedValues.length) - 1;
+  return sortedValues[Math.max(0, index)];
+}
+
+/**
+ * Rate a metric value against thresholds.
+ * @returns {'good'|'needs-improvement'|'poor'}
+ */
+function rateMetric(value, thresholds) {
+  if (!thresholds || typeof value !== 'number') return 'no-data';
+  if (value <= thresholds.good) return 'good';
+  if (value <= thresholds.needsImprovement) return 'needs-improvement';
   return 'poor';
 }
+
+/**
+ * Get the worst rating from an array of ratings.
+ */
+function getWorstRating(ratings) {
+  const order = ['poor', 'needs-improvement', 'good', 'no-data'];
+  for (const level of order) {
+    if (ratings.includes(level)) return level;
+  }
+  return 'no-data';
+}
+
+/**
+ * Check reported metrics against default budgets (synchronous).
+ */
+function checkBudgetViolations(record) {
+  const violations = [];
+  for (const metric of ['lcp', 'inp', 'cls']) {
+    const value = record[metric];
+    if (typeof value !== 'number' || value === 0) continue;
+
+    const thresholds = DEFAULT_THRESHOLDS[metric];
+    if (value > thresholds.needsImprovement) {
+      violations.push({ metric, value, severity: 'poor' });
+    } else if (value > thresholds.good) {
+      violations.push({ metric, value, severity: 'needs-improvement' });
+    }
+  }
+  return violations;
+}
+
+/**
+ * Get target dimensions for image context.
+ */
+function getTargetDimensions(context) {
+  const dimensions = {
+    hero: { maxWidth: 1920, maxHeight: 800 },
+    product: { maxWidth: 800, maxHeight: 800 },
+    thumbnail: { maxWidth: 300, maxHeight: 300 },
+    gallery: { maxWidth: 600, maxHeight: 600 },
+    icon: { maxWidth: 64, maxHeight: 64 },
+  };
+  return dimensions[context] || dimensions.product;
+}
+
+// Exported for testing
+export {
+  DEFAULT_THRESHOLDS,
+  VALID_METRICS,
+  VALID_DEVICE_TYPES,
+  clampMetric,
+  percentile,
+  rateMetric,
+  getWorstRating,
+  checkBudgetViolations,
+  getTargetDimensions,
+};
