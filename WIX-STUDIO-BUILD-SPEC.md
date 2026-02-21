@@ -361,6 +361,28 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | Form Error | Text | `#reviewFormError` | Hidden default |
 | Form Success | Text | `#reviewFormSuccess` | Hidden default |
 
+### Financing Options Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#financingSection` | Collapsible, hidden if price < $50 |
+| Teaser Text | Text | `#financingTeaser` | "As low as $50/mo" |
+| Plan Repeater | Repeater | `#financingRepeater` | Payment plan cards |
+| → Label | Text | `#planLabel` | "Pay in 4", "12 Months" |
+| → Monthly | Text | `#planMonthly` | "$50/mo" |
+| → Description | Text | `#planDescription` | "0% APR for 12 months" |
+| → Interest Info | Text | `#planInterest` | "No interest" or "$663 total (9.99% APR)" |
+| Learn More | Button | `#financingLearnMore` | Opens modal |
+| Overlay | Box | `#financingOverlay` | Semi-transparent backdrop |
+| Modal | Box | `#financingModal` | Centered lightbox |
+| → Close Button | Button | `#financingClose` | X icon |
+| → Detail Repeater | Repeater | `#financingDetailRepeater` | Full plan breakdown |
+| →→ Label | Text | `#detailLabel` | Plan name |
+| →→ Term | Text | `#detailTerm` | "12 payments" |
+| →→ Monthly | Text | `#detailMonthly` | "$50/mo" |
+| →→ Total | Text | `#detailTotal` | "Total: $600" |
+| →→ APR | Text | `#detailApr` | "0% APR" or "9.99% APR" |
+| →→ Interest | Text | `#detailInterest` | "No interest charges" or "Interest: $63.12" |
+
 ### Recently Viewed Products
 | Element | Type | ID | Notes |
 |---------|------|----|-------|

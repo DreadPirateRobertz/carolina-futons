@@ -14,6 +14,7 @@ import { initImageGallery, initProductBadge, initProductVideo } from 'public/Pro
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest } from 'public/ProductDetails.js';
 import { initProductReviews } from 'public/ProductReviews.js';
+import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 
 const state = {
@@ -64,6 +65,7 @@ async function initProductPage() {
       initBackInStockNotification($w, state),
       initWishlistButton($w, state),
       initProductReviews($w, state),
+      initFinancingOptions($w, state),
     ]);
 
     initSocialShare($w, state);
