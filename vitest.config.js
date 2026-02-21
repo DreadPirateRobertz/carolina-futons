@@ -47,6 +47,7 @@ export default defineConfig({
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
       'backend/searchService.web': path.resolve(__dirname, 'src/backend/searchService.web.js'),
       'backend/sizeGuide.web': path.resolve(__dirname, 'src/backend/sizeGuide.web.js'),
+      'backend/liveChatService.web': path.resolve(__dirname, 'src/backend/liveChatService.web.js'),
       'backend/blogContent': path.resolve(__dirname, 'src/backend/blogContent.js'),
       'backend/utils/sanitize': path.resolve(__dirname, 'src/backend/utils/sanitize.js'),
       'backend/utils/mediaHelpers': path.resolve(__dirname, 'src/backend/utils/mediaHelpers.js'),
@@ -90,6 +91,8 @@ export default defineConfig({
       'public/ProductReviews': path.resolve(__dirname, 'src/public/ProductReviews.js'),
       'public/AddToCart.js': path.resolve(__dirname, 'src/public/AddToCart.js'),
       'public/AddToCart': path.resolve(__dirname, 'src/public/AddToCart.js'),
+      'public/LiveChat.js': path.resolve(__dirname, 'src/public/LiveChat.js'),
+      'public/LiveChat': path.resolve(__dirname, 'src/public/LiveChat.js'),
     },
   },
 });

@@ -24,6 +24,13 @@ $w.onReady(async function () {
   initInstallBanner();
   await injectBusinessSchema();
 
+  // Live chat widget — async loaded, 2s delay to avoid impacting page speed
+  setTimeout(() => {
+    import('public/LiveChat.js').then(({ initLiveChat }) => {
+      initLiveChat($w);
+    }).catch(() => {}); // Chat is non-critical
+  }, 2000);
+
   // Promotional lightbox — delayed 3s so page renders first
   setTimeout(() => initPromoLightbox(), 3000);
 
