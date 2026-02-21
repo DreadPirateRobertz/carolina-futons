@@ -120,6 +120,7 @@ export default defineConfig({
       'backend/deliveryExperience.web': path.resolve(__dirname, 'src/backend/deliveryExperience.web.js'),
       'backend/topicClusters.web': path.resolve(__dirname, 'src/backend/topicClusters.web.js'),
       'backend/mediaGallery.web': path.resolve(__dirname, 'src/backend/mediaGallery.web.js'),
+      'backend/accountDashboard.web': path.resolve(__dirname, 'src/backend/accountDashboard.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },

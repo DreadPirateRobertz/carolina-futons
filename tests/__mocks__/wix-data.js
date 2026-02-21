@@ -4,12 +4,14 @@
 let _store = {};     // collection -> items[]
 let _insertSpy = null;
 let _updateSpy = null;
+let _removeSpy = null;
 
 // Reset all mock state between tests
 export function __reset() {
   _store = {};
   _insertSpy = null;
   _updateSpy = null;
+  _removeSpy = null;
 }
 
 // Seed a collection with items
@@ -20,6 +22,7 @@ export function __seed(collection, items) {
 // Spy on insert/update calls
 export function __onInsert(fn) { _insertSpy = fn; }
 export function __onUpdate(fn) { _updateSpy = fn; }
+export function __onRemove(fn) { _removeSpy = fn; }
 
 // Resolve dot-notation field paths (e.g. "variables.checkoutId")
 function getField(item, field) {
@@ -172,6 +175,17 @@ const wixData = {
     if (idx >= 0) _store[collection][idx] = { ...item };
     if (_updateSpy) _updateSpy(collection, item);
     return item;
+  },
+
+  async remove(collection, id) {
+    if (!_store[collection]) _store[collection] = [];
+    const idx = _store[collection].findIndex(i => i._id === id);
+    if (idx >= 0) {
+      const removed = _store[collection].splice(idx, 1)[0];
+      if (_removeSpy) _removeSpy(collection, id);
+      return removed;
+    }
+    return null;
   },
 };
 
