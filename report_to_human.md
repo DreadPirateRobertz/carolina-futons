@@ -1,181 +1,129 @@
-# Story Manager Report — Cross-Rig Status
+# Idea Funnel Report — Brainstorm Session #1
 
-**Last Updated:** 2026-02-20 18:15 MST
-**Role:** Story Manager (all rigs: cfutons, cfutons_mobile, tradingbot, gastown)
-**Reporting to:** Mayor / Human
-
----
-
-## Sprint Health Dashboard
-
-| Rig | Health | Open | In-Progress | Closed | P0 Status | Key Risk |
-|-----|--------|------|-------------|--------|-----------|----------|
-| **cfutons** | GREEN | 5 | 2 | 3 | cf-4aj: 2/4 blockers done, 2 in-progress | Polecats 54+55 nuked |
-| **cfutons_mobile** | RED | 8 | 1 | 0 | cm-821: 0/4 blockers done, furiosa nuked | No active workers |
-| **tradingbot** | YELLOW | 8 | 0 | 6 | tb-ni1: tb-91k unblocked, needs assignment | Both polecats done, no one picking up tb-91k |
-| **gastown** | YELLOW | 16 | 0 | 2 | No P0s, but 5 P1 bugs (build/test/race) | Build broken by ICU dependency |
+**Date:** 2026-02-20
+**Role:** Idea Funnel (brainstorm crew worker)
+**Scope:** All rigs — cfutons, cfutons_mobile, tradingbot, gastown
 
 ---
 
-## Critical Issues
+## Executive Summary
 
-| # | Severity | Issue | Rig | Action Needed |
-|---|----------|-------|-----|---------------|
-| 1 | P0 | **tb-91k UNBLOCKED** — both deps (tb-bel, tb-v8l) closed. P0 story ready, no one assigned | tradingbot | Assign polecat or crew immediately |
-| 2 | P0 | **cm-vx9 ORPHANED** — furiosa nuked, Expo scaffold work status unknown | cfutons_mobile | Respawn polecat, assess cm-vx9 progress |
-| 3 | P1 | **gastown build broken** — ICU dependency (gt-7px / gt-axm) blocks test execution | gastown | Fix or build-tag around ICU |
-| 4 | P1 | **cfutons_mobile has zero workers** — no polecats, crew artemis+tester idle | cfutons_mobile | Spawn polecats for cm-330, cm-5wg, cm-wi5 |
+**31 new beads filed** across 4 rigs. Research covered competitor analysis, trading bot innovations, Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
 
----
-
-## Velocity Tracking
-
-| Rig | Stories Closed (this session) | Merged | Notes |
-|-----|-------------------------------|--------|-------|
-| cfutons | 3 (cf-c6u, cf-eo2, cf-sc2) | direct push | Polecats 56+57 still working |
-| tradingbot | 6 (tb-bel, tb-v8l, tb-ekg, tb-vxm, tb-vsx + onyx agent) | via refinery | Both P0 blockers DONE |
-| cfutons_mobile | 0 | — | Stalled — furiosa nuked |
-| gastown | 2 (gt-05r, gt-m58) | — | Slow — many open bugs |
-| **Total** | **11** | | |
+| Rig | New Beads | P2 | P3 | P4 |
+|-----|-----------|----|----|-----|
+| cfutons | 9 | 5 | 4 | 0 |
+| cfutons_mobile | 8 | 5 | 3 | 0 |
+| tradingbot | 7 | 1 | 5 | 1 |
+| gastown | 7 | 0 | 4 | 3 |
 
 ---
 
-## Epic Tracker
+## Top 10 Ideas (Highest Impact)
 
-### P0 Epics
+### 1. MCP Server for Trading Bot (tb-f2i) — P2, tradingbot
+Expose trading bot capabilities via Model Context Protocol so Claude/Gas Town agents can manage trades through conversation. Freqtrade already has a popular MCP server (thousands of downloads). This bridges the trading bot into the Gas Town ecosystem.
 
-#### cf-4aj: Live Testing & Gallery Verification (cfutons)
-| Story | Status | Assignee | Hill | AC |
-|-------|--------|----------|------|-----|
-| cf-c6u: Full user flow smoke test | CLOSED | — | 5/5 | Approved |
-| cf-sc2: Placeholder image verification | CLOSED | — | 5/5 | Approved |
-| cf-o1a: Lightbox & zoom test | IN_PROGRESS | polecat-57 | 3-4/5 | Strengthened |
-| cf-qxo: Gallery hookup audit | IN_PROGRESS | polecat-56 | 3-4/5 | Strengthened |
+### 2. Smart Checkout with BNPL (cm-gmo) — P2, cfutons_mobile
+Apple Pay, Google Pay, and Buy Now Pay Later (Affirm/Klarna) at checkout. BNPL increases AOV 20-50% for furniture. Mobile cart abandonment drops from 97% (web) to 20% (native) when friction is minimized.
 
-**Status:** 2/4 done. 2 in-progress with active polecats. Epic close depends on polecat-56 and polecat-57 completing.
+### 3. Shared Design Tokens (cf-b9o) — P2, cfutons
+Shared design token package between web and mobile app. Prevents brand inconsistency as both platforms evolve independently. Builds on existing cf-a9q (extract constants) and cm-330 (mobile tokens).
 
-#### cm-821: Mobile App Scaffold & Design System (cfutons_mobile)
-| Story | Status | Assignee | Hill | AC |
-|-------|--------|----------|------|-----|
-| cm-vx9: Expo scaffold | IN_PROGRESS | furiosa (NUKED) | ?/5 | Approved |
-| cm-330: Design tokens | OPEN | — | 0/5 | Strengthened |
-| cm-5wg: Navigation | OPEN | — | 0/5 | Strengthened |
-| cm-wi5: Core components | OPEN (blocked by cm-330) | — | 0/5 | Strengthened |
+### 4. SEO Content Hub (cf-uyc) — P2, cfutons
+8 pillar blog posts with JSON-LD, FAQ schema, and internal linking. Blog.js is coded and live — content is the missing piece. Targets long-tail keywords like "best futon for guest room 2026."
 
-**Status:** 0/4 done. Stalled. furiosa dead, 3 stories unassigned, cm-wi5 now correctly blocked by cm-330.
+### 5. Email Marketing Automation (cf-d3u) — P2, cfutons
+Welcome series, abandoned cart recovery, post-purchase care. Backend code (emailService, cartRecovery) already built — needs Klaviyo/Wix Automations connection. Email has 4,200% ROI.
 
-#### tb-ni1: ML Decision Intelligence Engine (tradingbot)
-| Story | Status | Assignee | Hill | AC |
-|-------|--------|----------|------|-----|
-| tb-bel: OHLCV pipeline | CLOSED (merged) | onyx (done) | 5/5 | Strengthened |
-| tb-v8l: ML framework research | CLOSED (merged) | jasper (done) | 5/5 | Strengthened |
-| tb-91k: Train signal model | **READY** | **UNASSIGNED** | 0/5 | Approved |
+### 6. Product Comparison Tool (cf-it6) — P2, cfutons
+Side-by-side futon comparison on dimensions, materials, price, fabrics. Reduces decision paralysis for the "Guest Room Upgrader" persona evaluating multiple similar products.
 
-**Status:** 2/3 done. tb-91k is UNBLOCKED and ready for pickup. This is the critical path.
+### 7. Price Drop Alerts (cm-qtp) — P2, cfutons_mobile
+Push notifications for price drops, back-in-stock, new fabrics. 400% more effective than email. The native app solves what PWA couldn't (iOS push). AI manages notification frequency.
 
-### P1 Epics
+### 8. Style Quiz + Personalized Feed (cm-ke0) — P2, cfutons_mobile
+5-question visual quiz generating a persistent "For You" home feed. Wix site already has a style quiz — port it to native and connect to personalization engine. 84% of e-commerce integrating AI personalization.
 
-#### cf-47t: Site Polish & Bug Triage (cfutons)
-- Blocked by cf-ez0 (P2 perf audit). cf-eo2 (design review) already closed.
-- Ready for work when P0 testing wraps up.
+### 9. ML Product Recommendations (cf-7ik) — P3, cfutons
+"You might also like" + "Complete the room" using collaborative filtering and style matching. Cross-project synergy: leverage tradingbot ML pipeline patterns.
 
-#### cm-hv9: Core Mobile Shopping Experience (cfutons_mobile)
-- All 4 stories blocked on cm-vx9 and/or cm-330. No action until P0 scaffold lands.
-
-#### tb-oeo: Enhanced Data Sources & Live Readiness (tradingbot)
-- tb-bz0 (Twitter API) and tb-vwx (whale tracking) are READY, no assignee.
-- tb-3qi blocked by tb-91k. New stories: tb-6ft (ML integration), tb-nxs (mean reversion), tb-opn (trailing stops) — all need assignment.
+### 10. Webhook Notifications for Gas Town (gt-5kz) — P3, gastown
+Slack, Discord, email alerts for convoy completions, escalations, agent failures. Relates to existing gt-87f (escalation channels).
 
 ---
 
-## Polecat & Agent Status
+## All Beads Filed
 
-| Agent | Rig | State | Hook | Output |
-|-------|-----|-------|------|--------|
-| polecat-54 | cfutons | NUKED | — | Available for respawn |
-| polecat-55 | cfutons | NUKED | — | Available for respawn |
-| polecat-56 | cfutons | spawning | cf-qxo | Working gallery audit |
-| polecat-57 | cfutons | spawning | cf-o1a | Working lightbox test |
-| furiosa | cfutons_mobile | NUKED | — | cm-vx9 orphaned |
-| onyx | tradingbot | COMPLETED | — | tb-bel done + merged |
-| jasper | tradingbot | COMPLETED | — | tb-v8l done + merged |
-| brainstorm | cfutons | idle | — | Filed 3 ideas (see triage below) |
-| algo | tradingbot | idle | — | — |
-| tester | tradingbot | idle | — | Filed tb-1tl bug |
-| artemis | cfutons_mobile | idle | — | — |
+### cfutons (9 beads)
+| ID | Title | Priority |
+|----|-------|----------|
+| cf-b9o | Shared design token system between web and mobile | P2 |
+| cf-it6 | Product comparison tool: side-by-side futon comparison | P2 |
+| cf-g94 | Customer photo reviews with verified purchase badges | P2 |
+| cf-uyc | SEO content hub: buying guides, comparison articles | P2 |
+| cf-d3u | Email marketing automation: welcome, cart, post-purchase | P2 |
+| cf-7ik | ML-powered product recommendations engine | P3 |
+| cf-y05 | Virtual room planner tool: drag-and-drop layout | P3 |
+| cf-vfq | Showroom appointment booking with virtual tour | P3 |
+| cf-4es | Referral program with two-sided incentives | P3 |
+| cf-9xa | Furniture protection plan upsell at checkout | P3 |
+| cf-ugv | Assembly service upsell: TaskRabbit/Handy | P3 |
 
-**Team utilization:** 2/11 agents actively working. 4 nuked/completed. 5 idle. Significant underutilization.
+### cfutons_mobile (8 beads)
+| ID | Title | Priority |
+|----|-------|----------|
+| cm-gmo | Smart checkout: Apple Pay, Google Pay, BNPL | P2 |
+| cm-u59 | Fabric swatch visualizer with haptic feedback | P2 |
+| cm-qtp | Price drop and back-in-stock push notifications | P2 |
+| cm-0au | Offline product catalog with smart sync | P2 |
+| cm-ke0 | Style quiz with personalized home feed | P2 |
+| cm-zz9 | AR room preview: place futons in your space | P3 |
+| cm-mkh | AI shopping assistant: conversational discovery | P3 |
+| cm-zu5 | Shoppable room scenes feed (Stories/Reels format) | P3 |
+| cm-c48 | Live trading bot dashboard widget | P4 |
 
----
+### tradingbot (7 beads)
+| ID | Title | Priority |
+|----|-------|----------|
+| tb-f2i | MCP server for AI-driven trade management | P2 |
+| tb-acl | Funding rate arbitrage: spot-perpetual hedge | P3 |
+| tb-sxl | Kelly criterion position sizing with VaR constraints | P3 |
+| tb-dfd | Grid trading strategy for range-bound markets | P3 |
+| tb-9z7 | Multi-exchange smart order routing engine | P3 |
+| tb-1n6 | REST API for paper trader status (cross-project) | P3 |
+| tb-uan | Cross-exchange triangular arbitrage scanner | P4 |
 
-## Quality Gates Established
-
-See **STORY-MANAGEMENT.md** for full framework. Key gates:
-
-1. **Definition of Ready** — 9-point checklist. No story starts without passing.
-2. **Definition of Done** — 6-point checklist. No story closes without meeting all criteria.
-3. **AC Standards** — numbered, testable, binary pass/fail. Three formats: checklist, Given/When/Then, scenario.
-4. **Bug Report Standard** — steps to reproduce, expected vs actual, severity, evidence.
-5. **Merge Checklist** — tests cover changes, no lint warnings, AC approved before work started.
-6. **Hill Chart Progress** — 5-position tracking (Started → Approach found → Validated → Building → Done).
-
----
-
-## Brainstorm Triage
-
-| Bead | Title | Author | Decision | Rationale |
-|------|-------|--------|----------|-----------|
-| cf-7ik | ML-powered product recommendations | brainstorm | DEFER (P3) | Needs tradingbot ML infra first, no analytics data yet |
-| cf-b9o | Shared design tokens web+mobile | brainstorm | REFINE (P2) | Good idea, blocked by cm-330 and cf-a9q landing first |
-| gt-3bz | Prometheus/OTel metrics | brainstorm | DEFER (P3) | Premature — fix P1 bugs before observability |
-
-**Brainstorm quality:** Good. Ideas are well-structured with AC. Realistic cross-rig thinking (cf-b9o linking web+mobile tokens). Tendency to propose P3 moonshots — funnel is working correctly.
-
----
-
-## AC Review Scorecard (All Rigs)
-
-| Rig | Total Stories Reviewed | AC Added/Strengthened | Dependencies Fixed | Junk Cleaned |
-|-----|----------------------|----------------------|-------------------|-------------|
-| cfutons | 8 | 6 | 1 (cm-wi5→cm-330) | — |
-| cfutons_mobile | 7 | 4 | 1 (cm-wi5→cm-330) | — |
-| tradingbot | 10 | 7 | — | — |
-| gastown | 16 | 10 | 3 (gt-bvk→race fixes) | 3 (--help junk closed) |
-| **Total** | **41** | **27** | **5** | **3** |
+### gastown (7 beads)
+| ID | Title | Priority |
+|----|-------|----------|
+| gt-3bz | Prometheus/OpenTelemetry metrics export | P3 |
+| gt-24y | Smart task routing: skill-based agent assignment | P3 |
+| gt-4la | Multi-provider cost optimization: model routing | P3 |
+| gt-5kz | Webhook notifications: Slack, Discord, email | P3 |
+| gt-6da | Federation phase 1: cross-town convoy delegation | P3 |
+| gt-a6x | Formula marketplace: share community formulas | P4 |
+| gt-0sy | Agent A/B testing: compare model performance | P4 |
 
 ---
 
-## Risk Register
+## Cross-Project Synergies Identified
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| cfutons_mobile stalls completely (no workers) | HIGH | HIGH | Respawn furiosa or spawn new polecats |
-| tb-91k sits unassigned while polecats are done | HIGH | HIGH | Immediately assign to crew/algo or spawn polecat |
-| gastown build stays broken (ICU dep) | MEDIUM | HIGH | Build tags to skip ICU in tests, or install headers |
-| Brainstorm floods backlog with low-priority ideas | LOW | MEDIUM | Triage protocol in place, melania reviews all |
-| Cross-rig token divergence (web vs mobile) | MEDIUM | LOW | cf-b9o (shared tokens) queued after prerequisites |
+1. **Trading bot → Mobile app**: tb-1n6 (REST API) enables cm-c48 (trading widget in mobile app)
+2. **Trading bot → Website**: tradingbot ML pipeline patterns inform cf-7ik (product recommendations)
+3. **Website ↔ Mobile**: cf-b9o (shared design tokens) unifies visual identity across platforms
+4. **Gas Town → Trading bot**: tb-f2i (MCP server) lets Gas Town agents manage the trading bot
+5. **Gas Town → All rigs**: gt-5kz (webhooks) keeps overseer informed across all projects
 
 ---
 
-## Recommended Next Sprint Priorities
+## Research Sources
 
-### Immediate (next hour)
-1. Assign tb-91k to crew/algo or spawn tradingbot polecat — P0 critical path
-2. Respawn cfutons_mobile polecat for cm-vx9 (check if work survived)
-3. Wait for polecat-56 and polecat-57 to close cf-qxo and cf-o1a
-
-### This session
-4. Once cf-4aj closes: start cf-47t (site polish) — assign cf-ez0
-5. Once cm-vx9 closes: spawn polecats for cm-330, cm-5wg, cm-wi5
-6. Assign tb-bz0 and tb-vwx to tradingbot workers
-
-### Next sprint
-7. Fix gastown P1 bugs (gt-7px/gt-axm ICU, gt-0fz/gt-l0e/gt-tvl races, gt-xox test)
-8. cfutons P2 refactoring (cf-072, cf-4ef, cf-a9q extraction tasks)
-9. gt-ar2 dashboard improvements (after bugs fixed)
+- Competitor analysis: Wayfair (AR, room planner), IKEA (TaskRabbit, planning tools), West Elm (design consultation)
+- Trading: Freqtrade MCP server, funding rate arbitrage (Gate.io research), Kelly criterion (2026 Medium articles), triangular DEX arbitrage
+- Mobile UX: Appbrew 2026 trends, Zolak furniture ecommerce report, eMarketer social commerce projections
+- SEO/Marketing: Google Keyword Planner best practices, Klaviyo email ROI benchmarks
 
 ---
 
-*Story Manager: melania | All 41 stories across 4 rigs reviewed and quality-gated*
-*Framework: STORY-MANAGEMENT.md (DoR, DoD, AC standards, hill charts)*
-*Next review: on polecat completion or 30 minutes*
+*Next cycle: deeper research into specific implementation approaches for P2 items, plus competitive monitoring for new features launched by Wayfair/IKEA/West Elm.*
