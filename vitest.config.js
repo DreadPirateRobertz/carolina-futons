@@ -94,6 +94,9 @@ export default defineConfig({
       'public/AddToCart': path.resolve(__dirname, 'src/public/AddToCart.js'),
       'public/LiveChat.js': path.resolve(__dirname, 'src/public/LiveChat.js'),
       'public/LiveChat': path.resolve(__dirname, 'src/public/LiveChat.js'),
+      'public/ReturnsPortal.js': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
+      'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
+      'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
     },
   },
 });

@@ -3,6 +3,7 @@
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
+import { initReturnsSection } from 'public/ReturnsPortal.js';
 
 // Status badge color mapping
 const STATUS_COLORS = {
@@ -36,6 +37,7 @@ async function initMemberPage() {
       initAccountSettings(),
       initAddressBook(),
       initCommunicationPrefs(),
+      initReturnsSection($w),
     ]);
 
   } catch (err) {
@@ -210,6 +212,20 @@ function initOrderHistory() {
             console.error('[MemberPage] Reorder error:', err);
           }
         });
+      } catch (e) {}
+
+      // Start a Return button
+      try {
+        try { $item('#orderStartReturnBtn').accessibility.ariaLabel = `Start a return for order ${itemData.number}`; } catch (e) {}
+        $item('#orderStartReturnBtn').onClick(() => {
+          try { $w('#startReturnBtn').click(); } catch (e) {}
+          trackEvent('return_started', { orderNumber: itemData.number });
+        });
+
+        // Hide return button for cancelled orders
+        if (status === 'Cancelled') {
+          $item('#orderStartReturnBtn').hide();
+        }
       } catch (e) {}
 
       // Order items mini-gallery
