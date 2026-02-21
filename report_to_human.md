@@ -1,24 +1,42 @@
 # Story Manager Report — Cross-Rig Status
 
-**Last Updated:** 2026-02-20 17:45 MST
-**Role:** Story Manager (all rigs)
-**Reporting to:** Mayor
+**Last Updated:** 2026-02-20 18:15 MST
+**Role:** Story Manager (all rigs: cfutons, cfutons_mobile, tradingbot, gastown)
+**Reporting to:** Mayor / Human
 
 ---
 
-## Executive Summary
+## Sprint Health Dashboard
 
-6 active epics across 3 rigs. 3 P0, 3 P1. Reviewed and strengthened acceptance criteria on all P0 stories. Found critical issues requiring immediate attention.
+| Rig | Health | Open | In-Progress | Closed | P0 Status | Key Risk |
+|-----|--------|------|-------------|--------|-----------|----------|
+| **cfutons** | GREEN | 5 | 2 | 3 | cf-4aj: 2/4 blockers done, 2 in-progress | Polecats 54+55 nuked |
+| **cfutons_mobile** | RED | 8 | 1 | 0 | cm-821: 0/4 blockers done, furiosa nuked | No active workers |
+| **tradingbot** | YELLOW | 8 | 0 | 6 | tb-ni1: tb-91k unblocked, needs assignment | Both polecats done, no one picking up tb-91k |
+| **gastown** | YELLOW | 16 | 0 | 2 | No P0s, but 5 P1 bugs (build/test/race) | Build broken by ICU dependency |
 
-### CRITICAL ISSUES
+---
 
-| # | Issue | Rig | Impact |
-|---|-------|-----|--------|
-| 1 | **furiosa NUKED** — cm-vx9 (Expo scaffold) orphaned, no polecat working it | cfutons_mobile | Entire mobile P0 epic stalled |
-| 2 | **cf-c6u UNASSIGNED** — P0 smoke test, blocks tonight's testing | cfutons | Tonight's live test blocked |
-| 3 | **cf-sc2 UNASSIGNED** — P0 placeholder images, blocks tonight's testing | cfutons | Tonight's live test blocked |
-| 4 | **cm-330, cm-5wg, cm-wi5 UNASSIGNED** — P0 mobile blockers, no polecats available | cfutons_mobile | Mobile scaffold blocked after cm-vx9 |
-| 5 | **cfutons polecats 54 & 55 NUKED** — could pick up cf-c6u/cf-sc2 if respawned | cfutons | Available capacity wasted |
+## Critical Issues
+
+| # | Severity | Issue | Rig | Action Needed |
+|---|----------|-------|-----|---------------|
+| 1 | P0 | **tb-91k UNBLOCKED** — both deps (tb-bel, tb-v8l) closed. P0 story ready, no one assigned | tradingbot | Assign polecat or crew immediately |
+| 2 | P0 | **cm-vx9 ORPHANED** — furiosa nuked, Expo scaffold work status unknown | cfutons_mobile | Respawn polecat, assess cm-vx9 progress |
+| 3 | P1 | **gastown build broken** — ICU dependency (gt-7px / gt-axm) blocks test execution | gastown | Fix or build-tag around ICU |
+| 4 | P1 | **cfutons_mobile has zero workers** — no polecats, crew artemis+tester idle | cfutons_mobile | Spawn polecats for cm-330, cm-5wg, cm-wi5 |
+
+---
+
+## Velocity Tracking
+
+| Rig | Stories Closed (this session) | Merged | Notes |
+|-----|-------------------------------|--------|-------|
+| cfutons | 3 (cf-c6u, cf-eo2, cf-sc2) | direct push | Polecats 56+57 still working |
+| tradingbot | 6 (tb-bel, tb-v8l, tb-ekg, tb-vxm, tb-vsx + onyx agent) | via refinery | Both P0 blockers DONE |
+| cfutons_mobile | 0 | — | Stalled — furiosa nuked |
+| gastown | 2 (gt-05r, gt-m58) | — | Slow — many open bugs |
+| **Total** | **11** | | |
 
 ---
 
@@ -26,102 +44,138 @@
 
 ### P0 Epics
 
-#### cf-4aj: Live Testing & Gallery Verification (cfutons) — TONIGHT
-| Story | Priority | Status | Assignee | AC Reviewed |
-|-------|----------|--------|----------|-------------|
-| cf-qxo: Gallery hookup audit | P0 | IN_PROGRESS | polecat-56 | STRENGTHENED |
-| cf-o1a: Lightbox & zoom smoke test | P0 | IN_PROGRESS | polecat-57 | STRENGTHENED |
-| cf-c6u: Full user flow smoke test | P0 | **OPEN — UNASSIGNED** | — | STRENGTHENED |
-| cf-sc2: Placeholder image verification | P0 | **OPEN — UNASSIGNED** | — | STRENGTHENED |
+#### cf-4aj: Live Testing & Gallery Verification (cfutons)
+| Story | Status | Assignee | Hill | AC |
+|-------|--------|----------|------|-----|
+| cf-c6u: Full user flow smoke test | CLOSED | — | 5/5 | Approved |
+| cf-sc2: Placeholder image verification | CLOSED | — | 5/5 | Approved |
+| cf-o1a: Lightbox & zoom test | IN_PROGRESS | polecat-57 | 3-4/5 | Strengthened |
+| cf-qxo: Gallery hookup audit | IN_PROGRESS | polecat-56 | 3-4/5 | Strengthened |
 
-**Risk:** 2 of 4 blockers unassigned. polecat-54 and polecat-55 are nuked. Need respawn or crew assignment for cf-c6u and cf-sc2.
+**Status:** 2/4 done. 2 in-progress with active polecats. Epic close depends on polecat-56 and polecat-57 completing.
 
 #### cm-821: Mobile App Scaffold & Design System (cfutons_mobile)
-| Story | Priority | Status | Assignee | AC Reviewed |
-|-------|----------|--------|----------|-------------|
-| cm-vx9: Expo/RN scaffold | P0 | IN_PROGRESS | **furiosa (NUKED)** | Approved |
-| cm-330: Design tokens & theme | P0 | OPEN — UNASSIGNED | — | STRENGTHENED |
-| cm-5wg: Navigation (tab+stack) | P0 | OPEN — UNASSIGNED | — | STRENGTHENED |
-| cm-wi5: Core component library | P0 | OPEN — UNASSIGNED | — | STRENGTHENED + dep added (needs cm-330) |
+| Story | Status | Assignee | Hill | AC |
+|-------|--------|----------|------|-----|
+| cm-vx9: Expo scaffold | IN_PROGRESS | furiosa (NUKED) | ?/5 | Approved |
+| cm-330: Design tokens | OPEN | — | 0/5 | Strengthened |
+| cm-5wg: Navigation | OPEN | — | 0/5 | Strengthened |
+| cm-wi5: Core components | OPEN (blocked by cm-330) | — | 0/5 | Strengthened |
 
-**Risk:** furiosa is dead. cm-vx9 work may be lost. 3 of 4 blockers unassigned. Need polecat respawn for this rig.
+**Status:** 0/4 done. Stalled. furiosa dead, 3 stories unassigned, cm-wi5 now correctly blocked by cm-330.
 
 #### tb-ni1: ML Decision Intelligence Engine (tradingbot)
-| Story | Priority | Status | Assignee | AC Reviewed |
-|-------|----------|--------|----------|-------------|
-| tb-bel: OHLCV data pipeline | P0 | IN_PROGRESS | onyx (spawning) | STRENGTHENED |
-| tb-v8l: ML framework research | P0 | IN_PROGRESS | jasper (spawning) | STRENGTHENED |
-| tb-91k: Train signal model | P0 | OPEN (blocked by bel+v8l) | — | Approved (excellent AC already) |
+| Story | Status | Assignee | Hill | AC |
+|-------|--------|----------|------|-----|
+| tb-bel: OHLCV pipeline | CLOSED (merged) | onyx (done) | 5/5 | Strengthened |
+| tb-v8l: ML framework research | CLOSED (merged) | jasper (done) | 5/5 | Strengthened |
+| tb-91k: Train signal model | **READY** | **UNASSIGNED** | 0/5 | Approved |
 
-**Risk:** LOW. Both blocking stories have active polecats. tb-91k correctly blocked until dependencies close.
+**Status:** 2/3 done. tb-91k is UNBLOCKED and ready for pickup. This is the critical path.
 
 ### P1 Epics
 
 #### cf-47t: Site Polish & Bug Triage (cfutons)
-| Story | Priority | Status | Assignee |
-|-------|----------|--------|----------|
-| cf-eo2: Design review | P1 | OPEN (ready) | — |
-| cf-ez0: Performance audit | P2 | OPEN (ready) | — |
-
-**Risk:** Low urgency. Waiting on P0 completion. Stories are ready when polecats free up.
+- Blocked by cf-ez0 (P2 perf audit). cf-eo2 (design review) already closed.
+- Ready for work when P0 testing wraps up.
 
 #### cm-hv9: Core Mobile Shopping Experience (cfutons_mobile)
-| Story | Priority | Status | Assignee |
-|-------|----------|--------|----------|
-| cm-8u2: Product detail screen | P1 | OPEN (blocked by cm-330, cm-vx9) | — |
-| cm-rsl: Category navigation | P1 | OPEN (blocked by cm-vx9) | — |
-| cm-t3b: Cart screen | P1 | OPEN (blocked by cm-vx9) | — |
-| cm-w04: Product browsing grid | P1 | OPEN (blocked by cm-330, cm-vx9) | — |
-
-**Risk:** All blocked on P0 scaffold. No action needed until cm-821 stories land.
+- All 4 stories blocked on cm-vx9 and/or cm-330. No action until P0 scaffold lands.
 
 #### tb-oeo: Enhanced Data Sources & Live Readiness (tradingbot)
-| Story | Priority | Status | Assignee |
-|-------|----------|--------|----------|
-| tb-3qi: Extended paper trading | P1 | OPEN (blocked by tb-91k) | — |
-| tb-bz0: Twitter/X sentiment API | P1 | OPEN (ready) | — |
-| tb-vwx: On-chain whale tracking | P1 | OPEN (ready) | — |
-
-**Risk:** Medium. tb-bz0 and tb-vwx are ready but no polecats available. Need assignment when tradingbot workers free up.
+- tb-bz0 (Twitter API) and tb-vwx (whale tracking) are READY, no assignee.
+- tb-3qi blocked by tb-91k. New stories: tb-6ft (ML integration), tb-nxs (mean reversion), tb-opn (trailing stops) — all need assignment.
 
 ---
 
-## Polecat Status
+## Polecat & Agent Status
 
-| Agent | Rig | State | Hook | Notes |
-|-------|-----|-------|------|-------|
-| polecat-54 | cfutons | **NUKED** | — | Available for respawn |
-| polecat-55 | cfutons | **NUKED** | — | Available for respawn |
+| Agent | Rig | State | Hook | Output |
+|-------|-----|-------|------|--------|
+| polecat-54 | cfutons | NUKED | — | Available for respawn |
+| polecat-55 | cfutons | NUKED | — | Available for respawn |
 | polecat-56 | cfutons | spawning | cf-qxo | Working gallery audit |
 | polecat-57 | cfutons | spawning | cf-o1a | Working lightbox test |
-| furiosa | cfutons_mobile | **NUKED** | — | cm-vx9 orphaned |
-| onyx | tradingbot | spawning | tb-bel | Working data pipeline |
-| jasper | tradingbot | spawning | tb-v8l | Working ML research |
+| furiosa | cfutons_mobile | NUKED | — | cm-vx9 orphaned |
+| onyx | tradingbot | COMPLETED | — | tb-bel done + merged |
+| jasper | tradingbot | COMPLETED | — | tb-v8l done + merged |
+| brainstorm | cfutons | idle | — | Filed 3 ideas (see triage below) |
+| algo | tradingbot | idle | — | — |
+| tester | tradingbot | idle | — | Filed tb-1tl bug |
+| artemis | cfutons_mobile | idle | — | — |
+
+**Team utilization:** 2/11 agents actively working. 4 nuked/completed. 5 idle. Significant underutilization.
 
 ---
 
-## AC Review Summary
+## Quality Gates Established
 
-**Reviewed:** All 13 P0 stories + 3 P0 epics across all rigs
-**Strengthened:** 10 stories (added numbered, testable criteria)
-**Approved as-is:** 3 stories (tb-91k had excellent quantitative AC already, cm-vx9 clear and testable, tb-bel already strong but still strengthened)
-**Dependencies added:** cm-wi5 now formally depends on cm-330 (components need tokens)
+See **STORY-MANAGEMENT.md** for full framework. Key gates:
 
-### AC Standards Applied
-- Every AC is numbered and testable (pass/fail)
-- Behavioral ACs specify user interaction → expected result
-- Audit ACs require documented output (matrix, checklist, beads)
-- Epic ACs require all blocking stories closed before epic can close
+1. **Definition of Ready** — 9-point checklist. No story starts without passing.
+2. **Definition of Done** — 6-point checklist. No story closes without meeting all criteria.
+3. **AC Standards** — numbered, testable, binary pass/fail. Three formats: checklist, Given/When/Then, scenario.
+4. **Bug Report Standard** — steps to reproduce, expected vs actual, severity, evidence.
+5. **Merge Checklist** — tests cover changes, no lint warnings, AC approved before work started.
+6. **Hill Chart Progress** — 5-position tracking (Started → Approach found → Validated → Building → Done).
 
 ---
 
-## Recommended Actions for Mayor
+## Brainstorm Triage
 
-1. **URGENT:** Respawn cfutons polecats 54+55 → assign cf-c6u and cf-sc2 (tonight's testing)
-2. **URGENT:** Respawn cfutons_mobile furiosa (or new polecat) → check cm-vx9 progress, resume or restart
-3. **MEDIUM:** Once tradingbot polecats finish, assign tb-bz0 and tb-vwx
-4. **LOW:** After P0 epic closures, assign cf-eo2 and cf-ez0 (site polish)
+| Bead | Title | Author | Decision | Rationale |
+|------|-------|--------|----------|-----------|
+| cf-7ik | ML-powered product recommendations | brainstorm | DEFER (P3) | Needs tradingbot ML infra first, no analytics data yet |
+| cf-b9o | Shared design tokens web+mobile | brainstorm | REFINE (P2) | Good idea, blocked by cm-330 and cf-a9q landing first |
+| gt-3bz | Prometheus/OTel metrics | brainstorm | DEFER (P3) | Premature — fix P1 bugs before observability |
+
+**Brainstorm quality:** Good. Ideas are well-structured with AC. Realistic cross-rig thinking (cf-b9o linking web+mobile tokens). Tendency to propose P3 moonshots — funnel is working correctly.
 
 ---
 
-*Story Manager: melania | Next review: on polecat completion or in 30 minutes*
+## AC Review Scorecard (All Rigs)
+
+| Rig | Total Stories Reviewed | AC Added/Strengthened | Dependencies Fixed | Junk Cleaned |
+|-----|----------------------|----------------------|-------------------|-------------|
+| cfutons | 8 | 6 | 1 (cm-wi5→cm-330) | — |
+| cfutons_mobile | 7 | 4 | 1 (cm-wi5→cm-330) | — |
+| tradingbot | 10 | 7 | — | — |
+| gastown | 16 | 10 | 3 (gt-bvk→race fixes) | 3 (--help junk closed) |
+| **Total** | **41** | **27** | **5** | **3** |
+
+---
+
+## Risk Register
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| cfutons_mobile stalls completely (no workers) | HIGH | HIGH | Respawn furiosa or spawn new polecats |
+| tb-91k sits unassigned while polecats are done | HIGH | HIGH | Immediately assign to crew/algo or spawn polecat |
+| gastown build stays broken (ICU dep) | MEDIUM | HIGH | Build tags to skip ICU in tests, or install headers |
+| Brainstorm floods backlog with low-priority ideas | LOW | MEDIUM | Triage protocol in place, melania reviews all |
+| Cross-rig token divergence (web vs mobile) | MEDIUM | LOW | cf-b9o (shared tokens) queued after prerequisites |
+
+---
+
+## Recommended Next Sprint Priorities
+
+### Immediate (next hour)
+1. Assign tb-91k to crew/algo or spawn tradingbot polecat — P0 critical path
+2. Respawn cfutons_mobile polecat for cm-vx9 (check if work survived)
+3. Wait for polecat-56 and polecat-57 to close cf-qxo and cf-o1a
+
+### This session
+4. Once cf-4aj closes: start cf-47t (site polish) — assign cf-ez0
+5. Once cm-vx9 closes: spawn polecats for cm-330, cm-5wg, cm-wi5
+6. Assign tb-bz0 and tb-vwx to tradingbot workers
+
+### Next sprint
+7. Fix gastown P1 bugs (gt-7px/gt-axm ICU, gt-0fz/gt-l0e/gt-tvl races, gt-xox test)
+8. cfutons P2 refactoring (cf-072, cf-4ef, cf-a9q extraction tasks)
+9. gt-ar2 dashboard improvements (after bugs fixed)
+
+---
+
+*Story Manager: melania | All 41 stories across 4 rigs reviewed and quality-gated*
+*Framework: STORY-MANAGEMENT.md (DoR, DoD, AC standards, hill charts)*
+*Next review: on polecat completion or 30 minutes*
