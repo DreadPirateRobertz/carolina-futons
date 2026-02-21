@@ -108,6 +108,7 @@ export default defineConfig({
       'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
       'backend/storeLocatorService.web': path.resolve(__dirname, 'src/backend/storeLocatorService.web.js'),
+      'backend/bundleBuilder.web': path.resolve(__dirname, 'src/backend/bundleBuilder.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
