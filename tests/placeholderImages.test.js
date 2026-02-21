@@ -7,6 +7,21 @@ import {
   getGridThumbnail,
   getGalleryThumbnail,
 } from '../src/public/placeholderImages.js';
+import { getGalleryConfig } from '../src/public/galleryConfig.js';
+
+const ALL_CATEGORIES = [
+  'futon-frames',
+  'mattresses',
+  'murphy-cabinet-beds',
+  'platform-beds',
+  'casegoods-accessories',
+  'wall-huggers',
+  'unfinished-wood',
+];
+
+const UNSPLASH_URL_PATTERN = /^https:\/\/images\.unsplash\.com\/photo-[\w-]+\?w=\d+&h=\d+&fit=crop&crop=center$/;
+
+// ── getCategoryHeroImage ─────────────────────────────────────────
 
 describe('getCategoryHeroImage', () => {
   it('returns category-specific hero image', () => {
@@ -26,7 +41,20 @@ describe('getCategoryHeroImage', () => {
     const murphy = getCategoryHeroImage('murphy-cabinet-beds');
     expect(futon).not.toBe(murphy);
   });
+
+  it.each(ALL_CATEGORIES)('returns valid 1920x600 hero for %s', (cat) => {
+    const url = getCategoryHeroImage(cat);
+    expect(url).toMatch(UNSPLASH_URL_PATTERN);
+    expect(url).toContain('w=1920&h=600');
+  });
+
+  it('all 7 categories have unique hero images', () => {
+    const urls = ALL_CATEGORIES.map(getCategoryHeroImage);
+    expect(new Set(urls).size).toBe(7);
+  });
 });
+
+// ── getCategoryCardImage ─────────────────────────────────────────
 
 describe('getCategoryCardImage', () => {
   it('returns 600x400 category card image', () => {
@@ -39,7 +67,20 @@ describe('getCategoryCardImage', () => {
     const url = getCategoryCardImage('unknown');
     expect(url).toContain('unsplash.com');
   });
+
+  it.each(ALL_CATEGORIES)('returns valid 600x400 card for %s', (cat) => {
+    const url = getCategoryCardImage(cat);
+    expect(url).toMatch(UNSPLASH_URL_PATTERN);
+    expect(url).toContain('w=600&h=400');
+  });
+
+  it('all 7 categories have unique card images', () => {
+    const urls = ALL_CATEGORIES.map(getCategoryCardImage);
+    expect(new Set(urls).size).toBe(7);
+  });
 });
+
+// ── getPlaceholderProductImages ──────────────────────────────────
 
 describe('getPlaceholderProductImages', () => {
   it('returns requested number of images', () => {
@@ -48,9 +89,9 @@ describe('getPlaceholderProductImages', () => {
   });
 
   it('cycles images when count exceeds available', () => {
-    const images = getPlaceholderProductImages('murphy-cabinet-beds', 8);
+    const images = getPlaceholderProductImages('wall-huggers', 8);
     expect(images).toHaveLength(8);
-    // Should cycle: image[4] === image[0] (only 4 murphy images)
+    // wall-huggers has 4 images, so index 4 should cycle back to index 0
     expect(images[4]).toBe(images[0]);
   });
 
@@ -67,7 +108,26 @@ describe('getPlaceholderProductImages', () => {
       expect(url).toContain('h=800');
     }
   });
+
+  it.each(ALL_CATEGORIES)('returns valid 800x800 product images for %s', (cat) => {
+    const images = getPlaceholderProductImages(cat, 4);
+    expect(images.length).toBe(4);
+    for (const url of images) {
+      expect(url).toMatch(UNSPLASH_URL_PATTERN);
+      expect(url).toContain('w=800&h=800');
+    }
+  });
+
+  it.each(ALL_CATEGORIES)('has enough images for galleryConfig thumbnailCount in %s', (cat) => {
+    const config = getGalleryConfig(cat);
+    const images = getPlaceholderProductImages(cat, config.thumbnailCount);
+    // Every image should be unique (no cycling needed within thumbnailCount)
+    const unique = new Set(images);
+    expect(unique.size).toBe(config.thumbnailCount);
+  });
 });
+
+// ── getProductFallbackImage ──────────────────────────────────────
 
 describe('getProductFallbackImage', () => {
   it('returns first image from category when provided', () => {
@@ -85,7 +145,15 @@ describe('getProductFallbackImage', () => {
     const url = getProductFallbackImage('nonexistent');
     expect(url).toContain('unsplash.com');
   });
+
+  it.each(ALL_CATEGORIES)('returns valid fallback for %s', (cat) => {
+    const url = getProductFallbackImage(cat);
+    expect(url).toMatch(UNSPLASH_URL_PATTERN);
+    expect(url).toContain('w=800&h=800');
+  });
 });
+
+// ── getGridThumbnail ─────────────────────────────────────────────
 
 describe('getGridThumbnail', () => {
   it('converts 800x800 to 400x400', () => {
@@ -99,7 +167,18 @@ describe('getGridThumbnail', () => {
     const thumb = getGridThumbnail(null);
     expect(thumb).toContain('w=400&h=400');
   });
+
+  it.each(ALL_CATEGORIES)('converts product images to grid size for %s', (cat) => {
+    const images = getPlaceholderProductImages(cat, 2);
+    for (const url of images) {
+      const thumb = getGridThumbnail(url);
+      expect(thumb).toContain('w=400&h=400');
+      expect(thumb).not.toContain('w=800');
+    }
+  });
 });
+
+// ── getGalleryThumbnail ──────────────────────────────────────────
 
 describe('getGalleryThumbnail', () => {
   it('converts 800x800 to 100x100', () => {
@@ -111,5 +190,14 @@ describe('getGalleryThumbnail', () => {
   it('returns fallback for null input', () => {
     const thumb = getGalleryThumbnail(null);
     expect(thumb).toContain('w=100&h=100');
+  });
+
+  it.each(ALL_CATEGORIES)('converts product images to gallery thumbnail for %s', (cat) => {
+    const images = getPlaceholderProductImages(cat, 2);
+    for (const url of images) {
+      const thumb = getGalleryThumbnail(url);
+      expect(thumb).toContain('w=100&h=100');
+      expect(thumb).not.toContain('w=800');
+    }
   });
 });

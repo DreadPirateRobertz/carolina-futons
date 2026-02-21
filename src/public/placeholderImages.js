@@ -47,13 +47,15 @@ const productImages = {
     'https://images.unsplash.com/photo-1618220179428-22790b461013?w=800&h=800&fit=crop&crop=center',
     'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800&h=800&fit=crop&crop=center',
     'https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?w=800&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?w=800&h=800&fit=crop&crop=center',
   ],
   'platform-beds': [
     'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&h=800&fit=crop&crop=center',
     'https://images.unsplash.com/photo-1588046130717-0eb0c9a3ba15?w=800&h=800&fit=crop&crop=center',
     'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800&h=800&fit=crop&crop=center',
     'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1598928506311-c55ez637643e?w=800&h=800&fit=crop&crop=center',
+    'https://images.unsplash.com/photo-1598928506311-c55ece37643e?w=800&h=800&fit=crop&crop=center',
   ],
   'casegoods-accessories': [
     'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800&h=800&fit=crop&crop=center',
