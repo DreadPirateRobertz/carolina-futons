@@ -14,9 +14,14 @@ import {
   shadows as sharedShadows,
   transitions as sharedTransitions,
   breakpoints as sharedBreakpoints,
+  business,
+  shippingConfig,
   shadowToCSS,
   spacingPx,
 } from './sharedTokens.js';
+
+// Re-export business and shipping config for web consumers
+export { business, shippingConfig };
 
 // Re-export colors directly — same values, same keys
 export const colors = sharedColors;
@@ -104,12 +109,9 @@ export const seo = {
   defaultDescription: 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.',
   locale: 'en_US',
   businessAddress: {
-    street: '824 Locust St, Ste 200',
-    city: 'Hendersonville',
-    state: 'NC',
-    zip: '28792',
-    phone: '(828) 252-9449',
-    hours: 'Wed-Sat 10am-5pm',
+    ...business.address,
+    phone: business.phone,
+    hours: business.hours,
   },
   categoryTitles: {
     'futon-frames': 'Futon Frames - Solid Wood Frames from Night & Day, Strata & KD Frames',

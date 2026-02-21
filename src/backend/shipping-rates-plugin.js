@@ -9,11 +9,10 @@
 // must be exported. Wix calls this automatically during checkout.
 
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
+import { business, shippingConfig } from 'public/sharedTokens.js';
 
-const FREE_SHIPPING_THRESHOLD = 999;
-const WHITE_GLOVE_FREE_THRESHOLD = 1999;
-const WHITE_GLOVE_LOCAL_PRICE = 149;  // ZIP 287-289 (Asheville/Hendersonville area)
-const WHITE_GLOVE_REGIONAL_PRICE = 249; // ZIP 270-399 (NC/SC/GA/TN)
+const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
+const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, localPrice: WHITE_GLOVE_LOCAL_PRICE, regionalPrice: WHITE_GLOVE_REGIONAL_PRICE } = whiteGlove;
 
 export const getShippingRates = async (options) => {
   const { lineItems, shippingDestination, shippingOrigin } = options;
@@ -83,13 +82,13 @@ export const getShippingRates = async (options) => {
 
     // Add local pickup option for Hendersonville area
     const zip3 = parseInt((destination.postalCode || '').substring(0, 3));
-    if (zip3 >= 287 && zip3 <= 289) {
+    if (zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax) {
       shippingRates.push({
         code: 'local-pickup',
         title: 'In-Store Pickup (Free)',
         logistics: {
           deliveryTime: 'Ready in 1-2 business days',
-          instructions: 'Pick up at 824 Locust St, Ste 200, Hendersonville, NC 28792. Wed-Sat 10am-5pm.',
+          instructions: `Pick up at ${business.address.street}, ${business.address.city}, ${business.address.state} ${business.address.zip}. ${business.hours}.`,
         },
         cost: {
           price: '0.00',
@@ -100,14 +99,14 @@ export const getShippingRates = async (options) => {
     }
 
     // Add local delivery option for NC/SC/GA/TN
-    if (zip3 >= 270 && zip3 <= 399) {
+    if (zip3 >= zones.regional.prefixMin && zip3 <= zones.regional.prefixMax) {
       const localDeliveryPrice = orderSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 49.99;
       shippingRates.push({
         code: 'local-delivery',
         title: localDeliveryPrice === 0 ? 'Local Delivery (Free)' : 'Local Delivery',
         logistics: {
           deliveryTime: '3-7 business days',
-          instructions: 'Curbside delivery. Call (828) 252-9449 to schedule.',
+          instructions: `Curbside delivery. Call ${business.phone} to schedule.`,
         },
         cost: {
           price: String(localDeliveryPrice.toFixed(2)),
@@ -117,7 +116,7 @@ export const getShippingRates = async (options) => {
       });
 
       // White Glove Delivery: in-home placement, packaging removal, basic assembly
-      const isLocal = zip3 >= 287 && zip3 <= 289;
+      const isLocal = zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax;
       const whiteGloveBase = isLocal ? WHITE_GLOVE_LOCAL_PRICE : WHITE_GLOVE_REGIONAL_PRICE;
       const whiteGlovePrice = orderSubtotal >= WHITE_GLOVE_FREE_THRESHOLD ? 0 : whiteGloveBase;
       const whiteGloveLabel = whiteGlovePrice === 0

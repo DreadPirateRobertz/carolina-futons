@@ -13,15 +13,16 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
+import { brand, business, shippingConfig } from 'public/sharedTokens.js';
 
 // ── Configuration ───────────────────────────────────────────────────
 
 const ORIGIN_ADDRESS = {
-  Name: 'Carolina Futons',
-  AddressLine: ['824 Locust St, Ste 200'],
-  City: 'Hendersonville',
-  StateProvinceCode: 'NC',
-  PostalCode: '28792',
+  Name: brand.name,
+  AddressLine: [business.address.street],
+  City: business.address.city,
+  StateProvinceCode: business.address.state,
+  PostalCode: business.address.zip,
   CountryCode: 'US',
 };
 
@@ -49,7 +50,7 @@ const PACKAGE_DEFAULTS = {
 };
 
 // Free shipping threshold
-const FREE_SHIPPING_THRESHOLD = 999;
+const FREE_SHIPPING_THRESHOLD = shippingConfig.freeThreshold;
 
 // ── OAuth 2.0 Token Management ──────────────────────────────────────
 
@@ -274,7 +275,7 @@ export const createShipment = webMethod(
               Name: 'Carolina Futons',
               AttentionName: 'Brenda Deal',
               ShipperNumber: accountNumber,
-              Phone: { Number: '8282529449' },
+              Phone: { Number: business.phoneDigits },
               Address: ORIGIN_ADDRESS,
             },
             ShipTo: {
@@ -290,9 +291,9 @@ export const createShipment = webMethod(
               },
             },
             ShipFrom: {
-              Name: 'Carolina Futons',
+              Name: brand.name,
               AttentionName: 'Brenda Deal',
-              Phone: { Number: '8282529449' },
+              Phone: { Number: business.phoneDigits },
               Address: ORIGIN_ADDRESS,
             },
             PaymentInformation: {

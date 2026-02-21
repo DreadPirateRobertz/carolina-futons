@@ -85,6 +85,36 @@ export const breakpoints = {
   ultraWide: 1440,
 };
 
+// Business contact — single source of truth for all platforms
+export const business = {
+  phone: '(828) 252-9449',
+  phoneE164: '+18282529449',
+  phoneDigits: '8282529449',
+  baseUrl: 'https://www.carolinafutons.com',
+  address: {
+    street: '824 Locust St, Ste 200',
+    city: 'Hendersonville',
+    state: 'NC',
+    zip: '28792',
+  },
+  hours: 'Wed-Sat 10am-5pm',
+  deliveryDays: [3, 4, 5, 6], // Wed=3, Thu=4, Fri=5, Sat=6
+};
+
+// Shipping configuration
+export const shippingConfig = {
+  freeThreshold: 999,
+  whiteGlove: {
+    freeThreshold: 1999,
+    localPrice: 149,
+    regionalPrice: 249,
+  },
+  zones: {
+    local: { prefixMin: 287, prefixMax: 289, name: 'WNC' },
+    regional: { prefixMin: 270, prefixMax: 399, name: 'Southeast' },
+  },
+};
+
 // Helper: format shadow for CSS (web consumers)
 export function shadowToCSS(shadow) {
   return `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}`;
