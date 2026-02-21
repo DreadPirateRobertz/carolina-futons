@@ -9,6 +9,7 @@ import { __reset as resetWixLocation } from './__mocks__/wix-location.js';
 import { __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import { __reset as resetStorage } from './__mocks__/wix-storage-frontend.js';
 import { __reset as resetSite } from './__mocks__/wix-site-frontend.js';
+import { __reset as resetMarketing } from './__mocks__/wix-marketing-backend.js';
 
 // Provide sessionStorage globally (not available in Node environment)
 class MockSessionStorage {
@@ -40,6 +41,7 @@ beforeEach(() => {
   resetMembers();
   resetStorage();
   resetSite();
+  resetMarketing();
   if (globalThis.sessionStorage && globalThis.sessionStorage.clear) {
     globalThis.sessionStorage.clear();
   }
