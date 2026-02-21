@@ -20,6 +20,10 @@ export const futonFrame = {
   options: { finish: 'Natural', size: 'Full' },
   numericRating: 4.5,
   numReviews: 12,
+  reviews: [
+    { rating: 5, author: 'Sarah M.', body: 'Solid build quality, easy to assemble.', date: '2025-06-10' },
+    { rating: 4, author: 'Tom B.', body: 'Great frame, finish is <b>beautiful</b>.', date: '2025-05-22' },
+  ],
 };
 
 export const wallHuggerFrame = {

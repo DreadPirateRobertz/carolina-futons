@@ -2,7 +2,7 @@
 // Handles variant selection with independent pricing, cross-sell,
 // gallery enhancement, lightbox, zoom, recently viewed, and SEO schema injection
 import { getRelatedProducts, getSameCollection, getBundleSuggestion } from 'backend/productRecommendations.web';
-import { getProductSchema, generateAltText, getBreadcrumbSchema, getProductOgTags } from 'backend/seoHelpers.web';
+import { getProductSchema, generateAltText, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema } from 'backend/seoHelpers.web';
 import { getProductSwatches, getSwatchCount, getAllSwatchFamilies } from 'backend/swatchService.web';
 import { submitSwatchRequest } from 'backend/emailService.web';
 import {
@@ -1331,6 +1331,12 @@ async function injectProductSchema() {
     const schema = await getProductSchema(currentProduct);
     if (schema) {
       $w('#productSchemaHtml').postMessage(schema);
+    }
+
+    // Inject product FAQ schema for SEO
+    const faqSchema = await getProductFaqSchema(currentProduct);
+    if (faqSchema) {
+      try { $w('#productFaqSchemaHtml').postMessage(faqSchema); } catch (e) {}
     }
 
     // Inject Open Graph tags for social sharing

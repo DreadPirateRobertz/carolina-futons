@@ -5,6 +5,7 @@ import {
   getBusinessSchema,
   getBreadcrumbSchema,
   getFaqSchema,
+  getProductFaqSchema,
   generateAltText,
   getWebSiteSchema,
   getCollectionSchema,
@@ -73,6 +74,156 @@ describe('getProductSchema', () => {
     // wall-hugger -> Strata Furniture
     const schema = JSON.parse(getProductSchema(wallHuggerFrame));
     expect(schema.brand.name).toBe('Strata Furniture');
+  });
+
+  it('includes mpn from SKU', () => {
+    const schema = JSON.parse(getProductSchema(futonFrame));
+    expect(schema.mpn).toBe('EUR-FRM-001');
+  });
+
+  it('includes productID from _id', () => {
+    const schema = JSON.parse(getProductSchema(futonFrame));
+    expect(schema.productID).toBe('prod-frame-001');
+  });
+
+  it('includes priceValidUntil on offers', () => {
+    const schema = JSON.parse(getProductSchema(futonFrame));
+    expect(schema.offers.priceValidUntil).toBeDefined();
+    // Should be ISO date format YYYY-MM-DD
+    expect(schema.offers.priceValidUntil).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Should be ~1 year from now
+    const validDate = new Date(schema.offers.priceValidUntil);
+    const now = new Date();
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    expect(validDate.getFullYear()).toBe(oneYearFromNow.getFullYear());
+  });
+
+  it('includes individual reviews when present', () => {
+    const schema = JSON.parse(getProductSchema(futonFrame));
+    expect(schema.review).toBeDefined();
+    expect(schema.review).toHaveLength(2);
+    expect(schema.review[0]['@type']).toBe('Review');
+    expect(schema.review[0].reviewRating.ratingValue).toBe(5);
+    expect(schema.review[0].author.name).toBe('Sarah M.');
+    expect(schema.review[0].reviewBody).toBe('Solid build quality, easy to assemble.');
+    expect(schema.review[0].datePublished).toBe('2025-06-10');
+  });
+
+  it('strips HTML from review body', () => {
+    const schema = JSON.parse(getProductSchema(futonFrame));
+    expect(schema.review[1].reviewBody).toBe('Great frame, finish is beautiful.');
+    expect(schema.review[1].reviewBody).not.toContain('<b>');
+  });
+
+  it('uses Verified Customer as fallback author', () => {
+    const withAnonymousReview = {
+      ...futonFrame,
+      reviews: [{ rating: 4 }],
+    };
+    const schema = JSON.parse(getProductSchema(withAnonymousReview));
+    expect(schema.review[0].author.name).toBe('Verified Customer');
+  });
+
+  it('omits reviews when not present', () => {
+    const schema = JSON.parse(getProductSchema(wallHuggerFrame));
+    expect(schema.review).toBeUndefined();
+  });
+
+  it('omits reviews for empty reviews array', () => {
+    const emptyReviews = { ...futonFrame, reviews: [] };
+    const schema = JSON.parse(getProductSchema(emptyReviews));
+    expect(schema.review).toBeUndefined();
+  });
+
+  it('omits mpn when no SKU', () => {
+    const noSku = { ...futonFrame, sku: '' };
+    const schema = JSON.parse(getProductSchema(noSku));
+    expect(schema.mpn).toBeUndefined();
+  });
+});
+
+// ── getProductFaqSchema ─────────────────────────────────────────────
+
+describe('getProductFaqSchema', () => {
+  it('returns null for null product', () => {
+    expect(getProductFaqSchema(null)).toBeNull();
+  });
+
+  it('generates valid FAQPage schema', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonFrame));
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema['@type']).toBe('FAQPage');
+    expect(schema.mainEntity.length).toBeGreaterThan(0);
+    expect(schema.mainEntity[0]['@type']).toBe('Question');
+    expect(schema.mainEntity[0].acceptedAnswer['@type']).toBe('Answer');
+  });
+
+  it('includes return policy and shipping questions for all products', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonFrame));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('return policy'))).toBe(true);
+    expect(questions.some(q => q.includes('free shipping'))).toBe(true);
+    expect(questions.some(q => q.includes('delivery take'))).toBe(true);
+  });
+
+  it('includes product name in questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonFrame));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.every(q => q.includes('Eureka Futon Frame'))).toBe(true);
+  });
+
+  it('adds futon-specific questions for futon frames', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonFrame));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('mattress sizes'))).toBe(true);
+    expect(questions.some(q => q.includes('assembly required'))).toBe(true);
+  });
+
+  it('adds wall-hugger-specific questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(wallHuggerFrame));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('mattress sizes'))).toBe(true);
+    expect(questions.some(q => q.includes('assembly required'))).toBe(true);
+  });
+
+  it('adds murphy-bed-specific questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(murphyBed));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('mounted to a wall'))).toBe(true);
+    expect(questions.some(q => q.includes('mattress comes with'))).toBe(true);
+  });
+
+  it('adds mattress-specific questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonMattress));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('How long will'))).toBe(true);
+    expect(questions.some(q => q.includes('hypoallergenic'))).toBe(true);
+  });
+
+  it('adds platform-bed-specific questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(platformBed));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('box spring'))).toBe(true);
+  });
+
+  it('adds casegoods-specific questions', () => {
+    const schema = JSON.parse(getProductFaqSchema(casegoodsItem));
+    const questions = schema.mainEntity.map(q => q.name);
+    expect(questions.some(q => q.includes('Night & Day Furniture'))).toBe(true);
+  });
+
+  it('shows free shipping confirmation for qualifying products', () => {
+    const schema = JSON.parse(getProductFaqSchema(murphyBed)); // $1,899
+    const shippingQ = schema.mainEntity.find(q => q.name.includes('free shipping'));
+    expect(shippingQ.acceptedAnswer.text).toContain('Yes!');
+    expect(shippingQ.acceptedAnswer.text).toContain('free standard shipping');
+  });
+
+  it('shows shipping threshold for non-qualifying products', () => {
+    const schema = JSON.parse(getProductFaqSchema(futonFrame)); // $499
+    const shippingQ = schema.mainEntity.find(q => q.name.includes('free shipping'));
+    expect(shippingQ.acceptedAnswer.text).toContain('$999+');
   });
 });
 

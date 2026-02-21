@@ -106,6 +106,19 @@ export const getProductSchema = webMethod(
       },
     };
 
+    // Add manufacturer part number and product identifiers
+    if (product.sku) {
+      schema.mpn = product.sku;
+    }
+    if (product._id) {
+      schema.productID = product._id;
+    }
+
+    // Add priceValidUntil (required for Google price drop rich results)
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+    schema.offers.priceValidUntil = validUntil.toISOString().split('T')[0];
+
     // Add material if detectable from product data
     const material = detectMaterial(product);
     if (material) {
@@ -149,6 +162,27 @@ export const getProductSchema = webMethod(
         worstRating: 1,
         reviewCount: product.numReviews || 1,
       };
+    }
+
+    // Add individual reviews when review data is present
+    if (product.reviews && Array.isArray(product.reviews) && product.reviews.length > 0) {
+      schema.review = product.reviews.map(r => {
+        const review = {
+          '@type': 'Review',
+          reviewRating: {
+            '@type': 'Rating',
+            ratingValue: r.rating,
+            bestRating: 5,
+          },
+          author: {
+            '@type': 'Person',
+            name: r.author || 'Verified Customer',
+          },
+        };
+        if (r.body) review.reviewBody = stripHtml(r.body);
+        if (r.date) review.datePublished = r.date;
+        return review;
+      });
     }
 
     return JSON.stringify(schema);
@@ -303,6 +337,102 @@ export const getFaqSchema = webMethod(
   Permissions.Anyone,
   (faqs) => {
     if (!faqs || faqs.length === 0) return null;
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      })),
+    };
+
+    return JSON.stringify(schema);
+  }
+);
+
+// Generate product-specific FAQ schema for product pages
+// Creates category-relevant Q&A pairs for SEO structured data
+export const getProductFaqSchema = webMethod(
+  Permissions.Anyone,
+  (product) => {
+    if (!product) return null;
+
+    const category = getCategoryLabel(product);
+    const brand = getBrandName(product);
+    const faqs = [];
+
+    // Return policy — universal
+    faqs.push({
+      question: `What is the return policy for the ${product.name}?`,
+      answer: 'Carolina Futons offers a 30-day return policy on unused items in original packaging. Contact us at (828) 252-9449 for return authorization.',
+    });
+
+    // Free shipping — universal
+    faqs.push({
+      question: `Does the ${product.name} qualify for free shipping?`,
+      answer: product.price >= 999
+        ? `Yes! The ${product.name} qualifies for free standard shipping within the continental US.`
+        : `Free standard shipping is available on orders $999+. The ${product.name} is priced at ${product.formattedPrice || '$' + product.price}.`,
+    });
+
+    // Category-specific questions
+    if (category.includes('Futon Frame') || category.includes('Wall Hugger')) {
+      faqs.push({
+        question: `What mattress sizes fit the ${product.name}?`,
+        answer: `The ${product.name} accommodates standard futon mattresses. Check the product dimensions for exact size compatibility. Most of our futon frames accept Full and Queen size mattresses.`,
+      });
+      faqs.push({
+        question: `Is assembly required for the ${product.name}?`,
+        answer: `Yes, some assembly is required. The ${product.name}${brand ? ` by ${brand}` : ''} comes with detailed assembly instructions. Most customers complete assembly in 30-60 minutes.`,
+      });
+    }
+
+    if (category.includes('Murphy')) {
+      faqs.push({
+        question: `Does the ${product.name} need to be mounted to a wall?`,
+        answer: 'No! Our Murphy cabinet beds are freestanding and do not require wall mounting. They can be placed anywhere in your room and set up in under 2 minutes.',
+      });
+      faqs.push({
+        question: `What size mattress comes with the ${product.name}?`,
+        answer: 'Our Murphy cabinet beds include a premium Queen-size gel memory foam mattress. No additional mattress purchase is needed.',
+      });
+    }
+
+    if (category.includes('Mattress')) {
+      faqs.push({
+        question: `How long will the ${product.name} last?`,
+        answer: 'Our futon mattresses are built to last 10-15 years with proper care. They feature no-turn design and high-density construction for lasting comfort.',
+      });
+      faqs.push({
+        question: `Is the ${product.name} hypoallergenic?`,
+        answer: 'Yes, our Otis Bed mattresses are hypoallergenic and made with CertiPUR-US certified foam, free from harmful chemicals.',
+      });
+    }
+
+    if (category.includes('Platform')) {
+      faqs.push({
+        question: `Does the ${product.name} require a box spring?`,
+        answer: 'No box spring needed! Platform beds provide full mattress support with built-in slats. They work great with memory foam, latex, and hybrid mattresses.',
+      });
+    }
+
+    if (category.includes('Bedroom Furniture')) {
+      faqs.push({
+        question: `Does the ${product.name} match other Night & Day Furniture pieces?`,
+        answer: 'Yes! Our casegoods and accessories are designed to coordinate with Night & Day Furniture bed frames in matching finishes.',
+      });
+    }
+
+    // Delivery — universal
+    faqs.push({
+      question: `How long does delivery take for the ${product.name}?`,
+      answer: 'Standard delivery takes 5-14 business days within the continental US. White-glove delivery is available for local ($149) and regional ($249) customers, or free on orders over $1,999.',
+    });
 
     const schema = {
       '@context': 'https://schema.org',
