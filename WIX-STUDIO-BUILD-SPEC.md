@@ -80,8 +80,10 @@ Every page gets this header. Create in Wix Studio as a fixed header section.
 | Footer Logo | Image | `#footerLogo` | Smaller logo version |
 | Quick Links Column | Section | — | Home, Shop, Sale, About, Contact |
 | Shop Column | Section | — | Futon Frames, Mattresses, Murphy Beds, Platform Beds |
-| Newsletter Email | Input | `#footerEmail` | |
-| Newsletter Button | Button | `#footerSubscribe` | |
+| Newsletter Email | Input | `#footerEmailInput` | |
+| Newsletter Button | Button | `#footerEmailSubmit` | |
+| Newsletter Error | Text | `#footerEmailError` | Hidden default |
+| Newsletter Success | Text | `#footerEmailSuccess` | Hidden default |
 | Phone Link | Text | `#footerPhone` | (828) 252-9449 |
 | Address | Text | `#footerAddress` | Full address |
 | Hours | Text | `#footerHours` | Wed-Sat 10am-5pm |
@@ -116,6 +118,42 @@ Controlled by the Promotions CMS collection; auto-shows 3s after page load.
 | CTA Button | Button | `#promoCTA` | Primary action, coral bg |
 | Close Button | Button | `#promoClose` | X icon, top right |
 | Dismiss Link | Text/Button | `#promoDismiss` | "Maybe later" text link |
+
+### Accessibility & Skip Navigation
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Skip to Content | Button/Link | `#skipToContent` | Hidden until focused, jumps to main content |
+| Main Content | Container | `#mainContent` | Target for skip link, `role="main"` |
+
+### Exit-Intent Popup
+Displays when user moves cursor toward browser close. Captures email + links to swatch service.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Popup Container | Box | `#exitIntentPopup` | Hidden default, centered modal |
+| Overlay | Box | `#exitOverlay` | Semi-transparent backdrop |
+| Title | Text (H2) | `#exitTitle` | "Before You Go..." |
+| Subtitle | Text | `#exitSubtitle` | Offer text |
+| Email Input | Input | `#exitEmailInput` | |
+| Submit Button | Button | `#exitEmailSubmit` | |
+| Success Message | Text | `#exitSuccess` | Hidden default |
+| Swatch Link | Button | `#exitSwatchLink` | "Browse 700+ fabric swatches" |
+| Close Button | Button | `#exitClose` | X icon |
+
+### PWA Install Banner
+Shown to mobile users who haven't installed the PWA.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Banner Container | Box | `#installBanner` | Hidden default, bottom strip |
+| Banner Text | Text | `#installBannerText` | "Add to home screen" |
+| Install Button | Button | `#installBannerBtn` | "Install" |
+| Dismiss Button | Button | `#installBannerDismiss` | X icon |
+
+### Side Cart "Just Added" Highlight
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Highlight Box | Box | `#justAddedHighlight` | Brief flash on newly added item |
 
 ### Illustrated Header Decoration
 The mountain ridgeline illustration goes behind/above the nav bar.
@@ -171,12 +209,59 @@ The mountain ridgeline illustration goes behind/above the nav bar.
 | → Sale Price | Text | `#salePrice` | Coral color |
 | → Original Price | Text | `#saleOrigPrice` | Strikethrough |
 
+### Category Repeater (Alternative to Static Cards)
+Code uses a repeater for the 6 category cards:
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Category Repeater | Repeater | `#categoryRepeater` | 6 items, 3-col desktop, 2-col tablet |
+| → Card Title | Text | `#categoryCardTitle` | Category name |
+| → Card Tagline | Text | `#categoryCardTagline` | Subtitle/description |
+| → Product Count | Text | `#categoryCardCount` | "X products" |
+
+### Testimonials Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Testimonial Repeater | Repeater | `#testimonialRepeater` | Rotating customer quotes |
+| → Quote Text | Text | `#testimonialQuote` | |
+| → Customer Name | Text | `#testimonialName` | |
+
+### Video Showcase Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#videoShowcaseSection` | Collapsible |
+| Section Title | Text (H2) | `#videoShowcaseTitle` | |
+| Section Subtitle | Text | `#videoShowcaseSubtitle` | |
+| View All CTA | Button | `#viewAllVideosCTA` | → /product-videos |
+
+### Style Quiz CTA Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#quizCTASection` | |
+| Title | Text (H2) | `#quizCTATitle` | |
+| Subtitle | Text | `#quizCTASubtitle` | |
+| Start Quiz Button | Button | `#quizCTAButton` | → Style quiz page |
+
+### Recently Viewed Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#recentSection` | Collapsible, hidden if empty |
+| Repeater | Repeater | — | Reuses standard product card layout |
+| → Image | Image | `#recentImage` | |
+| → Name | Text | `#recentName` | |
+| → Price | Text | `#recentPrice` | |
+
 ### Trust Bar
-Horizontal strip with key differentiators:
-- "Largest Selection in the Carolinas"
-- "Family Owned Since 1991"
-- "700+ Fabric Swatches"
-- "Free Shipping Over $999"
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Trust Bar Container | Strip | `#trustBar` | Horizontal strip |
+
+Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "700+ Fabric Swatches" · "Free Shipping Over $999"
+
+### Website Schema
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Website Schema | HtmlComponent | `#websiteSchemaHtml` | Hidden, WebSite JSON-LD |
 
 ---
 
@@ -200,7 +285,7 @@ Horizontal strip with key differentiators:
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Product Dataset | Dataset | `#productDataset` | Connected to Stores/Products |
-| Product Name | Text (H1) | — | Bound to dataset |
+| Product Name | Text (H1) | `#productName` | Product title (also bound to dataset) |
 | Product Price | Text | `#productPrice` | Bold, 20px |
 | Compare Price | Text | `#productComparePrice` | Strikethrough, hidden default |
 | Stock Status | Text | `#stockStatus` | "In Stock" / "Special Order" |
@@ -232,9 +317,31 @@ Horizontal strip with key differentiators:
 | → Name | Text | `#collectionName` | |
 | → Price | Text | `#collectionPrice` | |
 
+### Recently Viewed Products
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#recentlyViewedSection` | Collapsible, hidden if empty |
+| Repeater | Repeater | `#recentlyViewedRepeater` | 4-col |
+| → Image | Image | `#recentImage` | |
+| → Name | Text | `#recentName` | |
+| → Price | Text | `#recentPrice` | |
+
 ---
 
 ## Page: CATEGORY PAGE (u0gn0)
+
+### Hero Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Hero Container | Section | `#categoryHeroSection` | Dynamic bg per category |
+| Category Title | Text (H1) | `#categoryHeroTitle` | Dynamic from URL |
+| Category Subtitle | Text | `#categoryHeroSubtitle` | |
+
+### Breadcrumbs
+| Element | Type | ID |
+|---------|------|----|
+| Home Link | Text/Link | `#breadcrumbHome` |
+| Current Page | Text | `#breadcrumbCurrent` |
 
 ### Filter Bar
 | Element | Type | ID |
@@ -259,6 +366,10 @@ Horizontal strip with key differentiators:
 | → Brand Label | Text | `#gridBrand` | Small, secondary text color |
 | → Ribbon | Text/Box | `#gridRibbon` | "Featured", "New", etc. |
 | → Quick View | Button | `#quickViewBtn` | Appears on hover |
+| → Badge | Text/Box | `#gridBadge` | "New", "Featured", etc., hidden default |
+| → Fabric Badge | Text | `#gridFabricBadge` | "700+ Fabric Options", hidden default |
+| → Compare Button | Button | `#gridCompareBtn` | Add to compare bar |
+| → Swatch Preview | Image | `#gridSwatchPreview` | Fabric swatch mini-preview |
 
 ### Quick View Modal
 | Element | Type | ID |
@@ -272,9 +383,54 @@ Horizontal strip with key differentiators:
 | Add to Cart | Button | `#qvAddToCart` |
 | Close | Button | `#qvClose` |
 
+### Empty State
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Empty Container | Section | `#emptyStateSection` | Shown when no products match filters |
+| Empty Title | Text (H2) | `#emptyStateTitle` | "No products found" |
+| Empty Message | Text | `#emptyStateMessage` | Suggestion text |
+| Empty Illustration | Image | `#emptyStateIllustration` | Mountain illustration |
+
+### Recently Viewed Products
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#recentlyViewedSection` | Collapsible, hidden if empty |
+| Section Title | Text (H2) | `#recentlyViewedTitle` | "Recently Viewed" |
+| Repeater | Repeater | — | Reuses standard product card layout |
+| → Image | Image | `#recentImage` | |
+| → Name | Text | `#recentName` | |
+| → Price | Text | `#recentPrice` | |
+
+### Product Comparison Bar
+Sticky bottom bar showing selected products for comparison.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Compare Bar | Box | `#compareBar` | Sticky bottom, hidden default |
+| Compare Repeater | Repeater | `#compareRepeater` | 2-4 selected items |
+| → Thumbnail | Image | `#compareThumb` | Small product image |
+| → Name | Text | `#compareName` | |
+| → Price | Text | `#comparePrice` | |
+| → Remove | Button | `#compareRemove` | X icon |
+
+### Schema Elements
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Category Schema | HtmlComponent | `#categorySchemaHtml` | Hidden, CollectionPage JSON-LD |
+| Breadcrumb Schema | HtmlComponent | `#categoryBreadcrumbSchemaHtml` | Hidden |
+| Open Graph | HtmlComponent | `#categoryOgHtml` | Hidden, OG meta tags |
+
 ---
 
 ## Page: CART PAGE (mqi5m)
+
+### Empty Cart State
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Empty Container | Section | `#emptyCartSection` | Shown when cart is empty |
+| Empty Title | Text (H2) | `#emptyCartTitle` | "Your cart is empty" |
+| Empty Message | Text | `#emptyCartMessage` | Suggestion text |
+| Continue Shopping | Button | `#continueShoppingBtn` | → /shop-main |
 
 ### Shipping Progress Bar
 | Element | Type | ID | Notes |
@@ -282,6 +438,12 @@ Horizontal strip with key differentiators:
 | Progress Bar | ProgressBar | `#shippingProgressBar` | 0-100 |
 | Progress Text | Text | `#shippingProgressText` | "$X away from free shipping" |
 | Progress Icon | Image | `#shippingProgressIcon` | Checkmark, hidden default |
+
+### Loyalty Tier Progress
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Tier Progress Bar | ProgressBar | `#tierProgressBar` | Shows loyalty tier progress |
+| Tier Progress Text | Text | `#tierProgressText` | "X points to next tier" |
 
 ### Cart Items
 | Element | Type | ID |
@@ -312,6 +474,15 @@ Horizontal strip with key differentiators:
 | → Price | Text | `#sugPrice` | |
 | → Add Button | Button | `#sugAddBtn` | "Quick Add" |
 
+### Recently Viewed (Cart)
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#cartRecentSection` | Collapsible, hidden if empty |
+| Repeater | Repeater | `#cartRecentRepeater` | 3-col |
+| → Image | Image | `#cartRecentImage` | |
+| → Name | Text | `#cartRecentName` | |
+| → Price | Text | `#cartRecentPrice` | |
+
 ---
 
 ## Page: SIDE CART (ego5s)
@@ -329,19 +500,23 @@ Horizontal strip with key differentiators:
 | → Item Price | Text | `#sideItemPrice` | |
 | → Item Qty | Text | `#sideItemQty` | |
 | → Item Variant | Text | `#sideItemVariant` | Hidden default |
+| → Line Total | Text | `#sideItemLineTotal` | Price × qty |
 | → Remove | Button | `#sideItemRemove` | X icon |
 | Footer | Box | `#sideCartFooter` | |
 | Subtotal | Text | `#sideCartSubtotal` | |
 | Shipping Bar | ProgressBar | `#sideShippingBar` | Mini version |
 | Shipping Text | Text | `#sideShippingText` | |
+| Tier Progress Bar | ProgressBar | `#sideTierBar` | Loyalty tier in side cart |
+| Tier Progress Text | Text | `#sideTierText` | |
 | View Cart | Button | `#viewFullCart` | Secondary button |
 | Checkout | Button | `#sideCartCheckout` | Primary coral button |
 | Suggestion Box | Box | `#sideCartSuggestion` | Collapsible |
-| → Label | Text | `#sideSugLabel` | |
-| → Image | Image | `#sideSugImage` | |
-| → Name | Text | `#sideSugName` | |
-| → Price | Text | `#sideSugPrice` | |
-| → Add | Button | `#sideSugAdd` | "Add" |
+| → Label | Text | `#sideSugLabel` | "Complete Your Futon" |
+| → Repeater | Repeater | `#sideSugRepeater` | 1-2 suggestion items |
+| → → Image | Image | `#sideSugImage` | Inside repeater |
+| → → Name | Text | `#sideSugName` | Inside repeater |
+| → → Price | Text | `#sideSugPrice` | Inside repeater |
+| → → Add | Button | `#sideSugAdd` | "Add" |
 
 ---
 
@@ -393,10 +568,12 @@ Horizontal strip with key differentiators:
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Page Title | Text (H1) | — | "Frequently Asked Questions" |
+| Search Input | Input | `#faqSearchInput` | Filter FAQs by keyword |
 | FAQ Repeater | Repeater | `#faqRepeater` | Accordion style |
 | → Question | Text (H3) | `#faqQuestion` | Clickable |
 | → Answer | Text | `#faqAnswer` | Collapsible |
 | → Toggle Icon | Text | `#faqToggle` | +/− |
+| No Results | Text | `#faqNoResults` | "No matching questions", hidden default |
 | Schema | HtmlComponent | `#faqSchemaHtml` | |
 
 ---
@@ -414,6 +591,7 @@ Horizontal strip with key differentiators:
 | → Description | Text | `#searchDesc` |
 | No Results Box | Box | `#noResultsBox` |
 | No Results Text | Text | `#noResultsText` |
+| → Add to Cart | Button | `#searchAddBtn` | Quick add from search results |
 
 ---
 
@@ -428,6 +606,7 @@ Horizontal strip with key differentiators:
 | → Title | Text | `#deliveryTitle` |
 | → Description | Text | `#deliveryDesc` |
 | Assembly Tips | Text | `#assemblyTips` |
+| Schema | HtmlComponent | `#shippingSchemaHtml` | Hidden, shipping info JSON-LD |
 
 ---
 
@@ -435,6 +614,7 @@ Horizontal strip with key differentiators:
 
 | Element | Type | ID |
 |---------|------|----|
+| Videos Dataset | Dataset | `#videosDataset` | Connected to product videos |
 | Video Player | VideoPlayer | `#videoPlayer` |
 | Video Overlay | Box | `#videoOverlay` |
 | Shop CTA | Button | `#videoShopCTA` |
@@ -453,33 +633,265 @@ Horizontal strip with key differentiators:
 
 ## Page: CHECKOUT (psuom)
 
-| Element | Type | ID |
-|---------|------|----|
-| Trust Repeater | Repeater | `#trustRepeater` |
-| → Trust Text | Text | `#trustText` |
-| Order Notes Toggle | Button | `#orderNotesToggle` |
-| Order Notes Field | TextArea | `#orderNotesField` |
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Trust Repeater | Repeater | `#trustRepeater` | Trust badges strip |
+| → Trust Text | Text | `#trustText` | Badge label |
+| Order Notes Toggle | Button | `#orderNotesToggle` | "Add order notes" |
+| Order Notes Field | TextArea | `#orderNotesField` | Collapsible, hidden default |
+| Free Shipping Message | Text | `#checkoutFreeShipping` | Hidden default, shows when qualifying |
+| Item Count | Text | `#checkoutItemCount` | "X items in your order" |
+| Delivery Estimate | Text | `#checkoutDeliveryEstimate` | "Estimated delivery: Mar 5 – Mar 12" |
 
 ---
 
 ## Page: THANK YOU (dk9x8)
 
-| Element | Type | ID |
-|---------|------|----|
-| Title | Text (H1) | `#thankYouTitle` |
-| Message | Text | `#thankYouMessage` |
-| Share Text | Text | `#shareText` |
-| Share Facebook | Button | `#shareFacebook` |
-| Share Pinterest | Button | `#sharePinterest` |
-| Newsletter Prompt | Text | `#newsletterPrompt` |
-| Newsletter Email | Input | `#newsletterEmail` |
-| Newsletter Signup | Button | `#newsletterSignup` |
-| Newsletter Success | Text | `#newsletterSuccess` |
-| Post-Purchase Heading | Text (H2) | `#postPurchaseHeading` |
-| Post-Purchase Repeater | Repeater | `#postPurchaseRepeater` |
-| → Image | Image | `#ppImage` |
-| → Name | Text | `#ppName` |
-| → Price | Text | `#ppPrice` |
+### Order Confirmation
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Title | Text (H1) | `#thankYouTitle` | "Thank You!" |
+| Order Number | Text | `#orderNumber` | "Order #12345" |
+| Message | Text | `#thankYouMessage` | Personalized confirmation |
+| Contact Info | Text | `#orderContactInfo` | Confirmation email note |
+
+### Personal Touch (Owner Message)
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#brendaMessageSection` | Collapsible |
+| Title | Text (H3) | `#brendaTitle` | "A Note From Brenda" |
+| Message | Text | `#brendaMessage` | Personal message from owner |
+
+### Delivery Timeline
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Timeline | Box | `#deliveryTimeline` | Visual delivery status steps |
+| Estimate Text | Text | `#deliveryEstimateText` | "Expected delivery: Mar 5-12" |
+
+### Social Sharing
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Share Text | Text | `#shareText` | "Share your purchase" |
+| Share Facebook | Button | `#shareFacebook` | |
+| Share Pinterest | Button | `#sharePinterest` | |
+| Share Instagram | Button | `#shareInstagram` | |
+
+### Newsletter Signup
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Newsletter Prompt | Text | `#newsletterPrompt` | |
+| Newsletter Email | Input | `#newsletterEmail` | |
+| Newsletter Signup | Button | `#newsletterSignup` | |
+| Newsletter Success | Text | `#newsletterSuccess` | Hidden default |
+
+### Referral Program
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#referralSection` | Collapsible |
+| Title | Text (H3) | `#referralTitle` | "Share & Save" |
+| Message | Text | `#referralMessage` | Referral program details |
+| Copy Link | Button | `#referralCopyBtn` | Copy referral link to clipboard |
+| Email Referral | Button | `#referralEmailBtn` | Send referral via email |
+
+### Post-Purchase Recommendations
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Heading | Text (H2) | `#postPurchaseHeading` | "Complete Your Space" |
+| Repeater | Repeater | `#postPurchaseRepeater` | 3-4 recommended products |
+| → Image | Image | `#ppImage` | |
+| → Name | Text | `#ppName` | |
+| → Price | Text | `#ppPrice` | |
+
+### Care & Assembly Info
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Care Section | Box | `#careSequenceInfo` | Collapsible |
+| Care Text | Text | `#careSequenceText` | Care tips for purchased items |
+| Assembly Section | Box | `#assemblyGuideSection` | Shown if ordered items need assembly |
+| Assembly Title | Text (H3) | `#assemblyGuideTitle` | "Assembly Guide" |
+| Assembly Text | Text | `#assemblyGuideText` | Instructions summary |
+| Assembly Button | Button | `#assemblyGuideBtn` | Download PDF / view guide |
+
+---
+
+## Page: BLOG
+
+Blog content is managed in Wix Blog dashboard. This code adds SEO, social sharing, product sidebar, and newsletter.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| SEO Schema | HtmlComponent | `#blogSeoSchema` | Hidden, Article/Business JSON-LD |
+
+### Related Products Sidebar
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#blogProductsSection` | Collapsible sidebar |
+| Product Repeater | Repeater | `#blogProductsRepeater` | 2-4 featured products |
+| → Image | Image | `#sidebarProductImage` | |
+| → Name | Text | `#sidebarProductName` | |
+| → Price | Text | `#sidebarProductPrice` | |
+| → Link | Button | `#sidebarProductLink` | → Product page |
+
+### Social Share Buttons
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Share Facebook | Button | `#shareFacebook` | Share article |
+| Share Pinterest | Button | `#sharePinterest` | |
+| Share Twitter | Button | `#shareTwitter` | |
+| Share Email | Button | `#shareEmail` | mailto: link |
+
+### Newsletter CTA
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Email Input | Input | `#blogNewsletterEmail` | |
+| Submit Button | Button | `#blogNewsletterSubmit` | |
+| Error Message | Text | `#blogNewsletterError` | Hidden default |
+| Success Message | Text | `#blogNewsletterSuccess` | Hidden default |
+
+---
+
+## Page: BLOG POST
+
+Individual blog post page. Wix Blog renders content; this adds Article + FAQ JSON-LD schema.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| SEO Schema | HtmlComponent | `#postSeoSchema` | Hidden, Article + FAQPage JSON-LD |
+
+---
+
+## Page: MEMBER PAGE (Account Dashboard)
+
+Logged-in member account page with order history, wishlist, loyalty, address book, and settings.
+
+### Dashboard Summary
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Welcome Text | Text (H1) | `#memberWelcome` | "Welcome back, [Name]!" |
+| Order Count | Text | `#memberOrderCount` | Total orders number |
+| Wishlist Count | Text | `#memberWishCount` | Saved items number |
+| Loyalty Points | Text | `#memberPointsDisplay` | "X pts" |
+| Loyalty Tier | Text | `#memberTierDisplay` | "Bronze" / "Silver" / "Gold" |
+| Quick Link: Orders | Button | `#dashQuickOrders` | Scrolls to orders section |
+| Quick Link: Wishlist | Button | `#dashQuickWishlist` | Scrolls to wishlist section |
+| Quick Link: Settings | Button | `#dashQuickSettings` | Scrolls to settings section |
+
+### Order History
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Orders Repeater | Repeater | `#ordersRepeater` | Order cards |
+| → Order Number | Text | `#orderNumber` | "Order #12345" |
+| → Date | Text | `#orderDate` | Formatted date |
+| → Total | Text | `#orderTotal` | "$X.XX" |
+| → Status Badge | Text/Box | `#orderStatusBadge` | Color-coded status |
+| → Status Text | Text | `#orderStatus` | Fallback for status badge |
+| → Track Button | Button | `#orderTrackBtn` | → Tracking page, hidden if no tracking |
+| → Reorder Button | Button | `#orderReorderBtn` | Adds all items to cart |
+| → Items Gallery | Gallery | `#orderItemsGallery` | Thumbnails of ordered items |
+
+### Wishlist / Saved Items
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Wishlist Repeater | Repeater | `#wishlistRepeater` | Saved product cards |
+| → Image | Image | `#wishImage` | |
+| → Name | Text | `#wishName` | |
+| → Price | Text | `#wishPrice` | Current price |
+| → Sale Price | Text | `#wishSalePrice` | Strikethrough compare price, hidden default |
+| → Stock Status | Text | `#wishStockStatus` | "In Stock" / "Special Order" |
+| → Add to Cart | Button | `#wishAddToCartBtn` | |
+| → View Product | Button | `#wishViewBtn` | → Product page |
+| → Remove | Button | `#wishRemoveBtn` | Remove from wishlist |
+| → Card Container | Box | `#wishCard` | Collapses on removal |
+| Sort Dropdown | Dropdown | `#wishSortDropdown` | Newest, price, name |
+| Share Wishlist | Button | `#wishShareBtn` | Copy link to clipboard |
+| Share Pinterest | Button | `#wishSharePinterest` | |
+| Share Email | Button | `#wishShareEmail` | |
+| Share Facebook | Button | `#wishShareFacebook` | |
+
+### Address Book
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Address Section | Box | `#addressBook` | |
+| Address Repeater | Repeater | `#addressRepeater` | Saved addresses |
+| → Address Text | Text | `#addressText` | Formatted address lines |
+| Empty State | Box | `#addressEmptyState` | "No addresses saved" |
+
+### Communication Preferences
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Preferences Section | Box | `#commPrefs` | |
+| Newsletter Toggle | Toggle | `#prefNewsletter` | Receive newsletter |
+| Sale Alerts Toggle | Toggle | `#prefSaleAlerts` | Receive sale alerts |
+| Back-in-Stock Toggle | Toggle | `#prefBackInStock` | Receive restock notifications |
+
+### Account Settings
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Settings Section | Box | `#accountSettings` | |
+| Logout Button | Button | `#logoutBtn` | |
+
+### Error Fallback
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Error Box | Box | `#memberErrorFallback` | Hidden default |
+| Error Text | Text | `#memberErrorText` | Error message |
+
+---
+
+## Page: SEARCH SUGGESTIONS BOX
+
+Autocomplete dropdown shown as user types in search input. Attaches to header search.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Search Input | Input | `#searchInput` | Connected to header search |
+| Suggestions Box | Box | `#suggestionsBox` | Dropdown container, collapsed default |
+| Suggestions Repeater | Repeater | `#suggestionsRepeater` | 5 results max |
+| → Image | Image | `#sugImage` | Product thumbnail |
+| → Name | Text | `#sugName` | Product name |
+| → Price | Text | `#sugPrice` | Formatted price |
+
+---
+
+## Page: ACCESSIBILITY STATEMENT
+
+Static page for WCAG compliance. Content managed entirely in Wix editor — no custom elements needed.
+Uses standard Wix text/rich text elements. No custom IDs required.
+
+---
+
+## Page: PRIVACY POLICY
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| TOC Repeater | Repeater | `#policyTocRepeater` | Table of contents navigation |
+| → TOC Link | Text/Link | `#tocLink` | Jump to section |
+
+Policy sections use anchor IDs for TOC navigation:
+`#policyCollect`, `#policyUse`, `#policySharing`, `#policyRights`, `#policyContact`
+
+---
+
+## Page: TERMS & CONDITIONS
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| TOC Repeater | Repeater | `#termsTocRepeater` | Table of contents navigation |
+| → TOC Link | Text/Link | `#tocLink` | Jump to section |
+
+Terms sections use anchor IDs for TOC navigation:
+`#termsAcceptance`, `#termsProducts`, `#termsOrders`, `#termsShipping`, `#termsReturns`, `#termsWarranties`, `#termsLiability`, `#termsContact`
+
+---
+
+## Page: REFUND POLICY
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Policy Repeater | Repeater | `#policyRepeater` | Accordion sections |
+| → Title | Text (H3) | `#policyTitle` | Clickable to expand |
+| → Content | Text | `#policyContent` | Collapsible, hidden default |
+| → Toggle Icon | Text | `#policyToggle` | +/− |
 
 ---
 
@@ -533,6 +945,14 @@ Horizontal strip with key differentiators:
 | ctaText | Text | CTA button label (default: "Shop the Sale") |
 | productIds | Text | Comma-separated product IDs for carousel |
 | isActive | Boolean | Master on/off switch |
+
+### 5. MemberPreferences (for communication opt-in/opt-out)
+| Field | Type | Notes |
+|-------|------|-------|
+| memberId | Text | Reference to Members |
+| newsletter | Boolean | Receive newsletter emails |
+| saleAlerts | Boolean | Receive sale alert emails |
+| backInStock | Boolean | Receive back-in-stock notifications |
 
 ---
 
