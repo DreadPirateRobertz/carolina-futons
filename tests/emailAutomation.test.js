@@ -10,8 +10,11 @@ import {
   processEmailQueue,
   unsubscribeContact,
   getEmailAutomationStats,
+  recordEmailEvent,
+  getEmailEvents,
   wixMembers_onMemberCreated,
   wixEcom_onOrderCreated,
+  wixEcom_onOrderCanceled,
   _SEQUENCES,
   _MAX_RETRY_ATTEMPTS,
 } from '../src/backend/emailAutomation.web.js';
@@ -968,5 +971,223 @@ describe('wixEcom_onOrderCreated', () => {
 
     await new Promise(r => setTimeout(r, 100));
     expect(insertCount).toBe(0);
+  });
+});
+
+// ── Order Cancellation ──────────────────────────────────────────────
+
+describe('wixEcom_onOrderCanceled', () => {
+  it('cancels pending post-purchase emails when order is cancelled', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-pp1', recipientEmail: 'cancel@test.com', sequenceType: 'post_purchase', sequenceStep: 1, status: 'sent', variables: { orderNumber: 'ORD-500' } },
+      { _id: 'eq-pp2', recipientEmail: 'cancel@test.com', sequenceType: 'post_purchase', sequenceStep: 2, status: 'pending', variables: { orderNumber: 'ORD-500' } },
+      { _id: 'eq-pp3', recipientEmail: 'cancel@test.com', sequenceType: 'post_purchase', sequenceStep: 3, status: 'pending', variables: { orderNumber: 'ORD-500' } },
+    ]);
+
+    let updatedItems = [];
+    __onUpdate((collection, item) => {
+      if (collection === 'EmailQueue') updatedItems.push(item);
+    });
+
+    wixEcom_onOrderCanceled({
+      entity: {
+        number: 'ORD-500',
+        buyerInfo: { email: 'cancel@test.com' },
+      },
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+
+    // Only pending items should be cancelled (eq-pp2, eq-pp3), not sent (eq-pp1)
+    expect(updatedItems).toHaveLength(2);
+    expect(updatedItems.every(i => i.status === 'cancelled')).toBe(true);
+    expect(updatedItems.every(i => i.lastError === 'Order cancelled')).toBe(true);
+  });
+
+  it('does not cancel emails for different orders', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-other', recipientEmail: 'cancel@test.com', sequenceType: 'post_purchase', sequenceStep: 2, status: 'pending', variables: { orderNumber: 'ORD-999' } },
+    ]);
+
+    let updateCount = 0;
+    __onUpdate(() => { updateCount++; });
+
+    wixEcom_onOrderCanceled({
+      entity: {
+        number: 'ORD-500',
+        buyerInfo: { email: 'cancel@test.com' },
+      },
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+    expect(updateCount).toBe(0);
+  });
+
+  it('does nothing when buyer email is missing', async () => {
+    let updateCount = 0;
+    __onUpdate(() => { updateCount++; });
+
+    wixEcom_onOrderCanceled({
+      entity: { number: 'ORD-500', buyerInfo: {} },
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+    expect(updateCount).toBe(0);
+  });
+
+  it('handles event without entity wrapper', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-direct', recipientEmail: 'direct@test.com', sequenceType: 'post_purchase', sequenceStep: 2, status: 'pending', variables: { orderNumber: 'ORD-600' } },
+    ]);
+
+    let updatedItems = [];
+    __onUpdate((collection, item) => {
+      if (collection === 'EmailQueue') updatedItems.push(item);
+    });
+
+    wixEcom_onOrderCanceled({
+      number: 'ORD-600',
+      buyerInfo: { email: 'direct@test.com' },
+    });
+
+    await new Promise(r => setTimeout(r, 100));
+    expect(updatedItems).toHaveLength(1);
+    expect(updatedItems[0].status).toBe('cancelled');
+  });
+});
+
+// ── Email Open/Click Tracking ─────────────────────────────────────────
+
+describe('recordEmailEvent', () => {
+  it('records an open event', async () => {
+    __seed('EmailEvents', []);
+
+    let insertedItem = null;
+    __onInsert((collection, item) => {
+      if (collection === 'EmailEvents') insertedItem = item;
+    });
+
+    const result = await recordEmailEvent({
+      emailQueueId: 'eq-1',
+      eventType: 'open',
+    });
+
+    expect(result.success).toBe(true);
+    expect(insertedItem).not.toBeNull();
+    expect(insertedItem.emailQueueId).toBe('eq-1');
+    expect(insertedItem.eventType).toBe('open');
+    expect(insertedItem.timestamp).toBeDefined();
+  });
+
+  it('records a click event with URL', async () => {
+    __seed('EmailEvents', []);
+
+    let insertedItem = null;
+    __onInsert((collection, item) => {
+      if (collection === 'EmailEvents') insertedItem = item;
+    });
+
+    const result = await recordEmailEvent({
+      emailQueueId: 'eq-2',
+      eventType: 'click',
+      linkUrl: 'https://carolinafutons.com/product/eureka',
+    });
+
+    expect(result.success).toBe(true);
+    expect(insertedItem.eventType).toBe('click');
+    expect(insertedItem.linkUrl).toContain('carolinafutons.com');
+  });
+
+  it('rejects invalid event types', async () => {
+    const result = await recordEmailEvent({
+      emailQueueId: 'eq-3',
+      eventType: 'delete',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing emailQueueId', async () => {
+    const result = await recordEmailEvent({
+      eventType: 'open',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing eventType', async () => {
+    const result = await recordEmailEvent({
+      emailQueueId: 'eq-4',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('sanitizes emailQueueId length', async () => {
+    __seed('EmailEvents', []);
+
+    let insertedItem = null;
+    __onInsert((collection, item) => {
+      if (collection === 'EmailEvents') insertedItem = item;
+    });
+
+    await recordEmailEvent({
+      emailQueueId: 'x'.repeat(200),
+      eventType: 'open',
+    });
+
+    expect(insertedItem.emailQueueId.length).toBeLessThanOrEqual(50);
+  });
+});
+
+describe('getEmailEvents', () => {
+  it('returns open and click counts', async () => {
+    __seed('EmailEvents', [
+      { _id: 'ev-1', emailQueueId: 'eq-1', eventType: 'open', timestamp: new Date() },
+      { _id: 'ev-2', emailQueueId: 'eq-1', eventType: 'click', linkUrl: '/product', timestamp: new Date() },
+      { _id: 'ev-3', emailQueueId: 'eq-2', eventType: 'open', timestamp: new Date() },
+    ]);
+
+    const result = await getEmailEvents();
+    expect(result.opens).toBe(2);
+    expect(result.clicks).toBe(1);
+    expect(result.events).toHaveLength(3);
+  });
+
+  it('returns empty results when no events', async () => {
+    __seed('EmailEvents', []);
+
+    const result = await getEmailEvents();
+    expect(result.opens).toBe(0);
+    expect(result.clicks).toBe(0);
+    expect(result.events).toEqual([]);
+  });
+
+  it('filters by sequence type', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-w1', sequenceType: 'welcome', status: 'sent' },
+      { _id: 'eq-c1', sequenceType: 'cart_recovery', status: 'sent' },
+    ]);
+    __seed('EmailEvents', [
+      { _id: 'ev-w1', emailQueueId: 'eq-w1', eventType: 'open', timestamp: new Date() },
+      { _id: 'ev-c1', emailQueueId: 'eq-c1', eventType: 'open', timestamp: new Date() },
+    ]);
+
+    const result = await getEmailEvents('welcome');
+    expect(result.opens).toBe(1);
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].emailQueueId).toBe('eq-w1');
+  });
+
+  it('includes event fields in output', async () => {
+    __seed('EmailEvents', [
+      { _id: 'ev-f', emailQueueId: 'eq-f', eventType: 'click', linkUrl: '/test', timestamp: new Date(), extraField: 'hidden' },
+    ]);
+
+    const result = await getEmailEvents();
+    const ev = result.events[0];
+    expect(ev).toHaveProperty('_id');
+    expect(ev).toHaveProperty('emailQueueId');
+    expect(ev).toHaveProperty('eventType');
+    expect(ev).toHaveProperty('linkUrl');
+    expect(ev).toHaveProperty('timestamp');
+    expect(ev).not.toHaveProperty('extraField');
   });
 });

@@ -118,6 +118,21 @@ export function wixEcom_onOrderCreated(event) {
     .catch(err => console.error('Error triggering post-purchase sequence:', err));
 }
 
+/**
+ * Triggered when an order is cancelled.
+ * Cancels any pending post-purchase care emails for that order.
+ */
+export function wixEcom_onOrderCanceled(event) {
+  const order = event.entity || event;
+  const email = order.buyerInfo?.email || '';
+  const orderNumber = order.number || '';
+
+  if (!email) return;
+
+  cancelSequenceForOrder(email, orderNumber)
+    .catch(err => console.error('Error cancelling care sequence:', err));
+}
+
 // ── Public Web Methods ────────────────────────────────────────────────
 
 /**
@@ -592,6 +607,96 @@ export const getEmailAutomationStats = webMethod(
   }
 );
 
+/**
+ * Record an email open or click event for tracking.
+ *
+ * @function recordEmailEvent
+ * @param {Object} params
+ * @param {string} params.emailQueueId - ID of the EmailQueue record
+ * @param {string} params.eventType - 'open' or 'click'
+ * @param {string} [params.linkUrl] - Clicked link URL (for click events)
+ * @returns {Promise<{success: boolean}>}
+ * @permission Anyone — tracking pixels/links fire without auth
+ */
+export const recordEmailEvent = webMethod(
+  Permissions.Anyone,
+  async (params = {}) => {
+    try {
+      const { emailQueueId, eventType, linkUrl } = params;
+
+      if (!emailQueueId || !eventType) return { success: false };
+      if (eventType !== 'open' && eventType !== 'click') return { success: false };
+
+      const cleanId = sanitize(emailQueueId, 50);
+      const cleanUrl = linkUrl ? sanitize(linkUrl, 500) : '';
+
+      await wixData.insert('EmailEvents', {
+        emailQueueId: cleanId,
+        eventType,
+        linkUrl: cleanUrl,
+        timestamp: new Date(),
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('Error recording email event:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
+ * Get email open/click events for analytics.
+ *
+ * @function getEmailEvents
+ * @param {string} [sequenceType] - Filter by sequence type
+ * @param {number} [days=30] - Lookback window
+ * @returns {Promise<{opens: number, clicks: number, events: Array}>}
+ * @permission Admin
+ */
+export const getEmailEvents = webMethod(
+  Permissions.Admin,
+  async (sequenceType, days = 30) => {
+    try {
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const eventsResult = await wixData.query('EmailEvents')
+        .ge('timestamp', since)
+        .find();
+
+      let events = eventsResult.items || [];
+
+      // If filtering by sequence type, cross-reference EmailQueue
+      if (sequenceType) {
+        const queueResult = await wixData.query('EmailQueue')
+          .eq('sequenceType', sequenceType)
+          .find();
+
+        const queueIds = new Set(queueResult.items.map(q => q._id));
+        events = events.filter(e => queueIds.has(e.emailQueueId));
+      }
+
+      const opens = events.filter(e => e.eventType === 'open').length;
+      const clicks = events.filter(e => e.eventType === 'click').length;
+
+      return {
+        opens,
+        clicks,
+        events: events.map(e => ({
+          _id: e._id,
+          emailQueueId: e.emailQueueId,
+          eventType: e.eventType,
+          linkUrl: e.linkUrl,
+          timestamp: e.timestamp,
+        })),
+      };
+    } catch (err) {
+      console.error('Error fetching email events:', err);
+      return { opens: 0, clicks: 0, events: [] };
+    }
+  }
+);
+
 // ── Internal Helpers ──────────────────────────────────────────────────
 
 /**
@@ -650,6 +755,31 @@ async function isUnsubscribed(email, sequenceType) {
  */
 function selectABVariant() {
   return Math.random() < 0.5 ? 'A' : 'B';
+}
+
+/**
+ * Cancel pending post-purchase emails when an order is cancelled.
+ */
+async function cancelSequenceForOrder(email, orderNumber) {
+  if (!email) return;
+
+  const cleanEmail = email.toLowerCase();
+
+  const pending = await wixData.query('EmailQueue')
+    .eq('recipientEmail', cleanEmail)
+    .eq('sequenceType', 'post_purchase')
+    .eq('status', 'pending')
+    .find();
+
+  for (const item of pending.items) {
+    if (item.variables?.orderNumber === orderNumber || !orderNumber) {
+      await wixData.update('EmailQueue', {
+        ...item,
+        status: 'cancelled',
+        lastError: 'Order cancelled',
+      });
+    }
+  }
 }
 
 // Export sequence definitions for testing
