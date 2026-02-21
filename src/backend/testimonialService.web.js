@@ -55,6 +55,9 @@ export const submitTestimonial = webMethod(
 
       const rating = Math.min(5, Math.max(1, Math.round(Number(data.rating) || 5)));
 
+      // Auto-flag suspicious content
+      const autoFlagged = isFlaggedContent(story) || isFlaggedContent(name);
+
       const record = {
         memberId,
         name: name || 'Carolina Futons Customer',
@@ -64,7 +67,7 @@ export const submitTestimonial = webMethod(
         productName: sanitize(data.productName || '', 200),
         productCategory: sanitize(data.productCategory || '', 100),
         rating,
-        status: 'pending',
+        status: autoFlagged ? 'flagged' : 'pending',
         featured: false,
         submittedAt: new Date(),
         orderId: sanitize(data.orderId || '', 50),
@@ -213,3 +216,100 @@ export const getTestimonialSchema = webMethod(
     }
   }
 );
+
+// ── Admin: Approve / Reject / Feature / Flag ────────────────────────
+
+const VALID_STATUSES = ['pending', 'approved', 'rejected', 'featured', 'flagged'];
+
+/**
+ * Update testimonial status (admin curation).
+ *
+ * @param {string} testimonialId - Testimonial _id.
+ * @param {string} newStatus - One of: approved, rejected, featured, flagged.
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const updateTestimonialStatus = webMethod(
+  Permissions.Admin,
+  async (testimonialId, newStatus) => {
+    try {
+      if (!testimonialId || !newStatus) {
+        return { success: false, error: 'Testimonial ID and status required' };
+      }
+
+      const cleanId = sanitize(testimonialId, 50);
+      const cleanStatus = sanitize(newStatus, 20).toLowerCase();
+
+      if (!VALID_STATUSES.includes(cleanStatus)) {
+        return { success: false, error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` };
+      }
+
+      const result = await wixData.query('Testimonials')
+        .eq('_id', cleanId)
+        .find();
+
+      if (result.items.length === 0) {
+        return { success: false, error: 'Testimonial not found' };
+      }
+
+      const testimonial = result.items[0];
+      const update = {
+        ...testimonial,
+        status: cleanStatus,
+        featured: cleanStatus === 'featured',
+      };
+
+      if (cleanStatus === 'approved' || cleanStatus === 'featured') {
+        update.approvedAt = new Date();
+      }
+
+      await wixData.update('Testimonials', update);
+      return { success: true };
+    } catch (err) {
+      console.error('[testimonialService] Error updating status:', err);
+      return { success: false, error: 'Failed to update testimonial status.' };
+    }
+  }
+);
+
+/**
+ * Get all pending testimonials for admin review queue.
+ *
+ * @param {number} [limit=20] - Max to return.
+ * @returns {Promise<{items: Array, success: boolean}>}
+ */
+export const getPendingTestimonials = webMethod(
+  Permissions.Admin,
+  async (limit = 20) => {
+    try {
+      const result = await wixData.query('Testimonials')
+        .eq('status', 'pending')
+        .descending('submittedAt')
+        .limit(Math.min(limit, 50))
+        .find();
+
+      return { items: result.items, success: true };
+    } catch (err) {
+      console.error('[testimonialService] Error getting pending testimonials:', err);
+      return { items: [], success: false };
+    }
+  }
+);
+
+// Flagged words for auto-detection
+const FLAGGED_PATTERNS = [
+  /\b(spam|scam|fake|viagra|casino)\b/i,
+  /https?:\/\//i,
+  /\b\d{10,}\b/,
+];
+
+/**
+ * Check if a testimonial story contains flagged content.
+ * Used internally on submission and available for admin review.
+ *
+ * @param {string} text - Text to check.
+ * @returns {boolean} True if content is flagged.
+ */
+export function isFlaggedContent(text) {
+  if (!text) return false;
+  return FLAGGED_PATTERNS.some(pattern => pattern.test(text));
+}
