@@ -659,10 +659,10 @@ function initImageGallery() {
     } catch (e) {}
 
     // Fullscreen lightbox on main image click
-    initImageLightbox('#productGallery', '#productMainImage');
+    initImageLightbox($w('#productGallery'), $w('#productMainImage'));
 
     // Hover zoom on main product image
-    initImageZoom('#productMainImage');
+    initImageZoom($w('#productMainImage'));
 
     // Preload gallery thumbnail images for smoother browsing
     preloadGalleryThumbnails();
