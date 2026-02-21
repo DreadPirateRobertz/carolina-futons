@@ -92,8 +92,8 @@ src/
                                           #   images (heroes, cards, about, contact, decorative)
 ```
 
-**Tests** (19 files in `tests/`): Vitest + Wix mocks. **372 tests passing** as of 2026-02-20 sprint.
-New test files: `loyaltyService.test.js` (12), `couponsService.test.js` (9), `cartRecovery.test.js` (7).
+**Tests** (53 files in `tests/`): Vitest + Wix mocks. **1,395 tests passing** as of 2026-02-21.
+Recent additions: financingService (33), productFinancing (23), returnsService (34), fulfillment expanded (13→33), productCache (12→29), emailService (13→29), loyaltyService (12→42), analyticsHelpers (12→69), couponsService (9→27), cartRecovery (11→28).
 
 ---
 
@@ -253,19 +253,28 @@ were NEVER committed. Must store in Wix Secrets Manager then DELETE local files.
 
 ---
 
-## Open Beads (Remaining Work) — 9 beads
+## Open Beads (Remaining Code Work) — 10 beads
 
 | Bead | Priority | Title | Status |
 |------|----------|-------|--------|
-| cf-6ub | P0 | Store secrets in Wix Secrets Manager + delete .conf files | NOT STARTED — needs Wix Dashboard |
-| cf-69b | P1 | Wix Editor visual layout buildout | NOT STARTED — needs Wix Studio |
-| cf-xv3 | P1 | Create CMS collections in Wix Dashboard | NOT STARTED — needs Wix Dashboard |
-| cf-8gu | P1 | Set up UPS Developer Portal credentials | NOT STARTED — needs UPS portal |
-| cf-e3o | P1 | Commission illustration assets | Spec ready (`ILLUSTRATION-ASSET-SPEC.md`) |
-| cf-mnh | P1 | Mobile-first responsive optimization + Wix Mobile App | IN PROGRESS |
-| cf-295 | P2 | Migrate wix-stores-frontend to wix-ecom for cart operations | IN PROGRESS |
-| cf-1ur | P2 | Create Triggered Email templates | NOT STARTED — needs Wix Dashboard |
-| cf-6wc | P2 | Metric tracking and customer engagement strategy | IN PROGRESS |
+| cf-f2z | P1 | Advanced search & filtering engine | IN_PROGRESS — caesar |
+| cf-qq9 | P1 | Order tracking page with UPS integration | IN_PROGRESS — radahn |
+| cf-cz4 | P2 | Self-service returns portal | IN_PROGRESS — backend done (34 tests), needs frontend |
+| cf-cmi | P2 | EmailQueue ISO strings bug | IN_PROGRESS — radahn |
+| cf-6es | P2 | Error monitoring dashboard | OPEN |
+| cf-7t5 | P2 | Live chat customer support widget | OPEN |
+| cf-8su | P2 | Product dimension/size guide | OPEN |
+| cf-yuc | P2 | WCAG 2.1 AA accessibility audit | OPEN |
+| cf-514 | P3 | Extract time duration constants | OPEN |
+| cf-g7e | P3 | AbandonedCarts JSON string issue | OPEN |
+
+### Wix Dashboard Items (can't do in code)
+- cf-6ub (P0): Store secrets in Wix Secrets Manager
+- cf-69b (P1): Wix Editor visual layout buildout
+- cf-xv3 (P1): Create 11 CMS collections
+- cf-8gu (P1): Set up UPS Developer Portal credentials
+- cf-e3o (P1): Commission illustration assets
+- cf-1ur (P2): Create Triggered Email templates
 
 ### Features Completed This Session (2026-02-20 — Sprint)
 
