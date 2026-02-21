@@ -1,0 +1,85 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$version": "1.0.0",
+  "$description": "Carolina Futons shared design tokens — platform-agnostic brand identity. Consumed by web (designTokens.js) and mobile (cfutons_mobile theme provider).",
+  "brand": {
+    "name": "Carolina Futons",
+    "shortName": "CF Futons",
+    "foundedYear": 1991
+  },
+  "colors": {
+    "primary": {
+      "sandBase": { "value": "#E8D5B7", "description": "Warm cream/sand — page backgrounds" },
+      "espresso": { "value": "#3A2518", "description": "Deep brown — primary text, headings" },
+      "mountainBlue": { "value": "#5B8FA8", "description": "Smoky blue-teal — links, accents, CTA secondary" },
+      "sunsetCoral": { "value": "#E8845C", "description": "Warm coral — primary CTA, sale badges" },
+      "mauve": { "value": "#C9A0A0", "description": "Soft mauve/pink — tertiary accent" },
+      "white": { "value": "#FFFFFF", "description": "Pure white" }
+    },
+    "variants": {
+      "sandLight": { "value": "#F2E8D5", "description": "Lighter sand — card backgrounds" },
+      "sandDark": { "value": "#D4BC96", "description": "Darker sand — borders, dividers" },
+      "espressoLight": { "value": "#5C4033", "description": "Lighter brown — secondary text" },
+      "mountainBlueDark": { "value": "#3D6B80", "description": "Darker blue — hover states" },
+      "mountainBlueLight": { "value": "#A8CCD8", "description": "Soft sky blue — subtle backgrounds" },
+      "sunsetCoralDark": { "value": "#C96B44", "description": "Darker coral — CTA hover" },
+      "sunsetCoralLight": { "value": "#F2A882", "description": "Light coral — subtle accents" }
+    },
+    "decorative": {
+      "skyGradientTop": { "value": "#B8D4E3", "description": "Sky gradient top" },
+      "skyGradientBottom": { "value": "#F0C87A", "description": "Sky gradient bottom (sunset glow)" },
+      "overlay": { "value": "rgba(58, 37, 24, 0.6)", "description": "Espresso modal overlay" }
+    },
+    "semantic": {
+      "success": { "value": "#4A7C59", "description": "Forest green — in stock, success" },
+      "error": { "value": "#E8845C", "description": "Coral — errors, low stock" },
+      "muted": { "value": "#999999", "description": "Grey — disabled, inactive" },
+      "mutedBrown": { "value": "#8B7355", "description": "Warm brown — pending states" }
+    }
+  },
+  "fontFamilies": {
+    "heading": "\"Playfair Display\", Georgia, serif",
+    "body": "\"Source Sans 3\", \"Helvetica Neue\", Arial, sans-serif"
+  },
+  "spacing": {
+    "$unit": "px",
+    "$base": 4,
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48,
+    "xxxl": 64
+  },
+  "borderRadius": {
+    "$unit": "px",
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "pill": 9999
+  },
+  "shadows": {
+    "card": { "x": 0, "y": 2, "blur": 12, "color": "rgba(58, 37, 24, 0.08)" },
+    "cardHover": { "x": 0, "y": 8, "blur": 24, "color": "rgba(58, 37, 24, 0.12)" },
+    "nav": { "x": 0, "y": 2, "blur": 8, "color": "rgba(58, 37, 24, 0.06)" },
+    "modal": { "x": 0, "y": 16, "blur": 48, "color": "rgba(58, 37, 24, 0.2)" },
+    "button": { "x": 0, "y": 2, "blur": 8, "color": "rgba(232, 132, 92, 0.3)" }
+  },
+  "transitions": {
+    "$unit": "ms",
+    "fast": 150,
+    "medium": 250,
+    "slow": 400
+  },
+  "breakpoints": {
+    "$unit": "px",
+    "mobile": 320,
+    "mobileLarge": 480,
+    "tablet": 768,
+    "desktop": 1024,
+    "wide": 1280,
+    "ultraWide": 1440
+  }
+}

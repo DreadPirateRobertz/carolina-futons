@@ -71,6 +71,8 @@ export default defineConfig({
       'public/touchHelpers': path.resolve(__dirname, 'src/public/touchHelpers.js'),
       'public/safeInit.js': path.resolve(__dirname, 'src/public/safeInit.js'),
       'public/safeInit': path.resolve(__dirname, 'src/public/safeInit.js'),
+      'public/sharedTokens.js': path.resolve(__dirname, 'src/public/sharedTokens.js'),
+      'public/sharedTokens': path.resolve(__dirname, 'src/public/sharedTokens.js'),
     },
   },
 });

@@ -1,41 +1,31 @@
 // Carolina Futons Design System - Tokens & Constants
 // Reference: Blue Ridge Mountain Illustrative aesthetic
 // These tokens guide both Velo code and Wix Studio editor styling
+//
+// Brand tokens (colors, spacing, radii, shadows, etc.) are sourced from
+// sharedTokens.js — the cross-platform single source of truth.
+// Web-specific config (SEO, typography scales, grid, categories) lives here.
 
-export const colors = {
-  // Primary palette - extracted from design reference
-  sandBase: '#E8D5B7',        // Warm cream/sand - page backgrounds
-  sandLight: '#F2E8D5',       // Lighter sand - card backgrounds, alternating sections
-  sandDark: '#D4BC96',        // Darker sand - borders, subtle dividers
-  espresso: '#3A2518',        // Deep brown - primary text, headings
-  espressoLight: '#5C4033',   // Lighter brown - secondary text, captions
-  mountainBlue: '#5B8FA8',    // Smoky blue-teal - links, accents, CTA secondary
-  mountainBlueDark: '#3D6B80', // Darker blue - hover states
-  mountainBlueLight: '#A8CCD8', // Soft sky blue - subtle backgrounds, tags
-  sunsetCoral: '#E8845C',     // Warm coral/orange - primary CTA, sale badges
-  sunsetCoralDark: '#C96B44', // Darker coral - hover states for CTA
-  sunsetCoralLight: '#F2A882', // Light coral - subtle accents
-  mauve: '#C9A0A0',           // Soft mauve/pink - tertiary accent
-  skyGradientTop: '#B8D4E3',  // Top of sky gradient in illustrations
-  skyGradientBottom: '#F0C87A', // Bottom of sky gradient (sunset glow)
-  white: '#FFFFFF',
-  overlay: 'rgba(58, 37, 24, 0.6)', // Espresso overlay for modals
-  // Semantic / status colors
-  success: '#4A7C59',           // Forest green - in stock, delivered, success states
-  error: '#E8845C',             // Reuses sunset coral - low stock, errors, warnings
-  muted: '#999999',             // Grey - cancelled, disabled, inactive
-  mutedBrown: '#8B7355',        // Warm muted brown - pending/upcoming steps
-};
+import {
+  colors as sharedColors,
+  fontFamilies,
+  spacing as sharedSpacing,
+  borderRadius as sharedRadius,
+  shadows as sharedShadows,
+  transitions as sharedTransitions,
+  breakpoints as sharedBreakpoints,
+  shadowToCSS,
+  spacingPx,
+} from './sharedTokens.js';
+
+// Re-export colors directly — same values, same keys
+export const colors = sharedColors;
 
 export const typography = {
-  // Heading font - warm serif/slab for handcrafted feel
-  // Recommended: "Playfair Display", "Lora", or "Libre Baskerville"
-  headingFamily: '"Playfair Display", Georgia, serif',
-  // Body font - clean sans-serif for readability
-  // Recommended: "Source Sans 3", "Nunito Sans", or "Open Sans"
-  bodyFamily: '"Source Sans 3", "Helvetica Neue", Arial, sans-serif',
+  headingFamily: fontFamilies.heading,
+  bodyFamily: fontFamilies.body,
 
-  // Scale (desktop)
+  // Scale (desktop) — web-specific sizes
   heroTitle: { size: '56px', weight: 700, lineHeight: 1.1, letterSpacing: '-0.02em' },
   h1: { size: '42px', weight: 700, lineHeight: 1.15, letterSpacing: '-0.01em' },
   h2: { size: '32px', weight: 700, lineHeight: 1.2, letterSpacing: '0' },
@@ -51,68 +41,63 @@ export const typography = {
   button: { size: '15px', weight: 600, lineHeight: 1, letterSpacing: '0.04em' },
 };
 
+// Spacing: shared values as CSS strings + web-specific layout tokens
 export const spacing = {
-  xs: '4px',
-  sm: '8px',
-  md: '16px',
-  lg: '24px',
-  xl: '32px',
-  xxl: '48px',
-  xxxl: '64px',
-  section: '80px',  // Between page sections
-  pagePadding: '24px', // Mobile page padding
+  xs: spacingPx('xs'),
+  sm: spacingPx('sm'),
+  md: spacingPx('md'),
+  lg: spacingPx('lg'),
+  xl: spacingPx('xl'),
+  xxl: spacingPx('xxl'),
+  xxxl: spacingPx('xxxl'),
+  section: '80px',
+  pagePadding: '24px',
   pagePaddingDesktop: '80px',
-  maxWidth: '1280px', // Content max-width
-  gridGap: '24px',    // Product grid gap
+  maxWidth: '1280px',
+  gridGap: '24px',
 };
 
+// Border radius: shared values as CSS strings + web aliases
 export const borderRadius = {
-  sm: '4px',
-  md: '8px',
-  lg: '12px',
-  xl: '16px',
-  pill: '9999px',
-  card: '12px',     // Product cards
-  button: '8px',    // Buttons
-  image: '8px',     // Product images
+  sm: `${sharedRadius.sm}px`,
+  md: `${sharedRadius.md}px`,
+  lg: `${sharedRadius.lg}px`,
+  xl: `${sharedRadius.xl}px`,
+  pill: `${sharedRadius.pill}px`,
+  card: '12px',
+  button: '8px',
+  image: '8px',
 };
 
+// Shadows: shared structured values as CSS strings
 export const shadows = {
-  card: '0 2px 12px rgba(58, 37, 24, 0.08)',
-  cardHover: '0 8px 24px rgba(58, 37, 24, 0.12)',
-  nav: '0 2px 8px rgba(58, 37, 24, 0.06)',
-  modal: '0 16px 48px rgba(58, 37, 24, 0.2)',
-  button: '0 2px 8px rgba(232, 132, 92, 0.3)',
+  card: shadowToCSS(sharedShadows.card),
+  cardHover: shadowToCSS(sharedShadows.cardHover),
+  nav: shadowToCSS(sharedShadows.nav),
+  modal: shadowToCSS(sharedShadows.modal),
+  button: shadowToCSS(sharedShadows.button),
 };
 
+// Transitions: shared durations as CSS strings
 export const transitions = {
-  fast: '150ms ease',
-  medium: '250ms ease',
-  slow: '400ms ease',
+  fast: `${sharedTransitions.fast}ms ease`,
+  medium: `${sharedTransitions.medium}ms ease`,
+  slow: `${sharedTransitions.slow}ms ease`,
   cardHover: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
 };
 
-// Product grid configurations
+// Product grid configurations (web-specific)
 export const grid = {
-  // Desktop: 3-4 columns, Tablet: 2, Mobile: 1-2
   desktop: { columns: 3, gap: '24px' },
   tablet: { columns: 2, gap: '20px' },
   mobile: { columns: 1, gap: '16px' },
-  // Featured/homepage grid
   featured: { columns: 4, gap: '24px' },
 };
 
 // Breakpoints (for reference - Wix Studio handles responsively)
-export const breakpoints = {
-  mobile: 320,
-  mobileLarge: 480,
-  tablet: 768,
-  desktop: 1024,
-  wide: 1280,
-  ultraWide: 1440,
-};
+export const breakpoints = sharedBreakpoints;
 
-// SEO defaults
+// SEO defaults (web-specific)
 export const seo = {
   siteName: 'Carolina Futons',
   titleSuffix: ' | Carolina Futons - Hendersonville, NC',
@@ -126,7 +111,6 @@ export const seo = {
     phone: '(828) 252-9449',
     hours: 'Wed-Sat 10am-5pm',
   },
-  // Category-specific SEO titles
   categoryTitles: {
     'futon-frames': 'Futon Frames - Solid Wood Frames from Night & Day, Strata & KD Frames',
     'mattresses': 'Futon Mattresses - Otis Bed Hypoallergenic Foam Mattresses',
@@ -136,7 +120,6 @@ export const seo = {
     'wall-huggers': 'Wall Hugger Futon Frames - Strata Furniture Patented Design',
     'unfinished-wood': 'Unfinished Wood Futon Frames - KD Frames Made in USA',
   },
-  // Category-specific keywords grouped by intent
   categoryKeywords: {
     'futon-frames': 'futon frames, solid wood futon frame, hardwood futon frame, night and day furniture, front loading futon, nesting futon, full size futon frame, queen futon frame',
     'mattresses': 'futon mattress, otis bed mattress, hypoallergenic futon mattress, foam futon mattress, CertiPUR-US mattress, full futon mattress, queen futon mattress',
@@ -146,23 +129,21 @@ export const seo = {
     'wall-huggers': 'wall hugger futon, strata furniture, space saving futon, futon for small rooms, wall hugger futon frame',
     'unfinished-wood': 'unfinished futon frame, kd frames, unfinished wood furniture, paintable futon frame, DIY futon frame, made in usa futon',
   },
-  // Sitewide keyword groups
   keywords: {
     primary: 'futons, futon frames, futon mattresses, murphy beds, murphy cabinet beds, platform beds',
     geographic: 'hendersonville nc furniture, asheville furniture store, western nc furniture, carolina futons',
     brand: 'night and day furniture, otis bed, strata furniture, kd frames, arizona mattress',
     intent: 'buy futon online, futon store near me, best futon mattress, convertible furniture, space saving bed',
   },
-  // Open Graph defaults
   og: {
     type: 'website',
     siteName: 'Carolina Futons',
     locale: 'en_US',
-    defaultImage: 'https://www.carolinafutons.com/og-image.jpg', // Update with actual OG image
+    defaultImage: 'https://www.carolinafutons.com/og-image.jpg',
   },
 };
 
-// Product category configuration
+// Product category configuration (web-specific)
 export const categories = {
   futonFrames: {
     slug: 'futon-frames',
@@ -203,7 +184,6 @@ export const categories = {
 };
 
 // Cross-sell relationship map
-// When viewing product in category A, suggest products from category B
 export const crossSellMap = {
   'futon-frames': ['mattresses', 'casegoods-accessories'],
   'mattresses': ['futon-frames'],
