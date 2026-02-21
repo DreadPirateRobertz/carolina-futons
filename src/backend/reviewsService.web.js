@@ -231,6 +231,137 @@ export const markHelpful = webMethod(
 );
 
 /**
+ * Flag a review as inappropriate. Creates a moderation record.
+ *
+ * @param {string} reviewId
+ * @param {string} reason - "spam" | "offensive" | "fake" | "other"
+ * @returns {Promise<{success: boolean}>}
+ */
+export const flagReview = webMethod(
+  Permissions.Anyone,
+  async (reviewId, reason) => {
+    const rid = validateId(reviewId);
+    if (!rid) return { success: false, error: 'Invalid review ID' };
+
+    const validReasons = ['spam', 'offensive', 'fake', 'other'];
+    const cleanReason = validReasons.includes(reason) ? reason : 'other';
+
+    try {
+      const review = await wixData.get(COLLECTION, rid);
+      if (!review) return { success: false, error: 'Review not found' };
+
+      // Record the flag
+      await wixData.insert('ReviewFlags', {
+        reviewId: rid,
+        reason: cleanReason,
+        flaggedAt: new Date(),
+      });
+
+      // Auto-hide if flagged 3+ times
+      const flags = await wixData.query('ReviewFlags')
+        .eq('reviewId', rid)
+        .count();
+
+      if (flags >= 3 && review.status === 'approved') {
+        review.status = 'pending'; // Send back for moderation
+        await wixData.update(COLLECTION, review);
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('[reviewsService] flagReview error:', err);
+      return { success: false, error: 'Failed to flag review' };
+    }
+  }
+);
+
+/**
+ * Get review statistics for admin dashboard.
+ *
+ * @param {number} [days=30] - Period to analyze
+ * @returns {Promise<Object>} Review stats
+ */
+export const getReviewStats = webMethod(
+  Permissions.Admin,
+  async (days = 30) => {
+    try {
+      const safeDays = Math.min(Math.max(1, days), 365);
+      const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
+
+      const total = await wixData.query(COLLECTION).ge('_createdDate', since).count();
+      const approved = await wixData.query(COLLECTION).ge('_createdDate', since).eq('status', 'approved').count();
+      const pending = await wixData.query(COLLECTION).ge('_createdDate', since).eq('status', 'pending').count();
+      const rejected = await wixData.query(COLLECTION).ge('_createdDate', since).eq('status', 'rejected').count();
+
+      // Average rating of approved reviews
+      const approvedReviews = await wixData.query(COLLECTION)
+        .ge('_createdDate', since)
+        .eq('status', 'approved')
+        .limit(1000)
+        .find();
+
+      let avgRating = 0;
+      if (approvedReviews.items.length > 0) {
+        const sum = approvedReviews.items.reduce((acc, r) => acc + (r.rating || 0), 0);
+        avgRating = Math.round((sum / approvedReviews.items.length) * 10) / 10;
+      }
+
+      // Verified purchase rate
+      const verified = approvedReviews.items.filter(r => r.verifiedPurchase).length;
+
+      return {
+        success: true,
+        period: `${safeDays} days`,
+        total,
+        approved,
+        pending,
+        rejected,
+        avgRating,
+        verifiedPurchaseRate: approved > 0 ? Math.round((verified / approved) * 100) : 0,
+        withPhotos: approvedReviews.items.filter(r => r.photos && r.photos.length > 0).length,
+      };
+    } catch (err) {
+      console.error('[reviewsService] getReviewStats error:', err);
+      return { success: false, error: 'Failed to fetch stats' };
+    }
+  }
+);
+
+/**
+ * Add an owner response to a review. Admin only.
+ *
+ * @param {string} reviewId
+ * @param {string} responseText - Owner's response
+ * @returns {Promise<{success: boolean}>}
+ */
+export const addOwnerResponse = webMethod(
+  Permissions.Admin,
+  async (reviewId, responseText) => {
+    try {
+      const rid = validateId(reviewId);
+      if (!rid) return { success: false, error: 'Invalid review ID' };
+
+      const text = sanitize(responseText, 2000);
+      if (!text || text.length < 5) {
+        return { success: false, error: 'Response must be at least 5 characters.' };
+      }
+
+      const review = await wixData.get(COLLECTION, rid);
+      if (!review) return { success: false, error: 'Review not found' };
+
+      review.ownerResponse = text;
+      review.ownerResponseDate = new Date();
+      await wixData.update(COLLECTION, review);
+
+      return { success: true };
+    } catch (err) {
+      console.error('[reviewsService] addOwnerResponse error:', err);
+      return { success: false, error: 'Failed to add response' };
+    }
+  }
+);
+
+/**
  * Check if a member has purchased a specific product.
  * Used for "Verified Purchase" badge.
  *
@@ -283,6 +414,12 @@ function formatReview(review) {
     photos: review.photos || [],
     verifiedPurchase: review.verifiedPurchase || false,
     helpful: review.helpful || 0,
+    ownerResponse: review.ownerResponse || null,
+    ownerResponseDate: review.ownerResponseDate
+      ? new Date(review.ownerResponseDate).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        })
+      : null,
     date: review._createdDate
       ? new Date(review._createdDate).toLocaleDateString('en-US', {
           year: 'numeric', month: 'long', day: 'numeric',

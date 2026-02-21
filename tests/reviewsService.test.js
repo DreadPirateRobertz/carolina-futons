@@ -6,11 +6,15 @@ let mockTotalCount = 0;
 
 const mockQuery = {
   eq: vi.fn().mockReturnThis(),
+  ge: vi.fn().mockReturnThis(),
+  gt: vi.fn().mockReturnThis(),
+  lt: vi.fn().mockReturnThis(),
   descending: vi.fn().mockReturnThis(),
   ascending: vi.fn().mockReturnThis(),
   skip: vi.fn().mockReturnThis(),
   limit: vi.fn().mockReturnThis(),
   find: vi.fn(async () => ({ items: mockItems, totalCount: mockTotalCount })),
+  count: vi.fn(async () => mockTotalCount),
 };
 
 vi.mock('wix-data', () => ({
@@ -58,6 +62,9 @@ import {
   getAggregateRating,
   submitReview,
   markHelpful,
+  flagReview,
+  getReviewStats,
+  addOwnerResponse,
 } from '../src/backend/reviewsService.web.js';
 
 // ── Test Data ─────────────────────────────────────────────────────────
@@ -396,6 +403,164 @@ describe('reviewsService', () => {
 
       const result = await markHelpful('rev-nonexistent');
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('flagReview', () => {
+    beforeEach(() => {
+      mockItems.length = 0;
+      mockItems.push(...sampleReviews);
+    });
+
+    it('flags an existing review', async () => {
+      const wixData = (await import('wix-data')).default;
+      // Mock count to return < 3 (no auto-hide)
+      mockQuery.find.mockResolvedValueOnce({ items: [sampleReviews[0]], totalCount: 1 });
+
+      const result = await flagReview('rev-001', 'spam');
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects invalid review ID', async () => {
+      const result = await flagReview('', 'spam');
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects non-existent review', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValueOnce(null);
+
+      const result = await flagReview('rev-nonexistent', 'spam');
+      expect(result.success).toBe(false);
+    });
+
+    it('normalizes invalid reason to "other"', async () => {
+      const wixData = (await import('wix-data')).default;
+
+      await flagReview('rev-001', 'invalid-reason');
+
+      // Should have called insert with reason 'other'
+      const insertCalls = wixData.insert.mock.calls;
+      const flagCall = insertCalls.find(c => c[0] === 'ReviewFlags');
+      if (flagCall) {
+        expect(flagCall[1].reason).toBe('other');
+      }
+    });
+
+    it('accepts valid reason types', async () => {
+      const wixData = (await import('wix-data')).default;
+      const validReasons = ['spam', 'offensive', 'fake', 'other'];
+
+      for (const reason of validReasons) {
+        vi.clearAllMocks();
+        mockItems.length = 0;
+        mockItems.push(...sampleReviews);
+
+        await flagReview('rev-001', reason);
+        const flagCall = wixData.insert.mock.calls.find(c => c[0] === 'ReviewFlags');
+        if (flagCall) {
+          expect(flagCall[1].reason).toBe(reason);
+        }
+      }
+    });
+  });
+
+  describe('getReviewStats', () => {
+    beforeEach(() => {
+      mockItems.length = 0;
+      mockItems.push(...sampleReviews);
+      mockTotalCount = sampleReviews.length;
+    });
+
+    it('returns review statistics', async () => {
+      const result = await getReviewStats(30);
+      expect(result.success).toBe(true);
+      expect(result.period).toBe('30 days');
+      expect(typeof result.total).toBe('number');
+      expect(typeof result.approved).toBe('number');
+      expect(typeof result.pending).toBe('number');
+      expect(typeof result.avgRating).toBe('number');
+      expect(typeof result.verifiedPurchaseRate).toBe('number');
+      expect(typeof result.withPhotos).toBe('number');
+    });
+
+    it('calculates average rating from approved reviews', async () => {
+      const result = await getReviewStats(30);
+      expect(result.avgRating).toBe(4); // (5+4+3)/3 = 4.0
+    });
+
+    it('counts reviews with photos', async () => {
+      const result = await getReviewStats(30);
+      expect(result.withPhotos).toBe(1); // only rev-002 has photos
+    });
+
+    it('calculates verified purchase rate', async () => {
+      const result = await getReviewStats(30);
+      // 2 verified out of 3 approved = 67%
+      expect(result.verifiedPurchaseRate).toBe(67);
+    });
+
+    it('handles empty dataset', async () => {
+      mockItems.length = 0;
+      mockTotalCount = 0;
+
+      const result = await getReviewStats(30);
+      expect(result.success).toBe(true);
+      expect(result.total).toBe(0);
+      expect(result.avgRating).toBe(0);
+    });
+
+    it('clamps days to safe range', async () => {
+      const result = await getReviewStats(0);
+      expect(result.period).toBe('1 days');
+    });
+  });
+
+  describe('addOwnerResponse', () => {
+    beforeEach(() => {
+      mockItems.length = 0;
+      mockItems.push(...sampleReviews);
+    });
+
+    it('adds owner response to an existing review', async () => {
+      const wixData = (await import('wix-data')).default;
+      const result = await addOwnerResponse('rev-001', 'Thank you for your kind words! We appreciate your business.');
+      expect(result.success).toBe(true);
+
+      const updateCall = wixData.update.mock.calls[0];
+      if (updateCall) {
+        expect(updateCall[1].ownerResponse).toContain('Thank you');
+        expect(updateCall[1].ownerResponseDate).toBeDefined();
+      }
+    });
+
+    it('rejects invalid review ID', async () => {
+      const result = await addOwnerResponse('', 'Some response text here.');
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects response shorter than 5 characters', async () => {
+      const result = await addOwnerResponse('rev-001', 'Hi');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('at least 5');
+    });
+
+    it('rejects non-existent review', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValueOnce(null);
+
+      const result = await addOwnerResponse('rev-nonexistent', 'Thank you for your feedback!');
+      expect(result.success).toBe(false);
+    });
+
+    it('sanitizes HTML from response text', async () => {
+      const wixData = (await import('wix-data')).default;
+      await addOwnerResponse('rev-001', '<script>alert(1)</script>Thank you for the review!');
+
+      const updateCall = wixData.update.mock.calls[0];
+      if (updateCall) {
+        expect(updateCall[1].ownerResponse).not.toContain('<script>');
+      }
     });
   });
 });
