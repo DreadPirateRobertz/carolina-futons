@@ -8,11 +8,11 @@
 
 ## Executive Summary
 
-**35 new beads filed** across 4 rigs. Research covered competitor analysis, trading bot innovations, Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
+**40 new beads filed** across 4 rigs. Research covered competitor analysis (Wayfair, IKEA, West Elm), trading bot innovations (Freqtrade, MCP, Kelly criterion), Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
 
 | Rig | New Beads | P2 | P3 | P4 |
 |-----|-----------|----|----|-----|
-| cfutons | 13 | 7 | 6 | 0 |
+| cfutons | 18 | 10 | 8 | 0 |
 | cfutons_mobile | 8 | 5 | 3 | 0 |
 | tradingbot | 7 | 1 | 5 | 1 |
 | gastown | 7 | 0 | 4 | 3 |
@@ -73,6 +73,11 @@ Slack, Discord, email alerts for convoy completions, escalations, agent failures
 | cf-376 | Pinterest discovery engine: Rich Pins, catalog sync | P2 |
 | cf-1vc | Exit-intent popup: tiered offers based on cart value | P3 |
 | cf-rc3 | Local SEO: Google Business Profile for showroom | P3 |
+| cf-zl7 | Product mechanism demo videos: futon conversion clips | P2 |
+| cf-5w9 | Swatch kit micro-product: $5 purchasable samples | P2 |
+| cf-tpy | Real-time delivery tracking: AfterShip integration | P2 |
+| cf-6sr | Social proof badges: Bestseller, Trending, X sold | P3 |
+| cf-ujv | Interior designer trade program: B2B wholesale | P3 |
 
 ### cfutons_mobile (8 beads)
 | ID | Title | Priority |
