@@ -10,6 +10,8 @@ import {
   shadows,
   transitions,
   breakpoints,
+  business,
+  shippingConfig,
   shadowToCSS,
   spacingPx,
 } from '../src/public/sharedTokens.js';
@@ -25,6 +27,63 @@ describe('brand', () => {
     expect(brand.name).toBe('Carolina Futons');
     expect(brand.shortName).toBe('CF Futons');
     expect(brand.foundedYear).toBe(1991);
+  });
+});
+
+// ── Business Contact ────────────────────────────────────────────────
+
+describe('business', () => {
+  it('has phone in all formats', () => {
+    expect(business.phone).toBe('(828) 252-9449');
+    expect(business.phoneE164).toBe('+18282529449');
+    expect(business.phoneDigits).toBe('8282529449');
+  });
+
+  it('has complete address', () => {
+    expect(business.address.street).toBe('824 Locust St, Ste 200');
+    expect(business.address.city).toBe('Hendersonville');
+    expect(business.address.state).toBe('NC');
+    expect(business.address.zip).toBe('28792');
+  });
+
+  it('has base URL and hours', () => {
+    expect(business.baseUrl).toContain('carolinafutons.com');
+    expect(business.hours).toBeTruthy();
+  });
+
+  it('has delivery days as numbers', () => {
+    expect(business.deliveryDays).toBeInstanceOf(Array);
+    expect(business.deliveryDays.length).toBeGreaterThanOrEqual(3);
+    for (const day of business.deliveryDays) {
+      expect(day).toBeGreaterThanOrEqual(0);
+      expect(day).toBeLessThanOrEqual(6);
+    }
+  });
+});
+
+// ── Shipping Config ─────────────────────────────────────────────────
+
+describe('shippingConfig', () => {
+  it('has free shipping threshold', () => {
+    expect(shippingConfig.freeThreshold).toBe(999);
+  });
+
+  it('has white glove pricing', () => {
+    expect(shippingConfig.whiteGlove.freeThreshold).toBe(1999);
+    expect(shippingConfig.whiteGlove.localPrice).toBe(149);
+    expect(shippingConfig.whiteGlove.regionalPrice).toBe(249);
+  });
+
+  it('has ZIP zone definitions', () => {
+    expect(shippingConfig.zones.local.prefixMin).toBe(287);
+    expect(shippingConfig.zones.local.prefixMax).toBe(289);
+    expect(shippingConfig.zones.regional.prefixMin).toBe(270);
+    expect(shippingConfig.zones.regional.prefixMax).toBe(399);
+  });
+
+  it('local zone is subset of regional zone', () => {
+    expect(shippingConfig.zones.local.prefixMin).toBeGreaterThanOrEqual(shippingConfig.zones.regional.prefixMin);
+    expect(shippingConfig.zones.local.prefixMax).toBeLessThanOrEqual(shippingConfig.zones.regional.prefixMax);
   });
 });
 
