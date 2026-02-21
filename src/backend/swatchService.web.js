@@ -96,6 +96,7 @@ export const getSwatchPreviewColors = webMethod(
         swatchName: item.swatchName,
       }));
     } catch (err) {
+      console.error('Error fetching swatch preview colors:', err);
       return [];
     }
   }
