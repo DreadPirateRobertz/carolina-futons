@@ -428,7 +428,7 @@ async function openSwatchGallery() {
       });
     } catch (e) {}
 
-    modal.show('fade', { duration: 250 });
+    modal.show('fade', { duration: 200 });
   } catch (e) {
     console.error('Error opening swatch gallery:', e);
   }
@@ -981,7 +981,7 @@ function initAddToCartEnhancements() {
           addToCartBtn.label = 'Add to Cart';
           addToCartBtn.enable();
         } catch (e) {}
-      }, 2000);
+      }, 3000);
     });
 
     // Listen for successful add-to-cart (covers side cart trigger)
@@ -1444,7 +1444,7 @@ function initStickyCartBar() {
             $w('#stickyAddBtn').label = 'Add to Cart';
             $w('#stickyAddBtn').enable();
           } catch (e) {}
-        }, 2000);
+        }, 3000);
       });
     } catch (e) {}
 

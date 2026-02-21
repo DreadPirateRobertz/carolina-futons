@@ -5,9 +5,11 @@ import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
+import { trackEvent } from 'public/engagementTracker';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  trackEvent('page_view', { page: 'blog' });
   try {
     // ── SEO Schema Injection ───────────────────────────────────────────
     const businessSchema = await getBusinessSchema();
