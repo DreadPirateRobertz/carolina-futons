@@ -115,6 +115,7 @@ export default defineConfig({
       'backend/storeLocatorService.web': path.resolve(__dirname, 'src/backend/storeLocatorService.web.js'),
       'backend/bundleBuilder.web': path.resolve(__dirname, 'src/backend/bundleBuilder.web.js'),
       'backend/checkoutOptimization.web': path.resolve(__dirname, 'src/backend/checkoutOptimization.web.js'),
+      'backend/sustainabilityService.web': path.resolve(__dirname, 'src/backend/sustainabilityService.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
