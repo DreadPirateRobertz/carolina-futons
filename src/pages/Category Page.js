@@ -8,6 +8,7 @@ import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, g
 import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, getCompareList } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
+import { searchProducts, getFilterValues } from 'backend/searchService.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
@@ -17,6 +18,8 @@ import { enableSwipe } from 'public/touchHelpers';
 let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
+let _debounceTimer = null;
+let _filterSessionState = {}; // persists across category nav within session
 
 // ── Category Content Map ─────────────────────────────────────────────
 // Marketing copy and hero config for each category
@@ -70,6 +73,7 @@ $w.onReady(async function () {
   initCategoryHero(currentPath);
   initSortControls();
   initFilterControls();
+  initAdvancedFilters(currentPath);
   initProductGrid();
   updateResultCount(currentPath);
   initRecentlyViewed();
@@ -78,6 +82,7 @@ $w.onReady(async function () {
   await injectCategorySchema();
   initCategorySwipe(currentPath);
   initBackToTop($w);
+  restoreFiltersFromUrl(currentPath);
   trackEvent('page_view', { page: 'category', category: currentPath });
 });
 
@@ -698,6 +703,384 @@ function initCategorySwipe(currentPath) {
       wixLocationFrontend.to(`/${nextCategory}`);
     }, { threshold: 60 });
   } catch (e) {}
+}
+
+// ── Advanced Faceted Filters ────────────────────────────────────────
+// Powered by searchService.web.js — faceted search with debounced application
+
+async function initAdvancedFilters(currentPath) {
+  try {
+    // Load available filter values for this category
+    const facets = await getFilterValues(currentPath);
+    if (!facets) return;
+
+    // Populate material checkboxes
+    try {
+      const materialGroup = $w('#filterMaterial');
+      if (materialGroup && facets.materials.length > 0) {
+        materialGroup.options = facets.materials.map(m => ({
+          label: `${m.value} (${m.count})`,
+          value: m.value,
+        }));
+        try { materialGroup.accessibility.ariaLabel = 'Filter by material'; } catch (e) {}
+        materialGroup.onChange(() => {
+          currentFilters.material = materialGroup.value;
+          debouncedApplyAdvancedFilters(currentPath);
+        });
+      }
+    } catch (e) {}
+
+    // Populate color swatches
+    try {
+      const colorGroup = $w('#filterColor');
+      if (colorGroup && facets.colors.length > 0) {
+        colorGroup.options = facets.colors.map(c => ({
+          label: `${c.value} (${c.count})`,
+          value: c.value,
+        }));
+        try { colorGroup.accessibility.ariaLabel = 'Filter by color'; } catch (e) {}
+        colorGroup.onChange(() => {
+          currentFilters.color = colorGroup.value;
+          debouncedApplyAdvancedFilters(currentPath);
+        });
+      }
+    } catch (e) {}
+
+    // Populate feature tag toggles
+    try {
+      const featureGroup = $w('#filterFeatures');
+      if (featureGroup && facets.features.length > 0) {
+        featureGroup.options = facets.features.map(f => ({
+          label: `${formatFeatureLabel(f.value)} (${f.count})`,
+          value: f.value,
+        }));
+        try { featureGroup.accessibility.ariaLabel = 'Filter by features'; } catch (e) {}
+        featureGroup.onChange(() => {
+          currentFilters.features = featureGroup.value
+            ? (Array.isArray(featureGroup.value) ? featureGroup.value : [featureGroup.value])
+            : [];
+          debouncedApplyAdvancedFilters(currentPath);
+        });
+      }
+    } catch (e) {}
+
+    // Price range slider (enhanced from existing dropdown)
+    try {
+      const priceSlider = $w('#filterPriceRange');
+      if (priceSlider) {
+        try { priceSlider.accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
+        priceSlider.onChange(() => {
+          currentFilters.priceRange = priceSlider.value;
+          debouncedApplyAdvancedFilters(currentPath);
+        });
+      }
+    } catch (e) {}
+
+    // Dimension range inputs
+    try {
+      const widthMin = $w('#filterWidthMin');
+      const widthMax = $w('#filterWidthMax');
+      if (widthMin && widthMax && facets.dimensions.width.max > 0) {
+        widthMin.placeholder = `${facets.dimensions.width.min}"`;
+        widthMax.placeholder = `${facets.dimensions.width.max}"`;
+        try { widthMin.accessibility.ariaLabel = 'Minimum width in inches'; } catch (e) {}
+        try { widthMax.accessibility.ariaLabel = 'Maximum width in inches'; } catch (e) {}
+        const onWidthChange = () => {
+          const min = parseFloat(widthMin.value) || 0;
+          const max = parseFloat(widthMax.value) || Infinity;
+          if (min || max !== Infinity) {
+            currentFilters.widthRange = [min, max === Infinity ? 999 : max];
+          } else {
+            delete currentFilters.widthRange;
+          }
+          debouncedApplyAdvancedFilters(currentPath);
+        };
+        widthMin.onChange(onWidthChange);
+        widthMax.onChange(onWidthChange);
+      }
+    } catch (e) {}
+
+    try {
+      const depthMin = $w('#filterDepthMin');
+      const depthMax = $w('#filterDepthMax');
+      if (depthMin && depthMax && facets.dimensions.depth.max > 0) {
+        depthMin.placeholder = `${facets.dimensions.depth.min}"`;
+        depthMax.placeholder = `${facets.dimensions.depth.max}"`;
+        try { depthMin.accessibility.ariaLabel = 'Minimum depth in inches'; } catch (e) {}
+        try { depthMax.accessibility.ariaLabel = 'Maximum depth in inches'; } catch (e) {}
+        const onDepthChange = () => {
+          const min = parseFloat(depthMin.value) || 0;
+          const max = parseFloat(depthMax.value) || Infinity;
+          if (min || max !== Infinity) {
+            currentFilters.depthRange = [min, max === Infinity ? 999 : max];
+          } else {
+            delete currentFilters.depthRange;
+          }
+          debouncedApplyAdvancedFilters(currentPath);
+        };
+        depthMin.onChange(onDepthChange);
+        depthMax.onChange(onDepthChange);
+      }
+    } catch (e) {}
+
+    // Live result count display
+    try {
+      $w('#filterResultCount').text = `${facets.totalProducts} products`;
+    } catch (e) {}
+
+    // Clear All button (enhanced)
+    try {
+      $w('#clearAllFilters').onClick(() => {
+        clearAllAdvancedFilters(currentPath);
+      });
+      try { $w('#clearAllFilters').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
+    } catch (e) {}
+
+    // Mobile: filter drawer toggle
+    try {
+      if (isMobile()) {
+        initFilterDrawer();
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function debouncedApplyAdvancedFilters(currentPath) {
+  if (_debounceTimer) clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(() => {
+    applyAdvancedFilters(currentPath);
+  }, 300);
+}
+
+async function applyAdvancedFilters(currentPath) {
+  try {
+    // Show loading indicator
+    try { $w('#filterLoadingIndicator').show(); } catch (e) {}
+
+    const result = await searchProducts({
+      category: currentPath,
+      priceRange: currentFilters.priceRange || undefined,
+      material: currentFilters.material || undefined,
+      color: currentFilters.color || undefined,
+      features: currentFilters.features || undefined,
+      widthRange: currentFilters.widthRange || undefined,
+      depthRange: currentFilters.depthRange || undefined,
+      sortBy: currentSort === 'bestselling' ? 'bestselling'
+        : currentSort === 'price-asc' ? 'price-asc'
+        : currentSort === 'price-desc' ? 'price-desc'
+        : currentSort === 'name-asc' ? 'name-asc'
+        : currentSort === 'name-desc' ? 'name-desc'
+        : currentSort === 'date-desc' ? 'newest'
+        : 'bestselling',
+      limit: 50,
+    });
+
+    // Update live result count
+    try {
+      $w('#filterResultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''}`;
+    } catch (e) {}
+    try {
+      $w('#resultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''}`;
+    } catch (e) {}
+
+    // Handle zero results
+    if (result.total === 0) {
+      showNoMatchesState(currentPath);
+    } else {
+      try { $w('#noMatchesSection').hide(); } catch (e) {}
+      try { $w('#emptyStateSection').hide(); } catch (e) {}
+    }
+
+    // Update URL with filter state (shareable)
+    updateUrlWithFilters(currentFilters);
+
+    // Save filter state for session persistence
+    _filterSessionState[currentPath] = { ...currentFilters };
+
+    // Track filter interaction
+    trackEvent('filter_applied', {
+      category: currentPath,
+      filters: Object.keys(currentFilters).filter(k => currentFilters[k]),
+      resultCount: result.total,
+    });
+
+    // Hide loading indicator
+    try { $w('#filterLoadingIndicator').hide(); } catch (e) {}
+
+    // Also apply to dataset for grid rendering
+    applyFilters();
+  } catch (e) {
+    try { $w('#filterLoadingIndicator').hide(); } catch (e2) {}
+  }
+}
+
+function clearAllAdvancedFilters(currentPath) {
+  currentFilters = {};
+
+  // Reset all filter UI elements
+  try { $w('#filterMaterial').value = ''; } catch (e) {}
+  try { $w('#filterColor').value = ''; } catch (e) {}
+  try { $w('#filterFeatures').value = []; } catch (e) {}
+  try { $w('#filterPriceRange').value = ''; } catch (e) {}
+  try { $w('#filterPrice').value = ''; } catch (e) {}
+  try { $w('#filterBrand').value = ''; } catch (e) {}
+  try { $w('#filterSize').value = ''; } catch (e) {}
+  try { $w('#filterWidthMin').value = ''; } catch (e) {}
+  try { $w('#filterWidthMax').value = ''; } catch (e) {}
+  try { $w('#filterDepthMin').value = ''; } catch (e) {}
+  try { $w('#filterDepthMax').value = ''; } catch (e) {}
+
+  // Clear URL params
+  updateUrlWithFilters({});
+
+  // Clear session state for this category
+  delete _filterSessionState[currentPath];
+
+  // Refresh with no filters
+  applyAdvancedFilters(currentPath);
+  applyFilters();
+
+  trackEvent('filters_cleared', { category: currentPath });
+}
+
+function showNoMatchesState(currentPath) {
+  try {
+    const content = CATEGORY_CONTENT[currentPath];
+    const categoryName = content ? content.title : 'this category';
+
+    try {
+      $w('#noMatchesTitle').text = 'No products match';
+    } catch (e) {}
+
+    try {
+      $w('#noMatchesMessage').text =
+        `Try removing some filters or broadening your search. We have ${categoryName} in many styles and price points.`;
+    } catch (e) {}
+
+    try {
+      $w('#noMatchesSuggestion').text = 'Try adjusting your price range or removing material filters.';
+    } catch (e) {}
+
+    try { $w('#noMatchesSection').show(); } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Filter URL State ────────────────────────────────────────────
+
+function updateUrlWithFilters(filters) {
+  try {
+    const params = {};
+    if (filters.priceRange) params.price = filters.priceRange;
+    if (filters.material) params.material = filters.material;
+    if (filters.color) params.color = filters.color;
+    if (filters.features && filters.features.length > 0) params.features = filters.features.join(',');
+    if (filters.widthRange) params.width = filters.widthRange.join('-');
+    if (filters.depthRange) params.depth = filters.depthRange.join('-');
+    if (filters.brand) params.brand = filters.brand;
+    if (filters.price) params.priceDropdown = filters.price;
+    if (filters.size) params.size = filters.size;
+
+    const queryString = Object.entries(params)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join('&');
+
+    // Update URL without page reload
+    try {
+      const base = wixLocationFrontend.baseUrl + '/' + (wixLocationFrontend.path?.[0] || '');
+      wixLocationFrontend.to(queryString ? `${base}?${queryString}` : base);
+    } catch (e) {
+      // URL update is best-effort; don't break filters if it fails
+    }
+  } catch (e) {}
+}
+
+function restoreFiltersFromUrl(currentPath) {
+  try {
+    const query = wixLocationFrontend.query || {};
+
+    // Restore from URL params
+    if (query.price) currentFilters.priceRange = query.price;
+    if (query.material) currentFilters.material = query.material;
+    if (query.color) currentFilters.color = query.color;
+    if (query.features) currentFilters.features = query.features.split(',');
+    if (query.width) {
+      const [min, max] = query.width.split('-').map(Number);
+      if (!isNaN(min) && !isNaN(max)) currentFilters.widthRange = [min, max];
+    }
+    if (query.depth) {
+      const [min, max] = query.depth.split('-').map(Number);
+      if (!isNaN(min) && !isNaN(max)) currentFilters.depthRange = [min, max];
+    }
+    if (query.brand) currentFilters.brand = query.brand;
+    if (query.size) currentFilters.size = query.size;
+
+    // Or restore from session state if no URL params
+    if (Object.keys(currentFilters).length === 0 && _filterSessionState[currentPath]) {
+      Object.assign(currentFilters, _filterSessionState[currentPath]);
+    }
+
+    // Apply restored filters if any
+    if (Object.keys(currentFilters).length > 0) {
+      // Set UI elements to match restored state
+      try { if (currentFilters.material) $w('#filterMaterial').value = currentFilters.material; } catch (e) {}
+      try { if (currentFilters.color) $w('#filterColor').value = currentFilters.color; } catch (e) {}
+      try { if (currentFilters.features) $w('#filterFeatures').value = currentFilters.features; } catch (e) {}
+      try { if (currentFilters.priceRange) $w('#filterPriceRange').value = currentFilters.priceRange; } catch (e) {}
+      try { if (currentFilters.brand) $w('#filterBrand').value = currentFilters.brand; } catch (e) {}
+      try { if (currentFilters.price) $w('#filterPrice').value = currentFilters.price; } catch (e) {}
+      try { if (currentFilters.size) $w('#filterSize').value = currentFilters.size; } catch (e) {}
+
+      applyAdvancedFilters(currentPath);
+    }
+  } catch (e) {}
+}
+
+// ── Mobile Filter Drawer ────────────────────────────────────────
+
+function initFilterDrawer() {
+  try {
+    // Toggle filter drawer as bottom sheet on mobile
+    $w('#filterToggleBtn').onClick(() => {
+      try {
+        const drawer = $w('#filterDrawer');
+        if (drawer.hidden) {
+          drawer.show('slide', { duration: 300, direction: 'bottom' });
+          try { $w('#filterDrawerOverlay').show('fade', { duration: 200 }); } catch (e) {}
+        } else {
+          drawer.hide('slide', { duration: 300, direction: 'bottom' });
+          try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+        }
+      } catch (e) {}
+    });
+
+    // Close drawer on overlay tap
+    try {
+      $w('#filterDrawerOverlay').onClick(() => {
+        try { $w('#filterDrawer').hide('slide', { duration: 300, direction: 'bottom' }); } catch (e) {}
+        try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+      });
+    } catch (e) {}
+
+    // "Apply" button in drawer
+    try {
+      $w('#filterDrawerApply').onClick(() => {
+        try { $w('#filterDrawer').hide('slide', { duration: 300, direction: 'bottom' }); } catch (e) {}
+        try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+      });
+    } catch (e) {}
+
+    // Show toggle button, keep drawer collapsed initially
+    try { $w('#filterToggleBtn').show(); } catch (e) {}
+    try { $w('#filterDrawer').hide(); } catch (e) {}
+
+    // ARIA
+    try { $w('#filterToggleBtn').accessibility.ariaLabel = 'Open filters'; } catch (e) {}
+    try { $w('#filterDrawerApply').accessibility.ariaLabel = 'Apply filters and close'; } catch (e) {}
+  } catch (e) {}
+}
+
+function formatFeatureLabel(tag) {
+  return tag.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────
