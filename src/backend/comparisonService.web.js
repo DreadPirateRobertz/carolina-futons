@@ -316,5 +316,87 @@ export const buildShareableUrl = webMethod(
   }
 );
 
+// ─── trackComparison ─────────────────────────────────────────────
+
+/**
+ * Log a comparison to CompareHistory CMS collection for analytics.
+ * Tracks which products are compared together to surface popular comparisons.
+ *
+ * @param {string[]} productIds - Array of product IDs that were compared
+ * @returns {Promise<boolean>} True if tracked successfully
+ */
+export const trackComparison = webMethod(
+  Permissions.Anyone,
+  async (productIds) => {
+    try {
+      if (!Array.isArray(productIds) || productIds.length < 2) return false;
+      const validIds = productIds.slice(0, MAX_COMPARE).map(id => validateId(id)).filter(Boolean);
+      if (validIds.length < 2) return false;
+
+      // Sort IDs for consistent dedup (A vs B same as B vs A)
+      const sortedIds = [...validIds].sort();
+      const comparisonKey = sortedIds.join('|');
+
+      // Check if this comparison already exists
+      const existing = await wixData.query('CompareHistory')
+        .eq('comparisonKey', comparisonKey)
+        .limit(1)
+        .find();
+
+      if (existing.items.length > 0) {
+        // Increment view count
+        const record = existing.items[0];
+        record.viewCount = (record.viewCount || 0) + 1;
+        record.lastViewed = new Date();
+        await wixData.update('CompareHistory', record);
+      } else {
+        // Create new record
+        await wixData.insert('CompareHistory', {
+          comparisonKey,
+          productIds: sortedIds,
+          productCount: sortedIds.length,
+          viewCount: 1,
+          lastViewed: new Date(),
+        });
+      }
+
+      return true;
+    } catch (err) {
+      console.error('[comparisonService] Error tracking comparison:', err);
+      return false;
+    }
+  }
+);
+
+// ─── getPopularComparisons ───────────────────────────────────────
+
+/**
+ * Get the most popular product comparisons.
+ *
+ * @param {number} [limit=5] - Number of comparisons to return
+ * @returns {Promise<Object[]>} Popular comparisons with product IDs and view counts
+ */
+export const getPopularComparisons = webMethod(
+  Permissions.Anyone,
+  async (limit = 5) => {
+    try {
+      const safeLimit = Math.min(Math.max(1, limit), 20);
+      const result = await wixData.query('CompareHistory')
+        .descending('viewCount')
+        .limit(safeLimit)
+        .find();
+
+      return result.items.map(item => ({
+        productIds: item.productIds || [],
+        viewCount: item.viewCount || 0,
+        lastViewed: item.lastViewed,
+      }));
+    } catch (err) {
+      console.error('[comparisonService] Error fetching popular comparisons:', err);
+      return [];
+    }
+  }
+);
+
 // Exported for testing
 export { findSharedCategory, buildComparisonRows, computeWinnerBadges, formatValue, hasDifferences, getNestedValue, CATEGORY_ATTRIBUTES, COMMON_ATTRIBUTES, MAX_COMPARE };

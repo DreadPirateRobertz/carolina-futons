@@ -178,6 +178,12 @@ export function getCompareList() {
   }
 }
 
+export function clearCompareList() {
+  try {
+    session.removeItem(COMPARE_KEY);
+  } catch (e) {}
+}
+
 // Smooth scroll to element (for in-page navigation)
 // Caller must pass $w from page context since public modules don't have access to $w
 export function scrollToElement($w, selector) {

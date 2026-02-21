@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   getComparisonData,
   buildShareableUrl,
+  trackComparison,
+  getPopularComparisons,
   findSharedCategory,
   buildComparisonRows,
   computeWinnerBadges,
@@ -498,5 +500,131 @@ describe('edge cases', () => {
     const priceRow = rows[0];
     expect(priceRow.cells[1].value).toBe('$349.00'); // discounted price shown
     expect(priceRow.cells[1].raw).toBe(349);
+  });
+});
+
+// ─── trackComparison ────────────────────────────────────────────
+
+describe('trackComparison', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('returns false for less than 2 product IDs', async () => {
+    expect(await trackComparison(['prod-1'])).toBe(false);
+    expect(await trackComparison([])).toBe(false);
+  });
+
+  it('returns false for non-array input', async () => {
+    expect(await trackComparison('not-array')).toBe(false);
+  });
+
+  it('creates new CompareHistory record for first comparison', async () => {
+    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id]);
+    expect(result).toBe(true);
+  });
+
+  it('increments viewCount for repeated comparisons', async () => {
+    // First comparison
+    await trackComparison([futonFrame._id, wallHuggerFrame._id]);
+    // Second comparison (same products, even in different order)
+    const result = await trackComparison([wallHuggerFrame._id, futonFrame._id]);
+    expect(result).toBe(true);
+  });
+
+  it('sorts product IDs for consistent dedup', async () => {
+    // A,B and B,A should resolve to same comparison key
+    await trackComparison(['b-id', 'a-id']);
+    __seed('CompareHistory', [{
+      _id: 'ch-1',
+      comparisonKey: 'a-id|b-id',
+      productIds: ['a-id', 'b-id'],
+      viewCount: 1,
+      lastViewed: new Date(),
+    }]);
+    const result = await trackComparison(['b-id', 'a-id']);
+    expect(result).toBe(true);
+  });
+
+  it('filters out invalid IDs', async () => {
+    const result = await trackComparison(['<script>', futonFrame._id]);
+    expect(result).toBe(false); // only 1 valid ID
+  });
+
+  it('limits to MAX_COMPARE products', async () => {
+    const ids = [futonFrame._id, wallHuggerFrame._id, metalFrame._id, outdoorFrame._id, futonMattress._id];
+    const result = await trackComparison(ids);
+    expect(result).toBe(true);
+  });
+});
+
+// ─── getPopularComparisons ──────────────────────────────────────
+
+describe('getPopularComparisons', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('returns empty array when no history', async () => {
+    const result = await getPopularComparisons(5);
+    expect(result).toEqual([]);
+  });
+
+  it('returns comparisons sorted by viewCount descending', async () => {
+    __seed('CompareHistory', [
+      { _id: 'ch-1', comparisonKey: 'a|b', productIds: ['a', 'b'], viewCount: 5, lastViewed: new Date() },
+      { _id: 'ch-2', comparisonKey: 'c|d', productIds: ['c', 'd'], viewCount: 10, lastViewed: new Date() },
+    ]);
+
+    const result = await getPopularComparisons(5);
+    expect(result.length).toBe(2);
+    expect(result[0].viewCount).toBe(10);
+    expect(result[1].viewCount).toBe(5);
+  });
+
+  it('respects limit parameter', async () => {
+    __seed('CompareHistory', [
+      { _id: 'ch-1', comparisonKey: 'a|b', productIds: ['a', 'b'], viewCount: 5, lastViewed: new Date() },
+      { _id: 'ch-2', comparisonKey: 'c|d', productIds: ['c', 'd'], viewCount: 10, lastViewed: new Date() },
+      { _id: 'ch-3', comparisonKey: 'e|f', productIds: ['e', 'f'], viewCount: 3, lastViewed: new Date() },
+    ]);
+
+    const result = await getPopularComparisons(2);
+    expect(result.length).toBe(2);
+  });
+
+  it('clamps limit to safe range', async () => {
+    const result = await getPopularComparisons(0);
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('returns productIds and viewCount per entry', async () => {
+    __seed('CompareHistory', [
+      { _id: 'ch-1', comparisonKey: 'a|b', productIds: ['a', 'b'], viewCount: 7, lastViewed: new Date() },
+    ]);
+
+    const result = await getPopularComparisons(5);
+    expect(result[0]).toHaveProperty('productIds');
+    expect(result[0]).toHaveProperty('viewCount');
+    expect(result[0].productIds).toEqual(['a', 'b']);
+    expect(result[0].viewCount).toBe(7);
+  });
+});
+
+// ─── clearCompareList ───────────────────────────────────────────
+
+describe('clearCompareList', () => {
+  it('clears the compare list from session storage', async () => {
+    const { addToCompare, getCompareList, clearCompareList } = await import('../src/public/galleryHelpers.js');
+    addToCompare(futonFrame);
+    expect(getCompareList().length).toBe(1);
+    clearCompareList();
+    expect(getCompareList().length).toBe(0);
+  });
+
+  it('does not throw when compare list is already empty', async () => {
+    const { clearCompareList, getCompareList } = await import('../src/public/galleryHelpers.js');
+    clearCompareList();
+    expect(getCompareList()).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 // Compare Page.js - Side-by-side product comparison
 // Displays up to 4 products with specs, diff highlighting, winner badges
-import { getComparisonData, buildShareableUrl } from 'backend/comparisonService.web';
+import { getComparisonData, buildShareableUrl, trackComparison } from 'backend/comparisonService.web';
 import { getCompareList, removeFromCompare, addToCompare } from 'public/galleryHelpers.js';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
@@ -50,8 +50,9 @@ async function initComparePage() {
 
     try { $w('#compareContent').show(); } catch (e) {}
 
-    // Track page view
+    // Track page view and log comparison to CMS
     trackProductPageView({ name: 'Product Comparison', _id: 'compare-page' });
+    trackComparison(productIds).catch(() => {});
 
     // Render
     renderProductHeaders();
