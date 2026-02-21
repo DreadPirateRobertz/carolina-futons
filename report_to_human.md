@@ -8,13 +8,13 @@
 
 ## Executive Summary
 
-**40 new beads filed** across 4 rigs. Research covered competitor analysis (Wayfair, IKEA, West Elm), trading bot innovations (Freqtrade, MCP, Kelly criterion), Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
+**44 new beads filed** across 4 rigs. Research covered competitor analysis (Wayfair, IKEA, West Elm), trading bot innovations (Freqtrade, Hummingbot, MCP, Kelly criterion, regime detection), Gas Town improvements, mobile UX trends, SEO/marketing, and cross-project synergies.
 
 | Rig | New Beads | P2 | P3 | P4 |
 |-----|-----------|----|----|-----|
 | cfutons | 18 | 10 | 8 | 0 |
 | cfutons_mobile | 8 | 5 | 3 | 0 |
-| tradingbot | 7 | 1 | 5 | 1 |
+| tradingbot | 11 | 3 | 7 | 1 |
 | gastown | 7 | 0 | 4 | 3 |
 
 ---
@@ -102,6 +102,10 @@ Slack, Discord, email alerts for convoy completions, escalations, agent failures
 | tb-9z7 | Multi-exchange smart order routing engine | P3 |
 | tb-1n6 | REST API for paper trader status (cross-project) | P3 |
 | tb-uan | Cross-exchange triangular arbitrage scanner | P4 |
+| tb-1dt | Statistical arbitrage: cointegrated pairs trading | P2 |
+| tb-zfw | Regime detection: HMM market state classifier | P2 |
+| tb-hxl | Order flow imbalance detector: microstructure signals | P3 |
+| tb-0dv | DeFi yield optimizer: multi-chain auto-rebalancing | P3 |
 
 ### gastown (7 beads)
 | ID | Title | Priority |
