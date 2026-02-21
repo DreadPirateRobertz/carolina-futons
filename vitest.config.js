@@ -36,6 +36,8 @@ export default defineConfig({
       'backend/seoHelpers.web': path.resolve(__dirname, 'src/backend/seoHelpers.web.js'),
       'backend/swatchService.web': path.resolve(__dirname, 'src/backend/swatchService.web.js'),
       'backend/emailService.web': path.resolve(__dirname, 'src/backend/emailService.web.js'),
+      'backend/emailAutomation.web': path.resolve(__dirname, 'src/backend/emailAutomation.web.js'),
+      'backend/cartRecovery.web': path.resolve(__dirname, 'src/backend/cartRecovery.web.js'),
       'backend/contactSubmissions.web': path.resolve(__dirname, 'src/backend/contactSubmissions.web.js'),
       'backend/promotions.web': path.resolve(__dirname, 'src/backend/promotions.web.js'),
       'backend/analyticsHelpers.web': path.resolve(__dirname, 'src/backend/analyticsHelpers.web.js'),

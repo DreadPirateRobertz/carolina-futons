@@ -21,6 +21,12 @@ export function __seed(collection, items) {
 export function __onInsert(fn) { _insertSpy = fn; }
 export function __onUpdate(fn) { _updateSpy = fn; }
 
+// Resolve dot-notation field paths (e.g. "variables.checkoutId")
+function getField(item, field) {
+  if (!field.includes('.')) return item[field];
+  return field.split('.').reduce((obj, key) => obj?.[key], item);
+}
+
 function createQueryBuilder(collection) {
   let filters = [];
   let sortField = null;
@@ -28,15 +34,15 @@ function createQueryBuilder(collection) {
   let limitVal = 50;
 
   const builder = {
-    eq(field, value) { filters.push(item => item[field] === value); return builder; },
-    ne(field, value) { filters.push(item => item[field] !== value); return builder; },
-    gt(field, value) { filters.push(item => (item[field] || 0) > value); return builder; },
-    ge(field, value) { filters.push(item => (item[field] || 0) >= value); return builder; },
-    lt(field, value) { filters.push(item => (item[field] || 0) < value); return builder; },
-    le(field, value) { filters.push(item => (item[field] || 0) <= value); return builder; },
+    eq(field, value) { filters.push(item => getField(item, field) === value); return builder; },
+    ne(field, value) { filters.push(item => getField(item, field) !== value); return builder; },
+    gt(field, value) { filters.push(item => (getField(item, field) || 0) > value); return builder; },
+    ge(field, value) { filters.push(item => (getField(item, field) || 0) >= value); return builder; },
+    lt(field, value) { filters.push(item => (getField(item, field) || 0) < value); return builder; },
+    le(field, value) { filters.push(item => (getField(item, field) || 0) <= value); return builder; },
     hasSome(field, values) {
       filters.push(item => {
-        const v = item[field];
+        const v = getField(item, field);
         if (Array.isArray(v)) return v.some(x => values.includes(x));
         return values.includes(v);
       });
@@ -44,7 +50,7 @@ function createQueryBuilder(collection) {
     },
     contains(field, value) {
       filters.push(item => {
-        const v = item[field];
+        const v = getField(item, field);
         if (typeof v === 'string') return v.includes(value);
         if (Array.isArray(v)) return v.some(x => String(x).includes(value));
         return false;
