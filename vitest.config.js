@@ -97,6 +97,8 @@ export default defineConfig({
       'public/ReturnsPortal.js': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
+      'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
+      'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
   },
 });

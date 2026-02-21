@@ -33,6 +33,7 @@ export function wixEcom_onAbandonedCheckoutCreated(event) {
     buyerName: checkout.buyerInfo?.firstName || '',
     cartTotal: checkout.payNow?.total?.amount || 0,
     lineItems: (checkout.lineItems || []).map(item => ({
+      productId: item.catalogReference?.catalogItemId || '',
       name: item.productName?.original || item.catalogReference?.catalogItemId || '',
       quantity: item.quantity || 1,
       price: item.price?.amount || 0,
@@ -121,7 +122,7 @@ export const getRecoverableCarts = webMethod(
         buyerEmail: c.buyerEmail,
         buyerName: c.buyerName,
         cartTotal: c.cartTotal,
-        lineItems: c.lineItems,
+        lineItems: parseLineItems(c.lineItems),
         abandonedAt: c.abandonedAt,
       }));
     } catch (err) {
@@ -183,11 +184,38 @@ async function recordAbandonedCart(data) {
     buyerEmail: sanitize(data.buyerEmail, 254),
     buyerName: sanitize(data.buyerName, 200),
     cartTotal: Number(data.cartTotal) || 0,
-    lineItems: validLineItems,
+    lineItems: JSON.stringify(validLineItems),
     abandonedAt: data.abandonedAt,
     status: 'abandoned',
     recoveryEmailSent: false,
   });
+}
+
+/**
+ * Parse lineItems from CMS — handles both JSON strings and raw arrays.
+ * Validates each item has required fields (productId, name, quantity, price).
+ * @param {string|Array} raw
+ * @returns {Array<{productId: string, name: string, quantity: number, price: number}>}
+ */
+function parseLineItems(raw) {
+  if (!raw) return [];
+  let items = raw;
+  if (typeof raw === 'string') {
+    try {
+      items = JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter(item => item && typeof item === 'object')
+    .map(item => ({
+      productId: String(item.productId || ''),
+      name: String(item.name || ''),
+      quantity: Number(item.quantity) || 0,
+      price: Number(item.price) || 0,
+    }));
 }
 
 async function markCartRecovered(checkoutId) {

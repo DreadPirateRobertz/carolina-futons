@@ -187,9 +187,10 @@ describe('recordAbandonedCart line item validation', () => {
     await new Promise(r => setTimeout(r, 50));
 
     expect(insertedItem).not.toBeNull();
-    expect(insertedItem.lineItems).toHaveLength(2);
-    expect(insertedItem.lineItems[0].name).toBe('Valid Item');
-    expect(insertedItem.lineItems[1].name).toBe('Fallback Name');
+    const parsedItems = JSON.parse(insertedItem.lineItems);
+    expect(parsedItems).toHaveLength(2);
+    expect(parsedItems[0].name).toBe('Valid Item');
+    expect(parsedItems[1].name).toBe('Fallback Name');
   });
 });
 
@@ -519,5 +520,134 @@ describe('input sanitization', () => {
     expect(updatedItem).not.toBeNull();
     expect(updatedItem._id.length).toBeLessThanOrEqual(50);
     expect(updatedItem.recoveryEmailSent).toBe(true);
+  });
+});
+
+// ── lineItems JSON storage & productId ──────────────────────────────
+
+describe('lineItems structured storage', () => {
+  it('stores lineItems as a JSON string', async () => {
+    __seed('AbandonedCarts', []);
+
+    let insertedItem = null;
+    __onInsert((collection, item) => { insertedItem = item; });
+
+    wixEcom_onAbandonedCheckoutCreated({
+      entity: {
+        _id: 'ck-json',
+        buyerInfo: { email: 'json@test.com', firstName: 'Json' },
+        payNow: { total: { amount: 300 } },
+        lineItems: [{ productName: { original: 'Futon' }, catalogReference: { catalogItemId: 'prod-123' }, quantity: 2, price: { amount: 150 } }],
+      },
+    });
+
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(insertedItem).not.toBeNull();
+    expect(typeof insertedItem.lineItems).toBe('string');
+    const parsed = JSON.parse(insertedItem.lineItems);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].name).toBe('Futon');
+  });
+
+  it('includes productId in stored line items', async () => {
+    __seed('AbandonedCarts', []);
+
+    let insertedItem = null;
+    __onInsert((collection, item) => { insertedItem = item; });
+
+    wixEcom_onAbandonedCheckoutCreated({
+      entity: {
+        _id: 'ck-pid',
+        buyerInfo: { email: 'pid@test.com' },
+        payNow: { total: { amount: 500 } },
+        lineItems: [
+          { productName: { original: 'Frame' }, catalogReference: { catalogItemId: 'prod-abc' }, quantity: 1, price: { amount: 500 } },
+        ],
+      },
+    });
+
+    await new Promise(r => setTimeout(r, 50));
+
+    const parsed = JSON.parse(insertedItem.lineItems);
+    expect(parsed[0].productId).toBe('prod-abc');
+    expect(parsed[0].name).toBe('Frame');
+    expect(parsed[0].quantity).toBe(1);
+    expect(parsed[0].price).toBe(500);
+  });
+
+  it('parses JSON string lineItems when reading recoverable carts', async () => {
+    __seed('AbandonedCarts', [{
+      _id: 'ac-parse',
+      checkoutId: 'ck-parse',
+      buyerEmail: 'parse@test.com',
+      buyerName: 'Parse',
+      cartTotal: 700,
+      lineItems: JSON.stringify([{ productId: 'prod-1', name: 'Mattress', quantity: 1, price: 700 }]),
+      abandonedAt: new Date(Date.now() - 2 * 3600000).toISOString(),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    const result = await getRecoverableCarts();
+    expect(result).toHaveLength(1);
+    expect(Array.isArray(result[0].lineItems)).toBe(true);
+    expect(result[0].lineItems[0].productId).toBe('prod-1');
+    expect(result[0].lineItems[0].name).toBe('Mattress');
+  });
+
+  it('handles already-parsed array lineItems gracefully', async () => {
+    __seed('AbandonedCarts', [{
+      _id: 'ac-arr',
+      checkoutId: 'ck-arr',
+      buyerEmail: 'arr@test.com',
+      buyerName: 'Array',
+      cartTotal: 200,
+      lineItems: [{ productId: 'prod-2', name: 'Cover', quantity: 1, price: 200 }],
+      abandonedAt: new Date(Date.now() - 3 * 3600000).toISOString(),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    const result = await getRecoverableCarts();
+    expect(result).toHaveLength(1);
+    expect(Array.isArray(result[0].lineItems)).toBe(true);
+    expect(result[0].lineItems[0].name).toBe('Cover');
+  });
+
+  it('returns empty array for malformed JSON lineItems', async () => {
+    __seed('AbandonedCarts', [{
+      _id: 'ac-bad',
+      checkoutId: 'ck-bad',
+      buyerEmail: 'bad@test.com',
+      buyerName: 'Bad',
+      cartTotal: 100,
+      lineItems: 'not valid json {{{',
+      abandonedAt: new Date(Date.now() - 4 * 3600000).toISOString(),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    const result = await getRecoverableCarts();
+    expect(result).toHaveLength(1);
+    expect(result[0].lineItems).toEqual([]);
+  });
+
+  it('returns empty array for null/undefined lineItems', async () => {
+    __seed('AbandonedCarts', [{
+      _id: 'ac-null',
+      checkoutId: 'ck-null',
+      buyerEmail: 'null@test.com',
+      buyerName: 'Null',
+      cartTotal: 50,
+      lineItems: null,
+      abandonedAt: new Date(Date.now() - 5 * 3600000).toISOString(),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    const result = await getRecoverableCarts();
+    expect(result).toHaveLength(1);
+    expect(result[0].lineItems).toEqual([]);
   });
 });
