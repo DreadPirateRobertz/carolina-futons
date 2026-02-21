@@ -198,14 +198,59 @@
 
 | Risk | Prob | Impact | Status |
 |------|------|--------|--------|
-| cfutons queue empty (0 agent-assignable) | HIGH | HIGH | OPEN — architect must spike stories |
-| Tradingbot Dolt crash blocks quant | HIGH | MEDIUM | OPEN — needs repair |
-| cfutons_mobile queue thin (3 total beads) | HIGH | MEDIUM | OPEN — needs story spike |
-| 4 cfutons P0-P1 beads need human action | HIGH | HIGH | OPEN — blocked on human |
-| 42% crew idle right now | MEDIUM | HIGH | OPEN — need work orders |
-| Gastown 5 junk beads pollute backlog | LOW | LOW | FLAGGED — cleanup needed |
+| cfutons queue empty (0 agent-assignable) | HIGH | HIGH | **MITIGATED** — 8 new stories spiked (cf-f2z, cf-qq9, cf-cz4, cf-8su, cf-yuc, cf-2pj, cf-7t5, cf-6es) |
+| Tradingbot Dolt crash blocks quant | HIGH | MEDIUM | **FILED gt-qlv** — assigned to tokensmith. 4 stories researched, ready to file when fixed |
+| cfutons_mobile queue thin (3 total beads) | HIGH | MEDIUM | **MITIGATED** — 6 new stories spiked (cm-w4a, cm-fgb, cm-8ip, cm-hbh, cm-bn0, cm-a27) |
+| 4 cfutons P0-P1 beads need human action | HIGH | HIGH | OPEN — blocked on human (Wix Dashboard login, illustration assets) |
+| 42% crew idle right now | MEDIUM | HIGH | **MITIGATED** — all 5 idle crew nudged with work orders |
+| Gastown 5 junk beads pollute backlog | LOW | LOW | **RESOLVED** — all 5 --help beads closed |
 
 ---
 
-*Production Manager: melania | 107 beads across 4 rigs | 7/12 crew active | 5 idle need work*
+## Actions Taken This Patrol (22:45-23:15 MST)
+
+### Stories Spiked (14 new beads)
+**cfutons (8 new):**
+| Bead | Priority | Title |
+|------|----------|-------|
+| cf-f2z | P1 | Advanced search & filtering engine for category pages |
+| cf-qq9 | P1 | Order tracking page with UPS integration |
+| cf-cz4 | P2 | Self-service returns portal |
+| cf-8su | P2 | Product dimension and size guide with room fit checker |
+| cf-yuc | P2 | WCAG 2.1 AA accessibility audit and remediation |
+| cf-2pj | P2 | Financing calculator with BNPL integration |
+| cf-7t5 | P2 | Live chat customer support widget |
+| cf-6es | P2 | Error monitoring dashboard with centralized logging |
+
+**cfutons_mobile (6 new):**
+| Bead | Priority | Title |
+|------|----------|-------|
+| cm-w4a | P1 | User authentication and account management |
+| cm-fgb | P1 | Order history and shipment tracking |
+| cm-8ip | P2 | Wishlist and saved products |
+| cm-hbh | P2 | Push notifications for orders and promotions |
+| cm-bn0 | P2 | Analytics and crash reporting integration |
+| cm-a27 | P2 | Deep linking from emails, SMS, and social media |
+
+**tradingbot (4 researched, pending Dolt fix):**
+- Order flow imbalance detector (P1) — STRATEGY-V2 ranked OFI as #1 alpha signal
+- Drawdown management and volatility scaling (P1) — survival feature for live trading
+- Performance attribution dashboard (P2) — enables live trading confidence
+- Walk-forward backtesting (P2) — prevents overfitting
+
+### Cleanup
+- 5 gastown junk beads closed (gt-906, gt-an1, gt-pou, gt-qts, gt-sqy)
+- Filed gt-qlv (tradingbot Dolt corruption bug, P1)
+
+### Crew Nudges Sent
+- architect: Review 8 new cfutons stories, assign to caesar/radahn
+- radahn: Pick up cf-f2z or cf-qq9 if blocked on Wix Dashboard tasks
+- artemis: cm-w4a (auth) is next after cm-oy5
+- tokensmith: Pick up gt-qlv (Dolt fix) or gt-0de/gt-3mr
+- quant: Keep coding tb-bhm, don't let Dolt crash block code work
+
+---
+
+*Production Manager: melania | 121 beads across 4 rigs | 14 new stories spiked | all idle crew nudged*
+*Queue health: cfutons 12 open | mobile 7 open | tradingbot 1 open (4 pending) | gastown 15 open*
 *Next patrol: +10 minutes*
