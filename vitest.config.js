@@ -45,6 +45,7 @@ export default defineConfig({
       'backend/fulfillment.web': path.resolve(__dirname, 'src/backend/fulfillment.web.js'),
       'backend/googleMerchantFeed.web': path.resolve(__dirname, 'src/backend/googleMerchantFeed.web.js'),
       'backend/notificationService.web': path.resolve(__dirname, 'src/backend/notificationService.web.js'),
+      'backend/testimonialService.web': path.resolve(__dirname, 'src/backend/testimonialService.web.js'),
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
       'backend/searchService.web': path.resolve(__dirname, 'src/backend/searchService.web.js'),
       'backend/sizeGuide.web': path.resolve(__dirname, 'src/backend/sizeGuide.web.js'),

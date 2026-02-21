@@ -245,43 +245,57 @@ function initTrustBar() {
 }
 
 // ── Testimonials ────────────────────────────────────────────────────
-// Customer reviews section with rotating quotes
+// Customer testimonials — loads featured from CMS, falls back to hardcoded
 
-function initTestimonials() {
-  const testimonials = [
-    {
-      _id: 'test1',
-      quote: 'The quality of our Night & Day futon frame is outstanding. It looks like a real piece of furniture, not a dorm room couch. Love it!',
-      name: 'Sarah M., Asheville NC',
-    },
-    {
-      _id: 'test2',
-      quote: 'Brenda helped us find the perfect Murphy cabinet bed for our guest room. The whole experience — from browsing to delivery — was wonderful.',
-      name: 'James & Linda K., Hendersonville NC',
-    },
-    {
-      _id: 'test3',
-      quote: 'We drove from Charlotte just to see the fabric swatches in person. So glad we did — our futon mattress is exactly what we wanted.',
-      name: 'Michelle T., Charlotte NC',
-    },
-    {
-      _id: 'test4',
-      quote: 'Best furniture shopping experience we\'ve had. Knowledgeable staff, beautiful showroom, and the platform bed we bought is solid as a rock.',
-      name: 'David R., Greenville SC',
-    },
-  ];
+const FALLBACK_TESTIMONIALS = [
+  { _id: 'test1', story: 'The quality of our Night & Day futon frame is outstanding. It looks like a real piece of furniture, not a dorm room couch. Love it!', name: 'Sarah M., Asheville NC', rating: 5 },
+  { _id: 'test2', story: 'Brenda helped us find the perfect Murphy cabinet bed for our guest room. The whole experience — from browsing to delivery — was wonderful.', name: 'James & Linda K., Hendersonville NC', rating: 5 },
+  { _id: 'test3', story: 'We drove from Charlotte just to see the fabric swatches in person. So glad we did — our futon mattress is exactly what we wanted.', name: 'Michelle T., Charlotte NC', rating: 5 },
+  { _id: 'test4', story: 'Best furniture shopping experience we\'ve had. Knowledgeable staff, beautiful showroom, and the platform bed we bought is solid as a rock.', name: 'David R., Greenville SC', rating: 5 },
+];
 
+async function initTestimonials() {
   try {
     const repeater = $w('#testimonialRepeater');
     if (!repeater) return;
 
+    // Try loading dynamic testimonials from CMS
+    let testimonials = FALLBACK_TESTIMONIALS;
+    try {
+      const { getFeaturedTestimonials, getTestimonialSchema } = await import('backend/testimonialService.web');
+      const result = await getFeaturedTestimonials(6);
+      if (result.success && result.items.length > 0) {
+        testimonials = result.items;
+      }
+
+      // Inject testimonial JSON-LD schema for SEO
+      try {
+        const schemaJson = await getTestimonialSchema();
+        if (schemaJson) {
+          const head = $w('#testimonialSchemaScript');
+          if (head) head.postMessage(schemaJson);
+        }
+      } catch (e) {}
+    } catch (e) {
+      // CMS unavailable — use fallback
+    }
+
     repeater.data = testimonials;
     repeater.onItemReady(($item, itemData) => {
-      try { $item('#testimonialQuote').text = `"${itemData.quote}"`; } catch (e) {}
+      try { $item('#testimonialQuote').text = `"${itemData.story || itemData.quote}"`; } catch (e) {}
       try { $item('#testimonialName').text = `— ${itemData.name}`; } catch (e) {}
+      try {
+        const photoEl = $item('#testimonialPhoto');
+        if (photoEl && itemData.photo) { photoEl.src = itemData.photo; photoEl.show(); }
+        else if (photoEl) { photoEl.hide(); }
+      } catch (e) {}
+      try {
+        const ratingEl = $item('#testimonialRating');
+        if (ratingEl && itemData.rating) { ratingEl.text = '\u2605'.repeat(itemData.rating); }
+      } catch (e) {}
     });
   } catch (e) {
-    // Testimonials section may not exist
+    // Testimonials section is non-critical
   }
 }
 

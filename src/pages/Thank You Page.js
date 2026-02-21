@@ -18,6 +18,7 @@ $w.onReady(async function () {
     loadPostPurchaseSuggestions(),
     initPostPurchaseCareSequence(),
     initAssemblyGuideLink(),
+    initTestimonialPrompt(),
   ]);
   // Track purchase completion in engagement funnel
   trackPurchaseComplete('', 0);
@@ -375,6 +376,66 @@ async function initAssemblyGuideLink() {
     guideSection.expand();
   } catch (err) {
     // Assembly guide section is optional
+  }
+}
+
+// ── Testimonial Submission ─────────────────────────────────────────
+// Invite customers to share their experience after purchase
+
+async function initTestimonialPrompt() {
+  try {
+    const section = $w('#testimonialSection');
+    if (!section) return;
+
+    try { $w('#testimonialTitle').text = 'Share Your Experience'; } catch (e) {}
+    try { $w('#testimonialPrompt').text = 'Love your new furniture? Tell us about it! Your story helps other customers find the perfect piece.'; } catch (e) {}
+
+    try { $w('#testimonialNameInput').accessibility.ariaLabel = 'Your name'; } catch (e) {}
+    try { $w('#testimonialStoryInput').accessibility.ariaLabel = 'Your testimonial'; } catch (e) {}
+    try { $w('#testimonialSubmitBtn').accessibility.ariaLabel = 'Submit testimonial'; } catch (e) {}
+
+    $w('#testimonialSubmitBtn').onClick(async () => {
+      try {
+        const name = $w('#testimonialNameInput').value?.trim();
+        const story = $w('#testimonialStoryInput').value?.trim();
+        if (!story || story.length < 10) {
+          try { $w('#testimonialError').text = 'Please write at least 10 characters.'; $w('#testimonialError').show(); } catch (e) {}
+          return;
+        }
+
+        $w('#testimonialSubmitBtn').disable();
+        $w('#testimonialSubmitBtn').label = 'Submitting...';
+
+        const { submitTestimonial } = await import('backend/testimonialService.web');
+        const result = await submitTestimonial({
+          name: name || undefined,
+          story,
+          source: 'thank_you',
+        });
+
+        if (result.success) {
+          try { $w('#testimonialNameInput').hide(); } catch (e) {}
+          try { $w('#testimonialStoryInput').hide(); } catch (e) {}
+          $w('#testimonialSubmitBtn').hide();
+          try { $w('#testimonialError').hide(); } catch (e) {}
+          try {
+            $w('#testimonialSuccess').text = 'Thank you for sharing! Your testimonial will appear on our site once reviewed.';
+            $w('#testimonialSuccess').show('fade', { duration: 300 });
+          } catch (e) {}
+        } else {
+          try { $w('#testimonialError').text = result.error || 'Something went wrong. Please try again.'; $w('#testimonialError').show(); } catch (e) {}
+          $w('#testimonialSubmitBtn').enable();
+          $w('#testimonialSubmitBtn').label = 'Share Your Story';
+        }
+      } catch (err) {
+        console.error('Testimonial submission error:', err);
+        try { $w('#testimonialSubmitBtn').enable(); $w('#testimonialSubmitBtn').label = 'Share Your Story'; } catch (e) {}
+      }
+    });
+
+    section.expand();
+  } catch (e) {
+    // Testimonial prompt is non-critical
   }
 }
 
