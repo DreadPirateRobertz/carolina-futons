@@ -104,6 +104,7 @@ export default defineConfig({
       'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
       'backend/postPurchaseCare.web': path.resolve(__dirname, 'src/backend/postPurchaseCare.web.js'),
       'backend/storeLocatorService.web': path.resolve(__dirname, 'src/backend/storeLocatorService.web.js'),
+      'backend/bundleAnalytics.web': path.resolve(__dirname, 'src/backend/bundleAnalytics.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
