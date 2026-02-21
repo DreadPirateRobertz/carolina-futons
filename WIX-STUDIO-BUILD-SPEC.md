@@ -383,6 +383,148 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | →→ APR | Text | `#detailApr` | "0% APR" or "9.99% APR" |
 | →→ Interest | Text | `#detailInterest` | "No interest charges" or "Interest: $63.12" |
 
+### Quantity Selector
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Quantity Input | Input | `#quantityInput` | Default "1", numeric only |
+| Minus Button | Button | `#quantityMinus` | Decrease qty, min 1 |
+| Plus Button | Button | `#quantityPlus` | Increase qty, max 99 |
+
+### Fabric Swatch Selector
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Swatch Section | Section | `#swatchSection` | Collapsible, hidden if no swatches |
+| Swatch Count | Text | `#swatchCount` | "Showing X of Y+ available fabrics" |
+| Color Family Filter | Dropdown | `#swatchColorFilter` | Filter swatches by color family |
+| Swatch Grid | Repeater | `#swatchGrid` | Grid of clickable swatch thumbnails |
+| → Swatch Thumbnail | Image | `#swatchThumb` | 60x60 swatch image or color-filled box |
+| → Swatch Label | Text | `#swatchLabel` | Swatch name tooltip |
+| Tint Overlay | Box | `#swatchTintOverlay` | Semi-transparent color overlay on main image, hidden default |
+| View All Button | Button | `#swatchViewAll` | Opens full swatch gallery lightbox |
+| Request Swatches Link | Button | `#swatchRequestLink` | Links to /request-swatches |
+
+### Full Swatch Gallery Lightbox
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Gallery Modal | Box | `#swatchGalleryModal` | Full-screen modal overlay, hidden default |
+| Search Input | Input | `#swatchSearch` | Filter swatches by name/color/material |
+| Gallery Grid | Repeater | `#swatchGalleryGrid` | Large grid of all swatches (120x120) |
+| → Thumbnail | Image | `#sgThumb` | Larger swatch image inside repeater |
+| → Name | Text | `#sgName` | Swatch name inside repeater |
+| → Material | Text | `#sgMaterial` | Material type inside repeater |
+| Close Button | Button | `#swatchGalleryClose` | X icon, closes modal |
+| Detail Panel | Box | `#swatchDetail` | Collapsed by default, shows selected swatch info |
+| → Detail Name | Text | `#swatchDetailName` | Selected swatch name |
+| → Detail Material | Text | `#swatchDetailMaterial` | "Material: ..." |
+| → Detail Care | Text | `#swatchDetailCare` | "Care: ..." |
+| → Detail Family | Text | `#swatchDetailFamily` | "Color Family: ..." |
+| → Detail Image | Image | `#swatchDetailImage` | Large swatch preview, hidden default |
+
+### Swatch Request Modal
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Request Button | Button | `#swatchRequestBtn` | "Request Free Swatches", hidden if no fabric options |
+| Modal Container | Box | `#swatchModal` | Centered lightbox, hidden default |
+| Product Name | Text | `#swatchProductName` | Shows current product name |
+| Options Repeater | Repeater | `#swatchOptions` | Fabric/finish checkbox list |
+| → Checkbox | Checkbox | `#swatchCheckbox` | Inside repeater, selectable swatch option |
+| Name Input | Input | `#swatchName` | Customer name |
+| Email Input | Input | `#swatchEmail` | Customer email |
+| Address Input | TextArea | `#swatchAddress` | Mailing address for swatches |
+| Submit Button | Button | `#swatchSubmit` | Sends swatch request |
+| Success Message | Text | `#swatchSuccess` | Hidden default, "Swatches on the way!" |
+| Error Message | Text | `#swatchError` | Hidden default, error fallback |
+
+### Product Video Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Video Section | Section | `#productVideoSection` | Collapsible, hidden if no video media |
+| Section Title | Text (H3) | `#productVideoTitle` | "See It In Action" |
+| Video Player | VideoPlayer | `#productVideo` | Auto-muted product demo video |
+| View All Videos Link | Button | `#viewAllVideosLink` | Links to /product-videos |
+
+### Product Info Accordion
+Collapsible sections for Description, Dimensions, Care, and Shipping info.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Description Header | Button/Box | `#infoHeaderDescription` | Clickable accordion toggle |
+| Description Content | Box | `#infoContentDescription` | Expanded by default |
+| Description Arrow | Text | `#infoArrowDescription` | "−" when open, "+" when closed |
+| Dimensions Header | Button/Box | `#infoHeaderDimensions` | Clickable accordion toggle |
+| Dimensions Content | Box | `#infoContentDimensions` | Collapsed by default |
+| Dimensions Arrow | Text | `#infoArrowDimensions` | "+" default |
+| Care Header | Button/Box | `#infoHeaderCare` | Clickable accordion toggle |
+| Care Content | Box | `#infoContentCare` | Collapsed by default |
+| Care Arrow | Text | `#infoArrowCare` | "+" default |
+| Shipping Header | Button/Box | `#infoHeaderShipping` | Clickable accordion toggle |
+| Shipping Content | Box/Text | `#infoContentShipping` | Collapsed by default, auto-populated with shipping policy |
+| Shipping Arrow | Text | `#infoArrowShipping` | "+" default |
+
+### Wishlist / Save Button
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Wishlist Button | Button | `#wishlistBtn` | Heart icon toggle, hidden if Members API unavailable |
+| Wishlist Icon | Image | `#wishlistIcon` | Swaps between outline and filled heart SVG |
+
+### Stock Urgency & Popularity
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Stock Urgency | Text | `#stockUrgency` | "Only X left in stock", hidden default, shows when qty < 5 |
+| Popularity Badge | Text | `#popularityBadge` | "Popular — X sold this week", hidden default |
+
+### Delivery Estimate & White Glove
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Delivery Estimate | Text | `#deliveryEstimate` | "Estimated delivery: Mar 5 – Mar 12" |
+| White-Glove Note | Text | `#whiteGloveNote` | "White-glove delivery available — call ...", hidden default |
+
+### Sticky Add-to-Cart Bar
+Fixed bottom bar that appears when the main Add to Cart button scrolls out of view.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Sticky Bar | Box | `#stickyCartBar` | Fixed bottom, hidden default, slides up on scroll |
+| Product Name | Text | `#stickyProductName` | Mirrors current product name |
+| Price | Text | `#stickyPrice` | Mirrors current variant price |
+| Add to Cart | Button | `#stickyAddBtn` | Coral bg, respects quantity selection |
+
+### Social Share Buttons
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Share Facebook | Button | `#shareFacebook` | Opens Facebook share dialog |
+| Share Pinterest | Button | `#sharePinterest` | Opens Pinterest pin create |
+| Share Email | Button | `#shareEmail` | Opens mailto: compose |
+| Copy Link | Button | `#shareCopyLink` | Copies product URL to clipboard |
+
+### Product Badge Overlay
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Badge Overlay | Text | `#productBadgeOverlay` | Sale/New/Featured badge on main image area, hidden default |
+
+### Back-in-Stock Notification
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#backInStockSection` | Collapsed default, expands when variant is out of stock |
+| Email Input | Input | `#backInStockEmail` | Guest email for restock notification |
+| Submit Button | Button | `#backInStockBtn` | "Notify Me" |
+| Success Message | Text | `#backInStockSuccess` | Hidden default, confirms signup |
+
+### Frequently Bought Together Bundle
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Section | `#bundleSection` | Collapsible, hidden if no bundle suggestion |
+| Bundle Image | Image | `#bundleImage` | Companion product image |
+| Bundle Name | Text | `#bundleName` | Companion product name |
+| Bundle Price | Text | `#bundlePrice` | Discounted bundle price |
+| Bundle Savings | Text | `#bundleSavings` | "Save $X" |
+| Add Both Button | Button | `#addBundleBtn` | "Add Both to Cart", adds current + companion |
+
+### Open Graph Meta
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| OG Tags | HtmlComponent | `#productOgHtml` | Hidden, Open Graph meta tags for social sharing |
+
 ### Recently Viewed Products
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
@@ -409,15 +551,42 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | Home Link | Text/Link | `#breadcrumbHome` |
 | Current Page | Text | `#breadcrumbCurrent` |
 
-### Filter Bar
-| Element | Type | ID |
-|---------|------|----|
-| Brand Filter | Dropdown | `#filterBrand` |
-| Price Filter | Dropdown | `#filterPrice` |
-| Size Filter | Dropdown | `#filterSize` |
-| Clear Filters | Button | `#clearFilters` |
-| Sort Dropdown | Dropdown | `#sortDropdown` |
-| Result Count | Text | `#resultCount` |
+### Filter Bar (Basic)
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Brand Filter | Dropdown | `#filterBrand` | All Brands, Night & Day, Strata, etc. |
+| Price Filter | Dropdown | `#filterPrice` | Predefined price ranges |
+| Size Filter | Dropdown | `#filterSize` | Full, Queen, Twin |
+| Clear Filters | Button | `#clearFilters` | Resets basic filters |
+| Sort Dropdown | Dropdown | `#sortDropdown` | Best Selling, Name, Price, Newest |
+| Result Count | Text | `#resultCount` | "X products" |
+
+### Advanced Faceted Filters
+Powered by `searchService.web.js` — dynamically populated from category product data.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Material Filter | CheckboxGroup/Dropdown | `#filterMaterial` | Dynamically populated with counts, e.g. "Wood (12)" |
+| Color Filter | CheckboxGroup/Dropdown | `#filterColor` | Dynamically populated with counts |
+| Features Filter | CheckboxGroup/Dropdown | `#filterFeatures` | Tag-based feature toggles, e.g. "Space Saving", "Storage" |
+| Price Range Slider | Slider/Dropdown | `#filterPriceRange` | Enhanced price range control |
+| Width Min | Input | `#filterWidthMin` | Minimum width in inches, placeholder from facet data |
+| Width Max | Input | `#filterWidthMax` | Maximum width in inches, placeholder from facet data |
+| Depth Min | Input | `#filterDepthMin` | Minimum depth in inches, placeholder from facet data |
+| Depth Max | Input | `#filterDepthMax` | Maximum depth in inches, placeholder from facet data |
+| Filter Result Count | Text | `#filterResultCount` | Live count, "X products" — updates on filter change |
+| Clear All Filters | Button | `#clearAllFilters` | Resets all basic + advanced filters and URL params |
+| Loading Indicator | Box/Image | `#filterLoadingIndicator` | Spinner shown during filter query, hidden default |
+
+### Mobile Filter Drawer
+Bottom sheet for filter controls on mobile devices.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Toggle Button | Button | `#filterToggleBtn` | "Filters" — opens drawer, shown only on mobile |
+| Drawer | Box | `#filterDrawer` | Slide-up bottom sheet containing all filter controls, hidden default |
+| Drawer Overlay | Box | `#filterDrawerOverlay` | Semi-transparent backdrop, hidden default |
+| Apply Button | Button | `#filterDrawerApply` | "Apply" — closes drawer after selections |
 
 ### Product Grid
 | Element | Type | ID | Notes |
@@ -435,7 +604,11 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | → Badge | Text/Box | `#gridBadge` | "New", "Featured", etc., hidden default |
 | → Fabric Badge | Text | `#gridFabricBadge` | "700+ Fabric Options", hidden default |
 | → Compare Button | Button | `#gridCompareBtn` | Add to compare bar |
-| → Swatch Preview | Image | `#gridSwatchPreview` | Fabric swatch mini-preview |
+| → Swatch Preview | Box | `#gridSwatchPreview` | Container for swatch color dots, collapsible |
+| →→ Swatch Dot 1 | Box | `#swatchDot1` | Small color circle inside repeater, hidden default |
+| →→ Swatch Dot 2 | Box | `#swatchDot2` | Small color circle inside repeater, hidden default |
+| →→ Swatch Dot 3 | Box | `#swatchDot3` | Small color circle inside repeater, hidden default |
+| →→ Swatch Dot 4 | Box | `#swatchDot4` | Small color circle inside repeater, hidden default |
 
 ### Quick View Modal
 | Element | Type | ID |
@@ -449,20 +622,30 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 | Add to Cart | Button | `#qvAddToCart` |
 | Close | Button | `#qvClose` |
 
-### Empty State
+### Empty State (No Products in Category)
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
-| Empty Container | Section | `#emptyStateSection` | Shown when no products match filters |
+| Empty Container | Section | `#emptyStateSection` | Shown when category has zero products |
 | Empty Title | Text (H2) | `#emptyStateTitle` | "No products found" |
-| Empty Message | Text | `#emptyStateMessage` | Suggestion text |
+| Empty Message | Text | `#emptyStateMessage` | Suggestion text with category name |
 | Empty Illustration | Image | `#emptyStateIllustration` | Mountain illustration |
+
+### No-Matches State (Filters Returned Zero)
+Shown when advanced filters produce no results. Different from empty state.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| No Matches Section | Section | `#noMatchesSection` | Hidden default, shown when filter result is 0 |
+| No Matches Title | Text (H2) | `#noMatchesTitle` | "No products match" |
+| No Matches Message | Text | `#noMatchesMessage` | "Try removing some filters..." with category name |
+| No Matches Suggestion | Text | `#noMatchesSuggestion` | "Try adjusting your price range or removing material filters." |
 
 ### Recently Viewed Products
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Section | Section | `#recentlyViewedSection` | Collapsible, hidden if empty |
 | Section Title | Text (H2) | `#recentlyViewedTitle` | "Recently Viewed" |
-| Repeater | Repeater | — | Reuses standard product card layout |
+| Repeater | Repeater | `#recentlyViewedRepeater` | Standard product card layout, 6 items max |
 | → Image | Image | `#recentImage` | |
 | → Name | Text | `#recentName` | |
 | → Price | Text | `#recentPrice` | |
@@ -663,6 +846,8 @@ Sticky bottom bar showing selected products for comparison.
 
 ## Page: SHIPPING / GETTING IT HOME (ype8c)
 
+> **Code file:** `src/pages/Shipping Policy.js`
+
 | Element | Type | ID |
 |---------|------|----|
 | ZIP Input | Input | `#shippingZipInput` |
@@ -677,6 +862,8 @@ Sticky bottom bar showing selected products for comparison.
 ---
 
 ## Page: PRODUCT VIDEOS (vu50r)
+
+> **Wix Page Layout:** Fullscreen Page (no header/footer). The code for this page lives in `src/pages/Fullscreen Page.js`.
 
 | Element | Type | ID |
 |---------|------|----|
@@ -853,6 +1040,7 @@ Logged-in member account page with order history, wishlist, loyalty, address boo
 | → Status Text | Text | `#orderStatus` | Fallback for status badge |
 | → Track Button | Button | `#orderTrackBtn` | → Tracking page, hidden if no tracking |
 | → Reorder Button | Button | `#orderReorderBtn` | Adds all items to cart |
+| → Start Return | Button | `#orderStartReturnBtn` | Opens returns flow, hidden for cancelled orders |
 | → Items Gallery | Gallery | `#orderItemsGallery` | Thumbnails of ordered items |
 
 ### Wishlist / Saved Items
@@ -867,6 +1055,7 @@ Logged-in member account page with order history, wishlist, loyalty, address boo
 | → Add to Cart | Button | `#wishAddToCartBtn` | |
 | → View Product | Button | `#wishViewBtn` | → Product page |
 | → Remove | Button | `#wishRemoveBtn` | Remove from wishlist |
+| → Alert Toggle | Toggle | `#wishAlertToggle` | Per-product mute/unmute for price drop & back-in-stock alerts |
 | → Card Container | Box | `#wishCard` | Collapses on removal |
 | Sort Dropdown | Dropdown | `#wishSortDropdown` | Newest, price, name |
 | Share Wishlist | Button | `#wishShareBtn` | Copy link to clipboard |
