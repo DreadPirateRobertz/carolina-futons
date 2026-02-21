@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import { __setMember, __setRoles } from './__mocks__/wix-members-backend.js';
@@ -15,6 +15,11 @@ import {
 function loginAsAdmin() {
   __setMember({ _id: 'admin-001' });
   __setRoles([{ _id: 'admin', title: 'Admin' }]);
+}
+
+function loginAsNonAdmin() {
+  __setMember({ _id: 'user-001' });
+  __setRoles([{ _id: 'member', title: 'Member' }]);
 }
 
 beforeEach(() => {
@@ -109,6 +114,34 @@ describe('getPendingOrders', () => {
     expect(order.buyerNote).toBe('Please leave at back door');
   });
 
+  it('includes shipping address', async () => {
+    const orders = await getPendingOrders(50);
+    const addr = orders[0].shippingAddress;
+    expect(addr.city).toBe('Asheville');
+    expect(addr.postalCode).toBe('28801');
+  });
+
+  it('includes subtotal and shipping cost', async () => {
+    const orders = await getPendingOrders(50);
+    expect(orders[0].subtotal).toBe(848);
+    expect(orders[0].shipping).toBe(29.99);
+  });
+
+  it('includes shipping method name', async () => {
+    const orders = await getPendingOrders(50);
+    expect(orders[0].shippingMethod).toBe('UPS Ground');
+  });
+
+  it('formats line items with quantity, sku, price, weight', async () => {
+    const orders = await getPendingOrders(50);
+    const item = orders[0].lineItems[0];
+    expect(item.name).toBe('Eureka Futon Frame');
+    expect(item.quantity).toBe(1);
+    expect(item.sku).toBe('EUR-FRM-001');
+    expect(item.price).toBe(499);
+    expect(item.weight).toBe(85);
+  });
+
   it('excludes fulfilled orders', async () => {
     __seed('Stores/Orders', [
       { ...sampleOrder, fulfillmentStatus: 'FULFILLED' },
@@ -130,6 +163,33 @@ describe('getPendingOrders', () => {
     const orders = await getPendingOrders(50);
     expect(orders).toEqual([]);
   });
+
+  it('returns empty for non-admin users', async () => {
+    loginAsNonAdmin();
+    const orders = await getPendingOrders(50);
+    expect(orders).toEqual([]);
+  });
+
+  it('handles order with missing billing info', async () => {
+    __seed('Stores/Orders', [{
+      ...sampleOrder,
+      billingInfo: {},
+      buyerInfo: {},
+    }]);
+    const orders = await getPendingOrders(50);
+    expect(orders[0].buyerName).toBe('');
+    expect(orders[0].buyerEmail).toBe('');
+  });
+
+  it('handles order with missing shipping info', async () => {
+    __seed('Stores/Orders', [{
+      ...sampleOrder,
+      shippingInfo: {},
+    }]);
+    const orders = await getPendingOrders(50);
+    expect(orders[0].shippingAddress).toEqual({});
+    expect(orders[0].shippingMethod).toBe('');
+  });
 });
 
 // ── fulfillOrder ───────────────────────────────────────────────────
@@ -145,6 +205,54 @@ describe('fulfillOrder', () => {
     expect(result.trackingNumber).toBe('1Z999AA10123456784');
     expect(result.labels).toHaveLength(1);
     expect(result.shippingCost).toBe(45);
+  });
+
+  it('saves fulfillment record to CMS', async () => {
+    let inserted;
+    __onInsert((col, item) => {
+      if (col === 'Fulfillments') inserted = item;
+    });
+
+    await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 80, width: 40, height: 12, weight: 85 }],
+    });
+
+    expect(inserted).toBeDefined();
+    expect(inserted.orderId).toBe('order-001');
+    expect(inserted.trackingNumber).toBe('1Z999AA10123456784');
+    expect(inserted.carrier).toBe('UPS');
+    expect(inserted.status).toBe('LABEL_CREATED');
+  });
+
+  it('stores service name in fulfillment record', async () => {
+    let inserted;
+    __onInsert((col, item) => {
+      if (col === 'Fulfillments') inserted = item;
+    });
+
+    await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+
+    expect(inserted.serviceName).toBe('UPS Ground');
+    expect(inserted.serviceCode).toBe('03');
+  });
+
+  it('stores recipient info in fulfillment record', async () => {
+    let inserted;
+    __onInsert((col, item) => {
+      if (col === 'Fulfillments') inserted = item;
+    });
+
+    await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+
+    expect(inserted.recipientName).toBe('Jane Smith');
+    expect(inserted.recipientCity).toBe('Asheville');
   });
 
   it('returns error for non-existent order', async () => {
@@ -165,6 +273,27 @@ describe('fulfillOrder', () => {
     expect(result.success).toBe(true);
     expect(result.trackingNumber).toBeTruthy();
   });
+
+  it('defaults serviceCode to 03 (Ground) when not specified', async () => {
+    let inserted;
+    __onInsert((col, item) => {
+      if (col === 'Fulfillments') inserted = item;
+    });
+
+    await fulfillOrder('order-001', {
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+
+    expect(inserted.serviceCode).toBe('03');
+  });
+
+  it('returns error for non-admin users', async () => {
+    loginAsNonAdmin();
+    const result = await fulfillOrder('order-001', {
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 // ── getTrackingUpdate ──────────────────────────────────────────────
@@ -177,15 +306,34 @@ describe('getTrackingUpdate', () => {
   });
 
   it('updates fulfillment record with tracking status', async () => {
-    // Seed a fulfillment record
     __seed('Fulfillments', [{
       _id: 'ful-001',
       trackingNumber: '1Z999AA10123456784',
       status: 'IN_TRANSIT',
     }]);
 
+    let updated;
+    __onUpdate((col, item) => {
+      if (col === 'Fulfillments') updated = item;
+    });
+
     await getTrackingUpdate('1Z999AA10123456784');
-    // The record should have been updated (status to DELIVERED via mapTrackingStatus)
+    expect(updated).toBeDefined();
+    expect(updated.status).toBe('DELIVERED');
+    expect(updated.lastTrackingUpdate).toBeInstanceOf(Date);
+  });
+
+  it('handles no matching fulfillment record gracefully', async () => {
+    __seed('Fulfillments', []);
+    const result = await getTrackingUpdate('1Z999AA10123456784');
+    // Should still return tracking info even if no CMS record to update
+    expect(result.success).toBe(true);
+  });
+
+  it('returns error for non-admin users', async () => {
+    loginAsNonAdmin();
+    const result = await getTrackingUpdate('1Z999AA10123456784');
+    expect(result.success).toBe(false);
   });
 });
 
@@ -213,6 +361,30 @@ describe('updateAllTracking', () => {
     expect(result.success).toBe(true);
     expect(result.updated).toBe(0);
   });
+
+  it('returns 0 updated when no active fulfillments', async () => {
+    __seed('Fulfillments', []);
+    const result = await updateAllTracking();
+    expect(result.success).toBe(true);
+    expect(result.updated).toBe(0);
+  });
+
+  it('returns error for non-admin users', async () => {
+    loginAsNonAdmin();
+    const result = await updateAllTracking();
+    expect(result.success).toBe(false);
+  });
+
+  it('skips records without tracking number', async () => {
+    __seed('Fulfillments', [
+      { _id: 'ful-001', status: 'LABEL_CREATED' },
+      { _id: 'ful-002', trackingNumber: '1Z999AA10123456784', status: 'IN_TRANSIT' },
+    ]);
+
+    const result = await updateAllTracking();
+    expect(result.success).toBe(true);
+    expect(result.updated).toBe(1); // only the one with a tracking number
+  });
 });
 
 // ── getFulfillmentHistory ──────────────────────────────────────────
@@ -226,12 +398,30 @@ describe('getFulfillmentHistory', () => {
 
     const history = await getFulfillmentHistory(100);
     expect(history).toHaveLength(2);
-    // Should be sorted descending by createdDate
     expect(history[0]._id).toBe('ful-002');
   });
 
   it('returns empty when no fulfillments exist', async () => {
     const history = await getFulfillmentHistory(100);
     expect(history).toEqual([]);
+  });
+
+  it('returns empty for non-admin users', async () => {
+    loginAsNonAdmin();
+    __seed('Fulfillments', [
+      { _id: 'ful-001', createdDate: new Date(), status: 'DELIVERED' },
+    ]);
+    const history = await getFulfillmentHistory(100);
+    expect(history).toEqual([]);
+  });
+
+  it('respects limit parameter', async () => {
+    __seed('Fulfillments', [
+      { _id: 'ful-001', createdDate: new Date('2025-06-15'), status: 'DELIVERED' },
+      { _id: 'ful-002', createdDate: new Date('2025-06-16'), status: 'IN_TRANSIT' },
+      { _id: 'ful-003', createdDate: new Date('2025-06-17'), status: 'LABEL_CREATED' },
+    ]);
+    const history = await getFulfillmentHistory(2);
+    expect(history).toHaveLength(2);
   });
 });
