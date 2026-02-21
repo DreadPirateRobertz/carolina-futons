@@ -4,6 +4,8 @@ import { ok, serverError, forbidden } from 'wix-http-functions';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
+import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
+import { triggerAbandonedCartRecovery } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
 
 // Google Merchant Center product feed endpoint
@@ -374,6 +376,86 @@ export async function get_checkWishlistAlerts(request) {
     });
   } catch (err) {
     console.error('HTTP function error (checkWishlistAlerts):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Browse Recovery Cron ─────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/triggerBrowseRecoveryCron
+// Schedule every 30 minutes via Wix Automations or external cron.
+// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_triggerBrowseRecoveryCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || requestKey !== cronKey) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await triggerBrowseRecovery();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        triggered: result.triggered || 0,
+        skipped: result.skipped || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (triggerBrowseRecoveryCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Abandoned Cart Recovery Cron ────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/triggerCartRecoveryCron
+// Schedule every 30 minutes via Wix Automations or external cron.
+// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_triggerCartRecoveryCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || requestKey !== cronKey) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await triggerAbandonedCartRecovery();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        processed: result.processed || 0,
+        emailsQueued: result.emailsQueued || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (triggerCartRecoveryCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },

@@ -7,6 +7,9 @@ import {
   get_productSitemap,
   get_facebookCatalogFeed,
   get_pinterestProductFeed,
+  get_checkWishlistAlerts,
+  get_triggerBrowseRecoveryCron,
+  get_triggerCartRecoveryCron,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -223,5 +226,113 @@ describe('get_pinterestProductFeed', () => {
     expect(result.status).toBe(200);
     const lines = result.body.split('\n');
     expect(lines.length).toBe(1); // only header
+  });
+});
+
+// ── Cron Endpoint Auth Tests ────────────────────────────────────────
+
+const cronRequest = (key) => ({ query: { key } });
+
+describe('get_checkWishlistAlerts', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('PriceSnapshots', []);
+    __seed('WishlistItems', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(body.timestamp).toBeDefined();
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with missing key', async () => {
+    const result = await get_checkWishlistAlerts({ query: {} });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns JSON content type', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('test-cron-key-123'));
+    expect(result.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('returns no-store cache control', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('test-cron-key-123'));
+    expect(result.headers['Cache-Control']).toBe('no-store');
+  });
+});
+
+describe('get_triggerBrowseRecoveryCron', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('BrowseSessions', []);
+    __seed('BrowseRecoveryEmails', []);
+    __seed('Unsubscribes', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_triggerBrowseRecoveryCron(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(body.timestamp).toBeDefined();
+    expect(typeof body.triggered).toBe('number');
+    expect(typeof body.skipped).toBe('number');
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_triggerBrowseRecoveryCron(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with no query params', async () => {
+    const result = await get_triggerBrowseRecoveryCron({ query: {} });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns JSON with no-store cache', async () => {
+    const result = await get_triggerBrowseRecoveryCron(cronRequest('test-cron-key-123'));
+    expect(result.headers['Content-Type']).toBe('application/json');
+    expect(result.headers['Cache-Control']).toBe('no-store');
+  });
+});
+
+describe('get_triggerCartRecoveryCron', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('AbandonedCarts', []);
+    __seed('AbandonedCartEmails', []);
+    __seed('Unsubscribes', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_triggerCartRecoveryCron(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(body.timestamp).toBeDefined();
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_triggerCartRecoveryCron(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with missing key', async () => {
+    const result = await get_triggerCartRecoveryCron({ query: {} });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns JSON with no-store cache', async () => {
+    const result = await get_triggerCartRecoveryCron(cronRequest('test-cron-key-123'));
+    expect(result.headers['Content-Type']).toBe('application/json');
+    expect(result.headers['Cache-Control']).toBe('no-store');
   });
 });

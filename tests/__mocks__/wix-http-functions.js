@@ -13,4 +13,8 @@ export function notFound({ body, headers }) {
   return { status: 404, body, headers: headers || {} };
 }
 
+export function forbidden({ body, headers }) {
+  return { status: 403, body, headers: headers || {} };
+}
+
 export function __reset() {}
