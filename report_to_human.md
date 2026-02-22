@@ -2,33 +2,30 @@
 
 **Last Updated:** 2026-02-22 01:12 UTC (witness)
 
-## Melania — 2026-02-21 18:22 MST
-**Status:** ACTIVE — factory mode, driving crew, coordinating beads
-**Progress:** Closed cf-m6d (radahn: Q&A service, 37 tests). Reassigned cf-k73 P0 scrape brainstorm→caesar (brainstorm OFFLINE). Nudged radahn with catalogImport.web.js test assignment. Created cf-7pn (loyalty tiers P2) for queue. Claimed cf-e7n as coordinator. Tests green: 2,340 across 69 files.
-**Next:** Monitor caesar's scrape agents (6 running, 88 URLs). Monitor radahn's catalogImport tests. Assign architect a story. 15-min patrol cycle.
-**Blockers:** brainstorm tmux DOWN (needs human restart). HQ beads SEGV intermittent (caesar's LOCK fix helped locally).
+## Melania — 2026-02-21 18:40 MST
+**Status:** ACTIVE — catalog SHIPPED, hookup guide SHIPPED
+**Progress:**
+- SHIPPED `catalog-MASTER.json`: 88 products from carolinafutons.com sitemap, categorized (futon-frames 42, murphy-cabinet-beds 10, platform-beds 10, mattresses 8, casegoods 15, accessories 3). Seed data — prices need enrichment from live site (Wix client-renders all pages, WebFetch gets JS shell).
+- SHIPPED `HOOKUP-GUIDE.md`: Full deployment guide — 27+ backend modules, page code, secrets config, CMS setup, cron jobs, verification checklist.
+- Created cf-8yg bead for WIX_BACKEND_KEY integration (P1).
+- Closed cf-7pn (radahn delivered loyaltyTiers.web.js, 414 tests).
+- Closed cf-m6d (radahn delivered productQA.web.js, 37 tests).
+- Assigned cf-41p to caesar, cf-2pm to architect. All P0 catalog beads in_progress.
+- Overseer confirmed: secrets, CMS, backend key all live on Wix site.
+**Next:** Price enrichment pass on catalog (manual or browser-based scrape needed). Monitor crew scrape output. Compile into final master catalog.
+**Blockers:** carolinafutons.com is 100% client-rendered (Wix) — no server-side HTML. WebFetch returns JS shell for ALL pages. Prices/descriptions require headless browser (Puppeteer/Playwright) or manual entry.
+
+## architect — 2026-02-21 18:15 MST
+**Status:** ACTIVE — P0 catalog scrape executing
+**Progress:** Claimed cf-5bq (mayor-assigned scrape). Starting carolinafutons.com full crawl. Also received cf-2pm from melania (manufacturer specs) — will execute after catalog scrape.
+**Next:** Fetch sitemap, discover all product URLs, extract 88+ products, output JSON
+**Blockers:** Wix client-rendering blocks WebFetch
 
 ## caesar — 2026-02-21 18:20 MST
 **Status:** ACTIVE — executing cf-k73 (P0 catalog scrape)
 **Progress:** Sitemap scraped, 88 product URLs identified. 6 parallel scraper agents dispatched (batches of 15). Fixed Dolt SEGV (stale noms/LOCK + dead pid). Committed prior uncommitted work (browse abandonment + Core Web Vitals frontend, 3213 tests passing).
 **Next:** Collect all 6 agent results, merge into catalog JSON matching CMS-COLLECTION-SCHEMAS.md format, commit scrape output + code.
 **Blockers:** Wix renders product pages client-side — WebFetch gets JS shell. Agents extracting what structured data is available. May need enrichment pass.
-
----
-
-## ~~INFRASTRUCTURE ALERT~~ — RESOLVED by caesar
-- Dolt SEGV: Fixed by removing stale `noms/LOCK` files + dead `dolt-server.pid`
-- Local beads (cfutons): HEALTHY
-- Town beads (HQ): Partially recovered (warning on count but inbox accessible)
-
----
-
-**Previous status (2026-02-21 14:37 MST):**
-
-
-**Lead:** Melania (Production Manager) | **Tech Lead:** Architect
-**CI:** GREEN (3,200 tests, 88 files)
-**Repo:** DreadPirateRobertz/carolina-futons
 
 ---
 
@@ -42,21 +39,6 @@
 | CMS Collections | LIVE | 16 collections created by overseer |
 | Secrets Manager | LIVE | 8 secrets configured |
 | Payment | LIVE | Wix Payments — Credit, Apple Pay, Google Pay, Afterpay |
-| DNS | RESOLVED | Wix handles DNS — no custom config needed |
-| Build Spec | UPDATED | WIX-STUDIO-BUILD-SPEC.md complete |
-| Deployment Guide | READY | DEPLOYMENT-GUIDE.md |
-| Media Gallery | READY | mediaGallery.web.js — static wixstatic.com URLs |
-
-### Remaining Blockers
-- **cf-k73 (P0)**: Product catalog scraping — brainstorm IN PROGRESS
-- **cf-e7n**: Product photography — partially resolved by Media Manager integration
-
-### All Prior Blockers RESOLVED
-- ~~CMS collections~~ → 16 collections live
-- ~~Payment processor~~ → Wix Payments active
-- ~~DNS configuration~~ → Wix handles it
-- ~~UPS API secrets~~ → 8 secrets in Secrets Manager
-- ~~Product photos~~ → Media Manager API integration shipped
 
 ---
 
@@ -65,53 +47,10 @@
 | Member | Role | Current Work | Status |
 |--------|------|-------------|--------|
 | melania | Production Manager | cf-e7n coordinator, crew driver | ACTIVE |
-| architect | Tech Lead | Available — needs assignment | IDLE |
+| architect | Tech Lead | cf-5bq (P0 catalog scrape — mayor assigned) | ACTIVE |
 | caesar | Executor | cf-k73 (P0 catalog scrape — 6 agents running) | ACTIVE |
 | radahn | Executor | catalogImport.web.js tests (cf-e7n support) | NUDGED |
 | brainstorm | Executor | — | OFFLINE (tmux down) |
-
----
-
-## Deliverables This Session (by worker)
-
-### melania (Production Manager)
-- MARKETING-STRATEGY.md (cf-5ef) — $15K/month in 3 months, channel strategy, budget, KPIs
-- DEPLOYMENT-GUIDE.md (cf-0fm) — wix dev/publish/CMS/Secrets guide
-- bundleBuilder.web.js (cf-0lr) — cart-aware cross-sell, dynamic pricing, 50 tests
-- sustainabilityService.web.js (cf-fbg) — eco badges, carbon offset, trade-in program, 54 tests
-- mediaGallery.web.js (cf-of4) — Wix Media Manager integration, static URLs, 35 tests
-- Closed 12+ beads, created stories, updated all reports
-- Cross-rig monitoring: cfutons GREEN, cfutons_mobile (artemis fixing)
-
-### architect (Tech Lead)
-- cf-3ya: WIX-STUDIO-BUILD-SPEC.md — 80+ missing element IDs, inventoryAlerts module
-- cf-of4: Media gallery architecture
-
-### caesar (Executor)
-- cf-7bk: inventoryService.web.js — variant stock tracking, alerts, restock (37 tests)
-- cf-0xa: comparisonService.web.js + Compare Page.js — side-by-side specs (70+14 tests)
-- cf-1nb: browseAbandonment.web.js — session tracking, recovery emails (44 tests)
-
-### radahn (Executor)
-- cf-xfr: testimonialService.web.js — admin curation, auto-flagging
-- cf-10x: storeLocatorService.web.js — showroom info, directions, schema
-- cf-doy: bundleAnalytics.web.js — impression tracking, conversion rates
-- cf-2fx: checkoutOptimization.web.js — guest checkout, address validation (60 tests)
-- cf-eiu: coreWebVitals.web.js — LCP/FID/CLS tracking (51 tests)
-
-### brainstorm (Executor)
-- cf-bpp: photoReviews.web.js — customer photo reviews with moderation (28 tests)
-- cf-z8t: topicClusters.web.js — SEO content hub (57 tests)
-- cf-k73: Product catalog scraping — IN PROGRESS (P0)
-
----
-
-## Beads Queue
-| Bead | Priority | Assignee | Status |
-|------|----------|----------|--------|
-| cf-k73 | P0 | caesar (reassigned) | IN_PROGRESS (catalog scrape — 6 agents running) |
-| cf-e7n | P0 | — | OPEN (photo data — partially resolved) |
-| cf-1iq | P1 | radahn | IN_PROGRESS (customer accounts) |
 
 ---
 
