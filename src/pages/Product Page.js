@@ -19,12 +19,19 @@ import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { getProductDimensions, checkRoomFit, convertUnit } from 'backend/sizeGuide.web';
 import { getStockStatus } from 'backend/inventoryService.web';
+import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 
 const state = {
   product: null,
   selectedSwatchId: null,
   selectedQuantity: 1,
   bundleProduct: null,
+};
+
+const _browseState = {
+  sessionId: '',
+  startTime: Date.now(),
+  productsViewed: [],
 };
 
 $w.onReady(async function () {
@@ -82,6 +89,7 @@ async function initProductPage() {
 
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
     initBackToTop($w);
+    initBrowseTracking(state);
   } catch (err) {
     console.error('Error initializing product page:', err);
   }
@@ -405,4 +413,139 @@ async function initInventoryDisplay($w, state) {
       } catch (e) {}
     }
   } catch (e) {}
+}
+
+// ── Browse Abandonment Tracking ─────────────────────────────────
+
+function initBrowseTracking(state) {
+  try {
+    if (!state.product) return;
+
+    // Generate or retrieve session ID
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        _browseState.sessionId = sessionStorage.getItem('cf_browse_session') || '';
+        if (!_browseState.sessionId) {
+          _browseState.sessionId = 'bs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          sessionStorage.setItem('cf_browse_session', _browseState.sessionId);
+        }
+      } catch (e) {}
+    }
+    if (!_browseState.sessionId) {
+      _browseState.sessionId = 'bs_' + Date.now();
+    }
+
+    // Record this product view
+    _browseState.productsViewed.push({
+      productId: state.product._id,
+      productName: state.product.name || '',
+      price: state.product.price || 0,
+      viewStart: Date.now(),
+    });
+
+    // Send session data on page visibility change (tab switch, navigate away)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          sendBrowseSession();
+        }
+      });
+    }
+
+    // Also send on beforeunload as backup
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', () => {
+        sendBrowseSession();
+      });
+    }
+
+    // Show "Remind Me" popup after 2 minutes of viewing
+    setTimeout(() => {
+      showRemindMePopup();
+    }, 2 * 60 * 1000);
+  } catch (e) {
+    // Browse tracking is non-critical
+  }
+}
+
+function sendBrowseSession() {
+  try {
+    const now = Date.now();
+    const products = _browseState.productsViewed.map(p => ({
+      productId: p.productId,
+      productName: p.productName,
+      price: p.price,
+      viewDuration: now - p.viewStart,
+    }));
+
+    const currentPath = '/' + (wixLocationFrontend.path || []).join('/');
+
+    trackBrowseSession({
+      sessionId: _browseState.sessionId,
+      productsViewed: products,
+      totalDuration: now - _browseState.startTime,
+      entryPage: currentPath,
+      exitPage: currentPath,
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+function showRemindMePopup() {
+  try {
+    const popup = $w('#remindMePopup');
+    if (!popup) return;
+
+    // Don't show if already dismissed this session
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('cf_remind_shown')) return;
+      } catch (e) {}
+    }
+
+    try { $w('#remindMeTitle').text = 'Still deciding?'; } catch (e) {}
+    try { $w('#remindMeSubtitle').text = "We'll remind you about this item — no spam, just a gentle nudge."; } catch (e) {}
+    try { $w('#remindMeEmailInput').accessibility.ariaLabel = 'Enter your email for reminder'; } catch (e) {}
+    try { $w('#remindMeSubmit').accessibility.ariaLabel = 'Get reminded about this product'; } catch (e) {}
+
+    popup.show('fade', { duration: 300 });
+
+    if (typeof sessionStorage !== 'undefined') {
+      try { sessionStorage.setItem('cf_remind_shown', '1'); } catch (e) {}
+    }
+
+    // Close handler
+    try {
+      $w('#remindMeClose').onClick(() => {
+        popup.hide('fade', { duration: 200 });
+      });
+    } catch (e) {}
+
+    // Submit handler
+    try {
+      $w('#remindMeSubmit').onClick(async () => {
+        const email = $w('#remindMeEmailInput').value?.trim();
+        if (!email || !email.includes('@')) return;
+
+        try {
+          $w('#remindMeSubmit').disable();
+          $w('#remindMeSubmit').label = 'Saving...';
+
+          await captureRemindMeRequest(_browseState.sessionId, email);
+
+          $w('#remindMeSubmit').label = 'Saved!';
+          try { $w('#remindMeSuccess').text = "We'll send you a reminder."; } catch (e) {}
+          try { $w('#remindMeSuccess').show('fade', { duration: 300 }); } catch (e) {}
+
+          setTimeout(() => {
+            try { popup.hide('fade', { duration: 200 }); } catch (e) {}
+          }, 3000);
+        } catch (err) {
+          $w('#remindMeSubmit').enable();
+          $w('#remindMeSubmit').label = 'Remind Me';
+        }
+      });
+    } catch (e) {}
+  } catch (e) {
+    // Remind Me popup is non-critical
+  }
 }

@@ -5,6 +5,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
+import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -22,6 +23,17 @@ $w.onReady(async function () {
   ]);
   // Track purchase completion in engagement funnel
   trackPurchaseComplete('', 0);
+
+  // Mark browse session as converted to cancel recovery emails
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const sessionId = sessionStorage.getItem('cf_browse_session');
+      if (sessionId) {
+        markSessionConverted(sessionId).catch(() => {});
+        sessionStorage.removeItem('cf_browse_session');
+      }
+    }
+  } catch (e) {}
 });
 
 // ── Order Summary ──────────────────────────────────────────────────

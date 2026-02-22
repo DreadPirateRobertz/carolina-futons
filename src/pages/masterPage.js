@@ -10,6 +10,7 @@ import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { typography } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
+import { reportMetrics } from 'backend/coreWebVitals.web';
 
 let _previousCartItemCount = null;
 
@@ -30,6 +31,9 @@ $w.onReady(async function () {
       initLiveChat($w);
     }).catch(() => {}); // Chat is non-critical
   }, 2000);
+
+  // Core Web Vitals — collect after page settles (5s)
+  setTimeout(() => collectCoreWebVitals(), 5000);
 
   // Promotional lightbox — delayed 3s so page renders first
   setTimeout(() => initPromoLightbox(), 3000);
@@ -705,4 +709,88 @@ function showExitPopup() {
 function dismissExitPopup() {
   try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+}
+
+// ── Core Web Vitals Collection ────────────────────────────────────
+// Collects performance metrics after page load and reports to CMS
+
+function collectCoreWebVitals() {
+  try {
+    if (typeof performance === 'undefined') return;
+
+    // Generate or retrieve session ID
+    let sessionId = '';
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        sessionId = sessionStorage.getItem('cf_cwv_session') || '';
+        if (!sessionId) {
+          sessionId = 'cwv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          sessionStorage.setItem('cf_cwv_session', sessionId);
+        }
+      } catch (e) {}
+    }
+    if (!sessionId) sessionId = 'cwv_' + Date.now();
+
+    const page = '/' + (wixLocationFrontend.path || []).join('/');
+
+    // Detect device type
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
+    const deviceType = width < 768 ? 'mobile' : width < 1024 ? 'tablet' : 'desktop';
+
+    // Detect connection type
+    let connectionType = 'unknown';
+    try {
+      if (typeof navigator !== 'undefined' && navigator.connection) {
+        connectionType = navigator.connection.effectiveType || 'unknown';
+      }
+    } catch (e) {}
+
+    const data = { sessionId, page, deviceType, connectionType };
+
+    // Collect TTFB and FCP from performance.timing (navigation timing)
+    try {
+      const timing = performance.timing;
+      if (timing && timing.responseStart > 0) {
+        data.ttfb = timing.responseStart - timing.navigationStart;
+      }
+    } catch (e) {}
+
+    // Collect paint timing entries (FCP)
+    try {
+      const paintEntries = performance.getEntriesByType('paint');
+      for (const entry of paintEntries) {
+        if (entry.name === 'first-contentful-paint') {
+          data.fcp = Math.round(entry.startTime);
+        }
+      }
+    } catch (e) {}
+
+    // Collect LCP from PerformanceObserver buffered entries
+    try {
+      const lcpEntries = performance.getEntriesByType('largest-contentful-paint');
+      if (lcpEntries && lcpEntries.length > 0) {
+        data.lcp = Math.round(lcpEntries[lcpEntries.length - 1].startTime);
+      }
+    } catch (e) {}
+
+    // CLS from layout-shift entries
+    try {
+      const layoutShifts = performance.getEntriesByType('layout-shift');
+      if (layoutShifts && layoutShifts.length > 0) {
+        let cls = 0;
+        for (const shift of layoutShifts) {
+          if (!shift.hadRecentInput) cls += shift.value;
+        }
+        data.cls = Math.round(cls * 1000) / 1000;
+      }
+    } catch (e) {}
+
+    // Only report if we have at least one metric
+    const hasMetric = data.lcp || data.fcp || data.ttfb || data.cls !== undefined;
+    if (!hasMetric) return;
+
+    reportMetrics(data).catch(() => {});
+  } catch (e) {
+    // CWV collection is non-critical
+  }
 }
