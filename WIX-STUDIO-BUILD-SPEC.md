@@ -1233,6 +1233,85 @@ Terms sections use anchor IDs for TOC navigation:
 
 ---
 
+## Page 10: Order Tracking (Route: `/tracking`)
+
+**Purpose**: Customer self-service order tracking — lookup by order number + email, real-time UPS shipment status, delivery timeline, activity history, notification opt-in.
+
+**Code file**: `src/pages/Order Tracking.js`
+**Backend**: `src/backend/orderTracking.web.js` (lookupOrder, subscribeToNotifications, unsubscribeFromNotifications, getTrackingTimeline)
+
+### Layout
+
+| Section | Element | Selector | Notes |
+|---------|---------|----------|-------|
+| **Lookup Form** | | | |
+| Title | Text | `#trackingTitle` | "Track Your Order" |
+| Subtitle | Text | `#trackingSubtitle` | Instructions |
+| Order Number | Input | `#orderNumberInput` | Text input, required |
+| Email | Input | `#emailInput` | Text input, required |
+| Submit | Button | `#trackOrderBtn` | Primary CTA |
+| Error | Text | `#trackingError` | Hidden by default, coral color |
+| Loader | Element | `#trackingLoader` | Spinner, hidden by default |
+| **Results Section** | Container | `#trackingResultsSection` | Collapsed by default |
+| Order Number | Text | `#resultOrderNumber` | "Order #10042" |
+| Order Date | Text | `#resultOrderDate` | "Placed January 15, 2026" |
+| Status Badge | Text | `#resultStatus` | Color-coded by fulfillment status |
+| Status Desc | Text | `#resultStatusDescription` | e.g. "Your package is on its way" |
+| New Search | Button | `#newSearchBtn` | "Track Another Order" |
+| Refresh | Button | `#refreshTrackingBtn` | Refresh tracking data |
+| **Timeline** | Container | `#trackingTimeline` | 5-step horizontal/vertical progress |
+| Step 0 | Box | `#timelineStep0` | "Order Placed" |
+| Step 0 Dot | Box | `#timelineDot0` | Circle indicator |
+| Step 0 Label | Text | `#timelineLabel0` | |
+| Step 1 | Box | `#timelineStep1` | "Shipped" |
+| Step 1 Dot | Box | `#timelineDot1` | |
+| Step 1 Label | Text | `#timelineLabel1` | |
+| Step 2 | Box | `#timelineStep2` | "In Transit" |
+| Step 2 Dot | Box | `#timelineDot2` | |
+| Step 2 Label | Text | `#timelineLabel2` | |
+| Step 3 | Box | `#timelineStep3` | "Out for Delivery" |
+| Step 3 Dot | Box | `#timelineDot3` | |
+| Step 3 Label | Text | `#timelineLabel3` | |
+| Step 4 | Box | `#timelineStep4` | "Delivered" |
+| Step 4 Dot | Box | `#timelineDot4` | |
+| Step 4 Label | Text | `#timelineLabel4` | |
+| **Shipping Details** | Container | `#shippingDetailsSection` | |
+| Carrier | Text | `#carrierName` | "UPS" |
+| Service | Text | `#serviceName` | "UPS Ground" |
+| Tracking # | Text | `#trackingNumberText` | Full tracking number |
+| Est. Delivery | Text | `#estimatedDelivery` | "Estimated delivery: Friday, March 5" |
+| Destination | Text | `#shippingDestination` | "Delivering to Charlotte, NC 28202" |
+| UPS Link | Button | `#upsTrackingBtn` | Opens UPS tracking in new tab |
+| No Tracking | Text | `#noTrackingMessage` | Shown when order has no tracking yet |
+| **Line Items** | Container | `#lineItemsSection` | |
+| Items | Repeater | `#trackingItemsRepeater` | Order line items |
+| → Image | Image | `#itemImage` | Product thumbnail |
+| → Name | Text | `#itemName` | Product name |
+| → Qty | Text | `#itemQty` | "Qty: 1" |
+| → Price | Text | `#itemPrice` | "$599.00" |
+| → SKU | Text | `#itemSku` | "SKU: FRAME-001" |
+| **Totals** | | | |
+| Subtotal | Text | `#totalSubtotal` | |
+| Shipping | Text | `#totalShipping` | "Free" if $0 |
+| Total | Text | `#totalAmount` | Bold |
+| **Activity Log** | Container | `#activitySection` | UPS tracking activities |
+| Activities | Repeater | `#activityRepeater` | Chronological list |
+| → Status | Text | `#activityStatus` | "Departed Facility" |
+| → Location | Text | `#activityLocation` | "Charlotte, NC" |
+| → Date/Time | Text | `#activityDateTime` | "Jan 15 2:30 PM" |
+| **Notifications** | Container | `#notificationSection` | |
+| Toggle | Switch | `#notificationToggle` | Opt-in/out email updates |
+| Label | Text | `#notificationLabel` | Toggle description |
+
+### Design Notes
+- **Color coding**: Green (delivered/success), Mountain Blue (in-transit/active), Coral (exception/error), Muted (pending)
+- **Timeline**: Horizontal on desktop, vertical on mobile. Dots are circles with connecting line between them.
+- **Auto-refresh**: Page refreshes tracking every 5 min for active shipments (not delivered/returned)
+- **Accessibility**: All interactive elements have aria-labels, form validates on Enter key
+- **Prefill**: Accepts `?order=XXXXX&email=x@x.com` query params from Member Page links
+
+---
+
 ## Illustration Assets Needed
 
 1. **Mountain ridgeline header** - SVG, blue mountain silhouette for nav background
