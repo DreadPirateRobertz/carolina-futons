@@ -1,0 +1,87 @@
+{
+  "_meta": {
+    "generatedAt": "2026-02-22T06:20:00Z",
+    "generatedBy": "caesar",
+    "purpose": "Category page hero text, SEO descriptions, and filter metadata"
+  },
+  "categories": [
+    {
+      "slug": "futon-frames",
+      "title": "Futon Frames",
+      "heroText": "Solid Hardwood Futon Frames — Sofa by Day, Bed by Night",
+      "description": "Discover our collection of premium futon frames crafted from solid hardwood. Night & Day Furniture's MoonGlider operating system makes converting from sofa to bed effortless. Available in Full and Queen sizes with multiple finish options including Cherry, Black Walnut, Dark Chocolate, and Natural.",
+      "seoTitle": "Futon Frames | Solid Wood Futon Sofas | Carolina Futons",
+      "seoDescription": "Shop solid hardwood futon frames from Night & Day Furniture. MoonGlider system for easy sofa-to-bed conversion. Full & Queen sizes. Free shipping over $1,999.",
+      "productCount": 19,
+      "priceRange": { "min": 199, "max": 903 },
+      "filters": ["size", "finish", "manufacturer", "priceRange"]
+    },
+    {
+      "slug": "wall-hugger-frames",
+      "title": "Wall Hugger Futon Frames",
+      "heroText": "Space-Saving Wall Hugger Futons — No Need to Move Away From the Wall",
+      "description": "Our wall hugger futon frames convert from sofa to bed without moving away from the wall. Strata Furniture's patented zero-tolerance mechanism and Night & Day's wall-hugging designs are perfect for small spaces, apartments, and rooms where every inch counts.",
+      "seoTitle": "Wall Hugger Futon Frames | Space-Saving Futons | Carolina Futons",
+      "seoDescription": "Wall hugger futon frames that convert without moving from the wall. Strata Furniture & Night & Day designs. Perfect for small spaces. Shop now.",
+      "productCount": 10,
+      "priceRange": { "min": 642, "max": 782 },
+      "filters": ["size", "finish", "manufacturer", "priceRange"]
+    },
+    {
+      "slug": "front-loading-nesting",
+      "title": "Front-Loading & Nesting Futon Frames",
+      "heroText": "Front-Loading Nesting Futon Frames — Classic Three-Position Design",
+      "description": "Front-loading nesting futon frames feature a classic three-position design: sofa, reclined, and bed. The nesting body style offers a traditional futon experience with easy front-access conversion.",
+      "seoTitle": "Front-Loading Nesting Futon Frames | Carolina Futons",
+      "seoDescription": "Front-loading nesting futon frames with 3 positions. Brushed Driftwood & Skye finishes. Full & Queen sizes available.",
+      "productCount": 2,
+      "priceRange": { "min": 559, "max": 729 },
+      "filters": ["size", "finish", "priceRange"]
+    },
+    {
+      "slug": "platform-beds",
+      "title": "Platform Beds",
+      "heroText": "Solid Wood Platform Beds — No Box Spring Needed",
+      "description": "Our platform beds provide a clean, modern sleeping solution with built-in slat support — no box spring or foundation needed. Choose from Night & Day Furniture's Spices collection in multiple finishes, or KD Frames' American-made unfinished Tulip Poplar that you can customize. Available in Twin through King sizes with up to 600 lb weight capacity.",
+      "seoTitle": "Platform Beds | Solid Wood Beds | No Box Spring | Carolina Futons",
+      "seoDescription": "Solid wood platform beds — no box spring needed. Night & Day Spices collection & KD Frames USA-made beds. Twin to King. 600 lb capacity. Free shipping over $1,999.",
+      "productCount": 21,
+      "priceRange": { "min": 169, "max": 486 },
+      "filters": ["size", "finish", "manufacturer", "priceRange", "height"]
+    },
+    {
+      "slug": "murphy-cabinet-beds",
+      "title": "Murphy Cabinet Beds",
+      "heroText": "Murphy Cabinet Beds — From Cabinet to Queen Bed in Under 60 Seconds",
+      "description": "Transform any room into a guest bedroom with our Murphy cabinet beds. No wall mounting required — these freestanding cabinets convert to a full-size bed in under a minute. All models include a gel-infused memory foam mattress. Premium models feature built-in power/USB outlets, flip-up side trays, and rolling storage drawers.",
+      "seoTitle": "Murphy Cabinet Beds | Space-Saving Guest Beds | Carolina Futons",
+      "seoDescription": "Murphy cabinet beds — freestanding, no wall mount needed. Converts to bed in 60 seconds. Mattress included. Night & Day Furniture. Starting at $1,399.",
+      "productCount": 9,
+      "priceRange": { "min": 1399, "max": 2978 },
+      "filters": ["size", "finish", "priceRange", "features"]
+    },
+    {
+      "slug": "mattresses",
+      "title": "Futon Mattresses",
+      "heroText": "Premium Futon Mattresses — Handcrafted for Comfort That Lasts",
+      "description": "Our Otis Bed futon mattresses are handcrafted in the USA with premium foams and proprietary Compression Lace Tufting for 10-12+ years of everyday comfort. From the plush Moonshadow to the firm Mesa 3000, find your perfect comfort level. Arizona boutique mattresses available exclusively in our Hendersonville showroom.",
+      "seoTitle": "Futon Mattresses | Otis Bed | Premium Foam | Carolina Futons",
+      "seoDescription": "Handcrafted Otis Bed futon mattresses — TRUE 8\" thick, 10-12+ year durability. Foam, innerspring & memory foam options. Full & Queen sizes. Shop or visit our showroom.",
+      "productCount": 14,
+      "priceRange": { "min": 0, "max": 709 },
+      "filters": ["size", "comfortLevel", "priceRange", "construction"],
+      "note": "Several mattresses are in-store only (contact for pricing)"
+    },
+    {
+      "slug": "casegoods-accessories",
+      "title": "Bedroom Furniture & Accessories",
+      "heroText": "Dressers, Chests, Nightstands & Accessories to Complete Your Room",
+      "description": "Complete your bedroom with our curated collection of Night & Day Furniture casegoods. The Clove and Secrets collections feature dovetailed drawers, hand-rubbed finishes, and hidden storage. Plus platform bed accessories like storage drawers, trundle beds, and mattress protectors.",
+      "seoTitle": "Bedroom Furniture | Dressers, Chests, Nightstands | Carolina Futons",
+      "seoDescription": "Night & Day Furniture dressers, chests, nightstands. Clove & Secrets collections. Dovetail construction, multiple finishes. Platform bed accessories.",
+      "productCount": 13,
+      "priceRange": { "min": 35, "max": 1029 },
+      "filters": ["finish", "collection", "priceRange"]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "generatedAt": "2026-02-22T06:15:00Z",
+    "generatedBy": "caesar"
+  },
+  "about": {
+    "companyName": "Carolina Futons",
+    "tagline": "Quality Futons, Platform Beds & Murphy Cabinet Beds in the Blue Ridge Mountains",
+    "location": {
+      "city": "Hendersonville",
+      "state": "North Carolina",
+      "region": "Western North Carolina / Blue Ridge Mountains"
+    },
+    "description": "Carolina Futons is your destination for quality futon furniture, platform beds, and Murphy cabinet beds in the heart of the Blue Ridge Mountains. Located in Hendersonville, NC, our showroom features the finest solid hardwood frames from Night & Day Furniture, innovative wall-hugger designs from Strata Furniture, American-made platform beds from KD Frames, and handcrafted mattresses from Otis Bed. Whether you're furnishing a mountain cabin, outfitting a college dorm, or creating a versatile guest room, we have the perfect solution for your space.",
+    "values": [
+      {
+        "title": "Quality Craftsmanship",
+        "description": "Every piece we carry is built to last. From plantation-grown Malaysian rubberwood to kiln-dried Virginia Tulip Poplar, our furniture is crafted from sustainable hardwoods with traditional joinery techniques."
+      },
+      {
+        "title": "Sustainability",
+        "description": "We're committed to environmentally responsible furniture. Night & Day Furniture uses plantation-grown rubberwood — a non-rainforest product. KD Frames harvests Tulip Poplar from sustainably managed Virginia forests and manufactures in Athens, GA. No old-growth or rainforest wood is used in any of our products."
+      },
+      {
+        "title": "Expert Guidance",
+        "description": "Our showroom staff knows futon furniture inside and out. We'll help you choose the right frame, mattress, and accessories for your specific needs — whether that's a primary sofa for daily sitting, a guest bed for occasional use, or a space-saving Murphy cabinet for a home office."
+      },
+      {
+        "title": "Try Before You Buy",
+        "description": "Our Hendersonville showroom lets you sit on every frame, lie on every mattress, and see every finish in person. Our exclusive Arizona boutique mattress line is available only in-store — come experience the difference quality makes."
+      }
+    ],
+    "manufacturers": [
+      {
+        "name": "Night & Day Furniture",
+        "specialty": "Futon frames, platform beds, Murphy cabinet beds, casegoods",
+        "materials": "Plantation-grown Malaysian rubberwood",
+        "highlight": "MoonGlider operating system for effortless sofa-to-bed conversion"
+      },
+      {
+        "name": "Strata Furniture",
+        "specialty": "Wall-hugger futon frames",
+        "materials": "Certified sustainable plantation-grown rubberwood",
+        "highlight": "The only true zero-tolerance wall-hugger futons — converts without moving from the wall"
+      },
+      {
+        "name": "KD Frames",
+        "specialty": "Platform beds and accessories",
+        "materials": "Kiln-dried Tulip Poplar hardwood",
+        "highlight": "Made in the USA (Athens, GA) — 600 lb weight capacity, unfinished wood you can customize"
+      },
+      {
+        "name": "Otis Bed",
+        "specialty": "Futon mattresses",
+        "materials": "Premium foams with CertiPUR-US certification",
+        "highlight": "Handcrafted in the USA — TRUE 8\" thickness, designed for 10-12+ years of everyday use"
+      }
+    ]
+  }
+}

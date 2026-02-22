@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "generatedAt": "2026-02-22T06:15:00Z",
+    "generatedBy": "caesar"
+  },
+  "shippingPolicy": {
+    "overview": "Carolina Futons offers multiple shipping options to get your furniture delivered safely and conveniently. Most in-stock items ship within 3-5 business days.",
+    "methods": [
+      {
+        "name": "Standard Shipping",
+        "description": "Curbside delivery via common carrier. Items are delivered to the curb or first dry area. You are responsible for bringing items inside.",
+        "timeline": "5-10 business days",
+        "freeThreshold": 1999,
+        "note": "Free on orders over $1,999"
+      },
+      {
+        "name": "Local White-Glove Delivery",
+        "description": "In-home delivery within 50 miles of Hendersonville, NC. Includes unpacking, room placement, assembly, and packaging removal.",
+        "price": 149,
+        "timeline": "Scheduled delivery — Wednesday through Saturday",
+        "area": "Within 50 miles of Hendersonville, NC"
+      },
+      {
+        "name": "Regional White-Glove Delivery",
+        "description": "Full-service in-home delivery for customers beyond local range. Includes unpacking, assembly, and packaging removal.",
+        "price": 249,
+        "timeline": "1-2 weeks",
+        "area": "Southeast US and beyond"
+      },
+      {
+        "name": "In-Store Pickup",
+        "description": "Pick up your order at our Hendersonville, NC showroom. No shipping charges.",
+        "price": 0,
+        "timeline": "Usually same day for in-stock items"
+      }
+    ],
+    "deliverySchedule": {
+      "days": ["Wednesday", "Thursday", "Friday", "Saturday"],
+      "hours": "9:00 AM - 5:00 PM",
+      "note": "Delivery windows are 2-hour blocks. You'll receive a confirmation call the day before delivery."
+    },
+    "returns": {
+      "policy": "We want you to be completely satisfied with your purchase. If you're not happy with your furniture, contact us within 30 days of delivery to arrange a return.",
+      "conditions": [
+        "Items must be in original condition, unassembled (if applicable)",
+        "Customer is responsible for return shipping costs",
+        "Mattresses are non-returnable for hygiene reasons unless defective",
+        "Custom or special-order items may not be returnable"
+      ],
+      "refundTimeline": "Refunds are processed within 5-7 business days after we receive the returned item."
+    }
+  },
+  "assemblyInfo": {
+    "overview": "Most of our furniture is designed for straightforward assembly. Here's what to expect:",
+    "categories": [
+      {
+        "type": "Futon Frames",
+        "difficulty": "Moderate",
+        "time": "30-60 minutes",
+        "tools": "Phillips screwdriver, Allen wrench (included)",
+        "notes": "Two people recommended. Night & Day frames include all hardware and step-by-step instructions."
+      },
+      {
+        "type": "Platform Beds",
+        "difficulty": "Easy",
+        "time": "20-45 minutes",
+        "tools": "Phillips screwdriver (KD Frames: all hardware included)",
+        "notes": "KD Frames beds have clearly labeled parts and assemble in 7 easy steps. Two people recommended for King size."
+      },
+      {
+        "type": "Murphy Cabinet Beds",
+        "difficulty": "None to Easy",
+        "time": "0-15 minutes",
+        "tools": "None required for most models",
+        "notes": "Premium flower series (Daisy, Poppy, Sagebrush, Clover, Ranchero), Murphy Cube, and San Sebastian arrive fully assembled. Orion requires minor setup. Murphy Express requires no assembly at all."
+      },
+      {
+        "type": "Casegoods (Dressers, Chests, Nightstands)",
+        "difficulty": "Easy",
+        "time": "5-10 minutes",
+        "tools": "Phillips screwdriver",
+        "notes": "Casegoods arrive assembled — only drawer knobs need to be attached. Each piece includes two sets of knobs (wood and metal/pewter) so you can choose your style."
+      }
+    ]
+  }
+}
