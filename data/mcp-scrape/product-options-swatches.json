@@ -1,0 +1,1144 @@
+{
+  "source": "carolinafutons.com Wix MCP - product variants",
+  "total_products_with_options": 71,
+  "unique_colors": [
+    "Antique Blue",
+    "Bakar",
+    "Black Walnut",
+    "Brushed Driftwood",
+    "Buttercream",
+    "Charcoal",
+    "Cherry",
+    "Chocolate",
+    "Clear",
+    "Clear finish",
+    "Dark Cherry",
+    "Espresso",
+    "Gray",
+    "Harvest Brown",
+    "Honey Pine finish",
+    "Natural",
+    "Normandy",
+    "Provence",
+    "Red",
+    "Skye",
+    "Stonewash Gray",
+    "Teal",
+    "Vintage White",
+    "Warm Cherry",
+    "White",
+    "White Bark",
+    "Wildwood Brown",
+    "Wildwood Vintage White"
+  ],
+  "unique_sizes": [
+    "12\" Footboard and 37\" Headboard",
+    "12\" for Full",
+    "12\" for King",
+    "12\" for Queen",
+    "12\" for Twin",
+    "12\" for Twin XL",
+    "18\" Footboard and 43\" Headboard",
+    "18\" for Full",
+    "18\" for King",
+    "18\" for Queen",
+    "18\" for Twin",
+    "18\" for Twin XL",
+    "Full",
+    "Full Headboard Only",
+    "Full Lounger",
+    "Full Loveseat w/Ottoman",
+    "Full P-Series",
+    "King",
+    "King Headboard Only",
+    "King P-Series",
+    "Queen",
+    "Queen Headboard Only",
+    "Queen Lounger",
+    "Queen Loveseat w/Ottoman",
+    "Queen P-Series",
+    "Twin",
+    "Twin Headboard Only",
+    "Twin Lounger",
+    "Twin P-Series",
+    "Twin XL"
+  ],
+  "products": [
+    {
+      "product": "Haley 110",
+      "slug": "haley-110",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "Moonshadow",
+      "slug": "pulsar",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "Murphy Express Cabinet Bed",
+      "slug": "murphy-cabinet-express",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Wildwood Brown",
+          "Normandy",
+          "Provence"
+        ]
+      }
+    },
+    {
+      "product": "Sealy San Sebastian Cabinet Bed",
+      "slug": "san-sebastian-sealy-cabinet-bed",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Espresso",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Ranchero  Murphy Cabinet Bed",
+      "slug": "ranchero-murphy-cabinet-bed",
+      "options": {
+        "Color": [
+          "Bakar",
+          "Wildwood Brown",
+          "Wildwood Vintage White"
+        ]
+      }
+    },
+    {
+      "product": "Orion Murphy Cabinet Bed",
+      "slug": "orion-murphy-cabinet-bed",
+      "options": {
+        "Size": [
+          "Full",
+          "Twin"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Stonewash Gray",
+          "White",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Northern Exposure Log Futon",
+      "slug": "northern-exposure-log-futon",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Clear finish",
+          "Honey Pine finish"
+        ]
+      }
+    },
+    {
+      "product": "Wilderness Log Futon",
+      "slug": "wilderness-log-futon",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Clear"
+        ]
+      }
+    },
+    {
+      "product": "Leg length options for Nomad Platform Bed",
+      "slug": "leg-length-options-for-nomad-platform-bed",
+      "options": {
+        "Size": [
+          "12\" for Twin",
+          "12\" for Twin XL",
+          "12\" for Full",
+          "12\" for Queen",
+          "12\" for King",
+          "18\" for Twin",
+          "18\" for Twin XL",
+          "18\" for Full",
+          "18\" for Queen",
+          "18\" for King"
+        ]
+      }
+    },
+    {
+      "product": "Leg length options for Charleston Platform Bed",
+      "slug": "leg-length-options-for-charleston-platform-bed",
+      "options": {
+        "Size": [
+          "12\" Footboard and 37\" Headboard",
+          "18\" Footboard and 43\" Headboard"
+        ]
+      }
+    },
+    {
+      "product": "Leg length options for Lexington Platform Bed",
+      "slug": "leg-length-options-for-lexington-platform-bed",
+      "options": {
+        "Size": [
+          "12\" Footboard and 37\" Headboard",
+          "18\" Footboard and 43\" Headboard"
+        ]
+      }
+    },
+    {
+      "product": "Folding Platform Bed",
+      "slug": "folding-platform-bed",
+      "options": {
+        "Size": [
+          "Twin",
+          "Twin XL",
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "Hook-On Nightstand",
+      "slug": "hook-on-nightstand",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Secrets Nightstand",
+      "slug": "secrets-nightstand",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Secrets 7-Drawer Dresser",
+      "slug": "secrets-7-drawer-dresser",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Secrets 5-Drawer Chest",
+      "slug": "secrets-5-drawer-chest",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Platform Bed Storage Drawers",
+      "slug": "storage-drawers",
+      "options": {
+        "Series": [
+          "Twin P-Series",
+          "Full P-Series",
+          "Queen P-Series",
+          "King P-Series",
+          "Twin K-Series",
+          "Full K-Series",
+          "Queen K-Series",
+          "King K-Series"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "White",
+          "Natural",
+          "Stonewash Gray"
+        ]
+      }
+    },
+    {
+      "product": "Clove 6-Drawer Dresser",
+      "slug": "clove-6-drawer-dresser",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Clove 5-Drawer Chest",
+      "slug": "clove-5-drawer-chest",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Nomad",
+      "slug": "nomad",
+      "options": {
+        "Size": [
+          "Twin",
+          "Twin XL",
+          "Full",
+          "Queen",
+          "King"
+        ]
+      }
+    },
+    {
+      "product": "Lexington",
+      "slug": "lexington-1",
+      "options": {
+        "Size": [
+          "Twin",
+          "Twin XL",
+          "Full",
+          "Queen",
+          "King"
+        ]
+      }
+    },
+    {
+      "product": "Charleston",
+      "slug": "charleston",
+      "options": {
+        "Size": [
+          "Twin",
+          "Twin XL",
+          "Full",
+          "Queen",
+          "King"
+        ]
+      }
+    },
+    {
+      "product": "Ekko Platform Bed",
+      "slug": "ekko",
+      "options": {
+        "Size": [
+          "Twin",
+          "Twin XL",
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "Pagoda",
+      "slug": "pagoda",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen",
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman"
+        ],
+        "Color": [
+          "Black Walnut",
+          "Gray"
+        ]
+      }
+    },
+    {
+      "product": "Yuma",
+      "slug": "yuma",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ]
+      }
+    },
+    {
+      "product": "Mattress Protector",
+      "slug": "mattress-protector",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "Galena",
+      "slug": "galena",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Black Walnut",
+          "Dark Cherry"
+        ]
+      }
+    },
+    {
+      "product": "Canby",
+      "slug": "canby",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Black Walnut",
+          "Warm Cherry",
+          "Gray"
+        ]
+      }
+    },
+    {
+      "product": "Clove 2-Drawer Nightstand",
+      "slug": "clove-nightstand",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Clove 6-Drawer Lingerie Chest",
+      "slug": "lingerie-chest",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Thyme",
+      "slug": "thyme",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin P-Series",
+          "Full P-Series",
+          "Queen P-Series",
+          "King P-Series"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Tarragon",
+      "slug": "tarragon",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Tamarind",
+      "slug": "tamarind",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Solstice",
+      "slug": "solstice-1",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray"
+        ]
+      }
+    },
+    {
+      "product": "Rosemary",
+      "slug": "rosemary",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Paprika",
+      "slug": "paprika",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Red",
+          "Teal",
+          "Charcoal",
+          "Gray"
+        ]
+      }
+    },
+    {
+      "product": "Nutmeg",
+      "slug": "nutmeg-platform-bed",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Basic Platform Bed",
+      "slug": "basic-bed",
+      "options": {
+        "Size": [
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Black Pepper",
+      "slug": "black-pepper",
+      "options": {
+        "Size": [
+          "Twin Headboard Only",
+          "Full Headboard Only",
+          "Queen Headboard Only",
+          "King Headboard Only",
+          "Twin",
+          "Full",
+          "Queen",
+          "King"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Stonewash Gray"
+        ]
+      }
+    },
+    {
+      "product": "Raleigh",
+      "slug": "raleigh",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Brushed Driftwood"
+        ]
+      }
+    },
+    {
+      "product": "Monterey",
+      "slug": "monterey",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate"
+        ]
+      }
+    },
+    {
+      "product": "Winter",
+      "slug": "winter",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Winchester",
+      "slug": "winchester",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Venice",
+      "slug": "venice",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Trinity",
+      "slug": "trinity",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Sunrise",
+      "slug": "sunrise",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Solstice",
+      "slug": "solstice",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Ruskin",
+      "slug": "ruskin",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate"
+        ]
+      }
+    },
+    {
+      "product": "Portofino",
+      "slug": "portofino",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Key West",
+      "slug": "key-west",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Kingston",
+      "slug": "kingston",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Fuji",
+      "slug": "fuji",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate"
+        ]
+      }
+    },
+    {
+      "product": "Eureka",
+      "slug": "eureka",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Bali",
+      "slug": "bali",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Skye",
+          "Brushed Driftwood"
+        ]
+      }
+    },
+    {
+      "product": "Autumn",
+      "slug": "autumn",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Murphy Cube Cabinet Bed",
+      "slug": "murphy-cube2",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Stonewash Gray",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Sagebrush Murphy Cabinet Bed",
+      "slug": "sagebrush-murphy-cabinet-bed",
+      "options": {
+        "Color": [
+          "Chocolate",
+          "Stonewash Gray"
+        ]
+      }
+    },
+    {
+      "product": "Poppy Murphy Cabinet Bed",
+      "slug": "poppy-murphy-bed-cabinet",
+      "options": {
+        "Color": [
+          "White Bark",
+          "Brushed Driftwood",
+          "Antique Blue",
+          "Harvest Brown"
+        ]
+      }
+    },
+    {
+      "product": "Daisy Murphy Cabinet Bed",
+      "slug": "daisy-murphy-bed-cabinet",
+      "options": {
+        "Color": [
+          "Buttercream",
+          "Black Walnut",
+          "White",
+          "Vintage White"
+        ]
+      }
+    },
+    {
+      "product": "Clover Murphy Cabinet Bed",
+      "slug": "clover-murphy-bed-cabinet",
+      "options": {
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "White"
+        ]
+      }
+    },
+    {
+      "product": "Albany",
+      "slug": "albany",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Cherry",
+          "Chocolate",
+          "Black Walnut",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Trelli",
+      "slug": "trelli",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Black Walnut",
+          "Warm Cherry"
+        ]
+      }
+    },
+    {
+      "product": "Studio Frame",
+      "slug": "studio-frame",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen"
+        ]
+      }
+    },
+    {
+      "product": "KD Lounger",
+      "slug": "kd-lounger",
+      "options": {
+        "Size": [
+          "Twin Lounger",
+          "Full Lounger",
+          "Queen Lounger"
+        ]
+      }
+    },
+    {
+      "product": "Denali",
+      "slug": "denali",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Dark Cherry",
+          "Warm Cherry",
+          "Gray",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Dillon",
+      "slug": "dillon",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Black Walnut",
+          "Dark Cherry",
+          "Warm Cherry",
+          "Gray",
+          "Natural"
+        ]
+      }
+    },
+    {
+      "product": "Durango",
+      "slug": "durango",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Dark Cherry",
+          "Warm Cherry",
+          "Gray"
+        ]
+      }
+    },
+    {
+      "product": "Lambton",
+      "slug": "lambton",
+      "options": {
+        "Size": [
+          "Full",
+          "Queen",
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman"
+        ],
+        "Color": [
+          "Dark Cherry",
+          "Warm Cherry"
+        ]
+      }
+    },
+    {
+      "product": "Rockwell",
+      "slug": "rockwell",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Black Walnut"
+        ]
+      }
+    },
+    {
+      "product": "Tiro",
+      "slug": "tiro",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Dark Cherry",
+          "Warm Cherry"
+        ]
+      }
+    },
+    {
+      "product": "Tozi",
+      "slug": "tozi",
+      "options": {
+        "Size": [
+          "Full Loveseat w/Ottoman",
+          "Queen Loveseat w/Ottoman",
+          "Full",
+          "Queen"
+        ],
+        "Color": [
+          "Dark Cherry",
+          "Warm Cherry"
+        ]
+      }
+    }
+  ]
+}

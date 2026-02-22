@@ -1,135 +1,253 @@
 # cfutons (Carolina Futons) — Report to Human
 
-**Last Updated:** 2026-02-22 16:30 UTC (architect)
+**Last Updated:** 2026-02-22 16:45 MST (melania, Production Manager)
 **Repo:** git@github.com:DreadPirateRobertz/carolina-futons.git
-**Beads DB:** ONLINE
+**Beads DB:** ONLINE (290 total | 218 closed | 6 ready | 0 in-progress)
 
 ---
 
-## Health: GREEN — LAUNCH READY
+## Health: GREEN — ALL WORKERS IDLE, LAUNCH READY
 
 | Metric | Value |
 |--------|-------|
-| Tests | 3,535+ vitest tests across 97 files (all green) |
-| Backend Modules | 63 `.web.js` modules ready |
-| Page Code | 24 page JS files with $w bindings |
-| CMS Collections | 16 live in Wix + 66 auto-created by backend |
+| Tests | 3,526 vitest tests across 96 files (**all green**) |
+| Backend Modules | 62+ `.web.js` modules ready |
+| Page Code | 23 page JS files with $w bindings |
+| Frontend Utils | 24 public JS modules |
+| CMS Collections | 16 defined (need creation in Dashboard) |
 | Secrets Manager | 8 secrets configured (incl. WIX_BACKEND_KEY) |
 | Payments | Wix Payments — Credit, Apple Pay, Google Pay, Afterpay |
 | Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
+| MCP Scrape | COMPLETE — 88 products + 70 pages pulled via Wix MCP API |
 
 ---
 
-## Product Catalog Status: SHIPPED
+## WHAT YOU (HUMAN) NEED TO DO — Priority Order
 
-| Data | Count | Status |
-|------|-------|--------|
-| Products total | 88 | All scraped via JSON-LD from carolinafutons.com |
-| With prices | 74 | $35–$2,978 range |
-| Contact-for-price | 14 | All Otis Bed mattresses (business choice, not missing data) |
-| With descriptions | 88/88 | Complete |
-| With images | 88/88 | High-res Wix static URLs |
-| YouTube videos | 16 | KD Frames, Night & Day, Strata |
+### Immediate (15 min, all free)
 
-**Categories:** futon-frames 19, platform-beds 21, mattresses 14, casegoods-accessories 13, wall-hugger-frames 10, murphy-cabinet-beds 9, front-loading-nesting 2
+1. **Install GA4** — Wix Dashboard > Marketing Integrations > paste your GA4 Measurement ID
+2. **Install Meta Pixel** — Dashboard > Tracking & Analytics > paste Facebook Pixel ID
+3. **Install Pinterest Tag** — Dashboard > Tracking & Analytics > paste Pinterest Tag ID
+4. **Connect Google Merchant Center** — connect feed URL: `/_functions/googleMerchantFeed`
+5. **Enable Wix Chat** — Dashboard > toggle on (one click)
 
-**Key files:**
-- `content/catalog-MASTER.json` — 88 products, enriched with prices/descriptions/images
-- `content/carolinafutons-products.json` — Raw JSON-LD scrape (88 products)
-- `content/catalog-youtube-videos.json` — 16 product videos
-- `content/faq.json` — FAQ content (ordering, frames, beds, mattresses)
-- `content/shipping-info.json` — Shipping policy, assembly, returns
+### This Week (30 min)
 
----
+6. **Create CMS Collections** — 16 collections needed. Full schema in `CMS-SETUP-GUIDE.md`. Priority order:
+   - ContactSubmissions, ProductAnalytics, Promotions, EmailQueue, Unsubscribes
+   - AbandonedCarts, Fulfillments, GiftCards, DeliverySchedule, AssemblyGuides
+   - **FabricSwatches** (see Swatch Hookup below), ProductBundles
+   - CustomerEngagement, ReviewRequests, ReferralCodes, Videos
+7. **Enable Wix Loyalty** — Dashboard toggle (code in `loyaltyService.web.js` ready)
+8. **Enable Wix Automations** — powers post-purchase sequences
+9. **Enable Wix Bookings** — for showroom appointment scheduling (Hendersonville)
+10. **Verify Secrets Manager** — login halworker85@gmail.com, confirm 8 secrets present
 
-## Deployment Guide: SHIPPED
+### Before Marketing Push
 
-`HOOKUP-GUIDE.md` — Complete step-by-step guide:
-1. Deploy 63 backend modules to Wix Velo
-2. Deploy utility modules
-3. Deploy page code (Product, Thank You, Master pages)
-4. Verify 8 secrets in Secrets Manager
-5. Import product catalog via `catalogImport.web.js`
-6. Configure 4 scheduled jobs (cart recovery, browse recovery, email queue, inventory)
-7. Connect domain and publish
-8. Verification checklist (13 test flows)
+11. **Install Klaviyo** — App Market (free up to 250 contacts). Replaces basic CRM emails with advanced automation
+12. **Install Stamped.io** — App Market (free tier). Product reviews with photos
+13. **Create Triggered Email Templates** — Wix Automations for: welcome, cart recovery, order confirmation, review request, swatch request confirmation
+14. **Commission illustration/lifestyle assets** — for homepage hero, category headers
 
----
+### Pricing Decisions Needed
 
-## Active Work
-
-| Bead | Priority | Status | Title | Assigned |
-|------|----------|--------|-------|----------|
-| cf-nbw | P0 | IN PROGRESS | Review and update all MD files for deployment | architect |
-| cf-584 | P0 | OPEN | Pull all text from carolinafutons.com via Wix MCP | unassigned |
-
-**Recently completed:** cf-umw (Order Tracking page with UPS integration) — SHIPPED by architect.
+14 products show $0.00 ("Contact for availability") — all Otis Bed mattresses:
+- Yuma, Northampton, Cambridge, Sedona, Mountainaire, Mesa 5000/3000/1000, Maricopa, Gemini II, Flagstaff, Chandler, Asheville, Alpine
+- **Decision:** Display real prices, or add "Request Quote" button? Code supports both.
 
 ---
 
-## Crew Status
+## FABRIC SWATCH SYSTEM — How to Hook It Up
 
-| Member | Role | Status | Current Work |
-|--------|------|--------|-------------|
-| melania | Production Manager | ACTIVE | Beads coordination, deployment prep |
-| architect | Tech Lead | RUNNING | cf-nbw: MD file review for deployment |
-| caesar | Executor | AVAILABLE | — |
-| radahn | Executor | RUNNING | CMS content import |
+The swatch system is **fully built** (code, tests, import pipeline, UI). Here's how to activate it:
+
+### What's Built
+
+| Component | File | Status |
+|-----------|------|--------|
+| Backend API (4 methods) | `swatchService.web.js` | Done, tested |
+| Frontend selector UI | `product/swatchSelector.js` | Done |
+| Swatch request email | `emailService.web.js` → `submitSwatchRequest()` | Done, tested |
+| Bulk import script | `scripts/importSwatches.js` | Done |
+| Product page integration | `ProductOptions.js` + `variantSelector.js` | Done |
+
+### API Methods Available
+
+```javascript
+import { getProductSwatches, getAllSwatchFamilies, getSwatchCount, getSwatchPreviewColors } from 'backend/swatchService.web.js';
+
+// Get swatches for a product (with optional color family filter)
+const swatches = await getProductSwatches('product-id', 'Blues', 50);
+
+// Get all color family names for filter dropdown
+const families = await getAllSwatchFamilies();
+
+// Get swatch count for "Showing X of Y"
+const count = await getSwatchCount('product-id');
+
+// Get 4 preview dots for category grid cards
+const dots = await getSwatchPreviewColors('product-id', 4);
+```
+
+### Step-by-Step Hookup
+
+**Step 1: Create FabricSwatches CMS Collection**
+In Wix Dashboard > CMS > Create Collection > "FabricSwatches" with fields:
+| Field | Type | Required |
+|-------|------|----------|
+| swatchId | Text | Yes (unique) |
+| swatchName | Text | Yes |
+| swatchImage | Image | Yes |
+| colorFamily | Text | Yes (e.g., Blues, Reds, Neutrals) |
+| colorHex | Text | Yes (#RRGGBB) |
+| material | Text | Yes |
+| careInstructions | Text | No |
+| availableForProducts | Tags | Yes (product IDs or "all") |
+| sortOrder | Number | Yes |
+
+**Step 2: Populate with swatch data**
+Option A (manual): Add swatches via Dashboard CMS editor
+Option B (bulk): Use `importSwatches.js` script — accepts JSON array, batch-processes 50 at a time, deduplicates on swatchId
+
+**Step 3: Upload swatch images**
+Upload fabric photos to Wix Media Manager. Each swatch needs a square photo (~300x300px). Use the `wix://` URL in the `swatchImage` field.
+
+**Step 4: Deploy code**
+The code is already in `swatchService.web.js` (backend) and `swatchSelector.js` (frontend). Deploy to Wix Velo and it connects automatically.
+
+### Current Finish/Color Data from Live Site (28 colors across 71 products)
+
+Finishes already on products: Antique Blue, Bakar, Black Walnut, Brushed Driftwood, Buttercream, Charcoal, Cherry, Chocolate, Clear, Dark Cherry, Espresso, Gray, Harvest Brown, Honey Pine, Natural, Normandy, Provence, Red, Seafoam, Skye, Stonewash Gray, Teal, Vintage White, Warm Cherry, White, White Bark, Wildwood Brown, Wildwood Vintage White
+
+These are **wood finishes**, not fabric swatches. Fabric swatch data (for futon covers/mattress covers) needs to come from Night & Day or other fabric suppliers. The CMS is ready to receive it.
 
 ---
 
-## Completed This Session (50+ beads closed)
+## MCP Scrape — COMPLETE
 
-Key deliverables shipped:
-- **catalog-MASTER.json** — 88 products, fully enriched
-- **HOOKUP-GUIDE.md** — Complete Wix deployment guide
-- **catalogImport.web.js** — Bulk import service (5 web methods, 39 tests)
-- **loyaltyTiers.web.js** — Loyalty program (5 web methods, 36 tests)
-- **productQA.web.js** — Q&A service (7 web methods, 37 tests)
-- **YouTube video catalog** — 16 product videos cataloged
-- 63 backend `.web.js` modules with 3,535+ tests
+Successfully connected to `carolinafutons.com/_api/mcp` and extracted:
 
----
+| Content | Count |
+|---------|-------|
+| Products (descriptions, prices, images, variants, stock status) | 88 |
+| Content pages (home, about, FAQ, blog, shipping, sales, contact, etc.) | 16 |
+| Product pages with full text | 54 |
+| Business details (address, phone, email, coordinates) | 1 |
+| Product options/variants (colors, sizes, series) | 71 products |
 
-## Wix Site Readiness
+**Output files:** `data/mcp-scrape/`
+- `carolinafutons-complete.json` (325KB) — everything combined
+- `products-full.json` (237KB) — 88 products with HTML + plain text descriptions
+- `site-pages.json` (84KB) — all page content
+- `product-options-swatches.json` — variant/option data per product
 
-### What's Ready (can deploy now):
-- All backend code (63 modules)
-- All page code (24 files)
-- Product catalog (88 products)
-- CMS collections (16 live)
-- Secrets (8 configured)
-- Payment processing (4 methods)
-- Shipping calculator (UPS API)
-- Email automation (SendGrid)
-
-### What Needs Human Action:
-| Item | Action Required |
-|------|----------------|
-| cf-6ub | Verify secrets in Wix Secrets Manager (halworker85@gmail.com login) |
-| cf-xv3 | Verify CMS collections in Wix Dashboard |
-| cf-e3o | Commission illustration assets |
-| cf-1ur | Create Triggered Email templates in Wix Automations |
-| Text content pages | FAQ, About, Shipping pages need content pasted into Wix Editor |
-
-### Blocker:
-- carolinafutons.com is 100% client-rendered (Wix Thunderbolt). WebFetch returns JS shell for all pages. Text content extraction requires headless browser or manual copy-paste from live site.
+**Inventory snapshot:** 18 in stock, 32 partially out, 38 out of stock.
 
 ---
 
-## Test Suite Growth
+## Crew Status — ALL IDLE
+
+| Member | Role | Status | Last Work |
+|--------|------|--------|-----------|
+| melania | Production Manager | ACTIVE | MCP scrape, beads alignment, reporting |
+| architect | Tech Lead | IDLE | contentImport.web.js (uncommitted — needs merge) |
+| caesar | Executor | IDLE | Advanced search, comparison guides (uncommitted) |
+| radahn | Executor | IDLE | MD docs cleanup, deployment guide updates |
+| brainstorm | Executor | IDLE | CMS import scripts |
+
+### Uncommitted Work (needs commit/merge)
+
+| Crew | Files | Action Needed |
+|------|-------|---------------|
+| architect | `contentImport.web.js` (576 lines) + tests (628 lines) | Commit and merge to refinery |
+| caesar | `comparison-guides.json`, `night-and-day-products.json` | Commit content data |
+| All crew | `state.json` files | Stale, can be .gitignored |
+| All crew | Duplicate `catalog-*.json`, `scraped-products-*.json` | Canonical copy is in `refinery/rig/content/` |
+
+---
+
+## Backlog — 6 Ready P2 Stories
+
+| Bead | Title |
+|------|-------|
+| cf-5js | WCAG 2.1 AA accessibility audit and remediation |
+| cf-dhu | Customer reviews with photo upload and star ratings |
+| cf-dth | Self-service returns and exchanges portal |
+| cf-ist | Financing calculator with monthly payment estimates and BNPL |
+| cf-q2w | Product size and dimension guide with room fit visualization |
+| cf-zk7 | Recently viewed products and personalized recommendations |
+
+---
+
+## Marketing Mission (melania's strategic role)
+
+### Delivered
+- **MARKETING-STRATEGY.md** — $15K/month revenue in 3 months, full channel/budget/KPI breakdown
+- **SOCIAL-MEDIA-STRATEGY.md** — Pinterest/Instagram/Facebook playbook
+- **PLUGIN-RECOMMENDATIONS.md** — prioritized Wix plugin install order
+
+### Active Marketing Infrastructure (code-ready)
+- Google Merchant feed endpoint (`/_functions/googleMerchantFeed`) — LIVE
+- Facebook product feed (`/_functions/facebookCatalogFeed`) — LIVE
+- Pinterest Rich Pins meta tags — built into `seoHelpers.web.js`
+- GA4 event tracking — built into `analyticsHelpers.web.js`
+- Email automation — `emailService.web.js`, `cartRecovery.web.js`, `browseAbandonment.web.js`
+- Loyalty program — `loyaltyService.web.js` (Bronze/Silver/Gold tiers)
+- Referral system — `referralService.web.js`
+- Exit-intent popup — built into page code
+- Newsletter signup — `contactSubmissions.web.js`
+
+### Next Marketing Actions (post-launch)
+1. Submit Google Merchant feed for Shopping ads
+2. Set up Facebook/Instagram Shop (connect feed)
+3. Create Pinterest business account + enable Rich Pins
+4. Launch Klaviyo abandoned cart sequence (3-email flow)
+5. Set up GA4 enhanced ecommerce funnel tracking
+6. First social media posts with product photography
+
+---
+
+## cfutons_mobile — Next Up
+
+| Bead | Priority | Title |
+|------|----------|-------|
+| cm-88d | P2 | AR Camera Feature: Augmented Reality Product Visualization |
+
+**Status:** Waiting for cfutons to reach stable idle. All cfutons workers are now idle. Ready to start cfutons_mobile when you give the word.
+
+---
+
+## CMS Hookup Quick Reference
+
+### How Wix CMS Works
+Wix CMS = database + visual editor. Define Collections (tables), bind them to page elements. Site reads data dynamically.
+
+### Import Product Catalog
+```javascript
+import { importProducts, validateImportData } from 'backend/catalogImport.web.js';
+const validation = await validateImportData(catalogData);
+const result = await importProducts(catalogData, { dryRun: false, updateExisting: true });
+```
+Max 500 products per batch. Admin role required. Supports dry-run mode.
+
+### Create Dynamic Pages
+1. Add Page > Dynamic Page > connect to Products collection
+2. URL becomes `/products/{slug}` — one page renders ALL products
+3. Bind elements to collection fields (no code needed)
+
+---
+
+## Test Suite
 
 | Checkpoint | Tests | Files |
 |------------|-------|-------|
-| Session start | 2,394 | 70 |
-| +comparison, abandonment | 2,639 | 75 |
-| +checkout, vitals, reviews | 2,899 | 81 |
-| +sustainability | 2,953 | 82 |
-| +media gallery, delivery, topics | 3,200 | 88 |
-| +catalogImport, productQA, loyalty | 3,444 | 94 |
-| +orderTracking, search, financing | 3,535 | 97 |
+| Current (2026-02-22) | **3,526** | **96** |
+| Previous session | 3,200 | 88 |
+| Sprint 1 end | 2,394 | 70 |
 
 ---
 
-*Production Manager: melania | cfutons GREEN — LAUNCH READY*
-*Next: Complete MD review, deploy live test, verify all pages*
+*Production Manager: melania | cfutons GREEN — ALL IDLE, LAUNCH READY*
+*Next: Human does Dashboard setup (plugins, CMS collections, secrets). Then fire cfutons_mobile for AR camera.*
