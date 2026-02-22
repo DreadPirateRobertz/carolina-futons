@@ -1,111 +1,122 @@
-# Gas Town Status Report
-**Generated:** 2026-02-27 18:30 MST
-**PM:** melania (cfutons/crew/melania)
+# cfutons Rig Report — Carolina Futons (Web)
+
+**Last Updated:** 2026-02-22 01:12 UTC (witness)
+
+## caesar — 2026-02-21 18:20 MST
+**Status:** ACTIVE — executing cf-k73 (P0 catalog scrape)
+**Progress:** Sitemap scraped, 88 product URLs identified. 6 parallel scraper agents dispatched (batches of 15). Fixed Dolt SEGV (stale noms/LOCK + dead pid). Committed prior uncommitted work (browse abandonment + Core Web Vitals frontend, 3213 tests passing).
+**Next:** Collect all 6 agent results, merge into catalog JSON matching CMS-COLLECTION-SCHEMAS.md format, commit scrape output + code.
+**Blockers:** Wix renders product pages client-side — WebFetch gets JS shell. Agents extracting what structured data is available. May need enrichment pass.
 
 ---
 
-## Town Summary
-
-| Rig | Status | Crew | Active Work |
-|-----|--------|------|-------------|
-| cfutons | GREEN | 4 active | PR backlog CLEARED — 17 merged, 1 dup closed, 0 open |
-| cfutons_mobile | ONLINE | 3 | AR Camera epic |
-| gastown | ONLINE | 6 | Infrastructure |
-| tradingbot | PARKED | 0 | Per human directive |
+## ~~INFRASTRUCTURE ALERT~~ — RESOLVED by caesar
+- Dolt SEGV: Fixed by removing stale `noms/LOCK` files + dead `dolt-server.pid`
+- Local beads (cfutons): HEALTHY
+- Town beads (HQ): Partially recovered (warning on count but inbox accessible)
 
 ---
 
-## cfutons — WEEKEND HOOKUP PREP
+**Previous status (2026-02-21 14:37 MST):**
 
-### PR Merge Sprint (2026-02-27 18:15-18:30 MST)
-**ALL 18 open PRs resolved in one session:**
 
-| Action | PRs | Details |
-|--------|-----|---------|
-| Clean merge | #37,38,39,40,41,43,44,45,47,48,49,50,51,54 | Merged without conflicts |
-| Conflict resolved + merged | #42,46,52,55,56,57 | Rebased onto main, conflicts resolved, merged |
-| Duplicate closed | #53 | Duplicate of #52 (same bead cf-8iy) |
-
-**Changes landed on main:**
-- P0: Race condition fixes (delivery scheduling, gift cards, appointments)
-- Security: Sanitize entity bypass (XSS), unsanitized DB IDs, refund upper bound, error leak prevention
-- Quality: Email validation consistency, null/empty state handling, SPA state bleed fix
-- UX: Focus trapping on modals, memory leak cleanup, scroll throttling, a11y improvements
-- Input sanitization on all frontend forms, side cart handler dedup
-
-### Test Suite
-- **4,436 / 4,437 tests passing** across 121 files
-- 1 pre-existing flaky test (errorMonitoring date drift — not caused by merges)
-
-### Ready Queue (P1 bugs — need assignment)
-- CF-3qj3: Input sanitization — **DONE via PR #56** (merged)
-- CF-wy0m: Memory leaks — **DONE via PR #55** (merged)
-- CF-d7dr: Focus trapping — **DONE via PR #57** (merged)
-- CF-1b86: Side Cart handlers — **DONE via PR #56** (merged)
-
-**All 4 P1 bugs from ready queue were addressed by crew PRs and merged this session.**
-
-### Active Work
-- CF-k582: Frontend competitive analysis (melania — in progress, research agents deployed)
-
-### Remaining Ready Queue
-- cf-09z: Token burn audit (P1)
-- cf-q2w: Product size/dimension guide (P2)
-- cf-zk7: Recently viewed + recommendations (P2)
+**Lead:** Melania (Production Manager) | **Tech Lead:** Architect
+**CI:** GREEN (3,200 tests, 88 files)
+**Repo:** DreadPirateRobertz/carolina-futons
 
 ---
 
-## Frontend Research — IN PROGRESS
+## Wix Live Test Readiness: GREEN — LAUNCH READY
 
-6 research agents deployed analyzing:
-- Article, Burrow, Floyd, Castlery (DTC furniture leaders)
-- West Elm, CB2 (established brands)
-- Joybird, Albany Park (customization-focused)
+| Check | Status | Detail |
+|-------|--------|--------|
+| Test Suite | PASS | 3,200 tests, 88 files, 0 failures |
+| Backend Modules | READY | 42+ .web.js modules |
+| Page Code | READY | 23 page JS files with $w bindings |
+| CMS Collections | LIVE | 16 collections created by overseer |
+| Secrets Manager | LIVE | 8 secrets configured |
+| Payment | LIVE | Wix Payments — Credit, Apple Pay, Google Pay, Afterpay |
+| DNS | RESOLVED | Wix handles DNS — no custom config needed |
+| Build Spec | UPDATED | WIX-STUDIO-BUILD-SPEC.md complete |
+| Deployment Guide | READY | DEPLOYMENT-GUIDE.md |
+| Media Gallery | READY | mediaGallery.web.js — static wixstatic.com URLs |
 
-Report will cover: visual design, UX patterns, product presentation, mobile, standout features.
-Deliverable: Competitive analysis + specific design recommendations for Carolina Futons.
+### Remaining Blockers
+- **cf-k73 (P0)**: Product catalog scraping — brainstorm IN PROGRESS
+- **cf-e7n**: Product photography — partially resolved by Media Manager integration
 
----
-
-## What Human Needs For Weekend Hookup
-
-1. **Codebase is READY** — all PRs merged, tests green, main is clean
-2. **Follow MASTER-HOOKUP.md** for Wix Studio connection
-3. **Still needed (human action):**
-   - Product photography
-   - Domain connection (carolinafutons.com)
-   - GA4, Meta Pixel, Pinterest Tag installation
-   - Google Merchant feed connection
-   - Wix Chat enablement
-
----
-
-## Standing Prime Directives
-1. **Quality is #1** — TDD, edge cases, coding standards on every PR
-2. **PR Process** — feature branch + PR + review + merge (no direct pushes)
-3. **Reporting** — report_to_human.md every 5 min + before handoffs
-4. **Factory Mode** — no idle crew
-5. **Token Efficiency** — no duplicate work
+### All Prior Blockers RESOLVED
+- ~~CMS collections~~ → 16 collections live
+- ~~Payment processor~~ → Wix Payments active
+- ~~DNS configuration~~ → Wix handles it
+- ~~UPS API secrets~~ → 8 secrets in Secrets Manager
+- ~~Product photos~~ → Media Manager API integration shipped
 
 ---
 
----
+## Crew Assignments
 
-## radahn Session Report (2026-02-28 01:15-01:30 UTC)
-
-### Completed
-- **CF-d7dr (P1): Focus trapping on modal dialogs** — PR #57, merged
-  - Rewrote `createFocusTrap` with active Tab/Shift+Tab keyboard trapping
-  - Fixed `setupAccessibleDialog`: save/restore focus, proper Escape cleanup
-  - 12 new tests, 97/97 a11yHelpers tests green
-- **PR Reviews (#49, #50, #51)**: All already merged before review — reported to melania
-
-### Next
-- Awaiting melania's next assignment from ready queue
+| Member | Role | Current Work | Status |
+|--------|------|-------------|--------|
+| melania | Production Manager | Shipping features, coordinating crew | ACTIVE |
+| architect | Tech Lead | cf-of4 media + build spec | DONE |
+| caesar | Executor | Available | DONE with recent features |
+| radahn | Executor | cf-1iq (customer account dashboard) | IN PROGRESS |
+| brainstorm | Executor | cf-k73 (product catalog scrape — P0) | IN PROGRESS |
 
 ---
 
-## Rennala Session Report — 2026-02-27 18:15 MST
+## Deliverables This Session (by worker)
+
+### melania (Production Manager)
+- MARKETING-STRATEGY.md (cf-5ef) — $15K/month in 3 months, channel strategy, budget, KPIs
+- DEPLOYMENT-GUIDE.md (cf-0fm) — wix dev/publish/CMS/Secrets guide
+- bundleBuilder.web.js (cf-0lr) — cart-aware cross-sell, dynamic pricing, 50 tests
+- sustainabilityService.web.js (cf-fbg) — eco badges, carbon offset, trade-in program, 54 tests
+- mediaGallery.web.js (cf-of4) — Wix Media Manager integration, static URLs, 35 tests
+- Closed 12+ beads, created stories, updated all reports
+- Cross-rig monitoring: cfutons GREEN, cfutons_mobile (artemis fixing)
+
+### architect (Tech Lead)
+- cf-3ya: WIX-STUDIO-BUILD-SPEC.md — 80+ missing element IDs, inventoryAlerts module
+- cf-of4: Media gallery architecture
+
+### caesar (Executor)
+- cf-7bk: inventoryService.web.js — variant stock tracking, alerts, restock (37 tests)
+- cf-0xa: comparisonService.web.js + Compare Page.js — side-by-side specs (70+14 tests)
+- cf-1nb: browseAbandonment.web.js — session tracking, recovery emails (44 tests)
+
+### radahn (Executor)
+- cf-xfr: testimonialService.web.js — admin curation, auto-flagging
+- cf-10x: storeLocatorService.web.js — showroom info, directions, schema
+- cf-doy: bundleAnalytics.web.js — impression tracking, conversion rates
+- cf-2fx: checkoutOptimization.web.js — guest checkout, address validation (60 tests)
+- cf-eiu: coreWebVitals.web.js — LCP/FID/CLS tracking (51 tests)
+
+### brainstorm (Executor)
+- cf-bpp: photoReviews.web.js — customer photo reviews with moderation (28 tests)
+- cf-z8t: topicClusters.web.js — SEO content hub (57 tests)
+- cf-k73: Product catalog scraping — IN PROGRESS (P0)
+
+---
+
+## Beads Queue
+| Bead | Priority | Assignee | Status |
+|------|----------|----------|--------|
+| cf-k73 | P0 | caesar (reassigned) | IN_PROGRESS (catalog scrape — 6 agents running) |
+| cf-e7n | P0 | — | OPEN (photo data — partially resolved) |
+| cf-1iq | P1 | radahn | IN_PROGRESS (customer accounts) |
+
+---
+
+## Test Suite Growth
+| Checkpoint | Tests | Files |
+|------------|-------|-------|
+| Session start | 2,394 | 70 |
+| +comparison, abandonment | 2,639 | 75 |
+| +checkout, vitals, reviews | 2,899 | 81 |
+| +sustainability | 2,953 | 82 |
+| +media gallery, delivery, topics | 3,200 | 88 |
 
 ### Completed
 - **CF-wy0m (P1)**: Fixed memory leaks — event listeners cleaned up on SPA navigation. PR #55 merged.
