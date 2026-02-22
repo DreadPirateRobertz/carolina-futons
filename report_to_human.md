@@ -2,6 +2,12 @@
 
 **Last Updated:** 2026-02-22 01:12 UTC (witness)
 
+## Melania — 2026-02-21 18:22 MST
+**Status:** ACTIVE — factory mode, driving crew, coordinating beads
+**Progress:** Closed cf-m6d (radahn: Q&A service, 37 tests). Reassigned cf-k73 P0 scrape brainstorm→caesar (brainstorm OFFLINE). Nudged radahn with catalogImport.web.js test assignment. Created cf-7pn (loyalty tiers P2) for queue. Claimed cf-e7n as coordinator. Tests green: 2,340 across 69 files.
+**Next:** Monitor caesar's scrape agents (6 running, 88 URLs). Monitor radahn's catalogImport tests. Assign architect a story. 15-min patrol cycle.
+**Blockers:** brainstorm tmux DOWN (needs human restart). HQ beads SEGV intermittent (caesar's LOCK fix helped locally).
+
 ## caesar — 2026-02-21 18:20 MST
 **Status:** ACTIVE — executing cf-k73 (P0 catalog scrape)
 **Progress:** Sitemap scraped, 88 product URLs identified. 6 parallel scraper agents dispatched (batches of 15). Fixed Dolt SEGV (stale noms/LOCK + dead pid). Committed prior uncommitted work (browse abandonment + Core Web Vitals frontend, 3213 tests passing).
@@ -58,11 +64,11 @@
 
 | Member | Role | Current Work | Status |
 |--------|------|-------------|--------|
-| melania | Production Manager | Shipping features, coordinating crew | ACTIVE |
-| architect | Tech Lead | cf-of4 media + build spec | DONE |
-| caesar | Executor | Available | DONE with recent features |
-| radahn | Executor | cf-1iq (customer account dashboard) | IN PROGRESS |
-| brainstorm | Executor | cf-k73 (product catalog scrape — P0) | IN PROGRESS |
+| melania | Production Manager | cf-e7n coordinator, crew driver | ACTIVE |
+| architect | Tech Lead | Available — needs assignment | IDLE |
+| caesar | Executor | cf-k73 (P0 catalog scrape — 6 agents running) | ACTIVE |
+| radahn | Executor | catalogImport.web.js tests (cf-e7n support) | NUDGED |
+| brainstorm | Executor | — | OFFLINE (tmux down) |
 
 ---
 
