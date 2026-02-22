@@ -1,9 +1,8 @@
 # Carolina Futons — Active Sprint Plan
 
-**Status**: LAUNCH NIGHT — All blockers resolved except catalog scraping
-**Test Suite**: 3,200 tests across 88 files (all passing)
-**Last Push**: eb2cf2e
-**Updated by**: melania — 2026-02-21 14:37 MST
+**Status**: LAUNCH READY — All blockers resolved, deployment-ready
+**Test Suite**: 3,535+ tests across 97 files (all passing)
+**Updated by**: architect — 2026-02-22
 
 ---
 
@@ -11,17 +10,17 @@
 
 | Item | Status |
 |------|--------|
-| CI/Tests | GREEN — 3,200 tests, 88 files |
+| CI/Tests | GREEN — 3,535+ tests, 97 files |
 | CMS Collections | LIVE — 16 collections created |
 | Secrets Manager | LIVE — 8 secrets configured |
 | Payment | LIVE — Wix Payments (Credit, Apple Pay, Google Pay, Afterpay) |
 | DNS | RESOLVED — Wix handles it |
-| Backend Modules | 42+ .web.js modules |
-| Page Code | 23 pages with $w bindings |
+| Backend Modules | 63 .web.js modules |
+| Page Code | 24 pages with $w bindings |
 | Media Gallery | READY — wix-media-backend integration |
 
 ### Last Blocker
-- **cf-k73 (P0)**: Product catalog scraping — brainstorm IN PROGRESS
+- None — catalog shipped (88 products enriched)
 
 ---
 
@@ -77,6 +76,8 @@
 | +checkout, vitals, reviews | 2,899 | 81 |
 | +sustainability | 2,953 | 82 |
 | +media, delivery, topics | 3,200 | 88 |
+| +catalogImport, productQA, loyalty | 3,444 | 94 |
+| +orderTracking, search, financing | 3,535 | 97 |
 
 ---
 

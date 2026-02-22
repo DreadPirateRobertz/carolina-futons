@@ -1,8 +1,8 @@
 # cfutons (Carolina Futons) — Report to Human
 
-**Last Updated:** 2026-02-22 06:30 UTC (melania, Production Manager)
+**Last Updated:** 2026-02-22 16:30 UTC (architect)
 **Repo:** git@github.com:DreadPirateRobertz/carolina-futons.git
-**Beads DB:** ONLINE (4 beads remaining, 2 P0 in-progress)
+**Beads DB:** ONLINE
 
 ---
 
@@ -10,9 +10,9 @@
 
 | Metric | Value |
 |--------|-------|
-| Tests | 3,200+ vitest tests across 88 files (all green) |
-| Backend Modules | 27+ `.web.js` modules ready |
-| Page Code | 23 page JS files with $w bindings |
+| Tests | 3,535+ vitest tests across 97 files (all green) |
+| Backend Modules | 63 `.web.js` modules ready |
+| Page Code | 24 page JS files with $w bindings |
 | CMS Collections | 16 live in Wix + 66 auto-created by backend |
 | Secrets Manager | 8 secrets configured (incl. WIX_BACKEND_KEY) |
 | Payments | Wix Payments — Credit, Apple Pay, Google Pay, Afterpay |
@@ -37,15 +37,15 @@
 - `content/catalog-MASTER.json` — 88 products, enriched with prices/descriptions/images
 - `content/carolinafutons-products.json` — Raw JSON-LD scrape (88 products)
 - `content/catalog-youtube-videos.json` — 16 product videos
-- `content/faq.json` — FAQ content (ordering, frames, beds, mattresses) *(pending commit by caesar)*
-- `content/shipping-info.json` — Shipping policy, assembly, returns *(pending commit by caesar)*
+- `content/faq.json` — FAQ content (ordering, frames, beds, mattresses)
+- `content/shipping-info.json` — Shipping policy, assembly, returns
 
 ---
 
 ## Deployment Guide: SHIPPED
 
 `HOOKUP-GUIDE.md` — Complete step-by-step guide:
-1. Deploy 27+ backend modules to Wix Velo
+1. Deploy 63 backend modules to Wix Velo
 2. Deploy utility modules
 3. Deploy page code (Product, Thank You, Master pages)
 4. Verify 8 secrets in Secrets Manager
@@ -60,14 +60,10 @@
 
 | Bead | Priority | Status | Title | Assigned |
 |------|----------|--------|-------|----------|
-| cf-2pm | P0 | IN PROGRESS | Scrape manufacturer sites (Night & Day, Strata, KD, Otis) | architect |
-| cf-n18 | P0 | IN PROGRESS | Manufacturer specs + text content extraction | caesar |
-| cf-8yg | P1 | OPEN | Configure WIX_BACKEND_KEY integration | unassigned |
-| cf-hxq | P1 | OPEN | Extract text content from Wix pages (FAQ, About, Shipping) | unassigned |
+| cf-nbw | P0 | IN PROGRESS | Review and update all MD files for deployment | architect |
+| cf-584 | P0 | OPEN | Pull all text from carolinafutons.com via Wix MCP | unassigned |
 
-**Caesar progress on cf-n18:** FAQ content (160 lines) and shipping info (86 lines) extracted, ready to commit. Manufacturer specs scrape in progress.
-
-**Radahn** has built `catalogContent.web.js` backend module for serving product content. Pending commit.
+**Recently completed:** cf-umw (Order Tracking page with UPS integration) — SHIPPED by architect.
 
 ---
 
@@ -75,11 +71,10 @@
 
 | Member | Role | Status | Current Work |
 |--------|------|--------|-------------|
-| melania | Production Manager | ACTIVE | Driving crew, beads coordination, reporting |
-| architect | Tech Lead | RUNNING | cf-2pm: manufacturer site scraping |
-| caesar | Executor | RUNNING | cf-n18: text content + manufacturer specs |
-| radahn | Executor | RUNNING | catalogContent.web.js backend module |
-| brainstorm | Executor | OFFLINE | tmux session down |
+| melania | Production Manager | ACTIVE | Beads coordination, deployment prep |
+| architect | Tech Lead | RUNNING | cf-nbw: MD file review for deployment |
+| caesar | Executor | AVAILABLE | — |
+| radahn | Executor | RUNNING | CMS content import |
 
 ---
 
@@ -92,15 +87,15 @@ Key deliverables shipped:
 - **loyaltyTiers.web.js** — Loyalty program (5 web methods, 36 tests)
 - **productQA.web.js** — Q&A service (7 web methods, 37 tests)
 - **YouTube video catalog** — 16 product videos cataloged
-- 42+ backend `.web.js` modules with 3,200 tests
+- 63 backend `.web.js` modules with 3,535+ tests
 
 ---
 
 ## Wix Site Readiness
 
 ### What's Ready (can deploy now):
-- All backend code (27+ modules)
-- All page code (23 files)
+- All backend code (63 modules)
+- All page code (24 files)
 - Product catalog (88 products)
 - CMS collections (16 live)
 - Secrets (8 configured)
@@ -132,8 +127,9 @@ Key deliverables shipped:
 | +sustainability | 2,953 | 82 |
 | +media gallery, delivery, topics | 3,200 | 88 |
 | +catalogImport, productQA, loyalty | 3,444 | 94 |
+| +orderTracking, search, financing | 3,535 | 97 |
 
 ---
 
-*Production Manager: melania | 4 rigs under management | cfutons GREEN — LAUNCH READY*
-*Next: Monitor manufacturer specs delivery, verify text content committed, close remaining beads*
+*Production Manager: melania | cfutons GREEN — LAUNCH READY*
+*Next: Complete MD review, deploy live test, verify all pages*

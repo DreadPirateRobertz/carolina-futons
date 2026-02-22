@@ -35,6 +35,7 @@ src/
 │   ├── Fullscreen Page.js           # Product videos gallery
 │   ├── Shipping Policy.js           # Shipping calculator & delivery info
 │   ├── Member Page.js               # Account: orders, wishlist, settings
+│   ├── Order Tracking.js            # Order lookup, UPS tracking, timeline
 │   ├── Accessibility Statement.js   # Static accessibility page
 │   ├── Privacy Policy.js            # Privacy policy with TOC navigation
 │   ├── Refund Policy.js             # Return policy accordion

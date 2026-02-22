@@ -52,6 +52,7 @@ All `.web.js` files in `src/backend/` must be copied to the Wix Velo editor unde
 | Promotions | `promotions.web.js` | Campaign management |
 | A/B Testing | `abTesting.web.js` | A/B test framework |
 | Account Dashboard | `accountDashboard.web.js` | Member portal |
+| Order Tracking | `orderTracking.web.js` | Customer order lookup & UPS tracking |
 
 ## Step 2: Deploy Utility Modules
 
@@ -74,6 +75,8 @@ Page-specific JavaScript goes in the Wix page code editor. For each page:
 | Product Page | `Product Page.js` | Q&A, reviews, gallery, compare, bundles |
 | Thank You Page | `Thank You Page.js` | Post-purchase flow, social sharing |
 | Master Page | `masterPage.js` | Global nav, cart, analytics |
+| Order Tracking | `Order Tracking.js` | Order lookup, UPS timeline, notifications |
+| Member Page | `Member Page.js` | Account dashboard, order history, wishlist |
 
 ## Step 4: Configure Secrets
 
@@ -161,6 +164,7 @@ After deployment, test these flows:
 - [ ] Cart abandonment email triggers (30 min delay)
 - [ ] Admin can import products via catalogImport
 - [ ] Search returns relevant products
+- [ ] Order tracking page returns tracking for known order
 - [ ] Mobile responsive on all pages
 
 ---

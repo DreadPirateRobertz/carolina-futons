@@ -474,6 +474,64 @@ Get default package dimensions for a product category.
 
 ---
 
+## orderTracking.web.js
+
+Customer-facing order tracking. Allows customers to look up orders by order
+number + email, view UPS tracking status with timeline, and manage shipping
+notification preferences.
+
+### `lookupOrder(orderNumber, email)`
+
+Look up an order by order number and buyer email. Returns order details,
+shipping status, UPS tracking activities, delivery timeline, and line items.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `orderNumber` | `string` | Yes | Order number |
+| `email` | `string` | Yes | Buyer's email for verification |
+
+- **Permission**: `Anyone`
+- **Returns**: `{ success, order, shipping, tracking, timeline, lineItems, totals, notificationsEnabled }`
+- **Security**: Email must match order's `buyerInfo.email`
+
+### `subscribeToNotifications(orderNumber, email)`
+
+Opt in to email notifications for shipment updates.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `orderNumber` | `string` | Yes | Order number |
+| `email` | `string` | Yes | Buyer's email |
+
+- **Permission**: `Anyone`
+- **Returns**: `{ success, alreadySubscribed }`
+- **Side effects**: Inserts/updates `TrackingNotifications` collection
+
+### `unsubscribeFromNotifications(orderNumber, email)`
+
+Opt out of email notifications for shipment updates.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `orderNumber` | `string` | Yes | Order number |
+| `email` | `string` | Yes | Buyer's email |
+
+- **Permission**: `Anyone`
+- **Returns**: `{ success }`
+
+### `getTrackingTimeline(trackingNumber)`
+
+Get current tracking timeline without full order lookup. Used for auto-refresh.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `trackingNumber` | `string` | Yes | UPS tracking number |
+
+- **Permission**: `Anyone`
+- **Returns**: `{ success, status, statusCode, fulfillmentStatus, statusLabel, estimatedDelivery, activities, timeline }`
+
+---
+
 ## shipping-rates-plugin.js
 
 **Wix eCommerce Service Plugin** — NOT a web module. This file is registered
