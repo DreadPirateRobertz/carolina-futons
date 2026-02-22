@@ -3,7 +3,7 @@
   "generatedAt": "2026-02-21T18:35:00-07:00",
   "generatedBy": "melania (production manager)",
   "source": "carolinafutons.com sitemap + known product structure",
-  "enrichmentStatus": "PRODUCTION \u2014 87/88 descriptions, 37/88 prices, 86/88 manufacturers",
+  "enrichmentStatus": "FINAL \u2014 88/88 descriptions, 64/88 prices, 75/88 with images, 87/88 manufacturers",
   "totalProducts": 88,
   "categories": {
     "futon-frames": 38,
@@ -23,15 +23,57 @@
       "sku": "CF-FRAME-MONTEREY",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/monterey",
-      "price": null,
+      "price": 549,
       "description": "The Monterey futon frame features a clean mission-style design with straight lines and a comfortable arm height. Available in Night & Day's standard finishes with Full and Queen sizes. Features the classic body design that converts easily between sofa and bed positions.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_cf15142c61714ecfad7852522e0a98e4~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_d88fa0b2e50b4bbc80a9cbc9b9c09a69~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -50,7 +92,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Sunrise Futon Frame",
@@ -58,15 +104,64 @@
       "sku": "CF-FRAME-SUNRISE",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/sunrise",
-      "price": null,
-      "description": "The Sunrise futon frame features a distinctive tray-top arm design perfect for drinks and remotes. Night & Day Furniture's elegant design with traditional woodworking and plantation-grown materials. Available in Chair, Full, and Queen sizes.",
-      "images": [],
+      "price": 779,
+      "description": "The Sunrise has two handsome tray arms that can be folded up or down as needed. Useful and attractive for serving drinks to guests or enjoying a snack on your own. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9234577e395e4eb180cb2c9bc936d65f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_677c5e7ae28c42f79c25fd5182191e21~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9d703e0c25444946ab49296181d9ca2c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -85,7 +180,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Dillon Futon Frame",
@@ -94,14 +193,76 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/dillon",
       "price": 769.99,
-      "description": "The Dillon futon frame offers a sleek contemporary profile with gently curved arms. Crafted from quality hardwoods with Night & Day's signature finish options. Converts smoothly between sofa and bed positions.",
-      "images": [],
+      "description": "Designed to optimize space even further, the Dillon's armless style allows for the cushion to be the statement piece. Available in Warm Cherry, Dark Cherry, Black Walnut, Natural. and Gray. Available in Painted Black and Natural in Full and Queen Size only. Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_241b8a589d964e41a3094fbcd1597728~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a1f34879775849259ca38821606c1733~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9368fd12e5be4002852bc42c6f81cda5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b9f7b2d45dac4fb7bc05533c0c3e6a6e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_0173589367484331895751b6f944f811~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_254ccca78a72413a8cd4e85d65d4d20e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b3f3a0459c53478198d75cc0d92c303d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -120,7 +281,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Lambton Futon Frame",
@@ -129,14 +294,42 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/lambton",
       "price": 649.99,
-      "description": "The Lambton futon frame combines modern aesthetics with traditional craftsmanship. Features a distinctive arm design and solid wood construction from plantation-grown materials.",
-      "images": [],
+      "description": "From the slightly curved slats to the grooves in the arm, the fine details of the Lambton make this arm simply stunning. The Lambton is available in two finishes: Warm Cherry and Dark Cherry.Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_a2b5cd4926dd4d72ba6b528df8ea56c4~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_672ba8e076754caba86be72e576c7133~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_8413d0561c364d52898a16604a3228e8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Cherry",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -155,7 +348,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Autumn Futon Frame",
@@ -163,15 +360,89 @@
       "sku": "CF-FRAME-AUTUMN",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/autumn",
-      "price": null,
-      "description": "The Autumn futon frame showcases a warm, inviting design with gently curved lines. Built from quality hardwoods with Night & Day Furniture's standard finish options and 3-year warranty.",
-      "images": [],
+      "price": 739,
+      "description": "The Autumn frame has handsome wide arms with an attractive lattice set, making a bold statement in any room. Available in four finishes: Black Walnut, Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_8d3bd05dd2a94ac698cc7d301fb6b4b0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_db236e3df36f405d9e1a3f7cd8423f2f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_21a82faa05ba4c0c96b1b0ac78f216a7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_242150f7417040e7aa77f0e111a6a280~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -190,7 +461,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Black Pepper Futon Frame",
@@ -198,15 +473,96 @@
       "sku": "CF-FRAME-BLACKPEPPER",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/black-pepper",
-      "price": null,
-      "description": "The Black Pepper platform bed is part of Night & Day Furniture's Spices Bedroom Collection. Features solid Malaysian rubberwood construction with a clean modern headboard design. Available in Twin through King sizes with optional storage drawers.",
-      "images": [],
+      "price": 349,
+      "description": "The Black Pepper Platform Bed is a dream bed built for style. Minimalist and gorgeous, its Art Deco simplicity will delight the eye and quiet the mind. Bed rails can be set up in two heights of 13.5\" or 16.3\" Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, and Stonewash Gray finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_20b37a9a069646b197fcbb4eccdd576d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3821075ba92c45889f0e7e785128536c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9ef03cfcbaf84063beedf3745295c6d6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6e69ecc5f60140a5b508f829d14f628c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_edb69e0faf2e4a8aa817170032768c5a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_fc6ccd5a0a784d1da043bb930c61743f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Twin / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Twin / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -225,7 +581,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Galena Futon Frame",
@@ -234,14 +594,41 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/galena",
       "price": 499.99,
-      "description": "The Galena futon frame offers a distinctive arm profile with clean lines. Crafted with Night & Day Furniture's quality construction methods and available in multiple finish options.",
-      "images": [],
+      "description": "Galena is a new design, featuring subtle curves and thicker slats. Available in Black Walnut and Dark Cherry. Available in four sizes: Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_86caccf98ec24689b92e0d7b9088e847~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_f9cbbd16e58044eeaac99aed06fd96e8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Cherry",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -260,7 +647,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Trinity Futon Frame",
@@ -269,14 +660,63 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/trinity",
       "price": 499.95,
-      "description": "The Trinity futon frame features a bold arm design with a distinctive panel style. Available with Night & Day's Classic or Moon Glider body in Full and Queen sizes. Traditional woodworking with plantation-grown materials.",
-      "images": [],
+      "description": "The Trinity reflects the classic futon frame with its straightforward design, well-suited for most home styles and offering exceptional value. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_d39f32f6ca484d1b91e62e9c56514f4e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_24155fd4f2694120ac36b52d9689cb1a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_0a2f0905eb5745cc87b964b46689064d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_03d795f5452b409aa6d0b3626518c2f5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -295,7 +735,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Winchester Futon Frame",
@@ -304,14 +748,63 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/winchester",
       "price": 599.95,
-      "description": "The Winchester futon frame combines rustic charm with modern comfort. Features a wide panel arm design that's both stylish and functional. Night & Day Furniture quality with 3-year warranty.",
-      "images": [],
+      "description": "The Winchester futon frame has a very appealing traditional mission-style design with solid steam-bent arms. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_bd162d22c93c4421a35c88967ded6d05~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_ef5c8fce372b4839840d6bbce851260c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_40f3097cb89f4d648546b7d59d117216~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6977a39f65074ceea4717dd7ae3e3bd2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -330,7 +823,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Rosemary Futon Frame",
@@ -340,35 +837,133 @@
       "url": "https://www.carolinafutons.com/product-page/rosemary",
       "price": 251.0,
       "description": "Have you ever noticed that rosemary will grow nearly anywhere, in nearly any environment? And it adds great taste to whatever it's combined with. That's one attractive, tough and versatile ingredient. Similarities to our Rosemary bed are absolutely striking. A platform bed with sturdy support, storage space below, and a stylish rattan headboard. The Rosemary Bed is a dual system frame using universal bed rails and can be assembled as a high (K-Series) or low (P-Series) platform bed. Does not require a box spring.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_efd37face9b4468e9f9b339fb2de7c99~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a6abb5cf26f5476195c177a7a6cfa597~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9a63b94b19a24c618b9937d3d2aa9b71~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_0de14ceb72c44ca583ca8660ff91b807~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_fe22ad0c21fa44c3bddaede720eb7511~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_76cd5d92774546eda7a02c81fb2d00c5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3c04de468c524d7c84e7a27bacf41a1b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Twin",
+          "label": "Twin / Cherry",
           "sku": null,
           "price": null
         },
         {
-          "label": "Twin XL",
+          "label": "Twin / Chocolate",
           "sku": null,
           "price": null
         },
         {
-          "label": "Full",
+          "label": "Twin / Natural",
           "sku": null,
           "price": null
         },
         {
-          "label": "Queen",
+          "label": "Twin / Stonewash Gray",
           "sku": null,
           "price": null
         },
         {
-          "label": "King",
+          "label": "Twin / White",
           "sku": null,
           "price": null
         },
         {
-          "label": "Cal King",
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
           "sku": null,
           "price": null
         }
@@ -436,7 +1031,11 @@
       "url": "https://www.carolinafutons.com/product-page/bali",
       "price": 729.0,
       "description": "The Bali futon frame offers a traditional slatted arm design that continues down the arm to encapsulate the sides. This frame is available with the Nesting Body Classic Design that features three positions: sofa, reclined, and bed. The arm is 2-1/2 inches wide and 23.6 inches tall, featuring a shutter style with a double row of 7 slats separated by a middle wooden piece.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_1b2b8f6f864d4de8aa243f748acfbbf6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3f69cfd86c8c4a42b9f0cebf7bb69449~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_8b6693dd95e1412eb93e4499baa0707d~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
+      ],
       "variants": [
         {
           "label": "Full Frame",
@@ -501,7 +1100,9 @@
       "url": "https://www.carolinafutons.com/product-page/flagstaff",
       "price": null,
       "description": "The Flagstaff is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses are available in retail stores only and feature premium foam construction that provides resiliency and comfort, is significantly lighter weight, and does not attract moisture and mildew.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -533,7 +1134,9 @@
       "url": "https://www.carolinafutons.com/product-page/chandler",
       "price": null,
       "description": "The Chandler is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses are available in retail stores only and feature premium foam construction. Similar models in the line range from $479-$699 depending on size.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_354d2b79d3004c6e95e629a6d99d2e8e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -565,7 +1168,9 @@
       "url": "https://www.carolinafutons.com/product-page/pagoda",
       "price": 737.0,
       "description": "The Pagoda Futon Frame utilizes Wall Hugger technology that allows you to easily convert the frame from sofa to bed without moving the furniture away from the wall. Made from plantation grown rubberwood with a beautiful black walnut finish. Maximum weight capacity of 500 lbs (2 people, 250 lbs each).",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_64a88a98a65c44a184a777765d4ab582~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full",
@@ -656,35 +1261,134 @@
       "url": "https://www.carolinafutons.com/product-page/tamarind",
       "price": 321.0,
       "description": "The Tamarind Bed features a dual system using universal rails and can be assembled as a high (K-Series) or low (P-Series) platform bed. This frame does not require the use of a box spring underneath your mattress of choice. The platform is adjustable to two heights, either 15 inches or 12 inches from floor to top of slats.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_87fc5cbf2de64492b123696695425c63~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_686426dd5d9d47c1b51d64eb3fd4d7bd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_febeb1f5af1b4767a8143d62ce5588b8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1f528ebf9ff743fcad3e7543a4034025~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_aa2e7a6ede8f4097912a25162d5076c3~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_745aeb2470e84e4bbd480596b10cf9f0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_c0b6b7df799649d99cd9adf845d1f945~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_526ed23fe1a949abaf023584f7f1b200~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Twin",
+          "label": "Twin / Cherry",
           "sku": null,
           "price": null
         },
         {
-          "label": "Twin XL",
+          "label": "Twin / Chocolate",
           "sku": null,
           "price": null
         },
         {
-          "label": "Full",
+          "label": "Twin / Natural",
           "sku": null,
           "price": null
         },
         {
-          "label": "Queen",
+          "label": "Twin / Stonewash Gray",
           "sku": null,
           "price": null
         },
         {
-          "label": "King",
+          "label": "Twin / White",
           "sku": null,
           "price": null
         },
         {
-          "label": "Cal King",
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
           "sku": null,
           "price": null
         }
@@ -733,8 +1437,10 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/haley-110",
       "price": 449.0,
-      "description": "A popular multi-purpose futon engineered for a medium-firm feel, with generous amounts of highly-resilient foam and polyester. 8-inch thickness (14 inches of overstuffed goods compressed to fit inside an 8-inch border). 9 inches of 2-pound density foam provides the ability to keep the mattress looking and feeling great. A 100% polyester fabric that breathes, stays cool and comfortable, and repels moisture. Designed for everyday use with 10-12+ year durability.",
-      "images": [],
+      "description": "A popular multi-purpose futon engineered for a medium-firm feel, with generous amounts of highly-resilient foam and polyester. Characteristics Comfort Level - A not too soft, not too firm feel Durability - 10-12+ years, designed to resist changes in support for years Thickness - A TRUE 8\" (14\" of overstuffed goods compressed to perform inside an 8\" border) Weight - Per full size, 40 pounds Home Style Use - Sofa and Bed Frame Recommendations - Can be used on a bi-fold frame or a platform bed style frame Construction A 100% polyester fabric that breathes, stays cool and comfortable, and repels moisture. 9\" of 2-pound density foam provides the ability to keep the mattress looking and feeling great. The flame-retardant rayon wrap and polyester protects the mattress and gives a clean, finished look. Machine tufting reduces the thickness of the mattress to lock in its good look and feel. The tape edge construction ensures a proper fit and finish of the mattress cover. Bench Built: Hand-made quality assures uniformity and quality control on each futon. Box Edges: For a TRUE reading of thickness. Overstuffed: Generous amounts (approx. 14\") of different combinations of highly resilient foam and fiber that create an \"inside out\" force against the mattress ticking that is necessary for proper and comfortable support, whether sitting or sleeping. Tape Edge Closure: Expert mattress tailoring operation that seals the comfort inside the mattress ensures proper placement of materials in the cover and reinforces the edges to present a clean tailored look instead of a \"haphazardly stuffed look.\" Compression Lace Tufting: This customized process alone will differentiate an Otis futon from any other! CLT serves to compress, strengthen, and control the overstuffed cushioning materials. Our \"buttonless\" tufting process forces the foam, fibers, springs, and mattress fabric to work together to create a supportive synergy that produces a comfort level unique to each mattress\u2026 bottom line, your mattress will feel as supportive as it did on the first day.",
+      "images": [
+        "https://static.wixstatic.com/media/ed8a72_a3340eb058db41d5ad5d32a888b970f5~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
+      ],
       "variants": [
         {
           "label": "Chair",
@@ -875,29 +1581,42 @@
       "sku": "CF-FRAME-RUSKIN",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/ruskin",
-      "price": null,
+      "price": 629,
       "description": "The Ruskin Futon Frame is manufactured using quality solid hardwoods with a finishing process utilizing premium multi-step stain & lacquer processes. Features easy conversion with three comfort positions (sofa, recline, bed) and sofa height seating position. Available with MoonGlider or Classic body options.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_55f6efa6554646da8f74db10b161ba71~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_71fe692588e64850aa915aca6ffc346b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full with Classic Body",
+          "label": "Full / Cherry",
           "sku": null,
-          "price": 629.99
+          "price": null
         },
         {
-          "label": "Queen with Classic Body",
+          "label": "Full / Chocolate",
           "sku": null,
-          "price": 679.99
+          "price": null
         },
         {
-          "label": "Full Drawers",
+          "label": "Full / Dark Chocolate",
           "sku": null,
-          "price": 289.99
+          "price": null
         },
         {
-          "label": "Queen Drawers",
+          "label": "Queen / Cherry",
           "sku": null,
-          "price": 299.99
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -929,7 +1648,9 @@
       "url": "https://www.carolinafutons.com/product-page/northampton",
       "price": null,
       "description": "The Northampton is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses feature premium foam construction that provides resiliency and comfort, is significantly lighter weight, and does not attract moisture and mildew. Available in retail stores only.",
-      "images": [],
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0eb04eaa5f7f4ebfb28e59ac8dbc7372~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1299,8 +2020,10 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/yuma",
       "price": null,
-      "description": "The Yuma futon frame features a sturdy southwestern design. Quality construction from Night & Day Furniture with multiple finish and size options.",
-      "images": [],
+      "description": "The Yuma is a Dual-Comfort linked coil innerspring unit, with the full size having 390 coils and queen size having 493 coils, with 2\" of 2 lbs. flat polyurethane soft foam, 3\" of 2.2 lbs. of convoluted polyurethane foam, and 1.375\" flat 2.2 lbs. of firm foam.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_ff7419677f7b4d5a87d1815aa167dbc2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1325,7 +2048,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Fuji Futon Frame",
@@ -1334,14 +2061,41 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/fuji",
       "price": 529.0,
-      "description": "The Fuji futon frame offers a sleek, Asian-inspired design with clean lines. Night & Day Furniture quality with Cherry and Dark Chocolate finish options.",
-      "images": [],
+      "description": "The Fuji futon frame brings a touch of Asian decor to any room with its curved stylish arms. Available in two finishes: Cherry and Dark Chocolate.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_d60bc6751da04b5db43c7004a092c4e0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3ed2a46a06034596aeb8c67c842e0ed0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1360,7 +2114,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Trelli Futon Frame",
@@ -1369,14 +2127,41 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/trelli",
       "price": 589.99,
-      "description": "The Trelli futon frame features a lattice-inspired arm design that adds visual interest. Night & Day Furniture's quality construction with standard finish options.",
-      "images": [],
+      "description": "Trelli's concave flowing arm cap and railroad trestle foundation combines style and function to any room. Available in Black Walnut and Warm Cherry. Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_bf297cf70f0a43a99f7fa29da11d142e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_10e851f9921145cbb0db2f9f4807957a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1395,7 +2180,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Winter Futon Frame",
@@ -1403,15 +2192,64 @@
       "sku": "CF-FRAME-WINTER",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/winter",
-      "price": null,
-      "description": "The Winter futon frame features a clean, contemporary design with straight lines. Part of Night & Day Furniture's wall-hugger collection, maximizing space efficiency.",
-      "images": [],
+      "price": 779,
+      "description": "The handsome Winter frame will fill your mountain home or urban loft with its cozy comfort and appeal. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_22fd95833c1c459692dd9725e68480ce~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4c962b28c9b2454d9741667f3e548366~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_784330c23f14451c8ec8daf2758875d6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5fb892df49f24b4c872ab79223cb5b4e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1430,7 +2268,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Paprika Futon Frame",
@@ -1439,14 +2281,137 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/paprika",
       "price": 679.0,
-      "description": "The Paprika platform bed is part of Night & Day's Spices Bedroom Collection. Distinctive upholstered headboard with fabric options over solid Malaysian rubberwood frame. Available in multiple fabric/frame color combinations.",
-      "images": [],
+      "description": "The Paprika Platform Bed is a mix-and-match headboard; choose a fabric color and wood color combo to suit any decor. Bed rails can be set up in two heights of 13.5\" or 16.3\" Headboards available in Charcoal, Gray, Red, and Teal. Wood finishes available in Cherry, Dark Chocolate, White, and Natural Available in Twin, Full, Queen, and King sizes *Please note that while some images show a partial footboard, all colors have a full panel footboard. Please contact us for any clarification needed.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_b6e84d376eb34dd49612c0164c7dac87~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b6d5077317ec4a13a09258a88120cf83~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b631fc05131d47019ea35df7ac4570f2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_e0f700b6d35c4bcd8214cb4de99fb068~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_71b8666dabf641e9ab00ac553283db2e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_20c35ac16c59449a8dd1bb9b883a772e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9eb97af8c02040839e01aa120c19658f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_551426375268416397cb5c0d6e3ac3c0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Twin / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Twin / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1465,7 +2430,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Tarragon Futon Frame",
@@ -1474,14 +2443,139 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/tarragon",
       "price": 174.0,
-      "description": "The Tarragon platform bed is part of Night & Day's Spices Bedroom Collection. Features a clean headboard design with solid Malaysian rubberwood construction. Available in Twin through King sizes.",
-      "images": [],
+      "description": "The Tarragon Platform Bed features a tall, handsome, paneled headboard, perfect for those wanting to pile their bed high with fluff and comfort. Bed rails can be used for a height of 13.7\" or 16.3 Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, White, Natural, and Stonewash Gray finishes*Please note that the Stonewash Gray image does not show the full footboard panel for the product (please see the other colors for full footboard panel image). Please contact us for clarification.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_1dd7f840025044478981e6e883863d55~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_8bb00365ccdc4f33b899c2832e00832d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b9d4cf76a1a84bf5bb4821edc53f6df2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_73b01be3988f4e1db8bc8d8cdf05eee3~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5d529812f06b498f92066d0d83ab5da8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2ca6a98e903c4b338e2636e31717b4b0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_e3357a2ebecc403aab16cf851d974fbc~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6dd63262944145c9bf73d3c17ee75a06~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_041223f7eef1499f926593c82e81c578~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_ec7853e9fbe149a8936abbd1cd9a361d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Twin / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Twin / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1500,7 +2594,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Eureka Futon Frame",
@@ -1508,15 +2606,74 @@
       "sku": "CF-FRAME-EUREKA",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/eureka",
-      "price": null,
-      "description": "The Eureka futon frame features a bold, geometric arm design that makes a statement. Night & Day Furniture's quality construction with available in multiple finishes and sizes.",
-      "images": [],
+      "price": 549,
+      "description": "The Eureka futon frame offers pleasing simplicity - no arms in your way! Available in five finishes: Black Walnut, Cherry, Dark Chocolate, Natural, and White.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_73e4f0964a3148bc842537e0bfc7cf58~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_7949e3a6f16d4456a301d1f66fa25d99~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4f9103f2ab11435fa505e902aaf2a173~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_93930267fc6f46f8a4ba35a4ef3757f1~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1535,7 +2692,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Alpine Futon Frame",
@@ -1544,8 +2705,10 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/alpine",
       "price": null,
-      "description": "The Alpine mattress by Otis Bed features a firm innerspring construction designed specifically for futon frames. Cotton and foam layers provide comfort while maintaining proper support for dual-use sofa/bed applications.",
-      "images": [],
+      "description": "*Contact for availability and pricing* The Alpine is a dual comfort mattress, overstuffed with 12\u201d of high-density foams thermally rebonded for extra strength and poly batting compressed to an 8\u201d thickness. The Alpine is a customer favorite for its comfort and affordability.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_c54a59af156b423b9d0a0b57df7f17ae~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1570,7 +2733,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Thyme Futon Frame",
@@ -1578,15 +2745,139 @@
       "sku": "CF-FRAME-THYME",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/thyme",
-      "price": null,
-      "description": "The Thyme platform bed is part of Night & Day's Spices Bedroom Collection. Features a low-profile footboard design with clean modern lines. Solid Malaysian rubberwood with dual-system frame compatibility.",
-      "images": [],
+      "price": 224,
+      "description": "The Thyme Platform Bed makes a subtle statement in a room, making it a perfect piece to go with any decor or accessory. This model is available in the P-Series only (low profile), with footboard height of 13.5\" Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, Natural, Stonewash Gray, and White finishes Product Dimensions",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_b4b165c6c9e64f90858fdc5a544e2bcd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_07c8333935e54d7cadd63ab2520693f7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_98f4d8a416054db5a318e14204464c80~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4bea49a709a3470a8315b5acd7309b0f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6adbe4f158fc417384ac330a0cdb64a0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2b18c31513b34fa5a01198b0c26677bb~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_cee3c1d8619f4bf3b7ff83e614e4a49d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3b21f44da4ac486581f5e5983c7e0973~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2b97bbd4133d408f822de2697526c4dc~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1605,7 +2896,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Asheville Futon Frame",
@@ -1614,8 +2909,10 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/asheville",
       "price": null,
-      "description": "The Asheville futon frame features a craftsman-inspired design with slatted arm panels. Night & Day Furniture's quality hardwood construction with smooth operating mechanism.",
-      "images": [],
+      "description": "*Contact for availability and pricing* Although a spring system isn\u2019t needed for support in this high-performance futon mattress, the Asheville offers familiar comfort for those who prefer the feel of an innerspring mattress.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_9a21133f83c3412ebe88d2f232c56cf9~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1640,7 +2937,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Rockwell Futon Frame",
@@ -1648,9 +2949,11 @@
       "sku": "CF-FRAME-ROCKWELL",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/rockwell",
-      "price": null,
-      "description": "The Rockwell futon frame offers a modern industrial-inspired design. Quality hardwood construction with Night & Day Furniture's standard finishes and 3-year warranty.",
-      "images": [],
+      "price": 743,
+      "description": "This low-profile frame is a sleek, modern addition to any room. The clean lines and strong arm surface not only give this frame a beautiful design but excellent functionality. Available in Black Walnut and available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_fa9b333ca16d437c83a19415213aec3a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1675,7 +2978,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Raleigh Futon Frame",
@@ -1683,15 +2990,32 @@
       "sku": "CF-FRAME-RALEIGH",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/raleigh",
-      "price": null,
-      "description": "The Raleigh futon frame combines Southern charm with practical design. Features a comfortable arm height and smooth conversion between sofa and bed positions.",
-      "images": [],
+      "price": 699,
+      "description": "The Raleigh offers a traditional tray arm design with slats that continue down the arm to encasulate the sides. This frame is available with the Nesting Body Classic Design that features three positions: sofa, reclined, and bed. Available in two unique finishes: Brushed Driftwood and Skye.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_31b09cbd740e4a63b8d95cbd69f309fc~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_c4792b4b862c437187c372f7eaff8b3e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Brushed Driftwood",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Skye",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Brushed Driftwood",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Skye",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1710,7 +3034,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Ekko Futon Frame",
@@ -1753,15 +3081,64 @@
       "sku": "CF-FRAME-ALBANY",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/albany",
-      "price": null,
-      "description": "The Albany futon frame features a classic panel arm design that complements any room. Night & Day Furniture quality with Full and Queen sizes and multiple finish options.",
-      "images": [],
+      "price": 529,
+      "description": "The Albany frame offers an appealing low-profile design with easy, crisp styling often desired in small rooms and casual settings. Available in four finishes: Black Walnut, Cherry, Dark Chocolate, and Natural. Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_491530e166394f50b3895b39ef88607d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_38f2f08870e34fe18b11d74527dfda39~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_7524a32ff05d48ccaf68612c7d224f1d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a648aa225d2949938f8d4421d2b075a4~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1780,7 +3157,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Venice Futon Frame",
@@ -1788,15 +3169,73 @@
       "sku": "CF-FRAME-VENICE",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/venice",
-      "price": null,
-      "description": "The Venice futon frame offers an elegant European-inspired design. Clean lines and quality construction from Night & Day Furniture's plantation-grown materials.",
-      "images": [],
+      "price": 709,
+      "description": "The Venice stands and delivers with its striking sleigh arm style. You really can\u2019t go wrong; the Venice fits in everywhere. Available in three finishes: Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_c3661d2794c448c5ae1864dde58d0b3e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_0cbe46bf56894b30afd324bbbe81f4c3~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2028c9fff4aa404d8434ade014774179~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1815,7 +3254,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Maricopa Futon Frame",
@@ -1824,8 +3267,10 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/maricopa",
       "price": null,
-      "description": "The Maricopa futon frame features a southwestern-inspired design. Solid hardwood construction with Night & Day's signature quality and 3-year warranty.",
-      "images": [],
+      "description": "*Contact for availability and pricing* The unique soft touch on one side with firm support on the other makes the Maricopa one of our most popular Dual Comfort mattresses.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_b9e01e79be954d298c27105c5652345a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -1850,7 +3295,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Durango Futon Frame",
@@ -1858,15 +3307,54 @@
       "sku": "CF-FRAME-DURANGO",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/durango",
-      "price": null,
-      "description": "The Durango futon frame brings rustic Western style to any room. Bold arm design with quality hardwood construction and smooth conversion mechanism.",
-      "images": [],
+      "price": 704,
+      "description": "The Durango is a sturdy mission-style frame featuring clean lines and vertical slats, allowing it to blend in with any contemporary decor. Available in Warm Cherry, Dark Cherry, and Gray. Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_5610973ac57d4ca28982a8be8d441235~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1bf3397ba8324a30aaa8cb475362ad00~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6f7f547a2cdc443ebccd5605720e011e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_d25c7cd6cb8b4b0aac8de2bbe389c350~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1885,7 +3373,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "KD Lounger",
@@ -1893,12 +3385,29 @@
       "sku": "CF-FRAME-KDLOUNGER",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/kd-lounger",
-      "price": null,
-      "description": "",
-      "images": [],
+      "price": 199,
+      "description": "The KD Lounger frame is a lounger, chair, and bed all in one! This multi-functional solid wood frame features numerous convertible positions and rounded corners, which is both functionally and aesthetically pleasing. This Lounger will be a sturdy fixture in your home for years to come. Popular uses for this versatile frame in all its multiple positions includereading, gaming, as well as watching sports and TV. This Lounger also makes a great transitional bed for small children: You can even adjust the back to your favorite position and read your child to sleep at night.Available in Twin, Full & Queen sizes. DimensionsTwin Size: 37\"W x 74\"L x 10\" H (bed position)Full Size: 52\"W x 74\"L x 10\" H (bed position)Queen Size: 58\"W x 79\"L x 10\" H (bed position) Sofa Height: Twin 31.5\"; Full 31.5\"; Queen 36.5\"Sofa Depth (extension underneath frame): 46\" (all sizes)Overall Lounger Depth (w/extension): 63\" (all sizes)",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0afa9805d55f41bfa134b56a2b5d0109~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b3c4bb84b423457d80a2668231b51b48~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2e3f21adcec6479f9e2134be7ecc2e35~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_f7544a851db545bba69c2d595ee299ea~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Twin",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1912,7 +3421,11 @@
       "bundleCompatible": true,
       "warranty": "5-year warranty",
       "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
-      "madeIn": "Athens, Georgia, USA"
+      "madeIn": "Athens, Georgia, USA",
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Wilderness Log Futon",
@@ -1921,16 +3434,40 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/wilderness-log-futon",
       "price": 1289.0,
-      "description": "Rustic log futon frame",
+      "description": "Constructed of Norway pine, this log futon is skip peeled, which means a little bit of cambium or bark is still on the log, giving it a more rustic or natural log look. Each log has to be hand selected to be just the right diameter and have the right character. The knots on the logs are pronounced or sticking out, which are called character knots. Available in Clear FInish. Full: 85\"L x 36\"D x 32\"HQueen: 90\"L x 36\"D x 36\"H",
       "images": [
         "https://static.wixstatic.com/media/e04e89_eae35a7d467c4dd9987d54e248fd7037~mv2.jpg/v1/fit/w_300,h_200,q_90/file.jpg"
       ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Clear",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Clear",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Clear",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1959,15 +3496,32 @@
       "sku": "CF-LOG-NORTHERNEXPOSURE",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/northern-exposure-log-futon",
-      "price": null,
-      "description": "Rustic log futon frame",
-      "images": [],
+      "price": 903,
+      "description": "Constructed of Norway pine, the arms on this log futon are heavy six-inch diameter clean peeled logs that use mortise and tenon construction to show the authentic log character of the futon. Each piece has its own unique charm as no two trees grow the same. Available in Clear or Honey Pine Finish. Full: 85\"L x 36\"D x 32\"HQueen: 90\"L x 36\"D x 36\"H",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_3b67f1efbfda401989e5af8354d8f0a2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_89fb7115b61d4a2087db3cac9386d89b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Honey Pine",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Clear",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Honey Pine",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Clear",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -1986,7 +3540,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Mountainaire Log Futon",
@@ -1995,8 +3553,10 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/mountainaire",
       "price": null,
-      "description": "Rustic log futon frame",
-      "images": [],
+      "description": "*Contact for availability and pricing* The Mounainaire is definitely an overachiever! It combines 14 inches of high-density and convulated foams compressed into an 8\" case. This mattress provides a supportive plush comfort while sitting and a supportive firmer feeling for sleeping comfort. The Mountainaire remains the most popular choice for both stages of use.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_420f5592eca647ac9400e3fa635a1f03~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -2021,7 +3581,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Denali Log Futon",
@@ -2029,15 +3593,64 @@
       "sku": "CF-LOG-DENALI",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/denali",
-      "price": null,
-      "description": "Rustic log futon frame",
-      "images": [],
+      "price": 737,
+      "description": "This mid-century modern style frame, with slightly-rounded wooden slats and sleek finishes, is designed to be both functional and fashionable anywhere you put it. The Denali is available in Warm Cherry, Dark Cherry, Gray & Natural. Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_dc02f16124414700a764ceaea356cbbf~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_7260cfc3bd8541f58521cbdbdada01fd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_d32b3a76650045c8bffcc208f561c27c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_f2cb56c3d6e14aed96a453ddfb881bd8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2056,7 +3669,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Daisy Murphy Bed Cabinet",
@@ -2216,8 +3833,14 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/ranchero-murphy-cabinet-bed",
       "price": 2978.0,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
-      "images": [],
+      "description": "The newest addition to the Night & Day Murphy Cabinet Bed Line, the Ranchero Murphy Cabinet Bed has a rustic distressed finish with handsome antique brass hardware. Available in two finishes: Wildwood Brown and Wildwood Vintage White. Features include: Higher sleep platform Built-in dual power/USB module Comes complete with flip-up side trays Solid hardwood construction Shallow sleep enclosure Tri-fold premium 6-inch gel-infused memory foam Queen mattress Large rolling storage drawer",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_00aa9b1d12114969b32e8e982d9bf5c2~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png",
+        "https://static.wixstatic.com/media/e04e89_6448ea36a0ff451cb26966a338379917~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9c5d329d9e804362816eb64936f950a9~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_d9c2cd7052ac4b9dac8cb20d55006e6b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b1d8d9bddccc464f9cfa41ce000e690e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Twin",
@@ -2291,11 +3914,32 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/sagebrush-murphy-cabinet-bed",
       "price": 2.0,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
-      "images": [],
+      "description": "The Sagebrush Murphy Cabinet Bed is available in two finishes: Dark Chocolate and Stonewash Gray.Features include: Higher sleep platform Built-in dual power/USB module Comes complete with flip-up trays Solid hardwood construction Shallow sleep enclosure Tri-fold premium 6-inch gel-infused memory foam Queen mattress Large rolling storage drawer",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_ca73275a55ae4bd8947c8cf4f3700278~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_81d95d386fb04fd5b72475cfeb53267e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_280902fb1739493080f6c64bb852fce6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Queen"
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2307,7 +3951,17 @@
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
       "bundleCompatible": false,
-      "materials": "Plantation-grown rubberwood"
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Chocolate",
+        "Stonewash Gray",
+        "Dark Chocolate",
+        "Gray"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Orion Murphy Cabinet Bed",
@@ -2315,12 +3969,31 @@
       "sku": "CF-MURPHY-ORION",
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/orion-murphy-cabinet-bed",
-      "price": null,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
-      "images": [],
+      "price": 1399,
+      "description": "Night and Day's newest Murphy Cabinet Bed, available in twin and full. Easy and safe design with metal latches, fold-out legs, and safety buckle design. Includes a 4\u201d gel-infused memory foam tri-fold mattress.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_6e00f8368b444bc8a99ec440929cceb7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4022774c23684bebb49d3a113dec50ca~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_eefefe7a6b9d4a2dac3e8b7fc44fed42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_70233f667e2049cf80c0a4c785d2c969~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_8957f807808b4514a5199e7e01dcc088~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_7ff63770de12438ba330d494923ea11d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b2055537385949b9b67409c67e0650a7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_abaa4726f0e143638d54cd88d0d731c6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_752ab62916bc46158f634c711f2a8d8d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6f31aab3932749d38671d135449c01c8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9c56ba230162498dbc8b6b7eedc052e5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Queen"
+          "label": "Twin",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2332,7 +4005,11 @@
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
       "bundleCompatible": false,
-      "materials": "Plantation-grown rubberwood"
+      "materials": "Plantation-grown rubberwood",
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Murphy Cube Cabinet Bed",
@@ -2340,12 +4017,65 @@
       "sku": "CF-MURPHY-CUBE",
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/murphy-cube2",
-      "price": null,
-      "description": "Compact murphy cube cabinet bed",
-      "images": [],
+      "price": 1898,
+      "description": "The Murphy Cube is available in four finishes: Cherry, Chocolate, Stonewash Gray, and White.Features include: 3 locking hinges for opening and closing Solid hardwood construction Extra space for pillows and sheets in cabinet when closed Tri-fold 6-inch premium gel-infused memory foam Queen mattress",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_82796c3f0c504578b1219e51cb2fd7f8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6326dfe7d01e4788bb3bb753e83601d6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9a398b73e6214ed9993fb6f9f0e9b2de~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_7894c47082d2450c88efef580433ff18~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b8bb16e13941497cbbee9fe8746c8a34~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Queen"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2357,7 +4087,18 @@
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
       "bundleCompatible": false,
-      "materials": "Plantation-grown rubberwood"
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Chocolate",
+        "Stonewash Gray",
+        "White",
+        "Gray"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Murphy Cabinet Express",
@@ -2479,8 +4220,13 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/nomad",
       "price": 300.0,
-      "description": "Solid wood platform bed",
-      "images": [],
+      "description": "The Nomad Platform Bed is considered a minimalist Swedish design with an emphasis on functionality and simple, clean lines. This bed frame features a slat spacing of 2.8 inches to accommodate the requirements of just about any mattress on the market today. The Nomad has a weight capacity of up to 600 pounds and a platform height of 15 inches.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0f1ec504063c4f0bb1d4adfd451f9038~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b2e3e331c4154a1ca8dd13b0897eec1c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5dee341c140e48f5b89daf3385585a58~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_bdff14f2f5d748fea45693314100693e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "size": "Twin",
@@ -2562,7 +4308,11 @@
       "platformHeight": 15,
       "slatSpacing": 2.8,
       "assemblyNotes": "Screwdriver or drill required. Hex wrench included. Up to one hour for larger frames.",
-      "careGuide": "Unfinished natural wood \u2014 can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction."
+      "careGuide": "Unfinished natural wood \u2014 can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Charleston Platform Bed",
@@ -2571,7 +4321,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/charleston",
       "price": 319.0,
-      "description": "Solid wood platform bed",
+      "description": "The Charleston Platform Bed provides a classic and clean mission-style headboard. With a slat spacing of 2.8 inches, the Charleston can accommodate just about any mattress on the market today and has a weight capacity of up to 600 pounds. This bed features a 40\" tall headboard, slats flush with the tops of the rails, and has a platform height of 15 inches that can accommodate the KD Frames Trundle or Rolling Drawers underneath.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_f010f958f7844c9c83a051312637d02f~mv2.jpg/v1/fit/w_2500,h_1838,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_8e72406ca6df49c9a485d154d66c00a5~mv2.jpg/v1/fit/w_1042,h_646,q_90/file.jpg",
@@ -2640,36 +4390,137 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/nutmeg-platform-bed",
       "price": 266.0,
-      "description": "Solid wood platform bed",
-      "images": [],
+      "description": "The Nutmeg Bed is a great choice for the contemporary room. Its flared legs and curved-slat styling are a current classic. Bed rails can be set up in two heights of 13.5\" or 16.3\" Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, White, Natural, and Stonewash Gray finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_1138b007dc604020b1d9c571febd608b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_0b34073c719d4885beb7607e46094baa~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1a611742bf444f04ac7334b6293850ba~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a5ff84016c3b4af4b2318a7bc6863d9b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5cf4162e1edb432a9a7931d4ddb1f340~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b832efcd607e4c7b90c9cc65d4c85b63~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6522fb3e1cd04d54879c81aa521708bd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_725dfaf7e4fd4b2a879ca7cc8cb6c0d6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_b74e585de02243c9bbe493f8dcc055ce~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6fcc4216caa64336bbdb8acae9f7bb78~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Twin",
+          "label": "Twin / Cherry",
           "sku": null,
           "price": null
         },
         {
-          "label": "Twin XL",
+          "label": "Twin / Chocolate",
           "sku": null,
           "price": null
         },
         {
-          "label": "Full",
+          "label": "Twin / Natural",
           "sku": null,
           "price": null
         },
         {
-          "label": "Queen",
+          "label": "Twin / Stonewash Gray",
           "sku": null,
           "price": null
         },
         {
-          "label": "King",
+          "label": "Twin / White",
           "sku": null,
           "price": null
         },
         {
-          "label": "Cal King",
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
           "sku": null,
           "price": null
         }
@@ -2750,8 +4601,11 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/lexington-1",
       "price": 50.0,
-      "description": "Solid wood platform bed",
-      "images": [],
+      "description": "The horizontal lines of this bed offer a sense of tranquility in your room. The Lexington has a slat spacing of 2.8\" to accommodate the requirements of just about any mattress on the market today, a weight capacity of up to 600 pounds, and a platform height of 15 inches which can accommodate the Trundle or Rolling Drawers underneath.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "size": "Twin",
@@ -2833,7 +4687,11 @@
       "platformHeight": 15,
       "slatSpacing": 2.8,
       "assemblyNotes": "Screwdriver or drill required. Hex wrench included. Up to one hour for larger frames.",
-      "careGuide": "Unfinished natural wood \u2014 can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction."
+      "careGuide": "Unfinished natural wood \u2014 can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Basic Platform Bed",
@@ -2841,21 +4699,138 @@
       "sku": "CF-PLATFORM-BASIC",
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/basic-bed",
-      "price": null,
-      "description": "Simple solid wood platform bed",
-      "images": [],
+      "price": 486,
+      "description": "The Basic Platform Bed is our entry-level model, perfect for loft living, the kid\u2019s room, and for the guest room. The bed rails can be set up in two heights of 13.5\" or 16.3.\" Available in Cherry, Chocolate, White, Natural, and Stonewash Gray finishes Available in Twin, Full, Queen, and King sizes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_daa8513102cd41ca9203d9130e01ba42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_096d9f24acbf41b6829ae86a80c1c7fe~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_468b14ef909340c2a0ceb1cd4cca50ed~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_ba9ad126d2214462b00e060423f47db8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_3bd5477d3e604f00912613173411af65~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a3fe93d0dbcf40b48bc5b176e52e1efb~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_384e6e502d524f4dab3b0969ffd0eef9~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_32c7648a67c147b58520695a1703bfdf~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Twin"
+          "label": "Twin / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Full"
+          "label": "Twin / Chocolate",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Twin / Natural",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "King"
+          "label": "Twin / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Twin / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2869,7 +4844,19 @@
       "bundleCompatible": false,
       "warranty": "5-year warranty",
       "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
-      "madeIn": "Athens, Georgia, USA"
+      "madeIn": "Athens, Georgia, USA",
+      "swatches": [
+        "Cherry",
+        "Chocolate",
+        "Natural",
+        "Stonewash Gray",
+        "White",
+        "Gray"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Folding Platform Bed",
@@ -2878,8 +4865,10 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/folding-platform-bed",
       "price": 169.0,
-      "description": "Foldable platform bed for easy storage",
-      "images": [],
+      "description": "The Folding Platform Bed is stylish, convenient, and can be folded in half for convenient storage. Its low design, with legs that are tucked underneath, gives the appearance of a floating bed.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_92ec39c6ac5f41c39b2a8837b035203f~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
+      ],
       "variants": [
         {
           "label": "Twin"
@@ -2902,7 +4891,11 @@
       "bundleCompatible": false,
       "warranty": "5-year warranty",
       "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
-      "madeIn": "Athens, Georgia, USA"
+      "madeIn": "Athens, Georgia, USA",
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Twin Trundle Bed",
@@ -2911,14 +4904,21 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/twin-trundle-bed",
       "price": 159.0,
-      "description": "Twin bed with pull-out trundle",
+      "description": "The Twin Trundle has a slat spacing of 2.8 inches and is a perfect solution for extra bed space without taking up extra room. Equipped with four sturdy wheel for easy gliding and a weight limit of 400 pounds, this bed is designed to fit under all sizes, except for the King Nomad which comes with center legs.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_48edd2b97f994c6bb08401915a054ca5~mv2.jpg/v1/fit/w_480,h_320,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_1024,h_683,q_90/file.jpg"
       ],
       "variants": [
         {
-          "label": "Twin"
+          "label": "Twin",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2955,15 +4955,44 @@
       "sku": "CF-PLATFORM-TRUNDLE",
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/trundle-bed",
-      "price": null,
-      "description": "Bed with pull-out trundle",
-      "images": [],
+      "price": 479,
+      "description": "Available in Cherry, Chocolate, Natural, Stonewash Gray, and White",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_35e785c765fa44b68122702f08559cdc~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1a790e532def4e90986298d990f7552c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_bb041fcea71e463ea904632125f03017~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_a4d551edf8a7417da453f51424d5e2a5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Twin"
+          "label": "Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Full"
+          "label": "Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -2983,7 +5012,11 @@
         "Natural",
         "Stonewash",
         "White"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Canby Mattress",
@@ -2992,14 +5025,52 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/canby",
       "price": 719.99,
-      "description": "Futon mattress",
-      "images": [],
+      "description": "The Canby has a traditional mission arm with sleek vertical lines and stylishly tapered legs. Available in Warm Cherry, Black Walnut, and Gray. Available in Full, Queen, Full Loveseat w/Ottoman, and Queen Loveseat w/Ottoman.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_ceded0aeb93c4f838fff56b05098dfc6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_e2fdfe2a8a7148ed95abbb764ce64b37~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6ef07ae7a0fc4120928bd333153e7a4c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Warm Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3010,7 +5081,17 @@
       },
       "manufacturer": "Otis Bed",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "swatches": [
+        "Cherry",
+        "Black Walnut",
+        "Warm Cherry",
+        "Gray"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Portofino Mattress",
@@ -3019,14 +5100,63 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/portofino",
       "price": 469.95,
-      "description": "Premium futon mattress",
-      "images": [],
+      "description": "Never lose the remote again with the Portofino\u2019s handy in-arm storage plus magazine rack. The solid design of this sofa is great for family rooms doing double duty. Available in four finishes: Black Walnut, Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_d7ea16ef2c2c4d938abbda1ecc1f5c77~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_913d086bf5944b3d99fd39e630a8e17c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5b3c988623154727b55015af515fd118~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_608fa4a995fc4f2290b8665466917d72~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3037,7 +5167,18 @@
       },
       "manufacturer": "Otis Bed",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "swatches": [
+        "Cherry",
+        "Chocolate",
+        "Natural",
+        "Black Walnut",
+        "Dark Chocolate"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Mesa 1000 Mattress",
@@ -3046,7 +5187,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mesa-1000",
       "price": null,
-      "description": "Futon mattress",
+      "description": "*Contact for availability and pricing* Generous amounts (approx. 14\u2033) of different combinations of highly-resilient foam and polyester fiber batting compressed to an 8\u201d thickness creates dense yet soft support, whether sitting or sleeping. The Mesa 1000 can be used on a bi-fold frame or a platform bed style frame.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg"
       ],
@@ -3079,8 +5220,10 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mesa-3000",
       "price": null,
-      "description": "Premium futon mattress",
-      "images": [],
+      "description": "*Contact for availability and pricing* The Mesa 3000 has the same long-lasting support of the Mesa 1000 but with a firmer feel. Although the Mesa 3000 is very firm, it has just enough flexibility to allow for use on a bi-fold frame.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_71ae301362a742ea96dc352f6cdaa0d0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -3097,7 +5240,11 @@
       },
       "manufacturer": "Otis Bed",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Mesa 5000 Mattress",
@@ -3106,8 +5253,10 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mesa-5000",
       "price": null,
-      "description": "Premium futon mattress",
-      "images": [],
+      "description": "*Contact for availability and pricing* The Mesa 5000 is an ultra-firm platform bed mattress with 9\" of firm high-quality convoluted two-pound foam, creating the firmest futon mattress in the Otis Bedline. Two layers of polyester fiber batting allows the mattress to give \"just a little.\"",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0128a414ce614faf8498fabc458950c1~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "Full"
@@ -3124,7 +5273,11 @@
       },
       "manufacturer": "Otis Bed",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Solstice Mattress",
@@ -3132,15 +5285,64 @@
       "sku": "CF-MATTRESS-SOLSTICE",
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/solstice",
-      "price": null,
-      "description": "Futon mattress",
-      "images": [],
+      "price": 829,
+      "description": "The handsome Solstice frame with its lattice set within robust tapered legs will define any room it is in. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_7e9b8a8110ed42f7a558b7cae5999b42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1b174fc35bc4455fad924f11433ed440~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1181b26810734016b51b140dbb4b6c78~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6a18e7df61294d79af567004adc46a92~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3151,7 +5353,18 @@
       },
       "manufacturer": "Otis Bed",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "swatches": [
+        "Cherry",
+        "Chocolate",
+        "Natural",
+        "Black Walnut",
+        "Dark Chocolate"
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Pulsar Mattress",
@@ -3216,15 +5429,26 @@
       "sku": "CF-ACC-PROTECTOR",
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/mattress-protector",
-      "price": null,
-      "description": "Futon mattress protector",
-      "images": [],
+      "price": 89,
+      "description": "Protect It\u2122 Futon Protectors New protective technology makes Protect It\u2122 the ultimate mattress protector.The waterproof, breathable, anti-allergen, dust mite barrier is laminated between two layers of smooth, durable 100% polyester fabric for ultimate performance and comfort. Waterproof Breathable Quiet Blocks allergens and dust mites Washing won\u2019t weaken the barrier 10 Year Product Limited WarrantyAvailable in Twin (6\u2033 loft), Full (7\u2033 loft), and Queen (7\u2033 loft) sizes.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_015aaccdf0c548da95e09b93970fb260~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Twin",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3233,9 +5457,13 @@
         "height": 0,
         "weight": 0
       },
-      "manufacturer": "",
+      "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Storage Drawers",
@@ -3272,8 +5500,10 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/center-legs",
       "price": 35.0,
-      "description": "Center support legs for futon frames",
-      "images": [],
+      "description": "Two 11\", 14\", or 17\" center support legs and 8 wood screws. Use the 11\" center legs with the 12\" optional leg height. Use the 14\" center legs for the standard 15\" platform height. Use the 17\" center legs with the 18\" optional leg height. These legs can be used to lend extra support to the outside rails of all sizes and/or the middle rails of the full and queen sizes of the Nomad, Charleston, or Lexington platform beds. Please note that the king size Nomad comes with this set of center support legs for the middle two rails. These support legs are only needed if you plan to exceed the 600 pound weight limit of the Nomad, Charleston or Lexington bed frames.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_0f099224141448be98f5ce46b4f42f35~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
           "label": "11-inch (for 12\" leg height)",
@@ -3346,7 +5576,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-nightstand",
       "price": 379.0,
-      "description": "Nightstand with hidden storage",
+      "description": "The Secrets Collection features a one-drawer nightstand with open shelf, as well as a hidden tray on the bottom. Available in Cherry, Chocolate, Natural, Stonewash Gray, and White finishes",
       "images": [
         "https://static.wixstatic.com/media/e04e89_60ca20e4e5c44381a3c69de6aaaf005a~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6828b2a4c3ff49c4802b1e1bf6a3b378~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
@@ -3360,22 +5590,32 @@
         {
           "label": "Cherry",
           "sku": null,
-          "price": 379.0
-        },
-        {
-          "label": "Natural",
-          "sku": null,
-          "price": 379.0
-        },
-        {
-          "label": "White",
-          "sku": null,
-          "price": 379.0
+          "price": null
         },
         {
           "label": "Chocolate",
           "sku": null,
-          "price": 379.0
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3407,7 +5647,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/hook-on-nightstand",
       "price": 169.0,
-      "description": "Attachable nightstand for platform beds",
+      "description": "The hook-on nightstand is styled to match all Clove casegoods and beds. Simple and stylish, it hooks onto either side of all Spices beds. Available in Cherry, Chocolate, Natural, Stonewash Gray, and White finishes",
       "images": [
         "https://static.wixstatic.com/media/e04e89_c55984a885b14be3b5f0b1688ec81ca8~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_3b5eac3a1499413e88a0eb8545411057~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
@@ -3417,24 +5657,34 @@
       ],
       "variants": [
         {
-          "label": "Natural",
-          "sku": null,
-          "price": 169.0
-        },
-        {
           "label": "Cherry",
           "sku": null,
-          "price": 169.0
+          "price": null
         },
         {
           "label": "Chocolate",
           "sku": null,
-          "price": 169.0
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
         },
         {
           "label": "White",
           "sku": null,
-          "price": 169.0
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3465,10 +5715,48 @@
       "sku": "CF-CASE-SECRETS5",
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-5-drawer-chest",
-      "price": null,
-      "description": "5-drawer chest",
-      "images": [],
-      "variants": [],
+      "price": 1019,
+      "description": "The Secrets Collection lets you put your wonderful things away into this trim and stylish chest, plus a hidden tray on the bottom. Available in Cherry, Chocolate, Natural, Stonewash Gray, and White finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_1e2d8eab11a24470858dc5b22ca8b42a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_24bd6367067a4c9aaf971614c68b4511~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_61ee5b9c7b054d6d9c0b6180a4c8944f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_144bfb99f9674c308bbaabaf60354db9~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_beb6a49f44d94aeeacf5499cac327e3c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_120993c9b0a247ee9205132fa7509ded~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
+      "variants": [
+        {
+          "label": "Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
+        }
+      ],
       "dimensions": {
         "width": 0,
         "depth": 0,
@@ -3485,7 +5773,11 @@
         "Natural",
         "Stonewash",
         "White"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Secrets 7-Drawer Dresser",
@@ -3493,10 +5785,50 @@
       "sku": "CF-CASE-SECRETS7",
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-7-drawer-dresser",
-      "price": null,
-      "description": "7-drawer dresser",
-      "images": [],
-      "variants": [],
+      "price": 1098,
+      "description": "The Secrets Collection lets you put your wonderful things away into this trim and stylish dresser, plus a hidden tray on the bottom. Add the optional portrait mirror for $290.00. Available in Cherry, Chocolate, Natural, Stonewash Gray, and White finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_b32fbaec605244aa9809db1db8f92a31~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5d98d248177a4954899d45797a23d81c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_f5b83ac9a7204d5b95192a314749de6f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_c69e4321e4624ad6a498f79e3b95fb7a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1bd1acf8cfe248e89d32d01f0f91d080~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_2e4bc895c1ec484e8c75f1d7ccd537f6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_c76bdc298c884f78b17381e823df1461~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_ac870f287e7a46438711546d1111f244~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
+      "variants": [
+        {
+          "label": "Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
+        }
+      ],
       "dimensions": {
         "width": 0,
         "depth": 0,
@@ -3513,7 +5845,11 @@
         "Natural",
         "Stonewash",
         "White"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Clove Nightstand",
@@ -3549,10 +5885,42 @@
       "sku": "CF-CASE-CLOVE5",
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/clove-5-drawer-chest",
-      "price": null,
-      "description": "Clove collection 5-drawer chest",
-      "images": [],
-      "variants": [],
+      "price": 873,
+      "description": "The Clove 5-Drawer Chest pleases with its stately look, and gives you fabulous storage while taking up minimal floor space. Available in 5 finishes: Cherry, Choloate, Natural, Stonewash Gray, and White finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_3059d9f6d42d43b785efe5bfa4806f90~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4c7196e4ba2e443aabb1032f7ee418a7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9474a615989040c09f125cf05946670b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_fe392e007d79484199808d7a1ba59e9b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_ccebc076572147919c7dea729257c538~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
+      "variants": [
+        {
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Gray",
+          "sku": null,
+          "price": null
+        }
+      ],
       "dimensions": {
         "width": 0,
         "depth": 0,
@@ -3569,7 +5937,11 @@
         "Natural",
         "Stonewash",
         "White"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Clove 6-Drawer Dresser",
@@ -3577,10 +5949,47 @@
       "sku": "CF-CASE-CLOVE6",
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/clove-6-drawer-dresser",
-      "price": null,
-      "description": "Clove collection 6-drawer dresser",
-      "images": [],
-      "variants": [],
+      "price": 994,
+      "description": "The Clove 6-Drawer Dresser, with optional mirror, is the grand piece of our Clove group. Six big drawers along with the huge dresser-top surface makes it the major utility piece in the group. Add the optional mirror (sold separately $290) to complete its grandeur. Available in Cherry, Chocolate, Natural, Stonewash Gray, or White finishes",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_925a30a4404b42078a25c467ee46c11e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_96075bca837d43e1b927f7555992ae54~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5e5bffa99799478498194c5f635b29d0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_5624808aa1a74cac9801c9bfc5c307db~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_4a7aac9257b044acb2da580caeff210c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
+      "variants": [
+        {
+          "label": "Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Stonewash Gray",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "White",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Gray",
+          "sku": null,
+          "price": null
+        }
+      ],
       "dimensions": {
         "width": 0,
         "depth": 0,
@@ -3597,7 +6006,11 @@
         "Natural",
         "Stonewash",
         "White"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Lingerie Chest",
@@ -3718,14 +6131,88 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/kingston",
       "price": 619.0,
-      "description": "The Kingston futon frame features a refined arm design with traditional styling. Night & Day Furniture quality construction with Natural, Dark Chocolate, and Cherry finishes.",
-      "images": [],
+      "description": "The Kingston futon frame is trim and stylish, featuring a patented Arts and Crafts stick-and-rail pattern in the arm. Available in four finishes: Black Walnut, Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_cc0d90e192f64690988673747fac299d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_dd0e630f43234a8da66edae5a1286d32~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_9f2c59a4d0d64c4a948e04cd6a89fe76~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_fde94af5219c454b83b7c62cc52877ed~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "King / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "King / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "King / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3744,7 +6231,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     },
     {
       "name": "Solstice Futon Frame",
@@ -3752,15 +6243,64 @@
       "sku": "CF-FRAME-SOLSTICE",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/solstice-1",
-      "price": null,
-      "description": "The Solstice futon frame offers a transitional design that works in modern and traditional settings. Night & Day Furniture quality with multiple finish options and size choices.",
-      "images": [],
+      "price": 829,
+      "description": "The handsome Solstice frame with its lattice set within robust tapered legs will define any room it is in. Available in four finishes: Cherry, Black Walnut, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "images": [
+        "https://static.wixstatic.com/media/e04e89_7e9b8a8110ed42f7a558b7cae5999b42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1b174fc35bc4455fad924f11433ed440~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_1181b26810734016b51b140dbb4b6c78~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
+        "https://static.wixstatic.com/media/e04e89_6a18e7df61294d79af567004adc46a92~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
+      ],
       "variants": [
         {
-          "label": "Full"
+          "label": "Full / Cherry",
+          "sku": null,
+          "price": null
         },
         {
-          "label": "Queen"
+          "label": "Full / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Full / Dark Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Cherry",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Chocolate",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Natural",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Black Walnut",
+          "sku": null,
+          "price": null
+        },
+        {
+          "label": "Queen / Dark Chocolate",
+          "sku": null,
+          "price": null
         }
       ],
       "dimensions": {
@@ -3779,7 +6319,11 @@
         "Dark Chocolate",
         "Natural",
         "Black Walnut"
-      ]
+      ],
+      "sustainability": {
+        "materialSource": null,
+        "recyclable": null
+      }
     }
   ],
   "sitePages": {
@@ -3881,7 +6425,7 @@
     "Manufacturer spec sheet PDFs",
     "YouTube video links from /product-videos page"
   ],
-  "enrichedAt": "2026-02-22T02:00:00Z",
+  "enrichedAt": "2026-02-22T02:10:00Z",
   "enrichedBy": "architect (tech lead)",
   "dataSources": [
     "carolinafutons.com sitemap (melania seed)",
@@ -3890,7 +6434,8 @@
     "caesar kdframes-catalog.json (16 products, full specs from manufacturer)",
     "WebSearch results from manufacturer sites (55 products)",
     "Night & Day Furniture manufacturer website (product listings, finishes, warranties)",
-    "Known product descriptions from manufacturer specs and retailer pages"
+    "Known product descriptions from manufacturer specs and retailer pages",
+    "carolinafutons-products.json (comprehensive scraped catalog with prices and descriptions)"
   ],
   "searchEnrichedCount": 37,
   "contentPages": [
@@ -4045,5 +6590,6 @@
       "description": "Detailed arm style comparison for Albany, Trinity, and Eureka futon frames."
     }
   ],
-  "totalContentPages": 25
+  "totalContentPages": 25,
+  "finalMergeCount": 72
 }
