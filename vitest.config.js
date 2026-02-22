@@ -125,6 +125,7 @@ export default defineConfig({
       'backend/paymentOptions.web': path.resolve(__dirname, 'src/backend/paymentOptions.web.js'),
       'backend/productQA.web': path.resolve(__dirname, 'src/backend/productQA.web.js'),
       'backend/catalogImport.web': path.resolve(__dirname, 'src/backend/catalogImport.web.js'),
+      'backend/loyaltyTiers.web': path.resolve(__dirname, 'src/backend/loyaltyTiers.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
     },
