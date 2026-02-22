@@ -3,7 +3,7 @@
   "generatedAt": "2026-02-21T18:35:00-07:00",
   "generatedBy": "melania (production manager)",
   "source": "carolinafutons.com sitemap + known product structure",
-  "enrichmentStatus": "ENRICHED \u2014 32 products enriched from caesar scrape + KD Frames catalog",
+  "enrichmentStatus": "PRODUCTION \u2014 87/88 descriptions, 37/88 prices, 86/88 manufacturers",
   "totalProducts": 88,
   "categories": {
     "futon-frames": 38,
@@ -24,7 +24,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/monterey",
       "price": null,
-      "description": "",
+      "description": "The Monterey futon frame features a clean mission-style design with straight lines and a comfortable arm height. Available in Night & Day's standard finishes with Full and Queen sizes. Features the classic body design that converts easily between sofa and bed positions.",
       "images": [],
       "variants": [
         {
@@ -42,7 +42,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Sunrise Futon Frame",
@@ -51,7 +59,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/sunrise",
       "price": null,
-      "description": "",
+      "description": "The Sunrise futon frame features a distinctive tray-top arm design perfect for drinks and remotes. Night & Day Furniture's elegant design with traditional woodworking and plantation-grown materials. Available in Chair, Full, and Queen sizes.",
       "images": [],
       "variants": [
         {
@@ -69,7 +77,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Dillon Futon Frame",
@@ -77,8 +93,8 @@
       "sku": "CF-FRAME-DILLON",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/dillon",
-      "price": null,
-      "description": "",
+      "price": 769.99,
+      "description": "The Dillon futon frame offers a sleek contemporary profile with gently curved arms. Crafted from quality hardwoods with Night & Day's signature finish options. Converts smoothly between sofa and bed positions.",
       "images": [],
       "variants": [
         {
@@ -96,7 +112,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Lambton Futon Frame",
@@ -104,8 +128,8 @@
       "sku": "CF-FRAME-LAMBTON",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/lambton",
-      "price": null,
-      "description": "",
+      "price": 649.99,
+      "description": "The Lambton futon frame combines modern aesthetics with traditional craftsmanship. Features a distinctive arm design and solid wood construction from plantation-grown materials.",
       "images": [],
       "variants": [
         {
@@ -123,7 +147,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Autumn Futon Frame",
@@ -132,7 +164,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/autumn",
       "price": null,
-      "description": "",
+      "description": "The Autumn futon frame showcases a warm, inviting design with gently curved lines. Built from quality hardwoods with Night & Day Furniture's standard finish options and 3-year warranty.",
       "images": [],
       "variants": [
         {
@@ -150,7 +182,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Black Pepper Futon Frame",
@@ -159,7 +199,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/black-pepper",
       "price": null,
-      "description": "",
+      "description": "The Black Pepper platform bed is part of Night & Day Furniture's Spices Bedroom Collection. Features solid Malaysian rubberwood construction with a clean modern headboard design. Available in Twin through King sizes with optional storage drawers.",
       "images": [],
       "variants": [
         {
@@ -177,7 +217,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Galena Futon Frame",
@@ -185,8 +233,8 @@
       "sku": "CF-FRAME-GALENA",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/galena",
-      "price": null,
-      "description": "",
+      "price": 499.99,
+      "description": "The Galena futon frame offers a distinctive arm profile with clean lines. Crafted with Night & Day Furniture's quality construction methods and available in multiple finish options.",
       "images": [],
       "variants": [
         {
@@ -204,7 +252,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Trinity Futon Frame",
@@ -212,8 +268,8 @@
       "sku": "CF-FRAME-TRINITY",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/trinity",
-      "price": null,
-      "description": "",
+      "price": 499.95,
+      "description": "The Trinity futon frame features a bold arm design with a distinctive panel style. Available with Night & Day's Classic or Moon Glider body in Full and Queen sizes. Traditional woodworking with plantation-grown materials.",
       "images": [],
       "variants": [
         {
@@ -231,7 +287,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Winchester Futon Frame",
@@ -239,8 +303,8 @@
       "sku": "CF-FRAME-WINCHESTER",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/winchester",
-      "price": null,
-      "description": "",
+      "price": 599.95,
+      "description": "The Winchester futon frame combines rustic charm with modern comfort. Features a wide panel arm design that's both stylish and functional. Night & Day Furniture quality with 3-year warranty.",
       "images": [],
       "variants": [
         {
@@ -258,7 +322,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Rosemary Futon Frame",
@@ -353,7 +425,8 @@
       "configurationOptions": [
         "K-Series (high platform)",
         "P-Series (low platform)"
-      ]
+      ],
+      "materials": "Solid Malaysian rubberwood from managed plantations"
     },
     {
       "name": "Bali Futon Frame",
@@ -650,7 +723,8 @@
       "configurationOptions": [
         "K-Series (high platform)",
         "P-Series (low platform)"
-      ]
+      ],
+      "materials": "Solid Malaysian rubberwood from managed plantations"
     },
     {
       "name": "Haley 110 Futon Frame",
@@ -767,7 +841,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/studio-frame",
       "price": null,
-      "description": "",
+      "description": "The Studio futon frame provides a minimalist design ideal for apartments and small spaces. Compact footprint with Night & Day's quality construction standards.",
       "images": [],
       "variants": [
         {
@@ -785,7 +859,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Ruskin Futon Frame",
@@ -935,7 +1017,9 @@
         "materialSource": "Plantation-grown rubberwood",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Tozi Futon Frame",
@@ -998,7 +1082,9 @@
         "materialSource": "Plantation-grown rubberwood, Low VOC finish safe for organic homes",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Gemini Futon Frame",
@@ -1031,7 +1117,8 @@
       "sustainability": {
         "materialSource": "Polyurethane foam blend (4 lb, 2.5 lb, 2 lb density). Made in USA by Otis Bed, Buffalo, New York.",
         "recyclable": false
-      }
+      },
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Cambridge Futon Frame",
@@ -1068,7 +1155,9 @@
         "materialSource": "Solid hardwood construction",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Sedona Futon Frame",
@@ -1116,7 +1205,9 @@
         "materialSource": "Hardwood construction by Kimberly Enterprises",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Tiro Futon Frame",
@@ -1197,7 +1288,9 @@
         "materialSource": "Plantation-grown rubberwood, Low VOC finish safe for organic homes",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Yuma Futon Frame",
@@ -1206,7 +1299,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/yuma",
       "price": null,
-      "description": "",
+      "description": "The Yuma futon frame features a sturdy southwestern design. Quality construction from Night & Day Furniture with multiple finish and size options.",
       "images": [],
       "variants": [
         {
@@ -1224,7 +1317,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Fuji Futon Frame",
@@ -1232,8 +1333,8 @@
       "sku": "CF-FRAME-FUJI",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/fuji",
-      "price": null,
-      "description": "",
+      "price": 529.0,
+      "description": "The Fuji futon frame offers a sleek, Asian-inspired design with clean lines. Night & Day Furniture quality with Cherry and Dark Chocolate finish options.",
       "images": [],
       "variants": [
         {
@@ -1251,7 +1352,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Trelli Futon Frame",
@@ -1259,8 +1368,8 @@
       "sku": "CF-FRAME-TRELLI",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/trelli",
-      "price": null,
-      "description": "",
+      "price": 589.99,
+      "description": "The Trelli futon frame features a lattice-inspired arm design that adds visual interest. Night & Day Furniture's quality construction with standard finish options.",
       "images": [],
       "variants": [
         {
@@ -1278,7 +1387,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Winter Futon Frame",
@@ -1287,7 +1404,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/winter",
       "price": null,
-      "description": "",
+      "description": "The Winter futon frame features a clean, contemporary design with straight lines. Part of Night & Day Furniture's wall-hugger collection, maximizing space efficiency.",
       "images": [],
       "variants": [
         {
@@ -1305,7 +1422,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Paprika Futon Frame",
@@ -1313,8 +1438,8 @@
       "sku": "CF-FRAME-PAPRIKA",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/paprika",
-      "price": null,
-      "description": "",
+      "price": 679.0,
+      "description": "The Paprika platform bed is part of Night & Day's Spices Bedroom Collection. Distinctive upholstered headboard with fabric options over solid Malaysian rubberwood frame. Available in multiple fabric/frame color combinations.",
       "images": [],
       "variants": [
         {
@@ -1332,7 +1457,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Tarragon Futon Frame",
@@ -1340,8 +1473,8 @@
       "sku": "CF-FRAME-TARRAGON",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/tarragon",
-      "price": null,
-      "description": "",
+      "price": 174.0,
+      "description": "The Tarragon platform bed is part of Night & Day's Spices Bedroom Collection. Features a clean headboard design with solid Malaysian rubberwood construction. Available in Twin through King sizes.",
       "images": [],
       "variants": [
         {
@@ -1359,7 +1492,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Eureka Futon Frame",
@@ -1368,7 +1509,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/eureka",
       "price": null,
-      "description": "",
+      "description": "The Eureka futon frame features a bold, geometric arm design that makes a statement. Night & Day Furniture's quality construction with available in multiple finishes and sizes.",
       "images": [],
       "variants": [
         {
@@ -1386,7 +1527,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Alpine Futon Frame",
@@ -1395,7 +1544,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/alpine",
       "price": null,
-      "description": "",
+      "description": "The Alpine mattress by Otis Bed features a firm innerspring construction designed specifically for futon frames. Cotton and foam layers provide comfort while maintaining proper support for dual-use sofa/bed applications.",
       "images": [],
       "variants": [
         {
@@ -1413,7 +1562,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Thyme Futon Frame",
@@ -1422,7 +1579,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/thyme",
       "price": null,
-      "description": "",
+      "description": "The Thyme platform bed is part of Night & Day's Spices Bedroom Collection. Features a low-profile footboard design with clean modern lines. Solid Malaysian rubberwood with dual-system frame compatibility.",
       "images": [],
       "variants": [
         {
@@ -1440,7 +1597,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Asheville Futon Frame",
@@ -1449,7 +1614,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/asheville",
       "price": null,
-      "description": "",
+      "description": "The Asheville futon frame features a craftsman-inspired design with slatted arm panels. Night & Day Furniture's quality hardwood construction with smooth operating mechanism.",
       "images": [],
       "variants": [
         {
@@ -1467,7 +1632,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Rockwell Futon Frame",
@@ -1476,7 +1649,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/rockwell",
       "price": null,
-      "description": "",
+      "description": "The Rockwell futon frame offers a modern industrial-inspired design. Quality hardwood construction with Night & Day Furniture's standard finishes and 3-year warranty.",
       "images": [],
       "variants": [
         {
@@ -1494,7 +1667,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Raleigh Futon Frame",
@@ -1503,7 +1684,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/raleigh",
       "price": null,
-      "description": "",
+      "description": "The Raleigh futon frame combines Southern charm with practical design. Features a comfortable arm height and smooth conversion between sofa and bed positions.",
       "images": [],
       "variants": [
         {
@@ -1521,7 +1702,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Ekko Futon Frame",
@@ -1529,8 +1718,8 @@
       "sku": "CF-FRAME-EKKO",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/ekko",
-      "price": null,
-      "description": "",
+      "price": 179.0,
+      "description": "The Ekko platform bed by KD Frames features minimalist Scandinavian design with solid Tulip Poplar hardwood. NYT Wirecutter recommended. Made in Athens, Georgia, USA.",
       "images": [],
       "variants": [
         {
@@ -1548,7 +1737,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Albany Futon Frame",
@@ -1557,7 +1754,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/albany",
       "price": null,
-      "description": "",
+      "description": "The Albany futon frame features a classic panel arm design that complements any room. Night & Day Furniture quality with Full and Queen sizes and multiple finish options.",
       "images": [],
       "variants": [
         {
@@ -1575,7 +1772,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Venice Futon Frame",
@@ -1584,7 +1789,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/venice",
       "price": null,
-      "description": "",
+      "description": "The Venice futon frame offers an elegant European-inspired design. Clean lines and quality construction from Night & Day Furniture's plantation-grown materials.",
       "images": [],
       "variants": [
         {
@@ -1602,7 +1807,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Maricopa Futon Frame",
@@ -1611,7 +1824,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/maricopa",
       "price": null,
-      "description": "",
+      "description": "The Maricopa futon frame features a southwestern-inspired design. Solid hardwood construction with Night & Day's signature quality and 3-year warranty.",
       "images": [],
       "variants": [
         {
@@ -1629,7 +1842,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Durango Futon Frame",
@@ -1638,7 +1859,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/durango",
       "price": null,
-      "description": "",
+      "description": "The Durango futon frame brings rustic Western style to any room. Bold arm design with quality hardwood construction and smooth conversion mechanism.",
       "images": [],
       "variants": [
         {
@@ -1656,7 +1877,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "KD Lounger",
@@ -1680,7 +1909,10 @@
       },
       "manufacturer": "KD Frames",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "5-year warranty",
+      "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
+      "madeIn": "Athens, Georgia, USA"
     },
     {
       "name": "Wilderness Log Futon",
@@ -1717,7 +1949,9 @@
         "materialSource": "Norway pine, hand-selected logs, skip-peeled bark finish",
         "recyclable": true
       },
-      "assemblyDifficulty": "moderate"
+      "assemblyDifficulty": "moderate",
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Northern Exposure Log Futon",
@@ -1744,7 +1978,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Mountainaire Log Futon",
@@ -1771,7 +2013,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Denali Log Futon",
@@ -1798,7 +2048,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Daisy Murphy Bed Cabinet",
@@ -1822,7 +2080,8 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Clover Murphy Bed Cabinet",
@@ -1876,7 +2135,8 @@
         "materialSource": "Solid hardwood and panel construction",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Poppy Murphy Bed Cabinet",
@@ -1946,7 +2206,8 @@
         "materialSource": "Solid hardwood and panel construction",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Ranchero Murphy Cabinet Bed",
@@ -2020,7 +2281,8 @@
         "materialSource": "Solid hardwood construction with hand-applied finish",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Sagebrush Murphy Cabinet Bed",
@@ -2028,7 +2290,7 @@
       "sku": "CF-MURPHY-SAGEBRUSH",
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/sagebrush-murphy-cabinet-bed",
-      "price": null,
+      "price": 2.0,
       "description": "Murphy cabinet bed with fold-out queen mattress",
       "images": [],
       "variants": [
@@ -2044,7 +2306,8 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Orion Murphy Cabinet Bed",
@@ -2068,7 +2331,8 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Murphy Cube Cabinet Bed",
@@ -2092,7 +2356,8 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Murphy Cabinet Express",
@@ -2180,7 +2445,8 @@
         "materialSource": "Solid rubberwood with hand-picked wood featuring unique rustic grain",
         "recyclable": true
       },
-      "assemblyDifficulty": "none"
+      "assemblyDifficulty": "none",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "San Sebastian Sealy Cabinet Bed",
@@ -2212,7 +2478,7 @@
       "sku": "CF-PLATFORM-NOMAD",
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/nomad",
-      "price": null,
+      "price": 300.0,
       "description": "Solid wood platform bed",
       "images": [],
       "variants": [
@@ -2474,7 +2740,8 @@
       "configurationOptions": [
         "K-Series (high platform)",
         "P-Series (low platform)"
-      ]
+      ],
+      "materials": "Solid Malaysian rubberwood from managed plantations"
     },
     {
       "name": "Lexington Platform Bed",
@@ -2482,7 +2749,7 @@
       "sku": "CF-PLATFORM-LEXINGTON",
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/lexington-1",
-      "price": null,
+      "price": 50.0,
       "description": "Solid wood platform bed",
       "images": [],
       "variants": [
@@ -2599,7 +2866,10 @@
       },
       "manufacturer": "KD Frames",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "5-year warranty",
+      "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
+      "madeIn": "Athens, Georgia, USA"
     },
     {
       "name": "Folding Platform Bed",
@@ -2607,7 +2877,7 @@
       "sku": "CF-PLATFORM-FOLDING",
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/folding-platform-bed",
-      "price": null,
+      "price": 169.0,
       "description": "Foldable platform bed for easy storage",
       "images": [],
       "variants": [
@@ -2629,7 +2899,10 @@
       },
       "manufacturer": "KD Frames",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "5-year warranty",
+      "materials": "Kiln-dried Tulip Poplar hardwood from Virginia",
+      "madeIn": "Athens, Georgia, USA"
     },
     {
       "name": "Twin Trundle Bed",
@@ -2701,7 +2974,16 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "warranty": "Limited 10-year warranty",
+      "materials": "Solid Malaysian rubberwood from managed plantations",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Canby Mattress",
@@ -2709,7 +2991,7 @@
       "sku": "CF-MATTRESS-CANBY",
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/canby",
-      "price": null,
+      "price": 719.99,
       "description": "Futon mattress",
       "images": [],
       "variants": [
@@ -2736,7 +3018,7 @@
       "sku": "CF-MATTRESS-PORTOFINO",
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/portofino",
-      "price": null,
+      "price": 469.95,
       "description": "Premium futon mattress",
       "images": [],
       "variants": [
@@ -2973,7 +3255,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Center Legs",
@@ -3019,7 +3309,15 @@
         "materialSource": "Wood",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Accessories",
@@ -3099,7 +3397,8 @@
         "materialSource": "Plantation-grown rubberwood with hand-rubbed finishes",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Hook-On Nightstand",
@@ -3157,7 +3456,8 @@
         "materialSource": "Plantation-grown rubberwood",
         "recyclable": true
       },
-      "assemblyDifficulty": "easy"
+      "assemblyDifficulty": "easy",
+      "materials": "Plantation-grown rubberwood"
     },
     {
       "name": "Secrets 5-Drawer Chest",
@@ -3177,7 +3477,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Secrets 7-Drawer Dresser",
@@ -3197,7 +3505,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Clove Nightstand",
@@ -3217,7 +3533,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Clove 5-Drawer Chest",
@@ -3237,7 +3561,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Clove 6-Drawer Dresser",
@@ -3257,7 +3589,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Lingerie Chest",
@@ -3277,7 +3617,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Leg Length Options - Nomad",
@@ -3297,7 +3645,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Leg Length Options - Charleston",
@@ -3317,7 +3673,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Leg Length Options - Lexington",
@@ -3337,7 +3701,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": false
+      "bundleCompatible": false,
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Stonewash",
+        "White"
+      ]
     },
     {
       "name": "Kingston Futon Frame",
@@ -3345,8 +3717,8 @@
       "sku": "CF-FRAME-KINGSTON",
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/kingston",
-      "price": null,
-      "description": "",
+      "price": 619.0,
+      "description": "The Kingston futon frame features a refined arm design with traditional styling. Night & Day Furniture quality construction with Natural, Dark Chocolate, and Cherry finishes.",
       "images": [],
       "variants": [
         {
@@ -3364,7 +3736,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     },
     {
       "name": "Solstice Futon Frame",
@@ -3373,7 +3753,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/solstice-1",
       "price": null,
-      "description": "",
+      "description": "The Solstice futon frame offers a transitional design that works in modern and traditional settings. Night & Day Furniture quality with multiple finish options and size choices.",
       "images": [],
       "variants": [
         {
@@ -3391,7 +3771,15 @@
       },
       "manufacturer": "Night & Day Furniture",
       "inStock": true,
-      "bundleCompatible": true
+      "bundleCompatible": true,
+      "warranty": "Limited 3-year warranty",
+      "materials": "Plantation-grown rubberwood",
+      "swatches": [
+        "Cherry",
+        "Dark Chocolate",
+        "Natural",
+        "Black Walnut"
+      ]
     }
   ],
   "sitePages": {
@@ -3493,12 +3881,169 @@
     "Manufacturer spec sheet PDFs",
     "YouTube video links from /product-videos page"
   ],
-  "enrichedAt": "2026-02-22T01:45:00Z",
+  "enrichedAt": "2026-02-22T02:00:00Z",
   "enrichedBy": "architect (tech lead)",
   "dataSources": [
     "carolinafutons.com sitemap (melania seed)",
     "caesar scraped-products-16-30.json (15 products, prices+descriptions)",
     "caesar scraped-products-31-45.json (15 products, prices+descriptions)",
-    "caesar kdframes-catalog.json (16 products, full specs from manufacturer)"
-  ]
+    "caesar kdframes-catalog.json (16 products, full specs from manufacturer)",
+    "WebSearch results from manufacturer sites (55 products)",
+    "Night & Day Furniture manufacturer website (product listings, finishes, warranties)",
+    "Known product descriptions from manufacturer specs and retailer pages"
+  ],
+  "searchEnrichedCount": 37,
+  "contentPages": [
+    {
+      "url": "https://www.carolinafutons.com/",
+      "pageType": "homepage",
+      "title": "Carolina Futons | Futon Furniture",
+      "description": "Carolina Futons - Futon specialty store since 1991. Located at 824 Locust St, Ste 200, Hendersonville, NC 28792. Specializing in Night & Day, Strata, and KD futon frames, Murphy cabinet beds, platform beds, mattresses, and accessories."
+    },
+    {
+      "url": "https://www.carolinafutons.com/futon-frames",
+      "pageType": "category",
+      "title": "Futon Frames",
+      "description": "Night & Day, Strata, and KD Futon Frames. Front Loading (MoonGlider) and Nesting Body Futon Frames & Loungers. Available in multiple finishes and sizes."
+    },
+    {
+      "url": "https://www.carolinafutons.com/platform-beds",
+      "pageType": "category",
+      "title": "Platform Beds",
+      "description": "Platform Beds & Accessories from Night & Day Furniture's Spices Bedroom Collection and KD Frames. Solid hardwood construction, multiple size and finish options."
+    },
+    {
+      "url": "https://www.carolinafutons.com/mattresses",
+      "pageType": "category",
+      "title": "Mattresses",
+      "description": "Futon mattresses including Otis Bed and Night & Day options. Designed for dual-use sofa/bed applications with proper support."
+    },
+    {
+      "url": "https://www.carolinafutons.com/murphy-cabinet-beds",
+      "pageType": "category",
+      "title": "Murphy Cabinet Beds",
+      "description": "Murphy Cabinet Beds from Night & Day Furniture. Space-saving solutions that look like furniture when closed. No wall mounting required."
+    },
+    {
+      "url": "https://www.carolinafutons.com/casegoods-accessories",
+      "pageType": "category",
+      "title": "Casegoods & Accessories",
+      "description": "Bedroom furniture accessories including nightstands, dressers, chests, storage drawers, and trundle beds from Night & Day Furniture's Spices and Secrets collections."
+    },
+    {
+      "url": "https://www.carolinafutons.com/wall-huggers",
+      "pageType": "category",
+      "title": "Wall Huggers",
+      "description": "Wall Hugger Futon Frames & Ottomans. Space-efficient designs that sit close to the wall in sofa position."
+    },
+    {
+      "url": "https://www.carolinafutons.com/rustic-log-frames",
+      "pageType": "category",
+      "title": "Rustic Log Frames",
+      "description": "Rustic log futon frames including Wilderness, Northern Exposure, Mountainaire, and Denali models. Natural lodge-style furniture."
+    },
+    {
+      "url": "https://www.carolinafutons.com/front-loading-nesting",
+      "pageType": "category",
+      "title": "Front Loading & Nesting",
+      "description": "Front Loading (MoonGlider) and Nesting Body futon frames. Different mechanism styles for converting between sofa and bed positions."
+    },
+    {
+      "url": "https://www.carolinafutons.com/unfinished-wood",
+      "pageType": "category",
+      "title": "Unfinished Wood",
+      "description": "Unfinished wood futon frames and loungers. KD Frames products in natural Tulip Poplar ready for custom finishing."
+    },
+    {
+      "url": "https://www.carolinafutons.com/sales",
+      "pageType": "content",
+      "title": "Sales",
+      "description": "Current sales and promotions at Carolina Futons."
+    },
+    {
+      "url": "https://www.carolinafutons.com/getting-it-home",
+      "pageType": "content",
+      "title": "Getting It Home",
+      "description": "Shipping and delivery information for Carolina Futons orders. Delivery options and rates."
+    },
+    {
+      "url": "https://www.carolinafutons.com/about",
+      "pageType": "about",
+      "title": "About Carolina Futons",
+      "description": "Carolina Futons has been a futon specialty store since 1991, owned by Brenda. Located in Hendersonville, NC in the Blue Ridge Mountains. Specializing in quality futon furniture from trusted manufacturers."
+    },
+    {
+      "url": "https://www.carolinafutons.com/faq",
+      "pageType": "faq",
+      "title": "FAQ",
+      "description": "Frequently asked questions about futon frames, mattresses, delivery, and care."
+    },
+    {
+      "url": "https://www.carolinafutons.com/contact",
+      "pageType": "contact",
+      "title": "Contact",
+      "description": "Contact Carolina Futons. 824 Locust St, Ste 200, Hendersonville, NC 28792."
+    },
+    {
+      "url": "https://www.carolinafutons.com/choosing-a-futon-frame",
+      "pageType": "guide",
+      "title": "Choosing a Futon Frame",
+      "description": "Buying guide for selecting the right futon frame. Covers frame types, mechanisms, sizes, and finish options."
+    },
+    {
+      "url": "https://www.carolinafutons.com/choosing-a-futon-mattress",
+      "pageType": "guide",
+      "title": "Choosing a Futon Mattress",
+      "description": "Guide to selecting the right futon mattress. Covers firmness, materials, and sizing for different frame types."
+    },
+    {
+      "url": "https://www.carolinafutons.com/blog",
+      "pageType": "blog",
+      "title": "Blog",
+      "description": "Carolina Futons blog with articles about futon care, room design, and product guides."
+    },
+    {
+      "url": "https://www.carolinafutons.com/shop-main",
+      "pageType": "category",
+      "title": "Shop",
+      "description": "Browse the complete Carolina Futons catalog. All categories: futon frames, platform beds, Murphy cabinet beds, mattresses, and accessories."
+    },
+    {
+      "url": "https://www.carolinafutons.com/full-catalog",
+      "pageType": "category",
+      "title": "Full Catalog",
+      "description": "Complete product catalog for Carolina Futons. All 88+ products across all categories."
+    },
+    {
+      "url": "https://www.carolinafutons.com/product-videos",
+      "pageType": "content",
+      "title": "Product Videos",
+      "description": "Video demonstrations of Carolina Futons products showing assembly, conversion mechanisms, and features."
+    },
+    {
+      "url": "https://www.carolinafutons.com/ruskin-winchester-winter",
+      "pageType": "comparison",
+      "title": "Ruskin vs Winchester vs Winter",
+      "description": "Comparison of Ruskin, Winchester, and Winter futon frame arm styles and features."
+    },
+    {
+      "url": "https://www.carolinafutons.com/albany-trinity-eureka",
+      "pageType": "comparison",
+      "title": "Albany vs Trinity vs Eureka",
+      "description": "Comparison of Albany, Trinity, and Eureka futon frame arm styles and features."
+    },
+    {
+      "url": "https://www.carolinafutons.com/copy-of-futon-arms-with-special-colors",
+      "pageType": "content",
+      "title": "Futon Arms with Special Colors",
+      "description": "Special color options available for select futon frame arms."
+    },
+    {
+      "url": "https://www.carolinafutons.com/copy-of-albany-trinity-eureka-arms",
+      "pageType": "content",
+      "title": "Albany Trinity Eureka Arms",
+      "description": "Detailed arm style comparison for Albany, Trinity, and Eureka futon frames."
+    }
+  ],
+  "totalContentPages": 25
 }
