@@ -1,5 +1,9 @@
 # Carolina Futons - API Reference
 
+> **Note:** This reference covers the core modules in detail. The backend has 62 web modules
+> total — see `src/backend/*.web.js` for the full list. Each module follows the same
+> `webMethod()` pattern documented below.
+
 All backend web methods are defined in `src/backend/*.web.js` files. They are
 callable from frontend page code via standard ES module imports.
 

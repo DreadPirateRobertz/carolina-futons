@@ -9,14 +9,11 @@ and shared public modules.
 
 ```
 src/
-├── backend/                 # Server-side web modules (run on Wix servers)
-│   ├── analyticsHelpers.web.js      # Product view/cart tracking
-│   ├── emailService.web.js          # Contact form & order notification emails
-│   ├── fulfillment.web.js           # Order fulfillment & UPS shipment management
-│   ├── productRecommendations.web.js # Cross-sell, featured, and sale products
-│   ├── seoHelpers.web.js            # JSON-LD schema & alt text generation
-│   ├── shipping-rates-plugin.js     # Wix eCommerce shipping rates plugin
-│   └── ups-shipping.web.js          # UPS REST API integration (OAuth 2.0)
+├── backend/                 # Server-side modules (run on Wix servers)
+│   ├── *.web.js (62 modules)        # Web methods callable from frontend
+│   ├── shipping-rates-plugin.js     # Wix eCommerce shipping rates SPI
+│   ├── http-functions.js            # HTTP endpoints (product feeds)
+│   └── blogContent.js               # Blog content helpers
 │
 ├── pages/                   # Page-specific frontend code (one per Wix page)
 │   ├── masterPage.js                # Global: nav, announcement bar, search, SEO
@@ -41,9 +38,13 @@ src/
 │   ├── Refund Policy.js             # Return policy accordion
 │   └── Terms & Conditions.js        # Terms with TOC navigation
 │
-└── public/                  # Shared frontend modules (importable from pages)
+└── public/                  # Shared frontend modules (24 files, importable from pages)
     ├── designTokens.js              # Design system: colors, typography, spacing
-    └── galleryHelpers.js            # Recently viewed, compare, product badges
+    ├── galleryHelpers.js            # Recently viewed, compare, product badges
+    ├── placeholderImages.js         # Image URIs (swap with Wix Media Manager)
+    ├── cartService.js               # Cart operations
+    ├── touchHelpers.js              # Mobile touch interactions
+    └── ... (19 more utilities)
 ```
 
 ## How Wix Velo Works

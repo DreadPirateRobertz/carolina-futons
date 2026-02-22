@@ -2,7 +2,7 @@
 
 **Author:** melania (Production Manager)
 **Bead:** cf-0fm
-**Date:** 2026-02-21
+**Date:** 2026-02-22
 **Purpose:** Step-by-step guide for tonight's live test and future deployments
 
 ---
@@ -40,8 +40,8 @@ wix publish
 
 | Component | Location in Repo | Deployed By |
 |-----------|-----------------|-------------|
-| Backend web modules | `src/backend/*.web.js` (63 modules) | `wix publish` |
-| Page code | `src/pages/*.js` (24 pages) | `wix publish` |
+| Backend web modules | `src/backend/*.web.js` (62 modules) | `wix publish` |
+| Page code | `src/pages/*.js` (22 pages + masterPage.js) | `wix publish` |
 | Public utilities | `src/public/*.js` | `wix publish` |
 | CMS collection data | Created via Dashboard or code | Manual setup |
 | API secrets (UPS, etc.) | Wix Secrets Manager | Manual setup |
@@ -173,7 +173,7 @@ export const getProductData = webMethod(
 | CMS data missing | Create collection in Dashboard first, then query |
 | `$w('#element')` returns null | Element doesn't exist in Editor — create it per WIX-STUDIO-BUILD-SPEC.md |
 | CORS errors on API calls | Move logic to `.web.js` backend module |
-| 3,535+ tests but site blank | Editor elements need manual creation — code only runs when elements exist |
+| 3,526 tests but site blank | Editor elements need manual creation — code only runs when elements exist |
 
 ---
 
@@ -181,7 +181,7 @@ export const getProductData = webMethod(
 
 ```
 src/
-├── backend/           ← 63 .web.js modules (server-side, deployed)
+├── backend/           ← 62 .web.js modules + 3 non-web (server-side, deployed)
 │   ├── analyticsHelpers.web.js
 │   ├── cartRecovery.web.js
 │   ├── couponsService.web.js
@@ -189,19 +189,19 @@ src/
 │   ├── inventoryService.web.js
 │   ├── loyaltyService.web.js
 │   ├── ups-shipping.web.js
-│   └── ... (63 total)
-├── pages/             ← 24 page files (Velo $w bindings)
+│   └── ... (62 .web.js + 3 non-web)
+├── pages/             ← 23 page files (Velo $w bindings)
 │   ├── Home.js
 │   ├── Product Page.js
 │   ├── Category Page.js
 │   ├── Cart Page.js
-│   └── ... (24 total)
+│   └── ... (23 total)
 ├── public/            ← Shared utilities (frontend-accessible)
 │   ├── designTokens.js
 │   ├── galleryHelpers.js
 │   ├── touchHelpers.js
 │   └── ...
-tests/                 ← 97 test files, 3,535+ tests (vitest)
+tests/                 ← 96 test files, 3,526 tests (vitest)
 ```
 
-**Test suite:** `npx vitest run` — must pass before any publish.
+**Test suite:** `npx vitest run` — all 3,526 tests must pass before any publish.

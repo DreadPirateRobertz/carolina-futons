@@ -1,7 +1,7 @@
 # Carolina Futons — Wix Studio Hookup Guide
 
 > How to connect all backend services to the live Wix site.
-> Generated 2026-02-21 by melania (Production Manager)
+> Generated 2026-02-21 by melania, updated 2026-02-22
 
 ## Prerequisites (Confirmed Done by Overseer)
 
@@ -14,7 +14,7 @@
 
 ## Step 1: Deploy Backend Modules
 
-All `.web.js` files in `src/backend/` must be copied to the Wix Velo editor under `backend/`. In Wix Studio:
+All 62 `.web.js` files in `src/backend/` (plus `shipping-rates-plugin.js`, `http-functions.js`, and `blogContent.js`) must be copied to the Wix Velo editor under `backend/`. In Wix Studio:
 
 1. Open your site in the Wix Editor
 2. Turn on **Dev Mode** (toggle in top bar)
