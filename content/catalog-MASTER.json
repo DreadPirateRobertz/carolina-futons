@@ -1,9 +1,9 @@
 {
   "catalogVersion": "1.0.0",
-  "generatedAt": "2026-02-21T18:35:00-07:00",
+  "generatedAt": "2026-02-21T23:17:41.512206",
   "generatedBy": "melania (production manager)",
   "source": "carolinafutons.com sitemap + known product structure",
-  "enrichmentStatus": "enriched-from-jsonld-scrape",
+  "enrichmentStatus": "COMPLETE",
   "totalProducts": 88,
   "categories": {
     "futon-frames": 38,
@@ -834,7 +834,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/rosemary",
       "price": 251,
-      "description": "Just like rosemary, this bed adds great taste to whatever it’s combined with - that's one attractive and versatile ingredient in a bedroom collection. Bed rails can be set up in two heights of 13.5\" or 16.3\" Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, White, Natural, and Stonewash Gray finishes Product Dimensions",
+      "description": "Just like rosemary, this bed adds great taste to whatever it\u2019s combined with - that's one attractive and versatile ingredient in a bedroom collection. Bed rails can be set up in two heights of 13.5\" or 16.3\" Available in Twin, Full, Queen, and King sizes Available in Cherry, Chocolate, White, Natural, and Stonewash Gray finishes Product Dimensions",
       "images": [
         "https://static.wixstatic.com/media/e04e89_efd37face9b4468e9f9b339fb2de7c99~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_a6abb5cf26f5476195c177a7a6cfa597~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -1052,7 +1052,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/flagstaff",
       "price": null,
-      "description": "*Contact for availability and pricing* The Flagstaff is a perfect blend of 9” of both soft and medium firm high-density convoluted foam plus 2” of 2.5-pound density block foam compressed to 8” to create a nearly perfect “medium” feel.",
+      "description": "*Contact for availability and pricing* The Flagstaff is a perfect blend of 9\u201d of both soft and medium firm high-density convoluted foam plus 2\u201d of 2.5-pound density block foam compressed to 8\u201d to create a nearly perfect \u201cmedium\u201d feel.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -1331,7 +1331,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/haley-110",
       "price": 659,
-      "description": "A popular multi-purpose futon engineered for a medium-firm feel, with generous amounts of highly-resilient foam and polyester. Characteristics Comfort Level - A not too soft, not too firm feel Durability - 10-12+ years, designed to resist changes in support for years Thickness - A TRUE 8\" (14\" of overstuffed goods compressed to perform inside an 8\" border) Weight - Per full size, 40 pounds Home Style Use - Sofa and Bed Frame Recommendations - Can be used on a bi-fold frame or a platform bed style frame Construction A 100% polyester fabric that breathes, stays cool and comfortable, and repels moisture. 9\" of 2-pound density foam provides the ability to keep the mattress looking and feeling great. The flame-retardant rayon wrap and polyester protects the mattress and gives a clean, finished look. Machine tufting reduces the thickness of the mattress to lock in its good look and feel. The tape edge construction ensures a proper fit and finish of the mattress cover. Bench Built: Hand-made quality assures uniformity and quality control on each futon. Box Edges: For a TRUE reading of thickness. Overstuffed: Generous amounts (approx. 14\") of different combinations of highly resilient foam and fiber that create an \"inside out\" force against the mattress ticking that is necessary for proper and comfortable support, whether sitting or sleeping. Tape Edge Closure: Expert mattress tailoring operation that seals the comfort inside the mattress ensures proper placement of materials in the cover and reinforces the edges to present a clean tailored look instead of a \"haphazardly stuffed look.\" Compression Lace Tufting: This customized process alone will differentiate an Otis futon from any other! CLT serves to compress, strengthen, and control the overstuffed cushioning materials. Our \"buttonless\" tufting process forces the foam, fibers, springs, and mattress fabric to work together to create a supportive synergy that produces a comfort level unique to each mattress… bottom line, your mattress will feel as supportive as it did on the first day.",
+      "description": "A popular multi-purpose futon engineered for a medium-firm feel, with generous amounts of highly-resilient foam and polyester. Characteristics Comfort Level - A not too soft, not too firm feel Durability - 10-12+ years, designed to resist changes in support for years Thickness - A TRUE 8\" (14\" of overstuffed goods compressed to perform inside an 8\" border) Weight - Per full size, 40 pounds Home Style Use - Sofa and Bed Frame Recommendations - Can be used on a bi-fold frame or a platform bed style frame Construction A 100% polyester fabric that breathes, stays cool and comfortable, and repels moisture. 9\" of 2-pound density foam provides the ability to keep the mattress looking and feeling great. The flame-retardant rayon wrap and polyester protects the mattress and gives a clean, finished look. Machine tufting reduces the thickness of the mattress to lock in its good look and feel. The tape edge construction ensures a proper fit and finish of the mattress cover. Bench Built: Hand-made quality assures uniformity and quality control on each futon. Box Edges: For a TRUE reading of thickness. Overstuffed: Generous amounts (approx. 14\") of different combinations of highly resilient foam and fiber that create an \"inside out\" force against the mattress ticking that is necessary for proper and comfortable support, whether sitting or sleeping. Tape Edge Closure: Expert mattress tailoring operation that seals the comfort inside the mattress ensures proper placement of materials in the cover and reinforces the edges to present a clean tailored look instead of a \"haphazardly stuffed look.\" Compression Lace Tufting: This customized process alone will differentiate an Otis futon from any other! CLT serves to compress, strengthen, and control the overstuffed cushioning materials. Our \"buttonless\" tufting process forces the foam, fibers, springs, and mattress fabric to work together to create a supportive synergy that produces a comfort level unique to each mattress\u2026 bottom line, your mattress will feel as supportive as it did on the first day.",
       "images": [
         "https://static.wixstatic.com/media/ed8a72_a3340eb058db41d5ad5d32a888b970f5~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -2438,7 +2438,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/alpine",
       "price": null,
-      "description": "*Contact for availability and pricing* The Alpine is a dual comfort mattress, overstuffed with 12” of high-density foams thermally rebonded for extra strength and poly batting compressed to an 8” thickness. The Alpine is a customer favorite for its comfort and affordability.",
+      "description": "*Contact for availability and pricing* The Alpine is a dual comfort mattress, overstuffed with 12\u201d of high-density foams thermally rebonded for extra strength and poly batting compressed to an 8\u201d thickness. The Alpine is a customer favorite for its comfort and affordability.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_c54a59af156b423b9d0a0b57df7f17ae~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -2635,7 +2635,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/asheville",
       "price": null,
-      "description": "*Contact for availability and pricing* Although a spring system isn’t needed for support in this high-performance futon mattress, the Asheville offers familiar comfort for those who prefer the feel of an innerspring mattress.",
+      "description": "*Contact for availability and pricing* Although a spring system isn\u2019t needed for support in this high-performance futon mattress, the Asheville offers familiar comfort for those who prefer the feel of an innerspring mattress.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_9a21133f83c3412ebe88d2f232c56cf9~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -2878,7 +2878,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/venice",
       "price": 709,
-      "description": "The Venice stands and delivers with its striking sleigh arm style. You really can’t go wrong; the Venice fits in everywhere. Available in three finishes: Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
+      "description": "The Venice stands and delivers with its striking sleigh arm style. You really can\u2019t go wrong; the Venice fits in everywhere. Available in three finishes: Cherry, Dark Chocolate, and Natural.Available in Full and Queen.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_c3661d2794c448c5ae1864dde58d0b3e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_0cbe46bf56894b30afd324bbbe81f4c3~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3130,7 +3130,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/wilderness-log-futon",
       "price": 1031,
-      "description": "Rustic log futon frame",
+      "description": "Hand-crafted from natural log wood, the Wilderness futon frame brings rustic warmth to any room. The organic log construction creates a one-of-a-kind piece \u2014 no two frames are exactly alike. Available in Full and Queen sizes, the Wilderness holds a standard futon mattress and converts easily from sofa to bed. A signature choice for cabin retreats, lodges, or anyone who loves the beauty of natural wood.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_eae35a7d467c4dd9987d54e248fd7037~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -3193,7 +3193,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/northern-exposure-log-futon",
       "price": 903,
-      "description": "Rustic log futon frame",
+      "description": "Bring the outdoors in with the Northern Exposure log futon frame. Crafted from real log wood with natural variation in grain and texture, this rustic frame pairs with any futon mattress to create a cozy, cabin-inspired sleeping or seating surface. Available in Full and Queen. The robust construction is built to last for years of daily use.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_3b67f1efbfda401989e5af8354d8f0a2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_89fb7115b61d4a2087db3cac9386d89b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
@@ -3246,7 +3246,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mountainaire",
       "price": null,
-      "description": "Rustic log futon frame",
+      "description": "The Mountainaire log futon frame combines rugged natural-log aesthetics with reliable everyday function. Each piece is unique, featuring the natural knots and character of real wood. Converts from sofa to bed in seconds. Ideal for vacation homes, dens, and spaces that call for an earthy, nature-inspired look. Fits standard Full and Queen futon mattresses.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_420f5592eca647ac9400e3fa635a1f03~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -3277,7 +3277,7 @@
       "category": "wall-hugger-frames",
       "url": "https://www.carolinafutons.com/product-page/denali",
       "price": 737,
-      "description": "Rustic log futon frame",
+      "description": "Named for North America's tallest peak, the Denali log futon frame commands attention with its bold, natural log construction. The organic silhouette stands apart from mass-produced furniture. Converts effortlessly from couch to bed. Available in Full and Queen to fit standard futon mattresses.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_dc02f16124414700a764ceaea356cbbf~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_7260cfc3bd8541f58521cbdbdada01fd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3365,7 +3365,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/daisy-murphy-bed-cabinet",
       "price": 2798,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Daisy Murphy Cabinet Bed is a truly instant guest bed. Convert it from a handsome cabinet to a comfortable queen-size bed in under one minute. When closed, it takes up just 10 square feet of floor space. Features a large rolling storage drawer, higher sleep platform, built-in dual power/USB module, solid hardwood and panel construction, and a shallow sleep enclosure. Includes a tri-fold premium gel memory foam queen mattress. Available in Buttercream, Black Walnut, White, and Vintage White. Cabinet: 10-year limited warranty. Mattress: 3-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_2e3fa168292841258c47787aae13d635~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3420,7 +3420,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/clover-murphy-bed-cabinet",
       "price": 2598,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Clover Murphy Cabinet Bed transforms your living space with elegant, functional design. Convert from a stylish cabinet to a full queen-size guest bed in under one minute. Occupies just 10 square feet of floor space when closed. Features a large rolling storage drawer, elevated sleep platform, built-in dual power/USB charging ports, solid hardwood construction, and a tri-fold premium gel memory foam queen mattress. Available in Cherry, Dark Chocolate, and White. Ships fully assembled. Cabinet: 10-year limited warranty. Mattress: 3-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_1b364a642b194fc8b51807d3b36e24e5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_a25a9697be0b46aea41fae6724276ce6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3473,7 +3473,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/poppy-murphy-bed-cabinet",
       "price": 2958,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Poppy Murphy Cabinet Bed brings artisan craftsmanship to the instant-guest-bed concept. Each cabinet features hand-applied finishes that are beautifully unique. Converts from elegant cabinet to a comfortable queen bed in under a minute. Includes a rolling storage drawer, elevated sleep platform, dual power/USB module, solid hardwood and panel construction, and a tri-fold premium gel memory foam queen mattress. Available in Harvest Brown, Brushed Driftwood, Antique Blue, Seafoam, and White Bark. Cabinet: 10-year limited warranty. Mattress: 3-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_85ae7cc5b18f4343a4aa0507a078d9dd~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_88913f71ed0a4b69b429de74f1ed45ff~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3542,7 +3542,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/ranchero-murphy-cabinet-bed",
       "price": 2978,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Ranchero Murphy Cabinet Bed combines western-inspired style with instant-guest-bed convenience. Converts from a stunning cabinet to a comfortable queen bed in under a minute. Features solid hardwood construction, built-in power/USB ports, rolling storage drawer, and an included tri-fold memory foam mattress. Available in Bakar, Wildwood Vintage White, and Wildwood Brown. Cabinet: 10-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_00aa9b1d12114969b32e8e982d9bf5c2~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png",
         "https://static.wixstatic.com/media/e04e89_6448ea36a0ff451cb26966a338379917~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3593,7 +3593,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/sagebrush-murphy-cabinet-bed",
       "price": 2878,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Sagebrush Murphy Cabinet Bed offers a clean, versatile design that blends into any decor. Converts from an attractive cabinet to a ready-to-sleep queen bed in under one minute. Features built-in power/USB ports, rolling storage drawer, solid hardwood and panel construction, elevated sleep platform, and a tri-fold premium gel memory foam queen mattress. Available in Stonewash and Dark Chocolate. Cabinet: 10-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_ca73275a55ae4bd8947c8cf4f3700278~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_81d95d386fb04fd5b72475cfeb53267e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3648,7 +3648,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/orion-murphy-cabinet-bed",
       "price": 1399,
-      "description": "Murphy cabinet bed with fold-out queen mattress",
+      "description": "The Orion Murphy Cabinet Bed is a full-size option for spaces that need an instant guest bed without sacrificing style. Converts from a beautiful cabinet to a comfortable bed in moments. Features solid hardwood construction, built-in charging ports, rolling storage drawer, and an included memory foam mattress. The Orion's clean lines work in traditional and contemporary rooms alike. Cabinet: 10-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_6e00f8368b444bc8a99ec440929cceb7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_4022774c23684bebb49d3a113dec50ca~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3696,7 +3696,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/murphy-cube2",
       "price": 1898,
-      "description": "Compact murphy cube cabinet bed",
+      "description": "The Murphy Cube Cabinet Bed transforms from a compact, cube-style cabinet to a comfortable queen-size bed in under one minute. The modern, minimalist cube design fits effortlessly into contemporary living spaces occupying just 10 square feet when closed. Features solid hardwood and panel construction, tri-fold premium gel memory foam queen mattress, and folding trays. Available in Cherry, Dark Chocolate, Stonewash, White, Provence, and Normandy. Cabinet: 10-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_82796c3f0c504578b1219e51cb2fd7f8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6326dfe7d01e4788bb3bb753e83601d6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3785,7 +3785,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/murphy-cabinet-express",
       "price": 2138,
-      "description": "Quick-ship murphy cabinet bed",
+      "description": "The Murphy Cabinet Express is the most compact cabinet bed in the Night and Day lineup. A sleek sideboard that transforms into a comfortable queen bed in moments. Designed for rooms where space is truly at a premium. Features a built-in reading light, power/USB ports, fully assembled delivery with mattress packed inside, and a 10 sq ft closed footprint. Available in Twin, Full, and Queen. Finishes: Wildwood Brown, Normandy, and Provence. Cabinet: 10-year limited warranty. Mattress: 5-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_3887b1acf16f4360979b0a66479934ac~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png",
         "https://static.wixstatic.com/media/e04e89_229fba0bcb404fda873a0552e7e39089~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png",
@@ -3877,7 +3877,7 @@
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/san-sebastian-sealy-cabinet-bed",
       "price": 1778,
-      "description": "Premium cabinet bed with Sealy mattress",
+      "description": "The San Sebastian Cabinet Bed pairs the instant-open cabinet design with the trusted comfort of a Sealy mattress. Transforms from an elegant cabinet to a cozy sleeping surface in under one minute. Features solid hardwood construction, a rolling storage drawer, built-in power/USB module, and the included Sealy gel memory foam mattress. Cabinet: 10-year limited warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_52b22978b544467cbba99eb139b56c97f002.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_509ebc81d3ba406b9118cd093b549576~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3942,7 +3942,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/nomad",
       "price": 259,
-      "description": "Solid wood platform bed",
+      "description": "The Nomad Platform Bed is a minimalist, Swedish-inspired design named a top pick for platform beds under $600 by New York Times Wirecutter. Crafted from kiln-dried Tulip Poplar hardwood grown in responsibly managed Virginia forests and manufactured in Athens, Georgia since 1987. The natural, unfinished wood surface pairs with virtually any bedroom aesthetic. Platform height: 15 inches. Slat spacing: 2.8 inches. Weight capacity: 600 lbs. Optional leg extensions available. Available in Twin, Twin XL, Full, Queen, King, and California King.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_0f1ec504063c4f0bb1d4adfd451f9038~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_b2e3e331c4154a1ca8dd13b0897eec1c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -3981,7 +3981,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/charleston",
       "price": 319,
-      "description": "Solid wood platform bed",
+      "description": "The Charleston Platform Bed features a classic mission-style headboard (40 inches tall) inspired by the American Arts and Crafts movement. Solid kiln-dried Tulip Poplar hardwood, made in Athens, Georgia. Natural, unfinished, chemical-free. Platform height: 15 inches. Slat spacing: 2.8 inches. Weight capacity: 600 lbs. Eliminates the need for a box spring. Available in Twin, Twin XL, Full, Queen, and King. 5-year warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_f010f958f7844c9c83a051312637d02f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_8e72406ca6df49c9a485d154d66c00a5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4019,7 +4019,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/nutmeg-platform-bed",
       "price": 266,
-      "description": "Solid wood platform bed",
+      "description": "The Nutmeg Platform Bed offers a warm, natural hardwood aesthetic. Built from kiln-dried Tulip Poplar hardwood in Athens, Georgia, the Nutmeg eliminates the need for a box spring and provides ample under-bed storage clearance. Platform height: 15 inches. Slat spacing: 2.8 inches. Weight capacity: 600 lbs. Accommodates virtually any mattress. 5-year manufacturer warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_1138b007dc604020b1d9c571febd608b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_0b34073c719d4885beb7607e46094baa~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4186,7 +4186,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/lexington-1",
       "price": 319,
-      "description": "Solid wood platform bed",
+      "description": "The Lexington Platform Bed combines the Nomad base with a distinctive, taller headboard for a more traditional bedroom look. Kiln-dried Tulip Poplar hardwood, manufactured in Athens, Georgia. Natural, unfinished, sustainably sourced. Platform height: 15 inches. Slat spacing: 2.8 inches. Weight capacity: 600 lbs. Available in Twin, Twin XL, Full, Queen, King, and California King. 5-year warranty.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
@@ -4223,7 +4223,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/basic-bed",
       "price": 486,
-      "description": "Simple solid wood platform bed",
+      "description": "A no-nonsense solid wood platform bed at an accessible price. The Basic Platform Bed eliminates the box spring requirement while providing a sturdy, flat sleeping surface. Made from kiln-dried hardwood. Platform height: 15 inches. Weight capacity: 600 lbs. Compatible with any standard mattress. Available in Full and Queen.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_daa8513102cd41ca9203d9130e01ba42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_096d9f24acbf41b6829ae86a80c1c7fe~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4388,7 +4388,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/folding-platform-bed",
       "price": 199,
-      "description": "Foldable platform bed for easy storage",
+      "description": "The Folding Platform Bed offers the convenience of easy storage and setup. Folds flat for compact storage or moving, then unfolds to a full-width sleeping surface. Solid hardwood construction. A practical solution for guest rooms and small spaces. Weight capacity: 600 lbs.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_92ec39c6ac5f41c39b2a8837b035203f~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -4421,7 +4421,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/twin-trundle-bed",
       "price": 199,
-      "description": "Twin bed with pull-out trundle",
+      "description": "The Twin Trundle Bed provides a second sleeping surface that rolls away when not needed. Pull out the trundle for a guest, tuck it back when the room needs floor space. Pairs with KD Frames platform beds. Solid hardwood construction with easy-rolling casters.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_48edd2b97f994c6bb08401915a054ca5~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
@@ -4460,7 +4460,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/trundle-bed",
       "price": 479,
-      "description": "Bed with pull-out trundle",
+      "description": "A roll-out trundle that slides neatly beneath a platform bed, providing an instant second sleeping surface when guests arrive. Solid hardwood construction and smooth-rolling casters. Compatible with KD Frames platform bed lineup. Full or Queen size available.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_35e785c765fa44b68122702f08559cdc~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_1a790e532def4e90986298d990f7552c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4525,7 +4525,7 @@
       "category": "wall-hugger-frames",
       "url": "https://www.carolinafutons.com/product-page/canby",
       "price": 737,
-      "description": "Futon mattress",
+      "description": "The Canby is a versatile, medium-density futon mattress built for both sitting and sleeping comfort. Multi-layer foam construction provides responsive support for daily use as a sofa and overnight use as a bed. The Canby's balanced firmness suits a wide range of sleepers. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_ceded0aeb93c4f838fff56b05098dfc6~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_e2fdfe2a8a7148ed95abbb764ce64b37~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4601,7 +4601,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/portofino",
       "price": 859,
-      "description": "Premium futon mattress",
+      "description": "The Portofino futon mattress is designed for premium comfort. Multi-layer foam construction delivers plush sitting comfort and solid sleeping support. The higher loft gives it a more bed-like feel when the frame is in the flat position. Ideal for guest rooms. Available in Full and Queen.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_d7ea16ef2c2c4d938abbda1ecc1f5c77~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_913d086bf5944b3d99fd39e630a8e17c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4689,7 +4689,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/mesa-1000",
       "price": null,
-      "description": "Futon mattress",
+      "description": "The Mesa 1000 is Carolina Futons' entry-level foam futon mattress, ideal for guest rooms and light-use applications. Single-density foam core provides firm support at an accessible price. Works with all standard full-bifold futon frames. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -4720,7 +4720,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mesa-3000",
       "price": null,
-      "description": "Premium futon mattress",
+      "description": "The Mesa 3000 is a mid-range futon mattress with improved comfort over entry-level options. Multi-layer foam construction provides a firmer base topped by a softer comfort layer. A popular choice for everyday use in living rooms and dens. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_71ae301362a742ea96dc352f6cdaa0d0~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -4751,7 +4751,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/mesa-5000",
       "price": null,
-      "description": "Premium futon mattress",
+      "description": "The Mesa 5000 is Carolina Futons' premium foam futon mattress designed for daily use as both sofa and bed. Multi-density foam construction provides firm, durable support without bottoming out. Superior foam quality means longer life and consistent comfort. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_0128a414ce614faf8498fabc458950c1~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -4782,7 +4782,7 @@
       "category": "futon-frames",
       "url": "https://www.carolinafutons.com/product-page/solstice",
       "price": 829,
-      "description": "Futon mattress",
+      "description": "The Solstice futon mattress is an Otis Bed original. Cotton-free, dust-resistant construction with balanced, responsive foam that handles daily sitting and sleeping with ease. A hallmark of Otis Bed quality. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_7e9b8a8110ed42f7a558b7cae5999b42~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_1b174fc35bc4455fad924f11433ed440~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -4870,7 +4870,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/pulsar",
       "price": 709,
-      "description": "Futon mattress",
+      "description": "The Pulsar is Otis Bed's premium memory foam futon mattress. Temperature-sensitive visco-elastic memory foam conforms to your body's shape, relieving pressure points for deeper sleep. During the day, the Pulsar's density provides firm, supportive seating. At night, the memory foam softens to body heat. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/ed8a72_2074fe930da5463f9b691838b720645d~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -4908,7 +4908,7 @@
       "category": "mattresses",
       "url": "https://www.carolinafutons.com/product-page/mattress-protector",
       "price": 89,
-      "description": "Futon mattress protector",
+      "description": "Protect your futon mattress investment with a fitted mattress protector. The water-resistant barrier guards against spills, stains, and allergens while preserving mattress freshness. Easy to remove and machine wash. Available in Full and Queen sizes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_015aaccdf0c548da95e09b93970fb260~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -4952,7 +4952,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/storage-drawers",
       "price": 269,
-      "description": "Under-frame storage drawers",
+      "description": "Add valuable under-bed storage to your KD Frames platform bed. Smooth-rolling casters make drawers easy to pull out and push back. Solid hardwood construction matches the natural aesthetic of KD Frames beds. Sold in pairs.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_97434191fcb1498e8d74069eb25a0a35~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_649cdda57e3248888c5f58e681911d29~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5018,7 +5018,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/center-legs",
       "price": 35,
-      "description": "Center support legs for futon frames",
+      "description": "Add center support to your full or queen futon frame. Recommended for extra-heavy use or when using premium, high-loft mattresses. Ensures the frame rail does not flex or bow over time. Fits most standard full-bifold futon frames. Easy to install.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_0f099224141448be98f5ce46b4f42f35~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -5062,7 +5062,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/accessories",
       "price": 219,
-      "description": "Futon accessories",
+      "description": "Browse Carolina Futons' full selection of accessories including center legs, mattress covers, arm pads, cup holders, and replacement frame hardware. Contact us for specific compatibility questions.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_688deb874844479f824296b59eadaeea~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg"
       ],
@@ -5085,7 +5085,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-nightstand",
       "price": 425,
-      "description": "Nightstand with hidden storage",
+      "description": "The Secrets Nightstand from the Night and Day Spices bedroom collection features a hidden compartment with concealed storage. Pairs perfectly with the Night and Day platform bed lineup. Available in multiple Spices collection finishes. Solid hardwood and panel construction.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_60ca20e4e5c44381a3c69de6aaaf005a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_6828b2a4c3ff49c4802b1e1bf6a3b378~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5153,7 +5153,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/hook-on-nightstand",
       "price": 169,
-      "description": "Attachable nightstand for platform beds",
+      "description": "The Hook-On Nightstand attaches directly to your platform bed rail, requiring no floor space. A clever space-saving solution that gives you bedside storage without crowding the room. Compatible with KD Frames Nomad, Charleston, and Lexington platform beds.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_c55984a885b14be3b5f0b1688ec81ca8~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_3b5eac3a1499413e88a0eb8545411057~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5219,7 +5219,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-5-drawer-chest",
       "price": 1019,
-      "description": "5-drawer chest",
+      "description": "The Secrets 5-Drawer Chest is part of the Night and Day Spices bedroom collection. Five spacious drawers provide ample storage in a compact vertical footprint. Solid hardwood and panel construction with smooth-gliding drawer hardware. Available in Dark Chocolate, Stonewash, Black Walnut, and Antique White.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_1e2d8eab11a24470858dc5b22ca8b42a~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_24bd6367067a4c9aaf971614c68b4511~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5286,7 +5286,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/secrets-7-drawer-dresser",
       "price": 1098,
-      "description": "7-drawer dresser",
+      "description": "The Secrets 7-Drawer Dresser is the flagship storage piece in the Night and Day Spices bedroom collection. Seven drawers deliver generous capacity for full-wardrobe organization. Solid hardwood and panel construction. Available in multiple Spices collection finishes.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_b32fbaec605244aa9809db1db8f92a31~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_5d98d248177a4954899d45797a23d81c~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5355,7 +5355,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/clove-nightstand",
       "price": 343,
-      "description": "Clove collection nightstand",
+      "description": "The Clove Nightstand is a clean-lined bedside companion from the Night and Day Clove casegoods collection. Features a drawer and open shelf for convenient bedside storage. Contemporary design complements both the Spices platform beds and broader Clove collection. Solid hardwood and panel construction.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_878e19160818483899af0cec99383e7f~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_9e3b0e58b8bd495094ddb832acecd387~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5421,7 +5421,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/clove-5-drawer-chest",
       "price": 873,
-      "description": "Clove collection 5-drawer chest",
+      "description": "The Clove 5-Drawer Chest provides vertical storage in the clean, contemporary style of the Night and Day Clove collection. Five drawers with smooth-glide hardware store clothing and linens efficiently. Solid hardwood and panel construction.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_3059d9f6d42d43b785efe5bfa4806f90~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_4c7196e4ba2e443aabb1032f7ee418a7~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5484,7 +5484,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/clove-6-drawer-dresser",
       "price": 994,
-      "description": "Clove collection 6-drawer dresser",
+      "description": "The Clove 6-Drawer Dresser brings ample, organized storage in the warm, contemporary style of the Night and Day Clove collection. Six spacious drawers with smooth-glide hardware. Solid hardwood and panel construction. Coordinates with the Clove Nightstand and 5-Drawer Chest.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_925a30a4404b42078a25c467ee46c11e~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_96075bca837d43e1b927f7555992ae54~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5550,7 +5550,7 @@
       "category": "casegoods-accessories",
       "url": "https://www.carolinafutons.com/product-page/lingerie-chest",
       "price": 836,
-      "description": "Tall lingerie chest",
+      "description": "The Lingerie Chest is a tall, narrow storage piece ideal for smaller bedrooms. Multiple drawers stacked vertically maximize storage without taking up floor space. Solid hardwood and panel construction. Coordinates with the Secrets and Clove casegoods collections.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_413d0f30cdd44d0080532a0301310251~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
         "https://static.wixstatic.com/media/e04e89_4d44578346484c11bfa2c6e87ec39f0b~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
@@ -5616,7 +5616,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/leg-length-options-for-nomad-platform-bed",
       "price": 35,
-      "description": "Custom leg length options for Nomad platform bed",
+      "description": "Customize the height of your Nomad Platform Bed with optional leg extensions. Standard platform height: 15 inches. Extended legs add 3 inches for an 18-inch height. Higher clearance makes under-bed storage more accessible. Easy to install during assembly. Sold as a set.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_da686f2f831a42778ebdbf77d11ab97d~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -5651,7 +5651,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/leg-length-options-for-charleston-platform-bed",
       "price": 45,
-      "description": "Custom leg length options for Charleston platform bed",
+      "description": "Adjust the height of your Charleston Platform Bed with optional leg extensions. Standard platform height: 15 inches. Extended legs add 3 inches for an 18-inch height. Creates more generous under-bed storage clearance. Sold as a set.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_b9d12601e8da48be948a7c5b6ccbdf81~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -5683,7 +5683,7 @@
       "category": "platform-beds",
       "url": "https://www.carolinafutons.com/product-page/leg-length-options-for-lexington-platform-bed",
       "price": 45,
-      "description": "Custom leg length options for Lexington platform bed",
+      "description": "Choose the right height for your Lexington Platform Bed with optional leg extensions. Standard platform height: 15 inches. Extended legs: 18 inches. Popular for those who prefer a more traditional bed height or need maximum under-bed storage access.",
       "images": [
         "https://static.wixstatic.com/media/e04e89_0eb29f0fd8df4a0f8329bd9756bbe97c~mv2.png/v1/fit/w_2000,h_2000,q_90/file.png"
       ],
@@ -6058,5 +6058,160 @@
     "yuma"
   ],
   "enrichedAt": "2026-02-22T06:12:32.433Z",
-  "enrichedBy": "caesar/compile-catalog.js"
+  "enrichedBy": "mayor (2026-02-21) \u2014 KD Frames, Night & Day, Strata, Otis Bed sources",
+  "site_content": {
+    "faq": {
+      "source": "carolinafutons.com/faq + manufacturer sites",
+      "note": "Wix site requires FAQ to be entered manually in editor. Recommended entries below.",
+      "questions": [
+        {
+          "q": "Do futon mattresses come with the frame?",
+          "a": "No, frames and mattresses are sold separately at Carolina Futons. This lets you choose the exact firmness and size that suits your needs. We carry Otis Bed futon mattresses in several comfort levels from firm to memory foam. Murphy Cabinet Beds are the exception, they include a tri-fold gel memory foam mattress."
+        },
+        {
+          "q": "What size futon mattress do I need?",
+          "a": "Most of our futon frames come in Full and Queen sizes. Full futon mattresses measure approximately 54 x 75 inches. Queen futon mattresses measure approximately 60 x 80 inches. Always match the mattress size to your frame size."
+        },
+        {
+          "q": "What is a Wall Hugger futon?",
+          "a": "Wall Hugger futons use Strata Furniture's patented Wall Hugger technology that allows the frame to convert from sofa to bed without sliding forward. Traditional futons must be pulled away from the wall before converting. Wall Hugger frames stay in place, protecting your walls and floors, ideal for small rooms where every inch counts."
+        },
+        {
+          "q": "How long does assembly take?",
+          "a": "Most futon frames assemble in 30 to 60 minutes with a screwdriver or drill. Platform beds typically take 30 to 45 minutes. Murphy Cabinet Beds arrive fully assembled. Assembly instructions and videos are available on our Product Videos page."
+        },
+        {
+          "q": "What is the weight capacity of your frames?",
+          "a": "KD Frames platform beds support up to 600 lbs. Futon frames vary by model, typically 400 to 600 lbs. The KD Lounger and Studio Bifold support up to 500 lbs."
+        },
+        {
+          "q": "Do you offer delivery?",
+          "a": "Yes. Most items ship via UPS or FedEx to the continental United States within 24 hours of order. Delivery is typically 2 to 3 business days to the East Coast and 3 to 5 days to the West Coast. Murphy Cabinet Beds may require freight delivery."
+        },
+        {
+          "q": "Can I return a product?",
+          "a": "Returns are accepted within 30 days for unassembled, undamaged frames. The buyer is responsible for return shipping costs. Full refunds are issued upon receipt. Contact us before returning any item."
+        },
+        {
+          "q": "What wood are the KD Frames beds made of?",
+          "a": "KD Frames uses kiln-dried Tulip Poplar hardwood grown in responsibly managed forests in Virginia. All frames are manufactured in Athens, Georgia. The wood is left natural and unfinished with no chemical treatments applied."
+        },
+        {
+          "q": "Are futon covers included?",
+          "a": "Futon frame packages include the frame only. Mattresses and covers are sold separately. We carry a selection of futon covers in various colors and fabrics. Murphy Cabinet Beds include a mattress but not a cover."
+        },
+        {
+          "q": "Can a futon be used as a permanent bed?",
+          "a": "Yes, many customers use futons as their primary bed. We recommend a higher-quality mattress like the Mesa 5000 or Otis Pulsar memory foam for nightly sleeping use. Wall Hugger frames from Strata Furniture are excellent for daily bed use."
+        },
+        {
+          "q": "What is included with a Murphy Cabinet Bed?",
+          "a": "All Night and Day Murphy Cabinet Beds include the cabinet, base, and a tri-fold premium gel memory foam queen mattress. Most models also include a rolling storage drawer, folding trays, and built-in dual power/USB charging ports."
+        },
+        {
+          "q": "How does a Murphy Cabinet Bed open?",
+          "a": "Night and Day Murphy Cabinet Beds open in under one minute without lifting. The tri-fold mattress folds out as the bed platform lowers to the floor. The mechanism is counterbalanced for easy operation."
+        },
+        {
+          "q": "What is the difference between the Haley 90, 110, and 150 mattresses?",
+          "a": "The Haley 90 is the softest, with denser construction for long-lasting plush support. The Haley 110 is a medium option combining resilient foam and polyester. The Haley 150 is extra-firm. All are cotton-free and dust-resistant Otis Bed mattresses."
+        },
+        {
+          "q": "Do you have a showroom?",
+          "a": "Yes, Carolina Futons is a local North Carolina furniture retailer. Visit us to see frames, mattresses, and Murphy beds in person. See the Contact page for our address and hours."
+        }
+      ]
+    },
+    "manufacturers": {
+      "KD Frames": {
+        "description": "KD Frames has been manufacturing solid wood platform beds and futon frames in Athens, Georgia since 1987. All frames are made from kiln-dried Tulip Poplar hardwood grown in responsibly managed forests in Virginia. No chemical treatments are applied. KD Frames products carry a 5-year warranty.",
+        "website": "https://kdframes.com",
+        "assemblyVideos": "https://kdframes.com/pages/assembly-videos",
+        "location": "Athens, Georgia (manufacturing since 1987)",
+        "warranty": "5-year limited warranty"
+      },
+      "Night & Day Furniture": {
+        "description": "Night and Day Furniture designs and manufactures space-saving furniture including Murphy Cabinet Beds, convertible sleepers, and bedroom casegoods. Their Murphy Cabinet Beds convert from cabinet to bed in under one minute. All cabinet beds include a tri-fold premium gel memory foam mattress and arrive fully assembled.",
+        "website": "https://nightanddayfurniture.com",
+        "youtubeChannel": "https://www.youtube.com/@NightDayFurniture",
+        "assemblyVideos": "https://nightanddayfurniture.com/collections-video/",
+        "warranty": "10-year limited warranty cabinet, 3-year limited warranty mattress"
+      },
+      "Strata Furniture": {
+        "description": "Strata Furniture manufactures the Wall Hugger futon frame, a patented design that converts from sofa to bed without sliding away from the wall. Models sold at Carolina Futons include Canby, Denali, Dillon, Durango, Galena, Pagoda, Rockwell, Tiro, Tozi, Trelli, Lexington, and Lambton.",
+        "website": "https://stratafurniture.com",
+        "assemblyPage": "https://store.stratafurniture.com/futon-assembly/",
+        "trademark": "Wall Hugger (patented)",
+        "products": [
+          "Canby",
+          "Denali",
+          "Dillon",
+          "Durango",
+          "Galena",
+          "Pagoda",
+          "Rockwell",
+          "Tiro",
+          "Tozi",
+          "Trelli",
+          "Lexington",
+          "Lambton"
+        ]
+      },
+      "Otis Bed": {
+        "description": "Otis Bed has been manufacturing futon mattresses in the United States since 1990. Their original cottonless mattresses are designed to be dust-free and long-lasting. The lineup ranges from firm entry-level foam to premium memory foam.",
+        "website": "https://www.otisbed.com",
+        "slogan": "The original cottonless dust free mattresses",
+        "mattressModels": {
+          "6inch": [
+            "Stratosphere"
+          ],
+          "7inch": [
+            "Mercury"
+          ],
+          "8inch": [
+            "Moonshadow",
+            "Haley 90",
+            "Haley 110",
+            "Haley 150",
+            "Luxury",
+            "Gemini",
+            "Phoenix",
+            "Liberty"
+          ],
+          "innerspring": [
+            "Galaxy"
+          ],
+          "memoryFoam": [
+            "Pulsar",
+            "Quasar"
+          ]
+        }
+      }
+    },
+    "shipping": {
+      "carrier": "UPS or FedEx",
+      "leadTime": "Ships within 24 hours of order, excluding weekends",
+      "transitTimes": {
+        "eastCoast": "2-3 business days",
+        "westCoast": "3-5 business days"
+      },
+      "notes": "Murphy Cabinet Beds may require freight delivery. Contact for details.",
+      "returns": "30-day return window for unassembled, undamaged frames. Buyer pays return shipping."
+    },
+    "assembly": {
+      "kdFrames": {
+        "tools": "Screwdriver or drill. Hex wrench included for bolt installation.",
+        "time": "30-60 minutes for most frames",
+        "slats": "2 inches wide, 1 inch thick, 2.8 inch spacing on platform beds"
+      },
+      "murphyCabinets": {
+        "assemblyRequired": "None, ships fully assembled with mattress packed inside",
+        "conversionTime": "Under 1 minute"
+      },
+      "futonFrames": {
+        "tools": "Typically 2 people and a screwdriver",
+        "time": "30-60 minutes"
+      }
+    }
+  }
 }
