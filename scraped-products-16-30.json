@@ -1,0 +1,539 @@
+[
+  {
+    "name": "Rosemary",
+    "sku": null,
+    "price": 251.00,
+    "description": "Have you ever noticed that rosemary will grow nearly anywhere, in nearly any environment? And it adds great taste to whatever it's combined with. That's one attractive, tough and versatile ingredient. Similarities to our Rosemary bed are absolutely striking. A platform bed with sturdy support, storage space below, and a stylish rattan headboard. The Rosemary Bed is a dual system frame using universal bed rails and can be assembled as a high (K-Series) or low (P-Series) platform bed. Does not require a box spring.",
+    "category": "platform-beds",
+    "variants": [
+      { "label": "Twin", "sku": null, "price": null },
+      { "label": "Twin XL", "sku": null, "price": null },
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null },
+      { "label": "King", "sku": null, "price": null },
+      { "label": "Cal King", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "twin": { "width": 44.7, "depth": 76, "height": 41.3, "weight": null },
+      "full": { "width": 59.7, "depth": 76, "height": 41.3, "weight": null },
+      "queen": { "width": 65.7, "depth": 80.6, "height": 41.3, "weight": 122 },
+      "king": { "width": 81.7, "depth": 80.6, "height": 41.3, "weight": null }
+    },
+    "swatches": ["Cherry", "Dark Chocolate", "Natural", "Stonewash", "White"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Solid Malaysian rubberwood sourced from managed rubber tree plantations; certified renewable resource",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Night & Day Furniture",
+    "collection": "Spices Bedroom Collection",
+    "warranty": "Limited 10-year warranty",
+    "accessories": ["P-Series Drawers", "K-Series Drawers", "Folding Footboard Bench", "Cinnamon Trundle (K-Series)"],
+    "configurationOptions": ["K-Series (high platform)", "P-Series (low platform)"]
+  },
+  {
+    "name": "Bali",
+    "sku": null,
+    "price": 729.00,
+    "description": "The Bali futon frame offers a traditional slatted arm design that continues down the arm to encapsulate the sides. This frame is available with the Nesting Body Classic Design that features three positions: sofa, reclined, and bed. The arm is 2-1/2 inches wide and 23.6 inches tall, featuring a shutter style with a double row of 7 slats separated by a middle wooden piece.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full Frame", "sku": null, "price": 789.99 },
+      { "label": "Queen Frame", "sku": null, "price": 839.99 },
+      { "label": "Full Storage Drawers", "sku": null, "price": 329.99 },
+      { "label": "Queen Storage Drawers", "sku": null, "price": 339.99 }
+    ],
+    "images": [],
+    "dimensions": {
+      "full": { "width": 54, "depth": 79, "height": null, "weight": null },
+      "queen": { "width": 60, "depth": 84, "height": null, "weight": null },
+      "armHeight": 23.6,
+      "armWidth": 2.5,
+      "fullLength": 79.2,
+      "queenLength": 84.5,
+      "fullBackHeight": 32,
+      "queenBackHeight": 38
+    },
+    "swatches": ["Skye", "Brushed Driftwood"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Quality solid hardwoods with premium multi-step stain & lacquer processes",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Anchor Furniture",
+    "warranty": "5-year manufacturer's limited warranty",
+    "bodyType": "Nesting Body Classic Design",
+    "positions": ["sofa", "reclined", "bed"],
+    "note": "12% ocean freight surcharge applies. Packaged in 2 cartons."
+  },
+  {
+    "name": "Flagstaff",
+    "sku": null,
+    "price": null,
+    "description": "The Flagstaff is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses are available in retail stores only and feature premium foam construction that provides resiliency and comfort, is significantly lighter weight, and does not attract moisture and mildew.",
+    "category": "mattresses",
+    "variants": [],
+    "images": [],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Hypo-allergenic foam construction",
+      "recyclable": null
+    },
+    "careGuide": null,
+    "assemblyDifficulty": null,
+    "manufacturer": "Otis Bed",
+    "collection": "Arizona Boutique Line",
+    "note": "Retail store exclusive - limited online information available"
+  },
+  {
+    "name": "Chandler",
+    "sku": null,
+    "price": null,
+    "description": "The Chandler is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses are available in retail stores only and feature premium foam construction. Similar models in the line range from $479-$699 depending on size.",
+    "category": "mattresses",
+    "variants": [],
+    "images": [],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Hypo-allergenic foam construction",
+      "recyclable": null
+    },
+    "careGuide": null,
+    "assemblyDifficulty": null,
+    "manufacturer": "Otis Bed",
+    "collection": "Arizona Boutique Line",
+    "note": "Retail store exclusive - limited online information available"
+  },
+  {
+    "name": "Pagoda",
+    "sku": null,
+    "price": 737.00,
+    "description": "The Pagoda Futon Frame utilizes Wall Hugger technology that allows you to easily convert the frame from sofa to bed without moving the furniture away from the wall. Made from plantation grown rubberwood with a beautiful black walnut finish. Maximum weight capacity of 500 lbs (2 people, 250 lbs each).",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null },
+      { "label": "Full Loveseat", "sku": null, "price": null },
+      { "label": "Full Loveseat Ottoman", "sku": null, "price": null },
+      { "label": "Queen Loveseat", "sku": null, "price": null },
+      { "label": "Queen Loveseat Ottoman", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "full": { "width": 82, "depth": 37.6, "height": 23.85, "weight": 130 },
+      "queen": { "width": 87, "depth": 37.6, "height": 23.85, "weight": 131 },
+      "fullLoveseat": { "width": 61, "depth": 37.6, "height": 23.85, "weight": null },
+      "fullLoveseatOttoman": { "width": 53.875, "depth": 20.75, "height": 10.75, "weight": null },
+      "queenLoveseat": { "width": 67, "depth": 37.6, "height": 23.85, "weight": null },
+      "queenLoveseatOttoman": { "width": 59.75, "depth": 25.75, "height": 10.75, "weight": null }
+    },
+    "swatches": ["Black Walnut"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation grown rubberwood",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Strata Furniture",
+    "bodyType": "Wall Hugger",
+    "weightCapacity": 500,
+    "status": "Out of Stock"
+  },
+  {
+    "name": "Pulsar",
+    "sku": null,
+    "price": 639.00,
+    "description": "The Pulsar is a premium memory foam futon mattress featuring a Pressurized Foam System designed to significantly reduce the degree of compression. The top layer is 3 inches of body-sensoring, pressure-reducing 3 lb. high-density viscoelastic foam. Non-Flip design with the Burlington fabric (white) always on top. Offers Medium-Soft comfort level. Non-toxic fire retardant barrier. CertiPUR-US certified foam.",
+    "category": "mattresses",
+    "variants": [
+      { "label": "Twin", "sku": null, "price": 569.00 },
+      { "label": "Full", "sku": null, "price": 639.00 },
+      { "label": "Queen", "sku": null, "price": 749.00 }
+    ],
+    "images": [],
+    "dimensions": {
+      "thickness": 8,
+      "full": { "width": 54, "depth": 75, "height": 8, "weight": null },
+      "queen": { "width": 60, "depth": 80, "height": 8, "weight": null },
+      "twin": { "width": 39, "depth": 75, "height": 8, "weight": null },
+      "note": "10.5 inches of overstuffed goods compressed to fit inside an 8-inch border"
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "CertiPUR-US certified foam; non-toxic fire retardant (FR) barrier with Flame Retardant Rayon for 16 CFR Part 1633 compliance",
+      "recyclable": null
+    },
+    "careGuide": "Non-flip design. Burlington fabric (white) always on top. Visco Memory Foam is just underneath the cover.",
+    "assemblyDifficulty": null,
+    "manufacturer": "Otis Bed",
+    "warranty": "10-year warranty",
+    "comfortLevel": "Medium-Soft",
+    "construction": {
+      "totalFoam": "7.5 inches CertiPUR-US certified foam",
+      "topLayer": "3 inches 3 lb. high-density viscoelastic foam",
+      "baseLayer": "4.5 inches blend of convoluted 2 and 2.5 lb foam",
+      "fabric": "100% polyester (cream) on sides and bottom; Polyester/Polypropylene blend on top"
+    }
+  },
+  {
+    "name": "Center Legs",
+    "sku": null,
+    "price": 35.00,
+    "description": "Center support legs for futon and platform bed frames. Includes two center support legs and 8 wood screws. Available in three height options: 11-inch legs for 12-inch optional leg height, 14-inch legs for standard 15-inch platform height, and 17-inch legs for taller configurations.",
+    "category": "casegoods-accessories",
+    "variants": [
+      { "label": "11-inch (for 12\" leg height)", "sku": null, "price": 35.00 },
+      { "label": "14-inch (for 15\" standard height)", "sku": null, "price": 35.00 },
+      { "label": "17-inch", "sku": null, "price": 35.00 }
+    ],
+    "images": [],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null,
+      "legHeights": [11, 14, 17]
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Wood",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "easy",
+    "includedHardware": "2 center support legs, 8 wood screws"
+  },
+  {
+    "name": "Murphy Cabinet Express",
+    "sku": "MUR-EXP-QEN-WWB",
+    "price": 2697.00,
+    "description": "The Murphy Express is the most compact cabinet bed yet -- a sleek solution for rooms where space is at a premium. Transforms from a handsome sideboard into a comfortable bed in under 60 seconds with a folded footprint of just 10 square feet. No assembly required. Mattress included, packed inside the cabinet. Features built-in reading light, dual power/USB ports, and LED lamp. Covered by US Patents #10,888,170.",
+    "category": "murphy-cabinet-beds",
+    "variants": [
+      { "label": "Twin - Normandy", "sku": null, "price": null },
+      { "label": "Twin - Provence", "sku": null, "price": null },
+      { "label": "Full - Normandy", "sku": null, "price": null },
+      { "label": "Full - Provence", "sku": null, "price": null },
+      { "label": "Queen - Wildwood Brown", "sku": "MUR-EXP-QEN-WWB", "price": 2697.00 },
+      { "label": "Queen - Normandy", "sku": null, "price": null },
+      { "label": "Queen - Provence", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "twin": {
+        "boxHeight": 46.5,
+        "boxWidth": 20.5,
+        "boxLength": 43.5,
+        "netWeight": 138.9,
+        "grossWeight": 152.1
+      },
+      "full": {
+        "boxHeight": 61.4,
+        "boxWidth": 20.5,
+        "boxLength": 43.5,
+        "netWeight": 175.3,
+        "grossWeight": 191.1
+      },
+      "queen": {
+        "boxHeight": 68.3,
+        "boxWidth": 20.5,
+        "boxLength": 45.9,
+        "netWeight": 201.6,
+        "grossWeight": 217.2
+      },
+      "footprint": "10 sq ft when closed"
+    },
+    "swatches": ["Wildwood Brown", "Normandy", "Provence"],
+    "bundleCompatible": false,
+    "sustainability": {
+      "materialSource": "Solid rubberwood with hand-picked wood featuring unique rustic grain",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "none",
+    "manufacturer": "Night & Day Furniture",
+    "warranty": {
+      "cabinet": "Limited 10-year warranty",
+      "mattress": "Limited 5-year warranty"
+    },
+    "features": ["Built-in reading light", "Dual power/USB ports", "LED lamp", "Mattress included", "No assembly required"]
+  },
+  {
+    "name": "Tamarind",
+    "sku": null,
+    "price": 321.00,
+    "description": "The Tamarind Bed features a dual system using universal rails and can be assembled as a high (K-Series) or low (P-Series) platform bed. This frame does not require the use of a box spring underneath your mattress of choice. The platform is adjustable to two heights, either 15 inches or 12 inches from floor to top of slats.",
+    "category": "platform-beds",
+    "variants": [
+      { "label": "Twin", "sku": null, "price": null },
+      { "label": "Twin XL", "sku": null, "price": null },
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null },
+      { "label": "King", "sku": null, "price": null },
+      { "label": "Cal King", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "headboardHeight": 48,
+      "pSeriesFootboardHeight": 13.7,
+      "kSeriesFootboardHeight": 16.3,
+      "platformHeights": [12, 15]
+    },
+    "swatches": ["Cherry", "Chocolate", "Natural", "Stonewash", "White"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Solid Malaysian rubberwood from managed plantations",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Night & Day Furniture",
+    "collection": "Spices Bedroom Collection",
+    "warranty": "Limited 10-year warranty",
+    "accessories": ["P-Series Drawers", "K-Series Drawers", "Folding Footboard Bench"],
+    "configurationOptions": ["K-Series (high platform)", "P-Series (low platform)"],
+    "status": "Pre-Order"
+  },
+  {
+    "name": "Haley 110",
+    "sku": null,
+    "price": 449.00,
+    "description": "A popular multi-purpose futon engineered for a medium-firm feel, with generous amounts of highly-resilient foam and polyester. 8-inch thickness (14 inches of overstuffed goods compressed to fit inside an 8-inch border). 9 inches of 2-pound density foam provides the ability to keep the mattress looking and feeling great. A 100% polyester fabric that breathes, stays cool and comfortable, and repels moisture. Designed for everyday use with 10-12+ year durability.",
+    "category": "mattresses",
+    "variants": [
+      { "label": "Chair", "sku": null, "price": null },
+      { "label": "Twin", "sku": null, "price": null },
+      { "label": "Twin Split", "sku": null, "price": null },
+      { "label": "Twin Ottoman", "sku": null, "price": null },
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Love Ottoman", "sku": null, "price": null },
+      { "label": "Loveseat", "sku": null, "price": null },
+      { "label": "Ottoman", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null },
+      { "label": "Queen Ottoman", "sku": null, "price": null },
+      { "label": "Queen Split", "sku": null, "price": null },
+      { "label": "Eastern King", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "thickness": 8,
+      "chair": { "width": 28, "depth": 54, "height": 8, "weight": null },
+      "twin": { "width": 39, "depth": 75, "height": 8, "weight": null },
+      "full": { "width": 54, "depth": 75, "height": 8, "weight": 45 },
+      "queen": { "width": 60, "depth": 80, "height": 8, "weight": null },
+      "note": "14 inches of overstuffed goods compressed to fit inside an 8-inch border"
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Highly resilient foam and polyester construction",
+      "recyclable": null
+    },
+    "careGuide": null,
+    "assemblyDifficulty": null,
+    "manufacturer": "Otis Bed",
+    "warranty": "10-year limited warranty against manufacturer's defects",
+    "comfortLevel": "Medium-Firm",
+    "construction": {
+      "foam": "9 inches of minimum 2.0 lb density foam",
+      "fabric": "7.5 oz twill fabric with 100% polyester cover",
+      "finishing": "Machine tufting, tape edge closing process"
+    }
+  },
+  {
+    "name": "Studio Frame",
+    "sku": null,
+    "price": 199.00,
+    "description": "The Studio frame is a no-frills approach for a couch that can quickly and effortlessly be converted to a bed. Features four adjustable positions as a couch with a set of sturdy wheels in the back, making it easy to move. Simple and affordable, a popular choice for any casual setting that fits in with any urban decor. The decks lock together with wood dowels and sit ten inches above floor in bed position.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "full": {
+        "bedPosition": { "width": 54.5, "depth": 74, "height": 10 },
+        "sofaHeight": 30,
+        "sofaDepth": 46,
+        "weight": 49
+      },
+      "queen": {
+        "bedPosition": { "width": 59.5, "depth": 78, "height": 10 },
+        "sofaHeight": 36,
+        "sofaDepth": 46,
+        "weight": 52
+      }
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Tulip Poplar (solid poplar hardwood), unfinished, eco-friendly, chemical-free",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "easy",
+    "manufacturer": "KD Frames",
+    "positions": 4,
+    "weightCapacity": 500,
+    "features": ["Sturdy wheels on back", "Wood dowel locking system", "Unfinished wood"]
+  },
+  {
+    "name": "Ruskin",
+    "sku": null,
+    "price": null,
+    "description": "The Ruskin Futon Frame is manufactured using quality solid hardwoods with a finishing process utilizing premium multi-step stain & lacquer processes. Features easy conversion with three comfort positions (sofa, recline, bed) and sofa height seating position. Available with MoonGlider or Classic body options.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full with Classic Body", "sku": null, "price": 629.99 },
+      { "label": "Queen with Classic Body", "sku": null, "price": 679.99 },
+      { "label": "Full Drawers", "sku": null, "price": 289.99 },
+      { "label": "Queen Drawers", "sku": null, "price": 299.99 }
+    ],
+    "images": [],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": ["Cherry", "Chocolate", "Honey Oak"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Quality solid hardwoods with premium multi-step stain & lacquer processes",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Anchor Furniture",
+    "warranty": "5-year manufacturer's limited warranty",
+    "bodyOptions": ["MoonGlider", "Classic"],
+    "positions": ["sofa", "recline", "bed"],
+    "note": "17% ocean freight surcharge applies. Packaged in 2 cartons."
+  },
+  {
+    "name": "Nutmeg Platform Bed",
+    "sku": null,
+    "price": 266.00,
+    "description": "The Nutmeg Bed is a great choice for the contemporary room. Its flared legs and curved-slat styling is a current classic reminiscent of a sleigh. Available as K-Series (high platform) or P-Series (low platform) models. Uses universal bed rails. Does not require a box spring.",
+    "category": "platform-beds",
+    "variants": [
+      { "label": "Twin", "sku": null, "price": null },
+      { "label": "Twin XL", "sku": null, "price": null },
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null },
+      { "label": "King", "sku": null, "price": null },
+      { "label": "Cal King", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "twin": { "width": 43.9, "depth": 84.6, "height": null, "weight": null },
+      "twinXL": { "width": 44, "depth": 89.2, "height": null, "weight": null },
+      "full": { "width": 58.9, "depth": 84.6, "height": null, "weight": null },
+      "queen": { "width": 64.9, "depth": 89.2, "height": null, "weight": null },
+      "king": { "width": 80.9, "depth": 89.2, "height": null, "weight": null },
+      "calKing": { "width": 76.9, "depth": 93.2, "height": null, "weight": null },
+      "pSeriesFloorToRail": 8,
+      "kSeriesFloorToRail": 11.5
+    },
+    "swatches": ["Cherry", "Chocolate", "Natural", "Stonewash", "White"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Solid Malaysian rubberwood from managed plantations",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate",
+    "manufacturer": "Night & Day Furniture",
+    "collection": "Spices Bedroom Collection",
+    "warranty": "Limited 10-year warranty",
+    "accessories": ["P-Series Drawers", "K-Series Drawers", "Folding Footboard Bench", "Cinnamon Trundle (K-Series)"],
+    "configurationOptions": ["K-Series (high platform)", "P-Series (low platform)"],
+    "status": "Pre-Order"
+  },
+  {
+    "name": "Northampton",
+    "sku": null,
+    "price": null,
+    "description": "The Northampton is part of the Arizona boutique line of hypo-allergenic futon mattresses by Otis Bed. These mattresses feature premium foam construction that provides resiliency and comfort, is significantly lighter weight, and does not attract moisture and mildew. Available in retail stores only.",
+    "category": "mattresses",
+    "variants": [],
+    "images": [],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Hypo-allergenic foam construction",
+      "recyclable": null
+    },
+    "careGuide": null,
+    "assemblyDifficulty": null,
+    "manufacturer": "Otis Bed",
+    "collection": "Arizona Boutique Line",
+    "note": "Retail store exclusive - limited online information available"
+  },
+  {
+    "name": "Ranchero Murphy Cabinet Bed",
+    "sku": null,
+    "price": 2978.00,
+    "description": "Converts from a handsome cabinet to a comfortable bed in less than a minute and takes up less than 10 square feet of floor space when closed. Supports 500 lbs -- great for couples and extra guests. Features built-in electrical outlets and USB ports. Hand-painted and individually retouched or distressed depending on the finish, resulting in a unique item each time. Comes complete with folding trays. Includes 6-inch tri-fold premium gel memory foam mattress.",
+    "category": "murphy-cabinet-beds",
+    "variants": [
+      { "label": "Twin", "sku": null, "price": null },
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen - Bakar", "sku": null, "price": null },
+      { "label": "Queen - Vintage White", "sku": null, "price": null },
+      { "label": "Queen - Wildwood Brown", "sku": null, "price": null }
+    ],
+    "images": [],
+    "dimensions": {
+      "closed": { "width": 63.5, "depth": 23.7, "height": 41.1, "weight": null },
+      "open": { "width": 63.5, "depth": 83.1, "height": 41.1, "weight": null },
+      "openWithSideTables": { "width": 77.1, "depth": 83.1, "height": 41.1 },
+      "footprint": "10 sq ft when closed"
+    },
+    "swatches": ["Bakar", "Vintage White", "Wildwood Brown"],
+    "bundleCompatible": false,
+    "sustainability": {
+      "materialSource": "Solid hardwood construction with hand-applied finish",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "easy",
+    "manufacturer": "Night & Day Furniture",
+    "warranty": {
+      "cabinet": "Limited 10-year warranty",
+      "mattress": "Limited 3-year warranty"
+    },
+    "weightCapacity": 500,
+    "features": ["Built-in electrical outlets", "USB ports", "Folding trays", "6-inch tri-fold gel memory foam mattress included"],
+    "status": "Pre-Order"
+  }
+]

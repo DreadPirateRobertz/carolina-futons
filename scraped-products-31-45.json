@@ -1,0 +1,476 @@
+[
+  {
+    "name": "Leg Length Options for Charleston Platform Bed",
+    "sku": null,
+    "price": 45.00,
+    "description": "The Charleston Platform Beds come with 15\" legs at the footboard and 40\" at the headboard, which give a platform height of 15\". These optional leg replacements allow you to customize the height. The 12\" footboard/37\" headboard legs give a lower profile, but Rolling Drawers are NOT compatible with this option. The 18\" footboard/43\" headboard legs are a good option if you are trying to create more clearance for a thicker mattress on the Trundle Bed — the 18\" legs will allow for a mattress that is up to 10\" thick for the trundle.",
+    "category": "casegoods-accessories",
+    "variants": [
+      { "label": "12\" Footboard / 37\" Headboard Legs", "sku": null, "price": 45.00 },
+      { "label": "18\" Footboard / 43\" Headboard Legs", "sku": null, "price": 45.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_b9d12601e8da48be948a7c5b6ccbdf81~mv2.png/v1/fit/w_1024,h_683,q_90/file.png"
+    ],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": ["Unfinished (Poplar)"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Tulip Poplar grown in responsibly managed Virginia forests, manufactured in Athens, Georgia, USA",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Secrets Nightstand",
+    "sku": null,
+    "price": 379.00,
+    "description": "The Secrets Nightstand features quality workmanship with dovetail-joint drawer, hand-rubbed finishes, and full-extension drawer glides. It includes a felt-lined hidden tray at the bottom for storing small keepsakes. Every Secrets piece has a secret compartment waiting to be discovered.",
+    "category": "casegoods-accessories",
+    "variants": [
+      { "label": "Cherry", "sku": null, "price": 379.00 },
+      { "label": "Natural", "sku": null, "price": 379.00 },
+      { "label": "White", "sku": null, "price": 379.00 },
+      { "label": "Chocolate", "sku": null, "price": 379.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_60ca20e4e5c44381a3c69de6aaaf005a~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_6828b2a4c3ff49c4802b1e1bf6a3b378~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_140fdee4d55e49c0b7a788ec8e37b493~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_e2f5ce31022e440cb128ec2bdc010cea~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_aa51b172cf6845eb8b203db92636de88~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_103a5d87a2b0417083e7db9159796d71~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_da31416241084918b283055ec966b741~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 22.9,
+      "depth": 18.5,
+      "height": 24.4,
+      "weight": null
+    },
+    "swatches": ["Cherry", "Natural", "White", "Chocolate"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation-grown rubberwood with hand-rubbed finishes",
+      "recyclable": true
+    },
+    "careGuide": "Hand-rubbed finish. Clean with soft dry cloth. Avoid harsh chemicals.",
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Key West",
+    "sku": null,
+    "price": 719.00,
+    "description": "The Key West will be perfect for your Florida sunroom. If you don't have one you'll feel like you do! These prime quality frames are made from the finest plantation-grown materials and are constructed with traditional woodworking good sense. The Key West arm is available in White finish, is 3.5\" wide and 23\" tall, and features 8 slats that form a slight arc bordered on each end by beveled decorative legs. Equipped with Bronze Shoe Fittings operating system for quick assembly and easy use.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full - Classic Nesting", "sku": null, "price": 719.00 },
+      { "label": "Queen - Classic Nesting", "sku": null, "price": null },
+      { "label": "Full - MoonGlider Front Loading", "sku": null, "price": null },
+      { "label": "Queen - MoonGlider Front Loading", "sku": null, "price": null },
+      { "label": "Chair", "sku": null, "price": null },
+      { "label": "39\" Lounger", "sku": null, "price": null },
+      { "label": "54\" Lounger", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_0cab553616744ccfb0c7afb01fd1bf7b~mv2.jpg/v1/fit/w_3000,h_1995,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 81,
+      "depth": 39,
+      "height": 34.37,
+      "weight": null
+    },
+    "swatches": ["White"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation-grown rubberwood",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate"
+  },
+  {
+    "name": "Hook-on Nightstand",
+    "sku": null,
+    "price": 169.00,
+    "description": "A simple and stylish addition to any side of your bed frame. The Hook-on Nightstand hooks directly onto compatible bed frames and is available in all corresponding finishes. No floor space required.",
+    "category": "casegoods-accessories",
+    "variants": [
+      { "label": "Natural", "sku": null, "price": 169.00 },
+      { "label": "Cherry", "sku": null, "price": 169.00 },
+      { "label": "Chocolate", "sku": null, "price": 169.00 },
+      { "label": "White", "sku": null, "price": 169.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_c55984a885b14be3b5f0b1688ec81ca8~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_3b5eac3a1499413e88a0eb8545411057~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_a0cc164131a24e60ac418b0d703ce305~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_05e35a783fa04ae9bb46dbb67ecbe928~mv2.jpg/v1/fit/w_3006,h_2000,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_2feec4ae1a214911948937f7ab798ae1~mv2.jpg/v1/fit/w_2048,h_1362,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 18.3,
+      "depth": 15.7,
+      "height": 23.5,
+      "weight": null
+    },
+    "swatches": ["Natural", "Cherry", "Chocolate", "White"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation-grown rubberwood",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Clover Murphy Bed Cabinet",
+    "sku": "MUR-CLV-QEN",
+    "price": 2448.00,
+    "description": "A truly instant guest bed. Convert it from handsome cabinet to comfy bed in less than a minute. When all closed up it just takes about 10 square feet of floor space. Features a large rolling storage drawer, higher sleep platform, built-in dual power/USB module, solid hardwood and panel construction, shallow sleep enclosure, and base packed inside fully assembled cabinet. Includes tri-fold premium 6-inch gel-infused memory foam queen mattress. Two sets of drawer knobs included (wood and metal/pewter options). US Patents #9,993,088 and #10,349,750.",
+    "category": "murphy-cabinet-beds",
+    "variants": [
+      { "label": "Queen - Cherry", "sku": "MUR-CLV-QEN-CH", "price": 2448.00 },
+      { "label": "Queen - Dark Chocolate", "sku": "MUR-CLV-QEN-DC", "price": 2448.00 },
+      { "label": "Queen - White", "sku": "MUR-CLV-QEN-WH", "price": 2448.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_1b364a642b194fc8b51807d3b36e24e5~mv2.jpg/v1/fit/w_600,h_600,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_a25a9697be0b46aea41fae6724276ce6~mv2.jpg/v1/fit/w_4256,h_2832,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_c92ae613e67046e789245f78ae817e34~mv2.jpg/v1/fit/w_2832,h_4256,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_e19c05c937b94ec69869cb0d91cedeaa~mv2.jpg/v1/fit/w_2748,h_1832,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_3379f363fe5247059ae5bdb1d8ac636a~mv2.jpg/v1/fit/w_4256,h_2832,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_4db23e464ec0466fa0e9a3109014cae6~mv2.jpg/v1/fit/w_3888,h_2777,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_90a7c808b3204519afffaddd7a499dcf~mv2.jpg/v1/fit/w_4732,h_3380,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 63.5,
+      "depth": 23.7,
+      "height": 41.1,
+      "weight": 165
+    },
+    "swatches": ["Cherry", "Dark Chocolate", "White"],
+    "bundleCompatible": false,
+    "sustainability": {
+      "materialSource": "Solid hardwood and panel construction",
+      "recyclable": true
+    },
+    "careGuide": "Clean cabinet exterior with soft dry cloth. Mattress: tri-fold gel memory foam, 80\"L x 63\"W x 6\"H. Max weight capacity 500 lbs (250 lbs per side).",
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Twin Trundle Bed",
+    "sku": "7903-TR-T",
+    "price": 159.00,
+    "description": "The Twin Trundle is a perfect solution for extra bed space without taking up extra room. Equipped with four sturdy wheels for easy gliding and a weight limit of 400 pounds. Designed to fit under all sizes of Nomad, Charleston, and Lexington platform beds, except for the King versions which come with center legs. Slat spacing of 2.8 inches accommodates most mattresses. Recommended mattress thickness is no more than 7 inches.",
+    "category": "casegoods-accessories",
+    "variants": [
+      { "label": "Twin - Unfinished", "sku": "7903-TR-T", "price": 159.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_48edd2b97f994c6bb08401915a054ca5~mv2.jpg/v1/fit/w_480,h_320,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_1024,h_683,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": 15,
+      "weight": null
+    },
+    "swatches": ["Unfinished (Poplar)"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Tulip Poplar, unfinished and chemical-free, grown in responsibly managed Virginia forests, manufactured in Athens, Georgia, USA",
+      "recyclable": true
+    },
+    "careGuide": "Unfinished wood — can be stained, painted, or left natural. Clean with dry cloth.",
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Wilderness Log Futon",
+    "sku": null,
+    "price": 1289.00,
+    "description": "The Wilderness log futon frame is a true northern lodge design that adds a rustic touch to a functional piece of log furniture. This particular log futon is skip peeled, which means a little bit of cambium or bark is still on the log, giving it a more rustic or natural log look. Constructed out of Norway pine, each log has to be hand selected to be just the right diameter and have the right character. Arms are made from six-inch diameter logs assembled together using mortise and tenon construction to get a true log sofa look. The back and seat sections are screwed and glued together, not stapled, which allows for a lifetime warranty on this frame.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full", "sku": null, "price": 1289.00 },
+      { "label": "Queen", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_eae35a7d467c4dd9987d54e248fd7037~mv2.jpg/v1/fit/w_300,h_200,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 85,
+      "depth": 36,
+      "height": 32,
+      "weight": null
+    },
+    "swatches": ["Clear Finish"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Norway pine, hand-selected logs, skip-peeled bark finish",
+      "recyclable": true
+    },
+    "careGuide": "Recommended to finish with clear finish to preserve skip-peeled effect. If honey pine finish is applied, the skip peeled effect is lost.",
+    "assemblyDifficulty": "moderate"
+  },
+  {
+    "name": "Mesa 1000",
+    "sku": null,
+    "price": null,
+    "description": "The Mesa 1000 is an Arizona boutique line futon mattress. Part of the premium mattress collection carried by Carolina Futons. Sold in retail store only.",
+    "category": "mattresses",
+    "variants": [
+      { "label": "Full", "sku": null, "price": null },
+      { "label": "Queen", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": null,
+      "weight": null
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": null,
+      "recyclable": null
+    },
+    "careGuide": null,
+    "assemblyDifficulty": null
+  },
+  {
+    "name": "Tozi",
+    "sku": null,
+    "price": 656.00,
+    "description": "The Tozi is a low-profile arm frame with a sleek accent piece that fits great in tight spaces and allows the cover to be the focal point of the design. Made from plantation-grown rubberwood, the Tozi utilizes Wall Hugger technology — easily convert from sofa to bed without moving the furniture away from the wall. Strata Furniture is the only Wall Hugger Futon with its Patented Mechanism. The maximum weight capacity of the frame is 500 lbs (250 lbs per side). Strata uses a Low VOC finish that is safe for organic homes.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full - Black Walnut", "sku": null, "price": 656.00 },
+      { "label": "Queen - Black Walnut", "sku": null, "price": null },
+      { "label": "Full - Warm Cherry", "sku": null, "price": null },
+      { "label": "Queen - Warm Cherry", "sku": null, "price": null },
+      { "label": "Full Loveseat + Ottoman", "sku": null, "price": null },
+      { "label": "Queen Loveseat + Ottoman", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_ddd2575f54504a6cbb7be09c774bbfe6~mv2.jpg/v1/fit/w_2679,h_1786,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_2decb44785ec43ca8c44aa735795b64f~mv2.jpg/v1/fit/w_2500,h_1667,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 78.75,
+      "depth": 35.40,
+      "height": 33,
+      "weight": null
+    },
+    "swatches": ["Black Walnut", "Warm Cherry"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation-grown rubberwood, Low VOC finish safe for organic homes",
+      "recyclable": true
+    },
+    "careGuide": "Low VOC finish. Clean with soft dry cloth.",
+    "assemblyDifficulty": "moderate"
+  },
+  {
+    "name": "Charleston",
+    "sku": "3991-CP",
+    "price": 319.00,
+    "description": "The Charleston Platform Bed provides a classic and clean mission-style headboard crafted from Tulip Poplar. Comes unfinished and chemical-free. Manufactured in Athens, Georgia, USA, with wood grown and responsibly managed in Virginia forests. Slat spacing of 2.8 inches accommodates just about any mattress on the market, with slats flush with the tops of the rails and weight capacity of 600 pounds. Eliminates the need for a box spring and provides plenty of room for storage underneath. Features a 40\" tall headboard and platform height of 15\".",
+    "category": "platform-beds",
+    "variants": [
+      { "label": "Twin", "sku": "3993-CP-T", "price": 239.00 },
+      { "label": "Twin XL", "sku": "3994-CP-XT", "price": 259.00 },
+      { "label": "Full", "sku": "3992-CP-F", "price": 289.00 },
+      { "label": "Queen", "sku": "3991-CP-Q", "price": 314.00 },
+      { "label": "King", "sku": "3995-CP-EK", "price": 349.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_f010f958f7844c9c83a051312637d02f~mv2.jpg/v1/fit/w_2500,h_1838,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_8e72406ca6df49c9a485d154d66c00a5~mv2.jpg/v1/fit/w_1042,h_646,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_ec0040c6d0604d679bf47db0644bdf54~mv2.jpg/v1/fit/w_1042,h_646,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": null,
+      "depth": null,
+      "height": 40,
+      "weight": null
+    },
+    "swatches": ["Unfinished (Poplar)"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Tulip Poplar grown in responsibly managed Virginia forests, manufactured in Athens, Georgia, USA. Unfinished, chemical-free, eco-friendly, non-toxic.",
+      "recyclable": true
+    },
+    "careGuide": "Unfinished wood — can be stained, painted, or left natural. Clean with dry cloth.",
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Gemini",
+    "sku": null,
+    "price": null,
+    "description": "The Gemini II is an ultra-premium seating and sleeping futon mattress manufactured by Otis Bed. It is 8 inches thick and features a blend of high-quality 4 pound, 2.5 pound, and 2 pound flat and convoluted polyurethane foam to create a firm supportive core and the feel of a latex-like sleep surface. It likens the feel and durability of natural latex, but at about one-third the cost of 100% Natural Latex. 10-year warranty. Arizona boutique line — sold in retail store only at Carolina Futons.",
+    "category": "mattresses",
+    "variants": [
+      { "label": "Full (54\" x 75\")", "sku": null, "price": null },
+      { "label": "Queen (60\" x 80\")", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_4cab654aac414b82bec33508dce4b1b3~mv2.jpg/v1/fit/w_512,h_512,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 54,
+      "depth": 75,
+      "height": 8,
+      "weight": null
+    },
+    "swatches": [],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Polyurethane foam blend (4 lb, 2.5 lb, 2 lb density). Made in USA by Otis Bed, Buffalo, New York.",
+      "recyclable": false
+    },
+    "careGuide": "Rotate mattress periodically for even wear. Spot clean cover as needed.",
+    "assemblyDifficulty": null
+  },
+  {
+    "name": "Cambridge",
+    "sku": null,
+    "price": null,
+    "description": "The Cambridge futon frame features sturdy solid hardwood construction with a simple, traditional design. Side-loaded technology allows you to easily convert from sofa to full-size bed. Available in a honey oak finish.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_17660b22850343059377d2a0edd7475c~mv2.jpg/v1/fit/w_3732,h_2116,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 80,
+      "depth": 37,
+      "height": 33,
+      "weight": null
+    },
+    "swatches": ["Honey Oak"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Solid hardwood construction",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate"
+  },
+  {
+    "name": "Poppy Murphy Bed Cabinet",
+    "sku": "MUR-POP-QEN",
+    "price": 2958.00,
+    "description": "A truly instant guest bed. Convert it from handsome cabinet to comfy bed in less than a minute. When all closed up it just takes about 10 square feet of floor space. Features flip-up side trays included, a large rolling storage drawer, higher sleep platform, built-in dual power/USB module, solid hardwood and panel construction, shallow sleep enclosure, and base packed inside fully assembled cabinet. Includes tri-fold premium 6-inch gel-infused memory foam queen mattress. US Patents #9,993,088 and #10,349,750.",
+    "category": "murphy-cabinet-beds",
+    "variants": [
+      { "label": "Queen - Harvest Brown", "sku": "MUR-POP-QEN-HBR", "price": 2958.00 },
+      { "label": "Queen - Brushed Driftwood", "sku": "MUR-POP-QEN-DBR", "price": 2958.00 },
+      { "label": "Queen - Antique Blue", "sku": "MUR-POP-QEN-ABL", "price": 2958.00 },
+      { "label": "Queen - Seafoam", "sku": "MUR-POP-QEN-SF", "price": 2958.00 },
+      { "label": "Queen - White Bark", "sku": "MUR-POP-QEN-WBK", "price": 2958.00 },
+      { "label": "Queen - Blizzard", "sku": "MUR-POP-QEN-BLZ", "price": 2958.00 }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_85ae7cc5b18f4343a4aa0507a078d9dd~mv2.jpg/v1/fit/w_5152,h_3680,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_88913f71ed0a4b69b429de74f1ed45ff~mv2.jpg/v1/fit/w_3000,h_1500,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_8a3941e60fe04d518c4920f04152a628~mv2.jpg/v1/fit/w_1024,h_683,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_f806bdd64fcd490ab95199c3a73cac4c~mv2.jpg/v1/fit/w_1024,h_683,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_246f67933fb9454fa6e637b4df96603a~mv2.jpg/v1/fit/w_3000,h_1500,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 63.5,
+      "depth": 23.7,
+      "height": 41.1,
+      "weight": null
+    },
+    "swatches": ["Harvest Brown", "Brushed Driftwood", "Antique Blue", "Seafoam", "White Bark", "Blizzard"],
+    "bundleCompatible": false,
+    "sustainability": {
+      "materialSource": "Solid hardwood and panel construction",
+      "recyclable": true
+    },
+    "careGuide": "Clean cabinet exterior with soft dry cloth. Mattress: tri-fold gel memory foam, 80\"L x 63\"W x 6\"H. Gel memory foam mattress weighs 37 lbs. Max weight capacity 500 lbs (250 lbs per side).",
+    "assemblyDifficulty": "easy"
+  },
+  {
+    "name": "Sedona",
+    "sku": null,
+    "price": null,
+    "description": "The Sedona is a hardwood futon frame by Kimberly Enterprises. Features durable hardwood construction with a weight capacity of up to 250 lbs for each futon side or 400 lbs total for 2 people. Available in Full and Queen sizes.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full - Mahogany", "sku": null, "price": null },
+      { "label": "Full - Golden Oak", "sku": null, "price": null },
+      { "label": "Full - Teak", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_1784a066b6d04f51b8882618474df1dc~mv2.jpg/v1/fit/w_4160,h_2340,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 80.5,
+      "depth": 32.75,
+      "height": 22.5,
+      "weight": null
+    },
+    "swatches": ["Mahogany", "Golden Oak", "Teak"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Hardwood construction by Kimberly Enterprises",
+      "recyclable": true
+    },
+    "careGuide": null,
+    "assemblyDifficulty": "moderate"
+  },
+  {
+    "name": "Tiro",
+    "sku": null,
+    "price": 782.00,
+    "description": "The Tiro features a mission-style arm that includes a beautifully designed folding tray table — the easiest way to make the most out of small spaces. Made from plantation-grown rubberwood, the Tiro utilizes Wall Hugger technology, allowing you to easily convert from sofa to bed without moving the furniture away from the wall. Strata Furniture is the only Wall Hugger Futon with its Patented Mechanism. Maximum weight capacity of the frame is 500 lbs (250 lbs per side). Strata uses a Low VOC finish that is safe for organic homes.",
+    "category": "futon-frames",
+    "variants": [
+      { "label": "Full - Warm Cherry", "sku": null, "price": 782.00 },
+      { "label": "Full - Dark Cherry", "sku": null, "price": null },
+      { "label": "Full - Gray", "sku": null, "price": null },
+      { "label": "Queen - Warm Cherry", "sku": null, "price": null },
+      { "label": "Queen - Dark Cherry", "sku": null, "price": null },
+      { "label": "Queen - Gray", "sku": null, "price": null },
+      { "label": "Twin Chair w/Ottoman", "sku": null, "price": null },
+      { "label": "Full Loveseat w/Ottoman", "sku": null, "price": null },
+      { "label": "Queen Loveseat w/Ottoman", "sku": null, "price": null }
+    ],
+    "images": [
+      "https://static.wixstatic.com/media/e04e89_36ddfc4cab4c40f5b5188f325a982984~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_5451dd4980b44f7e9f42048d5dc9bd8d~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_d8a9165606834f55bf514c4949a0d1f3~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "https://static.wixstatic.com/media/e04e89_4f8bc7427186421cbb10030a725cffc8~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg"
+    ],
+    "dimensions": {
+      "width": 80.5,
+      "depth": 40.625,
+      "height": 33,
+      "weight": null
+    },
+    "swatches": ["Warm Cherry", "Dark Cherry", "Gray"],
+    "bundleCompatible": true,
+    "sustainability": {
+      "materialSource": "Plantation-grown rubberwood, Low VOC finish safe for organic homes",
+      "recyclable": true
+    },
+    "careGuide": "Low VOC finish. Clean with soft dry cloth. Tray table folds for compact storage.",
+    "assemblyDifficulty": "moderate"
+  }
+]

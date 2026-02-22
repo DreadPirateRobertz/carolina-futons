@@ -1,0 +1,1151 @@
+[
+  {
+    "manufacturer": "KD Frames",
+    "name": "Nomad Platform Bed",
+    "slug": "nomad-plus-platform-bed",
+    "url": "https://kdframes.com/products/nomad-plus-platform-bed",
+    "description": "The Nomad Platform Bed features a minimalist Swedish design emphasizing functionality and clean lines. Voted New York Times Wirecutter top pick for platform beds under $600. Eliminates the need for a box spring with 2.8-inch slat spacing flush with rail tops, suitable for Memory Foam, Latex, and standard mattresses. Accommodates optional KD Frames Trundle or Rolling Drawers. The Lexington and Charleston share the identical base but include headboards.",
+    "category": "platform-beds",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 600,
+    "platformHeight": 15,
+    "slatSpacing": 2.8,
+    "slatDimensions": "2 inches wide, 1 inch thick",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included. Up to one hour for larger frames.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "2873-NP-T",
+        "msrp": 229.00,
+        "salePrice": 219.00,
+        "weight": 42,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 18
+      },
+      {
+        "size": "XL-Twin",
+        "sku": "2874-NP-XT",
+        "msrp": 244.00,
+        "salePrice": 224.00,
+        "weight": 44,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 2
+      },
+      {
+        "size": "Full",
+        "sku": "2872-NP-F",
+        "msrp": 279.00,
+        "salePrice": 259.00,
+        "weight": 60,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 11
+      },
+      {
+        "size": "Queen",
+        "sku": "2871-NP-Q",
+        "msrp": 299.00,
+        "salePrice": 279.00,
+        "weight": 68,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 33
+      },
+      {
+        "size": "King",
+        "sku": "2875-NP-EK",
+        "msrp": 349.00,
+        "salePrice": 319.00,
+        "weight": 80,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 23
+      },
+      {
+        "size": "California King",
+        "sku": "2876-NP-CK",
+        "msrp": 349.00,
+        "salePrice": 319.00,
+        "weight": 81,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 9
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75, "platformHeight": 15 },
+      "xlTwin": { "mattressWidth": 39, "mattressLength": 80, "platformHeight": 15 },
+      "full": { "mattressWidth": 54, "mattressLength": 75, "platformHeight": 15 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80, "platformHeight": 15 },
+      "king": { "mattressWidth": 76, "mattressLength": 80, "platformHeight": 15 },
+      "calKing": { "mattressWidth": 72, "mattressLength": 84, "platformHeight": 15 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Nomad_Plus_Lifestyle_copy_1024x1024.jpg?v=1559407758",
+      "https://kdframes.com/cdn/shop/products/NP_Frame_Trundle_Front_480x480.png?v=1764520672",
+      "https://kdframes.com/cdn/shop/products/Nomad_White_Blanket_Drawers_Front_480x480.png?v=1764520672",
+      "https://kdframes.com/cdn/shop/products/Nomad_Gray_Blanket_Trundle_Side_480x480.png?v=1764520672",
+      "https://kdframes.com/cdn/shop/products/Nomad_Plus_480x480.jpg?v=1764520672"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/Nomad_Dimensions.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Twin",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2873-NP-T_5cd22a4d-e878-4dc6-a0f6-0dce1dc9c81b.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Full",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2872-NP-F_96b25d74-f6b3-4e53-adfe-570631fa1762.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "XL-Twin",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2874-NP-XT_24433a0a-e267-40b3-a824-f68204403ec6.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Queen",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2871-NP-Q_52ddcb3d-6a1d-4a9b-94c2-e676c95275b1.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "King",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2875-NP-EK_03d0b51b-705f-4809-8cb0-49ed18cd1aeb.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "California King",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/2876-NP-CK.pdf"
+      }
+    ],
+    "assemblyVideo": "https://www.youtube.com/watch?v=EC1GCQ5CiSo",
+    "compatibleAccessories": ["Twin Trundle Bed", "Rolling Drawers", "Center Legs", "Leg Length Options for Nomad", "Lexington Headboard for Nomad"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Charleston Platform Bed",
+    "slug": "charleston-plus-platform-bed",
+    "url": "https://kdframes.com/products/charleston-plus-platform-bed",
+    "description": "The Charleston Platform Bed provides a classic and clean mission-style headboard associated with the American arts and crafts movement. Eliminates the need for a box spring with under-bed storage space. Features 2.8-inch slat spacing flush with rail tops, a 40-inch tall headboard, and 600-pound weight capacity. Shares the identical base as the Nomad but includes a mission-style headboard.",
+    "category": "platform-beds",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 600,
+    "platformHeight": 15,
+    "headboardHeight": 40,
+    "slatSpacing": 2.8,
+    "slatDimensions": "2 inches wide, 1 inch thick",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included. Up to one hour for larger frames.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "3993-CP-T",
+        "msrp": 259.00,
+        "salePrice": 239.00,
+        "weight": 53,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 12
+      },
+      {
+        "size": "Twin XL",
+        "sku": "3994-CP-XT",
+        "msrp": 279.00,
+        "salePrice": 259.00,
+        "weight": 54,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 10
+      },
+      {
+        "size": "Full",
+        "sku": "3992-CP-F",
+        "msrp": 309.00,
+        "salePrice": 289.00,
+        "weight": 72,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 15
+      },
+      {
+        "size": "Queen",
+        "sku": "3991-CP-Q",
+        "msrp": 334.00,
+        "salePrice": 314.00,
+        "weight": 83,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 6
+      },
+      {
+        "size": "King",
+        "sku": "3995-CP-EK",
+        "msrp": 354.00,
+        "salePrice": 349.00,
+        "weight": 98,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 2
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75, "platformHeight": 15, "headboardHeight": 40 },
+      "twinXL": { "mattressWidth": 39, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 },
+      "full": { "mattressWidth": 54, "mattressLength": 75, "platformHeight": 15, "headboardHeight": 40 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 },
+      "king": { "mattressWidth": 76, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Charleston_Lifestyle_Updated_copy_1024x1024.jpg?v=1560308819",
+      "https://kdframes.com/cdn/shop/products/DSC_0013_clipped_rev_3_480x480.jpg?v=1549561679",
+      "https://kdframes.com/cdn/shop/products/Charleston_and_Trundle_Gray_Blanket_Side_480x480.png?v=1549561679",
+      "https://kdframes.com/cdn/shop/products/Charleston_White_Blanket_Pillows_and_Drawers_Front_480x480.png?v=1549561679",
+      "https://kdframes.com/cdn/shop/products/CP_Closeup_Corner_f09729af-851f-4edd-a55d-e43b5a02fc3e_480x480.png?v=1549561679"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "label": "Charleston Dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/Charleston_Dimensions_2f976365-6795-43c0-9627-4318b7e1764a.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Twin",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/3993-CP-T.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Full",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/3992-CP-F.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Twin XL",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/3994-CP-XT.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Queen",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/3991-CP-Q.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "King",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/3995-CP-EK.pdf"
+      }
+    ],
+    "assemblyVideo": "https://www.youtube.com/watch?v=ouc5kWkEMfE",
+    "compatibleAccessories": ["Twin Trundle Bed", "Rolling Drawers", "Center Legs", "Leg Length Options for Charleston"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Lexington Platform Bed",
+    "slug": "copy-of-charleston-plus-platform-bed",
+    "url": "https://kdframes.com/products/copy-of-charleston-plus-platform-bed",
+    "description": "The horizontal lines of the Lexington Platform Bed suggest a solid, harmonious relationship with the earth and offer a sense of tranquility. Features 2.8-inch slat spacing suitable for most mattress types including Memory Foam or Latex. Supports up to 600 pounds with a 15-inch platform height. Accommodates optional KD Frames Trundle or Rolling Drawers accessories. Shares the identical base as the Nomad but includes a horizontal-line headboard.",
+    "category": "platform-beds",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 600,
+    "platformHeight": 15,
+    "headboardHeight": 40,
+    "slatSpacing": 2.8,
+    "slatDimensions": "2 inches wide, 1 inch thick",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included. Up to one hour for larger frames.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "6223-LX-T",
+        "msrp": 259.00,
+        "salePrice": 239.00,
+        "weight": 49,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 7
+      },
+      {
+        "size": "Twin XL",
+        "sku": "6224-LX-XT",
+        "msrp": 279.00,
+        "salePrice": 259.00,
+        "weight": 51,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 14
+      },
+      {
+        "size": "Full",
+        "sku": "6222-LX-F",
+        "msrp": 309.00,
+        "salePrice": 289.00,
+        "weight": 69,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 11
+      },
+      {
+        "size": "Queen",
+        "sku": "6221-LX-Q",
+        "msrp": 334.00,
+        "salePrice": 314.00,
+        "weight": 79,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 17
+      },
+      {
+        "size": "King",
+        "sku": "6225-LX-EK",
+        "msrp": 359.00,
+        "salePrice": 349.00,
+        "weight": 98,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 14
+      },
+      {
+        "size": "California King",
+        "sku": "6226-LX-CK",
+        "msrp": 354.00,
+        "salePrice": 349.00,
+        "weight": 95,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 10
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75, "platformHeight": 15, "headboardHeight": 40 },
+      "twinXL": { "mattressWidth": 39, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 },
+      "full": { "mattressWidth": 54, "mattressLength": 75, "platformHeight": 15, "headboardHeight": 40 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 },
+      "king": { "mattressWidth": 76, "mattressLength": 80, "platformHeight": 15, "headboardHeight": 40 },
+      "calKing": { "mattressWidth": 72, "mattressLength": 84, "platformHeight": 15, "headboardHeight": 40 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Lexington_Primary_copy.jpg?v=1549562242",
+      "https://kdframes.com/cdn/shop/products/Lexington_Frame_with_Trundle.png?v=1764520689",
+      "https://kdframes.com/cdn/shop/products/Lexington_with_Trundle.png?v=1764520689",
+      "https://kdframes.com/cdn/shop/products/Lexington_with_Drawers.png?v=1764520689",
+      "https://kdframes.com/cdn/shop/products/Closeup_Lexington.png?v=1764520689",
+      "https://kdframes.com/cdn/shop/products/Lexington_Dressed.png?v=1764520689"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/Lexington_Dimensions.jpg?v=1715965050"
+      },
+      {
+        "type": "assembly",
+        "size": "Twin",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6223-LX-T.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Twin XL",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6224-LX-XT.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Full",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6222-LX-F.pdf"
+      },
+      {
+        "type": "assembly",
+        "size": "Queen",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6221-LX-Q_3093628b-87af-41a6-9d5c-b99223159f8d.pdf?v=1715965391"
+      },
+      {
+        "type": "assembly",
+        "size": "King",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6225-LX-EK.pdf?v=1715965150"
+      },
+      {
+        "type": "assembly",
+        "size": "California King",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/6226-LX-CK.pdf?v=1715965145"
+      }
+    ],
+    "compatibleAccessories": ["Twin Trundle Bed", "Rolling Drawers", "Center Legs", "Leg Length Options for Lexington"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Ekko Platform Bed",
+    "slug": "ekko-platform-bed",
+    "url": "https://kdframes.com/products/ekko-platform-bed",
+    "description": "Introducing the Ekko Platform Bed that adds a clean and modern touch to your bedroom with its 'floating bed' appearance. Features slat spacing of 3 inches or less, ideal for memory foam and latex mattresses. Low-profile 10-inch platform height with an impressive 900-pound weight capacity — the highest in the KD Frames lineup.",
+    "category": "platform-beds",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 900,
+    "platformHeight": 10,
+    "slatSpacing": 3.0,
+    "slatDimensions": "2 inches wide, 1 inch thick",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "8313-EK-T",
+        "msrp": 189.00,
+        "salePrice": 179.00,
+        "weight": null,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 8
+      },
+      {
+        "size": "XL-Twin",
+        "sku": "8314-EK-XT",
+        "msrp": 209.00,
+        "salePrice": 199.00,
+        "weight": null,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 7
+      },
+      {
+        "size": "Full",
+        "sku": "8312-EK-F",
+        "msrp": 229.00,
+        "salePrice": 209.00,
+        "weight": null,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 7
+      },
+      {
+        "size": "Queen",
+        "sku": "8311-EK-Q",
+        "msrp": 249.00,
+        "salePrice": 239.00,
+        "weight": null,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 2
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75, "platformHeight": 10 },
+      "xlTwin": { "mattressWidth": 39, "mattressLength": 80, "platformHeight": 10 },
+      "full": { "mattressWidth": 54, "mattressLength": 75, "platformHeight": 10 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80, "platformHeight": 10 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/EkkoLifestyle.jpg?v=1650315225",
+      "https://kdframes.com/cdn/shop/products/FrameOnly.png?v=1650315242",
+      "https://kdframes.com/cdn/shop/products/framelow.jpg?v=1650401801",
+      "https://kdframes.com/cdn/shop/products/EkkoBedDimensions.jpg?v=1650490740"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://kdframes.com/cdn/shop/products/EkkoBedDimensions.jpg?v=1650490740"
+      }
+    ],
+    "compatibleAccessories": []
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Fold Platform Bed",
+    "slug": "fold-platform-bed",
+    "url": "https://kdframes.com/products/fold-platform-bed",
+    "description": "No more need for a boxspring — the Fold Bed is stylish, convenient, and can be folded in half for convenient storage. The low-profile design features tucked legs creating a floating bed appearance. Updated with rounded corners matching mattress shape. Made in the USA from non-toxic materials.",
+    "category": "platform-beds",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 600,
+    "slatDimensions": "2 inches wide, 1 inch thick",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "assemblyNotes": "Foldable design. Screwdriver or drill required. Hex wrench included.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "foldable": true,
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "5773-FB-T",
+        "msrp": 175.00,
+        "salePrice": 169.00,
+        "weight": 40,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 3
+      },
+      {
+        "size": "Full",
+        "sku": "5772-FB-F",
+        "msrp": 199.00,
+        "salePrice": 194.00,
+        "weight": 48,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 3
+      },
+      {
+        "size": "Queen",
+        "sku": "5771-FB-Q",
+        "msrp": 219.00,
+        "salePrice": 214.00,
+        "weight": 53,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 6
+      },
+      {
+        "size": "Twin XL",
+        "sku": "5774-FB-XT",
+        "msrp": 189.00,
+        "salePrice": 184.00,
+        "weight": 40,
+        "weightUnit": "lbs",
+        "inStock": false,
+        "inventory": 0
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75 },
+      "full": { "mattressWidth": 54, "mattressLength": 75 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80 },
+      "twinXL": { "mattressWidth": 39, "mattressLength": 80 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Fold_Bed_Lifestyle.jpg?v=1558923302",
+      "https://kdframes.com/cdn/shop/products/Dressed_Main_Url-2.jpg?v=1558923302",
+      "https://kdframes.com/cdn/shop/products/Frame_Url_1.jpg?v=1558923302",
+      "https://kdframes.com/cdn/shop/products/Folded_Url_2.jpg?v=1558923302",
+      "https://kdframes.com/cdn/shop/files/Fold_Bed_Dimensions.jpg?v=1767044283"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://kdframes.com/cdn/shop/files/Fold_Bed_Dimensions.jpg?v=1767044283"
+      }
+    ],
+    "assemblyVideo": "https://www.youtube.com/watch?v=Xi4Gddlhzd0",
+    "compatibleAccessories": []
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "KD Lounger Futon",
+    "slug": "kd-lounger-futon",
+    "url": "https://kdframes.com/products/kd-lounger-futon",
+    "description": "Lounger, chair, or bed. The multi-functional KD Lounger futon features 13 convertible positions. Recently updated with rounded corners. This is an original KD Frames design, not an import knockoff. Futon mattress is NOT included with the frame. Recommended mattress thickness is 6 to 8 inches.",
+    "category": "futon-frames",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 500,
+    "positions": 13,
+    "mattressIncluded": false,
+    "recommendedMattressThickness": "6-8 inches",
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "4833-KD-T",
+        "msrp": 174.00,
+        "salePrice": 174.00,
+        "weight": 42,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 5
+      },
+      {
+        "size": "Full",
+        "sku": "4832-KD-F",
+        "msrp": 189.00,
+        "salePrice": 189.00,
+        "weight": 52,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 6
+      },
+      {
+        "size": "Queen",
+        "sku": "4831-KD-Q",
+        "msrp": 209.00,
+        "salePrice": 209.00,
+        "weight": 55,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 5
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75 },
+      "full": { "mattressWidth": 54, "mattressLength": 75 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/KD_Lounger_Lifestyle.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/products/KD_frame_with_futon_copy.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/products/Main_Url_3edb5063-35f8-44c7-b79c-0b9d11ba5897.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/products/Url_2_01f87686-76e0-4fb7-8c09-766d98063356.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/products/Url_3.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/products/Url_4.jpg?v=1543351923",
+      "https://kdframes.com/cdn/shop/files/KD_Lounger_Dims_2.3.26.jpg?v=1770127763"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/KD_Lounger_Dims_2.3.26_edit.pdf"
+      }
+    ],
+    "assemblyVideo": "https://www.youtube.com/watch?v=RjBfOFzDxuo",
+    "compatibleAccessories": []
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Studio Bifold Futon",
+    "slug": "copy-of-studio-bifold-futon",
+    "url": "https://kdframes.com/products/copy-of-studio-bifold-futon",
+    "description": "Keep it simple. The Studio Bifold futon is a no-frills approach to satisfying the need for a couch that can quickly and effortlessly be converted to a bed. Features 4 adjustable positions, sturdy back wheels, and supports up to 500 pounds. Futon mattress is NOT included with this frame.",
+    "category": "futon-frames",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 500,
+    "positions": 4,
+    "mattressIncluded": false,
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Screwdriver or drill required. Hex wrench included.",
+    "careGuide": "Unfinished natural wood — can be stained, painted, or left natural. No chemicals applied during manufacturing. Non-toxic, eco-friendly construction.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Full",
+        "sku": "4722-BI-F",
+        "msrp": 199.00,
+        "salePrice": 189.00,
+        "weight": 48,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 4
+      },
+      {
+        "size": "Queen",
+        "sku": "4721-BI-Q",
+        "msrp": 219.00,
+        "salePrice": 209.00,
+        "weight": 55,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 5
+      }
+    ],
+    "dimensions": {
+      "full": { "mattressWidth": 54, "mattressLength": 75 },
+      "queen": { "mattressWidth": 60, "mattressLength": 80 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Studio_Bifold_Lifestyle_copy.jpg?v=1609856874",
+      "https://kdframes.com/cdn/shop/products/Shopify_slideshow_copy_c978744e-9025-46c8-977c-3860b31f9f55.jpg?v=1609856874",
+      "https://kdframes.com/cdn/shop/products/Main_URL_bc9f42cb-71d8-46de-95da-a2f96029f7b6.jpg?v=1609856874",
+      "https://kdframes.com/cdn/shop/products/Back_URL_1_e090b6ab-0729-4063-9c58-4aa818efce19.jpg?v=1609856874",
+      "https://kdframes.com/cdn/shop/products/StudioBifoldDimensions-page-001.jpg?v=1609856874"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/Studio_Bifold_Dimensions_6eb12a83-630f-40f7-956b-9f56825d68d1.pdf?v=1696882599"
+      },
+      {
+        "type": "assembly",
+        "size": "Full",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/4722_BI_F.pdf?15454472758059499866"
+      },
+      {
+        "type": "assembly",
+        "size": "Queen",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/4721_BI_Q.pdf?15454472758059499866"
+      }
+    ],
+    "assemblyVideo": "https://www.youtube.com/watch?v=lDnFOcn7qZ8",
+    "compatibleAccessories": []
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Twin Trundle Bed",
+    "slug": "trundle",
+    "url": "https://kdframes.com/products/trundle",
+    "description": "The Twin Trundle features updated construction with improved 2.8-inch slat spacing to fit most standard mattresses. Slides beneath platform beds for space-saving functionality. Equipped with four sturdy wheels for easy gliding. Compatible with Nomad, Charleston, and Lexington platform beds in all sizes except King models with center legs.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "weightCapacity": 300,
+    "slatSpacing": 2.8,
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "assemblyNotes": "Screwdriver or drill required. Four wheels included.",
+    "careGuide": "Unfinished natural wood — eco-friendly, chemical-free. Can be stained, painted, or left natural.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "7903-TR-T",
+        "msrp": 179.00,
+        "salePrice": 179.00,
+        "weight": 31,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 17
+      }
+    ],
+    "dimensions": {
+      "twin": { "mattressWidth": 39, "mattressLength": 75 }
+    },
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Trundle.jpg?v=1613082786",
+      "https://kdframes.com/cdn/shop/products/LexingtonwithTrundle.jpg?v=1613082808",
+      "https://kdframes.com/cdn/shop/products/Dim_Trundle_Twin-page-001.jpg?v=1613082808"
+    ],
+    "pdfs": [
+      {
+        "type": "assembly",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/7903-TR-T_7fe4e166-e439-4a65-84d0-7f110fc3333e.pdf"
+      }
+    ],
+    "compatibleWith": ["Nomad Platform Bed (all sizes except King with center legs)", "Charleston Platform Bed (all sizes except King with center legs)", "Lexington Platform Bed (all sizes except King with center legs)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Rolling Drawers (2)",
+    "slug": "rolling-drawers",
+    "url": "https://kdframes.com/products/rolling-drawers",
+    "description": "The Rolling Drawers by KD Frames were designed to fit neatly under the Nomad, Charleston, and Lexington platform beds. Two drawers come in the set and each drawer is equipped with four sturdy wheels for easy gliding. Features a slatted bottom (no plywood). NOT compatible with 12-inch leg length platform bed options. Customers can add cardboard from packaging for a solid bottom if desired.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood from responsibly managed Virginia forests",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "assemblyNotes": "Four wheels per drawer included.",
+    "careGuide": "Unfinished natural wood — eco-friendly, non-toxic. Can be stained, painted, or left natural.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Pair (2 drawers)",
+        "sku": "7936-RD-36",
+        "msrp": 189.00,
+        "salePrice": 179.00,
+        "weight": 49,
+        "weightUnit": "lbs",
+        "inStock": true,
+        "inventory": 28
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/rolling-drawers.jpg"
+    ],
+    "pdfs": [
+      {
+        "type": "dimensions",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/Dim_Rolling_Drawers.pdf"
+      },
+      {
+        "type": "assembly",
+        "url": "https://cdn.shopify.com/s/files/1/1773/2151/files/7936-RD-36.pdf"
+      }
+    ],
+    "compatibleWith": ["Nomad Platform Bed (15\" or 18\" legs only)", "Charleston Platform Bed (15\" or 18\" legs only)", "Lexington Platform Bed (15\" or 18\" legs only)"],
+    "notCompatibleWith": ["12-inch leg length options"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Center Legs (2)",
+    "slug": "rails-for-emily",
+    "url": "https://kdframes.com/products/rails-for-emily",
+    "description": "Two center support legs and 8 wood screws. Provide extra support to platform bed rails. Compatible with Nomad, Charleston, and Lexington bed frames in Full and Queen sizes. Come standard with King-size versions. Only needed if you plan to exceed the 600 pound weight limit.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "assemblyNotes": "8 wood screws included. Attach to center of bed rails.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "12 inch",
+        "sku": "2312-CL-12",
+        "msrp": 25.00,
+        "salePrice": 25.00,
+        "weight": 2,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "15 inch",
+        "sku": "2315-CL-15",
+        "msrp": 25.00,
+        "salePrice": 25.00,
+        "weight": 2,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18 inch",
+        "sku": "2318-CL-18",
+        "msrp": 25.00,
+        "salePrice": 25.00,
+        "weight": 2,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/IMG_0498_clipped_rev_1.jpg?v=1577937104",
+      "https://kdframes.com/cdn/shop/products/Center_Legs.jpg?v=1577937104"
+    ],
+    "pdfs": [],
+    "compatibleWith": ["Nomad Platform Bed (Full, Queen — optional; King — standard)", "Charleston Platform Bed (Full, Queen — optional; King — standard)", "Lexington Platform Bed (Full, Queen — optional; King — standard)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Leg Length Options for Nomad Platform Bed",
+    "slug": "18-leg-extensions-for-nomad-platform-bed",
+    "url": "https://kdframes.com/products/18-leg-extensions-for-nomad-platform-bed",
+    "description": "The Nomad Platform Beds ship with 15-inch legs providing 15-inch platform height. Alternative leg sets of 12 inches or 18 inches are available. The 12-inch option creates a lower profile but is incompatible with Rolling Drawers. The 18-inch option provides additional clearance for thicker mattresses on trundle beds, accommodating mattresses up to 10 inches thick. King size options include the required 2 center legs.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "12\" — Twin/XL-Twin/Full/Queen",
+        "sku": "1101-NO-12",
+        "msrp": 28.00,
+        "salePrice": 28.00,
+        "weight": 3,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "12\" — King/California King",
+        "sku": "1104-NO-EK-12",
+        "msrp": 33.00,
+        "salePrice": 33.00,
+        "weight": 4,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" — Twin/XL-Twin/Full/Queen",
+        "sku": "2201-NO-18",
+        "msrp": 30.00,
+        "salePrice": 30.00,
+        "weight": 4,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" — King/California King",
+        "sku": "2204-NO-EK-18",
+        "msrp": 35.00,
+        "salePrice": 35.00,
+        "weight": 4,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/18_leg_extensions.jpg?v=1487521229"
+    ],
+    "pdfs": [],
+    "compatibleWith": ["Nomad Platform Bed (all sizes)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Leg Length Options for Charleston Platform Bed",
+    "slug": "18-legs-for-the-charleston-platform-bed",
+    "url": "https://kdframes.com/products/18-legs-for-the-charleston-platform-bed",
+    "description": "The Charleston Platform Beds come standard with 15-inch footboard and 40-inch headboard legs, providing a 15-inch platform height. Alternative options: 12-inch footboard/37-inch headboard creates a lower profile but is incompatible with Rolling Drawers. 18-inch footboard/43-inch headboard offers additional clearance for mattresses up to 10 inches thick on Trundle Beds. King and California King variants include center leg pairs. These legs ship separately and cannot substitute the original legs bundled with frames.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "12\" Footboard / 37\" Headboard",
+        "sku": "1102-CH-12",
+        "msrp": 40.00,
+        "salePrice": 40.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" Footboard / 43\" Headboard",
+        "sku": "2202-CH-18",
+        "msrp": 45.00,
+        "salePrice": 45.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "12\" Footboard / 37\" Headboard — King/Cal-King",
+        "sku": "1106-CH-EK-12",
+        "msrp": 40.00,
+        "salePrice": 40.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" Footboard / 43\" Headboard — King/Cal-King",
+        "sku": "2206-CH-EK-18",
+        "msrp": 45.00,
+        "salePrice": 45.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Legs2.jpg?v=1488633820"
+    ],
+    "pdfs": [],
+    "compatibleWith": ["Charleston Platform Bed (all sizes)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Leg Length Options for Lexington Platform Bed",
+    "slug": "18-legs-for-the-lexington-platform-bed",
+    "url": "https://kdframes.com/products/18-legs-for-the-lexington-platform-bed",
+    "description": "The Lexington Platform Beds come standard with 15-inch footboard and 40-inch headboard legs, providing a 15-inch platform height. Alternative options: 12-inch footboard/37-inch headboard for a lower profile (incompatible with Rolling Drawers). 18-inch footboard/43-inch headboard for extra clearance for mattresses up to 10 inches thick on Trundle Beds. King and California King options include center legs. These legs ship separately.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "easy",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "12\" Footboard / 37\" Headboard",
+        "sku": "1103-LX-12",
+        "msrp": 40.00,
+        "salePrice": 40.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" Footboard / 43\" Headboard",
+        "sku": "2203-LX-18",
+        "msrp": 45.00,
+        "salePrice": 45.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "12\" Footboard / 37\" Headboard — King/Cal-King",
+        "sku": "1105-LX-EK-12",
+        "msrp": 40.00,
+        "salePrice": 40.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "18\" Footboard / 43\" Headboard — King/Cal-King",
+        "sku": "2205-LX-EK-18",
+        "msrp": 45.00,
+        "salePrice": 45.00,
+        "weight": 6,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Legs2_d515c6b1-88b5-4830-af9d-a5d8f6255c2d.jpg?v=1527126810"
+    ],
+    "pdfs": [],
+    "compatibleWith": ["Lexington Platform Bed (all sizes)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Lexington Headboard for Nomad Bed Frame",
+    "slug": "lexington-headboard-for-nomad-bed-frame",
+    "url": "https://kdframes.com/products/lexington-headboard-for-nomad-bed-frame",
+    "description": "Add-on headboard for existing Nomad bed owners. Fits any Nomad purchased after 2018 using the standard 15-inch legs. Requires removing existing bed-end legs to attach the new headboard kit. NOT compatible with Nomads purchased before 2019. NOT compatible with 12-inch or 18-inch leg variants. Only Lexington style available (no Charleston option).",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "warranty": "5-year warranty covering defects from faulty materials, workmanship, or shipping damage. Replacement at no charge with proof of purchase.",
+    "assemblyDifficulty": "moderate",
+    "assemblyNotes": "Requires removing existing Nomad bed-end legs before installation.",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      {
+        "size": "Twin",
+        "sku": "2403-LX-TH",
+        "msrp": 75.00,
+        "salePrice": 75.00,
+        "weight": 10,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "XL-Twin",
+        "sku": "2403-LX-TH",
+        "msrp": 75.00,
+        "salePrice": 75.00,
+        "weight": 10,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "Full",
+        "sku": "2402-LX-FH",
+        "msrp": 99.00,
+        "salePrice": 99.00,
+        "weight": 13,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "Queen",
+        "sku": "2401-LX-QH",
+        "msrp": 105.00,
+        "salePrice": 105.00,
+        "weight": 15,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "King",
+        "sku": "2405-LX-EKH",
+        "msrp": 115.00,
+        "salePrice": 115.00,
+        "weight": 18,
+        "weightUnit": "lbs",
+        "inStock": true
+      },
+      {
+        "size": "California King",
+        "sku": "2406-LX-CKH",
+        "msrp": 115.00,
+        "salePrice": 115.00,
+        "weight": 18,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/files/IMG_1265_1__preview_rev_1.png?v=1739399272"
+    ],
+    "pdfs": [],
+    "compatibleWith": ["Nomad Platform Bed (post-2018, 15\" legs only)"]
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Hardware Packs",
+    "slug": "hardware-packs",
+    "url": "https://kdframes.com/products/hardware-packs",
+    "description": "Replacement hardware packs for KD Frames beds. Hardware packs ARE included with frames, but if you ever lose yours (like when you move), you can choose the hardware pack that matches the style and size of your frame. Ships USPS Express from Athens, Georgia. Please note what year you bought your frame at checkout — changes have been made over the years that impact the hardware.",
+    "category": "accessories",
+    "materials": "Metal hardware (bolts, dowels, hex wrenches)",
+    "warranty": "N/A",
+    "assemblyDifficulty": "N/A",
+    "madeIn": "Athens, Georgia, USA",
+    "variants": [
+      { "size": "Nomad/Twin", "sku": "Hardware 2873-NP-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Nomad/XL-Twin", "sku": "Hardware 2874-NP-XT", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Nomad/Full", "sku": "Hardware 2872-NP-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Nomad/Queen", "sku": "Hardware 2871-NP-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Nomad/King", "sku": "Hardware 2875-NP-EK", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Nomad/California King", "sku": "Hardware 2876-NP-CK", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Charleston/Twin", "sku": "Hardware 3993-CP-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Charleston/XL-Twin", "sku": "Hardware 3994-CP-XT", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Charleston/Full", "sku": "Hardware 3992-CP-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Charleston/Queen", "sku": "Hardware 3991-CP-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Charleston/King", "sku": "Hardware 3995-CP-EK", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Studio Bifold/Full", "sku": "Hardware 4722-BI-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Studio Bifold/Queen", "sku": "Hardware 4721-BI-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "KD Lounger/Twin", "sku": "Hardware 4833-KD-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "KD Lounger/Full", "sku": "Hardware 4832-KD-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "KD Lounger/Queen", "sku": "Hardware 4831-KD-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Savannah Lounger/Twin", "sku": "Hardware-SL-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Savannah Lounger/Full", "sku": "Hardware-SL-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Savannah Bifold/Full", "sku": "Hardware-SB-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Savannah Bifold/Queen", "sku": "Hardware-SB-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Fold Bed/Twin", "sku": "Hardware 5773-FB-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Fold Bed/XL-Twin", "sku": "Hardware 5774-FB-XT", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Fold Bed/Full", "sku": "Hardware 5772-FB-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Fold Bed/Queen", "sku": "Hardware 5771-FB-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Trundle/Twin", "sku": "Hardware 7903-TR-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/Twin", "sku": "Hardware 6223-LX-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/XL-Twin", "sku": "Hardware 6224-LX-XT", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/Full", "sku": "Hardware 6222-LX-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/Queen", "sku": "Hardware 6221-LX-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/California King", "sku": "Hardware 6226-LX-CK", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Ekko/Twin", "sku": "Hardware 8313-EK-T", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Ekko/XL-Twin", "sku": "Hardware 8314-EK-XT", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Ekko/Full", "sku": "Hardware 8312-EK-F", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Ekko/Queen", "sku": "Hardware 8311-EK-Q", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Rolling Drawers/Pair", "sku": "Hardware 7936-RD-36", "msrp": 19.00, "salePrice": 19.00 },
+      { "size": "Lexington/King", "sku": "Hardware 6225-LX-EK", "msrp": 19.00, "salePrice": 19.00 }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Bolt_Dowel_Hex_copy.png?v=1519513397"
+    ],
+    "pdfs": []
+  },
+  {
+    "manufacturer": "KD Frames",
+    "name": "Wood Sample",
+    "slug": "sample",
+    "url": "https://kdframes.com/products/sample",
+    "description": "A 10-inch by 2-inch sample piece of Tulip Poplar — the same kiln-dried hardwood used in all KD Frames products. Useful for testing stain colors or finishes before committing to a full bed frame.",
+    "category": "accessories",
+    "materials": "Kiln-dried Tulip Poplar hardwood",
+    "finishes": ["Unfinished"],
+    "variants": [
+      {
+        "size": "10\" x 2\"",
+        "sku": "Sample",
+        "msrp": 10.00,
+        "salePrice": 10.00,
+        "weight": 1,
+        "weightUnit": "lbs",
+        "inStock": true
+      }
+    ],
+    "images": [
+      "https://kdframes.com/cdn/shop/products/Sample-1.jpg?v=1582052274"
+    ],
+    "pdfs": []
+  }
+]
