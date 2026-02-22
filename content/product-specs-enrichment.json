@@ -1,0 +1,222 @@
+{
+  "_meta": {
+    "generatedAt": "2026-02-22T06:25:00Z",
+    "generatedBy": "caesar",
+    "purpose": "Product specifications enrichment from manufacturer data and agent scrapes"
+  },
+  "specs": {
+    "futon-frame-dimensions": {
+      "note": "Sofa position dimensions. Bed position: width stays same, depth extends to mattress length",
+      "products": {
+        "trinity": { "full": { "w": 82.38, "d": 37.5, "h": 34.5 }, "queen": { "w": 87.75, "d": 38.75, "h": 38.25 } },
+        "winchester": { "full": { "w": 87.75, "d": 38.75, "h": 34.5 }, "queen": { "w": 93.13, "d": 38.75, "h": 38.25 } },
+        "sunrise": { "full": { "w": 87.75, "d": 38.25, "h": 34.5 }, "queen": { "w": 93.13, "d": 38.75, "h": 38.25 } },
+        "autumn": { "full": { "w": 88.37, "d": 37.5, "h": 34.5 }, "queen": { "w": 93.75, "d": 38.75, "h": 38.25 } },
+        "portofino": { "full": { "w": 88.37, "d": 37.5, "h": 34.5 }, "queen": { "w": 93.75, "d": 38.75, "h": 38.25 } },
+        "venice": { "full": { "w": 86.37, "d": 37.5, "h": 34.5 }, "queen": { "w": 91.75, "d": 38.75, "h": 38.25 } },
+        "kingston": { "full": { "w": 81, "d": 39, "h": 34.37 }, "queen": { "w": 86.37, "d": 38.75, "h": 38.25 } },
+        "albany": { "full": { "w": 79.5, "d": 37.5, "h": 34.5 }, "queen": { "w": 84.88, "d": 38.75, "h": 38.25 } },
+        "eureka": { "full": { "w": 76, "d": 37.5, "h": 34.5 }, "queen": { "w": 81.37, "d": 38.75, "h": 38.25 } },
+        "monterey": { "full": { "w": 82.38, "d": 37.5, "h": 34.5 }, "queen": { "w": 87.75, "d": 38.75, "h": 38.25 } },
+        "ruskin": { "full": { "w": 82.38, "d": 37.5, "h": 34.5 }, "queen": { "w": 87.75, "d": 38.75, "h": 38.25 } },
+        "fuji": { "full": { "w": 82.38, "d": 37.5, "h": 34.5 }, "queen": { "w": 87.75, "d": 38.75, "h": 38.25 } },
+        "winter": { "full": { "w": 85.5, "d": 37.5, "h": 34.5 }, "queen": { "w": 90.88, "d": 38.75, "h": 38.25 } },
+        "solstice": { "full": { "w": 85.5, "d": 37.5, "h": 34.5 }, "queen": { "w": 90.88, "d": 38.75, "h": 38.25 } },
+        "key-west": { "full": { "w": 87.75, "d": 37.5, "h": 34.5 }, "queen": { "w": 93.13, "d": 38.75, "h": 38.25 } },
+        "raleigh": { "full": { "w": 98.13, "d": 37.39, "h": 34.88 }, "queen": { "w": 103.5, "d": 38.25, "h": 37.13 } },
+        "studio-frame": { "full": { "w": 54.5, "d": 37.5, "h": 31 }, "queen": { "w": 59.5, "d": 38, "h": 36 } },
+        "kd-lounger": {
+          "twin": { "w": 37, "d": 46, "h": 31.5 },
+          "full": { "w": 52, "d": 46, "h": 31.5 },
+          "queen": { "w": 58, "d": 46, "h": 36.5 }
+        },
+        "northern-exposure-log-futon": { "full": { "w": 36, "d": 85, "h": 32 }, "queen": { "w": 36, "d": 90, "h": 36 } },
+        "wilderness-log-futon": { "full": { "w": 36, "d": 85, "h": 32 }, "queen": { "w": 36, "d": 90, "h": 36 } }
+      }
+    },
+    "wall-hugger-dimensions": {
+      "note": "Wall hugger frames — sofa position dimensions",
+      "products": {
+        "durango": {
+          "twin-chair": { "w": 44.75, "d": 37, "h": 23.5 },
+          "loveseat": { "w": 60, "d": 37, "h": 23.5 },
+          "queen-loveseat": { "w": 66, "d": 37, "h": 23.5 },
+          "full": { "w": 80.25, "d": 37, "h": 23.5 },
+          "queen": { "w": 85.5, "d": 37, "h": 23.5 }
+        },
+        "rockwell": {
+          "full": { "w": 89.125, "d": 40.625, "h": 36 },
+          "queen": { "w": 94.5, "d": 40.625, "h": 36 }
+        },
+        "denali": {
+          "full": { "w": 82.75, "d": 38.625, "h": 24.5 },
+          "queen": { "w": 88.12, "d": 38.625, "h": 24.5 }
+        }
+      }
+    },
+    "platform-bed-dimensions": {
+      "note": "All dimensions in inches. Weight in lbs.",
+      "products": {
+        "nomad": {
+          "twin": { "w": 40, "d": 76.75, "h": 15 },
+          "twin-xl": { "w": 40, "d": 81.75, "h": 15 },
+          "full": { "w": 55, "d": 76.75, "h": 15 },
+          "queen": { "w": 61, "d": 81.75, "h": 15, "weight": 72 },
+          "king": { "w": 79, "d": 81.75, "h": 15 },
+          "weightCapacity": 600
+        },
+        "charleston": {
+          "twin": { "w": 42, "d": 76.75, "h": 40 },
+          "full": { "w": 57, "d": 76.75, "h": 40 },
+          "queen": { "w": 63, "d": 81.75, "h": 40, "weight": 79 },
+          "king": { "w": 81, "d": 81.75, "h": 40 },
+          "weightCapacity": 600
+        },
+        "lexington": {
+          "twin": { "w": 42, "d": 76.75, "h": 40 },
+          "twin-xl": { "w": 42, "d": 81.75, "h": 40 },
+          "full": { "w": 57, "d": 76.75, "h": 40 },
+          "queen": { "w": 63, "d": 81.75, "h": 40, "weight": 79 },
+          "cal-king": { "w": 75, "d": 86.75, "h": 40 },
+          "king": { "w": 81, "d": 81.75, "h": 40 },
+          "weightCapacity": 600
+        },
+        "ekko": {
+          "twin": { "w": 37, "d": 72, "h": 10, "weight": 40 },
+          "twin-xl": { "w": 37, "d": 77, "h": 10, "weight": 43 },
+          "full": { "w": 52, "d": 72, "h": 10, "weight": 57 },
+          "queen": { "w": 58, "d": 77, "h": 10, "weight": 63 },
+          "weightCapacity": 600
+        },
+        "folding": {
+          "twin": { "w": 37, "d": 72, "h": 10, "weight": 40 },
+          "twin-xl": { "w": 37, "d": 77, "h": 10, "weight": 40 },
+          "full": { "w": 52, "d": 72, "h": 10, "weight": 48 },
+          "queen": { "w": 58, "d": 77, "h": 10, "weight": 53 },
+          "weightCapacity": 600
+        }
+      }
+    },
+    "murphy-cabinet-dimensions": {
+      "note": "Closed (cabinet) and open (bed) dimensions",
+      "products": {
+        "orion": {
+          "twin-closed": { "w": 42.4, "d": 20.5, "h": 36 },
+          "twin-open": { "w": 42.4, "d": 76.5, "h": 36 },
+          "full-closed": { "w": 59.7, "d": 20.5, "h": 36 },
+          "full-open": { "w": 59.7, "d": 76.5, "h": 36 },
+          "weight": 162,
+          "weightCapacity": 500
+        },
+        "murphy-cube": {
+          "closed": { "w": 64.1, "d": 26.4, "h": 36.6 },
+          "open": { "w": 64.1, "d": 80.3, "h": 25.7 },
+          "weight": 170,
+          "mattressWeight": 42,
+          "weightCapacity": 500
+        },
+        "alpine": {
+          "closed": { "w": 63.5, "d": 23.7, "h": 41.1 },
+          "open": { "w": 63.5, "d": 83.1, "h": 13 },
+          "weightCapacity": 500
+        },
+        "san-sebastian": {
+          "twin-closed": { "w": 45, "d": 20, "h": 49.5 },
+          "full-closed": { "w": 63, "d": 20, "h": 49.5 },
+          "queen-closed": { "w": 69, "d": 20, "h": 49.5 }
+        }
+      }
+    },
+    "mattress-specs": {
+      "note": "Futon mattress specifications from Otis Bed",
+      "products": {
+        "haley-110": {
+          "comfort": "medium-firm",
+          "thickness": 8,
+          "overstuffedThickness": 14,
+          "weightFull": 40,
+          "construction": "9\" of 2-lb density foam, 100% polyester fabric, flame-retardant rayon wrap",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "durability": "10-12+ years",
+          "tufting": "Compression Lace Tufting (CLT)"
+        },
+        "moonshadow": {
+          "comfort": "plush/soft",
+          "thickness": 8,
+          "overstuffedThickness": 14,
+          "weightFull": 45,
+          "construction": "10\" of 2-lb density convoluted and flat foam, 100% polyester fabric, flame-retardant rayon wrap",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "durability": "10-12+ years",
+          "tufting": "Compression Lace Tufting (CLT)"
+        },
+        "yuma": {
+          "comfort": "medium",
+          "thickness": 8,
+          "construction": "Dual-Comfort linked coil innerspring (Full: 390 coils, Queen: 493 coils), 2\" of 2-lb flat polyurethane foam, 3\" of 2.2-lb convoluted polyurethane foam, 1.375\" of 2.2-lb firm flat foam",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "durability": "10+ years"
+        },
+        "flagstaff": {
+          "comfort": "medium",
+          "thickness": 8,
+          "construction": "9\" of soft and medium-firm high-density convoluted foam plus 2\" of 2.5-lb density block foam compressed to 8\"",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "inStoreOnly": true
+        },
+        "mesa-1000": {
+          "comfort": "soft-medium",
+          "thickness": 8,
+          "overstuffedThickness": 14,
+          "construction": "Highly-resilient foam and polyester fiber batting",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "inStoreOnly": true
+        },
+        "mesa-3000": {
+          "comfort": "firm",
+          "thickness": 8,
+          "construction": "Same support as Mesa 1000 with firmer feel, allows bi-fold use",
+          "frameCompatibility": ["bi-fold", "platform-bed"],
+          "inStoreOnly": true
+        },
+        "chandler": {
+          "comfort": "medium-soft",
+          "construction": "Pressure-relieving memory foam, conforms to body",
+          "inStoreOnly": true
+        },
+        "sedona": {
+          "comfort": "firm/medium-firm",
+          "construction": "Dual Comfort: firm side and medium-firm side",
+          "inStoreOnly": true
+        },
+        "northampton": {
+          "comfort": "medium-firm",
+          "construction": "Dual Comfort: multi layers of rebonded foam and convoluted high-density foam",
+          "inStoreOnly": true
+        },
+        "cambridge": {
+          "comfort": "soft-medium",
+          "construction": "Simple Comfort line entry, soft-medium feel",
+          "inStoreOnly": true
+        },
+        "gemini-ii": {
+          "comfort": "plush",
+          "construction": "Latex-like foam for exceptional comfort and body-enveloping support",
+          "inStoreOnly": true
+        }
+      }
+    },
+    "casegood-dimensions": {
+      "products": {
+        "clove-6-drawer-dresser": { "w": 62, "d": 18.5, "h": 31.1 },
+        "clove-5-drawer-chest": { "w": 25, "d": 18.5, "h": 47.2 },
+        "clove-6-drawer-lingerie-chest": { "w": 20.1, "d": 18.5, "h": 52.4 },
+        "clove-2-drawer-nightstand": { "w": 25, "d": 18.5, "h": 24.1 },
+        "secrets-7-drawer-dresser": { "w": 61.3, "d": 18.5, "h": 35.7 },
+        "secrets-5-drawer-chest": { "w": 25, "d": 18.5, "h": 48.4 },
+        "secrets-nightstand": { "w": 25, "d": 18.5, "h": 27.4 },
+        "hook-on-nightstand": { "w": 14, "d": 12.5, "h": 9 }
+      }
+    }
+  }
+}
