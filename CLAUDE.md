@@ -23,7 +23,8 @@ SOCIAL-MEDIA-STRATEGY.md, http-functions.js (Facebook/Pinterest/Google feeds), s
 ## Standards
 - Run `npm test` after changes. Never break tests.
 - Follow codebase conventions: webMethod, JSDoc, try/catch, sanitize via `backend/utils/sanitize`
-- Wix Velo compatible imports. Read `memory.md`. MANDATORY PR PROCESS: NO direct pushes to main. Work on feature branches, open PR, get review, then merge. Branch: cf-<bead-id>-<desc>. Code only — no Dashboard.
+- Wix Velo compatible imports. Read `memory.md`. Code only — no Dashboard.
+- **MANDATORY PR PROCESS**: NO direct pushes to main. ALL work on feature branches → open PR → get review → merge. Branch naming: `cf-<bead-id>-<short-desc>`. Violations will be reverted.
 
 ## Key Files
 `memory.md`, `WIX-STUDIO-BUILD-SPEC.md`, `PLUGIN-RECOMMENDATIONS.md`, `SOCIAL-MEDIA-STRATEGY.md`, `design.jpeg`, `report_to_human.md`
