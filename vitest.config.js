@@ -112,6 +112,8 @@ export default defineConfig({
       'public/LiveChat': path.resolve(__dirname, 'src/public/LiveChat.js'),
       'public/ReturnsPortal.js': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
+      'public/ReturnsAdmin.js': path.resolve(__dirname, 'src/public/ReturnsAdmin.js'),
+      'public/ReturnsAdmin': path.resolve(__dirname, 'src/public/ReturnsAdmin.js'),
       'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
       'backend/storeLocatorService.web': path.resolve(__dirname, 'src/backend/storeLocatorService.web.js'),
       'backend/bundleBuilder.web': path.resolve(__dirname, 'src/backend/bundleBuilder.web.js'),
