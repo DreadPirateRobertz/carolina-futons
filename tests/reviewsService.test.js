@@ -63,6 +63,8 @@ import {
   submitReview,
   markHelpful,
   flagReview,
+  getPendingReviews,
+  moderateReview,
   getReviewStats,
   addOwnerResponse,
 } from '../src/backend/reviewsService.web.js';
@@ -561,6 +563,90 @@ describe('reviewsService', () => {
       if (updateCall) {
         expect(updateCall[1].ownerResponse).not.toContain('<script>');
       }
+    });
+  });
+
+  describe('getPendingReviews', () => {
+    beforeEach(() => {
+      mockItems.length = 0;
+      mockItems.push(
+        { _id: 'rev-p1', productId: 'prod-001', status: 'pending', rating: 4, body: 'Pending review', _createdDate: new Date() },
+        { _id: 'rev-p2', productId: 'prod-002', status: 'pending', rating: 3, body: 'Another pending', _createdDate: new Date() },
+      );
+      mockTotalCount = 2;
+    });
+
+    it('returns pending reviews', async () => {
+      const result = await getPendingReviews();
+      expect(result.success).toBe(true);
+      expect(result.reviews).toHaveLength(2);
+      expect(result.total).toBe(2);
+    });
+
+    it('returns empty when no pending reviews', async () => {
+      mockItems.length = 0;
+      mockTotalCount = 0;
+
+      const result = await getPendingReviews();
+      expect(result.success).toBe(true);
+      expect(result.reviews).toHaveLength(0);
+      expect(result.total).toBe(0);
+    });
+
+    it('clamps limit to safe range', async () => {
+      await getPendingReviews(100);
+      expect(mockQuery.limit).toHaveBeenCalledWith(50);
+    });
+  });
+
+  describe('moderateReview', () => {
+    beforeEach(() => {
+      mockItems.length = 0;
+      mockItems.push(...sampleReviews);
+    });
+
+    it('approves a review', async () => {
+      const wixData = (await import('wix-data')).default;
+      const result = await moderateReview('rev-001', 'approve');
+      expect(result.success).toBe(true);
+
+      const updateCall = wixData.update.mock.calls[0];
+      if (updateCall) {
+        expect(updateCall[1].status).toBe('approved');
+        expect(updateCall[1].moderatedAt).toBeInstanceOf(Date);
+      }
+    });
+
+    it('rejects a review', async () => {
+      const wixData = (await import('wix-data')).default;
+      const result = await moderateReview('rev-001', 'reject');
+      expect(result.success).toBe(true);
+
+      const updateCall = wixData.update.mock.calls[0];
+      if (updateCall) {
+        expect(updateCall[1].status).toBe('rejected');
+      }
+    });
+
+    it('rejects invalid review ID', async () => {
+      const result = await moderateReview('', 'approve');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid review ID');
+    });
+
+    it('rejects invalid action', async () => {
+      const result = await moderateReview('rev-001', 'delete');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('approve');
+    });
+
+    it('handles non-existent review', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValueOnce(null);
+
+      const result = await moderateReview('rev-nonexistent', 'approve');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
     });
   });
 });

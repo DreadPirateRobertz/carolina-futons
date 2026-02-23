@@ -276,6 +276,69 @@ export const flagReview = webMethod(
 );
 
 /**
+ * Get pending reviews for admin moderation queue.
+ *
+ * @param {number} [limit=20] - Max reviews to return.
+ * @returns {Promise<{success: boolean, reviews: Array, total: number}>}
+ */
+export const getPendingReviews = webMethod(
+  Permissions.Admin,
+  async (limit = 20) => {
+    try {
+      const safeLimit = Math.max(1, Math.min(50, Math.round(limit)));
+      const result = await wixData.query(COLLECTION)
+        .eq('status', 'pending')
+        .descending('_createdDate')
+        .limit(safeLimit)
+        .find();
+
+      return {
+        success: true,
+        reviews: result.items,
+        total: result.totalCount,
+      };
+    } catch (err) {
+      console.error('[reviewsService] getPendingReviews error:', err);
+      return { success: false, reviews: [], total: 0 };
+    }
+  }
+);
+
+/**
+ * Moderate a review: approve or reject. Admin only.
+ *
+ * @param {string} reviewId
+ * @param {string} action - "approve" | "reject"
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const moderateReview = webMethod(
+  Permissions.Admin,
+  async (reviewId, action) => {
+    try {
+      const rid = validateId(reviewId);
+      if (!rid) return { success: false, error: 'Invalid review ID.' };
+
+      const validActions = ['approve', 'reject'];
+      if (!validActions.includes(action)) {
+        return { success: false, error: 'Action must be "approve" or "reject".' };
+      }
+
+      const review = await wixData.get(COLLECTION, rid);
+      if (!review) return { success: false, error: 'Review not found.' };
+
+      review.status = action === 'approve' ? 'approved' : 'rejected';
+      review.moderatedAt = new Date();
+      await wixData.update(COLLECTION, review);
+
+      return { success: true };
+    } catch (err) {
+      console.error('[reviewsService] moderateReview error:', err);
+      return { success: false, error: 'Failed to moderate review.' };
+    }
+  }
+);
+
+/**
  * Get review statistics for admin dashboard.
  *
  * @param {number} [days=30] - Period to analyze
