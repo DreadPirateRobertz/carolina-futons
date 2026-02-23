@@ -1,7 +1,8 @@
 // Cart Page.js - Shopping Cart
 // Modern cart with cross-sell suggestions, shipping threshold,
-// tiered discount incentives, recently viewed, and "Complete Your Futon" bundling
+// tiered discount incentives, recently viewed, financing, and "Complete Your Futon" bundling
 import { getCompletionSuggestions } from 'backend/productRecommendations.web';
+import { getCartFinancing } from 'backend/financingCalc.web';
 import { getRecentlyViewed } from 'public/galleryHelpers';
 import {
   getCurrentCart,
@@ -38,6 +39,7 @@ async function initCartPage() {
     // Pass fetched cart to avoid redundant API calls
     updateShippingProgressFromCart(cart);
     updateTierProgressFromCart(cart);
+    updateCartFinancingFromCart(cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     initQuantityControls();
@@ -250,6 +252,65 @@ async function loadCartSuggestions(cart) {
   }
 }
 
+// ── Financing Options Display ──────────────────────────────────────
+// Shows BNPL and monthly payment options based on cart total
+
+async function updateCartFinancing(cart) {
+  try {
+    const currentCart = cart || await getCurrentCart();
+    if (!currentCart) return;
+    updateCartFinancingFromCart(currentCart);
+  } catch (e) {}
+}
+
+async function updateCartFinancingFromCart(currentCart) {
+  try {
+    const subtotal = currentCart.totals?.subtotal || 0;
+    const section = $w('#cartFinancingSection');
+    if (!section) return;
+
+    if (subtotal <= 0) { section.collapse(); return; }
+
+    const result = await getCartFinancing(subtotal);
+    if (!result.success) { section.collapse(); return; }
+
+    section.expand();
+
+    // Threshold message (e.g., "Add $50 more to unlock financing")
+    try {
+      const thresholdEl = $w('#financingThreshold');
+      if (thresholdEl && result.thresholdMessage) {
+        thresholdEl.text = result.thresholdMessage;
+        thresholdEl.show();
+      } else if (thresholdEl) {
+        thresholdEl.hide();
+      }
+    } catch (e) {}
+
+    // Lowest monthly teaser
+    try {
+      const teaserEl = $w('#cartFinancingTeaser');
+      if (teaserEl && result.financing.lowestMonthly) {
+        teaserEl.text = result.financing.lowestMonthly;
+        teaserEl.show();
+      } else if (teaserEl) {
+        teaserEl.hide();
+      }
+    } catch (e) {}
+
+    // Afterpay message
+    try {
+      const afterpayEl = $w('#cartAfterpayMessage');
+      if (afterpayEl && result.afterpay.eligible) {
+        afterpayEl.text = result.afterpay.message;
+        afterpayEl.show();
+      } else if (afterpayEl) {
+        afterpayEl.hide();
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
 // ── Quantity Controls ───────────────────────────────────────────────
 // +/- buttons for quantity adjustment
 
@@ -317,6 +378,7 @@ function initCartListeners() {
   onCartChanged(() => {
     updateShippingProgress();
     updateTierProgress();
+    updateCartFinancing();
     loadCartSuggestions();
     loadRecentlyViewed();
   });
@@ -332,5 +394,6 @@ async function refreshCartTotals() {
       try { $w('#cartTotal').text = fmt(currentCart.totals.total); } catch (e) {}
     }
     await updateShippingProgress();
+    await updateCartFinancing();
   } catch (e) {}
 }
