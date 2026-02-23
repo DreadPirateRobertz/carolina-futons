@@ -1,6 +1,6 @@
 # cfutons (Carolina Futons) — Report to Human
 
-**Last Updated:** 2026-02-23 12:30 MST (melania, Production Manager)
+**Last Updated:** 2026-02-23 12:55 MST (rennala, Crew Worker)
 **Repo:** git@github.com:DreadPirateRobertz/carolina-futons.git
 
 ---
@@ -9,33 +9,37 @@
 
 | Metric | Value |
 |--------|-------|
-| Tests | 3,749+ vitest tests across 100+ files (all green) |
-| Backend Modules | 67+ `.web.js` modules |
-| Page Code | 28 page JS files (new: Returns, Admin Returns, Style Quiz) |
+| Tests | 4,178 vitest tests across 112 files (all green) |
+| Backend Modules | 71 `.web.js` modules |
+| Page Code | 28 page JS files |
 | Frontend Utils | 26+ public JS modules |
 | CMS Collections | 16 priority + 50 auto-created |
 | Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
 
 ---
 
-## CHANGES SINCE LAST REPORT (2026-02-22)
+## CHANGES SINCE LAST REPORT (2026-02-23 12:30)
 
-### New Code on Main
-- Self-service returns portal (returnsService extended, Returns.js, Admin Returns.js)
-- Financing calculator with NaN guards (financingCalc.web.js)
-- Accessibility audit module (accessibility.web.js)
-- Social proof toasts (socialProof.web.js)
-- Style Quiz page
-- Content import pipeline (contentImport.web.js, 576 lines)
-- safeParse utility for JSON.parse hardening
-- Promise.allSettled patterns + tests
-- 5 stale MD files removed (consolidated into MASTER-HOOKUP.md)
+### New Code on Main (rennala)
 
-### Radahn's Stability Audit (report_from_radahn.md)
-- Found 1,426 silent catch blocks (zero error visibility)
-- 11 new bead proposals filed (5 stability, 6 feature)
-- Site assessed at 85-90% feature-complete
-- cf-2lm (safeParse utility) already landed
+**Marketing Launch Toolkit (CF-74x) — COMPLETE**
+- `emailTemplates.web.js` — 13-template registry across 5 sequences (welcome, cart recovery, promotional, post-purchase, re-engagement). Subject line resolver, variable validation, promotional queue.
+- `socialMediaKit.web.js` — Share URL generators (Facebook, Twitter, Pinterest, LinkedIn, email), social meta validator with per-platform scoring (OG/Twitter/Pinterest), product readiness checker, feed status dashboard.
+- `analyticsDashboard.web.js` — Conversion funnel (views→cart→purchase), top converters, category performance, email metrics, revenue attribution, unified dashboard summary.
+- 102 new tests across 3 test files.
+
+**Customer Reviews Unified API (CF-gp3) — COMPLETE**
+- `productReviews.web.js` — Unified facade over reviewsService + photoReviews. Combined review summary (star + photo), unified review feed with 5 sort modes + star filter + pagination, review highlights for product cards, batch summaries for listing pages, combined moderation queue.
+- 38 new tests.
+
+### Other Crew Work Landed
+- a11yHelpers.js improvements (godfrey)
+- Page code updates across 12 pages (godfrey)
+- LiveChat + ProductDetails + ProductFinancing enhancements
+
+### Previous Session (2026-02-22)
+- Self-service returns portal, financing calc, accessibility audit, social proof, Style Quiz, content import pipeline, safeParse, Promise.allSettled, MD consolidation
+- Radahn stability audit: 1,426 silent catch blocks identified, 11 beads filed
 
 ---
 
@@ -76,11 +80,11 @@ All feeds are LIVE — code generates them automatically from your product catal
 ### cfutons
 | Member | Status | Current/Last Work |
 |--------|--------|-------------------|
-| melania | ACTIVE | MD audit, social hookup, cleanup |
-| godfrey | cf-5js | WCAG 2.1 AA accessibility |
-| rennala | cf-dhu | Customer reviews + photo upload |
-| radahn | cf-dth | Returns + stability audit |
-| miquella | cf-ist | Financing calculator + BNPL |
+| melania | ACTIVE | Production management, bead coordination |
+| godfrey | ACTIVE | WCAG 2.1 AA accessibility, page code updates |
+| rennala | ACTIVE | Marketing launch toolkit (DONE), customer reviews (DONE) |
+| radahn | ACTIVE | Stability audit, reviews work |
+| miquella | cf-utqo | Product image pipeline |
 
 ### cfutons_mobile (AR Camera)
 | Member | Last Commit | Work |
