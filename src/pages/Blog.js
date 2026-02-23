@@ -6,6 +6,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
@@ -152,6 +153,7 @@ function initBlogNewsletter() {
 
         try { $w('#blogNewsletterSuccess').show(); } catch (e) {}
         try { $w('#blogNewsletterError').hide(); } catch (e) {}
+        fireCustomEvent('newsletter_signup', { source: 'blog' });
         announce($w, 'Successfully subscribed to newsletter');
         emailInput.value = '';
       } catch (err) {

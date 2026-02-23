@@ -3,6 +3,7 @@
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
+import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -30,8 +31,15 @@ $w.onReady(async function () {
       console.error(`[ThankYou] Section "${sections[i].name}" failed:`, result.reason);
     }
   });
-  // Track purchase completion in engagement funnel
-  trackPurchaseComplete('', 0);
+  // Track purchase completion in engagement funnel + GA4/Meta Pixel
+  const wixWindow = await import('wix-window-frontend');
+  const orderCtx = wixWindow.lightbox?.getContext?.() || null;
+  trackPurchaseComplete(orderCtx?.orderId || '', orderCtx?.total || 0);
+  firePurchase({
+    _id: orderCtx?.orderId || '',
+    lineItems: orderCtx?.lineItems || [],
+    totals: { total: orderCtx?.total || 0 },
+  });
 
   // Mark browse session as converted to cancel recovery emails
   try {
@@ -215,6 +223,7 @@ function initNewsletterSignup() {
             labelKeys: ['custom.newsletter'],
           });
           trackNewsletterSignup('thank_you_page');
+          fireCustomEvent('newsletter_signup', { source: 'thank_you_page' });
           $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
           $w('#newsletterSuccess').show();
           $w('#newsletterSignup').disable();

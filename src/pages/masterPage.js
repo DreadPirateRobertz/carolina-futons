@@ -8,6 +8,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { fireCustomEvent } from 'public/ga4Tracking';
 import { typography } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
@@ -316,6 +317,7 @@ function initFooterNewsletter() {
         } catch (e) {}
 
         trackEvent('newsletter_signup', { source: 'footer' });
+        fireCustomEvent('newsletter_signup', { source: 'footer' });
 
         emailInput.value = '';
         submitBtn.label = 'Subscribed!';
@@ -737,6 +739,7 @@ function showExitPopup() {
           } catch (e) {}
 
           trackEvent('exit_intent_capture', { email: 'captured' });
+          fireCustomEvent('lead_capture', { source: 'exit_intent' });
 
           $w('#exitEmailInput').value = '';
           $w('#exitEmailSubmit').label = 'Sent!';

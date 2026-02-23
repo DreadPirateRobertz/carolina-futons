@@ -89,6 +89,8 @@ export default defineConfig({
       'public/mobileHelpers': path.resolve(__dirname, 'src/public/mobileHelpers.js'),
       'public/engagementTracker.js': path.resolve(__dirname, 'src/public/engagementTracker.js'),
       'public/engagementTracker': path.resolve(__dirname, 'src/public/engagementTracker.js'),
+      'public/ga4Tracking.js': path.resolve(__dirname, 'src/public/ga4Tracking.js'),
+      'public/ga4Tracking': path.resolve(__dirname, 'src/public/ga4Tracking.js'),
       'public/pwaHelpers.js': path.resolve(__dirname, 'src/public/pwaHelpers.js'),
       'public/pwaHelpers': path.resolve(__dirname, 'src/public/pwaHelpers.js'),
       'public/productCache.js': path.resolve(__dirname, 'src/public/productCache.js'),
