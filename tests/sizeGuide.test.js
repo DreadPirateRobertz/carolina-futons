@@ -5,6 +5,7 @@ import {
   checkRoomFit,
   getDimensionsByCategory,
   convertUnit,
+  getComparisonTable,
 } from '../src/backend/sizeGuide.web.js';
 
 // ── Seed Data ────────────────────────────────────────────────────
@@ -318,5 +319,108 @@ describe('convertUnit', () => {
   it('rounds to 1 decimal place', async () => {
     const result = await convertUnit(1, 'in', 'cm');
     expect(result).toBe(2.5); // 2.54 rounded to 1 decimal
+  });
+});
+
+// ── getComparisonTable ───────────────────────────────────────────
+
+describe('getComparisonTable', () => {
+  it('returns comparison table with current product first', async () => {
+    const result = await getComparisonTable('prod-frame-001');
+    expect(result.success).toBe(true);
+    expect(result.category).toBe('futon-frames');
+    expect(result.unit).toBe('in');
+    expect(result.products.length).toBeGreaterThanOrEqual(1);
+    expect(result.products[0].productId).toBe('prod-frame-001');
+    expect(result.products[0].isCurrent).toBe(true);
+    expect(result.products[0].name).toBe('Eureka Futon Frame');
+  });
+
+  it('includes similar products with dimension data', async () => {
+    // prod-no-dims is in futon-frames but has no dimensions — should be excluded from others
+    const result = await getComparisonTable('prod-frame-001');
+    expect(result.success).toBe(true);
+    // Only prod-frame-001 has dimensions in futon-frames category
+    const others = result.products.filter(p => !p.isCurrent);
+    for (const p of others) {
+      expect(p.closed).not.toBeNull();
+    }
+  });
+
+  it('returns dimension data for current product', async () => {
+    const result = await getComparisonTable('prod-frame-001');
+    const current = result.products[0];
+    expect(current.closed.width).toBe(54);
+    expect(current.closed.depth).toBe(36);
+    expect(current.closed.height).toBe(34);
+    expect(current.open.width).toBe(54);
+    expect(current.open.depth).toBe(75);
+    expect(current.weight).toBe(85);
+    expect(current.mattressSize).toBe('Full');
+  });
+
+  it('converts dimensions to centimeters', async () => {
+    const result = await getComparisonTable('prod-frame-001', 'cm');
+    expect(result.unit).toBe('cm');
+    const current = result.products[0];
+    expect(current.closed.width).toBe(Math.round(54 * 2.54 * 10) / 10);
+  });
+
+  it('returns success: false for null product ID', async () => {
+    const result = await getComparisonTable(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Product ID');
+  });
+
+  it('returns success: false for nonexistent product', async () => {
+    const result = await getComparisonTable('nonexistent');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('returns success: false when product has no category', async () => {
+    __seed('Stores/Products', [
+      ...products,
+      { _id: 'no-cat', name: 'No Category', slug: 'no-cat', collections: [] },
+    ]);
+    const result = await getComparisonTable('no-cat');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('no category');
+  });
+
+  it('respects limit parameter', async () => {
+    // Add more products with dimensions to the same category
+    const extraProducts = [];
+    const extraDims = [];
+    for (let i = 0; i < 8; i++) {
+      extraProducts.push({
+        _id: `prod-extra-${i}`, name: `Extra Frame ${i}`, slug: `extra-${i}`,
+        collections: ['futon-frames'],
+      });
+      extraDims.push({
+        _id: `dim-extra-${i}`, productId: `prod-extra-${i}`,
+        closedWidth: 50 + i, closedDepth: 35, closedHeight: 33,
+        openWidth: 50 + i, openDepth: 72, openHeight: 16,
+        weight: 70 + i, mattressSize: 'Full',
+      });
+    }
+    __seed('Stores/Products', [...products, ...extraProducts]);
+    __seed('ProductDimensions', [futonDims, murphyDims, ...extraDims]);
+
+    const result = await getComparisonTable('prod-frame-001', 'in', 3);
+    expect(result.success).toBe(true);
+    // 1 current + up to 3 others
+    expect(result.products.length).toBeLessThanOrEqual(4);
+    expect(result.products[0].isCurrent).toBe(true);
+  });
+
+  it('marks non-current products correctly', async () => {
+    const result = await getComparisonTable('prod-murphy-001');
+    expect(result.success).toBe(true);
+    expect(result.products[0].isCurrent).toBe(true);
+    expect(result.products[0].productId).toBe('prod-murphy-001');
+    for (let i = 1; i < result.products.length; i++) {
+      expect(result.products[i].isCurrent).toBe(false);
+    }
   });
 });

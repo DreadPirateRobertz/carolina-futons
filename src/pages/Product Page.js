@@ -17,7 +17,7 @@ import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliver
 import { initProductReviews } from 'public/ProductReviews.js';
 import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
-import { getProductDimensions, checkRoomFit, convertUnit } from 'backend/sizeGuide.web';
+import { getProductDimensions, checkRoomFit, convertUnit, getComparisonTable } from 'backend/sizeGuide.web';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { announce } from 'public/a11yHelpers.js';
@@ -86,6 +86,7 @@ async function initProductPage() {
     initProductInfoAccordion($w);
     initDimensionDisplay($w, state);
     initRoomFitChecker($w, state);
+    initSizeComparisonTable($w, state);
     initInventoryDisplay($w, state);
 
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
@@ -281,6 +282,86 @@ function displayFitResults($w, result) {
     try { $w('#fitResultSection').show(); } catch (e) {}
     try { $w('#fitResultSection').accessibility.ariaLive = 'polite'; } catch (e) {}
     announce($w, lines[0]);
+  } catch (e) {}
+}
+
+// ── Size Comparison Table ─────────────────────────────────────────────
+
+async function initSizeComparisonTable($w, state) {
+  try {
+    if (!state.product) return;
+
+    const data = await getComparisonTable(state.product._id, _currentUnit, 5);
+
+    if (!data.success || data.products.length < 2) {
+      try { $w('#sizeCompareSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $w('#sizeCompareSection').expand(); } catch (e) {}
+    try { $w('#sizeCompareTitle').text = 'Compare Sizes'; } catch (e) {}
+    try { $w('#sizeCompareTitle').accessibility.ariaLabel = 'Size comparison table for similar products'; } catch (e) {}
+
+    renderSizeComparisonTable($w, data);
+  } catch (e) {}
+}
+
+function renderSizeComparisonTable($w, data) {
+  try {
+    const repeater = $w('#sizeCompareRepeater');
+    if (!repeater) return;
+
+    const unit = data.unit === 'cm' ? 'cm' : '"';
+    const fmt = (v) => v != null ? `${v}${unit}` : '—';
+
+    repeater.data = data.products.map(p => ({
+      _id: p.productId,
+      ...p,
+    }));
+
+    repeater.onItemReady(($item, itemData) => {
+      try {
+        $item('#compareProductName').text = itemData.name;
+        if (itemData.isCurrent) {
+          try { $item('#compareProductName').style.fontWeight = 'bold'; } catch (e) {}
+          try { $item('#compareCurrentBadge').show(); } catch (e) {}
+        } else {
+          try { $item('#compareCurrentBadge').hide(); } catch (e) {}
+        }
+      } catch (e) {}
+
+      // Closed dimensions
+      try {
+        $item('#compareClosedDims').text = itemData.closed
+          ? `${fmt(itemData.closed.width)} W × ${fmt(itemData.closed.depth)} D × ${fmt(itemData.closed.height)} H`
+          : '—';
+      } catch (e) {}
+
+      // Open dimensions
+      try {
+        $item('#compareOpenDims').text = itemData.open
+          ? `${fmt(itemData.open.width)} W × ${fmt(itemData.open.depth)} D × ${fmt(itemData.open.height)} H`
+          : '—';
+      } catch (e) {}
+
+      // Weight
+      try {
+        $item('#compareWeight').text = itemData.weight ? `${itemData.weight} lbs` : '—';
+      } catch (e) {}
+
+      // Mattress size
+      try {
+        $item('#compareMattressSize').text = itemData.mattressSize || '—';
+      } catch (e) {}
+
+      // Navigate to product on click (unless current)
+      if (!itemData.isCurrent && itemData.slug) {
+        try {
+          const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+          $item('#compareProductName').onClick(nav);
+        } catch (e) {}
+      }
+    });
   } catch (e) {}
 }
 

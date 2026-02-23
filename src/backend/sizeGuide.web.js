@@ -236,6 +236,116 @@ export const getDimensionsByCategory = webMethod(
   }
 );
 
+// ─── getComparisonTable ──────────────────────────────────────────
+
+/**
+ * Get a dimension comparison table for products in the same category.
+ * Returns the current product's dimensions alongside similar products
+ * for side-by-side size comparison.
+ *
+ * @param {string} productId - Wix product ID
+ * @param {string} [unit='in'] - 'in' for inches, 'cm' for centimeters
+ * @param {number} [limit=5] - Max number of similar products to include
+ * @returns {Promise<Object>} Comparison table data
+ * @permission Anyone — public product info
+ */
+export const getComparisonTable = webMethod(
+  Permissions.Anyone,
+  async (productId, unit = 'in', limit = 5) => {
+    try {
+      if (!productId) {
+        return { success: false, error: 'Product ID required' };
+      }
+
+      // Get the current product to find its category
+      const productResult = await wixData.query('Stores/Products')
+        .eq('_id', productId)
+        .limit(1)
+        .find();
+
+      if (productResult.items.length === 0) {
+        return { success: false, error: 'Product not found' };
+      }
+
+      const product = productResult.items[0];
+      const category = (product.collections || [])[0];
+      if (!category) {
+        return { success: false, error: 'Product has no category' };
+      }
+
+      // Get all products in the same category
+      const categoryProducts = await wixData.query('Stores/Products')
+        .hasSome('collections', [category])
+        .limit(100)
+        .find();
+
+      if (categoryProducts.items.length === 0) {
+        return { success: true, category, products: [], columns: [] };
+      }
+
+      const categoryProductIds = categoryProducts.items.map(p => p._id);
+      const dimResults = await wixData.query('ProductDimensions')
+        .hasSome('productId', categoryProductIds)
+        .limit(100)
+        .find();
+
+      const dimMap = {};
+      for (const d of dimResults.items) {
+        dimMap[d.productId] = d;
+      }
+
+      // Build rows: current product first, then others with dimensions
+      const convert = (val) => {
+        if (typeof val !== 'number') return null;
+        return unit === 'cm' ? Math.round(val * CM_PER_INCH * 10) / 10 : val;
+      };
+
+      const buildEntry = (prod, dims) => ({
+        productId: prod._id,
+        name: prod.name,
+        slug: prod.slug,
+        isCurrent: prod._id === productId,
+        closed: dims ? {
+          width: convert(dims.closedWidth),
+          depth: convert(dims.closedDepth),
+          height: convert(dims.closedHeight),
+        } : null,
+        open: dims ? {
+          width: convert(dims.openWidth),
+          depth: convert(dims.openDepth),
+          height: convert(dims.openHeight),
+        } : null,
+        weight: dims?.weight || null,
+        mattressSize: dims?.mattressSize || null,
+      });
+
+      // Current product first
+      const currentDims = dimMap[productId];
+      const entries = [buildEntry(product, currentDims)];
+
+      // Add similar products (those with dimension data, excluding current)
+      const safeLimit = Math.min(Math.max(1, limit), 10);
+      const others = categoryProducts.items
+        .filter(p => p._id !== productId && dimMap[p._id])
+        .slice(0, safeLimit);
+
+      for (const p of others) {
+        entries.push(buildEntry(p, dimMap[p._id]));
+      }
+
+      return {
+        success: true,
+        category,
+        unit: unit === 'cm' ? 'cm' : 'in',
+        products: entries,
+      };
+    } catch (err) {
+      console.error('Error building comparison table:', err);
+      return { success: false, error: 'Failed to build comparison table' };
+    }
+  }
+);
+
 // ─── convertUnit ─────────────────────────────────────────────────
 
 /**
