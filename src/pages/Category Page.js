@@ -15,6 +15,7 @@ import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
 import { announce } from 'public/a11yHelpers.js';
+import { initCategorySocialProof } from 'public/socialProofToast';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -85,6 +86,9 @@ $w.onReady(async function () {
   initBackToTop($w);
   restoreFiltersFromUrl(currentPath);
   trackEvent('page_view', { page: 'category', category: currentPath });
+
+  // Social proof toast (non-blocking, delayed)
+  initCategorySocialProof($w, currentPath).catch(() => {});
 });
 
 // ── Category Hero ────────────────────────────────────────────────────

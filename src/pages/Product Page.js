@@ -21,6 +21,7 @@ import { getProductDimensions, checkRoomFit, convertUnit, getComparisonTable } f
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { announce } from 'public/a11yHelpers.js';
+import { initProductSocialProof } from 'public/socialProofToast';
 
 const state = {
   product: null,
@@ -109,6 +110,9 @@ async function initProductPage() {
     collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
     initBackToTop($w);
     initBrowseTracking(state);
+
+    // Social proof toast (non-blocking, delayed)
+    initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});
   } catch (err) {
     console.error('Error initializing product page:', err);
   }
