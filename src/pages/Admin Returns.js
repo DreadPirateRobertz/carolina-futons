@@ -27,19 +27,23 @@ $w.onReady(async function () {
 async function loadDashboard() {
   showLoading(true);
   try {
-    const [returnsResult, statsResult] = await Promise.all([
+    const [returnsSettled, statsSettled] = await Promise.allSettled([
       getAdminReturns({ status: _currentFilter || undefined }),
       getReturnStats(),
     ]);
 
-    if (returnsResult.success) {
-      _returns = sortAdminReturns((returnsResult.returns || []).map(formatAdminReturnRow));
+    if (returnsSettled.status === 'fulfilled' && returnsSettled.value.success) {
+      _returns = sortAdminReturns((returnsSettled.value.returns || []).map(formatAdminReturnRow));
       renderReturnsList();
+    } else if (returnsSettled.status === 'rejected') {
+      console.error('[AdminReturns] Failed to load returns:', returnsSettled.reason);
     }
 
-    if (statsResult.success) {
-      _stats = statsResult.stats;
+    if (statsSettled.status === 'fulfilled' && statsSettled.value.success) {
+      _stats = statsSettled.value.stats;
       renderStats();
+    } else if (statsSettled.status === 'rejected') {
+      console.error('[AdminReturns] Failed to load stats:', statsSettled.reason);
     }
   } catch (err) {
     console.error('[AdminReturns] Load error:', err);

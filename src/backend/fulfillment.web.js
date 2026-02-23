@@ -196,8 +196,13 @@ export const updateAllTracking = webMethod(
         }
       }
 
-      await Promise.all(updates);
-      return { success: true, updated: updates.length };
+      const results = await Promise.allSettled(updates);
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected');
+      failed.forEach(r => {
+        console.error('[Fulfillment] Tracking update failed:', r.reason);
+      });
+      return { success: true, updated: succeeded, failed: failed.length };
     } catch (err) {
       console.error('Error batch updating tracking:', err);
       return { success: false, error: err.message };

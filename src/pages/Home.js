@@ -23,18 +23,36 @@ const CATEGORIES = [
 ];
 
 $w.onReady(async function () {
-  await Promise.all([
-    loadFeaturedProducts(),
-    loadSaleHighlights(),
-    initCategoryShowcase(),
-    initHeroAnimation(),
-    injectHomeSchemas(),
-    initRecentlyViewed(),
-    initTrustBar(),
-    initTestimonials(),
-    initVideoShowcase(),
-    initQuizCTA(),
-  ]);
+  const sections = [
+    { name: 'featuredProducts', init: loadFeaturedProducts },
+    { name: 'saleHighlights', init: loadSaleHighlights },
+    { name: 'categoryShowcase', init: initCategoryShowcase },
+    { name: 'heroAnimation', init: initHeroAnimation },
+    { name: 'homeSchemas', init: injectHomeSchemas },
+    { name: 'recentlyViewed', init: initRecentlyViewed },
+    { name: 'trustBar', init: initTrustBar },
+    { name: 'testimonials', init: initTestimonials },
+    { name: 'videoShowcase', init: initVideoShowcase },
+    { name: 'quizCTA', init: initQuizCTA },
+  ];
+
+  const results = await Promise.allSettled(sections.map(s => s.init()));
+
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      console.error(`[Home] Section "${sections[i].name}" failed:`, result.reason);
+      import('backend/errorMonitoring.web').then(({ logError }) => {
+        logError({
+          message: `Home page section "${sections[i].name}" failed to load`,
+          stack: result.reason?.stack || String(result.reason),
+          page: 'Home',
+          context: `onReady/${sections[i].name}`,
+          severity: 'error',
+        });
+      }).catch(() => {});
+    }
+  });
+
   initSmoothScroll();
   initBackToTop($w);
   trackEvent('page_view', { page: 'home' });

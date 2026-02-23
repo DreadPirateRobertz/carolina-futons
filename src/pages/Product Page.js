@@ -58,26 +58,43 @@ async function initProductPage() {
     cacheProduct(state.product);
     trackProductPageView(state.product);
 
-    await Promise.all([
-      initVariantSelector($w, state),
-      initSwatchSelector($w, state),
-      loadRelatedProducts(),
-      loadCollectionProducts(),
-      loadRecentlyViewed(),
-      injectProductSchema($w, state),
-      initImageGallery($w, state),
-      initBreadcrumbs($w, state),
-      initAddToCartEnhancements($w, state),
-      initQuantitySelector($w, state),
-      initProductBadge($w, state),
-      initProductVideo($w, state),
-      initBundleSection($w, state),
-      initStockUrgency($w, state),
-      initBackInStockNotification($w, state),
-      initWishlistButton($w, state),
-      initProductReviews($w, state),
-      initFinancingOptions($w, state),
-    ]);
+    const productSections = [
+      { name: 'variantSelector', init: () => initVariantSelector($w, state) },
+      { name: 'swatchSelector', init: () => initSwatchSelector($w, state) },
+      { name: 'relatedProducts', init: loadRelatedProducts },
+      { name: 'collectionProducts', init: loadCollectionProducts },
+      { name: 'recentlyViewed', init: loadRecentlyViewed },
+      { name: 'productSchema', init: () => injectProductSchema($w, state) },
+      { name: 'imageGallery', init: () => initImageGallery($w, state) },
+      { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state) },
+      { name: 'addToCart', init: () => initAddToCartEnhancements($w, state) },
+      { name: 'quantitySelector', init: () => initQuantitySelector($w, state) },
+      { name: 'productBadge', init: () => initProductBadge($w, state) },
+      { name: 'productVideo', init: () => initProductVideo($w, state) },
+      { name: 'bundleSection', init: () => initBundleSection($w, state) },
+      { name: 'stockUrgency', init: () => initStockUrgency($w, state) },
+      { name: 'backInStock', init: () => initBackInStockNotification($w, state) },
+      { name: 'wishlistButton', init: () => initWishlistButton($w, state) },
+      { name: 'productReviews', init: () => initProductReviews($w, state) },
+      { name: 'financingOptions', init: () => initFinancingOptions($w, state) },
+    ];
+
+    const results = await Promise.allSettled(productSections.map(s => s.init()));
+
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error(`[ProductPage] Section "${productSections[i].name}" failed:`, result.reason);
+        import('backend/errorMonitoring.web').then(({ logError }) => {
+          logError({
+            message: `Product page section "${productSections[i].name}" failed`,
+            stack: result.reason?.stack || String(result.reason),
+            page: 'Product Page',
+            context: `initProductPage/${productSections[i].name}`,
+            severity: 'error',
+          });
+        }).catch(() => {});
+      }
+    });
 
     initSocialShare($w, state);
     initStickyCartBar($w, state);

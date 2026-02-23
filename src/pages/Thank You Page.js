@@ -10,18 +10,26 @@ import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
-  await Promise.all([
-    initOrderSummary(),
-    initBrendaMessage(),
-    initDeliveryTimeline(),
-    initSocialSharing(),
-    initNewsletterSignup(),
-    initReferralSection(),
-    loadPostPurchaseSuggestions(),
-    initPostPurchaseCareSequence(),
-    initAssemblyGuideLink(),
-    initTestimonialPrompt(),
-  ]);
+  const sections = [
+    { name: 'orderSummary', init: initOrderSummary },
+    { name: 'brendaMessage', init: initBrendaMessage },
+    { name: 'deliveryTimeline', init: initDeliveryTimeline },
+    { name: 'socialSharing', init: initSocialSharing },
+    { name: 'newsletterSignup', init: initNewsletterSignup },
+    { name: 'referralSection', init: initReferralSection },
+    { name: 'postPurchaseSuggestions', init: loadPostPurchaseSuggestions },
+    { name: 'postPurchaseCare', init: initPostPurchaseCareSequence },
+    { name: 'assemblyGuideLink', init: initAssemblyGuideLink },
+    { name: 'testimonialPrompt', init: initTestimonialPrompt },
+  ];
+
+  const results = await Promise.allSettled(sections.map(s => s.init()));
+
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      console.error(`[ThankYou] Section "${sections[i].name}" failed:`, result.reason);
+    }
+  });
   // Track purchase completion in engagement funnel
   trackPurchaseComplete('', 0);
 

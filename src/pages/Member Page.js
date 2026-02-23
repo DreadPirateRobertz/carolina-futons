@@ -31,15 +31,32 @@ async function initMemberPage() {
   try {
     currentMember = await loadCurrentMember();
 
-    await Promise.all([
-      initDashboard(),
-      initOrderHistory(),
-      initWishlist(),
-      initAccountSettings(),
-      initAddressBook(),
-      initCommunicationPrefs(),
-      initReturnsSection($w),
-    ]);
+    const sections = [
+      { name: 'dashboard', init: initDashboard },
+      { name: 'orderHistory', init: initOrderHistory },
+      { name: 'wishlist', init: initWishlist },
+      { name: 'accountSettings', init: initAccountSettings },
+      { name: 'addressBook', init: initAddressBook },
+      { name: 'communicationPrefs', init: initCommunicationPrefs },
+      { name: 'returns', init: () => initReturnsSection($w) },
+    ];
+
+    const results = await Promise.allSettled(sections.map(s => s.init()));
+
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        console.error(`[MemberPage] Section "${sections[i].name}" failed:`, result.reason);
+        import('backend/errorMonitoring.web').then(({ logError }) => {
+          logError({
+            message: `Member page section "${sections[i].name}" failed to load`,
+            stack: result.reason?.stack || String(result.reason),
+            page: 'Member Page',
+            context: `initMemberPage/${sections[i].name}`,
+            severity: 'error',
+          });
+        }).catch(() => {});
+      }
+    });
 
   } catch (err) {
     console.error('[MemberPage] Initialization error:', err);

@@ -134,7 +134,7 @@ export const getMyRegistries = webMethod(Permissions.SiteMember, async () => {
       .limit(MAX_REGISTRIES_PER_MEMBER)
       .find();
 
-    const registries = await Promise.all(result.items.map(async (r) => {
+    const settled = await Promise.allSettled(result.items.map(async (r) => {
       const itemCount = await wixData.query('GiftRegistryItems')
         .eq('registryId', r._id)
         .count();
@@ -150,6 +150,10 @@ export const getMyRegistries = webMethod(Permissions.SiteMember, async () => {
         createdDate: r._createdDate,
       };
     }));
+
+    const registries = settled
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
 
     return { success: true, data: { registries } };
   } catch (err) {
