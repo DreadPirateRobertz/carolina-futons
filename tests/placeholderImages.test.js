@@ -20,6 +20,7 @@ const ALL_CATEGORIES = [
 ];
 
 const UNSPLASH_URL_PATTERN = /^https:\/\/images\.unsplash\.com\/photo-[\w-]+\?w=\d+&h=\d+&fit=crop&crop=center$/;
+const WIXSTATIC_URL_PATTERN = /^https:\/\/static\.wixstatic\.com\/media\/e04e89_[\w]+~mv2\.\w+\/v1\/fit\/w_\d+,h_\d+,q_\d+\/file\.\w+$/;
 
 // ── getCategoryHeroImage ─────────────────────────────────────────
 
@@ -65,7 +66,7 @@ describe('getCategoryCardImage', () => {
 
   it('returns fallback for unknown category', () => {
     const url = getCategoryCardImage('unknown');
-    expect(url).toContain('unsplash.com');
+    expect(url).toContain('static.wixstatic.com');
   });
 
   it.each(ALL_CATEGORIES)('returns valid 600x400 card for %s', (cat) => {
@@ -98,23 +99,24 @@ describe('getPlaceholderProductImages', () => {
   it('falls back to futon-frames for unknown category', () => {
     const images = getPlaceholderProductImages('nonexistent', 2);
     expect(images).toHaveLength(2);
-    expect(images[0]).toContain('unsplash.com');
+    expect(images[0]).toContain('static.wixstatic.com');
   });
 
-  it('all images are 800x800', () => {
+  it('all images are 800x800 wixstatic URLs', () => {
     const images = getPlaceholderProductImages('platform-beds', 4);
     for (const url of images) {
-      expect(url).toContain('w=800');
-      expect(url).toContain('h=800');
+      expect(url).toContain('w_800');
+      expect(url).toContain('h_800');
+      expect(url).toContain('static.wixstatic.com');
     }
   });
 
-  it.each(ALL_CATEGORIES)('returns valid 800x800 product images for %s', (cat) => {
+  it.each(ALL_CATEGORIES)('returns valid wixstatic product images for %s', (cat) => {
     const images = getPlaceholderProductImages(cat, 4);
     expect(images.length).toBe(4);
     for (const url of images) {
-      expect(url).toMatch(UNSPLASH_URL_PATTERN);
-      expect(url).toContain('w=800&h=800');
+      expect(url).toMatch(WIXSTATIC_URL_PATTERN);
+      expect(url).toContain('w_800,h_800');
     }
   });
 
@@ -132,48 +134,57 @@ describe('getPlaceholderProductImages', () => {
 describe('getProductFallbackImage', () => {
   it('returns first image from category when provided', () => {
     const url = getProductFallbackImage('mattresses');
-    expect(url).toContain('unsplash.com');
+    expect(url).toContain('static.wixstatic.com');
     expect(url).toContain('800');
   });
 
   it('returns generic fallback when no category', () => {
     const url = getProductFallbackImage();
-    expect(url).toContain('unsplash.com');
+    expect(url).toContain('static.wixstatic.com');
   });
 
   it('returns generic fallback for unknown category', () => {
     const url = getProductFallbackImage('nonexistent');
-    expect(url).toContain('unsplash.com');
+    expect(url).toContain('static.wixstatic.com');
   });
 
   it.each(ALL_CATEGORIES)('returns valid fallback for %s', (cat) => {
     const url = getProductFallbackImage(cat);
-    expect(url).toMatch(UNSPLASH_URL_PATTERN);
-    expect(url).toContain('w=800&h=800');
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
+    expect(url).toContain('w_800,h_800');
   });
 });
 
 // ── getGridThumbnail ─────────────────────────────────────────────
 
 describe('getGridThumbnail', () => {
-  it('converts 800x800 to 400x400', () => {
-    const source = 'https://images.unsplash.com/photo-123?w=800&h=800&fit=crop';
+  it('converts 800x800 wixstatic to 400x400', () => {
+    const source = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
     const thumb = getGridThumbnail(source);
-    expect(thumb).toContain('w=400&h=400');
-    expect(thumb).not.toContain('w=800');
+    expect(thumb).toContain('w_400');
+    expect(thumb).toContain('h_400');
+    expect(thumb).not.toContain('w_800');
   });
 
   it('returns fallback for null input', () => {
     const thumb = getGridThumbnail(null);
-    expect(thumb).toContain('w=400&h=400');
+    expect(thumb).toContain('w_400');
+    expect(thumb).toContain('h_400');
+  });
+
+  it('handles Unsplash URLs for backwards compatibility', () => {
+    const source = 'https://images.unsplash.com/photo-123?w=800&h=800&fit=crop';
+    const thumb = getGridThumbnail(source);
+    expect(thumb).toContain('w=400');
+    expect(thumb).toContain('h=400');
   });
 
   it.each(ALL_CATEGORIES)('converts product images to grid size for %s', (cat) => {
     const images = getPlaceholderProductImages(cat, 2);
     for (const url of images) {
       const thumb = getGridThumbnail(url);
-      expect(thumb).toContain('w=400&h=400');
-      expect(thumb).not.toContain('w=800');
+      expect(thumb).toContain('w_400');
+      expect(thumb).not.toContain('w_800');
     }
   });
 });
@@ -181,23 +192,32 @@ describe('getGridThumbnail', () => {
 // ── getGalleryThumbnail ──────────────────────────────────────────
 
 describe('getGalleryThumbnail', () => {
-  it('converts 800x800 to 100x100', () => {
-    const source = 'https://images.unsplash.com/photo-123?w=800&h=800&fit=crop';
+  it('converts 800x800 wixstatic to 100x100', () => {
+    const source = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
     const thumb = getGalleryThumbnail(source);
-    expect(thumb).toContain('w=100&h=100');
+    expect(thumb).toContain('w_100');
+    expect(thumb).toContain('h_100');
   });
 
   it('returns fallback for null input', () => {
     const thumb = getGalleryThumbnail(null);
-    expect(thumb).toContain('w=100&h=100');
+    expect(thumb).toContain('w_100');
+    expect(thumb).toContain('h_100');
+  });
+
+  it('handles Unsplash URLs for backwards compatibility', () => {
+    const source = 'https://images.unsplash.com/photo-123?w=800&h=800&fit=crop';
+    const thumb = getGalleryThumbnail(source);
+    expect(thumb).toContain('w=100');
+    expect(thumb).toContain('h=100');
   });
 
   it.each(ALL_CATEGORIES)('converts product images to gallery thumbnail for %s', (cat) => {
     const images = getPlaceholderProductImages(cat, 2);
     for (const url of images) {
       const thumb = getGalleryThumbnail(url);
-      expect(thumb).toContain('w=100&h=100');
-      expect(thumb).not.toContain('w=800');
+      expect(thumb).toContain('w_100');
+      expect(thumb).not.toContain('w_800');
     }
   });
 });
