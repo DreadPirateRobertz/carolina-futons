@@ -1,8 +1,12 @@
 // Backend web module for product recommendations
-// Handles cross-sell, related products, and "Complete Your Futon" bundles
+// Handles cross-sell, related products, recently viewed, and "Complete Your Futon" bundles
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize, validateSlug } from 'backend/utils/sanitize';
+import { currentMember } from 'wix-members-backend';
+import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
+
+const RECENTLY_VIEWED_COLLECTION = 'RecentlyViewed';
+const MAX_RECENTLY_VIEWED = 20;
 
 // Get related products for cross-selling on product pages
 // Returns products from complementary categories
@@ -343,6 +347,165 @@ export const getBestsellers = webMethod(
     } catch (err) {
       console.error('Error fetching bestsellers:', err);
       return [];
+    }
+  }
+);
+
+/**
+ * Track a recently viewed product for the logged-in member.
+ * Stores in RecentlyViewed CMS collection with dedup and cap.
+ *
+ * @param {string} productId - Product viewed.
+ * @returns {Promise<{success: boolean}>}
+ *
+ * @setup
+ * Create CMS collection `RecentlyViewed` with fields:
+ *   memberId (Text, indexed), productId (Text, indexed), viewedAt (Date, indexed)
+ */
+export const trackRecentlyViewed = webMethod(
+  Permissions.SiteMember,
+  async (productId) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false };
+
+      const pid = validateId(productId);
+      if (!pid) return { success: false };
+
+      const memberId = member._id;
+
+      // Remove existing entry for this product (dedup)
+      const existing = await wixData.query(RECENTLY_VIEWED_COLLECTION)
+        .eq('memberId', memberId)
+        .eq('productId', pid)
+        .find();
+
+      for (const item of existing.items) {
+        await wixData.remove(RECENTLY_VIEWED_COLLECTION, item._id);
+      }
+
+      // Insert fresh entry
+      await wixData.insert(RECENTLY_VIEWED_COLLECTION, {
+        memberId,
+        productId: pid,
+        viewedAt: new Date(),
+      });
+
+      // Trim to max entries
+      const all = await wixData.query(RECENTLY_VIEWED_COLLECTION)
+        .eq('memberId', memberId)
+        .descending('viewedAt')
+        .limit(MAX_RECENTLY_VIEWED + 10)
+        .find();
+
+      if (all.items.length > MAX_RECENTLY_VIEWED) {
+        const toRemove = all.items.slice(MAX_RECENTLY_VIEWED);
+        for (const item of toRemove) {
+          await wixData.remove(RECENTLY_VIEWED_COLLECTION, item._id);
+        }
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('[productRecommendations] trackRecentlyViewed error:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
+ * Get recently viewed products for the logged-in member.
+ *
+ * @param {number} [limit=10] - Max products to return.
+ * @returns {Promise<{success: boolean, products: Array}>}
+ */
+export const getRecentlyViewed = webMethod(
+  Permissions.SiteMember,
+  async (limit = 10) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, products: [] };
+
+      const safeLimit = Math.max(1, Math.min(MAX_RECENTLY_VIEWED, Math.round(limit)));
+
+      const viewed = await wixData.query(RECENTLY_VIEWED_COLLECTION)
+        .eq('memberId', member._id)
+        .descending('viewedAt')
+        .limit(safeLimit)
+        .find();
+
+      if (viewed.items.length === 0) return { success: true, products: [] };
+
+      const productIds = viewed.items.map(v => v.productId);
+      const products = await wixData.query('Stores/Products')
+        .hasSome('_id', productIds)
+        .find();
+
+      // Maintain view order
+      const productMap = new Map(products.items.map(p => [p._id, p]));
+      const ordered = productIds
+        .map(id => productMap.get(id))
+        .filter(Boolean)
+        .map(formatProduct);
+
+      return { success: true, products: ordered };
+    } catch (err) {
+      console.error('[productRecommendations] getRecentlyViewed error:', err);
+      return { success: false, products: [] };
+    }
+  }
+);
+
+/**
+ * Get similar products based on same category and price range.
+ * Used on product pages for "You may also like" section.
+ *
+ * @param {string} productId - Source product.
+ * @param {Object} [options]
+ * @param {number} [options.priceRange=0.3] - Price tolerance (0.3 = +/-30% of source price).
+ * @param {number} [options.limit=4] - Max results.
+ * @returns {Promise<{success: boolean, products: Array}>}
+ */
+export const getSimilarProducts = webMethod(
+  Permissions.Anyone,
+  async (productId, options = {}) => {
+    try {
+      const pid = validateId(productId);
+      if (!pid) return { success: false, products: [] };
+
+      const product = await wixData.get('Stores/Products', pid);
+      if (!product) return { success: false, products: [] };
+
+      const { priceRange = 0.3, limit = 4 } = options;
+      const safeLimit = Math.max(1, Math.min(12, Math.round(limit)));
+      const safePriceRange = Math.max(0.1, Math.min(1, priceRange));
+
+      const price = product.price || 0;
+      const minPrice = price * (1 - safePriceRange);
+      const maxPrice = price * (1 + safePriceRange);
+
+      const collections = Array.isArray(product.collections)
+        ? product.collections
+        : product.collections ? [product.collections] : [];
+
+      let query = wixData.query('Stores/Products')
+        .ne('_id', pid)
+        .ge('price', minPrice)
+        .le('price', maxPrice);
+
+      if (collections.length > 0) {
+        query = query.hasSome('collections', collections);
+      }
+
+      const results = await query.limit(safeLimit).find();
+
+      return {
+        success: true,
+        products: results.items.map(formatProduct),
+      };
+    } catch (err) {
+      console.error('[productRecommendations] getSimilarProducts error:', err);
+      return { success: false, products: [] };
     }
   }
 );

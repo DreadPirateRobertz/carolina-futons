@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed } from './__mocks__/wix-data.js';
+import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import { allProducts, futonFrame, futonMattress, murphyBed, platformBed, casegoodsItem, wallHuggerFrame, saleProduct } from './fixtures/products.js';
 import {
   getRelatedProducts,
@@ -9,6 +10,9 @@ import {
   getSaleProducts,
   getBundleSuggestion,
   getBestsellers,
+  trackRecentlyViewed,
+  getRecentlyViewed,
+  getSimilarProducts,
 } from '../src/backend/productRecommendations.web.js';
 
 beforeEach(() => {
@@ -277,5 +281,167 @@ describe('getBestsellers', () => {
   it('respects limit parameter', async () => {
     const results = await getBestsellers(2);
     expect(results.length).toBeLessThanOrEqual(2);
+  });
+});
+
+// ── trackRecentlyViewed ────────────────────────────────────────────
+
+describe('trackRecentlyViewed', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
+  });
+
+  it('tracks a viewed product for logged-in member', async () => {
+    const result = await trackRecentlyViewed('prod-frame-001');
+    expect(result.success).toBe(true);
+  });
+
+  it('fails when not authenticated', async () => {
+    __setMember(null);
+    const result = await trackRecentlyViewed('prod-frame-001');
+    expect(result.success).toBe(false);
+  });
+
+  it('fails for invalid product ID', async () => {
+    const result = await trackRecentlyViewed('');
+    expect(result.success).toBe(false);
+  });
+
+  it('deduplicates existing entries', async () => {
+    __seed('RecentlyViewed', [
+      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2026-02-20') },
+    ]);
+
+    const result = await trackRecentlyViewed('prod-frame-001');
+    expect(result.success).toBe(true);
+  });
+});
+
+// ── getRecentlyViewed ──────────────────────────────────────────────
+
+describe('getRecentlyViewed', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
+  });
+
+  it('returns recently viewed products in order', async () => {
+    __seed('RecentlyViewed', [
+      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2026-02-22') },
+      { _id: 'rv-2', memberId: 'member-1', productId: 'prod-matt-001', viewedAt: new Date('2026-02-21') },
+    ]);
+
+    const result = await getRecentlyViewed(10);
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(2);
+    expect(result.products[0]._id).toBe('prod-frame-001');
+    expect(result.products[1]._id).toBe('prod-matt-001');
+  });
+
+  it('returns empty when no viewed products', async () => {
+    __seed('RecentlyViewed', []);
+    const result = await getRecentlyViewed();
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('fails when not authenticated', async () => {
+    __setMember(null);
+    const result = await getRecentlyViewed();
+    expect(result.success).toBe(false);
+  });
+
+  it('only returns current member views', async () => {
+    __seed('RecentlyViewed', [
+      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date() },
+      { _id: 'rv-2', memberId: 'member-2', productId: 'prod-matt-001', viewedAt: new Date() },
+    ]);
+
+    const result = await getRecentlyViewed();
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0]._id).toBe('prod-frame-001');
+  });
+
+  it('respects limit parameter', async () => {
+    __seed('RecentlyViewed', [
+      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2026-02-22') },
+      { _id: 'rv-2', memberId: 'member-1', productId: 'prod-matt-001', viewedAt: new Date('2026-02-21') },
+      { _id: 'rv-3', memberId: 'member-1', productId: 'prod-murphy-001', viewedAt: new Date('2026-02-20') },
+    ]);
+
+    const result = await getRecentlyViewed(2);
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeLessThanOrEqual(2);
+  });
+});
+
+// ── getSimilarProducts ─────────────────────────────────────────────
+
+describe('getSimilarProducts', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
+  it('returns similar products in same category and price range', async () => {
+    // Eureka frame is $499 in futon-frames
+    const result = await getSimilarProducts('prod-frame-001');
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeGreaterThan(0);
+    // Should include other futon-frames in price range
+    result.products.forEach(p => {
+      expect(p._id).not.toBe('prod-frame-001');
+    });
+  });
+
+  it('returns empty for invalid product ID', async () => {
+    const result = await getSimilarProducts('');
+    expect(result.success).toBe(false);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('returns empty for non-existent product', async () => {
+    const result = await getSimilarProducts('nonexistent-id');
+    expect(result.success).toBe(false);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('respects price range option', async () => {
+    // Eureka is $499; with 10% range = $449-$549
+    const result = await getSimilarProducts('prod-frame-001', { priceRange: 0.1 });
+    expect(result.success).toBe(true);
+    // Sale frame is also $499 but wall-hugger ($699) should be excluded at 10% range
+    result.products.forEach(p => {
+      expect(p.price).toBeGreaterThanOrEqual(449);
+      expect(p.price).toBeLessThanOrEqual(549);
+    });
+  });
+
+  it('respects limit option', async () => {
+    const result = await getSimilarProducts('prod-frame-001', { limit: 1 });
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeLessThanOrEqual(1);
+  });
+
+  it('excludes the source product', async () => {
+    const result = await getSimilarProducts('prod-frame-001', { priceRange: 1 });
+    expect(result.success).toBe(true);
+    const ids = result.products.map(p => p._id);
+    expect(ids).not.toContain('prod-frame-001');
+  });
+
+  it('returns formatted product objects', async () => {
+    const result = await getSimilarProducts('prod-frame-001');
+    if (result.products.length > 0) {
+      const p = result.products[0];
+      expect(p).toHaveProperty('_id');
+      expect(p).toHaveProperty('name');
+      expect(p).toHaveProperty('price');
+      expect(p).toHaveProperty('collections');
+    }
   });
 });

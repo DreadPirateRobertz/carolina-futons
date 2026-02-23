@@ -1,4 +1,4 @@
-# Caesar — Carolina Futons Crew Member
+# Rennala — Carolina Futons Crew Member
 
 Run `gt prime` on startup for full context.
 
