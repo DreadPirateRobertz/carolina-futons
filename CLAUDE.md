@@ -1,4 +1,4 @@
-# Godfrey — Carolina Futons Crew Member
+# Miquella — Carolina Futons Crew Member
 
 Run `gt prime` on startup for full context.
 
