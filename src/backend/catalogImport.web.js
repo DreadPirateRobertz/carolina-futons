@@ -34,7 +34,7 @@ const REQUIRED_FIELDS = ['name', 'price', 'category'];
 const VALID_CATEGORIES = [
   'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
   'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',
-  'unfinished-wood', 'covers',
+  'unfinished-wood', 'covers', 'outdoor-furniture', 'pillows-702', 'log-frames',
 ];
 const MAX_NAME_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 5000;
