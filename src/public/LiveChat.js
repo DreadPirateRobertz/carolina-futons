@@ -93,6 +93,22 @@ function initChatToggle($w) {
       });
     } catch (e) {}
 
+    // Escape key closes chat
+    if (typeof document !== 'undefined') {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          try {
+            const widget = $w('#chatWidget');
+            if (!widget.hidden) {
+              widget.hide('slide', { direction: 'bottom', duration: 300 });
+              try { $w('#chatToggleBtn').label = '💬'; } catch (e2) {}
+              try { $w('#chatToggleBtn').focus(); } catch (e2) {}
+            }
+          } catch (e2) {}
+        }
+      });
+    }
+
     // Keep widget collapsed initially
     try { $w('#chatWidget').hide(); } catch (e) {}
   } catch (e) {}

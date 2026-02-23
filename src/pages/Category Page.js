@@ -14,7 +14,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 
 let currentSort = 'bestselling';
@@ -395,8 +395,8 @@ function initProductGrid() {
         });
       };
 
-      $item('#gridImage').onClick(navigateToProduct);
-      $item('#gridName').onClick(navigateToProduct);
+      makeClickable($item('#gridImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#gridName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` });
 
       // Fabric swatch preview dots (3-4 color circles)
       initGridSwatchPreview($item, itemData);
@@ -680,8 +680,8 @@ function initRecentlyViewed() {
         });
       };
 
-      try { $item('#recentImage').onClick(navigateToProduct); } catch (e) {}
-      try { $item('#recentName').onClick(navigateToProduct); } catch (e) {}
+      try { makeClickable($item('#recentImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}` }); } catch (e) {}
+      try { makeClickable($item('#recentName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` }); } catch (e) {}
     });
 
     $w('#recentlyViewedSection').show();

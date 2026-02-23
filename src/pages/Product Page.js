@@ -20,7 +20,7 @@ import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, ini
 import { getProductDimensions, checkRoomFit, convertUnit, getComparisonTable } from 'backend/sizeGuide.web';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 
 const state = {
@@ -379,7 +379,7 @@ function renderSizeComparisonTable($w, data) {
       if (!itemData.isCurrent && itemData.slug) {
         try {
           const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-          $item('#compareProductName').onClick(nav);
+          makeClickable($item('#compareProductName'), nav, { ariaLabel: `View ${itemData.name}`, role: 'link' });
         } catch (e) {}
       }
     });
@@ -407,8 +407,8 @@ async function loadRelatedProducts() {
         try { $item('#relatedBadge').text = itemData.ribbon; $item('#relatedBadge').show(); } catch (e) {}
       }
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-      $item('#relatedImage').onClick(nav);
-      $item('#relatedName').onClick(nav);
+      makeClickable($item('#relatedImage'), nav, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#relatedName'), nav, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = related;
   } catch (err) { console.error('Error loading related products:', err); }
@@ -429,8 +429,8 @@ async function loadCollectionProducts() {
       $item('#collectionName').text = itemData.name;
       $item('#collectionPrice').text = itemData.formattedPrice;
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-      $item('#collectionImage').onClick(nav);
-      $item('#collectionName').onClick(nav);
+      makeClickable($item('#collectionImage'), nav, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#collectionName'), nav, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = products;
   } catch (err) { console.error('Error loading collection products:', err); }
@@ -456,8 +456,8 @@ async function loadRecentlyViewed() {
       $item('#recentName').text = itemData.name;
       $item('#recentPrice').text = itemData.price;
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-      $item('#recentImage').onClick(nav);
-      $item('#recentName').onClick(nav);
+      makeClickable($item('#recentImage'), nav, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#recentName'), nav, { ariaLabel: `View ${itemData.name} details` });
     });
   } catch (e) {}
 }
@@ -488,6 +488,7 @@ async function initInventoryDisplay($w, state) {
           badge.style.color = colors.success;
         }
         try { badge.accessibility.ariaLabel = `Stock status: ${badge.text}`; } catch (e) {}
+        try { badge.accessibility.ariaLive = 'polite'; } catch (e) {}
       }
     } catch (e) {}
 

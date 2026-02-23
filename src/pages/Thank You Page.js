@@ -5,7 +5,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
@@ -300,12 +300,11 @@ async function loadPostPurchaseSuggestions() {
       $item('#ppName').text = itemData.name;
       $item('#ppPrice').text = itemData.formattedPrice;
 
-      try { $item('#ppImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-      $item('#ppImage').onClick(() => {
+      makeClickable($item('#ppImage'), () => {
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
-      });
+      }, { ariaLabel: `View ${itemData.name}` });
     });
     repeater.data = limitForViewport(products, { mobile: 2, tablet: 3, desktop: 4 });
   } catch (err) {

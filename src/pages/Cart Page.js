@@ -15,7 +15,7 @@ import {
 } from 'public/cartService';
 import { initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -178,8 +178,8 @@ async function loadRecentlyViewed(cart) {
             to(`/product-page/${itemData.slug}`);
           });
         };
-        try { $item('#cartRecentImage').onClick(navigate); } catch (e) {}
-        try { $item('#cartRecentName').onClick(navigate); } catch (e) {}
+        try { makeClickable($item('#cartRecentImage'), navigate, { ariaLabel: `View ${itemData.name}` }); } catch (e) {}
+        try { makeClickable($item('#cartRecentName'), navigate, { ariaLabel: `View ${itemData.name} details` }); } catch (e) {}
       });
     }
   } catch (e) {}
@@ -243,8 +243,8 @@ async function loadCartSuggestions(cart) {
           to(`/product-page/${itemData.slug}`);
         });
       };
-      $item('#sugImage').onClick(navigate);
-      $item('#sugName').onClick(navigate);
+      makeClickable($item('#sugImage'), navigate, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#sugName'), navigate, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = suggestion.products;
   } catch (err) {

@@ -87,13 +87,22 @@ function initFaqAccordion() {
       try { $item('#faqToggle').accessibility.ariaLabel = `Toggle answer: ${itemData.question}`; } catch (e) {}
       try { $item('#faqToggle').accessibility.ariaExpanded = false; } catch (e) {}
 
-      // Toggle on click
-      $item('#faqQuestion').onClick(() => {
-        toggleFaqItem($item, itemData.question);
-      });
-      $item('#faqToggle').onClick(() => {
-        toggleFaqItem($item, itemData.question);
-      });
+      // Toggle on click and keyboard (Enter/Space)
+      const toggle = () => toggleFaqItem($item, itemData.question);
+      $item('#faqQuestion').onClick(toggle);
+      $item('#faqToggle').onClick(toggle);
+      try {
+        $item('#faqQuestion').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') toggle();
+        });
+        $item('#faqQuestion').accessibility.tabIndex = 0;
+      } catch (e) {}
+      try {
+        $item('#faqToggle').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') toggle();
+        });
+        $item('#faqToggle').accessibility.tabIndex = 0;
+      } catch (e) {}
     });
     repeater.data = FAQ_DATA;
   } catch (e) {}

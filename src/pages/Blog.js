@@ -6,7 +6,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -62,10 +62,9 @@ async function initRelatedProductsSidebar() {
         $item('#sidebarProductImage').alt = itemData.name || 'Product';
         $item('#sidebarProductName').text = itemData.name || '';
         $item('#sidebarProductPrice').text = itemData.formattedPrice || '';
-        $item('#sidebarProductLink').onClick(() => {
+        makeClickable($item('#sidebarProductLink'), () => {
           wixLocationFrontend.to(`/product-page/${itemData.slug}`);
-        });
-        try { $item('#sidebarProductLink').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
+        }, { ariaLabel: `View ${itemData.name}` });
       } catch (e) {}
     });
 

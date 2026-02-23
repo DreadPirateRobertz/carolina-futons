@@ -3,6 +3,7 @@ import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqS
 import { submitSwatchRequest } from 'backend/emailService.web';
 import { getCategoryFromCollections, addBusinessDays } from 'public/productPageUtils.js';
 import { trackSocialShare } from 'public/engagementTracker';
+import { makeClickable } from 'public/a11yHelpers';
 
 // ── Breadcrumbs ───────────────────────────────────────────────────────
 
@@ -12,9 +13,9 @@ export async function initBreadcrumbs($w, state) {
     const category = getCategoryFromCollections(state.product.collections);
     try {
       $w('#breadcrumb1').text = 'Home';
-      $w('#breadcrumb1').onClick(() => { import('wix-location-frontend').then(({ to }) => to('/')); });
+      makeClickable($w('#breadcrumb1'), () => { import('wix-location-frontend').then(({ to }) => to('/')); }, { ariaLabel: 'Go to home page', role: 'link' });
       $w('#breadcrumb2').text = category.label;
-      $w('#breadcrumb2').onClick(() => { import('wix-location-frontend').then(({ to }) => to(category.path)); });
+      makeClickable($w('#breadcrumb2'), () => { import('wix-location-frontend').then(({ to }) => to(category.path)); }, { ariaLabel: `Browse ${category.label}`, role: 'link' });
       $w('#breadcrumb3').text = state.product.name;
     } catch (e) {}
     const schema = await getBreadcrumbSchema([
@@ -47,7 +48,7 @@ export function initProductInfoAccordion($w) {
           try { $w(`#infoArrow${section}`).text = '+'; } catch (e) {}
           try { header.accessibility.ariaExpanded = false; } catch (e) {}
         }
-        header.onClick(() => {
+        const toggleSection = () => {
           if (openStates[section]) {
             content.collapse(); openStates[section] = false;
             try { $w(`#infoArrow${section}`).text = '+'; } catch (e) {}
@@ -57,7 +58,13 @@ export function initProductInfoAccordion($w) {
             try { $w(`#infoArrow${section}`).text = '\u2212'; } catch (e) {}
             try { header.accessibility.ariaExpanded = true; } catch (e) {}
           }
-        });
+        };
+        header.onClick(toggleSection);
+        try {
+          header.onKeyPress((event) => {
+            if (event.key === 'Enter' || event.key === ' ') toggleSection();
+          });
+        } catch (e) {}
       } catch (e) {}
     });
     try {
@@ -84,21 +91,21 @@ export function initSocialShare($w, state) {
     try { $w('#shareEmail').accessibility.ariaLabel = 'Share via email'; } catch (e) {}
     try { $w('#shareCopyLink').accessibility.ariaLabel = 'Copy product link'; } catch (e) {}
 
-    try { $w('#shareFacebook').onClick(() => {
+    try { makeClickable($w('#shareFacebook'), () => {
       trackSocialShare('facebook', 'product');
       import('wix-window-frontend').then(({ openUrl }) => openUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`));
     }); } catch (e) {}
-    try { $w('#sharePinterest').onClick(() => {
+    try { makeClickable($w('#sharePinterest'), () => {
       trackSocialShare('pinterest', 'product');
       import('wix-window-frontend').then(({ openUrl }) => openUrl(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(image)}&description=${encodeURIComponent(title)}`));
     }); } catch (e) {}
-    try { $w('#shareEmail').onClick(() => {
+    try { makeClickable($w('#shareEmail'), () => {
       trackSocialShare('email', 'product');
       const subject = encodeURIComponent(`Check out ${title} from Carolina Futons`);
       const body = encodeURIComponent(`I thought you might like this: ${title}\n\n${url}`);
       import('wix-window-frontend').then(({ openUrl }) => openUrl(`mailto:?subject=${subject}&body=${body}`));
     }); } catch (e) {}
-    try { $w('#shareCopyLink').onClick(() => {
+    try { makeClickable($w('#shareCopyLink'), () => {
       trackSocialShare('copy_link', 'product');
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         navigator.clipboard.writeText(url).then(() => {

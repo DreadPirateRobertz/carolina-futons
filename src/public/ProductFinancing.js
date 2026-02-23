@@ -2,6 +2,8 @@
 // Shows available payment plans on product pages with a modal breakdown.
 // Integrates with financingService.web.js backend.
 
+import { makeClickable, setupAccessibleDialog, announce } from 'public/a11yHelpers';
+
 /**
  * Initialize the financing section on a product page.
  * Shows "As low as $XX/mo" teaser and expandable plan list.
@@ -123,27 +125,30 @@ function initFinancingModal($w, plans) {
     const learnMore = $w('#financingLearnMore');
     if (!learnMore) return;
 
-    try { learnMore.accessibility.ariaLabel = 'Learn more about financing options'; } catch (e) {}
+    try { $w('#financingClose').accessibility.ariaLabel = 'Close financing details'; } catch (e) {}
 
-    learnMore.onClick(() => openFinancingModal($w, plans));
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#financingModal',
+      closeId: '#financingClose',
+      titleId: '#financingModalTitle',
+      focusableIds: ['#financingClose', '#financingDetailRepeater'],
+      onClose: () => {
+        try { $w('#financingOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+        try { learnMore.focus(); } catch (e) {}
+      },
+    });
+
+    makeClickable(learnMore, () => openFinancingModal($w, plans, dialog), { ariaLabel: 'Learn more about financing options' });
   } catch (e) {}
 
-  // Close handlers
-  try {
-    const closeBtn = $w('#financingClose');
-    if (closeBtn) {
-      try { closeBtn.accessibility.ariaLabel = 'Close financing details'; } catch (e) {}
-      closeBtn.onClick(() => closeFinancingModal($w));
-    }
-  } catch (e) {}
-
+  // Overlay click to close
   try {
     const overlay = $w('#financingOverlay');
     if (overlay) overlay.onClick(() => closeFinancingModal($w));
   } catch (e) {}
 }
 
-function openFinancingModal($w, plans) {
+function openFinancingModal($w, plans, dialog) {
   try {
     // Populate modal details repeater
     const detailRepeater = $w('#financingDetailRepeater');
@@ -172,10 +177,13 @@ function openFinancingModal($w, plans) {
 
     $w('#financingOverlay').show('fade', { duration: 200 });
     $w('#financingModal').show('fade', { duration: 200 });
+    announce($w, 'Financing details opened');
+    try { $w('#financingClose').focus(); } catch (e) {}
   } catch (e) {}
 }
 
 function closeFinancingModal($w) {
   try { $w('#financingModal').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#financingOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+  announce($w, 'Financing details closed');
 }

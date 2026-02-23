@@ -7,7 +7,7 @@ import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHel
 import { getCategoryHeroImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────
@@ -89,18 +89,10 @@ async function loadFeaturedProducts() {
         } catch (e) { /* optional elements */ }
       }
 
-      // Navigate to product page on click
-      $item('#featuredImage').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
-
-      $item('#featuredName').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
+      // Navigate to product page on click/keyboard
+      const navToProduct = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      makeClickable($item('#featuredImage'), navToProduct, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = featured;
   } catch (err) {
@@ -130,11 +122,9 @@ async function loadSaleHighlights() {
         $item('#saleOrigPrice').text = itemData.formattedPrice;
       } catch (e) {}
 
-      $item('#saleImage').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
+      makeClickable($item('#saleImage'), () => {
+        import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      }, { ariaLabel: `View ${itemData.name} on sale` });
     });
     repeater.data = saleItems;
   } catch (err) {
@@ -174,9 +164,9 @@ async function initCategoryShowcase() {
             ? `${itemData.count} Products` : '';
         } catch (e) {}
         try { $item('#categoryCardTitle').accessibility.ariaLabel = `Browse ${itemData.name}`; } catch (e) {}
-        $item('#categoryCardTitle').onClick(() => {
+        makeClickable($item('#categoryCardTitle'), () => {
           import('wix-location-frontend').then(({ to }) => to(itemData.path));
-        });
+        }, { ariaLabel: `Browse ${itemData.name}` });
       });
     }
   } catch (e) {
@@ -186,9 +176,9 @@ async function initCategoryShowcase() {
   // Also wire up individual card click handlers (backward compatible)
   categoriesWithCounts.forEach((cat) => {
     try {
-      $w(cat.elementId).onClick(() => {
+      makeClickable($w(cat.elementId), () => {
         import('wix-location-frontend').then(({ to }) => to(cat.path));
-      });
+      }, { ariaLabel: `Browse ${cat.name}` });
     } catch (e) {
       // Card element may not exist in editor
     }
@@ -215,16 +205,9 @@ async function initRecentlyViewed() {
       try { $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       try { $item('#recentName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
-      $item('#recentImage').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
-      $item('#recentName').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
-        });
-      });
+      const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${itemData.name} details` });
     });
 
     $w('#recentSection').expand();
@@ -342,12 +325,9 @@ function initVideoShowcase() {
     const videoLinks = ['#videoThumb1', '#videoThumb2', '#videoThumb3'];
     videoLinks.forEach((id, i) => {
       try {
-        $w(id).onClick(() => {
-          import('wix-location-frontend').then(({ to }) => {
-            to('/product-videos');
-          });
-        });
-        try { $w(id).accessibility.ariaLabel = `Watch product video ${i + 1}`; } catch (e) {}
+        makeClickable($w(id), () => {
+          import('wix-location-frontend').then(({ to }) => to('/product-videos'));
+        }, { ariaLabel: `Watch product video ${i + 1}` });
       } catch (e) {}
     });
 

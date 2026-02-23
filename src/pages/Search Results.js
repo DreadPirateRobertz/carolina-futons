@@ -9,7 +9,7 @@ import {
   getAutocompleteSuggestions,
   getPopularSearches,
 } from 'backend/searchService.web';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, makeClickable } from 'public/a11yHelpers.js';
 
 let _debounceTimer = null;
 let _currentQuery = '';
@@ -138,10 +138,8 @@ function renderResults(products, query) {
         to(`/product-page/${itemData.slug}`);
       });
     };
-    $item('#searchImage').onClick(navigate);
-    $item('#searchName').onClick(navigate);
-    try { $item('#searchImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-    try { $item('#searchName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
+    makeClickable($item('#searchImage'), navigate, { ariaLabel: `View ${itemData.name}` });
+    makeClickable($item('#searchName'), navigate, { ariaLabel: `View ${itemData.name} details` });
 
     // Quick add to cart
     try {

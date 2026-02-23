@@ -324,6 +324,38 @@ export function getKeyboardPattern(role) {
   return KEYBOARD_PATTERNS[role] || null;
 }
 
+// ── Clickable Element Helper ──────────────────────────────────────
+
+/**
+ * Make an element keyboard-accessible by adding onKeyPress for Enter/Space.
+ * Use this for non-button elements that have onClick handlers (images, text, etc.).
+ *
+ * @param {Object} element - Wix element with onClick and onKeyPress
+ * @param {Function} handler - Click/activate handler
+ * @param {Object} [opts]
+ * @param {string} [opts.ariaLabel] - aria-label to set
+ * @param {string} [opts.role='button'] - ARIA role
+ */
+export function makeClickable(element, handler, opts = {}) {
+  if (!element || !handler) return;
+  try { element.onClick(handler); } catch (e) {}
+  try {
+    element.onKeyPress((event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        try { event.preventDefault?.(); } catch (e) {}
+        handler();
+      }
+    });
+  } catch (e) {}
+  if (opts.role) {
+    try { element.accessibility.role = opts.role; } catch (e) {}
+  }
+  if (opts.ariaLabel) {
+    try { element.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+  }
+  try { element.accessibility.tabIndex = 0; } catch (e) {}
+}
+
 // ── Live Announcements ────────────────────────────────────────────
 
 /**
@@ -413,7 +445,25 @@ export function setupAccessibleDialog($w, config) {
   // Wire close button
   try {
     $w(closeId).onClick(close);
+    $w(closeId).onKeyPress((event) => {
+      if (event.key === 'Enter' || event.key === ' ') close();
+    });
   } catch (e) {}
+
+  // Escape key closes dialog
+  if (typeof document !== 'undefined') {
+    const escHandler = (e) => {
+      if (e.key === 'Escape') close();
+    };
+    document.addEventListener('keydown', escHandler);
+    // Store cleanup so callers can remove if needed
+    const origClose = close;
+    // eslint-disable-next-line no-func-assign
+    close = function () {
+      origClose();
+      document.removeEventListener('keydown', escHandler);
+    };
+  }
 
   return { open, close };
 }

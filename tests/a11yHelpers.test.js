@@ -23,6 +23,7 @@ import {
   initSkipNav,
   announce,
   setupAccessibleDialog,
+  makeClickable,
 } from '../src/public/a11yHelpers.js';
 
 // ── hexToRgb ────────────────────────────────────────────────────────
@@ -606,5 +607,127 @@ describe('setupAccessibleDialog', () => {
       panelId: '#modal',
       closeId: '#closeBtn',
     })).not.toThrow();
+  });
+});
+
+// ── makeClickable ──────────────────────────────────────────────────
+
+describe('makeClickable', () => {
+  it('registers onClick and onKeyPress handlers', () => {
+    let clicked = false;
+    let keyPressed = false;
+    const element = {
+      accessibility: {},
+      onClick: (fn) => { clicked = true; },
+      onKeyPress: (fn) => { keyPressed = true; },
+    };
+
+    makeClickable(element, () => {});
+    expect(clicked).toBe(true);
+    expect(keyPressed).toBe(true);
+  });
+
+  it('sets ariaLabel when provided', () => {
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: () => {},
+    };
+
+    makeClickable(element, () => {}, { ariaLabel: 'View product' });
+    expect(element.accessibility.ariaLabel).toBe('View product');
+  });
+
+  it('sets role to button by default', () => {
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: () => {},
+    };
+
+    makeClickable(element, () => {}, { role: 'button' });
+    expect(element.accessibility.role).toBe('button');
+  });
+
+  it('sets custom role when provided', () => {
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: () => {},
+    };
+
+    makeClickable(element, () => {}, { role: 'link' });
+    expect(element.accessibility.role).toBe('link');
+  });
+
+  it('sets tabIndex to 0', () => {
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: () => {},
+    };
+
+    makeClickable(element, () => {});
+    expect(element.accessibility.tabIndex).toBe(0);
+  });
+
+  it('calls handler on Enter key press', () => {
+    let handlerCalled = false;
+    let keyHandler = null;
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: (fn) => { keyHandler = fn; },
+    };
+
+    makeClickable(element, () => { handlerCalled = true; });
+    keyHandler({ key: 'Enter' });
+    expect(handlerCalled).toBe(true);
+  });
+
+  it('calls handler on Space key press', () => {
+    let handlerCalled = false;
+    let keyHandler = null;
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: (fn) => { keyHandler = fn; },
+    };
+
+    makeClickable(element, () => { handlerCalled = true; });
+    keyHandler({ key: ' ' });
+    expect(handlerCalled).toBe(true);
+  });
+
+  it('does not call handler on other keys', () => {
+    let handlerCalled = false;
+    let keyHandler = null;
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      onKeyPress: (fn) => { keyHandler = fn; },
+    };
+
+    makeClickable(element, () => { handlerCalled = true; });
+    keyHandler({ key: 'Tab' });
+    expect(handlerCalled).toBe(false);
+  });
+
+  it('does not throw with null element', () => {
+    expect(() => makeClickable(null, () => {})).not.toThrow();
+  });
+
+  it('does not throw with null handler', () => {
+    const element = { accessibility: {}, onClick: () => {}, onKeyPress: () => {} };
+    expect(() => makeClickable(element, null)).not.toThrow();
+  });
+
+  it('does not throw when onKeyPress is not available', () => {
+    const element = {
+      accessibility: {},
+      onClick: () => {},
+      // No onKeyPress method
+    };
+    expect(() => makeClickable(element, () => {})).not.toThrow();
   });
 });

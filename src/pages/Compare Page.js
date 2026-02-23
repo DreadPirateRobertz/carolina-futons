@@ -5,7 +5,7 @@ import { getCompareList, removeFromCompare, addToCompare } from 'public/galleryH
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackProductPageView } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import wixLocationFrontend from 'wix-location-frontend';
 
 let comparisonData = null;
@@ -138,12 +138,12 @@ function renderProductHeaders() {
     // Click to navigate to product
     try {
       const slug = product.slug;
-      $w(`#compareImage${idx}`).onClick(() => {
+      makeClickable($w(`#compareImage${idx}`), () => {
         wixLocationFrontend.to(`/product-page/${slug}`);
-      });
-      $w(`#compareName${idx}`).onClick(() => {
+      }, { ariaLabel: `View ${product.name}` });
+      makeClickable($w(`#compareName${idx}`), () => {
         wixLocationFrontend.to(`/product-page/${slug}`);
-      });
+      }, { ariaLabel: `View ${product.name}` });
     } catch (e) {}
 
     // ARIA

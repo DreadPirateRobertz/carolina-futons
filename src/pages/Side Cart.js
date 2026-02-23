@@ -11,7 +11,7 @@ import {
   getTierProgress,
   FREE_SHIPPING_THRESHOLD,
 } from 'public/cartService';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, makeClickable } from 'public/a11yHelpers.js';
 
 let currentSideSugProduct = null;
 
@@ -45,8 +45,24 @@ function initSideCart() {
   try {
     $w('#sideCartOverlay').onClick(() => {
       $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
+      announce($w, 'Cart closed');
     });
   } catch (e) {}
+
+  // Escape key closes side cart
+  if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        try {
+          const panel = $w('#sideCartPanel');
+          if (!panel.hidden) {
+            panel.hide('slide', { direction: 'right', duration: 300 });
+            announce($w, 'Cart closed');
+          }
+        } catch (e2) {}
+      }
+    });
+  }
 
   // View full cart button
   try {
@@ -200,6 +216,8 @@ function updateSideCartShipping(subtotal) {
       } else {
         text.text = 'FREE shipping!';
       }
+      try { text.accessibility.ariaLive = 'polite'; } catch (e) {}
+      try { text.accessibility.role = 'status'; } catch (e) {}
     }
   } catch (e) {}
 }
@@ -280,8 +298,8 @@ async function loadSideCartSuggestions(lineItems) {
             to(`/product-page/${product.slug}`);
           });
         };
-        try { $item('#sideSugImage').onClick(navigate); } catch (e) {}
-        try { $item('#sideSugName').onClick(navigate); } catch (e) {}
+        try { makeClickable($item('#sideSugImage'), navigate, { ariaLabel: `View ${product.name}` }); } catch (e) {}
+        try { makeClickable($item('#sideSugName'), navigate, { ariaLabel: `View ${product.name} details` }); } catch (e) {}
       });
     } else {
       // Fallback: if no repeater, show single suggestion in legacy elements

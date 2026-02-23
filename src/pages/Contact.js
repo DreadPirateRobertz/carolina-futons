@@ -31,10 +31,16 @@ function initContactForm() {
     if (!submitBtn) return;
 
     try { $w('#contactName').accessibility.ariaLabel = 'Your name'; } catch (e) {}
+    try { $w('#contactName').accessibility.ariaDescribedBy = 'contactNameError'; } catch (e) {}
+    try { $w('#contactName').accessibility.ariaRequired = true; } catch (e) {}
     try { $w('#contactEmail').accessibility.ariaLabel = 'Your email address'; } catch (e) {}
+    try { $w('#contactEmail').accessibility.ariaDescribedBy = 'contactEmailError'; } catch (e) {}
+    try { $w('#contactEmail').accessibility.ariaRequired = true; } catch (e) {}
     try { $w('#contactPhone').accessibility.ariaLabel = 'Your phone number (optional)'; } catch (e) {}
     try { $w('#contactSubject').accessibility.ariaLabel = 'Message subject (optional)'; } catch (e) {}
     try { $w('#contactMessage').accessibility.ariaLabel = 'Your message'; } catch (e) {}
+    try { $w('#contactMessage').accessibility.ariaDescribedBy = 'contactMessageError'; } catch (e) {}
+    try { $w('#contactMessage').accessibility.ariaRequired = true; } catch (e) {}
     try { submitBtn.accessibility.ariaLabel = 'Send message to Carolina Futons'; } catch (e) {}
 
     submitBtn.onClick(async () => {
