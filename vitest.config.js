@@ -135,6 +135,8 @@ export default defineConfig({
       'public/ProductFinancing.js': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'public/ProductFinancing': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'backend/accessibility.web': path.resolve(__dirname, 'src/backend/accessibility.web.js'),
+      'backend/orderTracking.web': path.resolve(__dirname, 'src/backend/orderTracking.web.js'),
+      'backend/reviewsService.web': path.resolve(__dirname, 'src/backend/reviewsService.web.js'),
     },
   },
 });

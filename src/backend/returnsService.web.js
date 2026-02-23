@@ -27,7 +27,8 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { createShipment, trackShipment } from 'backend/ups-shipping.web';
 
 const COLLECTION = 'Returns';
 const RETURN_WINDOW_DAYS = 30;
@@ -305,6 +306,417 @@ export const updateReturnStatus = webMethod(
   }
 );
 
+// ─── Guest Return Lookup ────────────────────────────────────────────
+
+/**
+ * Look up a return by order number + email (no login required).
+ * Customers can check return status without creating an account.
+ *
+ * @param {string} orderNumber - Order number
+ * @param {string} email - Email used for the order
+ * @returns {Promise<{success: boolean, returns?: Array, error?: string}>}
+ */
+export const lookupReturn = webMethod(
+  Permissions.Anyone,
+  async (orderNumber, email) => {
+    try {
+      const cleanOrderNumber = sanitize(orderNumber, 50).replace(/[^a-zA-Z0-9-]/g, '');
+      const cleanEmail = (email || '').trim().toLowerCase();
+
+      if (!cleanOrderNumber) {
+        return { success: false, error: 'Order number is required.' };
+      }
+      if (!cleanEmail || !validateEmail(cleanEmail)) {
+        return { success: false, error: 'A valid email address is required.' };
+      }
+
+      // Find the order and verify email
+      const orderResult = await wixData.query('Stores/Orders')
+        .eq('number', cleanOrderNumber)
+        .find();
+
+      if (orderResult.items.length === 0) {
+        return { success: false, error: 'Order not found. Please check your order number.' };
+      }
+
+      const order = orderResult.items[0];
+      const buyerEmail = (order.buyerInfo?.email || '').toLowerCase();
+      if (buyerEmail !== cleanEmail) {
+        return { success: false, error: 'Order not found. Please check your order number and email.' };
+      }
+
+      // Find return requests for this order
+      const returnResult = await wixData.query(COLLECTION)
+        .eq('orderId', order._id)
+        .descending('_createdDate')
+        .find();
+
+      if (returnResult.items.length === 0) {
+        return { success: true, returns: [], order: formatOrderForReturn(order) };
+      }
+
+      return {
+        success: true,
+        returns: returnResult.items.map(formatReturn),
+        order: formatOrderForReturn(order),
+      };
+    } catch (err) {
+      console.error('[returnsService] lookupReturn error:', err);
+      return { success: false, error: 'Unable to look up return status. Please try again.' };
+    }
+  }
+);
+
+/**
+ * Submit a return request as a guest (by order number + email).
+ *
+ * @param {Object} data
+ * @param {string} data.orderNumber - Order number
+ * @param {string} data.email - Email address on the order
+ * @param {Array<{lineItemId: string, quantity: number}>} data.items - Items to return
+ * @param {string} data.reason - Reason category
+ * @param {string} [data.details] - Additional explanation
+ * @param {string} [data.type="return"] - "return" or "exchange"
+ * @returns {Promise<{success: boolean, rmaNumber?: string, error?: string}>}
+ */
+export const submitGuestReturn = webMethod(
+  Permissions.Anyone,
+  async (data) => {
+    try {
+      const cleanOrderNumber = sanitize(data.orderNumber, 50).replace(/[^a-zA-Z0-9-]/g, '');
+      const cleanEmail = (data.email || '').trim().toLowerCase();
+
+      if (!cleanOrderNumber) {
+        return { success: false, error: 'Order number is required.' };
+      }
+      if (!cleanEmail || !validateEmail(cleanEmail)) {
+        return { success: false, error: 'A valid email address is required.' };
+      }
+
+      // Validate reason
+      if (!VALID_REASONS.includes(data.reason)) {
+        return { success: false, error: 'Please select a valid return reason.' };
+      }
+
+      // Validate items
+      if (!Array.isArray(data.items) || data.items.length === 0) {
+        return { success: false, error: 'Please select at least one item to return.' };
+      }
+
+      // Find and verify the order
+      const orderResult = await wixData.query('Stores/Orders')
+        .eq('number', cleanOrderNumber)
+        .find();
+
+      if (orderResult.items.length === 0) {
+        return { success: false, error: 'Order not found.' };
+      }
+
+      const order = orderResult.items[0];
+      const buyerEmail = (order.buyerInfo?.email || '').toLowerCase();
+      if (buyerEmail !== cleanEmail) {
+        return { success: false, error: 'Order not found.' };
+      }
+
+      // Check return window
+      const orderDate = new Date(order._createdDate);
+      const daysSinceOrder = Math.floor((Date.now() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceOrder > RETURN_WINDOW_DAYS) {
+        return { success: false, error: `Returns must be initiated within ${RETURN_WINDOW_DAYS} days of purchase.` };
+      }
+
+      // Check for duplicate return
+      const existing = await wixData.query(COLLECTION)
+        .eq('orderId', order._id)
+        .find();
+
+      if (existing.items.length > 0) {
+        return { success: false, error: 'A return request already exists for this order.' };
+      }
+
+      // Validate return items against order line items
+      const orderLineIds = new Set((order.lineItems || []).map(li => li._id || li.productId));
+      const validItems = data.items.filter(item => {
+        const id = validateId(item.lineItemId);
+        return id && orderLineIds.has(id) && item.quantity > 0;
+      });
+
+      if (validItems.length === 0) {
+        return { success: false, error: 'No valid items selected for return.' };
+      }
+
+      const returnType = data.type === 'exchange' ? 'exchange' : 'return';
+      const details = sanitize(data.details || '', MAX_DETAILS_LEN);
+      const rmaNumber = generateRmaNumber();
+
+      const record = {
+        orderId: order._id,
+        orderNumber: String(order.number || ''),
+        memberId: order.buyerInfo?.id || '',
+        memberEmail: cleanEmail,
+        memberName: `${order.billingInfo?.firstName || ''} ${order.billingInfo?.lastName || ''}`.trim() || 'Customer',
+        items: JSON.stringify(validItems.map(item => ({
+          lineItemId: validateId(item.lineItemId),
+          quantity: Math.max(1, Math.floor(Number(item.quantity))),
+        }))),
+        reason: data.reason,
+        reasonLabel: REASON_LABELS[data.reason] || data.reason,
+        details,
+        type: returnType,
+        status: 'requested',
+        rmaNumber,
+        adminNotes: '',
+      };
+
+      await wixData.insert(COLLECTION, record);
+      return { success: true, rmaNumber };
+    } catch (err) {
+      console.error('[returnsService] submitGuestReturn error:', err);
+      return { success: false, error: 'Unable to submit return request. Please try again.' };
+    }
+  }
+);
+
+// ─── Return Label Generation ────────────────────────────────────────
+
+/**
+ * Admin: Generate a UPS return label for an approved return.
+ * Creates a shipment with ShipFrom = customer, ShipTo = us.
+ *
+ * @param {string} returnId - Return record ID
+ * @returns {Promise<{success: boolean, trackingNumber?: string, error?: string}>}
+ */
+export const generateReturnLabel = webMethod(
+  Permissions.Admin,
+  async (returnId) => {
+    try {
+      const rid = validateId(returnId);
+      if (!rid) return { success: false, error: 'Invalid return ID.' };
+
+      const record = await wixData.get(COLLECTION, rid);
+      if (!record) return { success: false, error: 'Return not found.' };
+
+      if (record.status !== 'approved') {
+        return { success: false, error: 'Return must be approved before generating a label.' };
+      }
+
+      // Get the original order for shipping address
+      const order = await wixData.get('Stores/Orders', record.orderId);
+      if (!order) return { success: false, error: 'Original order not found.' };
+
+      const shippingAddr = order.shippingInfo?.shipmentDetails?.address || {};
+      const billingAddr = order.billingInfo || {};
+
+      const shipmentResult = await createShipment({
+        orderId: record.orderId,
+        recipientName: `Carolina Futons Returns (RMA: ${record.rmaNumber})`,
+        recipientPhone: '',
+        addressLine1: shippingAddr.addressLine1 || shippingAddr.addressLine || billingAddr.address?.addressLine1 || '',
+        city: shippingAddr.city || billingAddr.address?.city || '',
+        state: shippingAddr.subdivision || billingAddr.address?.subdivision || '',
+        postalCode: shippingAddr.postalCode || billingAddr.address?.postalCode || '',
+        country: 'US',
+        serviceCode: '03', // Ground for returns
+        packages: [{
+          description: `Return - ${record.rmaNumber}`,
+          length: 48,
+          width: 30,
+          height: 12,
+          weight: 50,
+        }],
+      });
+
+      if (!shipmentResult.success) {
+        return { success: false, error: shipmentResult.error || 'Unable to generate return label.' };
+      }
+
+      // Update the return record with tracking info
+      record.returnTrackingNumber = shipmentResult.trackingNumber;
+      record.returnLabelBase64 = shipmentResult.labels?.[0]?.labelBase64 || '';
+      record.status = 'approved'; // Keep approved, label now attached
+      await wixData.update(COLLECTION, record);
+
+      return {
+        success: true,
+        trackingNumber: shipmentResult.trackingNumber,
+        labelBase64: shipmentResult.labels?.[0]?.labelBase64 || '',
+      };
+    } catch (err) {
+      console.error('[returnsService] generateReturnLabel error:', err);
+      return { success: false, error: 'Unable to generate return label.' };
+    }
+  }
+);
+
+// ─── Return Shipment Tracking ───────────────────────────────────────
+
+/**
+ * Track the return shipment by RMA number.
+ * Uses UPS tracking on the return label tracking number.
+ *
+ * @param {string} rmaNumber - RMA number to track
+ * @returns {Promise<{success: boolean, tracking?: Object, error?: string}>}
+ */
+export const trackReturnShipment = webMethod(
+  Permissions.Anyone,
+  async (rmaNumber) => {
+    try {
+      const rma = sanitize(rmaNumber, 30);
+      if (!rma) return { success: false, error: 'RMA number is required.' };
+
+      const result = await wixData.query(COLLECTION)
+        .eq('rmaNumber', rma)
+        .find();
+
+      if (result.items.length === 0) {
+        return { success: false, error: 'Return not found.' };
+      }
+
+      const record = result.items[0];
+      if (!record.returnTrackingNumber) {
+        return {
+          success: true,
+          tracking: null,
+          status: record.status,
+          message: 'Return label has not been generated yet.',
+        };
+      }
+
+      const trackingResult = await trackShipment(record.returnTrackingNumber);
+
+      return {
+        success: true,
+        status: record.status,
+        rmaNumber: record.rmaNumber,
+        tracking: trackingResult.success ? {
+          trackingNumber: record.returnTrackingNumber,
+          status: trackingResult.status,
+          statusCode: trackingResult.statusCode,
+          estimatedDelivery: trackingResult.estimatedDelivery,
+          activities: trackingResult.activities || [],
+        } : null,
+      };
+    } catch (err) {
+      console.error('[returnsService] trackReturnShipment error:', err);
+      return { success: false, error: 'Unable to track return shipment.' };
+    }
+  }
+);
+
+// ─── Admin: Return Management Dashboard ─────────────────────────────
+
+/**
+ * Admin: Get all return requests with filters.
+ *
+ * @param {Object} [filters]
+ * @param {string} [filters.status] - Filter by status
+ * @param {number} [filters.limit=50] - Max results
+ * @returns {Promise<{success: boolean, returns?: Array, total?: number}>}
+ */
+export const getAdminReturns = webMethod(
+  Permissions.Admin,
+  async (filters = {}) => {
+    try {
+      let query = wixData.query(COLLECTION);
+
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      const limit = Math.min(Math.max(1, filters.limit || 50), 100);
+
+      const result = await query
+        .descending('_createdDate')
+        .limit(limit)
+        .find();
+
+      return {
+        success: true,
+        returns: result.items.map(formatAdminReturn),
+        total: result.totalCount,
+      };
+    } catch (err) {
+      console.error('[returnsService] getAdminReturns error:', err);
+      return { success: false, returns: [], total: 0 };
+    }
+  }
+);
+
+/**
+ * Admin: Get return statistics.
+ *
+ * @returns {Promise<{success: boolean, stats?: Object}>}
+ */
+export const getReturnStats = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const statuses = ['requested', 'approved', 'shipped', 'received', 'refunded', 'denied'];
+      const counts = {};
+
+      for (const status of statuses) {
+        const result = await wixData.query(COLLECTION)
+          .eq('status', status)
+          .count();
+        counts[status] = result;
+      }
+
+      const total = Object.values(counts).reduce((sum, c) => sum + c, 0);
+
+      return {
+        success: true,
+        stats: { ...counts, total },
+      };
+    } catch (err) {
+      console.error('[returnsService] getReturnStats error:', err);
+      return { success: false, stats: {} };
+    }
+  }
+);
+
+/**
+ * Admin: Process refund for a return (mark as refunded with amount).
+ *
+ * @param {string} returnId
+ * @param {number} refundAmount
+ * @param {string} [notes]
+ * @returns {Promise<{success: boolean}>}
+ */
+export const processRefund = webMethod(
+  Permissions.Admin,
+  async (returnId, refundAmount, notes) => {
+    try {
+      const rid = validateId(returnId);
+      if (!rid) return { success: false, error: 'Invalid return ID.' };
+
+      if (typeof refundAmount !== 'number' || refundAmount <= 0) {
+        return { success: false, error: 'Valid refund amount required.' };
+      }
+
+      const record = await wixData.get(COLLECTION, rid);
+      if (!record) return { success: false, error: 'Return not found.' };
+
+      if (record.status === 'refunded') {
+        return { success: false, error: 'Refund already processed.' };
+      }
+
+      if (record.status === 'denied') {
+        return { success: false, error: 'Cannot refund a denied return.' };
+      }
+
+      record.status = 'refunded';
+      record.refundAmount = refundAmount;
+      if (notes) record.adminNotes = sanitize(notes, 2000);
+
+      await wixData.update(COLLECTION, record);
+      return { success: true };
+    } catch (err) {
+      console.error('[returnsService] processRefund error:', err);
+      return { success: false, error: 'Unable to process refund.' };
+    }
+  }
+);
+
 // ─── Internal Helpers ───────────────────────────────────────────────
 
 function generateRmaNumber() {
@@ -356,6 +768,35 @@ function formatReturn(record) {
     details: record.details || '',
     status: record.status,
     items,
+    returnTrackingNumber: record.returnTrackingNumber || null,
+    date: record._createdDate
+      ? new Date(record._createdDate).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        })
+      : '',
+  };
+}
+
+function formatAdminReturn(record) {
+  let items = [];
+  try { items = JSON.parse(record.items || '[]'); } catch (e) {}
+
+  return {
+    _id: record._id,
+    rmaNumber: record.rmaNumber,
+    orderId: record.orderId,
+    orderNumber: record.orderNumber,
+    memberId: record.memberId,
+    memberEmail: record.memberEmail,
+    memberName: record.memberName,
+    type: record.type,
+    reason: record.reasonLabel || record.reason,
+    details: record.details || '',
+    status: record.status,
+    items,
+    adminNotes: record.adminNotes || '',
+    returnTrackingNumber: record.returnTrackingNumber || null,
+    refundAmount: record.refundAmount || null,
     date: record._createdDate
       ? new Date(record._createdDate).toLocaleDateString('en-US', {
           year: 'numeric', month: 'long', day: 'numeric',
