@@ -1,7 +1,7 @@
 // Blog Post.js - Individual Blog Post Page
 // Wix Blog app renders the post content — this code adds SEO schema enhancements
 // Injects Article + FAQ JSON-LD structured data for each pillar blog post
-import { getBlogArticleSchema, getBlogFaqSchema } from 'backend/seoHelpers.web';
+import { getBlogArticleSchema, getBlogFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { getBlogPost } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';
@@ -38,6 +38,16 @@ $w.onReady(async function () {
         $w('#postSeoSchema').postMessage(schemas.join('\n'));
       } catch (e) {}
     }
+
+    // Inject meta tags (title, description, canonical)
+    try {
+      const [title, description, canonical] = await Promise.all([
+        getPageTitle('blogPost', { title: post.title }),
+        getPageMetaDescription('blogPost', { title: post.title, excerpt: post.excerpt }),
+        getCanonicalUrl('blogPost', slug),
+      ]);
+      try { $w('#postMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
+    } catch (e) {}
   } catch (err) {
     console.error('Blog post schema injection error:', err);
   }
