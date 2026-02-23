@@ -66,6 +66,7 @@ async function initProductPage() {
       { name: 'collectionProducts', init: loadCollectionProducts },
       { name: 'recentlyViewed', init: loadRecentlyViewed },
       { name: 'productSchema', init: () => injectProductSchema($w, state) },
+      { name: 'productMeta', init: () => injectProductMeta(state) },
       { name: 'imageGallery', init: () => initImageGallery($w, state) },
       { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state) },
       { name: 'addToCart', init: () => initAddToCartEnhancements($w, state) },
@@ -116,6 +117,24 @@ async function initProductPage() {
   } catch (err) {
     console.error('Error initializing product page:', err);
   }
+}
+
+// ── Product Meta Description & Title ─────────────────────────────────
+
+async function injectProductMeta(state) {
+  try {
+    if (!state.product) return;
+    const { head } = await import('wix-seo-frontend');
+    const product = state.product;
+
+    const title = `${product.name} | Carolina Futons - Hendersonville, NC`;
+    head.setTitle(title);
+
+    const description = product.description
+      ? product.description.replace(/<[^>]*>/g, '').substring(0, 160).trim()
+      : `Shop ${product.name} at Carolina Futons. Quality furniture since 1991. Free shipping on orders over $999.`;
+    head.setMetaTag('description', description);
+  } catch (e) {}
 }
 
 // ── Dimension Display & Room Fit Checker ──────────────────────────────
