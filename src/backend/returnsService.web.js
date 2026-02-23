@@ -28,6 +28,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
 
 const COLLECTION = 'Returns';
@@ -756,8 +757,7 @@ function formatOrderForReturn(order) {
 }
 
 function formatReturn(record) {
-  let items = [];
-  try { items = JSON.parse(record.items || '[]'); } catch (e) {}
+  let items = safeParse(record.items, [], 'returnsService/formatReturn');
 
   return {
     _id: record._id,
@@ -778,8 +778,7 @@ function formatReturn(record) {
 }
 
 function formatAdminReturn(record) {
-  let items = [];
-  try { items = JSON.parse(record.items || '[]'); } catch (e) {}
+  let items = safeParse(record.items, [], 'returnsService/formatAdminReturn');
 
   return {
     _id: record._id,

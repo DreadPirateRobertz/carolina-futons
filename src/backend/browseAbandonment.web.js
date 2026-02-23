@@ -16,6 +16,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
+import { safeParse } from 'backend/utils/safeParse';
 
 const HIGH_INTENT_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
 const RECOVERY_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
@@ -246,7 +247,7 @@ export const triggerBrowseRecovery = webMethod(
 
         // Parse products for email template
         let products = [];
-        try { products = JSON.parse(session.productsViewed || '[]'); } catch (e) {}
+        products = safeParse(session.productsViewed, [], 'browseAbandonment/productsViewed');
         const topProducts = products.slice(0, 3);
 
         // Queue recovery email
@@ -379,7 +380,7 @@ export const exportAbandonmentInsights = webMethod(
       const productMap = {};
       for (const session of sessions.items) {
         let products = [];
-        try { products = JSON.parse(session.productsViewed || '[]'); } catch (e) {}
+        products = safeParse(session.productsViewed, [], 'browseAbandonment/productsViewed');
 
         for (const p of products) {
           if (!p.productId) continue;

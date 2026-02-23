@@ -20,6 +20,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { safeParse } from 'backend/utils/safeParse';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -165,7 +166,7 @@ export const getActiveDeliveries = webMethod(Permissions.SiteMember, async () =>
       deliveryTier: d.deliveryTier || 'standard',
       trackingNumber: d.trackingNumber || null,
       estimatedDelivery: d.estimatedDelivery || null,
-      milestones: safeParse(d.milestones),
+      milestones: safeParse(d.milestones, [], 'accountDashboard/milestones'),
     }));
 
     return { success: true, data: { deliveries, count: deliveries.length } };
@@ -380,10 +381,3 @@ export const getReorderItems = webMethod(Permissions.SiteMember, async (orderId)
 
 // ── Utilities ────────────────────────────────────────────────────────
 
-function safeParse(json) {
-  try {
-    return JSON.parse(json);
-  } catch {
-    return [];
-  }
-}

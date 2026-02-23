@@ -25,6 +25,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { safeParse } from 'backend/utils/safeParse';
 
 // ── Default office hours (EST) ──────────────────────────────────────
 
@@ -114,7 +115,7 @@ export const getOfficeHoursStatus = webMethod(
           .eq('key', 'officeHours')
           .find();
         if (config.items.length > 0) {
-          officeHours = JSON.parse(config.items[0].value);
+          officeHours = safeParse(config.items[0].value, DEFAULT_OFFICE_HOURS, 'liveChat/officeHours');
         }
       } catch (e) {
         // Fall back to defaults
@@ -181,7 +182,7 @@ export const getCannedResponses = webMethod(
         if (config.items.length > 0) {
           return {
             success: true,
-            responses: JSON.parse(config.items[0].value),
+            responses: safeParse(config.items[0].value, [], 'liveChat/cannedResponses'),
           };
         }
       } catch (e) {

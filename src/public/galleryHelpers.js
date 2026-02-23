@@ -127,6 +127,7 @@ export function getRecentlyViewed(excludeId = null) {
     }
     return recent;
   } catch (e) {
+    console.error('[galleryHelpers] Failed to parse recently viewed:', e.message);
     return [];
   }
 }
@@ -166,7 +167,9 @@ export function removeFromCompare(productId) {
     let compareList = JSON.parse(stored);
     compareList = compareList.filter(p => p._id !== productId);
     session.setItem(COMPARE_KEY, JSON.stringify(compareList));
-  } catch (e) {}
+  } catch (e) {
+    console.error('[galleryHelpers] Failed to parse compare list:', e.message);
+  }
 }
 
 export function getCompareList() {
