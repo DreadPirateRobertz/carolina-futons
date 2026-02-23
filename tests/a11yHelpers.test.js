@@ -5,7 +5,7 @@
  * form field validation, focus management, skip navigation, keyboard patterns,
  * and design token contrast audit.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   hexToRgb,
   relativeLuminance,
@@ -21,6 +21,8 @@ import {
   getKeyboardPattern,
   KEYBOARD_PATTERNS,
   initSkipNav,
+  announce,
+  setupAccessibleDialog,
 } from '../src/public/a11yHelpers.js';
 
 // ── hexToRgb ────────────────────────────────────────────────────────
@@ -412,5 +414,197 @@ describe('initSkipNav', () => {
 
     initSkipNav($w);
     expect(scrolled).toBe(true);
+  });
+});
+
+// ── announce ──────────────────────────────────────────────────────────
+
+describe('announce', () => {
+  it('sets text on a11yLiveRegion element', () => {
+    vi.useFakeTimers();
+    let regionText = '';
+    const $w = (id) => {
+      if (id === '#a11yLiveRegion') {
+        return {
+          text: regionText,
+          set text(v) { regionText = v; },
+          get text() { return regionText; },
+        };
+      }
+      throw new Error('Unknown element');
+    };
+    // Override getter/setter properly
+    const region = { _text: '' };
+    Object.defineProperty(region, 'text', {
+      get() { return this._text; },
+      set(v) { this._text = v; },
+    });
+    const mock$w = (id) => {
+      if (id === '#a11yLiveRegion') return region;
+      throw new Error('Unknown element');
+    };
+
+    announce(mock$w, 'Test announcement');
+    // Initially cleared
+    expect(region.text).toBe('');
+    // After timeout, message is set
+    vi.advanceTimersByTime(100);
+    expect(region.text).toBe('Test announcement');
+    vi.useRealTimers();
+  });
+
+  it('does not throw with empty message', () => {
+    const $w = () => { throw new Error('Should not be called'); };
+    expect(() => announce($w, '')).not.toThrow();
+    expect(() => announce($w, null)).not.toThrow();
+  });
+
+  it('does not throw when element does not exist', () => {
+    const $w = () => { throw new Error('Element not found'); };
+    expect(() => announce($w, 'message')).not.toThrow();
+  });
+
+  it('falls back to announcementText when live region missing', () => {
+    let announcementText = '';
+    const $w = (id) => {
+      if (id === '#a11yLiveRegion') throw new Error('Not found');
+      if (id === '#announcementText') {
+        return {
+          role: 'status',
+          get text() { return announcementText; },
+          set text(v) { announcementText = v; },
+        };
+      }
+      throw new Error('Unknown');
+    };
+
+    announce($w, 'Fallback test');
+    expect(announcementText).toBe('Fallback test');
+  });
+});
+
+// ── setupAccessibleDialog ─────────────────────────────────────────────
+
+describe('setupAccessibleDialog', () => {
+  it('returns open and close functions', () => {
+    const $w = () => ({
+      accessibility: {},
+      show: () => {},
+      hide: () => {},
+      onClick: () => {},
+    });
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    });
+
+    expect(dialog.open).toBeInstanceOf(Function);
+    expect(dialog.close).toBeInstanceOf(Function);
+  });
+
+  it('sets role dialog on panel', () => {
+    const accessibility = {};
+    const $w = (id) => {
+      if (id === '#modal') {
+        return {
+          accessibility,
+          show: () => {},
+          hide: () => {},
+        };
+      }
+      return {
+        accessibility: {},
+        onClick: () => {},
+        show: () => {},
+        hide: () => {},
+      };
+    };
+
+    setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    });
+
+    expect(accessibility.role).toBe('dialog');
+    expect(accessibility.ariaModal).toBe(true);
+  });
+
+  it('sets ariaLabelledBy when titleId provided', () => {
+    const accessibility = {};
+    const $w = (id) => {
+      if (id === '#modal') {
+        return { accessibility, show: () => {}, hide: () => {} };
+      }
+      return { accessibility: {}, onClick: () => {}, show: () => {}, hide: () => {} };
+    };
+
+    setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      titleId: '#dialogTitle',
+    });
+
+    expect(accessibility.ariaLabelledBy).toBe('#dialogTitle');
+  });
+
+  it('wires close button onClick', () => {
+    let closeHandler = null;
+    const $w = (id) => {
+      if (id === '#closeBtn') {
+        return {
+          accessibility: {},
+          onClick: (fn) => { closeHandler = fn; },
+        };
+      }
+      return { accessibility: {}, show: () => {}, hide: () => {} };
+    };
+
+    setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    });
+
+    expect(closeHandler).toBeInstanceOf(Function);
+  });
+
+  it('calls onClose callback when closed', () => {
+    vi.useFakeTimers();
+    let closed = false;
+    let closeHandler = null;
+    const $w = (id) => {
+      if (id === '#closeBtn') {
+        return {
+          accessibility: {},
+          onClick: (fn) => { closeHandler = fn; },
+        };
+      }
+      if (id === '#a11yLiveRegion') {
+        return { text: '', set text(v) {} };
+      }
+      return {
+        accessibility: {},
+        show: () => {},
+        hide: () => {},
+      };
+    };
+
+    setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      onClose: () => { closed = true; },
+    });
+
+    closeHandler();
+    expect(closed).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('does not throw with missing elements', () => {
+    const $w = () => { throw new Error('Element not found'); };
+    expect(() => setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    })).not.toThrow();
   });
 });

@@ -11,6 +11,7 @@ import {
   getTierProgress,
   FREE_SHIPPING_THRESHOLD,
 } from 'public/cartService';
+import { announce } from 'public/a11yHelpers.js';
 
 let currentSideSugProduct = null;
 
@@ -24,10 +25,18 @@ function initSideCart() {
     await refreshSideCart();
   });
 
+  // Set ARIA dialog attributes on side cart panel
+  try {
+    $w('#sideCartPanel').accessibility.role = 'dialog';
+    $w('#sideCartPanel').accessibility.ariaModal = true;
+    $w('#sideCartPanel').accessibility.ariaLabel = 'Shopping cart';
+  } catch (e) {}
+
   // Close button
   try {
     $w('#sideCartClose').onClick(() => {
       $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
+      announce($w, 'Cart closed');
     });
     $w('#sideCartClose').accessibility.ariaLabel = 'Close cart';
   } catch (e) {}
@@ -98,6 +107,7 @@ function initSideCartRepeater() {
         } catch (e) {}
         try {
           await removeCartItem(itemData._id);
+          announce($w, `${itemData.name} removed from cart`);
         } catch (err) {
           console.error('Error removing item from cart:', err);
         }

@@ -9,6 +9,7 @@ import {
   getAutocompleteSuggestions,
   getPopularSearches,
 } from 'backend/searchService.web';
+import { announce } from 'public/a11yHelpers.js';
 
 let _debounceTimer = null;
 let _currentQuery = '';
@@ -69,7 +70,10 @@ async function performSearch(query) {
 
     try {
       $w('#resultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''} found`;
+      try { $w('#resultCount').accessibility.ariaLive = 'polite'; } catch (e) {}
     } catch (e) {}
+
+    announce($w, `${result.total} product${result.total !== 1 ? 's' : ''} found for "${query}"`);
 
     try { $w('#noResultsBox').hide(); } catch (e) {}
 
@@ -184,6 +188,9 @@ function setupAutocomplete() {
   try {
     const input = $w('#searchInput');
     if (!input) return;
+
+    try { input.accessibility.ariaLabel = 'Search products'; } catch (e) {}
+    try { $w('#suggestionsBox').accessibility.role = 'listbox'; } catch (e) {}
 
     input.onInput((event) => {
       const value = event.target.value || '';
@@ -351,8 +358,10 @@ function showNoResults(query) {
   try {
     $w('#searchQuery').text = `No results for "${query}"`;
     $w('#noResultsBox').show();
+    try { $w('#noResultsBox').accessibility.role = 'status'; } catch (e) {}
     $w('#searchRepeater').collapse();
     $w('#loadMoreBtn').hide();
+    announce($w, `No results found for "${query}". Try a different search.`);
   } catch (e) {}
 
   // Show popular searches as suggestions

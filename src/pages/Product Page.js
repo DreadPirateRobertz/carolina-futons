@@ -20,6 +20,7 @@ import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, ini
 import { getProductDimensions, checkRoomFit, convertUnit } from 'backend/sizeGuide.web';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
+import { announce } from 'public/a11yHelpers.js';
 
 const state = {
   product: null,
@@ -278,6 +279,8 @@ function displayFitResults($w, result) {
 
     try { $w('#fitResultText').text = lines.join('\n'); } catch (e) {}
     try { $w('#fitResultSection').show(); } catch (e) {}
+    try { $w('#fitResultSection').accessibility.ariaLive = 'polite'; } catch (e) {}
+    announce($w, lines[0]);
   } catch (e) {}
 }
 
@@ -506,6 +509,12 @@ function showRemindMePopup() {
     try { $w('#remindMeSubtitle').text = "We'll remind you about this item — no spam, just a gentle nudge."; } catch (e) {}
     try { $w('#remindMeEmailInput').accessibility.ariaLabel = 'Enter your email for reminder'; } catch (e) {}
     try { $w('#remindMeSubmit').accessibility.ariaLabel = 'Get reminded about this product'; } catch (e) {}
+    try { $w('#remindMeClose').accessibility.ariaLabel = 'Close reminder popup'; } catch (e) {}
+
+    // Set dialog ARIA attributes
+    try { popup.accessibility.role = 'dialog'; } catch (e) {}
+    try { popup.accessibility.ariaModal = true; } catch (e) {}
+    try { popup.accessibility.ariaLabel = 'Product reminder signup'; } catch (e) {}
 
     popup.show('fade', { duration: 300 });
 

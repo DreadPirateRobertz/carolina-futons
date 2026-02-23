@@ -14,6 +14,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
+import { announce } from 'public/a11yHelpers.js';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -167,6 +168,8 @@ function initSortControls() {
 
     sortDropdown.onChange(() => {
       currentSort = sortDropdown.value;
+      const label = sortDropdown.options.find(o => o.value === currentSort)?.label || currentSort;
+      announce($w, `Sorting by ${label}`);
       applySort();
     });
   } catch (e) {}
@@ -508,6 +511,10 @@ async function initGridSwatchPreview($item, itemData) {
 // Register quick view handlers once to avoid accumulation
 function initQuickViewHandlers() {
   try {
+    try { $w('#qvViewFull').accessibility.ariaLabel = 'View full product details'; } catch (e) {}
+    try { $w('#qvAddToCart').accessibility.ariaLabel = 'Add to cart'; } catch (e) {}
+    try { $w('#qvClose').accessibility.ariaLabel = 'Close quick view'; } catch (e) {}
+
     $w('#qvViewFull').onClick(() => {
       if (currentQuickViewProduct) {
         import('wix-location-frontend').then(({ to }) => {
@@ -524,6 +531,7 @@ function initQuickViewHandlers() {
         const { addToCart } = await import('public/cartService');
         await addToCart(currentQuickViewProduct._id);
         $w('#qvAddToCart').label = 'Added!';
+        announce($w, `${currentQuickViewProduct.name} added to cart`);
         setTimeout(() => {
           try { $w('#quickViewModal').hide('fade', { duration: 200 }); } catch (e) {}
         }, 1000);
@@ -531,11 +539,13 @@ function initQuickViewHandlers() {
         console.error('Error adding to cart from quick view:', err);
         $w('#qvAddToCart').label = 'Error — Try Again';
         $w('#qvAddToCart').enable();
+        announce($w, 'Error adding to cart. Please try again.');
       }
     });
 
     $w('#qvClose').onClick(() => {
       $w('#quickViewModal').hide('fade', { duration: 200 });
+      announce($w, 'Quick view closed');
     });
   } catch (e) {}
 }
@@ -550,7 +560,14 @@ function openQuickView(product) {
     $w('#qvDescription').text = stripHtml(product.description || '');
     $w('#qvAddToCart').label = 'Add to Cart';
     $w('#qvAddToCart').enable();
+
+    // Set dialog ARIA attributes for quick view modal
+    try { $w('#quickViewModal').accessibility.role = 'dialog'; } catch (e) {}
+    try { $w('#quickViewModal').accessibility.ariaModal = true; } catch (e) {}
+    try { $w('#quickViewModal').accessibility.ariaLabel = `Quick view: ${product.name}`; } catch (e) {}
+
     $w('#quickViewModal').show('fade', { duration: 200 });
+    announce($w, `Quick view opened for ${product.name}`);
     // Close handler is registered once in initQuickViewHandlers — not here
   } catch (e) {}
 }
@@ -883,6 +900,9 @@ async function applyAdvancedFilters(currentPath) {
       $w('#resultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''}`;
     } catch (e) {}
 
+    // Announce result count to screen readers
+    announce($w, `Showing ${result.total} product${result.total !== 1 ? 's' : ''}`);
+
     // Handle zero results
     if (result.total === 0) {
       showNoMatchesState(currentPath);
@@ -1046,9 +1066,13 @@ function initFilterDrawer() {
         if (drawer.hidden) {
           drawer.show('slide', { duration: 300, direction: 'bottom' });
           try { $w('#filterDrawerOverlay').show('fade', { duration: 200 }); } catch (e) {}
+          try { $w('#filterToggleBtn').accessibility.ariaExpanded = true; } catch (e) {}
+          announce($w, 'Filters panel opened');
         } else {
           drawer.hide('slide', { duration: 300, direction: 'bottom' });
           try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          try { $w('#filterToggleBtn').accessibility.ariaExpanded = false; } catch (e) {}
+          announce($w, 'Filters panel closed');
         }
       } catch (e) {}
     });

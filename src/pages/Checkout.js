@@ -47,14 +47,17 @@ function initOrderNotes() {
     if (notesToggle && notesField) {
       notesField.collapse();
       try { notesToggle.accessibility.ariaLabel = 'Toggle order notes'; } catch (e) {}
+      try { notesToggle.accessibility.ariaExpanded = false; } catch (e) {}
       try { notesField.accessibility.ariaLabel = 'Special delivery instructions'; } catch (e) {}
       notesToggle.onClick(() => {
         if (notesField.collapsed) {
           notesField.expand();
           notesToggle.text = 'Hide order notes';
+          try { notesToggle.accessibility.ariaExpanded = true; } catch (e) {}
         } else {
           notesField.collapse();
           notesToggle.text = 'Add order notes';
+          try { notesToggle.accessibility.ariaExpanded = false; } catch (e) {}
         }
       });
     }

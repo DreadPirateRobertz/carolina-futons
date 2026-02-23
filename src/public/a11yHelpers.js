@@ -323,3 +323,97 @@ export const KEYBOARD_PATTERNS = {
 export function getKeyboardPattern(role) {
   return KEYBOARD_PATTERNS[role] || null;
 }
+
+// ── Live Announcements ────────────────────────────────────────────
+
+/**
+ * Announce a message to screen readers via an aria-live region.
+ * Creates or reuses a live region element on the Wix page.
+ *
+ * @param {Function} $w - Wix selector function
+ * @param {string} message - Text to announce
+ * @param {'polite'|'assertive'} [priority='polite'] - aria-live priority
+ */
+export function announce($w, message, priority = 'polite') {
+  if (!message) return;
+  try {
+    const el = $w('#a11yLiveRegion');
+    if (el) {
+      el.text = '';
+      // Brief delay so screen readers detect the change
+      setTimeout(() => {
+        try { el.text = message; } catch (e) {}
+      }, 50);
+    }
+  } catch (e) {
+    // Live region element not on page — fallback to announcement text
+    try {
+      const announcement = $w('#announcementText');
+      if (announcement && announcement.role === 'status') {
+        announcement.text = message;
+      }
+    } catch (e2) {}
+  }
+}
+
+// ── Enhanced Dialog Focus Management ────────────────────────────────
+
+/**
+ * Set up accessible dialog/modal behavior. Manages focus trap,
+ * Escape key close, ARIA attributes, and focus restoration.
+ *
+ * @param {Function} $w - Wix selector function
+ * @param {Object} config
+ * @param {string} config.panelId - Dialog container element ID (e.g. '#quickViewModal')
+ * @param {string} config.closeId - Close button element ID
+ * @param {string} [config.titleId] - Dialog title element ID for aria-labelledby
+ * @param {Array<string>} [config.focusableIds] - Focusable element IDs for trap
+ * @param {Function} [config.onClose] - Callback when dialog closes
+ * @returns {{ open: Function, close: Function }}
+ */
+export function setupAccessibleDialog($w, config) {
+  const { panelId, closeId, titleId, focusableIds = [], onClose } = config;
+  let trap = null;
+
+  // Set ARIA attributes
+  try {
+    const panel = $w(panelId);
+    if (panel) {
+      try { panel.accessibility.role = 'dialog'; } catch (e) {}
+      try { panel.accessibility.ariaModal = true; } catch (e) {}
+      if (titleId) {
+        try { panel.accessibility.ariaLabelledBy = titleId; } catch (e) {}
+      }
+    }
+  } catch (e) {}
+
+  function open() {
+    try {
+      $w(panelId).show('fade', { duration: 200 });
+      // Create focus trap
+      if (focusableIds.length > 0) {
+        trap = createFocusTrap(panelId, focusableIds);
+      }
+      announce($w, titleId ? 'Dialog opened' : 'Dialog opened');
+    } catch (e) {}
+  }
+
+  function close() {
+    try {
+      $w(panelId).hide('fade', { duration: 200 });
+      if (trap) {
+        trap.release();
+        trap = null;
+      }
+      announce($w, 'Dialog closed');
+      if (onClose) onClose();
+    } catch (e) {}
+  }
+
+  // Wire close button
+  try {
+    $w(closeId).onClick(close);
+  } catch (e) {}
+
+  return { open, close };
+}

@@ -6,6 +6,7 @@ import { sendEmail } from 'backend/emailService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -56,7 +57,10 @@ function initContactForm() {
         hasError = true;
       }
 
-      if (hasError) return;
+      if (hasError) {
+        announce($w, 'Please fix the errors in the form');
+        return;
+      }
 
       // Disable button during submission
       submitBtn.disable();
@@ -87,6 +91,7 @@ function initContactForm() {
         try {
           $w('#contactSuccess').show('fade', { duration: 300 });
           $w('#contactForm').hide('fade', { duration: 300 });
+          announce($w, 'Message sent successfully. We will respond within 24 hours.');
         } catch (e) {}
       } catch (err) {
         console.error('Error sending contact form:', err);
@@ -106,6 +111,8 @@ function showFieldError(elementId, message) {
   try {
     $w(elementId).text = message;
     $w(elementId).show();
+    try { $w(elementId).accessibility.ariaLive = 'assertive'; } catch (e) {}
+    try { $w(elementId).accessibility.role = 'alert'; } catch (e) {}
   } catch (e) {}
 }
 

@@ -57,7 +57,17 @@ function initAccessibility() {
     }
   } catch (e) {}
 
-  // Global Escape key handler — closes any open overlay
+  // aria-live region for screen reader announcements (used by a11yHelpers.announce)
+  try {
+    const liveRegion = $w('#a11yLiveRegion');
+    if (liveRegion) {
+      try { liveRegion.accessibility.ariaLive = 'polite'; } catch (e) {}
+      try { liveRegion.accessibility.ariaAtomic = true; } catch (e) {}
+      try { liveRegion.accessibility.role = 'status'; } catch (e) {}
+    }
+  } catch (e) {}
+
+  // Global Escape key handler — closes any open overlay and restores focus
   try {
     if (typeof document !== 'undefined') {
       document.addEventListener('keydown', (e) => {
@@ -77,6 +87,7 @@ function initAccessibility() {
   // Set ARIA roles on key interactive elements
   try {
     $w('#announcementText').role = 'status';
+    try { $w('#announcementText').accessibility.ariaLive = 'polite'; } catch (e) {}
   } catch (e) {}
   try {
     $w('#headerSearchInput').role = 'search';
@@ -346,6 +357,11 @@ async function initPromoLightbox() {
     initPromoCopyCode(promo.discountCode);
     initPromoEmailCapture();
     initPromoCTA(promo.ctaUrl);
+
+    // Set dialog ARIA attributes
+    try { lightbox.accessibility.role = 'dialog'; } catch (e) {}
+    try { lightbox.accessibility.ariaModal = true; } catch (e) {}
+    try { lightbox.accessibility.ariaLabel = 'Promotional offer'; } catch (e) {}
 
     // Show the lightbox
     $w('#promoOverlay').show('fade', { duration: 300 });
@@ -638,6 +654,11 @@ function showExitPopup() {
     // Populate content
     try { $w('#exitTitle').text = 'Wait — Before You Go!'; } catch (e) {}
     try { $w('#exitSubtitle').text = 'Get free fabric swatches shipped to your door, or save 5% on your first order.'; } catch (e) {}
+
+    // Set dialog ARIA attributes
+    try { popup.accessibility.role = 'dialog'; } catch (e) {}
+    try { popup.accessibility.ariaModal = true; } catch (e) {}
+    try { popup.accessibility.ariaLabel = 'Special offer before you go'; } catch (e) {}
 
     popup.show('fade', { duration: 300 });
     try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
