@@ -4,6 +4,7 @@ import { getProductBadge, initImageLightbox, initImageZoom } from 'public/galler
 import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
 import { enableSwipe } from 'public/touchHelpers';
 import { trackGalleryInteraction } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers.js';
 
 export function initImageGallery($w, state) {
   try {
@@ -59,6 +60,45 @@ export function initImageGallery($w, state) {
         }
       } catch (e) {}
     }
+
+    // Keyboard arrow key navigation for gallery (WCAG 2.1.1)
+    try {
+      if (typeof document !== 'undefined' && gallery) {
+        let kbIdx = 0;
+        try { mainImage.accessibility.ariaLabel = 'Product image gallery, use arrow keys to navigate'; } catch (e) {}
+        try { mainImage.accessibility.ariaRoledescription = 'carousel'; } catch (e) {}
+
+        document.addEventListener('keydown', (e) => {
+          // Only handle arrow keys when gallery area has focus
+          try {
+            const items = gallery.items || [];
+            if (items.length === 0) return;
+            const active = document.activeElement;
+            const isGalleryFocused = active && (
+              active.id?.includes('productMainImage') ||
+              active.id?.includes('productGallery') ||
+              active.closest?.('[id*="productGallery"]') ||
+              active.closest?.('[id*="productMainImage"]')
+            );
+            if (!isGalleryFocused) return;
+
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              kbIdx = Math.min(kbIdx + 1, items.length - 1);
+              $w('#productMainImage').src = items[kbIdx].src;
+              announce($w, `Image ${kbIdx + 1} of ${items.length}`);
+              trackGalleryInteraction('keyboard', 'next');
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              kbIdx = Math.max(kbIdx - 1, 0);
+              $w('#productMainImage').src = items[kbIdx].src;
+              announce($w, `Image ${kbIdx + 1} of ${items.length}`);
+              trackGalleryInteraction('keyboard', 'prev');
+            }
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
 
     initImageLightbox($w('#productGallery'), $w('#productMainImage'));
     initImageZoom($w('#productMainImage'));

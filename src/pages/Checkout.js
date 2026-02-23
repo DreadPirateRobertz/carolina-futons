@@ -32,6 +32,8 @@ function initTrustSignals() {
 
     repeater.onItemReady(($item, itemData) => {
       $item('#trustText').text = itemData.text;
+      try { $item('#trustIcon').alt = itemData.text; } catch (e) {}
+      try { $item('#trustIcon').accessibility.ariaHidden = true; } catch (e) {}
     });
   } catch (e) {}
 }
@@ -82,6 +84,7 @@ async function initCheckoutSummary() {
     if (subtotal >= FREE_SHIPPING_THRESHOLD) {
       try {
         $w('#checkoutFreeShipping').text = 'Your order qualifies for FREE shipping!';
+        try { $w('#checkoutFreeShipping').accessibility.role = 'status'; } catch (e) {}
         $w('#checkoutFreeShipping').show();
       } catch (e) {}
     }
@@ -111,6 +114,8 @@ function initDeliveryEstimate() {
 
     estimateEl.text =
       `Estimated delivery: ${minDate.toLocaleDateString('en-US', opts)} – ${maxDate.toLocaleDateString('en-US', opts)}`;
+    try { estimateEl.accessibility.ariaLabel = estimateEl.text; } catch (e) {}
+    try { estimateEl.accessibility.role = 'status'; } catch (e) {}
     estimateEl.show();
   } catch (e) {}
 }

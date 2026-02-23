@@ -6,6 +6,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { colors, typography } from 'public/designTokens.js';
 import { checkReturnWindow, isItemReturnable, getStatusTimeline, formatReturnStatus, getStatusColor, getReturnableItems } from 'public/ReturnsPortal.js';
 import { initBackToTop } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers.js';
 
 let _currentOrder = null;
 let _currentReturns = [];
@@ -136,6 +137,7 @@ async function handleLookup() {
     showLoading(false);
     try { $w('#returnResultsSection').expand(); } catch (e) {}
     try { $w('#returnResultsSection').scrollTo(); } catch (e) {}
+    announce($w, `Order ${orderNumber} found. ${_currentReturns.length > 0 ? _currentReturns.length + ' existing return' + (_currentReturns.length > 1 ? 's' : '') + ' found.' : 'You can start a new return.'}`);
     trackEvent('return_lookup', { orderNumber });
   } catch (err) {
     console.error('[Returns] Lookup error:', err);
@@ -170,6 +172,7 @@ async function handleRmaTrack() {
     showLoading(false);
     try { $w('#rmaResultsSection').expand(); } catch (e) {}
     try { $w('#rmaResultsSection').scrollTo(); } catch (e) {}
+    announce($w, `Return ${rmaNumber} status: ${result.status || 'found'}`);
     trackEvent('rma_tracked', { rmaNumber });
   } catch (err) {
     console.error('[Returns] RMA tracking error:', err);
@@ -218,8 +221,10 @@ function renderExistingReturns(returns) {
 
       // Status badge
       try {
-        $item('#existingReturnStatus').text = formatReturnStatus(itemData.status);
+        const statusText = formatReturnStatus(itemData.status);
+        $item('#existingReturnStatus').text = statusText;
         $item('#existingReturnStatus').style.color = getStatusColor(itemData.status);
+        try { $item('#existingReturnStatus').accessibility.ariaLabel = `Return status: ${statusText}`; } catch (e) {}
       } catch (e) {}
 
       // Timeline
@@ -232,6 +237,8 @@ function renderExistingReturns(returns) {
           return `${marker} ${step.label}`;
         }).join('\n');
         $item('#existingReturnTimeline').text = timelineText;
+        try { $item('#existingReturnTimeline').accessibility.ariaLabel = 'Return progress timeline'; } catch (e) {}
+        try { $item('#existingReturnTimeline').accessibility.role = 'list'; } catch (e) {}
       } catch (e) {}
 
       // Tracking number
@@ -291,7 +298,10 @@ function renderReturnForm(order) {
 
       if (itemData.image) {
         try { $item('#selectItemImage').src = itemData.image; } catch (e) {}
+        try { $item('#selectItemImage').alt = `${itemData.name} product image`; } catch (e) {}
       }
+
+      try { $item('#selectItemCheckbox').accessibility.ariaLabel = `Select ${itemData.name} for return`; } catch (e) {}
 
       if (!itemData.returnable) {
         try {
@@ -335,6 +345,7 @@ async function handleGuestReturnSubmit() {
     const orderNumber = ($w('#returnOrderNumberInput').value || '').trim();
     const email = ($w('#returnEmailInput').value || '').trim();
     const reason = $w('#returnReasonSelect')?.value || '';
+    try { $w('#returnDetailsTextbox').accessibility.ariaLabel = 'Additional return details'; } catch (e) {}
     const details = $w('#returnDetailsTextbox')?.value || '';
     const returnType = $w('#returnTypeSelect')?.value || 'return';
 
@@ -372,9 +383,11 @@ async function handleGuestReturnSubmit() {
     if (result.success) {
       try {
         $w('#returnSuccessMessage').text = `Return request submitted! Your RMA number is ${result.rmaNumber}. Keep this number to track your return status.`;
+        try { $w('#returnSuccessMessage').accessibility.role = 'status'; } catch (e) {}
         $w('#returnSuccessMessage').show();
       } catch (e) {}
       try { $w('#returnFormSection').collapse(); } catch (e) {}
+      announce($w, `Return submitted successfully. RMA number: ${result.rmaNumber}`);
       trackEvent('guest_return_submitted', { rmaNumber: result.rmaNumber, type: returnType });
     } else {
       showFormError(result.error || 'Unable to submit return.');
@@ -396,8 +409,10 @@ function renderRmaStatus(result) {
   } catch (e) {}
 
   try {
-    $w('#rmaStatusLabel').text = formatReturnStatus(result.status);
+    const statusText = formatReturnStatus(result.status);
+    $w('#rmaStatusLabel').text = statusText;
     $w('#rmaStatusLabel').style.color = getStatusColor(result.status);
+    try { $w('#rmaStatusLabel').accessibility.ariaLabel = `Return status: ${statusText}`; } catch (e) {}
   } catch (e) {}
 
   // Timeline
@@ -410,6 +425,8 @@ function renderRmaStatus(result) {
       return `${marker} ${step.label}`;
     }).join('\n');
     $w('#rmaTimeline').text = timelineText;
+    try { $w('#rmaTimeline').accessibility.ariaLabel = 'Return progress timeline'; } catch (e) {}
+    try { $w('#rmaTimeline').accessibility.role = 'list'; } catch (e) {}
   } catch (e) {}
 
   // Tracking info
@@ -493,6 +510,8 @@ function initResultsSections() {
 function showError(message) {
   try {
     $w('#returnError').text = message;
+    try { $w('#returnError').accessibility.role = 'alert'; } catch (e) {}
+    try { $w('#returnError').accessibility.ariaLive = 'assertive'; } catch (e) {}
     $w('#returnError').show('fade', { duration: 200 });
     $w('#returnError').style.color = colors.sunsetCoral;
   } catch (e) {}
@@ -505,6 +524,8 @@ function hideError() {
 function showFormError(message) {
   try {
     $w('#returnFormError').text = message;
+    try { $w('#returnFormError').accessibility.role = 'alert'; } catch (e) {}
+    try { $w('#returnFormError').accessibility.ariaLive = 'assertive'; } catch (e) {}
     $w('#returnFormError').show('fade', { duration: 200 });
     $w('#returnFormError').style.color = colors.sunsetCoral;
   } catch (e) {}

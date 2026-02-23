@@ -13,6 +13,7 @@ import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstal
 import { reportMetrics } from 'backend/coreWebVitals.web';
 
 let _previousCartItemCount = null;
+let _lastFocusedBeforeOverlay = null;
 
 $w.onReady(async function () {
   captureInstallPrompt();
@@ -79,6 +80,17 @@ function initAccessibility() {
           try { $w('#promoOverlay').hide('fade', { duration: 200 }); } catch (e) {}
           // Close mobile menu
           try { $w('#mobileMenuOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          // Close exit intent popup
+          try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
+          try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          // Restore focus to previously active element
+          try {
+            if (document.activeElement && document.activeElement !== document.body) {
+              // Focus stays on current element
+            } else if (_lastFocusedBeforeOverlay) {
+              _lastFocusedBeforeOverlay.focus();
+            }
+          } catch (e) {}
         }
       });
     }
@@ -363,6 +375,9 @@ async function initPromoLightbox() {
     try { lightbox.accessibility.ariaModal = true; } catch (e) {}
     try { lightbox.accessibility.ariaLabel = 'Promotional offer'; } catch (e) {}
 
+    // Store focus for restoration
+    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
+
     // Show the lightbox
     $w('#promoOverlay').show('fade', { duration: 300 });
     lightbox.show('fade', { duration: 300 });
@@ -377,6 +392,7 @@ function populatePromoLightbox(promo) {
   try {
     if (promo.heroImage) {
       $w('#promoHeroImage').src = promo.heroImage;
+      try { $w('#promoHeroImage').alt = `${promo.title || 'Promotional offer'} - Carolina Futons`; } catch (e) {}
     }
   } catch (e) {}
   try {
@@ -441,6 +457,7 @@ function initPromoProducts(products) {
 
     repeater.onItemReady(($item, itemData) => {
       try { $item('#promoImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#promoImage').alt = `${itemData.name} - promotional product`; } catch (e) {}
       try { $item('#promoName').text = itemData.name; } catch (e) {}
       try {
         $item('#promoPrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
@@ -650,6 +667,9 @@ function showExitPopup() {
 
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
+
+    // Store focus for restoration
+    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
 
     // Populate content
     try { $w('#exitTitle').text = 'Wait — Before You Go!'; } catch (e) {}
