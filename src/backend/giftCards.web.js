@@ -43,7 +43,7 @@ export const purchaseGiftCard = webMethod(
       }
 
       const amount = Number(data.amount);
-      if (!GIFT_CARD_AMOUNTS.includes(amount)) {
+      if (!isFinite(amount) || !GIFT_CARD_AMOUNTS.includes(amount)) {
         return { success: false, message: `Amount must be one of: $${GIFT_CARD_AMOUNTS.join(', $')}` };
       }
 

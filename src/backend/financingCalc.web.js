@@ -183,8 +183,9 @@ export const getCartFinancing = webMethod(
 // ─── Internal Helpers ───────────────────────────────────────────────
 
 function toNumber(val) {
+  if (val == null || val === '') return null;
   const n = typeof val === 'number' ? val : parseFloat(val);
-  if (!isFinite(n) || n <= 0) return null;
+  if (!isFinite(n) || isNaN(n) || n <= 0) return null;
   return n;
 }
 

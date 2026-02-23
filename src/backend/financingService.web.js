@@ -39,8 +39,10 @@ export const calculateMonthlyPayment = webMethod(
   Permissions.Anyone,
   (price, term, apr = 0) => {
     const p = Number(price);
-    const t = Math.max(1, Math.floor(Number(term)));
-    const a = Math.max(0, Number(apr));
+    const rawT = Number(term);
+    const rawA = Number(apr);
+    const t = isFinite(rawT) ? Math.max(1, Math.floor(rawT)) : 1;
+    const a = isFinite(rawA) ? Math.max(0, rawA) : 0;
 
     if (!isFinite(p) || p <= 0) {
       return { monthly: 0, total: 0, interest: 0, term: t, apr: a };
