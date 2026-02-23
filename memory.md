@@ -38,7 +38,7 @@
 
 ## CMS Collections (Need Creation)
 
-ProductAnalytics, ContactSubmissions, Wishlist, Fulfillments, FabricSwatches, Promotions, MemberPreferences, AbandonedCarts, DeliverySchedule, AssemblyGuides, GiftCards — field schemas in source code
+ProductAnalytics, ContactSubmissions, Wishlist, Fulfillments, FabricSwatches, Promotions, MemberPreferences, AbandonedCarts, DeliverySchedule, AssemblyGuides, GiftCards, ShowroomAppointments — field schemas in source code
 
 ## Secrets (Need Storing in Wix Secrets Manager)
 
@@ -60,7 +60,7 @@ UPS_CLIENT_ID, UPS_CLIENT_SECRET, UPS_ACCOUNT_NUMBER, UPS_SANDBOX, SITE_OWNER_CO
 8. `gt sling` needs `--hook-raw-bead` (mol-polecat-work formula missing in cfutons)
 9. `gt session start` required after sling
 10. All workers MUST update memory before death/kill
-11. Submit PRs — do not commit directly. Reviews managed by melania.
+11. **MANDATORY PR PROCESS** — NO direct pushes to main. Workflow: feature branch → push branch → `gh pr create` → review/approval → merge. Melania enforces. Applies to cfutons AND cfutons_mobile.
 
 ## Known Open Issues
 
