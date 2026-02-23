@@ -180,33 +180,38 @@ function initMessageInput($w) {
       input.value = '';
       appendMessage($w, text, 'customer', _userName || 'You');
 
-      if (_isOnline) {
-        // Send to CMS for agent pickup
-        await sendMessage({
-          sessionId: _sessionId,
-          message: text,
-          senderName: _userName,
-          senderEmail: _userEmail,
-          sender: 'customer',
-        });
-      } else {
-        // After hours — create support ticket
-        await createSupportTicket({
-          name: _userName,
-          email: _userEmail,
-          message: text,
-          sessionId: _sessionId,
-        });
+      try {
+        if (_isOnline) {
+          // Send to CMS for agent pickup
+          await sendMessage({
+            sessionId: _sessionId,
+            message: text,
+            senderName: _userName,
+            senderEmail: _userEmail,
+            sender: 'customer',
+          });
+        } else {
+          // After hours — create support ticket
+          await createSupportTicket({
+            name: _userName,
+            email: _userEmail,
+            message: text,
+            sessionId: _sessionId,
+          });
 
-        appendMessage(
-          $w,
-          'Thanks for your message! We\'re currently offline but will respond via email within 1 business day.',
-          'agent',
-          'Carolina Futons'
-        );
+          appendMessage(
+            $w,
+            'Thanks for your message! We\'re currently offline but will respond via email within 1 business day.',
+            'agent',
+            'Carolina Futons'
+          );
+        }
+
+        trackEvent('chat_message_sent', { online: _isOnline });
+      } catch (err) {
+        console.error('[LiveChat] Failed to send message:', err.message);
+        appendMessage($w, 'Sorry, we couldn\'t send your message. Please try again.', 'agent', 'System');
       }
-
-      trackEvent('chat_message_sent', { online: _isOnline });
     };
 
     sendBtn.onClick(handleSend);

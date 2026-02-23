@@ -144,7 +144,7 @@ export async function initStockUrgency($w, state) {
         if (res.items.length > 0 && res.items[0].weekSales > 0) { badge.text = `Popular \u2014 ${res.items[0].weekSales} sold this week`; badge.show(); }
         else { badge.hide(); }
       }
-    } catch (e) { try { $w('#popularityBadge').hide(); } catch (e2) {} }
+    } catch (e) { console.error('[AddToCart] Error loading popularity badge:', e.message); try { $w('#popularityBadge').hide(); } catch (e2) {} }
   } catch (e) {}
 }
 
@@ -220,7 +220,7 @@ export async function initWishlistButton($w, state) {
         const wixData = (await import('wix-data')).default;
         const existing = await wixData.query('Wishlist').eq('memberId', member._id).eq('productId', state.product._id).find();
         if (existing.items.length > 0) setWishlistActive($w, true);
-      } catch (e) {}
+      } catch (e) { console.error('[AddToCart] Error checking wishlist status:', e.message); }
     }
     btn.onClick(async () => {
       const { currentMember: cm, authentication } = await import('wix-members-frontend');
@@ -236,7 +236,7 @@ export async function initWishlistButton($w, state) {
         setWishlistActive($w, true);
       }
     });
-  } catch (e) { try { $w('#wishlistBtn').hide(); } catch (e2) {} }
+  } catch (e) { console.error('[AddToCart] Wishlist operation failed:', e.message); try { $w('#wishlistBtn').hide(); } catch (e2) {} }
 }
 
 function setWishlistActive($w, active) {

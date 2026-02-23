@@ -172,7 +172,7 @@ export const triggerWelcomeSequence = webMethod(
       if (existing.items.length > 0) return { success: false, queued: 0 };
 
       let discountCode = '';
-      try { discountCode = await getSecret('WELCOME_DISCOUNT_CODE'); } catch (e) {}
+      try { discountCode = await getSecret('WELCOME_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve WELCOME_DISCOUNT_CODE:', e.message); }
 
       const abVariant = selectABVariant();
       const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
@@ -303,7 +303,7 @@ export const triggerAbandonedCartRecovery = webMethod(
 
       let cartsProcessed = 0;
       let discountCode = '';
-      try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) {}
+      try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve RECOVERY_DISCOUNT_CODE for cart recovery:', e.message); }
 
       for (const cart of result.items) {
         if (!cart.buyerEmail || !validateEmail(cart.buyerEmail)) continue;
@@ -398,7 +398,7 @@ export const triggerReengagement = webMethod(
         if (alreadySent.items.length > 0) continue;
 
         let discountCode = '';
-        try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) {}
+        try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve RECOVERY_DISCOUNT_CODE for reengagement:', e.message); }
 
         await queueEmail({
           templateId: SEQUENCES.reengagement.steps[0].templateId,

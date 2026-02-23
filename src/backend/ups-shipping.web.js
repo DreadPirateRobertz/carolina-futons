@@ -106,7 +106,7 @@ async function getBaseUrl() {
   let sandbox = false;
   try {
     sandbox = (await getSecret('UPS_SANDBOX')) === 'true';
-  } catch (e) {}
+  } catch (e) { console.error('[ups-shipping] Failed to retrieve UPS_SANDBOX setting:', e.message); }
   return sandbox
     ? 'https://wwwcie.ups.com/api'
     : 'https://onlinetools.ups.com/api';

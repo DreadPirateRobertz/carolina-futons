@@ -333,7 +333,7 @@ function initHelpfulVoting($w) {
             if (result.success) {
               try { $item('#reviewHelpfulCount').text = `Helpful (${result.helpful})`; } catch (e) {}
             }
-          } catch (e) {}
+          } catch (e) { console.error('[ProductReviews] markHelpful failed:', e.message); helpfulBtn.enable(); }
         });
       } catch (e) {}
     });
