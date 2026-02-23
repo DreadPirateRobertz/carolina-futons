@@ -15,17 +15,29 @@
 **Next:** Price enrichment pass on catalog (manual or browser-based scrape needed). Monitor crew scrape output. Compile into final master catalog.
 **Blockers:** carolinafutons.com is 100% client-rendered (Wix) — no server-side HTML. WebFetch returns JS shell for ALL pages. Prices/descriptions require headless browser (Puppeteer/Playwright) or manual entry.
 
-## architect — 2026-02-21 18:15 MST
-**Status:** ACTIVE — P0 catalog scrape executing
-**Progress:** Claimed cf-5bq (mayor-assigned scrape). Starting carolinafutons.com full crawl. Also received cf-2pm from melania (manufacturer specs) — will execute after catalog scrape.
-**Next:** Fetch sitemap, discover all product URLs, extract 88+ products, output JSON
-**Blockers:** Wix client-rendering blocks WebFetch
+## architect — 2026-02-21 19:10 MST
+**Status:** ACTIVE — cf-5bq SHIPPED, moving to cf-2pm
+**Progress:**
+- SHIPPED `catalog-scrape-carolinafutons.json`: FINAL enriched catalog — 88 products, 25 content pages. Merged 6 data sources (melania seed, caesar scrapes x2, KD Frames mfr catalog, Night & Day website, WebSearch results). Stats: 88/88 descriptions, 64/88 prices, 75/88 images, 87/88 manufacturers.
+- Ran 11 parallel scraper agents across product batches + content pages.
+- Pushed to mayor/rig/content/ and repo main.
+**Next:** Execute cf-2pm (manufacturer specs scrape) or claim next available bead.
+**Blockers:** None
 
-## caesar — 2026-02-21 18:20 MST
-**Status:** ACTIVE — executing cf-k73 (P0 catalog scrape)
-**Progress:** Sitemap scraped, 88 product URLs identified. 6 parallel scraper agents dispatched (batches of 15). Fixed Dolt SEGV (stale noms/LOCK + dead pid). Committed prior uncommitted work (browse abandonment + Core Web Vitals frontend, 3213 tests passing).
-**Next:** Collect all 6 agent results, merge into catalog JSON matching CMS-COLLECTION-SCHEMAS.md format, commit scrape output + code.
-**Blockers:** Wix renders product pages client-side — WebFetch gets JS shell. Agents extracting what structured data is available. May need enrichment pass.
+## caesar — 2026-02-22 00:20 MST
+**Status:** ACTIVE — cf-n18 manufacturer specs + content production
+**Progress:**
+- CLOSED cf-41p + cf-k73: 88 products scraped, categorized, pushed.
+- ENRICHED catalog-MASTER.json: 88/88 with prices, descriptions, images. Pushed.
+- SHIPPED content/faq.json: 30 FAQs across 7 categories. Pushed.
+- SHIPPED content/shipping-info.json: shipping methods, returns, assembly. Pushed.
+- SHIPPED content/about.json: company info, manufacturer profiles. Pushed.
+- SHIPPED content/category-descriptions.json: 7 categories with SEO. Pushed.
+- SHIPPED content/product-specs-enrichment.json: dimensions for all product types. Pushed.
+- cf-n18: 3 manufacturer agents still running (Night & Day, Strata, Otis Bed). KD Frames done.
+- Tests: 3,487 passing, 95 files, 0 failures.
+**Next:** Compile manufacturer agent results when done. Claim next bead.
+**Blockers:** None
 
 ---
 
