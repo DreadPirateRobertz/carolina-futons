@@ -1,8 +1,9 @@
-// Placeholder image system for Carolina Futons
-// Provides category-mapped placeholder images for layout testing
-// Uses Unsplash free stock photos sized for furniture/home categories
+// Product image fallback system for Carolina Futons
+// Category hero/card images use Unsplash placeholders (replaced when real assets uploaded to Wix Media Manager)
+// Product fallback images use real wixstatic.com URLs from the live catalog
 
 // ── Category Hero Images (1920x600) ─────────────────────────────────
+// These are page-level decorative images — replace with Wix Media uploads per MEDIA_MANIFEST.md
 const categoryHeroImages = {
   'futon-frames': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&h=600&fit=crop&crop=center',
   'mattresses': 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1920&h=600&fit=crop&crop=center',
@@ -24,61 +25,62 @@ const categoryCategoryCards = {
   'unfinished-wood': 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&h=400&fit=crop&crop=center',
 };
 
-// ── Product Placeholder Images (400x400 grid, 800x800 detail) ───────
-// Multiple images per category for gallery testing
+// ── Product Fallback Images (real wixstatic.com catalog images) ──────
+// Used when a product has no mainMedia. Sourced from catalog-MASTER.json.
+// Each category uses real product photos from the live carolinafutons.com site.
 const productImages = {
   'futon-frames': [
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_9234577e395e4eb180cb2c9bc936d65f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_677c5e7ae28c42f79c25fd5182191e21~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_9d703e0c25444946ab49296181d9ca2c~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_8d3bd05dd2a94ac698cc7d301fb6b4b0~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_db236e3df36f405d9e1a3f7cd8423f2f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'mattresses': [
-    'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1592229505726-ca121723b8ef?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_354d2b79d3004c6e95e629a6d99d2e8e~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_0eb04eaa5f7f4ebfb28e59ac8dbc7372~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'murphy-cabinet-beds': [
-    'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1618220179428-22790b461013?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_3887b1acf16f4360979b0a66479934ac~mv2.png/v1/fit/w_800,h_800,q_90/file.png',
+    'https://static.wixstatic.com/media/e04e89_229fba0bcb404fda873a0552e7e39089~mv2.png/v1/fit/w_800,h_800,q_90/file.png',
+    'https://static.wixstatic.com/media/e04e89_431e9254845144ce8ee4baed220b643e~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_d1838922ab7f4ed983c3c99e0fe95ff7~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_08a15287a88145c899f30248a02eb10a~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_4681ba492fcf41a4a7e967a932b01a22~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'platform-beds': [
-    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1588046130717-0eb0c9a3ba15?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1598928506311-c55ece37643e?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_1dd7f840025044478981e6e883863d55~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_8bb00365ccdc4f33b899c2832e00832d~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_b9d4cf76a1a84bf5bb4821edc53f6df2~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_73b01be3988f4e1db8bc8d8cdf05eee3~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_5d529812f06b498f92066d0d83ab5da8~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'casegoods-accessories': [
-    'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1532372320572-cda25653a26d?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1616627547584-bf28cee262db?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_b32fbaec605244aa9809db1db8f92a31~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_5d98d248177a4954899d45797a23d81c~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_f5b83ac9a7204d5b95192a314749de6f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_c69e4321e4624ad6a498f79e3b95fb7a~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'wall-huggers': [
-    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_241b8a589d964e41a3094fbcd1597728~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_a1f34879775849259ca38821606c1733~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_9368fd12e5be4002852bc42c6f81cda5~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_b9f7b2d45dac4fb7bc05533c0c3e6a6e~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
   'unfinished-wood': [
-    'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=800&h=800&fit=crop&crop=center',
-    'https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800&h=800&fit=crop&crop=center',
+    'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_9234577e395e4eb180cb2c9bc936d65f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_677c5e7ae28c42f79c25fd5182191e21~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
+    'https://static.wixstatic.com/media/e04e89_9d703e0c25444946ab49296181d9ca2c~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg',
   ],
 };
 
-// ── Fallback (generic furniture placeholder) ────────────────────────
-const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=800&fit=crop&crop=center';
+// ── Fallback (generic product image from catalog) ────────────────────
+const FALLBACK_IMAGE = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
 const FALLBACK_HERO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&h=600&fit=crop&crop=center';
 
 /**
@@ -100,7 +102,8 @@ export function getCategoryCardImage(categorySlug) {
 }
 
 /**
- * Get placeholder product images for a given category.
+ * Get fallback product images for a given category.
+ * Uses real product photos from the live catalog on Wix CDN.
  * @param {string} categorySlug - e.g. 'futon-frames'
  * @param {number} count - Number of images to return (cycles if > available)
  * @returns {string[]} Array of image URLs sized 800x800
@@ -128,13 +131,13 @@ export function getProductFallbackImage(categorySlug) {
 
 /**
  * Get a grid-sized thumbnail for a product card.
- * Takes an 800x800 source URL and returns a 400x400 version.
+ * Adjusts Wix Media transform params for 400x400 output.
  * @param {string} imageUrl - Source image URL
  * @returns {string} Resized URL (400x400)
  */
 export function getGridThumbnail(imageUrl) {
-  if (!imageUrl) return FALLBACK_IMAGE.replace('w=800&h=800', 'w=400&h=400');
-  return imageUrl.replace('w=800&h=800', 'w=400&h=400');
+  if (!imageUrl) return resizeWixImage(FALLBACK_IMAGE, 400, 400);
+  return resizeWixImage(imageUrl, 400, 400);
 }
 
 /**
@@ -143,6 +146,24 @@ export function getGridThumbnail(imageUrl) {
  * @returns {string} Resized URL (100x100)
  */
 export function getGalleryThumbnail(imageUrl) {
-  if (!imageUrl) return FALLBACK_IMAGE.replace('w=800&h=800', 'w=100&h=100');
-  return imageUrl.replace('w=800&h=800', 'w=100&h=100');
+  if (!imageUrl) return resizeWixImage(FALLBACK_IMAGE, 100, 100);
+  return resizeWixImage(imageUrl, 100, 100);
+}
+
+/**
+ * Resize a wixstatic.com image URL by replacing transform params.
+ * Falls back to string replacement for non-Wix URLs.
+ * @param {string} url - Image URL
+ * @param {number} w - Target width
+ * @param {number} h - Target height
+ * @returns {string} Resized URL
+ */
+function resizeWixImage(url, w, h) {
+  if (!url) return FALLBACK_IMAGE;
+  // Handle wixstatic.com URLs — replace w_/h_ params in transform path
+  if (url.includes('static.wixstatic.com')) {
+    return url.replace(/w_\d+/, `w_${w}`).replace(/h_\d+/, `h_${h}`);
+  }
+  // Fallback for Unsplash-style URLs
+  return url.replace(/w=\d+/, `w=${w}`).replace(/h=\d+/, `h=${h}`);
 }
