@@ -7,6 +7,7 @@ import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHel
 import { getCategoryHeroImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 import wixData from 'wix-data';
 
 // ── Category metadata for all 8 categories ──────────────────────────

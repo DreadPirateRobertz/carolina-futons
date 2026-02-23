@@ -1,6 +1,7 @@
 // Member Page.js - Customer Account Page
 // Account dashboard, order history, wishlist, and account settings
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { initReturnsSection } from 'public/ReturnsPortal.js';
@@ -165,6 +166,7 @@ function initOrderHistory() {
         if (badgeEl) {
           badgeEl.text = status;
           badgeEl.style.color = STATUS_COLORS[status] || colors.mountainBlue;
+          try { badgeEl.accessibility.ariaLabel = `Order status: ${status}`; } catch (e) {}
         } else {
           $item('#orderStatus').text = status;
         }
@@ -204,6 +206,7 @@ function initOrderHistory() {
             }
             $item('#orderReorderBtn').label = 'Added to Cart!';
             $item('#orderReorderBtn').disable();
+            announce($w, `Items from order ${itemData.number} added to cart`);
             setTimeout(() => {
               $item('#orderReorderBtn').label = 'Reorder';
               $item('#orderReorderBtn').enable();
@@ -236,7 +239,7 @@ function initOrderHistory() {
             .filter(li => li.mediaItem?.src)
             .map(li => ({
               src: li.mediaItem.src,
-              alt: li.name || 'Order item',
+              alt: li.name ? `Ordered item: ${li.name}` : 'Ordered item',
               title: li.name,
             }));
           if (galleryItems.length > 0) {
@@ -277,6 +280,7 @@ async function initWishlist() {
         sortDropdown.onChange(() => {
           wishlistSortOrder = sortDropdown.value;
           applyWishlistSort();
+          announce($w, `Wishlist sorted by ${sortDropdown.options.find(o => o.value === wishlistSortOrder)?.label || wishlistSortOrder}`);
         });
         try { sortDropdown.accessibility.ariaLabel = 'Sort wishlist items'; } catch (e) {}
       }
@@ -397,6 +401,7 @@ async function initWishlist() {
             await addToCart(itemData.productId || itemData._id);
             $item('#wishAddToCartBtn').label = 'Added!';
             $item('#wishAddToCartBtn').disable();
+            announce($w, `${itemData.name} added to cart`);
             setTimeout(() => {
               $item('#wishAddToCartBtn').label = 'Add to Cart';
               $item('#wishAddToCartBtn').enable();
@@ -439,6 +444,7 @@ async function initWishlist() {
           try {
             await mod.default.remove('Wishlist', itemData._id);
             $item('#wishCard').collapse();
+            announce($w, `${itemData.name} removed from wishlist`);
             // Update dashboard count
             try {
               const countEl = $w('#memberWishCount');

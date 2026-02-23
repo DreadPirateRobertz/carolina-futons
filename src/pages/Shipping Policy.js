@@ -2,6 +2,7 @@
 // Shipping calculator, delivery zones, and FAQ
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(async function () {
@@ -39,6 +40,7 @@ function initShippingCalculator() {
       try {
         resultText.text = zone.message;
         resultText.show('fade', { duration: 200 });
+        announce($w, zone.message);
       } catch (e) {}
     });
   } catch (e) {}
@@ -112,6 +114,7 @@ function initDeliveryInfo() {
     repeater.onItemReady(($item, itemData) => {
       $item('#deliveryTitle').text = itemData.title;
       $item('#deliveryDesc').text = itemData.description;
+      try { $item('#deliveryTitle').accessibility.ariaLabel = `${itemData.title}: ${itemData.description}`; } catch (e) {}
     });
     repeater.data = deliveryMethods;
   } catch (e) {}

@@ -5,6 +5,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
@@ -132,11 +133,14 @@ function initDeliveryTimeline() {
           el.text = step.text;
           if (step.status === 'complete') {
             el.style.color = colors.success;
+            try { el.accessibility.ariaLabel = `Completed: ${step.text}`; } catch (e) {}
           } else if (step.status === 'active') {
             el.style.color = colors.mountainBlue;
             el.style.fontWeight = String(typography.h2.weight);
+            try { el.accessibility.ariaLabel = `In progress: ${step.text}`; } catch (e) {}
           } else {
             el.style.color = colors.mutedBrown;
+            try { el.accessibility.ariaLabel = `Pending: ${step.text}`; } catch (e) {}
           }
         }
       } catch (e) {}
@@ -152,9 +156,9 @@ function initSocialSharing() {
   try {
     $w('#shareText').text = 'Love your new furniture? Share with friends!';
 
-    try { $w('#shareFacebook').accessibility.ariaLabel = 'Share on Facebook'; } catch (e) {}
-    try { $w('#sharePinterest').accessibility.ariaLabel = 'Share on Pinterest'; } catch (e) {}
-    try { $w('#shareInstagram').accessibility.ariaLabel = 'Follow us on Instagram'; } catch (e) {}
+    try { $w('#shareFacebook').accessibility.ariaLabel = 'Share on Facebook (opens in new window)'; } catch (e) {}
+    try { $w('#sharePinterest').accessibility.ariaLabel = 'Share on Pinterest (opens in new window)'; } catch (e) {}
+    try { $w('#shareInstagram').accessibility.ariaLabel = 'Follow us on Instagram (opens in new window)'; } catch (e) {}
 
     $w('#shareFacebook').onClick(() => {
       trackSocialShare('facebook', 'purchase');
@@ -412,6 +416,7 @@ async function initTestimonialPrompt() {
         const story = $w('#testimonialStoryInput').value?.trim();
         if (!story || story.length < 10) {
           try { $w('#testimonialError').text = 'Please write at least 10 characters.'; $w('#testimonialError').show(); } catch (e) {}
+          announce($w, 'Please write at least 10 characters for your testimonial');
           return;
         }
 
@@ -433,9 +438,11 @@ async function initTestimonialPrompt() {
           try {
             $w('#testimonialSuccess').text = 'Thank you for sharing! Your testimonial will appear on our site once reviewed.';
             $w('#testimonialSuccess').show('fade', { duration: 300 });
+            announce($w, 'Thank you for sharing your testimonial');
           } catch (e) {}
         } else {
           try { $w('#testimonialError').text = result.error || 'Something went wrong. Please try again.'; $w('#testimonialError').show(); } catch (e) {}
+          announce($w, result.error || 'Something went wrong. Please try again.');
           $w('#testimonialSubmitBtn').enable();
           $w('#testimonialSubmitBtn').label = 'Share Your Story';
         }

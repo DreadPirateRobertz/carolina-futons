@@ -47,7 +47,9 @@ function initPolicyAccordion() {
       $item('#policyToggle').text = '+';
 
       // ARIA for accordion
+      try { $item('#policyTitle').accessibility.role = 'button'; } catch (e) {}
       try { $item('#policyTitle').accessibility.ariaLabel = `Toggle ${itemData.title}`; } catch (e) {}
+      try { $item('#policyToggle').accessibility.ariaLabel = `Toggle ${itemData.title}`; } catch (e) {}
       try { $item('#policyToggle').accessibility.ariaExpanded = false; } catch (e) {}
 
       $item('#policyTitle').onClick(() => {

@@ -14,6 +14,7 @@ import {
 } from 'public/cartService';
 import { initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -166,6 +167,7 @@ async function loadRecentlyViewed(cart) {
       repeater.onItemReady(($item, itemData) => {
         try { $item('#cartRecentImage').src = itemData.mainMedia; } catch (e) {}
         try { $item('#cartRecentImage').alt = `${itemData.name} - recently viewed`; } catch (e) {}
+        try { $item('#cartRecentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
         try { $item('#cartRecentName').text = itemData.name; } catch (e) {}
         try { $item('#cartRecentPrice').text = itemData.price; } catch (e) {}
 
@@ -215,12 +217,15 @@ async function loadCartSuggestions(cart) {
       $item('#sugName').text = itemData.name;
       $item('#sugPrice').text = itemData.formattedPrice;
 
+      try { $item('#sugAddBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+
       // Quick add to cart button
       $item('#sugAddBtn').onClick(async () => {
         try {
           await addToCart(itemData._id);
           $item('#sugAddBtn').label = 'Added!';
           $item('#sugAddBtn').disable();
+          announce($w, `${itemData.name} added to cart`);
           setTimeout(() => {
             updateShippingProgress();
             loadCartSuggestions();
@@ -273,6 +278,7 @@ function initQuantityControls() {
               $item('#qtyInput').value = String(currentQty);
               console.error('Error updating quantity:', err);
             }
+            announce($w, `${itemData.name} quantity updated to ${newQty}`);
             await refreshCartTotals();
           }
         });
@@ -287,12 +293,14 @@ function initQuantityControls() {
             $item('#qtyInput').value = String(currentQty);
             console.error('Error updating quantity:', err);
           }
+          announce($w, `${itemData.name} quantity updated to ${newQty}`);
           await refreshCartTotals();
         });
 
         $item('#removeItem').onClick(async () => {
           try {
             await removeCartItem(itemData._id);
+            announce($w, `${itemData.name} removed from cart`);
           } catch (err) {
             console.error('Error removing item:', err);
           }

@@ -6,6 +6,7 @@ import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -87,7 +88,7 @@ function initSocialShareButtons() {
           openUrl(`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`, '_blank');
         });
       });
-      try { $w('#shareFacebook').accessibility.ariaLabel = 'Share this article on Facebook'; } catch (e) {}
+      try { $w('#shareFacebook').accessibility.ariaLabel = 'Share this article on Facebook (opens in new window)'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -96,7 +97,7 @@ function initSocialShareButtons() {
           openUrl(`https://pinterest.com/pin/create/button/?url=${currentUrl}&description=${pageTitle}`, '_blank');
         });
       });
-      try { $w('#sharePinterest').accessibility.ariaLabel = 'Share this article on Pinterest'; } catch (e) {}
+      try { $w('#sharePinterest').accessibility.ariaLabel = 'Share this article on Pinterest (opens in new window)'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -105,7 +106,7 @@ function initSocialShareButtons() {
           openUrl(`https://twitter.com/intent/tweet?url=${currentUrl}&text=${pageTitle}`, '_blank');
         });
       });
-      try { $w('#shareTwitter').accessibility.ariaLabel = 'Share this article on Twitter'; } catch (e) {}
+      try { $w('#shareTwitter').accessibility.ariaLabel = 'Share this article on Twitter (opens in new window)'; } catch (e) {}
     } catch (e) {}
 
     try {
@@ -137,6 +138,7 @@ function initBlogNewsletter() {
       if (!email || !email.includes('@')) {
         try { $w('#blogNewsletterError').text = 'Please enter a valid email'; } catch (e) {}
         try { $w('#blogNewsletterError').show(); } catch (e) {}
+        announce($w, 'Please enter a valid email address');
         return;
       }
 
@@ -151,10 +153,12 @@ function initBlogNewsletter() {
 
         try { $w('#blogNewsletterSuccess').show(); } catch (e) {}
         try { $w('#blogNewsletterError').hide(); } catch (e) {}
+        announce($w, 'Successfully subscribed to newsletter');
         emailInput.value = '';
       } catch (err) {
         try { $w('#blogNewsletterError').text = 'Something went wrong. Please try again.'; } catch (e) {}
         try { $w('#blogNewsletterError').show(); } catch (e) {}
+        announce($w, 'Something went wrong. Please try again.');
       } finally {
         submitBtn.enable();
       }

@@ -5,6 +5,7 @@ import { getCompareList, removeFromCompare, addToCompare } from 'public/galleryH
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackProductPageView } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 import wixLocationFrontend from 'wix-location-frontend';
 
 let comparisonData = null;
@@ -146,6 +147,7 @@ function renderProductHeaders() {
     } catch (e) {}
 
     // ARIA
+    try { $w(`#compareCol${idx}`).accessibility.role = 'region'; } catch (e) {}
     try { $w(`#compareCol${idx}`).accessibility.ariaLabel = `Product ${idx}: ${product.name}`; } catch (e) {}
   }
 
@@ -246,6 +248,7 @@ async function initShareButton() {
         $w('#shareCompareBtn').label = 'Link Copied!';
         try { $w('#shareUrlText').text = fullUrl; } catch (e) {}
         try { $w('#shareUrlText').show(); } catch (e) {}
+        announce($w, 'Comparison link copied to clipboard');
 
         setTimeout(() => {
           try { $w('#shareCompareBtn').label = 'Share Comparison'; } catch (e) {}

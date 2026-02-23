@@ -51,11 +51,13 @@ function initTimeline() {
     const repeater = $w('#timelineRepeater');
     if (!repeater) return;
 
+    try { repeater.accessibility.role = 'list'; } catch (e) {}
     try { repeater.accessibility.ariaLabel = 'Business history timeline'; } catch (e) {}
     repeater.onItemReady(($item, itemData) => {
       $item('#timelineYear').text = itemData.year;
       $item('#timelineTitle').text = itemData.title;
       $item('#timelineDesc').text = itemData.description;
+      try { $item('#timelineYear').accessibility.ariaLabel = `${itemData.year}: ${itemData.title}`; } catch (e) {}
     });
     repeater.data = milestones.map((m, i) => ({ ...m, _id: String(i) }));
   } catch (e) {}

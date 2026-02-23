@@ -3,6 +3,7 @@
 import wixData from 'wix-data';
 import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
 import { typography } from 'public/designTokens.js';
+import { announce } from 'public/a11yHelpers';
 
 $w.onReady(function () {
   initVideoGallery();
@@ -17,6 +18,8 @@ function initVideoGallery() {
   try {
     const videoPlayer = $w('#videoPlayer');
     if (!videoPlayer) return;
+
+    try { videoPlayer.accessibility.ariaLabel = 'Product demonstration video player'; } catch (e) {}
 
     // Auto-play on visibility
     videoPlayer.onPlay(() => {
@@ -58,11 +61,12 @@ function initProductVideoGrid() {
         try { $item('#videoDuration').text = itemData.duration; } catch (e) {}
       }
 
-      // Category badge
+      // Category badge (decorative — screen readers get info from title)
       if (itemData.category) {
         try {
           $item('#videoCategoryBadge').text = itemData.category;
           $item('#videoCategoryBadge').show();
+          try { $item('#videoCategoryBadge').accessibility.ariaHidden = true; } catch (e) {}
         } catch (e) {}
       }
 
@@ -104,10 +108,12 @@ function initVideoFilters() {
         try { $w(btnId).accessibility.ariaLabel = label; } catch (e) {}
         $w(btnId).onClick(() => {
           filterVideosByCategory(category);
-          // Highlight active filter
+          // Highlight active filter and update pressed state
           Object.keys(filterBtns).forEach(id => {
             try { $w(id).style.fontWeight = id === btnId ? String(typography.h2.weight) : String(typography.body.weight); } catch (e) {}
+            try { $w(id).accessibility.ariaPressed = id === btnId; } catch (e) {}
           });
+          announce($w, `Showing ${label.toLowerCase()}`);
         });
       } catch (e) {}
     });

@@ -3,6 +3,7 @@
 // delivery activity history, and notification opt-in/out
 import { lookupOrder, subscribeToNotifications, unsubscribeFromNotifications, getTrackingTimeline } from 'backend/orderTracking.web';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 import { colors, typography } from 'public/designTokens.js';
 import { initBackToTop } from 'public/mobileHelpers';
 
@@ -92,6 +93,7 @@ async function handleLookup() {
     renderResults(result);
     showLoading(false);
     showResults(true);
+    announce($w, `Order ${orderNumber} found. Status: ${result.order.status}`);
     trackEvent('order_tracked', { orderNumber, status: result.order.fulfillmentStatus });
 
     // Start auto-refresh for active shipments
@@ -151,6 +153,9 @@ function renderTimeline(timeline, order) {
 
     const isException = order.fulfillmentStatus === 'EXCEPTION' || order.fulfillmentStatus === 'RETURNED';
 
+    try { timelineContainer.accessibility.role = 'list'; } catch (e) {}
+    try { timelineContainer.accessibility.ariaLabel = 'Order tracking timeline'; } catch (e) {}
+
     timeline.forEach((step, idx) => {
       try {
         const stepEl = $w(`#timelineStep${idx}`);
@@ -175,10 +180,13 @@ function renderTimeline(timeline, order) {
           if (step.current) {
             labelEl.style.fontWeight = String(typography.h4.weight);
             labelEl.style.color = isException ? colors.sunsetCoral : colors.mountainBlue;
+            try { labelEl.accessibility.ariaLabel = `Current step: ${step.label}`; } catch (e) {}
           } else if (step.completed) {
             labelEl.style.color = colors.success;
+            try { labelEl.accessibility.ariaLabel = `Completed: ${step.label}`; } catch (e) {}
           } else {
             labelEl.style.color = colors.mutedBrown || colors.muted || '#9CA3AF';
+            try { labelEl.accessibility.ariaLabel = `Pending: ${step.label}`; } catch (e) {}
           }
         }
       } catch (e) {}
@@ -488,6 +496,7 @@ function showError(message) {
     $w('#trackingError').text = message;
     $w('#trackingError').show('fade', { duration: 200 });
     $w('#trackingError').style.color = colors.sunsetCoral;
+    announce($w, message);
   } catch (e) {}
 }
 

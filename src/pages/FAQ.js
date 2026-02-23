@@ -3,6 +3,7 @@
 import { getFaqSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers';
 
 const FAQ_DATA = [
   {
@@ -81,6 +82,7 @@ function initFaqAccordion() {
       $item('#faqToggle').text = '+';
 
       // ARIA for accordion
+      try { $item('#faqQuestion').accessibility.role = 'button'; } catch (e) {}
       try { $item('#faqQuestion').accessibility.ariaLabel = `Toggle answer: ${itemData.question}`; } catch (e) {}
       try { $item('#faqToggle').accessibility.ariaLabel = `Toggle answer: ${itemData.question}`; } catch (e) {}
       try { $item('#faqToggle').accessibility.ariaExpanded = false; } catch (e) {}
@@ -154,8 +156,10 @@ function filterFaqs(query) {
         $w('#faqNoResults').text = `No FAQs match "${query}". Try a different search or contact us!`;
         $w('#faqNoResults').expand();
       } catch (e) {}
+      announce($w, `No FAQs match "${query}"`);
     } else {
       try { $w('#faqNoResults').collapse(); } catch (e) {}
+      announce($w, `${filtered.length} FAQ${filtered.length !== 1 ? 's' : ''} found for "${query}"`);
     }
 
     repeater.data = filtered;

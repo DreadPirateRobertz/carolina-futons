@@ -2,6 +2,7 @@
 // Live search suggestions as user types
 import wixData from 'wix-data';
 import { trackEvent } from 'public/engagementTracker';
+import { announce } from 'public/a11yHelpers';
 
 $w.onReady(function () {
   initSearchSuggestions();
@@ -22,6 +23,7 @@ function initSearchSuggestions() {
 
     suggestionsRepeater.onItemReady(($item, itemData) => {
       $item('#sugImage').src = itemData.image;
+      try { $item('#sugImage').alt = `${itemData.name}`; } catch (e) {}
       $item('#sugName').text = itemData.name;
       $item('#sugPrice').text = itemData.price;
 
@@ -45,8 +47,10 @@ function initSearchSuggestions() {
         if (results.length > 0) {
           suggestionsRepeater.data = results;
           try { suggestionsBox.expand(); } catch (e) {}
+          announce($w, `${results.length} suggestion${results.length !== 1 ? 's' : ''} found`);
         } else {
           try { suggestionsBox.collapse(); } catch (e) {}
+          announce($w, 'No suggestions found');
         }
       }, 300);
 
