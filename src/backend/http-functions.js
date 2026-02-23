@@ -258,8 +258,8 @@ export function get_manifest() {
     description: 'Handcrafted futon frames, mattresses, Murphy beds & platform beds. Made in the USA.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#2C5F2D',
+    background_color: '#E8D5B7',
+    theme_color: '#5B8FA8',
     orientation: 'any',
     categories: ['shopping', 'lifestyle'],
     icons: [
@@ -461,6 +461,33 @@ export async function get_triggerCartRecoveryCron(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+}
+
+// robots.txt for SEO crawl control
+// URL: GET https://www.carolinafutons.com/_functions/robots
+// Add <meta name="robots"> or configure in Wix SEO settings to reference this
+export function get_robots() {
+  const robotsTxt = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /cart',
+    'Disallow: /checkout',
+    'Disallow: /thank-you',
+    'Disallow: /login',
+    'Disallow: /account',
+    'Disallow: /search-results',
+    'Disallow: /_functions/',
+    '',
+    'Sitemap: https://www.carolinafutons.com/_functions/productSitemap',
+  ].join('\n');
+
+  return ok({
+    body: robotsTxt,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
 }
 
 // ── Feed helper functions ─────────────────────────────────────────────
