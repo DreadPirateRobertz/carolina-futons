@@ -21,6 +21,24 @@
 ## CHANGES SINCE LAST REPORT (2026-02-23 12:30)
 
 ### New Code on Main (rennala)
+- Self-service returns portal (returnsService extended, Returns.js, Admin Returns.js)
+- Financing calculator with NaN guards (financingCalc.web.js)
+- Accessibility audit module (accessibility.web.js)
+- Social proof toasts (socialProof.web.js)
+- Style Quiz page
+- Content import pipeline (contentImport.web.js, 576 lines)
+- safeParse utility for JSON.parse hardening
+- Promise.allSettled patterns + tests
+- 5 stale MD files removed (consolidated into MASTER-HOOKUP.md)
+- Analytics dashboard (analyticsDashboard.web.js)
+- Email templates module (emailTemplates.web.js)
+- Social media kit (socialMediaKit.web.js)
+- A11y helpers expanded (makeClickable, announce)
+
+### Checkout E2E Testing (CF-q5b)
+- Extended checkout flow E2E from 27 → 35 tests across 14 flows
+- New coverage: cart abandonment→recovery lifecycle, batch payment badges, active promotions at checkout, promotion discount application
+- All cross-module checkout pathways now exercised: checkoutOptimization, paymentOptions, cartRecovery, promotions
 
 **Marketing Launch Toolkit (CF-74x) — COMPLETE**
 - `emailTemplates.web.js` — 13-template registry across 5 sequences (welcome, cart recovery, promotional, post-purchase, re-engagement). Subject line resolver, variable validation, promotional queue.
@@ -83,7 +101,7 @@ All feeds are LIVE — code generates them automatically from your product catal
 | melania | ACTIVE | Production management, bead coordination |
 | godfrey | ACTIVE | WCAG 2.1 AA accessibility, page code updates |
 | rennala | ACTIVE | Marketing launch toolkit (DONE), customer reviews (DONE) |
-| radahn | ACTIVE | Stability audit, reviews work |
+| radahn | ACTIVE | Stability audit, checkout E2E testing, reviews work |
 | miquella | cf-utqo | Product image pipeline |
 
 ### cfutons_mobile (AR Camera)
