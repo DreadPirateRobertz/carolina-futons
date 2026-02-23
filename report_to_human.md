@@ -1,6 +1,6 @@
 # cfutons (Carolina Futons) — Report to Human
 
-**Last Updated:** 2026-02-23 12:30 MST (melania, Production Manager)
+**Last Updated:** 2026-02-23 13:00 MST (radahn, Code Quality Engineer)
 **Repo:** git@github.com:DreadPirateRobertz/carolina-futons.git
 
 ---
@@ -9,7 +9,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Tests | 3,749+ vitest tests across 100+ files (all green) |
+| Tests | 4,099 vitest tests across 110 files (all green) |
 | Backend Modules | 67+ `.web.js` modules |
 | Page Code | 28 page JS files (new: Returns, Admin Returns, Style Quiz) |
 | Frontend Utils | 26+ public JS modules |
@@ -30,6 +30,18 @@
 - safeParse utility for JSON.parse hardening
 - Promise.allSettled patterns + tests
 - 5 stale MD files removed (consolidated into MASTER-HOOKUP.md)
+- Analytics dashboard (analyticsDashboard.web.js)
+- Email templates module (emailTemplates.web.js)
+- Social media kit (socialMediaKit.web.js)
+- A11y helpers expanded (makeClickable, announce)
+
+### In PR (pending merge)
+- **PR #22** (cf-cz3s): Category review summaries — `getCategoryReviewSummaries` bulk method + star ratings on category product grid cards. Reviews tests rewritten with shared mock pattern (62 tests).
+
+### Checkout E2E Testing (CF-q5b)
+- Extended checkout flow E2E from 27 → 35 tests across 14 flows
+- New coverage: cart abandonment→recovery lifecycle, batch payment badges, active promotions at checkout, promotion discount application
+- All cross-module checkout pathways now exercised: checkoutOptimization, paymentOptions, cartRecovery, promotions
 
 ### Radahn's Stability Audit (report_from_radahn.md)
 - Found 1,426 silent catch blocks (zero error visibility)
@@ -76,11 +88,11 @@ All feeds are LIVE — code generates them automatically from your product catal
 ### cfutons
 | Member | Status | Current/Last Work |
 |--------|--------|-------------------|
-| melania | ACTIVE | MD audit, social hookup, cleanup |
+| melania | ACTIVE | Production management, beads coordination |
 | godfrey | cf-5js | WCAG 2.1 AA accessibility |
-| rennala | cf-dhu | Customer reviews + photo upload |
-| radahn | cf-dth | Returns + stability audit |
-| miquella | cf-ist | Financing calculator + BNPL |
+| rennala | ACTIVE | Customer reviews + photo upload |
+| radahn | cf-cz3s, CF-q5b | Category review summaries (PR #22), checkout E2E testing |
+| miquella | cf-utqo | Product image pipeline |
 
 ### cfutons_mobile (AR Camera)
 | Member | Last Commit | Work |
