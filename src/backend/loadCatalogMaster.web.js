@@ -23,7 +23,8 @@ import { sanitize } from 'backend/utils/sanitize';
 const VALID_CATEGORIES = [
   'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
   'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',
-  'unfinished-wood', 'covers', 'outdoor-furniture', 'pillows-702', 'log-frames',
+  'wall-hugger-frames', 'unfinished-wood', 'covers', 'outdoor-furniture',
+  'pillows-702', 'log-frames',
 ];
 
 const MAX_NAME_LENGTH = 200;
@@ -66,8 +67,8 @@ function validateMasterProduct(product, index) {
     errors.push({ row: index, field: 'sku', error: 'SKU is required' });
   }
 
-  if (product.price == null || typeof product.price !== 'number' || product.price < 0) {
-    errors.push({ row: index, field: 'price', error: 'Price must be a non-negative number' });
+  if (product.price !== null && (typeof product.price !== 'number' || product.price < 0)) {
+    errors.push({ row: index, field: 'price', error: 'Price must be null or a non-negative number' });
   }
 
   if (!product.category || !VALID_CATEGORIES.includes(product.category)) {
