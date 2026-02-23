@@ -21,9 +21,10 @@
 12. [Step 9: Configure Scheduled Jobs](#step-9-scheduled-jobs)
 13. [Step 10: Publish & Verify](#step-10-publish-verify)
 14. [Fabric Swatch System Hookup](#swatch-hookup)
-15. [Complete Module Reference](#module-reference)
-16. [CMS Collection Reference](#cms-reference)
-17. [Troubleshooting](#troubleshooting)
+15. [Social Media Platform Hookup](#social-media-hookup)
+16. [Complete Module Reference](#module-reference)
+17. [CMS Collection Reference](#cms-reference)
+18. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -734,6 +735,142 @@ const count = await getSwatchCount('product-id'); // 24
 const dots = await getSwatchPreviewColors('product-id', 4);
 // [{ colorHex: '#8B4513', swatchName: 'Cherry' }, ...]
 ```
+
+---
+
+## Social Media Platform Hookup
+
+Everything you need to connect Pinterest, Instagram, Facebook, Google Shopping, and TikTok. Our code already generates the product feeds and meta tags — you just need to connect the accounts.
+
+### Pinterest (Highest Priority for Furniture)
+
+**Why first:** Pinterest is #1 for furniture discovery. Pins last months. Users actively search for room ideas.
+
+**Step 1: Create Pinterest Business Account**
+1. Go to [business.pinterest.com](https://business.pinterest.com) > Create Account (or convert personal)
+2. Claim your website: Settings > Claim > enter `carolinafutons.com`
+3. Pinterest will ask you to add an HTML tag or DNS record — choose DNS (TXT record)
+
+**Step 2: Enable Rich Pins**
+1. Our code (`seoHelpers.web.js` + `pinterestRichPins.web.js`) already injects Open Graph meta tags on every product page
+2. Go to [Pinterest Rich Pin Validator](https://developers.pinterest.com/tools/url-debugger/) > paste any product page URL
+3. Click "Validate" — should show Product Rich Pin with price, availability, title
+4. Click "Apply" to enable Rich Pins site-wide
+
+**Step 3: Connect Product Catalog Feed**
+1. Pinterest Business > Catalogs > + Add data source
+2. Feed URL: `https://carolinafutons.com/_functions/pinterestProductFeed`
+3. Format: XML (auto-detected)
+4. Refresh: Daily automatic
+5. Pinterest will ingest all 88 products and create shoppable pins automatically
+
+**Step 4: Install Pinterest Tag (Conversion Tracking)**
+1. Wix Dashboard > Marketing & SEO > Tracking & Analytics > + New Tool
+2. Select Pinterest Tag > paste your Tag ID (from Pinterest Ads Manager > Conversions)
+3. Our `analyticsHelpers.web.js` fires `trackEvent()` events that the tag captures
+
+**Step 5: Create Boards**
+- Futon Living Rooms (3-4 pins/week)
+- Small Space Solutions (2-3 pins/week)
+- Mountain Home Inspiration (2-3 pins/week)
+- Before & After (1-2 pins/week)
+- Bedroom Makeovers (2-3 pins/week)
+- Shop Our Products (auto-sync from catalog feed)
+
+### Instagram / Facebook (Shared Commerce Setup)
+
+Instagram Shopping and Facebook Shop use the same catalog. Set up once, works on both.
+
+**Step 1: Create Facebook Business Page** (if not already)
+1. [business.facebook.com](https://business.facebook.com) > Create Page
+2. Business name: Carolina Futons
+3. Complete: address, phone (828) 252-9449, hours Wed-Sat 10am-5pm, category: Furniture Store
+4. CTA button: "Shop Now" > carolinafutons.com
+
+**Step 2: Connect Facebook Catalog**
+1. Go to Facebook Commerce Manager > Catalog > Data Sources
+2. Click "Add Items" > "Use Data Feed"
+3. Feed URL: `https://carolinafutons.com/_functions/facebookCatalogFeed`
+4. Schedule: Daily refresh
+5. This auto-populates both Facebook Shop and Instagram Shopping
+
+**Step 3: Install Meta Pixel (Conversion Tracking)**
+1. Wix Dashboard > Marketing & SEO > Tracking & Analytics > + New Tool
+2. Select Facebook Pixel > paste your Pixel ID (from Meta Events Manager)
+3. Events automatically tracked: PageView, ViewContent, AddToCart, Purchase
+
+**Step 4: Enable Instagram Shopping**
+1. Instagram app > Settings > Business > Set up Instagram Shopping
+2. Connect your Facebook Catalog (from step 2)
+3. Submit for review (takes 1-3 days)
+4. Once approved: tag products in feed posts, Stories, and Reels
+
+**Step 5: Facebook/Instagram Ads (Retargeting)**
+- The Meta Pixel tracks every visitor automatically
+- In Ads Manager > Audiences > create Custom Audience from website visitors
+- Start with retargeting: people who viewed products but didn't buy
+- Budget: $10-15/day initially, carousel ads showing viewed products
+
+### Google Shopping / Merchant Center
+
+**Step 1: Set Up Google Merchant Center**
+1. Go to [merchants.google.com](https://merchants.google.com) > Create Account
+2. Verify your website (DNS or HTML tag method)
+3. Business info: Carolina Futons, 824 Locust St Ste 200, Hendersonville NC 28792
+
+**Step 2: Connect Product Feed**
+1. Merchant Center > Products > Feeds > + Create Feed
+2. Country: US, Language: English
+3. Feed type: "Scheduled fetch" (URL)
+4. Feed URL: `https://carolinafutons.com/_functions/googleMerchantFeed`
+5. Fetch schedule: Daily
+6. Feed includes all 88 products with: title, description, price, image, availability, category, brand
+
+**Step 3: Install GA4 (Required for Shopping Ads)**
+1. Wix Dashboard > Marketing Integrations > Connect Google Analytics
+2. Paste your GA4 Measurement ID (G-XXXXXXXXX)
+3. Our `analyticsHelpers.web.js` fires ecommerce events (view_item, add_to_cart, purchase) that GA4 captures
+
+**Step 4: Link to Google Ads**
+1. In Merchant Center > Settings > Linked accounts > Google Ads
+2. Start with Shopping campaigns targeting top 10 products
+3. Budget: $30-50/day, target Western NC + 200-mile radius
+4. Performance Max later (after 30+ conversions for smart bidding)
+
+### TikTok (Optional — If Targeting Younger Audience)
+
+**Step 1: TikTok Business Account**
+1. Create a TikTok Business account at [ads.tiktok.com](https://ads.tiktok.com)
+2. Install TikTok Pixel via Wix: Dashboard > Tracking & Analytics > + New Tool > Custom > paste TikTok Pixel code
+
+**Step 2: Content Strategy**
+- Room transformations (before/after reveals)
+- Assembly time-lapses
+- "Futons in 2026 are NOT what you remember" myth-busting
+- Day-in-the-life at the showroom
+- 3-5 videos/week, best times: 7-9am, 12-3pm, 7-11pm EST
+
+### Social Feed URLs Summary
+
+| Platform | Feed URL | What It Powers |
+|----------|----------|---------------|
+| Google Merchant | `/_functions/googleMerchantFeed` | Shopping ads, free product listings |
+| Facebook/Instagram | `/_functions/facebookCatalogFeed` | FB Shop, IG Shopping, dynamic ads |
+| Pinterest | `/_functions/pinterestProductFeed` | Rich Pins, shoppable pins, catalog |
+
+All three feeds are generated by `http-functions.js` and `googleMerchantFeed.web.js` / `pinterestRichPins.web.js`. They auto-update when products change in Wix Stores.
+
+### SEO Social Tags (Already Built)
+
+Our code automatically generates these meta tags on every page (via `seoHelpers.web.js` + `masterPage.js`):
+
+| Tag Type | Purpose | Status |
+|----------|---------|--------|
+| Open Graph (`og:title`, `og:image`, etc.) | Facebook/LinkedIn sharing previews | Built |
+| Twitter Cards (`twitter:card`, `twitter:image`) | Twitter/X sharing previews | Built |
+| Pinterest Rich Pins (`product:price:amount`, etc.) | Product Rich Pin data | Built |
+| JSON-LD Product schema | Google rich results (price, rating, availability) | Built |
+| JSON-LD LocalBusiness schema | Google Maps, knowledge panel | Built |
 
 ---
 
