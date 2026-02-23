@@ -4,6 +4,11 @@
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { sendEmail } from 'backend/emailService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
+import {
+  getAvailableAppointmentSlots,
+  bookAppointment,
+  getVisitTypes,
+} from 'backend/deliveryScheduling.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
@@ -12,6 +17,7 @@ $w.onReady(async function () {
   initBackToTop($w);
   initContactForm();
   initBusinessInfo();
+  initAppointmentBooking();
   await injectContactSchema();
   trackEvent('page_view', { page: 'contact' });
 });
@@ -156,6 +162,145 @@ function initBusinessInfo() {
       });
     });
     try { $w('#directionsBtn').accessibility.ariaLabel = 'Get directions to our showroom'; } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Showroom Appointment Booking ────────────────────────────────────
+
+function initAppointmentBooking() {
+  try {
+    const bookBtn = $w('#appointmentBookBtn');
+    if (!bookBtn) return;
+
+    // Populate visit type dropdown
+    loadVisitTypes();
+
+    // When visit type changes, load available slots
+    try {
+      $w('#appointmentVisitType').onChange(() => loadAppointmentSlots());
+    } catch (e) {}
+
+    // When date changes, load slots for that date
+    try {
+      $w('#appointmentDate').onChange(() => loadAppointmentSlots());
+    } catch (e) {}
+
+    bookBtn.onClick(async () => {
+      const name = $w('#appointmentName').value?.trim();
+      const email = $w('#appointmentEmail').value?.trim();
+      const phone = $w('#appointmentPhone').value?.trim();
+      const visitType = $w('#appointmentVisitType').value;
+      const date = $w('#appointmentDate').value;
+      const timeSlot = $w('#appointmentTimeSlot').value;
+      const interests = $w('#appointmentInterests').value?.trim();
+
+      // Clear errors
+      try { $w('#appointmentError').hide(); } catch (e) {}
+
+      if (!name || !email || !visitType || !date || !timeSlot) {
+        try {
+          $w('#appointmentError').text = 'Please fill in all required fields.';
+          $w('#appointmentError').show();
+        } catch (e) {}
+        return;
+      }
+
+      if (!isValidEmail(email)) {
+        try {
+          $w('#appointmentError').text = 'Please enter a valid email address.';
+          $w('#appointmentError').show();
+        } catch (e) {}
+        return;
+      }
+
+      bookBtn.disable();
+      bookBtn.label = 'Booking...';
+
+      try {
+        const result = await bookAppointment({
+          date,
+          timeSlot,
+          visitType,
+          customerName: name,
+          customerEmail: email,
+          customerPhone: phone || '',
+          productInterests: interests || '',
+        });
+
+        if (result.success) {
+          trackEvent('appointment_booked', { visitType, date });
+
+          // Show confirmation
+          try {
+            const conf = result.confirmation;
+            $w('#appointmentConfirmation').text =
+              `Your ${conf.visitLabel} is confirmed for ${conf.dayOfWeek}, ${conf.date} at ${conf.timeLabel}.\n\n` +
+              `Location: ${conf.address}\nPhone: ${conf.phone}\n\n` +
+              'A confirmation email will be sent shortly. ' +
+              'To cancel or reschedule, use the link in your confirmation email.';
+            $w('#appointmentForm').hide('fade', { duration: 300 });
+            $w('#appointmentSuccess').show('fade', { duration: 300 });
+          } catch (e) {}
+        } else {
+          try {
+            $w('#appointmentError').text = result.message || 'Unable to book. Please call (828) 252-9449.';
+            $w('#appointmentError').show();
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.error('Error booking appointment:', err);
+        try {
+          $w('#appointmentError').text = 'Something went wrong. Please call us at (828) 252-9449.';
+          $w('#appointmentError').show();
+        } catch (e) {}
+      } finally {
+        bookBtn.enable();
+        bookBtn.label = 'Book Visit';
+      }
+    });
+  } catch (e) {}
+}
+
+async function loadVisitTypes() {
+  try {
+    const types = await getVisitTypes();
+    if (!types || !types.length) return;
+    $w('#appointmentVisitType').options = types.map(t => ({
+      label: `${t.label} (${t.duration} min)`,
+      value: t.value,
+    }));
+  } catch (e) {}
+}
+
+async function loadAppointmentSlots() {
+  try {
+    const visitType = $w('#appointmentVisitType').value;
+    if (!visitType) return;
+
+    const slots = await getAvailableAppointmentSlots(visitType);
+    if (!slots || !slots.length) {
+      $w('#appointmentTimeSlot').options = [{ label: 'No slots available', value: '' }];
+      return;
+    }
+
+    // Group by date for the date picker
+    const dates = [...new Set(slots.map(s => s.date))];
+    $w('#appointmentDate').options = dates.map(d => {
+      const slot = slots.find(s => s.date === d);
+      return { label: `${slot.dayOfWeek}, ${d}`, value: d };
+    });
+
+    // Filter time slots for selected date
+    const selectedDate = $w('#appointmentDate').value || dates[0];
+    if (!$w('#appointmentDate').value && dates[0]) {
+      $w('#appointmentDate').value = dates[0];
+    }
+
+    const dateSlots = slots.filter(s => s.date === selectedDate);
+    $w('#appointmentTimeSlot').options = dateSlots.map(s => ({
+      label: `${s.timeLabel} (${s.spotsLeft} ${s.spotsLeft === 1 ? 'spot' : 'spots'} left)`,
+      value: s.timeSlot,
+    }));
   } catch (e) {}
 }
 
