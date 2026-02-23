@@ -425,6 +425,59 @@ export const addOwnerResponse = webMethod(
 );
 
 /**
+ * Get review summaries for multiple products (category grid).
+ * Returns average rating and total count for each product.
+ *
+ * @param {string[]} productIds - Array of product IDs.
+ * @returns {Promise<Object>} Map of productId -> { average, total }
+ */
+export const getCategoryReviewSummaries = webMethod(
+  Permissions.Anyone,
+  async (productIds) => {
+    try {
+      if (!Array.isArray(productIds) || productIds.length === 0) return {};
+
+      const cleanIds = productIds
+        .map(id => validateId(id))
+        .filter(Boolean)
+        .slice(0, 100);
+
+      if (cleanIds.length === 0) return {};
+
+      const result = await wixData.query(COLLECTION)
+        .eq('status', 'approved')
+        .hasSome('productId', cleanIds)
+        .limit(1000)
+        .find();
+
+      const summaries = {};
+      for (const id of cleanIds) {
+        summaries[id] = { average: 0, total: 0 };
+      }
+
+      for (const review of result.items) {
+        const pid = review.productId;
+        if (!summaries[pid]) continue;
+        summaries[pid].total++;
+        summaries[pid]._sum = (summaries[pid]._sum || 0) + Math.min(5, Math.max(1, Math.round(review.rating)));
+      }
+
+      for (const id of cleanIds) {
+        if (summaries[id].total > 0) {
+          summaries[id].average = Math.round((summaries[id]._sum / summaries[id].total) * 10) / 10;
+        }
+        delete summaries[id]._sum;
+      }
+
+      return summaries;
+    } catch (err) {
+      console.error('[reviewsService] getCategoryReviewSummaries error:', err);
+      return {};
+    }
+  }
+);
+
+/**
  * Check if a member has purchased a specific product.
  * Used for "Verified Purchase" badge.
  *
