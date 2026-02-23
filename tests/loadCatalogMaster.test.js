@@ -383,4 +383,50 @@ describe('validateMasterProduct edge cases', () => {
     const result = await previewCatalogLoad(catalog);
     expect(result.data.invalidProducts).toBe(1);
   });
+
+  it('accepts null price for contact-for-availability products', async () => {
+    const catalog = makeCatalog([makeProduct({ price: null })]);
+    const result = await previewCatalogLoad(catalog);
+    expect(result.data.validProducts).toBe(1);
+    expect(result.data.invalidProducts).toBe(0);
+  });
+
+  it('accepts wall-hugger-frames category', async () => {
+    const catalog = makeCatalog([
+      makeProduct({ category: 'wall-hugger-frames', sku: 'WH-1', slug: 'dillon', name: 'Dillon' }),
+    ]);
+    const result = await previewCatalogLoad(catalog);
+    expect(result.data.validProducts).toBe(1);
+    expect(result.data.errorCount).toBe(0);
+  });
+
+  it('loads null-price products into CMS', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const catalog = makeCatalog([makeProduct({ price: null })]);
+    const result = await loadCatalogMaster(catalog);
+    expect(result.success).toBe(true);
+    expect(result.data.successCount).toBe(1);
+    const p = inserts.find(i => i.col === 'Products').item;
+    expect(p.price).toBeNull();
+  });
+
+  it('validates full 88-product catalog structure', async () => {
+    const products = [];
+    for (let i = 0; i < 88; i++) {
+      products.push(makeProduct({
+        name: `Product ${i}`,
+        slug: `product-${i}`,
+        sku: `CF-${i}`,
+        price: i % 7 === 0 ? null : 100 + i * 10,
+      }));
+    }
+    const catalog = makeCatalog(products);
+    const result = await previewCatalogLoad(catalog);
+    expect(result.data.totalProducts).toBe(88);
+    expect(result.data.validProducts).toBe(88);
+  });
 });
