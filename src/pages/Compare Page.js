@@ -53,7 +53,7 @@ async function initComparePage() {
 
     // Track page view and log comparison to CMS
     trackProductPageView({ name: 'Product Comparison', _id: 'compare-page' });
-    trackComparison(productIds).catch(() => {});
+    trackComparison(productIds).catch(err => console.error('[Compare] trackComparison failed:', err.message));
 
     // Render
     renderProductHeaders();

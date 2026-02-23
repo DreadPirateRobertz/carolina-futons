@@ -219,12 +219,12 @@ export function initBackToTop($w, buttonId = '#backToTop') {
           }
         });
       }
-    }).catch(() => {});
+    }).catch(err => console.error('[mobileHelpers] Back-to-top scroll listener failed:', err.message));
 
     btn.onClick(() => {
       import('wix-window-frontend').then(({ scrollTo }) => {
         if (scrollTo) scrollTo(0, 0, { scrollAnimation: true });
-      }).catch(() => {});
+      }).catch(err => console.error('[mobileHelpers] scrollTo failed:', err.message));
     });
   } catch (e) {}
 }

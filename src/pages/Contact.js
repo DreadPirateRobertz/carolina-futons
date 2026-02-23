@@ -83,7 +83,7 @@ function initContactForm() {
           source: 'contact_page',
           status: 'new',
           notes: `Subject: ${subject || 'General'}\n\n${message}`,
-        }).catch(() => {});
+        }).catch(err => console.error('[Contact] CMS form save failed:', err.message));
 
         trackEvent('contact_form_submit', { subject: subject || 'general' });
 

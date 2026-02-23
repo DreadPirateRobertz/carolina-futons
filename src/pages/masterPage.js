@@ -30,7 +30,7 @@ $w.onReady(async function () {
   setTimeout(() => {
     import('public/LiveChat.js').then(({ initLiveChat }) => {
       initLiveChat($w);
-    }).catch(() => {}); // Chat is non-critical
+    }).catch(err => console.error('[masterPage] LiveChat init failed:', err.message));
   }, 2000);
 
   // Core Web Vitals — collect after page settles (5s)
@@ -830,7 +830,7 @@ function collectCoreWebVitals() {
     const hasMetric = data.lcp || data.fcp || data.ttfb || data.cls !== undefined;
     if (!hasMetric) return;
 
-    reportMetrics(data).catch(() => {});
+    reportMetrics(data).catch(err => console.error('[masterPage] CWV reportMetrics failed:', err.message));
   } catch (e) {
     // CWV collection is non-critical
   }

@@ -38,7 +38,7 @@ $w.onReady(async function () {
     if (typeof sessionStorage !== 'undefined') {
       const sessionId = sessionStorage.getItem('cf_browse_session');
       if (sessionId) {
-        markSessionConverted(sessionId).catch(() => {});
+        markSessionConverted(sessionId).catch(err => console.error('[ThankYou] markSessionConverted failed:', err.message));
         sessionStorage.removeItem('cf_browse_session');
       }
     }

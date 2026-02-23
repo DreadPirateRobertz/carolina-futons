@@ -54,7 +54,7 @@ async function initMemberPage() {
             context: `initMemberPage/${sections[i].name}`,
             severity: 'error',
           });
-        }).catch(() => {});
+        }).catch(err => console.error('[MemberPage] Error logging failed:', err.message));
       }
     });
 

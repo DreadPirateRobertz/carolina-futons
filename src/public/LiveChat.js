@@ -113,8 +113,8 @@ function initPreChatForm($w) {
             try { $w('#preChatForm').hide(); } catch (e) {}
             try { $w('#chatMessagesSection').show(); } catch (e) {}
           }
-        }).catch(() => {});
-      }).catch(() => {});
+        }).catch(err => console.error('[LiveChat] getMember failed:', err.message));
+      }).catch(err => console.error('[LiveChat] wix-members-frontend import failed:', err.message));
     } catch (e) {}
 
     try { $w('#preChatName').accessibility.ariaLabel = 'Your name'; } catch (e) {}

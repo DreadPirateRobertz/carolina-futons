@@ -92,7 +92,7 @@ async function initProductPage() {
             context: `initProductPage/${productSections[i].name}`,
             severity: 'error',
           });
-        }).catch(() => {});
+        }).catch(err => console.error('[ProductPage] Error logging failed:', err.message));
       }
     });
 
@@ -587,7 +587,7 @@ function sendBrowseSession() {
       totalDuration: now - _browseState.startTime,
       entryPage: currentPath,
       exitPage: currentPath,
-    }).catch(() => {});
+    }).catch(err => console.error('[ProductPage] trackBrowseSession failed:', err.message));
   } catch (e) {}
 }
 

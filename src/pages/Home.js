@@ -49,7 +49,7 @@ $w.onReady(async function () {
           context: `onReady/${sections[i].name}`,
           severity: 'error',
         });
-      }).catch(() => {});
+      }).catch(err => console.error('[Home] Error logging failed:', err.message));
     }
   });
 
