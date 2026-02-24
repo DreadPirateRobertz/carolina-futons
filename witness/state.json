@@ -1,19 +1,16 @@
 {
-  "patrol_count": 1,
-  "extraordinary_action": true,
-  "last_patrol": "2026-02-23T19:42:00Z",
+  "patrol_count": 15,
+  "extraordinary_action": false,
+  "last_patrol": "2026-02-24T02:21:00Z",
+  "current_wisp": "CF-wisp-wisp-sgis",
   "observations": {
     "deacon": "alive",
-    "refinery": "running, hitting Dolt resolution bug",
+    "refinery": "running 7h, queue empty",
     "crew": {
-      "melania": "active, coordinating",
-      "miquella": "active, cf-utqo image pipeline",
-      "godfrey": "active, resolving merge conflicts",
-      "radahn": "idle, nudged to pick up cf-dth",
-      "rennala": "idle, nudged to get assignment from melania"
+      "rennala": "CF-74x in_progress (marketing launch prep)"
     },
     "polecats": 0,
-    "notes": "Escalated Dolt beads db resolution bug to mayor. cf-01zs is root cause. Cleaned up orphaned mol steps. 2 idle crew nudged."
+    "notes": "Cycle 5: Dolt was crashing (stale LOCK on beads_hq), cleared locks, restarted. GC'd 21 stale wisps. No polecats, no swarms, no timer gates. Rig idle except rennala on CF-74x."
   },
-  "idle_backoff_s": 30
+  "idle_backoff_s": 120
 }
