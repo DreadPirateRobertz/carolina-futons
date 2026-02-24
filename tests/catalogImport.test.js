@@ -212,6 +212,30 @@ describe('importProducts', () => {
     expect(result.data.errors.some(e => e.field === 'category')).toBe(true);
   });
 
+  it('accepts null price for contact-for-availability products', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ price: null })];
+    const result = await importProducts(items);
+    expect(result.success).toBe(true);
+    expect(result.data.successCount).toBe(1);
+  });
+
+  it('accepts wall-hugger-frames category', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ category: 'wall-hugger-frames' })];
+    const result = await importProducts(items);
+    expect(result.success).toBe(true);
+    expect(result.data.successCount).toBe(1);
+  });
+
   it('rejects product with negative weight', async () => {
     __seed('Products', []);
     __seed('CatalogImports', []);
