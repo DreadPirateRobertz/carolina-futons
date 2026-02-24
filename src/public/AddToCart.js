@@ -1,5 +1,5 @@
 // AddToCart.js - Quantity, cart, sticky bar, bundle, stock, wishlist
-import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
+import { getProductVariants, addToCart, onCartChanged, clampQuantity, MIN_QUANTITY, MAX_QUANTITY } from 'public/cartService';
 import { getBundleSuggestion } from 'backend/productRecommendations.web';
 import { trackCartAdd } from 'public/engagementTracker';
 import { fireAddToCart, fireAddToWishlist } from 'public/ga4Tracking';
@@ -18,15 +18,14 @@ export function initQuantitySelector($w, state) {
     try { $w('#quantityMinus').accessibility.ariaLabel = 'Decrease quantity'; } catch (e) {}
     try { $w('#quantityPlus').accessibility.ariaLabel = 'Increase quantity'; } catch (e) {}
     input.onInput(() => {
-      const val = parseInt(input.value, 10);
-      if (val > 0 && val <= 99) { state.selectedQuantity = val; }
-      else { state.selectedQuantity = 1; input.value = '1'; }
+      state.selectedQuantity = clampQuantity(input.value);
+      input.value = String(state.selectedQuantity);
     });
     try { $w('#quantityMinus').onClick(() => {
-      if (state.selectedQuantity > 1) { state.selectedQuantity--; input.value = String(state.selectedQuantity); }
+      if (state.selectedQuantity > MIN_QUANTITY) { state.selectedQuantity--; input.value = String(state.selectedQuantity); }
     }); } catch (e) {}
     try { $w('#quantityPlus').onClick(() => {
-      if (state.selectedQuantity < 99) { state.selectedQuantity++; input.value = String(state.selectedQuantity); }
+      if (state.selectedQuantity < MAX_QUANTITY) { state.selectedQuantity++; input.value = String(state.selectedQuantity); }
     }); } catch (e) {}
   } catch (e) {}
 }

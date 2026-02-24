@@ -12,6 +12,8 @@ import {
   onCartChanged,
   getShippingProgress,
   getTierProgress,
+  MIN_QUANTITY,
+  MAX_QUANTITY,
 } from 'public/cartService';
 import { initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -328,33 +330,31 @@ function initQuantityControls() {
 
       try {
         $item('#qtyMinus').onClick(async () => {
-          const currentQty = parseInt($item('#qtyInput').value) || 1;
-          if (currentQty > 1) {
+          const currentQty = parseInt($item('#qtyInput').value) || MIN_QUANTITY;
+          if (currentQty > MIN_QUANTITY) {
             const newQty = currentQty - 1;
-            $item('#qtyInput').value = String(newQty);
             try {
               await updateCartItemQuantity(itemData._id, newQty);
+              $item('#qtyInput').value = String(newQty);
+              announce($w, `${itemData.name} quantity updated to ${newQty}`);
             } catch (err) {
-              // Revert on error
-              $item('#qtyInput').value = String(currentQty);
               console.error('Error updating quantity:', err);
             }
-            announce($w, `${itemData.name} quantity updated to ${newQty}`);
             await refreshCartTotals();
           }
         });
 
         $item('#qtyPlus').onClick(async () => {
-          const currentQty = parseInt($item('#qtyInput').value) || 1;
+          const currentQty = parseInt($item('#qtyInput').value) || MIN_QUANTITY;
+          if (currentQty >= MAX_QUANTITY) return;
           const newQty = currentQty + 1;
-          $item('#qtyInput').value = String(newQty);
           try {
             await updateCartItemQuantity(itemData._id, newQty);
+            $item('#qtyInput').value = String(newQty);
+            announce($w, `${itemData.name} quantity updated to ${newQty}`);
           } catch (err) {
-            $item('#qtyInput').value = String(currentQty);
             console.error('Error updating quantity:', err);
           }
-          announce($w, `${itemData.name} quantity updated to ${newQty}`);
           await refreshCartTotals();
         });
 

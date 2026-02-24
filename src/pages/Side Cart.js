@@ -10,6 +10,7 @@ import {
   getShippingProgress,
   getTierProgress,
   FREE_SHIPPING_THRESHOLD,
+  safeMultiply,
 } from 'public/cartService';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 
@@ -163,15 +164,16 @@ async function refreshSideCart() {
     const repeater = $w('#sideCartRepeater');
     if (repeater) {
       repeater.data = currentCart.lineItems.map(item => {
-        const variantDetails = item.options?.map(o => `${o.option}: ${o.value}`).join(' · ') || '';
+        const opts = Array.isArray(item.options) ? item.options : [];
+        const variantDetails = opts.map(o => `${o.option}: ${o.value}`).join(' · ');
         return {
           _id: item._id,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
           image: item.mediaItem?.src || '',
-          lineTotal: (item.price || 0) * (item.quantity || 1),
-          variantName: item.options?.map(o => o.value).join(', ') || '',
+          lineTotal: safeMultiply(item.price, item.quantity),
+          variantName: opts.map(o => o.value).join(', '),
           variantDetails,
         };
       });

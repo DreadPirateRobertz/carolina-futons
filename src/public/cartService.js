@@ -26,6 +26,35 @@ export const TIER_THRESHOLDS = [
   { min: 1000, max: Infinity, discount: 10, label: () => 'You qualify for 10% off — applied at checkout!' },
 ];
 
+// ── Validation ───────────────────────────────────────────────────────
+
+export const MIN_QUANTITY = 1;
+export const MAX_QUANTITY = 99;
+
+/**
+ * Clamp a quantity to valid bounds [MIN_QUANTITY, MAX_QUANTITY].
+ * Non-finite or non-numeric values return MIN_QUANTITY.
+ * @param {*} qty - Raw quantity input
+ * @returns {number} Clamped integer quantity
+ */
+export function clampQuantity(qty) {
+  const n = parseInt(qty, 10);
+  if (!Number.isFinite(n) || n < MIN_QUANTITY) return MIN_QUANTITY;
+  if (n > MAX_QUANTITY) return MAX_QUANTITY;
+  return n;
+}
+
+/**
+ * Safe currency multiplication: price * quantity with rounding to avoid
+ * floating-point drift (e.g., 19.99 * 3 = 59.969999...).
+ * @param {number} price
+ * @param {number} quantity
+ * @returns {number} Rounded to 2 decimal places
+ */
+export function safeMultiply(price, quantity) {
+  return Math.round((price || 0) * (quantity || 0) * 100) / 100;
+}
+
 // ── Cart Operations ──────────────────────────────────────────────────
 
 /**
@@ -36,7 +65,7 @@ export const TIER_THRESHOLDS = [
  * @returns {Promise<Object>} Cart response
  */
 export async function addToCart(productId, quantity = 1, options = {}) {
-  const item = { productId, quantity, ...options };
+  const item = { productId, quantity: clampQuantity(quantity), ...options };
   return wixStoresFrontend.cart.addProducts([item]);
 }
 
@@ -77,7 +106,7 @@ export function onCartChanged(callback) {
  * @returns {Promise<Object>} Updated cart
  */
 export async function updateCartItemQuantity(cartItemId, quantity) {
-  return wixStoresFrontend.cart.updateLineItemQuantity(cartItemId, quantity);
+  return wixStoresFrontend.cart.updateLineItemQuantity(cartItemId, clampQuantity(quantity));
 }
 
 /**

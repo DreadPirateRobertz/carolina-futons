@@ -24,7 +24,22 @@ SOCIAL-MEDIA-STRATEGY.md, http-functions.js (Facebook/Pinterest/Google feeds), s
 - Run `npm test` after changes. Never break tests.
 - Follow codebase conventions: webMethod, JSDoc, try/catch, sanitize via `backend/utils/sanitize`
 - Wix Velo compatible imports. Read `memory.md`. Code only — no Dashboard.
-- **MANDATORY PR PROCESS**: NO direct pushes to main. ALL work on feature branches → open PR → get review → merge. Branch naming: `cf-<bead-id>-<short-desc>`. Violations will be reverted.
+- **MANDATORY PR PROCESS**: NO direct pushes to main. ALL work on feature branches → open PR → melania reviews → merge. Branch naming: `cf-<bead-id>-<short-desc>`. Violations will be reverted.
+
+## PM Quality Gate (Melania Directive 2026-02-23)
+- **Melania is acceptance authority.** PRs reviewed against bead AC, coding standards, and edge case coverage.
+- **TESTS FIRST (TDD)**: Write tests BEFORE implementation. Tests define the spec.
+  - PRs without tests are rejected outright — no code review until tests exist.
+- Tests MUST cover ALL paths, not just happy path:
+  - Error states (API failures, network drops, missing data, timeouts)
+  - Empty/null/undefined values and boundary conditions (max lengths, overflow, min/max)
+  - Invalid input (malformed data, XSS vectors, injection, negative numbers)
+  - Mobile and accessibility behavior
+- **Coding standards enforced in PR review:**
+  - webMethod pattern, JSDoc, try/catch on all async, sanitize user input
+  - Wix Velo compatible imports only
+  - No unsanitized input, no missing error handling
+- Happy-path-only PRs WILL be sent back. "It works AND fails gracefully" is the bar.
 
 ## Key Files
 `memory.md`, `WIX-STUDIO-BUILD-SPEC.md`, `PLUGIN-RECOMMENDATIONS.md`, `SOCIAL-MEDIA-STRATEGY.md`, `design.jpeg`, `report_to_human.md`
