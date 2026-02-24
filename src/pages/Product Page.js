@@ -4,6 +4,7 @@ import { getRelatedProducts, getSameCollection } from 'backend/productRecommenda
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
 import { cacheProduct } from 'public/productCache';
 import { trackProductPageView } from 'public/engagementTracker';
+import { fireViewContent } from 'public/ga4Tracking';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
@@ -58,6 +59,7 @@ async function initProductPage() {
     trackProductView(state.product);
     cacheProduct(state.product);
     trackProductPageView(state.product);
+    fireViewContent(state.product);
 
     const productSections = [
       { name: 'variantSelector', init: () => initVariantSelector($w, state) },

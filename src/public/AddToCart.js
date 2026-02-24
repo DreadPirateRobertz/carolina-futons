@@ -2,6 +2,7 @@
 import { getProductVariants, addToCart, onCartChanged } from 'public/cartService';
 import { getBundleSuggestion } from 'backend/productRecommendations.web';
 import { trackCartAdd } from 'public/engagementTracker';
+import { fireAddToCart, fireAddToWishlist } from 'public/ga4Tracking';
 import { formatCurrency, HEART_FILLED_SVG, HEART_OUTLINE_SVG } from 'public/productPageUtils.js';
 import wixWindowFrontend from 'wix-window-frontend';
 
@@ -42,6 +43,7 @@ export function initAddToCartEnhancements($w, state) {
         btn.disable(); btn.label = 'Adding...';
         await addToCart(state.product._id, state.selectedQuantity);
         trackCartAdd(state.product, state.selectedQuantity);
+        fireAddToCart(state.product, state.selectedQuantity);
         btn.label = 'Added!';
       } catch (err) {
         console.error('Error adding to cart:', err);
@@ -78,6 +80,7 @@ export function initStickyCartBar($w, state) {
         $w('#stickyAddBtn').disable(); $w('#stickyAddBtn').label = 'Adding...';
         await addToCart(state.product._id, state.selectedQuantity);
         trackCartAdd(state.product, state.selectedQuantity);
+        fireAddToCart(state.product, state.selectedQuantity);
         $w('#stickyAddBtn').label = 'Added!';
       } catch (err) { $w('#stickyAddBtn').label = 'Error \u2014 Try Again'; }
       setTimeout(() => { try { $w('#stickyAddBtn').label = 'Add to Cart'; $w('#stickyAddBtn').enable(); } catch (e) {} }, 3000);
@@ -116,6 +119,7 @@ export async function initBundleSection($w, state) {
         await addToCart(bundle.product._id, 1);
         $w('#addBundleBtn').label = 'Bundle Added!';
         trackCartAdd(state.product, state.selectedQuantity);
+        fireAddToCart(state.product, state.selectedQuantity);
       } catch (err) { $w('#addBundleBtn').label = 'Error \u2014 Try Again'; }
       setTimeout(() => { try { $w('#addBundleBtn').label = 'Add Both to Cart'; $w('#addBundleBtn').enable(); } catch (e) {} }, 3000);
     }); } catch (e) {}
@@ -234,6 +238,7 @@ export async function initWishlistButton($w, state) {
       } else {
         await wixData.insert('Wishlist', { memberId: m._id, productId: state.product._id, productName: state.product.name, productImage: state.product.mainMedia, addedDate: new Date() });
         setWishlistActive($w, true);
+        fireAddToWishlist(state.product);
       }
     });
   } catch (e) { console.error('[AddToCart] Wishlist operation failed:', e.message); try { $w('#wishlistBtn').hide(); } catch (e2) {} }

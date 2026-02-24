@@ -5,7 +5,7 @@ import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
 
 // Google Merchant Center product feed endpoint
@@ -80,6 +80,7 @@ export async function get_productSitemap() {
       { loc: '/contact', priority: '0.5', changefreq: 'monthly' },
       { loc: '/faq', priority: '0.5', changefreq: 'monthly' },
       { loc: '/about', priority: '0.5', changefreq: 'monthly' },
+      { loc: '/newsletter', priority: '0.5', changefreq: 'monthly' },
     ];
 
     // Fetch all products for dynamic URLs
@@ -488,6 +489,86 @@ export function get_robots() {
       'Cache-Control': 'public, max-age=86400',
     },
   });
+}
+
+// ── Email Queue Processor Cron ────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/processEmailQueueCron
+// Schedule every 15-30 minutes via Wix Automations or external cron.
+// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_processEmailQueueCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || requestKey !== cronKey) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await processEmailQueue();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        sent: result.sent || 0,
+        failed: result.failed || 0,
+        cancelled: result.cancelled || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (processEmailQueueCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Re-engagement Cron ───────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/triggerReengagementCron
+// Schedule daily via Wix Automations or external cron.
+// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+export async function get_triggerReengagementCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || requestKey !== cronKey) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await triggerReengagement();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        contacted: result.contacted || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (triggerReengagementCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 // ── Feed helper functions ─────────────────────────────────────────────

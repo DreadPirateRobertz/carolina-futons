@@ -1,6 +1,7 @@
 // Checkout.js - Checkout Page
 // Trust signals, order notes, engagement tracking, delivery estimate
 import { trackCheckoutStart } from 'public/engagementTracker';
+import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD } from 'public/cartService';
 
 $w.onReady(async function () {
@@ -77,8 +78,9 @@ async function initCheckoutSummary() {
     const subtotal = cart.totals?.subtotal || 0;
     const itemCount = cart.lineItems?.reduce((s, i) => s + i.quantity, 0) || 0;
 
-    // Track checkout start in engagement funnel
+    // Track checkout start in engagement funnel + GA4/Meta Pixel
     trackCheckoutStart(subtotal, itemCount);
+    fireInitiateCheckout(cart.lineItems, subtotal);
 
     // Show free shipping badge if qualifying
     if (subtotal >= FREE_SHIPPING_THRESHOLD) {
