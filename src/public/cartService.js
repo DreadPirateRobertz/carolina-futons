@@ -65,8 +65,13 @@ export function safeMultiply(price, quantity) {
  * @returns {Promise<Object>} Cart response
  */
 export async function addToCart(productId, quantity = 1, options = {}) {
-  const item = { productId, quantity: clampQuantity(quantity), ...options };
-  return wixStoresFrontend.cart.addProducts([item]);
+  try {
+    const item = { productId, quantity: clampQuantity(quantity), ...options };
+    return await wixStoresFrontend.cart.addProducts([item]);
+  } catch (err) {
+    console.error('[cartService] addToCart failed:', err.message);
+    throw err;
+  }
 }
 
 /**
@@ -106,7 +111,12 @@ export function onCartChanged(callback) {
  * @returns {Promise<Object>} Updated cart
  */
 export async function updateCartItemQuantity(cartItemId, quantity) {
-  return wixStoresFrontend.cart.updateLineItemQuantity(cartItemId, clampQuantity(quantity));
+  try {
+    return await wixStoresFrontend.cart.updateLineItemQuantity(cartItemId, clampQuantity(quantity));
+  } catch (err) {
+    console.error('[cartService] updateCartItemQuantity failed:', err.message);
+    throw err;
+  }
 }
 
 /**
@@ -115,7 +125,12 @@ export async function updateCartItemQuantity(cartItemId, quantity) {
  * @returns {Promise<Object>} Updated cart
  */
 export async function removeCartItem(cartItemId) {
-  return wixStoresFrontend.cart.removeProduct(cartItemId);
+  try {
+    return await wixStoresFrontend.cart.removeProduct(cartItemId);
+  } catch (err) {
+    console.error('[cartService] removeCartItem failed:', err.message);
+    throw err;
+  }
 }
 
 // ── Product Variant Lookup ───────────────────────────────────────────
