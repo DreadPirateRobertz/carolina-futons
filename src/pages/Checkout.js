@@ -76,11 +76,12 @@ async function initCheckoutSummary() {
     if (!cart) return;
 
     const subtotal = cart.totals?.subtotal || 0;
-    const itemCount = cart.lineItems?.reduce((s, i) => s + i.quantity, 0) || 0;
+    const lineItems = Array.isArray(cart.lineItems) ? cart.lineItems : [];
+    const itemCount = lineItems.reduce((s, i) => s + (i.quantity || 0), 0);
 
     // Track checkout start in engagement funnel + GA4/Meta Pixel
     trackCheckoutStart(subtotal, itemCount);
-    fireInitiateCheckout(cart.lineItems || [], subtotal);
+    fireInitiateCheckout(lineItems, subtotal);
 
     // Show free shipping badge if qualifying
     if (subtotal >= FREE_SHIPPING_THRESHOLD) {
