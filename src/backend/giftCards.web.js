@@ -149,9 +149,9 @@ export const redeemGiftCard = webMethod(
       }
 
       const cleanCode = sanitize(code, 30).toUpperCase();
-      const redeemAmount = Math.abs(Number(amount));
+      const redeemAmount = Number(amount);
 
-      if (isNaN(redeemAmount) || redeemAmount <= 0) {
+      if (!isFinite(redeemAmount) || redeemAmount <= 0) {
         return { success: false, message: 'Invalid amount' };
       }
 

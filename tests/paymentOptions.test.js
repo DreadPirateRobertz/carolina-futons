@@ -293,4 +293,67 @@ describe('getInstallmentCalculation', () => {
     expect(result.price).toBe(1000);
     expect(result.months).toBe(12);
   });
+
+  it('rejects Infinity price', async () => {
+    const result = await getInstallmentCalculation(Infinity, 12);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity months', async () => {
+    const result = await getInstallmentCalculation(500, Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects "Infinity" string price', async () => {
+    const result = await getInstallmentCalculation('Infinity', 12);
+    expect(result.success).toBe(false);
+  });
+
+  it('caps months at 120 to prevent Math.pow overflow', async () => {
+    const result = await getInstallmentCalculation(500, 9999);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative months', async () => {
+    const result = await getInstallmentCalculation(500, -6);
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── Payment options edge cases ──────────────────────────────────────
+
+describe('Payment options — Infinity/overflow protection', () => {
+  it('rejects Infinity price in getPaymentOptions', async () => {
+    const result = await getPaymentOptions(Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects "Infinity" string in getPaymentOptions', async () => {
+    const result = await getPaymentOptions('Infinity');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity in getAfterpayMessage', async () => {
+    const result = await getAfterpayMessage(Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity in getCheckoutPaymentSummary', async () => {
+    const result = await getCheckoutPaymentSummary(Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects -Infinity price', async () => {
+    const result = await getPaymentOptions(-Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('skips Infinity-priced products in batch badges', async () => {
+    const result = await getBatchPaymentBadges([
+      { productId: 'inf-prod', price: Infinity },
+      { productId: 'good-prod', price: 500 },
+    ]);
+    expect(result.badges['inf-prod']).toBeUndefined();
+    expect(result.badges['good-prod']).toBeTruthy();
+  });
 });
