@@ -1,6 +1,6 @@
 // FAQ.js - Frequently Asked Questions
 // Accordion-style FAQ with search filtering, SEO schema markup, and engagement tracking
-import { getFaqSchema } from 'backend/seoHelpers.web';
+import { getFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
@@ -62,7 +62,10 @@ $w.onReady(async function () {
   initBackToTop($w);
   initFaqAccordion();
   initFaqSearch();
-  await injectFaqSchema();
+  await Promise.allSettled([
+    injectFaqSchema(),
+    injectFaqMeta(),
+  ]);
   trackEvent('page_view', { page: 'faq' });
 });
 
@@ -177,6 +180,17 @@ function filterFaqs(query) {
 }
 
 // ── FAQ Schema for SEO ──────────────────────────────────────────────
+
+async function injectFaqMeta() {
+  try {
+    const [title, description, canonical] = await Promise.all([
+      getPageTitle('faq'),
+      getPageMetaDescription('faq'),
+      getCanonicalUrl('faq'),
+    ]);
+    try { $w('#faqMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
+  } catch (e) {}
+}
 
 async function injectFaqSchema() {
   try {

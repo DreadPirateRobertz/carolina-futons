@@ -869,3 +869,122 @@ export const getBlogFaqSchema = webMethod(
 function escapeAttr(str) {
   return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+
+// ── Page Title Generation ───────────────────────────────────────────
+
+const SITE_NAME = 'Carolina Futons';
+const BASE_URL = 'https://www.carolinafutons.com';
+
+const CATEGORY_TITLES = {
+  'futon-frames': 'Futon Frames — Night & Day, Strata, KD Frames',
+  'mattresses': 'Futon Mattresses — Otis Bed CertiPUR-US Certified',
+  'murphy-cabinet-beds': 'Murphy Cabinet Beds — No Wall Mount Needed',
+  'platform-beds': 'Platform Beds — Solid Wood Bed Frames',
+  'casegoods-accessories': 'Casegoods & Bedroom Accessories',
+  'wall-huggers': 'Wall Hugger Futon Frames — Strata Furniture',
+  'unfinished-wood': 'Unfinished Wood Furniture — Made in USA',
+  'sales': 'Sale & Clearance — Furniture Deals',
+};
+
+/**
+ * Generate an SEO page title for a given page type.
+ * @param {string} pageType - 'product', 'category', 'home', 'blog', 'blogPost', 'faq', 'contact', 'about'
+ * @param {Object} [data] - Page-specific data (product, category slug, post title, etc.)
+ * @returns {string} Title tag content
+ */
+export const getPageTitle = webMethod(
+  Permissions.Anyone,
+  (pageType, data = {}) => {
+    switch (pageType) {
+      case 'product':
+        return data.name ? `${data.name} | ${SITE_NAME}` : SITE_NAME;
+      case 'category':
+        return `${CATEGORY_TITLES[data.slug] || 'Shop'} | ${SITE_NAME}`;
+      case 'home':
+        return `${SITE_NAME} — Handcrafted Futons, Murphy Beds & Platform Beds | Hendersonville NC`;
+      case 'blog':
+        return `Blog — Furniture Tips & Style Inspiration | ${SITE_NAME}`;
+      case 'blogPost':
+        return data.title ? `${data.title} | ${SITE_NAME} Blog` : `Blog | ${SITE_NAME}`;
+      case 'faq':
+        return `Frequently Asked Questions | ${SITE_NAME}`;
+      case 'contact':
+        return `Contact Us — Visit Our Hendersonville NC Showroom | ${SITE_NAME}`;
+      case 'about':
+        return `About Us — Family-Owned Since 1991 | ${SITE_NAME}`;
+      default:
+        return SITE_NAME;
+    }
+  }
+);
+
+// ── Canonical URL Generation ────────────────────────────────────────
+
+/**
+ * Generate canonical URL for a page to prevent duplicate content.
+ * @param {string} pageType - 'product', 'category', 'home', 'blog', 'blogPost', 'faq', 'contact', 'about'
+ * @param {string} [slug] - URL slug for dynamic pages
+ * @returns {string} Canonical URL
+ */
+export const getCanonicalUrl = webMethod(
+  Permissions.Anyone,
+  (pageType, slug = '') => {
+    switch (pageType) {
+      case 'product':
+        return `${BASE_URL}/product-page/${slug}`;
+      case 'category':
+        return `${BASE_URL}/${slug}`;
+      case 'home':
+        return BASE_URL;
+      case 'blog':
+        return `${BASE_URL}/blog`;
+      case 'blogPost':
+        return `${BASE_URL}/post/${slug}`;
+      case 'faq':
+        return `${BASE_URL}/faq`;
+      case 'contact':
+        return `${BASE_URL}/contact`;
+      case 'about':
+        return `${BASE_URL}/about`;
+      default:
+        return BASE_URL;
+    }
+  }
+);
+
+// ── Meta Description Generation ─────────────────────────────────────
+
+const PAGE_META_DESCRIPTIONS = {
+  home: 'Carolina Futons — the largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991. Free shipping on orders over $999.',
+  faq: 'Frequently asked questions about futons, Murphy beds, mattress care, shipping, and visiting our Hendersonville NC showroom. Get answers from Carolina Futons.',
+  contact: 'Contact Carolina Futons in Hendersonville, NC. Visit our showroom Wednesday–Saturday 10 AM–5 PM. Call (828) 252-9449 or book an appointment online.',
+  about: 'Carolina Futons has served Western NC since 1991. Family-owned furniture store specializing in quality futon frames, mattresses, Murphy beds, and platform beds in Hendersonville, NC.',
+  blog: 'Furniture tips, style inspiration, and product guides from Carolina Futons. Learn about futon care, room design ideas, and choosing the perfect furniture.',
+};
+
+/**
+ * Generate meta description for a page.
+ * @param {string} pageType - Page type
+ * @param {Object} [data] - Page-specific data
+ * @returns {string} Meta description (max 160 chars for static, dynamic for products)
+ */
+export const getPageMetaDescription = webMethod(
+  Permissions.Anyone,
+  (pageType, data = {}) => {
+    switch (pageType) {
+      case 'product':
+        if (data.description) {
+          return stripHtml(data.description).substring(0, 155) + '...';
+        }
+        return `Shop ${data.name || 'quality furniture'} at Carolina Futons. Free shipping on orders over $999. Visit our Hendersonville, NC showroom.`;
+      case 'category':
+        return getCategoryMetaDescriptionSync(data.slug);
+      case 'blogPost':
+        return data.excerpt
+          ? stripHtml(data.excerpt).substring(0, 155) + '...'
+          : `Read ${data.title || 'this article'} on the Carolina Futons blog.`;
+      default:
+        return PAGE_META_DESCRIPTIONS[pageType] || PAGE_META_DESCRIPTIONS.home;
+    }
+  }
+);

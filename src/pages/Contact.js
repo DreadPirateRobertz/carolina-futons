@@ -1,7 +1,7 @@
 // Contact.js - Contact Page
 // Contact form with validation, illustrated map section,
 // business hours, and local SEO schema
-import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { getBusinessSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { sendEmail } from 'backend/emailService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import {
@@ -18,7 +18,10 @@ $w.onReady(async function () {
   initContactForm();
   initBusinessInfo();
   initAppointmentBooking();
-  await injectContactSchema();
+  await Promise.allSettled([
+    injectContactSchema(),
+    injectContactMeta(),
+  ]);
   trackEvent('page_view', { page: 'contact' });
 });
 
@@ -318,5 +321,16 @@ async function injectContactSchema() {
     if (schema) {
       $w('#contactSchemaHtml').postMessage(schema);
     }
+  } catch (e) {}
+}
+
+async function injectContactMeta() {
+  try {
+    const [title, description, canonical] = await Promise.all([
+      getPageTitle('contact'),
+      getPageMetaDescription('contact'),
+      getCanonicalUrl('contact'),
+    ]);
+    try { $w('#contactMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
   } catch (e) {}
 }
