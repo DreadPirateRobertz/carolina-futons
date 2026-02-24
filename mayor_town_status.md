@@ -1,5 +1,5 @@
 # Gas Town Status Report
-**Generated:** 2026-02-24 02:30 UTC
+**Generated:** 2026-02-24 02:42 UTC
 **Updated by:** miquella (cfutons crew) — per mayor directive (5-min cadence)
 
 ---
@@ -8,7 +8,7 @@
 
 | Rig | Status | Crew | Polecats | Key Work |
 |-----|--------|------|----------|----------|
-| cfutons | RUNNING | 5 (miquella active) | 0 | 9 beads shipped, quality gate active |
+| cfutons | RUNNING | 5 (miquella active) | 0 | PR #31 + #35 open, 97 new tests, 2 P0s done |
 | cfutons_mobile | RUNNING | 3 (all active) | 3 (1 done, 2 working) | AR Camera epic |
 | gastown | RUNNING | 6 (all active) | 0 | 10 community PRs reviewed |
 | tradingbot | PARKED | 0 | 0 | Per human directive |
@@ -20,7 +20,10 @@
 ### cfutons — OPERATIONAL
 **Crew:** melania (PM), godfrey, miquella, radahn, rennala
 
-All open PRs merged. Quality gate active. 9 product beads shipped and closed. Miquella online and claiming next work.
+**Session work (miquella, 02:28-02:42 UTC):**
+- CF-cie (P0): Page edge cases — 8 fixes, 55 tests → PR #31 open
+- cf-duj (P0): Backend audit — 5 fixes, 42 tests → PR #35 open
+- Both PRs awaiting melania review. TDD directive followed.
 
 ### cfutons_mobile — OPERATIONAL (AR Camera Sprint)
 **Crew:** bishop, dallas, ripley
@@ -100,7 +103,7 @@ All open PRs merged. Quality gate active. 9 product beads shipped and closed. Mi
 | Page Code | 28 page JS files |
 | Frontend Utils | 56 public JS modules |
 | Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
-| Open PRs | **0** (all reviewed and merged) |
+| Open PRs | **2** (#31 CF-cie page edge cases, #35 cf-duj backend audit) |
 
 ## Recent Code on Main (latest first)
 - End-to-end checkout flow tests (27 tests) — cf-67ov
@@ -126,8 +129,8 @@ All open PRs merged. Quality gate active. 9 product beads shipped and closed. Mi
 | melania | PM | ACTIVE | Acceptance authority, beads coordination |
 | godfrey | Dev | IDLE | Shipped SEO optimization (CF-qs4) |
 | rennala | Dev | IDLE | Shipped reviews (CF-gp3) + marketing (CF-74x) |
-| radahn | Dev | ACTIVE | CF-04h DONE (PR #30), CF-559 DONE (PR #33), checking for more |
-| miquella | Dev | ACTIVE | Status report, claiming next work |
+| radahn | Dev | IDLE | Stability audit, checkout E2E, returns |
+| miquella | Dev | ACTIVE | PR #31 (CF-cie) + PR #35 (cf-duj) — both awaiting review |
 
 ## What Human Needs To Do
 
@@ -145,4 +148,4 @@ All open PRs merged. Quality gate active. 9 product beads shipped and closed. Mi
 ---
 
 *Report by: miquella | cfutons GREEN | Quality gate ACTIVE*
-*Next update: ~02:35 UTC (5-min cadence per mayor directive)*
+*Next update: ~02:40 UTC (5-min cadence per mayor directive)*
