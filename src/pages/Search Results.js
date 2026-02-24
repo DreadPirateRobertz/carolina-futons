@@ -60,7 +60,7 @@ async function performSearch(query) {
 
     try { $w('#loadingIndicator').hide(); } catch (e) {}
 
-    if (result.products.length === 0) {
+    if (!result?.products || result.products.length === 0) {
       trackEvent('search_no_results', { query });
       showNoResults(query);
       return;
@@ -246,10 +246,12 @@ function setupAutocomplete() {
         limit: PAGE_SIZE,
         offset: _currentOffset,
       });
-      if (result.products.length > 0) {
+      const products = result?.products || [];
+      if (products.length > 0) {
         const repeater = $w('#searchRepeater');
         if (repeater) {
-          repeater.data = [...repeater.data, ...result.products.map(p => ({ ...p, _id: p._id }))];
+          const existing = Array.isArray(repeater.data) ? repeater.data : [];
+          repeater.data = [...existing, ...products.map(p => ({ ...p, _id: p._id }))];
         }
       }
       try {
@@ -378,7 +380,7 @@ async function showEmptyState() {
 
 async function loadPopularSuggestions() {
   try {
-    const { queries } = await getPopularSearches(6);
+    const { queries = [] } = await getPopularSearches(6) || {};
     if (queries.length > 0) {
       const labels = queries.map(q => q.query).join(', ');
       $w('#noResultsText').text = `Try searching for: ${labels}`;

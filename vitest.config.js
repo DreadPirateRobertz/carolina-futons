@@ -143,6 +143,8 @@ export default defineConfig({
       'public/ProductFinancing': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'public/socialProofToast.js': path.resolve(__dirname, 'src/public/socialProofToast.js'),
       'public/socialProofToast': path.resolve(__dirname, 'src/public/socialProofToast.js'),
+      'public/validators.js': path.resolve(__dirname, 'src/public/validators.js'),
+      'public/validators': path.resolve(__dirname, 'src/public/validators.js'),
       'backend/socialProof.web': path.resolve(__dirname, 'src/backend/socialProof.web.js'),
       'backend/accessibility.web': path.resolve(__dirname, 'src/backend/accessibility.web.js'),
       'backend/orderTracking.web': path.resolve(__dirname, 'src/backend/orderTracking.web.js'),

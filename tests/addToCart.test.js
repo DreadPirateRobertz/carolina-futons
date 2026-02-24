@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { futonFrame } from './fixtures/products.js';
 
-vi.mock('public/cartService', () => ({
-  getProductVariants: vi.fn().mockResolvedValue([{ inStock: true }]),
-  addToCart: vi.fn().mockResolvedValue({}),
-  onCartChanged: vi.fn(),
-}));
+vi.mock('public/cartService', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getProductVariants: vi.fn().mockResolvedValue([{ inStock: true }]),
+    addToCart: vi.fn().mockResolvedValue({}),
+    onCartChanged: vi.fn(),
+  };
+});
 
 vi.mock('backend/productRecommendations.web', () => ({
   getRelatedProducts: vi.fn().mockResolvedValue([]),

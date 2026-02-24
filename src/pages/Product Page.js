@@ -23,6 +23,7 @@ import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
+import { validateEmail, validateDimension } from 'public/validators.js';
 
 const state = {
   product: null,
@@ -43,10 +44,11 @@ $w.onReady(async function () {
 
 async function initProductPage() {
   try {
-    // Show cached product data instantly while dataset loads
+    // Show cached product data instantly while dataset loads (max 5 min stale)
     const slug = wixLocationFrontend.path?.[1] || '';
     const cached = slug ? getCachedProduct(slug) : null;
-    if (cached) {
+    const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
+    if (cached && (!cached._cachedAt || (Date.now() - cached._cachedAt) < CACHE_MAX_AGE_MS)) {
       try { $w('#productName').text = cached.name; } catch (e) {}
       try { $w('#productPrice').text = cached.formattedPrice; } catch (e) {}
       try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) {}
@@ -136,7 +138,9 @@ async function injectProductMeta(state) {
       ? product.description.replace(/<[^>]*>/g, '').substring(0, 160).trim()
       : `Shop ${product.name} at Carolina Futons. Quality furniture since 1991. Free shipping on orders over $999.`;
     head.setMetaTag('description', description);
-  } catch (e) {}
+  } catch (e) {
+    console.error('[ProductPage] Failed to set meta:', e?.message || e);
+  }
 }
 
 // ── Dimension Display & Room Fit Checker ──────────────────────────────
@@ -200,7 +204,13 @@ async function initDimensionDisplay($w, state) {
     if (dims.mattressSize) {
       try { $w('#mattressSize').text = `Mattress Size: ${dims.mattressSize}`; } catch (e) {}
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('[ProductPage] Failed to load dimensions:', e?.message || e);
+    try { $w('#dimensionSection').expand(); } catch (e2) {}
+    try { $w('#dimensionPlaceholder').text = 'Dimensions temporarily unavailable'; } catch (e2) {}
+    try { $w('#dimensionPlaceholder').show(); } catch (e2) {}
+    try { $w('#dimensionGrid').hide(); } catch (e2) {}
+  }
 }
 
 function renderDimensions($w, dims) {
@@ -252,28 +262,42 @@ async function initRoomFitChecker($w, state) {
           $w('#checkFitBtn').label = 'Checking...';
 
           const roomDims = {};
+          let hasValidInput = false;
           try {
             const dw = parseFloat($w('#doorwayWidth').value);
             const dh = parseFloat($w('#doorwayHeight').value);
-            if (!isNaN(dw) && !isNaN(dh)) {
+            if (validateDimension(dw, 1, 120) && validateDimension(dh, 1, 120)) {
               roomDims.doorwayWidth = dw;
               roomDims.doorwayHeight = dh;
+              hasValidInput = true;
             }
           } catch (e) {}
 
           try {
             const hw = parseFloat($w('#hallwayWidth').value);
-            if (!isNaN(hw)) roomDims.hallwayWidth = hw;
+            if (validateDimension(hw, 1, 240)) {
+              roomDims.hallwayWidth = hw;
+              hasValidInput = true;
+            }
           } catch (e) {}
 
           try {
             const rw = parseFloat($w('#roomWidth').value);
             const rd = parseFloat($w('#roomDepth').value);
-            if (!isNaN(rw) && !isNaN(rd)) {
+            if (validateDimension(rw, 1, 600) && validateDimension(rd, 1, 600)) {
               roomDims.roomWidth = rw;
               roomDims.roomDepth = rd;
+              hasValidInput = true;
             }
           } catch (e) {}
+
+          if (!hasValidInput) {
+            try { $w('#fitResultText').text = 'Please enter valid dimensions (positive numbers within realistic ranges).'; } catch (e) {}
+            try { $w('#fitResultSection').show(); } catch (e) {}
+            $w('#checkFitBtn').label = 'Check Fit';
+            $w('#checkFitBtn').enable();
+            return;
+          }
 
           const result = await checkRoomFit(state.product._id, roomDims);
           displayFitResults($w, result);
@@ -657,7 +681,7 @@ function showRemindMePopup() {
     try {
       $w('#remindMeSubmit').onClick(async () => {
         const email = $w('#remindMeEmailInput').value?.trim();
-        if (!email || !email.includes('@')) return;
+        if (!email || !validateEmail(email)) return;
 
         try {
           $w('#remindMeSubmit').disable();
