@@ -177,8 +177,9 @@ function renderComparisonRows() {
       try { $item('#rowLabel').text = itemData.label; } catch (e) {}
 
       // Render cells (up to 4)
+      const cells = Array.isArray(itemData.cells) ? itemData.cells : [];
       for (let i = 0; i < 4; i++) {
-        const cell = itemData.cells[i];
+        const cell = cells[i];
         const cellId = `#rowCell${i + 1}`;
 
         if (!cell) {

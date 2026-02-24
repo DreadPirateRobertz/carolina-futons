@@ -80,7 +80,7 @@ async function initCheckoutSummary() {
 
     // Track checkout start in engagement funnel + GA4/Meta Pixel
     trackCheckoutStart(subtotal, itemCount);
-    fireInitiateCheckout(cart.lineItems, subtotal);
+    fireInitiateCheckout(cart.lineItems || [], subtotal);
 
     // Show free shipping badge if qualifying
     if (subtotal >= FREE_SHIPPING_THRESHOLD) {
