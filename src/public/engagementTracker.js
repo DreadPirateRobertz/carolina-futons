@@ -264,13 +264,116 @@ export function getSessionSummary() {
   };
 }
 
+// ── Synchronous Page-Exit Flush ──────────────────────────────────────
+// Uses navigator.sendBeacon() for reliable event delivery on page exit.
+// Falls back to localStorage persistence + recovery on next page load.
+
+const PENDING_EVENTS_KEY = 'cf_pending_events';
+const BEACON_ENDPOINT = '/_functions/trackEvents';
+
+/**
+ * Synchronously flush queued events on page exit using sendBeacon.
+ * Unlike flushEvents(), this is safe to call from beforeunload because
+ * it does not use async/await — sendBeacon is fire-and-forget.
+ * Falls back to localStorage if sendBeacon is unavailable or fails.
+ */
+export function flushEventsSync() {
+  if (_eventQueue.length === 0) return;
+
+  const events = _eventQueue.splice(0);
+  clearTimeout(_flushTimer);
+  _flushTimer = null;
+
+  // Also store local-only events to sessionStorage
+  const localEvents = events.filter(e =>
+    e.type !== 'product_view' && e.type !== 'add_to_cart'
+  );
+  for (const event of localEvents) {
+    _storeLocalEvent(event);
+  }
+
+  // Try sendBeacon for backend-tracked events
+  let beaconSent = false;
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([JSON.stringify(events)], { type: 'application/json' });
+      beaconSent = navigator.sendBeacon(BEACON_ENDPOINT, blob);
+    }
+  } catch (e) {
+    // sendBeacon may throw in some environments
+  }
+
+  // Fallback: persist to localStorage for recovery on next page load
+  if (!beaconSent) {
+    _savePendingEvents(events);
+  }
+}
+
+/**
+ * Get pending events saved by a previous flushEventsSync fallback.
+ * @returns {Array} Pending events from localStorage.
+ */
+export function _getPendingBeaconEvents() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(PENDING_EVENTS_KEY);
+      if (raw) return JSON.parse(raw);
+    }
+  } catch (e) {}
+  return [];
+}
+
+/**
+ * Recover pending events from localStorage and flush them via the async path.
+ * Call this on page init to deliver events from a previous session's exit.
+ */
+export async function _recoverPendingEvents() {
+  const pending = _getPendingBeaconEvents();
+  if (pending.length === 0) return;
+
+  // Clear immediately to prevent double-processing
+  try {
+    localStorage.removeItem(PENDING_EVENTS_KEY);
+  } catch (e) {}
+
+  // Re-queue and flush through the normal async path
+  for (const event of pending) {
+    _eventQueue.push(event);
+  }
+  await flushEvents();
+}
+
+function _savePendingEvents(events) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      // Merge with any existing pending events
+      const existing = _getPendingBeaconEvents();
+      const merged = existing.concat(events);
+      // Cap to prevent localStorage bloat
+      if (merged.length > 200) merged.splice(0, merged.length - 200);
+      localStorage.setItem(PENDING_EVENTS_KEY, JSON.stringify(merged));
+    }
+  } catch (e) {}
+}
+
 // ── Page Unload Handler ──────────────────────────────────────────────
-// Flush remaining events when user navigates away
+// Uses flushEventsSync (sendBeacon) instead of async flushEvents
 
 if (typeof window !== 'undefined') {
   try {
     window.addEventListener('beforeunload', () => {
-      flushEvents();
+      flushEventsSync();
+    });
+  } catch (e) {}
+}
+
+// ── Page Init: Recover Pending Events ────────────────────────────────
+// On load, flush any events saved by a previous exit that couldn't sendBeacon
+
+if (typeof window !== 'undefined') {
+  try {
+    window.addEventListener('load', () => {
+      _recoverPendingEvents();
     });
   } catch (e) {}
 }
