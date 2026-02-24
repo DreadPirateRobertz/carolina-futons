@@ -5,6 +5,7 @@ import { trackCartAdd } from 'public/engagementTracker';
 import { fireAddToCart, fireAddToWishlist } from 'public/ga4Tracking';
 import { formatCurrency, HEART_FILLED_SVG, HEART_OUTLINE_SVG } from 'public/productPageUtils.js';
 import wixWindowFrontend from 'wix-window-frontend';
+import { validateEmail } from 'public/validators.js';
 
 // ── Quantity Selector ─────────────────────────────────────────────────
 
@@ -145,7 +146,8 @@ export async function initStockUrgency($w, state) {
       if (badge) {
         const mod = await import('wix-data');
         const res = await mod.default.query('ProductAnalytics').eq('productId', state.product._id).find();
-        if (res.items.length > 0 && res.items[0].weekSales > 0) { badge.text = `Popular \u2014 ${res.items[0].weekSales} sold this week`; badge.show(); }
+        const weekSales = res.items.length > 0 ? Number(res.items[0].weekSales) : 0;
+        if (weekSales > 0 && isFinite(weekSales)) { badge.text = `Popular \u2014 ${weekSales} sold this week`; badge.show(); }
         else { badge.hide(); }
       }
     } catch (e) { console.error('[AddToCart] Error loading popularity badge:', e.message); try { $w('#popularityBadge').hide(); } catch (e2) {} }
@@ -182,7 +184,7 @@ export async function initBackInStockNotification($w, state) {
     } catch (e) { /* Fall through to email form */ }
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
-      if (!email || !email.includes('@')) return;
+      if (!email || !validateEmail(email)) return;
       try {
         const { submitContactForm } = await import('backend/contactSubmissions.web');
         await submitContactForm({ email, source: 'back_in_stock', status: 'back_in_stock_request', productId: state.product?._id || '', productName: state.product?.name || '', notes: `Back in stock request for ${state.product?.name || 'unknown product'}` });
