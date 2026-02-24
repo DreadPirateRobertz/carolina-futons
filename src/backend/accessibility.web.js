@@ -44,7 +44,8 @@ export const getAnnouncement = webMethod(
     if (!template) return '';
     try {
       return template(...args);
-    } catch {
+    } catch (err) {
+      console.warn(`[accessibility] Announcement template "${event}" failed:`, err?.message || err);
       return '';
     }
   }

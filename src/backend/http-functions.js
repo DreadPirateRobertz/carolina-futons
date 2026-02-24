@@ -8,6 +8,26 @@ import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
 
+/** Validate cron endpoint authentication. Returns true if authorized. */
+async function validateCronAuth(request, secretName = 'ALERT_CRON_KEY') {
+  const { getSecret } = await import('wix-secrets-backend');
+  const cronKey = await getSecret(secretName);
+  const requestKey = request.query?.key;
+  if (typeof requestKey !== 'string' || !requestKey || !cronKey) return false;
+  return requestKey === cronKey;
+}
+
+/** Escape special XML characters to prevent malformed XML output. */
+function escapeXml(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 // Google Merchant Center product feed endpoint
 // URL: GET https://www.carolinafutons.com/_functions/googleShoppingFeed
 // Configure this URL in Google Merchant Center as a scheduled fetch source
@@ -102,10 +122,10 @@ export async function get_productSitemap() {
 
     for (const url of allUrls) {
       xml += '  <url>\n';
-      xml += `    <loc>${SITE_URL}${url.loc}</loc>\n`;
-      if (url.lastmod) xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
-      xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
-      xml += `    <priority>${url.priority}</priority>\n`;
+      xml += `    <loc>${escapeXml(SITE_URL + url.loc)}</loc>\n`;
+      if (url.lastmod) xml += `    <lastmod>${escapeXml(url.lastmod)}</lastmod>\n`;
+      xml += `    <changefreq>${escapeXml(url.changefreq)}</changefreq>\n`;
+      xml += `    <priority>${escapeXml(url.priority)}</priority>\n`;
       xml += '  </url>\n';
     }
 
@@ -345,11 +365,7 @@ self.addEventListener('fetch', (event) => {
 // Pass ?key=<secret> for basic auth (set ALERT_CRON_KEY in Secrets Manager).
 export async function get_checkWishlistAlerts(request) {
   try {
-    const { getSecret } = await import('wix-secrets-backend');
-    const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
-
-    if (!cronKey || requestKey !== cronKey) {
+    if (!await validateCronAuth(request)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -390,11 +406,7 @@ export async function get_checkWishlistAlerts(request) {
 // Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerBrowseRecoveryCron(request) {
   try {
-    const { getSecret } = await import('wix-secrets-backend');
-    const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
-
-    if (!cronKey || requestKey !== cronKey) {
+    if (!await validateCronAuth(request)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -430,11 +442,7 @@ export async function get_triggerBrowseRecoveryCron(request) {
 // Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerCartRecoveryCron(request) {
   try {
-    const { getSecret } = await import('wix-secrets-backend');
-    const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
-
-    if (!cronKey || requestKey !== cronKey) {
+    if (!await validateCronAuth(request)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -497,11 +505,7 @@ export function get_robots() {
 // Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_processEmailQueueCron(request) {
   try {
-    const { getSecret } = await import('wix-secrets-backend');
-    const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
-
-    if (!cronKey || requestKey !== cronKey) {
+    if (!await validateCronAuth(request)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -538,11 +542,7 @@ export async function get_processEmailQueueCron(request) {
 // Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerReengagementCron(request) {
   try {
-    const { getSecret } = await import('wix-secrets-backend');
-    const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
-
-    if (!cronKey || requestKey !== cronKey) {
+    if (!await validateCronAuth(request)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },

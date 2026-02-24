@@ -137,7 +137,7 @@ function initSideCartRepeater() {
 async function refreshSideCart() {
   try {
     const currentCart = await getCurrentCart();
-    if (!currentCart || !currentCart.lineItems || currentCart.lineItems.length === 0) {
+    if (!currentCart || !Array.isArray(currentCart.lineItems) || currentCart.lineItems.length === 0) {
       try {
         $w('#sideCartEmpty').show();
         $w('#sideCartItems').hide();

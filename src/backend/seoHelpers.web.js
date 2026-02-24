@@ -31,13 +31,23 @@ const BUSINESS_INFO = {
   ],
 };
 
+/** Sanitize string for safe JSON-LD embedding (escapes HTML entities). */
+function sanitizeForJsonLd(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+}
+
 // Generate JSON-LD Product schema for a product page
 export const getProductSchema = webMethod(
   Permissions.Anyone,
   (product) => {
-    if (!product) return null;
+    if (!product || typeof product !== 'object') return null;
 
-    const productUrl = `${BUSINESS_INFO.url}/product-page/${product.slug}`;
+    const slug = typeof product.slug === 'string' ? product.slug : '';
+    const productUrl = `${BUSINESS_INFO.url}/product-page/${slug}`;
     const brand = getBrandName(product);
     const category = getCategoryLabel(product);
 
@@ -45,9 +55,9 @@ export const getProductSchema = webMethod(
       '@context': 'https://schema.org',
       '@type': 'Product',
       '@id': productUrl,
-      name: product.name,
+      name: sanitizeForJsonLd(product.name || ''),
       url: productUrl,
-      description: stripHtml(product.description || ''),
+      description: sanitizeForJsonLd(stripHtml(product.description || '')),
       image: buildImageArray(product),
       sku: product.sku || '',
       category: category,
@@ -610,6 +620,7 @@ function buildImageArray(product) {
 
 // Helper: strip HTML tags from text
 function stripHtml(html) {
+  if (typeof html !== 'string') return '';
   return html.replace(/<[^>]*>/g, '').trim();
 }
 

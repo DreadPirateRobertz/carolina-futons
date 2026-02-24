@@ -296,7 +296,7 @@ async function loadAppointmentSlots() {
     const dates = [...new Set(slots.map(s => s.date))];
     $w('#appointmentDate').options = dates.map(d => {
       const slot = slots.find(s => s.date === d);
-      return { label: `${slot.dayOfWeek}, ${d}`, value: d };
+      return { label: slot ? `${slot.dayOfWeek}, ${d}` : d, value: d };
     });
 
     // Filter time slots for selected date

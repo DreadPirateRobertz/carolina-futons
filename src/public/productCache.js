@@ -71,7 +71,7 @@ export function getCachedProduct(slug) {
     return null;
   }
 
-  return entry.data;
+  return { ...entry.data, _cachedAt: entry.cachedAt };
 }
 
 /**

@@ -84,8 +84,8 @@ export async function getCurrentCart() {
 export async function getCartItemCount() {
   try {
     const cart = await getCurrentCart();
-    if (!cart || !cart.lineItems) return 0;
-    return cart.lineItems.reduce((sum, item) => sum + item.quantity, 0);
+    if (!cart || !Array.isArray(cart.lineItems)) return 0;
+    return cart.lineItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   } catch {
     return 0;
   }
