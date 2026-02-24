@@ -54,7 +54,7 @@ export const getPaymentOptions = webMethod(
   async (price) => {
     try {
       const numPrice = typeof price === 'number' ? price : parseFloat(price);
-      if (isNaN(numPrice) || numPrice <= 0) {
+      if (!isFinite(numPrice) || numPrice <= 0) {
         return { success: false, error: 'Valid price required' };
       }
 
@@ -80,7 +80,7 @@ export const getAfterpayMessage = webMethod(
   async (price) => {
     try {
       const numPrice = typeof price === 'number' ? price : parseFloat(price);
-      if (isNaN(numPrice) || numPrice <= 0) {
+      if (!isFinite(numPrice) || numPrice <= 0) {
         return { success: false, error: 'Valid price required' };
       }
 
@@ -108,7 +108,7 @@ export const getBatchPaymentBadges = webMethod(
         const cleanId = sanitize(prod.productId || prod._id || '', 50);
         const price = typeof prod.price === 'number' ? prod.price : parseFloat(prod.price);
 
-        if (!cleanId || isNaN(price) || price <= 0) continue;
+        if (!cleanId || !isFinite(price) || price <= 0) continue;
 
         const afterpay = getAfterpayInfo(price);
         const financing = getFinancingInfo(price);
@@ -153,7 +153,7 @@ export const getCheckoutPaymentSummary = webMethod(
   async (cartTotal) => {
     try {
       const numTotal = typeof cartTotal === 'number' ? cartTotal : parseFloat(cartTotal);
-      if (isNaN(numTotal) || numTotal <= 0) {
+      if (!isFinite(numTotal) || numTotal <= 0) {
         return { success: false, error: 'Valid cart total required' };
       }
 
@@ -212,11 +212,11 @@ export const getInstallmentCalculation = webMethod(
       const numPrice = typeof price === 'number' ? price : parseFloat(price);
       const numMonths = typeof months === 'number' ? months : parseInt(months);
 
-      if (isNaN(numPrice) || numPrice <= 0) {
+      if (!isFinite(numPrice) || numPrice <= 0) {
         return { success: false, error: 'Valid price required' };
       }
-      if (isNaN(numMonths) || numMonths <= 0) {
-        return { success: false, error: 'Valid months required' };
+      if (!isFinite(numMonths) || numMonths <= 0 || numMonths > 120) {
+        return { success: false, error: 'Valid months required (1-120)' };
       }
 
       // Find applicable tier
