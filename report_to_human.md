@@ -1,150 +1,95 @@
-# cfutons (Carolina Futons) — Report to Human
-
-**Last Updated:** 2026-02-23 12:55 MST (rennala, Crew Worker)
-**Repo:** git@github.com:DreadPirateRobertz/carolina-futons.git
-
----
-
-## Health: GREEN — LAUNCH READY, CREW PRODUCING
-
-| Metric | Value |
-|--------|-------|
-| Tests | 4,178 vitest tests across 112 files (all green) |
-| Backend Modules | 71 `.web.js` modules |
-| Page Code | 28 page JS files |
-| Frontend Utils | 26+ public JS modules |
-| CMS Collections | 16 priority + 50 auto-created |
-| Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
+# Gas Town Status Report
+**Generated:** 2026-02-23 19:20 MST
+**Mayor Session:** 5f324bd1
 
 ---
 
-## CHANGES SINCE LAST REPORT (2026-02-23 12:30)
+## Town Summary
 
-### New Code on Main (rennala)
-- Self-service returns portal (returnsService extended, Returns.js, Admin Returns.js)
-- Financing calculator with NaN guards (financingCalc.web.js)
-- Accessibility audit module (accessibility.web.js)
-- Social proof toasts (socialProof.web.js)
-- Style Quiz page
-- Content import pipeline (contentImport.web.js, 576 lines)
-- safeParse utility for JSON.parse hardening
-- Promise.allSettled patterns + tests
-- 5 stale MD files removed (consolidated into MASTER-HOOKUP.md)
-- Analytics dashboard (analyticsDashboard.web.js)
-- Email templates module (emailTemplates.web.js)
-- Social media kit (socialMediaKit.web.js)
-- A11y helpers expanded (makeClickable, announce)
-
-### Checkout E2E Testing (CF-q5b)
-- Extended checkout flow E2E from 27 → 35 tests across 14 flows
-- New coverage: cart abandonment→recovery lifecycle, batch payment badges, active promotions at checkout, promotion discount application
-- All cross-module checkout pathways now exercised: checkoutOptimization, paymentOptions, cartRecovery, promotions
-
-**Marketing Launch Toolkit (CF-74x) — COMPLETE**
-- `emailTemplates.web.js` — 13-template registry across 5 sequences (welcome, cart recovery, promotional, post-purchase, re-engagement). Subject line resolver, variable validation, promotional queue.
-- `socialMediaKit.web.js` — Share URL generators (Facebook, Twitter, Pinterest, LinkedIn, email), social meta validator with per-platform scoring (OG/Twitter/Pinterest), product readiness checker, feed status dashboard.
-- `analyticsDashboard.web.js` — Conversion funnel (views→cart→purchase), top converters, category performance, email metrics, revenue attribution, unified dashboard summary.
-- 102 new tests across 3 test files.
-
-**Customer Reviews Unified API (CF-gp3) — COMPLETE**
-- `productReviews.web.js` — Unified facade over reviewsService + photoReviews. Combined review summary (star + photo), unified review feed with 5 sort modes + star filter + pagination, review highlights for product cards, batch summaries for listing pages, combined moderation queue.
-- 38 new tests.
-
-### Other Crew Work Landed
-- a11yHelpers.js improvements (godfrey)
-- Page code updates across 12 pages (godfrey)
-- LiveChat + ProductDetails + ProductFinancing enhancements
-
-### Previous Session (2026-02-22)
-- Self-service returns portal, financing calc, accessibility audit, social proof, Style Quiz, content import pipeline, safeParse, Promise.allSettled, MD consolidation
-- Radahn stability audit: 1,426 silent catch blocks identified, 11 beads filed
+| Rig | Status | Crew | Polecats | Key Work |
+|-----|--------|------|----------|----------|
+| cfutons | RUNNING | 5 (all active) | 0 | Catalog, deployment |
+| cfutons_mobile | RUNNING | 3 (all active) | 3 (1 done, 2 working) | AR Camera epic |
+| gastown | RUNNING | 6 (all active) | 0 | 10 community PRs reviewed |
+| tradingbot | PARKED | 0 | 0 | Per human directive |
 
 ---
 
-## WHAT YOU NEED TO DO
+## Active Rigs
 
-### 15-Minute Quick Wins (free)
-1. Install GA4 — Dashboard > Marketing Integrations > paste Measurement ID
-2. Install Meta Pixel — Dashboard > Tracking & Analytics > paste Pixel ID
-3. Install Pinterest Tag — same location > paste Tag ID
-4. Connect Google Merchant feed: `/_functions/googleMerchantFeed`
-5. Enable Wix Chat — one toggle
+### cfutons — OPERATIONAL
+**Crew:** melania (PM), godfrey, miquella, radahn, rennala
 
-### Social Media Hookup (MASTER-HOOKUP.md has full step-by-step)
+All crew started. Melania coordinates. Catalog scraping and deployment prep continuing from prior session.
 
-| Platform | What You Need | Feed URL |
-|----------|--------------|----------|
-| **Pinterest** | Business account, claim site, connect catalog | `/_functions/pinterestProductFeed` |
-| **Google Shopping** | Merchant Center, connect feed, link GA4 | `/_functions/googleMerchantFeed` |
-| **Facebook/Instagram** | Business page, Commerce Manager, catalog | `/_functions/facebookCatalogFeed` |
-| **TikTok** | Business account, install pixel | (custom pixel, no feed needed) |
+### cfutons_mobile — OPERATIONAL (AR Camera Sprint)
+**Crew:** bishop, dallas, ripley
+**Polecats:**
 
-All feeds are LIVE — code generates them automatically from your product catalog.
+| Polecat | Bead | Task | Status |
+|---------|------|------|--------|
+| furiosa | cm-9k2 | 3D model pipeline (USDZ/GLB) | DONE |
+| nux | cm-beo | Room detection & surface mapping | WORKING |
+| slit | cm-ci2 | Product placement UI | WORKING |
 
-### This Week
-6. Create 16 CMS Collections (schema in CMS-SETUP-GUIDE.md)
-7. Enable Wix Loyalty + Automations + Bookings
-8. Verify 8 Secrets in Secrets Manager
-9. Create email templates (17 total, see EMAIL-TEMPLATES.md)
+**Convoys:** 3 active AR Camera convoys tracking all work.
 
-### Critical Blockers
-- **Product photography** — #1 blocker. No real photos = no sales.
-- **Domain connection** — carolinafutons.com must point to Wix site
+### gastown — OPERATIONAL (PR Review Queue)
+**Crew:** batty, deckard, gaff, rachael, tyrell (token auditor), zhora
 
----
+**PR Queue (10 open, all reviewed this session):**
 
-## Crew Status
+| PR | Author | Title | Verdict |
+|----|--------|-------|---------|
+| #1949 | DreadPirateRobertz | errcheck lint fix (CI blocker) | MERGE |
+| #1947 | DreadPirateRobertz | gate nuke on MR failure | MERGE |
+| #1954 | Henry-E | refinery empty test_command default | MERGE |
+| #1953 | dmotles | seance prefix resolution | MERGE |
+| #1957 | pae23 | multi-town tmux/Dolt isolation | MERGE |
+| #1956 | alexhop | dashboard security hardening | MERGE (DRAFT) |
+| #1955 | l0g1x | parked rig checks in sling/convoy | FIX-MERGE |
+| #1958 | branch-cartesia | polecat branch config | FIX-MERGE |
+| #1952 | DreadPirateRobertz | recovery MQ check | SKIP (needs rebase) |
+| #1933 | Wenjix | formula fork workflow | PENDING REVIEW |
 
-### cfutons
-| Member | Status | Current/Last Work |
-|--------|--------|-------------------|
-| melania | ACTIVE | Production management, bead coordination |
-| godfrey | ACTIVE | WCAG 2.1 AA accessibility, page code updates |
-| rennala | ACTIVE | Marketing launch toolkit (DONE), customer reviews (DONE) |
-| radahn | ACTIVE | Stability audit, checkout E2E testing, reviews work |
-| miquella | cf-utqo | Product image pipeline |
-
-### cfutons_mobile (AR Camera)
-| Member | Last Commit | Work |
-|--------|-------------|------|
-| dallas | `c1acc46` | Reviews flow, search autocomplete |
-| bishop | `6967bb8` | Deep link routing, notification tests |
-| ripley | `0eb5180` | **AR camera** (Quick Look iOS + Scene Viewer Android), offline queue |
-
-**AR Camera (cm-88d): PROGRESSING** — Ripley has 5 commits building the AR foundation: 3D model catalog, platform detection, viewer integration, offline support. Well underway.
-
-**Note:** cfutons_mobile beads DB is down (table not found). Not blocking dev.
+**Blocker:** DreadPirateRobertz lacks merge permissions on steveyegge/gastown. Comments posted, can't merge.
 
 ---
 
-## Stale Branches to Clean
+## Infrastructure
 
-| Branch | Action |
-|--------|--------|
-| `feature/cf-7pp-social-proof` | DELETE — merged to main |
-| `polecat/chrome/cf-f1d@mlufumtt` | DELETE — stale |
-| `polecat/rust/cf-v00@mlufu4ug` | DELETE — stale |
-| `polecat/guzzle/cf-utqo-recovered` | REVIEW then delete |
-| `polecat/shiny/cf-qnsf-recovered` | REVIEW then delete |
+- **Dolt:** Running (PID active, port 3307, 11 databases verified)
+- **gt version:** v0.8.0-52-g3cb4b8e9 (dev)
+- **Beads:** All rig databases healthy
+- **Mail:** `gt mail` CLI has connectivity bug (bd works fine, nudges work)
+- **Formula bug filed:** gt-oir — mol-polecat-work lookup fails for non-gastown rigs
 
 ---
 
-## MD File Status
-
-18 MD files in repo (excluding CLAUDE.md). All serve unique purposes after consolidation. Key reference:
-
-| Need To... | Read This |
-|------------|-----------|
-| Deploy the site | `MASTER-HOOKUP.md` (now includes social media hookup) |
-| Create CMS tables | `CMS-SETUP-GUIDE.md` |
-| Set up emails | `EMAIL-TEMPLATES.md` |
-| Build pages in Wix Editor | `WIX-STUDIO-BUILD-SPEC.md` |
-| Connect social platforms | `MASTER-HOOKUP.md` > Social Media Platform Hookup |
-| Plan marketing | `MARKETING-STRATEGY.md` |
-| Plan social content | `SOCIAL-MEDIA-STRATEGY.md` |
-| Commission artwork | `ILLUSTRATION-ASSET-SPEC.md` |
+## Session Actions Completed
+1. Started Dolt server (was down)
+2. Dispatched 3 AR Camera polecats (furiosa done, nux+slit working)
+3. Closed 7 stale escalation beads
+4. Reviewed all 10 gastown PRs, posted comments
+5. Cleaned up orphan "myproject" phantom rig
+6. Filed formula lookup bug (gt-oir)
+7. Started all crew across all active rigs
+8. Nudged tyrell for token audit report
 
 ---
 
-*Production Manager: melania | cfutons GREEN*
-*Next update: ~12:45 MST*
+## Known Issues
+- `gt mail` CLI connection refused (workaround: use bd/nudges)
+- DreadPirateRobertz can't merge PRs on steveyegge/gastown (permissions)
+- mol-polecat-work formula lookup broken for non-gastown rigs (use --hook-raw-bead)
+- cfutons_mobile prefix mismatch: rig uses `cfutons_mobile-` but route expects `cm-`
+
+---
+
+## Standing Prime Directives
+1. **PR Process** — ALL repos, no direct push to main, PRs with review
+2. **Token Efficiency** — tyrell has standing audit order
+3. **Reporting** — report_to_human.md every 5 min (all active rigs + HQ)
+4. **Convoys/Swarms** — form as needed, mayor authorized
+5. **Session Cleanup** — always assign someone to clean up stale beads/wisps on session start
+6. **Remote Report** — push master report to cfutons repo for remote viewing
