@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   recordPriceSnapshot,
   getPriceHistory,
@@ -315,13 +316,17 @@ describe('checkBackInStock', () => {
 // ── Notification Preferences ────────────────────────────────────────
 
 describe('getAlertPrefs', () => {
+  beforeEach(() => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+  });
+
   it('returns preferences for a member', async () => {
     __seed('WishlistAlertPrefs', [
       { _id: 'pref-1', memberId: 'member-1', productId: 'prod-1', priceDrops: true, backInStock: false },
       { _id: 'pref-2', memberId: 'member-1', productId: 'prod-2', priceDrops: false, backInStock: true },
     ]);
 
-    const result = await getAlertPrefs('member-1');
+    const result = await getAlertPrefs();
     expect(result.prefs).toHaveLength(2);
     expect(result.prefs[0].priceDrops).toBe(true);
     expect(result.prefs[0].backInStock).toBe(false);
@@ -329,8 +334,9 @@ describe('getAlertPrefs', () => {
     expect(result.prefs[1].backInStock).toBe(true);
   });
 
-  it('returns empty for missing memberId', async () => {
-    const result = await getAlertPrefs(null);
+  it('returns empty for unauthenticated user', async () => {
+    __setMember(null);
+    const result = await getAlertPrefs();
     expect(result.prefs).toEqual([]);
   });
 
@@ -339,20 +345,24 @@ describe('getAlertPrefs', () => {
       { _id: 'pref-1', memberId: 'member-1', productId: 'prod-1' },
     ]);
 
-    const result = await getAlertPrefs('member-1');
+    const result = await getAlertPrefs();
     expect(result.prefs[0].priceDrops).toBe(true);
     expect(result.prefs[0].backInStock).toBe(true);
   });
 });
 
 describe('updateAlertPrefs', () => {
+  beforeEach(() => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+  });
+
   it('creates new pref record', async () => {
     let insertedItem = null;
     __onInsert((collection, item) => {
       if (collection === 'WishlistAlertPrefs') insertedItem = item;
     });
 
-    const result = await updateAlertPrefs('member-1', 'prod-1', { priceDrops: false });
+    const result = await updateAlertPrefs('prod-1', { priceDrops: false });
     expect(result.success).toBe(true);
     expect(insertedItem).not.toBeNull();
     expect(insertedItem.priceDrops).toBe(false);
@@ -369,20 +379,21 @@ describe('updateAlertPrefs', () => {
       if (collection === 'WishlistAlertPrefs') updatedItem = item;
     });
 
-    const result = await updateAlertPrefs('member-1', 'prod-1', { backInStock: false });
+    const result = await updateAlertPrefs('prod-1', { backInStock: false });
     expect(result.success).toBe(true);
     expect(updatedItem).not.toBeNull();
     expect(updatedItem.backInStock).toBe(false);
     expect(updatedItem.priceDrops).toBe(true); // unchanged
   });
 
-  it('rejects missing memberId', async () => {
-    const result = await updateAlertPrefs(null, 'prod-1', {});
+  it('rejects unauthenticated user', async () => {
+    __setMember(null);
+    const result = await updateAlertPrefs('prod-1', {});
     expect(result.success).toBe(false);
   });
 
   it('rejects missing productId', async () => {
-    const result = await updateAlertPrefs('member-1', null, {});
+    const result = await updateAlertPrefs(null, {});
     expect(result.success).toBe(false);
   });
 });

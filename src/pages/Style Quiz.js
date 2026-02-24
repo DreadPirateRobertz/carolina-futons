@@ -248,7 +248,7 @@ function renderResults(results) {
           trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
           $w('#resultViewBtn').target = '_self';
           const slug = product.slug || product._id;
-          import('wix-location').then(loc => loc.to(`/product-page/${slug}`));
+          import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
         });
       } catch (e) {}
 
@@ -275,7 +275,7 @@ function renderNoResults() {
   try { $w('#resultsBrowseBtn').expand(); } catch (e) {}
   try {
     $w('#resultsBrowseBtn').onClick(() => {
-      import('wix-location').then(loc => loc.to('/shop-main'));
+      import('wix-location-frontend').then(loc => loc.to('/shop-main'));
     });
   } catch (e) {}
 

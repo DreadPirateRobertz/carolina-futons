@@ -233,6 +233,10 @@ export const getPublicRegistry = webMethod(Permissions.Anyone, async (slug) => {
 
     const registry = result.items[0];
 
+    if (!registry.isPublic) {
+      return { success: false, error: 'Registry not found' };
+    }
+
     const itemsResult = await wixData.query('GiftRegistryItems')
       .eq('registryId', registry._id)
       .ascending('priority')

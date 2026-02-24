@@ -23,7 +23,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 const MAX_SLOTS_PER_WINDOW = 4; // Max deliveries per time window
 const DELIVERY_DAYS = [3, 4, 5, 6]; // Wed=3, Thu=4, Fri=5, Sat=6
@@ -182,7 +182,13 @@ export const getMyDeliverySchedule = webMethod(
   Permissions.SiteMember,
   async () => {
     try {
+      // Scope to current member's email to prevent data leaks
+      const { currentMember } = await import('wix-members-backend');
+      const member = await currentMember.getMember();
+      if (!member?.loginEmail) return [];
+
       const result = await wixData.query('DeliverySchedule')
+        .eq('customerEmail', member.loginEmail)
         .ne('status', 'cancelled')
         .descending('date')
         .find();
@@ -308,6 +314,10 @@ export const bookAppointment = webMethod(
       const visitType = sanitize(data.visitType, 20);
       const customerName = sanitize(data.customerName, 100);
       const customerEmail = sanitize(data.customerEmail, 254);
+
+      if (!validateEmail(customerEmail)) {
+        return { success: false, message: 'A valid email address is required' };
+      }
 
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         return { success: false, message: 'Invalid date format' };

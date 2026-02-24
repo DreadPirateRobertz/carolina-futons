@@ -152,17 +152,17 @@ describe('redeemReferralCode', () => {
   });
 
   it('normalizes code to uppercase', async () => {
-    const result = await redeemReferralCode('abcd1234', { name: 'Bob' });
+    const result = await redeemReferralCode('abcd1234', { name: 'Bob', email: 'bob@example.com' });
     expect(result.success).toBe(true);
   });
 
   it('strips non-alphanumeric characters from code', async () => {
-    const result = await redeemReferralCode('ABCD-1234', { name: 'Bob' });
+    const result = await redeemReferralCode('ABCD-1234', { name: 'Bob', email: 'bob@example.com' });
     expect(result.success).toBe(true);
   });
 
   it('fails for invalid code', async () => {
-    const result = await redeemReferralCode('XXXX9999');
+    const result = await redeemReferralCode('XXXX9999', { email: 'test@example.com' });
     expect(result.success).toBe(false);
     expect(result.error).toContain('Invalid');
   });
@@ -205,9 +205,10 @@ describe('redeemReferralCode', () => {
     expect(result.error).toContain('email');
   });
 
-  it('allows redemption without email', async () => {
+  it('requires email for redemption', async () => {
     const result = await redeemReferralCode('ABCD1234', { name: 'Bob' });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('email');
   });
 
   it('shows generic message when referrer has no name', async () => {
@@ -222,7 +223,7 @@ describe('redeemReferralCode', () => {
       refereeCredit: 25,
     }]);
 
-    const result = await redeemReferralCode('ANON5678', { name: 'Bob' });
+    const result = await redeemReferralCode('ANON5678', { name: 'Bob', email: 'bob@example.com' });
     expect(result.success).toBe(true);
     expect(result.message).toContain('a friend');
   });
@@ -235,6 +236,7 @@ describe('redeemReferralCode', () => {
 
     await redeemReferralCode('ABCD1234', {
       name: '<script>alert(1)</script>Bob',
+      email: 'bob@example.com',
     });
 
     expect(updated.refereeName).not.toContain('<script>');

@@ -211,7 +211,7 @@ export const submitReview = webMethod(
  * @returns {Promise<{success: boolean, helpful?: number}>}
  */
 export const markHelpful = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (reviewId) => {
     const rid = validateId(reviewId);
     if (!rid) return { success: false };
@@ -238,7 +238,7 @@ export const markHelpful = webMethod(
  * @returns {Promise<{success: boolean}>}
  */
 export const flagReview = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (reviewId, reason) => {
     const rid = validateId(reviewId);
     if (!rid) return { success: false, error: 'Invalid review ID' };

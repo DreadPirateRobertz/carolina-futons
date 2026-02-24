@@ -13,6 +13,28 @@ let _currentFilter = '';
 let _selectedReturn = null;
 
 $w.onReady(async function () {
+  // Verify admin access before loading dashboard
+  try {
+    const { currentMember } = await import('wix-members-backend');
+    const member = await currentMember.getMember();
+    if (!member?._id) {
+      const loc = await import('wix-location-frontend');
+      loc.to('/');
+      return;
+    }
+    const roles = await currentMember.getRoles();
+    const isAdmin = roles.some(r => r.title === 'Admin' || r._id === 'admin');
+    if (!isAdmin) {
+      const loc = await import('wix-location-frontend');
+      loc.to('/');
+      return;
+    }
+  } catch (e) {
+    const loc = await import('wix-location-frontend');
+    loc.to('/');
+    return;
+  }
+
   initBackToTop($w);
   initFilterDropdown();
   initReturnsList();

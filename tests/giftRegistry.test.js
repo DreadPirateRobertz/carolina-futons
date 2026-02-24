@@ -191,7 +191,7 @@ describe('getRegistry', () => {
 describe('getPublicRegistry', () => {
   it('returns public registry by slug', async () => {
     __seed('GiftRegistries', [
-      { _id: 'r-1', memberId: 'other-member', title: 'Wedding', slug: 'wedding-abc', occasion: 'wedding', message: 'Help us!', eventDate: new Date('2026-06-15') },
+      { _id: 'r-1', memberId: 'other-member', title: 'Wedding', slug: 'wedding-abc', occasion: 'wedding', message: 'Help us!', eventDate: new Date('2026-06-15'), isPublic: true },
     ]);
     __seed('GiftRegistryItems', [
       { _id: 'i-1', registryId: 'r-1', productName: 'Futon', productPrice: 549, quantity: 2, purchasedQuantity: 1, priority: 1 },
@@ -207,7 +207,7 @@ describe('getPublicRegistry', () => {
 
   it('does not expose memberId', async () => {
     __seed('GiftRegistries', [
-      { _id: 'r-1', memberId: 'secret-member', title: 'Wedding', slug: 'test-slug' },
+      { _id: 'r-1', memberId: 'secret-member', title: 'Wedding', slug: 'test-slug', isPublic: true },
     ]);
     __seed('GiftRegistryItems', []);
 
@@ -228,7 +228,7 @@ describe('getPublicRegistry', () => {
 
   it('calculates remaining quantity', async () => {
     __seed('GiftRegistries', [
-      { _id: 'r-1', memberId: 'member-1', title: 'Test', slug: 'test-slug' },
+      { _id: 'r-1', memberId: 'member-1', title: 'Test', slug: 'test-slug', isPublic: true },
     ]);
     __seed('GiftRegistryItems', [
       { _id: 'i-1', registryId: 'r-1', productName: 'Item', quantity: 3, purchasedQuantity: 2, priority: 1 },

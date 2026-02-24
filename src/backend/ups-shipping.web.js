@@ -14,6 +14,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
 import { fetch } from 'wix-fetch';
 import { brand, business, shippingConfig } from 'public/sharedTokens.js';
+import { sanitize } from 'backend/utils/sanitize';
 
 // ── Configuration ───────────────────────────────────────────────────
 
@@ -120,6 +121,19 @@ export const getUPSRates = webMethod(
   Permissions.Anyone,
   async (destinationAddress, packages, orderSubtotal = 0) => {
     try {
+      // Cap packages array to prevent API amplification
+      const safePackages = (Array.isArray(packages) ? packages : []).slice(0, 20);
+
+      // Sanitize address fields
+      if (destinationAddress) {
+        destinationAddress.name = sanitize(destinationAddress.name, 100);
+        destinationAddress.addressLine1 = sanitize(destinationAddress.addressLine1, 200);
+        destinationAddress.city = sanitize(destinationAddress.city, 100);
+        destinationAddress.state = sanitize(destinationAddress.state, 10);
+        destinationAddress.postalCode = sanitize(destinationAddress.postalCode, 15);
+        destinationAddress.country = sanitize(destinationAddress.country, 5);
+      }
+
       // Check for free shipping eligibility
       if (orderSubtotal >= FREE_SHIPPING_THRESHOLD) {
         return [{
@@ -136,7 +150,7 @@ export const getUPSRates = webMethod(
       const baseUrl = await getBaseUrl();
 
       // Build package array for UPS request
-      const upsPackages = packages.map(pkg => ({
+      const upsPackages = safePackages.map(pkg => ({
         PackagingType: {
           Code: '02', // Customer Supplied Package
           Description: 'Package',
@@ -254,7 +268,7 @@ function getFallbackRates(postalCode) {
 // Create a shipment and generate a shipping label
 // Called from the order fulfillment dashboard
 export const createShipment = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (orderData) => {
     try {
       const token = await getUPSToken();
@@ -391,7 +405,7 @@ export const createShipment = webMethod(
       console.error('Error creating UPS shipment:', err);
       return {
         success: false,
-        error: err.message,
+        error: 'Unable to create shipment. Please try again or contact support.',
       };
     }
   }
@@ -404,11 +418,17 @@ export const trackShipment = webMethod(
   Permissions.Anyone,
   async (trackingNumber) => {
     try {
+      // Sanitize tracking number — alphanumeric only (UPS format: 1Z... + digits)
+      const cleanTracking = (trackingNumber || '').replace(/[^a-zA-Z0-9]/g, '');
+      if (!cleanTracking || cleanTracking.length < 10 || cleanTracking.length > 35) {
+        return { success: false, error: 'Invalid tracking number format' };
+      }
+
       const token = await getUPSToken();
       const baseUrl = await getBaseUrl();
 
       const response = await fetch(
-        `${baseUrl}/track/v1/details/${trackingNumber}`,
+        `${baseUrl}/track/v1/details/${cleanTracking}`,
         {
           method: 'GET',
           headers: {

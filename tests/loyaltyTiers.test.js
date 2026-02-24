@@ -240,7 +240,7 @@ describe('calculateRewards', () => {
       currentTier: 'Bronze', tierChangedAt: new Date(),
     }]);
 
-    const result = await calculateRewards('member-1', 200);
+    const result = await calculateRewards( 200);
     expect(result.success).toBe(true);
     expect(result.data.tier).toBe('Bronze');
     expect(result.data.discountPercent).toBe(0);
@@ -255,7 +255,7 @@ describe('calculateRewards', () => {
       currentTier: 'Silver', tierChangedAt: new Date(),
     }]);
 
-    const result = await calculateRewards('member-1', 100);
+    const result = await calculateRewards( 100);
     expect(result.data.discountPercent).toBe(5);
     expect(result.data.discountAmount).toBe(5);
     expect(result.data.finalTotal).toBe(95);
@@ -268,7 +268,7 @@ describe('calculateRewards', () => {
       currentTier: 'Gold', tierChangedAt: new Date(),
     }]);
 
-    const result = await calculateRewards('member-1', 300);
+    const result = await calculateRewards( 300);
     expect(result.data.discountPercent).toBe(10);
     expect(result.data.discountAmount).toBe(30);
     expect(result.data.finalTotal).toBe(270);
@@ -281,7 +281,7 @@ describe('calculateRewards', () => {
       currentTier: 'Platinum', tierChangedAt: new Date(),
     }]);
 
-    const result = await calculateRewards('member-1', 400);
+    const result = await calculateRewards( 400);
     expect(result.data.discountPercent).toBe(15);
     expect(result.data.discountAmount).toBe(60);
     expect(result.data.finalTotal).toBe(340);
@@ -291,7 +291,7 @@ describe('calculateRewards', () => {
   it('returns Bronze defaults for unknown member', async () => {
     __seed('CustomerTierHistory', []);
 
-    const result = await calculateRewards('unknown-member', 200);
+    const result = await calculateRewards( 200);
     expect(result.success).toBe(true);
     expect(result.data.tier).toBe('Bronze');
     expect(result.data.discountAmount).toBe(0);
@@ -305,17 +305,18 @@ describe('calculateRewards', () => {
     }]);
 
     // Bronze threshold is 150, order of 100 should NOT qualify
-    const result = await calculateRewards('member-1', 100);
+    const result = await calculateRewards( 100);
     expect(result.data.freeShipping).toBe(false);
   });
 
   it('rejects invalid member ID', async () => {
-    const result = await calculateRewards('', 100);
+    __setMember(null);
+    const result = await calculateRewards(100);
     expect(result.success).toBe(false);
   });
 
   it('rejects negative order total', async () => {
-    const result = await calculateRewards('member-1', -50);
+    const result = await calculateRewards( -50);
     expect(result.success).toBe(false);
   });
 
@@ -325,7 +326,7 @@ describe('calculateRewards', () => {
       currentTier: 'Silver', tierChangedAt: new Date(),
     }]);
 
-    const result = await calculateRewards('member-1', 0);
+    const result = await calculateRewards( 0);
     expect(result.data.discountAmount).toBe(0);
     expect(result.data.finalTotal).toBe(0);
   });

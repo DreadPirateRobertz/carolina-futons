@@ -152,7 +152,7 @@ export const sendMessage = webMethod(
         message: cleanMessage,
         senderName: sanitize(senderName || '', 100),
         senderEmail: senderEmail && validateEmail(senderEmail) ? senderEmail.trim() : '',
-        sender: sender === 'agent' ? 'agent' : 'customer',
+        sender: 'customer',
         timestamp: new Date(),
         read: sender === 'agent',
       };
@@ -177,15 +177,17 @@ export const sendMessage = webMethod(
  * @returns {Promise<Object[]>} Messages sorted by timestamp ascending
  */
 export const getChatHistory = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (sessionId, limit = 50) => {
     try {
       if (!sessionId) return [];
+      const cleanSessionId = sanitize(sessionId, 100);
+      if (!cleanSessionId) return [];
 
       const safeLimit = Math.min(Math.max(1, Number(limit) || 50), 200);
 
       const results = await wixData.query('ChatMessages')
-        .eq('sessionId', sessionId)
+        .eq('sessionId', cleanSessionId)
         .ascending('timestamp')
         .limit(safeLimit)
         .find();

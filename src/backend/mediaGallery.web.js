@@ -242,7 +242,7 @@ export const getBatchProductThumbnails = webMethod(
 // ── listMediaFolder (admin) ─────────────────────────────────────────
 
 export const listMediaFolder = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (folderPath, options = {}) => {
     try {
       await requireAdmin();
@@ -283,7 +283,7 @@ export const listMediaFolder = webMethod(
       };
     } catch (err) {
       console.error('listMediaFolder error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to list media folder' };
     }
   }
 );
@@ -291,7 +291,7 @@ export const listMediaFolder = webMethod(
 // ── listMediaFolders (admin) ────────────────────────────────────────
 
 export const listMediaFolders = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     try {
       await requireAdmin();
@@ -306,7 +306,7 @@ export const listMediaFolders = webMethod(
       return { success: true, folders };
     } catch (err) {
       console.error('listMediaFolders error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to list media folders' };
     }
   }
 );
@@ -314,7 +314,7 @@ export const listMediaFolders = webMethod(
 // ── syncProductMedia (admin — pulls from Media Manager to cache) ────
 
 export const syncProductMedia = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (productId) => {
     try {
       await requireAdmin();
@@ -376,7 +376,7 @@ export const syncProductMedia = webMethod(
       };
     } catch (err) {
       console.error('syncProductMedia error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to sync product media' };
     }
   }
 );
@@ -384,7 +384,7 @@ export const syncProductMedia = webMethod(
 // ── batchSyncMedia (admin — sync all products) ─────────────────────
 
 export const batchSyncMedia = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (options = {}) => {
     try {
       await requireAdmin();
@@ -438,7 +438,7 @@ export const batchSyncMedia = webMethod(
       return { success: true, synced, totalProducts: products.items.length };
     } catch (err) {
       console.error('batchSyncMedia error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to batch sync media' };
     }
   }
 );
@@ -479,7 +479,7 @@ export const getImageUrl = webMethod(
 // ── getMediaStats (admin dashboard) ─────────────────────────────────
 
 export const getMediaStats = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     try {
       await requireAdmin();
@@ -515,7 +515,7 @@ export const getMediaStats = webMethod(
       };
     } catch (err) {
       console.error('getMediaStats error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to load media stats' };
     }
   }
 );

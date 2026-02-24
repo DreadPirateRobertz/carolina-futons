@@ -295,10 +295,10 @@ export const createSupportTicket = webMethod(
 // Pre-populate chat with customer info from session
 
 export const getChatContext = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (sessionInfo = {}) => {
     try {
-      const { memberId, currentPage } = sessionInfo;
+      const { currentPage } = sessionInfo;
 
       const context = {
         page: sanitize(currentPage, 200),
@@ -308,9 +308,15 @@ export const getChatContext = webMethod(
         recentOrders: [],
       };
 
-      if (memberId) {
-        const cleanId = sanitize(memberId, 50);
-        if (cleanId) {
+      // Use the authenticated caller's own member ID instead of accepting arbitrary IDs
+      let cleanId = '';
+      try {
+        const { currentMember } = await import('wix-members-backend');
+        const member = await currentMember.getMember();
+        cleanId = member?._id || '';
+      } catch (e) { /* not logged in */ }
+
+      if (cleanId) {
           // Try to get member info
           try {
             const memberResult = await wixData.query('Members/PrivateMembersData')

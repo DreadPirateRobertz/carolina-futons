@@ -255,7 +255,7 @@ export const scheduleReviewRequest = webMethod(
  * @returns {Promise<Array>} Pending requests with scheduledDate <= now.
  */
 export const getPendingReviewRequests = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     try {
       await requireMember();
@@ -464,8 +464,10 @@ export const trackVideoView = webMethod(
   async (videoId) => {
     try {
       if (!videoId) return;
+      const cleanId = sanitize(videoId, 50).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!cleanId) return;
 
-      const record = await wixData.get('Videos', videoId);
+      const record = await wixData.get('Videos', cleanId);
       if (!record) return;
 
       record.viewCount = (record.viewCount || 0) + 1;

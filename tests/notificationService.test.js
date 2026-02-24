@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __reset as resetEmail, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import {
@@ -240,6 +241,10 @@ describe('checkWishlistAlerts', () => {
 // ── toggleProductAlerts ───────────────────────────────────────────────
 
 describe('toggleProductAlerts', () => {
+  beforeEach(() => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+  });
+
   it('mutes alerts for a wishlist item', async () => {
     __seed('Wishlist', [
       { _id: 'w-1', memberId: 'member-1', productId: 'prod-1', muteAlerts: false },
@@ -274,18 +279,20 @@ describe('toggleProductAlerts', () => {
 
 describe('getNotificationHistory', () => {
   it('returns recent notifications for a member', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
     __seed('NotificationLog', [
       { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', productName: 'Eureka', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
       { _id: 'nl-2', memberId: 'member-1', productId: 'prod-2', productName: 'Phoenix', alertType: 'back_in_stock', sentAt: new Date('2026-02-19') },
     ]);
 
-    const result = await getNotificationHistory('member-1');
+    const result = await getNotificationHistory();
     expect(result.success).toBe(true);
     expect(result.items).toHaveLength(2);
   });
 
-  it('returns empty for invalid member ID', async () => {
-    const result = await getNotificationHistory('<bad>');
+  it('returns empty for unauthenticated user', async () => {
+    __setMember(null);
+    const result = await getNotificationHistory();
     expect(result.success).toBe(false);
     expect(result.items).toHaveLength(0);
   });
