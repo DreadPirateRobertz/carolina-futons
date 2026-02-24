@@ -676,7 +676,9 @@ describe('returnsService — extended', () => {
   describe('processRefund', () => {
     it('processes refund for a valid return', async () => {
       const wixData = (await import('wix-data')).default;
-      wixData.get.mockResolvedValue({ ...existingReturn, status: 'received' });
+      wixData.get
+        .mockResolvedValueOnce({ ...existingReturn, status: 'received' })
+        .mockResolvedValueOnce(recentOrder);
 
       const result = await processRefund('return-001', 899, 'Full refund');
       expect(result.success).toBe(true);
@@ -735,6 +737,38 @@ describe('returnsService — extended', () => {
       const result = await processRefund('return-001', 899);
       expect(result.success).toBe(false);
       expect(result.error).toContain('denied');
+    });
+
+    it('rejects refund exceeding order total', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get
+        .mockResolvedValueOnce({ ...existingReturn, status: 'received' })
+        .mockResolvedValueOnce(recentOrder); // totals.total = 998
+
+      const result = await processRefund('return-001', 10000);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('exceeds order total');
+    });
+
+    it('allows refund exactly equal to order total', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get
+        .mockResolvedValueOnce({ ...existingReturn, status: 'received' })
+        .mockResolvedValueOnce(recentOrder); // totals.total = 998
+
+      const result = await processRefund('return-001', 998);
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects refund when order not found', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get
+        .mockResolvedValueOnce({ ...existingReturn, status: 'received' })
+        .mockResolvedValueOnce(null);
+
+      const result = await processRefund('return-001', 899);
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('order not found');
     });
   });
 });
