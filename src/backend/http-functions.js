@@ -8,6 +8,98 @@ import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
 
+// ── Security Helpers ──────────────────────────────────────────────────
+
+/**
+ * Constant-time string comparison to prevent timing attacks on secret keys.
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean}
+ */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+/**
+ * Decode HTML entities to prevent entity-encoded XSS in feed outputs.
+ * Handles numeric (&#60;), hex (&#x3c;), and named (&lt;) entities.
+ * @param {string} str
+ * @returns {string}
+ */
+function decodeHtmlEntities(str) {
+  if (!str) return '';
+  return str
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&apos;/g, "'");
+}
+
+/**
+ * Strip HTML tags AND decode entities, then remove any remaining tags
+ * that were hidden inside entities. Safe for feed text fields.
+ * @param {string} html
+ * @returns {string}
+ */
+function stripHtmlSafe(html) {
+  if (!html) return '';
+  // First pass: strip visible tags
+  let text = html.replace(/<[^>]*>/g, '');
+  // Decode entities that may contain hidden markup
+  text = decodeHtmlEntities(text);
+  // Second pass: strip any tags that were entity-encoded
+  text = text.replace(/<[^>]*>/g, '');
+  return text;
+}
+
+/**
+ * Escape special XML characters for safe inclusion in XML documents.
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeXml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
+ * Fetch all products from the Stores/Products collection, paginating
+ * past the Wix 1000-item query limit.
+ * @returns {Promise<Array>}
+ */
+async function fetchAllProducts() {
+  const PAGE_SIZE = 1000;
+  let allItems = [];
+  let skip = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const result = await wixData.query('Stores/Products')
+      .limit(PAGE_SIZE)
+      .skip(skip)
+      .find();
+    allItems = allItems.concat(result.items);
+    skip += PAGE_SIZE;
+    hasMore = result.items.length === PAGE_SIZE;
+  }
+
+  return allItems;
+}
+
 // Google Merchant Center product feed endpoint
 // URL: GET https://www.carolinafutons.com/_functions/googleShoppingFeed
 // Configure this URL in Google Merchant Center as a scheduled fetch source
@@ -83,13 +175,11 @@ export async function get_productSitemap() {
       { loc: '/newsletter', priority: '0.5', changefreq: 'monthly' },
     ];
 
-    // Fetch all products for dynamic URLs
-    const products = await wixData.query('Stores/Products')
-      .limit(200)
-      .find();
+    // Fetch all products for dynamic URLs (paginated — no 200 limit)
+    const productItems = await fetchAllProducts();
 
-    const productUrls = products.items.map(p => ({
-      loc: `/product-page/${p.slug}`,
+    const productUrls = productItems.map(p => ({
+      loc: `/product-page/${encodeURIComponent(p.slug)}`,
       priority: '0.7',
       changefreq: 'weekly',
       lastmod: p._updatedDate ? new Date(p._updatedDate).toISOString().split('T')[0] : '',
@@ -102,10 +192,10 @@ export async function get_productSitemap() {
 
     for (const url of allUrls) {
       xml += '  <url>\n';
-      xml += `    <loc>${SITE_URL}${url.loc}</loc>\n`;
-      if (url.lastmod) xml += `    <lastmod>${url.lastmod}</lastmod>\n`;
-      xml += `    <changefreq>${url.changefreq}</changefreq>\n`;
-      xml += `    <priority>${url.priority}</priority>\n`;
+      xml += `    <loc>${escapeXml(SITE_URL + url.loc)}</loc>\n`;
+      if (url.lastmod) xml += `    <lastmod>${escapeXml(url.lastmod)}</lastmod>\n`;
+      xml += `    <changefreq>${escapeXml(url.changefreq)}</changefreq>\n`;
+      xml += `    <priority>${escapeXml(url.priority)}</priority>\n`;
       xml += '  </url>\n';
     }
 
@@ -133,21 +223,19 @@ export async function get_productSitemap() {
 export async function get_facebookCatalogFeed() {
   try {
     const SITE_URL = 'https://www.carolinafutons.com';
-    const products = await wixData.query('Stores/Products')
-      .limit(200)
-      .find();
+    const productItems = await fetchAllProducts();
 
     // Facebook catalog TSV format (tab-separated values)
     const headers = ['id', 'title', 'description', 'availability', 'condition', 'price',
       'link', 'image_link', 'brand', 'google_product_category', 'fb_product_category',
       'sale_price', 'item_group_id', 'content_type'].join('\t');
 
-    const rows = products.items.map(p => {
+    const rows = productItems.map(p => {
       const availability = p.inStock !== false ? 'in stock' : 'out of stock';
       const price = `${(p.price || 0).toFixed(2)} USD`;
       const salePrice = p.discountedPrice ? `${p.discountedPrice.toFixed(2)} USD` : '';
       const brand = detectBrandFromProduct(p);
-      const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
+      const description = stripHtmlSafe(p.description || '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
       const category = detectGoogleCategory(p);
       const imageUrl = getImageUrl(p.mainMedia);
 
@@ -158,7 +246,7 @@ export async function get_facebookCatalogFeed() {
         availability,
         'new',
         price,
-        `${SITE_URL}/product-page/${p.slug}`,
+        `${SITE_URL}/product-page/${encodeURIComponent(p.slug)}`,
         imageUrl,
         brand,
         category,
@@ -193,21 +281,19 @@ export async function get_facebookCatalogFeed() {
 export async function get_pinterestProductFeed() {
   try {
     const SITE_URL = 'https://www.carolinafutons.com';
-    const products = await wixData.query('Stores/Products')
-      .limit(200)
-      .find();
+    const productItems = await fetchAllProducts();
 
     // Pinterest catalog TSV format
     const headers = ['id', 'title', 'description', 'link', 'image_link', 'price',
       'availability', 'brand', 'google_product_category', 'condition',
       'sale_price', 'product_type', 'additional_image_link'].join('\t');
 
-    const rows = products.items.map(p => {
+    const rows = productItems.map(p => {
       const availability = p.inStock !== false ? 'in stock' : 'out of stock';
       const price = `${(p.price || 0).toFixed(2)} USD`;
       const salePrice = p.discountedPrice ? `${p.discountedPrice.toFixed(2)} USD` : '';
       const brand = detectBrandFromProduct(p);
-      const description = (p.description || '').replace(/<[^>]*>/g, '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
+      const description = stripHtmlSafe(p.description || '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
       const category = detectGoogleCategory(p);
       const productType = detectProductType(p);
       const imageUrl = getImageUrl(p.mainMedia);
@@ -218,7 +304,7 @@ export async function get_pinterestProductFeed() {
         p._id || '',
         (p.name || '').replace(/[\t\n\r]/g, ' '),
         description,
-        `${SITE_URL}/product-page/${p.slug}`,
+        `${SITE_URL}/product-page/${encodeURIComponent(p.slug)}`,
         imageUrl,
         price,
         availability,
@@ -349,7 +435,7 @@ export async function get_checkWishlistAlerts(request) {
     const cronKey = await getSecret('ALERT_CRON_KEY');
     const requestKey = request.query?.key;
 
-    if (!cronKey || requestKey !== cronKey) {
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -394,7 +480,7 @@ export async function get_triggerBrowseRecoveryCron(request) {
     const cronKey = await getSecret('ALERT_CRON_KEY');
     const requestKey = request.query?.key;
 
-    if (!cronKey || requestKey !== cronKey) {
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -434,7 +520,7 @@ export async function get_triggerCartRecoveryCron(request) {
     const cronKey = await getSecret('ALERT_CRON_KEY');
     const requestKey = request.query?.key;
 
-    if (!cronKey || requestKey !== cronKey) {
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -501,7 +587,7 @@ export async function get_processEmailQueueCron(request) {
     const cronKey = await getSecret('ALERT_CRON_KEY');
     const requestKey = request.query?.key;
 
-    if (!cronKey || requestKey !== cronKey) {
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
@@ -542,7 +628,7 @@ export async function get_triggerReengagementCron(request) {
     const cronKey = await getSecret('ALERT_CRON_KEY');
     const requestKey = request.query?.key;
 
-    if (!cronKey || requestKey !== cronKey) {
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
         body: JSON.stringify({ error: 'Unauthorized' }),
         headers: { 'Content-Type': 'application/json' },
