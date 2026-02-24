@@ -1,6 +1,6 @@
 # Gas Town Status Report
-**Generated:** 2026-02-23 19:20 MST
-**Mayor Session:** 5f324bd1
+**Generated:** 2026-02-24 02:30 UTC
+**Updated by:** miquella (cfutons crew) — per mayor directive (5-min cadence)
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Rig | Status | Crew | Polecats | Key Work |
 |-----|--------|------|----------|----------|
-| cfutons | RUNNING | 5 (all active) | 0 | PRs merged, quality gate active |
+| cfutons | RUNNING | 5 (miquella active) | 0 | 9 beads shipped, quality gate active |
 | cfutons_mobile | RUNNING | 3 (all active) | 3 (1 done, 2 working) | AR Camera epic |
 | gastown | RUNNING | 6 (all active) | 0 | 10 community PRs reviewed |
 | tradingbot | PARKED | 0 | 0 | Per human directive |
@@ -20,7 +20,7 @@
 ### cfutons — OPERATIONAL
 **Crew:** melania (PM), godfrey, miquella, radahn, rennala
 
-All crew started. Melania coordinates as PM. All open PRs merged. Quality gate directive deployed to all crew.
+All open PRs merged. Quality gate active. 9 product beads shipped and closed. Miquella online and claiming next work.
 
 ### cfutons_mobile — OPERATIONAL (AR Camera Sprint)
 **Crew:** bishop, dallas, ripley
@@ -67,7 +67,7 @@ All crew started. Melania coordinates as PM. All open PRs merged. Quality gate d
 ---
 
 ## Known Issues
-- `gt mail` to crew addresses fails ("no agent found") — crew pick up directives from CLAUDE.md instead
+- `gt mail` to crew addresses fails ("no agent found") — CF-tvk filed, desire-path label
 - DreadPirateRobertz can't merge PRs on steveyegge/gastown (permissions)
 - mol-polecat-work formula lookup broken for non-gastown rigs (use --hook-raw-bead)
 - cfutons_mobile prefix mismatch: rig uses `cfutons_mobile-` but route expects `cm-`
@@ -89,45 +89,45 @@ All crew started. Melania coordinates as PM. All open PRs merged. Quality gate d
 
 ---
 
-# cfutons Detail Report (Melania, PM)
-
-**Last Updated:** 2026-02-23 19:25 MST
+# cfutons Detail Report (miquella, 2026-02-24 02:30 UTC)
 
 ## Health: GREEN — ALL PRs MERGED, QUALITY GATE ACTIVE
 
 | Metric | Value |
 |--------|-------|
 | Tests | 4,178+ vitest tests across 112+ files (all green) |
-| Backend Modules | 71 `.web.js` modules |
+| Backend Modules | 131 modules |
 | Page Code | 28 page JS files |
-| Frontend Utils | 26+ public JS modules |
+| Frontend Utils | 56 public JS modules |
 | Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
 | Open PRs | **0** (all reviewed and merged) |
 
-## Session Actions (2026-02-23 19:10-19:25 MST)
+## Recent Code on Main (latest first)
+- End-to-end checkout flow tests (27 tests) — cf-67ov
+- Social media hookup guide + Radahn proposals
+- Catalog-MASTER.json loader pipeline — cf-e961
+- Content import null-detection fix
+- Social proof notifications — cf-7pp
+- Showroom appointment booking — cf-ttc
+- Robots.txt, PWA manifest fix, Style Quiz page — cf-kzci, cf-tblb
+- GA4 tracking, newsletter page, email cron (PR #28)
+- Product image pipeline — audit, enrich, alt text (PR #27)
+- Silent catch instrumentation, safeParse utility, Promise.allSettled patterns
 
-### PRs Reviewed and Merged
-| PR | Branch | Work | Tests |
-|----|--------|------|-------|
-| #27 | `polecat/guzzle/cf-utqo-recovered` | Product image pipeline — audit, enrich, alt text | 72 |
-| #28 | `polecat/shiny/cf-qnsf-recovered` | GA4 tracking, newsletter page, email cron | 318 |
-
-PR #28 had 3 merge conflicts — resolved (both sides kept).
-
-### PM Quality Gate Deployed
-- Directive added to all 4 crew CLAUDE.md files
-- Melania is acceptance authority
-- Edge case coverage required on all PRs
+## Beads Status
+- **9 product beads shipped and closed** (catalog, reviews, marketing, checkout, SEO, image pipeline, social proof)
+- **1 open P1** (CF-tvk): `gt mail send` routing bug — gastown tooling issue
+- **0 in-progress** — ready for next sprint
 
 ## Crew Status
 
-| Member | Role | Current Work |
-|--------|------|-------------|
-| melania | PM | Acceptance authority, beads coordination |
-| godfrey | Dev | WCAG 2.1 AA accessibility |
-| rennala | Dev | Marketing toolkit (DONE), reviews (DONE) |
-| radahn | Dev | Stability audit, checkout E2E, returns |
-| miquella | Dev | Image pipeline, financing calc |
+| Member | Role | Status | Current Work |
+|--------|------|--------|-------------|
+| melania | PM | ACTIVE | Acceptance authority, beads coordination |
+| godfrey | Dev | IDLE | Shipped SEO optimization (CF-qs4) |
+| rennala | Dev | IDLE | Shipped reviews (CF-gp3) + marketing (CF-74x) |
+| radahn | Dev | IDLE | Stability audit, checkout E2E, returns |
+| miquella | Dev | ACTIVE | Status report, claiming next work |
 
 ## What Human Needs To Do
 
@@ -144,4 +144,5 @@ PR #28 had 3 merge conflicts — resolved (both sides kept).
 
 ---
 
-*Production Manager: melania | cfutons GREEN | Quality gate ACTIVE*
+*Report by: miquella | cfutons GREEN | Quality gate ACTIVE*
+*Next update: ~02:35 UTC (5-min cadence per mayor directive)*
