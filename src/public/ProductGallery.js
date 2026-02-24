@@ -100,8 +100,8 @@ export function initImageGallery($w, state) {
       }
     } catch (e) {}
 
-    initImageLightbox($w('#productGallery'), $w('#productMainImage'));
-    initImageZoom($w('#productMainImage'));
+    initImageLightbox($w, $w('#productGallery'), $w('#productMainImage'));
+    initImageZoom($w, $w('#productMainImage'));
   } catch (e) {}
 }
 

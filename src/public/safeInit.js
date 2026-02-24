@@ -1,13 +1,15 @@
 // safeInit.js — Safe element initialization utilities for Wix Velo pages
 // Replaces 450+ silent try/catch blocks wrapping optional $w() element access.
 // Elements may not exist on every page, so these helpers gracefully handle missing elements.
+// NOTE: $w must be passed from the page context — it is NOT available as a global in public modules.
 
 /**
  * Safely select a Wix $w element. Returns null if the element doesn't exist.
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector - Wix element selector (e.g., '#myButton')
  * @returns {object|null} The element or null
  */
-export function safeSelect(selector) {
+export function safeSelect($w, selector) {
   try {
     const el = $w(selector);
     // $w returns an object even for non-existent elements in some contexts.
@@ -34,10 +36,11 @@ export function safeCall(fn) {
 
 /**
  * Safely set a text property on an element.
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector - Wix element selector
  * @param {string} text - Text to set
  */
-export function safeText(selector, text) {
+export function safeText($w, selector, text) {
   try {
     $w(selector).text = text;
   } catch {
@@ -47,10 +50,11 @@ export function safeText(selector, text) {
 
 /**
  * Safely bind a click handler to an element.
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector - Wix element selector
  * @param {Function} handler - Click handler
  */
-export function safeClick(selector, handler) {
+export function safeClick($w, selector, handler) {
   try {
     $w(selector).onClick(handler);
   } catch {
@@ -60,10 +64,11 @@ export function safeClick(selector, handler) {
 
 /**
  * Safely set an element's src property (images, iframes).
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector - Wix element selector
  * @param {string} src - Source URL
  */
-export function safeSrc(selector, src) {
+export function safeSrc($w, selector, src) {
   try {
     $w(selector).src = src;
   } catch {
@@ -73,9 +78,10 @@ export function safeSrc(selector, src) {
 
 /**
  * Safely expand an element (show).
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector
  */
-export function safeExpand(selector) {
+export function safeExpand($w, selector) {
   try {
     $w(selector).expand();
   } catch {}
@@ -83,9 +89,10 @@ export function safeExpand(selector) {
 
 /**
  * Safely collapse an element (hide).
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector
  */
-export function safeCollapse(selector) {
+export function safeCollapse($w, selector) {
   try {
     $w(selector).collapse();
   } catch {}
@@ -93,10 +100,11 @@ export function safeCollapse(selector) {
 
 /**
  * Safely set ARIA label on an element.
+ * @param {Function} $w - Page-scoped $w selector from Wix Velo
  * @param {string} selector
  * @param {string} label
  */
-export function safeAriaLabel(selector, label) {
+export function safeAriaLabel($w, selector, label) {
   try {
     $w(selector).accessibility.ariaLabel = label;
   } catch {}

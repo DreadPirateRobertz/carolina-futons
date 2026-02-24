@@ -197,7 +197,7 @@ async function initRecentlyViewed() {
     }
 
     // Use buildRecentlyViewedSection from galleryHelpers (added by cf-vw0)
-    buildRecentlyViewedSection('#recentRepeater', ($item, itemData) => {
+    buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
       $item('#recentImage').src = itemData.mainMedia;
       $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
       $item('#recentName').text = itemData.name;

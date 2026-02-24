@@ -10,15 +10,18 @@ import {
   safeAriaLabel,
 } from '../src/public/safeInit.js';
 
-// Mock $w globally
+// Mock $w as a callable function that looks up elements
 let mockElements;
+let mock$w;
 
 beforeEach(() => {
   mockElements = {};
-  globalThis.$w = (selector) => {
+  mock$w = (selector) => {
     if (mockElements[selector]) return mockElements[selector];
     throw new Error(`Element ${selector} not found`);
   };
+  // Remove global $w to verify functions don't rely on it
+  delete globalThis.$w;
 });
 
 function mockElement(selector, overrides = {}) {
@@ -38,13 +41,20 @@ function mockElement(selector, overrides = {}) {
 // ── safeSelect ──────────────────────────────────────────────────────
 
 describe('safeSelect', () => {
-  it('returns element when it exists', () => {
+  it('returns element when it exists (passed $w)', () => {
     const el = mockElement('#myBtn');
-    expect(safeSelect('#myBtn')).toBe(el);
+    expect(safeSelect(mock$w, '#myBtn')).toBe(el);
   });
 
   it('returns null when element does not exist', () => {
-    expect(safeSelect('#nonexistent')).toBeNull();
+    expect(safeSelect(mock$w, '#nonexistent')).toBeNull();
+  });
+
+  it('does not use global $w', () => {
+    globalThis.$w = () => { throw new Error('should not use global $w'); };
+    const el = mockElement('#btn');
+    expect(safeSelect(mock$w, '#btn')).toBe(el);
+    delete globalThis.$w;
   });
 });
 
@@ -67,82 +77,82 @@ describe('safeCall', () => {
 // ── safeText ────────────────────────────────────────────────────────
 
 describe('safeText', () => {
-  it('sets text on existing element', () => {
+  it('sets text on existing element (passed $w)', () => {
     const el = mockElement('#title');
-    safeText('#title', 'Hello World');
+    safeText(mock$w, '#title', 'Hello World');
     expect(el.text).toBe('Hello World');
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeText('#missing', 'test')).not.toThrow();
+    expect(() => safeText(mock$w, '#missing', 'test')).not.toThrow();
   });
 });
 
 // ── safeClick ───────────────────────────────────────────────────────
 
 describe('safeClick', () => {
-  it('binds click handler on existing element', () => {
+  it('binds click handler on existing element (passed $w)', () => {
     const el = mockElement('#btn');
     const handler = vi.fn();
-    safeClick('#btn', handler);
+    safeClick(mock$w, '#btn', handler);
     expect(el.onClick).toHaveBeenCalledWith(handler);
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeClick('#missing', vi.fn())).not.toThrow();
+    expect(() => safeClick(mock$w, '#missing', vi.fn())).not.toThrow();
   });
 });
 
 // ── safeSrc ─────────────────────────────────────────────────────────
 
 describe('safeSrc', () => {
-  it('sets src on existing element', () => {
+  it('sets src on existing element (passed $w)', () => {
     const el = mockElement('#img');
-    safeSrc('#img', 'https://example.com/photo.jpg');
+    safeSrc(mock$w, '#img', 'https://example.com/photo.jpg');
     expect(el.src).toBe('https://example.com/photo.jpg');
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeSrc('#missing', 'url')).not.toThrow();
+    expect(() => safeSrc(mock$w, '#missing', 'url')).not.toThrow();
   });
 });
 
 // ── safeExpand / safeCollapse ───────────────────────────────────────
 
 describe('safeExpand', () => {
-  it('calls expand on existing element', () => {
+  it('calls expand on existing element (passed $w)', () => {
     const el = mockElement('#section');
-    safeExpand('#section');
+    safeExpand(mock$w, '#section');
     expect(el.expand).toHaveBeenCalled();
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeExpand('#missing')).not.toThrow();
+    expect(() => safeExpand(mock$w, '#missing')).not.toThrow();
   });
 });
 
 describe('safeCollapse', () => {
-  it('calls collapse on existing element', () => {
+  it('calls collapse on existing element (passed $w)', () => {
     const el = mockElement('#section');
-    safeCollapse('#section');
+    safeCollapse(mock$w, '#section');
     expect(el.collapse).toHaveBeenCalled();
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeCollapse('#missing')).not.toThrow();
+    expect(() => safeCollapse(mock$w, '#missing')).not.toThrow();
   });
 });
 
 // ── safeAriaLabel ───────────────────────────────────────────────────
 
 describe('safeAriaLabel', () => {
-  it('sets aria label on existing element', () => {
+  it('sets aria label on existing element (passed $w)', () => {
     const el = mockElement('#btn');
-    safeAriaLabel('#btn', 'Close dialog');
+    safeAriaLabel(mock$w, '#btn', 'Close dialog');
     expect(el.accessibility.ariaLabel).toBe('Close dialog');
   });
 
   it('does nothing when element missing', () => {
-    expect(() => safeAriaLabel('#missing', 'label')).not.toThrow();
+    expect(() => safeAriaLabel(mock$w, '#missing', 'label')).not.toThrow();
   });
 });
