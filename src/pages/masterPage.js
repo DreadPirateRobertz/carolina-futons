@@ -24,6 +24,7 @@ $w.onReady(async function () {
   initSideCartAutoOpen();
   initFooterNewsletter();
   initInstallBanner();
+  injectCanonicalUrl();
   await injectBusinessSchema();
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
@@ -329,6 +330,22 @@ function initFooterNewsletter() {
 
 // ── SEO Schema Injection ────────────────────────────────────────────
 // Injects LocalBusiness JSON-LD on every page
+
+// ── Canonical URL ───────────────────────────────────────────────────
+// Sets rel="canonical" on every page to prevent duplicate content issues.
+// Strips query params (filters, sort) so search engines index the clean URL.
+
+function injectCanonicalUrl() {
+  try {
+    const baseUrl = 'https://www.carolinafutons.com';
+    const path = wixLocationFrontend.path.join('/');
+    const canonicalUrl = path ? `${baseUrl}/${path}` : baseUrl;
+
+    import('wix-seo-frontend').then(({ head }) => {
+      head.setLinks([{ rel: 'canonical', href: canonicalUrl }]);
+    }).catch(() => {});
+  } catch (e) {}
+}
 
 async function injectBusinessSchema() {
   try {
