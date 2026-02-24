@@ -126,7 +126,7 @@ All open PRs merged. Quality gate active. 9 product beads shipped and closed. Mi
 | melania | PM | ACTIVE | Acceptance authority, beads coordination |
 | godfrey | Dev | IDLE | Shipped SEO optimization (CF-qs4) |
 | rennala | Dev | IDLE | Shipped reviews (CF-gp3) + marketing (CF-74x) |
-| radahn | Dev | IDLE | Stability audit, checkout E2E, returns |
+| radahn | Dev | ACTIVE | CF-04h DONE (PR #30), CF-559 DONE (PR #33), checking for more |
 | miquella | Dev | ACTIVE | Status report, claiming next work |
 
 ## What Human Needs To Do
