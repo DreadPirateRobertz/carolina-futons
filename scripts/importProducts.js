@@ -17,6 +17,14 @@
  *   ribbon?: string,              // "Featured", "New", "Sale"
  *   category: string,             // category slug
  *   images: string[],             // image URLs
+ *   media?: Array<{               // enriched media objects (from enrichProductImages)
+ *     type: string,               // "image"
+ *     url: string,                // image URL
+ *     alt: string,                // SEO alt text
+ *     width?: number,
+ *     height?: number,
+ *     source?: string             // manufacturer source
+ *   }>,
  *   options?: Array<{             // product variants
  *     name: string,               // e.g. "Size", "Color"
  *     choices: string[]           // e.g. ["Full", "Queen"]
@@ -29,6 +37,50 @@
  */
 import wixData from 'wix-data';
 import { processBatches, requireString, sanitize, sanitizeRichText } from './importConfig';
+
+/**
+ * Build Wix-compatible mediaItems array from product data.
+ * Prefers enriched media objects (with alt text), falls back to raw image URLs.
+ * @param {Object} product - Product data from scrape/enrichment
+ * @returns {Array} Wix mediaItems format
+ */
+function buildMediaItems(product) {
+  // Prefer enriched media objects (from enrichProductImages.js)
+  if (Array.isArray(product.media) && product.media.length > 0) {
+    return product.media.map((m, i) => ({
+      src: m.url || '',
+      type: m.type || 'image',
+      title: product.name || '',
+      altText: m.alt || buildDefaultAltText(product.name, i),
+      width: m.width || 0,
+      height: m.height || 0,
+    }));
+  }
+
+  // Fall back to raw image URLs array
+  if (Array.isArray(product.images) && product.images.length > 0) {
+    return product.images.map((url, i) => ({
+      src: url,
+      type: 'image',
+      title: product.name || '',
+      altText: buildDefaultAltText(product.name, i),
+    }));
+  }
+
+  return [];
+}
+
+/**
+ * Build a default alt text string when no enriched alt is available.
+ * @param {string} name - Product name
+ * @param {number} index - Image position
+ * @returns {string}
+ */
+function buildDefaultAltText(name, index) {
+  const productName = name || 'Product';
+  if (index === 0) return `${productName} - Main Product Image`;
+  return `${productName} - View ${index + 1}`;
+}
 
 /**
  * Import products into Wix Stores. Uses Stores/Products collection for
@@ -99,6 +151,9 @@ export async function importProducts(products) {
         continue;
       }
 
+      // Build media items with alt text for Wix gallery format
+      const mediaItems = buildMediaItems(product);
+
       // Prepare Wix Stores product record
       const record = {
         name: sanitize(product.name, 500),
@@ -107,8 +162,7 @@ export async function importProducts(products) {
         sku: product.sku ? sanitize(product.sku, 100) : '',
         weight: typeof product.weight === 'number' ? product.weight : 0,
         ribbon: product.ribbon ? sanitize(product.ribbon, 50) : '',
-        // Media handled separately — Wix needs mediaItems array format
-        // Categories need to be mapped to Wix collection IDs post-import
+        mediaItems,
         _scraped: {
           slug: product.slug || '',
           category: product.category || '',
@@ -163,25 +217,42 @@ export async function importProducts(products) {
  * @returns {Array} Objects with Wix CSV import column names.
  */
 export function prepareProductsCsv(products) {
-  return (products || []).map((p, i) => ({
-    handleId: p.slug || `product-${i}`,
-    fieldType: 'Product',
-    name: p.name || '',
-    description: p.description || '',
-    productImageUrl: Array.isArray(p.images) ? p.images.join(';') : '',
-    price: p.price || 0,
-    discountedPrice: p.discountedPrice || '',
-    sku: p.sku || '',
-    ribbon: p.ribbon || '',
-    weight: p.weight || '',
-    collection: p.category || '',
-    productOptionName1: p.options?.[0]?.name || '',
-    productOptionDescription1: p.options?.[0]?.choices?.join(';') || '',
-    productOptionName2: p.options?.[1]?.name || '',
-    productOptionDescription2: p.options?.[1]?.choices?.join(';') || '',
-    additionalInfoTitle1: p.additionalInfo?.[0]?.title || '',
-    additionalInfoDescription1: p.additionalInfo?.[0]?.description || '',
-    additionalInfoTitle2: p.additionalInfo?.[1]?.title || '',
-    additionalInfoDescription2: p.additionalInfo?.[1]?.description || '',
-  }));
+  return (products || []).map((p, i) => {
+    // Build image URLs — prefer enriched media, fall back to images array
+    let imageUrls = '';
+    if (Array.isArray(p.media) && p.media.length > 0) {
+      imageUrls = p.media.map(m => m.url || '').filter(Boolean).join(';');
+    } else if (Array.isArray(p.images)) {
+      imageUrls = p.images.join(';');
+    }
+
+    // Build alt text for images
+    let imageAltText = '';
+    if (Array.isArray(p.media) && p.media.length > 0) {
+      imageAltText = p.media.map(m => m.alt || '').join(';');
+    }
+
+    return {
+      handleId: p.slug || `product-${i}`,
+      fieldType: 'Product',
+      name: p.name || '',
+      description: p.description || '',
+      productImageUrl: imageUrls,
+      productImageAltText: imageAltText,
+      price: p.price || 0,
+      discountedPrice: p.discountedPrice || '',
+      sku: p.sku || '',
+      ribbon: p.ribbon || '',
+      weight: p.weight || '',
+      collection: p.category || '',
+      productOptionName1: p.options?.[0]?.name || '',
+      productOptionDescription1: p.options?.[0]?.choices?.join(';') || '',
+      productOptionName2: p.options?.[1]?.name || '',
+      productOptionDescription2: p.options?.[1]?.choices?.join(';') || '',
+      additionalInfoTitle1: p.additionalInfo?.[0]?.title || '',
+      additionalInfoDescription1: p.additionalInfo?.[0]?.description || '',
+      additionalInfoTitle2: p.additionalInfo?.[1]?.title || '',
+      additionalInfoDescription2: p.additionalInfo?.[1]?.description || '',
+    };
+  });
 }
