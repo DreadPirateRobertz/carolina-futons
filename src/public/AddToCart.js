@@ -183,7 +183,13 @@ export async function initBackInStockNotification($w, state) {
     } catch (e) { /* Fall through to email form */ }
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
-      if (!email || !validateEmail(email)) return;
+      if (!email || !validateEmail(email)) {
+        try {
+          const errEl = $w('#backInStockError');
+          if (errEl) { errEl.text = 'Please enter a valid email address.'; errEl.show('fade', { duration: 300 }); }
+        } catch (e) {}
+        return;
+      }
       try {
         const { submitContactForm } = await import('backend/contactSubmissions.web');
         await submitContactForm({ email, source: 'back_in_stock', status: 'back_in_stock_request', productId: state.product?._id || '', productName: state.product?.name || '', notes: `Back in stock request for ${state.product?.name || 'unknown product'}` });
