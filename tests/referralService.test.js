@@ -236,6 +236,7 @@ describe('redeemReferralCode', () => {
 
     await redeemReferralCode('ABCD1234', {
       name: '<script>alert(1)</script>Bob',
+      email: 'bob@example.com',
     });
 
     expect(updated.refereeName).not.toContain('<script>');
