@@ -284,7 +284,7 @@ export const createShipment = webMethod(
             },
           },
           Shipment: {
-            Description: `${brand.name} Order`,
+            Description: orderData.returnLabel ? `${brand.name} Return` : `${brand.name} Order`,
             Shipper: {
               Name: brand.name,
               AttentionName: 'Brenda Deal',
@@ -292,24 +292,44 @@ export const createShipment = webMethod(
               Phone: { Number: business.phoneDigits },
               Address: ORIGIN_ADDRESS,
             },
-            ShipTo: {
-              Name: orderData.recipientName,
-              AttentionName: orderData.recipientName,
-              Phone: { Number: orderData.recipientPhone || '' },
-              Address: {
-                AddressLine: [orderData.addressLine1, orderData.addressLine2 || ''].filter(Boolean),
-                City: orderData.city,
-                StateProvinceCode: orderData.state,
-                PostalCode: orderData.postalCode,
-                CountryCode: orderData.country || 'US',
+            ShipTo: orderData.returnLabel
+              ? {
+                Name: brand.name,
+                AttentionName: `Returns Dept (RMA)`,
+                Phone: { Number: business.phoneDigits },
+                Address: ORIGIN_ADDRESS,
+              }
+              : {
+                Name: orderData.recipientName,
+                AttentionName: orderData.recipientName,
+                Phone: { Number: orderData.recipientPhone || '' },
+                Address: {
+                  AddressLine: [orderData.addressLine1, orderData.addressLine2 || ''].filter(Boolean),
+                  City: orderData.city,
+                  StateProvinceCode: orderData.state,
+                  PostalCode: orderData.postalCode,
+                  CountryCode: orderData.country || 'US',
+                },
               },
-            },
-            ShipFrom: {
-              Name: brand.name,
-              AttentionName: 'Brenda Deal',
-              Phone: { Number: business.phoneDigits },
-              Address: ORIGIN_ADDRESS,
-            },
+            ShipFrom: orderData.returnLabel
+              ? {
+                Name: orderData.recipientName,
+                AttentionName: orderData.recipientName,
+                Phone: { Number: orderData.recipientPhone || '' },
+                Address: {
+                  AddressLine: [orderData.addressLine1, orderData.addressLine2 || ''].filter(Boolean),
+                  City: orderData.city,
+                  StateProvinceCode: orderData.state,
+                  PostalCode: orderData.postalCode,
+                  CountryCode: orderData.country || 'US',
+                },
+              }
+              : {
+                Name: brand.name,
+                AttentionName: 'Brenda Deal',
+                Phone: { Number: business.phoneDigits },
+                Address: ORIGIN_ADDRESS,
+              },
             PaymentInformation: {
               ShipmentCharge: [{
                 Type: '01', // Transportation

@@ -375,12 +375,21 @@ function initQuantityControls() {
 // ── Cart Change Listeners ───────────────────────────────────────────
 
 function initCartListeners() {
+  let cartChangeTimer;
   onCartChanged(() => {
-    updateShippingProgress();
-    updateTierProgress();
-    updateCartFinancing();
-    loadCartSuggestions();
-    loadRecentlyViewed();
+    // Debounce to prevent 5 redundant API calls per rapid cart change
+    clearTimeout(cartChangeTimer);
+    cartChangeTimer = setTimeout(async () => {
+      try {
+        // Single getCurrentCart() call shared by all listeners
+        const cart = await getCurrentCart();
+        updateShippingProgress(cart);
+        updateTierProgress(cart);
+        updateCartFinancing(cart);
+        loadCartSuggestions(cart);
+        loadRecentlyViewed(cart);
+      } catch (e) {}
+    }, 300);
   });
 }
 

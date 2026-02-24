@@ -354,16 +354,23 @@ async function handleGuestReturnSubmit() {
       return;
     }
 
-    // Collect selected items (placeholder — in Wix, iterate repeater)
-    const items = _currentOrder?.lineItems
-      ?.filter(li => {
-        const check = isItemReturnable(li);
-        return check.returnable;
-      })
-      .map(li => ({ lineItemId: li._id, quantity: li.quantity })) || [];
+    // Collect user-selected items from repeater checkboxes
+    const items = [];
+    try {
+      const repeater = $w('#returnItemsSelector');
+      if (repeater) {
+        repeater.forEachItem(($item, itemData) => {
+          try {
+            if ($item('#selectItemCheckbox').checked) {
+              items.push({ lineItemId: itemData._id, quantity: itemData.quantity });
+            }
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
 
     if (items.length === 0) {
-      showFormError('No returnable items found.');
+      showFormError('Please select at least one item to return.');
       return;
     }
 
