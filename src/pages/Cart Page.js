@@ -340,7 +340,7 @@ function initQuantityControls() {
             } catch (err) {
               console.error('Error updating quantity:', err);
             }
-            await refreshCartTotals();
+            try { await refreshCartTotals(); } catch (e) {}
           }
         });
 
@@ -355,7 +355,7 @@ function initQuantityControls() {
           } catch (err) {
             console.error('Error updating quantity:', err);
           }
-          await refreshCartTotals();
+          try { await refreshCartTotals(); } catch (e) {}
         });
 
         $item('#removeItem').onClick(async () => {
@@ -365,7 +365,7 @@ function initQuantityControls() {
           } catch (err) {
             console.error('Error removing item:', err);
           }
-          await refreshCartTotals();
+          try { await refreshCartTotals(); } catch (e) {}
         });
       } catch (e) {}
     });
