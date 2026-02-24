@@ -208,6 +208,15 @@ export const completeReferral = webMethod(
       const referral = result.items[0];
       referral.refereeMemberId = member._id;
 
+      // Idempotency: if already credited, return success without re-issuing
+      if (referral.status === 'credited') {
+        return {
+          success: true,
+          referrerCredit: REFERRER_CREDIT_AMOUNT,
+          refereeCredit: REFEREE_CREDIT_AMOUNT,
+        };
+      }
+
       // RACE FIX: Claim referral by setting status='processing' FIRST.
       // Concurrent requests querying status='signed_up' will not find this referral.
       referral.status = 'processing';
@@ -220,28 +229,42 @@ export const completeReferral = webMethod(
         return { success: false, error: 'Referral was already being processed' };
       }
 
-      // Issue credits
+      // Issue credits with idempotency — check for existing credits before inserting
       const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-      // Credit for referrer
-      await wixData.insert(CREDITS_COLLECTION, {
-        memberId: referral.referrerMemberId,
-        amount: REFERRER_CREDIT_AMOUNT,
-        source: 'referrer_bonus',
-        referralId: referral._id,
-        status: 'available',
-        expiresAt,
-      });
+      // Credit for referrer (skip if already issued)
+      const existingReferrerCredit = await wixData.query(CREDITS_COLLECTION)
+        .eq('referralId', referral._id)
+        .eq('source', 'referrer_bonus')
+        .find();
+      if (existingReferrerCredit.items.length === 0) {
+        await wixData.insert(CREDITS_COLLECTION, {
+          memberId: referral.referrerMemberId,
+          amount: REFERRER_CREDIT_AMOUNT,
+          source: 'referrer_bonus',
+          referralId: referral._id,
+          status: 'available',
+          expiresAt,
+        });
+      }
 
-      // Credit for referee
-      await wixData.insert(CREDITS_COLLECTION, {
-        memberId: member._id,
-        amount: REFEREE_CREDIT_AMOUNT,
-        source: 'referee_bonus',
-        referralId: referral._id,
-        status: 'available',
-        expiresAt,
-      });
+      // Credit for referee (skip if already issued)
+      if (member?._id) {
+        const existingRefereeCredit = await wixData.query(CREDITS_COLLECTION)
+          .eq('referralId', referral._id)
+          .eq('source', 'referee_bonus')
+          .find();
+        if (existingRefereeCredit.items.length === 0) {
+          await wixData.insert(CREDITS_COLLECTION, {
+            memberId: member._id,
+            amount: REFEREE_CREDIT_AMOUNT,
+            source: 'referee_bonus',
+            referralId: referral._id,
+            status: 'available',
+            expiresAt,
+          });
+        }
+      }
 
       // Finalize status
       claimed.status = 'credited';

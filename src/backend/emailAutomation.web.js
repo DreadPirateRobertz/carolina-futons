@@ -309,11 +309,11 @@ export const triggerAbandonedCartRecovery = webMethod(
         if (!cart.buyerEmail || !validateEmail(cart.buyerEmail)) continue;
         if (await isUnsubscribed(cart.buyerEmail, 'cart_recovery')) continue;
 
-        // Check if recovery already queued for this cart
+        // Check if recovery already queued for this cart (flat field, not nested)
         const alreadyQueued = await wixData.query('EmailQueue')
           .eq('recipientEmail', cart.buyerEmail)
           .eq('sequenceType', 'cart_recovery')
-          .eq('variables.checkoutId', cart.checkoutId)
+          .eq('checkoutId', cart.checkoutId)
           .find();
 
         if (alreadyQueued.items.length > 0) continue;
@@ -716,6 +716,8 @@ async function queueEmail({ templateId, recipientEmail, recipientContactId, vari
     variables: variables || {},
     sequenceType,
     sequenceStep,
+    // Flat field for dedup queries (Wix Data can't query nested object fields)
+    checkoutId: variables?.checkoutId || '',
     status: 'pending',
     scheduledFor,
     sentAt: null,
