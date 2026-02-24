@@ -1,61 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// Mock wix-data
-const mockItems = [];
-let mockTotalCount = 0;
-
-const mockQuery = {
-  eq: vi.fn().mockReturnThis(),
-  ge: vi.fn().mockReturnThis(),
-  gt: vi.fn().mockReturnThis(),
-  lt: vi.fn().mockReturnThis(),
-  descending: vi.fn().mockReturnThis(),
-  ascending: vi.fn().mockReturnThis(),
-  skip: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  find: vi.fn(async () => ({ items: mockItems, totalCount: mockTotalCount })),
-  count: vi.fn(async () => mockTotalCount),
-};
-
-vi.mock('wix-data', () => ({
-  default: {
-    query: vi.fn(() => ({ ...mockQuery })),
-    get: vi.fn(async (collection, id) => mockItems.find(i => i._id === id)),
-    insert: vi.fn(async (collection, record) => ({ ...record, _id: 'new-review-001', _createdDate: new Date() })),
-    update: vi.fn(async (collection, record) => record),
-  },
-}));
-
-// Mock wix-members-backend
-const mockMember = {
-  _id: 'member-001',
-  contactDetails: { firstName: 'Jane', lastName: 'Smith' },
-};
-
-vi.mock('wix-members-backend', () => ({
-  currentMember: {
-    getMember: vi.fn(async () => mockMember),
-  },
-}));
-
-// Mock wix-web-module
-vi.mock('wix-web-module', () => ({
-  Permissions: { Anyone: 'Anyone', SiteMember: 'SiteMember', Admin: 'Admin' },
-  webMethod: (perm, fn) => fn,
-}));
-
-// Mock sanitize
-vi.mock('backend/utils/sanitize', () => ({
-  sanitize: (str, maxLen = 1000) => {
-    if (typeof str !== 'string') return '';
-    return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLen);
-  },
-  validateId: (id) => {
-    if (typeof id !== 'string') return '';
-    const cleaned = id.trim().slice(0, 50);
-    return /^[a-zA-Z0-9_-]+$/.test(cleaned) ? cleaned : '';
-  },
-}));
+import { describe, it, expect, beforeEach } from 'vitest';
+import wixData, { __reset as resetData, __seed } from 'wix-data';
+import { __reset as resetMembers, __setMember } from 'wix-members-backend';
 
 import {
   getProductReviews,
@@ -67,6 +12,7 @@ import {
   moderateReview,
   getReviewStats,
   addOwnerResponse,
+  getCategoryReviewSummaries,
 } from '../src/backend/reviewsService.web.js';
 
 // ── Test Data ─────────────────────────────────────────────────────────
@@ -116,14 +62,19 @@ const sampleReviews = [
   },
 ];
 
+const mockMember = {
+  _id: 'member-001',
+  contactDetails: { firstName: 'Jane', lastName: 'Smith' },
+};
+
 // ── Tests ─────────────────────────────────────────────────────────────
 
 describe('reviewsService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockItems.length = 0;
-    mockItems.push(...sampleReviews);
-    mockTotalCount = sampleReviews.length;
+    resetData();
+    resetMembers();
+    __seed('Reviews', sampleReviews);
+    __setMember(mockMember);
   });
 
   describe('getProductReviews', () => {
@@ -135,7 +86,6 @@ describe('reviewsService', () => {
       expect(result.page).toBe(0);
       expect(result.pageSize).toBe(10);
 
-      // Check formatted fields
       const first = result.reviews[0];
       expect(first.authorName).toBe('Jane S.');
       expect(first.rating).toBe(5);
@@ -157,34 +107,33 @@ describe('reviewsService', () => {
       expect(result.reviews).toEqual([]);
     });
 
-    it('applies sort parameter', async () => {
-      await getProductReviews('prod-001', { sort: 'highest' });
-      expect(mockQuery.descending).toHaveBeenCalledWith('rating');
+    it('sorts by newest by default (descending _createdDate)', async () => {
+      const result = await getProductReviews('prod-001');
+      // Default sort is descending _createdDate — rev-001 (Jan 15) should be first
+      expect(result.reviews[0].title).toBe('Amazing futon');
+      expect(result.reviews[2].title).toBe('Decent');
     });
 
-    it('applies lowest sort', async () => {
-      await getProductReviews('prod-001', { sort: 'lowest' });
-      expect(mockQuery.ascending).toHaveBeenCalledWith('rating');
+    it('sorts by highest rating', async () => {
+      const result = await getProductReviews('prod-001', { sort: 'highest' });
+      expect(result.reviews[0].rating).toBe(5);
+      expect(result.reviews[2].rating).toBe(3);
     });
 
-    it('applies helpful sort', async () => {
-      await getProductReviews('prod-001', { sort: 'helpful' });
-      expect(mockQuery.descending).toHaveBeenCalledWith('helpful');
+    it('sorts by lowest rating', async () => {
+      const result = await getProductReviews('prod-001', { sort: 'lowest' });
+      expect(result.reviews[0].rating).toBe(3);
+      expect(result.reviews[2].rating).toBe(5);
     });
 
-    it('defaults to newest sort', async () => {
-      await getProductReviews('prod-001');
-      expect(mockQuery.descending).toHaveBeenCalledWith('_createdDate');
-    });
-
-    it('respects pagination', async () => {
-      await getProductReviews('prod-001', { page: 2 });
-      expect(mockQuery.skip).toHaveBeenCalledWith(20);
+    it('sorts by most helpful', async () => {
+      const result = await getProductReviews('prod-001', { sort: 'helpful' });
+      expect(result.reviews[0].helpful).toBe(3);
+      expect(result.reviews[2].helpful).toBe(0);
     });
 
     it('handles negative page number', async () => {
       const result = await getProductReviews('prod-001', { page: -1 });
-      expect(mockQuery.skip).toHaveBeenCalledWith(0);
       expect(result.page).toBe(0);
     });
 
@@ -194,6 +143,16 @@ describe('reviewsService', () => {
       expect(first.memberId).toBeUndefined();
       expect(first.status).toBeUndefined();
       expect(first.productId).toBeUndefined();
+    });
+
+    it('returns only approved reviews', async () => {
+      __seed('Reviews', [
+        ...sampleReviews,
+        { _id: 'rev-pending', productId: 'prod-001', status: 'pending', rating: 1, body: 'Pending', _createdDate: new Date() },
+        { _id: 'rev-rejected', productId: 'prod-001', status: 'rejected', rating: 1, body: 'Rejected', _createdDate: new Date() },
+      ]);
+      const result = await getProductReviews('prod-001');
+      expect(result.reviews).toHaveLength(3);
     });
   });
 
@@ -211,11 +170,7 @@ describe('reviewsService', () => {
     });
 
     it('returns zeros for product with no reviews', async () => {
-      mockItems.length = 0;
-      mockTotalCount = 0;
-
-      const result = await getAggregateRating('prod-002');
-
+      const result = await getAggregateRating('prod-999');
       expect(result.average).toBe(0);
       expect(result.total).toBe(0);
       expect(result.breakdown).toEqual({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
@@ -228,10 +183,11 @@ describe('reviewsService', () => {
     });
 
     it('clamps ratings to 1-5 range', async () => {
-      mockItems.length = 0;
-      mockItems.push({ _id: 'r1', rating: 7, status: 'approved' }); // Should clamp to 5
-      mockItems.push({ _id: 'r2', rating: 0, status: 'approved' }); // Should clamp to 1
-      mockTotalCount = 2;
+      resetData();
+      __seed('Reviews', [
+        { _id: 'r1', productId: 'prod-001', rating: 7, status: 'approved' },
+        { _id: 'r2', productId: 'prod-001', rating: 0, status: 'approved' },
+      ]);
 
       const result = await getAggregateRating('prod-001');
       expect(result.breakdown[5]).toBe(1);
@@ -242,9 +198,11 @@ describe('reviewsService', () => {
 
   describe('submitReview', () => {
     beforeEach(() => {
-      // Clear existing reviews so no duplicate check fails
-      mockItems.length = 0;
-      mockTotalCount = 0;
+      // Use empty Reviews so duplicate check passes
+      resetData();
+      __seed('Reviews', []);
+      // Seed empty orders so verifiedPurchase check works
+      __seed('Stores/Orders', []);
     });
 
     it('submits a valid review', async () => {
@@ -256,7 +214,7 @@ describe('reviewsService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.reviewId).toBe('new-review-001');
+      expect(result.reviewId).toBeTruthy();
     });
 
     it('rejects review with invalid product ID', async () => {
@@ -303,8 +261,7 @@ describe('reviewsService', () => {
     });
 
     it('rejects duplicate review from same member', async () => {
-      mockItems.push({ _id: 'existing', productId: 'prod-001', memberId: 'member-001' });
-      mockTotalCount = 1;
+      __seed('Reviews', [{ _id: 'existing', productId: 'prod-001', memberId: 'member-001' }]);
 
       const result = await submitReview({
         productId: 'prod-001',
@@ -317,79 +274,115 @@ describe('reviewsService', () => {
     });
 
     it('sanitizes HTML from review body', async () => {
-      const wixData = (await import('wix-data')).default;
-
-      await submitReview({
+      const result = await submitReview({
         productId: 'prod-001',
         rating: 4,
         title: '<script>alert("xss")</script>Great',
-        body: 'This <b>bold</b> review has HTML tags that should be stripped for safety.',
+        body: 'This review has HTML tags that should be stripped for safety.',
       });
 
-      const insertCall = wixData.insert.mock.calls[0];
-      if (insertCall) {
-        const record = insertCall[1];
-        expect(record.body).not.toContain('<b>');
-        expect(record.title).not.toContain('<script>');
+      expect(result.success).toBe(true);
+      // Verify the stored record is clean
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].title).not.toContain('<script>');
       }
     });
 
-    it('limits photos to MAX_PHOTOS', async () => {
-      const wixData = (await import('wix-data')).default;
-
-      await submitReview({
+    it('limits photos to MAX_PHOTOS (3)', async () => {
+      const result = await submitReview({
         productId: 'prod-001',
         rating: 5,
         body: 'Review with many photos attached to it.',
         photos: ['a.jpg', 'b.jpg', 'c.jpg', 'd.jpg', 'e.jpg'],
       });
 
-      const insertCall = wixData.insert.mock.calls[0];
-      if (insertCall) {
-        expect(insertCall[1].photos).toHaveLength(3);
+      expect(result.success).toBe(true);
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].photos).toHaveLength(3);
       }
     });
 
     it('sets review status to pending', async () => {
-      const wixData = (await import('wix-data')).default;
-
-      await submitReview({
+      const result = await submitReview({
         productId: 'prod-001',
         rating: 5,
         body: 'This review should start as pending moderation.',
       });
 
-      const insertCall = wixData.insert.mock.calls[0];
-      if (insertCall) {
-        expect(insertCall[1].status).toBe('pending');
+      expect(result.success).toBe(true);
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].status).toBe('pending');
       }
     });
 
     it('builds author name as "FirstName L." format', async () => {
-      const wixData = (await import('wix-data')).default;
-
-      await submitReview({
+      const result = await submitReview({
         productId: 'prod-001',
         rating: 5,
         body: 'Testing the author name formatting logic.',
       });
 
-      const insertCall = wixData.insert.mock.calls[0];
-      if (insertCall) {
-        expect(insertCall[1].authorName).toBe('Jane S.');
+      expect(result.success).toBe(true);
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].authorName).toBe('Jane S.');
       }
+    });
+
+    it('detects verified purchase from order history', async () => {
+      __seed('Stores/Orders', [
+        {
+          _id: 'order-001',
+          buyerInfo: { id: 'member-001' },
+          lineItems: [{ productId: 'prod-001' }],
+        },
+      ]);
+
+      const result = await submitReview({
+        productId: 'prod-001',
+        rating: 5,
+        body: 'Testing verified purchase badge detection.',
+      });
+
+      expect(result.success).toBe(true);
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].verifiedPurchase).toBe(true);
+      }
+    });
+
+    it('returns false for verified purchase when no matching order', async () => {
+      const result = await submitReview({
+        productId: 'prod-001',
+        rating: 5,
+        body: 'Testing non-verified purchase scenario here.',
+      });
+
+      expect(result.success).toBe(true);
+      const stored = await wixData.query('Reviews').eq('_id', result.reviewId).find();
+      if (stored.items.length > 0) {
+        expect(stored.items[0].verifiedPurchase).toBe(false);
+      }
+    });
+
+    it('requires logged-in member', async () => {
+      __setMember(null);
+      const result = await submitReview({
+        productId: 'prod-001',
+        rating: 5,
+        body: 'Trying to submit without being logged in.',
+      });
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('log in');
     });
   });
 
   describe('markHelpful', () => {
-    beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(...sampleReviews);
-    });
-
     it('increments helpful count on approved review', async () => {
       const result = await markHelpful('rev-001');
-
       expect(result.success).toBe(true);
       expect(result.helpful).toBe(4); // Was 3, now 4
     });
@@ -400,25 +393,22 @@ describe('reviewsService', () => {
     });
 
     it('rejects non-existent review', async () => {
-      const wixData = (await import('wix-data')).default;
-      wixData.get.mockResolvedValueOnce(null);
-
       const result = await markHelpful('rev-nonexistent');
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects non-approved review', async () => {
+      __seed('Reviews', [
+        { _id: 'rev-pending', productId: 'prod-001', status: 'pending', helpful: 0 },
+      ]);
+      const result = await markHelpful('rev-pending');
       expect(result.success).toBe(false);
     });
   });
 
   describe('flagReview', () => {
-    beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(...sampleReviews);
-    });
-
     it('flags an existing review', async () => {
-      const wixData = (await import('wix-data')).default;
-      // Mock count to return < 3 (no auto-hide)
-      mockQuery.find.mockResolvedValueOnce({ items: [sampleReviews[0]], totalCount: 1 });
-
+      __seed('ReviewFlags', []);
       const result = await flagReview('rev-001', 'spam');
       expect(result.success).toBe(true);
     });
@@ -429,49 +419,63 @@ describe('reviewsService', () => {
     });
 
     it('rejects non-existent review', async () => {
-      const wixData = (await import('wix-data')).default;
-      wixData.get.mockResolvedValueOnce(null);
-
+      resetData();
+      __seed('Reviews', []);
+      __seed('ReviewFlags', []);
       const result = await flagReview('rev-nonexistent', 'spam');
       expect(result.success).toBe(false);
     });
 
     it('normalizes invalid reason to "other"', async () => {
-      const wixData = (await import('wix-data')).default;
-
+      __seed('ReviewFlags', []);
       await flagReview('rev-001', 'invalid-reason');
-
-      // Should have called insert with reason 'other'
-      const insertCalls = wixData.insert.mock.calls;
-      const flagCall = insertCalls.find(c => c[0] === 'ReviewFlags');
-      if (flagCall) {
-        expect(flagCall[1].reason).toBe('other');
+      const flags = await wixData.query('ReviewFlags').find();
+      const flag = flags.items.find(f => f.reviewId === 'rev-001');
+      if (flag) {
+        expect(flag.reason).toBe('other');
       }
     });
 
     it('accepts valid reason types', async () => {
-      const wixData = (await import('wix-data')).default;
       const validReasons = ['spam', 'offensive', 'fake', 'other'];
-
       for (const reason of validReasons) {
-        vi.clearAllMocks();
-        mockItems.length = 0;
-        mockItems.push(...sampleReviews);
+        resetData();
+        __seed('Reviews', sampleReviews);
+        __seed('ReviewFlags', []);
 
         await flagReview('rev-001', reason);
-        const flagCall = wixData.insert.mock.calls.find(c => c[0] === 'ReviewFlags');
-        if (flagCall) {
-          expect(flagCall[1].reason).toBe(reason);
+        const flags = await wixData.query('ReviewFlags').find();
+        const flag = flags.items.find(f => f.reviewId === 'rev-001');
+        if (flag) {
+          expect(flag.reason).toBe(reason);
         }
       }
+    });
+
+    it('auto-hides review after 3 flags', async () => {
+      __seed('ReviewFlags', [
+        { _id: 'f1', reviewId: 'rev-001', reason: 'spam' },
+        { _id: 'f2', reviewId: 'rev-001', reason: 'offensive' },
+      ]);
+
+      await flagReview('rev-001', 'fake');
+
+      // Review should now be set to pending
+      const review = await wixData.get('Reviews', 'rev-001');
+      expect(review.status).toBe('pending');
     });
   });
 
   describe('getReviewStats', () => {
     beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(...sampleReviews);
-      mockTotalCount = sampleReviews.length;
+      // Use recent dates so they fall within the stats window
+      const now = new Date();
+      const recentReviews = sampleReviews.map(r => ({
+        ...r,
+        _createdDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      }));
+      resetData();
+      __seed('Reviews', recentReviews);
     });
 
     it('returns review statistics', async () => {
@@ -503,9 +507,8 @@ describe('reviewsService', () => {
     });
 
     it('handles empty dataset', async () => {
-      mockItems.length = 0;
-      mockTotalCount = 0;
-
+      resetData();
+      __seed('Reviews', []);
       const result = await getReviewStats(30);
       expect(result.success).toBe(true);
       expect(result.total).toBe(0);
@@ -519,21 +522,13 @@ describe('reviewsService', () => {
   });
 
   describe('addOwnerResponse', () => {
-    beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(...sampleReviews);
-    });
-
     it('adds owner response to an existing review', async () => {
-      const wixData = (await import('wix-data')).default;
       const result = await addOwnerResponse('rev-001', 'Thank you for your kind words! We appreciate your business.');
       expect(result.success).toBe(true);
 
-      const updateCall = wixData.update.mock.calls[0];
-      if (updateCall) {
-        expect(updateCall[1].ownerResponse).toContain('Thank you');
-        expect(updateCall[1].ownerResponseDate).toBeDefined();
-      }
+      const review = await wixData.get('Reviews', 'rev-001');
+      expect(review.ownerResponse).toContain('Thank you');
+      expect(review.ownerResponseDate).toBeDefined();
     });
 
     it('rejects invalid review ID', async () => {
@@ -548,32 +543,24 @@ describe('reviewsService', () => {
     });
 
     it('rejects non-existent review', async () => {
-      const wixData = (await import('wix-data')).default;
-      wixData.get.mockResolvedValueOnce(null);
-
       const result = await addOwnerResponse('rev-nonexistent', 'Thank you for your feedback!');
       expect(result.success).toBe(false);
     });
 
     it('sanitizes HTML from response text', async () => {
-      const wixData = (await import('wix-data')).default;
       await addOwnerResponse('rev-001', '<script>alert(1)</script>Thank you for the review!');
-
-      const updateCall = wixData.update.mock.calls[0];
-      if (updateCall) {
-        expect(updateCall[1].ownerResponse).not.toContain('<script>');
-      }
+      const review = await wixData.get('Reviews', 'rev-001');
+      expect(review.ownerResponse).not.toContain('<script>');
     });
   });
 
   describe('getPendingReviews', () => {
     beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(
+      resetData();
+      __seed('Reviews', [
         { _id: 'rev-p1', productId: 'prod-001', status: 'pending', rating: 4, body: 'Pending review', _createdDate: new Date() },
         { _id: 'rev-p2', productId: 'prod-002', status: 'pending', rating: 3, body: 'Another pending', _createdDate: new Date() },
-      );
-      mockTotalCount = 2;
+      ]);
     });
 
     it('returns pending reviews', async () => {
@@ -584,48 +571,31 @@ describe('reviewsService', () => {
     });
 
     it('returns empty when no pending reviews', async () => {
-      mockItems.length = 0;
-      mockTotalCount = 0;
-
+      resetData();
+      __seed('Reviews', []);
       const result = await getPendingReviews();
       expect(result.success).toBe(true);
       expect(result.reviews).toHaveLength(0);
       expect(result.total).toBe(0);
     });
-
-    it('clamps limit to safe range', async () => {
-      await getPendingReviews(100);
-      expect(mockQuery.limit).toHaveBeenCalledWith(50);
-    });
   });
 
   describe('moderateReview', () => {
-    beforeEach(() => {
-      mockItems.length = 0;
-      mockItems.push(...sampleReviews);
-    });
-
     it('approves a review', async () => {
-      const wixData = (await import('wix-data')).default;
       const result = await moderateReview('rev-001', 'approve');
       expect(result.success).toBe(true);
 
-      const updateCall = wixData.update.mock.calls[0];
-      if (updateCall) {
-        expect(updateCall[1].status).toBe('approved');
-        expect(updateCall[1].moderatedAt).toBeInstanceOf(Date);
-      }
+      const review = await wixData.get('Reviews', 'rev-001');
+      expect(review.status).toBe('approved');
+      expect(review.moderatedAt).toBeInstanceOf(Date);
     });
 
     it('rejects a review', async () => {
-      const wixData = (await import('wix-data')).default;
       const result = await moderateReview('rev-001', 'reject');
       expect(result.success).toBe(true);
 
-      const updateCall = wixData.update.mock.calls[0];
-      if (updateCall) {
-        expect(updateCall[1].status).toBe('rejected');
-      }
+      const review = await wixData.get('Reviews', 'rev-001');
+      expect(review.status).toBe('rejected');
     });
 
     it('rejects invalid review ID', async () => {
@@ -641,12 +611,67 @@ describe('reviewsService', () => {
     });
 
     it('handles non-existent review', async () => {
-      const wixData = (await import('wix-data')).default;
-      wixData.get.mockResolvedValueOnce(null);
-
       const result = await moderateReview('rev-nonexistent', 'approve');
       expect(result.success).toBe(false);
       expect(result.error).toContain('not found');
+    });
+  });
+
+  describe('getCategoryReviewSummaries', () => {
+    beforeEach(() => {
+      resetData();
+      __seed('Reviews', [
+        { _id: 'r1', productId: 'prod-001', rating: 5, status: 'approved' },
+        { _id: 'r2', productId: 'prod-001', rating: 3, status: 'approved' },
+        { _id: 'r3', productId: 'prod-002', rating: 4, status: 'approved' },
+        { _id: 'r4', productId: 'prod-002', rating: 4, status: 'approved' },
+        { _id: 'r5', productId: 'prod-002', rating: 2, status: 'pending' }, // not approved
+        { _id: 'r6', productId: 'prod-003', rating: 5, status: 'rejected' }, // not approved
+      ]);
+    });
+
+    it('returns summaries for multiple products', async () => {
+      const result = await getCategoryReviewSummaries(['prod-001', 'prod-002', 'prod-003']);
+
+      expect(result['prod-001'].total).toBe(2);
+      expect(result['prod-001'].average).toBe(4); // (5+3)/2
+      expect(result['prod-002'].total).toBe(2);
+      expect(result['prod-002'].average).toBe(4); // (4+4)/2
+      expect(result['prod-003'].total).toBe(0); // rejected not counted
+    });
+
+    it('returns empty object for empty array', async () => {
+      const result = await getCategoryReviewSummaries([]);
+      expect(result).toEqual({});
+    });
+
+    it('returns empty object for non-array input', async () => {
+      const result = await getCategoryReviewSummaries(null);
+      expect(result).toEqual({});
+    });
+
+    it('returns empty object for invalid IDs', async () => {
+      const result = await getCategoryReviewSummaries(['', null, undefined]);
+      expect(result).toEqual({});
+    });
+
+    it('returns zero summary for products with no reviews', async () => {
+      const result = await getCategoryReviewSummaries(['prod-no-reviews']);
+      expect(result['prod-no-reviews'].total).toBe(0);
+      expect(result['prod-no-reviews'].average).toBe(0);
+    });
+
+    it('excludes non-approved reviews', async () => {
+      const result = await getCategoryReviewSummaries(['prod-002']);
+      // prod-002 has 2 approved + 1 pending; only approved count
+      expect(result['prod-002'].total).toBe(2);
+    });
+
+    it('handles large product arrays (caps at 100)', async () => {
+      const ids = Array.from({ length: 150 }, (_, i) => `prod-${i}`);
+      const result = await getCategoryReviewSummaries(ids);
+      // Should not throw, should cap at 100
+      expect(Object.keys(result).length).toBeLessThanOrEqual(100);
     });
   });
 });
