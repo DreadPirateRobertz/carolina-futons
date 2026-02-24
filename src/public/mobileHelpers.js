@@ -130,6 +130,7 @@ export function addSwipeHandler(element, handlers, threshold = 50) {
  * @returns {Array} Sliced items for current viewport
  */
 export function limitForViewport(items, limits = {}) {
+  if (!Array.isArray(items)) return [];
   const defaults = { mobile: 4, tablet: 6, desktop: 12 };
   const merged = { ...defaults, ...limits };
   const vp = getViewport();

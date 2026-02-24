@@ -27,8 +27,12 @@ export function safeParse(str, fallback = null, context) {
             context,
             severity: 'warning',
           });
-        }).catch(() => {});
-      } catch (_) {}
+        }).catch((logErr) => {
+          console.warn(`[safeParse] Error monitoring unavailable:`, logErr?.message || logErr);
+        });
+      } catch (importErr) {
+        console.warn(`[safeParse] Failed to import errorMonitoring:`, importErr?.message || importErr);
+      }
     }
     return fallback;
   }

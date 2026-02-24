@@ -224,8 +224,8 @@ function renderShippingDetails(shipping) {
 
       // Shipping destination
       try {
-        const addr = shipping.shippingAddress;
-        if (addr.city && addr.state) {
+        const addr = shipping?.shippingAddress;
+        if (addr?.city && addr?.state) {
           $w('#shippingDestination').text = `Delivering to ${addr.city}, ${addr.state} ${addr.postalCode}`;
         }
       } catch (e) {}

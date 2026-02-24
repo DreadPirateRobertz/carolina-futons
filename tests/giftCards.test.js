@@ -169,6 +169,56 @@ describe('redeemGiftCard', () => {
     const result = await redeemGiftCard('CF-NOPE-NOPE-NOPE-NOPE', 50);
     expect(result.success).toBe(false);
   });
+
+  it('rejects negative amount', async () => {
+    const result = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', -50);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects NaN amount', async () => {
+    const result = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', 'not-a-number');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity amount', async () => {
+    const result = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', Infinity);
+    expect(result.success).toBe(false);
+  });
+
+  it('prevents balance from going negative after redemption', async () => {
+    const result = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', 999999);
+    expect(result.success).toBe(true);
+    expect(result.remainingBalance).toBe(0);
+    expect(result.amountApplied).toBe(100);
+  });
+
+  it('rejects redemption on zero-balance card', async () => {
+    __seed('GiftCards', [{
+      _id: 'gc-zero',
+      code: 'CF-ZERO-ZERO-ZERO-ZERO',
+      balance: 0,
+      initialAmount: 100,
+      status: 'active',
+      expirationDate: new Date(Date.now() + 86400000 * 30).toISOString(),
+    }]);
+    const result = await redeemGiftCard('CF-ZERO-ZERO-ZERO-ZERO', 10);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('no remaining balance');
+  });
+
+  it('rejects redemption on expired card', async () => {
+    __seed('GiftCards', [{
+      _id: 'gc-exp',
+      code: 'CF-EXPI-REDD-CARD-HERE',
+      balance: 50,
+      initialAmount: 50,
+      status: 'active',
+      expirationDate: new Date(Date.now() - 86400000).toISOString(),
+    }]);
+    const result = await redeemGiftCard('CF-EXPI-REDD-CARD-HERE', 25);
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('expired');
+  });
 });
 
 // ── getGiftCardOptions ───────────────────────────────────────────────
