@@ -237,31 +237,40 @@ function setupAutocomplete() {
         $w('#loadMoreBtn').label = 'Loading...';
         $w('#loadMoreBtn').disable();
       } catch (e) {}
-      _currentOffset += PAGE_SIZE;
-      const result = await fullTextSearch({
-        query: _currentQuery,
-        category: _currentCategory,
-        priceRange: _currentPriceRange,
-        sortBy: _currentSort,
-        limit: PAGE_SIZE,
-        offset: _currentOffset,
-      });
-      const products = result?.products || [];
-      if (products.length > 0) {
-        const repeater = $w('#searchRepeater');
-        if (repeater) {
-          const existing = Array.isArray(repeater.data) ? repeater.data : [];
-          repeater.data = [...existing, ...products.map(p => ({ ...p, _id: p._id }))];
-        }
-      }
+      const nextOffset = _currentOffset + PAGE_SIZE;
       try {
-        if (_currentOffset + PAGE_SIZE >= result.total) {
-          $w('#loadMoreBtn').hide();
-        } else {
+        const result = await fullTextSearch({
+          query: _currentQuery,
+          category: _currentCategory,
+          priceRange: _currentPriceRange,
+          sortBy: _currentSort,
+          limit: PAGE_SIZE,
+          offset: nextOffset,
+        });
+        _currentOffset = nextOffset;
+        const products = result?.products || [];
+        if (products.length > 0) {
+          const repeater = $w('#searchRepeater');
+          if (repeater) {
+            const existing = Array.isArray(repeater.data) ? repeater.data : [];
+            repeater.data = [...existing, ...products.map(p => ({ ...p, _id: p._id }))];
+          }
+        }
+        try {
+          if (_currentOffset + PAGE_SIZE >= result.total) {
+            $w('#loadMoreBtn').hide();
+          } else {
+            $w('#loadMoreBtn').label = 'Load More';
+            $w('#loadMoreBtn').enable();
+          }
+        } catch (e) {}
+      } catch (err) {
+        console.error('Load more failed:', err);
+        try {
           $w('#loadMoreBtn').label = 'Load More';
           $w('#loadMoreBtn').enable();
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
     });
   } catch (e) {}
 }

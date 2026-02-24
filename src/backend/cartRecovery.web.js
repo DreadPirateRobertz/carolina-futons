@@ -147,8 +147,10 @@ export const markRecoveryEmailSent = webMethod(
       if (!cartId) return { success: false };
       const cleanId = sanitize(cartId, 50);
 
+      const existing = await wixData.get('AbandonedCarts', cleanId);
+      if (!existing) return { success: false };
       await wixData.update('AbandonedCarts', {
-        _id: cleanId,
+        ...existing,
         recoveryEmailSent: true,
         recoveryEmailSentAt: new Date().toISOString(),
       });

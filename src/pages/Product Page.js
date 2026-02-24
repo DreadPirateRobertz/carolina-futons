@@ -56,7 +56,13 @@ async function initProductPage() {
 
     await $w('#productDataset').onReady();
     state.product = $w('#productDataset').getCurrentItem();
-    if (!state.product) return;
+    if (!state.product) {
+      try { $w('#productName').text = 'Product Not Found'; } catch (e) {}
+      try { $w('#productPrice').text = ''; } catch (e) {}
+      try { $w('#productDescription').text = 'Sorry, this product is no longer available. Please browse our catalog for similar items.'; } catch (e) {}
+      try { $w('#addToCartBtn').hide(); } catch (e) {}
+      return;
+    }
 
     trackProductView(state.product);
     cacheProduct(state.product);

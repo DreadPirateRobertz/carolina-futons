@@ -319,7 +319,13 @@ export const triggerAbandonedCartRecovery = webMethod(
         if (alreadyQueued.items.length > 0) continue;
 
         const abandonedAt = new Date(cart.abandonedAt);
-        const itemSummary = (cart.lineItems || [])
+        let parsedItems = [];
+        try {
+          parsedItems = typeof cart.lineItems === 'string'
+            ? JSON.parse(cart.lineItems)
+            : (cart.lineItems || []);
+        } catch (e) { parsedItems = []; }
+        const itemSummary = parsedItems
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
