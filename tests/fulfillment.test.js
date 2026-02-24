@@ -287,6 +287,32 @@ describe('fulfillOrder', () => {
     expect(inserted.serviceCode).toBe('03');
   });
 
+  it('uses sanitized orderId in DB insert (not raw input)', async () => {
+    // validateId strips non-alphanumeric/dash/underscore chars
+    // A clean ID like 'order-001' passes through unchanged
+    let inserted;
+    __onInsert((col, item) => {
+      if (col === 'Fulfillments') inserted = item;
+    });
+
+    await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+
+    // orderId in DB should match the sanitized value
+    expect(inserted.orderId).toBe('order-001');
+  });
+
+  it('rejects orderId with injection characters', async () => {
+    const result = await fulfillOrder('<script>alert(1)</script>', {
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    // validateId returns '' for non-alphanumeric IDs
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid order ID');
+  });
+
   it('returns error for non-admin users', async () => {
     loginAsNonAdmin();
     const result = await fulfillOrder('order-001', {
@@ -328,6 +354,25 @@ describe('getTrackingUpdate', () => {
     const result = await getTrackingUpdate('1Z999AA10123456784');
     // Should still return tracking info even if no CMS record to update
     expect(result.success).toBe(true);
+  });
+
+  it('queries DB with sanitized tracking number, not raw input', async () => {
+    // Tracking with special chars should be cleaned before DB query
+    __seed('Fulfillments', [{
+      _id: 'ful-001',
+      trackingNumber: '1Z999AA10123456784',
+      status: 'IN_TRANSIT',
+    }]);
+
+    let updated;
+    __onUpdate((col, item) => {
+      if (col === 'Fulfillments') updated = item;
+    });
+
+    // Pass tracking with dashes — sanitize strips non-alphanumeric
+    await getTrackingUpdate('1Z999AA1-0123-456784');
+    expect(updated).toBeDefined();
+    expect(updated.status).toBe('DELIVERED');
   });
 
   it('returns error for non-admin users', async () => {

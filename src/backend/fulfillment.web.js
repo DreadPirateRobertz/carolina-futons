@@ -112,7 +112,7 @@ export const fulfillOrder = webMethod(
 
       // Save fulfillment record
       await wixData.insert('Fulfillments', {
-        orderId,
+        orderId: cleanOrderId,
         orderNumber: order.number,
         trackingNumber: shipmentResult.trackingNumber,
         carrier: 'UPS',
@@ -157,7 +157,7 @@ export const getTrackingUpdate = webMethod(
 
       // Update the fulfillment record with latest status
       const records = await wixData.query('Fulfillments')
-        .eq('trackingNumber', trackingNumber)
+        .eq('trackingNumber', cleanTracking)
         .find();
 
       if (records.items.length > 0) {
