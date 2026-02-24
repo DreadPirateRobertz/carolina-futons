@@ -158,14 +158,25 @@ export const submitReturnRequest = webMethod(
       }
 
       // Validate return items against order line items
-      const orderLineIds = new Set((order.lineItems || []).map(li => li._id || li.productId));
+      const orderLineMap = new Map(
+        (order.lineItems || []).map(li => [li._id || li.productId, li.quantity || 0])
+      );
       const validItems = data.items.filter(item => {
         const id = validateId(item.lineItemId);
-        return id && orderLineIds.has(id) && item.quantity > 0;
+        return id && orderLineMap.has(id) && item.quantity > 0;
       });
 
       if (validItems.length === 0) {
         return { success: false, error: 'No valid items selected for return.' };
+      }
+
+      // Validate return quantity does not exceed ordered quantity
+      for (const item of validItems) {
+        const orderedQty = orderLineMap.get(validateId(item.lineItemId)) || 0;
+        const requestedQty = Math.max(1, Math.floor(Number(item.quantity)));
+        if (requestedQty > orderedQty) {
+          return { success: false, error: `Return quantity exceeds ordered quantity for item ${validateId(item.lineItemId)}.` };
+        }
       }
 
       const returnType = data.type === 'exchange' ? 'exchange' : 'return';
@@ -181,7 +192,10 @@ export const submitReturnRequest = webMethod(
         memberName,
         items: JSON.stringify(validItems.map(item => ({
           lineItemId: validateId(item.lineItemId),
-          quantity: Math.max(1, Math.floor(Number(item.quantity))),
+          quantity: Math.min(
+            Math.max(1, Math.floor(Number(item.quantity))),
+            orderLineMap.get(validateId(item.lineItemId)) || 0
+          ),
         }))),
         reason,
         reasonLabel: REASON_LABELS[reason] || reason,
@@ -436,14 +450,25 @@ export const submitGuestReturn = webMethod(
       }
 
       // Validate return items against order line items
-      const orderLineIds = new Set((order.lineItems || []).map(li => li._id || li.productId));
+      const orderLineMap = new Map(
+        (order.lineItems || []).map(li => [li._id || li.productId, li.quantity || 0])
+      );
       const validItems = data.items.filter(item => {
         const id = validateId(item.lineItemId);
-        return id && orderLineIds.has(id) && item.quantity > 0;
+        return id && orderLineMap.has(id) && item.quantity > 0;
       });
 
       if (validItems.length === 0) {
         return { success: false, error: 'No valid items selected for return.' };
+      }
+
+      // Validate return quantity does not exceed ordered quantity
+      for (const item of validItems) {
+        const orderedQty = orderLineMap.get(validateId(item.lineItemId)) || 0;
+        const requestedQty = Math.max(1, Math.floor(Number(item.quantity)));
+        if (requestedQty > orderedQty) {
+          return { success: false, error: `Return quantity exceeds ordered quantity for item ${validateId(item.lineItemId)}.` };
+        }
       }
 
       const returnType = data.type === 'exchange' ? 'exchange' : 'return';
@@ -458,7 +483,10 @@ export const submitGuestReturn = webMethod(
         memberName: `${order.billingInfo?.firstName || ''} ${order.billingInfo?.lastName || ''}`.trim() || 'Customer',
         items: JSON.stringify(validItems.map(item => ({
           lineItemId: validateId(item.lineItemId),
-          quantity: Math.max(1, Math.floor(Number(item.quantity))),
+          quantity: Math.min(
+            Math.max(1, Math.floor(Number(item.quantity))),
+            orderLineMap.get(validateId(item.lineItemId)) || 0
+          ),
         }))),
         reason: data.reason,
         reasonLabel: REASON_LABELS[data.reason] || data.reason,
