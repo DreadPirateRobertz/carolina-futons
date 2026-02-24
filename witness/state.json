@@ -1,16 +1,13 @@
 {
   "patrol_count": 15,
   "extraordinary_action": false,
-  "last_patrol": "2026-02-24T02:21:00Z",
-  "current_wisp": "CF-wisp-wisp-sgis",
+  "last_patrol": "2026-02-24T07:58:00Z",
+  "current_wisp": null,
   "observations": {
     "deacon": "alive",
-    "refinery": "running 7h, queue empty",
-    "crew": {
-      "rennala": "CF-74x in_progress (marketing launch prep)"
-    },
+    "refinery": "running 7h+, queue empty",
     "polecats": 0,
-    "notes": "Cycle 5: Dolt was crashing (stale LOCK on beads_hq), cleared locks, restarted. GC'd 21 stale wisps. No polecats, no swarms, no timer gates. Rig idle except rennala on CF-74x."
+    "notes": "Cycle 15: Handoff threshold reached. Rig idle throughout session. No incidents."
   },
-  "idle_backoff_s": 120
+  "idle_backoff_s": 60
 }
