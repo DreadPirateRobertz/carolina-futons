@@ -10,6 +10,8 @@ import {
   get_checkWishlistAlerts,
   get_triggerBrowseRecoveryCron,
   get_triggerCartRecoveryCron,
+  get_processEmailQueueCron,
+  get_triggerReengagementCron,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -102,7 +104,7 @@ describe('get_productSitemap', () => {
     expect(result.body).toContain('/murphy-cabinet-beds</loc>');
   });
 
-  it('includes dynamic product URLs from CMS', async () => {
+  it('includes dynamic product URLs from CMS with URL-encoded slugs', async () => {
     const result = await get_productSitemap();
     expect(result.body).toContain('/product-page/eureka-futon-frame</loc>');
     expect(result.body).toContain('/product-page/moonshadow-futon-mattress</loc>');
@@ -334,5 +336,367 @@ describe('get_triggerCartRecoveryCron', () => {
     const result = await get_triggerCartRecoveryCron(cronRequest('test-cron-key-123'));
     expect(result.headers['Content-Type']).toBe('application/json');
     expect(result.headers['Cache-Control']).toBe('no-store');
+  });
+});
+
+// ── Security: XSS in Sitemap (slug injection) ────────────────────────
+
+describe('Sitemap XSS prevention', () => {
+  it('URL-encodes malicious slugs to prevent XML injection', async () => {
+    __seed('Stores/Products', [{
+      _id: 'xss-1',
+      name: 'XSS Test',
+      slug: '"><script>alert(1)</script>',
+      price: 100,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_productSitemap();
+    expect(result.body).not.toContain('<script>');
+    expect(result.body).toContain(encodeURIComponent('"><script>alert(1)</script>'));
+  });
+
+  it('escapes XML special characters in sitemap loc values', async () => {
+    __seed('Stores/Products', [{
+      _id: 'xml-1',
+      name: 'XML Escape Test',
+      slug: 'test&product<name>',
+      price: 100,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_productSitemap();
+    // After encodeURIComponent + escapeXml, raw & and < should not appear unescaped
+    expect(result.body).not.toMatch(/<loc>[^<]*[<>][^<]*<\/loc>/);
+  });
+
+  it('handles empty slug gracefully', async () => {
+    __seed('Stores/Products', [{
+      _id: 'empty-slug',
+      name: 'No Slug',
+      slug: '',
+      price: 100,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_productSitemap();
+    expect(result.status).toBe(200);
+    expect(result.body).toContain('/product-page/</loc>');
+  });
+
+  it('handles null _updatedDate without error', async () => {
+    __seed('Stores/Products', [{
+      _id: 'no-date',
+      name: 'No Date',
+      slug: 'no-date',
+      price: 100,
+      inStock: true,
+      collections: [],
+      _updatedDate: null,
+    }]);
+    const result = await get_productSitemap();
+    expect(result.status).toBe(200);
+    expect(result.body).toContain('/product-page/no-date</loc>');
+  });
+});
+
+// ── Security: HTML Entity XSS in Feed Descriptions ──────────────────
+
+describe('Feed description XSS prevention', () => {
+  const xssProducts = [
+    {
+      _id: 'entity-xss',
+      name: 'Entity XSS Product',
+      slug: 'entity-xss',
+      price: 299,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: 'Nice product &#60;script&#62;alert("xss")&#60;/script&#62; with features',
+      inStock: true,
+      collections: ['futon-frames'],
+      _updatedDate: new Date(),
+    },
+  ];
+
+  it('strips entity-encoded script tags from Facebook feed', async () => {
+    __seed('Stores/Products', xssProducts);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).not.toContain('<script>');
+    expect(result.body).not.toContain('&#60;script');
+    expect(result.body).toContain('Nice product');
+  });
+
+  it('strips entity-encoded script tags from Pinterest feed', async () => {
+    __seed('Stores/Products', xssProducts);
+    const result = await get_pinterestProductFeed();
+    expect(result.body).not.toContain('<script>');
+    expect(result.body).not.toContain('&#60;script');
+    expect(result.body).toContain('Nice product');
+  });
+
+  it('strips hex entity-encoded tags from feeds', async () => {
+    __seed('Stores/Products', [{
+      _id: 'hex-xss',
+      name: 'Hex Entity Test',
+      slug: 'hex-entity',
+      price: 199,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: 'Test &#x3c;script&#x3e;alert(1)&#x3c;/script&#x3e; end',
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).not.toContain('<script>');
+    expect(result.body).toContain('Test');
+  });
+
+  it('handles named HTML entities (&lt; &gt;) in descriptions', async () => {
+    __seed('Stores/Products', [{
+      _id: 'named-xss',
+      name: 'Named Entity',
+      slug: 'named-entity',
+      price: 99,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: 'Compare &lt;script&gt;alert(1)&lt;/script&gt; end',
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).not.toContain('<script>');
+    expect(result.body).toContain('Compare');
+  });
+
+  it('handles null/undefined descriptions without error', async () => {
+    __seed('Stores/Products', [{
+      _id: 'null-desc',
+      name: 'No Description',
+      slug: 'no-desc',
+      price: 99,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: null,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.status).toBe(200);
+  });
+});
+
+// ── Security: Constant-Time Secret Comparison ───────────────────────
+
+describe('Cron endpoint timing-safe auth', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'correct-key-abc123' });
+    __seed('PriceSnapshots', []);
+    __seed('WishlistItems', []);
+    __seed('BrowseSessions', []);
+    __seed('BrowseRecoveryEmails', []);
+    __seed('AbandonedCarts', []);
+    __seed('AbandonedCartEmails', []);
+    __seed('Unsubscribes', []);
+    __seed('EmailQueue', []);
+  });
+
+  it('rejects key with same prefix but different suffix', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('correct-key-abc12X'));
+    expect(result.status).toBe(403);
+  });
+
+  it('rejects key with same length but different content', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('xxxxxxx-xxx-xxxxxx'));
+    expect(result.status).toBe(403);
+  });
+
+  it('rejects empty string key', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest(''));
+    expect(result.status).toBe(403);
+  });
+
+  it('rejects null/undefined key', async () => {
+    const result = await get_checkWishlistAlerts({ query: { key: null } });
+    expect(result.status).toBe(403);
+  });
+
+  it('rejects undefined query object', async () => {
+    const result = await get_checkWishlistAlerts({ query: undefined });
+    expect(result.status).toBe(403);
+  });
+
+  it('accepts exact correct key', async () => {
+    const result = await get_checkWishlistAlerts(cronRequest('correct-key-abc123'));
+    expect(result.status).toBe(200);
+  });
+});
+
+// ── New Cron Endpoints Auth Tests ───────────────────────────────────
+
+describe('get_processEmailQueueCron', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('EmailQueue', []);
+    __seed('AbandonedCarts', []);
+    __seed('Unsubscribes', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_processEmailQueueCron(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(typeof body.sent).toBe('number');
+    expect(typeof body.failed).toBe('number');
+    expect(typeof body.cancelled).toBe('number');
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_processEmailQueueCron(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with missing key', async () => {
+    const result = await get_processEmailQueueCron({ query: {} });
+    expect(result.status).toBe(403);
+  });
+});
+
+describe('get_triggerReengagementCron', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('EmailQueue', []);
+    __seed('Unsubscribes', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_triggerReengagementCron(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(typeof body.contacted).toBe('number');
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_triggerReengagementCron(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with missing key', async () => {
+    const result = await get_triggerReengagementCron({ query: {} });
+    expect(result.status).toBe(403);
+  });
+});
+
+// ── Feed Pagination (catalog > 200 products) ─────────────────────────
+
+describe('Feed pagination (fetchAllProducts)', () => {
+  it('facebook feed includes products beyond the 200 limit', async () => {
+    // Create 205 products to exceed old 200 limit
+    const manyProducts = Array.from({ length: 205 }, (_, i) => ({
+      _id: `bulk-${i}`,
+      name: `Product ${i}`,
+      slug: `product-${i}`,
+      price: 100 + i,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: `Description for product ${i}`,
+      inStock: true,
+      collections: ['futon-frames'],
+      _updatedDate: new Date(),
+    }));
+    __seed('Stores/Products', manyProducts);
+
+    const result = await get_facebookCatalogFeed();
+    const lines = result.body.split('\n');
+    // header + 205 product rows
+    expect(lines.length).toBe(206);
+    expect(result.body).toContain('Product 204');
+  });
+
+  it('sitemap includes products beyond the 200 limit', async () => {
+    const manyProducts = Array.from({ length: 205 }, (_, i) => ({
+      _id: `sitemap-${i}`,
+      name: `Sitemap Product ${i}`,
+      slug: `sitemap-product-${i}`,
+      price: 100,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }));
+    __seed('Stores/Products', manyProducts);
+
+    const result = await get_productSitemap();
+    expect(result.body).toContain('sitemap-product-204');
+  });
+
+  it('pinterest feed includes products beyond the 200 limit', async () => {
+    const manyProducts = Array.from({ length: 205 }, (_, i) => ({
+      _id: `pin-${i}`,
+      name: `Pin Product ${i}`,
+      slug: `pin-product-${i}`,
+      price: 100,
+      discountedPrice: null,
+      mainMedia: 'https://example.com/img.jpg',
+      description: `Pin desc ${i}`,
+      inStock: true,
+      collections: [],
+      _updatedDate: new Date(),
+    }));
+    __seed('Stores/Products', manyProducts);
+
+    const result = await get_pinterestProductFeed();
+    const lines = result.body.split('\n');
+    expect(lines.length).toBe(206);
+    expect(result.body).toContain('Pin Product 204');
+  });
+
+  it('handles empty catalog for all feeds', async () => {
+    __seed('Stores/Products', []);
+    const [sitemap, fb, pin] = await Promise.all([
+      get_productSitemap(),
+      get_facebookCatalogFeed(),
+      get_pinterestProductFeed(),
+    ]);
+    expect(sitemap.status).toBe(200);
+    expect(fb.status).toBe(200);
+    expect(pin.status).toBe(200);
+  });
+});
+
+// ── Feed URL encoding in product links ──────────────────────────────
+
+describe('Feed URL encoding', () => {
+  const specialSlugProducts = [{
+    _id: 'special-slug',
+    name: 'Special Slug Product',
+    slug: 'product with spaces & special<chars>',
+    price: 299,
+    discountedPrice: null,
+    mainMedia: 'https://example.com/img.jpg',
+    description: 'Test product',
+    inStock: true,
+    collections: [],
+    _updatedDate: new Date(),
+  }];
+
+  it('URL-encodes slugs in Facebook feed links', async () => {
+    __seed('Stores/Products', specialSlugProducts);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).not.toContain('product with spaces');
+    expect(result.body).toContain(encodeURIComponent('product with spaces & special<chars>'));
+  });
+
+  it('URL-encodes slugs in Pinterest feed links', async () => {
+    __seed('Stores/Products', specialSlugProducts);
+    const result = await get_pinterestProductFeed();
+    expect(result.body).not.toContain('product with spaces');
+    expect(result.body).toContain(encodeURIComponent('product with spaces & special<chars>'));
   });
 });
