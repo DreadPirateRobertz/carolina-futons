@@ -396,6 +396,7 @@ async function handleGuestReturnSubmit() {
     try { $w('#submitGuestReturnBtn').enable(); } catch (e) {}
     try { $w('#submitGuestReturnBtn').label = 'Submit Return'; } catch (e) {}
   } catch (e) {
+    showFormError('Something went wrong. Please try again.');
     try { $w('#submitGuestReturnBtn').enable(); } catch (e2) {}
     try { $w('#submitGuestReturnBtn').label = 'Submit Return'; } catch (e2) {}
   }

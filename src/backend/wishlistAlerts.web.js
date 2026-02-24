@@ -23,6 +23,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10%
@@ -88,11 +89,13 @@ export const getPriceHistory = webMethod(
     try {
       if (!productId) return { prices: [] };
 
-      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const safeDays = Math.min(365, Math.max(1, Math.round(Number(days) || 30)));
+      const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
       const result = await wixData.query('PriceHistory')
         .eq('productId', sanitize(productId, 50))
         .ge('date', since)
         .ascending('date')
+        .limit(365)
         .find();
 
       return {
@@ -283,13 +286,13 @@ export const checkBackInStock = webMethod(
  */
 export const getAlertPrefs = webMethod(
   Permissions.SiteMember,
-  async (memberId) => {
+  async () => {
     try {
-      if (!memberId) return { prefs: [] };
-      const cleanId = sanitize(memberId, 50);
+      const member = await currentMember.getMember();
+      if (!member?._id) return { prefs: [] };
 
       const result = await wixData.query('WishlistAlertPrefs')
-        .eq('memberId', cleanId)
+        .eq('memberId', member._id)
         .find();
 
       return {
@@ -316,10 +319,11 @@ export const getAlertPrefs = webMethod(
  */
 export const updateAlertPrefs = webMethod(
   Permissions.SiteMember,
-  async (memberId, productId, prefs = {}) => {
+  async (productId, prefs = {}) => {
     try {
-      if (!memberId || !productId) return { success: false };
-      const cleanMemberId = sanitize(memberId, 50);
+      const member = await currentMember.getMember();
+      if (!member?._id || !productId) return { success: false };
+      const cleanMemberId = member._id;
       const cleanProductId = sanitize(productId, 50);
 
       // Find existing pref

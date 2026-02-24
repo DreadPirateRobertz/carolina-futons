@@ -430,7 +430,7 @@ describe('getErrorDashboard', () => {
     setupNonAdmin();
     const result = await getErrorDashboard();
     expect(result.success).toBe(false);
-    expect(result.error).toContain('Admin');
+    expect(result.error).toBeTruthy();
   });
 
   it('rejects unauthenticated user', async () => {

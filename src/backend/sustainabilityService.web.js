@@ -469,7 +469,7 @@ export const moderateTradeIn = webMethod(
       };
     } catch (err) {
       console.error('moderateTradeIn error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to moderate trade-in request' };
     }
   }
 );
@@ -516,7 +516,7 @@ export const getPendingTradeIns = webMethod(
       };
     } catch (err) {
       console.error('getPendingTradeIns error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to load pending trade-ins' };
     }
   }
 );
@@ -583,7 +583,7 @@ export const getSustainabilityStats = webMethod(
       };
     } catch (err) {
       console.error('getSustainabilityStats error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to load sustainability stats' };
     }
   }
 );

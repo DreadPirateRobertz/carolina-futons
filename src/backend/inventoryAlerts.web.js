@@ -281,7 +281,7 @@ export const syncInventory = webMethod(
       return { success: true, synced, alertsCreated };
     } catch (err) {
       console.error('syncInventory error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Inventory sync failed' };
     }
   }
 );
@@ -300,6 +300,11 @@ export const getLowStockAlerts = webMethod(
       let query = wixData.query(ALERTS_COLLECTION)
         .descending('_createdDate')
         .limit(safeLimit);
+
+      const VALID_STATUSES = ['active', 'acknowledged', 'resolved'];
+      if (status && !VALID_STATUSES.includes(status)) {
+        return { success: false, error: 'Invalid status filter' };
+      }
 
       if (status !== 'all') {
         query = query.eq('status', status);
@@ -325,7 +330,7 @@ export const getLowStockAlerts = webMethod(
       };
     } catch (err) {
       console.error('getLowStockAlerts error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to load alerts' };
     }
   }
 );
@@ -358,7 +363,7 @@ export const acknowledgeAlert = webMethod(
       return { success: true, status: 'acknowledged' };
     } catch (err) {
       console.error('acknowledgeAlert error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to acknowledge alert' };
     }
   }
 );
@@ -389,7 +394,7 @@ export const resolveAlert = webMethod(
       return { success: true, status: 'resolved' };
     } catch (err) {
       console.error('resolveAlert error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to resolve alert' };
     }
   }
 );
@@ -433,7 +438,7 @@ export const updateThreshold = webMethod(
       };
     } catch (err) {
       console.error('updateThreshold error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to update threshold' };
     }
   }
 );
@@ -490,7 +495,7 @@ export const getLowStockSummary = webMethod(
       };
     } catch (err) {
       console.error('getLowStockSummary error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to load summary' };
     }
   }
 );

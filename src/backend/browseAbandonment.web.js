@@ -427,7 +427,7 @@ export const exportAbandonmentInsights = webMethod(
  * @returns {Promise<boolean>}
  */
 export const markSessionConverted = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (sessionId) => {
     try {
       const cleanId = sanitize(sessionId, 100);

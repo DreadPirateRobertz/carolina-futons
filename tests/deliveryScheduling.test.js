@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   getAvailableDeliverySlots,
   scheduleDelivery,
@@ -156,10 +157,14 @@ describe('scheduleDelivery', () => {
 // ── getMyDeliverySchedule ────────────────────────────────────────────
 
 describe('getMyDeliverySchedule', () => {
+  beforeEach(() => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+  });
+
   it('returns scheduled deliveries', async () => {
     __seed('DeliverySchedule', [
-      { _id: 'ds-1', orderId: 'o-1', date: '2026-03-05', timeWindow: 'morning', type: 'standard', status: 'scheduled' },
-      { _id: 'ds-2', orderId: 'o-2', date: '2026-03-06', timeWindow: 'afternoon', type: 'white_glove', status: 'scheduled' },
+      { _id: 'ds-1', orderId: 'o-1', date: '2026-03-05', timeWindow: 'morning', type: 'standard', status: 'scheduled', customerEmail: 'test@example.com' },
+      { _id: 'ds-2', orderId: 'o-2', date: '2026-03-06', timeWindow: 'afternoon', type: 'white_glove', status: 'scheduled', customerEmail: 'test@example.com' },
     ]);
     const result = await getMyDeliverySchedule();
     expect(result).toHaveLength(2);
@@ -169,8 +174,8 @@ describe('getMyDeliverySchedule', () => {
 
   it('excludes cancelled deliveries', async () => {
     __seed('DeliverySchedule', [
-      { _id: 'ds-1', orderId: 'o-1', date: '2026-03-05', timeWindow: 'morning', type: 'standard', status: 'scheduled' },
-      { _id: 'ds-2', orderId: 'o-2', date: '2026-03-06', timeWindow: 'afternoon', type: 'standard', status: 'cancelled' },
+      { _id: 'ds-1', orderId: 'o-1', date: '2026-03-05', timeWindow: 'morning', type: 'standard', status: 'scheduled', customerEmail: 'test@example.com' },
+      { _id: 'ds-2', orderId: 'o-2', date: '2026-03-06', timeWindow: 'afternoon', type: 'standard', status: 'cancelled', customerEmail: 'test@example.com' },
     ]);
     const result = await getMyDeliverySchedule();
     expect(result).toHaveLength(1);

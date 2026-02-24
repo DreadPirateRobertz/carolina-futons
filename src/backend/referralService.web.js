@@ -133,10 +133,10 @@ export const redeemReferralCode = webMethod(
       }
 
       const { name, email } = refereeData;
-      const cleanEmail = (email || '').trim().toLowerCase();
+      const cleanEmail = sanitize(email, 254).trim().toLowerCase();
 
-      if (cleanEmail && !validateEmail(cleanEmail)) {
-        return { success: false, error: 'Please provide a valid email address' };
+      if (!cleanEmail || !validateEmail(cleanEmail)) {
+        return { success: false, error: 'A valid email address is required' };
       }
 
       // Find the referral
@@ -201,11 +201,12 @@ export const completeReferral = webMethod(
 
       const referral = result.items[0];
 
-      // Get referee member ID
+      // Require authenticated member for credit issuance
       const member = await currentMember.getMember();
-      if (member?._id) {
-        referral.refereeMemberId = member._id;
+      if (!member?._id) {
+        return { success: false, error: 'You must be logged in to complete a referral' };
       }
+      referral.refereeMemberId = member._id;
 
       // Mark as purchased
       referral.status = 'purchased';

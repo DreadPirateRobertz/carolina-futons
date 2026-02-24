@@ -4,12 +4,6 @@
       "*": {
         "siteOwner": {
           "invoke": true
-        },
-        "siteMember": {
-          "invoke": true
-        },
-        "anonymous": {
-          "invoke": true
         }
       }
     }

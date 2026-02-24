@@ -222,7 +222,7 @@ export const getErrorDashboard = webMethod(
       };
     } catch (err) {
       console.error('getErrorDashboard error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to load error dashboard' };
     }
   }
 );
@@ -286,7 +286,7 @@ export const getErrorDetails = webMethod(
       };
     } catch (err) {
       console.error('getErrorDetails error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to load error details' };
     }
   }
 );
@@ -323,7 +323,7 @@ export const updateErrorGroupStatus = webMethod(
       return { success: true, status: newStatus };
     } catch (err) {
       console.error('updateErrorGroupStatus error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to update error group status' };
     }
   }
 );
@@ -365,7 +365,7 @@ export const checkErrorRateSpike = webMethod(
       };
     } catch (err) {
       console.error('checkErrorRateSpike error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to check error rate' };
     }
   }
 );
@@ -430,7 +430,7 @@ export const getErrorFrequency = webMethod(
       };
     } catch (err) {
       console.error('getErrorFrequency error:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to load error frequency' };
     }
   }
 );

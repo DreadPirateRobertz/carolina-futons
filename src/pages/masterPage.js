@@ -291,7 +291,7 @@ function initFooterNewsletter() {
 
     submitBtn.onClick(async () => {
       const email = emailInput.value?.trim();
-      if (!email || !email.includes('@')) {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         try { $w('#footerEmailError').text = 'Please enter a valid email'; } catch (e) {}
         try { $w('#footerEmailError').show(); } catch (e) {}
         return;
@@ -556,7 +556,7 @@ function initPromoEmailCapture() {
 
     emailSubmit.onClick(async () => {
       const email = emailInput.value.trim();
-      if (!email || !email.includes('@')) return;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
       try {
         const wixCrm = await import('wix-crm-frontend');
@@ -719,7 +719,7 @@ function showExitPopup() {
       try { $w('#exitEmailSubmit').accessibility.ariaLabel = 'Get my offer'; } catch (e) {}
       $w('#exitEmailSubmit').onClick(async () => {
         const email = $w('#exitEmailInput').value?.trim();
-        if (!email || !email.includes('@')) return;
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
         try {
           $w('#exitEmailSubmit').disable();

@@ -198,20 +198,19 @@ export const updateTier = webMethod(Permissions.Admin, async (memberId, orderAmo
  * @param {string} memberId - The member ID
  * @param {number} orderTotal - The order total before discounts
  */
-export const calculateRewards = webMethod(Permissions.Anyone, async (memberId, orderTotal) => {
+export const calculateRewards = webMethod(Permissions.SiteMember, async (orderTotal) => {
   try {
-    if (!memberId || typeof memberId !== 'string') {
-      return { success: false, error: 'Invalid member ID' };
-    }
     if (typeof orderTotal !== 'number' || orderTotal < 0) {
       return { success: false, error: 'Order total must be a non-negative number' };
     }
 
-    const cleanId = sanitize(memberId, 50);
+    const member = await getMember();
+    if (!member?._id) return { success: false, error: 'Not authenticated' };
+
     const tiers = await getTierDefinitions();
 
     const history = await wixData.query('CustomerTierHistory')
-      .eq('memberId', cleanId)
+      .eq('memberId', member._id)
       .limit(1)
       .find();
 

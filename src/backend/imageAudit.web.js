@@ -48,7 +48,7 @@ function extractMediaId(url) {
  * @returns {Object} Audit report with coverage stats and flagged products
  */
 export const auditCatalogImages = webMethod(
-  Permissions.Anyone,
+  Permissions.Admin,
   (products) => {
     if (!Array.isArray(products)) {
       return { success: false, error: 'Products must be an array' };
@@ -157,7 +157,7 @@ export const auditCatalogImages = webMethod(
  * @returns {Object} Live audit report
  */
 export const auditLiveProducts = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     try {
       const results = [];
@@ -226,7 +226,7 @@ export const auditLiveProducts = webMethod(
  * @returns {Object} Pipeline status summary
  */
 export const getImagePipelineStatus = webMethod(
-  Permissions.Anyone,
+  Permissions.Admin,
   (catalogProducts) => {
     if (!Array.isArray(catalogProducts)) {
       return { success: false, error: 'Products array required' };

@@ -5,6 +5,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
+import { sanitize, validateId } from 'backend/utils/sanitize';
 
 /**
  * Check if the current member has the Admin role.
@@ -36,7 +37,7 @@ export const getPendingOrders = webMethod(
         .eq('paymentStatus', 'PAID')
         .ne('fulfillmentStatus', 'FULFILLED')
         .descending('_createdDate')
-        .limit(limit)
+        .limit(Math.min(Math.max(1, Number(limit) || 50), 200))
         .find();
 
       return orders.items.map(order => ({
@@ -74,8 +75,12 @@ export const fulfillOrder = webMethod(
     try {
       await requireAdmin();
 
+      // Validate order ID
+      const cleanOrderId = validateId(orderId);
+      if (!cleanOrderId) return { success: false, error: 'Invalid order ID' };
+
       // Get the order
-      const order = await wixData.get('Stores/Orders', orderId);
+      const order = await wixData.get('Stores/Orders', cleanOrderId);
       if (!order) throw new Error('Order not found');
 
       const shippingAddr = order.shippingInfo?.shipmentDetails?.address || {};
@@ -130,7 +135,7 @@ export const fulfillOrder = webMethod(
       };
     } catch (err) {
       console.error('Error fulfilling order:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Unable to fulfill order. Please try again or contact support.' };
     }
   }
 );
@@ -139,11 +144,13 @@ export const fulfillOrder = webMethod(
 
 // Get tracking status for a fulfillment record (admin only — writes to CMS)
 export const getTrackingUpdate = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (trackingNumber) => {
     try {
       await requireAdmin();
-      const tracking = await trackShipment(trackingNumber);
+      const cleanTracking = sanitize(trackingNumber, 50).replace(/[^a-zA-Z0-9]/g, '');
+      if (!cleanTracking) return { success: false, error: 'Invalid tracking number' };
+      const tracking = await trackShipment(cleanTracking);
       if (!tracking.success) {
         return tracking;
       }
@@ -164,14 +171,14 @@ export const getTrackingUpdate = webMethod(
       return tracking;
     } catch (err) {
       console.error('Error getting tracking update:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to get tracking update' };
     }
   }
 );
 
 // Batch update tracking for all active shipments
 export const updateAllTracking = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async () => {
     try {
       await requireAdmin();
@@ -205,7 +212,7 @@ export const updateAllTracking = webMethod(
       return { success: true, updated: succeeded, failed: failed.length };
     } catch (err) {
       console.error('Error batch updating tracking:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: 'Failed to update tracking' };
     }
   }
 );
@@ -213,14 +220,13 @@ export const updateAllTracking = webMethod(
 // ── Fulfillment History ─────────────────────────────────────────────
 
 export const getFulfillmentHistory = webMethod(
-  Permissions.SiteMember,
+  Permissions.Admin,
   async (limit = 100) => {
     try {
       await requireAdmin();
-
       const records = await wixData.query('Fulfillments')
         .descending('createdDate')
-        .limit(limit)
+        .limit(Math.min(Math.max(1, Number(limit) || 100), 500))
         .find();
 
       return records.items;

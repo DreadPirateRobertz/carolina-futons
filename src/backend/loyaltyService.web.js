@@ -16,7 +16,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { rewards } from 'wix-loyalty.v2';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
 
 // Tier thresholds (points)
 const TIERS = {
@@ -111,7 +111,10 @@ export const redeemReward = webMethod(
         return { success: false, message: 'Reward ID is required' };
       }
 
-      const cleanId = sanitize(rewardId, 50);
+      const cleanId = validateId(rewardId);
+      if (!cleanId) {
+        return { success: false, message: 'Invalid reward ID format' };
+      }
 
       // Check member has enough points
       const account = await accounts.getMyAccount();

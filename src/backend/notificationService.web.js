@@ -41,7 +41,7 @@ const BATCH_SIZE = 50; // Process products in batches
  * @returns {Promise<{recorded: number}>} Count of price snapshots recorded.
  */
 export const recordPriceSnapshots = webMethod(
-  Permissions.Anyone,
+  Permissions.Admin,
   async () => {
     try {
       let recorded = 0;
@@ -77,7 +77,7 @@ export const recordPriceSnapshots = webMethod(
       return { recorded };
     } catch (err) {
       console.error('[notificationService] Error recording price snapshots:', err);
-      return { recorded: 0, error: err.message };
+      return { recorded: 0, error: 'Failed to record price snapshots' };
     }
   }
 );
@@ -95,7 +95,7 @@ export const recordPriceSnapshots = webMethod(
  * @returns {Promise<{priceDropAlerts: number, backInStockAlerts: number}>}
  */
 export const checkWishlistAlerts = webMethod(
-  Permissions.Anyone,
+  Permissions.Admin,
   async () => {
     try {
       let priceDropAlerts = 0;
@@ -155,7 +155,7 @@ export const checkWishlistAlerts = webMethod(
       return { priceDropAlerts, backInStockAlerts };
     } catch (err) {
       console.error('[notificationService] Error checking wishlist alerts:', err);
-      return { priceDropAlerts: 0, backInStockAlerts: 0, error: err.message };
+      return { priceDropAlerts: 0, backInStockAlerts: 0, error: 'Failed to check alerts' };
     }
   }
 );
@@ -311,8 +311,12 @@ export const toggleProductAlerts = webMethod(
       const cleanId = validateId(wishlistItemId);
       if (!cleanId) return { success: false };
 
+      const { currentMember } = await import('wix-members-backend');
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false };
+
       const item = await wixData.get('Wishlist', cleanId);
-      if (!item) return { success: false };
+      if (!item || item.memberId !== member._id) return { success: false };
 
       item.muteAlerts = !!muted;
       await wixData.update('Wishlist', item);
@@ -335,13 +339,14 @@ export const toggleProductAlerts = webMethod(
  */
 export const getNotificationHistory = webMethod(
   Permissions.SiteMember,
-  async (memberId, limit = 10) => {
+  async (_unused, limit = 10) => {
     try {
-      const cleanId = validateId(memberId);
-      if (!cleanId) return { items: [], success: false };
+      const { currentMember } = await import('wix-members-backend');
+      const member = await currentMember.getMember();
+      if (!member?._id) return { items: [], success: false };
 
       const result = await wixData.query('NotificationLog')
-        .eq('memberId', cleanId)
+        .eq('memberId', member._id)
         .descending('sentAt')
         .limit(Math.min(limit, 50))
         .find();
