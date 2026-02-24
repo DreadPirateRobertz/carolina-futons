@@ -8,7 +8,7 @@
 
 | Rig | Status | Crew | Polecats | Key Work |
 |-----|--------|------|----------|----------|
-| cfutons | RUNNING | 5 (all active) | 0 | Catalog, deployment |
+| cfutons | RUNNING | 5 (all active) | 0 | PRs merged, quality gate active |
 | cfutons_mobile | RUNNING | 3 (all active) | 3 (1 done, 2 working) | AR Camera epic |
 | gastown | RUNNING | 6 (all active) | 0 | 10 community PRs reviewed |
 | tradingbot | PARKED | 0 | 0 | Per human directive |
@@ -20,7 +20,7 @@
 ### cfutons — OPERATIONAL
 **Crew:** melania (PM), godfrey, miquella, radahn, rennala
 
-All crew started. Melania coordinates. Catalog scraping and deployment prep continuing from prior session.
+All crew started. Melania coordinates as PM. All open PRs merged. Quality gate directive deployed to all crew.
 
 ### cfutons_mobile — OPERATIONAL (AR Camera Sprint)
 **Crew:** bishop, dallas, ripley
@@ -61,25 +61,13 @@ All crew started. Melania coordinates. Catalog scraping and deployment prep cont
 - **Dolt:** Running (PID active, port 3307, 11 databases verified)
 - **gt version:** v0.8.0-52-g3cb4b8e9 (dev)
 - **Beads:** All rig databases healthy
-- **Mail:** `gt mail` CLI has connectivity bug (bd works fine, nudges work)
+- **Mail:** `gt mail` to mayor works. `gt mail` to crew fails (crew not registered as agents). Directives via CLAUDE.md.
 - **Formula bug filed:** gt-oir — mol-polecat-work lookup fails for non-gastown rigs
 
 ---
 
-## Session Actions Completed
-1. Started Dolt server (was down)
-2. Dispatched 3 AR Camera polecats (furiosa done, nux+slit working)
-3. Closed 7 stale escalation beads
-4. Reviewed all 10 gastown PRs, posted comments
-5. Cleaned up orphan "myproject" phantom rig
-6. Filed formula lookup bug (gt-oir)
-7. Started all crew across all active rigs
-8. Nudged tyrell for token audit report
-
----
-
 ## Known Issues
-- `gt mail` CLI connection refused (workaround: use bd/nudges)
+- `gt mail` to crew addresses fails ("no agent found") — crew pick up directives from CLAUDE.md instead
 - DreadPirateRobertz can't merge PRs on steveyegge/gastown (permissions)
 - mol-polecat-work formula lookup broken for non-gastown rigs (use --hook-raw-bead)
 - cfutons_mobile prefix mismatch: rig uses `cfutons_mobile-` but route expects `cm-`
@@ -88,8 +76,72 @@ All crew started. Melania coordinates. Catalog scraping and deployment prep cont
 
 ## Standing Prime Directives
 1. **PR Process** — ALL repos, no direct push to main, PRs with review
-2. **Token Efficiency** — tyrell has standing audit order
-3. **Reporting** — report_to_human.md every 5 min (all active rigs + HQ)
-4. **Convoys/Swarms** — form as needed, mayor authorized
-5. **Session Cleanup** — always assign someone to clean up stale beads/wisps on session start
-6. **Remote Report** — push master report to cfutons repo for remote viewing
+2. **PM Quality Gate** — Melania reviews all PRs against bead AC + edge cases. Happy-path-only = rejected.
+3. **Edge Case Mandate** — Tests must cover error states, null/empty, boundaries, invalid input, mobile/a11y
+4. **Token Efficiency** — tyrell has standing audit order
+5. **Reporting** — report_to_human.md every 5 min (all active rigs + HQ)
+6. **Convoys/Swarms** — form as needed, mayor authorized
+7. **Session Cleanup** — always assign someone to clean up stale beads/wisps on session start
+8. **Remote Report** — push master report to cfutons repo for remote viewing
+9. **Mail to Crew** — Use gt mail for crew communication (fix agent registration). Fallback: CLAUDE.md directives.
+
+---
+
+---
+
+# cfutons Detail Report (Melania, PM)
+
+**Last Updated:** 2026-02-23 19:25 MST
+
+## Health: GREEN — ALL PRs MERGED, QUALITY GATE ACTIVE
+
+| Metric | Value |
+|--------|-------|
+| Tests | 4,178+ vitest tests across 112+ files (all green) |
+| Backend Modules | 71 `.web.js` modules |
+| Page Code | 28 page JS files |
+| Frontend Utils | 26+ public JS modules |
+| Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
+| Open PRs | **0** (all reviewed and merged) |
+
+## Session Actions (2026-02-23 19:10-19:25 MST)
+
+### PRs Reviewed and Merged
+| PR | Branch | Work | Tests |
+|----|--------|------|-------|
+| #27 | `polecat/guzzle/cf-utqo-recovered` | Product image pipeline — audit, enrich, alt text | 72 |
+| #28 | `polecat/shiny/cf-qnsf-recovered` | GA4 tracking, newsletter page, email cron | 318 |
+
+PR #28 had 3 merge conflicts — resolved (both sides kept).
+
+### PM Quality Gate Deployed
+- Directive added to all 4 crew CLAUDE.md files
+- Melania is acceptance authority
+- Edge case coverage required on all PRs
+
+## Crew Status
+
+| Member | Role | Current Work |
+|--------|------|-------------|
+| melania | PM | Acceptance authority, beads coordination |
+| godfrey | Dev | WCAG 2.1 AA accessibility |
+| rennala | Dev | Marketing toolkit (DONE), reviews (DONE) |
+| radahn | Dev | Stability audit, checkout E2E, returns |
+| miquella | Dev | Image pipeline, financing calc |
+
+## What Human Needs To Do
+
+### 15-Minute Quick Wins
+1. Install GA4 — Dashboard > Marketing Integrations > paste Measurement ID
+2. Install Meta Pixel — Dashboard > Tracking & Analytics > paste Pixel ID
+3. Install Pinterest Tag — same location > paste Tag ID
+4. Connect Google Merchant feed: `/_functions/googleMerchantFeed`
+5. Enable Wix Chat — one toggle
+
+### Critical Blockers
+- **Product photography** — #1 blocker. No real photos = no sales.
+- **Domain connection** — carolinafutons.com must point to Wix site
+
+---
+
+*Production Manager: melania | cfutons GREEN | Quality gate ACTIVE*
