@@ -36,7 +36,7 @@ export const getShippingRates = async (options) => {
 
     for (const item of lineItems) {
       const quantity = item.quantity || 1;
-      const price = parseFloat(item.price) || 0;
+      const price = Math.max(0, parseFloat(item.price) || 0);
       orderSubtotal += price * quantity;
 
       // Determine package dimensions based on product category
