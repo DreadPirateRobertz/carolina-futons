@@ -26,7 +26,7 @@ export const getActivePromotion = webMethod(
       // Parse comma-separated product IDs and fetch product details
       let products = [];
       if (promo.productIds) {
-        const ids = promo.productIds.split(',').map(id => id.trim()).filter(Boolean);
+        const ids = promo.productIds.split(',').map(id => id.trim()).filter(Boolean).slice(0, 50);
         if (ids.length > 0) {
           const productResults = await wixData.query('Stores/Products')
             .hasSome('_id', ids)

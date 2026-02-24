@@ -98,19 +98,22 @@ export const calculateForTerm = webMethod(
       const intMonths = Math.floor(m);
       const plan = TERM_PLANS.find(t => t.months === intMonths && p >= t.minPrice && p <= t.maxPrice);
 
-      const apr = plan ? plan.apr : 9.99;
-      const calc = amortize(p, intMonths, apr);
+      if (!plan) {
+        return { success: false, error: 'No financing plan available for this price and term' };
+      }
+
+      const calc = amortize(p, intMonths, plan.apr);
 
       return {
         success: true,
         monthly: calc.monthly,
         total: calc.total,
         interest: calc.interest,
-        apr,
+        apr: plan.apr,
         months: intMonths,
-        isZeroInterest: apr === 0,
-        label: plan ? plan.label : `${intMonths} Months`,
-        description: plan ? plan.description : `${apr}% APR for ${intMonths} months`,
+        isZeroInterest: plan.apr === 0,
+        label: plan.label,
+        description: plan.description,
       };
     } catch (err) {
       console.error('calculateForTerm error:', err);

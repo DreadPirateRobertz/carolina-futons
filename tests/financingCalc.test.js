@@ -178,12 +178,10 @@ describe('calculateForTerm', () => {
     expect(result.isZeroInterest).toBe(false);
   });
 
-  it('uses default 9.99% for non-plan term', async () => {
+  it('rejects non-plan term instead of using fallback APR', async () => {
     const result = await calculateForTerm(500, 3);
-    expect(result.success).toBe(true);
-    expect(result.apr).toBe(9.99);
-    expect(result.isZeroInterest).toBe(false);
-    expect(result.label).toBe('3 Months');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
   });
 
   it('handles string inputs', async () => {
