@@ -74,16 +74,17 @@ describe('Category Page', () => {
   // ── Sort Controls ─────────────────────────────────────────────────
 
   describe('sort controls', () => {
-    it('initializes sort dropdown with 6 options including Best Selling', async () => {
+    it('initializes sort dropdown with 7 options including Best Selling and Highest Rated', async () => {
       await onReadyHandler();
       const dropdown = getEl('#sortDropdown');
-      expect(dropdown.options).toHaveLength(6);
+      expect(dropdown.options).toHaveLength(7);
       expect(dropdown.options[0]).toEqual({ label: 'Best Selling', value: 'bestselling' });
       expect(dropdown.options[1]).toEqual({ label: 'Name (A-Z)', value: 'name-asc' });
       expect(dropdown.options[2]).toEqual({ label: 'Name (Z-A)', value: 'name-desc' });
       expect(dropdown.options[3]).toEqual({ label: 'Price: Low to High', value: 'price-asc' });
       expect(dropdown.options[4]).toEqual({ label: 'Price: High to Low', value: 'price-desc' });
       expect(dropdown.options[5]).toEqual({ label: 'Newest First', value: 'date-desc' });
+      expect(dropdown.options[6]).toEqual({ label: 'Highest Rated', value: 'rating-desc' });
     });
 
     it('defaults to bestselling sort', async () => {
@@ -106,6 +107,38 @@ describe('Category Page', () => {
       onChange();
 
       expect(getEl('#categoryDataset').setSort).toHaveBeenCalled();
+    });
+
+    it('rating-desc sort triggers dataset.setSort', async () => {
+      await onReadyHandler();
+      const dropdown = getEl('#sortDropdown');
+      const onChange = dropdown.onChange.mock.calls[0][0];
+
+      dropdown.value = 'rating-desc';
+      onChange();
+
+      expect(getEl('#categoryDataset').setSort).toHaveBeenCalled();
+    });
+  });
+
+  // ── Comfort Level Filter ─────────────────────────────────────────
+
+  describe('comfort level filter', () => {
+    it('initializes comfort level filter with 4 options', async () => {
+      await onReadyHandler();
+      const comfortFilter = getEl('#filterComfortLevel');
+      expect(comfortFilter.options).toHaveLength(4);
+      expect(comfortFilter.options[0]).toEqual({ label: 'Any Comfort', value: '' });
+    });
+
+    it('registers onChange handler on comfort level filter', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterComfortLevel').onChange).toHaveBeenCalled();
+    });
+
+    it('sets aria-label on comfort level filter', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterComfortLevel').accessibility.ariaLabel).toBe('Filter by comfort level');
     });
   });
 

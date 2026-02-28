@@ -163,6 +163,7 @@ function initSortControls() {
       { label: 'Price: Low to High', value: 'price-asc' },
       { label: 'Price: High to Low', value: 'price-desc' },
       { label: 'Newest First', value: 'date-desc' },
+      { label: 'Highest Rated', value: 'rating-desc' },
     ];
 
     sortDropdown.value = 'bestselling';
@@ -203,6 +204,9 @@ function applySort() {
         break;
       case 'date-desc':
         sort = wixData.sort().descending('_createdDate');
+        break;
+      case 'rating-desc':
+        sort = wixData.sort().descending('numericRating');
         break;
       default:
         sort = wixData.sort();
@@ -856,6 +860,24 @@ async function initAdvancedFilters(currentPath) {
       }
     } catch (e) {}
 
+    // Comfort level filter (Castlery-inspired 1-5 scale)
+    try {
+      const comfortGroup = $w('#filterComfortLevel');
+      if (comfortGroup) {
+        comfortGroup.options = [
+          { label: 'Any Comfort', value: '' },
+          { label: 'Firm (1-2)', value: '1-2' },
+          { label: 'Medium (3)', value: '3' },
+          { label: 'Plush (4-5)', value: '4-5' },
+        ];
+        try { comfortGroup.accessibility.ariaLabel = 'Filter by comfort level'; } catch (e) {}
+        comfortGroup.onChange(() => {
+          currentFilters.comfortLevel = comfortGroup.value;
+          debouncedApplyAdvancedFilters(currentPath);
+        });
+      }
+    } catch (e) {}
+
     // Dimension range inputs
     try {
       const widthMin = $w('#filterWidthMin');
@@ -1012,6 +1034,7 @@ function clearAllAdvancedFilters(currentPath) {
   try { $w('#filterWidthMax').value = ''; } catch (e) {}
   try { $w('#filterDepthMin').value = ''; } catch (e) {}
   try { $w('#filterDepthMax').value = ''; } catch (e) {}
+  try { $w('#filterComfortLevel').value = ''; } catch (e) {}
 
   // Clear URL params
   updateUrlWithFilters({});
@@ -1062,6 +1085,7 @@ function updateUrlWithFilters(filters) {
     if (filters.brand) params.brand = filters.brand;
     if (filters.price) params.priceDropdown = filters.price;
     if (filters.size) params.size = filters.size;
+    if (filters.comfortLevel) params.comfort = filters.comfortLevel;
 
     const queryString = Object.entries(params)
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
@@ -1099,6 +1123,7 @@ function restoreFiltersFromUrl(currentPath) {
     }
     if (query.brand) currentFilters.brand = query.brand;
     if (query.size) currentFilters.size = query.size;
+    if (query.comfort) currentFilters.comfortLevel = query.comfort;
 
     // Or restore from session state if no URL params
     if (Object.keys(currentFilters).length === 0 && _filterSessionState[currentPath]) {
@@ -1115,6 +1140,7 @@ function restoreFiltersFromUrl(currentPath) {
       try { if (currentFilters.brand) $w('#filterBrand').value = currentFilters.brand; } catch (e) {}
       try { if (currentFilters.price) $w('#filterPrice').value = currentFilters.price; } catch (e) {}
       try { if (currentFilters.size) $w('#filterSize').value = currentFilters.size; } catch (e) {}
+      try { if (currentFilters.comfortLevel) $w('#filterComfortLevel').value = currentFilters.comfortLevel; } catch (e) {}
 
       applyAdvancedFilters(currentPath);
     }
