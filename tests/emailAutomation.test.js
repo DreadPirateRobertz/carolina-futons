@@ -434,6 +434,7 @@ describe('triggerAbandonedCartRecovery', () => {
       _id: 'eq-1',
       recipientEmail: 'shopper@test.com',
       sequenceType: 'cart_recovery',
+      checkoutId: 'ck-1',
       variables: { checkoutId: 'ck-1' },
       status: 'pending',
     }]);
