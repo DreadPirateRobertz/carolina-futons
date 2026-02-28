@@ -86,10 +86,10 @@ export function initImageGallery($w, product) {
     } catch (e) {}
 
     // Fullscreen lightbox on main image click
-    initImageLightbox($w('#productGallery'), $w('#productMainImage'));
+    initImageLightbox($w, $w('#productGallery'), $w('#productMainImage'));
 
     // Hover zoom on main product image
-    initImageZoom($w('#productMainImage'));
+    initImageZoom($w, $w('#productMainImage'));
 
     // Preload gallery thumbnail images for smoother browsing
     // Intentional no-op: Wix gallery handles its own image loading.

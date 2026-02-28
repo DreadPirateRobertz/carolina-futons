@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   trackProductView,
   getRecentlyViewed,
@@ -7,6 +7,10 @@ import {
   getCompareList,
   formatDescription,
   getProductBadge,
+  buildRecentlyViewedSection,
+  buildComparisonBar,
+  initImageLightbox,
+  initImageZoom,
 } from '../src/public/galleryHelpers.js';
 import { futonFrame, wallHuggerFrame, futonMattress, murphyBed } from './fixtures/products.js';
 import { session } from 'wix-storage-frontend';
@@ -337,5 +341,128 @@ describe('formatDescription', () => {
   it('handles nested HTML', () => {
     const html = '<div><p>Outer <span class="bold">inner <em>deep</em></span> text</p></div>';
     expect(formatDescription(html)).toBe('Outer inner deep text');
+  });
+});
+
+// ── $w parameter tests ──────────────────────────────────────────────
+// Verify functions that previously used global $w now accept it as a parameter
+
+function createMock$w(elements = {}) {
+  return (selector) => {
+    if (elements[selector]) return elements[selector];
+    throw new Error(`Element ${selector} not found`);
+  };
+}
+
+function mockElement(overrides = {}) {
+  return {
+    collapse: vi.fn(),
+    expand: vi.fn(),
+    show: vi.fn(),
+    hide: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
+    onClick: vi.fn(),
+    onItemClicked: vi.fn(),
+    onMouseIn: vi.fn(),
+    onMouseOut: vi.fn(),
+    text: '',
+    src: '',
+    data: [],
+    items: [],
+    onItemReady: vi.fn(),
+    ...overrides,
+  };
+}
+
+describe('buildRecentlyViewedSection (accepts $w)', () => {
+  it('collapses container when no recent views', () => {
+    const container = mockElement();
+    const mock$w = createMock$w({ '#recentSection': container });
+    buildRecentlyViewedSection(mock$w, '#recentSection', vi.fn());
+    expect(container.collapse).toHaveBeenCalled();
+  });
+
+  it('expands container and populates repeater with recent views', () => {
+    trackProductView(futonFrame);
+    const container = mockElement();
+    const repeater = mockElement();
+    const mock$w = createMock$w({
+      '#recentSection': container,
+      '#recentRepeater': repeater,
+    });
+    const handler = vi.fn();
+    buildRecentlyViewedSection(mock$w, '#recentSection', handler);
+    expect(container.expand).toHaveBeenCalled();
+    expect(repeater.onItemReady).toHaveBeenCalledWith(handler);
+  });
+
+  it('does not use global $w', () => {
+    globalThis.$w = () => { throw new Error('should not use global $w'); };
+    const container = mockElement();
+    const mock$w = createMock$w({ '#section': container });
+    expect(() => buildRecentlyViewedSection(mock$w, '#section', vi.fn())).not.toThrow();
+    delete globalThis.$w;
+  });
+});
+
+describe('buildComparisonBar (accepts $w)', () => {
+  it('collapses bar when compare list is empty', () => {
+    const bar = mockElement();
+    const mock$w = createMock$w({ '#compareBar': bar });
+    buildComparisonBar(mock$w);
+    expect(bar.collapse).toHaveBeenCalled();
+  });
+
+  it('does not use global $w', () => {
+    globalThis.$w = () => { throw new Error('should not use global $w'); };
+    const bar = mockElement();
+    const mock$w = createMock$w({ '#compareBar': bar });
+    expect(() => buildComparisonBar(mock$w)).not.toThrow();
+    delete globalThis.$w;
+  });
+});
+
+describe('initImageLightbox (accepts $w)', () => {
+  it('returns null when no images available', () => {
+    const mock$w = createMock$w({});
+    const result = initImageLightbox(mock$w, null, null);
+    expect(result).toBeNull();
+  });
+
+  it('returns lightbox controller with open/close/handleKeydown', () => {
+    const gallery = mockElement({ items: [{ src: 'img1.jpg' }, { src: 'img2.jpg' }] });
+    const mainImage = mockElement({ src: 'img1.jpg' });
+    const mock$w = createMock$w({
+      '#lightboxImage': mockElement(),
+      '#lightboxCounter': mockElement(),
+      '#lightboxOverlay': mockElement(),
+      '#lightboxPrev': mockElement(),
+      '#lightboxNext': mockElement(),
+      '#lightboxClose': mockElement(),
+    });
+    const result = initImageLightbox(mock$w, gallery, mainImage);
+    expect(result).toHaveProperty('open');
+    expect(result).toHaveProperty('close');
+    expect(result).toHaveProperty('handleKeydown');
+  });
+});
+
+describe('initImageZoom (accepts $w)', () => {
+  it('returns null when imageElement is null', () => {
+    const mock$w = createMock$w({});
+    expect(initImageZoom(mock$w, null)).toBeNull();
+  });
+
+  it('returns zoom controller with show/hide', () => {
+    const image = mockElement({ src: 'test.jpg' });
+    const mock$w = createMock$w({
+      '#imageZoomImage': mockElement(),
+      '#imageZoomOverlay': mockElement(),
+    });
+    const result = initImageZoom(mock$w, image);
+    expect(result).toHaveProperty('show');
+    expect(result).toHaveProperty('hide');
+    expect(result.zoomFactor).toBe(2);
   });
 });

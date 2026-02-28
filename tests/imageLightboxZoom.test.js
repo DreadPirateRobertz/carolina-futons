@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
-// initImageLightbox and initImageZoom use the global $w selector
-// to access page elements (#lightboxOverlay, #imageZoomOverlay, etc.).
+// initImageLightbox and initImageZoom accept $w as first parameter
+// (public modules don't have access to global $w in Wix Velo).
 
 const elements = new Map();
 
@@ -24,7 +24,7 @@ function getEl(sel) {
   return elements.get(sel);
 }
 
-globalThis.$w = (sel) => getEl(sel);
+const mock$w = (sel) => getEl(sel);
 
 // Mock document for keyboard event registration
 const keydownListeners = [];
@@ -75,7 +75,7 @@ describe('initImageLightbox', () => {
     it('returns controller with open, close, handleKeydown', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       expect(lb).toHaveProperty('open');
       expect(lb).toHaveProperty('close');
@@ -83,20 +83,20 @@ describe('initImageLightbox', () => {
     });
 
     it('returns null when no images available', () => {
-      const lb = initImageLightbox({ items: [] }, null);
+      const lb = initImageLightbox(mock$w, { items: [] }, null);
       expect(lb).toBeNull();
     });
 
     it('falls back to main image when gallery has no items', () => {
       const mainImg = createMainImage('https://example.com/solo.jpg');
-      const lb = initImageLightbox({ items: [] }, mainImg);
+      const lb = initImageLightbox(mock$w, { items: [] }, mainImg);
       expect(lb).not.toBeNull();
     });
 
     it('registers keydown listener on document', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
       expect(globalThis.document.addEventListener).toHaveBeenCalledWith(
         'keydown',
         expect.any(Function)
@@ -110,7 +110,7 @@ describe('initImageLightbox', () => {
     it('opens lightbox when main image is clicked', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       const clickCb = mainImg.onClick.mock.calls[0][0];
       clickCb();
@@ -123,7 +123,7 @@ describe('initImageLightbox', () => {
     it('opens at correct index when gallery thumbnail is clicked', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       const itemClickCb = gallery.onItemClicked.mock.calls[0][0];
       itemClickCb({ item: { src: galleryImages[1] } });
@@ -135,7 +135,7 @@ describe('initImageLightbox', () => {
     it('defaults to index 0 if thumbnail src not found in images', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       const itemClickCb = gallery.onItemClicked.mock.calls[0][0];
       itemClickCb({ item: { src: 'https://example.com/unknown.jpg' } });
@@ -151,7 +151,7 @@ describe('initImageLightbox', () => {
     it('closes on close button click', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       // Open first
       mainImg.onClick.mock.calls[0][0]();
@@ -166,7 +166,7 @@ describe('initImageLightbox', () => {
     it('closes on Escape key', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
       lb.handleKeydown({ key: 'Escape' });
@@ -177,7 +177,7 @@ describe('initImageLightbox', () => {
     it('programmatic close() hides overlay', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
       lb.close();
@@ -192,7 +192,7 @@ describe('initImageLightbox', () => {
     it('ArrowRight advances to next image', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
       lb.handleKeydown({ key: 'ArrowRight' });
@@ -204,7 +204,7 @@ describe('initImageLightbox', () => {
     it('ArrowLeft goes to previous image', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(1);
       lb.handleKeydown({ key: 'ArrowLeft' });
@@ -216,7 +216,7 @@ describe('initImageLightbox', () => {
     it('wraps from last to first image on ArrowRight', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(2);
       lb.handleKeydown({ key: 'ArrowRight' });
@@ -228,7 +228,7 @@ describe('initImageLightbox', () => {
     it('wraps from first to last image on ArrowLeft', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
       lb.handleKeydown({ key: 'ArrowLeft' });
@@ -240,7 +240,7 @@ describe('initImageLightbox', () => {
     it('ignores keystrokes when lightbox is closed', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       // Don't open — just fire keys
       lb.handleKeydown({ key: 'ArrowRight' });
@@ -253,7 +253,7 @@ describe('initImageLightbox', () => {
     it('keyboard events reach handler via document listener', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
 
@@ -271,7 +271,7 @@ describe('initImageLightbox', () => {
     it('prev button navigates backward', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       // Open at first image
       mainImg.onClick.mock.calls[0][0]();
@@ -285,7 +285,7 @@ describe('initImageLightbox', () => {
     it('next button navigates forward', () => {
       const gallery = createGallery(galleryImages);
       const mainImg = createMainImage(galleryImages[0]);
-      initImageLightbox(gallery, mainImg);
+      initImageLightbox(mock$w, gallery, mainImg);
 
       mainImg.onClick.mock.calls[0][0]();
 
@@ -301,7 +301,7 @@ describe('initImageLightbox', () => {
     it('hides nav controls when only one image', () => {
       const gallery = createGallery(['https://example.com/solo.jpg']);
       const mainImg = createMainImage('https://example.com/solo.jpg');
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
 
@@ -313,7 +313,7 @@ describe('initImageLightbox', () => {
     it('still displays the image correctly', () => {
       const gallery = createGallery(['https://example.com/solo.jpg']);
       const mainImg = createMainImage('https://example.com/solo.jpg');
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
 
@@ -328,7 +328,7 @@ describe('initImageLightbox', () => {
       const images = Array.from({ length: 5 }, (_, i) => `https://example.com/img-${i}.jpg`);
       const gallery = createGallery(images);
       const mainImg = createMainImage(images[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(3);
       expect(getEl('#lightboxImage').src).toBe(images[3]);
@@ -339,7 +339,7 @@ describe('initImageLightbox', () => {
       const images = ['https://example.com/a.jpg', 'https://example.com/b.jpg'];
       const gallery = createGallery(images);
       const mainImg = createMainImage(images[0]);
-      const lb = initImageLightbox(gallery, mainImg);
+      const lb = initImageLightbox(mock$w, gallery, mainImg);
 
       lb.open(0);
 
@@ -350,7 +350,7 @@ describe('initImageLightbox', () => {
 
     it('fallback-only product (no gallery items)', () => {
       const mainImg = createMainImage('https://example.com/fallback.jpg');
-      const lb = initImageLightbox({ items: [] }, mainImg);
+      const lb = initImageLightbox(mock$w, { items: [] }, mainImg);
 
       lb.open(0);
       expect(getEl('#lightboxImage').src).toBe('https://example.com/fallback.jpg');
@@ -371,7 +371,7 @@ describe('initImageZoom', () => {
   describe('initialization', () => {
     it('returns controller with show, hide, zoomFactor', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      const zoom = initImageZoom(img);
+      const zoom = initImageZoom(mock$w, img);
 
       expect(zoom).toHaveProperty('show');
       expect(zoom).toHaveProperty('hide');
@@ -379,18 +379,18 @@ describe('initImageZoom', () => {
     });
 
     it('returns null for null element', () => {
-      expect(initImageZoom(null)).toBeNull();
+      expect(initImageZoom(mock$w, null)).toBeNull();
     });
 
     it('accepts custom zoom factor', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      const zoom = initImageZoom(img, 3);
+      const zoom = initImageZoom(mock$w, img, 3);
       expect(zoom.zoomFactor).toBe(3);
     });
 
     it('registers onMouseIn and onMouseOut handlers', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      initImageZoom(img);
+      initImageZoom(mock$w, img);
 
       expect(img.onMouseIn).toHaveBeenCalledWith(expect.any(Function));
       expect(img.onMouseOut).toHaveBeenCalledWith(expect.any(Function));
@@ -402,7 +402,7 @@ describe('initImageZoom', () => {
   describe('desktop hover zoom', () => {
     it('shows zoom overlay on mouse enter', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      initImageZoom(img);
+      initImageZoom(mock$w, img);
 
       const mouseInCb = img.onMouseIn.mock.calls[0][0];
       mouseInCb();
@@ -413,7 +413,7 @@ describe('initImageZoom', () => {
 
     it('hides zoom overlay on mouse leave', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      initImageZoom(img);
+      initImageZoom(mock$w, img);
 
       const mouseOutCb = img.onMouseOut.mock.calls[0][0];
       mouseOutCb();
@@ -423,7 +423,7 @@ describe('initImageZoom', () => {
 
     it('uses current image src at hover time (tracks gallery navigation)', () => {
       const img = createMainImage('https://example.com/futon-1.jpg');
-      initImageZoom(img);
+      initImageZoom(mock$w, img);
 
       // Simulate gallery navigation changing the src
       img.src = 'https://example.com/futon-2.jpg';
@@ -440,7 +440,7 @@ describe('initImageZoom', () => {
   describe('programmatic control', () => {
     it('show() triggers zoom overlay', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      const zoom = initImageZoom(img);
+      const zoom = initImageZoom(mock$w, img);
 
       zoom.show();
 
@@ -449,7 +449,7 @@ describe('initImageZoom', () => {
 
     it('hide() closes zoom overlay', () => {
       const img = createMainImage('https://example.com/futon.jpg');
-      const zoom = initImageZoom(img);
+      const zoom = initImageZoom(mock$w, img);
 
       zoom.hide();
 
@@ -470,7 +470,7 @@ describe('initImageZoom', () => {
       it(`zoom works for ${imgSrc.split('/').pop()}`, () => {
         elements.clear();
         const img = createMainImage(imgSrc);
-        initImageZoom(img);
+        initImageZoom(mock$w, img);
 
         const mouseInCb = img.onMouseIn.mock.calls[0][0];
         mouseInCb();

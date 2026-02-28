@@ -50,13 +50,18 @@ function startBrowseTracking(productId) {
     let scrolledToPricing = false;
     let variantInteractions = 0;
 
-    // Track scroll to pricing section
+    // Track scroll to pricing section using DOM API (no $w in public modules)
     const checkPricingScroll = () => {
       try {
-        const pricingEl = typeof $w !== 'undefined' ? $w('#productPrice') : null;
-        if (pricingEl) {
-          scrolledToPricing = true;
-          window.removeEventListener('scroll', checkPricingScroll);
+        if (typeof document !== 'undefined') {
+          const pricingEl = document.querySelector('[data-testid="product-price"], [id*="productPrice"]');
+          if (pricingEl) {
+            const rect = pricingEl.getBoundingClientRect();
+            if (rect.top < window.innerHeight) {
+              scrolledToPricing = true;
+              window.removeEventListener('scroll', checkPricingScroll);
+            }
+          }
         }
       } catch (e) {}
     };
@@ -65,15 +70,8 @@ function startBrowseTracking(productId) {
       window.addEventListener('scroll', checkPricingScroll, { passive: true });
     }
 
-    // Track variant selector interactions
-    if (typeof $w !== 'undefined') {
-      try {
-        const sizeDropdown = $w('#sizeDropdown');
-        const finishDropdown = $w('#finishDropdown');
-        if (sizeDropdown) sizeDropdown.onChange(() => { variantInteractions++; });
-        if (finishDropdown) finishDropdown.onChange(() => { variantInteractions++; });
-      } catch (e) {}
-    }
+    // Variant interactions are tracked by page-level code which has $w access.
+    // This module only records the counter via the browse data store.
 
     // Record enriched data on page leave
     const recordBrowseData = () => {
@@ -233,7 +231,7 @@ export function getProductBadge(product) {
 // Renders a 'Recently Viewed' horizontal scroll from session storage.
 // Naming convention: containerId '#xyzSection' → repeater '#xyzRepeater'
 
-export function buildRecentlyViewedSection(containerId, repeaterItemHandler) {
+export function buildRecentlyViewedSection($w, containerId, repeaterItemHandler) {
   const recent = getRecentlyViewed();
 
   try {
@@ -282,7 +280,7 @@ export function buildProductBadgeOverlay(product) {
 // Page elements: #lightboxOverlay, #lightboxImage, #lightboxClose,
 //   #lightboxPrev, #lightboxNext, #lightboxCounter
 
-export function initImageLightbox(galleryElement, mainImageElement) {
+export function initImageLightbox($w, galleryElement, mainImageElement) {
   let images = [];
   let currentIndex = 0;
   let isOpen = false;
@@ -372,7 +370,7 @@ export function initImageLightbox(galleryElement, mainImageElement) {
 // Page elements: #imageZoomOverlay, #imageZoomImage
 // Desktop: hover to zoom; mobile: pinch handled natively by platform.
 
-export function initImageZoom(imageElement, zoomFactor = 2) {
+export function initImageZoom($w, imageElement, zoomFactor = 2) {
   if (!imageElement) return null;
 
   let isZoomed = false;
@@ -443,7 +441,7 @@ function revealImageOnViewport($item) {
 // Page elements: #compareBar, #compareBarRepeater, #compareButton,
 //   #compareClearBtn, #compareCount
 
-export function buildComparisonBar() {
+export function buildComparisonBar($w) {
   const compareList = getCompareList();
 
   try {
@@ -467,7 +465,7 @@ export function buildComparisonBar() {
           $item('#compareItemName').text = itemData.name;
           $item('#compareItemRemove').onClick(() => {
             removeFromCompare(itemData._id);
-            buildComparisonBar();
+            buildComparisonBar($w);
           });
         } catch (e) {}
       });
@@ -497,7 +495,7 @@ export function buildComparisonBar() {
     try {
       $w('#compareClearBtn').onClick(() => {
         try { sessionStorage.removeItem(COMPARE_KEY); } catch (e) {}
-        buildComparisonBar();
+        buildComparisonBar($w);
       });
     } catch (e) {}
 
