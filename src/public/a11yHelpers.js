@@ -36,23 +36,49 @@ export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#s
 // ── Focus Trap ──────────────────────────────────────────────────────
 
 /**
- * Create a focus trap for modals/dialogs. Keeps Tab focus within the
- * specified container. Returns a release function.
+ * Create a focus trap for modals/dialogs. Listens for Tab/Shift+Tab
+ * and wraps focus between first and last focusable elements.
  *
+ * @param {Function} $w - Wix selector function
  * @param {string} containerId - Wix element ID of the trap container
  * @param {Array<string>} focusableIds - Element IDs that can receive focus
- * @returns {{ release: Function }} Cleanup function
+ * @returns {{ firstId: string, lastId: string, isActive: Function, release: Function }}
  */
-export function createFocusTrap(containerId, focusableIds) {
+export function createFocusTrap($w, containerId, focusableIds) {
   if (!containerId || !focusableIds || focusableIds.length === 0) {
-    return { release: () => {} };
+    return { release: () => {}, isActive: () => false };
   }
 
   const state = {
     active: true,
+    currentFocusId: null,
     firstId: focusableIds[0],
     lastId: focusableIds[focusableIds.length - 1],
   };
+
+  for (const id of focusableIds) {
+    try {
+      const el = $w(id);
+      if (el && el.onFocus) {
+        el.onFocus(() => { state.currentFocusId = id; });
+      }
+    } catch (e) { /* element may not support onFocus */ }
+  }
+
+  function onKeydown(e) {
+    if (e.key !== 'Tab' || !state.active) return;
+    if (!e.shiftKey && state.currentFocusId === state.lastId) {
+      e.preventDefault();
+      try { $w(state.firstId).focus(); } catch (err) { /* */ }
+    } else if (e.shiftKey && state.currentFocusId === state.firstId) {
+      e.preventDefault();
+      try { $w(state.lastId).focus(); } catch (err) { /* */ }
+    }
+  }
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('keydown', onKeydown);
+  }
 
   return {
     containerId,
@@ -60,7 +86,12 @@ export function createFocusTrap(containerId, focusableIds) {
     firstId: state.firstId,
     lastId: state.lastId,
     isActive() { return state.active; },
-    release() { state.active = false; },
+    release() {
+      state.active = false;
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('keydown', onKeydown);
+      }
+    },
   };
 }
 
@@ -406,6 +437,8 @@ export function announce($w, message, priority = 'polite') {
 export function setupAccessibleDialog($w, config) {
   const { panelId, closeId, titleId, focusableIds = [], onClose } = config;
   let trap = null;
+  let savedFocus = null;
+  let escHandler = null;
 
   // Set ARIA attributes
   try {
@@ -419,14 +452,28 @@ export function setupAccessibleDialog($w, config) {
     }
   } catch (e) {}
 
+  function removeEscHandler() {
+    if (escHandler && typeof document !== 'undefined') {
+      document.removeEventListener('keydown', escHandler);
+      escHandler = null;
+    }
+  }
+
   function open() {
     try {
-      $w(panelId).show('fade', { duration: 200 });
-      // Create focus trap
-      if (focusableIds.length > 0) {
-        trap = createFocusTrap(panelId, focusableIds);
+      // Save current focus for restoration on close
+      if (typeof document !== 'undefined') {
+        savedFocus = document.activeElement;
       }
-      announce($w, titleId ? 'Dialog opened' : 'Dialog opened');
+      $w(panelId).show('fade', { duration: 200 });
+      // Create focus trap and move focus into dialog
+      if (focusableIds.length > 0) {
+        trap = createFocusTrap($w, panelId, focusableIds);
+        try { $w(focusableIds[0]).focus(); } catch (e) {}
+      } else {
+        try { $w(closeId).focus(); } catch (e) {}
+      }
+      announce($w, 'Dialog opened');
     } catch (e) {}
   }
 
@@ -437,6 +484,12 @@ export function setupAccessibleDialog($w, config) {
         trap.release();
         trap = null;
       }
+      // Restore focus to previously focused element
+      if (savedFocus && savedFocus.focus) {
+        savedFocus.focus();
+        savedFocus = null;
+      }
+      removeEscHandler();
       announce($w, 'Dialog closed');
       if (onClose) onClose();
     } catch (e) {}
@@ -452,17 +505,10 @@ export function setupAccessibleDialog($w, config) {
 
   // Escape key closes dialog
   if (typeof document !== 'undefined') {
-    const escHandler = (e) => {
+    escHandler = (e) => {
       if (e.key === 'Escape') close();
     };
     document.addEventListener('keydown', escHandler);
-    // Store cleanup so callers can remove if needed
-    const origClose = close;
-    // eslint-disable-next-line no-func-assign
-    close = function () {
-      origClose();
-      document.removeEventListener('keydown', escHandler);
-    };
   }
 
   return { open, close };

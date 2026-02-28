@@ -5,7 +5,7 @@
  * form field validation, focus management, skip navigation, keyboard patterns,
  * and design token contrast audit.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   hexToRgb,
   relativeLuminance,
@@ -324,26 +324,28 @@ describe('auditDesignTokenContrast', () => {
 // ── createFocusTrap ─────────────────────────────────────────────────
 
 describe('createFocusTrap', () => {
+  const mock$w = () => ({ onFocus: () => {}, focus: () => {} });
+
   it('creates trap with first and last focusable IDs', () => {
-    const trap = createFocusTrap('#modal', ['#closeBtn', '#input1', '#submitBtn']);
+    const trap = createFocusTrap(mock$w, '#modal', ['#closeBtn', '#input1', '#submitBtn']);
     expect(trap.firstId).toBe('#closeBtn');
     expect(trap.lastId).toBe('#submitBtn');
     expect(trap.isActive()).toBe(true);
   });
 
   it('release deactivates the trap', () => {
-    const trap = createFocusTrap('#dialog', ['#btn1', '#btn2']);
+    const trap = createFocusTrap(mock$w, '#dialog', ['#btn1', '#btn2']);
     trap.release();
     expect(trap.isActive()).toBe(false);
   });
 
   it('returns no-op trap for empty focusableIds', () => {
-    const trap = createFocusTrap('#modal', []);
+    const trap = createFocusTrap(mock$w, '#modal', []);
     expect(trap.release).toBeInstanceOf(Function);
   });
 
   it('returns no-op trap for null containerId', () => {
-    const trap = createFocusTrap(null, ['#btn']);
+    const trap = createFocusTrap(mock$w, null, ['#btn']);
     expect(trap.release).toBeInstanceOf(Function);
   });
 });
@@ -729,5 +731,321 @@ describe('makeClickable', () => {
       // No onKeyPress method
     };
     expect(() => makeClickable(element, () => {})).not.toThrow();
+  });
+});
+
+// ── createFocusTrap — active keyboard trapping ────────────────────────
+
+describe('createFocusTrap — active keyboard trapping', () => {
+  let keydownHandlers;
+  let removedHandlers;
+
+  beforeEach(() => {
+    keydownHandlers = [];
+    removedHandlers = [];
+    vi.stubGlobal('document', {
+      addEventListener: (event, handler) => {
+        if (event === 'keydown') keydownHandlers.push(handler);
+      },
+      removeEventListener: (event, handler) => {
+        removedHandlers.push({ event, handler });
+        keydownHandlers = keydownHandlers.filter(h => h !== handler);
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('accepts $w as first parameter and returns trap with correct shape', () => {
+    const $w = () => ({ onFocus: () => {}, focus: () => {} });
+    const trap = createFocusTrap($w, '#modal', ['#btn1', '#btn2']);
+    expect(trap.firstId).toBe('#btn1');
+    expect(trap.lastId).toBe('#btn2');
+    expect(trap.isActive()).toBe(true);
+  });
+
+  it('registers a keydown listener on document', () => {
+    const $w = () => ({ onFocus: () => {}, focus: () => {} });
+    createFocusTrap($w, '#modal', ['#btn1', '#btn2']);
+    expect(keydownHandlers.length).toBe(1);
+  });
+
+  it('focuses first element when Tab pressed on last element', () => {
+    const onFocusMap = {};
+    const focusCalls = [];
+    const $w = (id) => ({
+      onFocus: (fn) => { onFocusMap[id] = fn; },
+      focus: () => { focusCalls.push(id); },
+    });
+
+    createFocusTrap($w, '#modal', ['#btn1', '#btn2', '#btn3']);
+
+    // Simulate #btn3 getting focus
+    onFocusMap['#btn3']();
+
+    // Press Tab (no shift)
+    const event = { key: 'Tab', shiftKey: false, preventDefault: vi.fn() };
+    keydownHandlers[0](event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(focusCalls).toContain('#btn1');
+  });
+
+  it('focuses last element when Shift+Tab pressed on first element', () => {
+    const onFocusMap = {};
+    const focusCalls = [];
+    const $w = (id) => ({
+      onFocus: (fn) => { onFocusMap[id] = fn; },
+      focus: () => { focusCalls.push(id); },
+    });
+
+    createFocusTrap($w, '#modal', ['#btn1', '#btn2', '#btn3']);
+
+    // Simulate #btn1 getting focus
+    onFocusMap['#btn1']();
+
+    // Press Shift+Tab
+    const event = { key: 'Tab', shiftKey: true, preventDefault: vi.fn() };
+    keydownHandlers[0](event);
+
+    expect(event.preventDefault).toHaveBeenCalled();
+    expect(focusCalls).toContain('#btn3');
+  });
+
+  it('does not redirect Tab when middle element has focus', () => {
+    const onFocusMap = {};
+    const focusCalls = [];
+    const $w = (id) => ({
+      onFocus: (fn) => { onFocusMap[id] = fn; },
+      focus: () => { focusCalls.push(id); },
+    });
+
+    createFocusTrap($w, '#modal', ['#btn1', '#btn2', '#btn3']);
+
+    // Simulate #btn2 getting focus (middle)
+    onFocusMap['#btn2']();
+
+    const event = { key: 'Tab', shiftKey: false, preventDefault: vi.fn() };
+    keydownHandlers[0](event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(focusCalls).toHaveLength(0);
+  });
+
+  it('release removes the keydown listener and deactivates', () => {
+    const $w = () => ({ onFocus: () => {}, focus: () => {} });
+    const trap = createFocusTrap($w, '#modal', ['#btn1', '#btn2']);
+
+    trap.release();
+
+    expect(trap.isActive()).toBe(false);
+    expect(removedHandlers.length).toBe(1);
+    expect(removedHandlers[0].event).toBe('keydown');
+  });
+
+  it('ignores non-Tab keydown events', () => {
+    const focusCalls = [];
+    const $w = (id) => ({
+      onFocus: () => {},
+      focus: () => { focusCalls.push(id); },
+    });
+
+    createFocusTrap($w, '#modal', ['#btn1', '#btn2']);
+
+    const event = { key: 'Enter', shiftKey: false, preventDefault: vi.fn() };
+    keydownHandlers[0](event);
+
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(focusCalls).toHaveLength(0);
+  });
+
+  it('handles elements without onFocus gracefully', () => {
+    const $w = () => ({ focus: () => {} });
+    expect(() => createFocusTrap($w, '#modal', ['#btn1', '#btn2'])).not.toThrow();
+  });
+
+  it('does not register listener when document is undefined', () => {
+    vi.unstubAllGlobals();
+    // document is now undefined in Node test env
+    const $w = () => ({ onFocus: () => {}, focus: () => {} });
+    const trap = createFocusTrap($w, '#modal', ['#btn1', '#btn2']);
+    expect(trap.isActive()).toBe(true);
+    expect(trap.release).toBeInstanceOf(Function);
+  });
+
+  it('returns no-op trap for empty focusableIds with $w', () => {
+    const $w = () => ({});
+    const trap = createFocusTrap($w, '#modal', []);
+    expect(trap.release).toBeInstanceOf(Function);
+    expect(keydownHandlers).toHaveLength(0);
+  });
+
+  it('returns no-op trap for null containerId with $w', () => {
+    const $w = () => ({});
+    const trap = createFocusTrap($w, null, ['#btn']);
+    expect(trap.release).toBeInstanceOf(Function);
+    expect(keydownHandlers).toHaveLength(0);
+  });
+});
+
+// ── setupAccessibleDialog — focus management ──────────────────────────
+
+describe('setupAccessibleDialog — focus management', () => {
+  let keydownHandlers;
+  let removedHandlers;
+  let mockActiveElement;
+
+  function createMock$w() {
+    const focusCalls = [];
+    const onFocusMap = {};
+    const $w = (id) => ({
+      accessibility: {},
+      show: () => {},
+      hide: () => {},
+      onClick: () => {},
+      onKeyPress: () => {},
+      onFocus: (fn) => { onFocusMap[id] = fn; },
+      focus: () => { focusCalls.push(id); },
+      text: '',
+    });
+    return { $w, focusCalls, onFocusMap };
+  }
+
+  beforeEach(() => {
+    keydownHandlers = [];
+    removedHandlers = [];
+    mockActiveElement = { focus: vi.fn() };
+    vi.stubGlobal('document', {
+      activeElement: mockActiveElement,
+      addEventListener: (event, handler) => {
+        if (event === 'keydown') keydownHandlers.push(handler);
+      },
+      removeEventListener: (event, handler) => {
+        removedHandlers.push({ event, handler });
+        keydownHandlers = keydownHandlers.filter(h => h !== handler);
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('moves focus to first focusable element on open', () => {
+    const { $w, focusCalls } = createMock$w();
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      focusableIds: ['#input1', '#input2', '#submitBtn'],
+    });
+
+    dialog.open();
+    expect(focusCalls).toContain('#input1');
+  });
+
+  it('moves focus to close button on open when no focusableIds', () => {
+    const { $w, focusCalls } = createMock$w();
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    });
+
+    dialog.open();
+    expect(focusCalls).toContain('#closeBtn');
+  });
+
+  it('saves and restores focus to previously focused element on close', () => {
+    const { $w } = createMock$w();
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      focusableIds: ['#input1'],
+    });
+
+    dialog.open(); // saves document.activeElement
+    dialog.close(); // should restore focus
+    expect(mockActiveElement.focus).toHaveBeenCalled();
+  });
+
+  it('removes Escape handler when close button is clicked (bug fix)', () => {
+    let closeClickHandler = null;
+    const $w = (id) => ({
+      accessibility: {},
+      show: () => {},
+      hide: () => {},
+      onClick: (fn) => { if (id === '#closeBtn') closeClickHandler = fn; },
+      onKeyPress: () => {},
+      onFocus: () => {},
+      focus: () => {},
+      text: '',
+    });
+
+    setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+    });
+
+    // Escape handler should be registered
+    expect(keydownHandlers.length).toBeGreaterThan(0);
+
+    // Click the close button
+    closeClickHandler();
+
+    // Escape handler should be removed
+    const removedKeydown = removedHandlers.filter(h => h.event === 'keydown');
+    expect(removedKeydown.length).toBeGreaterThan(0);
+  });
+
+  it('creates and releases focus trap around open/close lifecycle', () => {
+    const { $w, focusCalls, onFocusMap } = createMock$w();
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      focusableIds: ['#input1', '#input2'],
+    });
+
+    dialog.open();
+
+    // Focus trap should be active — simulate Tab on last element
+    if (onFocusMap['#input2']) onFocusMap['#input2']();
+    const tabEvent = { key: 'Tab', shiftKey: false, preventDefault: vi.fn() };
+    keydownHandlers.forEach(h => h(tabEvent));
+    expect(focusCalls).toContain('#input1');
+
+    dialog.close();
+
+    // After close, Tab should not redirect
+    focusCalls.length = 0;
+    if (onFocusMap['#input2']) onFocusMap['#input2']();
+    const tabEvent2 = { key: 'Tab', shiftKey: false, preventDefault: vi.fn() };
+    keydownHandlers.forEach(h => h(tabEvent2));
+    expect(focusCalls.filter(id => id === '#input1')).toHaveLength(0);
+  });
+
+  it('does not throw when focus() is unavailable on elements', () => {
+    const $w = (id) => ({
+      accessibility: {},
+      show: () => {},
+      hide: () => {},
+      onClick: () => {},
+      onKeyPress: () => {},
+      text: '',
+      // No focus() method
+    });
+
+    const dialog = setupAccessibleDialog($w, {
+      panelId: '#modal',
+      closeId: '#closeBtn',
+      focusableIds: ['#input1'],
+    });
+
+    expect(() => dialog.open()).not.toThrow();
+    expect(() => dialog.close()).not.toThrow();
   });
 });
