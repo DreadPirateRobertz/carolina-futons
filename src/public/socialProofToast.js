@@ -9,6 +9,8 @@ import { isMobile } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
 
 const SESSION_KEY = 'cf_social_proof';
+let _closeHandlerBound = false;
+let _currentDismissTimer = null;
 
 function getSessionState() {
   try {
@@ -137,16 +139,35 @@ function showToast($w, notification, config) {
     setSessionState({ count: state.count + 1, lastShown: now });
 
     // Auto-dismiss
-    const dismissTimer = setTimeout(() => {
+    if (_currentDismissTimer) clearTimeout(_currentDismissTimer);
+    _currentDismissTimer = setTimeout(() => {
       try { toastEl.hide('fade', { duration: 300 }); } catch (e) {}
+      _currentDismissTimer = null;
     }, config.autoDismissMs);
 
-    // Manual close
-    try {
-      toastClose.onClick(() => {
-        clearTimeout(dismissTimer);
-        try { toastEl.hide('fade', { duration: 200 }); } catch (e) {}
-      });
-    } catch (e) {}
+    // Manual close — bind once to avoid stacking handlers
+    if (!_closeHandlerBound && toastClose) {
+      try {
+        toastClose.onClick(() => {
+          if (_currentDismissTimer) {
+            clearTimeout(_currentDismissTimer);
+            _currentDismissTimer = null;
+          }
+          try { toastEl.hide('fade', { duration: 200 }); } catch (e) {}
+        });
+        _closeHandlerBound = true;
+      } catch (e) {}
+    }
   } catch (e) {}
+}
+
+/**
+ * Reset toast state for SPA navigation cleanup.
+ */
+export function cleanupToast() {
+  if (_currentDismissTimer) {
+    clearTimeout(_currentDismissTimer);
+    _currentDismissTimer = null;
+  }
+  _closeHandlerBound = false;
 }

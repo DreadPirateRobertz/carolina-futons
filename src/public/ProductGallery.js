@@ -9,7 +9,7 @@ import { announce } from 'public/a11yHelpers.js';
 export function initImageGallery($w, state) {
   try {
     const product = state.product;
-    if (!product) return;
+    if (!product) return { destroy() {} };
 
     const mainImage = $w('#productMainImage');
     if (mainImage) {
@@ -62,13 +62,14 @@ export function initImageGallery($w, state) {
     }
 
     // Keyboard arrow key navigation for gallery (WCAG 2.1.1)
+    let galleryKeyHandler = null;
     try {
       if (typeof document !== 'undefined' && gallery) {
         let kbIdx = 0;
         try { mainImage.accessibility.ariaLabel = 'Product image gallery, use arrow keys to navigate'; } catch (e) {}
         try { mainImage.accessibility.ariaRoledescription = 'carousel'; } catch (e) {}
 
-        document.addEventListener('keydown', (e) => {
+        galleryKeyHandler = (e) => {
           // Only handle arrow keys when gallery area has focus
           try {
             const items = gallery.items || [];
@@ -96,13 +97,28 @@ export function initImageGallery($w, state) {
               trackGalleryInteraction('keyboard', 'prev');
             }
           } catch (e) {}
-        });
+        };
+        document.addEventListener('keydown', galleryKeyHandler);
       }
     } catch (e) {}
 
-    initImageLightbox($w, $w('#productGallery'), $w('#productMainImage'));
+    const lightbox = initImageLightbox($w, $w('#productGallery'), $w('#productMainImage'));
     initImageZoom($w, $w('#productMainImage'));
+
+    // Return cleanup function for SPA navigation
+    return {
+      destroy() {
+        try {
+          if (typeof document !== 'undefined' && galleryKeyHandler) {
+            document.removeEventListener('keydown', galleryKeyHandler);
+            galleryKeyHandler = null;
+          }
+          if (lightbox && lightbox.destroy) lightbox.destroy();
+        } catch (e) {}
+      },
+    };
   } catch (e) {}
+  return { destroy() {} };
 }
 
 export function initProductBadge($w, state) {

@@ -44,14 +44,23 @@ export function trackProductView(product) {
 
 const BROWSE_DATA_KEY = 'cf_browse_data';
 
+// Store refs for cleanup on SPA navigation
+let _browseScrollHandler = null;
+let _browseUnloadHandler = null;
+let _browseVisChangeHandler = null;
+
 function startBrowseTracking(productId) {
+  // Clean up any previous tracking listeners first
+  cleanupBrowseTracking();
+
   try {
     const startTime = Date.now();
     let scrolledToPricing = false;
     let variantInteractions = 0;
 
     // Track scroll to pricing section using DOM API (no $w in public modules)
-    const checkPricingScroll = () => {
+    // Store handler reference for SPA cleanup
+    _browseScrollHandler = () => {
       try {
         if (typeof document !== 'undefined') {
           const pricingEl = document.querySelector('[data-testid="product-price"], [id*="productPrice"]');
@@ -59,7 +68,8 @@ function startBrowseTracking(productId) {
             const rect = pricingEl.getBoundingClientRect();
             if (rect.top < window.innerHeight) {
               scrolledToPricing = true;
-              window.removeEventListener('scroll', checkPricingScroll);
+              window.removeEventListener('scroll', _browseScrollHandler);
+              _browseScrollHandler = null;
             }
           }
         }
@@ -67,7 +77,7 @@ function startBrowseTracking(productId) {
     };
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('scroll', checkPricingScroll, { passive: true });
+      window.addEventListener('scroll', _browseScrollHandler, { passive: true });
     }
 
     // Variant interactions are tracked by page-level code which has $w access.
@@ -91,18 +101,43 @@ function startBrowseTracking(productId) {
       } catch (e) {}
     };
 
+    _browseUnloadHandler = recordBrowseData;
+    _browseVisChangeHandler = () => {
+      if (document.visibilityState === 'hidden') {
+        recordBrowseData();
+      }
+    };
+
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', recordBrowseData);
-      // Also capture on visibility change (mobile tab switches)
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          recordBrowseData();
-        }
-      });
+      window.addEventListener('beforeunload', _browseUnloadHandler);
+      document.addEventListener('visibilitychange', _browseVisChangeHandler);
     }
   } catch (e) {
     // Browse tracking is non-critical
   }
+}
+
+/**
+ * Remove all browse tracking event listeners.
+ * Call on SPA page navigation to prevent memory leaks.
+ */
+export function cleanupBrowseTracking() {
+  try {
+    if (typeof window !== 'undefined') {
+      if (_browseScrollHandler) {
+        window.removeEventListener('scroll', _browseScrollHandler);
+        _browseScrollHandler = null;
+      }
+      if (_browseUnloadHandler) {
+        window.removeEventListener('beforeunload', _browseUnloadHandler);
+        _browseUnloadHandler = null;
+      }
+    }
+    if (typeof document !== 'undefined' && _browseVisChangeHandler) {
+      document.removeEventListener('visibilitychange', _browseVisChangeHandler);
+      _browseVisChangeHandler = null;
+    }
+  } catch (e) {}
 }
 
 export function getBrowseData() {
@@ -379,7 +414,15 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     }
   } catch (e) {}
 
-  return { open: openLightbox, close: closeLightbox, handleKeydown };
+  function destroy() {
+    try {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('keydown', handleKeydown);
+      }
+    } catch (e) {}
+  }
+
+  return { open: openLightbox, close: closeLightbox, handleKeydown, destroy };
 }
 
 // ── Image Zoom ──────────────────────────────────────────────────────

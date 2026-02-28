@@ -13,6 +13,7 @@ let _sessionId = null;
 let _userName = '';
 let _userEmail = '';
 let _isOnline = false;
+let _escapeKeyHandler = null;
 
 /**
  * Initialize the live chat widget. Called from masterPage.js after page load.
@@ -95,9 +96,12 @@ function initChatToggle($w) {
       });
     } catch (e) {}
 
-    // Escape key closes chat
+    // Escape key closes chat — store ref for cleanup
     if (typeof document !== 'undefined') {
-      document.addEventListener('keydown', (e) => {
+      if (_escapeKeyHandler) {
+        document.removeEventListener('keydown', _escapeKeyHandler);
+      }
+      _escapeKeyHandler = (e) => {
         if (e.key === 'Escape') {
           try {
             const widget = $w('#chatWidget');
@@ -108,7 +112,8 @@ function initChatToggle($w) {
             }
           } catch (e2) {}
         }
-      });
+      };
+      document.addEventListener('keydown', _escapeKeyHandler);
     }
 
     // Keep widget collapsed initially
@@ -294,4 +299,17 @@ function getOrCreateSessionId() {
 
   // Fallback if sessionStorage unavailable
   return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Remove all LiveChat document event listeners.
+ * Call on SPA page navigation to prevent memory leaks.
+ */
+export function cleanupLiveChat() {
+  try {
+    if (typeof document !== 'undefined' && _escapeKeyHandler) {
+      document.removeEventListener('keydown', _escapeKeyHandler);
+      _escapeKeyHandler = null;
+    }
+  } catch (e) {}
 }
