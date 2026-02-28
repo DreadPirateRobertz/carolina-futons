@@ -5,14 +5,39 @@
  */
 
 /**
+ * Decode HTML entities (named, numeric decimal, numeric hex).
+ * @param {string} str - String with potential HTML entities.
+ * @returns {string} Decoded string.
+ */
+function decodeHtmlEntities(str) {
+  if (!str) return '';
+  return str
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&apos;/g, "'");
+}
+
+/**
  * Strip HTML tags and limit string length.
+ * Decodes HTML entities first to prevent entity-encoded XSS bypass,
+ * then strips tags from the decoded result. Repeats decode+strip to
+ * catch double-encoded payloads.
  * @param {string} str - Raw input string.
  * @param {number} [maxLen=1000] - Maximum allowed length.
  * @returns {string} Sanitized string.
  */
 export function sanitize(str, maxLen = 1000) {
   if (typeof str !== 'string') return '';
-  return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLen);
+  const stripTags = s => s.replace(/<[^>]*>/g, '');
+  // Pass 1: strip literal tags, decode entities, strip any tags that emerged
+  let result = stripTags(decodeHtmlEntities(stripTags(str)));
+  // Pass 2: catch double-encoded entities (&amp;lt; → &lt; → <)
+  result = stripTags(decodeHtmlEntities(result));
+  return result.trim().slice(0, maxLen);
 }
 
 /**

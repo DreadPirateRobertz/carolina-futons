@@ -37,6 +37,31 @@ describe('sanitize', () => {
   it('handles nested HTML tags', () => {
     expect(sanitize('<div><span>text</span></div>')).toBe('text');
   });
+
+  it('neutralizes HTML entity-encoded tags (XSS bypass)', () => {
+    // Named entities
+    expect(sanitize('&lt;script&gt;alert(1)&lt;/script&gt;')).toBe('alert(1)');
+    expect(sanitize('&lt;img src=x onerror=alert(1)&gt;')).toBe('');
+    // Numeric entities
+    expect(sanitize('&#60;script&#62;alert(1)&#60;/script&#62;')).toBe('alert(1)');
+    // Hex entities
+    expect(sanitize('&#x3c;script&#x3e;alert(1)&#x3c;/script&#x3e;')).toBe('alert(1)');
+  });
+
+  it('decodes safe entities without stripping them', () => {
+    expect(sanitize('Tom &amp; Jerry')).toBe('Tom & Jerry');
+    expect(sanitize('5 &gt; 3')).toBe('5 > 3');
+    expect(sanitize('&quot;quoted&quot;')).toBe('"quoted"');
+  });
+
+  it('handles mixed entities and literal tags', () => {
+    expect(sanitize('<b>&lt;script&gt;xss&lt;/script&gt;</b>')).toBe('xss');
+  });
+
+  it('handles double-encoded entities', () => {
+    // &amp;lt; decodes to &lt; which then decodes to < — must strip that too
+    expect(sanitize('&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;')).toBe('alert(1)');
+  });
 });
 
 // ── validateEmail ───────────────────────────────────────────────────
