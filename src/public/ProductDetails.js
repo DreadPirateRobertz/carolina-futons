@@ -124,9 +124,19 @@ export function initDeliveryEstimate($w, state) {
   try {
     const el = $w('#deliveryEstimate');
     if (!el || !state.product) return;
+    showDefaultEstimate($w, state);
+    initZipCodeInput($w, state);
+  } catch (e) {}
+}
+
+function showDefaultEstimate($w, state) {
+  try {
+    const el = $w('#deliveryEstimate');
     const today = new Date();
-    const opts = { month: 'short', day: 'numeric', year: 'numeric' };
-    el.text = `Estimated delivery: ${addBusinessDays(today, 5).toLocaleDateString('en-US', opts)} \u2013 ${addBusinessDays(today, 10).toLocaleDateString('en-US', opts)}`;
+    const opts = { month: 'short', day: 'numeric' };
+    const early = addBusinessDays(today, 5).toLocaleDateString('en-US', opts);
+    const late = addBusinessDays(today, 10).toLocaleDateString('en-US', opts);
+    el.text = `Estimated delivery: ${early} \u2013 ${late}`;
     el.show();
     try {
       const isLarge = state.product.weight > 50 ||
@@ -134,6 +144,61 @@ export function initDeliveryEstimate($w, state) {
       if (isLarge) {
         const note = $w('#whiteGloveNote');
         if (note) { note.text = 'White-glove delivery available \u2014 call (828) 252-9449 to schedule'; note.show(); }
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function initZipCodeInput($w, state) {
+  try {
+    const zipInput = $w('#deliveryZipInput');
+    const zipBtn = $w('#deliveryZipBtn');
+    if (!zipInput || !zipBtn) return;
+    try { zipInput.accessibility.ariaLabel = 'Enter your zip code for delivery estimate'; } catch (e) {}
+    try { zipBtn.accessibility.ariaLabel = 'Get delivery estimate'; } catch (e) {}
+    zipBtn.onClick(() => updateEstimateForZip($w, state, zipInput.value));
+    try {
+      zipInput.onKeyPress((event) => {
+        if (event.key === 'Enter') updateEstimateForZip($w, state, zipInput.value);
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function updateEstimateForZip($w, state, rawZip) {
+  try {
+    const zip = (rawZip || '').trim().replace(/[^0-9]/g, '').slice(0, 5);
+    if (zip.length !== 5) return;
+    const prefix = parseInt(zip.slice(0, 3), 10);
+    const today = new Date();
+    const opts = { month: 'short', day: 'numeric' };
+    // Local WNC (287–289): 3–5 business days
+    // Southeast (270–399): 5–8 business days
+    // National: 7–12 business days
+    let minDays, maxDays, zone;
+    if (prefix >= 287 && prefix <= 289) {
+      minDays = 3; maxDays = 5; zone = 'local';
+    } else if (prefix >= 270 && prefix <= 399) {
+      minDays = 5; maxDays = 8; zone = 'regional';
+    } else {
+      minDays = 7; maxDays = 12; zone = 'national';
+    }
+    const early = addBusinessDays(today, minDays).toLocaleDateString('en-US', opts);
+    const late = addBusinessDays(today, maxDays).toLocaleDateString('en-US', opts);
+    const el = $w('#deliveryEstimate');
+    el.text = `Delivered by ${early} \u2013 ${late}`;
+    el.show();
+    // Show white-glove for large items in local/regional zones
+    try {
+      const isLarge = state.product.weight > 50 ||
+        (state.product.collections || []).some(c => /murphy|platform|futon|frame/i.test(c));
+      if (isLarge && (zone === 'local' || zone === 'regional')) {
+        const note = $w('#whiteGloveNote');
+        if (note) {
+          const price = zone === 'local' ? '$149' : '$249';
+          note.text = `White-glove delivery available (${price}) \u2014 call (828) 252-9449 to schedule`;
+          note.show();
+        }
       }
     } catch (e) {}
   } catch (e) {}
@@ -225,4 +290,22 @@ async function handleSwatchSubmit($w, state) {
       if (msg) { msg.text = 'Something went wrong. Please call us at (828) 252-9449.'; msg.show('fade', { duration: 300 }); }
     } catch (e) {}
   }
+}
+
+// ── Prominent "Get Free Swatches" CTA ────────────────────────────────
+// Always-visible branded button that opens the swatch request modal.
+// Uses Coral (#E8845C) background per brand palette for high visibility.
+
+export function initSwatchCTA($w, state) {
+  try {
+    const btn = $w('#swatchCTABtn');
+    if (!btn || !state?.product) return;
+    const hasFabricOptions = state.product.productOptions?.some(opt => /finish|fabric|color|cover/i.test(opt.name));
+    btn.label = hasFabricOptions ? 'Get Free Swatches' : 'Request Free Swatches';
+    try { btn.style.backgroundColor = '#E8845C'; } catch (e) {}
+    try { btn.style.color = '#FFFFFF'; } catch (e) {}
+    try { btn.accessibility.ariaLabel = 'Request free fabric swatches shipped to your door'; } catch (e) {}
+    btn.show();
+    btn.onClick(() => openSwatchModal($w, state));
+  } catch (e) {}
 }
