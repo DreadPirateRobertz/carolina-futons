@@ -14,7 +14,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 // Components
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
-import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest } from 'public/ProductDetails.js';
+import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
 import { initProductReviews } from 'public/ProductReviews.js';
 import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
@@ -115,6 +115,7 @@ async function initProductPage() {
       { name: 'stickyCartBar', init: () => initStickyCartBar($w, state) },
       { name: 'deliveryEstimate', init: () => initDeliveryEstimate($w, state) },
       { name: 'swatchRequest', init: () => initSwatchRequest($w, state) },
+      { name: 'swatchCTA', init: () => initSwatchCTA($w, state) },
       { name: 'productInfoAccordion', init: () => initProductInfoAccordion($w) },
       { name: 'comfortCards', init: () => initComfortCards($w, state) },
       { name: 'dimensionDisplay', init: () => initDimensionDisplay($w, state) },
