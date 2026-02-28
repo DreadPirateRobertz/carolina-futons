@@ -158,6 +158,8 @@ export default defineConfig({
       'public/SwatchRequestFlow': path.resolve(__dirname, 'src/public/SwatchRequestFlow.js'),
       'public/ComfortStoryCards.js': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
       'public/ComfortStoryCards': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
+      'public/proactiveChatTriggers.js': path.resolve(__dirname, 'src/public/proactiveChatTriggers.js'),
+      'public/proactiveChatTriggers': path.resolve(__dirname, 'src/public/proactiveChatTriggers.js'),
     },
   },
 });

@@ -44,7 +44,11 @@ $w.onReady(async function () {
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
   setTimeout(() => {
     import('public/LiveChat.js').then(({ initLiveChat }) => {
-      initLiveChat($w);
+      const path = wixLocationFrontend.path?.join('/') || '';
+      const page = path.includes('product-page') ? 'product'
+        : path.includes('checkout') ? 'checkout'
+        : undefined;
+      initLiveChat($w, { page });
     }).catch(err => console.error('[masterPage] LiveChat init failed:', err.message));
   }, 2000);
 
