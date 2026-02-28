@@ -108,19 +108,29 @@ async function initProductPage() {
       }
     });
 
-    initSocialShare($w, state);
-    initStickyCartBar($w, state);
-    initDeliveryEstimate($w, state);
-    initSwatchRequest($w, state);
-    initProductInfoAccordion($w);
-    initDimensionDisplay($w, state);
-    initRoomFitChecker($w, state);
-    initSizeComparisonTable($w, state);
-    initInventoryDisplay($w, state);
+    // Each init wrapped individually so one failure doesn't block the rest
+    const secondaryInits = [
+      { name: 'socialShare', init: () => initSocialShare($w, state) },
+      { name: 'stickyCartBar', init: () => initStickyCartBar($w, state) },
+      { name: 'deliveryEstimate', init: () => initDeliveryEstimate($w, state) },
+      { name: 'swatchRequest', init: () => initSwatchRequest($w, state) },
+      { name: 'productInfoAccordion', init: () => initProductInfoAccordion($w) },
+      { name: 'dimensionDisplay', init: () => initDimensionDisplay($w, state) },
+      { name: 'roomFitChecker', init: () => initRoomFitChecker($w, state) },
+      { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
+      { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
+      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']) },
+      { name: 'backToTop', init: () => initBackToTop($w) },
+      { name: 'browseTracking', init: () => initBrowseTracking(state) },
+    ];
 
-    collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']);
-    initBackToTop($w);
-    initBrowseTracking(state);
+    for (const section of secondaryInits) {
+      try {
+        section.init();
+      } catch (e) {
+        console.error(`[ProductPage] "${section.name}" init failed:`, e);
+      }
+    }
 
     // Social proof toast (non-blocking, delayed)
     initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});
