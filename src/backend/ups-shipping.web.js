@@ -503,7 +503,7 @@ export const trackShipment = webMethod(
       console.error('Error tracking UPS shipment:', err);
       return {
         success: false,
-        error: err.message,
+        error: 'Unable to retrieve tracking information',
       };
     }
   }

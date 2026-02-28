@@ -287,6 +287,39 @@ describe('trackShipment', () => {
     const result = await trackShipment('1ZINVALID');
     expect(result.success).toBe(false);
   });
+
+  it('does not leak internal error details to public callers', async () => {
+    __setHandler(() => {
+      throw new Error('UPS API key expired: client_id=abc123, secret=xyz789');
+    });
+
+    const result = await trackShipment('1Z999AA10123456784');
+    expect(result.success).toBe(false);
+    // Must NOT contain the internal error message
+    expect(result.error).not.toContain('UPS API');
+    expect(result.error).not.toContain('abc123');
+    expect(result.error).not.toContain('secret');
+    // Should return a generic user-facing message
+    expect(result.error).toBe('Unable to retrieve tracking information');
+  });
+
+  it('rejects tracking numbers that are too short', async () => {
+    const result = await trackShipment('ABC');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid tracking number format');
+  });
+
+  it('rejects empty tracking number', async () => {
+    const result = await trackShipment('');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid tracking number format');
+  });
+
+  it('rejects null/undefined tracking number', async () => {
+    const result = await trackShipment(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid tracking number format');
+  });
 });
 
 // ── validateAddress ────────────────────────────────────────────────

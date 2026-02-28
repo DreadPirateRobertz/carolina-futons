@@ -292,6 +292,38 @@ describe('getShippingRates', () => {
     expect(local.cost.price).toBe('49.99');
   });
 
+  it('rejects negative item prices — treats them as zero', async () => {
+    const result = await getShippingRates({
+      lineItems: [
+        { name: 'Futon Frame', quantity: 1, price: '-500' },
+        { name: 'Mattress', quantity: 1, price: '200' },
+      ],
+      shippingDestination: {
+        address: { postalCode: '10001', city: 'New York', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    // Negative price clamped to 0, so subtotal = 0 + 200 = 200, NOT -300
+    // Should NOT qualify for free shipping
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('free-ground');
+  });
+
+  it('does not allow negative prices to reduce subtotal below zero', async () => {
+    const result = await getShippingRates({
+      lineItems: [
+        { name: 'Futon Frame', quantity: 1, price: '-9999' },
+      ],
+      shippingDestination: {
+        address: { postalCode: '10001', city: 'New York', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    // Negative price clamped to 0, subtotal = 0
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('free-ground');
+  });
+
   it('white-glove has shorter delivery time for local ZIP codes', async () => {
     const localResult = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
