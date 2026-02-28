@@ -4,7 +4,7 @@
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { getCategoryHeroImage } from 'public/placeholderImages.js';
+import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -70,6 +70,10 @@ $w.onReady(async function () {
 
 async function loadFeaturedProducts() {
   try {
+    // Set section heading
+    try { $w('#featuredTitle').text = 'Our Favorite Finds'; } catch (e) {}
+    try { $w('#featuredSubtitle').text = 'Handpicked by the Carolina Futons family — quality you can feel.'; } catch (e) {}
+
     const allFeatured = await getFeaturedProducts(8);
     const featured = limitForViewport(allFeatured, { mobile: 4, tablet: 6, desktop: 8 });
     const repeater = $w('#featuredRepeater');
@@ -92,6 +96,16 @@ async function loadFeaturedProducts() {
           $item('#featuredSaleBadge').show();
         } catch (e) { /* optional elements */ }
       }
+
+      // Show ribbon badge (Featured, New, Clearance, etc.)
+      try {
+        if (itemData.ribbon) {
+          $item('#featuredRibbon').text = itemData.ribbon;
+          $item('#featuredRibbon').show();
+        } else {
+          $item('#featuredRibbon').hide();
+        }
+      } catch (e) { /* ribbon element optional */ }
 
       // Navigate to product page on click/keyboard
       const navToProduct = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
@@ -168,6 +182,26 @@ async function initCategoryShowcase() {
             ? `${itemData.count} Products` : '';
         } catch (e) {}
         try { $item('#categoryCardTitle').accessibility.ariaLabel = `Browse ${itemData.name}`; } catch (e) {}
+        // Category card image
+        try {
+          const cardImg = $item('#categoryCardImage');
+          if (cardImg && itemData.collection) {
+            cardImg.src = getCategoryCardImage(itemData.collection);
+            cardImg.alt = `${itemData.name} - Carolina Futons`;
+          }
+        } catch (e) {}
+        // Hover Coral accent on card
+        try {
+          const card = $item('#categoryCard');
+          if (card) {
+            card.onMouseIn(() => {
+              try { card.style.backgroundColor = '#E8845C'; } catch (e) {}
+            });
+            card.onMouseOut(() => {
+              try { card.style.backgroundColor = ''; } catch (e) {}
+            });
+          }
+        } catch (e) {}
         makeClickable($item('#categoryCardTitle'), () => {
           import('wix-location-frontend').then(({ to }) => to(itemData.path));
         }, { ariaLabel: `Browse ${itemData.name}` });
@@ -222,28 +256,34 @@ async function initRecentlyViewed() {
 }
 
 // ── Trust Bar ───────────────────────────────────────────────────────
-// Animated trust signals strip with key selling points
+// Animated trust signals strip with hand-drawn line icons
+
+const TRUST_ICONS = { mountain: '\u26F0', heart: '\u2764', palette: '\uD83C\uDFA8', truck: '\uD83D\uDE9A' };
 
 function initTrustBar() {
   const trustSignals = [
-    { id: '#trustItem1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
-    { id: '#trustItem2', text: 'Family Owned Since 1991', icon: 'heart' },
-    { id: '#trustItem3', text: '700+ Fabric Swatches', icon: 'palette' },
-    { id: '#trustItem4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
+    { id: '#trustItem1', iconId: '#trustIcon1', textId: '#trustText1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
+    { id: '#trustItem2', iconId: '#trustIcon2', textId: '#trustText2', text: 'Family Owned Since 1991', icon: 'heart' },
+    { id: '#trustItem3', iconId: '#trustIcon3', textId: '#trustText3', text: '700+ Fabric Swatches', icon: 'palette' },
+    { id: '#trustItem4', iconId: '#trustIcon4', textId: '#trustText4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
   ];
 
   try {
     const trustBar = $w('#trustBar');
     if (!trustBar) return;
 
-    // Staggered fade-in for each trust item
     trustSignals.forEach((signal, index) => {
       try {
         const element = $w(signal.id);
         if (element) {
           element.show('fade', { duration: 400, delay: 200 + (index * 150) });
+          try { element.accessibility.ariaLabel = signal.text; } catch (e) {}
         }
       } catch (e) {}
+      // Wire icon element
+      try { $w(signal.iconId).text = TRUST_ICONS[signal.icon] || signal.icon; } catch (e) {}
+      // Wire text element
+      try { $w(signal.textId).text = signal.text; } catch (e) {}
     });
   } catch (e) {
     // Trust bar may not exist

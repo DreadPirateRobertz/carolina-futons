@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { futonFrame, futonMattress, wallHuggerFrame, saleProduct } from './fixtures/products.js';
+import { futonFrame, futonMattress, wallHuggerFrame, saleProduct, outdoorFrame } from './fixtures/products.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -78,6 +78,7 @@ vi.mock('public/galleryHelpers.js', () => ({
 
 vi.mock('public/placeholderImages.js', () => ({
   getCategoryHeroImage: vi.fn().mockReturnValue('https://example.com/hero.jpg'),
+  getCategoryCardImage: vi.fn((slug) => `https://example.com/card-${slug}.jpg`),
   getRidgelineHeaderSrc: vi.fn().mockReturnValue('https://example.com/ridgeline.svg'),
   getCategoryIllustration: vi.fn((cat) => `https://example.com/category-${cat}.png`),
 }));
@@ -597,6 +598,234 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       await onReadyHandler();
       const { trackEvent } = await import('public/engagementTracker');
       expect(trackEvent).toHaveBeenCalledWith('page_view', expect.objectContaining({ page: 'home' }));
+    });
+  });
+
+  // ── Trust Bar Icon Wiring ──────────────────────────────────────────
+
+  describe('trust bar icon wiring', () => {
+    it('sets icon text on trust icon elements', async () => {
+      await onReadyHandler();
+      const icon1 = getEl('#trustIcon1');
+      expect(icon1.text).toBeTruthy();
+    });
+
+    it('sets text content on trust text elements', async () => {
+      await onReadyHandler();
+      const text1 = getEl('#trustText1');
+      expect(text1.text).toContain('Carolinas');
+    });
+
+    it('trust icon 2 shows heart icon for family-owned', async () => {
+      await onReadyHandler();
+      const icon2 = getEl('#trustIcon2');
+      expect(icon2.text).toBeTruthy();
+    });
+
+    it('trust icon 3 shows palette icon for swatches', async () => {
+      await onReadyHandler();
+      const icon3 = getEl('#trustIcon3');
+      expect(icon3.text).toBeTruthy();
+    });
+
+    it('trust icon 4 shows truck icon for shipping', async () => {
+      await onReadyHandler();
+      const icon4 = getEl('#trustIcon4');
+      expect(icon4.text).toBeTruthy();
+    });
+
+    it('sets accessibility label on trust items', async () => {
+      await onReadyHandler();
+      const item1 = getEl('#trustItem1');
+      expect(item1.accessibility.ariaLabel).toContain('Carolinas');
+    });
+  });
+
+  // ── Category Card Image & Hover ────────────────────────────────────
+
+  describe('category card images and hover', () => {
+    it('category onItemReady sets card image src', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+            style: { backgroundColor: '' },
+          };
+        }
+        return itemElements[sel];
+      };
+
+      const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
+      itemReadyCb($item, catData);
+
+      expect(itemElements['#categoryCardImage'].src).toBeTruthy();
+    });
+
+    it('category card image has alt text', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+            style: { backgroundColor: '' },
+          };
+        }
+        return itemElements[sel];
+      };
+
+      const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
+      itemReadyCb($item, catData);
+
+      expect(itemElements['#categoryCardImage'].alt).toContain('Futon Frames');
+    });
+
+    it('category card registers mouseIn hover handler', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+            style: { backgroundColor: '' },
+          };
+        }
+        return itemElements[sel];
+      };
+
+      const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
+      itemReadyCb($item, catData);
+
+      expect(itemElements['#categoryCard'].onMouseIn).toHaveBeenCalled();
+    });
+
+    it('category card registers mouseOut hover handler', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+            style: { backgroundColor: '' },
+          };
+        }
+        return itemElements[sel];
+      };
+
+      const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
+      itemReadyCb($item, catData);
+
+      expect(itemElements['#categoryCard'].onMouseOut).toHaveBeenCalled();
+    });
+  });
+
+  // ── Featured Products Badge Support ────────────────────────────────
+
+  describe('featured products badge support', () => {
+    it('shows ribbon badge when product has ribbon text', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#featuredRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      // wallHuggerFrame has ribbon: 'Featured'
+      itemReadyCb($item, wallHuggerFrame);
+      expect(itemElements['#featuredRibbon'].text).toBe('Featured');
+      expect(itemElements['#featuredRibbon'].show).toHaveBeenCalled();
+    });
+
+    it('hides ribbon badge when product has no ribbon', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#featuredRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      // futonFrame has ribbon: ''
+      itemReadyCb($item, futonFrame);
+      expect(itemElements['#featuredRibbon'].hide).toHaveBeenCalled();
+    });
+
+    it('shows "New" ribbon for new arrival products', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#featuredRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '',
+            accessibility: { ariaLabel: '' },
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      // outdoorFrame has ribbon: 'New'
+      itemReadyCb($item, outdoorFrame);
+      expect(itemElements['#featuredRibbon'].text).toBe('New');
+      expect(itemElements['#featuredRibbon'].show).toHaveBeenCalled();
+    });
+  });
+
+  // ── Featured Products Section Title ────────────────────────────────
+
+  describe('featured products section title', () => {
+    it('sets featured section title text', async () => {
+      await onReadyHandler();
+      const title = getEl('#featuredTitle');
+      expect(title.text).toBeTruthy();
+    });
+
+    it('sets featured section subtitle text', async () => {
+      await onReadyHandler();
+      const subtitle = getEl('#featuredSubtitle');
+      expect(subtitle.text).toBeTruthy();
     });
   });
 });
