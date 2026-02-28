@@ -18,6 +18,7 @@ import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliver
 import { initProductReviews } from 'public/ProductReviews.js';
 import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
+import { initComfortCards } from 'public/ComfortStoryCards.js';
 import { getProductDimensions, checkRoomFit, convertUnit, getComparisonTable } from 'backend/sizeGuide.web';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
@@ -115,6 +116,7 @@ async function initProductPage() {
       { name: 'deliveryEstimate', init: () => initDeliveryEstimate($w, state) },
       { name: 'swatchRequest', init: () => initSwatchRequest($w, state) },
       { name: 'productInfoAccordion', init: () => initProductInfoAccordion($w) },
+      { name: 'comfortCards', init: () => initComfortCards($w, state) },
       { name: 'dimensionDisplay', init: () => initDimensionDisplay($w, state) },
       { name: 'roomFitChecker', init: () => initRoomFitChecker($w, state) },
       { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
