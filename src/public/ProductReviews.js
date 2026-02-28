@@ -2,8 +2,9 @@
 // Displays product reviews with star ratings, sorting, pagination,
 // submission form for logged-in members, and helpful voting.
 
-let currentSort = 'newest';
-let currentPage = 0;
+// Page-scoped review state — reset on every init to prevent SPA bleed
+const DEFAULT_SORT = 'newest';
+const DEFAULT_PAGE = 0;
 
 /**
  * Initialize the reviews section on a product page.
@@ -20,12 +21,16 @@ export async function initProductReviews($w, state) {
     const productId = state.product?._id;
     if (!productId) { section.collapse(); return; }
 
+    // Reset review state on each init to prevent SPA navigation bleed
+    state.reviewSort = DEFAULT_SORT;
+    state.reviewPage = DEFAULT_PAGE;
+
     // Load aggregate + reviews in parallel
     const { getAggregateRating, getProductReviews } = await import('backend/reviewsService.web');
 
     const [aggregate, reviewsResult] = await Promise.all([
       getAggregateRating(productId),
-      getProductReviews(productId, { sort: currentSort, page: 0 }),
+      getProductReviews(productId, { sort: state.reviewSort, page: DEFAULT_PAGE }),
     ]);
 
     // Show section
@@ -185,15 +190,15 @@ function initSortDropdown($w, state, getProductReviews) {
       { label: 'Lowest Rated', value: 'lowest' },
       { label: 'Most Helpful', value: 'helpful' },
     ];
-    dropdown.value = currentSort;
+    dropdown.value = state.reviewSort;
     try { dropdown.accessibility.ariaLabel = 'Sort reviews'; } catch (e) {}
 
     dropdown.onChange(async () => {
-      currentSort = dropdown.value;
-      currentPage = 0;
-      const result = await getProductReviews(state.product._id, { sort: currentSort, page: 0 });
+      state.reviewSort = dropdown.value;
+      state.reviewPage = 0;
+      const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: 0 });
       renderReviews($w, result);
-      updatePaginationState($w, result);
+      updatePaginationState($w, state, result);
     });
   } catch (e) {}
 }
@@ -201,17 +206,17 @@ function initSortDropdown($w, state, getProductReviews) {
 // ── Pagination ────────────────────────────────────────────────────────
 
 function initPagination($w, state, initialResult, getProductReviews) {
-  updatePaginationState($w, initialResult);
+  updatePaginationState($w, state, initialResult);
 
   try {
     const nextBtn = $w('#reviewsNextBtn');
     if (nextBtn) {
       try { nextBtn.accessibility.ariaLabel = 'Next page of reviews'; } catch (e) {}
       nextBtn.onClick(async () => {
-        currentPage++;
-        const result = await getProductReviews(state.product._id, { sort: currentSort, page: currentPage });
+        state.reviewPage++;
+        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage });
         renderReviews($w, result);
-        updatePaginationState($w, result);
+        updatePaginationState($w, state, result);
       });
     }
   } catch (e) {}
@@ -221,28 +226,28 @@ function initPagination($w, state, initialResult, getProductReviews) {
     if (prevBtn) {
       try { prevBtn.accessibility.ariaLabel = 'Previous page of reviews'; } catch (e) {}
       prevBtn.onClick(async () => {
-        currentPage = Math.max(0, currentPage - 1);
-        const result = await getProductReviews(state.product._id, { sort: currentSort, page: currentPage });
+        state.reviewPage = Math.max(0, state.reviewPage - 1);
+        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage });
         renderReviews($w, result);
-        updatePaginationState($w, result);
+        updatePaginationState($w, state, result);
       });
     }
   } catch (e) {}
 }
 
-function updatePaginationState($w, result) {
+function updatePaginationState($w, state, result) {
   const totalPages = Math.ceil(result.total / result.pageSize);
   try {
     const prevBtn = $w('#reviewsPrevBtn');
-    if (prevBtn) { currentPage > 0 ? prevBtn.enable() : prevBtn.disable(); }
+    if (prevBtn) { state.reviewPage > 0 ? prevBtn.enable() : prevBtn.disable(); }
   } catch (e) {}
   try {
     const nextBtn = $w('#reviewsNextBtn');
-    if (nextBtn) { currentPage < totalPages - 1 ? nextBtn.enable() : nextBtn.disable(); }
+    if (nextBtn) { state.reviewPage < totalPages - 1 ? nextBtn.enable() : nextBtn.disable(); }
   } catch (e) {}
   try {
     $w('#reviewsPageInfo').text = totalPages > 0
-      ? `Page ${currentPage + 1} of ${totalPages}`
+      ? `Page ${state.reviewPage + 1} of ${totalPages}`
       : '';
   } catch (e) {}
 }

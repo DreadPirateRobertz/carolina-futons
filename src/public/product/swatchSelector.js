@@ -18,6 +18,9 @@ let selectedSwatchId = null;
  * @param {Function} [options.onSelectVariant] - Called to trigger variant change when swatch matches a finish
  */
 export async function initSwatchSelector($w, product, { onSelectVariant } = {}) {
+  // Reset module state on init to prevent SPA navigation bleed
+  selectedSwatchId = null;
+
   try {
     const swatchSection = $w('#swatchSection');
     if (!swatchSection || !product) {

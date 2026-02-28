@@ -138,4 +138,66 @@ describe('ProductReviews', () => {
     await initProductReviews($w, state);
     expect($w('#reviewsEmptyState').show).toHaveBeenCalled();
   });
+
+  // ── SPA state-bleed regression tests ────────────────────────────────
+
+  it('resets sort to newest on each init (SPA navigation)', async () => {
+    const { getProductReviews } = await import('backend/reviewsService.web');
+
+    // First product page — simulate sort change via onChange handler
+    await initProductReviews($w, state);
+    const sortDropdown = $w('#reviewsSortDropdown');
+    // Simulate user changing sort to 'helpful'
+    sortDropdown.value = 'helpful';
+    const onChangeHandler = sortDropdown.onChange.mock.calls[0][0];
+    await onChangeHandler();
+
+    // Verify sort was called with 'helpful'
+    expect(getProductReviews).toHaveBeenCalledWith(
+      state.product._id,
+      expect.objectContaining({ sort: 'helpful' })
+    );
+
+    // Navigate to second product (SPA) — fresh $w and state
+    vi.clearAllMocks();
+    const $w2 = create$w();
+    const state2 = { product: { ...futonFrame, _id: 'product-2' } };
+
+    await initProductReviews($w2, state2);
+
+    // Sort dropdown should be reset to 'newest', NOT carry over 'helpful'
+    expect($w2('#reviewsSortDropdown').value).toBe('newest');
+    // Initial fetch should use 'newest' sort and page 0
+    expect(getProductReviews).toHaveBeenCalledWith(
+      'product-2',
+      expect.objectContaining({ sort: 'newest', page: 0 })
+    );
+  });
+
+  it('resets page to 0 on each init (SPA navigation)', async () => {
+    const { getProductReviews } = await import('backend/reviewsService.web');
+    getProductReviews.mockResolvedValue({ reviews: mockReviews.reviews, total: 30, page: 0, pageSize: 10 });
+
+    // First product page — simulate pagination
+    await initProductReviews($w, state);
+    const nextBtn = $w('#reviewsNextBtn');
+    const nextHandler = nextBtn.onClick.mock.calls[0][0];
+    await nextHandler(); // go to page 1
+
+    // Navigate to second product (SPA)
+    vi.clearAllMocks();
+    getProductReviews.mockResolvedValue({ reviews: mockReviews.reviews, total: 30, page: 0, pageSize: 10 });
+    const $w2 = create$w();
+    const state2 = { product: { ...futonFrame, _id: 'product-2' } };
+
+    await initProductReviews($w2, state2);
+
+    // Should fetch page 0, not page 1 carried over from previous product
+    expect(getProductReviews).toHaveBeenCalledWith(
+      'product-2',
+      expect.objectContaining({ page: 0 })
+    );
+    // Prev button should be disabled (we're on page 0)
+    expect($w2('#reviewsPrevBtn').disable).toHaveBeenCalled();
+  });
 });
