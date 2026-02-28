@@ -5,7 +5,7 @@ import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCurrentCart, onCartChanged } from 'public/cartService';
+import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
@@ -35,6 +35,8 @@ $w.onReady(async function () {
   initSearch();
   initSideCartAutoOpen();
   initFooterNewsletter();
+  initHeaderShippingProgress();
+  initNewsletterModal();
   initInstallBanner();
   injectCanonicalUrl();
   await injectBusinessSchema();
@@ -96,6 +98,9 @@ function initAccessibility() {
           // Close exit intent popup
           try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
           try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          // Close newsletter modal
+          try { $w('#newsletterModal').hide('fade', { duration: 200 }); } catch (e) {}
+          try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
           // Restore focus to previously active element
           try {
             if (document.activeElement && document.activeElement !== document.body) {
@@ -704,13 +709,36 @@ function initExitIntent() {
       if (!$w('#promoLightbox').hidden) return;
     } catch (e) {}
 
-    // Mouse leave detection (desktop only — moves cursor above viewport)
-    if (typeof document !== 'undefined') {
-      document.addEventListener('mouseleave', (e) => {
-        if (e.clientY <= 0) {
-          showExitPopup();
-        }
-      }, { once: true });
+    if (isMobile()) {
+      // Mobile: detect back-button / tab-switch via visibility API
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            // Mark shown so popup fires on return to page
+            if (typeof sessionStorage !== 'undefined') {
+              try { sessionStorage.setItem('cf_exit_pending', '1'); } catch (e) {}
+            }
+          } else if (document.visibilityState === 'visible') {
+            if (typeof sessionStorage !== 'undefined') {
+              try {
+                if (sessionStorage.getItem('cf_exit_pending') && !sessionStorage.getItem('cf_exit_shown')) {
+                  sessionStorage.removeItem('cf_exit_pending');
+                  showExitPopup();
+                }
+              } catch (e) {}
+            }
+          }
+        });
+      }
+    } else {
+      // Desktop: mouse leave detection (cursor above viewport)
+      if (typeof document !== 'undefined') {
+        document.addEventListener('mouseleave', (e) => {
+          if (e.clientY <= 0) {
+            showExitPopup();
+          }
+        }, { once: true });
+      }
     }
   } catch (e) {}
 }
@@ -730,7 +758,7 @@ function showExitPopup() {
 
     // Populate content
     try { $w('#exitTitle').text = 'Wait — Before You Go!'; } catch (e) {}
-    try { $w('#exitSubtitle').text = 'Get free fabric swatches shipped to your door, or save 5% on your first order.'; } catch (e) {}
+    try { $w('#exitSubtitle').text = 'Get free fabric swatches shipped to your door, or save 10% on your first order.'; } catch (e) {}
 
     // Set dialog ARIA attributes
     try { popup.accessibility.role = 'dialog'; } catch (e) {}
@@ -782,7 +810,7 @@ function showExitPopup() {
           $w('#exitEmailInput').value = '';
           $w('#exitEmailSubmit').label = 'Sent!';
           try {
-            $w('#exitSuccess').text = 'Check your inbox! Use code WELCOME5 for 5% off.';
+            $w('#exitSuccess').text = 'Check your inbox! Use code WELCOME10 for 10% off.';
             $w('#exitSuccess').show('fade', { duration: 300 });
           } catch (e) {}
 
@@ -808,6 +836,143 @@ function showExitPopup() {
 function dismissExitPopup() {
   try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+}
+
+// ── Header Shipping Progress Bar ─────────────────────────────────
+// Persistent bar showing distance to $999 free shipping threshold
+
+function initHeaderShippingProgress() {
+  async function updateHeaderShipping() {
+    try {
+      const cart = await getCurrentCart();
+      const subtotal = cart?.totals?.subtotal || 0;
+      const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
+
+      try {
+        const bar = $w('#headerShippingBar');
+        if (bar) bar.value = Math.max(0, progressPct);
+      } catch (e) {}
+
+      try {
+        const text = $w('#headerShippingText');
+        if (text) {
+          text.text = qualifies
+            ? 'FREE shipping!'
+            : `$${remaining.toFixed(2)} away from free shipping`;
+          try { text.accessibility.ariaLive = 'polite'; } catch (e) {}
+        }
+      } catch (e) {}
+    } catch (e) {}
+  }
+
+  updateHeaderShipping();
+  onCartChanged(() => updateHeaderShipping());
+}
+
+// ── Newsletter Modal ────────────────────────────────────────────────
+// Dedicated newsletter signup modal with Mountain-themed design + 10% offer
+
+function initNewsletterModal() {
+  try {
+    const trigger = $w('#newsletterModalTrigger');
+    const modal = $w('#newsletterModal');
+    if (!trigger && !modal) return;
+
+    // Open modal on trigger click (e.g., CTA button in hero or footer)
+    if (trigger) {
+      trigger.onClick(() => showNewsletterModal());
+    }
+
+    // Close handlers
+    try {
+      $w('#newsletterModalClose').onClick(() => dismissNewsletterModal());
+      try { $w('#newsletterModalClose').accessibility.ariaLabel = 'Close newsletter signup'; } catch (e) {}
+    } catch (e) {}
+    try {
+      $w('#newsletterModalOverlay').onClick(() => dismissNewsletterModal());
+    } catch (e) {}
+
+    // Email submission
+    try {
+      const emailInput = $w('#newsletterModalEmail');
+      const submitBtn = $w('#newsletterModalSubmit');
+      if (!emailInput || !submitBtn) return;
+
+      try { emailInput.accessibility.ariaLabel = 'Enter your email for 10% off'; } catch (e) {}
+      try { submitBtn.accessibility.ariaLabel = 'Subscribe for 10% off'; } catch (e) {}
+
+      submitBtn.onClick(async () => {
+        const email = emailInput.value?.trim();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          try { $w('#newsletterModalError').text = 'Please enter a valid email'; } catch (e) {}
+          try { $w('#newsletterModalError').show(); } catch (e) {}
+          return;
+        }
+
+        try { $w('#newsletterModalError').hide(); } catch (e) {}
+        submitBtn.disable();
+        submitBtn.label = 'Subscribing...';
+
+        try {
+          await submitContactForm({
+            email,
+            source: 'newsletter_modal',
+            status: 'newsletter_signup',
+            notes: 'Subscribed via newsletter modal — 10% welcome offer',
+          });
+
+          try {
+            const wixCrm = await import('wix-crm-frontend');
+            await wixCrm.createContact({ emails: [email] });
+          } catch (e) {}
+
+          trackEvent('newsletter_signup', { source: 'modal' });
+          fireCustomEvent('newsletter_signup', { source: 'modal' });
+
+          emailInput.value = '';
+          submitBtn.label = 'Subscribed!';
+          try {
+            $w('#newsletterModalSuccess').text = 'Use code WELCOME10 for 10% off your first order!';
+            $w('#newsletterModalSuccess').show('fade', { duration: 300 });
+          } catch (e) {}
+
+          setTimeout(() => dismissNewsletterModal(), 4000);
+        } catch (err) {
+          submitBtn.enable();
+          submitBtn.label = 'Get 10% Off';
+        }
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+function showNewsletterModal() {
+  try {
+    // Don't show if already subscribed this session
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        if (sessionStorage.getItem('cf_newsletter_modal_shown')) return;
+        sessionStorage.setItem('cf_newsletter_modal_shown', '1');
+      } catch (e) {}
+    }
+
+    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
+
+    const modal = $w('#newsletterModal');
+    if (!modal) return;
+
+    try { modal.accessibility.role = 'dialog'; } catch (e) {}
+    try { modal.accessibility.ariaModal = true; } catch (e) {}
+    try { modal.accessibility.ariaLabel = 'Newsletter signup — 10% off your first order'; } catch (e) {}
+
+    try { $w('#newsletterModalOverlay').show('fade', { duration: 300 }); } catch (e) {}
+    modal.show('fade', { duration: 300 });
+  } catch (e) {}
+}
+
+function dismissNewsletterModal() {
+  try { $w('#newsletterModal').hide('fade', { duration: 200 }); } catch (e) {}
+  try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
 }
 
 // ── Core Web Vitals Collection ────────────────────────────────────

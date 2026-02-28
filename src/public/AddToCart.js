@@ -150,7 +150,12 @@ export async function initStockUrgency($w, state) {
     try {
       const el = $w('#stockUrgency');
       if (el && state.product.quantityInStock != null && state.product.quantityInStock < 5 && state.product.quantityInStock > 0) {
-        el.text = `Only ${state.product.quantityInStock} left in stock`; el.show();
+        el.text = `Only ${state.product.quantityInStock} left in stock`;
+        el.show();
+        // Pulse animation for critical stock (≤ 2 units)
+        if (state.product.quantityInStock <= 2) {
+          try { el.style.animation = 'pulse 1.5s ease-in-out infinite'; } catch (e) {}
+        }
       } else if (el) { el.hide(); }
     } catch (e) {}
     try {
