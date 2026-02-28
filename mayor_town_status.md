@@ -1,5 +1,34 @@
 # Mayor Town Status Report
 
+## 2026-02-28 02:05 MST — Full Production, Convoys Launched
+
+**3 convoys created, 3 polecats dispatched, all crew assigned.**
+
+### Convoys Active
+| Convoy | ID | Issues | Status |
+|--------|-----|--------|--------|
+| cfutons Frontend Sprint | hq-cv-1ghmy | 9 | All crew assigned, in-progress |
+| Gastown P1 Bug Blitz | hq-cv-epfrr | 6 | 3 polecats running + 3 crew assigned |
+| Gastown CI Failures | hq-cv-oujgr | 8 | Tracking, crew to claim |
+
+### Gastown Polecats
+- furiosa → gt-t1f (patrol --root-only bug)
+- nux → gt-g6q (workspace trust prompt)
+- slit → gt-vp5 (stale PID handling)
+- gt-dv4 → assigned to deckard (polecat spawn failed, crew fallback)
+
+### Cfutons Crew Assignments (all in-progress)
+- godfrey: cf-0sej (nav/layout), cf-joph (empty states)
+- radahn: cf-r9sc (swatch/fabric), cf-mjc3 (product page UX)
+- rennala: cf-5qpo (conversion), cf-4com (category filtering)
+- miquella: cf-6arz (cart/checkout), cf-fy6h (homepage hero) + TOKEN AUDITOR
+- melania: beads coordinator
+
+### Duplicates Closed
+- gt-y2l (dupe of gt-g6q), gt-7a5 (dupe of gt-vp5)
+
+---
+
 ## 2026-02-28 01:58 MST — Session Start + Triage
 
 **Mayor session:** 7f1955bd (cold start)
