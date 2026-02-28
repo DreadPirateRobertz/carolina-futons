@@ -70,7 +70,7 @@ const TIERS = {
   starter: { maxPrice: 500, label: 'Starter Bundle', badgeColor: '#5B8FA8' },
   essentials: { maxPrice: 1000, label: 'Essentials Bundle', badgeColor: '#E8845C' },
   premium: { maxPrice: 1500, label: 'Premium Bundle', badgeColor: '#3A2518' },
-  deluxe: { maxPrice: Infinity, label: 'Deluxe Bundle', badgeColor: '#C9A0A0' },
+  deluxe: { maxPrice: Infinity, label: 'Deluxe Bundle', badgeColor: '#5B8FA8' },
 };
 
 /**
