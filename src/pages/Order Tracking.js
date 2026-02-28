@@ -5,7 +5,7 @@ import { lookupOrder, subscribeToNotifications, unsubscribeFromNotifications, ge
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { colors, typography } from 'public/designTokens.js';
-import { initBackToTop } from 'public/mobileHelpers';
+import { initBackToTop, isMobile } from 'public/mobileHelpers';
 
 let _currentOrder = null;
 let _autoRefreshTimer = null;
@@ -156,7 +156,18 @@ function renderTimeline(timeline, order) {
     try { timelineContainer.accessibility.role = 'list'; } catch (e) {}
     try { timelineContainer.accessibility.ariaLabel = 'Order tracking timeline'; } catch (e) {}
 
+    // On mobile, only show completed + current + next step to prevent overflow
+    const mobile = isMobile();
+    let currentStepIdx = timeline.findIndex(s => s.current);
+    if (currentStepIdx < 0) currentStepIdx = timeline.length - 1;
+
     timeline.forEach((step, idx) => {
+      // On mobile, collapse steps that aren't near the current step
+      if (mobile && Math.abs(idx - currentStepIdx) > 1 && !step.completed && !step.current) {
+        try { $w(`#timelineStep${idx}`)?.collapse(); } catch (e) {}
+        return;
+      }
+      try { $w(`#timelineStep${idx}`)?.expand(); } catch (e) {}
       try {
         const stepEl = $w(`#timelineStep${idx}`);
         const dotEl = $w(`#timelineDot${idx}`);

@@ -54,12 +54,19 @@ export function initImageGallery($w, product) {
       }
     }
 
+    // Shared gallery index for click/swipe sync
+    let currentGalleryIndex = 0;
+
     // Gallery thumbnail click handling
     const gallery = $w('#productGallery');
     if (gallery) {
       gallery.onItemClicked((event) => {
         try {
           $w('#productMainImage').src = event.item.src;
+          // Sync swipe index with clicked item
+          const items = gallery.items || [];
+          const clickedIdx = items.findIndex(item => item.src === event.item.src);
+          if (clickedIdx >= 0) currentGalleryIndex = clickedIdx;
         } catch (e) {}
       });
     }
@@ -68,7 +75,6 @@ export function initImageGallery($w, product) {
     try {
       const galleryEl = gallery?.getElement?.() || (typeof document !== 'undefined' ? document.querySelector('[id*="productGallery"]') : null);
       if (galleryEl) {
-        let currentGalleryIndex = 0;
         enableSwipe(galleryEl, (direction) => {
           try {
             const items = gallery.items || [];
@@ -130,6 +136,24 @@ export async function loadRecentlyViewed($w, product) {
       };
       $item('#recentImage').onClick(navigateToProduct);
       $item('#recentName').onClick(navigateToProduct);
+
+      // Keyboard navigation for recently viewed items
+      try {
+        $item('#recentImage').accessibility.tabIndex = 0;
+        $item('#recentImage').accessibility.role = 'link';
+        $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`;
+        $item('#recentImage').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') navigateToProduct();
+        });
+      } catch (e) {}
+      try {
+        $item('#recentName').accessibility.tabIndex = 0;
+        $item('#recentName').accessibility.role = 'link';
+        $item('#recentName').accessibility.ariaLabel = `View ${itemData.name} details`;
+        $item('#recentName').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') navigateToProduct();
+        });
+      } catch (e) {}
     });
   } catch (e) {}
 }
