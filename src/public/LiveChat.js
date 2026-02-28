@@ -9,6 +9,7 @@ import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 import { announce } from 'public/a11yHelpers';
 import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
+import wixLocationFrontend from 'wix-location-frontend';
 
 let _sessionId = null;
 let _userName = '';
@@ -75,6 +76,11 @@ export async function initLiveChat($w, options = {}) {
         initProactiveTriggers($w, { page: options.page, isOnline: _isOnline });
       } catch (e) {}
     }
+
+    // Wire cleanup to SPA navigation — prevent listener/timer leaks across pages
+    try {
+      wixLocationFrontend.onChange(() => { cleanupLiveChat(); });
+    } catch (e) {}
   } catch (e) {
     // Chat widget is non-critical — never block the page
   }

@@ -513,13 +513,78 @@ describe('Edge cases', () => {
     }
   });
 
-  it('does not double-init if called twice', () => {
+  it('re-init on SPA navigation cleans up previous and starts fresh', () => {
     const $w = make$w();
-    initProactiveTriggers($w, { page: 'product', delayMs: 1000 });
-    initProactiveTriggers($w, { page: 'product', delayMs: 1000 });
+    initProactiveTriggers($w, { page: 'product', delayMs: 5000 });
 
-    vi.advanceTimersByTime(1000);
-    // Should only show once, not twice
-    expect($w('#proactiveBubble').show).toHaveBeenCalledTimes(1);
+    // Navigate to checkout before product trigger fires
+    const $w2 = make$w();
+    initProactiveTriggers($w2, { page: 'checkout', delayMs: 2000 });
+
+    // Product's 5s timer should have been cleaned up — only checkout fires
+    vi.advanceTimersByTime(2000);
+    expect($w2('#proactiveBubble').show).toHaveBeenCalledTimes(1);
+
+    // Product timer should NOT fire later
+    vi.advanceTimersByTime(5000);
+    expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
+  });
+
+  it('handles delayMs: 0 — triggers immediately', () => {
+    const $w = make$w();
+    initProactiveTriggers($w, { page: 'product', delayMs: 0 });
+
+    vi.advanceTimersByTime(0);
+    expect($w('#proactiveBubble').show).toHaveBeenCalled();
+  });
+
+  it('handles negative delayMs — falls back to default delay', () => {
+    const $w = make$w();
+    initProactiveTriggers($w, { page: 'product', delayMs: -500 });
+
+    // Should use default product delay (10s), not fire immediately
+    vi.advanceTimersByTime(0);
+    expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(10000);
+    expect($w('#proactiveBubble').show).toHaveBeenCalled();
+  });
+
+  it('handles non-numeric delayMs — falls back to default delay', () => {
+    const $w = make$w();
+    initProactiveTriggers($w, { page: 'checkout', delayMs: 'fast' });
+
+    // Should use default checkout delay (15s), not throw
+    vi.advanceTimersByTime(0);
+    expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(15000);
+    expect($w('#proactiveBubble').show).toHaveBeenCalled();
+  });
+
+  it('trackEvent throwing does not prevent bubble from showing', () => {
+    // Mock trackEvent to throw
+    vi.mock('public/engagementTracker', () => ({
+      trackEvent: vi.fn(() => { throw new Error('analytics down'); }),
+    }));
+
+    const $w = make$w();
+    expect(() => {
+      initProactiveTriggers($w, { page: 'product', delayMs: 1000 });
+      vi.advanceTimersByTime(1000);
+    }).not.toThrow();
+
+    expect($w('#proactiveBubble').show).toHaveBeenCalled();
+  });
+
+  it('sets role=alert at init time, not show time', () => {
+    const $w = make$w();
+    initProactiveTriggers($w, { page: 'product', delayMs: 5000 });
+
+    // role=alert should be set immediately at init, before bubble shows
+    expect($w('#proactiveBubble').accessibility.role).toBe('alert');
+
+    // Bubble hasn't shown yet
+    expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
   });
 });
