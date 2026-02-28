@@ -147,16 +147,8 @@ async function initProductPage() {
 async function injectProductMeta(state) {
   try {
     if (!state.product) return;
-    const { head } = await import('wix-seo-frontend');
-    const product = state.product;
-
-    const title = `${product.name} | Carolina Futons - Hendersonville, NC`;
-    head.setTitle(title);
-
-    const description = product.description
-      ? product.description.replace(/<[^>]*>/g, '').substring(0, 160).trim()
-      : `Shop ${product.name} at Carolina Futons. Quality furniture since 1991. Free shipping on orders over $999.`;
-    head.setMetaTag('description', description);
+    const { injectProductMeta: injectMeta } = await import('public/product/productSchema.js');
+    await injectMeta(state.product);
   } catch (e) {
     console.error('[ProductPage] Failed to set meta:', e?.message || e);
   }

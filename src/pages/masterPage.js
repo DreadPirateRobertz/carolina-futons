@@ -1,7 +1,7 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
 // mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
-import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import {
@@ -539,6 +539,16 @@ async function injectBusinessSchema() {
     }
   } catch (e) {
     // Schema injection is non-critical
+  }
+
+  // WebSite schema with SearchAction for sitelinks searchbox eligibility
+  try {
+    const websiteSchema = await getWebSiteSchema();
+    if (websiteSchema) {
+      $w('#websiteSchemaHtml').postMessage(websiteSchema);
+    }
+  } catch (e) {
+    // WebSite schema is non-critical
   }
 }
 

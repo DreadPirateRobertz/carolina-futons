@@ -4,7 +4,7 @@
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags } from 'backend/seoHelpers.web';
+import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags, getCanonicalUrl } from 'backend/seoHelpers.web';
 import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, getCompareList } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
@@ -144,20 +144,25 @@ function initCategoryHero(currentPath) {
 
 async function injectCategoryMeta(currentPath) {
   try {
+    const { head } = await import('wix-seo-frontend');
+
     const metaDescription = await getCategoryMetaDescription(currentPath);
     if (metaDescription) {
-      const { head } = await import('wix-seo-frontend');
       head.setMetaTag('description', metaDescription);
-
-      // Also set OG description
       head.setMetaTag('og:description', metaDescription);
+    }
 
-      // Set title from category content if available
-      const content = CATEGORY_CONTENT[currentPath];
-      if (content) {
-        head.setTitle(`${content.title} | Carolina Futons - Hendersonville, NC`);
-        head.setMetaTag('og:title', `${content.title} | Carolina Futons`);
-      }
+    // Set title from category content if available
+    const content = CATEGORY_CONTENT[currentPath];
+    if (content) {
+      head.setTitle(`${content.title} | Carolina Futons - Hendersonville, NC`);
+      head.setMetaTag('og:title', `${content.title} | Carolina Futons`);
+    }
+
+    // Set canonical URL for this category page
+    const canonical = await getCanonicalUrl('category', currentPath);
+    if (canonical) {
+      head.setLinks([{ rel: 'canonical', href: canonical }]);
     }
   } catch (e) {}
 }
@@ -1459,6 +1464,7 @@ async function injectCategorySchema() {
       'casegoods-accessories': { slug: 'casegoods-accessories', title: 'Casegoods & Accessories' },
       'wall-huggers': { slug: 'wall-huggers', title: 'Wall Hugger Futon Frames' },
       'unfinished-wood': { slug: 'unfinished-wood', title: 'Unfinished Wood Futon Frames' },
+      'sales': { slug: 'sales', title: 'Sale & Clearance' },
     };
 
     const categoryInfo = categoryMap[currentPath];

@@ -110,6 +110,8 @@ export default defineConfig({
       'public/ProductOptions': path.resolve(__dirname, 'src/public/ProductOptions.js'),
       'public/ProductDetails.js': path.resolve(__dirname, 'src/public/ProductDetails.js'),
       'public/ProductDetails': path.resolve(__dirname, 'src/public/ProductDetails.js'),
+      'public/product/productSchema.js': path.resolve(__dirname, 'src/public/product/productSchema.js'),
+      'public/product/productSchema': path.resolve(__dirname, 'src/public/product/productSchema.js'),
       'public/ProductReviews.js': path.resolve(__dirname, 'src/public/ProductReviews.js'),
       'public/ProductReviews': path.resolve(__dirname, 'src/public/ProductReviews.js'),
       'public/AddToCart.js': path.resolve(__dirname, 'src/public/AddToCart.js'),
