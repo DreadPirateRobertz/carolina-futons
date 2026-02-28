@@ -7,6 +7,7 @@ import { addToCart } from 'public/cartService';
 import { trackCartAdd } from 'public/engagementTracker';
 import { formatCurrency } from 'public/product/variantSelector.js';
 import { buildGridAlt } from 'public/product/productSchema.js';
+import { makeClickable } from 'public/a11yHelpers.js';
 
 /**
  * Load "You Might Also Like" cross-category recommendations.
@@ -42,8 +43,8 @@ export async function loadRelatedProducts($w, product) {
           to(`/product-page/${itemData.slug}`);
         });
       };
-      $item('#relatedImage').onClick(navigateToProduct);
-      $item('#relatedName').onClick(navigateToProduct);
+      makeClickable($item('#relatedImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}`, role: 'link' });
+      makeClickable($item('#relatedName'), navigateToProduct, { ariaLabel: `View ${itemData.name}`, role: 'link' });
     });
     repeater.data = related;
   } catch (err) {

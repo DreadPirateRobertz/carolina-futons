@@ -326,6 +326,10 @@ function initQuantityControls() {
       try { $item('#qtyMinus').accessibility.ariaLabel = `Decrease quantity of ${itemData.name}`; } catch (e) {}
       try { $item('#qtyPlus').accessibility.ariaLabel = `Increase quantity of ${itemData.name}`; } catch (e) {}
       try { $item('#qtyInput').accessibility.ariaLabel = `Quantity of ${itemData.name}`; } catch (e) {}
+      try { $item('#qtyInput').accessibility.role = 'spinbutton'; } catch (e) {}
+      try { $item('#qtyInput').accessibility.ariaValueMin = MIN_QUANTITY; } catch (e) {}
+      try { $item('#qtyInput').accessibility.ariaValueMax = MAX_QUANTITY; } catch (e) {}
+      try { $item('#qtyInput').accessibility.ariaValueNow = parseInt($item('#qtyInput').value) || MIN_QUANTITY; } catch (e) {}
       try { $item('#removeItem').accessibility.ariaLabel = `Remove ${itemData.name} from cart`; } catch (e) {}
 
       try {
@@ -336,6 +340,7 @@ function initQuantityControls() {
             try {
               await updateCartItemQuantity(itemData._id, newQty);
               $item('#qtyInput').value = String(newQty);
+              try { $item('#qtyInput').accessibility.ariaValueNow = newQty; } catch (e) {}
               announce($w, `${itemData.name} quantity updated to ${newQty}`);
             } catch (err) {
               console.error('Error updating quantity:', err);
@@ -351,6 +356,7 @@ function initQuantityControls() {
           try {
             await updateCartItemQuantity(itemData._id, newQty);
             $item('#qtyInput').value = String(newQty);
+            try { $item('#qtyInput').accessibility.ariaValueNow = newQty; } catch (e) {}
             announce($w, `${itemData.name} quantity updated to ${newQty}`);
           } catch (err) {
             console.error('Error updating quantity:', err);
