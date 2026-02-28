@@ -1,137 +1,189 @@
-# Gas Town Status Report
-**Generated:** 2026-02-24 02:42 UTC
-**Updated by:** miquella (cfutons crew) — per mayor directive (5-min cadence)
+# Gas Town Status Report — Mayor
+
+---
+
+## UPDATE: 2026-02-28 01:35 MST — ALL CONVOYS LANDED
+
+- P1 Bug Sprint (hq-cv-sjk7e) — **4/4 COMPLETE**
+- Frontend Redesign (hq-cv-b26zm) — **1/1 COMPLETE**
+- Token Burn Audit (hq-cv-m7uwe) — **1/1 COMPLETE**
+- 18 PRs merged by melania (entire backlog cleared)
+- Crew produced: 10 commits, +2,581/-299 lines, 11 PR reviews
+- `FRONTEND-COMPETITIVE-ANALYSIS.md` delivered by crew
+- `token-burn-audit.md` delivered by crew
+- Gastown crew: 7 PRs approved, 6 issues triaged, CI mapped
+- **Next:** handoff prep, token auditor as standing mandate
+
+---
+
+## UPDATE: 2026-02-28 01:30 MST — Session b8758b87
+
+**Status:** ACTIVE → HANDOFF PREP
+
+### ALL 3 CONVOYS LANDED
+- P1 Bug Sprint (hq-cv-sjk7e) — **4/4 COMPLETE** (CF-3qj3, CF-wy0m, CF-d7dr, CF-1b86 all closed)
+- Frontend Redesign (hq-cv-b26zm) — **1/1 COMPLETE** (CF-k582 closed)
+- Token Burn Audit (hq-cv-m7uwe) — **1/1 COMPLETE** (cf-09z closed)
+
+### cfutons Sprint Results
+- 10 commits, +2,581/-299 lines
+- 18 PRs merged (entire backlog cleared by melania)
+- 4 P1 bugs fixed and shipped
+- 1 PR still open (#58, CF-ax12 mobile/a11y rollup — miquella)
+
+### Token Audit Summary
+| Member | Efficiency | Output | Waste |
+|--------|-----------|--------|-------|
+| godfrey | A | 2 commits, PR #56 merged, 4 reviews | None |
+| melania | A | 18 PRs merged, coordinator | None |
+| rennala | A | 2 commits, PR #55 merged, 4 reviews | None |
+| miquella | A- | 3 commits, PR #58 open | Low-Mod |
+| radahn | B | 2 commits, PR #57 merged | ~83k tokens on merged-PR reviews |
+
+### Gastown Crew Reports
+- tyrell: 5 PRs approved, 1 changes-requested, merge order provided
+- rachael: 6 issues triaged, 3 new P1s identified
+- zhora: CI review complete, 2 PRs approved, lint+integration fixes mapped
+- deckard: 5 community PRs reviewed, crew activation plan proposed
+- batty, gaff: working daemon bugs + doctor fixes
+
+---
+
+## UPDATE: 2026-02-28 01:25 MST — Session b8758b87
+
+**Status:** ACTIVE — cfutons PRIORITY rig
+
+### Town Overview
+| Rig | Status | Crew | Focus |
+|-----|--------|------|-------|
+| cfutons | **RUNNING** | 5 active | P1 bug sprint + frontend redesign initiative |
+| gastown | RUNNING | 6 active | PR reviews, issue triage, CI health |
+| cfutons_mobile | PARKED | — | — |
+| tradingbot | PARKED | — | — |
+
+### Active Convoys (3)
+| Convoy | ID | Progress | Key |
+|--------|----|----------|-----|
+| P1 Bug Sprint | hq-cv-sjk7e | 0/4 | CF-3qj3, CF-wy0m, CF-d7dr, CF-1b86 |
+| Frontend Redesign | hq-cv-b26zm | 0/1 | CF-k582 — competitive analysis, proposals before code |
+| Token Burn Audit | hq-cv-m7uwe | 0/1 | cf-09z — miquella enforcing |
+
+### cfutons Crew Assignments
+| Member | Primary | Status |
+|--------|---------|--------|
+| godfrey | CF-1b86 (side cart) → CF-3qj3 (sanitization) | TDD in progress |
+| rennala | CF-wy0m (memory leaks) | TDD in progress, PR #52 shipped |
+| radahn | CF-d7dr (focus trapping) | Analysis complete, coding |
+| melania | Coordinator — PR reconciliation, CF-k582 reassignment | Active |
+| miquella | Token burn auditor (cf-09z) | First audit delivered |
+
+### cfutons Token Audit (first sweep)
+| Member | Tokens | Output | Waste |
+|--------|--------|--------|-------|
+| godfrey | 10.9k | Writing tests (TDD) | None |
+| rennala | 9.6k | PR #52 + started CF-wy0m | None |
+| radahn | 53.9k | Explore agent on focus traps | **MONITOR** — high single-call spend |
+| melania | 8.5k | Test suite green, coordinating | None |
+| miquella | 9.8k | PR #53 shipped | Minor dup work w/ rennala |
+
+**Issues found:** PRs #52/#53 may overlap (cf-8iy audit). Melania to reconcile.
+
+### gastown Crew Reports Received
+- **tyrell:** 5 PRs approved, 1 changes-requested. Merge order provided.
+- **rachael:** 6 issues triaged with root cause analysis. 3 new P1s found.
+- **zhora:** CI review complete. 2 PRs approved. Lint + integration test fixes identified.
+
+### Session Actions This Cycle
+1. Woke cfutons crew (5 members)
+2. Unparked + started gastown crew (6 members)
+3. Created 3 convoys (P1 bugs, frontend redesign, token audit)
+4. Dispatched parallel audit agents — crew token burn, frontend status, beads progress
+5. Assigned miquella as token burn auditor (standing mandate)
+6. Cleaned ~1.3M stale beads artifacts (locks, flocks, backups, sqlite)
+7. Labeled all 20 tmux windows (GT:/CF:/HQ: prefixes)
+8. Sent directives to melania (frontend analysis, CLAUDE.md review, PR reconciliation)
+9. Gastown crew: tyrell (PR reviews), batty (daemon bugs), deckard (community PRs), rachael (issue triage), gaff (doctor/infra), zhora (CI/testing)
+
+### Known Issues
+- DreadPirateRobertz can't merge PRs or add labels (permissions on steveyegge/gastown)
+- CF-k582 (frontend analysis) needs reassignment — rennala is on memory leaks
+- Radahn's 53.9k Explore spend needs to convert to commits
+- `gt` binary 87 commits behind (human updated, may need `make install`)
+
+---
+
+## PREVIOUS REPORT: 2026-02-24 00:03 MST
+**Mayor Session:** 5f324bd1
+**Status:** HANDOFF
 
 ---
 
 ## Town Summary
 
-| Rig | Status | Crew | Polecats | Key Work |
-|-----|--------|------|----------|----------|
-| cfutons | RUNNING | 5 (all active) | 0 | Pre-launch P0 audit sprint, 7 PRs open |
-| cfutons_mobile | RUNNING | 3 (all active) | 3 (1 done, 2 working) | AR Camera epic |
-| gastown | RUNNING | 6 (all active) | 0 | 10 community PRs reviewed |
-| tradingbot | PARKED | 0 | 0 | Per human directive |
+| Rig | Status | Crew | Key Work |
+|-----|--------|------|----------|
+| cfutons | RUNNING | 5 active | **P0 PRE-LAUNCH AUDIT** (2/4 done, 2 working) |
+| cfutons_mobile | RUNNING | 3 active | AR Camera PRs merged |
+| gastown | RUNNING | 6 active | 10 community PRs reviewed, comments posted |
+| tradingbot | PARKED | — | Per human directive |
 
 ---
 
-## Active Rigs
+## Active Convoys (6 remaining)
 
-### cfutons — OPERATIONAL (PRE-LAUNCH P0 SPRINT)
-**Crew:** melania (PM), godfrey, miquella, radahn, rennala
+### cfutons — Pre-Launch Audit Swarm
+| Convoy | Assigned | Task | Status |
+|--------|----------|------|--------|
+| hq-cv-hs7rw | melania (PM) | Parent coordinator | ACTIVE |
+| ~~hq-cv-veifu~~ | godfrey | Cart/checkout flow | **DONE** |
+| ~~hq-cv-tjdns~~ | radahn | Page code & routing | **DONE** |
+| hq-cv-rybs6 | miquella | Backend modules & HTTP | WORKING |
+| hq-cv-rm4qm | rennala | Public utilities | WORKING |
 
-All crew active on P0 pre-launch edge case audit. 7 PRs open awaiting melania review. Quality gate + TDD directive active.
+### cfutons_mobile — AR Camera (ALL COMPLETE)
+| Convoy | Result |
+|--------|--------|
+| hq-cv-n6yh4 | PR #10 — 3D model pipeline (1243 tests) — **MERGED** |
+| hq-cv-bt76i | PR #11 — Product placement UI (109 tests) — **MERGED** |
+| hq-cv-3jgsw | PR #12 — Surface plane detection — **MERGED** |
 
-**Open PRs (7):**
-
-| PR | Branch | Author | Work |
-|----|--------|--------|------|
-| #30 | `cf-04h-cart-validation` | radahn | Cart qty validation, race condition fix, safe math (22 new tests) |
-| #33 | `cf-559-page-audit` | radahn | Page code null crash guards (6 files) |
-| #29 | `cf-0qf-http-security` | godfrey | HTTP functions security — XSS, timing, pagination |
-| #31 | `cf-cie-page-edge-cases` | miquella | Page code edge cases — null checks, input validation |
-| #32 | `cf-3vq-cart-checkout-audit` | miquella | Cart/checkout — payment overflow, gift card edge cases |
-| #34 | `cf-dux-backend-edge-cases` | rennala | Backend service edge cases — gift card, returns, inventory |
-| #35 | `cf-duj-backend-audit` | miquella | Backend auth hardening, XSS prevention, error logging |
-
-### cfutons_mobile — OPERATIONAL (AR Camera Sprint)
-**Crew:** bishop, dallas, ripley
-**Polecats:**
-
-| Polecat | Bead | Task | Status |
-|---------|------|------|--------|
-| furiosa | cm-9k2 | 3D model pipeline (USDZ/GLB) | DONE |
-| nux | cm-beo | Room detection & surface mapping | WORKING |
-| slit | cm-ci2 | Product placement UI | WORKING |
-
-**Convoys:** 3 active AR Camera convoys tracking all work.
-
-### gastown — OPERATIONAL (PR Review Queue)
-**Crew:** batty, deckard, gaff, rachael, tyrell (token auditor), zhora
-
-**Blocker:** DreadPirateRobertz lacks merge permissions on steveyegge/gastown.
+### gastown — PR Queue (all reviewed, can't merge)
+6 MERGE-ready, 2 FIX-MERGE, 1 SKIP, 1 pending. Blocked on steveyegge/gastown permissions.
 
 ---
+
+## Session Accomplishments
+1. Fixed Dolt server (stale PID)
+2. **Fixed mail system** — recreated 22 agent beads lost after DB rebuild
+3. Dispatched 3 AR Camera polecats → all completed → PRs created → **merged**
+4. Reviewed all 10 gastown community PRs, posted comments
+5. Formed pre-launch audit swarm (4 crew parallel, 2 already done)
+6. Cleaned orphan "myproject" phantom rig (twice)
+7. Cleaned 14 stale agent locks
+8. Closed 15+ stale beads
+9. Filed formula lookup bug (gt-oir)
+10. Token audit: $26.09 total, witness wisp churn = 31% waste
+11. Established reporting pipeline (all crews notified)
+12. Melania issued TDD + quality gate directives across ALL rigs
 
 ## Infrastructure
-
-- **Dolt:** Running (PID active, port 3307, 11 databases verified)
-- **gt version:** v0.8.0-52-g3cb4b8e9 (dev)
-- **Beads:** All rig databases healthy
-- **Mail:** `gt mail` to mayor works. `gt mail` to crew fails (crew not registered as agents). Directives via CLAUDE.md.
-
----
+- **Dolt:** Running, port 3307, 11 databases
+- **gt:** v0.8.0-52-g3cb4b8e9 (dev)
+- **Mail:** FIXED — all agent beads registered, crew-to-crew working
+- **Beads:** Healthy across all rigs
 
 ## Known Issues
-- `gt mail` to crew addresses fails ("no agent found") — CF-tvk filed, desire-path label
-- DreadPirateRobertz can't merge PRs on steveyegge/gastown (permissions)
-- mol-polecat-work formula lookup broken for non-gastown rigs (use --hook-raw-bead)
-- cfutons_mobile prefix mismatch: rig uses `cfutons_mobile-` but route expects `cm-`
+- `myproject` phantom rig keeps recreating (no config — ghost spawner)
+- mol-polecat-work formula broken for non-gastown rigs (use `--hook-raw-bead`)
+- Can't merge gastown PRs (DreadPirateRobertz permissions)
+- Witness wisp churn = 31% token waste — needs arch fix
 
----
-
-## Standing Prime Directives
-1. **PR Process** — ALL repos, no direct push to main, PRs with review
-2. **PM Quality Gate** — Melania reviews all PRs against bead AC + edge cases. Happy-path-only = rejected.
-3. **Edge Case Mandate** — Tests must cover error states, null/empty, boundaries, invalid input, mobile/a11y
-4. **TDD** — Tests BEFORE implementation. PRs without tests rejected outright.
-5. **Token Efficiency** — tyrell has standing audit order
-6. **Reporting** — report every 5 min (all active rigs + HQ)
-7. **Convoys/Swarms** — form as needed, mayor authorized
-8. **Remote Report** — push master report to cfutons repo for remote viewing
-
----
-
----
-
-# cfutons Detail Report (radahn, 2026-02-24 02:41 UTC)
-
-## Health: GREEN — P0 AUDIT SPRINT ACTIVE
-
-| Metric | Value |
-|--------|-------|
-| Tests | 4,288 vitest tests across 117 files (all green) |
-| Backend Modules | 131 modules |
-| Page Code | 28 page JS files |
-| Frontend Utils | 56 public JS modules |
-| Product Catalog | 88 products enriched (74 priced, 14 contact-for-price) |
-| Open PRs | **7** (all P0 pre-launch, awaiting melania review) |
-
-## Beads In-Progress (P0 Sprint)
-
-| Bead | Assignee | Status | PR |
-|------|----------|--------|-----|
-| CF-04h | radahn | DONE | #30 |
-| CF-559 | radahn | DONE | #33 |
-| CF-0qf | godfrey | IN_PROGRESS | #29 |
-| CF-cie | miquella | IN_PROGRESS | #31 |
-| CF-dux | rennala | IN_PROGRESS | #34 |
-| cf-duj | miquella | IN_PROGRESS | #35 |
-| cf-8iy | rennala | IN_PROGRESS | pending |
-
-## Crew Status
-
-| Member | Role | Status | Current Work |
-|--------|------|--------|-------------|
-| melania | PM | ACTIVE | Acceptance authority, PR review queue (7 PRs) |
-| godfrey | Dev | ACTIVE | CF-0qf HTTP security (PR #29) |
-| rennala | Dev | ACTIVE | CF-dux backend edge cases (PR #34), cf-8iy public utils audit |
-| radahn | Dev | ACTIVE | CF-04h DONE (PR #30), CF-559 DONE (PR #33), awaiting next |
-| miquella | Dev | ACTIVE | CF-cie page edge cases (PR #31), cf-duj backend audit (PR #35) |
-
-## What Human Needs To Do
-
-### 15-Minute Quick Wins
-1. Install GA4 — Dashboard > Marketing Integrations > paste Measurement ID
-2. Install Meta Pixel — Dashboard > Tracking & Analytics > paste Pixel ID
-3. Install Pinterest Tag — same location > paste Tag ID
-4. Connect Google Merchant feed: `/_functions/googleMerchantFeed`
-5. Enable Wix Chat — one toggle
-
-### Critical Blockers
-- **Product photography** — #1 blocker. No real photos = no sales.
-- **Domain connection** — carolinafutons.com must point to Wix site
-
----
-
-*Report by: radahn | cfutons GREEN | P0 sprint active, 7 PRs awaiting review*
+## Prime Directives
+1. PR Process — ALL repos, no direct push to main
+2. Token Efficiency — tyrell audits
+3. Reporting — report_to_human.md every 5 min (all rigs)
+4. Remote Report — push `mayor_town_status.md` to cfutons repo
+5. Convoys/Swarms — form as needed at mayor discretion
+6. Session Cleanup — assign cleanup on startup
+7. "Update from the top" — mayor writes, crew follows
+8. **Startup DB Sync** — pull beads + gastown DBs BEFORE waking crew
