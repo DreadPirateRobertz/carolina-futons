@@ -50,6 +50,7 @@ $w.onReady(async function () {
     { name: 'testimonials', init: initTestimonials },
     { name: 'videoShowcase', init: initVideoShowcase },
     { name: 'quizCTA', init: initQuizCTA },
+    { name: 'featuredQuickView', init: initFeaturedQuickView },
     { name: 'newsletter', init: initNewsletterSection },
     { name: 'ridgeline', init: initRidgelineHeader },
   ];
@@ -81,10 +82,13 @@ $w.onReady(async function () {
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
 
+let currentFeaturedQvProduct = null;
+
 /**
  * Load and display featured product cards in the homepage grid.
- * Sets section heading, fetches products from backend, and wires
- * repeater with product data, sale badges, and ribbon badges.
+ * Castlery-style cards: image + name + price + color swatches +
+ * badge (Bestseller/Sale/New) + hover Quick View button.
+ * 4-column desktop, 2-column mobile (layout set in Wix editor).
  * @returns {Promise<void>}
  */
 async function loadFeaturedProducts() {
@@ -99,6 +103,7 @@ async function loadFeaturedProducts() {
     if (!repeater || featured.length === 0) return;
 
     repeater.onItemReady(($item, itemData) => {
+      // Product image + alt
       $item('#featuredImage').src = itemData.mainMedia;
       $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
       $item('#featuredName').text = itemData.name;
@@ -116,7 +121,7 @@ async function loadFeaturedProducts() {
         } catch (e) { /* optional elements */ }
       }
 
-      // Show ribbon badge (Featured, New, Clearance, etc.)
+      // Show ribbon badge (Featured, New, Clearance, Bestseller, etc.)
       try {
         if (itemData.ribbon) {
           $item('#featuredRibbon').text = itemData.ribbon;
@@ -125,6 +130,25 @@ async function loadFeaturedProducts() {
           $item('#featuredRibbon').hide();
         }
       } catch (e) { /* ribbon element optional */ }
+
+      // Color swatches — show finish count from productOptions
+      try {
+        const colorOpts = getColorOptions(itemData);
+        if (colorOpts.length > 0) {
+          $item('#featuredColorText').text = `${colorOpts.length} finishes`;
+          $item('#featuredSwatchContainer').show();
+        } else {
+          $item('#featuredSwatchContainer').hide();
+        }
+      } catch (e) { /* swatch elements optional */ }
+
+      // Quick View button on card
+      try {
+        $item('#featuredQuickViewBtn').onClick(() => {
+          openFeaturedQuickView(itemData);
+        });
+        $item('#featuredQuickViewBtn').accessibility.ariaLabel = `Quick view ${itemData.name}`;
+      } catch (e) { /* Quick View button optional */ }
 
       // Navigate to product page on click/keyboard
       const slug = safeSlug(itemData.slug);
@@ -135,6 +159,96 @@ async function loadFeaturedProducts() {
     repeater.data = featured;
   } catch (err) {
     console.error('[Home] Error loading featured products:', err);
+  }
+}
+
+/**
+ * Extract color/finish choices from a product's productOptions array.
+ * Returns array of choice objects for color-type options.
+ * @param {Object} product - Product data with productOptions
+ * @returns {Array} Color choice objects
+ */
+function getColorOptions(product) {
+  if (!product.productOptions || !Array.isArray(product.productOptions)) return [];
+  const colorOpt = product.productOptions.find(
+    opt => opt.optionType === 'color' || (opt.name && /finish|color/i.test(opt.name))
+  );
+  if (!colorOpt || !Array.isArray(colorOpt.choices)) return [];
+  return colorOpt.choices.filter(c => c.inStock !== false);
+}
+
+// ── Featured Quick View Modal ───────────────────────────────────────
+
+/**
+ * Register Quick View modal handlers for the featured products section.
+ * Wires close, "View Full Details", and "Add to Cart" buttons once
+ * to avoid accumulation on repeated calls.
+ */
+function initFeaturedQuickView() {
+  try {
+    try { $w('#featuredQvViewFull').accessibility.ariaLabel = 'View full product details'; } catch (e) {}
+    try { $w('#featuredQvAddToCart').accessibility.ariaLabel = 'Add to cart'; } catch (e) {}
+    try { $w('#featuredQvClose').accessibility.ariaLabel = 'Close quick view'; } catch (e) {}
+
+    $w('#featuredQvViewFull').onClick(() => {
+      if (currentFeaturedQvProduct) {
+        const slug = safeSlug(currentFeaturedQvProduct.slug);
+        import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
+      }
+    });
+
+    $w('#featuredQvAddToCart').onClick(async () => {
+      if (!currentFeaturedQvProduct) return;
+      try {
+        $w('#featuredQvAddToCart').disable();
+        $w('#featuredQvAddToCart').label = 'Adding...';
+        const { addToCart } = await import('public/cartService');
+        await addToCart(currentFeaturedQvProduct._id);
+        $w('#featuredQvAddToCart').label = 'Added!';
+        announce(`${currentFeaturedQvProduct.name} added to cart`);
+        setTimeout(() => {
+          try { $w('#featuredQuickViewModal').hide('fade', { duration: 200 }); } catch (e) {}
+        }, 1000);
+      } catch (err) {
+        console.error('[Home] Quick View add to cart error:', err);
+        try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
+        try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
+      }
+    });
+
+    $w('#featuredQvClose').onClick(() => {
+      $w('#featuredQuickViewModal').hide('fade', { duration: 200 });
+      announce('Quick view closed');
+    });
+  } catch (e) {
+    // Quick View modal elements may not exist in editor
+  }
+}
+
+/**
+ * Open the Quick View modal for a featured product.
+ * Populates image, name, price, and ARIA attributes.
+ * @param {Object} product - Product data to display
+ */
+function openFeaturedQuickView(product) {
+  try {
+    currentFeaturedQvProduct = product;
+    $w('#featuredQvImage').src = product.mainMedia;
+    $w('#featuredQvImage').alt = buildProductAlt(product, 'featured');
+    $w('#featuredQvName').text = product.name;
+    $w('#featuredQvPrice').text = product.formattedDiscountedPrice || product.formattedPrice;
+    try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
+    try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
+
+    // ARIA dialog attributes
+    try { $w('#featuredQuickViewModal').accessibility.role = 'dialog'; } catch (e) {}
+    try { $w('#featuredQuickViewModal').accessibility.ariaModal = true; } catch (e) {}
+    try { $w('#featuredQuickViewModal').accessibility.ariaLabel = `Quick view: ${product.name}`; } catch (e) {}
+
+    $w('#featuredQuickViewModal').show('fade', { duration: 200 });
+    announce(`Quick view opened for ${product.name}`);
+  } catch (e) {
+    console.error('[Home] Error opening Quick View:', e);
   }
 }
 

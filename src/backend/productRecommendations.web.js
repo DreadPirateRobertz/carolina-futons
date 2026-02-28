@@ -523,5 +523,7 @@ function formatProduct(item) {
     sku: item.sku,
     ribbon: item.ribbon,
     collections: item.collections,
+    color: item.color || null,
+    productOptions: item.productOptions || [],
   };
 }
