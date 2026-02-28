@@ -135,7 +135,7 @@ function initDeliveryTimeline() {
         `Estimated delivery: ${minDate.toLocaleDateString('en-US', opts)} – ${maxDate.toLocaleDateString('en-US', opts)}`;
     } catch (e) {}
 
-    // Delivery steps
+    // Delivery steps with ARIA step indicator
     const steps = [
       { id: '#step1', text: 'Order confirmed', status: 'complete' },
       { id: '#step2', text: 'Preparing your items', status: 'active' },
@@ -143,21 +143,22 @@ function initDeliveryTimeline() {
       { id: '#step4', text: 'Delivered to your door', status: 'pending' },
     ];
 
-    steps.forEach(step => {
+    steps.forEach((step, index) => {
       try {
         const el = $w(step.id);
         if (el) {
           el.text = step.text;
           if (step.status === 'complete') {
             el.style.color = colors.success;
-            try { el.accessibility.ariaLabel = `Completed: ${step.text}`; } catch (e) {}
+            try { el.accessibility.ariaLabel = `Step ${index + 1} of ${steps.length}: ${step.text} — completed`; } catch (e) {}
           } else if (step.status === 'active') {
             el.style.color = colors.mountainBlue;
             el.style.fontWeight = String(typography.h2.weight);
-            try { el.accessibility.ariaLabel = `In progress: ${step.text}`; } catch (e) {}
+            try { el.accessibility.ariaLabel = `Step ${index + 1} of ${steps.length}: ${step.text} — in progress`; } catch (e) {}
+            try { el.accessibility.ariaCurrent = 'step'; } catch (e) {}
           } else {
             el.style.color = colors.mutedBrown;
-            try { el.accessibility.ariaLabel = `Pending: ${step.text}`; } catch (e) {}
+            try { el.accessibility.ariaLabel = `Step ${index + 1} of ${steps.length}: ${step.text} — pending`; } catch (e) {}
           }
         }
       } catch (e) {}

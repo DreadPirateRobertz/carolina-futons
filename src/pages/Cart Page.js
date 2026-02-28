@@ -15,7 +15,7 @@ import {
   MIN_QUANTITY,
   MAX_QUANTITY,
 } from 'public/cartService';
-import { initBackToTop } from 'public/mobileHelpers';
+import { initBackToTop, isMobile, collapseOnMobile, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 
@@ -38,6 +38,9 @@ async function initCartPage() {
 
     trackEvent('page_view', { page: 'cart', itemCount: cart.lineItems.length });
 
+    // Collapse non-essential sections on mobile for faster paint
+    collapseOnMobile($w, ['#cartRecentSection', '#cartFinancingSection']);
+
     // Pass fetched cart to avoid redundant API calls
     updateShippingProgressFromCart(cart);
     updateTierProgressFromCart(cart);
@@ -55,11 +58,15 @@ async function initCartPage() {
 function showEmptyCart() {
   try {
     try { $w('#emptyCartSection').expand(); } catch (e) {}
-    try { $w('#emptyCartTitle').text = 'Your cart is empty'; } catch (e) {}
+    try {
+      $w('#emptyCartTitle').text = 'Your cart is empty';
+      $w('#emptyCartTitle').accessibility.role = 'heading';
+    } catch (e) {}
     try {
       $w('#emptyCartMessage').text = 'Browse our collection to find the perfect futon for your home.';
     } catch (e) {}
     try {
+      $w('#continueShoppingBtn').accessibility.ariaLabel = 'Continue shopping — browse our collection';
       $w('#continueShoppingBtn').onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/'));
       });
@@ -67,8 +74,11 @@ function showEmptyCart() {
     // Collapse sections that don't apply for empty carts
     try { $w('#suggestionsSection').collapse(); } catch (e) {}
     try { $w('#cartRecentSection').collapse(); } catch (e) {}
+    try { $w('#cartFinancingSection').collapse(); } catch (e) {}
     try { $w('#shippingProgressBar').hide(); } catch (e) {}
+    try { $w('#shippingProgressText').hide(); } catch (e) {}
     try { $w('#tierProgressBar').hide(); } catch (e) {}
+    try { $w('#tierProgressText').hide(); } catch (e) {}
   } catch (e) {}
 }
 
@@ -105,7 +115,15 @@ function updateShippingProgressFromCart(currentCart) {
           $w('#shippingProgressIcon').show();
         } catch (e) {}
       }
+      try { progressText.accessibility.ariaLive = 'polite'; } catch (e) {}
+      try { progressText.accessibility.role = 'status'; } catch (e) {}
     }
+
+    // ARIA label for progress bar
+    try { progressBar.accessibility.ariaLabel = `Free shipping progress: ${progressPct}%`; } catch (e) {}
+    try { progressBar.accessibility.ariaValueNow = progressPct; } catch (e) {}
+    try { progressBar.accessibility.ariaValueMin = 0; } catch (e) {}
+    try { progressBar.accessibility.ariaValueMax = 100; } catch (e) {}
   } catch (e) {}
 }
 
@@ -134,7 +152,15 @@ function updateTierProgressFromCart(currentCart) {
 
     if (progressText) {
       progressText.text = tier.label(remaining.toFixed(2));
+      try { progressText.accessibility.ariaLive = 'polite'; } catch (e) {}
+      try { progressText.accessibility.role = 'status'; } catch (e) {}
     }
+
+    // ARIA label for tier progress bar
+    try { progressBar.accessibility.ariaLabel = `Discount tier progress: ${progressPct}%`; } catch (e) {}
+    try { progressBar.accessibility.ariaValueNow = progressPct; } catch (e) {}
+    try { progressBar.accessibility.ariaValueMin = 0; } catch (e) {}
+    try { progressBar.accessibility.ariaValueMax = 100; } catch (e) {}
   } catch (e) {}
 }
 
@@ -248,7 +274,7 @@ async function loadCartSuggestions(cart) {
       makeClickable($item('#sugImage'), navigate, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#sugName'), navigate, { ariaLabel: `View ${itemData.name} details` });
     });
-    repeater.data = suggestion.products;
+    repeater.data = limitForViewport(suggestion.products, { mobile: 2, tablet: 3, desktop: 4 });
   } catch (err) {
     console.error('Error loading cart suggestions:', err);
   }
