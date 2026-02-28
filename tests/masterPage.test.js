@@ -117,6 +117,33 @@ vi.mock('wix-window-frontend', () => ({
   scrollTo: vi.fn(),
 }));
 
+vi.mock('public/footerContent', () => ({
+  getFooterShopLinks: vi.fn(() => [
+    { label: 'Futon Frames', path: '/futon-frames' },
+  ]),
+  getFooterServiceLinks: vi.fn(() => [
+    { label: 'Shipping Policy', path: '/shipping-policy' },
+  ]),
+  getFooterAboutLinks: vi.fn(() => [
+    { label: 'Our Story', path: '/about' },
+  ]),
+  getStoreInfo: vi.fn(() => ({
+    name: 'Carolina Futons',
+    address: '824 Locust St, Hendersonville, NC 28792',
+    phone: '(828) 692-8550',
+    hours: [{ days: 'Wednesday – Friday', time: '10:00 AM – 5:00 PM' }],
+  })),
+  getTrustBadges: vi.fn(() => [
+    { label: 'Family Owned Since 1991', icon: '\u2764' },
+  ]),
+  getPaymentMethods: vi.fn(() => [
+    { name: 'visa', icon: 'visa' },
+  ]),
+  getFooterSocialLinks: vi.fn(() => [
+    { platform: 'facebook', url: 'https://www.facebook.com/carolinafutons', ariaLabel: 'Visit Carolina Futons on Facebook' },
+  ]),
+}));
+
 // ── Import Modules ──────────────────────────────────────────────────
 
 import {

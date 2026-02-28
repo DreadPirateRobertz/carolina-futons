@@ -13,6 +13,15 @@ import { typography } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import {
+  getFooterShopLinks,
+  getFooterServiceLinks,
+  getFooterAboutLinks,
+  getStoreInfo,
+  getTrustBadges,
+  getPaymentMethods,
+  getFooterSocialLinks,
+} from 'public/footerContent';
+import {
   applyActiveNavState,
   initMegaMenu,
   initMobileDrawer,
@@ -35,6 +44,7 @@ $w.onReady(async function () {
   initSearch();
   initSideCartAutoOpen();
   initFooterNewsletter();
+  initFooterContent();
   initHeaderShippingProgress();
   initNewsletterModal();
   initInstallBanner();
@@ -371,6 +381,137 @@ function initFooterNewsletter() {
       }
     });
   } catch (e) {}
+}
+
+// ── Rich Footer Content ──────────────────────────────────────────────
+// 4-column footer: Shop, Customer Service, About Us, Store Info
+// Plus trust badges, payment method icons, and social links
+
+function initFooterContent() {
+  try {
+    // Column 1: Shop links
+    try {
+      const shopRepeater = $w('#footerShopRepeater');
+      if (shopRepeater) {
+        const links = getFooterShopLinks();
+        shopRepeater.data = links.map((l, i) => ({ ...l, _id: `shop-${i}` }));
+        shopRepeater.onItemReady(($item, itemData) => {
+          try { $item('#footerLink').text = itemData.label; } catch (e) {}
+          try { $item('#footerLink').accessibility.ariaLabel = `Shop ${itemData.label}`; } catch (e) {}
+          try {
+            $item('#footerLink').onClick(() => {
+              import('wix-location-frontend').then(({ to }) => to(itemData.path));
+            });
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Column 2: Customer Service links
+    try {
+      const serviceRepeater = $w('#footerServiceRepeater');
+      if (serviceRepeater) {
+        const links = getFooterServiceLinks();
+        serviceRepeater.data = links.map((l, i) => ({ ...l, _id: `svc-${i}` }));
+        serviceRepeater.onItemReady(($item, itemData) => {
+          try { $item('#footerLink').text = itemData.label; } catch (e) {}
+          try { $item('#footerLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
+          try {
+            $item('#footerLink').onClick(() => {
+              import('wix-location-frontend').then(({ to }) => to(itemData.path));
+            });
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Column 3: About Us links
+    try {
+      const aboutRepeater = $w('#footerAboutRepeater');
+      if (aboutRepeater) {
+        const links = getFooterAboutLinks();
+        aboutRepeater.data = links.map((l, i) => ({ ...l, _id: `about-${i}` }));
+        aboutRepeater.onItemReady(($item, itemData) => {
+          try { $item('#footerLink').text = itemData.label; } catch (e) {}
+          try { $item('#footerLink').accessibility.ariaLabel = itemData.label; } catch (e) {}
+          try {
+            $item('#footerLink').onClick(() => {
+              import('wix-location-frontend').then(({ to }) => to(itemData.path));
+            });
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Column 4: Store Info
+    try {
+      const info = getStoreInfo();
+      try { $w('#footerStoreName').text = info.name; } catch (e) {}
+      try { $w('#footerStoreAddress').text = info.address; } catch (e) {}
+      try { $w('#footerStorePhone').text = info.phone; } catch (e) {}
+      try { $w('#footerStorePhone').accessibility.ariaLabel = `Call ${info.name} at ${info.phone}`; } catch (e) {}
+      try {
+        const hoursText = info.hours.map(h => `${h.days}: ${h.time}`).join('\n');
+        $w('#footerStoreHours').text = hoursText;
+      } catch (e) {}
+    } catch (e) {}
+
+    // Trust badges row
+    try {
+      const badgeRepeater = $w('#footerBadgeRepeater');
+      if (badgeRepeater) {
+        const badges = getTrustBadges();
+        badgeRepeater.data = badges.map((b, i) => ({ ...b, _id: `badge-${i}` }));
+        badgeRepeater.onItemReady(($item, itemData) => {
+          try { $item('#badgeIcon').text = itemData.icon; } catch (e) {}
+          try { $item('#badgeLabel').text = itemData.label; } catch (e) {}
+          try { $item('#badgeLabel').accessibility.ariaLabel = itemData.label; } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Payment method icons
+    try {
+      const paymentRepeater = $w('#footerPaymentRepeater');
+      if (paymentRepeater) {
+        const methods = getPaymentMethods();
+        paymentRepeater.data = methods.map((m, i) => ({ ...m, _id: `pay-${i}` }));
+        paymentRepeater.onItemReady(($item, itemData) => {
+          try { $item('#paymentIcon').text = itemData.icon; } catch (e) {}
+          try { $item('#paymentIcon').accessibility.ariaLabel = `We accept ${itemData.name}`; } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Social media links
+    try {
+      const socialRepeater = $w('#footerSocialRepeater');
+      if (socialRepeater) {
+        const links = getFooterSocialLinks();
+        socialRepeater.data = links.map((l, i) => ({ ...l, _id: `social-${i}` }));
+        socialRepeater.onItemReady(($item, itemData) => {
+          try { $item('#socialIcon').text = itemData.platform; } catch (e) {}
+          try { $item('#socialIcon').accessibility.ariaLabel = itemData.ariaLabel; } catch (e) {}
+          try {
+            $item('#socialIcon').onClick(() => {
+              if (typeof window !== 'undefined') window.open(itemData.url, '_blank');
+            });
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Copyright line
+    try {
+      const year = new Date().getFullYear();
+      $w('#footerCopyright').text = `\u00A9 ${year} Carolina Futons. All rights reserved.`;
+    } catch (e) {}
+
+    // Footer ARIA landmark
+    try { $w('#siteFooter').accessibility.role = 'contentinfo'; } catch (e) {}
+  } catch (e) {
+    // Footer content is non-critical — page functions without it
+  }
 }
 
 // ── SEO Schema Injection ────────────────────────────────────────────
