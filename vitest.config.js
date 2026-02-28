@@ -153,6 +153,11 @@ export default defineConfig({
       'backend/accessibility.web': path.resolve(__dirname, 'src/backend/accessibility.web.js'),
       'backend/orderTracking.web': path.resolve(__dirname, 'src/backend/orderTracking.web.js'),
       'backend/reviewsService.web': path.resolve(__dirname, 'src/backend/reviewsService.web.js'),
+      'backend/comfortService.web': path.resolve(__dirname, 'src/backend/comfortService.web.js'),
+      'public/SwatchRequestFlow.js': path.resolve(__dirname, 'src/public/SwatchRequestFlow.js'),
+      'public/SwatchRequestFlow': path.resolve(__dirname, 'src/public/SwatchRequestFlow.js'),
+      'public/ComfortStoryCards.js': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
+      'public/ComfortStoryCards': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
     },
   },
 });
