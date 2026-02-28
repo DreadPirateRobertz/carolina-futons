@@ -37,7 +37,7 @@ Think of the Carolina Futons website like a restaurant:
 - **The walk-in fridge** = where the data lives (products, prices, customer info). This is the **CMS** (Content Management System).
 - **The recipes** = the instructions that tell the kitchen what to do. These are the **code modules**.
 
-**What we built:** 77 kitchen recipes (backend modules), 28 dining room layouts (pages), 40 shared tools (utilities), and a complete inventory list (88 products).
+**What we built:** 78 kitchen recipes (backend modules), 28 dining room layouts (pages), 43 shared tools (utilities), and a complete inventory list (88 products).
 
 **What you need to do:** Put the recipes in the kitchen, set up the fridge, and open the doors.
 
@@ -102,9 +102,9 @@ If you ever want to use a **custom domain** (carolinafutons.com instead of usern
 Print this out and check off as you go:
 
 ```
-[ ] 1. Deploy 77 backend .web.js/.js files to Wix Velo backend/
+[ ] 1. Deploy 78 backend .web.js/.js files to Wix Velo backend/
 [ ] 2. Deploy 28 page .js files to Wix page code editor
-[ ] 3. Deploy 40 public utility .js files to Wix public/
+[ ] 3. Deploy 43 public utility .js files to Wix public/
 [ ] 4. Create 16 priority CMS collections in Dashboard
 [ ] 5. Verify 8 secrets in Secrets Manager
 [ ] 6. Install 7 free plugins (GA4, Meta Pixel, etc.)
@@ -113,6 +113,39 @@ Print this out and check off as you go:
 [ ] 9. Set up 4 scheduled jobs (cart recovery, etc.)
 [ ] 10. Connect domain, publish, verify 14-point checklist
 ```
+
+### What's Ready vs. In Progress (Feb 28 evening status)
+
+**SHIPPED (merged to main, ready to deploy):**
+- Homepage hero overhaul (full-bleed lifestyle, gradient overlay, staggered animations)
+- Announcement bar (rotating messages, dark espresso bg)
+- 5-icon trust bar (white-glove, financing, handcrafted, swatches, guarantee)
+- Product card grid (names, prices, sale strikethrough, color swatches, Quick View)
+- Category showcase cards (lifestyle images, "Shop Now" overlays)
+- Brand palette enforced (Sand/Espresso/Blue/Coral — pink killed)
+- Product page modernization (delivery estimate by ZIP, swatch CTA, accordion)
+- Email capture popup (exit-intent, WELCOME10, session gating, ARIA)
+- Financing calculator + BNPL display (monthly payments, Afterpay)
+- offWhite token (#FAF7F2) replacing pink backgrounds
+
+**IN REVIEW (PR #83, pending merge):**
+- Footer redesign (4-column links, newsletter signup, social icons, trust badges, payment methods)
+
+**IN PROGRESS (crew working now):**
+- Swatch kit CTA + free swatches promotion (CF-y8je — rennala)
+- Live chat widget (CF-5ggk — godfrey)
+- Product size/dimension guide (CF-p03z — miquella)
+
+**IN PROGRESS (convoy polecats):**
+- Performance optimization — lazy loading, code splitting, Core Web Vitals (cf-2epn)
+- SEO & metadata — dynamic meta tags, JSON-LD, OpenGraph (cf-k9ot)
+- Checkout flow polish — progress indicator, form validation (cf-7nky)
+- Mobile responsive audit — breakpoints, hamburger nav, touch targets (cf-wn17)
+- Wishlist & save for later (cf-ogdt)
+
+**NOT STARTED (ready queue):**
+- Lifestyle product photography (CF-x8pd) — needs actual photos
+- Email integration with Klaviyo/Mailchimp (cf-tcww) — current popup uses built-in newsletter service
 
 ---
 
@@ -248,6 +281,12 @@ These are the "kitchen recipes" — the server-side logic. All files go in the W
 | 76 | `searchIndex.web.js` | 10KB | Search index management |
 | 77 | `socialProofService.web.js` | 7KB | Real-time social proof events |
 
+**New in Design Sprint (Feb 28 afternoon — PRs #75-#83):**
+
+| # | File | Size | What It Does |
+|---|------|------|-------------|
+| 78 | `newsletterService.web.js` | 5KB | Newsletter subscription (email validation, dedup, Bronze loyalty auto-enroll, WELCOME10 discount code) |
+
 **Feed & Social:**
 
 | # | File | Size | What It Does |
@@ -379,6 +418,14 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 | `ga4Tracking.js` | 4KB | GA4 ecommerce event helpers |
 | `validators.js` | 3KB | Form input validation |
 | `ReturnsAdmin.js` | 8KB | Admin returns management UI |
+
+**New in Design Sprint (Feb 28 — PRs #75-#83):**
+
+| File | Size | What It Does |
+|------|------|-------------|
+| `exitIntentCapture.js` | 6KB | Exit-intent email capture popup (session gating, page exclusions, ARIA, email validation) |
+| `FooterSection.js` | 8KB | Extracted footer component (4-column links, newsletter, social icons, trust badges, payment methods) |
+| `ProductFinancing.js` | 6KB | Updated: financing calculator with BNPL monthly payments modal |
 
 **Also create `public/product/` subdirectory with:**
 
@@ -971,6 +1018,8 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | **Navigation** | — | navigationHelpers | — |
 | **Social proof** | socialProofService | socialProofToast | — |
 | **Returns admin** | returnsService | ReturnsAdmin, ReturnsPortal | — |
+| **Newsletter/email capture** | newsletterService | exitIntentCapture | ContactSubmissions |
+| **Footer** | — | FooterSection | — |
 
 ---
 
@@ -1017,10 +1066,10 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 5,032 tests across 135 files — all passing.
+**Current status:** 5,475+ tests across 135+ files — all passing (2 pre-existing notificationService failures unrelated to new code).
 
 ---
 
 *Generated by melania (Production Manager) — Carolina Futons cfutons rig*
 *Source files: refinery/rig/src/ (canonical codebase)*
-*Last verified: 2026-02-28 (updated: file counts, new Sprint 2 modules, test numbers 5,032)*
+*Last verified: 2026-02-28 21:00 MST (updated: Design Sprint modules, hookup status, test count 5,475+)*
