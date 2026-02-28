@@ -1,6 +1,6 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 05:42 UTC (godfrey)
+**Last Updated:** 2026-02-28 06:15 UTC (melania)
 
 ---
 
@@ -8,66 +8,89 @@
 
 **Goal:** Brand-defining visual pages that match the design.jpeg mockup. "Most kickass boutique furniture site ever." Every page feels like walking into a Blue Ridge Mountain showroom.
 
-### Sprint Status: 5 PRs Merged, 4 Crew Redirected to Core Design
+### Sprint Status: PR #67 Merged, 8 New Design Beads from Visual Audit
 
-**Just completed (this session):**
-- Reviewed and merged 5 PRs (#60-#64) from the functional feature sprint
-- Fixed critical bugs: 3 missing `await` in Checkout.js, ESM import issues, confirmation email wiring
-- Test suite: **5,032 tests, 135 files, ALL GREEN**
-- Created 3 new P1 frontend design beads (homepage, product page, category page)
-- Redirected ALL crew to P1 visual design work
+**This session (melania):**
+- Merged PR #67 (godfrey CF-edk1 homepage hero) — newsletter, ridgeline header, trust bar, category cards
+- Approved PR #66 (radahn CF-jl8u product page UX) — 105 tests, merge conflicts need rebase
+- Reviewed PR #69 (miquella CF-ynwm category page) — 2 blockers: unauthorized CLAUDE.md edit + merge conflicts
+- Closed PR #70 as redundant (superseded by #67)
+- Nudged rennala on PR #65 (CF-xai7 live chat) — no updates since last review
+- **Visual audit of 10 competitor sites** via Puppeteer screenshots: Castlery, Article, Floyd, Joybird, West Elm, Room & Board, Burrow, Interior Define, The Futon Shop, Futonland
+- **Created 8 new design beads** from visual audit findings (see below)
+- Mailed Dallas (cfutons_mobile) with 8-point design alignment guide for mobile app
+- All crew notified for handoff
 
-### Active Frontend Design Beads — 4 P1 Stories Assigned
+### Visual Audit Key Findings
+
+**Our site's biggest gaps vs competitors:**
+1. Pink-lavender gradient backgrounds — NO competitor uses this. Must die immediately.
+2. No lifestyle hero — every competitor uses full-bleed room-staged photography
+3. Product image dump — no names, prices, or cards on homepage. Just bare images stacked
+4. No announcement bar or trust signals — competitors all have top-of-page promo + trust icons
+5. Product page wall-of-text — needs accordion, reviews tab, related products, delivery estimate
+
+**Best-in-class patterns to adopt:**
+- Castlery: Warm palette, sidebar filters, product badges, color swatches on cards
+- Joybird: 5-icon trust bar, countdown timer, swatch dots on product cards
+- Floyd: Full-bleed lifestyle hero, "Designed in Detroit" regional storytelling
+- Article: Dramatic lifestyle photography, financing bar, "Shop By Room" cards
+- Futonland: Trust bar with 5 icons (Delivery, Assembly, Personal Approach, Price Match, No Tax)
+
+**Target aesthetic: "Castlery meets Blue Ridge Mountain craftsmanship"**
+
+### New Design Beads (from Visual Audit)
+
+| Bead | Story | Priority |
+|------|-------|----------|
+| CF-bbms | **Homepage hero overhaul** — kill heart bubbles, full-bleed lifestyle hero | P0 |
+| CF-c94m | **Announcement bar + trust bar** — top-of-page social proof strip | P0 |
+| CF-a1ps | **Kill pink-lavender background** — apply brand palette sitewide | P0 |
+| CF-dgiy | **Product card grid** — image + name + price + swatches + badges | P1 |
+| CF-b0sr | **Category showcase** — lifestyle cards for Shop by Category | P1 |
+| CF-isru | **Product page modernization** — accordion, reviews, related, delivery | P1 |
+| CF-x8pd | **Lifestyle product photography** — room-staged shots needed | P1 |
+| CF-y8je | **Swatch kit CTA** — free swatches promotion (Floyd/Burrow pattern) | P2 |
+| CF-8gzd | **Footer redesign** — columns, newsletter, social proof | P2 |
+
+### Active PRs
+
+| PR | Bead | Crew | Status |
+|----|------|------|--------|
+| #67 | CF-edk1 | godfrey | **MERGED** |
+| #66 | CF-jl8u | radahn | **APPROVED — needs rebase** (merge conflicts) |
+| #69 | CF-ynwm | miquella | **REQUEST CHANGES** (CLAUDE.md edit + conflicts) |
+| #65 | CF-xai7 | rennala | **REQUEST CHANGES** (no updates since last review) |
+| #68 | CF-v6q3 | refinery | **REQUEST CHANGES** (backup files only, no hooks code) |
+
+### Active Frontend Design Beads — Original Sprint
 
 | Bead | Story | Crew | Status |
 |------|-------|------|--------|
-| CF-edk1 | **Homepage Hero & Visual Polish** — hero section, trust bar, category showcase, mountain ridgeline | godfrey | **PR #67 OPEN** |
-| CF-jl8u | **Product Page UX** — gallery, sticky add-to-cart, dimension display, comfort integration | radahn | IN PROGRESS |
-| CF-ynwm | **Category Page Filtering** — faceted nav, compare tool, quick view, sort controls | miquella | IN PROGRESS |
-| CF-xai7 | **Live Chat Widget** — Tidio/Wix Chat, proactive triggers, branded styling | rennala | IN PROGRESS |
+| CF-edk1 | Homepage Hero & Visual Polish | godfrey | **MERGED PR #67** |
+| CF-jl8u | Product Page UX | radahn | PR #66 approved, needs rebase |
+| CF-ynwm | Category Page Filtering | miquella | PR #69, 2 blockers |
+| CF-xai7 | Live Chat Widget | rennala | PR #65, awaiting updates |
 
 ### Ready Queue — Next Wave
 
 | Bead | Story | Priority |
 |------|-------|----------|
-| CF-p03z | Product size/dimension guide with room fit visualization | P2 |
+| CF-bbms | Homepage hero overhaul (from visual audit) | P0 |
+| CF-c94m | Announcement bar + trust bar | P0 |
+| CF-a1ps | Kill pink-lavender background | P0 |
 | CF-78g2 | Recently viewed products + personalized recommendations | P2 |
+| CF-p03z | Product size/dimension guide with room fit visualization | P2 |
 | CF-pmkr | Customer reviews with photo upload + verified badges | P2 |
 
-### Design Principles (from Competitive Analysis)
+### Design Principles (from Competitive Analysis + Visual Audit)
 - **Boutique > Generic**: Hand-drawn mountain aesthetic, illustrated borders, regional personality
 - **Two-tone accent**: Coral #E8845C (CTAs) + Mountain Blue #5B8FA8 (secondary) — unique in market
 - **Conversion-first**: Every page drives to cart. Urgency, social proof, shipping progress
 - **"Can't touch it" solved**: Swatch flow + comfort cards (MERGED in PR #60)
 - **Mobile-first**: 60% of furniture traffic. Every feature mobile-optimized
-
----
-
-## What Shipped This Session (Feb 28 02:00-05:25 UTC)
-
-### PRs Merged (5)
-
-| PR | Bead | Crew | What | Bug Fixed |
-|----|------|------|------|-----------|
-| #64 | cf-joph | godfrey | Empty states & loading skeletons (mountain-themed) | Node 18 ESM fix |
-| #63 | cf-5qpo+dvlj | rennala | Conversion optimization + customer reviews | Node 18 ESM fix |
-| #60 | cf-r9sc | radahn | Swatch request flow + comfort story cards | Wired confirmation email, state init |
-| #62 | cf-6arz | miquella | Cart & checkout flow polish | **3 missing await on backend calls** (P1) |
-| #61 | cf-0sej | godfrey | Navigation & layout | Closed — superseded by #64 |
-
-### Beads Closed
-- cf-joph, cf-0sej, cf-5qpo, cf-dvlj, cf-6arz, cf-r9sc (6 total)
-- cf-4tty, cf-mol-327b (stale operational beads)
-
-### PR Review Findings
-All 5 PRs had issues — none were clean merges:
-- **PR #62**: P1 bug — 3 backend `await` calls missing, would silently fail at runtime
-- **PR #60**: Confirmation email function existed but was never called in submit flow
-- **PR #63**: ~15 placeholder tests (`expect(true).toBe(true)`), missing JSDoc
-- **PR #64**: 404 page missing search+categories, navigationHelpers scope creep
-- **PR #61**: Missing search autocomplete entirely (closed, superseded by #64)
-
-Quality gate working — all issues caught in review, critical bugs fixed before merge.
+- **Lifestyle photography**: Full-bleed room scenes, not product-on-white. Every competitor does this.
+- **Trust signals everywhere**: Announcement bar, trust icon strip, review counts, delivery estimates
 
 ---
 
@@ -76,11 +99,26 @@ Quality gate working — all issues caught in review, critical bugs fixed before
 | Metric | Value |
 |--------|-------|
 | Tests | **5,080 passing** / 136 files / 0 failures |
-| PRs merged total | 64 |
-| PRs open | **1** (PR #67 — CF-edk1 homepage hero) |
-| Frontend P1 beads | 4 active, 0 ready |
-| Frontend P2 beads | 3 ready |
+| PRs merged total | 65 (PR #67 merged this session) |
+| PRs open | **4** (#65, #66, #68, #69) |
+| Frontend P0 beads | 3 new (from visual audit) |
+| Frontend P1 beads | 4 (1 merged, 3 in progress + 4 new) |
+| Frontend P2 beads | 5 ready |
 | Codebase | **GREEN** |
+
+---
+
+## Crew Status (all handoff imminent)
+
+| Crew | Rig | Status | Next |
+|------|-----|--------|------|
+| godfrey | cfutons | PR #67 MERGED, handoff | CF-78g2 or P0 design bead |
+| radahn | cfutons | PR #66 approved, needs rebase | Rebase onto main, re-push |
+| miquella | cfutons | PR #69 has 2 blockers | Fix CLAUDE.md edit + conflicts |
+| rennala | cfutons | PR #65 stale | Address review comments |
+| dallas | cfutons_mobile | Wix REST API client | Received 8-point design alignment |
+| bishop | cfutons_mobile | Auth integration | — |
+| ripley | cfutons_mobile | Replace mock data | — |
 
 ---
 
@@ -99,7 +137,7 @@ Quality gate working — all issues caught in review, critical bugs fixed before
 ## What Human Needs
 
 1. **Illustration assets** — design.jpeg shows hand-drawn mountain illustrations. Code can wire them up, but someone needs to create/source: mountain ridgeline header, hero cabin scene, category card illustrations, decorative dividers, icon set (see ILLUSTRATION-ASSET-SPEC.md)
-2. **Product photography** — product images for the catalog
+2. **Lifestyle product photography** — room-staged shots for hero, category cards, product pages. EVERY competitor has this. Critical gap.
 3. **Domain connection** — carolinafutons.com
 4. **GA4, Meta Pixel, Pinterest Tag** installation in Wix Dashboard
 5. **Wix Chat or Tidio account setup** for CF-xai7 live chat integration
@@ -115,8 +153,4 @@ Quality gate working — all issues caught in review, critical bugs fixed before
 | Feb 27 sprint | 4,437 | 121 |
 | Feb 28 (now) | **5,080** | **136** |
 
-### godfrey status (05:42 UTC)
-- **CF-edk1**: PR #67 open — newsletter section, ridgeline header, hero content polish. 48 new tests. Awaiting melania review.
-- Branch: `cf-edk1-homepage-hero`, all pushed.
-
-*PM: melania | cfutons GREEN | 1 PR open | 5,080 tests | Frontend design sprint Phase 2 active*
+*PM: melania | cfutons GREEN | 4 PRs open | 5,080 tests | 8 new design beads from visual audit | Frontend design sprint Phase 2 active*
