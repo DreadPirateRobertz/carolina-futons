@@ -219,9 +219,9 @@ describe('Exit-Intent Popup', () => {
       expect(successMessage).toContain('10%');
     });
 
-    it('uses Mountain Blue/Coral design tokens', () => {
+    it('uses Mountain Blue/Coral design tokens', async () => {
       // Verify the popup uses brand design tokens
-      const { colors: sharedColors } = require('../src/public/sharedTokens.js');
+      const { colors: sharedColors } = await import('../src/public/sharedTokens.js');
       expect(sharedColors.mountainBlue).toBe('#5B8FA8');
       expect(sharedColors.sunsetCoral).toBe('#E8845C');
     });
