@@ -8,7 +8,7 @@
  */
 export function validateEmail(email) {
   if (typeof email !== 'string') return false;
-  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email.trim());
+  return /^[^\s@<>]+@[^\s@<>.][^\s@<>]*\.[^\s@<>]+$/.test(email.trim());
 }
 
 /**

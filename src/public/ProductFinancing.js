@@ -186,4 +186,6 @@ function closeFinancingModal($w) {
   try { $w('#financingModal').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#financingOverlay').hide('fade', { duration: 200 }); } catch (e) {}
   announce($w, 'Financing details closed');
+  // Restore focus to the learn more link that opened the modal
+  try { $w('#financingLearnMore').focus(); } catch (e) {}
 }

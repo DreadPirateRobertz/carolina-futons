@@ -157,21 +157,27 @@ export function initStickyCartBar($w, product) {
       });
     } catch (e) {}
 
-    // Monitor scroll to show/hide sticky bar
+    // Monitor scroll to show/hide sticky bar (throttled to prevent mobile jank)
     let stickyVisible = false;
-    wixWindowFrontend.onScroll(async (event) => {
-      try {
-        const btnBounds = await $w('#addToCartButton').getBoundingRect();
-        const shouldShow = btnBounds.top < 0;
+    let scrollTicking = false;
+    wixWindowFrontend.onScroll(() => {
+      if (scrollTicking) return;
+      scrollTicking = true;
+      (typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : setTimeout)(async () => {
+        try {
+          const btnBounds = await $w('#addToCartButton').getBoundingRect();
+          const shouldShow = btnBounds.top < 0;
 
-        if (shouldShow && !stickyVisible) {
-          stickyVisible = true;
-          stickyBar.show('slide', { direction: 'bottom', duration: 250 });
-        } else if (!shouldShow && stickyVisible) {
-          stickyVisible = false;
-          stickyBar.hide('slide', { direction: 'bottom', duration: 250 });
-        }
-      } catch (e) {}
+          if (shouldShow && !stickyVisible) {
+            stickyVisible = true;
+            stickyBar.show('slide', { direction: 'bottom', duration: 250 });
+          } else if (!shouldShow && stickyVisible) {
+            stickyVisible = false;
+            stickyBar.hide('slide', { direction: 'bottom', duration: 250 });
+          }
+        } catch (e) {}
+        scrollTicking = false;
+      });
     });
   } catch (e) {}
 }
