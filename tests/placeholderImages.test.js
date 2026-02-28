@@ -79,6 +79,11 @@ describe('getCategoryCardImage', () => {
     const urls = ALL_CATEGORIES.map(getCategoryCardImage);
     expect(new Set(urls).size).toBe(7);
   });
+
+  it('sales category has a card image', () => {
+    const url = getCategoryCardImage('sales');
+    expect(url).toContain('w=600&h=400');
+  });
 });
 
 // ── getPlaceholderProductImages ──────────────────────────────────
