@@ -1012,6 +1012,9 @@ async function applyAdvancedFilters(currentPath) {
     // Hide loading indicator
     try { $w('#filterLoadingIndicator').hide(); } catch (e) {}
 
+    // Update active filter chips
+    renderFilterChips();
+
     // Also apply to dataset for grid rendering
     applyFilters();
   } catch (e) {
@@ -1046,7 +1049,44 @@ function clearAllAdvancedFilters(currentPath) {
   applyAdvancedFilters(currentPath);
   applyFilters();
 
+  renderFilterChips();
   trackEvent('filters_cleared', { category: currentPath });
+}
+
+// ── Active Filter Chips ──────────────────────────────────────────
+
+function renderFilterChips() {
+  try {
+    const container = $w('#activeFilterChips');
+    if (!container) return;
+
+    const chips = [];
+    if (currentFilters.material) chips.push({ label: `Material: ${currentFilters.material}`, key: 'material' });
+    if (currentFilters.color) chips.push({ label: `Color: ${currentFilters.color}`, key: 'color' });
+    if (currentFilters.features && currentFilters.features.length > 0) {
+      currentFilters.features.forEach(f => {
+        chips.push({ label: `Feature: ${formatFeatureLabel(f)}`, key: 'features', value: f });
+      });
+    }
+    if (currentFilters.priceRange) chips.push({ label: `Price: ${currentFilters.priceRange}`, key: 'priceRange' });
+    if (currentFilters.brand) chips.push({ label: `Brand: ${currentFilters.brand}`, key: 'brand' });
+    if (currentFilters.size) chips.push({ label: `Size: ${currentFilters.size}`, key: 'size' });
+    if (currentFilters.comfortLevel) chips.push({ label: `Comfort: ${currentFilters.comfortLevel}`, key: 'comfortLevel' });
+    if (currentFilters.widthRange) chips.push({ label: `Width: ${currentFilters.widthRange[0]}"-${currentFilters.widthRange[1]}"`, key: 'widthRange' });
+    if (currentFilters.depthRange) chips.push({ label: `Depth: ${currentFilters.depthRange[0]}"-${currentFilters.depthRange[1]}"`, key: 'depthRange' });
+
+    if (chips.length === 0) {
+      container.hide();
+      return;
+    }
+
+    try {
+      $w('#filterChipsText').text = chips.map(c => c.label).join(' · ');
+    } catch (e) {}
+
+    container.show();
+    announce($w, `${chips.length} filter${chips.length !== 1 ? 's' : ''} active`);
+  } catch (e) {}
 }
 
 function showNoMatchesState(currentPath) {
