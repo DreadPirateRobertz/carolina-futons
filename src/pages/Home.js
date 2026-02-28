@@ -1,6 +1,6 @@
 // Home.js - Homepage
 // "Handcrafted Comfort, Mountain Inspired."
-// Featured products, category showcase, recently viewed, trust signals, testimonials
+// Hero, categories, featured products, trust bar, newsletter, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
@@ -9,6 +9,8 @@ import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'pub
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import wixData from 'wix-data';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ── Category metadata for all 8 categories ──────────────────────────
 const CATEGORIES = [
@@ -34,6 +36,8 @@ $w.onReady(async function () {
     { name: 'testimonials', init: initTestimonials },
     { name: 'videoShowcase', init: initVideoShowcase },
     { name: 'quizCTA', init: initQuizCTA },
+    { name: 'newsletter', init: initNewsletterSection },
+    { name: 'ridgeline', init: initRidgelineHeader },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
@@ -408,7 +412,7 @@ function initSmoothScroll() {
 
 function initHeroAnimation() {
   try {
-    // Set hero background from Media Manager
+    // Set hero background — mountain cabin illustration
     try {
       const heroBg = $w('#heroBg');
       if (heroBg) {
@@ -421,16 +425,19 @@ function initHeroAnimation() {
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');
 
-    // Staggered fade-in
+    // Set hero content — Playfair Display title, brand tagline, CTA
     if (heroTitle) {
+      heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
       heroTitle.show('fade', { duration: 600, delay: 200 });
     }
     if (heroSubtitle) {
+      heroSubtitle.text = 'Hendersonville\'s largest selection of futons, Murphy beds & platform beds since 1991.';
       heroSubtitle.show('fade', { duration: 600, delay: 500 });
     }
     if (heroCta) {
+      heroCta.label = 'Explore Our Collection';
       heroCta.show('fade', { duration: 400, delay: 800 });
-      try { heroCta.accessibility.ariaLabel = 'Shop all furniture'; } catch (e) {}
+      try { heroCta.accessibility.ariaLabel = 'Explore our furniture collection'; } catch (e) {}
       heroCta.onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/shop-main'));
       });
@@ -450,6 +457,92 @@ async function injectHomeSchemas() {
       $w('#websiteSchemaHtml').postMessage(schema);
     }
   } catch (e) {}
+}
+
+// ── Newsletter Signup Section ────────────────────────────────────────
+// Mountain-themed email signup CTA with discount code incentive
+
+function initNewsletterSection() {
+  try {
+    const section = $w('#newsletterSection');
+    if (!section) return;
+
+    try { $w('#newsletterTitle').text = 'Join the Carolina Futons Family'; } catch (e) {}
+    try {
+      $w('#newsletterSubtitle').text =
+        'Get exclusive deals, new arrivals & furniture tips — plus 10% off your first order.';
+    } catch (e) {}
+
+    // Hide feedback messages initially
+    try { $w('#newsletterSuccess').hide(); } catch (e) {}
+    try { $w('#newsletterError').hide(); } catch (e) {}
+
+    // Set accessibility labels
+    try { $w('#newsletterEmail').accessibility.ariaLabel = 'Enter your email address'; } catch (e) {}
+    try { $w('#newsletterSubmit').accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
+
+    // Wire submit handler
+    try {
+      $w('#newsletterSubmit').onClick(async () => {
+        const email = $w('#newsletterEmail').value?.trim() || '';
+
+        // Validate email
+        if (!email || !EMAIL_RE.test(email)) {
+          try {
+            $w('#newsletterError').text = 'Please enter a valid email address.';
+            $w('#newsletterError').show();
+          } catch (e) {}
+          try { $w('#newsletterSuccess').hide(); } catch (e) {}
+          try { announce('Please enter a valid email address.'); } catch (e) {}
+          return;
+        }
+
+        // Submit
+        try {
+          $w('#newsletterSubmit').label = 'Submitting...';
+          const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+          const result = await subscribeToNewsletter(email);
+
+          $w('#newsletterSuccess').text =
+            `Welcome! Use code ${result.discountCode || 'WELCOME10'} for 10% off your first order.`;
+          $w('#newsletterSuccess').show();
+          try { $w('#newsletterError').hide(); } catch (e) {}
+
+          trackEvent('newsletter_signup', { page: 'home', email });
+          announce('Successfully subscribed! Check your email for your discount code.');
+        } catch (err) {
+          try {
+            $w('#newsletterError').text = 'Something went wrong. Please try again.';
+            $w('#newsletterError').show();
+          } catch (e) {}
+          try { $w('#newsletterSuccess').hide(); } catch (e) {}
+          announce('Subscription failed. Please try again.');
+        } finally {
+          try { $w('#newsletterSubmit').label = 'Subscribe'; } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Newsletter section is optional
+  }
+}
+
+// ── Mountain Ridgeline Header ───────────────────────────────────────
+// Decorative Blue Ridge ridgeline SVG behind navigation
+
+function initRidgelineHeader() {
+  try {
+    const ridgeline = $w('#ridgelineHeader');
+    if (!ridgeline) return;
+
+    ridgeline.src = 'https://static.wixstatic.com/media/cf-asset-01-ridgeline-header.svg';
+    ridgeline.alt = 'Blue Ridge Mountain ridgeline decoration';
+    try { ridgeline.accessibility.ariaLabel = 'Decorative mountain ridgeline'; } catch (e) {}
+  } catch (e) {
+    // Ridgeline header is decorative, non-critical
+  }
 }
 
 // ── Alt Text Helpers ────────────────────────────────────────────────
