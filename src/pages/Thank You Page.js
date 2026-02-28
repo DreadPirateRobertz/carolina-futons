@@ -7,6 +7,7 @@ import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { validateEmail } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
@@ -214,22 +215,27 @@ function initNewsletterSignup() {
     try { $w('#newsletterEmail').accessibility.ariaLabel = 'Enter your email for newsletter'; } catch (e) {}
     try { $w('#newsletterSignup').accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
     $w('#newsletterSignup').onClick(async () => {
-      const email = $w('#newsletterEmail').value;
-      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const email = $w('#newsletterEmail').value?.trim();
+      if (!email || !validateEmail(email)) {
         try {
-          const { contacts } = await import('wix-crm-frontend');
-          await contacts.appendOrCreateContact({
-            emails: [email],
-            labelKeys: ['custom.newsletter'],
-          });
-          trackNewsletterSignup('thank_you_page');
-          fireCustomEvent('newsletter_signup', { source: 'thank_you_page' });
-          $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
-          $w('#newsletterSuccess').show();
-          $w('#newsletterSignup').disable();
-        } catch (e) {
-          console.error('Newsletter signup error:', e);
-        }
+          $w('#newsletterError').text = 'Please enter a valid email address.';
+          $w('#newsletterError').show();
+        } catch (e) {}
+        return;
+      }
+      try {
+        const { contacts } = await import('wix-crm-frontend');
+        await contacts.appendOrCreateContact({
+          emails: [email],
+          labelKeys: ['custom.newsletter'],
+        });
+        trackNewsletterSignup('thank_you_page');
+        fireCustomEvent('newsletter_signup', { source: 'thank_you_page' });
+        $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
+        $w('#newsletterSuccess').show();
+        $w('#newsletterSignup').disable();
+      } catch (e) {
+        console.error('Newsletter signup error:', e);
       }
     });
   } catch (e) {}

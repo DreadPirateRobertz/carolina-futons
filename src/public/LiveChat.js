@@ -6,6 +6,7 @@
 import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHistory, createSupportTicket } from 'backend/liveChatService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
+import { validateEmail } from 'public/validators.js';
 
 let _sessionId = null;
 let _userName = '';
@@ -142,7 +143,7 @@ function initPreChatForm($w) {
         const name = $w('#preChatName').value?.trim() || '';
         const email = $w('#preChatEmail').value?.trim() || '';
 
-        if (!email || !email.includes('@')) {
+        if (!email || !validateEmail(email)) {
           try { $w('#preChatError').text = 'Please enter a valid email'; } catch (e) {}
           try { $w('#preChatError').show(); } catch (e) {}
           return;

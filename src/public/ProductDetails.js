@@ -4,6 +4,7 @@ import { submitSwatchRequest } from 'backend/emailService.web';
 import { getCategoryFromCollections, addBusinessDays } from 'public/productPageUtils.js';
 import { trackSocialShare } from 'public/engagementTracker';
 import { makeClickable } from 'public/a11yHelpers';
+import { validateEmail } from 'public/validators.js';
 
 // ── Breadcrumbs ───────────────────────────────────────────────────────
 
@@ -197,7 +198,14 @@ async function handleSwatchSubmit($w, state) {
     const name = $w('#swatchName').value?.trim();
     const email = $w('#swatchEmail').value?.trim();
     const address = $w('#swatchAddress').value?.trim();
-    if (!name || !email || !address) return;
+    if (!name || !address) return;
+    if (!email || !validateEmail(email)) {
+      try {
+        const msg = $w('#swatchError');
+        if (msg) { msg.text = 'Please enter a valid email address.'; msg.show('fade', { duration: 300 }); }
+      } catch (e) {}
+      return;
+    }
     const selected = [];
     try {
       $w('#swatchOptions').forEachItem(($item, d) => {

@@ -697,7 +697,13 @@ function showRemindMePopup() {
     try {
       $w('#remindMeSubmit').onClick(async () => {
         const email = $w('#remindMeEmailInput').value?.trim();
-        if (!email || !validateEmail(email)) return;
+        if (!email || !validateEmail(email)) {
+          try {
+            const errEl = $w('#remindMeError');
+            if (errEl) { errEl.text = 'Please enter a valid email address.'; errEl.show('fade', { duration: 300 }); }
+          } catch (e) {}
+          return;
+        }
 
         try {
           $w('#remindMeSubmit').disable();
