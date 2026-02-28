@@ -800,5 +800,20 @@ describe('masterPage.js', () => {
       await onReadyHandler();
       expect(getEl('#announcementText').accessibility.ariaLive || getEl('#announcementText').role).toBeTruthy();
     });
+
+    it('sets initial announcement message text', async () => {
+      await onReadyHandler();
+      expect(getEl('#announcementText').text).toBeTruthy();
+    });
+
+    it('sets aria-live=polite on announcement text', async () => {
+      await onReadyHandler();
+      expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
+    });
+
+    it('wires dismiss button with click handler', async () => {
+      await onReadyHandler();
+      expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+    });
   });
 });

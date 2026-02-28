@@ -232,27 +232,14 @@ function initEnhancedNavigation() {
 function initAnnouncementBar() {
   const messages = [
     'Free Shipping on Orders Over $999!',
-    'Visit Our Showroom: 824 Locust St, Hendersonville NC',
+    'Visit Our Showroom: Wed–Sat 10–5, Hendersonville NC',
     'Over 700 Fabric Swatches Available In-Store',
     'Request FREE fabric swatches — shipped to your door!',
     'Family Owned Since 1991 — Now Carolina Futons',
   ];
 
-  let currentIndex = 0;
-
   try {
-    const announcementText = $w('#announcementText');
-    if (!announcementText) return;
-
-    announcementText.text = messages[0];
-
-    setInterval(() => {
-      currentIndex = (currentIndex + 1) % messages.length;
-      announcementText.hide('fade', { duration: 300 }).then(() => {
-        announcementText.text = messages[currentIndex];
-        announcementText.show('fade', { duration: 300 });
-      });
-    }, 5000);
+    initAnnouncementBarHelper($w, messages, { interval: 5000 });
   } catch (e) {
     // Announcement bar may not be on all pages
   }
