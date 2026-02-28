@@ -66,6 +66,15 @@ afterEach(() => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('galleryHelpers: initImageLightbox returns cleanup', () => {
+  const mock$w = () => ({
+    show: vi.fn(),
+    hide: vi.fn(),
+    src: '',
+    text: '',
+    onClick: vi.fn(),
+    accessibility: {},
+  });
+
   it('returns a destroy function that removes keydown listener', async () => {
     const { initImageLightbox } = await import('../src/public/galleryHelpers.js');
 
