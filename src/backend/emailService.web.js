@@ -170,6 +170,60 @@ export const submitSwatchRequest = webMethod(
 );
 
 /**
+ * Send a swatch confirmation email to the customer.
+ * Branded template with mountain illustration, estimated arrival, swatch list.
+ *
+ * @function sendSwatchConfirmationEmail
+ * @param {Object} params
+ * @param {string} params.contactId - Customer's Wix contact ID.
+ * @param {string} params.name - Customer's name.
+ * @param {string} params.email - Customer's email (for reference).
+ * @param {string[]} params.swatchNames - Names of requested swatches.
+ * @param {string} params.productName - Product the swatches are for.
+ * @param {number} [params.estimatedDays] - Estimated delivery days.
+ * @returns {Promise<{success: boolean}>}
+ * @permission Anyone
+ */
+export const sendSwatchConfirmationEmail = webMethod(
+  Permissions.Anyone,
+  async ({ contactId, name, email, swatchNames, productName, estimatedDays }) => {
+    try {
+      if (!contactId) {
+        return { success: false, message: 'Customer contact ID is required.' };
+      }
+
+      const cleanName = sanitize(name, 200);
+      const cleanProductName = sanitize(productName, 200);
+      const cleanSwatches = Array.isArray(swatchNames)
+        ? swatchNames.map(s => sanitize(s, 100))
+        : [];
+
+      const arrival = estimatedDays
+        ? `${estimatedDays} business days`
+        : '5-7 business days';
+
+      await triggeredEmails.emailContact(
+        'swatch_confirmation',
+        contactId,
+        {
+          variables: {
+            customerName: cleanName,
+            productName: cleanProductName,
+            swatchList: cleanSwatches.join(', '),
+            estimatedArrival: arrival,
+          },
+        }
+      );
+
+      return { success: true };
+    } catch (err) {
+      console.error('Error sending swatch confirmation email:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
  * Send a new order notification to the store owner.
  * Non-critical — returns `{ success: false }` on failure rather than throwing.
  *
