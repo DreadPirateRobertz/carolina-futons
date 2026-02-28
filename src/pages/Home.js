@@ -4,7 +4,7 @@
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
+import { getHomepageHeroImage, getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -613,17 +613,37 @@ function initSmoothScroll() {
 // ── Hero Animation ──────────────────────────────────────────────────
 
 /**
- * Initialize the hero section with mountain cabin illustration,
- * Playfair Display title, brand subtitle, and CTA with staggered fade-in.
+ * Initialize the hero section with full-bleed lifestyle photograph,
+ * semi-transparent overlay, Playfair Display title, brand subtitle,
+ * and CTA with staggered fade-in animation.
+ *
+ * CF-bbms: Replaced generic hero with Blue Ridge cabin lifestyle hero.
  */
 function initHeroAnimation() {
   try {
-    // Set hero background — mountain cabin illustration
+    // Set hero section ARIA landmark
+    try {
+      const heroSection = $w('#heroSection');
+      if (heroSection) {
+        heroSection.accessibility.ariaLabel = 'Carolina Futons hero banner';
+      }
+    } catch (e) {}
+
+    // Set hero background — full-bleed Blue Ridge cabin lifestyle photo
     try {
       const heroBg = $w('#heroBg');
       if (heroBg) {
-        heroBg.src = getCategoryHeroImage('futon-frames');
+        heroBg.src = getHomepageHeroImage();
         heroBg.alt = 'Handcrafted Comfort, Mountain Inspired - Carolina Futons Hendersonville NC';
+      }
+    } catch (e) {}
+
+    // Set overlay for text readability over lifestyle photo
+    try {
+      const heroOverlay = $w('#heroOverlay');
+      if (heroOverlay) {
+        heroOverlay.style.backgroundColor = 'rgba(58, 37, 24, 0.6)';
+        heroOverlay.show('fade', { duration: 400, delay: 0 });
       }
     } catch (e) {}
 
@@ -631,7 +651,7 @@ function initHeroAnimation() {
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');
 
-    // Set hero content — Playfair Display title, brand tagline, CTA
+    // Staggered fade-in: title → subtitle → CTA
     if (heroTitle) {
       heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
       heroTitle.show('fade', { duration: 600, delay: 200 });

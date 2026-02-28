@@ -82,9 +82,22 @@ const productImages = {
   ],
 };
 
+// ── Homepage Hero Image (1920x800, Blue Ridge cabin lifestyle) ────────
+// Full-bleed lifestyle hero — warm wood, natural light, mountain cabin aesthetic
+// Replace with Wix Media upload per MEDIA_MANIFEST.md when real asset is ready
+const HOMEPAGE_HERO = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=800&fit=crop&crop=center';
+
 // ── Fallback (generic product image from catalog) ────────────────────
 const FALLBACK_IMAGE = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
 const FALLBACK_HERO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&h=600&fit=crop&crop=center';
+
+/**
+ * Get the homepage hero image — full-bleed Blue Ridge cabin lifestyle photo.
+ * @returns {string} Image URL sized 1920x800
+ */
+export function getHomepageHeroImage() {
+  return HOMEPAGE_HERO;
+}
 
 /**
  * Get a hero image URL for a category page header.
