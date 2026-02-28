@@ -1,5 +1,71 @@
 # Gas Town Status Report — Mayor
-**Generated:** 2026-02-24 00:03 MST
+
+---
+
+## UPDATE: 2026-02-28 01:25 MST — Session b8758b87
+
+**Status:** ACTIVE — cfutons PRIORITY rig
+
+### Town Overview
+| Rig | Status | Crew | Focus |
+|-----|--------|------|-------|
+| cfutons | **RUNNING** | 5 active | P1 bug sprint + frontend redesign initiative |
+| gastown | RUNNING | 6 active | PR reviews, issue triage, CI health |
+| cfutons_mobile | PARKED | — | — |
+| tradingbot | PARKED | — | — |
+
+### Active Convoys (3)
+| Convoy | ID | Progress | Key |
+|--------|----|----------|-----|
+| P1 Bug Sprint | hq-cv-sjk7e | 0/4 | CF-3qj3, CF-wy0m, CF-d7dr, CF-1b86 |
+| Frontend Redesign | hq-cv-b26zm | 0/1 | CF-k582 — competitive analysis, proposals before code |
+| Token Burn Audit | hq-cv-m7uwe | 0/1 | cf-09z — miquella enforcing |
+
+### cfutons Crew Assignments
+| Member | Primary | Status |
+|--------|---------|--------|
+| godfrey | CF-1b86 (side cart) → CF-3qj3 (sanitization) | TDD in progress |
+| rennala | CF-wy0m (memory leaks) | TDD in progress, PR #52 shipped |
+| radahn | CF-d7dr (focus trapping) | Analysis complete, coding |
+| melania | Coordinator — PR reconciliation, CF-k582 reassignment | Active |
+| miquella | Token burn auditor (cf-09z) | First audit delivered |
+
+### cfutons Token Audit (first sweep)
+| Member | Tokens | Output | Waste |
+|--------|--------|--------|-------|
+| godfrey | 10.9k | Writing tests (TDD) | None |
+| rennala | 9.6k | PR #52 + started CF-wy0m | None |
+| radahn | 53.9k | Explore agent on focus traps | **MONITOR** — high single-call spend |
+| melania | 8.5k | Test suite green, coordinating | None |
+| miquella | 9.8k | PR #53 shipped | Minor dup work w/ rennala |
+
+**Issues found:** PRs #52/#53 may overlap (cf-8iy audit). Melania to reconcile.
+
+### gastown Crew Reports Received
+- **tyrell:** 5 PRs approved, 1 changes-requested. Merge order provided.
+- **rachael:** 6 issues triaged with root cause analysis. 3 new P1s found.
+- **zhora:** CI review complete. 2 PRs approved. Lint + integration test fixes identified.
+
+### Session Actions This Cycle
+1. Woke cfutons crew (5 members)
+2. Unparked + started gastown crew (6 members)
+3. Created 3 convoys (P1 bugs, frontend redesign, token audit)
+4. Dispatched parallel audit agents — crew token burn, frontend status, beads progress
+5. Assigned miquella as token burn auditor (standing mandate)
+6. Cleaned ~1.3M stale beads artifacts (locks, flocks, backups, sqlite)
+7. Labeled all 20 tmux windows (GT:/CF:/HQ: prefixes)
+8. Sent directives to melania (frontend analysis, CLAUDE.md review, PR reconciliation)
+9. Gastown crew: tyrell (PR reviews), batty (daemon bugs), deckard (community PRs), rachael (issue triage), gaff (doctor/infra), zhora (CI/testing)
+
+### Known Issues
+- DreadPirateRobertz can't merge PRs or add labels (permissions on steveyegge/gastown)
+- CF-k582 (frontend analysis) needs reassignment — rennala is on memory leaks
+- Radahn's 53.9k Explore spend needs to convert to commits
+- `gt` binary 87 commits behind (human updated, may need `make install`)
+
+---
+
+## PREVIOUS REPORT: 2026-02-24 00:03 MST
 **Mayor Session:** 5f324bd1
 **Status:** HANDOFF
 
