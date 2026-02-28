@@ -6,6 +6,7 @@
  */
 import { getProductSocialProof, getCategorySocialProof } from 'backend/socialProof.web';
 import { isMobile } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers.js';
 
 const SESSION_KEY = 'cf_social_proof';
 
@@ -112,8 +113,15 @@ function showToast($w, notification, config) {
     const toastClose = $w('#socialProofClose');
     if (!toastEl || !toastMsg) return;
 
+    // Set ARIA role for screen reader announcement
+    try { toastEl.accessibility.role = 'alert'; } catch (e) {}
+    try { toastEl.accessibility.ariaLive = 'polite'; } catch (e) {}
+
     // Set message
     toastMsg.text = notification.message;
+
+    // Announce to screen readers
+    announce($w, notification.message);
 
     // Set icon based on type
     try {

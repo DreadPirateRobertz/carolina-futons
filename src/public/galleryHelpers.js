@@ -201,7 +201,8 @@ export function scrollToElement($w, selector) {
 // Format product description for display (strip HTML, truncate)
 export function formatDescription(html, maxLength = 200) {
   if (!html) return '';
-  const text = html.replace(/<[^>]*>/g, '').trim();
+  // Strip closed tags and unclosed/malformed tags (e.g., <br without >)
+  const text = html.replace(/<[^>]*>?/g, '').trim();
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
 }
@@ -314,6 +315,14 @@ export function initImageLightbox(galleryElement, mainImageElement) {
       try { $w('#lightboxCounter').hide(); } catch (e) {}
     }
   }
+
+  // Set ARIA attributes for lightbox overlay
+  try { $w('#lightboxOverlay').accessibility.role = 'dialog'; } catch (e) {}
+  try { $w('#lightboxOverlay').accessibility.ariaModal = true; } catch (e) {}
+  try { $w('#lightboxOverlay').accessibility.ariaLabel = 'Image lightbox gallery'; } catch (e) {}
+  try { $w('#lightboxClose').accessibility.ariaLabel = 'Close lightbox'; } catch (e) {}
+  try { $w('#lightboxPrev').accessibility.ariaLabel = 'Previous image'; } catch (e) {}
+  try { $w('#lightboxNext').accessibility.ariaLabel = 'Next image'; } catch (e) {}
 
   function openLightbox(startIndex = 0) {
     isOpen = true;
@@ -481,9 +490,14 @@ export function buildComparisonBar() {
     // Compare button — enabled when 2+ items selected
     try {
       $w('#compareButton').onClick(() => {
-        const ids = compareList.map(p => p._id).join(',');
+        // Validate product IDs before building URL to prevent injection
+        const ids = compareList
+          .map(p => p._id)
+          .filter(id => typeof id === 'string' && /^[a-zA-Z0-9_-]+$/.test(id))
+          .join(',');
+        if (!ids) return;
         import('wix-location-frontend').then(({ to }) => {
-          to(`/compare?products=${ids}`);
+          to(`/compare?products=${encodeURIComponent(ids)}`);
         });
       });
       if (compareList.length >= 2) {

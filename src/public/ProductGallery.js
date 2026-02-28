@@ -68,7 +68,7 @@ export function initImageGallery($w, state) {
         try { mainImage.accessibility.ariaLabel = 'Product image gallery, use arrow keys to navigate'; } catch (e) {}
         try { mainImage.accessibility.ariaRoledescription = 'carousel'; } catch (e) {}
 
-        document.addEventListener('keydown', (e) => {
+        const handleGalleryKeydown = (e) => {
           // Only handle arrow keys when gallery area has focus
           try {
             const items = gallery.items || [];
@@ -96,7 +96,12 @@ export function initImageGallery($w, state) {
               trackGalleryInteraction('keyboard', 'prev');
             }
           } catch (e) {}
-        });
+        };
+        document.addEventListener('keydown', handleGalleryKeydown);
+        // Store cleanup reference for SPA navigation
+        if (typeof window !== 'undefined') {
+          window.__cfGalleryKbCleanup = () => document.removeEventListener('keydown', handleGalleryKeydown);
+        }
       }
     } catch (e) {}
 

@@ -6,6 +6,7 @@
 import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHistory, createSupportTicket } from 'backend/liveChatService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
+import { validateEmail } from 'public/validators.js';
 
 let _sessionId = null;
 let _userName = '';
@@ -93,9 +94,9 @@ function initChatToggle($w) {
       });
     } catch (e) {}
 
-    // Escape key closes chat
+    // Escape key closes chat — named handler for cleanup
     if (typeof document !== 'undefined') {
-      document.addEventListener('keydown', (e) => {
+      const handleEscapeKey = (e) => {
         if (e.key === 'Escape') {
           try {
             const widget = $w('#chatWidget');
@@ -106,7 +107,12 @@ function initChatToggle($w) {
             }
           } catch (e2) {}
         }
-      });
+      };
+      document.addEventListener('keydown', handleEscapeKey);
+      // Store cleanup reference for SPA navigation
+      if (typeof window !== 'undefined') {
+        window.__cfChatEscCleanup = () => document.removeEventListener('keydown', handleEscapeKey);
+      }
     }
 
     // Keep widget collapsed initially
@@ -142,7 +148,7 @@ function initPreChatForm($w) {
         const name = $w('#preChatName').value?.trim() || '';
         const email = $w('#preChatEmail').value?.trim() || '';
 
-        if (!email || !email.includes('@')) {
+        if (!email || !validateEmail(email)) {
           try { $w('#preChatError').text = 'Please enter a valid email'; } catch (e) {}
           try { $w('#preChatError').show(); } catch (e) {}
           return;
