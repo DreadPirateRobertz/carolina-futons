@@ -1,6 +1,6 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 05:25 UTC (melania)
+**Last Updated:** 2026-02-28 05:42 UTC (godfrey)
 
 ---
 
@@ -21,7 +21,7 @@
 
 | Bead | Story | Crew | Status |
 |------|-------|------|--------|
-| CF-edk1 | **Homepage Hero & Visual Polish** — hero section, trust bar, category showcase, mountain ridgeline | godfrey | IN PROGRESS |
+| CF-edk1 | **Homepage Hero & Visual Polish** — hero section, trust bar, category showcase, mountain ridgeline | godfrey | **PR #67 OPEN** |
 | CF-jl8u | **Product Page UX** — gallery, sticky add-to-cart, dimension display, comfort integration | radahn | IN PROGRESS |
 | CF-ynwm | **Category Page Filtering** — faceted nav, compare tool, quick view, sort controls | miquella | IN PROGRESS |
 | CF-xai7 | **Live Chat Widget** — Tidio/Wix Chat, proactive triggers, branded styling | rennala | IN PROGRESS |
@@ -75,9 +75,9 @@ Quality gate working — all issues caught in review, critical bugs fixed before
 
 | Metric | Value |
 |--------|-------|
-| Tests | **5,032 passing** / 135 files / 0 failures |
+| Tests | **5,080 passing** / 136 files / 0 failures |
 | PRs merged total | 64 |
-| PRs open | **0** |
+| PRs open | **1** (PR #67 — CF-edk1 homepage hero) |
 | Frontend P1 beads | 4 active, 0 ready |
 | Frontend P2 beads | 3 ready |
 | Codebase | **GREEN** |
@@ -113,6 +113,10 @@ Quality gate working — all issues caught in review, critical bugs fixed before
 | Feb 21 start | 2,394 | 70 |
 | Feb 23 | 3,526 | 96 |
 | Feb 27 sprint | 4,437 | 121 |
-| Feb 28 (now) | **5,032** | **135** |
+| Feb 28 (now) | **5,080** | **136** |
 
-*PM: melania | cfutons GREEN | 0 PRs open | 5,032 tests | Frontend design sprint Phase 2 active*
+### godfrey status (05:42 UTC)
+- **CF-edk1**: PR #67 open — newsletter section, ridgeline header, hero content polish. 48 new tests. Awaiting melania review.
+- Branch: `cf-edk1-homepage-hero`, all pushed.
+
+*PM: melania | cfutons GREEN | 1 PR open | 5,080 tests | Frontend design sprint Phase 2 active*

@@ -1,14 +1,29 @@
 // Home.js - Homepage
 // "Handcrafted Comfort, Mountain Inspired."
-// Featured products, category showcase, recently viewed, trust signals, testimonials
+// Hero, categories, featured products, trust bar, newsletter, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { getCategoryHeroImage } from 'public/placeholderImages.js';
+import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import wixData from 'wix-data';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SLUG_RE = /^[a-z0-9-]+$/;
+
+/**
+ * Sanitize a product slug for safe URL construction.
+ * Strips anything that isn't lowercase alphanumeric or hyphens.
+ * @param {string} slug - Raw slug from product data
+ * @returns {string} Sanitized slug safe for URL path segments
+ */
+function safeSlug(slug) {
+  if (typeof slug !== 'string') return '';
+  const cleaned = slug.trim().toLowerCase().slice(0, 100);
+  return SLUG_RE.test(cleaned) ? cleaned : cleaned.replace(/[^a-z0-9-]/g, '');
+}
 
 // ── Category metadata for all 8 categories ──────────────────────────
 const CATEGORIES = [
@@ -34,6 +49,8 @@ $w.onReady(async function () {
     { name: 'testimonials', init: initTestimonials },
     { name: 'videoShowcase', init: initVideoShowcase },
     { name: 'quizCTA', init: initQuizCTA },
+    { name: 'newsletter', init: initNewsletterSection },
+    { name: 'ridgeline', init: initRidgelineHeader },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
@@ -62,10 +79,19 @@ $w.onReady(async function () {
 });
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
-// Displays curated product selection in a grid
 
+/**
+ * Load and display featured product cards in the homepage grid.
+ * Sets section heading, fetches products from backend, and wires
+ * repeater with product data, sale badges, and ribbon badges.
+ * @returns {Promise<void>}
+ */
 async function loadFeaturedProducts() {
   try {
+    // Set section heading
+    try { $w('#featuredTitle').text = 'Our Favorite Finds'; } catch (e) {}
+    try { $w('#featuredSubtitle').text = 'Handpicked by the Carolina Futons family — quality you can feel.'; } catch (e) {}
+
     const allFeatured = await getFeaturedProducts(8);
     const featured = limitForViewport(allFeatured, { mobile: 4, tablet: 6, desktop: 8 });
     const repeater = $w('#featuredRepeater');
@@ -89,20 +115,35 @@ async function loadFeaturedProducts() {
         } catch (e) { /* optional elements */ }
       }
 
+      // Show ribbon badge (Featured, New, Clearance, etc.)
+      try {
+        if (itemData.ribbon) {
+          $item('#featuredRibbon').text = itemData.ribbon;
+          $item('#featuredRibbon').show();
+        } else {
+          $item('#featuredRibbon').hide();
+        }
+      } catch (e) { /* ribbon element optional */ }
+
       // Navigate to product page on click/keyboard
-      const navToProduct = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      const slug = safeSlug(itemData.slug);
+      const navToProduct = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
       makeClickable($item('#featuredImage'), navToProduct, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = featured;
   } catch (err) {
-    console.error('Error loading featured products:', err);
+    console.error('[Home] Error loading featured products:', err);
   }
 }
 
 // ── Sale Highlights ─────────────────────────────────────────────────
-// Shows current sale items in a horizontal scroll section
 
+/**
+ * Load and display sale product cards in a horizontal scroll section.
+ * Collapses the section if no sale items are available.
+ * @returns {Promise<void>}
+ */
 async function loadSaleHighlights() {
   try {
     const saleItems = await getSaleProducts(6);
@@ -122,19 +163,25 @@ async function loadSaleHighlights() {
         $item('#saleOrigPrice').text = itemData.formattedPrice;
       } catch (e) {}
 
+      const slug = safeSlug(itemData.slug);
       makeClickable($item('#saleImage'), () => {
-        import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+        import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
       }, { ariaLabel: `View ${itemData.name} on sale` });
     });
     repeater.data = saleItems;
   } catch (err) {
-    console.error('Error loading sale highlights:', err);
+    console.error('[Home] Error loading sale highlights:', err);
   }
 }
 
 // ── Category Showcase ───────────────────────────────────────────────
-// All 8 categories with content injection (name, tagline, product count)
 
+/**
+ * Initialize the category showcase grid with product counts,
+ * card images, hover Coral accent, and click navigation.
+ * Fetches live product counts from Wix Data in parallel.
+ * @returns {Promise<void>}
+ */
 async function initCategoryShowcase() {
   // Fetch product counts for all categories in parallel
   const countPromises = CATEGORIES.map(async (cat) => {
@@ -164,6 +211,26 @@ async function initCategoryShowcase() {
             ? `${itemData.count} Products` : '';
         } catch (e) {}
         try { $item('#categoryCardTitle').accessibility.ariaLabel = `Browse ${itemData.name}`; } catch (e) {}
+        // Category card image
+        try {
+          const cardImg = $item('#categoryCardImage');
+          if (cardImg && itemData.collection) {
+            cardImg.src = getCategoryCardImage(itemData.collection);
+            cardImg.alt = `${itemData.name} - Carolina Futons`;
+          }
+        } catch (e) {}
+        // Hover Coral accent on card
+        try {
+          const card = $item('#categoryCard');
+          if (card) {
+            card.onMouseIn(() => {
+              try { card.style.backgroundColor = '#E8845C'; } catch (e) {}
+            });
+            card.onMouseOut(() => {
+              try { card.style.backgroundColor = ''; } catch (e) {}
+            });
+          }
+        } catch (e) {}
         makeClickable($item('#categoryCardTitle'), () => {
           import('wix-location-frontend').then(({ to }) => to(itemData.path));
         }, { ariaLabel: `Browse ${itemData.name}` });
@@ -186,8 +253,13 @@ async function initCategoryShowcase() {
 }
 
 // ── Recently Viewed ─────────────────────────────────────────────────
-// Shows products the visitor has browsed this session
 
+/**
+ * Initialize the recently viewed products section.
+ * Reads visitor browsing history from session and populates
+ * a product card repeater. Collapses section if no history.
+ * @returns {Promise<void>}
+ */
 async function initRecentlyViewed() {
   try {
     const recent = getRecentlyViewed();
@@ -196,7 +268,6 @@ async function initRecentlyViewed() {
       return;
     }
 
-    // Use buildRecentlyViewedSection from galleryHelpers (added by cf-vw0)
     buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
       $item('#recentImage').src = itemData.mainMedia;
       $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
@@ -205,41 +276,51 @@ async function initRecentlyViewed() {
       try { $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       try { $item('#recentName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
-      const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      const slug = safeSlug(itemData.slug);
+      const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
       makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${itemData.name} details` });
     });
 
     $w('#recentSection').expand();
   } catch (e) {
-    // Recently viewed section may not exist or galleryHelpers not ready
+    console.error('[Home] Error loading recently viewed:', e);
     try { $w('#recentSection').collapse(); } catch (e2) {}
   }
 }
 
 // ── Trust Bar ───────────────────────────────────────────────────────
-// Animated trust signals strip with key selling points
 
+const TRUST_ICONS = { mountain: '\u26F0', heart: '\u2764', palette: '\uD83C\uDFA8', truck: '\uD83D\uDE9A' };
+
+/**
+ * Initialize the trust bar with hand-drawn line icons and staggered fade-in.
+ * Wires icon, text, and accessibility labels for each trust signal.
+ */
 function initTrustBar() {
   const trustSignals = [
-    { id: '#trustItem1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
-    { id: '#trustItem2', text: 'Family Owned Since 1991', icon: 'heart' },
-    { id: '#trustItem3', text: '700+ Fabric Swatches', icon: 'palette' },
-    { id: '#trustItem4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
+    { id: '#trustItem1', iconId: '#trustIcon1', textId: '#trustText1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
+    { id: '#trustItem2', iconId: '#trustIcon2', textId: '#trustText2', text: 'Family Owned Since 1991', icon: 'heart' },
+    { id: '#trustItem3', iconId: '#trustIcon3', textId: '#trustText3', text: '700+ Fabric Swatches', icon: 'palette' },
+    { id: '#trustItem4', iconId: '#trustIcon4', textId: '#trustText4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
   ];
 
   try {
     const trustBar = $w('#trustBar');
     if (!trustBar) return;
 
-    // Staggered fade-in for each trust item
     trustSignals.forEach((signal, index) => {
       try {
         const element = $w(signal.id);
         if (element) {
           element.show('fade', { duration: 400, delay: 200 + (index * 150) });
+          try { element.accessibility.ariaLabel = signal.text; } catch (e) {}
         }
       } catch (e) {}
+      // Wire icon element
+      try { $w(signal.iconId).text = TRUST_ICONS[signal.icon] || signal.icon; } catch (e) {}
+      // Wire text element
+      try { $w(signal.textId).text = signal.text; } catch (e) {}
     });
   } catch (e) {
     // Trust bar may not exist
@@ -247,7 +328,6 @@ function initTrustBar() {
 }
 
 // ── Testimonials ────────────────────────────────────────────────────
-// Customer testimonials — loads featured from CMS, falls back to hardcoded
 
 const FALLBACK_TESTIMONIALS = [
   { _id: 'test1', story: 'The quality of our Night & Day futon frame is outstanding. It looks like a real piece of furniture, not a dorm room couch. Love it!', name: 'Sarah M., Asheville NC', rating: 5 },
@@ -256,6 +336,12 @@ const FALLBACK_TESTIMONIALS = [
   { _id: 'test4', story: 'Best furniture shopping experience we\'ve had. Knowledgeable staff, beautiful showroom, and the platform bed we bought is solid as a rock.', name: 'David R., Greenville SC', rating: 5 },
 ];
 
+/**
+ * Load and display customer testimonials from CMS.
+ * Falls back to hardcoded testimonials if CMS is unavailable.
+ * Injects testimonial JSON-LD schema for SEO.
+ * @returns {Promise<void>}
+ */
 async function initTestimonials() {
   try {
     const repeater = $w('#testimonialRepeater');
@@ -277,7 +363,9 @@ async function initTestimonials() {
           const head = $w('#testimonialSchemaScript');
           if (head) head.postMessage(schemaJson);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('[Home] Testimonial schema injection failed:', e);
+      }
     } catch (e) {
       // CMS unavailable — use fallback
     }
@@ -297,16 +385,16 @@ async function initTestimonials() {
       } catch (e) {}
     });
   } catch (e) {
-    // Testimonials section is non-critical
+    console.error('[Home] Testimonials section failed:', e);
   }
 }
 
-// ── Smooth Scroll ───────────────────────────────────────────────────
-// Smooth scroll anchors for in-page navigation between sections
-
 // ── Video Showcase ──────────────────────────────────────────────────
-// "See Our Furniture in Action" — 3 featured video thumbnails
 
+/**
+ * Initialize the "See Our Furniture in Action" video section.
+ * Wires 3 video thumbnails and a "View All Videos" CTA button.
+ */
 function initVideoShowcase() {
   try {
     const section = $w('#videoShowcaseSection');
@@ -331,14 +419,11 @@ function initVideoShowcase() {
       } catch (e) {}
     });
 
-    // "View All Videos" button
+    // "View All Videos" button — uses makeClickable for keyboard a11y
     try {
-      $w('#viewAllVideosCTA').onClick(() => {
-        import('wix-location-frontend').then(({ to }) => {
-          to('/product-videos');
-        });
-      });
-      try { $w('#viewAllVideosCTA').accessibility.ariaLabel = 'View all product videos'; } catch (e) {}
+      makeClickable($w('#viewAllVideosCTA'), () => {
+        import('wix-location-frontend').then(({ to }) => to('/product-videos'));
+      }, { ariaLabel: 'View all product videos' });
     } catch (e) {}
 
     section.expand();
@@ -349,8 +434,11 @@ function initVideoShowcase() {
 }
 
 // ── Style Quiz CTA ────────────────────────────────────────────────
-// "Find Your Perfect Futon" call-to-action on homepage
 
+/**
+ * Initialize the style quiz call-to-action section.
+ * Links to /style-quiz for the "Find Your Perfect Futon" quiz.
+ */
 function initQuizCTA() {
   try {
     const section = $w('#quizCTASection');
@@ -383,6 +471,9 @@ function initQuizCTA() {
 
 // ── Smooth Scroll ──────────────────────────────────────────────────
 
+/**
+ * Wire up smooth scroll anchor links for in-page section navigation.
+ */
 function initSmoothScroll() {
   const scrollTargets = {
     '#scrollToFeatured': { target: '#featuredRepeater', label: 'Scroll to featured products' },
@@ -404,11 +495,14 @@ function initSmoothScroll() {
 }
 
 // ── Hero Animation ──────────────────────────────────────────────────
-// Subtle entrance animations for the mountain illustration hero
 
+/**
+ * Initialize the hero section with mountain cabin illustration,
+ * Playfair Display title, brand subtitle, and CTA with staggered fade-in.
+ */
 function initHeroAnimation() {
   try {
-    // Set hero background from Media Manager
+    // Set hero background — mountain cabin illustration
     try {
       const heroBg = $w('#heroBg');
       if (heroBg) {
@@ -421,16 +515,19 @@ function initHeroAnimation() {
     const heroSubtitle = $w('#heroSubtitle');
     const heroCta = $w('#heroCTA');
 
-    // Staggered fade-in
+    // Set hero content — Playfair Display title, brand tagline, CTA
     if (heroTitle) {
+      heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
       heroTitle.show('fade', { duration: 600, delay: 200 });
     }
     if (heroSubtitle) {
+      heroSubtitle.text = 'Hendersonville\'s largest selection of futons, Murphy beds & platform beds since 1991.';
       heroSubtitle.show('fade', { duration: 600, delay: 500 });
     }
     if (heroCta) {
+      heroCta.label = 'Explore Our Collection';
       heroCta.show('fade', { duration: 400, delay: 800 });
-      try { heroCta.accessibility.ariaLabel = 'Shop all furniture'; } catch (e) {}
+      try { heroCta.accessibility.ariaLabel = 'Explore our furniture collection'; } catch (e) {}
       heroCta.onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/shop-main'));
       });
@@ -441,19 +538,122 @@ function initHeroAnimation() {
 }
 
 // ── Homepage Schema Injection ───────────────────────────────────────
-// WebSite schema with SearchAction enables sitelinks searchbox in Google
 
+/**
+ * Inject WebSite JSON-LD schema into the page for Google sitelinks searchbox.
+ * @returns {Promise<void>}
+ */
 async function injectHomeSchemas() {
   try {
     const schema = await getWebSiteSchema();
     if (schema) {
       $w('#websiteSchemaHtml').postMessage(schema);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('[Home] Schema injection failed:', e);
+  }
+}
+
+// ── Newsletter Signup Section ────────────────────────────────────────
+
+/**
+ * Initialize the newsletter signup section with email validation,
+ * backend subscription via newsletterService, and discount code display.
+ */
+function initNewsletterSection() {
+  try {
+    const section = $w('#newsletterSection');
+    if (!section) return;
+
+    try { $w('#newsletterTitle').text = 'Join the Carolina Futons Family'; } catch (e) {}
+    try {
+      $w('#newsletterSubtitle').text =
+        'Get exclusive deals, new arrivals & furniture tips — plus 10% off your first order.';
+    } catch (e) {}
+
+    // Hide feedback messages initially
+    try { $w('#newsletterSuccess').hide(); } catch (e) {}
+    try { $w('#newsletterError').hide(); } catch (e) {}
+
+    // Set accessibility labels
+    try { $w('#newsletterEmail').accessibility.ariaLabel = 'Enter your email address'; } catch (e) {}
+    try { $w('#newsletterSubmit').accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
+
+    // Wire submit handler
+    try {
+      $w('#newsletterSubmit').onClick(async () => {
+        const email = $w('#newsletterEmail').value?.trim() || '';
+
+        // Validate email
+        if (!email || !EMAIL_RE.test(email)) {
+          try {
+            $w('#newsletterError').text = 'Please enter a valid email address.';
+            $w('#newsletterError').show();
+          } catch (e) {}
+          try { $w('#newsletterSuccess').hide(); } catch (e) {}
+          try { announce('Please enter a valid email address.'); } catch (e) {}
+          return;
+        }
+
+        // Submit
+        try {
+          $w('#newsletterSubmit').label = 'Submitting...';
+          const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+          const result = await subscribeToNewsletter(email);
+
+          $w('#newsletterSuccess').text =
+            `Welcome! Use code ${result.discountCode || 'WELCOME10'} for 10% off your first order.`;
+          $w('#newsletterSuccess').show();
+          try { $w('#newsletterError').hide(); } catch (e) {}
+
+          trackEvent('newsletter_signup', { page: 'home', email });
+          announce('Successfully subscribed! Check your email for your discount code.');
+        } catch (err) {
+          try {
+            $w('#newsletterError').text = 'Something went wrong. Please try again.';
+            $w('#newsletterError').show();
+          } catch (e) {}
+          try { $w('#newsletterSuccess').hide(); } catch (e) {}
+          announce('Subscription failed. Please try again.');
+        } finally {
+          try { $w('#newsletterSubmit').label = 'Subscribe'; } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Newsletter section is optional
+  }
+}
+
+// ── Mountain Ridgeline Header ───────────────────────────────────────
+
+/**
+ * Wire the decorative Blue Ridge ridgeline SVG into the page header.
+ */
+function initRidgelineHeader() {
+  try {
+    const ridgeline = $w('#ridgelineHeader');
+    if (!ridgeline) return;
+
+    ridgeline.src = 'https://static.wixstatic.com/media/cf-asset-01-ridgeline-header.svg';
+    ridgeline.alt = 'Blue Ridge Mountain ridgeline decoration';
+    try { ridgeline.accessibility.ariaLabel = 'Decorative mountain ridgeline'; } catch (e) {}
+  } catch (e) {
+    // Ridgeline header is decorative, non-critical
+  }
 }
 
 // ── Alt Text Helpers ────────────────────────────────────────────────
 
+/**
+ * Build descriptive alt text for a product image including brand and category.
+ * Truncates to 125 characters for SEO best practices.
+ * @param {Object} product - Product data from Wix Stores
+ * @param {string} context - Context for alt text ('featured', 'sale', etc.)
+ * @returns {string} Formatted alt text
+ */
 function buildProductAlt(product, context) {
   const brand = detectBrand(product);
   const category = detectCategory(product);
@@ -466,6 +666,11 @@ function buildProductAlt(product, context) {
   return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
 }
 
+/**
+ * Detect brand name from a product's collection memberships.
+ * @param {Object} product - Product data with collections array
+ * @returns {string} Brand name or default 'Night & Day Furniture'
+ */
 function detectBrand(product) {
   if (!product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
@@ -475,6 +680,11 @@ function detectBrand(product) {
   return 'Night & Day Furniture';
 }
 
+/**
+ * Detect product category from a product's collection memberships.
+ * @param {Object} product - Product data with collections array
+ * @returns {string} Category name or default 'Furniture'
+ */
 function detectCategory(product) {
   if (!product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];

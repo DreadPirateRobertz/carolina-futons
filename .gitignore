@@ -9,6 +9,7 @@ jsconfig.json
 .runtime/
 .claude/commands/
 .logs/
+.beads/
 
 # Secrets - NEVER commit
 *.conf
