@@ -4,25 +4,28 @@
 
 // ── Category Hero Images (1920x600) ─────────────────────────────────
 // These are page-level decorative images — replace with Wix Media uploads per MEDIA_MANIFEST.md
+// Curated lifestyle room scenes — warm interiors, styled rooms matching Blue Ridge aesthetic
 const categoryHeroImages = {
-  'futon-frames': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&h=600&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1920&h=600&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=1920&h=600&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1920&h=600&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=1920&h=600&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1920&h=600&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=1920&h=600&fit=crop&crop=center',
+  'futon-frames': 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=1920&h=600&fit=crop&crop=center',
+  'mattresses': 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1920&h=600&fit=crop&crop=center',
+  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=1920&h=600&fit=crop&crop=center',
+  'platform-beds': 'https://images.unsplash.com/photo-1616627561839-074385245ff6?w=1920&h=600&fit=crop&crop=center',
+  'casegoods-accessories': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&h=600&fit=crop&crop=center',
+  'wall-huggers': 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=1920&h=600&fit=crop&crop=center',
+  'unfinished-wood': 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=1920&h=600&fit=crop&crop=center',
 };
 
 // ── Category Card Images (600x400, 3:2 ratio for homepage) ──────────
+// Curated lifestyle room scenes — Castlery/Article style (warm, styled rooms)
 const categoryCategoryCards = {
-  'futon-frames': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&h=400&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=600&h=400&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=600&h=400&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=600&h=400&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?w=600&h=400&fit=crop&crop=center',
+  'futon-frames': 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=600&h=400&fit=crop&crop=center',
+  'mattresses': 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&h=400&fit=crop&crop=center',
+  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=600&h=400&fit=crop&crop=center',
+  'platform-beds': 'https://images.unsplash.com/photo-1616627561839-074385245ff6?w=600&h=400&fit=crop&crop=center',
+  'casegoods-accessories': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop&crop=center',
+  'wall-huggers': 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=600&h=400&fit=crop&crop=center',
+  'unfinished-wood': 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=600&h=400&fit=crop&crop=center',
+  'sales': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop&crop=center',
 };
 
 // ── Product Fallback Images (real wixstatic.com catalog images) ──────

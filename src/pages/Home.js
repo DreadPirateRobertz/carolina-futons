@@ -8,6 +8,7 @@ import { getCategoryHeroImage, getCategoryCardImage } from 'public/placeholderIm
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { colors } from 'public/designTokens.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -224,7 +225,7 @@ async function initCategoryShowcase() {
           const card = $item('#categoryCard');
           if (card) {
             card.onMouseIn(() => {
-              try { card.style.backgroundColor = '#E8845C'; } catch (e) {}
+              try { card.style.backgroundColor = colors.sunsetCoral; } catch (e) {}
             });
             card.onMouseOut(() => {
               try { card.style.backgroundColor = ''; } catch (e) {}
