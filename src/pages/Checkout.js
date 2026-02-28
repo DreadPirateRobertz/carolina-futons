@@ -213,7 +213,7 @@ async function initPaymentOptions(subtotal) {
 
 async function initShippingOptions(subtotal) {
   try {
-    const result = getShippingOptions(subtotal);
+    const result = await getShippingOptions(subtotal);
     if (!result.success) return;
 
     const repeater = $w('#shippingOptionsRepeater');
@@ -240,7 +240,7 @@ async function initShippingOptions(subtotal) {
       try {
         $item('#shippingOptionRadio').onClick(async () => {
           try {
-            const estimate = getDeliveryEstimate(option.id);
+            const estimate = await getDeliveryEstimate(option.id);
             if (estimate.success) {
               $w('#checkoutDeliveryEstimate').text = `Estimated delivery: ${estimate.data.label}`;
               try { $w('#checkoutDeliveryEstimate').accessibility.ariaLabel = `Estimated delivery: ${estimate.data.label}`; } catch (e) {}
@@ -288,7 +288,7 @@ async function initAddressValidation() {
           zip: $w('#addressZip').value || '',
         };
 
-        const result = validateShippingAddress(address);
+        const result = await validateShippingAddress(address);
 
         if (result.valid) {
           try {
