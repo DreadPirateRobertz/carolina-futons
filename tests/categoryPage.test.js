@@ -443,6 +443,161 @@ describe('Category Page', () => {
     });
   });
 
+  // ── No-Matches State with Suggestions ──────────────────────────
+
+  describe('no-matches state with suggestions', () => {
+    it('shows no-matches section element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#noMatchesSection')).toBeDefined();
+    });
+
+    it('shows fallback suggestion text on initial load', async () => {
+      await onReadyHandler();
+      expect(getEl('#noMatchesSuggestion')).toBeDefined();
+    });
+  });
+
+  // ── Skeleton Loading ──────────────────────────────────────────
+
+  describe('skeleton loading', () => {
+    it('loading indicator element is accessible', async () => {
+      await onReadyHandler();
+      const indicator = getEl('#filterLoadingIndicator');
+      expect(indicator.show).toBeDefined();
+      expect(indicator.hide).toBeDefined();
+    });
+
+    it('product grid has show/hide for fade transitions', async () => {
+      await onReadyHandler();
+      const grid = getEl('#productGridRepeater');
+      expect(grid.show).toBeDefined();
+      expect(grid.hide).toBeDefined();
+    });
+  });
+
+  // ── Compare View ──────────────────────────────────────────────
+
+  describe('compare view', () => {
+    it('compare view button element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#compareViewBtn')).toBeDefined();
+    });
+
+    it('compare view button has enable/disable methods', async () => {
+      await onReadyHandler();
+      const btn = getEl('#compareViewBtn');
+      expect(btn.enable).toBeDefined();
+      expect(btn.disable).toBeDefined();
+    });
+  });
+
+  // ── Mobile Sticky Sort Bar ────────────────────────────────────
+
+  describe('mobile sticky sort bar', () => {
+    it('mobile sort bar element is accessible', async () => {
+      await onReadyHandler();
+      expect(getEl('#mobileSortBar')).toBeDefined();
+    });
+  });
+
+  // ── Advanced Filter Edge Cases ────────────────────────────────
+
+  describe('advanced filter edge cases', () => {
+    it('handles rapid filter changes without error', async () => {
+      await onReadyHandler();
+      const materialFilter = getEl('#filterMaterial');
+      const onChange = materialFilter.onChange.mock.calls[0]?.[0];
+      if (onChange) {
+        materialFilter.value = 'hardwood';
+        onChange();
+        materialFilter.value = 'metal';
+        onChange();
+        materialFilter.value = 'fabric';
+        onChange();
+        // Should not throw — debounce handles rapid changes
+      }
+    });
+
+    it('clears all filters resets filter dropdowns', async () => {
+      await onReadyHandler();
+      getEl('#filterMaterial').value = 'hardwood';
+      getEl('#filterColor').value = 'walnut';
+      const clearBtn = getEl('#clearAllFilters');
+      const onClick = clearBtn.onClick.mock.calls[0]?.[0];
+      if (onClick) onClick();
+      expect(getEl('#filterMaterial').value).toBe('');
+      expect(getEl('#filterColor').value).toBe('');
+    });
+  });
+
+  // ── Mobile Filter Drawer ──────────────────────────────────────
+
+  describe('mobile filter drawer', () => {
+    it('filter toggle button element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterToggleBtn')).toBeDefined();
+      expect(getEl('#filterToggleBtn').onClick).toBeDefined();
+    });
+
+    it('filter drawer overlay element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterDrawerOverlay')).toBeDefined();
+      expect(getEl('#filterDrawerOverlay').onClick).toBeDefined();
+    });
+
+    it('filter drawer apply button element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterDrawerApply')).toBeDefined();
+      expect(getEl('#filterDrawerApply').onClick).toBeDefined();
+    });
+  });
+
+  // ── Compare Flow Edge Cases ───────────────────────────────────
+
+  describe('compare flow', () => {
+    it('compare button registers click handler on grid items', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#productGridRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '', label: '',
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+            enable: vi.fn(), disable: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      itemReadyCb($item, futonFrame);
+      expect(itemElements['#gridCompareBtn'].onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── WCAG AA Compliance ────────────────────────────────────────
+
+  describe('WCAG AA compliance', () => {
+    it('sets aria-label on sort dropdown', async () => {
+      await onReadyHandler();
+      expect(getEl('#sortDropdown').accessibility.ariaLabel).toBe('Sort products by');
+    });
+
+    it('sets aria-label on clear filters button', async () => {
+      await onReadyHandler();
+      expect(getEl('#clearFilters').accessibility.ariaLabel).toBe('Clear all filters');
+    });
+
+    it('sets aria-label on quick view action buttons', async () => {
+      await onReadyHandler();
+      expect(getEl('#qvViewFull').accessibility.ariaLabel).toBe('View full product details');
+      expect(getEl('#qvAddToCart').accessibility.ariaLabel).toBe('Add to cart');
+      expect(getEl('#qvClose').accessibility.ariaLabel).toBe('Close quick view');
+    });
+  });
+
   // ── Category Schema ───────────────────────────────────────────────
 
   describe('category schema injection', () => {

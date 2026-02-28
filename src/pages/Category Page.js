@@ -9,6 +9,7 @@ import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, ge
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { searchProducts, getFilterValues } from 'backend/searchService.web';
+import { suggestFilterRelaxation } from 'backend/categorySearch.web';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
@@ -956,8 +957,9 @@ function debouncedApplyAdvancedFilters(currentPath) {
 
 async function applyAdvancedFilters(currentPath) {
   try {
-    // Show loading indicator
+    // Show loading indicator and fade grid
     try { $w('#filterLoadingIndicator').show(); } catch (e) {}
+    try { $w('#productGridRepeater').hide('fade', { duration: 150 }); } catch (e) {}
 
     const result = await searchProducts({
       category: currentPath,
@@ -1009,8 +1011,9 @@ async function applyAdvancedFilters(currentPath) {
       resultCount: result.total,
     });
 
-    // Hide loading indicator
+    // Hide loading indicator and restore grid
     try { $w('#filterLoadingIndicator').hide(); } catch (e) {}
+    try { $w('#productGridRepeater').show('fade', { duration: 150 }); } catch (e) {}
 
     // Update active filter chips
     renderFilterChips();
@@ -1019,6 +1022,7 @@ async function applyAdvancedFilters(currentPath) {
     applyFilters();
   } catch (e) {
     try { $w('#filterLoadingIndicator').hide(); } catch (e2) {}
+    try { $w('#productGridRepeater').show('fade', { duration: 150 }); } catch (e2) {}
   }
 }
 
@@ -1089,7 +1093,7 @@ function renderFilterChips() {
   } catch (e) {}
 }
 
-function showNoMatchesState(currentPath) {
+async function showNoMatchesState(currentPath) {
   try {
     const content = CATEGORY_CONTENT[currentPath];
     const categoryName = content ? content.title : 'this category';
@@ -1103,9 +1107,34 @@ function showNoMatchesState(currentPath) {
         `Try removing some filters or broadening your search. We have ${categoryName} in many styles and price points.`;
     } catch (e) {}
 
+    // Dynamic suggestions from backend
     try {
-      $w('#noMatchesSuggestion').text = 'Try adjusting your price range or removing material filters.';
-    } catch (e) {}
+      const { suggestions } = await suggestFilterRelaxation({
+        category: currentPath,
+        priceMin: currentFilters.priceRange ? parseFloat(currentFilters.priceRange.split('-')[0]) : undefined,
+        priceMax: currentFilters.priceRange ? parseFloat(currentFilters.priceRange.split('-')[1]) : undefined,
+        materials: currentFilters.material ? [currentFilters.material] : undefined,
+        colors: currentFilters.color ? [currentFilters.color] : undefined,
+        featureTags: currentFilters.features || undefined,
+        brands: currentFilters.brand ? [currentFilters.brand] : undefined,
+      });
+
+      if (suggestions && suggestions.length > 0) {
+        const topSuggestions = suggestions.slice(0, 3);
+        const suggestionText = topSuggestions
+          .map(s => `Remove ${s.label} filter (${s.resultCount} results)`)
+          .join(' · ');
+        try { $w('#noMatchesSuggestion').text = suggestionText; } catch (e) {}
+      } else {
+        try {
+          $w('#noMatchesSuggestion').text = 'Try adjusting your price range or removing material filters.';
+        } catch (e) {}
+      }
+    } catch (e) {
+      try {
+        $w('#noMatchesSuggestion').text = 'Try adjusting your price range or removing material filters.';
+      } catch (e2) {}
+    }
 
     try { $w('#noMatchesSection').show(); } catch (e) {}
   } catch (e) {}
@@ -1232,6 +1261,15 @@ function initFilterDrawer() {
     // ARIA
     try { $w('#filterToggleBtn').accessibility.ariaLabel = 'Open filters'; } catch (e) {}
     try { $w('#filterDrawerApply').accessibility.ariaLabel = 'Apply filters and close'; } catch (e) {}
+
+    // Sticky sort bar on mobile
+    try {
+      const sortBar = $w('#mobileSortBar');
+      if (sortBar) {
+        try { sortBar.accessibility.ariaLabel = 'Sort and filter controls'; } catch (e) {}
+        sortBar.show();
+      }
+    } catch (e) {}
   } catch (e) {}
 }
 
@@ -1310,7 +1348,36 @@ function refreshCompareBarUI() {
       });
     }
 
+    // Compare view button
+    try {
+      const compareViewBtn = $w('#compareViewBtn');
+      if (compareViewBtn) {
+        compareViewBtn.label = `Compare ${items.length} Items`;
+        compareViewBtn.onClick(() => openCompareView());
+        if (items.length >= 2) {
+          compareViewBtn.enable();
+        } else {
+          compareViewBtn.disable();
+        }
+      }
+    } catch (e) {}
+
     compareBar.show('slide', { duration: 200, direction: 'bottom' });
+  } catch (e) {}
+}
+
+function openCompareView() {
+  try {
+    const items = getCompareList();
+    if (items.length < 2) {
+      announce($w, 'Select at least 2 products to compare');
+      return;
+    }
+
+    const slugs = items.map(p => p.slug).join(',');
+    import('wix-location-frontend').then(({ to }) => {
+      to(`/compare?products=${slugs}`);
+    }).catch(() => {});
   } catch (e) {}
 }
 
