@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   getOfficeHoursStatus,
   getCannedResponses,
@@ -384,6 +385,7 @@ describe('getChatContext', () => {
   });
 
   it('returns member context when logged in', async () => {
+    __setMember({ _id: 'member-001' });
     __seed('Members/PrivateMembersData', [{
       _id: 'member-001',
       name: 'Jane Smith',
@@ -391,7 +393,6 @@ describe('getChatContext', () => {
     }]);
 
     const result = await getChatContext({
-      memberId: 'member-001',
       currentPage: '/product-page/eureka',
     });
 
@@ -402,6 +403,7 @@ describe('getChatContext', () => {
   });
 
   it('returns recent orders for logged-in member', async () => {
+    __setMember({ _id: 'member-001' });
     __seed('Members/PrivateMembersData', [{
       _id: 'member-001',
       name: 'Jane',
@@ -415,7 +417,7 @@ describe('getChatContext', () => {
       fulfillmentStatus: 'NOT_FULFILLED',
     }]);
 
-    const result = await getChatContext({ memberId: 'member-001' });
+    const result = await getChatContext({});
     expect(result.context.recentOrders.length).toBe(1);
     expect(result.context.recentOrders[0].number).toBe('10042');
   });

@@ -350,7 +350,6 @@ export const getChatContext = webMethod(
             // Order lookup failed — continue without order context
           }
         }
-      }
 
       return { success: true, context };
     } catch (err) {

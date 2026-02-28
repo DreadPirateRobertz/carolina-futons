@@ -24,7 +24,32 @@ SOCIAL-MEDIA-STRATEGY.md, http-functions.js (Facebook/Pinterest/Google feeds), s
 - Run `npm test` after changes. Never break tests.
 - Follow codebase conventions: webMethod, JSDoc, try/catch, sanitize via `backend/utils/sanitize`
 - Wix Velo compatible imports. Read `memory.md`. Code only — no Dashboard.
-- **MANDATORY PR PROCESS**: NO direct pushes to main. ALL work on feature branches → open PR → melania reviews → merge. Branch naming: `cf-<bead-id>-<short-desc>`. Violations will be reverted.
+- **MANDATORY PR PROCESS**: NO direct pushes to main. ALL work on feature branches → open PR → melania assigns reviewers and tells them to review→ merge -> mail the crew member that completed to gt handoff. Branch naming: `cf-<bead-id>-<short-desc>`. Violations will be reverted.
+
+
+You must also sync and gt handoff when you have delegated your duties and your crew is working
+
+## PR Completion & Handoff Protocol
+
+When a PR is successfully merged:
+1. **Merger** closes the associated bead: `bd close <bead-id>`
+2. **Merger** mails the crew member who opened the PR: `gt mail send cfutons/crew/<name> -s "PR merged: <bead-id>" -m "Your PR for <bead-id> has been merged. Please gt handoff to cycle your session."`
+3. **Crew member** receives mail, verifies merge, then runs `gt handoff` to cycle their session with context for next assignment
+4. **Melania** assigns next work from ready queue before or after handoff mail
+
+### gt handoff — When and How
+- Run `gt handoff` when: PR merged, context full, logical chunk complete, or switching tasks
+- Include context notes: `gt handoff -s "Completed <bead-id>" -m "PR merged, tests green, next: pick up <next-bead>"`
+- Handoff preserves your hooked molecule — your next session picks up where you left off
+- **Never leave a session without pushing all commits and running gt handoff**
+
+### Session Continuity Checklist
+1. `git status` — clean working tree
+2. `git push` — all commits on remote
+3. `bd close <id>` or `bd update <id> --status=in_progress` — beads reflect reality
+4. `gt handoff -s "..." -m "..."` — context notes for next session
+
+
 
 ## PM Quality Gate (Melania Directive 2026-02-23)
 - **Melania is acceptance authority.** PRs reviewed against bead AC, coding standards, and edge case coverage.

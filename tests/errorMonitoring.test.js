@@ -22,12 +22,16 @@ function setupNonAdmin() {
   __setRoles([{ _id: 'member', title: 'Member' }]);
 }
 
+// Use dynamic dates so tests don't drift out of the 7-day dashboard window
+const _now = Date.now();
+const daysAgo = (n) => new Date(_now - n * 24 * 60 * 60 * 1000);
+
 const sampleErrorGroup = {
   _id: 'grp-001',
   groupKey: 'cart.addItem::Cannot read property S of undefined',
   message: 'Cannot read property \'items\' of undefined',
-  firstSeen: new Date('2026-02-15'),
-  lastSeen: new Date('2026-02-21'),
+  firstSeen: daysAgo(12),
+  lastSeen: daysAgo(1),
   occurrenceCount: 42,
   status: 'active',
   affectedPages: JSON.stringify(['/product-page', '/cart']),
@@ -38,22 +42,22 @@ const resolvedErrorGroup = {
   _id: 'grp-002',
   groupKey: 'checkout.submit::Network timeout',
   message: 'Network timeout',
-  firstSeen: new Date('2026-02-10'),
-  lastSeen: new Date('2026-02-18'),
+  firstSeen: daysAgo(17),
+  lastSeen: daysAgo(9),
   occurrenceCount: 5,
   status: 'resolved',
   affectedPages: JSON.stringify(['/checkout']),
   sampleStack: 'Error: Network timeout...',
   resolvedBy: 'admin-001',
-  resolvedDate: new Date('2026-02-19'),
+  resolvedDate: daysAgo(8),
 };
 
 const ignoredErrorGroup = {
   _id: 'grp-003',
   groupKey: 'analytics.track::GA not loaded',
   message: 'GA not loaded',
-  firstSeen: new Date('2026-02-01'),
-  lastSeen: new Date('2026-02-20'),
+  firstSeen: daysAgo(26),
+  lastSeen: daysAgo(3),
   occurrenceCount: 200,
   status: 'ignored',
   affectedPages: JSON.stringify(['/home', '/product-page']),
@@ -72,7 +76,7 @@ const sampleErrorLogs = [
     userAgent: 'Mozilla/5.0',
     severity: 'error',
     metadata: '{}',
-    _createdDate: new Date('2026-02-21T08:00:00Z'),
+    _createdDate: daysAgo(1),
   },
   {
     _id: 'log-002',
@@ -85,7 +89,7 @@ const sampleErrorLogs = [
     userAgent: 'Mozilla/5.0',
     severity: 'error',
     metadata: '{"cartId":"abc"}',
-    _createdDate: new Date('2026-02-21T09:00:00Z'),
+    _createdDate: daysAgo(1),
   },
   {
     _id: 'log-003',
@@ -98,7 +102,7 @@ const sampleErrorLogs = [
     userAgent: 'Mozilla/5.0',
     severity: 'critical',
     metadata: '',
-    _createdDate: new Date('2026-02-20T12:00:00Z'),
+    _createdDate: daysAgo(2),
   },
   {
     _id: 'log-004',
@@ -111,7 +115,7 @@ const sampleErrorLogs = [
     userAgent: '',
     severity: 'warning',
     metadata: '',
-    _createdDate: new Date('2026-02-19T10:00:00Z'),
+    _createdDate: daysAgo(3),
   },
 ];
 
