@@ -66,6 +66,15 @@ afterEach(() => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('galleryHelpers: initImageLightbox returns cleanup', () => {
+  const mock$w = () => ({
+    show: vi.fn(),
+    hide: vi.fn(),
+    src: '',
+    text: '',
+    onClick: vi.fn(),
+    accessibility: {},
+  });
+
   it('returns a destroy function that removes keydown listener', async () => {
     const { initImageLightbox } = await import('../src/public/galleryHelpers.js');
 
@@ -75,7 +84,7 @@ describe('galleryHelpers: initImageLightbox returns cleanup', () => {
     };
     const mockMainImage = { src: 'img1.jpg', onClick: vi.fn() };
 
-    const result = initImageLightbox(mockGallery, mockMainImage);
+    const result = initImageLightbox(mock$w, mockGallery, mockMainImage);
 
     expect(result).not.toBeNull();
     expect(typeof result.destroy).toBe('function');
@@ -99,7 +108,7 @@ describe('galleryHelpers: initImageLightbox returns cleanup', () => {
     };
     const mockMainImage = { src: 'img1.jpg', onClick: vi.fn() };
 
-    const result = initImageLightbox(mockGallery, mockMainImage);
+    const result = initImageLightbox(mock$w, mockGallery, mockMainImage);
     expect(() => {
       result.destroy();
       result.destroy();
