@@ -1,7 +1,7 @@
 # Carolina Futons — MASTER HOOKUP GUIDE
 
 > **The one file that tells you everything about connecting this codebase to a live Wix website.**
-> Last updated: 2026-02-22 by melania (Production Manager)
+> Last updated: 2026-02-28 by melania (Production Manager)
 
 ---
 
@@ -37,7 +37,7 @@ Think of the Carolina Futons website like a restaurant:
 - **The walk-in fridge** = where the data lives (products, prices, customer info). This is the **CMS** (Content Management System).
 - **The recipes** = the instructions that tell the kitchen what to do. These are the **code modules**.
 
-**What we built:** 131 kitchen recipes (backend modules), 25 dining room layouts (pages), 56 shared tools (utilities), and a complete inventory list (88 products).
+**What we built:** 77 kitchen recipes (backend modules), 28 dining room layouts (pages), 40 shared tools (utilities), and a complete inventory list (88 products).
 
 **What you need to do:** Put the recipes in the kitchen, set up the fridge, and open the doors.
 
@@ -102,9 +102,9 @@ If you ever want to use a **custom domain** (carolinafutons.com instead of usern
 Print this out and check off as you go:
 
 ```
-[ ] 1. Deploy 64 backend .web.js files to Wix Velo backend/
-[ ] 2. Deploy 23 page .js files to Wix page code editor
-[ ] 3. Deploy 24 public utility .js files to Wix public/
+[ ] 1. Deploy 77 backend .web.js/.js files to Wix Velo backend/
+[ ] 2. Deploy 28 page .js files to Wix page code editor
+[ ] 3. Deploy 40 public utility .js files to Wix public/
 [ ] 4. Create 16 priority CMS collections in Dashboard
 [ ] 5. Verify 8 secrets in Secrets Manager
 [ ] 6. Install 7 free plugins (GA4, Meta Pixel, etc.)
@@ -230,6 +230,24 @@ These are the "kitchen recipes" — the server-side logic. All files go in the W
 | 60 | `sustainabilityService.web.js` | 20KB | Sustainability scoring |
 | 61 | `abTesting.web.js` | 14KB | A/B test framework |
 
+**New in Sprint 2 (Feb 27-28):**
+
+| # | File | Size | What It Does |
+|---|------|------|-------------|
+| 65 | `comfortService.web.js` | 8KB | Comfort story card data & rating scales |
+| 66 | `accessibility.web.js` | 10KB | WCAG AA compliance backend helpers |
+| 67 | `analyticsDashboard.web.js` | 12KB | Analytics dashboard data |
+| 68 | `contentImport.web.js` | 9KB | Content migration tools |
+| 69 | `emailTemplates.web.js` | 7KB | Email template management |
+| 70 | `financingCalc.web.js` | 5KB | BNPL monthly payment calculations |
+| 71 | `imageAltText.web.js` | 6KB | Auto alt text generation |
+| 72 | `imageAudit.web.js` | 8KB | Image optimization audit |
+| 73 | `inventoryService.web.js` | 14KB | Stock tracking |
+| 74 | `orderHistory.web.js` | 11KB | Customer order history |
+| 75 | `reviewSummary.web.js` | 9KB | Review aggregation & summaries |
+| 76 | `searchIndex.web.js` | 10KB | Search index management |
+| 77 | `socialProofService.web.js` | 7KB | Real-time social proof events |
+
 **Feed & Social:**
 
 | # | File | Size | What It Does |
@@ -246,7 +264,7 @@ These are the "kitchen recipes" — the server-side logic. All files go in the W
 | `utils/sanitize.js` | `backend/utils/` | Input sanitization (required by all modules) |
 | `permissions.json` | `backend/` | Backend permissions config |
 
-**Total: 131 backend files**
+**Total: 77 backend files**
 
 ---
 
@@ -261,7 +279,7 @@ Each page in your Wix Editor has a code panel at the bottom. Click the `{ }` ico
 3. Paste the corresponding code from `src/pages/`
 4. Repeat for each page
 
-### Page Code Files (25 files)
+### Page Code Files (28 files)
 
 **Main Pages:**
 
@@ -305,6 +323,9 @@ Each page in your Wix Editor has a code panel at the bottom. Click the `{ }` ico
 | Terms | `Terms & Conditions.js` | 1KB |
 | Refund Policy | `Refund Policy.js` | 3KB |
 | Accessibility | `Accessibility Statement.js` | 0.3KB |
+| Returns | `Returns.js` | 6KB |
+| Admin Returns | `Admin Returns.js` | 19KB |
+| Style Quiz | `Style Quiz.js` | 8KB |
 
 ---
 
@@ -317,7 +338,7 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 1. In the Wix Editor file tree, click `public/`
 2. Create each file and paste the code from `src/public/`
 
-### Public Utility Files (56 files)
+### Public Utility Files (40 files)
 
 | File | Size | What It Does |
 |------|------|-------------|
@@ -346,12 +367,31 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 | `pwaHelpers.js` | 2KB | Progressive Web App support |
 | `testProducts.js` | 12KB | Test product data (dev only) |
 
+**New in Sprint 2 (Feb 27-28):**
+
+| File | Size | What It Does |
+|------|------|-------------|
+| `ComfortStoryCards.js` | 8KB | Illustrated comfort rating cards (Plush/Firm/Medium) |
+| `SwatchRequestFlow.js` | 10KB | Free swatch request form with email confirmation |
+| `emptyStates.js` | 6KB | Mountain-themed empty states (no results, empty cart) |
+| `navigationHelpers.js` | 9KB | Mobile nav, mega menu, search autocomplete |
+| `socialProofToast.js` | 5KB | Real-time "X just purchased" toasts |
+| `ga4Tracking.js` | 4KB | GA4 ecommerce event helpers |
+| `validators.js` | 3KB | Form input validation |
+| `ReturnsAdmin.js` | 8KB | Admin returns management UI |
+
 **Also create `public/product/` subdirectory with:**
 
 | File | What It Does |
 |------|-------------|
 | `swatchSelector.js` | Fabric swatch selection UI, gallery lightbox, "Request Free Swatches" form |
 | `variantSelector.js` | Size/Finish variant pricing & image switching |
+| `cartEnhancements.js` | Urgency badges, progress bar, cross-sell in cart |
+| `crossSell.js` | "Complete the Set" product recommendations |
+| `productDetails.js` | Tabbed details (Description, Specs, Care, Shipping) |
+| `productGallery.js` | Multi-image gallery with zoom & fullscreen |
+| `productSchema.js` | Product page JSON-LD schema generation |
+| `socialWishlist.js` | Social sharing & wishlist integration |
 
 ---
 
@@ -554,6 +594,7 @@ console.log('Import result:', result);
 
 | Template ID | Subject Line | Merge Variables |
 |------------|-------------|-----------------|
+| `swatch_confirmation` | Your Free Swatches Are On Their Way! | customerName, productName, swatchList, estimatedArrival |
 | `post_purchase_1` | Your Order is Confirmed! | firstName, orderNumber, total, productNames |
 | `post_purchase_2` | Assembly Tips for Your New Futon | firstName, productNames |
 | `post_purchase_3` | How's Your New Futon? | firstName |
@@ -717,7 +758,9 @@ Product Page (swatch gallery, color dots, request form)
 
 4. **The code is deployed** — once you create the CMS collection and add data, the swatch selector on the Product Page will automatically query `swatchService.web.js` and display available swatches.
 
-5. **"Request Free Swatches"** — customers can select swatches and enter their mailing address. The form calls `emailService.web.js → submitSwatchRequest()`, which saves to the ContactSubmissions collection with `status: 'swatch_request'` and emails you the request.
+5. **"Request Free Swatches"** — customers can select swatches and enter their mailing address. The form calls `emailService.web.js → submitSwatchRequest()`, which saves to the ContactSubmissions collection with `status: 'swatch_request'` and emails you the request. **A confirmation email is also sent to the customer** via the `swatch_confirmation` triggered email template (see Step 8).
+
+6. **Swatch Request Flow UI** — `SwatchRequestFlow.js` in `public/` provides the full frontend swatch request form. It handles swatch selection, address input, and submission. The flow clears previous selections on init to prevent stale state.
 
 ### API Methods (already built)
 
@@ -921,7 +964,13 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | **Sustainability** | sustainability, sustainabilityService | — | — |
 | **Performance** | coreWebVitals, errorMonitoring | — | — |
 | **Promotions** | promotions | Home Page | Promotions |
-| **Financing** | financingService, paymentOptions | ProductFinancing | — |
+| **Financing** | financingService, financingCalc, paymentOptions | ProductFinancing | — |
+| **Comfort ratings** | comfortService | ComfortStoryCards | — |
+| **Swatch request** | emailService (submitSwatchRequest) | SwatchRequestFlow | ContactSubmissions |
+| **Empty states** | — | emptyStates | — |
+| **Navigation** | — | navigationHelpers | — |
+| **Social proof** | socialProofService | socialProofToast | — |
+| **Returns admin** | returnsService | ReturnsAdmin, ReturnsPortal | — |
 
 ---
 
@@ -968,10 +1017,10 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 3,749 tests across 100 files — all passing.
+**Current status:** 5,032 tests across 135 files — all passing.
 
 ---
 
 *Generated by melania (Production Manager) — Carolina Futons cfutons rig*
 *Source files: refinery/rig/src/ (canonical codebase)*
-*Last verified: 2026-02-22 (updated: counts, stale guides removed, test numbers)*
+*Last verified: 2026-02-28 (updated: file counts, new Sprint 2 modules, test numbers 5,032)*
