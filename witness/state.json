@@ -1,13 +1,26 @@
 {
-  "patrol_count": 15,
-  "extraordinary_action": false,
-  "last_patrol": "2026-02-24T07:58:00Z",
+  "patrol_count": 2,
+  "extraordinary_action": true,
+  "last_patrol": "2026-02-28T01:55:00Z",
   "current_wisp": null,
   "observations": {
-    "deacon": "alive",
-    "refinery": "running 7h+, queue empty",
+    "deacon": "alive, patrol #4, sleeping between cycles",
+    "refinery": "running (contradicts prior state)",
     "polecats": 0,
-    "notes": "Cycle 15: Handoff threshold reached. Rig idle throughout session. No incidents."
+    "crew": {
+      "melania": "STOPPED",
+      "godfrey": "STOPPED",
+      "miquella": "STOPPED",
+      "radahn": "STOPPED",
+      "rennala": "STOPPED"
+    },
+    "open_prs": {
+      "58": "CF-ax12 mobile a11y - no reviews",
+      "59": "cf-09z token burn - merge conflicts, no reviews"
+    },
+    "in_progress_beads": ["CF-k582", "cf-09z"],
+    "issues": "56+ stale wisps unresolvable. bd dolt pull failing. All crew stopped.",
+    "notes": "ESCALATED to mayor: all 5 crew stopped, requesting restart. Extraordinary action triggered — will handoff after this cycle."
   },
-  "idle_backoff_s": 60
+  "idle_backoff_s": 30
 }
