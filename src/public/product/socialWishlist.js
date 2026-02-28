@@ -111,33 +111,42 @@ export async function initWishlistButton($w, product) {
       } catch (e) {}
     }
 
+    let wishlistBusy = false;
     btn.onClick(async () => {
-      const { currentMember: cm, authentication } = await import('wix-members-frontend');
-      const m = await cm.getMember();
+      if (wishlistBusy) return;
+      wishlistBusy = true;
+      try {
+        const { currentMember: cm, authentication } = await import('wix-members-frontend');
+        const m = await cm.getMember();
 
-      if (!m) {
-        authentication.promptLogin();
-        return;
-      }
+        if (!m) {
+          authentication.promptLogin();
+          return;
+        }
 
-      const wixData = (await import('wix-data')).default;
-      const existing = await wixData.query('Wishlist')
-        .eq('memberId', m._id)
-        .eq('productId', product._id)
-        .find();
+        const wixData = (await import('wix-data')).default;
+        const existing = await wixData.query('Wishlist')
+          .eq('memberId', m._id)
+          .eq('productId', product._id)
+          .find();
 
-      if (existing.items.length > 0) {
-        await wixData.remove('Wishlist', existing.items[0]._id);
-        setWishlistActive($w, false);
-      } else {
-        await wixData.insert('Wishlist', {
-          memberId: m._id,
-          productId: product._id,
-          productName: product.name,
-          productImage: product.mainMedia,
-          addedDate: new Date(),
-        });
-        setWishlistActive($w, true);
+        if (existing.items.length > 0) {
+          await wixData.remove('Wishlist', existing.items[0]._id);
+          setWishlistActive($w, false);
+        } else {
+          await wixData.insert('Wishlist', {
+            memberId: m._id,
+            productId: product._id,
+            productName: product.name,
+            productImage: product.mainMedia,
+            addedDate: new Date(),
+          });
+          setWishlistActive($w, true);
+        }
+      } catch (e) {
+        console.error('[socialWishlist] Wishlist toggle failed:', e.message);
+      } finally {
+        wishlistBusy = false;
       }
     });
   } catch (e) {

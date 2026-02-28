@@ -240,19 +240,28 @@ export async function initWishlistButton($w, state) {
         if (existing.items.length > 0) setWishlistActive($w, true);
       } catch (e) { console.error('[AddToCart] Error checking wishlist status:', e.message); }
     }
+    let wishlistBusy = false;
     btn.onClick(async () => {
-      const { currentMember: cm, authentication } = await import('wix-members-frontend');
-      const m = await cm.getMember();
-      if (!m) { authentication.promptLogin(); return; }
-      const wixData = (await import('wix-data')).default;
-      const existing = await wixData.query('Wishlist').eq('memberId', m._id).eq('productId', state.product._id).find();
-      if (existing.items.length > 0) {
-        await wixData.remove('Wishlist', existing.items[0]._id);
-        setWishlistActive($w, false);
-      } else {
-        await wixData.insert('Wishlist', { memberId: m._id, productId: state.product._id, productName: state.product.name, productImage: state.product.mainMedia, addedDate: new Date() });
-        setWishlistActive($w, true);
-        fireAddToWishlist(state.product);
+      if (wishlistBusy) return;
+      wishlistBusy = true;
+      try {
+        const { currentMember: cm, authentication } = await import('wix-members-frontend');
+        const m = await cm.getMember();
+        if (!m) { authentication.promptLogin(); return; }
+        const wixData = (await import('wix-data')).default;
+        const existing = await wixData.query('Wishlist').eq('memberId', m._id).eq('productId', state.product._id).find();
+        if (existing.items.length > 0) {
+          await wixData.remove('Wishlist', existing.items[0]._id);
+          setWishlistActive($w, false);
+        } else {
+          await wixData.insert('Wishlist', { memberId: m._id, productId: state.product._id, productName: state.product.name, productImage: state.product.mainMedia, addedDate: new Date() });
+          setWishlistActive($w, true);
+          fireAddToWishlist(state.product);
+        }
+      } catch (e) {
+        console.error('[AddToCart] Wishlist toggle failed:', e.message);
+      } finally {
+        wishlistBusy = false;
       }
     });
   } catch (e) { console.error('[AddToCart] Wishlist operation failed:', e.message); try { $w('#wishlistBtn').hide(); } catch (e2) {} }
