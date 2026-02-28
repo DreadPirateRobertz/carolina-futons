@@ -177,7 +177,8 @@ export const searchProducts = webMethod(
 
       // Pagination
       const safeLimit = Math.min(Math.max(1, limit), 100);
-      query = query.limit(safeLimit);
+      const safeSkip = Math.max(0, Math.floor(skip) || 0);
+      query = query.skip(safeSkip).limit(safeLimit);
 
       const result = await query.find();
 

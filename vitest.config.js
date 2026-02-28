@@ -49,6 +49,7 @@ export default defineConfig({
       'backend/testimonialService.web': path.resolve(__dirname, 'src/backend/testimonialService.web.js'),
       'backend/styleQuiz.web': path.resolve(__dirname, 'src/backend/styleQuiz.web.js'),
       'backend/searchService.web': path.resolve(__dirname, 'src/backend/searchService.web.js'),
+      'backend/categorySearch.web': path.resolve(__dirname, 'src/backend/categorySearch.web.js'),
       'backend/sizeGuide.web': path.resolve(__dirname, 'src/backend/sizeGuide.web.js'),
       'backend/liveChatService.web': path.resolve(__dirname, 'src/backend/liveChatService.web.js'),
       'backend/wishlistAlerts.web': path.resolve(__dirname, 'src/backend/wishlistAlerts.web.js'),
