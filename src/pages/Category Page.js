@@ -58,7 +58,7 @@ const CATEGORY_CONTENT = {
   'platform-beds': {
     title: 'Platform Beds',
     subtitle: 'Modern simplicity meets mountain craftsmanship',
-    heroGradient: `linear-gradient(135deg, ${colors.sandBase} 0%, ${colors.mauve} 100%)`,
+    heroGradient: `linear-gradient(135deg, ${colors.sandBase} 0%, ${colors.sandDark} 100%)`,
   },
   'casegoods-accessories': {
     title: 'Casegoods & Accessories',

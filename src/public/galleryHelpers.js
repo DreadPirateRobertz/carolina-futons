@@ -1,6 +1,7 @@
 // Gallery and product engagement helpers
 // Used across multiple pages for consistent product display behavior
 import { session } from 'wix-storage-frontend';
+import { colors } from 'public/designTokens.js';
 
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
@@ -307,7 +308,7 @@ export function buildProductBadgeOverlay(product) {
     Sale:            { text: 'Sale',          bgColor: colors.sunsetCoral,  textColor: colors.white },
     New:             { text: 'New',           bgColor: colors.mountainBlue, textColor: colors.white },
     Featured:        { text: 'Featured',      bgColor: colors.espresso,     textColor: colors.sandBase },
-    'In-Store Only': { text: 'In-Store Only', bgColor: colors.mauve,        textColor: colors.espresso },
+    'In-Store Only': { text: 'In-Store Only', bgColor: colors.sandDark,      textColor: colors.espresso },
   };
 
   return configs[badge] || { text: badge, bgColor: colors.espresso, textColor: colors.white };
