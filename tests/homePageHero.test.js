@@ -81,6 +81,7 @@ vi.mock('public/placeholderImages.js', () => ({
   getCategoryCardImage: vi.fn((slug) => `https://example.com/card-${slug}.jpg`),
   getRidgelineHeaderSrc: vi.fn().mockReturnValue('https://example.com/ridgeline.svg'),
   getCategoryIllustration: vi.fn((cat) => `https://example.com/category-${cat}.png`),
+  getHomepageHeroImage: vi.fn().mockReturnValue('https://example.com/homepage-hero.jpg'),
 }));
 
 vi.mock('public/mobileHelpers', () => ({
@@ -340,6 +341,59 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
     it('hero CTA navigates to /shop-main on click', async () => {
       await onReadyHandler();
       expect(getEl('#heroCTA').onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── CF-bbms Hero Overhaul ──────────────────────────────────────────
+
+  describe('CF-bbms hero overhaul — overlay and ARIA', () => {
+    it('sets hero overlay background color for text readability', async () => {
+      await onReadyHandler();
+      const overlay = getEl('#heroOverlay');
+      expect(overlay.show).toHaveBeenCalled();
+    });
+
+    it('hero overlay uses brand espresso overlay color', async () => {
+      await onReadyHandler();
+      const overlay = getEl('#heroOverlay');
+      expect(overlay.style.backgroundColor).toBe('rgba(58, 37, 24, 0.6)');
+    });
+
+    it('sets hero section ARIA landmark role', async () => {
+      await onReadyHandler();
+      const section = getEl('#heroSection');
+      expect(section.accessibility.ariaLabel).toContain('hero');
+    });
+
+    it('hero background uses dedicated homepage hero image', async () => {
+      await onReadyHandler();
+      const { getHomepageHeroImage } = await import('public/placeholderImages.js');
+      expect(getHomepageHeroImage).toHaveBeenCalled();
+    });
+
+    it('hero background alt text includes brand and location', async () => {
+      await onReadyHandler();
+      const heroBg = getEl('#heroBg');
+      expect(heroBg.alt).toContain('Handcrafted');
+      expect(heroBg.alt).toContain('Carolina Futons');
+      expect(heroBg.alt).toContain('Hendersonville');
+    });
+
+    it('hero overlay fades in before title animation', async () => {
+      await onReadyHandler();
+      const overlayCall = getEl('#heroOverlay').show.mock.calls[0];
+      const titleCall = getEl('#heroTitle').show.mock.calls[0];
+      expect(overlayCall[1].delay).toBeLessThanOrEqual(titleCall[1].delay);
+    });
+
+    it('page still loads when hero overlay element is missing', async () => {
+      elements.delete('#heroOverlay');
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+
+    it('page still loads when hero section element is missing', async () => {
+      elements.delete('#heroSection');
+      await expect(onReadyHandler()).resolves.not.toThrow();
     });
   });
 
