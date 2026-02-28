@@ -31,6 +31,12 @@ async function initMemberPage() {
   try {
     currentMember = await loadCurrentMember();
 
+    if (!currentMember) {
+      const { authentication } = await import('wix-members-frontend');
+      authentication.promptLogin();
+      return;
+    }
+
     const sections = [
       { name: 'dashboard', init: initDashboard },
       { name: 'orderHistory', init: initOrderHistory },
@@ -476,6 +482,15 @@ async function initWishlist() {
         });
       });
     });
+
+    // Set initial data on the repeater (was only set on sort change)
+    applyWishlistSort();
+
+    // Show empty state if no items
+    if (wishlistData.length === 0) {
+      try { $w('#wishlistEmpty').show(); } catch (e) {}
+      try { wishlistRepeater.collapse(); } catch (e) {}
+    }
 
   } catch (e) {
     console.error('[MemberPage] Error initializing wishlist:', e);

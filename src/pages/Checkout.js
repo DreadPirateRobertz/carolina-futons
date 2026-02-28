@@ -79,6 +79,13 @@ async function initCheckoutSummary() {
     const lineItems = Array.isArray(cart.lineItems) ? cart.lineItems : [];
     const itemCount = lineItems.reduce((s, i) => s + (i.quantity || 0), 0);
 
+    // Empty cart — redirect to cart page instead of showing blank checkout
+    if (itemCount === 0) {
+      const { to } = await import('wix-location-frontend');
+      to('/cart');
+      return;
+    }
+
     // Track checkout start in engagement funnel + GA4/Meta Pixel
     trackCheckoutStart(subtotal, itemCount);
     fireInitiateCheckout(lineItems, subtotal);

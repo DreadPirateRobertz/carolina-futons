@@ -245,7 +245,10 @@ async function initShareButton() {
         const baseUrl = wixLocationFrontend.baseUrl;
         const fullUrl = `${baseUrl}${shareUrl}`;
 
-        // Copy to clipboard via Wix
+        // Actually copy to clipboard via Wix API
+        const wixWindow = await import('wix-window-frontend');
+        await wixWindow.copyToClipboard(fullUrl);
+
         $w('#shareCompareBtn').label = 'Link Copied!';
         try { $w('#shareUrlText').text = fullUrl; } catch (e) {}
         try { $w('#shareUrlText').show(); } catch (e) {}
