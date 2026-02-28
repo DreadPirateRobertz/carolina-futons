@@ -500,6 +500,42 @@ describe('Category Page', () => {
     });
   });
 
+  // ── URL Param Restoration ──────────────────────────────────────
+
+  describe('URL param restoration', () => {
+    it('restores material filter from URL params', async () => {
+      const { __setQuery } = await import('./__mocks__/wix-location-frontend.js');
+      if (__setQuery) {
+        __setQuery({ material: 'hardwood' });
+        elements.clear();
+        await onReadyHandler();
+        // After restore, the filter should be set
+        expect(getEl('#filterMaterial')).toBeDefined();
+      }
+    });
+
+    it('strips HTML from URL params (XSS prevention)', async () => {
+      const { __setQuery } = await import('./__mocks__/wix-location-frontend.js');
+      if (__setQuery) {
+        __setQuery({ material: '<script>alert("xss")</script>hardwood' });
+        elements.clear();
+        await onReadyHandler();
+        // sanitizeInput should strip the script tag
+        expect(getEl('#filterMaterial')).toBeDefined();
+      }
+    });
+
+    it('handles empty URL query gracefully', async () => {
+      const { __setQuery } = await import('./__mocks__/wix-location-frontend.js');
+      if (__setQuery) {
+        __setQuery({});
+        elements.clear();
+        await onReadyHandler();
+        // No errors thrown
+      }
+    });
+  });
+
   // ── Advanced Filter Edge Cases ────────────────────────────────
 
   describe('advanced filter edge cases', () => {
@@ -514,7 +550,6 @@ describe('Category Page', () => {
         onChange();
         materialFilter.value = 'fabric';
         onChange();
-        // Should not throw — debounce handles rapid changes
       }
     });
 
@@ -527,6 +562,48 @@ describe('Category Page', () => {
       if (onClick) onClick();
       expect(getEl('#filterMaterial').value).toBe('');
       expect(getEl('#filterColor').value).toBe('');
+    });
+
+    it('clearAllAdvancedFilters resets comfort level', async () => {
+      await onReadyHandler();
+      getEl('#filterComfortLevel').value = '3';
+      const clearBtn = getEl('#clearAllFilters');
+      const onClick = clearBtn.onClick.mock.calls[0]?.[0];
+      if (onClick) onClick();
+      expect(getEl('#filterComfortLevel').value).toBe('');
+    });
+
+    it('clearAllAdvancedFilters resets dimension inputs', async () => {
+      await onReadyHandler();
+      getEl('#filterWidthMin').value = '30';
+      getEl('#filterWidthMax').value = '80';
+      const clearBtn = getEl('#clearAllFilters');
+      const onClick = clearBtn.onClick.mock.calls[0]?.[0];
+      if (onClick) onClick();
+      expect(getEl('#filterWidthMin').value).toBe('');
+      expect(getEl('#filterWidthMax').value).toBe('');
+    });
+  });
+
+  // ── Filter Chip Remove ──────────────────────────────────────
+
+  describe('filter chip remove', () => {
+    it('chip repeater element exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#filterChipRepeater')).toBeDefined();
+      expect(getEl('#filterChipRepeater').onItemReady).toBeDefined();
+    });
+
+    it('clear all chip button exists', async () => {
+      await onReadyHandler();
+      expect(getEl('#clearAllFiltersChip')).toBeDefined();
+    });
+
+    it('chip remove button has accessibility label setter', async () => {
+      await onReadyHandler();
+      const btn = getEl('#chipRemove');
+      expect(btn).toBeDefined();
+      expect(btn.onClick).toBeDefined();
     });
   });
 

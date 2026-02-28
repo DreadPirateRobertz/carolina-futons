@@ -35,6 +35,7 @@ function createQueryBuilder(collection) {
   let sortField = null;
   let sortDir = 'asc';
   let limitVal = 50;
+  let skipVal = 0;
 
   const builder = {
     eq(field, value) { filters.push(item => getField(item, field) === value); return builder; },
@@ -80,7 +81,7 @@ function createQueryBuilder(collection) {
     },
     ascending(field) { sortField = field; sortDir = 'asc'; return builder; },
     descending(field) { sortField = field; sortDir = 'desc'; return builder; },
-    skip(n) { return builder; },
+    skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
     async find() {
@@ -97,8 +98,9 @@ function createQueryBuilder(collection) {
         });
       }
 
-      items = items.slice(0, limitVal);
-      return { items, totalCount: items.length, length: items.length };
+      const totalCount = items.length;
+      items = items.slice(skipVal, skipVal + limitVal);
+      return { items, totalCount, length: items.length };
     },
     async distinct(field) {
       const items = (_store[collection] || []).filter(item =>

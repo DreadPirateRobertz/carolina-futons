@@ -24,6 +24,18 @@ let currentQuickViewProduct = null;
 let _debounceTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
 
+/**
+ * Sanitize user input from URL params — strip HTML tags, decode entities, limit length.
+ * Frontend-safe equivalent of backend/utils/sanitize for page code.
+ */
+function sanitizeInput(str, maxLen = 200) {
+  if (typeof str !== 'string') return '';
+  let result = str.replace(/<[^>]*>/g, '');
+  result = result.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+  result = result.replace(/<[^>]*>/g, '');
+  return result.trim().slice(0, maxLen);
+}
+
 // ── Category Content Map ─────────────────────────────────────────────
 // Marketing copy and hero config for each category
 
@@ -625,7 +637,7 @@ function openQuickView(product) {
     $w('#qvImage').alt = buildAltText(product);
     $w('#qvName').text = product.name;
     $w('#qvPrice').text = product.formattedPrice;
-    $w('#qvDescription').text = stripHtml(product.description || '');
+    $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
     $w('#qvAddToCart').label = 'Add to Cart';
     $w('#qvAddToCart').enable();
 
@@ -1065,32 +1077,89 @@ function renderFilterChips() {
     if (!container) return;
 
     const chips = [];
-    if (currentFilters.material) chips.push({ label: `Material: ${currentFilters.material}`, key: 'material' });
-    if (currentFilters.color) chips.push({ label: `Color: ${currentFilters.color}`, key: 'color' });
+    if (currentFilters.material) chips.push({ _id: 'chip-material', label: `Material: ${currentFilters.material}`, key: 'material' });
+    if (currentFilters.color) chips.push({ _id: 'chip-color', label: `Color: ${currentFilters.color}`, key: 'color' });
     if (currentFilters.features && currentFilters.features.length > 0) {
-      currentFilters.features.forEach(f => {
-        chips.push({ label: `Feature: ${formatFeatureLabel(f)}`, key: 'features', value: f });
+      currentFilters.features.forEach((f, i) => {
+        chips.push({ _id: `chip-feature-${i}`, label: `Feature: ${formatFeatureLabel(f)}`, key: 'features', value: f });
       });
     }
-    if (currentFilters.priceRange) chips.push({ label: `Price: ${currentFilters.priceRange}`, key: 'priceRange' });
-    if (currentFilters.brand) chips.push({ label: `Brand: ${currentFilters.brand}`, key: 'brand' });
-    if (currentFilters.size) chips.push({ label: `Size: ${currentFilters.size}`, key: 'size' });
-    if (currentFilters.comfortLevel) chips.push({ label: `Comfort: ${currentFilters.comfortLevel}`, key: 'comfortLevel' });
-    if (currentFilters.widthRange) chips.push({ label: `Width: ${currentFilters.widthRange[0]}"-${currentFilters.widthRange[1]}"`, key: 'widthRange' });
-    if (currentFilters.depthRange) chips.push({ label: `Depth: ${currentFilters.depthRange[0]}"-${currentFilters.depthRange[1]}"`, key: 'depthRange' });
+    if (currentFilters.priceRange) chips.push({ _id: 'chip-price', label: `Price: ${currentFilters.priceRange}`, key: 'priceRange' });
+    if (currentFilters.brand) chips.push({ _id: 'chip-brand', label: `Brand: ${currentFilters.brand}`, key: 'brand' });
+    if (currentFilters.size) chips.push({ _id: 'chip-size', label: `Size: ${currentFilters.size}`, key: 'size' });
+    if (currentFilters.comfortLevel) chips.push({ _id: 'chip-comfort', label: `Comfort: ${currentFilters.comfortLevel}`, key: 'comfortLevel' });
+    if (currentFilters.widthRange) chips.push({ _id: 'chip-width', label: `Width: ${currentFilters.widthRange[0]}"-${currentFilters.widthRange[1]}"`, key: 'widthRange' });
+    if (currentFilters.depthRange) chips.push({ _id: 'chip-depth', label: `Depth: ${currentFilters.depthRange[0]}"-${currentFilters.depthRange[1]}"`, key: 'depthRange' });
 
     if (chips.length === 0) {
       container.hide();
+      try { $w('#clearAllFiltersChip').hide(); } catch (e) {}
       return;
     }
 
+    // Populate chip repeater for per-chip X-to-remove
+    try {
+      const chipRepeater = $w('#filterChipRepeater');
+      if (chipRepeater) {
+        chipRepeater.data = chips;
+        chipRepeater.onItemReady(($item, itemData) => {
+          try { $item('#chipLabel').text = itemData.label; } catch (e) {}
+          try {
+            $item('#chipRemove').onClick(() => {
+              removeFilterChip(itemData.key, itemData.value);
+            });
+            try { $item('#chipRemove').accessibility.ariaLabel = `Remove ${itemData.label} filter`; } catch (e) {}
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Fallback text summary
     try {
       $w('#filterChipsText').text = chips.map(c => c.label).join(' · ');
     } catch (e) {}
 
+    // Show Clear All chip button
+    try { $w('#clearAllFiltersChip').show(); } catch (e) {}
+
     container.show();
     announce($w, `${chips.length} filter${chips.length !== 1 ? 's' : ''} active`);
   } catch (e) {}
+}
+
+function removeFilterChip(key, value) {
+  const currentPath = wixLocationFrontend.path?.[0] || '';
+
+  if (key === 'features' && value) {
+    currentFilters.features = (currentFilters.features || []).filter(f => f !== value);
+    if (currentFilters.features.length === 0) delete currentFilters.features;
+    try { $w('#filterFeatures').value = currentFilters.features || []; } catch (e) {}
+  } else if (key === 'widthRange') {
+    delete currentFilters.widthRange;
+    try { $w('#filterWidthMin').value = ''; } catch (e) {}
+    try { $w('#filterWidthMax').value = ''; } catch (e) {}
+  } else if (key === 'depthRange') {
+    delete currentFilters.depthRange;
+    try { $w('#filterDepthMin').value = ''; } catch (e) {}
+    try { $w('#filterDepthMax').value = ''; } catch (e) {}
+  } else {
+    delete currentFilters[key];
+    // Reset corresponding filter UI
+    const filterMap = {
+      material: '#filterMaterial',
+      color: '#filterColor',
+      priceRange: '#filterPriceRange',
+      brand: '#filterBrand',
+      size: '#filterSize',
+      comfortLevel: '#filterComfortLevel',
+    };
+    if (filterMap[key]) {
+      try { $w(filterMap[key]).value = ''; } catch (e) {}
+    }
+  }
+
+  debouncedApplyAdvancedFilters(currentPath);
+  trackEvent('filter_chip_removed', { key, value });
 }
 
 async function showNoMatchesState(currentPath) {
@@ -1177,22 +1246,22 @@ function restoreFiltersFromUrl(currentPath) {
   try {
     const query = wixLocationFrontend.query || {};
 
-    // Restore from URL params
-    if (query.price) currentFilters.priceRange = query.price;
-    if (query.material) currentFilters.material = query.material;
-    if (query.color) currentFilters.color = query.color;
-    if (query.features) currentFilters.features = query.features.split(',');
+    // Restore from URL params (sanitized to prevent XSS via crafted URLs)
+    if (query.price) currentFilters.priceRange = sanitizeInput(query.price, 20);
+    if (query.material) currentFilters.material = sanitizeInput(query.material, 100);
+    if (query.color) currentFilters.color = sanitizeInput(query.color, 50);
+    if (query.features) currentFilters.features = sanitizeInput(query.features, 500).split(',').map(f => sanitizeInput(f, 50)).filter(Boolean);
     if (query.width) {
-      const [min, max] = query.width.split('-').map(Number);
+      const [min, max] = sanitizeInput(query.width, 20).split('-').map(Number);
       if (!isNaN(min) && !isNaN(max)) currentFilters.widthRange = [min, max];
     }
     if (query.depth) {
-      const [min, max] = query.depth.split('-').map(Number);
+      const [min, max] = sanitizeInput(query.depth, 20).split('-').map(Number);
       if (!isNaN(min) && !isNaN(max)) currentFilters.depthRange = [min, max];
     }
-    if (query.brand) currentFilters.brand = query.brand;
-    if (query.size) currentFilters.size = query.size;
-    if (query.comfort) currentFilters.comfortLevel = query.comfort;
+    if (query.brand) currentFilters.brand = sanitizeInput(query.brand, 100);
+    if (query.size) currentFilters.size = sanitizeInput(query.size, 50);
+    if (query.comfort) currentFilters.comfortLevel = sanitizeInput(query.comfort, 50);
 
     // Or restore from session state if no URL params
     if (Object.keys(currentFilters).length === 0 && _filterSessionState[currentPath]) {
@@ -1311,10 +1380,6 @@ function detectCategory(product) {
   if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
   if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
   return '';
-}
-
-function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, '').trim();
 }
 
 // ── Compare Bar Refresh ──────────────────────────────────────────

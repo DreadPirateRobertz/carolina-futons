@@ -158,10 +158,9 @@ describe('getOrderHistory', () => {
     __seed('Stores/Orders', orders);
 
     const result = await getOrderHistory({ page: 1, pageSize: 3 });
-    // Mock returns sliced items count as totalCount
     expect(result.data.orders).toHaveLength(3);
-    expect(result.data.totalCount).toBe(3);
-    expect(result.data.totalPages).toBe(1);
+    expect(result.data.totalCount).toBe(5);
+    expect(result.data.totalPages).toBe(2);
   });
 
   it('fails when not authenticated', async () => {

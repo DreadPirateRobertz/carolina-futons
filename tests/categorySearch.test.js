@@ -258,6 +258,34 @@ describe('searchProducts', () => {
     expect(result.hasMore).toBe(false);
   });
 
+  it('applies skip to paginate results', async () => {
+    const page1 = await searchProducts({ limit: 2, skip: 0 });
+    const page2 = await searchProducts({ limit: 2, skip: 2 });
+    expect(page1.items).toHaveLength(2);
+    expect(page2.items).toHaveLength(2);
+    // Pages should not overlap
+    const page1Ids = page1.items.map(i => i._id);
+    const page2Ids = page2.items.map(i => i._id);
+    page2Ids.forEach(id => {
+      expect(page1Ids).not.toContain(id);
+    });
+  });
+
+  it('skip returns correct totalCount for all items', async () => {
+    const result = await searchProducts({ limit: 2, skip: 2 });
+    expect(result.totalCount).toBe(allProducts.length);
+  });
+
+  it('hasMore is true when skip + limit < totalCount', async () => {
+    const result = await searchProducts({ limit: 2, skip: 0 });
+    expect(result.hasMore).toBe(true);
+  });
+
+  it('handles negative skip gracefully', async () => {
+    const result = await searchProducts({ limit: 2, skip: -5 });
+    expect(result.items).toHaveLength(2);
+  });
+
   it('sanitizes search query with HTML', async () => {
     const result = await searchProducts({ searchQuery: '<script>alert("xss")</script>Eureka' });
     // Should not throw and should strip HTML tags
