@@ -13,6 +13,7 @@ import {
   getWcagChecklist,
   getDialogAriaConfig,
   getFormErrorAttributes,
+  auditPageAccessibility,
 } from '../src/backend/accessibility.web.js';
 
 // ── getAnnouncement ─────────────────────────────────────────────────
@@ -236,5 +237,187 @@ describe('getFormErrorAttributes', () => {
 
   it('returns empty object for empty array', async () => {
     expect(await getFormErrorAttributes([])).toEqual({});
+  });
+});
+
+// ── auditPageAccessibility ──────────────────────────────────────────
+
+describe('auditPageAccessibility', () => {
+  it('returns passing audit for fully compliant page', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Home',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [
+        { src: '/hero.jpg', alt: 'Carolina Futons showroom in Hendersonville NC' },
+        { src: '/divider.png', alt: '' },
+      ],
+      forms: [
+        { fieldId: 'email', label: 'Email Address' },
+      ],
+      interactiveElements: [
+        { id: '#shopBtn', hasKeyboardHandler: true, hasAriaLabel: true },
+      ],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.pageName).toBe('Home');
+    expect(result.passes).toBe(true);
+    expect(result.issues).toHaveLength(0);
+    expect(result.score).toBe(100);
+  });
+
+  it('flags missing landmarks', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Test',
+      landmarks: ['banner'],
+      images: [],
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const landmarkIssue = result.issues.find(i => i.criterion === '2.4.1');
+    expect(landmarkIssue).toBeDefined();
+    expect(landmarkIssue.details).toContain('navigation');
+  });
+
+  it('flags images with missing alt text', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Product',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [
+        { src: '/product.jpg', alt: null },
+        { src: '/hero.jpg', alt: 'image' },
+      ],
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const altIssues = result.issues.filter(i => i.criterion === '1.1.1');
+    expect(altIssues.length).toBe(2);
+  });
+
+  it('flags form fields without labels', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Contact',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [
+        { fieldId: 'name' },
+        { fieldId: 'email', label: 'Email' },
+      ],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const formIssue = result.issues.find(i => i.criterion === '3.3.2');
+    expect(formIssue).toBeDefined();
+    expect(formIssue.element).toBe('name');
+  });
+
+  it('flags interactive elements without keyboard handlers', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Category',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [],
+      interactiveElements: [
+        { id: '#filterBtn', hasKeyboardHandler: false, hasAriaLabel: true },
+      ],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const kbIssue = result.issues.find(i => i.criterion === '2.1.1');
+    expect(kbIssue).toBeDefined();
+    expect(kbIssue.element).toBe('#filterBtn');
+  });
+
+  it('flags interactive elements without aria labels', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Category',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [],
+      interactiveElements: [
+        { id: '#iconBtn', hasKeyboardHandler: true, hasAriaLabel: false },
+      ],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const labelIssue = result.issues.find(i => i.criterion === '4.1.2');
+    expect(labelIssue).toBeDefined();
+  });
+
+  it('flags missing skip navigation', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Blog',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: false,
+      hasLiveRegion: true,
+    });
+
+    expect(result.passes).toBe(false);
+    const skipIssue = result.issues.find(i => i.criterion === '2.4.1');
+    expect(skipIssue).toBeDefined();
+    expect(skipIssue.details).toContain('skip');
+  });
+
+  it('flags missing live region', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'FAQ',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: false,
+    });
+
+    expect(result.passes).toBe(false);
+    const liveIssue = result.issues.find(i => i.criterion === '4.1.3');
+    expect(liveIssue).toBeDefined();
+  });
+
+  it('calculates score based on passing checks', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'Partial',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [{ src: '/img.jpg', alt: null }],
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+
+    expect(result.score).toBeGreaterThan(0);
+    expect(result.score).toBeLessThan(100);
+  });
+
+  it('handles null/undefined input gracefully', async () => {
+    const result = await auditPageAccessibility(null);
+    expect(result.passes).toBe(false);
+    expect(result.pageName).toBe('Unknown');
+  });
+
+  it('handles missing optional fields', async () => {
+    const result = await auditPageAccessibility({ pageName: 'Minimal' });
+    expect(result.pageName).toBe('Minimal');
+    expect(result.passes).toBe(false);
+    expect(Array.isArray(result.issues)).toBe(true);
   });
 });
