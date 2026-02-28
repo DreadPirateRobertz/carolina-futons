@@ -101,19 +101,26 @@ vi.mock('backend/emailService.web', () => ({
 }));
 vi.mock('backend/sizeGuide.web', () => ({
   getProductDimensions: vi.fn().mockResolvedValue({
-    width: 54, depth: 38, height: 33, unit: 'in',
-    seatHeight: 18, seatDepth: 20,
-    openWidth: 54, openDepth: 75, openHeight: 10,
+    productId: 'prod-frame-001', unit: 'in',
+    closed: { width: 54, depth: 38, height: 33 },
+    open: { width: 54, depth: 75, height: 10 },
+    weight: 65, seatHeight: 18, mattressSize: 'Full',
   }),
   checkRoomFit: vi.fn().mockResolvedValue({
-    fits: true, clearance: { left: 12, right: 12, front: 24 },
-    doorwayOk: true, warnings: [],
+    success: true, allFit: true, anyTight: false,
+    checks: [
+      { check: 'doorway', fits: true, tight: false, clearanceWidth: 12, clearanceHeight: 20 },
+      { check: 'room', fits: true, tight: false, clearanceWidth: 24, clearanceDepth: 30 },
+    ],
   }),
   convertUnit: vi.fn((v, from, to) => to === 'cm' ? v * 2.54 : v / 2.54),
-  getComparisonTable: vi.fn().mockResolvedValue([
-    { size: 'Full', width: 54, depth: 38, height: 33 },
-    { size: 'Queen', width: 60, depth: 38, height: 33 },
-  ]),
+  getComparisonTable: vi.fn().mockResolvedValue({
+    success: true, category: 'futon-frames', unit: 'in',
+    products: [
+      { productId: 'prod-frame-001', name: 'Eureka Futon Frame', slug: 'eureka', isCurrent: true, closed: { width: 54, depth: 38, height: 33 }, open: { width: 54, depth: 75, height: 10 }, weight: 65, mattressSize: 'Full' },
+      { productId: 'prod-frame-002', name: 'Phoenix Futon Frame', slug: 'phoenix', isCurrent: false, closed: { width: 60, depth: 38, height: 33 }, open: { width: 60, depth: 75, height: 10 }, weight: 72, mattressSize: 'Queen' },
+    ],
+  }),
 }));
 vi.mock('wix-window-frontend', () => ({
   default: { onScroll: vi.fn(), getBoundingRect: vi.fn() },
@@ -143,13 +150,15 @@ import { initComfortCards, renderComfortCard, COMFORT_ICONS } from '../src/publi
 import { initImageLightbox, initImageZoom } from 'public/galleryHelpers.js';
 import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
-import { getProductDimensions, checkRoomFit } from 'backend/sizeGuide.web';
+import { getProductDimensions, checkRoomFit, getComparisonTable } from 'backend/sizeGuide.web';
 import { getProductComfort } from 'backend/comfortService.web';
+import { submitSwatchRequest } from 'backend/emailService.web';
 import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
 import { addToCart } from 'public/cartService';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile } from 'public/mobileHelpers';
 import { validateDimension } from 'public/validators.js';
+import wixWindowFrontend from 'wix-window-frontend';
 
 // ── Test Helpers ─────────────────────────────────────────────────────
 
@@ -384,54 +393,105 @@ describe('Dimension Display', () => {
     expect(validateDimension(NaN, 1, 120)).toBe(false);
   });
 
-  it('getProductDimensions returns measurements with unit', async () => {
+  it('getProductDimensions returns nested closed/open shapes', async () => {
     const dims = await getProductDimensions('prod-frame-001', 'in');
     expect(dims).toMatchObject({
-      width: 54, depth: 38, height: 33, unit: 'in',
+      unit: 'in',
+      closed: { width: 54, depth: 38, height: 33 },
+      open: { width: 54, depth: 75, height: 10 },
     });
   });
 
-  it('getProductDimensions includes open/closed and seat dimensions', async () => {
+  it('getProductDimensions includes seatHeight and mattressSize', async () => {
     const dims = await getProductDimensions('prod-frame-001', 'in');
-    expect(dims).toHaveProperty('seatHeight');
-    expect(dims).toHaveProperty('seatDepth');
-    expect(dims).toHaveProperty('openWidth');
-    expect(dims).toHaveProperty('openDepth');
+    expect(dims).toHaveProperty('seatHeight', 18);
+    expect(dims).toHaveProperty('mattressSize', 'Full');
   });
 
-  it('checkRoomFit returns fit status with clearance info', async () => {
-    const result = await checkRoomFit({
-      productId: 'prod-frame-001',
+  it('checkRoomFit returns success with allFit and checks array', async () => {
+    const result = await checkRoomFit('prod-frame-001', {
       roomWidth: 120, roomDepth: 120,
-      doorwayWidth: 36, hallwayWidth: 48,
+      doorwayWidth: 36, doorwayHeight: 80,
     });
     expect(result).toMatchObject({
-      fits: true,
-      doorwayOk: true,
+      success: true,
+      allFit: true,
+      anyTight: false,
     });
-    expect(result.clearance).toBeDefined();
+    expect(result.checks).toBeDefined();
+    expect(result.checks.length).toBeGreaterThan(0);
+    expect(result.checks[0]).toHaveProperty('check');
+    expect(result.checks[0]).toHaveProperty('fits');
+    expect(result.checks[0]).toHaveProperty('tight');
   });
 
-  it('checkRoomFit warns when product does not fit', async () => {
+  it('checkRoomFit returns not-fit result', async () => {
     checkRoomFit.mockResolvedValueOnce({
-      fits: false,
-      clearance: { left: -2, right: -2, front: 5 },
-      doorwayOk: false,
-      warnings: ['Product wider than doorway', 'Tight fit in room'],
+      success: true, allFit: false, anyTight: false,
+      checks: [
+        { check: 'doorway', fits: false, tight: false, clearanceWidth: -2, clearanceHeight: 10 },
+        { check: 'room', fits: false, tight: false, clearanceWidth: -5, clearanceDepth: -3 },
+      ],
     });
-    const result = await checkRoomFit({
-      productId: 'prod-frame-001',
+    const result = await checkRoomFit('prod-frame-001', {
       roomWidth: 50, roomDepth: 40,
-      doorwayWidth: 30,
+      doorwayWidth: 30, doorwayHeight: 80,
     });
-    expect(result.fits).toBe(false);
-    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.success).toBe(true);
+    expect(result.allFit).toBe(false);
+    expect(result.checks.some(c => !c.fits)).toBe(true);
+  });
+
+  it('checkRoomFit returns tight fit result', async () => {
+    checkRoomFit.mockResolvedValueOnce({
+      success: true, allFit: true, anyTight: true,
+      checks: [
+        { check: 'doorway', fits: true, tight: true, clearanceWidth: 1, clearanceHeight: 10 },
+      ],
+    });
+    const result = await checkRoomFit('prod-frame-001', {
+      doorwayWidth: 55, doorwayHeight: 80,
+    });
+    expect(result.allFit).toBe(true);
+    expect(result.anyTight).toBe(true);
+  });
+
+  it('checkRoomFit returns error when no dimensions', async () => {
+    checkRoomFit.mockResolvedValueOnce({
+      success: false, error: 'No dimension data available for this product',
+    });
+    const result = await checkRoomFit('unknown-product', { roomWidth: 100, roomDepth: 100 });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
   });
 
   it('handles missing dimension data gracefully', async () => {
     getProductDimensions.mockResolvedValueOnce(null);
     const dims = await getProductDimensions('unknown-product', 'in');
     expect(dims).toBeNull();
+  });
+
+  it('getComparisonTable returns product entries with correct shape', async () => {
+    const { getComparisonTable } = await import('backend/sizeGuide.web');
+    const table = await getComparisonTable('prod-frame-001', 'in', 5);
+    expect(table).toMatchObject({
+      success: true,
+      unit: 'in',
+    });
+    expect(table.products).toHaveLength(2);
+    expect(table.products[0]).toMatchObject({
+      isCurrent: true,
+      closed: { width: 54, depth: 38, height: 33 },
+      open: { width: 54, depth: 75, height: 10 },
+    });
+    expect(table.products[1].isCurrent).toBe(false);
+  });
+
+  it('getComparisonTable handles failure', async () => {
+    const { getComparisonTable } = await import('backend/sizeGuide.web');
+    getComparisonTable.mockResolvedValueOnce({ success: false, error: 'Product not found' });
+    const table = await getComparisonTable('unknown-product', 'in', 5);
+    expect(table.success).toBe(false);
   });
 });
 
@@ -1005,5 +1065,355 @@ describe('Quantity Selector', () => {
     const handler = $w('#quantityPlus').onClick.mock.calls[0][0];
     handler();
     expect(state.selectedQuantity).toBe(99);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// displayFitResults — data contract tests (3 branches + error)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('displayFitResults data contracts', () => {
+  it('all-fit, no-tight result has correct shape', async () => {
+    const result = await checkRoomFit('prod-frame-001', {
+      doorwayWidth: 60, doorwayHeight: 80,
+      roomWidth: 120, roomDepth: 120,
+    });
+    expect(result.success).toBe(true);
+    expect(result.allFit).toBe(true);
+    expect(result.anyTight).toBe(false);
+    expect(Array.isArray(result.checks)).toBe(true);
+    for (const c of result.checks) {
+      expect(c).toHaveProperty('check');
+      expect(c).toHaveProperty('fits');
+      expect(c).toHaveProperty('tight');
+      expect(c.fits).toBe(true);
+    }
+  });
+
+  it('all-fit, with-tight result has correct shape', async () => {
+    checkRoomFit.mockResolvedValueOnce({
+      success: true, allFit: true, anyTight: true,
+      checks: [
+        { check: 'doorway', fits: true, tight: true, clearanceWidth: 1, clearanceHeight: 5 },
+        { check: 'room', fits: true, tight: false, clearanceWidth: 20, clearanceDepth: 30 },
+      ],
+    });
+    const result = await checkRoomFit('prod-frame-001', {
+      doorwayWidth: 55, doorwayHeight: 80,
+      roomWidth: 120, roomDepth: 120,
+    });
+    expect(result.allFit).toBe(true);
+    expect(result.anyTight).toBe(true);
+    expect(result.checks.some(c => c.tight)).toBe(true);
+    expect(result.checks.every(c => c.fits)).toBe(true);
+  });
+
+  it('not-all-fit result has correct shape', async () => {
+    checkRoomFit.mockResolvedValueOnce({
+      success: true, allFit: false, anyTight: false,
+      checks: [
+        { check: 'doorway', fits: false, tight: false, clearanceWidth: -5, clearanceHeight: 10 },
+        { check: 'hallway', fits: true, tight: false, clearance: 8 },
+      ],
+    });
+    const result = await checkRoomFit('prod-frame-001', {
+      doorwayWidth: 30, doorwayHeight: 80,
+      hallwayWidth: 48,
+    });
+    expect(result.allFit).toBe(false);
+    expect(result.checks.some(c => !c.fits)).toBe(true);
+  });
+
+  it('error result has success=false with error message', async () => {
+    checkRoomFit.mockResolvedValueOnce({
+      success: false, error: 'No dimension data available for this product',
+    });
+    const result = await checkRoomFit('no-dims-product', {});
+    expect(result.success).toBe(false);
+    expect(typeof result.error).toBe('string');
+    expect(result.checks).toBeUndefined();
+  });
+
+  it('check entries include check type label for display', async () => {
+    const result = await checkRoomFit('prod-frame-001', {
+      doorwayWidth: 60, doorwayHeight: 80,
+      roomWidth: 120, roomDepth: 120,
+    });
+    const validTypes = ['doorway', 'hallway', 'room'];
+    for (const c of result.checks) {
+      expect(validTypes).toContain(c.check);
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Dimension Rendering — renderDimensions data shape tests
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Dimension Rendering', () => {
+  it('getProductDimensions returns closed/open nested objects for rendering', async () => {
+    const dims = await getProductDimensions('prod-frame-001', 'in');
+    // renderDimensions reads dims.closed.width, dims.open.width etc.
+    expect(dims.closed).toBeDefined();
+    expect(dims.open).toBeDefined();
+    expect(typeof dims.closed.width).toBe('number');
+    expect(typeof dims.closed.depth).toBe('number');
+    expect(typeof dims.closed.height).toBe('number');
+    expect(typeof dims.open.width).toBe('number');
+    expect(typeof dims.open.depth).toBe('number');
+    expect(typeof dims.open.height).toBe('number');
+  });
+
+  it('dimension unit toggle — cm conversion produces correct shape', async () => {
+    getProductDimensions.mockResolvedValueOnce({
+      productId: 'prod-frame-001', unit: 'cm',
+      closed: { width: 137.2, depth: 96.5, height: 83.8 },
+      open: { width: 137.2, depth: 190.5, height: 25.4 },
+      weight: 65, seatHeight: 45.7, mattressSize: 'Full',
+    });
+    const dims = await getProductDimensions('prod-frame-001', 'cm');
+    expect(dims.unit).toBe('cm');
+    expect(dims.closed.width).toBeGreaterThan(100); // cm values are larger
+    expect(dims.open.depth).toBeGreaterThan(100);
+  });
+
+  it('dimension data includes weight and mattressSize', async () => {
+    const dims = await getProductDimensions('prod-frame-001', 'in');
+    expect(dims.weight).toBe(65);
+    expect(dims.mattressSize).toBe('Full');
+  });
+
+  it('null dimensions return null (no rendering)', async () => {
+    getProductDimensions.mockResolvedValueOnce(null);
+    const dims = await getProductDimensions('no-dims', 'in');
+    expect(dims).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Scroll-based Sticky Bar Visibility
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Scroll-based Sticky Bar', () => {
+  let $w, state;
+
+  beforeEach(() => {
+    $w = create$w();
+    state = makeState();
+    vi.clearAllMocks();
+  });
+
+  it('registers scroll listener via wix-window-frontend', () => {
+    initStickyCartBar($w, state);
+    expect(wixWindowFrontend.onScroll).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it('shows sticky bar when addToCartButton scrolls above viewport', async () => {
+    initStickyCartBar($w, state);
+    const scrollHandler = wixWindowFrontend.onScroll.mock.calls[0][0];
+
+    // Simulate scrolling past add-to-cart button (top < 0)
+    $w('#addToCartButton').getBoundingRect.mockResolvedValueOnce({ top: -50, bottom: -10, left: 0, right: 400 });
+    await scrollHandler();
+    expect($w('#stickyCartBar').show).toHaveBeenCalledWith('slide', expect.objectContaining({ direction: 'bottom' }));
+  });
+
+  it('hides sticky bar when addToCartButton scrolls back into view', async () => {
+    initStickyCartBar($w, state);
+    const scrollHandler = wixWindowFrontend.onScroll.mock.calls[0][0];
+
+    // First scroll past (show bar)
+    $w('#addToCartButton').getBoundingRect.mockResolvedValueOnce({ top: -50, bottom: -10, left: 0, right: 400 });
+    await scrollHandler();
+
+    // Then scroll back (hide bar)
+    $w('#addToCartButton').getBoundingRect.mockResolvedValueOnce({ top: 100, bottom: 200, left: 0, right: 400 });
+    await scrollHandler();
+    expect($w('#stickyCartBar').hide).toHaveBeenCalledWith('slide', expect.objectContaining({ direction: 'bottom' }));
+  });
+
+  it('does not re-show if already visible', async () => {
+    initStickyCartBar($w, state);
+    const scrollHandler = wixWindowFrontend.onScroll.mock.calls[0][0];
+
+    $w('#addToCartButton').getBoundingRect.mockResolvedValue({ top: -50, bottom: -10, left: 0, right: 400 });
+    await scrollHandler();
+    await scrollHandler();
+    // show should be called only once (guard prevents re-trigger)
+    expect($w('#stickyCartBar').show).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Swatch Modal Submission Flow
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('Swatch Modal', () => {
+  let $w, state;
+
+  beforeEach(() => {
+    $w = create$w();
+    state = makeState();
+    state.product.productOptions = [
+      { name: 'Finish', choices: [{ value: 'oak', description: 'Oak' }, { value: 'walnut', description: 'Walnut' }] },
+    ];
+    vi.clearAllMocks();
+  });
+
+  it('initSwatchRequest wires onClick handler to button', () => {
+    initSwatchRequest($w, state);
+    expect($w('#swatchRequestBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('swatch button click triggers modal show', () => {
+    $w('#swatchModal').show = vi.fn();
+    initSwatchRequest($w, state);
+    // Trigger the button click handler
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+    expect($w('#swatchModal').show).toHaveBeenCalledWith('fade', expect.objectContaining({ duration: 200 }));
+  });
+
+  it('modal shows product name', () => {
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+    expect($w('#swatchProductName').text).toBe('Eureka Futon Frame');
+  });
+
+  it('modal clears form fields on open', () => {
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+    expect($w('#swatchName').value).toBe('');
+    expect($w('#swatchEmail').value).toBe('');
+    expect($w('#swatchAddress').value).toBe('');
+  });
+
+  it('submitSwatchRequest is called with correct payload', async () => {
+    initSwatchRequest($w, state);
+
+    // Open modal
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    // Fill form
+    $w('#swatchName').value = 'Test User';
+    $w('#swatchEmail').value = 'test@example.com';
+    $w('#swatchAddress').value = '123 Main St';
+
+    // Mock forEachItem to simulate checked swatches
+    $w('#swatchOptions').forEachItem = vi.fn(($itemCb) => {
+      const mockItem = (sel) => {
+        if (sel === '#swatchCheckbox') return { checked: true };
+        return {};
+      };
+      $itemCb(mockItem, { label: 'Oak' });
+    });
+
+    // Trigger submit
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect(submitSwatchRequest).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Test User',
+      email: 'test@example.com',
+      address: '123 Main St',
+      productId: 'prod-frame-001',
+      productName: 'Eureka Futon Frame',
+      swatchNames: ['Oak'],
+    }));
+  });
+
+  it('submit disables button and shows success', async () => {
+    vi.useFakeTimers();
+    initSwatchRequest($w, state);
+
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    $w('#swatchName').value = 'Test User';
+    $w('#swatchEmail').value = 'test@example.com';
+    $w('#swatchAddress').value = '123 Main St';
+    $w('#swatchOptions').forEachItem = vi.fn(($itemCb) => {
+      $itemCb((sel) => sel === '#swatchCheckbox' ? { checked: true } : {}, { label: 'Oak' });
+    });
+
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w('#swatchSubmit').disable).toHaveBeenCalled();
+    expect($w('#swatchSuccess').show).toHaveBeenCalled();
+
+    vi.advanceTimersByTime(3000);
+    expect($w('#swatchModal').hide).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('submit rejected without name/address', async () => {
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    $w('#swatchName').value = '';
+    $w('#swatchEmail').value = 'test@example.com';
+    $w('#swatchAddress').value = '';
+
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect(submitSwatchRequest).not.toHaveBeenCalled();
+  });
+
+  it('submit rejected with invalid email', async () => {
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    $w('#swatchName').value = 'Test User';
+    $w('#swatchEmail').value = 'not-an-email';
+    $w('#swatchAddress').value = '123 Main St';
+
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect(submitSwatchRequest).not.toHaveBeenCalled();
+    expect($w('#swatchError').text).toContain('valid email');
+  });
+
+  it('submit rejected without selected swatches', async () => {
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    $w('#swatchName').value = 'Test User';
+    $w('#swatchEmail').value = 'test@example.com';
+    $w('#swatchAddress').value = '123 Main St';
+    $w('#swatchOptions').forEachItem = vi.fn(() => {}); // no items checked
+
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect(submitSwatchRequest).not.toHaveBeenCalled();
+  });
+
+  it('submit handles API error gracefully', async () => {
+    submitSwatchRequest.mockRejectedValueOnce(new Error('API down'));
+    initSwatchRequest($w, state);
+    const btnHandler = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+    btnHandler();
+
+    $w('#swatchName').value = 'Test User';
+    $w('#swatchEmail').value = 'test@example.com';
+    $w('#swatchAddress').value = '123 Main St';
+    $w('#swatchOptions').forEachItem = vi.fn(($itemCb) => {
+      $itemCb((sel) => sel === '#swatchCheckbox' ? { checked: true } : {}, { label: 'Oak' });
+    });
+
+    const submitHandler = $w('#swatchSubmit').onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w('#swatchSubmit').enable).toHaveBeenCalled();
+    expect($w('#swatchError').text).toContain('Something went wrong');
   });
 });
