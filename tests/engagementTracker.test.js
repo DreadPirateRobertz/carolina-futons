@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   trackEvent,
   flushEvents,
+  flushEventsSync,
+  _getPendingBeaconEvents,
+  _recoverPendingEvents,
   getFunnelProgress,
   getEngagementScore,
   getSessionSummary,
@@ -13,11 +16,20 @@ import {
   trackQuizComplete,
 } from '../src/public/engagementTracker.js';
 
-// Reset session storage between tests
+const PENDING_EVENTS_KEY = 'cf_pending_events';
+
+// Reset storage between tests
 beforeEach(() => {
   if (typeof sessionStorage !== 'undefined') {
     sessionStorage.clear();
   }
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem(PENDING_EVENTS_KEY);
+  }
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 // ── trackEvent ───────────────────────────────────────────────────────
@@ -136,5 +148,102 @@ describe('event helper functions', () => {
 
   it('trackQuizComplete does not throw', () => {
     expect(() => trackQuizComplete({ room: 'living' }, 3)).not.toThrow();
+  });
+});
+
+// ── flushEventsSync (sendBeacon) ────────────────────────────────────
+
+describe('flushEventsSync', () => {
+  it('does not throw when event queue is empty', () => {
+    expect(() => flushEventsSync()).not.toThrow();
+  });
+
+  it('uses navigator.sendBeacon when available', () => {
+    const sendBeacon = vi.fn(() => true);
+    vi.stubGlobal('navigator', { sendBeacon });
+
+    trackEvent('product_view', { productId: 'p1', productName: 'Test', category: 'frames' });
+    flushEventsSync();
+
+    expect(sendBeacon).toHaveBeenCalledTimes(1);
+    const [url, data] = sendBeacon.mock.calls[0];
+    expect(url).toContain('trackEvents');
+    const blob = data;
+    expect(blob).toBeInstanceOf(Blob);
+  });
+
+  it('saves events to localStorage as fallback when sendBeacon is unavailable', () => {
+    vi.stubGlobal('navigator', {});
+
+    trackEvent('add_to_cart', { productId: 'p2' });
+    flushEventsSync();
+
+    const stored = JSON.parse(localStorage.getItem(PENDING_EVENTS_KEY));
+    expect(stored).toBeInstanceOf(Array);
+    expect(stored.length).toBeGreaterThan(0);
+    expect(stored[0].type).toBe('add_to_cart');
+  });
+
+  it('saves events to localStorage when sendBeacon returns false', () => {
+    const sendBeacon = vi.fn(() => false);
+    vi.stubGlobal('navigator', { sendBeacon });
+
+    trackEvent('checkout_start', { cartTotal: 500 });
+    flushEventsSync();
+
+    const stored = JSON.parse(localStorage.getItem(PENDING_EVENTS_KEY));
+    expect(stored).toBeInstanceOf(Array);
+    expect(stored.length).toBeGreaterThan(0);
+  });
+
+  it('clears the event queue after flushing', () => {
+    vi.stubGlobal('navigator', { sendBeacon: vi.fn(() => true) });
+
+    trackEvent('page_view', {});
+    trackEvent('product_view', { productId: 'p1' });
+    flushEventsSync();
+
+    // Queue should be empty — second sync flush should be a no-op
+    const sendBeacon = vi.fn(() => true);
+    vi.stubGlobal('navigator', { sendBeacon });
+    flushEventsSync();
+    expect(sendBeacon).not.toHaveBeenCalled();
+  });
+});
+
+// ── Pending event recovery ──────────────────────────────────────────
+
+describe('pending event recovery', () => {
+  it('_getPendingBeaconEvents returns empty array when no pending events', () => {
+    expect(_getPendingBeaconEvents()).toEqual([]);
+  });
+
+  it('_getPendingBeaconEvents returns saved events from localStorage', () => {
+    const events = [
+      { type: 'product_view', data: { productId: 'p1' }, timestamp: Date.now(), page: '/' },
+    ];
+    localStorage.setItem(PENDING_EVENTS_KEY, JSON.stringify(events));
+    expect(_getPendingBeaconEvents()).toEqual(events);
+  });
+
+  it('_getPendingBeaconEvents handles corrupted localStorage gracefully', () => {
+    localStorage.setItem(PENDING_EVENTS_KEY, 'not-json{{{');
+    expect(_getPendingBeaconEvents()).toEqual([]);
+  });
+
+  it('_recoverPendingEvents re-queues saved events and clears localStorage', async () => {
+    const events = [
+      { type: 'product_view', data: { productId: 'p1', productName: 'Test', category: 'cat' }, timestamp: Date.now(), page: '/' },
+    ];
+    localStorage.setItem(PENDING_EVENTS_KEY, JSON.stringify(events));
+
+    await _recoverPendingEvents();
+
+    // localStorage should be cleared after recovery
+    expect(localStorage.getItem(PENDING_EVENTS_KEY)).toBeNull();
+  });
+
+  it('_recoverPendingEvents does not throw when localStorage is empty', async () => {
+    await expect(_recoverPendingEvents()).resolves.not.toThrow();
   });
 });
