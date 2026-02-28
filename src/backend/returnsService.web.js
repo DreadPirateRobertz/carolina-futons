@@ -738,6 +738,14 @@ export const processRefund = webMethod(
         return { success: false, error: 'Cannot refund a denied return.' };
       }
 
+      const order = await wixData.get('Stores/Orders', record.orderId);
+      if (!order) return { success: false, error: 'Original order not found.' };
+
+      const orderTotal = order.totals?.total || 0;
+      if (refundAmount > orderTotal) {
+        return { success: false, error: `Refund amount exceeds order total ($${orderTotal}).` };
+      }
+
       record.status = 'refunded';
       record.refundAmount = refundAmount;
       if (notes) record.adminNotes = sanitize(notes, 2000);
