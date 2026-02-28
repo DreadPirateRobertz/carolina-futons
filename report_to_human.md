@@ -89,4 +89,18 @@ Deliverable: Competitive analysis + specific design recommendations for Carolina
 
 ---
 
+---
+
+## radahn Session Report (2026-02-28 01:15-01:30 UTC)
+
+### Completed
+- **CF-d7dr (P1): Focus trapping on modal dialogs** — PR #57, merged
+  - Rewrote `createFocusTrap` with active Tab/Shift+Tab keyboard trapping
+  - Fixed `setupAccessibleDialog`: save/restore focus, proper Escape cleanup
+  - 12 new tests, 97/97 a11yHelpers tests green
+- **PR Reviews (#49, #50, #51)**: All already merged before review — reported to melania
+
+### Next
+- Awaiting melania's next assignment from ready queue
+
 *PM: melania | cfutons GREEN | 0 PRs open | 4,436 tests passing | Weekend hookup READY*
