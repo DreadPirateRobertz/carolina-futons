@@ -133,6 +133,7 @@ export async function submitRequest(formData) {
  */
 export async function initSwatchRequestFlow($w, state) {
   try {
+    clearSelectedSwatches();
     const section = $w('#swatchRequestSection');
     if (!state?.product) {
       try { section.collapse(); } catch (e) {}

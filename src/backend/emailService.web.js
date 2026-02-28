@@ -20,7 +20,7 @@
  *    orderNumber, customerName, total, itemCount.
  */
 import { Permissions, webMethod } from 'wix-web-module';
-import { triggeredEmails } from 'wix-crm-backend';
+import { triggeredEmails, contacts } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
@@ -160,6 +160,30 @@ export const submitSwatchRequest = webMethod(
           },
         }
       );
+
+      // Send customer confirmation email (best-effort — don't fail the request if this fails)
+      try {
+        const contactResult = await contacts.queryContacts()
+          .eq('primaryInfo.email', cleanEmail)
+          .limit(1)
+          .find();
+        if (contactResult.items.length > 0) {
+          await triggeredEmails.emailContact(
+            'swatch_confirmation',
+            contactResult.items[0]._id,
+            {
+              variables: {
+                customerName: cleanName,
+                productName: cleanProductName,
+                swatchList: cleanSwatches.join(', '),
+                estimatedArrival: '5-7 business days',
+              },
+            }
+          );
+        }
+      } catch (confirmErr) {
+        console.error('Swatch confirmation email failed (non-blocking):', confirmErr);
+      }
 
       return { success: true };
     } catch (err) {
