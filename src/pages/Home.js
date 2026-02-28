@@ -51,6 +51,7 @@ $w.onReady(async function () {
     { name: 'videoShowcase', init: initVideoShowcase },
     { name: 'quizCTA', init: initQuizCTA },
     { name: 'featuredQuickView', init: initFeaturedQuickView },
+    { name: 'swatchPromo', init: initSwatchPromo },
     { name: 'newsletter', init: initNewsletterSection },
     { name: 'ridgeline', init: initRidgelineHeader },
   ];
@@ -687,6 +688,36 @@ async function injectHomeSchemas() {
     }
   } catch (e) {
     console.error('[Home] Schema injection failed:', e);
+  }
+}
+
+// ── Swatch Promo Section ─────────────────────────────────────────────
+
+/**
+ * Initialize the "700+ Free Fabric Swatches" promotion section.
+ * CTA navigates to /free-swatches landing page.
+ */
+function initSwatchPromo() {
+  try {
+    const section = $w('#swatchPromoSection');
+    if (!section) return;
+
+    try { $w('#swatchPromoTitle').text = '700+ Free Fabric Swatches'; } catch (e) {}
+    try {
+      $w('#swatchPromoSubtitle').text =
+        'Feel the quality before you buy — we\'ll ship up to 6 swatches to your door, free.';
+    } catch (e) {}
+
+    try {
+      $w('#swatchPromoCTA').onClick(() => {
+        import('wix-location-frontend').then(({ to }) => to('/free-swatches'));
+      });
+      try { $w('#swatchPromoCTA').accessibility.ariaLabel = 'Request free fabric swatches'; } catch (e) {}
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Swatch promo section is optional
   }
 }
 

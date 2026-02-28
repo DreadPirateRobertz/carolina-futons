@@ -663,6 +663,7 @@ describe('Navigation Helpers', () => {
       expect(ids).toContain('#navFAQ');
       expect(ids).toContain('#navAbout');
       expect(ids).toContain('#navBlog');
+      expect(ids).toContain('#navFreeSwatches');
     });
 
     it('every nav link has path and label', () => {
@@ -670,6 +671,11 @@ describe('Navigation Helpers', () => {
         expect(config.path).toBeTruthy();
         expect(config.label).toBeTruthy();
       });
+    });
+
+    it('Free Swatches nav link points to /free-swatches', () => {
+      expect(NAV_LINKS['#navFreeSwatches'].path).toBe('/free-swatches');
+      expect(NAV_LINKS['#navFreeSwatches'].label).toBe('Free Swatches');
     });
   });
 
@@ -688,6 +694,15 @@ describe('Navigation Helpers', () => {
           expect(item.path).toBeTruthy();
         });
       });
+    });
+
+    it('includes Free Swatches in More group', () => {
+      const moreGroup = MEGA_MENU_CATEGORIES.find(g => g.title === 'More');
+      expect(moreGroup).toBeTruthy();
+      const swatchItem = moreGroup.items.find(i => i.label === 'Free Swatches');
+      expect(swatchItem).toBeTruthy();
+      expect(swatchItem.path).toBe('/free-swatches');
+      expect(swatchItem.id).toBe('#navFreeSwatches');
     });
   });
 });
