@@ -1,88 +1,62 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 15:00 UTC (melania)
+**Last Updated:** 2026-02-28 09:55 MST (melania)
 
 ---
 
 ## PRIORITY: Frontend Design Sprint — Making the Site Sleek
 
-**Goal:** Transform carolinafutons.com from amateur to competitor-grade. Visual audit against 10 top competitors (Castlery, Article, Floyd, Joybird, West Elm, Room&Board, Burrow, Interior Define, The Futon Shop, Futonland) identified critical gaps.
+**Goal:** Transform carolinafutons.com from amateur to competitor-grade. Visual audit against 10 top competitors complete (COMPETITIVE-DESIGN-REFERENCE.md).
 
-### P0 Design Beads — Active (assigned, crew working)
+### Recently Merged
 
-| Bead | Story | Assigned | Status |
-|------|-------|----------|--------|
-| CF-a1ps | **Kill pink-lavender background** — apply brand palette to all pages | rennala | IN PROGRESS |
-| CF-bbms | **Homepage hero overhaul** — kill heart bubbles, full-bleed lifestyle hero | godfrey | IN PROGRESS |
-| CF-c94m | **Announcement bar + trust bar** — top-of-page social proof strip | radahn | IN PROGRESS |
+| PR | Bead | Story | Author |
+|----|------|-------|--------|
+| #73 | CF-a1ps | Kill pink-lavender — brand palette fix | rennala |
+| #75 | CF-c94m | Announcement bar + 5-icon trust bar | radahn |
+| #77 | CF-b0sr | Category showcase — lifestyle cards | rennala |
 
-### P1 Design Beads — Active
+### Open PRs (All Reviewed, Crew Fixing)
 
-| Bead | Story | Assigned | Status |
-|------|-------|----------|--------|
-| CF-dgiy | **Product card grid with info** — replace image dump on homepage | miquella | IN PROGRESS |
+| PR | Bead | Story | Author | Status |
+|----|------|-------|--------|--------|
+| #78 | CF-a1ps | offWhite token + bundleBuilder badge fix | rennala | NEEDS FIX — .beads backup corrupted + rebase |
+| #79 | CF-dgiy | Product card grid + color swatches + Quick View | miquella | APPROVED — rebase needed |
+| #80 | CF-bbms | Homepage hero — full-bleed lifestyle + overlay | godfrey | NEEDS FIX — remove stray recentlyViewed files + rebase |
 
-### P1 Design Beads — Ready (unassigned)
+---
+
+## Crew Assignments
+
+| Member | Current Work | Next Up | Status |
+|--------|-------------|---------|--------|
+| **melania** | PM — PR reviews, coordination | — | Active |
+| **godfrey** | CF-bbms hero overhaul (PR #80) | — | Fixing PR |
+| **miquella** | CF-dgiy product cards (PR #79) | CF-ist financing calculator | Rebasing |
+| **rennala** | CF-a1ps follow-up (PR #78) | CF-isru product page modernization | Fixing PR |
+| **radahn** | CF-dth self-service returns | — | In progress |
+
+All crew mailed with specific fix instructions.
+
+---
+
+## Ready Queue (P1)
 
 | Bead | Story |
 |------|-------|
-| CF-isru | Product page modernization — accordion, reviews, related products |
-| CF-b0sr | Category showcase — lifestyle cards for Shop by Category |
+| CF-vqya | Free Swatch Kit CTA — prominent site-wide promotion |
+| CF-murg | Email capture popup — exit-intent + welcome discount |
 | CF-x8pd | Lifestyle product photography — room-staged shots |
 
-### P2 Design Beads — Ready
-
-| Bead | Story |
-|------|-------|
-| CF-8gzd | Footer redesign — columns, newsletter, social proof |
-| CF-y8je | Swatch kit CTA + free swatches promotion |
-
 ---
 
-## Session Summary (2026-02-28 08:53–15:00 UTC)
+## Bead Housekeeping (This Session)
 
-### PRs Merged This Session (5)
-
-| PR | Author | Bead | Story |
-|----|--------|------|-------|
-| #65 | rennala | CF-xai7 | Live chat proactive triggers (38 tests) |
-| #66 | radahn | CF-jl8u | Product Page UX — comfort cards, gallery, sticky CTA |
-| #69 | miquella | CF-ynwm | Category filtering — faceted nav, compare, quick view (46 tests) |
-| #71 | rennala | CF-xai7 | Review fixes — SPA nav, role=alert, cleanup wiring (6 new tests) |
-| #72 | godfrey | CF-5js | WCAG page-level audit endpoint (11 tests) |
-
-### PRs Closed
-
-| PR | Reason |
-|----|--------|
-| #68 | Beads backup data contamination (8000+ lines of .beads/backup/ committed) |
-
-### Beads Closed This Session (4)
-
-- CF-xai7: Live chat proactive triggers
-- CF-jl8u: Product Page UX
-- CF-ynwm: Category filtering UX
-- CF-pmkr: Customer reviews (already fully implemented — 5 test files, 1892 lines)
-
----
-
-## Current Crew Assignments
-
-| Member | Bead | Priority | Work |
-|--------|------|----------|------|
-| **rennala** | CF-a1ps | P0 | Kill pink-lavender background — brand palette everywhere |
-| **godfrey** | CF-bbms | P0 | Homepage hero overhaul — kill heart bubbles |
-| **radahn** | CF-c94m | P0 | Announcement bar + trust bar — social proof strip |
-| **miquella** | CF-dgiy | P1 | Product card grid with info |
-| **melania** | PM | — | PR reviews, bead coordination, design sprint management |
-
-All crew mailed and nudged with assignments.
-
----
-
-## Open PRs
-
-None currently open. All reviewed and merged or closed.
+- Closed CF-b0sr (merged PR #77 but bead left open)
+- Closed CF-v6q3 P0 bug (pre-commit hook — `bd hooks run` works now)
+- Closed 3 stale template beads (cf-4tty, cf-bivz, cf-kuxh)
+- Reset CF-p03z to open (was in_progress with no work)
+- Dallas (cfutons_mobile) replied re: AR Camera design alignment — sent shared design tokens
 
 ---
 
@@ -92,8 +66,9 @@ None currently open. All reviewed and merged or closed.
 |-------|-------|-----|
 | Sand | #E8D5B7 | Backgrounds, secondary |
 | Espresso | #3A2518 | Text, headers |
-| Mountain Blue | #5B8FA8 | Accents, links, headers |
+| Mountain Blue | #5B8FA8 | Accents, links |
 | Coral | #E8845C | CTAs, highlights |
+| offWhite | #FAF7F2 | Product areas, clean sections |
 
 ---
 
@@ -102,8 +77,8 @@ None currently open. All reviewed and merged or closed.
 | Checkpoint | Tests | Files |
 |------------|-------|-------|
 | Feb 21 start | 2,394 | 70 |
-| Feb 28 current | **5,100+** | **137+** |
+| Feb 28 current | **5,300+** | **137+** |
 
 ---
 
-*PM: melania | cfutons GREEN | 0 PRs open | All crew on design sprint | Next: review incoming P0 design PRs*
+*PM: melania | cfutons GREEN | 3 PRs open (reviewed, crew fixing) | All crew active | Next: merge PRs as crew rebases*
