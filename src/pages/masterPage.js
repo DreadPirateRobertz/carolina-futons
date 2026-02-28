@@ -1,6 +1,6 @@
 // masterPage.js - Global site code
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
-// and side cart auto-open on add-to-cart
+// mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
@@ -12,6 +12,16 @@ import { fireCustomEvent } from 'public/ga4Tracking';
 import { typography } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
+import {
+  applyActiveNavState,
+  initMegaMenu,
+  initMobileDrawer,
+  initAnnouncementBar as initAnnouncementBarHelper,
+  initBackToTop as initBackToTopHelper,
+  initStickyNav,
+  breadcrumbsFromPath,
+  renderBreadcrumbs,
+} from 'public/navigationHelpers';
 
 let _previousCartItemCount = null;
 let _lastFocusedBeforeOverlay = null;
@@ -20,6 +30,7 @@ $w.onReady(async function () {
   captureInstallPrompt();
   initAccessibility();
   initNavigation();
+  initEnhancedNavigation();
   initAnnouncementBar();
   initSearch();
   initSideCartAutoOpen();
@@ -167,6 +178,33 @@ function initNavigation() {
   } catch (e) {
     // Mobile elements may not exist
   }
+}
+
+// ── Enhanced Navigation (Mega Menu, Breadcrumbs, Back-to-Top, Sticky) ──
+
+function initEnhancedNavigation() {
+  const currentPath = '/' + (wixLocationFrontend.path || []).join('/');
+
+  // Active page indicator with Mountain Blue styling
+  try { applyActiveNavState($w, currentPath); } catch (e) {}
+
+  // Mega menu for desktop shop dropdown
+  try { initMegaMenu($w); } catch (e) {}
+
+  // Mobile drawer with focus trap and accessible close
+  try { initMobileDrawer($w); } catch (e) {}
+
+  // Breadcrumbs with schema.org JSON-LD
+  try {
+    const crumbs = breadcrumbsFromPath(currentPath);
+    renderBreadcrumbs($w, crumbs);
+  } catch (e) {}
+
+  // Back-to-top button
+  try { initBackToTopHelper($w); } catch (e) {}
+
+  // Sticky nav shadow on scroll
+  try { initStickyNav($w); } catch (e) {}
 }
 
 // ── Announcement Bar ────────────────────────────────────────────────
