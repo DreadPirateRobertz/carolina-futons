@@ -1067,10 +1067,13 @@ function updateUrlWithFilters(filters) {
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
       .join('&');
 
-    // Update URL without page reload
+    // Update URL without page reload using pushState (not wixLocationFrontend.to which navigates)
     try {
-      const base = wixLocationFrontend.baseUrl + '/' + (wixLocationFrontend.path?.[0] || '');
-      wixLocationFrontend.to(queryString ? `${base}?${queryString}` : base);
+      if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+        const path = '/' + (wixLocationFrontend.path?.[0] || '');
+        const newUrl = queryString ? `${path}?${queryString}` : path;
+        window.history.pushState({ filters }, '', newUrl);
+      }
     } catch (e) {
       // URL update is best-effort; don't break filters if it fails
     }
