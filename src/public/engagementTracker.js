@@ -18,8 +18,13 @@ const FLUSH_INTERVAL = 5000; // 5s batch window
  * @param {Object} [data={}] - Event-specific data
  */
 export function trackEvent(eventType, data = {}) {
+  if (!eventType || typeof eventType !== 'string') return;
+  // Sanitize: only allow alphanumeric, underscores, hyphens
+  const sanitized = eventType.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!sanitized) return;
+
   _eventQueue.push({
-    type: eventType,
+    type: sanitized,
     data,
     timestamp: Date.now(),
     page: _getCurrentPage(),

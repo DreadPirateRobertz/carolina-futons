@@ -25,6 +25,8 @@ function setCache(cache) {
  */
 export function cacheProduct(product) {
   if (!product || !product.slug) return;
+  // Validate slug: only allow lowercase alphanumeric, hyphens
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(product.slug)) return;
 
   const cache = getCache();
   cache[product.slug] = {

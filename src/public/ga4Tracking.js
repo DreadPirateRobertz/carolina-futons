@@ -112,10 +112,15 @@ export async function fireAddToWishlist(product) {
  */
 export async function fireCustomEvent(eventName, params = {}) {
   try {
+    if (!eventName || typeof eventName !== 'string') return;
+    // Sanitize event name: only alphanumeric and underscores
+    const sanitized = eventName.replace(/[^a-zA-Z0-9_]/g, '');
+    if (!sanitized) return;
+
     const ww = await getWixWindow();
     if (!ww?.trackEvent) return;
     ww.trackEvent('CustomEvent', {
-      event: eventName,
+      event: sanitized,
       ...params,
     });
   } catch (e) {}
