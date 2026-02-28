@@ -1,5 +1,27 @@
 # Mayor Town Status Report
 
+## 2026-02-28 02:12 MST — 5 Convoys, Standing Orders Issued
+
+**5 convoys active. Fork-PR-only standing order issued to all gastown. 3 dupes closed.**
+
+### All Convoys
+| # | Convoy | ID | Issues | Progress |
+|---|--------|-----|--------|----------|
+| 1 | cfutons Frontend Sprint | hq-cv-1ghmy | 9 | 0/9 (8 in-progress) |
+| 2 | cfutons P2 Features | hq-cv-9fyx6 | 4 | 0/4 (all in-progress) |
+| 3 | Gastown P1 Bug Blitz | hq-cv-epfrr | 6 | 1/6 (gt-dv4 done) |
+| 4 | Gastown Infra & PR Reviews | hq-cv-v2ea2 | 5 | 0/5 |
+| 5 | Gastown CI Failures | hq-cv-oujgr | 8 | 0/8 |
+
+### Standing Orders
+- **steveyegge/gastown: Fork PRs ONLY.** No push, no merge. Permanent. All crew notified.
+- Token auditor: miquella (cfutons). Batch reports, squash 1-commit PRs.
+
+### Duplicates Closed This Session
+- gt-y2l (dupe of gt-g6q), gt-7a5 (dupe of gt-vp5), gt-9l8 (dupe of gt-av7)
+
+---
+
 ## 2026-02-28 02:05 MST — Full Production, Convoys Launched
 
 **3 convoys created, 3 polecats dispatched, all crew assigned.**
