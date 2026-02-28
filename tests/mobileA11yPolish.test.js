@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateEmail, validateDimension } from '../src/public/validators.js';
+import { makeClickable } from '../src/public/a11yHelpers.js';
 
 // ── validators.js email edge cases ──────────────────────────────────────
 
@@ -75,7 +76,6 @@ describe('ARIA spinbutton role requirements', () => {
 describe('Keyboard navigation requirements', () => {
   it('makeClickable adds Enter/Space handlers + tabIndex', () => {
     // Integration test — just verify the pattern exists
-    const { makeClickable } = require('../src/public/a11yHelpers.js');
     expect(typeof makeClickable).toBe('function');
   });
 });
