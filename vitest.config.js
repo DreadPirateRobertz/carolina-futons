@@ -166,6 +166,10 @@ export default defineConfig({
       'public/exitIntentCapture.js': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
       'public/exitIntentCapture': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
       'backend/newsletterService.web': path.resolve(__dirname, 'src/backend/newsletterService.web.js'),
+      'public/checkoutProgress.js': path.resolve(__dirname, 'src/public/checkoutProgress.js'),
+      'public/checkoutProgress': path.resolve(__dirname, 'src/public/checkoutProgress.js'),
+      'public/checkoutValidation.js': path.resolve(__dirname, 'src/public/checkoutValidation.js'),
+      'public/checkoutValidation': path.resolve(__dirname, 'src/public/checkoutValidation.js'),
     },
   },
 });
