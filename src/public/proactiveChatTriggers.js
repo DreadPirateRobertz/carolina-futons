@@ -49,8 +49,8 @@ let _state = {
  * @param {boolean} [options.isOnline=true] - Whether chat agents are currently online
  */
 export function initProactiveTriggers($w, options = {}) {
-  // Prevent double-init
-  if (_state.initialized) return;
+  // Clean up any previous init (SPA navigation — page changed but same session)
+  cleanupProactiveTriggers();
 
   const { page, delayMs, isOnline = true } = options;
 
@@ -73,7 +73,8 @@ export function initProactiveTriggers($w, options = {}) {
   // Check eligibility before scheduling
   if (!shouldShowTrigger(page)) return;
 
-  const delay = delayMs ?? DEFAULT_DELAYS[page];
+  const rawDelay = delayMs ?? DEFAULT_DELAYS[page];
+  const delay = typeof rawDelay === 'number' && rawDelay >= 0 ? rawDelay : DEFAULT_DELAYS[page];
 
   _state.timerId = setTimeout(() => {
     _showBubble($w, page, isOnline);
@@ -175,7 +176,6 @@ function _showBubble($w, page, isOnline) {
     try {
       const bubble = $w('#proactiveBubble');
       bubble.text = message;
-      bubble.accessibility.role = 'alert';
       bubble.show();
     } catch (e) {
       return; // bubble element missing — silently bail
@@ -192,6 +192,7 @@ function _showBubble($w, page, isOnline) {
 function _setAriaLabels($w) {
   try {
     $w('#proactiveBubble').accessibility.ariaLabel = 'Chat with us — click to open live chat';
+    $w('#proactiveBubble').accessibility.role = 'alert';
   } catch (e) {}
   try {
     $w('#proactiveDismissBtn').accessibility.ariaLabel = 'Dismiss chat prompt';
