@@ -152,6 +152,73 @@ describe('scheduleDelivery', () => {
     const result = await scheduleDelivery(null);
     expect(result.success).toBe(false);
   });
+
+  it('rejects past dates', async () => {
+    const result = await scheduleDelivery({
+      orderId: 'order-past',
+      date: '2020-01-15',
+      timeWindow: 'morning',
+      type: 'standard',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('future');
+  });
+
+  it('rejects non-delivery days (Sunday)', async () => {
+    const nextSun = getNextDayOfWeek(0); // Sunday
+    const dateStr = nextSun.toISOString().split('T')[0];
+    const result = await scheduleDelivery({
+      orderId: 'order-sun',
+      date: dateStr,
+      timeWindow: 'morning',
+      type: 'standard',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Wednesday through Saturday');
+  });
+
+  it('rejects non-delivery days (Monday)', async () => {
+    const nextMon = getNextDayOfWeek(1); // Monday
+    const dateStr = nextMon.toISOString().split('T')[0];
+    const result = await scheduleDelivery({
+      orderId: 'order-mon',
+      date: dateStr,
+      timeWindow: 'afternoon',
+      type: 'standard',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Wednesday through Saturday');
+  });
+
+  it('rejects dates beyond booking window (>21 days)', async () => {
+    const farFuture = new Date();
+    farFuture.setDate(farFuture.getDate() + 60);
+    // Ensure it's a Wed-Sat so only the window check fails
+    while (![3, 4, 5, 6].includes(farFuture.getDay())) {
+      farFuture.setDate(farFuture.getDate() + 1);
+    }
+    const dateStr = farFuture.toISOString().split('T')[0];
+    const result = await scheduleDelivery({
+      orderId: 'order-far',
+      date: dateStr,
+      timeWindow: 'morning',
+      type: 'standard',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('21 days');
+  });
+
+  it('accepts valid future Wed-Sat date', async () => {
+    const nextThu = getNextDayOfWeek(4); // Thursday
+    const dateStr = nextThu.toISOString().split('T')[0];
+    const result = await scheduleDelivery({
+      orderId: 'order-thu',
+      date: dateStr,
+      timeWindow: 'afternoon',
+      type: 'white_glove',
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 // ── getMyDeliverySchedule ────────────────────────────────────────────

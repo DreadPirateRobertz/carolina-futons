@@ -134,6 +134,26 @@ export const scheduleDelivery = webMethod(
         return { success: false, message: 'Invalid date format' };
       }
 
+      // Validate date is a delivery day (Wed-Sat)
+      const dateObj = new Date(date + 'T12:00:00');
+      if (!DELIVERY_DAYS.includes(dateObj.getDay())) {
+        return { success: false, message: 'Deliveries are only available Wednesday through Saturday' };
+      }
+
+      // Validate date is in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (dateObj <= today) {
+        return { success: false, message: 'Delivery date must be in the future' };
+      }
+
+      // Validate date is within booking window
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + BOOKING_WINDOW_DAYS);
+      if (dateObj > maxDate) {
+        return { success: false, message: `Deliveries can only be scheduled up to ${BOOKING_WINDOW_DAYS} days in advance` };
+      }
+
       // Check for existing schedule for this order
       const existing = await wixData.query('DeliverySchedule')
         .eq('orderId', orderId)
