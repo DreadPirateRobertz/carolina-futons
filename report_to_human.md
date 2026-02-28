@@ -1,36 +1,40 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 10:15 MST (melania)
+**Last Updated:** 2026-02-28 13:45 MST (melania)
 
 ---
 
-## Session Update — 2026-02-28 10:15 MST
+## Session Update — 2026-02-28 13:45 MST
 
-### PRs Merged This Session
+### Actions This Session
 
-| PR | Bead | Story | Author |
-|----|------|-------|--------|
-| #78 | CF-a1ps | offWhite token + bundleBuilder badge fix (palette cleanup) | rennala |
-| #79 | CF-dgiy | Product card grid + color swatches + Quick View modal | miquella |
-| #80 | CF-bbms | Homepage hero — full-bleed lifestyle photo + overlay | godfrey |
-| #81 | CF-isru | Product page modernization — zip delivery estimate + swatch CTA | rennala |
+**Mobile (cfutons_mobile):**
+- Merged PR #26 (cm-a7m stores refactor) — clean
+- Closed PR #23 (superseded by #25)
+- PRs #22, #24, #25 have merge conflicts — duplicate hook files from pre-#19/#20 base. Mailed + nudged dallas to rebase.
 
-**4 PRs merged, 4 beads closed.** All P0 frontend items complete.
-
-### Created This Session
-
-- **DESIGN-SYSTEM.md** — Formal cross-platform design system. Colors, typography, spacing, component specs, mobile mapping. Sent to dallas (mobile) for web/app alignment.
-- Mailed dallas full token specs, product card pattern, and interaction mapping (web hover → mobile press).
+**cfutons:** All 5 PRs from last session already merged and beads closed. No open PRs.
 
 ### Crew Status Right Now
 
-| Member | Status | Current/Next |
-|--------|--------|-------------|
-| **melania** | Active | PM — gap analysis, design system, crew coordination |
-| **godfrey** | Handoff pending | CF-bbms merged → cycling session |
-| **miquella** | Handoff pending | CF-dgiy merged → CF-ist financing next |
-| **rennala** | Handoff pending | CF-isru merged → cycling session |
-| **radahn** | Active | CF-murg email capture popup (brainstorming) |
+| Member | Bead | Story | Status |
+|--------|------|-------|--------|
+| **radahn** | CF-76b1 (P1) | Footer redesign — 4-column links, newsletter, social, trust badges | In progress |
+| **godfrey** | CF-5ggk (P2) | Live chat widget — Gorgias/Tidio integration | In progress |
+| **rennala** | CF-y8je (P2) | Swatch kit CTA + free swatches promotion | In progress |
+| **miquella** | cf-ist (P2) | Financing calculator + BNPL display | In progress |
+
+All 4 crew assigned and working. No open PRs yet — expecting PRs soon.
+
+### Mobile (cfutons_mobile)
+
+| Member | Status | Notes |
+|--------|--------|-------|
+| **dallas** | Active | PR #26 merged. PRs #22, #24, #25 need rebase (conflict with merged hooks). Nudged. |
+
+### Ready Queue (cfutons)
+- CF-x8pd (P1): Lifestyle product photography
+- CF-p03z (P2): Product size/dimension guide with room fit visualization
 
 ---
 
