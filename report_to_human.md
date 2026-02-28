@@ -103,4 +103,20 @@ Deliverable: Competitive analysis + specific design recommendations for Carolina
 ### Next
 - Awaiting melania's next assignment from ready queue
 
+---
+
+## Rennala Session Report — 2026-02-27 18:15 MST
+
+### Completed
+- **CF-wy0m (P1)**: Fixed memory leaks — event listeners cleaned up on SPA navigation. PR #55 merged.
+  - Files: ProductGallery.js, galleryHelpers.js, LiveChat.js, socialProofToast.js
+  - 10 new tests, all passing
+- **PR Reviews**: Reviewed #45, #46, #47, #48 per melania's assignment
+  - #47, #48: Approved (quality gate pass)
+  - #45: Changes requested (no tests)
+  - #46: Changes requested (off-by-one bug on day 21 booking boundary)
+
+### Next
+- Available for next assignment from ready queue
+
 *PM: melania | cfutons GREEN | 0 PRs open | 4,436 tests passing | Weekend hookup READY*
