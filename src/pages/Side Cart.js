@@ -15,6 +15,8 @@ import {
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 
 let currentSideSugProduct = null;
+let _legacySugHandlerRegistered = false;
+let _repeaterInitialized = false;
 
 $w.onReady(function () {
   initSideCart();
@@ -271,44 +273,48 @@ async function loadSideCartSuggestions(lineItems) {
     const sugRepeater = $w('#sideSugRepeater');
     if (sugRepeater) {
       const products = topSuggestion.products.slice(0, 3);
+
+      // Register onItemReady ONCE to prevent handler accumulation (CF-1b86)
+      if (!_repeaterInitialized) {
+        _repeaterInitialized = true;
+        sugRepeater.onItemReady(($item, product) => {
+          try { $item('#sideSugImage').src = product.mainMedia; } catch (e) {}
+          try { $item('#sideSugImage').alt = `${product.name} - add to cart`; } catch (e) {}
+          try { $item('#sideSugName').text = product.name; } catch (e) {}
+          try { $item('#sideSugPrice').text = product.formattedPrice; } catch (e) {}
+
+          try {
+            $item('#sideSugAdd').onClick(async () => {
+              try {
+                $item('#sideSugAdd').disable();
+                $item('#sideSugAdd').label = 'Adding...';
+                await addToCart(product._id);
+                $item('#sideSugAdd').label = 'Added!';
+              } catch (err) {
+                console.error('Error adding suggestion:', err);
+                $item('#sideSugAdd').label = 'Error';
+                $item('#sideSugAdd').enable();
+              }
+            });
+          } catch (e) {}
+
+          // Click image/name to navigate to product
+          const navigate = () => {
+            import('wix-location-frontend').then(({ to }) => {
+              to(`/product-page/${product.slug}`);
+            });
+          };
+          try { makeClickable($item('#sideSugImage'), navigate, { ariaLabel: `View ${product.name}` }); } catch (e) {}
+          try { makeClickable($item('#sideSugName'), navigate, { ariaLabel: `View ${product.name} details` }); } catch (e) {}
+        });
+      }
+
       sugRepeater.data = products.map(p => ({ ...p, _id: p._id }));
-
-      sugRepeater.onItemReady(($item, product) => {
-        try { $item('#sideSugImage').src = product.mainMedia; } catch (e) {}
-        try { $item('#sideSugImage').alt = `${product.name} - add to cart`; } catch (e) {}
-        try { $item('#sideSugName').text = product.name; } catch (e) {}
-        try { $item('#sideSugPrice').text = product.formattedPrice; } catch (e) {}
-
-        try {
-          $item('#sideSugAdd').onClick(async () => {
-            try {
-              $item('#sideSugAdd').disable();
-              $item('#sideSugAdd').label = 'Adding...';
-              await addToCart(product._id);
-              $item('#sideSugAdd').label = 'Added!';
-            } catch (err) {
-              console.error('Error adding suggestion:', err);
-              $item('#sideSugAdd').label = 'Error';
-              $item('#sideSugAdd').enable();
-            }
-          });
-        } catch (e) {}
-
-        // Click image/name to navigate to product
-        const navigate = () => {
-          import('wix-location-frontend').then(({ to }) => {
-            to(`/product-page/${product.slug}`);
-          });
-        };
-        try { makeClickable($item('#sideSugImage'), navigate, { ariaLabel: `View ${product.name}` }); } catch (e) {}
-        try { makeClickable($item('#sideSugName'), navigate, { ariaLabel: `View ${product.name} details` }); } catch (e) {}
-      });
     } else {
       // Fallback: if no repeater, show single suggestion in legacy elements
       const product = topSuggestion.products[0];
       currentSideSugProduct = product;
       try {
-        currentSideSugProduct = product;
         $w('#sideSugImage').src = product.mainMedia;
         $w('#sideSugName').text = product.name;
         $w('#sideSugPrice').text = product.formattedPrice;
@@ -316,18 +322,22 @@ async function loadSideCartSuggestions(lineItems) {
         $w('#sideSugAdd').label = 'Add to Cart';
         $w('#sideCartSuggestion').expand();
 
-        $w('#sideSugAdd').onClick(async () => {
-          try {
-            $w('#sideSugAdd').disable();
-            $w('#sideSugAdd').label = 'Adding...';
-            await addToCart(product._id);
-            $w('#sideSugAdd').label = 'Added!';
-          } catch (err) {
-            console.error('Error adding suggestion:', err);
-            $w('#sideSugAdd').label = 'Error';
-            $w('#sideSugAdd').enable();
-          }
-        });
+        // Register onClick ONCE to prevent handler accumulation (CF-1b86)
+        if (!_legacySugHandlerRegistered) {
+          _legacySugHandlerRegistered = true;
+          $w('#sideSugAdd').onClick(async () => {
+            try {
+              $w('#sideSugAdd').disable();
+              $w('#sideSugAdd').label = 'Adding...';
+              await addToCart(currentSideSugProduct._id);
+              $w('#sideSugAdd').label = 'Added!';
+            } catch (err) {
+              console.error('Error adding suggestion:', err);
+              $w('#sideSugAdd').label = 'Error';
+              $w('#sideSugAdd').enable();
+            }
+          });
+        }
       } catch (e) {}
     }
   } catch (e) {}
