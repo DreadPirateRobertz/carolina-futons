@@ -148,6 +148,8 @@ export default defineConfig({
       'public/emptyStates': path.resolve(__dirname, 'src/public/emptyStates.js'),
       'public/ProductFinancing.js': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'public/ProductFinancing': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
+      'public/ProductSizeGuide.js': path.resolve(__dirname, 'src/public/ProductSizeGuide.js'),
+      'public/ProductSizeGuide': path.resolve(__dirname, 'src/public/ProductSizeGuide.js'),
       'public/socialProofToast.js': path.resolve(__dirname, 'src/public/socialProofToast.js'),
       'public/socialProofToast': path.resolve(__dirname, 'src/public/socialProofToast.js'),
       'public/validators.js': path.resolve(__dirname, 'src/public/validators.js'),
