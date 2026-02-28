@@ -52,7 +52,7 @@ export const sendEmail = webMethod(
       const cleanMessage = sanitize(message, 2000);
 
       if (!validateEmail(cleanEmail)) {
-        throw new Error('Invalid email address.');
+        return { success: false, message: 'Invalid email address.' };
       }
 
       // Retrieve the site owner's Wix contact ID from Secrets Manager.
@@ -91,7 +91,7 @@ export const sendEmail = webMethod(
       return { success: true };
     } catch (err) {
       console.error('Error sending contact email:', err);
-      throw new Error('Failed to send message. Please try calling us at (828) 252-9449.');
+      return { success: false, message: 'Failed to send message. Please try calling us at (828) 252-9449.' };
     }
   }
 );
@@ -126,7 +126,7 @@ export const submitSwatchRequest = webMethod(
         : [];
 
       if (!validateEmail(cleanEmail)) {
-        throw new Error('Invalid email address.');
+        return { success: false, message: 'Invalid email address.' };
       }
 
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
@@ -164,7 +164,7 @@ export const submitSwatchRequest = webMethod(
       return { success: true };
     } catch (err) {
       console.error('Error submitting swatch request:', err);
-      throw new Error('Failed to submit swatch request. Please try calling us at (828) 252-9449.');
+      return { success: false, message: 'Failed to submit swatch request. Please try calling us at (828) 252-9449.' };
     }
   }
 );

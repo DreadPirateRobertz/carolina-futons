@@ -33,7 +33,7 @@ export const createWelcomeCoupon = webMethod(
 
       const coupon = await coupons.createCoupon({
         name: `Welcome 10% Off - ${cleanEmail}`,
-        code: generateCode('WELCOME'),
+        code: await generateCode('WELCOME'),
         percentOffRate: 10,
         scope: { namespace: 'stores' },
         minimumSubtotal: 0,
@@ -112,7 +112,7 @@ export const createBirthdayCoupon = webMethod(
 
       const coupon = await coupons.createCoupon({
         name: `Happy Birthday ${name}! 15% Off`,
-        code: generateCode('BDAY'),
+        code: await generateCode('BDAY'),
         percentOffRate: 15,
         scope: { namespace: 'stores' },
         minimumSubtotal: 0,
@@ -158,7 +158,7 @@ export const createTierUpgradeCoupon = webMethod(
 
       const coupon = await coupons.createCoupon({
         name: `${tier} Tier Welcome - ${discount}% Off`,
-        code: generateCode(tier.toUpperCase()),
+        code: await generateCode(tier.toUpperCase()),
         percentOffRate: discount,
         scope: { namespace: 'stores' },
         minimumSubtotal: 0,
@@ -183,10 +183,26 @@ export const createTierUpgradeCoupon = webMethod(
 
 // ── Internal helpers ──────────────────────────────────────────────────
 
-function generateCode(prefix) {
+async function generateCode(prefix) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I/O/0/1 for clarity
+  const maxAttempts = 5;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    let code = prefix + '-';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    // Check for collision with existing coupons
+    try {
+      const existing = await coupons.queryV2().eq('code', code).limit(1).find();
+      if (!existing.items || existing.items.length === 0) return code;
+    } catch (e) {
+      // If query fails, return the code (collision is unlikely with 6 chars from 32-char alphabet)
+      return code;
+    }
+  }
+  // Fallback: extend to 8 chars for extra entropy
   let code = prefix + '-';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;

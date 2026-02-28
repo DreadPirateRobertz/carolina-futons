@@ -95,23 +95,26 @@ describe('sendEmail', () => {
   });
 
   it('rejects invalid email address', async () => {
-    await expect(sendEmail({
+    const result = await sendEmail({
       name: 'Bad Email',
       email: 'not-an-email',
       phone: '',
       subject: 'Test',
       message: 'Test',
-    })).rejects.toThrow('calling us at (828)');
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Invalid email');
   });
 
   it('rejects empty email address', async () => {
-    await expect(sendEmail({
+    const result = await sendEmail({
       name: 'No Email',
       email: '',
       phone: '',
       subject: 'Test',
       message: 'Test',
-    })).rejects.toThrow();
+    });
+    expect(result.success).toBe(false);
   });
 
   it('sanitizes HTML/XSS in form fields', async () => {
@@ -156,15 +159,17 @@ describe('sendEmail', () => {
     expect(emails[0].options.variables.message.length).toBeLessThanOrEqual(2000);
   });
 
-  it('throws user-friendly error with phone number on email failure', async () => {
+  it('returns user-friendly error with phone number on email failure', async () => {
     __failNextEmail();
-    await expect(sendEmail({
+    const result = await sendEmail({
       name: 'Test',
       email: 'test@test.com',
       phone: '',
       subject: 'Test',
       message: 'Test',
-    })).rejects.toThrow('(828) 252-9449');
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('(828) 252-9449');
   });
 
   it('handles empty phone and subject gracefully', async () => {
@@ -251,14 +256,16 @@ describe('submitSwatchRequest', () => {
   });
 
   it('rejects invalid email for swatch request', async () => {
-    await expect(submitSwatchRequest({
+    const result = await submitSwatchRequest({
       name: 'Test',
       email: 'bad-email',
       address: '123 St',
       productId: 'p1',
       productName: 'Test',
       swatchNames: ['Swatch'],
-    })).rejects.toThrow('calling us at (828)');
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Invalid email');
   });
 
   it('handles empty swatchNames array', async () => {

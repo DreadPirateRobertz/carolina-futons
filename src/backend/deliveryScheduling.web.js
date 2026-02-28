@@ -25,6 +25,17 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
+/** Constant-time string comparison to prevent timing attacks on cancel tokens. */
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 const MAX_SLOTS_PER_WINDOW = 4; // Max deliveries per time window
 const DELIVERY_DAYS = [3, 4, 5, 6]; // Wed=3, Thu=4, Fri=5, Sat=6
 const BOOKING_WINDOW_DAYS = 21; // How far ahead can book
@@ -418,7 +429,7 @@ export const cancelAppointment = webMethod(
         return { success: false, message: 'Appointment not found' };
       }
 
-      if (appointment.cancelToken !== token) {
+      if (!timingSafeEqual(appointment.cancelToken, token)) {
         return { success: false, message: 'Invalid cancel token' };
       }
 
