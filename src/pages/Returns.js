@@ -7,6 +7,7 @@ import { colors, typography } from 'public/designTokens.js';
 import { checkReturnWindow, isItemReturnable, getStatusTimeline, formatReturnStatus, getStatusColor, getReturnableItems } from 'public/ReturnsPortal.js';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
+import { sanitizeText } from 'public/validators';
 
 let _currentOrder = null;
 let _currentReturns = [];
@@ -342,11 +343,11 @@ function initReturnForm() {
 
 async function handleGuestReturnSubmit() {
   try {
-    const orderNumber = ($w('#returnOrderNumberInput').value || '').trim();
+    const orderNumber = sanitizeText($w('#returnOrderNumberInput').value, 50);
     const email = ($w('#returnEmailInput').value || '').trim();
     const reason = $w('#returnReasonSelect')?.value || '';
     try { $w('#returnDetailsTextbox').accessibility.ariaLabel = 'Additional return details'; } catch (e) {}
-    const details = $w('#returnDetailsTextbox')?.value || '';
+    const details = sanitizeText($w('#returnDetailsTextbox')?.value, 2000);
     const returnType = $w('#returnTypeSelect')?.value || 'return';
 
     if (!reason) {

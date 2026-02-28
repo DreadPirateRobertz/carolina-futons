@@ -7,7 +7,7 @@ import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
-import { validateEmail } from 'public/validators.js';
+import { validateEmail, sanitizeText } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 
 $w.onReady(async function () {
@@ -434,8 +434,8 @@ async function initTestimonialPrompt() {
 
     $w('#testimonialSubmitBtn').onClick(async () => {
       try {
-        const name = $w('#testimonialNameInput').value?.trim();
-        const story = $w('#testimonialStoryInput').value?.trim();
+        const name = sanitizeText($w('#testimonialNameInput').value, 100);
+        const story = sanitizeText($w('#testimonialStoryInput').value, 5000);
         if (!story || story.length < 10) {
           try { $w('#testimonialError').text = 'Please write at least 10 characters.'; $w('#testimonialError').show(); } catch (e) {}
           announce($w, 'Please write at least 10 characters for your testimonial');

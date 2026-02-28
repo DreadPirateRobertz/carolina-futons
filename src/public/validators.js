@@ -21,3 +21,16 @@ export function validateEmail(email) {
 export function validateDimension(value, min = 1, max = 600) {
   return typeof value === 'number' && !isNaN(value) && value >= min && value <= max;
 }
+
+/**
+ * Strip HTML tags and enforce max length for free-text form input.
+ * Mirrors backend/utils/sanitize.sanitize() for client-side use.
+ * @param {string} str - Raw input string.
+ * @param {number} [maxLen=1000] - Maximum allowed length.
+ * @returns {string} Sanitized string.
+ */
+export function sanitizeText(str, maxLen = 1000) {
+  if (typeof str !== 'string') return '';
+  // Strip complete HTML tags, then unclosed tags (e.g. <img src=x onerror=...)
+  return str.replace(/<[^>]*>/g, '').replace(/<[^>]*$/g, '').trim().slice(0, maxLen);
+}

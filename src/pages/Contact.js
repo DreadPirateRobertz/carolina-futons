@@ -12,6 +12,7 @@ import {
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
+import { sanitizeText } from 'public/validators';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -48,11 +49,11 @@ function initContactForm() {
 
     submitBtn.onClick(async () => {
       // Validate required fields
-      const name = $w('#contactName').value?.trim();
+      const name = sanitizeText($w('#contactName').value, 200);
       const email = $w('#contactEmail').value?.trim();
-      const phone = $w('#contactPhone').value?.trim();
-      const subject = $w('#contactSubject').value?.trim();
-      const message = $w('#contactMessage').value?.trim();
+      const phone = sanitizeText($w('#contactPhone').value, 30);
+      const subject = sanitizeText($w('#contactSubject').value, 200);
+      const message = sanitizeText($w('#contactMessage').value, 5000);
 
       // Clear previous errors
       hideAllErrors();
@@ -195,13 +196,13 @@ function initAppointmentBooking() {
     } catch (e) {}
 
     bookBtn.onClick(async () => {
-      const name = $w('#appointmentName').value?.trim();
+      const name = sanitizeText($w('#appointmentName').value, 200);
       const email = $w('#appointmentEmail').value?.trim();
-      const phone = $w('#appointmentPhone').value?.trim();
+      const phone = sanitizeText($w('#appointmentPhone').value, 30);
       const visitType = $w('#appointmentVisitType').value;
       const date = $w('#appointmentDate').value;
       const timeSlot = $w('#appointmentTimeSlot').value;
-      const interests = $w('#appointmentInterests').value?.trim();
+      const interests = sanitizeText($w('#appointmentInterests').value, 1000);
 
       // Clear errors
       try { $w('#appointmentError').hide(); } catch (e) {}
