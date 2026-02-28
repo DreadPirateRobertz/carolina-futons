@@ -32,6 +32,7 @@ import {
   applyActiveNavState,
   initMegaMenu,
   initMobileDrawer,
+  initFooterAccordions,
   initAnnouncementBar as initAnnouncementBarHelper,
   initBackToTop as initBackToTopHelper,
   initStickyNav,
@@ -183,27 +184,7 @@ function initNavigation() {
     }
   });
 
-  // Mobile hamburger menu toggle
-  try {
-    const menuButton = $w('#mobileMenuButton');
-    const mobileMenu = $w('#mobileMenuOverlay');
-    const menuClose = $w('#mobileMenuClose');
-
-    if (menuButton && mobileMenu) {
-      try { menuButton.accessibility.ariaLabel = 'Open navigation menu'; } catch (e) {}
-      menuButton.onClick(() => {
-        mobileMenu.show('fade', { duration: 200 });
-      });
-    }
-    if (menuClose && mobileMenu) {
-      try { menuClose.accessibility.ariaLabel = 'Close navigation menu'; } catch (e) {}
-      menuClose.onClick(() => {
-        mobileMenu.hide('fade', { duration: 200 });
-      });
-    }
-  } catch (e) {
-    // Mobile elements may not exist
-  }
+  // Mobile nav is handled by initMobileDrawer() in initEnhancedNavigation()
 }
 
 // ── Enhanced Navigation (Mega Menu, Breadcrumbs, Back-to-Top, Sticky) ──
@@ -214,8 +195,8 @@ function initEnhancedNavigation() {
   // Active page indicator with Mountain Blue styling
   try { applyActiveNavState($w, currentPath); } catch (e) {}
 
-  // Mega menu for desktop shop dropdown
-  try { initMegaMenu($w); } catch (e) {}
+  // Mega menu for desktop shop dropdown (skip on mobile — drawer handles it)
+  try { if (!isMobile()) initMegaMenu($w); } catch (e) {}
 
   // Mobile drawer with focus trap and accessible close
   try { initMobileDrawer($w); } catch (e) {}
@@ -231,6 +212,15 @@ function initEnhancedNavigation() {
 
   // Sticky nav shadow on scroll
   try { initStickyNav($w); } catch (e) {}
+
+  // Footer columns → accordions on mobile
+  try {
+    initFooterAccordions($w, [
+      { headerId: '#footerShopHeader', contentId: '#footerShopLinks', label: 'Shop' },
+      { headerId: '#footerServiceHeader', contentId: '#footerServiceLinks', label: 'Customer Service' },
+      { headerId: '#footerAboutHeader', contentId: '#footerAboutLinks', label: 'About Us' },
+    ]);
+  } catch (e) {}
 }
 
 // ── Announcement Bar ────────────────────────────────────────────────

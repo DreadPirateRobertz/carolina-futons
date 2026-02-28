@@ -2,6 +2,7 @@
 // Used across multiple pages for consistent product display behavior
 import { session } from 'wix-storage-frontend';
 import { colors } from 'public/designTokens.js';
+import { enableSwipe } from 'public/touchHelpers';
 
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
@@ -415,11 +416,27 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     }
   } catch (e) {}
 
+  // Swipe navigation for mobile lightbox
+  let cleanupSwipe = null;
+  try {
+    const overlayEl = $w('#lightboxOverlay');
+    if (overlayEl) {
+      const swipeTarget = overlayEl.htmlElement || overlayEl;
+      if (swipeTarget.addEventListener) {
+        cleanupSwipe = enableSwipe(swipeTarget, (direction) => {
+          if (direction === 'left') showImage(currentIndex + 1);
+          else if (direction === 'right') showImage(currentIndex - 1);
+        }, { threshold: 40 });
+      }
+    }
+  } catch (e) {}
+
   function destroy() {
     try {
       if (typeof document !== 'undefined') {
         document.removeEventListener('keydown', handleKeydown);
       }
+      if (cleanupSwipe) cleanupSwipe();
     } catch (e) {}
   }
 

@@ -791,19 +791,18 @@ function initCategorySwipe(currentPath) {
     if (currentIndex === -1) return;
 
     enableSwipe(gridEl, (direction) => {
+      if (direction !== 'left' && direction !== 'right') return;
       let nextIndex;
       if (direction === 'left') {
         nextIndex = currentIndex + 1;
-      } else if (direction === 'right') {
-        nextIndex = currentIndex - 1;
       } else {
-        return;
+        nextIndex = currentIndex - 1;
       }
       if (nextIndex < 0 || nextIndex >= CATEGORY_ORDER.length) return;
       const nextCategory = CATEGORY_ORDER[nextIndex];
       trackEvent('category_swipe', { from: currentPath, to: nextCategory, direction });
       wixLocationFrontend.to(`/${nextCategory}`);
-    }, { threshold: 60 });
+    }, { threshold: 100, maxTime: 400 });
   } catch (e) {}
 }
 

@@ -738,6 +738,13 @@ describe('masterPage.js', () => {
       expect(getEl('#mobileMenuButton').onClick).toHaveBeenCalled();
     });
 
+    it('registers hamburger onClick only once (no duplicate legacy handler)', async () => {
+      await onReadyHandler();
+      // initMobileDrawer via makeClickable registers one onClick.
+      // The legacy handler was removed so there should be exactly 1 call.
+      expect(getEl('#mobileMenuButton').onClick).toHaveBeenCalledTimes(1);
+    });
+
     it('sets ariaLabel on mobile menu button', async () => {
       await onReadyHandler();
       expect(getEl('#mobileMenuButton').accessibility.ariaLabel).toBe('Open navigation menu');
@@ -746,6 +753,22 @@ describe('masterPage.js', () => {
     it('wires mobile menu close onClick', async () => {
       await onReadyHandler();
       expect(getEl('#mobileMenuClose').onClick).toHaveBeenCalled();
+    });
+
+    it('does not initialize mega menu on mobile viewport', async () => {
+      mockIsMobile.mockReturnValue(true);
+      elements.clear();
+      await onReadyHandler();
+      // On mobile, mega menu hover handlers should not be wired
+      expect(getEl('#navShop').onMouseIn).not.toHaveBeenCalled();
+      mockIsMobile.mockReturnValue(false);
+    });
+
+    it('initializes mega menu on desktop viewport', async () => {
+      mockIsMobile.mockReturnValue(false);
+      elements.clear();
+      await onReadyHandler();
+      expect(getEl('#navShop').onMouseIn).toHaveBeenCalled();
     });
   });
 

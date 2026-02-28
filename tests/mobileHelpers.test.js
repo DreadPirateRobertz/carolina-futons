@@ -77,8 +77,26 @@ describe('mobileHelpers', () => {
       expect(isTouchDevice()).toBe(true);
     });
 
-    it('returns false for desktop', async () => {
+    it('returns false for desktop without touch capability', async () => {
       setWindowWidth(1100);
+      Object.defineProperty(global, 'navigator', { value: { maxTouchPoints: 0 }, configurable: true });
+      vi.resetModules();
+      const { isTouchDevice } = await import('public/mobileHelpers');
+      expect(isTouchDevice()).toBe(false);
+    });
+
+    it('returns true for desktop with touch capability (e.g. Surface)', async () => {
+      setWindowWidth(1100);
+      Object.defineProperty(global, 'navigator', { value: { maxTouchPoints: 2 }, configurable: true });
+      vi.resetModules();
+      const { isTouchDevice } = await import('public/mobileHelpers');
+      expect(isTouchDevice()).toBe(true);
+    });
+
+    it('returns false for desktop when navigator is undefined', async () => {
+      setWindowWidth(1100);
+      Object.defineProperty(global, 'navigator', { value: undefined, configurable: true });
+      vi.resetModules();
       const { isTouchDevice } = await import('public/mobileHelpers');
       expect(isTouchDevice()).toBe(false);
     });
