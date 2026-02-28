@@ -230,15 +230,91 @@ Our Blue Ridge palette vs. competitors:
 
 ---
 
+## The Unfair Advantage: Why Carolina Futons Wins
+
+After analyzing all 8 competitors, here's the insight: **every single one looks like a furniture website.** Clean minimalism, neutral palettes, stock lifestyle photography. They're interchangeable. A customer could swap the logo on Article, Burrow, and Floyd and barely notice.
+
+**Carolina Futons is the ONLY one with a soul.**
+
+The design mockup shows something none of these $100M+ companies have: **hand-drawn mountain illustrations, illustrated borders, regional character, and a warm personality that feels like walking into a real store in the Blue Ridge Mountains.** This isn't a weakness to polish away — it's the entire competitive moat.
+
+### What Makes "Most Kickass Boutique" Different from "Most Professional"
+
+| Attribute | What Competitors Do | What Makes Us Kickass |
+|-----------|--------------------|-----------------------|
+| Hero | Stock lifestyle photo | **Illustrated mountain scene with hand-drawn character** |
+| Product Cards | White box, photo, price | **Illustrated frame borders, warm sand backgrounds** |
+| Navigation | Generic horizontal nav | **Mountain-themed header with illustrated logo** |
+| Brand Voice | Corporate-minimal | **"Handcrafted Comfort, Mountain Inspired"** |
+| Color | Single accent on white | **Two-tone Coral + Mountain Blue on Sand — a whole WORLD** |
+| Footer | Standard links grid | **Illustrated mountain silhouette, map, community feel** |
+| About | Corporate "our mission" | **"Our Story" with real team photos, mountain backdrop** |
+
+### The Boutique Formula: Charm + Competence
+
+The trap is thinking "professional = minimalist." Wrong. Professional = **the site works flawlessly.** Charm = **the site has a personality you remember.**
+
+**Our formula:**
+1. **Illustrated mountain aesthetic** for brand frames, headers, section dividers, and empty states (NO competitor has this)
+2. **World-class UX underneath** — every interaction pattern from the best competitors (filtering, dimensions, zoom, skeleton loading, a11y)
+3. **Regional storytelling** — "Handcrafted in the Carolina mountains" isn't a tagline, it's a moat. Burrow can't claim it. Article can't claim it. Nobody can.
+4. **Personal touch at scale** — Brenda's message on Thank You page, real team photos on About, local delivery by real people
+
+### The 5 Features That Make Us THE Boutique Furniture Site
+
+1. **Illustrated Empty States** — When a search returns no results, show a hand-drawn mountain scene with "No futons found on this trail... try a different path." When the cart is empty, show a cozy illustrated cabin with "Your cabin is empty. Time to furnish it." NOBODY does this. It's memorable.
+
+2. **Comfort Story Cards** — Instead of Castlery's clinical 1-5 scales, do illustrated comfort stories: a hand-drawn figure sinking into a cushion for "Plush," sitting upright for "Firm," etc. Same data, 10x more personality.
+
+3. **"Mountain-to-Home" Delivery Tracker** — Instead of boring "Processing → Shipped → Delivered," show an illustrated mountain trail: "Being crafted" (workshop scene) → "Coming down the mountain" (truck on mountain road) → "At your doorstep" (cabin with open door). Make tracking FUN.
+
+4. **Product Videos with Brenda** — Not stock videos. Brenda walks through the showroom, sits on futons, demonstrates fold-out mechanisms. Authentic. No competitor does founder-led product videos.
+
+5. **Swatch Request with Mountain Packaging** — When swatches arrive, they come in a branded mountain-illustrated envelope with a handwritten-style note: "These fabrics are hand-selected from our Carolina workshop." Turn the swatch experience into a brand moment.
+
+---
+
+## Revised Priority: Weekend Hookup Must-Haves
+
+Given "most kickass boutique ever," here's what matters for the hookup:
+
+### Must Ship This Weekend
+1. Design tokens wired (our palette IS the brand — Sand, Espresso, Mountain Blue, Coral)
+2. Illustrated hero section ("Handcrafted Comfort, Mountain Inspired")
+3. Product cards with warm styling and clear dimensions
+4. Working cart → checkout flow with personality (not generic)
+5. Mobile responsive (60% of traffic) with touch-friendly nav
+6. Product page with zoom, multiple images, dimension display
+7. Skeleton loading states (already built)
+8. A11y (focus trapping, keyboard nav — already merged)
+
+### Ship Week After
+9. Customer photo reviews
+10. Comfort story cards (illustrated comfort scales)
+11. Collection curation ("Mountain Lodge," "Coastal Carolina," "Modern Loft")
+12. Free swatch request flow
+13. "Will it fit?" room calculator
+14. Product videos (even placeholder spots)
+
+### Sprint 4+
+15. Illustrated delivery tracker
+16. AR "See in your room"
+17. Modular configurator
+18. Room planner
+
+---
+
 ## Next Steps
 
-1. Human reviews this report and picks Tier 1-2 priorities for weekend hookup
-2. Design mockups for approved features (using frontend-design skill)
-3. Crew implements approved designs on feature branches
-4. Melania reviews against this competitive benchmark
+1. Human reviews and approves priorities for weekend hookup
+2. Design mockups for any new features (using frontend-design skill)
+3. Crew implements on feature branches
+4. Melania reviews against competitive benchmark
+5. **Iterate** — this report is a living document. Update after each sprint.
 
 **This is a PROPOSALS document. No code until human approves direction.**
 
 ---
 
 *Competitive analysis by melania | CF-k582 | 8 sites analyzed | 2026-02-27*
+*Iteration 2: "Most kickass boutique" lens applied*
