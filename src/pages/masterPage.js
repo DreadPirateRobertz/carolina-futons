@@ -4,6 +4,13 @@
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
+import {
+  shouldShowExitIntent,
+  markExitIntentShown,
+  markExitIntentDismissed,
+  validateCaptureEmail,
+  getExitIntentConfig,
+} from 'public/exitIntentCapture';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
@@ -816,6 +823,7 @@ function initInstallBanner() {
 }
 
 // ── Exit-Intent Lead Capture ──────────────────────────────────────
+// Uses testable exitIntentCapture module for logic, newsletterService for backend.
 // Detects when user is about to leave and shows a lead capture popup.
 // Only shows once per session, doesn't interrupt checkout/cart pages,
 // and respects promo lightbox (only shows if promo didn't fire).
@@ -825,16 +833,8 @@ function initExitIntent() {
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
-    // Don't show on cart, checkout, or thank-you pages
     const path = wixLocationFrontend.path?.join('/') || '';
-    if (['cart', 'checkout', 'thank-you'].some(p => path.includes(p))) return;
-
-    // Only show once per session
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        if (sessionStorage.getItem('cf_exit_shown')) return;
-      } catch (e) {}
-    }
+    if (!shouldShowExitIntent(path)) return;
 
     // Don't show if promo lightbox is already visible
     try {
@@ -846,19 +846,14 @@ function initExitIntent() {
       if (typeof document !== 'undefined') {
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'hidden') {
-            // Mark shown so popup fires on return to page
-            if (typeof sessionStorage !== 'undefined') {
-              try { sessionStorage.setItem('cf_exit_pending', '1'); } catch (e) {}
-            }
+            try { sessionStorage.setItem('cf_exit_pending', '1'); } catch (e) {}
           } else if (document.visibilityState === 'visible') {
-            if (typeof sessionStorage !== 'undefined') {
-              try {
-                if (sessionStorage.getItem('cf_exit_pending') && !sessionStorage.getItem('cf_exit_shown')) {
-                  sessionStorage.removeItem('cf_exit_pending');
-                  showExitPopup();
-                }
-              } catch (e) {}
-            }
+            try {
+              if (sessionStorage.getItem('cf_exit_pending') && !sessionStorage.getItem('cf_exit_shown')) {
+                sessionStorage.removeItem('cf_exit_pending');
+                showExitPopup();
+              }
+            } catch (e) {}
           }
         });
       }
@@ -877,35 +872,47 @@ function initExitIntent() {
 
 function showExitPopup() {
   try {
-    // Mark as shown for this session
-    if (typeof sessionStorage !== 'undefined') {
-      try { sessionStorage.setItem('cf_exit_shown', '1'); } catch (e) {}
-    }
+    markExitIntentShown();
 
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
+    const config = getExitIntentConfig();
+
     // Store focus for restoration
     try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
 
-    // Populate content
-    try { $w('#exitTitle').text = 'Wait — Before You Go!'; } catch (e) {}
-    try { $w('#exitSubtitle').text = 'Get free fabric swatches shipped to your door, or save 10% on your first order.'; } catch (e) {}
+    // Populate content from config
+    try { $w('#exitTitle').text = config.title; } catch (e) {}
+    try { $w('#exitSubtitle').text = config.subtitle; } catch (e) {}
 
     // Set dialog ARIA attributes
     try { popup.accessibility.role = 'dialog'; } catch (e) {}
     try { popup.accessibility.ariaModal = true; } catch (e) {}
-    try { popup.accessibility.ariaLabel = 'Special offer before you go'; } catch (e) {}
+    try { popup.accessibility.ariaLabel = config.ariaLabel; } catch (e) {}
 
     popup.show('fade', { duration: 300 });
     try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
 
     trackEvent('exit_intent_shown', { page: wixLocationFrontend.path?.join('/') || '' });
 
+    // Escape key closes popup
+    try {
+      if (typeof document !== 'undefined') {
+        const escHandler = (e) => {
+          if (e.key === 'Escape') {
+            dismissExitPopup();
+            document.removeEventListener('keydown', escHandler);
+          }
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+    } catch (e) {}
+
     // Close handlers
     try {
       $w('#exitClose').onClick(() => dismissExitPopup());
-      try { $w('#exitClose').accessibility.ariaLabel = 'Close popup'; } catch (e) {}
+      try { $w('#exitClose').accessibility.ariaLabel = config.closeAriaLabel; } catch (e) {}
     } catch (e) {}
     try {
       $w('#exitOverlay').onClick(() => dismissExitPopup());
@@ -913,22 +920,36 @@ function showExitPopup() {
 
     // Email capture form
     try {
-      try { $w('#exitEmailInput').accessibility.ariaLabel = 'Enter your email for offer'; } catch (e) {}
-      try { $w('#exitEmailSubmit').accessibility.ariaLabel = 'Get my offer'; } catch (e) {}
+      try { $w('#exitEmailInput').accessibility.ariaLabel = config.emailPlaceholder; } catch (e) {}
+      try { $w('#exitEmailSubmit').accessibility.ariaLabel = config.ctaText; } catch (e) {}
+      try { $w('#exitEmailSubmit').label = config.ctaText; } catch (e) {}
       $w('#exitEmailSubmit').onClick(async () => {
         const email = $w('#exitEmailInput').value?.trim();
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+        if (!validateCaptureEmail(email)) {
+          try {
+            $w('#exitEmailError').text = 'Please enter a valid email address.';
+            $w('#exitEmailError').show('fade', { duration: 200 });
+          } catch (e) {}
+          return;
+        }
 
         try {
           $w('#exitEmailSubmit').disable();
           $w('#exitEmailSubmit').label = 'Sending...';
+          try { $w('#exitEmailError').hide(); } catch (e) {}
 
-          await submitContactForm({
-            email,
-            source: 'exit_intent_popup',
-            status: 'exit_intent_signup',
-            notes: 'Exit intent capture — interested in swatches/discount',
-          });
+          const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+          const result = await subscribeToNewsletter(email, { source: 'exit_intent_popup' });
+
+          if (!result.success) {
+            $w('#exitEmailSubmit').enable();
+            $w('#exitEmailSubmit').label = config.ctaText;
+            try {
+              $w('#exitEmailError').text = result.message || 'Something went wrong. Please try again.';
+              $w('#exitEmailError').show('fade', { duration: 200 });
+            } catch (e) {}
+            return;
+          }
 
           // Also add to Wix contacts for email marketing
           try {
@@ -942,14 +963,18 @@ function showExitPopup() {
           $w('#exitEmailInput').value = '';
           $w('#exitEmailSubmit').label = 'Sent!';
           try {
-            $w('#exitSuccess').text = 'Check your inbox! Use code WELCOME10 for 10% off.';
+            $w('#exitSuccess').text = config.successMessage;
             $w('#exitSuccess').show('fade', { duration: 300 });
           } catch (e) {}
 
           setTimeout(() => dismissExitPopup(), 4000);
         } catch (err) {
           $w('#exitEmailSubmit').enable();
-          $w('#exitEmailSubmit').label = 'Get My Offer';
+          $w('#exitEmailSubmit').label = config.ctaText;
+          try {
+            $w('#exitEmailError').text = 'Something went wrong. Please try again.';
+            $w('#exitEmailError').show('fade', { duration: 200 });
+          } catch (e) {}
         }
       });
     } catch (e) {}
@@ -962,12 +987,29 @@ function showExitPopup() {
         import('wix-location-frontend').then(({ to }) => to('/contact'));
       });
     } catch (e) {}
+
+    // Focus trap: keep focus within the popup dialog
+    try {
+      if (typeof document !== 'undefined') {
+        const focusableSelector = 'input, button, [tabindex]:not([tabindex="-1"]), a[href]';
+        popup.onViewportEnter(() => {
+          try { $w('#exitEmailInput').focus(); } catch (e) {}
+        });
+      }
+    } catch (e) {}
   } catch (e) {}
 }
 
 function dismissExitPopup() {
+  markExitIntentDismissed();
   try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+  // Restore focus to element that was focused before popup
+  try {
+    if (_lastFocusedBeforeOverlay && typeof _lastFocusedBeforeOverlay.focus === 'function') {
+      _lastFocusedBeforeOverlay.focus();
+    }
+  } catch (e) {}
 }
 
 // ── Header Shipping Progress Bar ─────────────────────────────────

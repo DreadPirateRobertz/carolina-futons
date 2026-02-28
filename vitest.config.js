@@ -161,6 +161,9 @@ export default defineConfig({
       'public/ComfortStoryCards': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
       'public/proactiveChatTriggers.js': path.resolve(__dirname, 'src/public/proactiveChatTriggers.js'),
       'public/proactiveChatTriggers': path.resolve(__dirname, 'src/public/proactiveChatTriggers.js'),
+      'public/exitIntentCapture.js': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
+      'public/exitIntentCapture': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
+      'backend/newsletterService.web': path.resolve(__dirname, 'src/backend/newsletterService.web.js'),
     },
   },
 });
