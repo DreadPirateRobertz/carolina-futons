@@ -17,12 +17,14 @@ import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCach
 import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
+import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
 let _debounceTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
+let _wishlistSet = new Set(); // cached wishlist status for product cards
 
 /**
  * Sanitize user input from URL params — strip HTML tags, decode entities, limit length.
@@ -90,6 +92,7 @@ $w.onReady(async function () {
   initFilterControls();
   initAdvancedFilters(currentPath);
   initProductGrid();
+  preloadWishlistStatus();
   updateResultCount(currentPath);
   initRecentlyViewed();
   initQuickViewHandlers();
@@ -349,6 +352,19 @@ function applyFilters() {
   }
 }
 
+// ── Wishlist Preload ────────────────────────────────────────────────
+// Batch-load wishlist status so product cards can show heart state
+
+async function preloadWishlistStatus() {
+  try {
+    const repeater = $w('#productGridRepeater');
+    if (!repeater || !repeater.data) return;
+    const productIds = repeater.data.map(p => p._id).filter(Boolean);
+    if (productIds.length === 0) return;
+    _wishlistSet = await batchCheckWishlistStatus(productIds);
+  } catch (e) {}
+}
+
 // ── Product Grid ────────────────────────────────────────────────────
 // Enhanced product cards with hover effects, quick-view, and badges
 
@@ -442,6 +458,11 @@ function initProductGrid() {
         $item('#quickViewBtn').onClick(() => {
           openQuickView(itemData);
         });
+      } catch (e) {}
+
+      // Wishlist heart button
+      try {
+        initCardWishlistButton($item, itemData, _wishlistSet.has(itemData._id));
       } catch (e) {}
 
       // Compare button

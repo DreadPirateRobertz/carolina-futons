@@ -168,6 +168,8 @@ export default defineConfig({
       'public/FooterSection': path.resolve(__dirname, 'src/public/FooterSection.js'),
       'public/footerContent.js': path.resolve(__dirname, 'src/public/footerContent.js'),
       'public/footerContent': path.resolve(__dirname, 'src/public/footerContent.js'),
+      'public/WishlistCardButton.js': path.resolve(__dirname, 'src/public/WishlistCardButton.js'),
+      'public/WishlistCardButton': path.resolve(__dirname, 'src/public/WishlistCardButton.js'),
     },
   },
 });
