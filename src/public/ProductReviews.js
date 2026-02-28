@@ -254,12 +254,19 @@ function updatePaginationState($w, state, result) {
 
 // ── Review Submission Form ────────────────────────────────────────────
 
+const MAX_REVIEW_PHOTOS = 3;
+let _uploadedPhotoUrls = [];
+
 function initReviewForm($w, state) {
   try {
     const submitBtn = $w('#reviewSubmitBtn');
     if (!submitBtn) return;
+    _uploadedPhotoUrls = [];
 
     try { submitBtn.accessibility.ariaLabel = 'Submit your review'; } catch (e) {}
+
+    // Photo upload button (max 3 photos)
+    initPhotoUpload($w);
 
     submitBtn.onClick(async () => {
       try {
@@ -289,9 +296,11 @@ function initReviewForm($w, state) {
           rating,
           title,
           body,
+          photos: _uploadedPhotoUrls.slice(0, MAX_REVIEW_PHOTOS),
         });
 
         if (result.success) {
+          _uploadedPhotoUrls = [];
           try { $w('#reviewFormSuccess').show(); } catch (e) {}
           try { $w('#reviewForm').collapse(); } catch (e) {}
         } else {
@@ -302,6 +311,111 @@ function initReviewForm($w, state) {
         showFormError($w, 'Something went wrong. Please try again.');
         submitBtn.enable();
       }
+    });
+  } catch (e) {}
+}
+
+function initPhotoUpload($w) {
+  try {
+    const uploadBtn = $w('#reviewPhotoUpload');
+    if (!uploadBtn) return;
+
+    try { uploadBtn.accessibility.ariaLabel = `Upload photos (max ${MAX_REVIEW_PHOTOS})`; } catch (e) {}
+
+    updatePhotoCount($w);
+
+    uploadBtn.onChange(async () => {
+      if (_uploadedPhotoUrls.length >= MAX_REVIEW_PHOTOS) {
+        showFormError($w, `Maximum ${MAX_REVIEW_PHOTOS} photos allowed.`);
+        return;
+      }
+
+      try {
+        uploadBtn.disable();
+        try {
+          const label = $w('#reviewPhotoStatus');
+          if (label) label.text = 'Uploading...';
+        } catch (e) {}
+
+        const uploadResult = await uploadBtn.startUpload();
+        if (uploadResult && uploadResult.url) {
+          _uploadedPhotoUrls.push(uploadResult.url);
+          updatePhotoCount($w);
+          renderPhotoPreview($w);
+        }
+
+        uploadBtn.enable();
+        try {
+          const label = $w('#reviewPhotoStatus');
+          if (label) label.text = '';
+        } catch (e) {}
+
+        // Disable upload button if max reached
+        if (_uploadedPhotoUrls.length >= MAX_REVIEW_PHOTOS) {
+          uploadBtn.disable();
+          try {
+            const label = $w('#reviewPhotoStatus');
+            if (label) label.text = `Maximum ${MAX_REVIEW_PHOTOS} photos reached`;
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.error('[ProductReviews] Photo upload failed:', err.message);
+        uploadBtn.enable();
+        try {
+          const label = $w('#reviewPhotoStatus');
+          if (label) label.text = 'Upload failed — try again';
+        } catch (e) {}
+      }
+    });
+  } catch (e) {}
+}
+
+function updatePhotoCount($w) {
+  try {
+    const countEl = $w('#reviewPhotoCount');
+    if (countEl) countEl.text = `${_uploadedPhotoUrls.length}/${MAX_REVIEW_PHOTOS} photos`;
+  } catch (e) {}
+}
+
+function renderPhotoPreview($w) {
+  try {
+    const previewRepeater = $w('#reviewPhotoPreview');
+    if (!previewRepeater) return;
+
+    if (_uploadedPhotoUrls.length === 0) {
+      try { previewRepeater.collapse(); } catch (e) {}
+      return;
+    }
+
+    previewRepeater.expand();
+    previewRepeater.data = _uploadedPhotoUrls.map((url, i) => ({
+      _id: `photo-${i}`,
+      src: url,
+      index: i,
+    }));
+
+    previewRepeater.onItemReady(($item, itemData) => {
+      try { $item('#reviewPreviewImage').src = itemData.src; } catch (e) {}
+      try { $item('#reviewPreviewImage').alt = `Review photo ${itemData.index + 1}`; } catch (e) {}
+      try {
+        $item('#reviewPreviewRemove').onClick(() => {
+          _uploadedPhotoUrls.splice(itemData.index, 1);
+          updatePhotoCount($w);
+          renderPhotoPreview($w);
+          // Re-enable upload button if below max
+          try {
+            const uploadBtn = $w('#reviewPhotoUpload');
+            if (uploadBtn && _uploadedPhotoUrls.length < MAX_REVIEW_PHOTOS) {
+              uploadBtn.enable();
+              try {
+                const label = $w('#reviewPhotoStatus');
+                if (label) label.text = '';
+              } catch (e) {}
+            }
+          } catch (e) {}
+        });
+        try { $item('#reviewPreviewRemove').accessibility.ariaLabel = `Remove photo ${itemData.index + 1}`; } catch (e) {}
+      } catch (e) {}
     });
   } catch (e) {}
 }

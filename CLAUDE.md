@@ -38,21 +38,24 @@ When a PR is successfully merged:
 4. **Melania** assigns next work from ready queue before or after handoff mail
 
 ### gt handoff — When and How
-- Run `gt handoff` when: PR merged, context full, logical chunk complete, or switching tasks
+- Run `gt handoff` ONLY after your PR is **successfully merged to main**
+- Do NOT handoff when: PR is just opened, context is full, or between tasks — stay in session
 - Include context notes: `gt handoff -s "Completed <bead-id>" -m "PR merged, tests green, next: pick up <next-bead>"`
 - Handoff preserves your hooked molecule — your next session picks up where you left off
-- **Never leave a session without pushing all commits and running gt handoff**
 
 ### Session Continuity Checklist
 1. `git status` — clean working tree
 2. `git push` — all commits on remote
-3. `bd close <id>` or `bd update <id> --status=in_progress` — beads reflect reality
-4. `gt handoff -s "..." -m "..."` — context notes for next session
+3. Verify PR is **merged** (not just opened)
+4. `bd close <id>` — bead closed after merge confirmed
+5. `gt handoff -s "..." -m "..."` — context notes for next session
 
 
 
-## PM Quality Gate (Melania Directive 2026-02-23)
-- **Melania is acceptance authority.** PRs reviewed against bead AC, coding standards, and edge case coverage.
+## PM Quality Gate (Melania Directive 2026-02-27)
+- **Melania is the FINAL ARBITER on all PRs.** No PR merges without melania's explicit approval.
+- **Crew does NOT self-merge.** Open PR → melania reviews → melania merges or rejects.
+- PRs reviewed against bead AC, coding standards, and edge case coverage.
 - **TESTS FIRST (TDD)**: Write tests BEFORE implementation. Tests define the spec.
   - PRs without tests are rejected outright — no code review until tests exist.
 - Tests MUST cover ALL paths, not just happy path:
