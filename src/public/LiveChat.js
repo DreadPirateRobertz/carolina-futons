@@ -8,6 +8,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 import { announce } from 'public/a11yHelpers';
+import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
 
 let _sessionId = null;
 let _userName = '';
@@ -18,8 +19,10 @@ let _escapeKeyHandler = null;
 /**
  * Initialize the live chat widget. Called from masterPage.js after page load.
  * @param {Function} $w - Wix $w selector
+ * @param {Object} [options]
+ * @param {string} [options.page] - Current page type ('product'|'checkout') for proactive triggers
  */
-export async function initLiveChat($w) {
+export async function initLiveChat($w, options = {}) {
   try {
     // Check online status
     const status = await isOnline();
@@ -65,6 +68,13 @@ export async function initLiveChat($w) {
     try { $w('#chatCloseBtn').accessibility.ariaLabel = 'Close chat'; } catch (e) {}
     try { $w('#chatSendBtn').accessibility.ariaLabel = 'Send message'; } catch (e) {}
     try { $w('#chatMessageInput').accessibility.ariaLabel = 'Type your message'; } catch (e) {}
+
+    // Proactive chat triggers (Product Page & Checkout only)
+    if (options.page) {
+      try {
+        initProactiveTriggers($w, { page: options.page, isOnline: _isOnline });
+      } catch (e) {}
+    }
   } catch (e) {
     // Chat widget is non-critical — never block the page
   }
@@ -316,4 +326,5 @@ export function cleanupLiveChat() {
       _escapeKeyHandler = null;
     }
   } catch (e) {}
+  try { cleanupProactiveTriggers(); } catch (e) {}
 }
