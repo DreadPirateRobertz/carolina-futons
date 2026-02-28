@@ -7,6 +7,7 @@ import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHi
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
+import { announce } from 'public/a11yHelpers';
 
 let _sessionId = null;
 let _userName = '';
@@ -254,6 +255,11 @@ function appendMessage($w, text, sender, name) {
     const currentText = messagesContainer.text || '';
     const newLine = currentText ? '\n' : '';
     messagesContainer.text = `${currentText}${newLine}${prefix}${text}`;
+
+    // Announce new messages to screen readers
+    if (sender === 'agent') {
+      announce($w, `${name} says: ${text}`, 'polite');
+    }
   } catch (e) {}
 }
 

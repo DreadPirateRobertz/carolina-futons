@@ -6,6 +6,7 @@
  */
 import { getProductSocialProof, getCategorySocialProof } from 'backend/socialProof.web';
 import { isMobile } from 'public/mobileHelpers';
+import { announce } from 'public/a11yHelpers';
 
 const SESSION_KEY = 'cf_social_proof';
 
@@ -128,6 +129,9 @@ function showToast($w, notification, config) {
 
     // Show with animation
     toastEl.show('slide', { duration: 300, direction: 'bottom' });
+
+    // Announce to screen readers
+    announce($w, notification.message, 'polite');
 
     // Update session state
     setSessionState({ count: state.count + 1, lastShown: now });

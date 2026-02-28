@@ -136,6 +136,10 @@ const MAX_COMPARE = 4;
 
 export function addToCompare(product) {
   try {
+    if (!product || !product._id) return false;
+    // Validate _id: only allow alphanumeric, hyphens, underscores
+    if (!/^[a-zA-Z0-9_-]+$/.test(product._id)) return false;
+
     const stored = session.getItem(COMPARE_KEY);
     let compareList = stored ? JSON.parse(stored) : [];
 
@@ -317,7 +321,11 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     isOpen = true;
     showImage(startIndex);
     try {
-      $w('#lightboxOverlay').show('fade', { duration: 250 });
+      const overlay = $w('#lightboxOverlay');
+      overlay.show('fade', { duration: 250 });
+      try { overlay.accessibility.role = 'dialog'; } catch (e) {}
+      try { overlay.accessibility.ariaModal = true; } catch (e) {}
+      try { overlay.accessibility.ariaLabel = 'Product image lightbox'; } catch (e) {}
     } catch (e) {}
   }
 
@@ -344,10 +352,19 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     });
   } catch (e) {}
 
-  // Navigation controls
-  try { $w('#lightboxPrev').onClick(() => showImage(currentIndex - 1)); } catch (e) {}
-  try { $w('#lightboxNext').onClick(() => showImage(currentIndex + 1)); } catch (e) {}
-  try { $w('#lightboxClose').onClick(closeLightbox); } catch (e) {}
+  // Navigation controls with ARIA labels
+  try {
+    $w('#lightboxPrev').onClick(() => showImage(currentIndex - 1));
+    try { $w('#lightboxPrev').accessibility.ariaLabel = 'Previous image'; } catch (e) {}
+  } catch (e) {}
+  try {
+    $w('#lightboxNext').onClick(() => showImage(currentIndex + 1));
+    try { $w('#lightboxNext').accessibility.ariaLabel = 'Next image'; } catch (e) {}
+  } catch (e) {}
+  try {
+    $w('#lightboxClose').onClick(closeLightbox);
+    try { $w('#lightboxClose').accessibility.ariaLabel = 'Close lightbox'; } catch (e) {}
+  } catch (e) {}
 
   // Keyboard support (Esc, arrow keys)
   function handleKeydown(e) {
@@ -479,7 +496,7 @@ export function buildComparisonBar($w) {
     // Compare button — enabled when 2+ items selected
     try {
       $w('#compareButton').onClick(() => {
-        const ids = compareList.map(p => p._id).join(',');
+        const ids = compareList.map(p => encodeURIComponent(p._id)).join(',');
         import('wix-location-frontend').then(({ to }) => {
           to(`/compare?products=${ids}`);
         });
