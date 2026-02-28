@@ -164,6 +164,10 @@ export default defineConfig({
       'public/exitIntentCapture.js': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
       'public/exitIntentCapture': path.resolve(__dirname, 'src/public/exitIntentCapture.js'),
       'backend/newsletterService.web': path.resolve(__dirname, 'src/backend/newsletterService.web.js'),
+      'public/FooterSection.js': path.resolve(__dirname, 'src/public/FooterSection.js'),
+      'public/FooterSection': path.resolve(__dirname, 'src/public/FooterSection.js'),
+      'public/footerContent.js': path.resolve(__dirname, 'src/public/footerContent.js'),
+      'public/footerContent': path.resolve(__dirname, 'src/public/footerContent.js'),
     },
   },
 });
