@@ -76,6 +76,11 @@ export function initStickyCartBar($w, state) {
       try { $w('#stickyPrice').text = state.product.formattedPrice; } catch (e) {}
     }
     try { $w('#stickyAddBtn').onClick(async () => {
+      if (!state.product?._id) {
+        $w('#stickyAddBtn').label = 'Loading...';
+        setTimeout(() => { try { $w('#stickyAddBtn').label = 'Add to Cart'; } catch (e) {} }, 1500);
+        return;
+      }
       try {
         $w('#stickyAddBtn').disable(); $w('#stickyAddBtn').label = 'Adding...';
         await addToCart(state.product._id, state.selectedQuantity);
@@ -112,17 +117,25 @@ export async function initBundleSection($w, state) {
       $w('#bundlePrice').text = formatCurrency(bundle.bundlePrice);
       $w('#bundleSavings').text = `Save ${formatCurrency(bundle.savings)}`;
     } catch (e) {}
-    try { $w('#addBundleBtn').onClick(async () => {
-      try {
-        $w('#addBundleBtn').disable(); $w('#addBundleBtn').label = 'Adding...';
-        await addToCart(state.product._id, state.selectedQuantity);
-        await addToCart(bundle.product._id, 1);
-        $w('#addBundleBtn').label = 'Bundle Added!';
-        trackCartAdd(state.product, state.selectedQuantity);
-        fireAddToCart(state.product, state.selectedQuantity);
-      } catch (err) { $w('#addBundleBtn').label = 'Error \u2014 Try Again'; }
-      setTimeout(() => { try { $w('#addBundleBtn').label = 'Add Both to Cart'; $w('#addBundleBtn').enable(); } catch (e) {} }, 3000);
-    }); } catch (e) {}
+    try {
+      let bundleMainAdded = false;
+      $w('#addBundleBtn').onClick(async () => {
+        try {
+          $w('#addBundleBtn').disable(); $w('#addBundleBtn').label = 'Adding...';
+          // Only add main product if not already added (prevents double-add on retry)
+          if (!bundleMainAdded) {
+            await addToCart(state.product._id, state.selectedQuantity);
+            bundleMainAdded = true;
+          }
+          await addToCart(bundle.product._id, 1);
+          $w('#addBundleBtn').label = 'Bundle Added!';
+          bundleMainAdded = false; // Reset for next fresh click
+          trackCartAdd(state.product, state.selectedQuantity);
+          fireAddToCart(state.product, state.selectedQuantity);
+        } catch (err) { $w('#addBundleBtn').label = 'Error \u2014 Try Again'; }
+        setTimeout(() => { try { $w('#addBundleBtn').label = 'Add Both to Cart'; $w('#addBundleBtn').enable(); } catch (e) {} }, 3000);
+      });
+    } catch (e) {}
     const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${bundle.product.slug}`));
     try { $w('#bundleImage').onClick(nav); } catch (e) {}
     try { $w('#bundleName').onClick(nav); } catch (e) {}

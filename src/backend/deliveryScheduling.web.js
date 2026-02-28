@@ -134,12 +134,6 @@ export const scheduleDelivery = webMethod(
         return { success: false, message: 'Invalid date format' };
       }
 
-      // Check slot availability
-      const booked = await countBookedSlots(date, timeWindow, type);
-      if (booked >= MAX_SLOTS_PER_WINDOW) {
-        return { success: false, message: 'This time slot is fully booked' };
-      }
-
       // Check for existing schedule for this order
       const existing = await wixData.query('DeliverySchedule')
         .eq('orderId', orderId)
@@ -150,18 +144,32 @@ export const scheduleDelivery = webMethod(
         return { success: false, message: 'Delivery already scheduled for this order' };
       }
 
+      // RACE FIX: Insert first with 'pending' status, then validate slot count.
+      // This prevents two concurrent requests from both passing the count check.
       const schedule = await wixData.insert('DeliverySchedule', {
         orderId,
         date,
         timeWindow,
         type,
-        status: 'scheduled',
+        status: 'pending',
         customerEmail: sanitize(data.customerEmail || '', 254),
         customerPhone: sanitize(data.customerPhone || '', 20),
         address: sanitize(data.address || '', 500),
         notes: sanitize(data.notes || '', 1000),
         createdAt: new Date(),
       });
+
+      // Now count all booked + pending slots (including the one we just inserted)
+      const booked = await countBookedSlots(date, timeWindow, type);
+      if (booked > MAX_SLOTS_PER_WINDOW) {
+        // Over capacity — rollback by removing our insertion
+        await wixData.remove('DeliverySchedule', schedule._id);
+        return { success: false, message: 'This time slot is fully booked' };
+      }
+
+      // Confirm the booking
+      schedule.status = 'scheduled';
+      await wixData.update('DeliverySchedule', schedule);
 
       return { success: true, scheduleId: schedule._id };
     } catch (err) {
@@ -344,19 +352,13 @@ export const bookAppointment = webMethod(
         return { success: false, message: 'Appointment date must be in the future' };
       }
 
-      // Check slot availability
       const duration = VISIT_TYPES[visitType].duration;
       const slotsNeeded = duration / 30;
-      const dayAppointments = await getAppointmentsForDate(date);
-      const concurrent = countConcurrentAtTime(dayAppointments, timeSlot, slotsNeeded);
-
-      if (concurrent >= MAX_CONCURRENT_VISITS) {
-        return { success: false, message: 'This time slot is fully booked' };
-      }
 
       // Generate cancel token
       const cancelToken = generateToken();
 
+      // RACE FIX: Insert with 'pending' first, then validate concurrency, rollback if over.
       const appointment = await wixData.insert('ShowroomAppointments', {
         date,
         timeSlot,
@@ -367,10 +369,29 @@ export const bookAppointment = webMethod(
         customerPhone: sanitize(data.customerPhone || '', 20),
         productInterests: sanitize(data.productInterests || '', 500),
         notes: sanitize(data.notes || '', 1000),
-        status: 'confirmed',
+        status: 'pending',
         cancelToken,
         createdAt: new Date(),
       });
+
+      // Re-check concurrency including our pending record
+      const dayAppointments = await getAppointmentsForDate(date);
+      // Also count pending appointments
+      const pendingResult = await wixData.query('ShowroomAppointments')
+        .eq('date', date)
+        .eq('status', 'pending')
+        .find();
+      const allAppointments = [...dayAppointments, ...pendingResult.items];
+      const concurrent = countConcurrentAtTime(allAppointments, timeSlot, slotsNeeded);
+
+      if (concurrent > MAX_CONCURRENT_VISITS) {
+        await wixData.remove('ShowroomAppointments', appointment._id);
+        return { success: false, message: 'This time slot is fully booked' };
+      }
+
+      // Confirm the appointment
+      appointment.status = 'confirmed';
+      await wixData.update('ShowroomAppointments', appointment);
 
       return {
         success: true,

@@ -115,14 +115,20 @@ export async function initBundleSection($w, product, { getQuantity } = {}) {
     } catch (e) {}
 
     try {
+      let crossSellMainAdded = false;
       $w('#addBundleBtn').onClick(async () => {
         try {
           $w('#addBundleBtn').disable();
           $w('#addBundleBtn').label = 'Adding...';
           const qty = getQuantity ? getQuantity() : 1;
-          await addToCart(product._id, qty);
+          // Only add main product if not already added (prevents double-add on retry)
+          if (!crossSellMainAdded) {
+            await addToCart(product._id, qty);
+            crossSellMainAdded = true;
+          }
           await addToCart(bundle.product._id, 1);
           $w('#addBundleBtn').label = 'Bundle Added!';
+          crossSellMainAdded = false; // Reset for next fresh click
           trackCartAdd(product, qty);
         } catch (err) {
           console.error('Error adding bundle to cart:', err);

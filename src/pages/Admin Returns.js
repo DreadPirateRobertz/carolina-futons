@@ -15,7 +15,7 @@ let _selectedReturn = null;
 $w.onReady(async function () {
   // Verify admin access before loading dashboard
   try {
-    const { currentMember } = await import('wix-members-backend');
+    const { currentMember } = await import('wix-members-frontend');
     const member = await currentMember.getMember();
     if (!member?._id) {
       const loc = await import('wix-location-frontend');

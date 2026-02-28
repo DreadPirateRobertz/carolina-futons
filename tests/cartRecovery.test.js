@@ -70,6 +70,9 @@ describe('getRecoverableCarts', () => {
 
 describe('markRecoveryEmailSent', () => {
   it('returns success when marking email sent', async () => {
+    __seed('AbandonedCarts', [
+      { _id: 'ac-1', checkoutId: 'ck-1', buyerEmail: 'a@test.com', cartTotal: 100, status: 'abandoned', recoveryEmailSent: false },
+    ]);
     const result = await markRecoveryEmailSent('ac-1');
     expect(result.success).toBe(true);
   });
@@ -509,12 +512,17 @@ describe('input sanitization', () => {
   });
 
   it('markRecoveryEmailSent sanitizes cart ID', async () => {
+    const longId = 'a'.repeat(100);
+    const truncatedId = longId.slice(0, 50);
+    __seed('AbandonedCarts', [
+      { _id: truncatedId, checkoutId: 'ck-san', buyerEmail: 'san@test.com', cartTotal: 50, status: 'abandoned', recoveryEmailSent: false },
+    ]);
+
     let updatedItem = null;
     __onUpdate((collection, item) => {
       if (collection === 'AbandonedCarts') updatedItem = item;
     });
 
-    const longId = 'a'.repeat(100);
     await markRecoveryEmailSent(longId);
 
     expect(updatedItem).not.toBeNull();

@@ -536,10 +536,15 @@ export const generateReturnLabel = webMethod(
       const shippingAddr = order.shippingInfo?.shipmentDetails?.address || {};
       const billingAddr = order.billingInfo || {};
 
+      const customerName = shippingAddr.fullName || order.billingInfo?.contactDetails?.firstName
+        ? `${order.billingInfo.contactDetails.firstName} ${order.billingInfo.contactDetails.lastName || ''}`.trim()
+        : 'Customer';
+
       const shipmentResult = await createShipment({
         orderId: record.orderId,
-        recipientName: `Carolina Futons Returns (RMA: ${record.rmaNumber})`,
-        recipientPhone: '',
+        returnLabel: true, // Swaps ShipFrom (customer) and ShipTo (store)
+        recipientName: customerName,
+        recipientPhone: shippingAddr.phone || order.billingInfo?.contactDetails?.phone || '',
         addressLine1: shippingAddr.addressLine1 || shippingAddr.addressLine || billingAddr.address?.addressLine1 || '',
         city: shippingAddr.city || billingAddr.address?.city || '',
         state: shippingAddr.subdivision || billingAddr.address?.subdivision || '',

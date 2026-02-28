@@ -119,13 +119,26 @@ export function trackProductPageView(product) {
   });
 }
 
-/** Track add-to-cart with product and variant info. */
-export function trackCartAdd(productId, productName, variant) {
-  trackEvent('add_to_cart', {
-    productId,
-    productName,
-    variant: variant || '',
-  });
+/** Track add-to-cart with product and variant info.
+ * @param {Object|string} productOrId - Product object or product ID string
+ * @param {number|string} [quantityOrName] - Quantity (when product object) or product name (legacy)
+ * @param {string} [variant] - Variant info (legacy signature only)
+ */
+export function trackCartAdd(productOrId, quantityOrName, variant) {
+  if (productOrId && typeof productOrId === 'object') {
+    trackEvent('add_to_cart', {
+      productId: productOrId._id || '',
+      productName: productOrId.name || '',
+      quantity: quantityOrName || 1,
+      variant: variant || '',
+    });
+  } else {
+    trackEvent('add_to_cart', {
+      productId: productOrId,
+      productName: quantityOrName || '',
+      variant: variant || '',
+    });
+  }
 }
 
 /** Track checkout initiation. */

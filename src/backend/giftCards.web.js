@@ -176,11 +176,22 @@ export const redeemGiftCard = webMethod(
         return { success: false, message: 'Gift card has no remaining balance' };
       }
 
-      const amountApplied = Math.min(redeemAmount, card.balance);
-      const newBalance = card.balance - amountApplied;
+      // RACE FIX: Claim card by setting status='processing' BEFORE calculating.
+      // Concurrent requests querying status='active' will not find this card.
+      const originalBalance = card.balance;
+      await wixData.update('GiftCards', { ...card, status: 'processing' });
+
+      // Re-read to confirm we won the claim (another request may have set processing first)
+      const claimed = await wixData.get('GiftCards', card._id);
+      if (claimed.status !== 'processing' || claimed.balance !== originalBalance) {
+        return { success: false, message: 'Gift card was modified concurrently, please retry' };
+      }
+
+      const amountApplied = Math.min(redeemAmount, claimed.balance);
+      const newBalance = claimed.balance - amountApplied;
 
       await wixData.update('GiftCards', {
-        ...card,
+        ...claimed,
         balance: newBalance,
         status: newBalance <= 0 ? 'redeemed' : 'active',
         lastUsedDate: new Date(),

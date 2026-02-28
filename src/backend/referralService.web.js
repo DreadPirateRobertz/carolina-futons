@@ -189,6 +189,12 @@ export const completeReferral = webMethod(
         return { success: false, error: 'Referral code and order number required' };
       }
 
+      // Require authenticated member for credit issuance
+      const member = await currentMember.getMember();
+      if (!member?._id) {
+        return { success: false, error: 'You must be logged in to complete a referral' };
+      }
+
       // Find the signed-up referral
       const result = await wixData.query(REFERRALS_COLLECTION)
         .eq('referralCode', cleanCode)
@@ -200,18 +206,19 @@ export const completeReferral = webMethod(
       }
 
       const referral = result.items[0];
-
-      // Require authenticated member for credit issuance
-      const member = await currentMember.getMember();
-      if (!member?._id) {
-        return { success: false, error: 'You must be logged in to complete a referral' };
-      }
       referral.refereeMemberId = member._id;
 
-      // Mark as purchased
-      referral.status = 'purchased';
+      // RACE FIX: Claim referral by setting status='processing' FIRST.
+      // Concurrent requests querying status='signed_up' will not find this referral.
+      referral.status = 'processing';
       referral.orderNumber = cleanOrder;
       await wixData.update(REFERRALS_COLLECTION, referral);
+
+      // Verify we won the claim
+      const claimed = await wixData.get(REFERRALS_COLLECTION, referral._id);
+      if (claimed.status !== 'processing') {
+        return { success: false, error: 'Referral was already being processed' };
+      }
 
       // Issue credits
       const expiresAt = new Date(Date.now() + CREDIT_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
@@ -227,20 +234,18 @@ export const completeReferral = webMethod(
       });
 
       // Credit for referee
-      if (member?._id) {
-        await wixData.insert(CREDITS_COLLECTION, {
-          memberId: member._id,
-          amount: REFEREE_CREDIT_AMOUNT,
-          source: 'referee_bonus',
-          referralId: referral._id,
-          status: 'available',
-          expiresAt,
-        });
-      }
+      await wixData.insert(CREDITS_COLLECTION, {
+        memberId: member._id,
+        amount: REFEREE_CREDIT_AMOUNT,
+        source: 'referee_bonus',
+        referralId: referral._id,
+        status: 'available',
+        expiresAt,
+      });
 
-      // Update status to credited
-      referral.status = 'credited';
-      await wixData.update(REFERRALS_COLLECTION, referral);
+      // Finalize status
+      claimed.status = 'credited';
+      await wixData.update(REFERRALS_COLLECTION, claimed);
 
       return {
         success: true,
@@ -363,13 +368,21 @@ export const applyCredit = webMethod(
         return { success: false, error: 'Credit has expired' };
       }
 
+      // RACE FIX: Set status='applied' immediately to claim.
+      // Concurrent requests will read status!='available' and bail out above.
       credit.status = 'applied';
       await wixData.update(CREDITS_COLLECTION, credit);
 
+      // Verify we won the claim
+      const claimed = await wixData.get(CREDITS_COLLECTION, credit._id);
+      if (claimed.status !== 'applied') {
+        return { success: false, error: 'Credit was modified concurrently, please retry' };
+      }
+
       return {
         success: true,
-        amount: credit.amount,
-        message: `$${credit.amount} credit applied to your order!`,
+        amount: claimed.amount,
+        message: `$${claimed.amount} credit applied to your order!`,
       };
     } catch (err) {
       console.error('applyCredit error:', err);
