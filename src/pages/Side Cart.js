@@ -5,14 +5,19 @@ import { getCompletionSuggestions } from 'backend/productRecommendations.web';
 import {
   getCurrentCart,
   addToCart,
+  updateCartItemQuantity,
   removeCartItem,
   onCartChanged,
   getShippingProgress,
   getTierProgress,
+  clampQuantity,
   FREE_SHIPPING_THRESHOLD,
+  MIN_QUANTITY,
+  MAX_QUANTITY,
   safeMultiply,
 } from 'public/cartService';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { addSwipeHandler } from 'public/mobileHelpers';
 
 let currentSideSugProduct = null;
 let _legacySugHandlerRegistered = false;
@@ -81,6 +86,16 @@ function initSideCart() {
     });
   } catch (e) {}
 
+  // Swipe right to close side cart on mobile
+  try {
+    addSwipeHandler($w('#sideCartPanel'), {
+      onRight: () => {
+        $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
+        announce($w, 'Cart closed');
+      },
+    });
+  } catch (e) {}
+
   // Register repeater handlers once (not on every refresh)
   initSideCartRepeater();
 }
@@ -93,9 +108,50 @@ function initSideCartRepeater() {
 
     repeater.onItemReady(($item, itemData) => {
       $item('#sideItemImage').src = itemData.image;
+      try { $item('#sideItemImage').alt = `${itemData.name}`; } catch (e) {}
       $item('#sideItemName').text = itemData.name;
       $item('#sideItemPrice').text = `$${Number(itemData.price).toFixed(2)}`;
-      $item('#sideItemQty').text = `Qty: ${itemData.quantity}`;
+
+      // Quantity spinner: −/qty/+ controls
+      try {
+        $item('#sideItemQty').text = String(itemData.quantity);
+        $item('#sideItemQty').accessibility.ariaLabel = `Quantity of ${itemData.name}`;
+        $item('#sideItemQty').accessibility.role = 'status';
+      } catch (e) {}
+
+      // Minus button
+      try {
+        $item('#sideQtyMinus').accessibility.ariaLabel = `Decrease quantity of ${itemData.name}`;
+        $item('#sideQtyMinus').onClick(async () => {
+          const currentQty = itemData.quantity || MIN_QUANTITY;
+          if (currentQty <= MIN_QUANTITY) return;
+          const newQty = currentQty - 1;
+          try {
+            await updateCartItemQuantity(itemData._id, newQty);
+            announce($w, `${itemData.name} quantity decreased to ${newQty}`);
+          } catch (err) {
+            console.error('Error updating side cart quantity:', err);
+          }
+          setTimeout(() => refreshSideCart(), 200);
+        });
+      } catch (e) {}
+
+      // Plus button
+      try {
+        $item('#sideQtyPlus').accessibility.ariaLabel = `Increase quantity of ${itemData.name}`;
+        $item('#sideQtyPlus').onClick(async () => {
+          const currentQty = itemData.quantity || MIN_QUANTITY;
+          if (currentQty >= MAX_QUANTITY) return;
+          const newQty = currentQty + 1;
+          try {
+            await updateCartItemQuantity(itemData._id, newQty);
+            announce($w, `${itemData.name} quantity increased to ${newQty}`);
+          } catch (err) {
+            console.error('Error updating side cart quantity:', err);
+          }
+          setTimeout(() => refreshSideCart(), 200);
+        });
+      } catch (e) {}
 
       // Line item total (price × qty)
       try {
