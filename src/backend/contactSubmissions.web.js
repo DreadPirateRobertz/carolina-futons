@@ -46,12 +46,12 @@ export const submitContactForm = webMethod(
   async (data) => {
     try {
       if (!data || !data.email) {
-        throw new Error('Email is required');
+        return { success: false, message: 'Email is required' };
       }
 
       const email = sanitize(data.email, 254).toLowerCase();
       if (!validateEmail(email)) {
-        throw new Error('Invalid email format');
+        return { success: false, message: 'Invalid email format' };
       }
 
       // Rate limit: reject if same email submitted within 60 seconds

@@ -255,6 +255,10 @@ function appendMessage($w, text, sender, name) {
     const messagesContainer = $w('#chatMessages');
     if (!messagesContainer) return;
 
+    // Ensure aria-live is set so screen readers announce new messages
+    try { messagesContainer.accessibility.ariaLive = 'polite'; } catch (e) {}
+    try { messagesContainer.accessibility.role = 'log'; } catch (e) {}
+
     // Append to existing text (simple text-based chat display)
     const prefix = sender === 'agent' ? `${name}: ` : `${name}: `;
     const currentText = messagesContainer.text || '';

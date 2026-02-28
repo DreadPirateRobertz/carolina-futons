@@ -333,13 +333,12 @@ export const toggleProductAlerts = webMethod(
  * Get notification history for the current member's wishlist.
  * Used on Member Page to show recent alerts sent.
  *
- * @param {string} memberId - The member ID.
  * @param {number} [limit=10] - Max results.
  * @returns {Promise<{items: Array, success: boolean}>}
  */
 export const getNotificationHistory = webMethod(
   Permissions.SiteMember,
-  async (_unused, limit = 10) => {
+  async (limit = 10) => {
     try {
       const { currentMember } = await import('wix-members-backend');
       const member = await currentMember.getMember();

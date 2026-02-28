@@ -168,6 +168,8 @@ function applySwatchTint($w, colorHex) {
 
 // ── Full Swatch Gallery Modal ─────────────────────────────────────────
 
+let _swatchGalleryEscHandler = null;
+
 async function openSwatchGallery($w, state) {
   try {
     const modal = $w('#swatchGalleryModal');
@@ -185,8 +187,37 @@ async function openSwatchGallery($w, state) {
         renderSwatchGalleryGrid($w, state, filtered);
       });
     } catch (e) {}
-    try { $w('#swatchGalleryClose').onClick(() => modal.hide('fade', { duration: 200 })); } catch (e) {}
+
+    const closeModal = () => {
+      modal.hide('fade', { duration: 200 });
+      // Restore focus to the "View All" button that opened the modal
+      try { $w('#swatchViewAll').focus(); } catch (e) {}
+      // Remove Escape handler
+      if (_swatchGalleryEscHandler && typeof document !== 'undefined') {
+        document.removeEventListener('keydown', _swatchGalleryEscHandler);
+        _swatchGalleryEscHandler = null;
+      }
+    };
+
+    try { $w('#swatchGalleryClose').onClick(closeModal); } catch (e) {}
+
+    // ARIA dialog attributes
+    try { modal.accessibility.role = 'dialog'; } catch (e) {}
+    try { modal.accessibility.ariaModal = true; } catch (e) {}
+    try { modal.accessibility.ariaLabel = 'Swatch gallery'; } catch (e) {}
+
     modal.show('fade', { duration: 200 });
+
+    // Focus the search input (first focusable element) for focus trapping
+    try { $w('#swatchSearch').focus(); } catch (e) {}
+
+    // Escape key closes modal
+    if (typeof document !== 'undefined') {
+      _swatchGalleryEscHandler = (e) => {
+        if (e.key === 'Escape') closeModal();
+      };
+      document.addEventListener('keydown', _swatchGalleryEscHandler);
+    }
   } catch (e) { console.error('Error opening swatch gallery:', e); }
 }
 

@@ -5,7 +5,7 @@ import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
 import { cacheProduct } from 'public/productCache';
 import { trackProductPageView } from 'public/engagementTracker';
 import { fireViewContent } from 'public/ga4Tracking';
-import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
+import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
@@ -200,13 +200,17 @@ async function initDimensionDisplay($w, state) {
         unitToggle.value = 'in';
         try { unitToggle.accessibility.ariaLabel = 'Switch dimension units'; } catch (e) {}
 
-        unitToggle.onChange(async () => {
-          _currentUnit = unitToggle.value;
-          const converted = await getProductDimensions(state.product._id, _currentUnit);
-          if (converted) {
-            state.dimensions = converted;
-            renderDimensions($w, converted);
-          }
+        let _unitToggleTimer = null;
+        unitToggle.onChange(() => {
+          clearTimeout(_unitToggleTimer);
+          _unitToggleTimer = setTimeout(async () => {
+            _currentUnit = unitToggle.value;
+            const converted = await getProductDimensions(state.product._id, _currentUnit);
+            if (converted) {
+              state.dimensions = converted;
+              renderDimensions($w, converted);
+            }
+          }, 300);
         });
       }
     } catch (e) {}
@@ -373,7 +377,9 @@ async function initSizeComparisonTable($w, state) {
   try {
     if (!state.product) return;
 
-    const data = await getComparisonTable(state.product._id, _currentUnit, 5);
+    // Limit comparison products on mobile to prevent table overflow
+    const maxProducts = isMobile() ? 3 : 5;
+    const data = await getComparisonTable(state.product._id, _currentUnit, maxProducts);
 
     if (!data.success || data.products.length < 2) {
       try { $w('#sizeCompareSection').collapse(); } catch (e) {}
@@ -426,14 +432,16 @@ function renderSizeComparisonTable($w, data) {
           : '—';
       } catch (e) {}
 
-      // Weight
+      // Weight — collapse on mobile to save horizontal space
       try {
         $item('#compareWeight').text = itemData.weight ? `${itemData.weight} lbs` : '—';
+        if (isMobile()) $item('#compareWeight').collapse();
       } catch (e) {}
 
-      // Mattress size
+      // Mattress size — collapse on mobile to save horizontal space
       try {
         $item('#compareMattressSize').text = itemData.mattressSize || '—';
+        if (isMobile()) $item('#compareMattressSize').collapse();
       } catch (e) {}
 
       // Navigate to product on click (unless current)
@@ -611,19 +619,22 @@ function initBrowseTracking(state) {
     });
 
     // Send session data on page visibility change (tab switch, navigate away)
+    // Guard against double-send from both visibilitychange and beforeunload
+    let _browseSessionSent = false;
+    const sendOnce = () => {
+      if (_browseSessionSent) return;
+      _browseSessionSent = true;
+      sendBrowseSession();
+    };
+
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') {
-          sendBrowseSession();
-        }
+        if (document.visibilityState === 'hidden') sendOnce();
       });
     }
 
-    // Also send on beforeunload as backup
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
-        sendBrowseSession();
-      });
+      window.addEventListener('beforeunload', sendOnce);
     }
 
     // Show "Remind Me" popup after 2 minutes of viewing

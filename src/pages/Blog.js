@@ -80,7 +80,9 @@ async function initRelatedProductsSidebar() {
 function initSocialShareButtons() {
   try {
     const currentUrl = encodeURIComponent(wixLocationFrontend.url);
-    const pageTitle = encodeURIComponent(document.title || 'Carolina Futons Blog');
+    const pageTitle = encodeURIComponent(
+      (typeof document !== 'undefined' && document.title) ? document.title : 'Carolina Futons Blog'
+    );
 
     try {
       $w('#shareFacebook').onClick(() => {

@@ -3,7 +3,7 @@
 import { getComparisonData, buildShareableUrl, trackComparison } from 'backend/comparisonService.web';
 import { getCompareList, removeFromCompare, addToCompare } from 'public/galleryHelpers.js';
 import { colors } from 'public/designTokens.js';
-import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
+import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { trackProductPageView } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import wixLocationFrontend from 'wix-location-frontend';
@@ -100,13 +100,14 @@ function renderProductHeaders() {
   if (!comparisonData?.products) return;
 
   const products = comparisonData.products;
+  const maxCols = isMobile() ? 2 : 4;
 
-  // Render up to 4 product header columns
+  // Render up to maxCols product header columns (2 on mobile, 4 on desktop)
   for (let i = 0; i < 4; i++) {
     const idx = i + 1;
     const product = products[i];
 
-    if (!product) {
+    if (!product || i >= maxCols) {
       try { $w(`#compareCol${idx}`).collapse(); } catch (e) {}
       continue;
     }
@@ -173,16 +174,17 @@ function renderComparisonRows() {
       ...row,
     }));
 
+    const rowMaxCols = isMobile() ? 2 : 4;
     repeater.onItemReady(($item, itemData) => {
       try { $item('#rowLabel').text = itemData.label; } catch (e) {}
 
-      // Render cells (up to 4)
+      // Render cells (up to maxCols — 2 on mobile, 4 on desktop)
       const cells = Array.isArray(itemData.cells) ? itemData.cells : [];
       for (let i = 0; i < 4; i++) {
         const cell = cells[i];
         const cellId = `#rowCell${i + 1}`;
 
-        if (!cell) {
+        if (!cell || i >= rowMaxCols) {
           try { $item(cellId).collapse(); } catch (e) {}
           continue;
         }

@@ -259,15 +259,15 @@ describe('trackAddToCart security', () => {
 
 describe('sendEmail security', () => {
   it('rejects invalid email format', async () => {
-    await expect(
-      sendEmail({
-        name: 'John',
-        email: 'not-valid',
-        phone: '555',
-        subject: 'Test',
-        message: 'Test message',
-      })
-    ).rejects.toThrow();
+    const result = await sendEmail({
+      name: 'John',
+      email: 'not-valid',
+      phone: '555',
+      subject: 'Test',
+      message: 'Test message',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Invalid email');
   });
 
   it('strips HTML from all fields', async () => {
@@ -285,16 +285,16 @@ describe('sendEmail security', () => {
 
 describe('submitSwatchRequest security', () => {
   it('rejects invalid email format', async () => {
-    await expect(
-      submitSwatchRequest({
-        name: 'John',
-        email: 'bad-email',
-        address: '123 Main St',
-        productId: 'prod-001',
-        productName: 'Test Product',
-        swatchNames: ['Red'],
-      })
-    ).rejects.toThrow();
+    const result = await submitSwatchRequest({
+      name: 'John',
+      email: 'bad-email',
+      address: '123 Main St',
+      productId: 'prod-001',
+      productName: 'Test Product',
+      swatchNames: ['Red'],
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('Invalid email');
   });
 
   it('sanitizes swatch names array', async () => {
