@@ -555,8 +555,8 @@ function showNoResults(query) {
     announce($w, `No results found for "${query}". Try a different search.`);
   } catch (e) {}
 
-  // Show popular searches as suggestions
-  loadPopularSuggestions();
+  try { $w('#noResultsText').text = 'Try one of these popular searches:'; } catch (e) {}
+  loadPopularChips();
 }
 
 async function showEmptyState() {
@@ -566,21 +566,56 @@ async function showEmptyState() {
     $w('#loadMoreBtn').hide();
   } catch (e) {}
 
-  loadPopularSuggestions();
+  try { $w('#noResultsText').text = 'Popular searches:'; } catch (e) {}
+  loadPopularChips();
 }
 
-async function loadPopularSuggestions() {
+async function loadPopularChips() {
+  const fallbackQueries = ['futon frames', 'mattresses', 'murphy beds', 'platform beds', 'accessories'];
   try {
-    const { queries = [] } = await getPopularSearches(6) || {};
-    if (queries.length > 0) {
-      const labels = queries.map(q => q.query).join(', ');
-      $w('#noResultsText').text = `Try searching for: ${labels}`;
-    } else {
-      $w('#noResultsText').text = 'Try searching for: futon frames, mattresses, murphy beds, platform beds, or accessories';
-    }
+    const { queries = [] } = await getPopularSearches(8) || {};
+    const queryStrings = queries.length > 0
+      ? queries.map(q => q.query)
+      : fallbackQueries;
+    const chips = buildSearchChips(queryStrings, 8);
+
+    const chipsRepeater = $w('#searchChipsRepeater');
+    if (!chipsRepeater) return;
+
+    chipsRepeater.onItemReady(($item, itemData) => {
+      try { $item('#chipLabel').text = itemData.label; } catch (e) {}
+      try {
+        $item('#chipLabel').accessibility.ariaLabel = `Search for ${itemData.label}`;
+      } catch (e) {}
+      try {
+        makeClickable($item('#chipLabel'), () => {
+          try { $w('#searchInput').value = itemData.query; } catch (e) {}
+          performSearch(itemData.query);
+        }, { ariaLabel: `Search for ${itemData.label}` });
+      } catch (e) {}
+    });
+
+    chipsRepeater.data = chips;
+    try { chipsRepeater.expand(); } catch (e) {}
   } catch (e) {
+    // Fallback: show chips from defaults
     try {
-      $w('#noResultsText').text = 'Try searching for: futon frames, mattresses, murphy beds, platform beds, or accessories';
+      const chips = buildSearchChips(fallbackQueries, 8);
+      const chipsRepeater = $w('#searchChipsRepeater');
+      if (!chipsRepeater) return;
+
+      chipsRepeater.onItemReady(($item, itemData) => {
+        try { $item('#chipLabel').text = itemData.label; } catch (e2) {}
+        try {
+          makeClickable($item('#chipLabel'), () => {
+            try { $w('#searchInput').value = itemData.query; } catch (e2) {}
+            performSearch(itemData.query);
+          }, { ariaLabel: `Search for ${itemData.label}` });
+        } catch (e2) {}
+      });
+
+      chipsRepeater.data = chips;
+      try { chipsRepeater.expand(); } catch (e2) {}
     } catch (e2) {}
   }
 }
