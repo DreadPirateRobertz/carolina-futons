@@ -50,7 +50,7 @@ async function performSearch(query) {
     _currentOffset = 0;
 
     try { $w('#searchQuery').text = `Results for "${query}"`; } catch (e) {}
-    try { $w('#loadingIndicator').show(); } catch (e) {}
+    showSkeletonGrid();
 
     trackEvent('page_view', { page: 'search', query });
 
@@ -63,7 +63,7 @@ async function performSearch(query) {
       offset: 0,
     });
 
-    try { $w('#loadingIndicator').hide(); } catch (e) {}
+    hideSkeletonGrid();
 
     if (!result?.products || result.products.length === 0) {
       trackEvent('search_no_results', { query });
@@ -96,7 +96,7 @@ async function performSearch(query) {
     } catch (e) {}
   } catch (err) {
     console.error('Search error:', err);
-    try { $w('#loadingIndicator').hide(); } catch (e) {}
+    hideSkeletonGrid();
     showNoResults(query);
   }
 }
@@ -198,6 +198,35 @@ async function renderResults(products, query) {
     _id: p._id,
   }));
   repeater.data = limitForViewport(mapped, { mobile: 8, tablet: 12, desktop: 24 });
+}
+
+function showSkeletonGrid() {
+  try {
+    const repeater = $w('#searchRepeater');
+    if (!repeater) return;
+
+    const viewport = getViewport();
+    const count = viewport === 'mobile' ? 4 : viewport === 'tablet' ? 6 : 8;
+    const skeletons = buildSkeletonData(count);
+
+    repeater.onItemReady(($item, itemData) => {
+      if (!itemData.isSkeleton) return;
+      try { $item('#searchName').text = ''; } catch (e) {}
+      try { $item('#searchPrice').text = ''; } catch (e) {}
+      try { $item('#searchDesc').text = ''; } catch (e) {}
+      try { $item('#searchRibbon').hide(); } catch (e) {}
+      try { $item('#searchAddBtn').hide(); } catch (e) {}
+      try { $item('#searchImage').src = ''; } catch (e) {}
+    });
+
+    repeater.data = skeletons;
+    repeater.expand();
+  } catch (e) {}
+  try { $w('#loadMoreBtn').hide(); } catch (e) {}
+}
+
+function hideSkeletonGrid() {
+  try { $w('#loadingIndicator').hide(); } catch (e) {}
 }
 
 async function initGridSwatchPreview($item, itemData) {
