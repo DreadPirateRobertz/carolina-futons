@@ -58,7 +58,7 @@ function initContactForm() {
 
     submitBtn.onClick(async () => {
       const name = sanitizeText($w('#contactName').value, 200);
-      const email = $w('#contactEmail').value?.trim();
+      const email = sanitizeText($w('#contactEmail').value, 254).toLowerCase().trim();
       const phone = sanitizeText($w('#contactPhone').value, 30);
       const subject = sanitizeText($w('#contactSubject').value, 200);
       const message = sanitizeText($w('#contactMessage').value, 5000);
@@ -254,7 +254,7 @@ function initAppointmentBooking() {
 
     bookBtn.onClick(async () => {
       const name = sanitizeText($w('#appointmentName').value, 200);
-      const email = $w('#appointmentEmail').value?.trim();
+      const email = sanitizeText($w('#appointmentEmail').value, 254).toLowerCase().trim();
       const phone = sanitizeText($w('#appointmentPhone').value, 30);
       const visitType = $w('#appointmentVisitType').value;
       const date = $w('#appointmentDate').value;
