@@ -186,6 +186,8 @@ export default defineConfig({
       'public/faqHelpers': path.resolve(__dirname, 'src/public/faqHelpers.js'),
       'public/models3d.js': path.resolve(__dirname, 'src/public/models3d.js'),
       'public/models3d': path.resolve(__dirname, 'src/public/models3d.js'),
+      'public/arSupport.js': path.resolve(__dirname, 'src/public/arSupport.js'),
+      'public/arSupport': path.resolve(__dirname, 'src/public/arSupport.js'),
     },
   },
 });
