@@ -10,6 +10,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { prioritizeSections } from 'public/performanceHelpers.js';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -120,33 +121,29 @@ async function loadFeaturedProducts() {
     if (!repeater || featured.length === 0) return;
 
     repeater.onItemReady(($item, itemData) => {
-      // Product image + alt
-      $item('#featuredImage').src = itemData.mainMedia;
+      // Card container structure: white bg, 12px radius, shadow, hover
+      try { styleCardContainer($item('#featuredCard')); } catch (e) {}
+      try { initCardHover($item('#featuredCard')); } catch (e) {}
+
+      // Product image with placeholder fallback
+      setCardImage($item('#featuredImage'), itemData);
       $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
       $item('#featuredName').text = itemData.name;
-      $item('#featuredPrice').text = itemData.formattedPrice;
       try { $item('#featuredImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
       try { $item('#featuredName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
 
-      // Show sale badge if discounted
-      if (itemData.formattedDiscountedPrice) {
-        $item('#featuredPrice').text = itemData.formattedDiscountedPrice;
-        try {
-          $item('#featuredOriginalPrice').text = itemData.formattedPrice;
-          $item('#featuredOriginalPrice').show();
-          $item('#featuredSaleBadge').show();
-        } catch (e) { /* optional elements */ }
-      }
-
-      // Show ribbon badge (Featured, New, Clearance, Bestseller, etc.)
+      // Price with sale strikethrough
       try {
-        if (itemData.ribbon) {
-          $item('#featuredRibbon').text = itemData.ribbon;
-          $item('#featuredRibbon').show();
-        } else {
-          $item('#featuredRibbon').hide();
-        }
-      } catch (e) { /* ribbon element optional */ }
+        formatCardPrice(
+          $item('#featuredPrice'),
+          $item('#featuredOriginalPrice'),
+          $item('#featuredSaleBadge'),
+          itemData
+        );
+      } catch (e) {}
+
+      // Badge (Featured, New, Clearance, Bestseller, Sale)
+      try { styleBadge($item('#featuredRibbon'), itemData.ribbon || null); } catch (e) {}
 
       // Color swatches — show finish count from productOptions
       try {
@@ -286,13 +283,24 @@ async function loadSaleHighlights() {
     }
 
     repeater.onItemReady(($item, itemData) => {
-      $item('#saleImage').src = itemData.mainMedia;
+      // Card container structure: white bg, 12px radius, shadow, hover
+      try { styleCardContainer($item('#saleCard')); } catch (e) {}
+      try { initCardHover($item('#saleCard')); } catch (e) {}
+
+      // Product image with placeholder fallback
+      setCardImage($item('#saleImage'), itemData);
       $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
       $item('#saleName').text = itemData.name;
-      $item('#salePrice').text = itemData.formattedDiscountedPrice || itemData.formattedPrice;
       try { $item('#saleImage').accessibility.ariaLabel = `View ${itemData.name} on sale`; } catch (e) {}
+
+      // Price with sale strikethrough
       try {
-        $item('#saleOrigPrice').text = itemData.formattedPrice;
+        formatCardPrice(
+          $item('#salePrice'),
+          $item('#saleOrigPrice'),
+          null,
+          itemData
+        );
       } catch (e) {}
 
       const slug = safeSlug(itemData.slug);
