@@ -1,11 +1,20 @@
 // Blog Post.js - Individual Blog Post Page
-// Wix Blog app renders the post content — this code adds SEO schema enhancements
-// Injects Article + FAQ JSON-LD structured data for each pillar blog post
+// Wix Blog app renders the post content — this code adds SEO schema,
+// reading time, social share buttons, author bio, and related posts
 import { getBlogArticleSchema, getBlogFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
-import { getBlogPost } from 'backend/blogContent';
+import { getBlogPost, getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { fireCustomEvent } from 'public/ga4Tracking';
+import { announce, makeClickable } from 'public/a11yHelpers';
+import {
+  estimateReadingTime,
+  formatPublishDate,
+  buildAuthorBio,
+  buildShareUrls,
+  getRelatedPosts,
+} from 'public/blogHelpers';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -18,25 +27,32 @@ $w.onReady(async function () {
     if (!slug) return;
 
     const post = getBlogPost(slug);
-    if (!post) return; // Not a pillar post — no custom schema needed
+    if (!post) return; // Not a pillar post — no custom enhancements
 
-    // Build schema scripts
+    // ── Reading Time Badge ────────────────────────────────────────────
+    initReadingTime(post);
+
+    // ── Author Bio ────────────────────────────────────────────────────
+    initAuthorBio();
+
+    // ── Social Share Buttons ──────────────────────────────────────────
+    initPostShareButtons(post);
+
+    // ── Related Posts ─────────────────────────────────────────────────
+    initRelatedPosts(post);
+
+    // ── SEO Schema Injection ──────────────────────────────────────────
     const schemas = [];
-
     const articleSchema = await getBlogArticleSchema(post);
     if (articleSchema) {
       schemas.push(`<script type="application/ld+json">${articleSchema}</script>`);
     }
-
     const faqSchema = await getBlogFaqSchema(slug);
     if (faqSchema) {
       schemas.push(`<script type="application/ld+json">${faqSchema}</script>`);
     }
-
     if (schemas.length > 0) {
-      try {
-        $w('#postSeoSchema').postMessage(schemas.join('\n'));
-      } catch (e) {}
+      try { $w('#postSeoSchema').postMessage(schemas.join('\n')); } catch (e) {}
     }
 
     // Inject meta tags (title, description, canonical)
@@ -48,7 +64,126 @@ $w.onReady(async function () {
       ]);
       try { $w('#postMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
     } catch (e) {}
+
+    fireCustomEvent('blog_post_view', { slug, category: post.category });
   } catch (err) {
-    console.error('Blog post schema injection error:', err);
+    console.error('Blog post page init error:', err);
   }
 });
+
+// ── Reading Time Badge ────────────────────────────────────────────────
+
+function initReadingTime(post) {
+  try {
+    const readTime = estimateReadingTime(post.excerpt);
+    try { $w('#postReadTime').text = `${readTime} min read`; } catch (e) {}
+    try { $w('#postDate').text = formatPublishDate(post.publishDate); } catch (e) {}
+    try { $w('#postCategory').text = post.category || ''; } catch (e) {}
+  } catch (err) {
+    console.error('Reading time error:', err);
+  }
+}
+
+// ── Author Bio ────────────────────────────────────────────────────────
+
+function initAuthorBio() {
+  try {
+    const bio = buildAuthorBio();
+    try { $w('#authorName').text = bio.name; } catch (e) {}
+    try { $w('#authorDescription').text = bio.description; } catch (e) {}
+    try { $w('#authorLocation').text = bio.location; } catch (e) {}
+    try { $w('#authorEstablished').text = `Est. ${bio.established}`; } catch (e) {}
+    try { $w('#authorBioSection').expand(); } catch (e) {}
+  } catch (err) {
+    console.error('Author bio error:', err);
+  }
+}
+
+// ── Social Share Buttons ──────────────────────────────────────────────
+
+function initPostShareButtons(post) {
+  try {
+    const postUrl = `https://www.carolinafutons.com/blog/${post.slug}`;
+    const urls = buildShareUrls(postUrl, post.title);
+    if (!urls.facebook) return;
+
+    try {
+      $w('#postShareFacebook').onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(urls.facebook, '_blank');
+        });
+      });
+      try { $w('#postShareFacebook').accessibility.ariaLabel = 'Share on Facebook (opens in new window)'; } catch (e) {}
+    } catch (e) {}
+
+    try {
+      $w('#postSharePinterest').onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(urls.pinterest, '_blank');
+        });
+      });
+      try { $w('#postSharePinterest').accessibility.ariaLabel = 'Share on Pinterest (opens in new window)'; } catch (e) {}
+    } catch (e) {}
+
+    try {
+      $w('#postShareTwitter').onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(urls.twitter, '_blank');
+        });
+      });
+      try { $w('#postShareTwitter').accessibility.ariaLabel = 'Share on Twitter (opens in new window)'; } catch (e) {}
+    } catch (e) {}
+
+    try {
+      $w('#postShareEmail').onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(urls.email, '_self');
+        });
+      });
+      try { $w('#postShareEmail').accessibility.ariaLabel = 'Share via email'; } catch (e) {}
+    } catch (e) {}
+  } catch (err) {
+    console.error('Share buttons error:', err);
+  }
+}
+
+// ── Related Posts ─────────────────────────────────────────────────────
+
+function initRelatedPosts(currentPost) {
+  try {
+    const allPosts = getAllBlogPosts() || [];
+    const related = getRelatedPosts(currentPost, allPosts);
+
+    if (related.length === 0) {
+      try { $w('#relatedPostsSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const relatedRepeater = $w('#relatedPostsRepeater');
+    if (!relatedRepeater) return;
+
+    relatedRepeater.data = related.map((p, i) => ({
+      ...p,
+      _id: p.slug || `related-${i}`,
+    }));
+
+    relatedRepeater.onItemReady(($item, itemData) => {
+      try {
+        try { $item('#relatedTitle').text = itemData.title || ''; } catch (e) {}
+        try { $item('#relatedCategory').text = itemData.category || ''; } catch (e) {}
+        try {
+          const readTime = estimateReadingTime(itemData.excerpt);
+          $item('#relatedReadTime').text = `${readTime} min read`;
+        } catch (e) {}
+
+        makeClickable($item('#relatedPostLink'), () => {
+          wixLocationFrontend.to(`/blog/${itemData.slug}`);
+        }, { ariaLabel: `Read related: ${itemData.title}` });
+      } catch (e) {}
+    });
+
+    try { $w('#relatedPostsSection').expand(); } catch (e) {}
+  } catch (err) {
+    console.error('Related posts error:', err);
+  }
+}
