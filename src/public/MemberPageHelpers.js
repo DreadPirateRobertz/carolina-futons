@@ -71,7 +71,10 @@ export function hasTrackingInfo(order) {
 }
 
 /**
- * Determine if the return button should be hidden (cancelled orders).
+ * Determine if the return button should be visible for an order.
+ * Only Cancelled orders hide the return button — all other statuses
+ * (including Processing/Shipped) show it. Actual return eligibility
+ * (return window, final-sale check) is enforced by ReturnsPortal.js.
  * @param {string} fulfillmentStatus
  * @returns {boolean}
  */
@@ -91,7 +94,7 @@ export function buildOrderGalleryItems(lineItems) {
     .map(li => ({
       src: li.mediaItem.src,
       alt: li.name ? `Ordered item: ${li.name}` : 'Ordered item',
-      title: li.name || '',
+      title: li.name,
     }));
 }
 

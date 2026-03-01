@@ -252,6 +252,10 @@ describe('Member Page — Order history display', () => {
     it('returns placeholder for empty string', () => {
       expect(formatOrderNumber('')).toBe('Order #—');
     });
+
+    it('formats zero as a valid order number', () => {
+      expect(formatOrderNumber(0)).toBe('Order #0');
+    });
   });
 
   describe('hasTrackingInfo', () => {
@@ -280,8 +284,10 @@ describe('Member Page — Order history display', () => {
     });
   });
 
+  // isReturnEligible only hides the button for Cancelled orders.
+  // Actual return eligibility (window, final-sale) is enforced by ReturnsPortal.js.
   describe('isReturnEligible', () => {
-    it('returns true for Processing orders', () => {
+    it('returns true for Processing orders (button visible, portal enforces window)', () => {
       expect(isReturnEligible('Processing')).toBe(true);
     });
 
@@ -333,7 +339,7 @@ describe('Member Page — Order history display', () => {
       ];
       const result = buildOrderGalleryItems(lineItems);
       expect(result[0].alt).toBe('Ordered item');
-      expect(result[0].title).toBe('');
+      expect(result[0].title).toBeUndefined();
     });
 
     it('returns empty array for null input', () => {
