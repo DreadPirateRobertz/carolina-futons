@@ -265,8 +265,8 @@ describe('Home Page — Product Card Grid', () => {
       cb($item, featuredWithColor);
       // Price should be regular price (no discount)
       expect(itemElements['#featuredPrice'].text).toBe(wallHuggerFrame.formattedPrice);
-      // Sale badge element should not be accessed for non-discounted products
-      expect(itemElements['#featuredSaleBadge']).toBeUndefined();
+      // Sale badge should be hidden for non-discounted products
+      expect(itemElements['#featuredSaleBadge']?.hide).toHaveBeenCalled();
     });
   });
 
