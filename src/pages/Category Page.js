@@ -19,6 +19,7 @@ import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
+import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -467,6 +468,15 @@ function initProductGrid() {
       // Wishlist heart button
       try {
         initCardWishlistButton($item, itemData, _wishlistSet.has(itemData._id));
+      } catch (e) {}
+
+      // "See It In a Room" lifestyle overlay badge
+      try {
+        const overlay = getLifestyleOverlay(category);
+        if (overlay) {
+          $item('#gridLifestyleBadge').text = overlay.label;
+          $item('#gridLifestyleBadge').show();
+        }
       } catch (e) {}
 
       // Compare button

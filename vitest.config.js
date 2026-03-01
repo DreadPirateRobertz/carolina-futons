@@ -200,6 +200,12 @@ export default defineConfig({
       'public/MemberPageHelpers': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
       'public/productCardHelpers.js': path.resolve(__dirname, 'src/public/productCardHelpers.js'),
       'public/productCardHelpers': path.resolve(__dirname, 'src/public/productCardHelpers.js'),
+      'public/blogHelpers.js': path.resolve(__dirname, 'src/public/blogHelpers.js'),
+      'public/blogHelpers': path.resolve(__dirname, 'src/public/blogHelpers.js'),
+      'public/lifestyleImages.js': path.resolve(__dirname, 'src/public/lifestyleImages.js'),
+      'public/lifestyleImages': path.resolve(__dirname, 'src/public/lifestyleImages.js'),
+      'public/LifestyleGallery.js': path.resolve(__dirname, 'src/public/LifestyleGallery.js'),
+      'public/LifestyleGallery': path.resolve(__dirname, 'src/public/LifestyleGallery.js'),
     },
   },
 });

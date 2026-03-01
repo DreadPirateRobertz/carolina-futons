@@ -1,19 +1,43 @@
 // Blog.js - Blog Page
-// Wix Blog app integration with SEO schema, social sharing, and related products sidebar
-// Blog content is managed in Wix Blog dashboard — this code adds enhancements
+// Card grid layout with featured post hero, category filters,
+// reading time badges, SEO schema, social sharing, and related products sidebar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
+import { getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import {
+  getCategories,
+  filterPostsByCategory,
+  getFeaturedPost,
+  estimateReadingTime,
+  formatPublishDate,
+  buildAuthorBio,
+} from 'public/blogHelpers';
+
+let _allPosts = [];
+let _activeCategory = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
   trackEvent('page_view', { page: 'blog' });
   try {
-    // ── SEO Schema Injection ───────────────────────────────────────────
+    // ── Load Blog Posts ─────────────────────────────────────────────
+    _allPosts = getAllBlogPosts() || [];
+
+    // ── Featured Post Hero ──────────────────────────────────────────
+    initFeaturedHero(_allPosts);
+
+    // ── Category Filters ────────────────────────────────────────────
+    initCategoryFilters(_allPosts);
+
+    // ── Blog Card Grid ──────────────────────────────────────────────
+    renderBlogGrid(_allPosts);
+
+    // ── SEO Schema Injection ────────────────────────────────────────
     const businessSchema = await getBusinessSchema();
     if (businessSchema) {
       try {
@@ -23,19 +47,149 @@ $w.onReady(async function () {
       } catch (e) {}
     }
 
-    // ── Related Products Sidebar ───────────────────────────────────────
+    // ── Related Products Sidebar ────────────────────────────────────
     initRelatedProductsSidebar();
 
-    // ── Social Share Buttons ───────────────────────────────────────────
+    // ── Social Share Buttons ────────────────────────────────────────
     initSocialShareButtons();
 
-    // ── Newsletter CTA ─────────────────────────────────────────────────
+    // ── Newsletter CTA ──────────────────────────────────────────────
     initBlogNewsletter();
 
   } catch (err) {
     console.error('Blog page init error:', err);
   }
 });
+
+// ── Featured Post Hero ────────────────────────────────────────────────
+// Shows the most recent post in a prominent hero section
+
+function initFeaturedHero(posts) {
+  try {
+    const featured = getFeaturedPost(posts);
+    if (!featured) {
+      try { $w('#featuredHeroSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $w('#featuredTitle').text = featured.title || ''; } catch (e) {}
+    try { $w('#featuredExcerpt').text = featured.excerpt || ''; } catch (e) {}
+    try { $w('#featuredCategory').text = featured.category || ''; } catch (e) {}
+    try {
+      $w('#featuredDate').text = formatPublishDate(featured.publishDate);
+    } catch (e) {}
+    try {
+      const readTime = estimateReadingTime(featured.excerpt);
+      $w('#featuredReadTime').text = `${readTime} min read`;
+    } catch (e) {}
+
+    try {
+      const authorBio = buildAuthorBio();
+      $w('#featuredAuthor').text = authorBio.name;
+    } catch (e) {}
+
+    try {
+      makeClickable($w('#featuredHeroLink'), () => {
+        wixLocationFrontend.to(`/blog/${featured.slug}`);
+      }, { ariaLabel: `Read featured post: ${featured.title}` });
+    } catch (e) {}
+
+    try { $w('#featuredHeroSection').expand(); } catch (e) {}
+    fireCustomEvent('blog_featured_view', { slug: featured.slug });
+  } catch (err) {
+    console.error('Featured hero error:', err);
+  }
+}
+
+// ── Category Filters ──────────────────────────────────────────────────
+// Horizontal filter chips — "All" + each category
+
+function initCategoryFilters(posts) {
+  try {
+    const filterRepeater = $w('#categoryFilterRepeater');
+    if (!filterRepeater) return;
+
+    const categories = getCategories(posts);
+    const filterData = [
+      { _id: 'all', label: 'All', value: null },
+      ...categories.map((cat, i) => ({
+        _id: `cat-${i}`,
+        label: cat,
+        value: cat,
+      })),
+    ];
+
+    filterRepeater.data = filterData;
+
+    filterRepeater.onItemReady(($item, itemData) => {
+      try {
+        $item('#filterLabel').text = itemData.label;
+        const isActive = itemData.value === _activeCategory;
+        try {
+          $item('#filterChip').style.backgroundColor = isActive ? '#5B8FA8' : '#F2E8D5';
+          $item('#filterLabel').style.color = isActive ? '#FFFFFF' : '#3A2518';
+        } catch (e) {}
+
+        makeClickable($item('#filterChip'), () => {
+          _activeCategory = itemData.value;
+          const filtered = filterPostsByCategory(_allPosts, _activeCategory);
+          renderBlogGrid(filtered);
+          filterRepeater.data = [...filterData];
+          fireCustomEvent('blog_filter', { category: itemData.label });
+          announce($w, `Showing ${itemData.label} posts`);
+        }, { ariaLabel: `Filter by ${itemData.label}` });
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error('Category filter error:', err);
+  }
+}
+
+// ── Blog Card Grid ────────────────────────────────────────────────────
+// Responsive card grid with title, excerpt, category, date, reading time
+
+function renderBlogGrid(posts) {
+  try {
+    const gridRepeater = $w('#blogGridRepeater');
+    if (!gridRepeater) return;
+
+    if (!posts || posts.length === 0) {
+      try { $w('#blogEmptyState').expand(); } catch (e) {}
+      try { $w('#blogGridRepeater').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $w('#blogEmptyState').collapse(); } catch (e) {}
+    try { $w('#blogGridRepeater').expand(); } catch (e) {}
+
+    const visiblePosts = limitForViewport(posts, { mobile: 4, tablet: 6, desktop: 9 });
+    gridRepeater.data = visiblePosts.map((p, i) => ({
+      ...p,
+      _id: p.slug || `post-${i}`,
+    }));
+
+    gridRepeater.onItemReady(($item, itemData) => {
+      try {
+        try { $item('#cardTitle').text = itemData.title || ''; } catch (e) {}
+        try { $item('#cardExcerpt').text = itemData.excerpt || ''; } catch (e) {}
+        try { $item('#cardCategory').text = itemData.category || ''; } catch (e) {}
+        try {
+          $item('#cardDate').text = formatPublishDate(itemData.publishDate);
+        } catch (e) {}
+        try {
+          const readTime = estimateReadingTime(itemData.excerpt);
+          $item('#cardReadTime').text = `${readTime} min read`;
+        } catch (e) {}
+
+        makeClickable($item('#blogCardLink'), () => {
+          wixLocationFrontend.to(`/blog/${itemData.slug}`);
+        }, { ariaLabel: `Read: ${itemData.title}` });
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error('Blog grid error:', err);
+  }
+}
 
 // ── Related Products Sidebar ──────────────────────────────────────────
 // Shows featured products alongside blog content for cross-selling

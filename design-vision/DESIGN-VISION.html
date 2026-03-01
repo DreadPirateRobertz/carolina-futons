@@ -558,6 +558,298 @@
   .status-progress { color: var(--sunset-coral); font-weight: 600; }
   .status-missing { color: #cc3333; font-weight: 600; }
 
+  /* --- DIVERGENCE TABLE --- */
+  .divergence-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+  }
+  .divergence-table th {
+    background: var(--espresso);
+    color: var(--sand-light);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 14px 16px;
+    border-bottom: none;
+  }
+  .divergence-table td {
+    padding: 14px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--sand-light);
+    vertical-align: top;
+  }
+  .divergence-table tr:last-child td { border-bottom: none; }
+  .divergence-table .severity-critical {
+    color: #cc3333;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .divergence-table .severity-high {
+    color: var(--sunset-coral);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .divergence-table .severity-medium {
+    color: var(--mountain-blue);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+  .platform-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-right: 4px;
+  }
+  .platform-web { background: #fce4d6; color: #a84c20; }
+  .platform-mobile { background: #d6eafc; color: #2060a8; }
+  .platform-correct { background: #d6f0d6; color: #2d6b3d; }
+  .platform-wrong { background: #fce4e4; color: #8b3030; }
+
+  /* --- SPRINT CARDS --- */
+  .sprint-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .sprint-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    border-left: 4px solid var(--mountain-blue);
+    transition: box-shadow 300ms ease, transform 300ms ease;
+  }
+  .sprint-card:hover {
+    box-shadow: 0 8px 24px rgba(58,37,24,0.12);
+    transform: translateY(-2px);
+  }
+  .sprint-card-header {
+    padding: 20px 24px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .sprint-card-id {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mountain-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--mountain-blue-light);
+    padding: 3px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .sprint-card-status {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .status-ready { background: #d6f0d6; color: #2d6b3d; }
+  .status-assigned { background: #fce4d6; color: #a84c20; }
+  .status-in-progress { background: #fcefd6; color: #8b6b00; }
+  .sprint-card-body {
+    padding: 0 24px 20px;
+  }
+  .sprint-card-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--espresso);
+    margin-bottom: 8px;
+  }
+  .sprint-card-desc {
+    font-size: 14px;
+    color: var(--espresso-light);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .sprint-card-assignee {
+    font-size: 13px;
+    color: var(--muted-brown);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sprint-card-assignee .assignee-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sunset-coral);
+  }
+
+  /* --- COLOR SYSTEM REFERENCE --- */
+  .color-ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .color-ref-swatch {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+    background: var(--white);
+  }
+  .color-ref-swatch .swatch-block {
+    height: 72px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 8px 12px;
+  }
+  .color-ref-swatch .swatch-block span {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.9);
+    color: var(--espresso);
+  }
+  .color-ref-swatch .swatch-info {
+    padding: 10px 12px;
+  }
+  .color-ref-swatch .swatch-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--espresso);
+    margin-bottom: 2px;
+  }
+  .color-ref-swatch .swatch-role {
+    font-size: 11px;
+    color: var(--muted-brown);
+  }
+  .banned-swatch .swatch-block {
+    position: relative;
+  }
+  .banned-swatch .swatch-block::after {
+    content: 'BANNED';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-size: 18px;
+    font-weight: 700;
+    color: #cc3333;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 8px rgba(255,255,255,0.9), 0 0 16px rgba(255,255,255,0.7);
+    pointer-events: none;
+  }
+  .banned-swatch {
+    border: 2px dashed #cc3333;
+    opacity: 0.85;
+  }
+
+  /* --- TYPOGRAPHY SCALE --- */
+  .type-scale {
+    margin-bottom: 32px;
+  }
+  .type-scale-row {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--sand-dark);
+  }
+  .type-scale-row:last-child { border-bottom: none; }
+  .type-scale-label {
+    flex: 0 0 140px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted-brown);
+  }
+  .type-scale-sample {
+    flex: 1;
+    color: var(--espresso);
+  }
+  .type-scale-meta {
+    flex: 0 0 220px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* --- COMPONENT SPEC CARDS --- */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .spec-card {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+  }
+  .spec-card-header {
+    padding: 20px 24px;
+    background: var(--sand-light);
+    border-bottom: 1px solid var(--sand-dark);
+  }
+  .spec-card-header h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--espresso);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 0;
+  }
+  .spec-card-body {
+    padding: 20px 24px;
+  }
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--sand-light);
+    font-size: 13px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-prop {
+    color: var(--muted-brown);
+    font-weight: 500;
+  }
+  .spec-val {
+    font-weight: 600;
+    color: var(--espresso);
+    text-align: right;
+  }
+  .spec-val .color-pip {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+    border: 1px solid rgba(58,37,24,0.15);
+  }
+
   /* --- RESPONSIVE --- */
   @media (max-width: 768px) {
     .compare-grid { grid-template-columns: 1fr; }
@@ -566,6 +858,10 @@
     .trust-bar { flex-wrap: wrap; gap: 24px; }
     .cover h1 { font-size: 40px; }
     section { padding: 48px 20px; }
+    .sprint-grid { grid-template-columns: 1fr; }
+    .spec-grid { grid-template-columns: 1fr; }
+    .type-scale-row { flex-direction: column; gap: 4px; }
+    .type-scale-meta { text-align: left; }
   }
 </style>
 </head>
@@ -1206,6 +1502,667 @@
       <div style="font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--espresso);">88</div>
       <div style="font-size: 14px; color: var(--muted-brown); margin-top: 8px;">Products in Catalog</div>
     </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 8: CROSS-PLATFORM DESIGN ALIGNMENT ===== -->
+<section class="dark">
+  <div class="inner">
+    <h4 style="color: var(--sunset-coral); margin-bottom: 8px;">Cross-Platform Audit</h4>
+    <h2>Cross-Platform Design Alignment</h2>
+    <p class="section-intro">
+      A full audit of web (Wix Studio) vs. mobile (React Native/Expo) surfaces revealed five critical divergences where the platforms present different brands to the same customer. The mobile app is closer to the spec; the web must catch up.
+    </p>
+
+    <h3 style="color: var(--sand-base); margin-bottom: 24px;">Divergence Summary</h3>
+
+    <table class="divergence-table">
+      <thead>
+        <tr>
+          <th style="width: 22%;">Issue</th>
+          <th style="width: 12%;">Severity</th>
+          <th style="width: 22%;">Web (Current)</th>
+          <th style="width: 22%;">Mobile (Current)</th>
+          <th style="width: 22%;">Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CTA Button Color</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>
+            <span class="platform-tag platform-wrong">#3ECF8E Green</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Live site uses green on all primary CTAs despite spec defining coral</span>
+          </td>
+          <td>
+            <span class="platform-tag platform-correct">#E8845C Coral</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Correctly implements Sunset Coral per brand spec</span>
+          </td>
+          <td>
+            <span style="display:inline-block;width:14px;height:14px;background:#E8845C;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
+            <strong>#E8845C</strong> everywhere. Green has no place in the Blue Ridge palette.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Background Treatment</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>
+            <span class="platform-tag platform-wrong">Pink / Lavender</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Product pages use pink/lavender gradients that break the mountain aesthetic</span>
+          </td>
+          <td>
+            <span class="platform-tag platform-correct">Sand #E8D5B7</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Warm sand backgrounds throughout, per spec</span>
+          </td>
+          <td>
+            <span style="display:inline-block;width:14px;height:14px;background:#E8D5B7;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
+            <strong>sandBase</strong> or <strong>offWhite</strong> only. No pink, no lavender.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Product Card Structure</strong></td>
+          <td><span class="severity-high">High</span></td>
+          <td>
+            <span class="platform-tag platform-wrong">Bare Repeater</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Image + text only. No card container, no shadow, no badges, no wishlist, no ratings</span>
+          </td>
+          <td>
+            <span class="platform-tag platform-correct">Full ProductCard</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Structured card: shadow, badges (Sale/New/Bestseller), wishlist heart, star ratings, price formatting</span>
+          </td>
+          <td>
+            Web cards must match mobile structure: white bg, 12px radius, shadow, badge system, wishlist, ratings.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Mobile Navigation (Web)</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>
+            <span class="platform-tag platform-wrong">Broken</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Horizontal nav overflows on mobile viewport, logo clips, no hamburger menu</span>
+          </td>
+          <td>
+            <span class="platform-tag platform-correct">Bottom Tabs</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Bottom tab bar with Home, Shop, Cart (badge), Account. Well-implemented.</span>
+          </td>
+          <td>
+            Web needs hamburger menu at mobile breakpoint. Slide-out drawer, sandLight bg, coral active state.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Search Experience</strong></td>
+          <td><span class="severity-high">High</span></td>
+          <td>
+            <span class="platform-tag platform-wrong">Basic Input</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Simple header search field, navigates to results page</span>
+          </td>
+          <td>
+            <span class="platform-tag platform-correct">Full Autocomplete</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">SearchBar with autocomplete dropdown, recent searches, suggestions, visual feedback</span>
+          </td>
+          <td>
+            Web search must add autocomplete suggestions, recent searches, and real-time matching.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="color: var(--sand-base); margin-top: 48px; margin-bottom: 16px;">Token Alignment Status</h3>
+    <p style="color: var(--sand-dark); font-size: 15px; margin-bottom: 24px;">
+      A shared token layer (<code style="background: var(--espresso-light); padding: 2px 6px; border-radius: 3px; font-size: 13px;">sharedTokens.js</code>) is the cross-platform single source of truth. Colors, spacing, border radius, and shadows are numerically aligned. The divergence is in <em>application</em>, not definition &mdash; the Wix Studio editor overrides the tokens.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;">
+      <div style="background: var(--espresso-light); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--sand-base);">12</div>
+        <div style="font-size: 12px; color: var(--sand-dark); margin-top: 4px;">Color Tokens</div>
+        <div style="font-size: 11px; color: var(--sunset-coral); margin-top: 4px; font-weight: 600;">2 Divergent</div>
+      </div>
+      <div style="background: var(--espresso-light); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--sand-base);">10</div>
+        <div style="font-size: 12px; color: var(--sand-dark); margin-top: 4px;">Spacing Tokens</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 600;">All Aligned</div>
+      </div>
+      <div style="background: var(--espresso-light); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--sand-base);">7</div>
+        <div style="font-size: 12px; color: var(--sand-dark); margin-top: 4px;">Border Radius</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 600;">All Aligned</div>
+      </div>
+      <div style="background: var(--espresso-light); border-radius: 12px; padding: 24px; text-align: center;">
+        <div style="font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--sand-base);">5</div>
+        <div style="font-size: 12px; color: var(--sand-dark); margin-top: 4px;">Shadow Tokens</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 600;">All Aligned</div>
+      </div>
+    </div>
+
+    <p style="color: var(--sand-dark); font-size: 14px; font-style: italic;">
+      Key takeaway: The mobile app is closer to competitor standards than the web site. The web must catch up to the mobile app, not the other way around. See HOMOGENIZATION-ANALYSIS.md for the full token matrix.
+    </p>
+  </div>
+</section>
+
+<!-- ===== SECTION 9: SPRINT 3 FRONTEND ROADMAP ===== -->
+<section>
+  <h4 style="color: var(--sunset-coral); margin-bottom: 8px;">Sprint 3 Plan</h4>
+  <h2>Sprint 3 Frontend Roadmap</h2>
+  <p class="section-intro">
+    Four high-impact beads targeting the critical divergences identified in the cross-platform audit. Each addresses a top-ranked divergence from the homogenization analysis. Sprint 3 focus: close the web-to-mobile parity gap.
+  </p>
+
+  <div class="sprint-grid">
+
+    <!-- cf-t2px: Mobile Hamburger Nav -->
+    <div class="sprint-card" style="border-left-color: #cc3333;">
+      <div class="sprint-card-header">
+        <span class="sprint-card-id">cf-t2px</span>
+        <span class="sprint-card-status status-assigned">Assigned</span>
+      </div>
+      <div class="sprint-card-body">
+        <div class="sprint-card-title">Mobile Hamburger Navigation</div>
+        <div class="sprint-card-desc">
+          Wire the <code>#mobileMenuButton</code> and <code>#mobileMenuOverlay</code> elements in masterPage.js. Show hamburger at mobile breakpoint, hide horizontal nav. Slide-out drawer with sandLight background, espresso text, coral active links. Cart badge included.
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="sprint-card-assignee">
+            <span class="assignee-dot"></span> radahn
+          </div>
+          <div style="font-size: 11px; color: var(--muted-brown);">
+            Divergence Rank: <strong style="color: #cc3333;">#2 Critical</strong>
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--muted-brown);">
+          <strong>Files:</strong> src/pages/masterPage.js &bull; Wix Studio mobile breakpoint
+        </div>
+      </div>
+    </div>
+
+    <!-- cf-biba: Product Card Structure -->
+    <div class="sprint-card" style="border-left-color: var(--sunset-coral);">
+      <div class="sprint-card-header">
+        <span class="sprint-card-id">cf-biba</span>
+        <span class="sprint-card-status status-assigned">Assigned</span>
+      </div>
+      <div class="sprint-card-body">
+        <div class="sprint-card-title">Product Card Structure + Badges</div>
+        <div class="sprint-card-desc">
+          Build proper card containers in product repeaters. White background, 12px radius, espresso-tinted shadow. Add badge system (Sale=coral, New=blue, Bestseller=blue) top-left overlay. Match mobile ProductCard architecture.
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="sprint-card-assignee">
+            <span class="assignee-dot"></span> rennala
+          </div>
+          <div style="font-size: 11px; color: var(--muted-brown);">
+            Divergence Rank: <strong style="color: var(--sunset-coral);">#4 High</strong>
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--muted-brown);">
+          <strong>Files:</strong> src/pages/Home.js &bull; src/pages/Category Page.js &bull; Wix Studio editor
+        </div>
+      </div>
+    </div>
+
+    <!-- cf-ys3q: Star Ratings + Wishlist -->
+    <div class="sprint-card" style="border-left-color: var(--sunset-coral);">
+      <div class="sprint-card-header">
+        <span class="sprint-card-id">cf-ys3q</span>
+        <span class="sprint-card-status status-assigned">Assigned</span>
+      </div>
+      <div class="sprint-card-body">
+        <div class="sprint-card-title">Star Ratings + Wishlist Hookup</div>
+        <div class="sprint-card-desc">
+          Hook up the existing backend review and wishlist services to the web UI. Add coral star ratings (5-star display + review count) and heart wishlist toggle buttons to all product cards. Backend is ready; this is the frontend wiring.
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="sprint-card-assignee">
+            <span class="assignee-dot"></span> godfrey
+          </div>
+          <div style="font-size: 11px; color: var(--muted-brown);">
+            Divergence Rank: <strong style="color: var(--sunset-coral);">#4 High</strong> (sub-items)
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--muted-brown);">
+          <strong>Files:</strong> src/pages/Home.js &bull; wishlistService.web.js &bull; reviewsService.web.js
+        </div>
+      </div>
+    </div>
+
+    <!-- cf-bu5s: Search Autocomplete -->
+    <div class="sprint-card" style="border-left-color: var(--mountain-blue);">
+      <div class="sprint-card-header">
+        <span class="sprint-card-id">cf-bu5s</span>
+        <span class="sprint-card-status status-assigned">Assigned</span>
+      </div>
+      <div class="sprint-card-body">
+        <div class="sprint-card-title">Search Autocomplete</div>
+        <div class="sprint-card-desc">
+          Enhance the web search with live autocomplete suggestions as user types. Add recent searches stored in session, product name fuzzy matching, and a styled dropdown matching mobile SearchBar. sandLight background, hairline border, coral highlights.
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="sprint-card-assignee">
+            <span class="assignee-dot"></span> miquella
+          </div>
+          <div style="font-size: 11px; color: var(--muted-brown);">
+            Divergence Rank: <strong style="color: var(--mountain-blue);">#6 Medium</strong>
+          </div>
+        </div>
+        <div style="margin-top: 12px; font-size: 12px; color: var(--muted-brown);">
+          <strong>Files:</strong> src/pages/Search Suggestions Box.js &bull; src/pages/masterPage.js
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="background: var(--sand-light); border-radius: 12px; padding: 24px 32px; border-left: 4px solid var(--sunset-coral);">
+    <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">Sprint 3 Scope Note</h4>
+    <p style="font-size: 14px; color: var(--espresso-light); line-height: 1.6; margin: 0;">
+      CTA color (#1) and background treatment (#3) divergences are <strong>editor-only fixes</strong> &mdash; no code changes needed, applied in Wix Studio theme settings. The four beads above target the code-requiring divergences. Combined, these six changes close the top six ranked issues from the homogenization analysis.
+    </p>
+  </div>
+</section>
+
+<!-- ===== SECTION 10: UNIFIED DESIGN LANGUAGE ===== -->
+<section class="sand">
+  <div class="inner">
+    <h4 style="color: var(--sunset-coral); margin-bottom: 8px;">Design System</h4>
+    <h2>Unified Design Language</h2>
+    <p class="section-intro">
+      The canonical visual reference for Carolina Futons across all platforms. Every PR that touches UI must be reviewed against this section. One brand, one language, zero ambiguity.
+    </p>
+
+    <!-- 10.1 Canonical Color Palette -->
+    <h3>Canonical Color Palette</h3>
+    <p style="font-size: 14px; color: var(--espresso-light); margin-bottom: 24px;">
+      Source of truth: <code style="background: var(--white); padding: 2px 6px; border-radius: 3px; font-size: 13px;">src/public/sharedTokens.js</code>. Every color has a defined role. Off-palette colors are not permitted.
+    </p>
+
+    <h4 style="color: var(--espresso); margin-bottom: 16px;">Approved Palette</h4>
+    <div class="color-ref-grid">
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #E8D5B7;"><span>#E8D5B7</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Sand Base</div>
+          <div class="swatch-role">Primary page backgrounds</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #F2E8D5;"><span>#F2E8D5</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Sand Light</div>
+          <div class="swatch-role">Cards, header, tab bar, inputs</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #D4BC96;"><span>#D4BC96</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Sand Dark</div>
+          <div class="swatch-role">Borders, dividers, input outlines</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #FAF7F2;"><span>#FAF7F2</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Off White</div>
+          <div class="swatch-role">Card interiors, modals, content bg</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #3A2518;"><span style="background: rgba(255,255,255,0.9);">#3A2518</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Espresso</div>
+          <div class="swatch-role">Primary text, dark backgrounds</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #5C4033;"><span style="background: rgba(255,255,255,0.9);">#5C4033</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Espresso Light</div>
+          <div class="swatch-role">Secondary text, descriptions</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #5B8FA8;"><span>#5B8FA8</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Mountain Blue</div>
+          <div class="swatch-role">Links, secondary CTA, New badge</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch">
+        <div class="swatch-block" style="background: #E8845C;"><span>#E8845C</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Sunset Coral</div>
+          <div class="swatch-role">Primary CTA, Sale badge, active states</div>
+        </div>
+      </div>
+    </div>
+
+    <h4 style="color: #cc3333; margin-bottom: 16px;">Banned Colors</h4>
+    <p style="font-size: 14px; color: var(--espresso-light); margin-bottom: 16px;">
+      These colors must be removed from all platforms. They have no role in the Blue Ridge brand. PRs introducing these colors will be rejected.
+    </p>
+    <div class="color-ref-grid" style="grid-template-columns: repeat(3, minmax(180px, 220px));">
+      <div class="color-ref-swatch banned-swatch">
+        <div class="swatch-block" style="background: #3ECF8E;"><span>#3ECF8E</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name" style="color: #cc3333;">Green</div>
+          <div class="swatch-role">Currently on web CTAs. Must be coral.</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch banned-swatch">
+        <div class="swatch-block" style="background: linear-gradient(135deg, #E8B0C8, #C8A0D8);"><span style="font-size: 10px;">Pink/Lavender</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name" style="color: #cc3333;">Pink / Lavender</div>
+          <div class="swatch-role">Currently on web product page bgs.</div>
+        </div>
+      </div>
+      <div class="color-ref-swatch banned-swatch">
+        <div class="swatch-block" style="background: linear-gradient(135deg, #FF69B4, #FFB6C1);"><span style="font-size: 10px;">Hot Pink</span></div>
+        <div class="swatch-info">
+          <div class="swatch-name" style="color: #cc3333;">Hot Pink</div>
+          <div class="swatch-role">Current site hero hearts. Must be removed.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10.2 Typography Scale -->
+    <h3 style="margin-top: 48px;">Typography Scale</h3>
+    <p style="font-size: 14px; color: var(--espresso-light); margin-bottom: 24px;">
+      Two font families only. Playfair Display for headings (elegance), Source Sans 3 for body (readability). Mobile native sizes are proportionally scaled (~75-90% of desktop).
+    </p>
+
+    <div class="type-scale" style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+      <div class="type-scale-row">
+        <div class="type-scale-label">Hero Title</div>
+        <div class="type-scale-sample" style="font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700; line-height: 1.1;">Mountain Inspired</div>
+        <div class="type-scale-meta">Playfair 700 &bull; 56px / 42px / 36px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">H1</div>
+        <div class="type-scale-sample" style="font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; line-height: 1.15;">Section Heading</div>
+        <div class="type-scale-meta">Playfair 700 &bull; 42px / 34px / 28px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">H2</div>
+        <div class="type-scale-sample" style="font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; line-height: 1.2;">Subsection Title</div>
+        <div class="type-scale-meta">Playfair 700 &bull; 32px / 26px / 24px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">H3</div>
+        <div class="type-scale-sample" style="font-family: 'Source Sans 3', sans-serif; font-size: 22px; font-weight: 600; line-height: 1.3;">Component Heading</div>
+        <div class="type-scale-meta">Source Sans 600 &bull; 24px / 21px / 20px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">H4</div>
+        <div class="type-scale-sample" style="font-family: 'Source Sans 3', sans-serif; font-size: 18px; font-weight: 600; line-height: 1.35;">Label Heading</div>
+        <div class="type-scale-meta">Source Sans 600 &bull; 20px / 18px / 18px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">Body</div>
+        <div class="type-scale-sample" style="font-family: 'Source Sans 3', sans-serif; font-size: 16px; font-weight: 400; line-height: 1.6;">The Blue Ridge Queen futon blends handcrafted quality with mountain-inspired design for lasting comfort in any living space.</div>
+        <div class="type-scale-meta">Source Sans 400 &bull; 16px / 15px / 16px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">Caption</div>
+        <div class="type-scale-sample" style="font-family: 'Source Sans 3', sans-serif; font-size: 12px; font-weight: 500; line-height: 1.4; color: var(--muted-brown);">Available in 700+ fabric options &bull; Free swatch kit</div>
+        <div class="type-scale-meta">Source Sans 500 &bull; 12px / 12px / 12px</div>
+      </div>
+      <div class="type-scale-row">
+        <div class="type-scale-label">Button</div>
+        <div class="type-scale-sample" style="font-family: 'Source Sans 3', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;">Shop Collection</div>
+        <div class="type-scale-meta">Source Sans 600 &bull; 15px / 15px / 14px &bull; 0.04em</div>
+      </div>
+    </div>
+
+    <!-- 10.3 Component Standards -->
+    <h3 style="margin-top: 48px;">Component Standards</h3>
+    <p style="font-size: 14px; color: var(--espresso-light); margin-bottom: 24px;">
+      Universal specs for the three key components that must be identical across platforms. These are the acceptance criteria for Sprint 3 beads.
+    </p>
+
+    <div class="spec-grid">
+
+      <!-- Product Card Spec -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <h4>Product Card (Universal)</h4>
+        </div>
+        <div class="spec-card-body">
+          <div class="spec-row">
+            <span class="spec-prop">Background</span>
+            <span class="spec-val"><span class="color-pip" style="background: #FFFFFF;"></span>#FFFFFF (white)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Border Radius</span>
+            <span class="spec-val">12px</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Shadow (rest)</span>
+            <span class="spec-val">0 2px 12px rgba(58,37,24,0.08)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Shadow (hover)</span>
+            <span class="spec-val">0 8px 24px rgba(58,37,24,0.12)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Image Ratio</span>
+            <span class="spec-val">4:3 aspect, sandLight placeholder</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Badge Position</span>
+            <span class="spec-val">Top-left, 4px radius, white text</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Badge: Sale</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Sunset Coral</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Badge: New</span>
+            <span class="spec-val"><span class="color-pip" style="background: #5B8FA8;"></span>Mountain Blue</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Badge: Bestseller</span>
+            <span class="spec-val"><span class="color-pip" style="background: #5B8FA8;"></span>Mountain Blue</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Wishlist Heart</span>
+            <span class="spec-val">Top-right overlay, coral when active</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Star Rating</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral stars + muted count</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Price</span>
+            <span class="spec-val">Espresso bold &bull; Original: muted strikethrough</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Button Spec -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <h4>Button System</h4>
+        </div>
+        <div class="spec-card-body">
+          <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--sand-light);">
+            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-brown); margin-bottom: 8px;">Primary Button</div>
+            <div style="display: inline-block; background: #E8845C; color: white; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; box-shadow: 0 2px 8px rgba(232,132,92,0.3);">Shop Collection</div>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Background</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>#E8845C Coral</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Text</span>
+            <span class="spec-val">#FFFFFF, Source Sans 600, 15px</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Border Radius</span>
+            <span class="spec-val">8px</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Shadow</span>
+            <span class="spec-val">0 2px 8px rgba(232,132,92,0.3)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Hover (web)</span>
+            <span class="spec-val"><span class="color-pip" style="background: #C96B44;"></span>#C96B44 (darken)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Disabled</span>
+            <span class="spec-val">50% opacity</span>
+          </div>
+          <div style="margin-top: 16px; margin-bottom: 16px; padding-top: 12px; padding-bottom: 12px; border-top: 2px solid var(--sand-light); border-bottom: 2px solid var(--sand-light);">
+            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-brown); margin-bottom: 8px;">Secondary Button</div>
+            <div style="display: inline-block; background: #5B8FA8; color: white; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;">View Details</div>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Background</span>
+            <span class="spec-val"><span class="color-pip" style="background: #5B8FA8;"></span>#5B8FA8 Mountain Blue</span>
+          </div>
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--sand-light);">
+            <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-brown); margin-bottom: 8px;">Ghost Button</div>
+            <div style="display: inline-block; background: transparent; color: #3A2518; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #5C4033;">Learn More</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Spec -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <h4>Search Component</h4>
+        </div>
+        <div class="spec-card-body">
+          <div style="margin-bottom: 16px;">
+            <div style="background: #F2E8D5; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--muted);">&#128269;</span>
+              <span style="color: var(--muted); font-size: 14px;">Search futons, sofas, fabrics...</span>
+            </div>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Input Background</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Border Radius</span>
+            <span class="spec-val">12px</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Placeholder</span>
+            <span class="spec-val"><span class="color-pip" style="background: #999;"></span>Muted text</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Dropdown BG</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Dropdown Border</span>
+            <span class="spec-val">Hairline top, sandDark</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Recent Icon</span>
+            <span class="spec-val">Clock icon + query + remove btn</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Suggestion Highlight</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral on match text</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Keyboard Nav</span>
+            <span class="spec-val">Arrow keys + Enter to select</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Spec -->
+      <div class="spec-card">
+        <div class="spec-card-header">
+          <h4>Mobile Navigation (Web)</h4>
+        </div>
+        <div class="spec-card-body">
+          <div class="spec-row">
+            <span class="spec-prop">Trigger</span>
+            <span class="spec-val">Hamburger icon at mobile breakpoint</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Drawer BG</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Text Color</span>
+            <span class="spec-val"><span class="color-pip" style="background: #3A2518;"></span>Espresso</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Active Link</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Sunset Coral</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Animation</span>
+            <span class="spec-val">Slide-in from right, 250ms ease</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Overlay</span>
+            <span class="spec-val">rgba(58,37,24,0.6)</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Cart Badge</span>
+            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral bg, white count text</span>
+          </div>
+          <div class="spec-row">
+            <span class="spec-prop">Close</span>
+            <span class="spec-val">X button + tap overlay + swipe right</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Token Architecture Diagram -->
+    <h3 style="margin-top: 48px;">Cross-Platform Token Architecture</h3>
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(58,37,24,0.08); margin-bottom: 32px;">
+      <div style="font-family: 'Source Sans 3', monospace; font-size: 14px; line-height: 2.2; color: var(--espresso);">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <span style="background: var(--sunset-coral); color: white; padding: 6px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; letter-spacing: 0.02em;">sharedTokens.js</span>
+          <div style="font-size: 11px; color: var(--muted-brown); margin-top: 4px;">SOURCE OF TRUTH</div>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 80px; position: relative;">
+          <div style="text-align: center;">
+            <div style="width: 2px; height: 24px; background: var(--sand-dark); margin: 0 auto;"></div>
+            <span style="background: var(--mountain-blue); color: white; padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; display: inline-block;">designTokens.js</span>
+            <div style="font-size: 11px; color: var(--muted-brown); margin-top: 4px;">Web &mdash; CSS formatting, grid, SEO</div>
+            <div style="width: 2px; height: 16px; background: var(--sand-dark); margin: 4px auto;"></div>
+            <div style="font-size: 11px; color: var(--muted); font-style: italic;">All Wix Velo pages</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 2px; height: 24px; background: var(--sand-dark); margin: 0 auto;"></div>
+            <span style="background: var(--mountain-blue); color: white; padding: 6px 16px; border-radius: 6px; font-weight: 600; font-size: 12px; display: inline-block;">tokens.ts</span>
+            <div style="font-size: 11px; color: var(--muted-brown); margin-top: 4px;">Mobile &mdash; RN formatting, mobile scale</div>
+            <div style="width: 2px; height: 16px; background: var(--sand-dark); margin: 4px auto;"></div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <div style="font-size: 11px; color: var(--muted); font-style: italic;">ThemeProvider.tsx</div>
+              <div style="font-size: 11px; color: var(--muted); font-style: italic;">useTheme()</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sand-light); font-size: 13px; color: var(--espresso-light); text-align: center;">
+        Architecture is correct. Gap is in <strong>application</strong>, not definition. Wix Studio editor overrides the code tokens.
+      </div>
+    </div>
+
+    <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+      <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">PR Review Checklist (Design)</h4>
+      <p style="font-size: 14px; color: var(--espresso-light); line-height: 1.8; margin: 0;">
+        Every PR touching UI is reviewed against this section:<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">1.</span> No banned colors (#3ECF8E green, pink/lavender, hot pink).<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">2.</span> CTAs use Sunset Coral (#E8845C), not green.<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">3.</span> Backgrounds are sandBase, sandLight, or offWhite.<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">4.</span> Product cards follow the universal card spec above.<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">5.</span> Typography uses only Playfair Display (headings) and Source Sans 3 (body).<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">6.</span> Tokens imported from designTokens.js (web) or tokens.ts (mobile), not hardcoded.
+      </p>
+    </div>
+
   </div>
 </section>
 
