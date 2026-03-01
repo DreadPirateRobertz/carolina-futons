@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import wixData, { __seed, __reset as resetData, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import {
   importFAQ,
   importShippingInfo,
@@ -254,14 +254,10 @@ describe('importFAQ', () => {
     expect(result.success).toBe(false);
   });
 
-  it('handles wixData query failure gracefully', async () => {
-    // Don't seed FAQ — the mock store will be undefined, causing the query to work on empty
-    // Instead we test the outer catch by not seeding ContentImports so insert fails
-    // The try/catch in importFAQ should catch and return error
-    const data = makeFaqData();
-    // Simulate: seed FAQ so queries work, but make insert throw
+  it('handles wixData insert failure gracefully', async () => {
     __seed('FAQ', []);
     __onInsert(() => { throw new Error('DB write failed'); });
+    const data = makeFaqData();
     const result = await importFAQ(data);
     expect(result.success).toBe(false);
     expect(result.error).toBe('FAQ import failed');
@@ -856,5 +852,119 @@ describe('getContentImportHistory', () => {
     expect(imp.itemCount).toBe(5);
     expect(imp.dryRun).toBe(true);
     expect(imp.completedAt).toEqual(now);
+  });
+
+  it('handles wixData query failure gracefully', async () => {
+    const origQuery = wixData.query;
+    wixData.query = () => { throw new Error('DB connection lost'); };
+    const result = await getContentImportHistory();
+    wixData.query = origQuery;
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Failed to load import history');
+  });
+});
+
+// ── XSS / Injection vectors ─────────────────────────────────────────
+
+describe('XSS/injection sanitization', () => {
+  const XSS_PAYLOAD = '<script>alert(1)</script>';
+
+  it('sanitizes XSS in FAQ question and answer fields', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('FAQ', []);
+    __seed('ContentImports', []);
+
+    const data = {
+      categories: [{
+        title: 'Ordering & Shipping',
+        faqs: [{ question: XSS_PAYLOAD, answer: XSS_PAYLOAD }],
+      }],
+    };
+    const result = await importFAQ(data);
+    expect(result.success).toBe(true);
+    const faqInsert = inserts.find(i => i.col === 'FAQ');
+    expect(faqInsert.item.question).not.toContain('<script>');
+    expect(faqInsert.item.answer).not.toContain('<script>');
+  });
+
+  it('sanitizes XSS in shipping method fields', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('ShippingInfo', []);
+    __seed('ContentImports', []);
+
+    const data = {
+      shippingPolicy: {
+        methods: [{ name: XSS_PAYLOAD, description: XSS_PAYLOAD, price: 0, timeline: XSS_PAYLOAD }],
+      },
+    };
+    const result = await importShippingInfo(data);
+    expect(result.success).toBe(true);
+    const shipInsert = inserts.find(i => i.col === 'ShippingInfo' && i.item.name !== '__policy_overview');
+    expect(shipInsert.item.name).not.toContain('<script>');
+    expect(shipInsert.item.description).not.toContain('<script>');
+    expect(shipInsert.item.timeline).not.toContain('<script>');
+  });
+
+  it('sanitizes XSS in about content fields', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('AboutContent', []);
+    __seed('ContentImports', []);
+
+    const data = {
+      about: {
+        companyName: XSS_PAYLOAD,
+        tagline: XSS_PAYLOAD,
+        description: 'Safe description',
+      },
+    };
+    const result = await importAboutContent(data);
+    expect(result.success).toBe(true);
+    const companyInfo = inserts.find(i => i.col === 'AboutContent' && i.item.sectionKey === 'company-info');
+    expect(companyInfo.item.title).not.toContain('<script>');
+  });
+
+  it('sanitizes XSS in category description fields', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('CategoryDescriptions', []);
+    __seed('ContentImports', []);
+
+    const data = {
+      categories: [{
+        slug: 'test-cat',
+        title: XSS_PAYLOAD,
+        heroText: XSS_PAYLOAD,
+        description: XSS_PAYLOAD,
+        seoTitle: XSS_PAYLOAD,
+        seoDescription: XSS_PAYLOAD,
+      }],
+    };
+    const result = await importCategoryDescriptions(data);
+    expect(result.success).toBe(true);
+    const catInsert = inserts.find(i => i.col === 'CategoryDescriptions');
+    expect(catInsert.item.title).not.toContain('<script>');
+    expect(catInsert.item.heroText).not.toContain('<script>');
+    expect(catInsert.item.description).not.toContain('<script>');
+    expect(catInsert.item.seoTitle).not.toContain('<script>');
+    expect(catInsert.item.seoDescription).not.toContain('<script>');
+  });
+});
+
+// ── importAllContent null input ──────────────────────────────────────
+
+describe('importAllContent — null input', () => {
+  it('handles null input gracefully', async () => {
+    const result = await importAllContent(null);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Bulk content import failed');
+  });
+
+  it('handles undefined input gracefully', async () => {
+    const result = await importAllContent(undefined);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Bulk content import failed');
   });
 });
