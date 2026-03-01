@@ -15,7 +15,7 @@ function createMockElement(id) {
     html: '',
     data: [],
     hidden: true,
-    style: { color: '', fontWeight: '', boxShadow: '' },
+    style: { color: '', fontWeight: '', boxShadow: '', backgroundColor: '' },
     accessibility: {
       ariaLabel: '',
       ariaExpanded: undefined,
@@ -362,6 +362,167 @@ describe('Navigation Helpers', () => {
       ctrl.open();
       // show called only once
       expect(getEl('#mobileMenuOverlay').show).toHaveBeenCalledTimes(1);
+    });
+
+    // ── cf-t2px: Mobile Hamburger Nav enhancements ──────────────────
+
+    describe('body scroll lock', () => {
+      let origDoc;
+      beforeEach(() => {
+        origDoc = globalThis.document;
+        globalThis.document = {
+          body: { style: { overflow: '' } },
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          activeElement: null,
+        };
+      });
+      afterEach(() => {
+        globalThis.document = origDoc;
+      });
+
+      it('sets body overflow hidden when menu opens', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+        expect(globalThis.document.body.style.overflow).toBe('hidden');
+      });
+
+      it('restores body overflow when menu closes', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+        ctrl.close();
+        expect(globalThis.document.body.style.overflow).toBe('');
+      });
+    });
+
+    describe('escape key closes menu', () => {
+      let origDoc;
+      let keydownHandlers;
+      beforeEach(() => {
+        origDoc = globalThis.document;
+        keydownHandlers = [];
+        globalThis.document = {
+          body: { style: { overflow: '' } },
+          addEventListener: vi.fn((event, handler) => {
+            if (event === 'keydown') keydownHandlers.push(handler);
+          }),
+          removeEventListener: vi.fn(),
+          activeElement: null,
+        };
+      });
+      afterEach(() => {
+        globalThis.document = origDoc;
+      });
+
+      it('closes menu and restores state on Escape', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+
+        keydownHandlers.forEach(h => h({ key: 'Escape' }));
+
+        expect(getEl('#mobileMenuOverlay').hide).toHaveBeenCalled();
+        expect(getEl('#mobileMenuButton').accessibility.ariaExpanded).toBe(false);
+        expect(globalThis.document.body.style.overflow).toBe('');
+      });
+
+      it('does not close on non-Escape keys', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+
+        keydownHandlers.forEach(h => h({ key: 'Enter' }));
+
+        // Menu should still be open — hide should not have been called
+        expect(getEl('#mobileMenuOverlay').hide).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('overlay backdrop click closes menu', () => {
+      it('wires onClick on overlay element', () => {
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileMenuOverlay').onClick).toHaveBeenCalled();
+      });
+
+      it('closes menu when overlay backdrop is clicked', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+
+        const overlayClicks = getEl('#mobileMenuOverlay').onClick.mock.calls;
+        const backdropHandler = overlayClicks[overlayClicks.length - 1][0];
+        backdropHandler();
+
+        expect(getEl('#mobileMenuOverlay').hide).toHaveBeenCalled();
+        expect(getEl('#mobileMenuButton').accessibility.ariaExpanded).toBe(false);
+      });
+    });
+
+    describe('nav link population and navigation', () => {
+      it('sets text labels on mobile nav elements', () => {
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileNavHome').text).toBe('Home');
+        expect(getEl('#mobileNavShop').text).toBe('Shop All');
+        expect(getEl('#mobileNavFutonFrames').text).toBe('Futon Frames');
+        expect(getEl('#mobileNavMattresses').text).toBe('Mattresses');
+      });
+
+      it('wires onClick on nav links', () => {
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileNavHome').onClick).toHaveBeenCalled();
+        expect(getEl('#mobileNavFutonFrames').onClick).toHaveBeenCalled();
+      });
+
+      it('closes menu when a nav link is clicked', () => {
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+
+        const clickHandler = getEl('#mobileNavHome').onClick.mock.calls[0][0];
+        clickHandler();
+
+        expect(getEl('#mobileMenuOverlay').hide).toHaveBeenCalled();
+      });
+    });
+
+    describe('design token colors', () => {
+      it('sets sandLight background on overlay', () => {
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileMenuOverlay').style.backgroundColor).toBe('#F2E8D5');
+      });
+
+      it('sets espresso text color on nav links', () => {
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileNavHome').style.color).toBe('#3A2518');
+        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#3A2518');
+      });
+
+      it('sets coral color on active nav link for current path', () => {
+        initMobileDrawer(getEl, '/futon-frames');
+        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#E8845C');
+      });
+
+      it('keeps espresso on non-active links when path provided', () => {
+        initMobileDrawer(getEl, '/futon-frames');
+        expect(getEl('#mobileNavHome').style.color).toBe('#3A2518');
+        expect(getEl('#mobileNavMattresses').style.color).toBe('#3A2518');
+      });
+    });
+
+    describe('responsive: desktop breakpoint', () => {
+      it('hides mobile menu button on desktop', () => {
+        mockIsMobile.mockReturnValue(false);
+        mockGetViewport.mockReturnValue('desktop');
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileMenuButton').hide).toHaveBeenCalled();
+        mockIsMobile.mockReturnValue(false);
+        mockGetViewport.mockReturnValue('desktop');
+      });
+
+      it('shows mobile menu button on mobile', () => {
+        mockIsMobile.mockReturnValue(true);
+        mockGetViewport.mockReturnValue('mobile');
+        initMobileDrawer(getEl);
+        expect(getEl('#mobileMenuButton').show).toHaveBeenCalled();
+        mockIsMobile.mockReturnValue(false);
+        mockGetViewport.mockReturnValue('desktop');
+      });
     });
   });
 
