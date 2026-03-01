@@ -182,6 +182,8 @@ export default defineConfig({
       'public/performanceHelpers': path.resolve(__dirname, 'src/public/performanceHelpers.js'),
       'public/aboutContactHelpers.js': path.resolve(__dirname, 'src/public/aboutContactHelpers.js'),
       'public/aboutContactHelpers': path.resolve(__dirname, 'src/public/aboutContactHelpers.js'),
+      'public/faqHelpers.js': path.resolve(__dirname, 'src/public/faqHelpers.js'),
+      'public/faqHelpers': path.resolve(__dirname, 'src/public/faqHelpers.js'),
     },
   },
 });

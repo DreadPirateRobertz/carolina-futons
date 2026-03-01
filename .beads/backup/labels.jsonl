@@ -1,3 +1,5 @@
+{"issue_id":"CF-4scn","label":"design"}
+{"issue_id":"CF-4scn","label":"frontend"}
 {"issue_id":"CF-5ggk","label":"design"}
 {"issue_id":"CF-5ggk","label":"frontend"}
 {"issue_id":"CF-5rfj","label":"ar"}
@@ -32,16 +34,16 @@
 {"issue_id":"CF-tvk","label":"desire-path"}
 {"issue_id":"CF-vqya","label":"design"}
 {"issue_id":"CF-vqya","label":"frontend"}
-{"issue_id":"CF-wisp-1iecq","label":"gt:merge-request"}
-{"issue_id":"CF-wisp-ai3dh","label":"gt:merge-request"}
-{"issue_id":"CF-wisp-etzo","label":"idle:5"}
-{"issue_id":"CF-wisp-xhwjp","label":"gt:merge-request"}
+{"issue_id":"CF-wisp-ngg8","label":"backoff-until:1772340563"}
+{"issue_id":"CF-wisp-ngg8","label":"idle:3"}
 {"issue_id":"CF-x8pd","label":"design"}
 {"issue_id":"CF-x8pd","label":"frontend"}
 {"issue_id":"CF-y8je","label":"design"}
 {"issue_id":"CF-y8je","label":"frontend"}
 {"issue_id":"CF-ynwm","label":"design"}
 {"issue_id":"CF-ynwm","label":"frontend"}
+{"issue_id":"CF-yp3o","label":"frontend"}
+{"issue_id":"CF-yp3o","label":"performance"}
 {"issue_id":"CF-z5tk","label":"design"}
 {"issue_id":"CF-z5tk","label":"frontend"}
 {"issue_id":"cf-cfutons-crew-godfrey","label":"gt:agent"}
