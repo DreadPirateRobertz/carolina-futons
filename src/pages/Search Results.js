@@ -3,13 +3,18 @@
 import wixLocationFrontend from 'wix-location-frontend';
 import { trackEvent } from 'public/engagementTracker';
 import { addToCart } from 'public/cartService';
-import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
+import { limitForViewport, initBackToTop, getViewport } from 'public/mobileHelpers';
 import {
   fullTextSearch,
   getAutocompleteSuggestions,
   getPopularSearches,
+  getFilterValues,
 } from 'backend/searchService.web';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/WishlistCardButton.js';
+import { buildProductBadgeOverlay } from 'public/galleryHelpers';
+import { getSwatchPreviewColors } from 'backend/swatchService.web';
+import { buildSkeletonData, getActiveFilterCount, buildSearchChips } from 'public/SearchResultsHelpers.js';
 
 let _debounceTimer = null;
 let _currentQuery = '';
@@ -77,7 +82,7 @@ async function performSearch(query) {
 
     try { $w('#noResultsBox').hide(); } catch (e) {}
 
-    renderResults(result.products, query);
+    await renderResults(result.products, query);
 
     // Show load more if there are additional pages
     try {
@@ -96,11 +101,16 @@ async function performSearch(query) {
   }
 }
 
-function renderResults(products, query) {
+async function renderResults(products, query) {
   const repeater = $w('#searchRepeater');
   if (!repeater) return;
 
   try { repeater.expand(); } catch (e) {}
+
+  let wishlistedIds = new Set();
+  try {
+    wishlistedIds = await batchCheckWishlistStatus(products.map(p => p._id));
+  } catch (e) {}
 
   repeater.onItemReady(($item, itemData) => {
     $item('#searchImage').src = itemData.mainMedia;
@@ -111,10 +121,11 @@ function renderResults(products, query) {
       $item('#searchDesc').text = stripHtml(itemData.description || '').substring(0, 120) + '...';
     } catch (e) {}
 
-    // Show sale ribbon
+    // ── Badge overlay ──
     try {
-      if (itemData.ribbon) {
-        $item('#searchRibbon').text = itemData.ribbon;
+      const badge = buildProductBadgeOverlay(itemData);
+      if (badge) {
+        $item('#searchRibbon').text = badge.text;
         $item('#searchRibbon').show();
       } else {
         $item('#searchRibbon').hide();
@@ -171,6 +182,15 @@ function renderResults(products, query) {
         }
       });
     } catch (e) {}
+
+    // ── Wishlist heart ──
+    try {
+      const isWishlisted = wishlistedIds.has(itemData._id);
+      initCardWishlistButton($item, itemData, isWishlisted);
+    } catch (e) {}
+
+    // ── Swatch preview dots ──
+    initGridSwatchPreview($item, itemData);
   });
 
   const mapped = products.map(p => ({
@@ -178,6 +198,45 @@ function renderResults(products, query) {
     _id: p._id,
   }));
   repeater.data = limitForViewport(mapped, { mobile: 8, tablet: 12, desktop: 24 });
+}
+
+async function initGridSwatchPreview($item, itemData) {
+  try {
+    const preview = $item('#searchSwatchPreview');
+    if (!preview) return;
+
+    const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
+    const hasFabricOptions = colls.some(c =>
+      c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
+      c.includes('sofa') || c.includes('loveseat') || c.includes('sleeper')
+    );
+
+    if (!hasFabricOptions) {
+      preview.collapse();
+      return;
+    }
+
+    const swatchColors = await getSwatchPreviewColors(itemData._id, 4);
+    if (!swatchColors || swatchColors.length === 0) {
+      preview.collapse();
+      return;
+    }
+
+    const dotIds = ['#searchSwatchDot1', '#searchSwatchDot2', '#searchSwatchDot3', '#searchSwatchDot4'];
+    dotIds.forEach((dotId, i) => {
+      try {
+        const dot = $item(dotId);
+        if (i < swatchColors.length) {
+          dot.style.backgroundColor = swatchColors[i].colorHex;
+          dot.show();
+        } else {
+          dot.hide();
+        }
+      } catch (e) {}
+    });
+
+    preview.expand();
+  } catch (e) {}
 }
 
 // ─── Autocomplete ────────────────────────────────────────────────
