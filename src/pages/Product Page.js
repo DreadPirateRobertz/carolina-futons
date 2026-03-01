@@ -25,6 +25,7 @@ import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbando
 import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { validateEmail } from 'public/validators.js';
+import { initProductARViewer } from 'public/ProductARViewer.js';
 
 const state = {
   product: null,
@@ -79,6 +80,7 @@ async function initProductPage() {
       { name: 'productSchema', init: () => injectProductSchema($w, state) },
       { name: 'productMeta', init: () => injectProductMeta(state) },
       { name: 'imageGallery', init: () => initImageGallery($w, state) },
+      { name: 'arViewer', init: () => initProductARViewer($w, state) },
       { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state) },
       { name: 'addToCart', init: () => initAddToCartEnhancements($w, state) },
       { name: 'quantitySelector', init: () => initQuantitySelector($w, state) },
