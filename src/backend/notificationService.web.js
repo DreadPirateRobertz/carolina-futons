@@ -117,7 +117,6 @@ export const checkWishlistAlerts = webMethod(
             .eq('productId', product._id)
             .descending('recordedAt')
             .limit(1)
-            .skip(1) // Skip the one we just recorded, get the previous
             .find();
 
           if (history.items.length === 0) continue;
