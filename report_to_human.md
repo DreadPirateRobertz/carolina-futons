@@ -1,53 +1,46 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 21:35 MST (melania)
+**Last Updated:** 2026-03-01 04:40 MST (melania)
 
 ---
 
-## Session Update — 2026-02-28 21:35 MST
+## Session Update — 2026-03-01 04:40 MST
 
-### Hookup Readiness: GO
+### PRs This Session
 
-Everything is on main and ready for Wix Studio hookup tomorrow morning. 28 pages, 43+ frontend modules, 5,600+ passing tests.
+**Merged:**
+- PR #91 (radahn): CF-f8of About + Contact brand polish — brand story, team section, showroom info, enhanced validation, FAQ links, social proof. 38 tests. CI green.
 
-### PRs Merged This Session
+**Open — Awaiting Review:**
+- PR #93 (radahn): CF-f8of follow-up fixes — email sanitization + 30 page-level tests addressing miquella's review feedback. CI green. Waiting for miquella peer review.
+- PR #89: CF-aptu notification test fix — NEEDS WORK (has .beads files, merge conflicts).
 
-**cfutons (web):**
-- PR #88 (miquella): CF-p03z ProductSizeGuide extraction + fixed 2 pre-existing notification test failures. Peer reviewed by radahn.
-- PR #90 (godfrey): cf-2epn Performance optimization — lazy loading, CLS prevention, Core Web Vitals. Peer reviewed by rennala.
-- PRs #83-87 (from earlier session): Footer redesign, swatch promo, wishlist buttons, size guide, ESP sync — all applied to main.
-
-**cfutons_mobile:**
-- PR #28 (dallas): Onboarding 3-slide carousel
-- PR #29 (dallas): Offline mode — order cache + OfflineBanner
-- PR #30 (dallas): Screen refactor — hook re-exports
-- PR #31 (dallas): Wix Members auth client
-- PR #32: Merge conflict after #30 — dallas rebasing
+### New Process: Peer Review Timeout (Mayor Directive)
+- Wait for assigned peer reviewer before merging
+- 30-minute timeout: if no peer review, PM can merge with own review
+- Applied retroactively: PR #91 merged too fast, PR #93 now properly waiting
 
 ### Crew Status
 
 | Member | Bead | Story | Status | Peer Reviewer |
 |--------|------|-------|--------|---------------|
-| **miquella** | CF-z5tk (P1) | Search Results page polish | Assigned | radahn |
-| **rennala** | CF-l9fw (P1) | Blog + Blog Post page design | Assigned | godfrey |
-| **radahn** | CF-f8of (P1) | About + Contact page brand polish | Assigned | miquella |
+| **miquella** | CF-z5tk (P1) | Search Results page polish | In progress | radahn |
+| **rennala** | CF-l9fw (P1) | Blog + Blog Post page design | In progress | godfrey |
+| **radahn** | CF-yp3o (P1) | Perf fix — deferred sections block LCP | Assigned (after handoff) | miquella |
 | **godfrey** | CF-5ggk (P2) | Live chat widget — Gorgias/Tidio | In progress | rennala |
 
-All crew have peer reviewers assigned. No more solo melania reviews.
+### Design Vision — Screenshot Capture
 
-### Mobile (cfutons_mobile)
+Non-blocking Puppeteer script running (`design-vision/capture-screenshots.js`):
+- Explicit 15s page load + 5s screenshot timeouts per target
+- 5-minute total safety kill switch
+- 14 new targets: futonland product/category, futon shop product/category, article/castlery/burrow/cb2/westelm product pages, CF current site (5 pages for before/after)
+- Progress: capturing successfully, no hangs
 
-| Member | Status | Notes |
-|--------|--------|-------|
-| **dallas** | Active | 4/5 PRs merged. PR #32 needs rebase. AR patterns documented for web reuse. |
-
-### AR for Web (CF-5rfj)
-
-Dallas audited mobile AR architecture. **80% of AR value achievable without WebXR:**
-- Shared from mobile: model catalog, eligibility service, URL resolution
-- Web component: `<model-viewer>` (already exists in mobile codebase)
-- iOS gets AR Quick Look automatically via USDZ fallback
-- Optional future: WebXR hit-test for Chrome room placement
+### Figma Integration Available
+- Figma MCP tools connected — can pull design context, push pages, generate design system rules
+- Could push current CF site into Figma for visual annotation and comparison
+- Awaiting mayor direction on Figma workflow
 
 ---
 
@@ -59,45 +52,42 @@ Dallas audited mobile AR architecture. **80% of AR value achievable without WebX
 | Full-bleed lifestyle hero | 10/10 | YES (PR #80) | Shipped |
 | Product cards with swatches | 10/10 | YES (PR #79) | Shipped |
 | Brand palette consistency | All | YES (PRs #73, #78) | Shipped |
-| Trust bar / icons | 6/10 | YES (PR #75) — 5 icons | Shipped |
+| Trust bar / icons | 6/10 | YES (PR #75) | Shipped |
 | Category showcase cards | 7/10 | YES (PR #77) | Shipped |
-| Delivery estimate | 8/10 | YES (PR #81) — zip-based | Shipped |
+| Delivery estimate | 8/10 | YES (PR #81) | Shipped |
 | Free swatch CTA | 4/10 | YES (PR #81, #84) | Shipped |
-| Email capture popup | 6/10 | YES (PR #82) — exit-intent | Shipped |
-| Newsletter footer | 8/10 | YES (PR #83) — 4-column + signup | Shipped |
-| Financing display | 5/10 | YES (cf-ist closed) | Shipped |
+| Email capture popup | 6/10 | YES (PR #82) | Shipped |
+| Newsletter footer | 8/10 | YES (PR #83) | Shipped |
+| Financing display | 5/10 | YES (cf-ist) | Shipped |
 | Product size guide | 4/10 | YES (PR #88) | Shipped |
 | Wishlist buttons | 5/10 | YES (PR #85) | Shipped |
-| Performance/CWV | All | YES (PR #90) — lazy load, CLS fix | Shipped |
+| Performance/CWV | All | YES (PR #90) | Shipped |
+| About + Contact polish | 9/10 | YES (PR #91) | Shipped |
 | Checkout flow polish | 8/10 | YES (cf-7nky) | Shipped |
 | SEO/metadata | All | YES (cf-k9ot) | Shipped |
-| Star ratings / reviews | 7/10 | Backend ready, needs content | Ready for hookup |
-| Live chat widget | 4/10 | CF-5ggk — godfrey active | In progress |
-| AR / 3D visualization | 5/10 | CF-5rfj — plan ready, P2 | Planned |
-| Search results polish | 6/10 | CF-z5tk — miquella assigned | In progress |
-| Blog/content pages | 8/10 | CF-l9fw — rennala assigned | In progress |
-| About/Contact polish | 9/10 | CF-f8of — radahn assigned | In progress |
+| Star ratings / reviews | 7/10 | Backend ready | Ready for hookup |
+| Live chat widget | 4/10 | CF-5ggk — godfrey | In progress |
+| AR / 3D visualization | 5/10 | CF-5rfj — plan ready | Planned |
+| Search results polish | 6/10 | CF-z5tk — miquella | In progress |
+| Blog/content pages | 8/10 | CF-l9fw — rennala | In progress |
 
 ### The "Boutique Formula" — Our Differentiation
 
-Every competitor looks interchangeable — clean minimalism, neutral palettes, stock photography. CF is the **only** one with regional character: Blue Ridge aesthetic, hand-drawn mountain illustrations, two-tone coral + mountain blue accent system. This is the moat.
+Every competitor looks interchangeable — clean minimalism, neutral palettes, stock photography. CF is the **only** one with regional character: Blue Ridge aesthetic, hand-drawn mountain illustrations, two-tone coral + mountain blue accent system.
 
 ---
 
 ## Sprint Summary
 
 ### P0 Frontend Sprint: COMPLETE (6/6)
-All merged: brand palette, announcement bar, category showcase, hero overhaul, product cards, product page modernization.
-
 ### P1 Design Sprint: COMPLETE (8/8)
-All merged: footer redesign, email capture, swatch promo, wishlist buttons, size guide, ESP sync, checkout polish, SEO.
+### Active Sprint: P1 Page Polish + Enhancements
 
-### Active Sprint: P1 Page Polish (4 stories)
 | Bead | Story | Owner | Reviewer | Status |
 |------|-------|-------|----------|--------|
-| CF-z5tk | Search Results polish | miquella | radahn | Assigned |
-| CF-l9fw | Blog + Blog Post design | rennala | godfrey | Assigned |
-| CF-f8of | About + Contact polish | radahn | miquella | Assigned |
+| CF-z5tk | Search Results polish | miquella | radahn | In progress |
+| CF-l9fw | Blog + Blog Post design | rennala | godfrey | In progress |
+| CF-yp3o | Perf fix (LCP) | radahn | miquella | Assigned |
 | CF-5ggk | Live chat widget | godfrey | rennala | In progress |
 
 ---
@@ -107,17 +97,17 @@ All merged: footer redesign, email capture, swatch promo, wishlist buttons, size
 | Checkpoint | Tests | Files |
 |------------|-------|-------|
 | Feb 21 start | 2,394 | 70 |
-| Feb 28 current | **5,600+** | **140+** |
+| Feb 28 | 5,600+ | 140+ |
+| Mar 1 current | **5,736+** | **152+** |
 
 ---
 
-## PR Review Process (New)
+## PR Review Process
 
-Peer reviewer pairings rotate per sprint:
-- miquella ↔ radahn (cross-review)
-- rennala ↔ godfrey (cross-review)
+- Peer reviewer pairings: miquella ↔ radahn, rennala ↔ godfrey
 - Melania gives final approval after peer review passes
+- **30-minute timeout**: if no peer review, PM can merge with own review (mayor directive)
 
 ---
 
-*PM: melania | cfutons GREEN | Hookup ready | 14+ PRs merged today | 5,600+ tests | 4 crew active with peer reviewers | Mobile: 4 PRs merged, AR patterns documented*
+*PM: melania | cfutons GREEN | 5,736+ tests | 4 crew active | PR #93 awaiting peer review | Screenshots capturing | Figma available*
