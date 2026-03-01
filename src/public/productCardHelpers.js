@@ -42,6 +42,7 @@ export function styleBadge($el, badgeType) {
       $el.hide();
       return;
     }
+    // Wix Velo .text is a plain-text setter (not innerHTML) — no XSS vector
     $el.text = badgeType;
     $el.show();
     // Style properties may not exist on all element types
@@ -49,7 +50,7 @@ export function styleBadge($el, badgeType) {
       const bgColor = getBadgeColor(badgeType);
       $el.style.backgroundColor = bgColor;
       $el.style.color = colors.white;
-      $el.style.borderRadius = '4px';
+      $el.style.borderRadius = borderRadius.sm;
     } catch (e) { /* style props optional */ }
   } catch (e) { /* element may not exist */ }
 }
@@ -88,7 +89,7 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
   if ($priceEl) {
     try {
       $priceEl.text = discounted || price || 'Price unavailable';
-    } catch (e) {}
+    } catch (e) { console.warn('[ProductCard] Price element error:', e); }
   }
 
   if (discounted && price) {

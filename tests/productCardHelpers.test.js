@@ -11,7 +11,7 @@ vi.mock('../src/public/designTokens.js', () => ({
     espresso: '#3A2518',
     sandLight: '#F2E8D5',
   },
-  borderRadius: { card: '12px' },
+  borderRadius: { sm: '4px', card: '12px' },
   shadows: {
     card: '0 2px 12px rgba(58, 37, 24, 0.08)',
     cardHover: '0 8px 24px rgba(58, 37, 24, 0.12)',
