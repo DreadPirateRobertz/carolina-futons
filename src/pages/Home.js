@@ -9,6 +9,7 @@ import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'pub
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
+import { prioritizeSections } from 'public/performanceHelpers.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,34 +40,37 @@ const CATEGORIES = [
 ];
 
 $w.onReady(async function () {
+  // Critical sections: above-fold content that affects LCP
+  // Deferred sections: below-fold content loaded during idle time
   const sections = [
-    { name: 'featuredProducts', init: loadFeaturedProducts },
-    { name: 'saleHighlights', init: loadSaleHighlights },
-    { name: 'categoryShowcase', init: initCategoryShowcase },
-    { name: 'heroAnimation', init: initHeroAnimation },
-    { name: 'homeSchemas', init: injectHomeSchemas },
-    { name: 'recentlyViewed', init: initRecentlyViewed },
-    { name: 'trustBar', init: initTrustBar },
-    { name: 'testimonials', init: initTestimonials },
-    { name: 'videoShowcase', init: initVideoShowcase },
-    { name: 'quizCTA', init: initQuizCTA },
-    { name: 'featuredQuickView', init: initFeaturedQuickView },
-    { name: 'swatchPromo', init: initSwatchPromo },
-    { name: 'newsletter', init: initNewsletterSection },
-    { name: 'ridgeline', init: initRidgelineHeader },
+    { name: 'heroAnimation', init: initHeroAnimation, critical: true },
+    { name: 'featuredProducts', init: loadFeaturedProducts, critical: true },
+    { name: 'categoryShowcase', init: initCategoryShowcase, critical: true },
+    { name: 'trustBar', init: initTrustBar, critical: true },
+    { name: 'saleHighlights', init: loadSaleHighlights, critical: false },
+    { name: 'recentlyViewed', init: initRecentlyViewed, critical: false },
+    { name: 'testimonials', init: initTestimonials, critical: false },
+    { name: 'videoShowcase', init: initVideoShowcase, critical: false },
+    { name: 'quizCTA', init: initQuizCTA, critical: false },
+    { name: 'featuredQuickView', init: initFeaturedQuickView, critical: false },
+    { name: 'swatchPromo', init: initSwatchPromo, critical: false },
+    { name: 'newsletter', init: initNewsletterSection, critical: false },
+    { name: 'ridgeline', init: initRidgelineHeader, critical: false },
+    { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
   ];
 
-  const results = await Promise.allSettled(sections.map(s => s.init()));
+  const { critical: criticalResults } = await prioritizeSections(sections);
 
-  results.forEach((result, i) => {
+  criticalResults.forEach((result, i) => {
     if (result.status === 'rejected') {
-      console.error(`[Home] Section "${sections[i].name}" failed:`, result.reason);
+      const criticalSections = sections.filter(s => s.critical);
+      console.error(`[Home] Section "${criticalSections[i].name}" failed:`, result.reason);
       import('backend/errorMonitoring.web').then(({ logError }) => {
         logError({
-          message: `Home page section "${sections[i].name}" failed to load`,
+          message: `Home page section "${criticalSections[i].name}" failed to load`,
           stack: result.reason?.stack || String(result.reason),
           page: 'Home',
-          context: `onReady/${sections[i].name}`,
+          context: `onReady/${criticalSections[i].name}`,
           severity: 'error',
         });
       }).catch(err => console.error('[Home] Error logging failed:', err.message));
