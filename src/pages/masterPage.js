@@ -189,8 +189,8 @@ function initEnhancedNavigation() {
   // Mega menu for desktop shop dropdown (skip on mobile — drawer handles it)
   try { if (!isMobile()) initMegaMenu($w); } catch (e) {}
 
-  // Mobile drawer with focus trap and accessible close
-  try { initMobileDrawer($w); } catch (e) {}
+  // Mobile drawer with focus trap, scroll lock, and accessible close
+  try { initMobileDrawer($w, currentPath); } catch (e) {}
 
   // Breadcrumbs with schema.org JSON-LD
   try {

@@ -189,15 +189,50 @@ export function initMegaMenu($w) {
 // ── Mobile Drawer ────────────────────────────────────────────────────
 
 /**
+ * Mobile nav link mapping — element IDs to their NAV_LINKS counterparts.
+ * Used by initMobileDrawer to populate and style the mobile menu.
+ */
+const MOBILE_NAV_MAP = [
+  { mobileId: '#mobileNavHome', desktopId: '#navHome' },
+  { mobileId: '#mobileNavShop', desktopId: '#navShop' },
+  { mobileId: '#mobileNavFutonFrames', desktopId: '#navFutonFrames' },
+  { mobileId: '#mobileNavMattresses', desktopId: '#navMattresses' },
+  { mobileId: '#mobileNavMurphy', desktopId: '#navMurphy' },
+  { mobileId: '#mobileNavPlatformBeds', desktopId: '#navPlatformBeds' },
+  { mobileId: '#mobileNavSale', desktopId: '#navSale' },
+  { mobileId: '#mobileNavContact', desktopId: '#navContact' },
+  { mobileId: '#mobileNavFAQ', desktopId: '#navFAQ' },
+  { mobileId: '#mobileNavAbout', desktopId: '#navAbout' },
+];
+
+/**
  * Initialize mobile navigation drawer with slide-out animation,
- * category accordions, and focus trap.
+ * category accordions, focus trap, scroll lock, and nav link population.
  *
  * @param {Function} $w - Wix selector
+ * @param {string} [currentPath] - Current page path for active link highlighting
  * @returns {{ open: Function, close: Function }} Control object
  */
-export function initMobileDrawer($w) {
+export function initMobileDrawer($w, currentPath) {
   let isOpen = false;
   let focusTrap = null;
+  let escHandler = null;
+
+  function lockScroll() {
+    try {
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.style.overflow = 'hidden';
+      }
+    } catch (e) {}
+  }
+
+  function unlockScroll() {
+    try {
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.style.overflow = '';
+      }
+    } catch (e) {}
+  }
 
   function open() {
     if (isOpen) return;
@@ -205,19 +240,13 @@ export function initMobileDrawer($w) {
     try {
       $w('#mobileMenuOverlay').show('fade', { duration: transitions.medium });
       try { $w('#mobileMenuButton').accessibility.ariaExpanded = true; } catch (e) {}
+      lockScroll();
 
       // Create focus trap inside the drawer
       focusTrap = createFocusTrap($w, '#mobileMenuOverlay', [
         '#mobileMenuClose',
         '#mobileSearchInput',
-        '#mobileNavHome',
-        '#mobileNavShop',
-        '#mobileNavFutonFrames',
-        '#mobileNavMattresses',
-        '#mobileNavMurphy',
-        '#mobileNavPlatformBeds',
-        '#mobileNavSale',
-        '#mobileNavContact',
+        ...MOBILE_NAV_MAP.map(m => m.mobileId),
       ]);
 
       try { $w('#mobileMenuClose').focus(); } catch (e) {}
@@ -231,6 +260,7 @@ export function initMobileDrawer($w) {
     try {
       $w('#mobileMenuOverlay').hide('slide', { direction: 'left', duration: transitions.medium });
       try { $w('#mobileMenuButton').accessibility.ariaExpanded = false; } catch (e) {}
+      unlockScroll();
       if (focusTrap) {
         focusTrap.release();
         focusTrap = null;
@@ -239,6 +269,50 @@ export function initMobileDrawer($w) {
       announce($w, 'Navigation menu closed');
     } catch (e) {}
   }
+
+  // Escape key closes menu
+  try {
+    if (typeof document !== 'undefined') {
+      escHandler = (e) => {
+        if (e.key === 'Escape') close();
+      };
+      document.addEventListener('keydown', escHandler);
+    }
+  } catch (e) {}
+
+  // Responsive: show/hide button based on viewport
+  try {
+    if (isMobile()) {
+      $w('#mobileMenuButton').show();
+    } else {
+      $w('#mobileMenuButton').hide();
+    }
+  } catch (e) {}
+
+  // Style overlay with design tokens
+  try {
+    $w('#mobileMenuOverlay').style.backgroundColor = colors.sandLight;
+  } catch (e) {}
+
+  // Populate nav links with labels, colors, and click handlers
+  const activeNavId = currentPath ? getActiveNavId(currentPath) : null;
+  MOBILE_NAV_MAP.forEach(({ mobileId, desktopId }) => {
+    try {
+      const el = $w(mobileId);
+      const config = NAV_LINKS[desktopId];
+      if (!el || !config) return;
+
+      el.text = config.label;
+      el.style.color = (desktopId === activeNavId) ? colors.sunsetCoral : colors.espresso;
+
+      el.onClick(() => {
+        import('wix-location-frontend').then(({ to }) => {
+          to(config.path);
+        }).catch(() => {});
+        close();
+      });
+    } catch (e) {}
+  });
 
   // Wire menu button
   try {
@@ -256,6 +330,11 @@ export function initMobileDrawer($w) {
     if (closeBtn) {
       makeClickable(closeBtn, () => close(), { ariaLabel: 'Close navigation menu' });
     }
+  } catch (e) {}
+
+  // Wire overlay backdrop click to close
+  try {
+    $w('#mobileMenuOverlay').onClick(() => close());
   } catch (e) {}
 
   return { open, close };
