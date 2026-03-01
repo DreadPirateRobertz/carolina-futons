@@ -44,10 +44,8 @@ describe('checkWishlistAlerts', () => {
       { _id: 'prod-1', name: 'Eureka Futon', price: 499, inStock: true, slug: 'eureka', mainMedia: 'img.jpg' },
     ]);
 
-    // Current snapshot (recorded by recordPriceSnapshots) + previous price
-    // Previous $599 → now $499 = 16.7% drop
+    // Previous price was $599 — now $499 = 16.7% drop
     __seed('PriceHistory', [
-      { _id: 'ph-2', productId: 'prod-1', price: 499, inStock: true, recordedAt: new Date('2026-02-27') },
       { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
     ]);
 
@@ -107,9 +105,8 @@ describe('checkWishlistAlerts', () => {
       { _id: 'prod-1', name: 'Phoenix Frame', price: 799, inStock: true, slug: 'phoenix', mainMedia: 'img.jpg' },
     ]);
 
-    // Current snapshot (now in stock) + previous (was out of stock)
+    // Was out of stock previously
     __seed('PriceHistory', [
-      { _id: 'ph-2', productId: 'prod-1', price: 799, inStock: true, recordedAt: new Date('2026-02-27') },
       { _id: 'ph-1', productId: 'prod-1', price: 799, inStock: false, recordedAt: new Date('2026-02-20') },
     ]);
 

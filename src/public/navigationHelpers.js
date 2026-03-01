@@ -37,7 +37,6 @@ export const NAV_LINKS = {
   '#navFAQ': { path: '/faq', label: 'FAQ' },
   '#navAbout': { path: '/about', label: 'About' },
   '#navBlog': { path: '/blog', label: 'Blog' },
-  '#navFreeSwatches': { path: '/free-swatches', label: 'Free Swatches' },
 };
 
 /**
@@ -65,7 +64,6 @@ export const MEGA_MENU_CATEGORIES = [
       { id: '#navSale', label: 'Sale', path: '/sales' },
       { id: '#navProductVideos', label: 'Product Videos', path: '/product-videos' },
       { id: '#navGettingItHome', label: 'Getting It Home', path: '/getting-it-home' },
-      { id: '#navFreeSwatches', label: 'Free Swatches', path: '/free-swatches' },
     ],
   },
 ];

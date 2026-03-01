@@ -3,26 +3,19 @@
 import wixLocationFrontend from 'wix-location-frontend';
 import { trackEvent } from 'public/engagementTracker';
 import { addToCart } from 'public/cartService';
-import { limitForViewport, initBackToTop, getViewport } from 'public/mobileHelpers';
+import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import {
   fullTextSearch,
   getAutocompleteSuggestions,
   getPopularSearches,
-  getFilterValues,
 } from 'backend/searchService.web';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
-import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/WishlistCardButton.js';
-import { buildProductBadgeOverlay } from 'public/galleryHelpers';
-import { getSwatchPreviewColors } from 'backend/swatchService.web';
-import { buildSkeletonData, getActiveFilterCount, buildSearchChips } from 'public/SearchResultsHelpers.js';
 
 let _debounceTimer = null;
 let _currentQuery = '';
 let _currentSort = 'relevance';
 let _currentCategory = '';
 let _currentPriceRange = '';
-let _currentMaterial = '';
-let _currentColor = '';
 let _currentOffset = 0;
 const PAGE_SIZE = 24;
 
@@ -52,7 +45,7 @@ async function performSearch(query) {
     _currentOffset = 0;
 
     try { $w('#searchQuery').text = `Results for "${query}"`; } catch (e) {}
-    showSkeletonGrid();
+    try { $w('#loadingIndicator').show(); } catch (e) {}
 
     trackEvent('page_view', { page: 'search', query });
 
@@ -60,14 +53,12 @@ async function performSearch(query) {
       query,
       category: _currentCategory,
       priceRange: _currentPriceRange,
-      material: _currentMaterial,
-      color: _currentColor,
       sortBy: _currentSort,
       limit: PAGE_SIZE,
       offset: 0,
     });
 
-    hideSkeletonGrid();
+    try { $w('#loadingIndicator').hide(); } catch (e) {}
 
     if (!result?.products || result.products.length === 0) {
       trackEvent('search_no_results', { query });
@@ -86,7 +77,7 @@ async function performSearch(query) {
 
     try { $w('#noResultsBox').hide(); } catch (e) {}
 
-    await renderResults(result.products, query);
+    renderResults(result.products, query);
 
     // Show load more if there are additional pages
     try {
@@ -100,21 +91,16 @@ async function performSearch(query) {
     } catch (e) {}
   } catch (err) {
     console.error('Search error:', err);
-    hideSkeletonGrid();
+    try { $w('#loadingIndicator').hide(); } catch (e) {}
     showNoResults(query);
   }
 }
 
-async function renderResults(products, query) {
+function renderResults(products, query) {
   const repeater = $w('#searchRepeater');
   if (!repeater) return;
 
   try { repeater.expand(); } catch (e) {}
-
-  let wishlistedIds = new Set();
-  try {
-    wishlistedIds = await batchCheckWishlistStatus(products.map(p => p._id));
-  } catch (e) {}
 
   repeater.onItemReady(($item, itemData) => {
     $item('#searchImage').src = itemData.mainMedia;
@@ -122,15 +108,13 @@ async function renderResults(products, query) {
     $item('#searchName').text = itemData.name;
     $item('#searchPrice').text = itemData.formattedPrice;
     try {
-      const desc = stripHtml(itemData.description || '').substring(0, 120);
-      $item('#searchDesc').text = desc ? desc + '...' : '';
+      $item('#searchDesc').text = stripHtml(itemData.description || '').substring(0, 120) + '...';
     } catch (e) {}
 
-    // ── Badge overlay ──
+    // Show sale ribbon
     try {
-      const badge = buildProductBadgeOverlay(itemData);
-      if (badge) {
-        $item('#searchRibbon').text = badge.text;
+      if (itemData.ribbon) {
+        $item('#searchRibbon').text = itemData.ribbon;
         $item('#searchRibbon').show();
       } else {
         $item('#searchRibbon').hide();
@@ -187,15 +171,6 @@ async function renderResults(products, query) {
         }
       });
     } catch (e) {}
-
-    // ── Wishlist heart ──
-    try {
-      const isWishlisted = wishlistedIds.has(itemData._id);
-      initCardWishlistButton($item, itemData, isWishlisted);
-    } catch (e) {}
-
-    // ── Swatch preview dots ──
-    initGridSwatchPreview($item, itemData);
   });
 
   const mapped = products.map(p => ({
@@ -203,74 +178,6 @@ async function renderResults(products, query) {
     _id: p._id,
   }));
   repeater.data = limitForViewport(mapped, { mobile: 8, tablet: 12, desktop: 24 });
-}
-
-function showSkeletonGrid() {
-  try {
-    const repeater = $w('#searchRepeater');
-    if (!repeater) return;
-
-    const viewport = getViewport();
-    const count = viewport === 'mobile' ? 4 : viewport === 'tablet' ? 6 : 8;
-    const skeletons = buildSkeletonData(count);
-
-    repeater.onItemReady(($item, itemData) => {
-      if (!itemData.isSkeleton) return;
-      try { $item('#searchName').text = ''; } catch (e) {}
-      try { $item('#searchPrice').text = ''; } catch (e) {}
-      try { $item('#searchDesc').text = ''; } catch (e) {}
-      try { $item('#searchRibbon').hide(); } catch (e) {}
-      try { $item('#searchAddBtn').hide(); } catch (e) {}
-      try { $item('#searchImage').src = ''; } catch (e) {}
-    });
-
-    repeater.data = skeletons;
-    repeater.expand();
-  } catch (e) {}
-  try { $w('#loadMoreBtn').hide(); } catch (e) {}
-}
-
-function hideSkeletonGrid() {
-  try { $w('#loadingIndicator').hide(); } catch (e) {}
-}
-
-async function initGridSwatchPreview($item, itemData) {
-  try {
-    const preview = $item('#searchSwatchPreview');
-    if (!preview) return;
-
-    const colls = Array.isArray(itemData.collections) ? itemData.collections : [];
-    const hasFabricOptions = colls.some(c =>
-      c.includes('futon') || c.includes('frame') || c.includes('wall-hugger') ||
-      c.includes('sofa') || c.includes('loveseat') || c.includes('sleeper')
-    );
-
-    if (!hasFabricOptions) {
-      preview.collapse();
-      return;
-    }
-
-    const swatchColors = await getSwatchPreviewColors(itemData._id, 4);
-    if (!swatchColors || swatchColors.length === 0) {
-      preview.collapse();
-      return;
-    }
-
-    const dotIds = ['#searchSwatchDot1', '#searchSwatchDot2', '#searchSwatchDot3', '#searchSwatchDot4'];
-    dotIds.forEach((dotId, i) => {
-      try {
-        const dot = $item(dotId);
-        if (i < swatchColors.length) {
-          dot.style.backgroundColor = swatchColors[i].colorHex;
-          dot.show();
-        } else {
-          dot.hide();
-        }
-      } catch (e) {}
-    });
-
-    preview.expand();
-  } catch (e) {}
 }
 
 // ─── Autocomplete ────────────────────────────────────────────────
@@ -336,15 +243,13 @@ function setupAutocomplete() {
           query: _currentQuery,
           category: _currentCategory,
           priceRange: _currentPriceRange,
-          material: _currentMaterial,
-          color: _currentColor,
           sortBy: _currentSort,
           limit: PAGE_SIZE,
           offset: nextOffset,
         });
+        _currentOffset = nextOffset;
         const products = result?.products || [];
         if (products.length > 0) {
-          _currentOffset = nextOffset;
           const repeater = $w('#searchRepeater');
           if (repeater) {
             const existing = Array.isArray(repeater.data) ? repeater.data : [];
@@ -415,7 +320,6 @@ function setupFilters() {
   try {
     $w('#categoryFilter').onChange((event) => {
       _currentCategory = event.target.value || '';
-      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#categoryFilter').accessibility.ariaLabel = 'Filter by category'; } catch (e) {}
@@ -425,45 +329,9 @@ function setupFilters() {
   try {
     $w('#priceFilter').onChange((event) => {
       _currentPriceRange = event.target.value || '';
-      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#priceFilter').accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
-  } catch (e) {}
-
-  // Material filter dropdown
-  try {
-    $w('#materialFilter').onChange((event) => {
-      _currentMaterial = event.target.value || '';
-      updateFilterBadge();
-      if (_currentQuery) performSearch(_currentQuery);
-    });
-    try { $w('#materialFilter').accessibility.ariaLabel = 'Filter by material'; } catch (e) {}
-  } catch (e) {}
-
-  // Color filter dropdown
-  try {
-    $w('#colorFilter').onChange((event) => {
-      _currentColor = event.target.value || '';
-      updateFilterBadge();
-      if (_currentQuery) performSearch(_currentQuery);
-    });
-    try { $w('#colorFilter').accessibility.ariaLabel = 'Filter by color'; } catch (e) {}
-  } catch (e) {}
-
-  // Mobile filter sidebar toggle
-  try {
-    $w('#filterToggleBtn').onClick(() => {
-      try {
-        const sidebar = $w('#filterSidebar');
-        if (sidebar.hidden) {
-          sidebar.show();
-        } else {
-          sidebar.hide();
-        }
-      } catch (e) {}
-    });
-    try { $w('#filterToggleBtn').accessibility.ariaLabel = 'Toggle filters'; } catch (e) {}
   } catch (e) {}
 
   // Clear filters button
@@ -471,64 +339,13 @@ function setupFilters() {
     $w('#clearFiltersBtn').onClick(() => {
       _currentCategory = '';
       _currentPriceRange = '';
-      _currentMaterial = '';
-      _currentColor = '';
       _currentSort = 'relevance';
       try { $w('#categoryFilter').value = ''; } catch (e) {}
       try { $w('#priceFilter').value = ''; } catch (e) {}
-      try { $w('#materialFilter').value = ''; } catch (e) {}
-      try { $w('#colorFilter').value = ''; } catch (e) {}
       try { $w('#sortDropdown').value = 'relevance'; } catch (e) {}
-      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#clearFiltersBtn').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
-  } catch (e) {}
-
-  // Load facet data for filter dropdowns
-  loadFilterFacets();
-}
-
-async function loadFilterFacets() {
-  try {
-    const facets = await getFilterValues();
-    if (!facets) return;
-
-    if (facets.materials && facets.materials.length > 0) {
-      try {
-        $w('#materialFilter').options = [
-          { label: 'All Materials', value: '' },
-          ...facets.materials.map(m => ({ label: `${m.value} (${m.count})`, value: m.value })),
-        ];
-      } catch (e) {}
-    }
-
-    if (facets.colors && facets.colors.length > 0) {
-      try {
-        $w('#colorFilter').options = [
-          { label: 'All Colors', value: '' },
-          ...facets.colors.map(c => ({ label: `${c.value} (${c.count})`, value: c.value })),
-        ];
-      } catch (e) {}
-    }
-  } catch (e) {}
-}
-
-function updateFilterBadge() {
-  try {
-    const count = getActiveFilterCount({
-      category: _currentCategory,
-      priceRange: _currentPriceRange,
-      material: _currentMaterial,
-      color: _currentColor,
-    });
-    const badge = $w('#filterBadge');
-    if (count > 0) {
-      badge.text = String(count);
-      badge.show();
-    } else {
-      badge.hide();
-    }
   } catch (e) {}
 }
 
@@ -556,8 +373,8 @@ function showNoResults(query) {
     announce($w, `No results found for "${query}". Try a different search.`);
   } catch (e) {}
 
-  try { $w('#noResultsText').text = 'Try one of these popular searches:'; } catch (e) {}
-  loadPopularChips();
+  // Show popular searches as suggestions
+  loadPopularSuggestions();
 }
 
 async function showEmptyState() {
@@ -567,69 +384,25 @@ async function showEmptyState() {
     $w('#loadMoreBtn').hide();
   } catch (e) {}
 
-  try { $w('#noResultsText').text = 'Popular searches:'; } catch (e) {}
-  loadPopularChips();
+  loadPopularSuggestions();
 }
 
-async function loadPopularChips() {
-  const fallbackQueries = ['futon frames', 'mattresses', 'murphy beds', 'platform beds', 'accessories'];
+async function loadPopularSuggestions() {
   try {
-    const { queries = [] } = await getPopularSearches(8) || {};
-    const queryStrings = queries.length > 0
-      ? queries.map(q => q.query)
-      : fallbackQueries;
-    const chips = buildSearchChips(queryStrings, 8);
-
-    const chipsRepeater = $w('#searchChipsRepeater');
-    if (!chipsRepeater) return;
-
-    chipsRepeater.onItemReady(($item, itemData) => {
-      try { $item('#chipLabel').text = itemData.label; } catch (e) {}
-      try {
-        $item('#chipLabel').accessibility.ariaLabel = `Search for ${itemData.label}`;
-      } catch (e) {}
-      try {
-        makeClickable($item('#chipLabel'), () => {
-          try { $w('#searchInput').value = itemData.query; } catch (e) {}
-          performSearch(itemData.query);
-        }, { ariaLabel: `Search for ${itemData.label}` });
-      } catch (e) {}
-    });
-
-    chipsRepeater.data = chips;
-    try { chipsRepeater.expand(); } catch (e) {}
+    const { queries = [] } = await getPopularSearches(6) || {};
+    if (queries.length > 0) {
+      const labels = queries.map(q => q.query).join(', ');
+      $w('#noResultsText').text = `Try searching for: ${labels}`;
+    } else {
+      $w('#noResultsText').text = 'Try searching for: futon frames, mattresses, murphy beds, platform beds, or accessories';
+    }
   } catch (e) {
-    // Fallback: show chips from defaults
     try {
-      const chips = buildSearchChips(fallbackQueries, 8);
-      const chipsRepeater = $w('#searchChipsRepeater');
-      if (!chipsRepeater) return;
-
-      chipsRepeater.onItemReady(($item, itemData) => {
-        try { $item('#chipLabel').text = itemData.label; } catch (e2) {}
-        try {
-          makeClickable($item('#chipLabel'), () => {
-            try { $w('#searchInput').value = itemData.query; } catch (e2) {}
-            performSearch(itemData.query);
-          }, { ariaLabel: `Search for ${itemData.label}` });
-        } catch (e2) {}
-      });
-
-      chipsRepeater.data = chips;
-      try { chipsRepeater.expand(); } catch (e2) {}
+      $w('#noResultsText').text = 'Try searching for: futon frames, mattresses, murphy beds, platform beds, or accessories';
     } catch (e2) {}
   }
 }
 
 function stripHtml(html) {
-  if (!html || typeof html !== 'string') return '';
-  return html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .trim();
+  return html.replace(/<[^>]*>/g, '').trim();
 }

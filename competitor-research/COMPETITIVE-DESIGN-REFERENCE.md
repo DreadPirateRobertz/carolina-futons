@@ -306,31 +306,22 @@ Screenshots captured via puppeteer of carolinafutons.com as-is:
 
 ## Actionable Priorities for Design Sprint
 
-### P0 — Must Have (COMPLETE)
-- [x] Kill pink-lavender background (CF-a1ps — rennala, PR #73+#78 MERGED)
+### P0 — Must Have (current sprint)
+- [x] Kill pink-lavender background (CF-a1ps — rennala, PR #73 MERGED)
 - [x] Announcement bar + trust bar (CF-c94m — radahn, PR #75 MERGED)
 - [x] Category showcase lifestyle cards (CF-b0sr — rennala, PR #77 MERGED)
-- [x] Homepage hero overhaul (CF-bbms — godfrey, PR #80 MERGED)
+- [ ] Homepage hero overhaul (CF-bbms — godfrey, PR #80 open — needs rebase)
 
-### P1 — Should Have (COMPLETE)
-- [x] Product card grid with info (CF-dgiy — miquella, PR #79 MERGED)
-- [x] Product page modernization (CF-isru — rennala, PR #81 MERGED)
-- [x] Email capture popup + exit-intent (CF-murg — radahn, PR #82 MERGED)
+### P1 — Should Have (current sprint)
+- [ ] Product card grid with info (CF-dgiy — miquella, PR #79 open — approved)
+- [ ] Product page modernization (CF-isru — rennala, assigned)
 
-### P2 — In Progress (current sprint)
-- [ ] Footer redesign (CF-76b1 — radahn, in progress)
-- [ ] Free swatch kit CTA (CF-y8je — rennala, in progress)
-- [ ] Live chat widget (CF-5ggk — godfrey, in progress)
-- [ ] Financing calculator + BNPL (cf-ist — miquella, in progress)
-- [ ] Lifestyle product photography (CF-x8pd — ready queue)
-- [ ] Product size/dimension guide (CF-p03z — ready queue)
-
-### Mobile Alignment (cfutons_mobile)
-- [ ] Add offWhite token (#FAF7F2) to mobile tokens.ts
-- [ ] Fix hard-coded colors in ViewInRoomButton + HomeScreen
-- [ ] Align Bestseller badge to mountainBlue (not green)
-- [ ] Announcement bar (future)
-- [ ] Trust bar (future)
+### P2 — Nice to Have (next sprint)
+- [ ] Footer redesign (CF-8gzd)
+- [ ] Free swatch kit CTA (CF-y8je)
+- [ ] Email capture popup + exit-intent
+- [ ] "Shop by Room" cards
+- [ ] Lifestyle product photography (CF-x8pd)
 
 ---
 

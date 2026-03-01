@@ -13,13 +13,13 @@ const SESSION_KEY_DISMISSED = 'cf_chat_proactive_dismissed';
 const SESSION_KEY_IMPRESSIONS = 'cf_chat_proactive_impressions';
 
 const DEFAULT_DELAYS = {
-  product: 30000,
+  product: 10000,
   checkout: 15000,
 };
 
 const PAGE_MESSAGES = {
   product: {
-    online: 'Need help choosing? Chat with us!',
+    online: 'Have questions about this product? We\'re here to help!',
     offline: 'Leave us a message — we\'ll get back to you within 1 business day!',
   },
   checkout: {

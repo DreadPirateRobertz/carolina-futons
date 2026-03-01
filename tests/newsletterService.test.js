@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __reset as resetCrm, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __reset as resetMarketing, coupons } from './__mocks__/wix-marketing-backend.js';
-import { subscribeToNewsletter, syncToESP } from '../src/backend/newsletterService.web.js';
+import { subscribeToNewsletter } from '../src/backend/newsletterService.web.js';
 
 beforeEach(() => {
   resetData();
@@ -190,33 +190,5 @@ describe('subscribeToNewsletter', () => {
     expect(result.message || '').not.toContain('Sensitive');
 
     wixData.insert = originalInsert;
-  });
-});
-
-// ── syncToESP ────────────────────────────────────────────────────────
-
-describe('syncToESP', () => {
-  it('returns skipped when no ESP config is set', async () => {
-    const result = await syncToESP('test@example.com', 'exit_intent_popup');
-    expect(result.synced).toBe(false);
-    expect(result.reason).toBe('no_esp_configured');
-  });
-
-  it('rejects invalid email', async () => {
-    const result = await syncToESP('notanemail', 'footer');
-    expect(result.synced).toBe(false);
-    expect(result.reason).toBe('invalid_email');
-  });
-
-  it('rejects empty email', async () => {
-    const result = await syncToESP('', 'footer');
-    expect(result.synced).toBe(false);
-    expect(result.reason).toBe('invalid_email');
-  });
-
-  it('sanitizes source parameter', async () => {
-    const result = await syncToESP('test@example.com', '<script>xss</script>');
-    // Should not throw even with malicious source
-    expect(result.synced).toBe(false);
   });
 });

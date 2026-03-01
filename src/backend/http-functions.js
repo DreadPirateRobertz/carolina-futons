@@ -563,7 +563,6 @@ export function get_robots() {
     'Disallow: /login',
     'Disallow: /account',
     'Disallow: /search-results',
-    'Allow: /_functions/productSitemap',
     'Disallow: /_functions/',
     '',
     'Sitemap: https://www.carolinafutons.com/_functions/productSitemap',

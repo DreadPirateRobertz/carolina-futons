@@ -448,39 +448,6 @@ describe('initImageLightbox (accepts $w)', () => {
   });
 });
 
-describe('initImageLightbox swipe navigation', () => {
-  it('returns destroy function that cleans up swipe handler', () => {
-    const overlayEl = mockElement();
-    // Simulate htmlElement with addEventListener for swipe
-    overlayEl.htmlElement = {
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    };
-    const gallery = mockElement({ items: [{ src: 'a.jpg' }, { src: 'b.jpg' }] });
-    const mainImage = mockElement({ src: 'a.jpg' });
-    const mock$w = createMock$w({
-      '#lightboxImage': mockElement(),
-      '#lightboxCounter': mockElement(),
-      '#lightboxOverlay': overlayEl,
-      '#lightboxPrev': mockElement(),
-      '#lightboxNext': mockElement(),
-      '#lightboxClose': mockElement(),
-    });
-    const result = initImageLightbox(mock$w, gallery, mainImage);
-    expect(result).toHaveProperty('destroy');
-    // Swipe handler should have been wired via enableSwipe on overlay htmlElement
-    expect(overlayEl.htmlElement.addEventListener).toHaveBeenCalledWith(
-      'touchstart', expect.any(Function), { passive: true }
-    );
-    expect(overlayEl.htmlElement.addEventListener).toHaveBeenCalledWith(
-      'touchend', expect.any(Function), { passive: true }
-    );
-    // destroy should clean up
-    result.destroy();
-    expect(overlayEl.htmlElement.removeEventListener).toHaveBeenCalled();
-  });
-});
-
 describe('initImageZoom (accepts $w)', () => {
   it('returns null when imageElement is null', () => {
     const mock$w = createMock$w({});

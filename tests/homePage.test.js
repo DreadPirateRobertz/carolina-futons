@@ -310,24 +310,4 @@ describe('Home Page', () => {
       );
     });
   });
-
-  // ── Swatch Promo Section ──────────────────────────────────────────
-
-  describe('swatch promo section', () => {
-    it('sets swatch promo title and subtitle', async () => {
-      await onReadyHandler();
-      expect(getEl('#swatchPromoTitle').text).toBe('700+ Free Fabric Swatches');
-      expect(getEl('#swatchPromoSubtitle').text).toContain('Feel the quality');
-    });
-
-    it('expands swatch promo section', async () => {
-      await onReadyHandler();
-      expect(getEl('#swatchPromoSection').expand).toHaveBeenCalled();
-    });
-
-    it('registers click handler on swatch promo CTA', async () => {
-      await onReadyHandler();
-      expect(getEl('#swatchPromoCTA').onClick).toHaveBeenCalled();
-    });
-  });
 });

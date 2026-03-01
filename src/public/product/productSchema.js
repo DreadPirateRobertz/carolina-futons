@@ -2,7 +2,7 @@
 // Handles JSON-LD product schema, breadcrumb schema, Open Graph tags,
 // and product category/brand detection for alt text generation.
 
-import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema, getPageTitle, getPageMetaDescription, getCanonicalUrl } from 'backend/seoHelpers.web';
+import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema } from 'backend/seoHelpers.web';
 
 /**
  * Inject JSON-LD product schema, FAQ schema, and OG tags.
@@ -61,45 +61,6 @@ export async function initBreadcrumbs($w, product) {
       } catch (e) {}
     }
   } catch (e) {}
-}
-
-/**
- * Inject dynamic meta tags (title, description, canonical, OG) via wix-seo-frontend.
- * Complements the HtmlComponent-based schema injection with proper head-level meta.
- */
-export async function injectProductMeta(product) {
-  try {
-    if (!product) return;
-
-    const { head } = await import('wix-seo-frontend');
-
-    const title = await getPageTitle('product', { name: product.name });
-    if (title) head.setTitle(title);
-
-    const description = await getPageMetaDescription('product', {
-      description: product.description,
-      name: product.name,
-    });
-    if (description) head.setMetaTag('description', description);
-
-    const canonical = await getCanonicalUrl('product', product.slug);
-    if (canonical) head.setLinks([{ rel: 'canonical', href: canonical }]);
-
-    // Set OG meta tags via wix-seo-frontend for crawler access
-    const ogTags = await getProductOgTags(product);
-    if (ogTags) {
-      const tags = JSON.parse(ogTags);
-      for (const [key, value] of Object.entries(tags)) {
-        if (key.startsWith('og:') || key.startsWith('product:')) {
-          head.setMetaTag(key, value);
-        } else if (key.startsWith('twitter:')) {
-          head.setMetaTag(key, value);
-        }
-      }
-    }
-  } catch (e) {
-    // Meta tag injection is non-critical
-  }
 }
 
 /**

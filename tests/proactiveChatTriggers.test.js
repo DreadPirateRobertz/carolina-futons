@@ -104,12 +104,12 @@ describe('Time-based triggers', () => {
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
   });
 
-  it('uses default delay when none specified (30s product, 15s checkout)', () => {
+  it('uses default delay when none specified', () => {
     const $w = make$w();
     initProactiveTriggers($w, { page: 'product' });
 
-    // Default delay should be 30s for product per melania brief
-    vi.advanceTimersByTime(29999);
+    // Default delay should be 10s for product, 15s for checkout
+    vi.advanceTimersByTime(9999);
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect($w('#proactiveBubble').show).toHaveBeenCalled();
@@ -134,11 +134,6 @@ describe('Page-specific messages', () => {
     expect(msg).toBeTruthy();
     expect(typeof msg).toBe('string');
     expect(msg.length).toBeLessThanOrEqual(120);
-  });
-
-  it('product online message asks "Need help choosing?"', () => {
-    const msg = getPageMessage('product', true);
-    expect(msg).toContain('Need help choosing');
   });
 
   it('returns checkout-focused message for Checkout', () => {
@@ -547,11 +542,11 @@ describe('Edge cases', () => {
     const $w = make$w();
     initProactiveTriggers($w, { page: 'product', delayMs: -500 });
 
-    // Should use default product delay (30s), not fire immediately
+    // Should use default product delay (10s), not fire immediately
     vi.advanceTimersByTime(0);
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(30000);
+    vi.advanceTimersByTime(10000);
     expect($w('#proactiveBubble').show).toHaveBeenCalled();
   });
 
