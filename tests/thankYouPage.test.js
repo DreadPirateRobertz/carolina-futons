@@ -478,6 +478,19 @@ describe('Thank You Page', () => {
       await clickHandler();
       expect(trackNewsletterSignup).toHaveBeenCalled();
     });
+
+    it('handles CRM API failure silently without showing success', async () => {
+      const { contacts } = await import('wix-crm-frontend');
+      contacts.appendOrCreateContact.mockRejectedValueOnce(new Error('CRM unavailable'));
+      await onReadyHandler();
+      getEl('#newsletterEmail').value = 'test@example.com';
+      const clickHandler = getEl('#newsletterSignup').onClick.mock.calls[0][0];
+      await clickHandler();
+      // CRM failure is caught — success message should NOT be shown
+      expect(getEl('#newsletterSuccess').show).not.toHaveBeenCalled();
+      // Tracking should NOT fire since signup didn't complete
+      expect(trackNewsletterSignup).not.toHaveBeenCalled();
+    });
   });
 
   // ── Referral Section ──────────────────────────────────────────
