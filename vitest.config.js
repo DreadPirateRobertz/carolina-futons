@@ -198,6 +198,8 @@ export default defineConfig({
       'public/ProductARViewer': path.resolve(__dirname, 'src/public/ProductARViewer.js'),
       'public/MemberPageHelpers.js': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
       'public/MemberPageHelpers': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
+      'public/StarRatingCard.js': path.resolve(__dirname, 'src/public/StarRatingCard.js'),
+      'public/StarRatingCard': path.resolve(__dirname, 'src/public/StarRatingCard.js'),
     },
   },
 });

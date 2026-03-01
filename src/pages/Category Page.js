@@ -18,6 +18,7 @@ import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
+import { batchLoadRatings, renderCardStarRating } from 'public/StarRatingCard';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -455,8 +456,10 @@ function initProductGrid() {
         }
       } catch (e) {}
 
-      // Review stars (loaded async from cached summaries)
-      initGridReviewStars($item, itemData);
+      // Review stars (loaded async from shared module)
+      batchLoadRatings([itemData._id]).then(ratingsMap => {
+        renderCardStarRating($item, itemData._id, ratingsMap);
+      }).catch(() => {});
 
       // Quick view button
       try {
@@ -554,62 +557,6 @@ async function initGridSwatchPreview($item, itemData) {
   } catch (e) {
     try { $item('#gridSwatchPreview').collapse(); } catch (e2) {}
   }
-}
-
-// ── Grid Review Stars ────────────────────────────────────────────────
-// Shows star rating + count on product cards from bulk review summaries
-
-let _reviewSummariesCache = null;
-let _reviewSummariesPromise = null;
-
-async function loadReviewSummaries(productIds) {
-  if (_reviewSummariesCache) return _reviewSummariesCache;
-  if (_reviewSummariesPromise) return _reviewSummariesPromise;
-
-  _reviewSummariesPromise = (async () => {
-    try {
-      const { getCategoryReviewSummaries } = await import('backend/reviewsService.web');
-      _reviewSummariesCache = await getCategoryReviewSummaries(productIds);
-      return _reviewSummariesCache;
-    } catch (e) {
-      return {};
-    }
-  })();
-
-  return _reviewSummariesPromise;
-}
-
-async function initGridReviewStars($item, itemData) {
-  try {
-    const starsEl = $item('#gridReviewStars');
-    const countEl = $item('#gridReviewCount');
-    if (!starsEl && !countEl) return;
-
-    // Collect product IDs from the repeater dataset for bulk load
-    const summaries = await loadReviewSummaries([itemData._id]);
-    const summary = summaries[itemData._id];
-
-    if (!summary || summary.total === 0) {
-      try { if (starsEl) starsEl.collapse(); } catch (e) {}
-      try { if (countEl) countEl.collapse(); } catch (e) {}
-      return;
-    }
-
-    if (starsEl) {
-      const fullStars = Math.floor(summary.average);
-      const halfStar = summary.average - fullStars >= 0.5;
-      let stars = '★'.repeat(fullStars);
-      if (halfStar) stars += '½';
-      stars += '☆'.repeat(5 - fullStars - (halfStar ? 1 : 0));
-      starsEl.text = stars;
-      try { starsEl.expand(); } catch (e) {}
-    }
-
-    if (countEl) {
-      countEl.text = `(${summary.total})`;
-      try { countEl.expand(); } catch (e) {}
-    }
-  } catch (e) {}
 }
 
 // ── Quick View Modal ────────────────────────────────────────────────

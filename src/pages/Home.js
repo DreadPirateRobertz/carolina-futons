@@ -10,6 +10,8 @@ import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { prioritizeSections } from 'public/performanceHelpers.js';
+import { batchLoadRatings, renderCardStarRating } from 'public/StarRatingCard.js';
+import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -119,6 +121,13 @@ async function loadFeaturedProducts() {
     const repeater = $w('#featuredRepeater');
     if (!repeater || featured.length === 0) return;
 
+    // Batch-load star ratings and wishlist status for all featured products
+    const productIds = featured.map(p => p._id).filter(Boolean);
+    const [ratingsMap, wishlistSet] = await Promise.all([
+      batchLoadRatings(productIds).catch(() => ({})),
+      batchCheckWishlistStatus(productIds).catch(() => new Set()),
+    ]);
+
     repeater.onItemReady(($item, itemData) => {
       // Product image + alt
       $item('#featuredImage').src = itemData.mainMedia;
@@ -158,6 +167,12 @@ async function loadFeaturedProducts() {
           $item('#featuredSwatchContainer').hide();
         }
       } catch (e) { /* swatch elements optional */ }
+
+      // Star rating display
+      try { renderCardStarRating($item, itemData._id, ratingsMap); } catch (e) {}
+
+      // Wishlist heart button
+      try { initCardWishlistButton($item, itemData, wishlistSet.has(itemData._id)); } catch (e) {}
 
       // Quick View button on card
       try {
