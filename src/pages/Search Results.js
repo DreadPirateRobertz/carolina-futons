@@ -21,6 +21,8 @@ let _currentQuery = '';
 let _currentSort = 'relevance';
 let _currentCategory = '';
 let _currentPriceRange = '';
+let _currentMaterial = '';
+let _currentColor = '';
 let _currentOffset = 0;
 const PAGE_SIZE = 24;
 
@@ -58,6 +60,8 @@ async function performSearch(query) {
       query,
       category: _currentCategory,
       priceRange: _currentPriceRange,
+      material: _currentMaterial,
+      color: _currentColor,
       sortBy: _currentSort,
       limit: PAGE_SIZE,
       offset: 0,
@@ -331,6 +335,8 @@ function setupAutocomplete() {
           query: _currentQuery,
           category: _currentCategory,
           priceRange: _currentPriceRange,
+          material: _currentMaterial,
+          color: _currentColor,
           sortBy: _currentSort,
           limit: PAGE_SIZE,
           offset: nextOffset,
@@ -408,6 +414,7 @@ function setupFilters() {
   try {
     $w('#categoryFilter').onChange((event) => {
       _currentCategory = event.target.value || '';
+      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#categoryFilter').accessibility.ariaLabel = 'Filter by category'; } catch (e) {}
@@ -417,9 +424,45 @@ function setupFilters() {
   try {
     $w('#priceFilter').onChange((event) => {
       _currentPriceRange = event.target.value || '';
+      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#priceFilter').accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
+  } catch (e) {}
+
+  // Material filter dropdown
+  try {
+    $w('#materialFilter').onChange((event) => {
+      _currentMaterial = event.target.value || '';
+      updateFilterBadge();
+      if (_currentQuery) performSearch(_currentQuery);
+    });
+    try { $w('#materialFilter').accessibility.ariaLabel = 'Filter by material'; } catch (e) {}
+  } catch (e) {}
+
+  // Color filter dropdown
+  try {
+    $w('#colorFilter').onChange((event) => {
+      _currentColor = event.target.value || '';
+      updateFilterBadge();
+      if (_currentQuery) performSearch(_currentQuery);
+    });
+    try { $w('#colorFilter').accessibility.ariaLabel = 'Filter by color'; } catch (e) {}
+  } catch (e) {}
+
+  // Mobile filter sidebar toggle
+  try {
+    $w('#filterToggleBtn').onClick(() => {
+      try {
+        const sidebar = $w('#filterSidebar');
+        if (sidebar.hidden) {
+          sidebar.show();
+        } else {
+          sidebar.hide();
+        }
+      } catch (e) {}
+    });
+    try { $w('#filterToggleBtn').accessibility.ariaLabel = 'Toggle filters'; } catch (e) {}
   } catch (e) {}
 
   // Clear filters button
@@ -427,13 +470,64 @@ function setupFilters() {
     $w('#clearFiltersBtn').onClick(() => {
       _currentCategory = '';
       _currentPriceRange = '';
+      _currentMaterial = '';
+      _currentColor = '';
       _currentSort = 'relevance';
       try { $w('#categoryFilter').value = ''; } catch (e) {}
       try { $w('#priceFilter').value = ''; } catch (e) {}
+      try { $w('#materialFilter').value = ''; } catch (e) {}
+      try { $w('#colorFilter').value = ''; } catch (e) {}
       try { $w('#sortDropdown').value = 'relevance'; } catch (e) {}
+      updateFilterBadge();
       if (_currentQuery) performSearch(_currentQuery);
     });
     try { $w('#clearFiltersBtn').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
+  } catch (e) {}
+
+  // Load facet data for filter dropdowns
+  loadFilterFacets();
+}
+
+async function loadFilterFacets() {
+  try {
+    const facets = await getFilterValues();
+    if (!facets) return;
+
+    if (facets.materials && facets.materials.length > 0) {
+      try {
+        $w('#materialFilter').options = [
+          { label: 'All Materials', value: '' },
+          ...facets.materials.map(m => ({ label: `${m.value} (${m.count})`, value: m.value })),
+        ];
+      } catch (e) {}
+    }
+
+    if (facets.colors && facets.colors.length > 0) {
+      try {
+        $w('#colorFilter').options = [
+          { label: 'All Colors', value: '' },
+          ...facets.colors.map(c => ({ label: `${c.value} (${c.count})`, value: c.value })),
+        ];
+      } catch (e) {}
+    }
+  } catch (e) {}
+}
+
+function updateFilterBadge() {
+  try {
+    const count = getActiveFilterCount({
+      category: _currentCategory,
+      priceRange: _currentPriceRange,
+      material: _currentMaterial,
+      color: _currentColor,
+    });
+    const badge = $w('#filterBadge');
+    if (count > 0) {
+      badge.text = String(count);
+      badge.show();
+    } else {
+      badge.hide();
+    }
   } catch (e) {}
 }
 
