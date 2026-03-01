@@ -2,7 +2,12 @@
 // Lazy loads on user interaction. Graceful degradation if AR unavailable.
 
 import { getModel3DForProduct } from 'public/models3d.js';
-import { isProductAREnabled } from 'public/arSupport.js';
+import { checkWebARSupport, isProductAREnabled } from 'public/arSupport.js';
+
+/** Strip HTML tags from a string for safe postMessage payload */
+function safeText(str) {
+  return String(str || '').replace(/<[^>]*>/g, '').trim().slice(0, 200);
+}
 
 /**
  * Initialize the AR product viewer on the product page.
@@ -18,8 +23,8 @@ export async function initProductARViewer($w, state) {
   const container = $w('#arViewerContainer');
   const viewer = $w('#productARViewer');
 
-  // Guard: no product or AR not supported
-  if (!state.product || !isProductAREnabled(state.product)) {
+  // Guard: no product, browser can't render, or product not AR-eligible
+  if (!checkWebARSupport() || !state.product || !isProductAREnabled(state.product)) {
     btn.hide();
     container.collapse();
     return { destroy() {} };
@@ -35,20 +40,25 @@ export async function initProductARViewer($w, state) {
   // Show the "View in Room" button
   btn.show();
 
+  // Track mounted state to prevent stale click handlers on re-init
+  let mounted = true;
+
   // On click: expand viewer and send model data
   btn.onClick(() => {
+    if (!mounted) return;
     container.expand();
     viewer.postMessage({
       type: 'loadModel',
       glbUrl: model.glbUrl,
       usdzUrl: model.usdzUrl,
-      title: state.product.name,
+      title: safeText(state.product.name),
       dimensions: model.dimensions,
     });
   });
 
   return {
     destroy() {
+      mounted = false;
       container.collapse();
     },
   };

@@ -114,10 +114,12 @@ export const MODELS_3D = [
 
 /** Look up 3D model asset for a product */
 export function getModel3DForProduct(productId) {
+  if (!productId) return undefined;
   return MODELS_3D.find(m => m.productId === productId);
 }
 
 /** Check whether a product has an AR model available */
 export function hasARModel(productId) {
+  if (!productId) return false;
   return MODELS_3D.some(m => m.productId === productId);
 }

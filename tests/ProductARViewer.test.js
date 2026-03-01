@@ -121,5 +121,46 @@ describe('ProductARViewer', () => {
       result.destroy();
       expect($w('#arViewerContainer').collapse).toHaveBeenCalled();
     });
+
+    it('strips HTML tags from product name in postMessage payload', async () => {
+      state.product.name = '<script>alert(1)</script>Asheville';
+      await initProductARViewer($w, state);
+
+      const clickHandler = $w('#viewInRoomBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      const payload = $w('#productARViewer').postMessage.mock.calls[0][0];
+      expect(payload.title).not.toContain('<script>');
+      expect(payload.title).toBe('alert(1)Asheville');
+    });
+
+    it('handles empty product name gracefully', async () => {
+      state.product.name = '';
+      await initProductARViewer($w, state);
+
+      const clickHandler = $w('#viewInRoomBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      const payload = $w('#productARViewer').postMessage.mock.calls[0][0];
+      expect(payload.title).toBe('');
+    });
+
+    it('does not fire click handler after destroy (re-init guard)', async () => {
+      const result = await initProductARViewer($w, state);
+
+      const clickHandler = $w('#viewInRoomBtn').onClick.mock.calls[0][0];
+      result.destroy();
+      clickHandler();
+
+      expect($w('#productARViewer').postMessage).not.toHaveBeenCalled();
+    });
+
+    it('hides AR button when checkWebARSupport returns false', async () => {
+      const { checkWebARSupport } = await import('public/arSupport');
+      checkWebARSupport.mockReturnValueOnce(false);
+
+      await initProductARViewer($w, state);
+      expect($w('#viewInRoomBtn').hide).toHaveBeenCalled();
+    });
   });
 });
