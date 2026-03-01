@@ -190,6 +190,8 @@ export default defineConfig({
       'public/arSupport': path.resolve(__dirname, 'src/public/arSupport.js'),
       'public/ProductARViewer.js': path.resolve(__dirname, 'src/public/ProductARViewer.js'),
       'public/ProductARViewer': path.resolve(__dirname, 'src/public/ProductARViewer.js'),
+      'public/MemberPageHelpers.js': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
+      'public/MemberPageHelpers': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
     },
   },
 });
