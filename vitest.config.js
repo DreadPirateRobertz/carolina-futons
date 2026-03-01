@@ -178,6 +178,8 @@ export default defineConfig({
       'public/footerContent': path.resolve(__dirname, 'src/public/footerContent.js'),
       'public/WishlistCardButton.js': path.resolve(__dirname, 'src/public/WishlistCardButton.js'),
       'public/WishlistCardButton': path.resolve(__dirname, 'src/public/WishlistCardButton.js'),
+      'public/performanceHelpers.js': path.resolve(__dirname, 'src/public/performanceHelpers.js'),
+      'public/performanceHelpers': path.resolve(__dirname, 'src/public/performanceHelpers.js'),
     },
   },
 });

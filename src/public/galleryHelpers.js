@@ -481,14 +481,23 @@ export function initImageZoom($w, imageElement, zoomFactor = 2) {
 // ── Lazy Load Images ────────────────────────────────────────────────
 // Viewport-triggered reveal for below-fold product images.
 // Uses Wix onViewportEnter for intersection observation.
+// Supports explicit dimensions to prevent CLS (Cumulative Layout Shift).
 
-export function initLazyLoadImages(repeaterItems) {
+const DEFAULT_IMAGE_IDS = ['#productImage', '#gridImage', '#featuredImage', '#saleImage', '#collectionImage'];
+
+export function initLazyLoadImages(repeaterItems, opts = {}) {
   if (!repeaterItems) return;
+
+  const {
+    imageIds = DEFAULT_IMAGE_IDS,
+    fadeDuration = 300,
+    dimensions = null,
+  } = opts;
 
   try {
     if (typeof repeaterItems.forEachItem === 'function') {
       repeaterItems.forEachItem(($item) => {
-        revealImageOnViewport($item);
+        revealImageOnViewport($item, imageIds, fadeDuration, dimensions);
       });
     }
   } catch (e) {
@@ -496,16 +505,23 @@ export function initLazyLoadImages(repeaterItems) {
   }
 }
 
-function revealImageOnViewport($item) {
-  const imageIds = ['#productImage', '#gridImage', '#featuredImage', '#saleImage', '#collectionImage'];
+function revealImageOnViewport($item, imageIds, fadeDuration, dimensions) {
   for (const imgId of imageIds) {
     try {
       const img = $item(imgId);
       if (!img || typeof img.onViewportEnter !== 'function') continue;
 
+      // Set explicit dimensions to prevent CLS
+      if (dimensions) {
+        try {
+          img.style.width = `${dimensions.width}px`;
+          img.style.height = `${dimensions.height}px`;
+        } catch (e) { /* style may not be settable */ }
+      }
+
       img.hide();
       img.onViewportEnter(() => {
-        img.show('fade', { duration: 300 });
+        img.show('fade', { duration: fadeDuration });
       });
       return;
     } catch (e) {
