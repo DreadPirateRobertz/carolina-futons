@@ -405,27 +405,35 @@ describe('cartEnhancements', () => {
       globalThis.requestAnimationFrame = origRAF;
     });
 
-    it('scroll handler throttles via requestAnimationFrame', async () => {
+    it('scroll handler throttles via requestAnimationFrame — second scroll ignored while ticking', async () => {
       const wixWindow = (await import('wix-window-frontend')).default;
       initStickyCartBar($w, product);
 
       const scrollCb = wixWindow.onScroll.mock.calls[0][0];
 
-      let rafCallback = null;
+      const rafCallbacks = [];
       const origRAF = globalThis.requestAnimationFrame;
-      globalThis.requestAnimationFrame = (cb) => { rafCallback = cb; };
+      globalThis.requestAnimationFrame = (cb) => { rafCallbacks.push(cb); };
 
-      // First call starts ticking
+      // First scroll queues a RAF
       scrollCb();
-      // Second call should be ignored (throttled)
+      expect(rafCallbacks.length).toBe(1);
+
+      // Second scroll while first RAF is pending — should be dropped
       scrollCb();
+      expect(rafCallbacks.length).toBe(1); // still only 1 RAF queued
 
-      // Only one RAF should be queued
-      expect(rafCallback).not.toBeNull();
+      // Third scroll — also dropped
+      scrollCb();
+      expect(rafCallbacks.length).toBe(1);
 
-      // Resolve the RAF
+      // Resolve the single queued RAF
       $w('#addToCartButton').getBoundingRect.mockResolvedValue({ top: 100 });
-      await rafCallback();
+      await rafCallbacks[0]();
+
+      // After RAF resolves, scrollTicking resets — new scroll should queue again
+      scrollCb();
+      expect(rafCallbacks.length).toBe(2); // now a second RAF is queued
 
       globalThis.requestAnimationFrame = origRAF;
     });

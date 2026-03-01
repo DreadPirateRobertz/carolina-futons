@@ -638,6 +638,66 @@ describe('swatchSelector', () => {
       );
     });
 
+    it('submit does nothing when email is empty', async () => {
+      initSwatchRequest($w, productWithOptions);
+      const openCb = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+      openCb();
+
+      $w('#swatchName').value = 'John';
+      $w('#swatchEmail').value = '';
+      $w('#swatchAddress').value = '123 St';
+
+      const submitCb = $w('#swatchSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+
+      expect(submitSwatchRequest).not.toHaveBeenCalled();
+    });
+
+    it('submit does nothing when email is whitespace-only', async () => {
+      initSwatchRequest($w, productWithOptions);
+      const openCb = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+      openCb();
+
+      $w('#swatchName').value = 'John';
+      $w('#swatchEmail').value = '   ';
+      $w('#swatchAddress').value = '123 St';
+
+      const submitCb = $w('#swatchSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+
+      expect(submitSwatchRequest).not.toHaveBeenCalled();
+    });
+
+    it('submit does nothing when address is empty', async () => {
+      initSwatchRequest($w, productWithOptions);
+      const openCb = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+      openCb();
+
+      $w('#swatchName').value = 'John';
+      $w('#swatchEmail').value = 'j@ex.com';
+      $w('#swatchAddress').value = '';
+
+      const submitCb = $w('#swatchSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+
+      expect(submitSwatchRequest).not.toHaveBeenCalled();
+    });
+
+    it('submit does nothing when all fields are whitespace-only', async () => {
+      initSwatchRequest($w, productWithOptions);
+      const openCb = $w('#swatchRequestBtn').onClick.mock.calls[0][0];
+      openCb();
+
+      $w('#swatchName').value = '   ';
+      $w('#swatchEmail').value = '   ';
+      $w('#swatchAddress').value = '   ';
+
+      const submitCb = $w('#swatchSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+
+      expect(submitSwatchRequest).not.toHaveBeenCalled();
+    });
+
     it('matches Color option name for fabric detection', () => {
       const prod = {
         ...product,
