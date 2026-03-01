@@ -184,6 +184,8 @@ export default defineConfig({
       'public/aboutContactHelpers': path.resolve(__dirname, 'src/public/aboutContactHelpers.js'),
       'public/faqHelpers.js': path.resolve(__dirname, 'src/public/faqHelpers.js'),
       'public/faqHelpers': path.resolve(__dirname, 'src/public/faqHelpers.js'),
+      'public/models3d.js': path.resolve(__dirname, 'src/public/models3d.js'),
+      'public/models3d': path.resolve(__dirname, 'src/public/models3d.js'),
     },
   },
 });
