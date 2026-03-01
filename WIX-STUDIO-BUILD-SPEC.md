@@ -896,6 +896,50 @@ Sticky bottom bar showing selected products for comparison.
 | Item Count | Text | `#checkoutItemCount` | "X items in your order" |
 | Delivery Estimate | Text | `#checkoutDeliveryEstimate` | "Estimated delivery: Mar 5 – Mar 12" |
 
+### Checkout Progress Indicator
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Progress Nav | Box | `#checkoutProgressNav` | role="navigation", aria-label="Checkout progress" |
+| Progress Repeater | Repeater | `#checkoutProgressRepeater` | 4 steps: Information, Shipping, Payment, Review |
+| → Step Container | Box | `#progressStepContainer` | aria-current="step" on active |
+| → Step Dot | Box | `#progressStepDot` | Circle — mountainBlue=active, success=done, sandDark=pending |
+| → Step Number | Text | `#progressStepNumber` | "1", "2", etc. Hidden when completed |
+| → Step Check | Text/Icon | `#progressStepCheck` | Checkmark, hidden default, shown when completed |
+| → Step Label | Text | `#progressStepLabel` | "Information", "Shipping", "Payment", "Review" |
+
+### Inline Address Validation Errors
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Name Error | Text | `#addressFullNameError` | Hidden default, role="alert" |
+| Street Error | Text | `#addressLine1Error` | Hidden default, role="alert" |
+| City Error | Text | `#addressCityError` | Hidden default, role="alert" |
+| State Error | Text | `#addressStateError` | Hidden default, role="alert" |
+| ZIP Error | Text | `#addressZipError` | Hidden default, role="alert" |
+
+### Order Summary Sidebar
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Sidebar | Box | `#orderSummarySidebar` | Sticky sidebar, hidden default |
+| Items Repeater | Repeater | `#orderSummaryItemsRepeater` | Line items list |
+| → Item Name | Text | `#summaryItemName` | Product name |
+| → Item Qty | Text | `#summaryItemQty` | "×2" |
+| → Item Price | Text | `#summaryItemPrice` | "$299.00" |
+| Subtotal | Text | `#orderSummarySubtotal` | |
+| Shipping | Text | `#orderSummaryShipping` | "FREE" or "$49.99" |
+| Tax | Text | `#orderSummaryTax` | |
+| Total | Text | `#orderSummaryTotal` | Bold |
+| Savings | Text | `#orderSummarySavings` | Hidden default, shows shipping savings |
+
+### Express Checkout
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#expressCheckoutSection` | Hidden default |
+| Button | Button | `#expressCheckoutBtn` | Disabled until address validated |
+| Summary Section | Box | `#expressSummarySection` | Hidden default, shows after click |
+| Summary Total | Text | `#expressSummaryTotal` | "Total: $1,067.50" |
+| Summary Shipping | Text | `#expressSummaryShipping` | "Free Shipping" or cost |
+| Summary Address | Text | `#expressSummaryAddress` | One-line formatted address |
+
 ---
 
 ## Page: THANK YOU (dk9x8)

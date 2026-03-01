@@ -36,7 +36,9 @@ export function isMobile() {
  */
 export function isTouchDevice() {
   const vp = getViewport();
-  return vp === 'mobile' || vp === 'tablet';
+  if (vp === 'mobile' || vp === 'tablet') return true;
+  if (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) return true;
+  return false;
 }
 
 /**

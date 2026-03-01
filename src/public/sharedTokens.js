@@ -24,6 +24,7 @@ export const colors = {
   sunsetCoral: '#E8845C',
   sunsetCoralDark: '#C96B44',
   sunsetCoralLight: '#F2A882',
+  mauve: '#C9A0A0',
   offWhite: '#FAF7F2',
   white: '#FFFFFF',
 

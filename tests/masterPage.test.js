@@ -663,6 +663,7 @@ describe('Navigation Helpers', () => {
       expect(ids).toContain('#navFAQ');
       expect(ids).toContain('#navAbout');
       expect(ids).toContain('#navBlog');
+      expect(ids).toContain('#navFreeSwatches');
     });
 
     it('every nav link has path and label', () => {
@@ -670,6 +671,11 @@ describe('Navigation Helpers', () => {
         expect(config.path).toBeTruthy();
         expect(config.label).toBeTruthy();
       });
+    });
+
+    it('Free Swatches nav link points to /free-swatches', () => {
+      expect(NAV_LINKS['#navFreeSwatches'].path).toBe('/free-swatches');
+      expect(NAV_LINKS['#navFreeSwatches'].label).toBe('Free Swatches');
     });
   });
 
@@ -688,6 +694,15 @@ describe('Navigation Helpers', () => {
           expect(item.path).toBeTruthy();
         });
       });
+    });
+
+    it('includes Free Swatches in More group', () => {
+      const moreGroup = MEGA_MENU_CATEGORIES.find(g => g.title === 'More');
+      expect(moreGroup).toBeTruthy();
+      const swatchItem = moreGroup.items.find(i => i.label === 'Free Swatches');
+      expect(swatchItem).toBeTruthy();
+      expect(swatchItem.path).toBe('/free-swatches');
+      expect(swatchItem.id).toBe('#navFreeSwatches');
     });
   });
 });
@@ -738,6 +753,13 @@ describe('masterPage.js', () => {
       expect(getEl('#mobileMenuButton').onClick).toHaveBeenCalled();
     });
 
+    it('registers hamburger onClick only once (no duplicate legacy handler)', async () => {
+      await onReadyHandler();
+      // initMobileDrawer via makeClickable registers one onClick.
+      // The legacy handler was removed so there should be exactly 1 call.
+      expect(getEl('#mobileMenuButton').onClick).toHaveBeenCalledTimes(1);
+    });
+
     it('sets ariaLabel on mobile menu button', async () => {
       await onReadyHandler();
       expect(getEl('#mobileMenuButton').accessibility.ariaLabel).toBe('Open navigation menu');
@@ -746,6 +768,22 @@ describe('masterPage.js', () => {
     it('wires mobile menu close onClick', async () => {
       await onReadyHandler();
       expect(getEl('#mobileMenuClose').onClick).toHaveBeenCalled();
+    });
+
+    it('does not initialize mega menu on mobile viewport', async () => {
+      mockIsMobile.mockReturnValue(true);
+      elements.clear();
+      await onReadyHandler();
+      // On mobile, mega menu hover handlers should not be wired
+      expect(getEl('#navShop').onMouseIn).not.toHaveBeenCalled();
+      mockIsMobile.mockReturnValue(false);
+    });
+
+    it('initializes mega menu on desktop viewport', async () => {
+      mockIsMobile.mockReturnValue(false);
+      elements.clear();
+      await onReadyHandler();
+      expect(getEl('#navShop').onMouseIn).toHaveBeenCalled();
     });
   });
 

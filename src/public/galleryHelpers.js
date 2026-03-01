@@ -2,6 +2,7 @@
 // Used across multiple pages for consistent product display behavior
 import { session } from 'wix-storage-frontend';
 import { colors } from 'public/designTokens.js';
+import { enableSwipe } from 'public/touchHelpers';
 
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
@@ -415,11 +416,27 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     }
   } catch (e) {}
 
+  // Swipe navigation for mobile lightbox
+  let cleanupSwipe = null;
+  try {
+    const overlayEl = $w('#lightboxOverlay');
+    if (overlayEl) {
+      const swipeTarget = overlayEl.htmlElement || overlayEl;
+      if (swipeTarget.addEventListener) {
+        cleanupSwipe = enableSwipe(swipeTarget, (direction) => {
+          if (direction === 'left') showImage(currentIndex + 1);
+          else if (direction === 'right') showImage(currentIndex - 1);
+        }, { threshold: 40 });
+      }
+    }
+  } catch (e) {}
+
   function destroy() {
     try {
       if (typeof document !== 'undefined') {
         document.removeEventListener('keydown', handleKeydown);
       }
+      if (cleanupSwipe) cleanupSwipe();
     } catch (e) {}
   }
 
@@ -464,14 +481,23 @@ export function initImageZoom($w, imageElement, zoomFactor = 2) {
 // ── Lazy Load Images ────────────────────────────────────────────────
 // Viewport-triggered reveal for below-fold product images.
 // Uses Wix onViewportEnter for intersection observation.
+// Supports explicit dimensions to prevent CLS (Cumulative Layout Shift).
 
-export function initLazyLoadImages(repeaterItems) {
+const DEFAULT_IMAGE_IDS = ['#productImage', '#gridImage', '#featuredImage', '#saleImage', '#collectionImage'];
+
+export function initLazyLoadImages(repeaterItems, opts = {}) {
   if (!repeaterItems) return;
+
+  const {
+    imageIds = DEFAULT_IMAGE_IDS,
+    fadeDuration = 300,
+    dimensions = null,
+  } = opts;
 
   try {
     if (typeof repeaterItems.forEachItem === 'function') {
       repeaterItems.forEachItem(($item) => {
-        revealImageOnViewport($item);
+        revealImageOnViewport($item, imageIds, fadeDuration, dimensions);
       });
     }
   } catch (e) {
@@ -479,16 +505,23 @@ export function initLazyLoadImages(repeaterItems) {
   }
 }
 
-function revealImageOnViewport($item) {
-  const imageIds = ['#productImage', '#gridImage', '#featuredImage', '#saleImage', '#collectionImage'];
+function revealImageOnViewport($item, imageIds, fadeDuration, dimensions) {
   for (const imgId of imageIds) {
     try {
       const img = $item(imgId);
       if (!img || typeof img.onViewportEnter !== 'function') continue;
 
+      // Set explicit dimensions to prevent CLS
+      if (dimensions) {
+        try {
+          img.style.width = `${dimensions.width}px`;
+          img.style.height = `${dimensions.height}px`;
+        } catch (e) { /* style may not be settable */ }
+      }
+
       img.hide();
       img.onViewportEnter(() => {
-        img.show('fade', { duration: 300 });
+        img.show('fade', { duration: fadeDuration });
       });
       return;
     } catch (e) {

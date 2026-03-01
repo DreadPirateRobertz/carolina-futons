@@ -1,65 +1,23 @@
 // FAQ.js - Frequently Asked Questions
-// Accordion-style FAQ with search filtering, SEO schema markup, and engagement tracking
+// Accordion-style FAQ with category filters, search, SEO schema markup, and engagement tracking
 import { getFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
+import {
+  getFaqData,
+  getFaqCategories,
+  filterFaqsByCategory,
+  searchFaqs,
+  buildFaqSchemaData,
+} from 'public/faqHelpers.js';
 
-const FAQ_DATA = [
-  {
-    _id: '1',
-    question: 'What is a futon?',
-    answer: 'A futon is actually comprised of three separate components: a frame, a futon mattress, and a removable cover. Together they create a versatile piece of furniture that converts from a sofa to a bed.',
-  },
-  {
-    _id: '2',
-    question: 'What is the difference between a front-loading futon and a wall hugger?',
-    answer: 'Front-loading futons (like Night & Day\'s MoonGlider) fold down from the front, requiring space behind to open into a bed. Wall Hugger futons by Strata Furniture use a patented mechanism that allows conversion without pulling the frame away from the wall — the deck slides forward and down while the back stays in place.',
-  },
-  {
-    _id: '3',
-    question: 'What are the advantages of Otis Bed futon mattresses?',
-    answer: 'Otis Bed mattresses are hypoallergenic, cottonless, and made with high-density foam (1.8+ lb/cu ft). Unlike cotton futons, they don\'t require regular turning, won\'t develop a permanent crease, and are significantly lighter. They\'re also CertiPUR-US certified and last 10-15 years.',
-  },
-  {
-    _id: '4',
-    question: 'What sizes do your futons come in?',
-    answer: 'Most of our futon frames and mattresses are available in Full and Queen sizes. Some models may also be available in Twin. Check individual product pages for specific size availability.',
-  },
-  {
-    _id: '5',
-    question: 'How does a Murphy Cabinet Bed work?',
-    answer: 'Unlike traditional Murphy beds that mount to the wall, our Night & Day Murphy Cabinet Beds are freestanding furniture pieces. The bed folds out of a cabinet in under two minutes — no wall installation required. When closed, it looks like an attractive cabinet.',
-  },
-  {
-    _id: '6',
-    question: 'Are KD Frames really made in the USA?',
-    answer: 'Yes! KD Frames are manufactured in Athens, Georgia using kiln-dried Tulip Poplar harvested from responsibly managed forests in Virginia. No chemicals are applied in their factory, and the wood is smooth and unfinished so you can stain or paint it to match your decor.',
-  },
-  {
-    _id: '7',
-    question: 'Can I visit your showroom?',
-    answer: 'We\'d love to see you! Visit us at 824 Locust St, Suite 200, Hendersonville, NC 28792. We\'re open Wednesday through Saturday, 10 AM to 5 PM. Come see over 700 fabric swatches, try out our frames, and feel the difference of an Otis mattress in person.',
-  },
-  {
-    _id: '8',
-    question: 'Do you offer fabric swatches?',
-    answer: 'Yes! We have over 700 swatches of premium fabric lines available in our showroom for choosing a custom futon cover. Visit us in person to browse the full selection.',
-  },
-  {
-    _id: '9',
-    question: 'What is your shipping policy?',
-    answer: 'We offer shipping across the United States. Orders over $999 qualify for free shipping. For specific shipping information, delivery timelines, and regional details, please visit our "Getting It Home" page or contact us directly.',
-  },
-  {
-    _id: '10',
-    question: 'Do your futon mattresses work with memory foam?',
-    answer: 'Our KD Frames platform beds feature 2.8-inch slat spacing specifically designed to properly support Memory Foam and Latex mattresses, keeping body weight evenly distributed. Otis Bed\'s Pulsar model is their dedicated memory foam futon mattress option.',
-  },
-];
+let currentCategory = null;
+let currentQuery = '';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initCategoryFilters();
   initFaqAccordion();
   initFaqSearch();
   await Promise.allSettled([
@@ -68,6 +26,44 @@ $w.onReady(async function () {
   ]);
   trackEvent('page_view', { page: 'faq' });
 });
+
+// ── Category Filters ─────────────────────────────────────────────────
+
+function initCategoryFilters() {
+  try {
+    const catRepeater = $w('#faqCategoryRepeater');
+    if (!catRepeater) return;
+
+    const categories = getFaqCategories();
+    const allOption = { _id: 'cat-all', id: '', label: 'All', description: 'Show all FAQs' };
+    const catData = [allOption, ...categories.map(c => ({ ...c, _id: `cat-${c.id}` }))];
+
+    try { catRepeater.accessibility.ariaLabel = 'FAQ category filters'; } catch (e) {}
+    try { catRepeater.accessibility.role = 'tablist'; } catch (e) {}
+
+    catRepeater.onItemReady(($item, itemData) => {
+      $item('#categoryLabel').text = itemData.label;
+      try { $item('#categoryLabel').accessibility.role = 'tab'; } catch (e) {}
+      try { $item('#categoryLabel').accessibility.ariaLabel = `Filter FAQs: ${itemData.label}`; } catch (e) {}
+      try { $item('#categoryLabel').accessibility.tabIndex = 0; } catch (e) {}
+
+      const selectCategory = () => {
+        currentCategory = itemData.id || null;
+        applyFilters();
+        trackEvent('faq_category', { category: itemData.label });
+        announce($w, `Showing ${itemData.label} FAQs`);
+      };
+
+      $item('#categoryLabel').onClick(selectCategory);
+      try {
+        $item('#categoryLabel').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') selectCategory();
+        });
+      } catch (e) {}
+    });
+    catRepeater.data = catData;
+  } catch (e) {}
+}
 
 // ── FAQ Accordion ───────────────────────────────────────────────────
 
@@ -107,7 +103,7 @@ function initFaqAccordion() {
         $item('#faqToggle').accessibility.tabIndex = 0;
       } catch (e) {}
     });
-    repeater.data = FAQ_DATA;
+    repeater.data = getFaqData();
   } catch (e) {}
 }
 
@@ -127,7 +123,6 @@ function toggleFaqItem($item, question) {
 }
 
 // ── FAQ Search / Filter ────────────────────────────────────────────
-// Lets users filter FAQs by keyword to quickly find answers
 
 function initFaqSearch() {
   try {
@@ -140,42 +135,40 @@ function initFaqSearch() {
     searchInput.onKeyPress(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        const query = searchInput.value?.trim().toLowerCase();
-        filterFaqs(query);
+        currentQuery = searchInput.value?.trim().toLowerCase() || '';
+        applyFilters();
       }, 300);
     });
   } catch (e) {}
 }
 
-function filterFaqs(query) {
+function applyFilters() {
   try {
     const repeater = $w('#faqRepeater');
     if (!repeater) return;
 
-    if (!query) {
-      repeater.data = FAQ_DATA;
-      try { $w('#faqNoResults').collapse(); } catch (e) {}
-      return;
-    }
-
-    const filtered = FAQ_DATA.filter(
-      f => f.question.toLowerCase().includes(query)
-        || f.answer.toLowerCase().includes(query)
-    );
+    let filtered = getFaqData();
+    filtered = filterFaqsByCategory(filtered, currentCategory);
+    filtered = searchFaqs(filtered, currentQuery);
 
     if (filtered.length === 0) {
       try {
-        $w('#faqNoResults').text = `No FAQs match "${query}". Try a different search or contact us!`;
+        const msg = currentQuery
+          ? `No FAQs match "${currentQuery}". Try a different search or contact us!`
+          : 'No FAQs in this category.';
+        $w('#faqNoResults').text = msg;
         $w('#faqNoResults').expand();
       } catch (e) {}
-      announce($w, `No FAQs match "${query}"`);
+      announce($w, `No FAQs found`);
     } else {
       try { $w('#faqNoResults').collapse(); } catch (e) {}
-      announce($w, `${filtered.length} FAQ${filtered.length !== 1 ? 's' : ''} found for "${query}"`);
+      announce($w, `${filtered.length} FAQ${filtered.length !== 1 ? 's' : ''} found`);
     }
 
     repeater.data = filtered;
-    trackEvent('faq_search', { query, resultCount: filtered.length });
+    if (currentQuery) {
+      trackEvent('faq_search', { query: currentQuery, resultCount: filtered.length });
+    }
   } catch (e) {}
 }
 
@@ -194,11 +187,8 @@ async function injectFaqMeta() {
 
 async function injectFaqSchema() {
   try {
-    const faqs = FAQ_DATA.map(f => ({
-      question: f.question,
-      answer: f.answer,
-    }));
-    const schema = await getFaqSchema(faqs);
+    const schemaData = buildFaqSchemaData(getFaqData());
+    const schema = await getFaqSchema(schemaData);
     if (schema) {
       $w('#faqSchemaHtml').postMessage(schema);
     }

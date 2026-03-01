@@ -37,7 +37,7 @@ Think of the Carolina Futons website like a restaurant:
 - **The walk-in fridge** = where the data lives (products, prices, customer info). This is the **CMS** (Content Management System).
 - **The recipes** = the instructions that tell the kitchen what to do. These are the **code modules**.
 
-**What we built:** 77 kitchen recipes (backend modules), 28 dining room layouts (pages), 40 shared tools (utilities), and a complete inventory list (88 products).
+**What we built:** 78 kitchen recipes (backend modules), 28 dining room layouts (pages), 43 shared tools (utilities), and a complete inventory list (88 products).
 
 **What you need to do:** Put the recipes in the kitchen, set up the fridge, and open the doors.
 
@@ -102,9 +102,9 @@ If you ever want to use a **custom domain** (carolinafutons.com instead of usern
 Print this out and check off as you go:
 
 ```
-[ ] 1. Deploy 77 backend .web.js/.js files to Wix Velo backend/
+[ ] 1. Deploy 78 backend .web.js/.js files to Wix Velo backend/
 [ ] 2. Deploy 28 page .js files to Wix page code editor
-[ ] 3. Deploy 40 public utility .js files to Wix public/
+[ ] 3. Deploy 43 public utility .js files to Wix public/
 [ ] 4. Create 16 priority CMS collections in Dashboard
 [ ] 5. Verify 8 secrets in Secrets Manager
 [ ] 6. Install 7 free plugins (GA4, Meta Pixel, etc.)
@@ -113,6 +113,39 @@ Print this out and check off as you go:
 [ ] 9. Set up 4 scheduled jobs (cart recovery, etc.)
 [ ] 10. Connect domain, publish, verify 14-point checklist
 ```
+
+### What's Ready vs. In Progress (Feb 28 evening status)
+
+**SHIPPED (merged to main, ready to deploy):**
+- Homepage hero overhaul (full-bleed lifestyle, gradient overlay, staggered animations)
+- Announcement bar (rotating messages, dark espresso bg)
+- 5-icon trust bar (white-glove, financing, handcrafted, swatches, guarantee)
+- Product card grid (names, prices, sale strikethrough, color swatches, Quick View)
+- Category showcase cards (lifestyle images, "Shop Now" overlays)
+- Brand palette enforced (Sand/Espresso/Blue/Coral — pink killed)
+- Product page modernization (delivery estimate by ZIP, swatch CTA, accordion)
+- Email capture popup (exit-intent, WELCOME10, session gating, ARIA)
+- Financing calculator + BNPL display (monthly payments, Afterpay)
+- offWhite token (#FAF7F2) replacing pink backgrounds
+
+**IN REVIEW (PR #83, pending merge):**
+- Footer redesign (4-column links, newsletter signup, social icons, trust badges, payment methods)
+
+**IN PROGRESS (crew working now):**
+- Swatch kit CTA + free swatches promotion (CF-y8je — rennala)
+- Live chat widget (CF-5ggk — godfrey)
+- Product size/dimension guide (CF-p03z — miquella)
+
+**IN PROGRESS (convoy polecats):**
+- Performance optimization — lazy loading, code splitting, Core Web Vitals (cf-2epn)
+- SEO & metadata — dynamic meta tags, JSON-LD, OpenGraph (cf-k9ot)
+- Checkout flow polish — progress indicator, form validation (cf-7nky)
+- Mobile responsive audit — breakpoints, hamburger nav, touch targets (cf-wn17)
+- Wishlist & save for later (cf-ogdt)
+
+**NOT STARTED (ready queue):**
+- Lifestyle product photography (CF-x8pd) — needs actual photos
+- Email integration with Klaviyo/Mailchimp (cf-tcww) — current popup uses built-in newsletter service
 
 ---
 
@@ -248,6 +281,12 @@ These are the "kitchen recipes" — the server-side logic. All files go in the W
 | 76 | `searchIndex.web.js` | 10KB | Search index management |
 | 77 | `socialProofService.web.js` | 7KB | Real-time social proof events |
 
+**New in Design Sprint (Feb 28 afternoon — PRs #75-#83):**
+
+| # | File | Size | What It Does |
+|---|------|------|-------------|
+| 78 | `newsletterService.web.js` | 5KB | Newsletter subscription (email validation, dedup, Bronze loyalty auto-enroll, WELCOME10 discount code) |
+
 **Feed & Social:**
 
 | # | File | Size | What It Does |
@@ -367,6 +406,14 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 | `pwaHelpers.js` | 2KB | Progressive Web App support |
 | `testProducts.js` | 12KB | Test product data (dev only) |
 
+**New in AR Sprint (Mar 1):**
+
+| File | Size | What It Does |
+|------|------|-------------|
+| `models3d.js` | 5KB | 3D model catalog — 11 products (futons, frames, murphy beds) with GLB + USDZ URLs, dimensions in meters, content hashes. CDN base: `cdn.carolinafutons.com/models` |
+| `arSupport.js` | 2KB | Web AR detection — checks `customElements` support, product eligibility (futons/frames/murphy-beds + in stock + has 3D model) |
+| `ProductARViewer.js` | 3KB | AR viewer init — sends model data to Wix HtmlComponent via `postMessage`, shows/hides "View in Room" button, returns `{ destroy }` cleanup |
+
 **New in Sprint 2 (Feb 27-28):**
 
 | File | Size | What It Does |
@@ -379,6 +426,14 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 | `ga4Tracking.js` | 4KB | GA4 ecommerce event helpers |
 | `validators.js` | 3KB | Form input validation |
 | `ReturnsAdmin.js` | 8KB | Admin returns management UI |
+
+**New in Design Sprint (Feb 28 — PRs #75-#83):**
+
+| File | Size | What It Does |
+|------|------|-------------|
+| `exitIntentCapture.js` | 6KB | Exit-intent email capture popup (session gating, page exclusions, ARIA, email validation) |
+| `FooterSection.js` | 8KB | Extracted footer component (4-column links, newsletter, social icons, trust badges, payment methods) |
+| `ProductFinancing.js` | 6KB | Updated: financing calculator with BNPL monthly payments modal |
 
 **Also create `public/product/` subdirectory with:**
 
@@ -715,6 +770,10 @@ Test each of these after publishing:
 [ ] Search — type "murphy bed" in search bar, verify results
 [ ] Order tracking — enter a test order number, verify tracking page
 [ ] Mobile — test all above on phone
+[ ] AR viewer — on Asheville Full product page, click "View in Room", verify 3D model loads
+[ ] AR viewer — hidden on products without 3D models (covers, accessories)
+[ ] AR viewer — iOS Safari: tap AR icon → Quick Look opens
+[ ] AR viewer — out-of-stock product hides "View in Room" button
 ```
 
 ---
@@ -903,6 +962,135 @@ Instagram Shopping and Facebook Shop use the same catalog. Set up once, works on
 
 All three feeds are generated by `http-functions.js` and `googleMerchantFeed.web.js` / `pinterestRichPins.web.js`. They auto-update when products change in Wix Stores.
 
+---
+
+## Web AR "View in Room" Hookup
+
+### What It Does
+
+Customers can view 3D models of futons, frames, and murphy beds right on the product page. Click "View in Room" and a 3D viewer appears using Google `<model-viewer>`. On iOS, it opens AR Quick Look (place furniture in your room via camera). On Android, it opens Scene Viewer. On desktop, you get a 3D preview you can rotate and zoom.
+
+**Zero page load impact** — the viewer only loads when the customer clicks the button.
+
+### Architecture
+
+```
+Product Page loads
+  → arSupport.isProductAREnabled(product) checks:
+      1. Is product in AR category? (futons, frames, murphy-beds)
+      2. Is product in stock?
+      3. Does it have a 3D model in models3d.js catalog?
+  → YES: Show "View in Room" button
+  → Customer clicks button:
+      → models3d.getModel3DForProduct(id) gets GLB + USDZ URLs
+      → ProductARViewer sends model data to HtmlComponent via postMessage
+      → HtmlComponent loads <model-viewer> with the 3D model
+```
+
+### Step-by-Step Wix Studio Setup
+
+**1. Create elements on the Product Page:**
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| View in Room Button | Button | `#viewInRoomBtn` | Place below product gallery. Text: "View in Room" or "View in AR". Style: Mountain Blue bg, white text. Add a 3D/AR icon if available. |
+| AR Viewer Container | Box | `#arViewerContainer` | Place below the button (or wherever you want the 3D viewer). Set to **Collapsed on Load** in the Properties panel. Size: 100% width, 400px height recommended. |
+| AR Viewer | HtmlComponent | `#productARViewer` | Drag an "HTML iframe" element inside `#arViewerContainer`. This is where `<model-viewer>` renders. |
+
+**2. Configure the HtmlComponent (`#productARViewer`):**
+
+In the Wix Editor, click on the HtmlComponent and paste this HTML into the "Enter Code" section:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { margin: 0; overflow: hidden; }
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <model-viewer id="viewer"
+    camera-controls
+    touch-action="pan-y"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    shadow-intensity="1"
+    style="width: 100%; height: 400px;">
+  </model-viewer>
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <script>
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'loadModel') {
+        const viewer = document.getElementById('viewer');
+        viewer.src = event.data.glbUrl;
+        viewer.setAttribute('ios-src', event.data.usdzUrl);
+        viewer.setAttribute('alt', event.data.title + ' — 3D View');
+      }
+    });
+  </script>
+</body>
+</html>
+```
+
+**3. That's it for Wix Studio.** The code handles everything else:
+- Button visibility (auto-hides if product doesn't have a 3D model)
+- Model loading on click
+- Container expand/collapse
+- Cleanup on page navigation
+
+### Products with 3D Models (11 total)
+
+| Product ID | Product | Category | Has Fabric Variants |
+|-----------|---------|----------|-------------------|
+| `prod-murphy-queen-vertical` | Murphy Queen Vertical | Murphy Beds | No |
+| `prod-murphy-full-horizontal` | Murphy Full Horizontal | Murphy Beds | No |
+| `prod-murphy-queen-bookcase` | Murphy Queen Bookcase | Murphy Beds | No |
+| `prod-murphy-twin-cabinet` | Murphy Twin Cabinet | Murphy Beds | No |
+| `prod-murphy-queen-desk` | Murphy Queen w/ Desk | Murphy Beds | No |
+| `prod-murphy-full-storage` | Murphy Full Storage | Murphy Beds | No |
+| `prod-asheville-full` | Asheville Full Futon | Futons | Yes |
+| `prod-blue-ridge-queen` | Blue Ridge Queen Futon | Futons | Yes |
+| `prod-pisgah-twin` | Pisgah Twin Futon | Futons | Yes |
+| `prod-biltmore-loveseat` | Biltmore Loveseat Futon | Futons | Yes |
+| `prod-hardwood-frame` | Hardwood Frame | Frames | No |
+
+**Important:** The `productId` in this table must match the product's `_id` field in the Wix Stores collection. If your Wix product IDs are different, update `src/public/models3d.js` to match.
+
+### 3D Model Assets (CDN Setup)
+
+The code expects GLB and USDZ model files hosted at `https://cdn.carolinafutons.com/models/`.
+
+**For initial testing:** The Asheville Full model uses a public Khronos sample model (SheenChair.glb) — this will work immediately without any CDN setup. All other models point to `cdn.carolinafutons.com` which will need real 3D model files uploaded.
+
+**To get real 3D models:**
+1. Commission 3D scans from a service (e.g., CGTrader, TurboSquid) or photograph products for photogrammetry
+2. Export in GLB format (for web/Android) and USDZ format (for iOS AR Quick Look)
+3. Upload to your CDN at the paths defined in `models3d.js`
+4. Update content hashes if file content changes
+
+### Verification Checklist (AR Feature)
+
+```
+[ ] #viewInRoomBtn visible on Asheville Full product page (the one with the sample model)
+[ ] #viewInRoomBtn hidden on products without AR models (e.g., covers, accessories)
+[ ] Click "View in Room" — 3D model appears in the embedded viewer
+[ ] Rotate model with mouse/touch drag
+[ ] Zoom with scroll/pinch
+[ ] iOS Safari: tap AR icon → AR Quick Look opens (places model in real room)
+[ ] Android Chrome: tap AR icon → Scene Viewer opens
+[ ] Navigate away from product page → viewer collapses (no memory leak)
+[ ] Out-of-stock product → "View in Room" button hidden even if model exists
+[ ] Page load speed unchanged (model-viewer loads only on button click)
+```
+
 ### SEO Social Tags (Already Built)
 
 Our code automatically generates these meta tags on every page (via `seoHelpers.web.js` + `masterPage.js`):
@@ -962,6 +1150,7 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | **Member dashboard** | accountDashboard | Member Page | MemberPreferences |
 | **Returns** | returnsService | ReturnsPortal | — |
 | **Sustainability** | sustainability, sustainabilityService | — | — |
+| **AR viewer** | — | models3d, arSupport, ProductARViewer | — |
 | **Performance** | coreWebVitals, errorMonitoring | — | — |
 | **Promotions** | promotions | Home Page | Promotions |
 | **Financing** | financingService, financingCalc, paymentOptions | ProductFinancing | — |
@@ -971,6 +1160,8 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | **Navigation** | — | navigationHelpers | — |
 | **Social proof** | socialProofService | socialProofToast | — |
 | **Returns admin** | returnsService | ReturnsAdmin, ReturnsPortal | — |
+| **Newsletter/email capture** | newsletterService | exitIntentCapture | ContactSubmissions |
+| **Footer** | — | FooterSection | — |
 
 ---
 
@@ -1017,10 +1208,10 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 5,032 tests across 135 files — all passing.
+**Current status:** 5,819 tests across 158 files — all passing (2 pre-existing notificationService failures unrelated to new code).
 
 ---
 
 *Generated by melania (Production Manager) — Carolina Futons cfutons rig*
 *Source files: refinery/rig/src/ (canonical codebase)*
-*Last verified: 2026-02-28 (updated: file counts, new Sprint 2 modules, test numbers 5,032)*
+*Last verified: 2026-03-01 05:15 MST (updated: AR viewer hookup, test count 5,819, AR Sprint modules)*

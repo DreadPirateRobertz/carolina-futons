@@ -4,7 +4,7 @@
 // Used for: Futon Frames, Mattresses, Murphy Beds, Platform Beds, etc.
 import wixData from 'wix-data';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags } from 'backend/seoHelpers.web';
+import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, getCategoryOgTags, getCanonicalUrl } from 'backend/seoHelpers.web';
 import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, getCompareList } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
@@ -17,12 +17,14 @@ import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCach
 import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
+import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
 let _debounceTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
+let _wishlistSet = new Set(); // cached wishlist status for product cards
 
 /**
  * Sanitize user input from URL params — strip HTML tags, decode entities, limit length.
@@ -90,6 +92,7 @@ $w.onReady(async function () {
   initFilterControls();
   initAdvancedFilters(currentPath);
   initProductGrid();
+  preloadWishlistStatus();
   updateResultCount(currentPath);
   initRecentlyViewed();
   initQuickViewHandlers();
@@ -144,20 +147,25 @@ function initCategoryHero(currentPath) {
 
 async function injectCategoryMeta(currentPath) {
   try {
+    const { head } = await import('wix-seo-frontend');
+
     const metaDescription = await getCategoryMetaDescription(currentPath);
     if (metaDescription) {
-      const { head } = await import('wix-seo-frontend');
       head.setMetaTag('description', metaDescription);
-
-      // Also set OG description
       head.setMetaTag('og:description', metaDescription);
+    }
 
-      // Set title from category content if available
-      const content = CATEGORY_CONTENT[currentPath];
-      if (content) {
-        head.setTitle(`${content.title} | Carolina Futons - Hendersonville, NC`);
-        head.setMetaTag('og:title', `${content.title} | Carolina Futons`);
-      }
+    // Set title from category content if available
+    const content = CATEGORY_CONTENT[currentPath];
+    if (content) {
+      head.setTitle(`${content.title} | Carolina Futons - Hendersonville, NC`);
+      head.setMetaTag('og:title', `${content.title} | Carolina Futons`);
+    }
+
+    // Set canonical URL for this category page
+    const canonical = await getCanonicalUrl('category', currentPath);
+    if (canonical) {
+      head.setLinks([{ rel: 'canonical', href: canonical }]);
     }
   } catch (e) {}
 }
@@ -349,6 +357,19 @@ function applyFilters() {
   }
 }
 
+// ── Wishlist Preload ────────────────────────────────────────────────
+// Batch-load wishlist status so product cards can show heart state
+
+async function preloadWishlistStatus() {
+  try {
+    const repeater = $w('#productGridRepeater');
+    if (!repeater || !repeater.data) return;
+    const productIds = repeater.data.map(p => p._id).filter(Boolean);
+    if (productIds.length === 0) return;
+    _wishlistSet = await batchCheckWishlistStatus(productIds);
+  } catch (e) {}
+}
+
 // ── Product Grid ────────────────────────────────────────────────────
 // Enhanced product cards with hover effects, quick-view, and badges
 
@@ -442,6 +463,11 @@ function initProductGrid() {
         $item('#quickViewBtn').onClick(() => {
           openQuickView(itemData);
         });
+      } catch (e) {}
+
+      // Wishlist heart button
+      try {
+        initCardWishlistButton($item, itemData, _wishlistSet.has(itemData._id));
       } catch (e) {}
 
       // Compare button
@@ -786,19 +812,18 @@ function initCategorySwipe(currentPath) {
     if (currentIndex === -1) return;
 
     enableSwipe(gridEl, (direction) => {
+      if (direction !== 'left' && direction !== 'right') return;
       let nextIndex;
       if (direction === 'left') {
         nextIndex = currentIndex + 1;
-      } else if (direction === 'right') {
-        nextIndex = currentIndex - 1;
       } else {
-        return;
+        nextIndex = currentIndex - 1;
       }
       if (nextIndex < 0 || nextIndex >= CATEGORY_ORDER.length) return;
       const nextCategory = CATEGORY_ORDER[nextIndex];
       trackEvent('category_swipe', { from: currentPath, to: nextCategory, direction });
       wixLocationFrontend.to(`/${nextCategory}`);
-    }, { threshold: 60 });
+    }, { threshold: 100, maxTime: 400 });
   } catch (e) {}
 }
 
@@ -1459,6 +1484,7 @@ async function injectCategorySchema() {
       'casegoods-accessories': { slug: 'casegoods-accessories', title: 'Casegoods & Accessories' },
       'wall-huggers': { slug: 'wall-huggers', title: 'Wall Hugger Futon Frames' },
       'unfinished-wood': { slug: 'unfinished-wood', title: 'Unfinished Wood Futon Frames' },
+      'sales': { slug: 'sales', title: 'Sale & Clearance' },
     };
 
     const categoryInfo = categoryMap[currentPath];
