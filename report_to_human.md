@@ -1,146 +1,104 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-02-28 13:45 MST (melania)
+**Last Updated:** 2026-02-28 21:35 MST (melania)
 
 ---
 
-## Session Update — 2026-02-28 13:45 MST
+## Session Update — 2026-02-28 21:35 MST
 
-### Actions This Session
+### Hookup Readiness: GO
 
-**Mobile (cfutons_mobile):**
-- Merged PR #26 (cm-a7m stores refactor) — clean
-- Closed PR #23 (superseded by #25)
-- PRs #22, #24, #25 have merge conflicts — duplicate hook files from pre-#19/#20 base. Mailed + nudged dallas to rebase.
+Everything is on main and ready for Wix Studio hookup tomorrow morning. 28 pages, 43+ frontend modules, 5,600+ passing tests.
 
-**cfutons:** All 5 PRs from last session already merged and beads closed. No open PRs.
+### PRs Merged This Session
 
-### Crew Status Right Now
+**cfutons (web):**
+- PR #88 (miquella): CF-p03z ProductSizeGuide extraction + fixed 2 pre-existing notification test failures. Peer reviewed by radahn.
+- PR #90 (godfrey): cf-2epn Performance optimization — lazy loading, CLS prevention, Core Web Vitals. Peer reviewed by rennala.
+- PRs #83-87 (from earlier session): Footer redesign, swatch promo, wishlist buttons, size guide, ESP sync — all applied to main.
 
-| Member | Bead | Story | Status |
-|--------|------|-------|--------|
-| **radahn** | CF-76b1 (P1) | Footer redesign — 4-column links, newsletter, social, trust badges | In progress |
-| **godfrey** | CF-5ggk (P2) | Live chat widget — Gorgias/Tidio integration | In progress |
-| **rennala** | CF-y8je (P2) | Swatch kit CTA + free swatches promotion | In progress |
-| **miquella** | cf-ist (P2) | Financing calculator + BNPL display | In progress |
+**cfutons_mobile:**
+- PR #28 (dallas): Onboarding 3-slide carousel
+- PR #29 (dallas): Offline mode — order cache + OfflineBanner
+- PR #30 (dallas): Screen refactor — hook re-exports
+- PR #31 (dallas): Wix Members auth client
+- PR #32: Merge conflict after #30 — dallas rebasing
 
-All 4 crew assigned and working. No open PRs yet — expecting PRs soon.
+### Crew Status
+
+| Member | Bead | Story | Status | Peer Reviewer |
+|--------|------|-------|--------|---------------|
+| **miquella** | CF-z5tk (P1) | Search Results page polish | Assigned | radahn |
+| **rennala** | CF-l9fw (P1) | Blog + Blog Post page design | Assigned | godfrey |
+| **radahn** | CF-f8of (P1) | About + Contact page brand polish | Assigned | miquella |
+| **godfrey** | CF-5ggk (P2) | Live chat widget — Gorgias/Tidio | In progress | rennala |
+
+All crew have peer reviewers assigned. No more solo melania reviews.
 
 ### Mobile (cfutons_mobile)
 
 | Member | Status | Notes |
 |--------|--------|-------|
-| **dallas** | Active | PR #26 merged. PRs #22, #24, #25 need rebase (conflict with merged hooks). Nudged. |
+| **dallas** | Active | 4/5 PRs merged. PR #32 needs rebase. AR patterns documented for web reuse. |
 
-### Ready Queue (cfutons)
-- CF-x8pd (P1): Lifestyle product photography
-- CF-p03z (P2): Product size/dimension guide with room fit visualization
+### AR for Web (CF-5rfj)
 
----
-
-## Competitive Gap Analysis — What We Still Need
-
-### What We Shipped vs. What Competitors ALL Have
-
-| Feature | Competitors | Us (after today's merges) | Gap? |
-|---------|-------------|--------------------------|------|
-| Announcement bar | 9/10 have it | YES (PR #75) | Closed |
-| Full-bleed lifestyle hero | 10/10 | YES (PR #80) | Closed |
-| Product cards with info | 10/10 | YES (PR #79) — swatches, badges, Quick View | Closed |
-| Brand palette consistency | All | YES (PRs #73, #78) | Closed |
-| Trust bar / icons | 6/10 | YES (PR #75) — 5 icons | Closed |
-| Category showcase cards | 7/10 | YES (PR #77) | Closed |
-| Delivery estimate on product page | 8/10 | YES (PR #81) — zip-based zones | Closed |
-| Free swatch CTA | 4/10 (Joybird, Albany Park) | YES (PR #81) — coral CTA on product page | Closed |
-| Email capture popup | 6/10 | IN PROGRESS (CF-murg — radahn) | Working |
-| Newsletter footer | 8/10 | Partial (contact form exists) | Open |
-| Financing display on product page | 5/10 | Queued (CF-ist — miquella next) | Open |
-| Star ratings / reviews | 7/10 | Structure exists, needs content | Open |
-| Live chat widget | 4/10 | Queued (CF-5ggk) | Open |
-| AR / 3D visualization | 5/10 | Mobile only (cm-88d) | Mobile done, web TBD |
-| Room planner / "Will it fit?" | 3/10 | Queued (CF-p03z) | Sprint 3+ |
-| Free swatch ordering flow | 3/10 | Modal exists, needs backend flow | Sprint 3+ |
-
-### Priority — What Moves the Needle Next
-
-**P1 — Must have soon (this sprint):**
-1. **CF-murg: Email capture popup** — radahn active. Exit-intent + 10% off. Every aspirational competitor has this.
-2. **CF-ist: Financing calculator** — miquella next. "Starting at $42/mo with Affirm" on product pages.
-3. **CF-vqya: Free swatch kit promotion** — site-wide CTA. Joybird and Albany Park's killer feature.
-
-**P2 — Should have (next sprint):**
-4. **CF-5ggk: Live chat** — Gorgias or Tidio. 4/10 competitors have it.
-5. **CF-p03z: Room fit calculator** — "Will this futon fit?" with dimensions. Simpler than full room planner.
-6. **Newsletter footer redesign** — proper 4-column footer with social icons, newsletter signup.
-
-**P3 — Differentiators (sprint 3+):**
-7. Illustrated empty states / error pages (nobody else has this)
-8. Comfort story cards (illustrated version of Castlery's 1-5 scales)
-9. AR "See in your room" for web (mobile already has it)
-10. Modular configurator for sectionals
-
-### The "Boutique Formula" — Where We're Differentiated
-
-Our research found every competitor looks interchangeable — clean minimalism, neutral palettes, stock photography. CF is the **only** one with regional character: hand-drawn mountain illustrations, Blue Ridge aesthetic, two-tone coral + mountain blue accent system. This is the moat.
-
-**Already shipped:** Brand palette enforced, illustrated category cards, mountain-themed section dividers.
-**Next:** Illustrated empty states, comfort story cards, mountain delivery tracker.
+Dallas audited mobile AR architecture. **80% of AR value achievable without WebXR:**
+- Shared from mobile: model catalog, eligibility service, URL resolution
+- Web component: `<model-viewer>` (already exists in mobile codebase)
+- iOS gets AR Quick Look automatically via USDZ fallback
+- Optional future: WebXR hit-test for Chrome room placement
 
 ---
 
-## Overall Sprint Status
+## Competitive Gap Analysis — Updated
 
-### P0 Frontend Sprint: COMPLETE (6/6 stories merged)
+| Feature | Competitors | Us | Status |
+|---------|-------------|-----|--------|
+| Announcement bar | 9/10 | YES (PR #75) | Shipped |
+| Full-bleed lifestyle hero | 10/10 | YES (PR #80) | Shipped |
+| Product cards with swatches | 10/10 | YES (PR #79) | Shipped |
+| Brand palette consistency | All | YES (PRs #73, #78) | Shipped |
+| Trust bar / icons | 6/10 | YES (PR #75) — 5 icons | Shipped |
+| Category showcase cards | 7/10 | YES (PR #77) | Shipped |
+| Delivery estimate | 8/10 | YES (PR #81) — zip-based | Shipped |
+| Free swatch CTA | 4/10 | YES (PR #81, #84) | Shipped |
+| Email capture popup | 6/10 | YES (PR #82) — exit-intent | Shipped |
+| Newsletter footer | 8/10 | YES (PR #83) — 4-column + signup | Shipped |
+| Financing display | 5/10 | YES (cf-ist closed) | Shipped |
+| Product size guide | 4/10 | YES (PR #88) | Shipped |
+| Wishlist buttons | 5/10 | YES (PR #85) | Shipped |
+| Performance/CWV | All | YES (PR #90) — lazy load, CLS fix | Shipped |
+| Checkout flow polish | 8/10 | YES (cf-7nky) | Shipped |
+| SEO/metadata | All | YES (cf-k9ot) | Shipped |
+| Star ratings / reviews | 7/10 | Backend ready, needs content | Ready for hookup |
+| Live chat widget | 4/10 | CF-5ggk — godfrey active | In progress |
+| AR / 3D visualization | 5/10 | CF-5rfj — plan ready, P2 | Planned |
+| Search results polish | 6/10 | CF-z5tk — miquella assigned | In progress |
+| Blog/content pages | 8/10 | CF-l9fw — rennala assigned | In progress |
+| About/Contact polish | 9/10 | CF-f8of — radahn assigned | In progress |
 
-| Bead | Story | Status |
-|------|-------|--------|
-| CF-a1ps | Kill pink-lavender + offWhite | MERGED (#73, #78) |
-| CF-c94m | Announcement bar + trust bar | MERGED (#75) |
-| CF-b0sr | Category showcase | MERGED (#77) |
-| CF-bbms | Hero overhaul | MERGED (#80) |
-| CF-dgiy | Product card grid | MERGED (#79) |
-| CF-isru | Product page modernization | MERGED (#81) |
+### The "Boutique Formula" — Our Differentiation
 
-### Active Work
-
-| Bead | Story | Owner | Status |
-|------|-------|-------|--------|
-| CF-murg | Email capture popup | radahn | Brainstorming |
-| CF-ist | Financing calculator | miquella | Queued (handoff pending) |
-| cf-qnsf | Marketing launch prep | polecats/rust | In progress |
-
-### Ready Queue (Frontend Priority)
-
-| Bead | Priority | Story |
-|------|----------|-------|
-| CF-vqya | P1 | Free Swatch Kit CTA |
-| CF-x8pd | P1 | Lifestyle product photography |
-| CF-5ggk | P2 | Live chat widget |
-| CF-y8je | P2 | Swatch kit + free swatches promo |
-| CF-p03z | P2 | Room fit calculator |
-
----
-
-## Mobile/Web Alignment
-
-- **DESIGN-SYSTEM.md** created — formal cross-platform design system
-- Dallas (cfutons_mobile) received full token specs + component patterns
-- AR Camera (cm-88d) already uses brand palette — confirmed aligned
-- Product card pattern (image+name+price+swatches+badge) documented for both platforms
-- Interaction mapping: web hover → mobile press, modal → bottom sheet
-- Shared file: `sharedTokens.js` is the single source of truth
+Every competitor looks interchangeable — clean minimalism, neutral palettes, stock photography. CF is the **only** one with regional character: Blue Ridge aesthetic, hand-drawn mountain illustrations, two-tone coral + mountain blue accent system. This is the moat.
 
 ---
 
-## Brand Palette (enforced across all pages)
+## Sprint Summary
 
-| Token | Color | Use |
-|-------|-------|-----|
-| Sand | #E8D5B7 | Backgrounds, secondary |
-| Espresso | #3A2518 | Text, headers |
-| Mountain Blue | #5B8FA8 | Accents, links |
-| Coral | #E8845C | CTAs, highlights |
-| offWhite | #FAF7F2 | Product areas, clean sections |
+### P0 Frontend Sprint: COMPLETE (6/6)
+All merged: brand palette, announcement bar, category showcase, hero overhaul, product cards, product page modernization.
+
+### P1 Design Sprint: COMPLETE (8/8)
+All merged: footer redesign, email capture, swatch promo, wishlist buttons, size guide, ESP sync, checkout polish, SEO.
+
+### Active Sprint: P1 Page Polish (4 stories)
+| Bead | Story | Owner | Reviewer | Status |
+|------|-------|-------|----------|--------|
+| CF-z5tk | Search Results polish | miquella | radahn | Assigned |
+| CF-l9fw | Blog + Blog Post design | rennala | godfrey | Assigned |
+| CF-f8of | About + Contact polish | radahn | miquella | Assigned |
+| CF-5ggk | Live chat widget | godfrey | rennala | In progress |
 
 ---
 
@@ -149,8 +107,17 @@ Our research found every competitor looks interchangeable — clean minimalism, 
 | Checkpoint | Tests | Files |
 |------------|-------|-------|
 | Feb 21 start | 2,394 | 70 |
-| Feb 28 current | **5,300+** | **137+** |
+| Feb 28 current | **5,600+** | **140+** |
 
 ---
 
-*PM: melania | cfutons GREEN | P0 sprint COMPLETE (6/6) | 4 PRs merged this session | Design system doc created | Gap analysis done | Next: email popup, financing, swatch kit*
+## PR Review Process (New)
+
+Peer reviewer pairings rotate per sprint:
+- miquella ↔ radahn (cross-review)
+- rennala ↔ godfrey (cross-review)
+- Melania gives final approval after peer review passes
+
+---
+
+*PM: melania | cfutons GREEN | Hookup ready | 14+ PRs merged today | 5,600+ tests | 4 crew active with peer reviewers | Mobile: 4 PRs merged, AR patterns documented*
