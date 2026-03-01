@@ -122,7 +122,8 @@ async function renderResults(products, query) {
     $item('#searchName').text = itemData.name;
     $item('#searchPrice').text = itemData.formattedPrice;
     try {
-      $item('#searchDesc').text = stripHtml(itemData.description || '').substring(0, 120) + '...';
+      const desc = stripHtml(itemData.description || '').substring(0, 120);
+      $item('#searchDesc').text = desc ? desc + '...' : '';
     } catch (e) {}
 
     // ── Badge overlay ──
@@ -341,9 +342,9 @@ function setupAutocomplete() {
           limit: PAGE_SIZE,
           offset: nextOffset,
         });
-        _currentOffset = nextOffset;
         const products = result?.products || [];
         if (products.length > 0) {
+          _currentOffset = nextOffset;
           const repeater = $w('#searchRepeater');
           if (repeater) {
             const existing = Array.isArray(repeater.data) ? repeater.data : [];
@@ -621,5 +622,14 @@ async function loadPopularChips() {
 }
 
 function stripHtml(html) {
-  return html.replace(/<[^>]*>/g, '').trim();
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .trim();
 }
