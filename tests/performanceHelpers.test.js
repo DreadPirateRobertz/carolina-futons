@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+vi.mock('backend/errorMonitoring.web', () => ({
+  logError: vi.fn(),
+}));
+
 // ── deferInit ────────────────────────────────────────────────────────
 
 describe('deferInit', () => {
@@ -105,13 +109,35 @@ describe('prioritizeSections', () => {
     expect(deferredFn).toHaveBeenCalledOnce();
     expect(result.critical).toHaveLength(1);
     expect(result.critical[0].status).toBe('fulfilled');
-    expect(result.deferred).toHaveLength(1);
-    expect(result.deferred[0].status).toBe('fulfilled');
+    // Deferred results are fire-and-forget — not in return value
+    expect(result.deferred).toBeUndefined();
     // Critical runs before deferred
     expect(callOrder[0]).toBe('critical');
   });
 
-  it('runs deferred sections after critical', async () => {
+  it('resolves immediately after critical sections without waiting for deferred', async () => {
+    let deferredResolved = false;
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const deferredFn = vi.fn().mockImplementation(() =>
+      new Promise(resolve => {
+        setTimeout(() => { deferredResolved = true; resolve('deferred-ok'); }, 5000);
+      })
+    );
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'video', init: deferredFn, critical: false },
+    ];
+
+    // prioritizeSections should resolve right after critical, NOT wait for deferred
+    const result = await prioritizeSections(sections);
+    expect(criticalFn).toHaveBeenCalledOnce();
+    expect(deferredFn).toHaveBeenCalledOnce(); // started but not awaited
+    expect(deferredResolved).toBe(false); // deferred still pending
+    expect(result.critical).toHaveLength(1);
+  });
+
+  it('deferred sections do not appear in returned results', async () => {
     const criticalFn = vi.fn().mockResolvedValue('ok');
     const deferredFn = vi.fn().mockResolvedValue('deferred-ok');
 
@@ -121,9 +147,8 @@ describe('prioritizeSections', () => {
     ];
 
     const result = await prioritizeSections(sections);
-    expect(criticalFn).toHaveBeenCalledOnce();
-    expect(deferredFn).toHaveBeenCalledOnce();
-    expect(result.deferred[0].status).toBe('fulfilled');
+    // Deferred results should not be returned (they're fire-and-forget)
+    expect(result.deferred).toBeUndefined();
   });
 
   it('handles critical section failures without breaking deferred', async () => {
@@ -138,13 +163,35 @@ describe('prioritizeSections', () => {
     const result = await prioritizeSections(sections);
     expect(result.critical[0].status).toBe('rejected');
     expect(deferredFn).toHaveBeenCalledOnce();
-    expect(result.deferred[0].status).toBe('fulfilled');
   });
 
-  it('returns empty arrays for empty input', async () => {
+  it('reports deferred section failures to errorMonitoring', async () => {
+    const { logError } = await import('backend/errorMonitoring.web');
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const failingDeferredFn = vi.fn().mockRejectedValue(new Error('deferred boom'));
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'broken-deferred', init: failingDeferredFn, critical: false },
+    ];
+
+    await prioritizeSections(sections);
+
+    // Flush microtask queue so fire-and-forget deferred settles
+    await vi.runAllTimersAsync();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('broken-deferred'),
+      })
+    );
+  });
+
+  it('returns empty critical array for empty input', async () => {
     const result = await prioritizeSections([]);
     expect(result.critical).toHaveLength(0);
-    expect(result.deferred).toHaveLength(0);
   });
 
   it('treats all sections as critical when none marked deferred', async () => {
@@ -160,7 +207,6 @@ describe('prioritizeSections', () => {
     expect(fn1).toHaveBeenCalledOnce();
     expect(fn2).toHaveBeenCalledOnce();
     expect(result.critical).toHaveLength(2);
-    expect(result.deferred).toHaveLength(0);
   });
 });
 

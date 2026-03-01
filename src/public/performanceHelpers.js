@@ -1,6 +1,8 @@
 // Performance optimization helpers
 // Deferred loading, IntersectionObserver image lazy loading, CLS prevention
 
+import { logError } from 'backend/errorMonitoring.web';
+
 // ── deferInit ────────────────────────────────────────────────────────
 // Schedule non-critical initialization for idle time.
 // Uses requestIdleCallback when available, falls back to setTimeout.
@@ -28,7 +30,7 @@ export function deferInit(fn, opts = {}) {
 
 export async function prioritizeSections(sections) {
   if (!sections || sections.length === 0) {
-    return { critical: [], deferred: [] };
+    return { critical: [] };
   }
 
   const critical = sections.filter(s => s.critical);
@@ -46,19 +48,21 @@ export async function prioritizeSections(sections) {
     }
   });
 
-  // Run deferred sections after critical content is rendered.
-  // This ensures above-fold content paints before below-fold starts loading.
-  const deferredResults = await Promise.allSettled(
-    deferred.map(s => s.init())
-  );
+  // Fire-and-forget deferred sections — do NOT await.
+  // Awaiting deferred sections blocks onReady and hurts LCP.
+  if (deferred.length > 0) {
+    Promise.allSettled(deferred.map(s => s.init())).then(results => {
+      results.forEach((result, i) => {
+        if (result.status === 'rejected') {
+          try {
+            logError(new Error(`Deferred section "${deferred[i].name}" failed: ${result.reason?.message || result.reason}`));
+          } catch (e) {}
+        }
+      });
+    });
+  }
 
-  deferredResults.forEach((result, i) => {
-    if (result.status === 'rejected') {
-      console.error(`[perf] Deferred section "${deferred[i].name}" failed:`, result.reason);
-    }
-  });
-
-  return { critical: criticalResults, deferred: deferredResults };
+  return { critical: criticalResults };
 }
 
 // ── createImageObserver ──────────────────────────────────────────────
