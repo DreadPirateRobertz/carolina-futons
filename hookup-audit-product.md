@@ -19,7 +19,7 @@ $w refs are managed by their respective modules and would need separate audits.
 | `#productMainImage` | `#productMainImage` | MATCH | Main gallery image |
 | `#productDataset` | `#productDataset` | MATCH | Dataset connection |
 | `#productDescription` | — | IN CODE ONLY | RichText for "not found" message. Spec has Description as `—` (no ID, dataset-bound). |
-| `#addToCartBtn` | — | IN CODE ONLY | Code uses `#addToCartBtn`; spec defines `#addToCartButton`. **ID MISMATCH.** |
+| `#addToCartButton` | `#addToCartButton` | MATCH | Fixed: was `#addToCartBtn`, now matches spec. |
 
 ### Related Products ("You Might Also Like")
 | Code ID | Spec ID | Status | Notes |
@@ -52,7 +52,7 @@ $w refs are managed by their respective modules and would need separate audits.
 ### Inventory / Stock Display
 | Code ID | Spec ID | Status | Notes |
 |---------|---------|--------|-------|
-| `#stockStatusBadge` | — | IN CODE ONLY | Stock badge (In Stock/Low Stock/Out of Stock). Spec has `#stockStatus` — **ID MISMATCH.** |
+| `#stockStatus` | `#stockStatus` | MATCH | Fixed: was `#stockStatusBadge`, now matches spec. |
 | `#variantStockRepeater` | — | IN CODE ONLY | Per-variant stock repeater. Not in spec. |
 | `#variantStockLabel` | — | IN CODE ONLY | Repeater: variant label. Not in spec. |
 | `#variantStockStatus` | — | IN CODE ONLY | Repeater: variant stock status. Not in spec. |
@@ -72,7 +72,7 @@ $w refs are managed by their respective modules and would need separate audits.
 ### Sections Referenced for collapseOnMobile
 | Code ID | Spec ID | Status | Notes |
 |---------|---------|--------|-------|
-| `#relatedProductsSection` | — | IN CODE ONLY | Code passes this to `collapseOnMobile` but section is `#relatedSection` in spec. **ID MISMATCH.** |
+| ~~`#relatedProductsSection`~~ | `#relatedSection` | FIXED | Was bug: wrong ID in collapseOnMobile. Now uses `#relatedSection`. |
 
 ---
 
@@ -80,12 +80,12 @@ $w refs are managed by their respective modules and would need separate audits.
 
 **Total: 14 IDs in Product Page.js directly, missing from spec**
 
-### ID Mismatches (code ≠ spec — must reconcile):
-| Code ID | Spec ID | Resolution |
-|---------|---------|------------|
-| `#addToCartBtn` | `#addToCartButton` | Rename in code OR editor. Must pick one. |
-| `#stockStatusBadge` | `#stockStatus` | Rename in code OR editor. Must pick one. |
-| `#relatedProductsSection` | `#relatedSection` | Code uses wrong ID in `collapseOnMobile` call. Fix code. |
+### ID Mismatches — ALL FIXED:
+| Code ID (was) | Spec ID | Resolution |
+|---------------|---------|------------|
+| `#addToCartBtn` | `#addToCartButton` | FIXED — code updated to match spec |
+| `#stockStatusBadge` | `#stockStatus` | FIXED — code updated to match spec |
+| `#relatedProductsSection` | `#relatedSection` | FIXED — bug corrected in collapseOnMobile call |
 
 ### Must Create in Wix Studio Editor:
 | Element | Type | Notes |
@@ -190,19 +190,16 @@ Note: `isMobile` is imported but only used indirectly via other helpers.
 | Item | Location | Issue |
 |------|----------|-------|
 | `isMobile` | Import line 8 | Imported but never called directly |
-| `#relatedProductsSection` | `collapseOnMobile` call (line 127) | Bug: should be `#relatedSection` (spec ID). Code uses non-existent ID. |
+| ~~`#relatedProductsSection`~~ | `collapseOnMobile` call (line 127) | FIXED — now uses `#relatedSection` |
 
 ---
 
-## 6. Critical Issues (Action Required)
+## 6. Critical Issues — ALL RESOLVED
 
-### ID Mismatches — Must Reconcile Before Hookup
-
-| # | Code ID | Spec ID | Recommendation |
-|---|---------|---------|----------------|
-| 1 | `#addToCartBtn` | `#addToCartButton` | **Update code** to `#addToCartButton` (spec is authoritative) |
-| 2 | `#stockStatusBadge` | `#stockStatus` | **Update spec** to `#stockStatusBadge` (code is more descriptive) OR update code |
-| 3 | `#relatedProductsSection` | `#relatedSection` | **Fix code bug** — change to `#relatedSection` in collapseOnMobile call |
+All 3 ID mismatches have been fixed in code to match the spec:
+1. `#addToCartBtn` → `#addToCartButton`
+2. `#stockStatusBadge` → `#stockStatus`
+3. `#relatedProductsSection` → `#relatedSection` (bug fix)
 
 ---
 
@@ -213,11 +210,11 @@ Note: `isMobile` is imported but only used indirectly via other helpers.
 | Total unique $w IDs in Product Page.js | 34 |
 | IDs matching spec | 17 |
 | IDs in code, missing from spec | 14 |
-| ID mismatches (code ≠ spec) | 3 |
+| ID mismatches (code ≠ spec) | 3 (ALL FIXED) |
 | Spec IDs delegated to component modules | ~80+ |
 | Backend/public imports | 25 (all resolve) |
 | Dead imports | 1 (`isMobile`) |
-| Bugs found | 1 (`#relatedProductsSection` wrong ID) |
+| Bugs found | 1 (FIXED — `#relatedProductsSection` → `#relatedSection`) |
 | Wix Studio elements to create | 12 (4 stock + 8 remind-me) |
 
 ### Recommended Next Steps

@@ -62,7 +62,7 @@ async function initProductPage() {
       try { $w('#productName').text = 'Product Not Found'; } catch (e) {}
       try { $w('#productPrice').text = ''; } catch (e) {}
       try { $w('#productDescription').text = 'Sorry, this product is no longer available. Please browse our catalog for similar items.'; } catch (e) {}
-      try { $w('#addToCartBtn').hide(); } catch (e) {}
+      try { $w('#addToCartButton').hide(); } catch (e) {}
       return;
     }
 
@@ -124,7 +124,7 @@ async function initProductPage() {
       { name: 'roomFitChecker', init: () => initRoomFitChecker($w, state) },
       { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
       { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
-      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedProductsSection']) },
+      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection']) },
       { name: 'backToTop', init: () => initBackToTop($w) },
       { name: 'browseTracking', init: () => initBrowseTracking(state) },
     ];
@@ -242,7 +242,7 @@ async function initInventoryDisplay($w, state) {
 
     // Stock status badge
     try {
-      const badge = $w('#stockStatusBadge');
+      const badge = $w('#stockStatus');
       if (badge) {
         if (stockInfo.preOrder) {
           badge.text = 'Pre-Order Available';
