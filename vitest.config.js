@@ -188,6 +188,8 @@ export default defineConfig({
       'public/models3d': path.resolve(__dirname, 'src/public/models3d.js'),
       'public/arSupport.js': path.resolve(__dirname, 'src/public/arSupport.js'),
       'public/arSupport': path.resolve(__dirname, 'src/public/arSupport.js'),
+      'public/ProductARViewer.js': path.resolve(__dirname, 'src/public/ProductARViewer.js'),
+      'public/ProductARViewer': path.resolve(__dirname, 'src/public/ProductARViewer.js'),
     },
   },
 });
