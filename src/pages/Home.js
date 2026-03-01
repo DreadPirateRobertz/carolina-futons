@@ -59,7 +59,19 @@ $w.onReady(async function () {
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
   ];
 
-  const { critical: criticalResults } = await prioritizeSections(sections);
+  const { critical: criticalResults } = await prioritizeSections(sections, {
+    onError: (section, reason) => {
+      import('backend/errorMonitoring.web').then(({ logError }) => {
+        logError({
+          message: `Home page deferred section "${section.name}" failed to load`,
+          stack: reason?.stack || String(reason),
+          page: 'Home',
+          context: `onReady/deferred/${section.name}`,
+          severity: 'warning',
+        });
+      }).catch(err => console.error('[Home] Error logging failed:', err.message));
+    },
+  });
 
   criticalResults.forEach((result, i) => {
     if (result.status === 'rejected') {
