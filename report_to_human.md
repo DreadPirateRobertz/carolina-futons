@@ -1,36 +1,37 @@
 # cfutons Rig Report — Carolina Futons (Web)
 
-**Last Updated:** 2026-03-01 04:50 MST (melania)
+**Last Updated:** 2026-03-01 05:10 MST (melania)
 
 ---
 
-## Session Update — 2026-03-01 04:50 MST
+## Session Update — 2026-03-01 05:10 MST
 
 ### PRs Merged This Session
 - PR #91 (radahn): CF-f8of About + Contact brand polish — 38 tests
+- PR #92 (godfrey): CF-5ggk Live chat widget refinements — 25 tests
 - PR #93 (radahn): CF-f8of follow-up — email sanitization + 30 page tests
+- PR #94 (miquella): CF-z5tk Search results polish — radahn peer-reviewed, all bugs fixed
 - PR #96 (radahn): CF-yp3o perf fix — deferred sections fire-and-forget for LCP
 
 ### Open PRs — Awaiting Review
-- **PR #92** (godfrey, CF-5ggk): Live chat refinements + 25 tests — CI green, awaiting rennala peer review
-- **PR #94** (miquella, CF-z5tk): Search results polish — CI green, radahn found 2 bugs (offset + truncation), miquella fixing
-- **PR #89**: CF-aptu notification fix — needs .beads cleanup + rebase
+- **PR #97** (radahn, CF-4scn): FAQ page — 5 categories, search, accordion, schema markup, 47 tests. CI green. Miquella assigned as peer reviewer.
+- **PR #89**: CF-aptu notification fix — needs .beads cleanup + rebase (low priority)
 
-### Process Updates
-- **Peer review timeout** (mayor directive): wait for peer reviewer, 30-min timeout before PM can solo merge
-- **Review accuracy**: miquella flagged non-existent issues on PR #93 (read working tree, not diff) — corrected
+### Infrastructure
+- **gt mail send FIXED** — `gt doctor --fix` resolved prefix mismatch (rigs.json vs routes.jsonl). Mail working again.
+- **gt doctor**: database-prefix still shows 2 warnings (beads_hq) — non-blocking
 
 ### Crew Status
 
 | Member | Bead | Story | Status | Peer Reviewer |
 |--------|------|-------|--------|---------------|
-| **miquella** | CF-z5tk (P1) | Search Results polish | Fixing 2 bugs from review | radahn |
+| **miquella** | Needs assignment | — | PR #94 merged, handoff pending | radahn |
 | **rennala** | CF-l9fw (P1) | Blog + Blog Post design | In progress | godfrey |
-| **radahn** | CF-4scn (P1) | FAQ page design | Assigned (after handoff) | miquella |
-| **godfrey** | CF-5ggk (P2) | Live chat widget | PR #92 awaiting review | rennala |
-| **dallas** | CF-5rfj (P2) | Web AR visualization | Just assigned | TBD |
+| **radahn** | CF-4scn (P1) | FAQ page design | PR #97 awaiting review | miquella |
+| **godfrey** | Needs assignment | — | PR #92 merged, handoff pending | rennala |
+| **dallas** | CF-5rfj (P2) | Web AR visualization | Assigned | TBD |
 
-### Design Vision — Updated
+### Design Vision
 - 42 total screenshots: 18 competitor homepages, 14 product/category, 10 social media
 - Social media competitive analysis: futon category unowned on Pinterest/Instagram
 - DESIGN-VISION.html: social media section + before/after shots added
@@ -60,10 +61,10 @@
 | Checkout flow polish | 8/10 | YES | Shipped |
 | SEO/metadata | All | YES | Shipped |
 | Star ratings / reviews | 7/10 | Backend ready | Hookup ready |
-| Live chat widget | 4/10 | PR #92 | Awaiting review |
-| Search results polish | 6/10 | PR #94 | Fixing bugs |
+| Live chat widget | 4/10 | YES (PR #92) | Shipped |
+| Search results polish | 6/10 | YES (PR #94) | Shipped |
 | Blog/content pages | 8/10 | CF-l9fw | In progress |
-| FAQ page | 7/10 | CF-4scn | Assigned |
+| FAQ page | 7/10 | PR #97 | Awaiting review |
 | AR / 3D visualization | 5/10 | CF-5rfj | Assigned |
 
 ---
@@ -74,7 +75,7 @@
 |------------|-------|-------|
 | Feb 21 start | 2,394 | 70 |
 | Feb 28 | 5,600+ | 140+ |
-| Mar 1 current | **5,700+** | **152+** |
+| Mar 1 current | **5,789+** | **155+** |
 
 ---
 
@@ -86,4 +87,4 @@
 
 ---
 
-*PM: melania | cfutons GREEN | 5,700+ tests | 5 crew active | 3 PRs merged + 2 open | 42 design screenshots | Social strategy complete | AR assigned to dallas | Hookup ready*
+*PM: melania | cfutons GREEN | 5,789+ tests | 5 crew active | 5 PRs merged + 1 open | 42 design screenshots | Social strategy complete | AR assigned to dallas | Hookup ready | gt mail fixed*
