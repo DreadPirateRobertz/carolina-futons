@@ -9,6 +9,7 @@
  *
  * @module StarRatingCard
  */
+import { colors } from 'public/designTokens.js';
 
 // ── Cache ───────────────────────────────────────────────────────────
 
@@ -67,9 +68,17 @@ export function renderCardStarRating($item, productId, ratingsMap) {
   try {
     const summary = ratingsMap && productId ? ratingsMap[productId] : null;
 
-    if (!summary || summary.total === 0) {
+    const safeTotal = summary ? Math.max(0, Math.floor(Number(summary.total) || 0)) : 0;
+
+    if (!summary || safeTotal === 0) {
       try { const s = $item('#gridReviewStars'); if (s) s.collapse(); } catch (e) {}
-      try { const c = $item('#gridReviewCount'); if (c) c.collapse(); } catch (e) {}
+      try {
+        const c = $item('#gridReviewCount');
+        if (c) {
+          c.text = 'No reviews yet';
+          c.expand();
+        }
+      } catch (e) {}
       return;
     }
 
@@ -77,6 +86,7 @@ export function renderCardStarRating($item, productId, ratingsMap) {
       const starsEl = $item('#gridReviewStars');
       if (starsEl) {
         starsEl.text = generateStarString(summary.average);
+        starsEl.style.color = colors.sunsetCoral;
         starsEl.accessibility.ariaLabel = `${summary.average} out of 5 stars`;
         starsEl.expand();
       }
@@ -85,7 +95,7 @@ export function renderCardStarRating($item, productId, ratingsMap) {
     try {
       const countEl = $item('#gridReviewCount');
       if (countEl) {
-        countEl.text = `(${summary.total})`;
+        countEl.text = `(${safeTotal})`;
         countEl.expand();
       }
     } catch (e) {}

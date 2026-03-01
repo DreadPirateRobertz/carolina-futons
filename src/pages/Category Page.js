@@ -18,7 +18,7 @@ import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
-import { batchLoadRatings, renderCardStarRating } from 'public/StarRatingCard';
+import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -86,6 +86,7 @@ const CATEGORY_CONTENT = {
 };
 
 $w.onReady(async function () {
+  resetRatingsCache();
   const currentPath = wixLocationFrontend.path?.[0] || '';
 
   initCategoryHero(currentPath);

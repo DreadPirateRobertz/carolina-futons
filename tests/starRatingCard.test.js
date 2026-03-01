@@ -200,14 +200,15 @@ describe('renderCardStarRating', () => {
     expect($item('#gridReviewCount').expand).toHaveBeenCalled();
   });
 
-  it('collapses elements when product has zero reviews', () => {
+  it('shows "No reviews yet" when product has zero reviews', () => {
     const $item = createCard$item();
     const ratingsMap = { 'prod-1': { average: 0, total: 0 } };
 
     renderCardStarRating($item, 'prod-1', ratingsMap);
 
     expect($item('#gridReviewStars').collapse).toHaveBeenCalled();
-    expect($item('#gridReviewCount').collapse).toHaveBeenCalled();
+    expect($item('#gridReviewCount').text).toBe('No reviews yet');
+    expect($item('#gridReviewCount').expand).toHaveBeenCalled();
   });
 
   it('collapses elements when product not in ratings map', () => {
@@ -261,5 +262,62 @@ describe('renderCardStarRating', () => {
     renderCardStarRating($item, 'prod-1', ratingsMap);
 
     expect($item('#gridReviewStars').text).toBe('★★★★☆');
+  });
+
+  it('sets star color to sunsetCoral', () => {
+    const $item = createCard$item();
+    const ratingsMap = { 'prod-1': { average: 4.0, total: 10 } };
+
+    renderCardStarRating($item, 'prod-1', ratingsMap);
+
+    expect($item('#gridReviewStars').style.color).toBe('#E8845C');
+  });
+
+  it('shows "No reviews yet" when product not in ratings map', () => {
+    const $item = createCard$item();
+
+    renderCardStarRating($item, 'prod-1', {});
+
+    expect($item('#gridReviewCount').text).toBe('No reviews yet');
+    expect($item('#gridReviewCount').expand).toHaveBeenCalled();
+  });
+
+  it('sanitizes non-numeric total to 0', () => {
+    const $item = createCard$item();
+    const ratingsMap = { 'prod-1': { average: 4.0, total: '<script>alert(1)</script>' } };
+
+    renderCardStarRating($item, 'prod-1', ratingsMap);
+
+    // Non-numeric total → NaN → floor to 0 → "No reviews yet" path
+    expect($item('#gridReviewCount').text).toBe('No reviews yet');
+  });
+
+  it('sanitizes negative total to 0', () => {
+    const $item = createCard$item();
+    const ratingsMap = { 'prod-1': { average: 3.0, total: -5 } };
+
+    renderCardStarRating($item, 'prod-1', ratingsMap);
+
+    expect($item('#gridReviewCount').text).toBe('No reviews yet');
+  });
+
+  it('floors fractional total values', () => {
+    const $item = createCard$item();
+    const ratingsMap = { 'prod-1': { average: 4.0, total: 10.7 } };
+
+    renderCardStarRating($item, 'prod-1', ratingsMap);
+
+    expect($item('#gridReviewCount').text).toBe('(10)');
+  });
+
+  it('handles Infinity total safely', () => {
+    const $item = createCard$item();
+    const ratingsMap = { 'prod-1': { average: 4.0, total: Infinity } };
+
+    renderCardStarRating($item, 'prod-1', ratingsMap);
+
+    // Infinity is numeric but not finite — floor(Infinity) = Infinity, max(0, Infinity) = Infinity
+    // Number coercion is fine, display is "(Infinity)" which is safe (no XSS)
+    expect($item('#gridReviewCount').text).not.toContain('<');
   });
 });

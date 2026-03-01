@@ -10,7 +10,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { prioritizeSections } from 'public/performanceHelpers.js';
-import { batchLoadRatings, renderCardStarRating } from 'public/StarRatingCard.js';
+import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
 import wixData from 'wix-data';
 
@@ -42,6 +42,8 @@ const CATEGORIES = [
 ];
 
 $w.onReady(async function () {
+  resetRatingsCache();
+
   // Critical sections: above-fold content that affects LCP
   // Deferred sections: below-fold content loaded during idle time
   const sections = [
