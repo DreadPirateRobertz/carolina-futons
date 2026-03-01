@@ -1,6 +1,6 @@
 // Contact.js - Contact Page
-// Contact form with validation, illustrated map section,
-// business hours, and local SEO schema
+// Contact form with enhanced validation, business hours with live status,
+// showroom info, appointment booking, social proof, FAQ link, and local SEO
 import { getBusinessSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { sendEmail } from 'backend/emailService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
@@ -11,14 +11,23 @@ import {
 } from 'backend/deliveryScheduling.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { sanitizeText } from 'public/validators';
+import {
+  validateContactFields,
+  getShowroomDetails,
+  formatBusinessHours,
+  getSocialProofSnippets,
+} from 'public/aboutContactHelpers.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
   initContactForm();
   initBusinessInfo();
+  initBusinessHoursDisplay();
   initAppointmentBooking();
+  initContactSocialProof();
+  initContactFaqLink();
   await Promise.allSettled([
     injectContactSchema(),
     injectContactMeta(),
@@ -27,7 +36,7 @@ $w.onReady(async function () {
 });
 
 // ── Contact Form ────────────────────────────────────────────────────
-// Validated form that sends to store email
+// Validated form using extracted validation helpers
 
 function initContactForm() {
   try {
@@ -48,7 +57,6 @@ function initContactForm() {
     try { submitBtn.accessibility.ariaLabel = 'Send message to Carolina Futons'; } catch (e) {}
 
     submitBtn.onClick(async () => {
-      // Validate required fields
       const name = sanitizeText($w('#contactName').value, 200);
       const email = $w('#contactEmail').value?.trim();
       const phone = sanitizeText($w('#contactPhone').value, 30);
@@ -58,22 +66,21 @@ function initContactForm() {
       // Clear previous errors
       hideAllErrors();
 
-      let hasError = false;
+      // Use extracted validation
+      const validation = validateContactFields({ name, email, message, phone });
 
-      if (!name) {
-        showFieldError('#contactNameError', 'Please enter your name');
-        hasError = true;
-      }
-      if (!email || !isValidEmail(email)) {
-        showFieldError('#contactEmailError', 'Please enter a valid email address');
-        hasError = true;
-      }
-      if (!message) {
-        showFieldError('#contactMessageError', 'Please enter your message');
-        hasError = true;
-      }
-
-      if (hasError) {
+      if (!validation.valid) {
+        for (const err of validation.errors) {
+          const errorMap = {
+            name: '#contactNameError',
+            email: '#contactEmailError',
+            message: '#contactMessageError',
+            phone: '#contactPhoneError',
+          };
+          if (errorMap[err.field]) {
+            showFieldError(errorMap[err.field], err.message);
+          }
+        }
         announce($w, 'Please fix the errors in the form');
         return;
       }
@@ -133,45 +140,98 @@ function showFieldError(elementId, message) {
 }
 
 function hideAllErrors() {
-  ['#contactNameError', '#contactEmailError', '#contactMessageError', '#contactError'].forEach(id => {
+  ['#contactNameError', '#contactEmailError', '#contactMessageError', '#contactPhoneError', '#contactError'].forEach(id => {
     try { $w(id).hide(); } catch (e) {}
   });
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 // ── Business Info Display ───────────────────────────────────────────
 
 function initBusinessInfo() {
-  const info = {
-    address: '824 Locust St, Ste 200\nHendersonville, NC 28792',
-    phone: '(828) 252-9449',
-    hours: 'Wednesday - Saturday\n10:00 AM - 5:00 PM',
-    email: '', // Add store email when available
-  };
+  const details = getShowroomDetails();
 
-  try { $w('#infoAddress').text = info.address; } catch (e) {}
-  try { $w('#infoPhone').text = info.phone; } catch (e) {}
-  try { $w('#infoHours').text = info.hours; } catch (e) {}
+  try { $w('#infoAddress').text = details.address; } catch (e) {}
+  try { $w('#infoPhone').text = details.phone; } catch (e) {}
+
+  // Showroom features
+  try {
+    const featuresList = $w('#contactFeatures');
+    if (featuresList) {
+      featuresList.onItemReady(($item, itemData) => {
+        try { $item('#featureItem').text = itemData.text; } catch (e) {}
+      });
+      featuresList.data = details.features.map((f, i) => ({ _id: `cf-${i}`, text: f }));
+    }
+  } catch (e) {}
 
   // Phone click-to-call
   try {
     $w('#infoPhoneLink').onClick(() => {
-      import('wix-window-frontend').then(({ openUrl }) => openUrl('tel:+18282529449'));
+      import('wix-window-frontend').then(({ openUrl }) => openUrl(details.telLink));
     });
-    try { $w('#infoPhoneLink').accessibility.ariaLabel = 'Call Carolina Futons at (828) 252-9449'; } catch (e) {}
+    try { $w('#infoPhoneLink').accessibility.ariaLabel = `Call Carolina Futons at ${details.phone}`; } catch (e) {}
   } catch (e) {}
 
   // Directions button
   try {
     $w('#directionsBtn').onClick(() => {
-      import('wix-window-frontend').then(({ openUrl }) => {
-        openUrl('https://maps.google.com/?q=824+Locust+St+Ste+200+Hendersonville+NC+28792');
-      });
+      import('wix-window-frontend').then(({ openUrl }) => openUrl(details.directionsUrl));
     });
     try { $w('#directionsBtn').accessibility.ariaLabel = 'Get directions to our showroom'; } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Business Hours with Live Status ─────────────────────────────────
+
+function initBusinessHoursDisplay() {
+  try {
+    const hours = formatBusinessHours();
+
+    // Today's open/closed status
+    try { $w('#todayStatus').text = hours.todayStatus; } catch (e) {}
+
+    // Full weekly schedule
+    try {
+      const hoursRepeater = $w('#hoursRepeater');
+      if (hoursRepeater) {
+        hoursRepeater.onItemReady(($item, itemData) => {
+          try { $item('#hourDay').text = itemData.day; } catch (e) {}
+          try { $item('#hourTime').text = itemData.time; } catch (e) {}
+        });
+        hoursRepeater.data = hours.schedule.map((h, i) => ({ ...h, _id: `hr-${i}` }));
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Social Proof ────────────────────────────────────────────────────
+
+function initContactSocialProof() {
+  try {
+    const repeater = $w('#contactTestimonials');
+    if (!repeater) return;
+
+    const snippets = getSocialProofSnippets();
+    try { repeater.accessibility.ariaLabel = 'Customer testimonials'; } catch (e) {}
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#testimonialQuote').text = `"${itemData.quote}"`; } catch (e) {}
+      try { $item('#testimonialAuthor').text = `— ${itemData.author}`; } catch (e) {}
+      try { $item('#testimonialStars').text = '★'.repeat(itemData.rating) + '☆'.repeat(5 - itemData.rating); } catch (e) {}
+    });
+    repeater.data = snippets.map((s, i) => ({ ...s, _id: `ct-${i}` }));
+  } catch (e) {}
+}
+
+// ── FAQ Link ────────────────────────────────────────────────────────
+
+function initContactFaqLink() {
+  try {
+    const faqLink = $w('#contactFaqLink');
+    if (!faqLink) return;
+
+    makeClickable(faqLink, () => {
+      import('wix-location-frontend').then(({ to }) => to('/faq'));
+    }, { ariaLabel: 'Visit our frequently asked questions page', role: 'link' });
   } catch (e) {}
 }
 
@@ -182,15 +242,12 @@ function initAppointmentBooking() {
     const bookBtn = $w('#appointmentBookBtn');
     if (!bookBtn) return;
 
-    // Populate visit type dropdown
     loadVisitTypes();
 
-    // When visit type changes, load available slots
     try {
       $w('#appointmentVisitType').onChange(() => loadAppointmentSlots());
     } catch (e) {}
 
-    // When date changes, load slots for that date
     try {
       $w('#appointmentDate').onChange(() => loadAppointmentSlots());
     } catch (e) {}
@@ -204,7 +261,6 @@ function initAppointmentBooking() {
       const timeSlot = $w('#appointmentTimeSlot').value;
       const interests = sanitizeText($w('#appointmentInterests').value, 1000);
 
-      // Clear errors
       try { $w('#appointmentError').hide(); } catch (e) {}
 
       if (!name || !email || !visitType || !date || !timeSlot) {
@@ -215,7 +271,8 @@ function initAppointmentBooking() {
         return;
       }
 
-      if (!isValidEmail(email)) {
+      const emailCheck = validateContactFields({ name, email, message: 'placeholder' });
+      if (emailCheck.errors.some(e => e.field === 'email')) {
         try {
           $w('#appointmentError').text = 'Please enter a valid email address.';
           $w('#appointmentError').show();
@@ -240,7 +297,6 @@ function initAppointmentBooking() {
         if (result.success) {
           trackEvent('appointment_booked', { visitType, date });
 
-          // Show confirmation
           try {
             const conf = result.confirmation;
             $w('#appointmentConfirmation').text =
@@ -293,14 +349,12 @@ async function loadAppointmentSlots() {
       return;
     }
 
-    // Group by date for the date picker
     const dates = [...new Set(slots.map(s => s.date))];
     $w('#appointmentDate').options = dates.map(d => {
       const slot = slots.find(s => s.date === d);
       return { label: slot ? `${slot.dayOfWeek}, ${d}` : d, value: d };
     });
 
-    // Filter time slots for selected date
     const selectedDate = $w('#appointmentDate').value || dates[0];
     if (!$w('#appointmentDate').value && dates[0]) {
       $w('#appointmentDate').value = dates[0];
