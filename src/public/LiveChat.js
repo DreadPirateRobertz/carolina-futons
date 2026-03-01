@@ -64,7 +64,8 @@ export async function initLiveChat($w, options = {}) {
     // Restore existing chat history
     await restoreChatHistory($w);
 
-    // ARIA labels
+    // ARIA attributes
+    try { $w('#chatWidget').accessibility.role = 'complementary'; } catch (e) {}
     try { $w('#chatToggleBtn').accessibility.ariaLabel = 'Open live chat'; } catch (e) {}
     try { $w('#chatCloseBtn').accessibility.ariaLabel = 'Close chat'; } catch (e) {}
     try { $w('#chatSendBtn').accessibility.ariaLabel = 'Send message'; } catch (e) {}
