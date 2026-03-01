@@ -60,6 +60,14 @@ describe('models3d', () => {
     it('returns undefined for empty string', () => {
       expect(getModel3DForProduct('')).toBeUndefined();
     });
+
+    it('returns undefined for null', () => {
+      expect(getModel3DForProduct(null)).toBeUndefined();
+    });
+
+    it('returns undefined for undefined', () => {
+      expect(getModel3DForProduct(undefined)).toBeUndefined();
+    });
   });
 
   describe('hasARModel', () => {
@@ -73,6 +81,14 @@ describe('models3d', () => {
 
     it('returns false for empty string', () => {
       expect(hasARModel('')).toBe(false);
+    });
+
+    it('returns false for null', () => {
+      expect(hasARModel(null)).toBe(false);
+    });
+
+    it('returns false for undefined', () => {
+      expect(hasARModel(undefined)).toBe(false);
     });
   });
 });
