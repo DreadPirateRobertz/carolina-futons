@@ -19,6 +19,8 @@ import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
+import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -381,34 +383,32 @@ function initProductGrid() {
     if (!repeater) return;
 
     repeater.onItemReady(($item, itemData) => {
-      // Set product image with SEO alt text (fallback to placeholder if no image)
+      // Card container structure: white bg, 12px radius, shadow, hover
+      try { styleCardContainer($item('#gridCard')); } catch (e) {}
+      try { initCardHover($item('#gridCard')); } catch (e) {}
+
+      // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';
-      $item('#gridImage').src = itemData.mainMedia || getProductFallbackImage(category);
+      setCardImage($item('#gridImage'), itemData, category);
       $item('#gridImage').alt = buildAltText(itemData);
 
       // Product info
       $item('#gridName').text = itemData.name;
-      $item('#gridPrice').text = itemData.formattedPrice;
 
-      // Sale pricing
-      if (itemData.formattedDiscountedPrice) {
-        $item('#gridPrice').text = itemData.formattedDiscountedPrice;
-        try {
-          $item('#gridOrigPrice').text = itemData.formattedPrice;
-          $item('#gridOrigPrice').show();
-          $item('#gridSaleBadge').show();
-        } catch (e) {}
-      }
+      // Price with sale strikethrough
+      try {
+        formatCardPrice(
+          $item('#gridPrice'),
+          $item('#gridOrigPrice'),
+          $item('#gridSaleBadge'),
+          itemData
+        );
+      } catch (e) {}
 
-      // Product badge from galleryHelpers (Sale, New, Featured, In-Store Only)
+      // Product badge with styled colors (Sale=coral, New/Bestseller=blue)
       try {
         const badge = getProductBadge(itemData);
-        if (badge) {
-          $item('#gridBadge').text = badge;
-          $item('#gridBadge').show();
-        } else {
-          $item('#gridBadge').hide();
-        }
+        styleBadge($item('#gridBadge'), badge);
       } catch (e) {}
 
       // Brand label
@@ -472,6 +472,15 @@ function initProductGrid() {
       // Wishlist heart button
       try {
         initCardWishlistButton($item, itemData, _wishlistSet.has(itemData._id));
+      } catch (e) {}
+
+      // "See It In a Room" lifestyle overlay badge
+      try {
+        const overlay = getLifestyleOverlay(category);
+        if (overlay) {
+          $item('#gridLifestyleBadge').text = overlay.label;
+          $item('#gridLifestyleBadge').show();
+        }
       } catch (e) {}
 
       // Compare button
