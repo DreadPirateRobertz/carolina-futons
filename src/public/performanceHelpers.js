@@ -24,13 +24,15 @@ export function deferInit(fn, opts = {}) {
 
 // ── prioritizeSections ───────────────────────────────────────────────
 // Split page sections into critical (load immediately) and deferred
-// (load during idle time). Returns critical results for error handling.
+// (load during idle time). Critical sections are awaited; deferred
+// sections are fire-and-forget so they don't block LCP.
 
-export async function prioritizeSections(sections) {
+export async function prioritizeSections(sections, opts = {}) {
   if (!sections || sections.length === 0) {
-    return { critical: [], deferred: [] };
+    return { critical: [] };
   }
 
+  const { onError } = opts;
   const critical = sections.filter(s => s.critical);
   const deferred = sections.filter(s => !s.critical);
 
@@ -46,19 +48,23 @@ export async function prioritizeSections(sections) {
     }
   });
 
-  // Run deferred sections after critical content is rendered.
-  // This ensures above-fold content paints before below-fold starts loading.
-  const deferredResults = await Promise.allSettled(
-    deferred.map(s => s.init())
-  );
+  // Fire-and-forget deferred sections — do NOT await.
+  // This lets onReady return after critical content paints.
+  if (deferred.length > 0) {
+    Promise.allSettled(deferred.map(s => s.init()))
+      .then(results => {
+        results.forEach((result, i) => {
+          if (result.status === 'rejected') {
+            console.error(`[perf] Deferred section "${deferred[i].name}" failed:`, result.reason);
+            if (typeof onError === 'function') {
+              try { onError(deferred[i], result.reason); } catch (e) {}
+            }
+          }
+        });
+      });
+  }
 
-  deferredResults.forEach((result, i) => {
-    if (result.status === 'rejected') {
-      console.error(`[perf] Deferred section "${deferred[i].name}" failed:`, result.reason);
-    }
-  });
-
-  return { critical: criticalResults, deferred: deferredResults };
+  return { critical: criticalResults };
 }
 
 // ── createImageObserver ──────────────────────────────────────────────

@@ -80,20 +80,35 @@ describe('prioritizeSections', () => {
   let prioritizeSections;
 
   beforeEach(async () => {
-    vi.useFakeTimers();
     ({ prioritizeSections } = await import('../src/public/performanceHelpers.js'));
   });
 
   afterEach(() => {
-    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.resetModules();
   });
 
-  it('runs critical sections first via Promise.allSettled', async () => {
-    const callOrder = [];
-    const criticalFn = vi.fn().mockImplementation(() => { callOrder.push('critical'); return Promise.resolve('ok'); });
-    const deferredFn = vi.fn().mockImplementation(() => { callOrder.push('deferred'); return Promise.resolve('ok'); });
+  it('awaits critical sections and returns their results', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+    ];
+
+    const result = await prioritizeSections(sections);
+    expect(criticalFn).toHaveBeenCalledOnce();
+    expect(result.critical).toHaveLength(1);
+    expect(result.critical[0].status).toBe('fulfilled');
+  });
+
+  it('does not await deferred sections (fire-and-forget)', async () => {
+    let deferredResolved = false;
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const deferredFn = vi.fn().mockImplementation(() => {
+      return new Promise(resolve => {
+        setTimeout(() => { deferredResolved = true; resolve('done'); }, 2000);
+      });
+    });
 
     const sections = [
       { name: 'hero', init: criticalFn, critical: true },
@@ -101,29 +116,52 @@ describe('prioritizeSections', () => {
     ];
 
     const result = await prioritizeSections(sections);
-    expect(criticalFn).toHaveBeenCalledOnce();
-    expect(deferredFn).toHaveBeenCalledOnce();
-    expect(result.critical).toHaveLength(1);
+
+    // Critical completed, function returned
     expect(result.critical[0].status).toBe('fulfilled');
-    expect(result.deferred).toHaveLength(1);
-    expect(result.deferred[0].status).toBe('fulfilled');
-    // Critical runs before deferred
-    expect(callOrder[0]).toBe('critical');
+    // Deferred was started but not awaited — still pending
+    expect(deferredFn).toHaveBeenCalledOnce();
+    expect(deferredResolved).toBe(false);
   });
 
-  it('runs deferred sections after critical', async () => {
+  it('calls onError callback for deferred section failures', async () => {
     const criticalFn = vi.fn().mockResolvedValue('ok');
-    const deferredFn = vi.fn().mockResolvedValue('deferred-ok');
+    const deferredFn = vi.fn().mockRejectedValue(new Error('deferred boom'));
+    const onError = vi.fn();
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'broken', init: deferredFn, critical: false },
+    ];
+
+    await prioritizeSections(sections, { onError });
+
+    // Let the fire-and-forget promise chain settle
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'broken' }),
+      expect.any(Error),
+    );
+  });
+
+  it('does not call onError for successful deferred sections', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const deferredFn = vi.fn().mockResolvedValue('fine');
+    const onError = vi.fn();
 
     const sections = [
       { name: 'hero', init: criticalFn, critical: true },
       { name: 'video', init: deferredFn, critical: false },
     ];
 
-    const result = await prioritizeSections(sections);
-    expect(criticalFn).toHaveBeenCalledOnce();
-    expect(deferredFn).toHaveBeenCalledOnce();
-    expect(result.deferred[0].status).toBe('fulfilled');
+    await prioritizeSections(sections, { onError });
+
+    // Let the fire-and-forget promise chain settle
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('handles critical section failures without breaking deferred', async () => {
@@ -138,13 +176,16 @@ describe('prioritizeSections', () => {
     const result = await prioritizeSections(sections);
     expect(result.critical[0].status).toBe('rejected');
     expect(deferredFn).toHaveBeenCalledOnce();
-    expect(result.deferred[0].status).toBe('fulfilled');
   });
 
   it('returns empty arrays for empty input', async () => {
     const result = await prioritizeSections([]);
     expect(result.critical).toHaveLength(0);
-    expect(result.deferred).toHaveLength(0);
+  });
+
+  it('returns empty arrays for null input', async () => {
+    const result = await prioritizeSections(null);
+    expect(result.critical).toHaveLength(0);
   });
 
   it('treats all sections as critical when none marked deferred', async () => {
@@ -160,7 +201,56 @@ describe('prioritizeSections', () => {
     expect(fn1).toHaveBeenCalledOnce();
     expect(fn2).toHaveBeenCalledOnce();
     expect(result.critical).toHaveLength(2);
-    expect(result.deferred).toHaveLength(0);
+  });
+
+  it('reports multiple deferred failures via onError', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const fail1 = vi.fn().mockRejectedValue(new Error('fail-1'));
+    const fail2 = vi.fn().mockRejectedValue(new Error('fail-2'));
+    const onError = vi.fn();
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'broken1', init: fail1, critical: false },
+      { name: 'broken2', init: fail2, critical: false },
+    ];
+
+    await prioritizeSections(sections, { onError });
+
+    // Let the fire-and-forget promise chain settle
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(onError).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not throw if onError callback throws', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const deferredFn = vi.fn().mockRejectedValue(new Error('fail'));
+    const onError = vi.fn().mockImplementation(() => { throw new Error('callback boom'); });
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'broken', init: deferredFn, critical: false },
+    ];
+
+    // Should not reject
+    await expect(prioritizeSections(sections, { onError })).resolves.toBeDefined();
+
+    // Let fire-and-forget settle — callback throws but doesn't propagate
+    await new Promise(r => setTimeout(r, 50));
+  });
+
+  it('works without onError option', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const deferredFn = vi.fn().mockRejectedValue(new Error('fail'));
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'broken', init: deferredFn, critical: false },
+    ];
+
+    // No onError — should not throw
+    await expect(prioritizeSections(sections)).resolves.toBeDefined();
   });
 });
 
