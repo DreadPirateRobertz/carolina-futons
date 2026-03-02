@@ -143,6 +143,20 @@ When implementing any design from Figma:
 - **Assets**: Store in appropriate Wix media directories
 - IMPORTANT: If Figma MCP returns a localhost source for an image/SVG, use that source directly — DO NOT create placeholders
 
+### SVG Illustration Quality Bar (PM Directive 2026-03-02)
+
+**design.jpeg is the quality bar. Flat vector shapes with opacity = REJECTED.**
+
+Every SVG illustration MUST include:
+1. **SVG filter effects** — `feTurbulence` + `feDisplacementMap` for watercolor texture on fills. No flat shapes.
+2. **Organic hand-drawn paths** — Add wobble/irregularity to bezier curves. Real mountains aren't smooth. Add extra control points.
+3. **Detail elements** — Birds (V shapes in sky), pine tree branch layers (not blobs), wildflowers at base, chimney smoke, stars. Minimum 15 SVG elements per scene.
+4. **Rich gradients** — 5+ stops for sky transitions, not 2-stop linear. Layer multiple gradients for depth.
+5. **Paper grain overlay** — Subtle `feNoise` or texture filter for hand-drawn feel.
+6. **Atmospheric depth** — Foreground/midground/background layers with varying opacity. Fog, haze, light rays.
+7. **All colors from sharedTokens** — Zero hardcoded hex. Destructure from `colors`.
+8. **ALWAYS render and visually verify** — Tests passing is necessary but NOT sufficient. Screenshot the SVG and compare against design.jpeg before submitting PR.
+
 ### Styling in Wix Velo
 
 - Wix Velo uses `$w('#elementId').style.property` for runtime styling
