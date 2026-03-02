@@ -55,6 +55,15 @@ export async function initFeelAndComfort($w, state) {
         const grid = $w('#feelSwatchPreview');
         if (grid) {
           grid.data = swatches.map((s, i) => ({ ...s, _id: s._id || `fs-${i}` }));
+          // Mobile: horizontal scroll for swatch preview
+          try {
+            const { isMobile } = await import('public/mobileHelpers');
+            if (isMobile()) {
+              try { grid.style.overflowX = 'auto'; } catch (e) {}
+              try { grid.style.flexWrap = 'nowrap'; } catch (e) {}
+            }
+          } catch (e) {}
+
           grid.onItemReady(($item, itemData) => {
             try {
               if (itemData.swatchImage) {
