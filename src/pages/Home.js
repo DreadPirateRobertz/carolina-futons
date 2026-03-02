@@ -114,6 +114,7 @@ let currentFeaturedQvProduct = null;
  * @returns {Promise<void>}
  */
 async function loadFeaturedProducts() {
+  try { $w('#featuredSkeleton').show(); } catch (e) {}
   try {
     // Set section heading
     try { $w('#featuredTitle').text = 'Our Favorite Finds'; } catch (e) {}
@@ -188,8 +189,10 @@ async function loadFeaturedProducts() {
       makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = featured;
+    try { $w('#featuredSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   } catch (err) {
     console.error('[Home] Error loading featured products:', err);
+    try { $w('#featuredSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   }
 }
 
@@ -291,6 +294,7 @@ function openFeaturedQuickView(product) {
  * @returns {Promise<void>}
  */
 async function loadSaleHighlights() {
+  try { $w('#saleSkeleton').show(); } catch (e) {}
   try {
     const saleItems = await getSaleProducts(6);
     const repeater = $w('#saleRepeater');
@@ -326,8 +330,10 @@ async function loadSaleHighlights() {
       }, { ariaLabel: `View ${itemData.name} on sale` });
     });
     repeater.data = saleItems;
+    try { $w('#saleSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   } catch (err) {
     console.error('[Home] Error loading sale highlights:', err);
+    try { $w('#saleSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   }
 }
 
@@ -340,6 +346,7 @@ async function loadSaleHighlights() {
  * @returns {Promise<void>}
  */
 async function initCategoryShowcase() {
+  try { $w('#categorySkeleton').show(); } catch (e) {}
   // Fetch product counts for all categories in parallel
   const countPromises = CATEGORIES.map(async (cat) => {
     if (!cat.collection) return { ...cat, count: null };
@@ -354,6 +361,7 @@ async function initCategoryShowcase() {
   });
 
   const categoriesWithCounts = await Promise.all(countPromises);
+  try { $w('#categorySkeleton').hide('fade', { duration: 300 }); } catch (e) {}
 
   // Set up repeater if it exists (preferred: shared element IDs per card)
   try {
