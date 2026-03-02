@@ -7,6 +7,7 @@
  */
 import { getComfortLevels, getProductComfort, getComfortProducts } from 'backend/comfortService.web';
 import { colors } from 'public/designTokens.js';
+import { getComfortVisual } from 'public/comfortIllustrations.js';
 
 /**
  * Icon/label map for comfort levels (used as fallback when illustrations unavailable).
@@ -30,11 +31,29 @@ export function renderComfortCard($item, comfort) {
   try { $item('#comfortDescription').text = comfort.description || ''; } catch (e) {}
 
   try {
-    if (comfort.illustration) {
+    const visual = getComfortVisual(comfort.slug);
+    if (visual.type === 'svg') {
+      $item('#comfortIllustration').src = visual.src;
+      $item('#comfortIllustration').alt = visual.alt;
+    } else if (comfort.illustration) {
       $item('#comfortIllustration').src = comfort.illustration;
       $item('#comfortIllustration').alt = comfort.illustrationAlt || `${comfort.name} comfort level illustration`;
+    } else {
+      const fallback = COMFORT_ICONS[comfort.slug];
+      if (fallback) {
+        try { $item('#comfortEmoji').text = fallback.icon; } catch (e2) {}
+        try { $item('#comfortIllustration').hide(); } catch (e2) {}
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    // Final fallback — try emoji if SVG rendering fails
+    try {
+      const fallback = COMFORT_ICONS[comfort.slug];
+      if (fallback) {
+        try { $item('#comfortEmoji').text = fallback.icon; } catch (e2) {}
+      }
+    } catch (e2) {}
+  }
 }
 
 /**

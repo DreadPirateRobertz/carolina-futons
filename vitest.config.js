@@ -167,6 +167,8 @@ export default defineConfig({
       'backend/comfortService.web': path.resolve(__dirname, 'src/backend/comfortService.web.js'),
       'public/SwatchRequestFlow.js': path.resolve(__dirname, 'src/public/SwatchRequestFlow.js'),
       'public/SwatchRequestFlow': path.resolve(__dirname, 'src/public/SwatchRequestFlow.js'),
+      'public/comfortIllustrations.js': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
+      'public/comfortIllustrations': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
       'public/ComfortStoryCards.js': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
       'public/ComfortStoryCards': path.resolve(__dirname, 'src/public/ComfortStoryCards.js'),
       'public/proactiveChatTriggers.js': path.resolve(__dirname, 'src/public/proactiveChatTriggers.js'),

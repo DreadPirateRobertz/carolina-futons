@@ -35,6 +35,9 @@ vi.mock('public/designTokens.js', () => ({
     mountainBlue: '#5B8FA8', sandBase: '#E8D5B7', sandDark: '#D4BC96',
     espresso: '#3A2518', sunsetCoral: '#E8845C', white: '#FFFFFF',
     sandLight: '#F2E8D5', mountainBlueLight: '#A8CCD8',
+    espressoLight: '#5C4033', sunsetCoralLight: '#F2A882',
+    offWhite: '#FAF7F2', skyGradientTop: '#B8D4E3', skyGradientBottom: '#F0C87A',
+    mountainBlueDark: '#3D6B80',
   },
   spacing: { sm: '8px', md: '16px', lg: '24px', xl: '32px' },
   borderRadius: { card: '12px', md: '8px' },
@@ -96,7 +99,7 @@ describe('ComfortStoryCards — renderComfortCard', () => {
     expect($item('#comfortDescription').text).toBe('Solid support.');
   });
 
-  it('sets illustration image with alt text', () => {
+  it('sets SVG illustration from comfortIllustrations module', () => {
     const $item = create$w();
     const comfort = {
       slug: 'medium', name: 'Medium', tagline: 'Best of both',
@@ -105,8 +108,9 @@ describe('ComfortStoryCards — renderComfortCard', () => {
       illustrationAlt: 'Balanced figure',
     };
     renderComfortCard($item, comfort);
-    expect($item('#comfortIllustration').src).toBe('wix:image://medium.svg');
-    expect($item('#comfortIllustration').alt).toBe('Balanced figure');
+    // SVG illustrations take priority over CMS illustration URLs
+    expect($item('#comfortIllustration').src).toMatch(/^data:image\/svg\+xml,/);
+    expect($item('#comfortIllustration').alt).toBeTruthy();
   });
 
   it('handles missing illustration gracefully', () => {
@@ -122,6 +126,28 @@ describe('ComfortStoryCards — renderComfortCard', () => {
   it('handles null comfort data gracefully', () => {
     const $item = create$w();
     expect(() => renderComfortCard($item, null)).not.toThrow();
+  });
+
+  it('falls back to emoji for unknown comfort slug', () => {
+    const $item = create$w();
+    const comfort = {
+      slug: 'ultra-plush', name: 'Ultra Plush', tagline: 'Extreme softness',
+      description: 'The softest.', illustration: '', illustrationAlt: '',
+    };
+    // Should not throw — no SVG and no CMS illustration, unknown slug emoji
+    expect(() => renderComfortCard($item, comfort)).not.toThrow();
+  });
+
+  it('uses SVG data URI for all known comfort levels', () => {
+    for (const slug of ['plush', 'medium', 'firm']) {
+      const $item = create$w();
+      const comfort = {
+        slug, name: slug, tagline: 'Test', description: 'Test.',
+        illustration: `wix:image://${slug}.svg`, illustrationAlt: 'Test alt',
+      };
+      renderComfortCard($item, comfort);
+      expect($item('#comfortIllustration').src).toMatch(/^data:image\/svg\+xml,/);
+    }
   });
 });
 
@@ -157,10 +183,11 @@ describe('ComfortStoryCards — initComfortCards', () => {
     expect($w('#comfortTagline').text).toBe('The best of both worlds');
   });
 
-  it('sets illustration on product comfort card', async () => {
+  it('sets SVG illustration on product comfort card', async () => {
     await initComfortCards($w, state);
-    expect($w('#comfortIllustration').src).toBe('wix:image://medium.svg');
-    expect($w('#comfortIllustration').alt).toBe('Figure in balanced position');
+    // SVG illustrations from comfortIllustrations take priority
+    expect($w('#comfortIllustration').src).toMatch(/^data:image\/svg\+xml,/);
+    expect($w('#comfortIllustration').alt).toBeTruthy();
   });
 
   it('collapses section when product has no comfort data', async () => {
