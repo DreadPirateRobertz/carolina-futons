@@ -38,6 +38,24 @@ const murphyDims = {
   mattressSize: 'Queen',
 };
 
+const futonDimsWithShipping = {
+  _id: 'dim-003',
+  productId: 'prod-frame-shipping',
+  closedWidth: 54,
+  closedDepth: 36,
+  closedHeight: 34,
+  openWidth: 54,
+  openDepth: 75,
+  openHeight: 18,
+  weight: 85,
+  seatHeight: 18,
+  mattressSize: 'Full',
+  shippingWidth: 56,
+  shippingDepth: 20,
+  shippingHeight: 14,
+  shippingWeight: 92,
+};
+
 const products = [
   {
     _id: 'prod-frame-001', name: 'Eureka Futon Frame', slug: 'eureka',
@@ -51,10 +69,14 @@ const products = [
     _id: 'prod-no-dims', name: 'New Product', slug: 'new-product',
     collections: ['futon-frames'],
   },
+  {
+    _id: 'prod-frame-shipping', name: 'Shipping Frame', slug: 'shipping-frame',
+    collections: ['futon-frames'],
+  },
 ];
 
 beforeEach(() => {
-  __seed('ProductDimensions', [futonDims, murphyDims]);
+  __seed('ProductDimensions', [futonDims, murphyDims, futonDimsWithShipping]);
   __seed('Stores/Products', products);
 });
 
@@ -111,6 +133,27 @@ describe('getProductDimensions', () => {
     const dims = await getProductDimensions('prod-frame-001', 'invalid');
     expect(dims.unit).toBe('in');
     expect(dims.closed.width).toBe(54);
+  });
+
+  it('returns shipping dimensions when CMS has shipping fields', async () => {
+    const dims = await getProductDimensions('prod-frame-shipping');
+    expect(dims.shipping).not.toBeNull();
+    expect(dims.shipping.width).toBe(56);
+    expect(dims.shipping.depth).toBe(20);
+    expect(dims.shipping.height).toBe(14);
+    expect(dims.shipping.weight).toBe(92);
+  });
+
+  it('returns null shipping when CMS has no shipping fields', async () => {
+    const dims = await getProductDimensions('prod-frame-001');
+    expect(dims.shipping).toBeNull();
+  });
+
+  it('converts shipping dimensions to centimeters', async () => {
+    const dims = await getProductDimensions('prod-frame-shipping', 'cm');
+    expect(dims.shipping).not.toBeNull();
+    expect(dims.shipping.width).toBe(Math.round(56 * 2.54 * 10) / 10);
+    expect(dims.shipping.depth).toBe(Math.round(20 * 2.54 * 10) / 10);
   });
 });
 
@@ -263,7 +306,7 @@ describe('checkRoomFit', () => {
 describe('getDimensionsByCategory', () => {
   it('returns dimension summaries for category products', async () => {
     const dims = await getDimensionsByCategory('futon-frames');
-    expect(dims).toHaveLength(2); // Eureka + New Product
+    expect(dims).toHaveLength(3); // Eureka + New Product + Shipping Frame
     const eureka = dims.find(d => d.productId === 'prod-frame-001');
     expect(eureka.hasDimensions).toBe(true);
     expect(eureka.closedWidth).toBe(54);
