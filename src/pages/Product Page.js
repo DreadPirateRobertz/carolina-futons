@@ -19,8 +19,7 @@ import { initProductReviews } from 'public/ProductReviews.js';
 import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initComfortCards } from 'public/ComfortStoryCards.js';
-import { initFeelAndComfort } from 'public/FeelAndComfort.js';
-import { initDimensionDisplay, initRoomFitChecker, initSizeComparisonTable } from 'public/ProductSizeGuide.js';
+import { initDimensionDisplay, initRoomFitChecker, initSizeComparisonTable, initDimensionOverlay, initDoorwayPresets, initShippingDimensions, initVisualSizeComparison } from 'public/ProductSizeGuide.js';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { makeClickable } from 'public/a11yHelpers.js';
@@ -127,7 +126,11 @@ async function initProductPage() {
       { name: 'comfortCards', init: () => initComfortCards($w, state) },
       { name: 'dimensionDisplay', init: () => initDimensionDisplay($w, state) },
       { name: 'roomFitChecker', init: () => initRoomFitChecker($w, state) },
+      { name: 'doorwayPresets', init: () => initDoorwayPresets($w) },
       { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
+      { name: 'dimensionOverlay', init: () => initDimensionOverlay($w, state) },
+      { name: 'shippingDimensions', init: () => initShippingDimensions($w, state) },
+      { name: 'visualSizeComparison', init: () => initVisualSizeComparison($w, state) },
       { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
       { name: 'lifestyleGallery', init: () => initLifestyleGallery($w, state) },
       { name: 'designTokens', init: () => applyProductPageTokens($w) },

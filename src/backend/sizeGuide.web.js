@@ -43,6 +43,11 @@ export const getProductDimensions = webMethod(
         return unit === 'cm' ? Math.round(val * CM_PER_INCH * 10) / 10 : val;
       };
 
+      // Shipping/box dimensions (if available in CMS)
+      const hasShipping = typeof dims.shippingWidth === 'number'
+        || typeof dims.shippingDepth === 'number'
+        || typeof dims.shippingHeight === 'number';
+
       return {
         productId: dims.productId,
         unit: unit === 'cm' ? 'cm' : 'in',
@@ -56,6 +61,12 @@ export const getProductDimensions = webMethod(
           depth: convert(dims.openDepth),
           height: convert(dims.openHeight),
         },
+        shipping: hasShipping ? {
+          width: convert(dims.shippingWidth),
+          depth: convert(dims.shippingDepth),
+          height: convert(dims.shippingHeight),
+          weight: dims.shippingWeight || null,
+        } : null,
         weight: dims.weight || null,
         seatHeight: convert(dims.seatHeight),
         mattressSize: dims.mattressSize || null,

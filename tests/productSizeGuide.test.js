@@ -29,6 +29,10 @@ import {
   initDimensionDisplay,
   initRoomFitChecker,
   initSizeComparisonTable,
+  initDimensionOverlay,
+  initDoorwayPresets,
+  initShippingDimensions,
+  initVisualSizeComparison,
 } from '../src/public/ProductSizeGuide.js';
 
 import { announce } from 'public/a11yHelpers.js';
@@ -828,5 +832,499 @@ describe('edge cases', () => {
 
     // Should not throw
     await expect(initSizeComparisonTable($w, state)).resolves.not.toThrow();
+  });
+});
+
+// ── initDimensionOverlay ────────────────────────────────────────────────
+
+describe('initDimensionOverlay', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns early when state has no product', () => {
+    const $w = createMock$w();
+    initDimensionOverlay($w, {});
+    expect($w._elements['#dimensionOverlayBtn']).toBeUndefined();
+  });
+
+  it('returns early when state has no dimensions', () => {
+    const $w = createMock$w();
+    initDimensionOverlay($w, { product: { _id: 'prod-001' } });
+    expect($w._elements['#dimensionOverlayBtn']).toBeUndefined();
+  });
+
+  it('sets up toggle button when dimensions exist', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    expect($w('#dimensionOverlayBtn').label).toBe('Show Dimensions');
+    expect($w('#dimensionOverlayBtn').onClick).toHaveBeenCalled();
+    expect($w('#dimensionOverlayBtn').accessibility.ariaLabel).toBe('Toggle dimension overlay on product image');
+  });
+
+  it('toggle button shows overlay on first click', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect($w('#dimensionOverlaySvg').show).toHaveBeenCalled();
+    expect($w('#dimensionOverlayBtn').label).toBe('Hide Dimensions');
+  });
+
+  it('toggle button hides overlay on second click', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler(); // show
+    clickHandler(); // hide
+
+    expect($w('#dimensionOverlaySvg').hide).toHaveBeenCalled();
+    expect($w('#dimensionOverlayBtn').label).toBe('Show Dimensions');
+  });
+
+  it('renders SVG content with product dimensions', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler();
+
+    // SVG html should contain dimension values
+    const svgHtml = $w('#dimensionOverlaySvg').html;
+    expect(svgHtml).toContain('54"');
+    expect(svgHtml).toContain('38"');
+    expect(svgHtml).toContain('33"');
+    expect(svgHtml).toContain('<svg');
+    expect(svgHtml).toContain('role="img"');
+  });
+
+  it('renders SVG with centimeter values when unit is cm', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsCm,
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler();
+
+    const svgHtml = $w('#dimensionOverlaySvg').html;
+    expect(svgHtml).toContain('cm');
+    expect(svgHtml).not.toContain('"W');
+  });
+
+  it('SVG includes aria-label describing dimensions', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler();
+
+    const svgHtml = $w('#dimensionOverlaySvg').html;
+    expect(svgHtml).toContain('aria-label=');
+    expect(svgHtml).toContain('Product dimensions');
+  });
+
+  it('initially hides overlay SVG', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    expect($w('#dimensionOverlaySvg').hide).toHaveBeenCalled();
+  });
+
+  it('handles null dimension values in SVG gracefully', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        unit: 'in',
+        closed: { width: 54, depth: null, height: 33 },
+        open: { width: null, depth: 75, height: 18 },
+      },
+    };
+
+    initDimensionOverlay($w, state);
+
+    const clickHandler = $w('#dimensionOverlayBtn').onClick.mock.calls[0][0];
+    clickHandler();
+
+    const svgHtml = $w('#dimensionOverlaySvg').html;
+    expect(svgHtml).toContain('54"');
+    expect(svgHtml).toContain('—'); // null values shown as dash
+  });
+
+  it('uses simplified text on mobile instead of SVG overlay', () => {
+    isMobile.mockReturnValue(true);
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initDimensionOverlay($w, state);
+
+    // On mobile, overlay button should not be set up (text is inline instead)
+    expect($w('#dimensionOverlayBtn').onClick).not.toHaveBeenCalled();
+    isMobile.mockReturnValue(false);
+  });
+});
+
+// ── initDoorwayPresets ──────────────────────────────────────────────────
+
+describe('initDoorwayPresets', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sets up three preset buttons with standard door widths', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    expect($w('#doorPreset30').label).toBe('30" Door');
+    expect($w('#doorPreset32').label).toBe('32" Door');
+    expect($w('#doorPreset36').label).toBe('36" Door');
+  });
+
+  it('sets ARIA labels on preset buttons', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    expect($w('#doorPreset30').accessibility.ariaLabel).toBe('Check fit for 30 inch standard door');
+    expect($w('#doorPreset32').accessibility.ariaLabel).toBe('Check fit for 32 inch standard door');
+    expect($w('#doorPreset36').accessibility.ariaLabel).toBe('Check fit for 36 inch standard door');
+  });
+
+  it('registers click handlers on all presets', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    expect($w('#doorPreset30').onClick).toHaveBeenCalled();
+    expect($w('#doorPreset32').onClick).toHaveBeenCalled();
+    expect($w('#doorPreset36').onClick).toHaveBeenCalled();
+  });
+
+  it('clicking 30" preset fills doorway fields with 30 and 80', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    const clickHandler = $w('#doorPreset30').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect($w('#doorwayWidth').value).toBe('30');
+    expect($w('#doorwayHeight').value).toBe('80');
+  });
+
+  it('clicking 32" preset fills doorway fields with 32 and 80', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    const clickHandler = $w('#doorPreset32').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect($w('#doorwayWidth').value).toBe('32');
+    expect($w('#doorwayHeight').value).toBe('80');
+  });
+
+  it('clicking 36" preset fills doorway fields with 36 and 80', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    const clickHandler = $w('#doorPreset36').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect($w('#doorwayWidth').value).toBe('36');
+    expect($w('#doorwayHeight').value).toBe('80');
+  });
+
+  it('clicking preset triggers check fit button click', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    const clickHandler = $w('#doorPreset30').onClick.mock.calls[0][0];
+    clickHandler();
+
+    // After filling fields, should programmatically click the check fit button
+    expect($w('#checkFitBtn').onClick).toBeDefined();
+  });
+
+  it('highlights active preset after click', () => {
+    const $w = createMock$w();
+    initDoorwayPresets($w);
+
+    const clickHandler = $w('#doorPreset32').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect($w('#doorPreset32').style.backgroundColor).toBeDefined();
+    // Other presets should not be highlighted
+  });
+});
+
+// ── initShippingDimensions ──────────────────────────────────────────────
+
+describe('initShippingDimensions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns early when state has no product', () => {
+    const $w = createMock$w();
+    initShippingDimensions($w, {});
+    expect($w._elements['#shippingDimsLabel']).toBeUndefined();
+  });
+
+  it('hides shipping row when dimensions have no shipping data', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: mockDimensionsInches, // no shipping field
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingDimsRow').hide).toHaveBeenCalled();
+  });
+
+  it('renders shipping dimensions when available', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        ...mockDimensionsInches,
+        shipping: { width: 56, depth: 20, height: 14, weight: 92 },
+      },
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingDimsLabel').text).toBe('Shipping (Boxed)');
+    expect($w('#shippingDims').text).toContain('56"');
+    expect($w('#shippingDims').text).toContain('20"');
+    expect($w('#shippingDims').text).toContain('14"');
+  });
+
+  it('renders shipping weight when available', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        ...mockDimensionsInches,
+        shipping: { width: 56, depth: 20, height: 14, weight: 92 },
+      },
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingWeight').text).toBe('Shipping Weight: 92 lbs');
+  });
+
+  it('renders centimeter units for shipping when unit is cm', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        ...mockDimensionsCm,
+        shipping: { width: 142.2, depth: 50.8, height: 35.6, weight: 92 },
+      },
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingDims').text).toContain('cm');
+  });
+
+  it('shows row when shipping data exists', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        ...mockDimensionsInches,
+        shipping: { width: 56, depth: 20, height: 14, weight: 92 },
+      },
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingDimsRow').show).toHaveBeenCalled();
+  });
+
+  it('handles null shipping dimension values with dashes', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001' },
+      dimensions: {
+        ...mockDimensionsInches,
+        shipping: { width: 56, depth: null, height: 14, weight: null },
+      },
+    };
+
+    initShippingDimensions($w, state);
+
+    expect($w('#shippingDims').text).toContain('—');
+  });
+});
+
+// ── initVisualSizeComparison ────────────────────────────────────────────
+
+describe('initVisualSizeComparison', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns early when state has no product', () => {
+    const $w = createMock$w();
+    initVisualSizeComparison($w, {});
+    expect($w._elements['#sizeComparisonVisual']).toBeUndefined();
+  });
+
+  it('returns early when state has no dimensions', () => {
+    const $w = createMock$w();
+    initVisualSizeComparison($w, { product: { _id: 'prod-001' } });
+    expect($w._elements['#sizeComparisonVisual']).toBeUndefined();
+  });
+
+  it('renders SVG with product silhouette and person reference', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Eureka Frame' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initVisualSizeComparison($w, state);
+
+    const svgHtml = $w('#sizeComparisonVisual').html;
+    expect(svgHtml).toContain('<svg');
+    expect(svgHtml).toContain('role="img"');
+    // Should contain person reference (6ft = 72")
+    expect(svgHtml).toContain('6\'0"');
+    // Should contain product name label
+    expect(svgHtml).toContain('Eureka Frame');
+  });
+
+  it('draws product rectangle proportional to actual dimensions', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Test Futon' },
+      dimensions: mockDimensionsInches, // closed: 54W x 38D x 33H
+    };
+
+    initVisualSizeComparison($w, state);
+
+    const svgHtml = $w('#sizeComparisonVisual').html;
+    // Product height (33") should be less than person height (72")
+    // SVG should contain rect elements for both
+    expect(svgHtml).toContain('<rect');
+    expect(svgHtml).toContain('33"');
+  });
+
+  it('includes aria-label with product name and dimensions', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Eureka Frame' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initVisualSizeComparison($w, state);
+
+    const svgHtml = $w('#sizeComparisonVisual').html;
+    expect(svgHtml).toContain('aria-label=');
+    expect(svgHtml).toContain('Eureka Frame');
+  });
+
+  it('uses design token colors for SVG elements', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Test' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initVisualSizeComparison($w, state);
+
+    const svgHtml = $w('#sizeComparisonVisual').html;
+    // Should use espresso (#3A2518) for outlines and sand (#E8D5B7) for fills
+    expect(svgHtml).toContain('#3A2518');
+  });
+
+  it('renders comparison title', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Test' },
+      dimensions: mockDimensionsInches,
+    };
+
+    initVisualSizeComparison($w, state);
+
+    expect($w('#sizeComparisonTitle').text).toBe('Size Reference');
+  });
+
+  it('handles very small product dimensions without breaking', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Small Item' },
+      dimensions: {
+        unit: 'in',
+        closed: { width: 12, depth: 10, height: 8 },
+        open: { width: 12, depth: 20, height: 4 },
+        weight: 15,
+        seatHeight: null,
+        mattressSize: null,
+      },
+    };
+
+    initVisualSizeComparison($w, state);
+
+    const svgHtml = $w('#sizeComparisonVisual').html;
+    expect(svgHtml).toContain('<svg');
+    expect(svgHtml).toContain('8"'); // height label
+  });
+
+  it('handles null closed dimensions gracefully', () => {
+    const $w = createMock$w();
+    const state = {
+      product: { _id: 'prod-001', name: 'Test' },
+      dimensions: {
+        unit: 'in',
+        closed: { width: null, depth: null, height: null },
+        open: { width: 54, depth: 75, height: 18 },
+      },
+    };
+
+    // Should not throw
+    expect(() => initVisualSizeComparison($w, state)).not.toThrow();
   });
 });
