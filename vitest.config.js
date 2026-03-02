@@ -152,6 +152,8 @@ export default defineConfig({
       'public/navigationHelpers': path.resolve(__dirname, 'src/public/navigationHelpers.js'),
       'public/emptyStates.js': path.resolve(__dirname, 'src/public/emptyStates.js'),
       'public/emptyStates': path.resolve(__dirname, 'src/public/emptyStates.js'),
+      'public/emptyStateIllustrations.js': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
+      'public/emptyStateIllustrations': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
       'public/ProductFinancing.js': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'public/ProductFinancing': path.resolve(__dirname, 'src/public/ProductFinancing.js'),
       'public/ProductSizeGuide.js': path.resolve(__dirname, 'src/public/ProductSizeGuide.js'),

@@ -165,6 +165,22 @@ describe('Empty States & Loading Skeletons', () => {
       expect(getEl('#EmptyIllustration').alt).toBe(EMPTY_STATE_CONTENT.cart.illustrationAlt);
     });
 
+    it('sets illustration src from ILLUSTRATIONS registry', () => {
+      renderEmptyState(getEl, 'cart');
+      expect(getEl('#EmptyIllustration').src).toMatch(/^data:image\/svg\+xml,/);
+    });
+
+    it('sets illustration src for every state type', () => {
+      Object.keys(EMPTY_STATE_CONTENT).forEach(key => {
+        elements.clear();
+        renderEmptyState(getEl, key);
+        expect(
+          getEl('#EmptyIllustration').src,
+          `${key} illustration src should be set`
+        ).toMatch(/^data:image\/svg\+xml,/);
+      });
+    });
+
     it('sets CTA button label', () => {
       renderEmptyState(getEl, 'cart');
       expect(getEl('#EmptyCta').label).toBe('Start Shopping');

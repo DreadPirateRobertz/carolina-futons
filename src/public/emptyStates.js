@@ -10,6 +10,7 @@
 
 import { colors, transitions } from 'public/sharedTokens';
 import { announce } from 'public/a11yHelpers';
+import { ILLUSTRATIONS } from 'public/emptyStateIllustrations';
 
 // ── Empty State Content Registry ─────────────────────────────────────
 
@@ -126,9 +127,12 @@ export function renderEmptyState($w, stateKey, opts = {}) {
     try { $w(messageId).style.color = colors.espressoLight; } catch (e) {}
   } catch (e) {}
 
-  // Set illustration alt text
+  // Set illustration image and alt text
   try {
     $w(illustrationId).alt = content.illustrationAlt;
+    if (ILLUSTRATIONS[stateKey]) {
+      $w(illustrationId).src = ILLUSTRATIONS[stateKey];
+    }
   } catch (e) {}
 
   // Set up CTA button
