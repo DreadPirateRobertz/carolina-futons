@@ -14,7 +14,7 @@ const SESSION_KEY_IMPRESSIONS = 'cf_chat_proactive_impressions';
 
 const DEFAULT_DELAYS = {
   product: 30000,
-  checkout: 15000,
+  checkout: 10000,
 };
 
 const PAGE_MESSAGES = {

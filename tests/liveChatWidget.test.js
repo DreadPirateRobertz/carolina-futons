@@ -22,9 +22,20 @@ vi.mock('public/proactiveChatTriggers.js', () => ({
   cleanupProactiveTriggers: vi.fn(),
 }));
 
+vi.mock('public/a11yHelpers', () => ({
+  announce: vi.fn(),
+  createFocusTrap: vi.fn(() => ({
+    release: vi.fn(),
+    isActive: () => true,
+    firstId: '#chatCloseBtn',
+    lastId: '#chatSendBtn',
+  })),
+}));
+
 import { initLiveChat, cleanupLiveChat } from '../src/public/LiveChat.js';
 import { isOnline, sendMessage, createSupportTicket } from 'backend/liveChatService.web';
 import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
+import { createFocusTrap } from 'public/a11yHelpers';
 
 // ── $w Mock Factory ──────────────────────────────────────────────
 
@@ -43,6 +54,7 @@ function make$w(overrides = {}) {
     preChatForm: { show: vi.fn(), hide: vi.fn() },
     preChatName: { value: '', accessibility: {} },
     preChatEmail: { value: '', accessibility: {} },
+    preChatCategory: { value: '', options: [], accessibility: {} },
     preChatStart: { onClick: vi.fn(), accessibility: {} },
     preChatError: { text: '', show: vi.fn(), hide: vi.fn() },
     chatMessagesSection: { show: vi.fn(), hide: vi.fn() },
@@ -409,5 +421,234 @@ describe('SPA cleanup', () => {
       cleanupLiveChat();
       cleanupLiveChat();
     }).not.toThrow();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// 9. PRE-CHAT QUESTION CATEGORY
+// ═════════════════════════════════════════════════════════════════
+
+describe('Pre-chat question category', () => {
+  it('sets ARIA label on category dropdown', async () => {
+    const $w = make$w();
+    await initLiveChat($w);
+    expect($w('#preChatCategory').accessibility.ariaLabel).toBeTruthy();
+    expect($w('#preChatCategory').accessibility.ariaLabel).toMatch(/category/i);
+  });
+
+  it('sends question category with support ticket when offline', async () => {
+    isOnline.mockResolvedValue({ online: false, message: 'Offline', nextOpen: 'Wed' });
+    const $w = make$w();
+    await initLiveChat($w);
+
+    // Fill pre-chat form with category
+    const preChatHandler = $w('#preChatStart').onClick.mock.calls[0]?.[0];
+    $w('#preChatName').value = 'Jane';
+    $w('#preChatEmail').value = 'jane@example.com';
+    $w('#preChatCategory').value = 'Returns';
+    if (preChatHandler) preChatHandler();
+
+    // Send message
+    const sendHandler = $w('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    $w('#chatMessageInput').value = 'Need to return my order';
+    if (sendHandler) await sendHandler();
+
+    expect(createSupportTicket).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'Returns',
+      })
+    );
+  });
+
+  it('sends question category with online message', async () => {
+    isOnline.mockResolvedValue({ online: true, message: 'Online', nextOpen: null });
+    const $w = make$w();
+    await initLiveChat($w);
+
+    const preChatHandler = $w('#preChatStart').onClick.mock.calls[0]?.[0];
+    $w('#preChatName').value = 'Jane';
+    $w('#preChatEmail').value = 'jane@example.com';
+    $w('#preChatCategory').value = 'Sales';
+    if (preChatHandler) preChatHandler();
+
+    const sendHandler = $w('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    $w('#chatMessageInput').value = 'Price question';
+    if (sendHandler) await sendHandler();
+
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'Sales',
+      })
+    );
+  });
+
+  it('defaults category to empty string if not selected', async () => {
+    const $w = make$w();
+    await initLiveChat($w);
+
+    const preChatHandler = $w('#preChatStart').onClick.mock.calls[0]?.[0];
+    $w('#preChatEmail').value = 'jane@example.com';
+    if (preChatHandler) preChatHandler();
+
+    const sendHandler = $w('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    $w('#chatMessageInput').value = 'Hello';
+    if (sendHandler) await sendHandler();
+
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: '',
+      })
+    );
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// 10. FOCUS TRAP
+// ═════════════════════════════════════════════════════════════════
+
+describe('Focus trap', () => {
+  it('creates focus trap when chat widget opens', async () => {
+    const widget = { hidden: true, show: vi.fn(), hide: vi.fn(), accessibility: {} };
+    widget.show.mockImplementation(() => { widget.hidden = false; });
+    const $w = make$w({ chatWidget: widget });
+    await initLiveChat($w);
+
+    // Click toggle to open
+    const toggleHandler = $w('#chatToggleBtn').onClick.mock.calls[0]?.[0];
+    if (toggleHandler) toggleHandler();
+
+    expect(createFocusTrap).toHaveBeenCalledWith(
+      $w,
+      '#chatWidget',
+      expect.arrayContaining(['#chatCloseBtn', '#chatSendBtn'])
+    );
+  });
+
+  it('releases focus trap when chat widget closes via close button', async () => {
+    const widget = { hidden: true, show: vi.fn(), hide: vi.fn(), accessibility: {} };
+    widget.show.mockImplementation(() => { widget.hidden = false; });
+    widget.hide.mockImplementation(() => { widget.hidden = true; });
+    const $w = make$w({ chatWidget: widget });
+    await initLiveChat($w);
+
+    // Open chat
+    const toggleHandler = $w('#chatToggleBtn').onClick.mock.calls[0]?.[0];
+    if (toggleHandler) toggleHandler();
+
+    const trap = createFocusTrap.mock.results[0]?.value;
+
+    // Close chat via close button
+    const closeHandler = $w('#chatCloseBtn').onClick.mock.calls[0]?.[0];
+    if (closeHandler) closeHandler();
+
+    expect(trap.release).toHaveBeenCalled();
+  });
+
+  it('releases focus trap on cleanup', async () => {
+    const widget = { hidden: true, show: vi.fn(), hide: vi.fn(), accessibility: {} };
+    widget.show.mockImplementation(() => { widget.hidden = false; });
+    const $w = make$w({ chatWidget: widget });
+    await initLiveChat($w);
+
+    // Open chat to create trap
+    const toggleHandler = $w('#chatToggleBtn').onClick.mock.calls[0]?.[0];
+    if (toggleHandler) toggleHandler();
+
+    const trap = createFocusTrap.mock.results[0]?.value;
+
+    cleanupLiveChat();
+    expect(trap.release).toHaveBeenCalled();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// 11. MOBILE FULL-SCREEN
+// ═════════════════════════════════════════════════════════════════
+
+describe('Mobile full-screen', () => {
+  it('applies mobile full-screen style when opening on mobile viewport', async () => {
+    globalThis.window.innerWidth = 375;
+    const widget = {
+      hidden: true,
+      show: vi.fn(),
+      hide: vi.fn(),
+      accessibility: {},
+      style: {},
+    };
+    widget.show.mockImplementation(() => { widget.hidden = false; });
+    const $w = make$w({ chatWidget: widget });
+    await initLiveChat($w);
+
+    const toggleHandler = $w('#chatToggleBtn').onClick.mock.calls[0]?.[0];
+    if (toggleHandler) toggleHandler();
+
+    // On mobile, widget style should indicate full-screen
+    expect(widget.style.width).toBe('100%');
+    expect(widget.style.height).toBe('100%');
+  });
+
+  it('does not apply mobile full-screen on desktop', async () => {
+    globalThis.window.innerWidth = 1024;
+    const widget = {
+      hidden: true,
+      show: vi.fn(),
+      hide: vi.fn(),
+      accessibility: {},
+      style: {},
+    };
+    widget.show.mockImplementation(() => { widget.hidden = false; });
+    const $w = make$w({ chatWidget: widget });
+    await initLiveChat($w);
+
+    const toggleHandler = $w('#chatToggleBtn').onClick.mock.calls[0]?.[0];
+    if (toggleHandler) toggleHandler();
+
+    expect(widget.style.width).toBeUndefined();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════
+// 12. PAGE CONTEXT
+// ═════════════════════════════════════════════════════════════════
+
+describe('Page context', () => {
+  it('passes pageUrl to sendMessage when provided', async () => {
+    const $w = make$w();
+    await initLiveChat($w, { page: 'product', pageUrl: '/product-page/eureka', productName: 'Eureka Futon Frame' });
+
+    const preChatHandler = $w('#preChatStart').onClick.mock.calls[0]?.[0];
+    $w('#preChatEmail').value = 'jane@example.com';
+    if (preChatHandler) preChatHandler();
+
+    const sendHandler = $w('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    $w('#chatMessageInput').value = 'Question about this';
+    if (sendHandler) await sendHandler();
+
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageUrl: '/product-page/eureka',
+        productName: 'Eureka Futon Frame',
+      })
+    );
+  });
+
+  it('defaults pageUrl and productName to empty when not provided', async () => {
+    const $w = make$w();
+    await initLiveChat($w);
+
+    const preChatHandler = $w('#preChatStart').onClick.mock.calls[0]?.[0];
+    $w('#preChatEmail').value = 'jane@example.com';
+    if (preChatHandler) preChatHandler();
+
+    const sendHandler = $w('#chatSendBtn').onClick.mock.calls[0]?.[0];
+    $w('#chatMessageInput').value = 'Hello';
+    if (sendHandler) await sendHandler();
+
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageUrl: '',
+        productName: '',
+      })
+    );
   });
 });

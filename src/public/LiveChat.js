@@ -1,30 +1,42 @@
 // LiveChat.js — Chat widget component for bottom-right corner
 // Async loaded from masterPage.js, no impact on initial page speed.
-// Handles pre-chat form, online/offline state, canned responses,
-// message sending, and after-hours ticket creation.
+// Handles pre-chat form (name, email, question category), online/offline state,
+// canned responses, message sending, after-hours ticket creation,
+// focus trapping, and mobile full-screen layout.
 
 import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHistory, createSupportTicket } from 'backend/liveChatService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
-import { announce } from 'public/a11yHelpers';
+import { announce, createFocusTrap } from 'public/a11yHelpers';
 import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
 import wixLocationFrontend from 'wix-location-frontend';
+
+const MOBILE_BREAKPOINT = 768;
 
 let _sessionId = null;
 let _userName = '';
 let _userEmail = '';
+let _userCategory = '';
 let _isOnline = false;
 let _escapeKeyHandler = null;
+let _focusTrap = null;
+let _pageUrl = '';
+let _productName = '';
 
 /**
  * Initialize the live chat widget. Called from masterPage.js after page load.
  * @param {Function} $w - Wix $w selector
  * @param {Object} [options]
  * @param {string} [options.page] - Current page type ('product'|'checkout') for proactive triggers
+ * @param {string} [options.pageUrl] - Current page URL for agent context
+ * @param {string} [options.productName] - Current product name for agent context
  */
 export async function initLiveChat($w, options = {}) {
   try {
+    _pageUrl = options.pageUrl || '';
+    _productName = options.productName || '';
+
     // Check online status
     const status = await isOnline();
     _isOnline = status.online;
@@ -95,12 +107,16 @@ function initChatToggle($w) {
       try {
         const widget = $w('#chatWidget');
         if (widget.hidden) {
+          _applyMobileStyles($w, widget);
           widget.show('slide', { direction: 'bottom', duration: 300 });
           try { $w('#chatToggleBtn').label = '\u2715'; } catch (e) {}
+          _activateFocusTrap($w);
           trackEvent('chat_opened', { online: _isOnline });
         } else {
+          _clearMobileStyles(widget);
           widget.hide('slide', { direction: 'bottom', duration: 300 });
           try { $w('#chatToggleBtn').label = '\uD83D\uDCAC'; } catch (e) {}
+          _releaseFocusTrap();
         }
       } catch (e) {}
     });
@@ -108,8 +124,13 @@ function initChatToggle($w) {
     // Close button inside widget
     try {
       $w('#chatCloseBtn').onClick(() => {
-        try { $w('#chatWidget').hide('slide', { direction: 'bottom', duration: 300 }); } catch (e) {}
+        try {
+          const widget = $w('#chatWidget');
+          _clearMobileStyles(widget);
+          widget.hide('slide', { direction: 'bottom', duration: 300 });
+        } catch (e) {}
         try { $w('#chatToggleBtn').label = '\uD83D\uDCAC'; } catch (e) {}
+        _releaseFocusTrap();
       });
     } catch (e) {}
 
@@ -123,9 +144,11 @@ function initChatToggle($w) {
           try {
             const widget = $w('#chatWidget');
             if (!widget.hidden) {
+              _clearMobileStyles(widget);
               widget.hide('slide', { direction: 'bottom', duration: 300 });
               try { $w('#chatToggleBtn').label = '💬'; } catch (e2) {}
               try { $w('#chatToggleBtn').focus(); } catch (e2) {}
+              _releaseFocusTrap();
             }
           } catch (e2) {}
         }
@@ -159,6 +182,7 @@ function initPreChatForm($w) {
 
     try { $w('#preChatName').accessibility.ariaLabel = 'Your name'; } catch (e) {}
     try { $w('#preChatEmail').accessibility.ariaLabel = 'Your email'; } catch (e) {}
+    try { $w('#preChatCategory').accessibility.ariaLabel = 'Question category'; } catch (e) {}
     try { $w('#preChatStart').accessibility.ariaLabel = 'Start chat'; } catch (e) {}
 
     $w('#preChatStart').onClick(() => {
@@ -174,6 +198,13 @@ function initPreChatForm($w) {
 
         _userName = name;
         _userEmail = email;
+
+        // Capture question category (Sales/Support/Returns)
+        try {
+          _userCategory = $w('#preChatCategory').value?.trim() || '';
+        } catch (e) {
+          _userCategory = '';
+        }
 
         try { $w('#preChatError').hide(); } catch (e) {}
         try { $w('#preChatForm').hide(); } catch (e) {}
@@ -229,6 +260,9 @@ function initMessageInput($w) {
             senderName: _userName,
             senderEmail: _userEmail,
             sender: 'customer',
+            category: _userCategory,
+            pageUrl: _pageUrl,
+            productName: _productName,
           });
         } else {
           // After hours — create support ticket
@@ -237,6 +271,7 @@ function initMessageInput($w) {
             email: _userEmail,
             message: text,
             sessionId: _sessionId,
+            category: _userCategory,
           });
 
           appendMessage(
@@ -322,6 +357,56 @@ function getOrCreateSessionId() {
   return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+// ── Focus Trap ──────────────────────────────────────────────────
+
+function _activateFocusTrap($w) {
+  _releaseFocusTrap();
+  try {
+    _focusTrap = createFocusTrap($w, '#chatWidget', [
+      '#chatCloseBtn',
+      '#chatMessageInput',
+      '#chatSendBtn',
+    ]);
+  } catch (e) {}
+}
+
+function _releaseFocusTrap() {
+  try {
+    if (_focusTrap) {
+      _focusTrap.release();
+      _focusTrap = null;
+    }
+  } catch (e) {}
+}
+
+// ── Mobile Full-Screen ──────────────────────────────────────────
+
+function _isMobile() {
+  try {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < MOBILE_BREAKPOINT;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function _applyMobileStyles($w, widget) {
+  if (!_isMobile()) return;
+  try {
+    widget.style.width = '100%';
+    widget.style.height = '100%';
+  } catch (e) {}
+}
+
+function _clearMobileStyles(widget) {
+  try {
+    if (widget && widget.style) {
+      delete widget.style.width;
+      delete widget.style.height;
+    }
+  } catch (e) {}
+}
+
 /**
  * Remove all LiveChat document event listeners.
  * Call on SPA page navigation to prevent memory leaks.
@@ -333,5 +418,6 @@ export function cleanupLiveChat() {
       _escapeKeyHandler = null;
     }
   } catch (e) {}
+  _releaseFocusTrap();
   try { cleanupProactiveTriggers(); } catch (e) {}
 }
