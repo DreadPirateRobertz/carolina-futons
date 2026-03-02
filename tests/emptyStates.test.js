@@ -50,6 +50,8 @@ vi.mock('wix-location-frontend', () => ({
   to: vi.fn(),
 }));
 
+// Use real illustrations module (no mock needed — it's pure data)
+
 // ── Import Module Under Test ────────────────────────────────────────
 
 import {
@@ -483,6 +485,31 @@ describe('Empty States & Loading Skeletons', () => {
 
     it('showErrorState without options does not throw', () => {
       expect(() => showErrorState(getEl)).not.toThrow();
+    });
+  });
+
+  // ── Illustration Integration ─────────────────────────────────────
+
+  describe('illustration integration', () => {
+    it('renderEmptyState sets illustration src to a data URI', () => {
+      renderEmptyState(getEl, 'cart');
+      const src = getEl('#EmptyIllustration').src;
+      expect(src).toMatch(/^data:image\/svg\+xml/);
+    });
+
+    it('all 8 states set illustration src', () => {
+      Object.keys(EMPTY_STATE_CONTENT).forEach(key => {
+        elements.clear();
+        renderEmptyState(getEl, key);
+        const src = getEl('#EmptyIllustration').src;
+        expect(src, `${key} missing illustration src`).toMatch(/^data:image\/svg\+xml/);
+      });
+    });
+
+    it('prefixed empty state sets prefixed illustration src', () => {
+      renderEmptyState(getEl, 'sideCart', { prefix: 'sideCart' });
+      const src = getEl('#sideCartEmptyIllustration').src;
+      expect(src).toMatch(/^data:image\/svg\+xml/);
     });
   });
 });
