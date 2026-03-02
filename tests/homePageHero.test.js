@@ -266,20 +266,26 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
   // ── Mountain Ridgeline Header ──────────────────────────────────────
 
   describe('mountain ridgeline header', () => {
+    // initRidgelineHeader uses dynamic import → .catch fallback is async
+    const flushPromises = () => new Promise(r => setTimeout(r, 50));
+
     it('sets ridgeline image src from asset helper', async () => {
       await onReadyHandler();
+      await flushPromises();
       const ridgeline = getEl('#ridgelineHeader');
       expect(ridgeline.src).toBeTruthy();
     });
 
     it('sets alt text on ridgeline for accessibility', async () => {
       await onReadyHandler();
+      await flushPromises();
       const ridgeline = getEl('#ridgelineHeader');
       expect(ridgeline.alt).toContain('Blue Ridge');
     });
 
     it('ridgeline has decorative aria label', async () => {
       await onReadyHandler();
+      await flushPromises();
       const ridgeline = getEl('#ridgelineHeader');
       expect(ridgeline.accessibility.ariaLabel).toBeDefined();
     });

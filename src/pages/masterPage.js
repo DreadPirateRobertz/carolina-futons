@@ -44,6 +44,7 @@ $w.onReady(async function () {
   initSearch();
   initSideCartAutoOpen();
   initFooter($w);
+  initMountainSkylineHeader();
   initHeaderShippingProgress();
   initNewsletterModal();
   initInstallBanner();
@@ -953,6 +954,21 @@ function showNewsletterModal() {
 function dismissNewsletterModal() {
   try { $w('#newsletterModal').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+}
+
+// ── Mountain Skyline Header ──────────────────────────────────────
+// Signature Blue Ridge mountain silhouette SVG in the global header border
+
+function initMountainSkylineHeader() {
+  try {
+    import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
+      initMountainSkyline($w, { variant: 'silhouette', containerId: '#headerSkyline' });
+    }).catch(() => {
+      // MountainSkyline module not yet available — silently skip
+    });
+  } catch (e) {
+    // Non-critical decorative element
+  }
 }
 
 // ── Core Web Vitals Collection ────────────────────────────────────

@@ -838,16 +838,24 @@ function initNewsletterSection() {
 // ── Mountain Ridgeline Header ───────────────────────────────────────
 
 /**
- * Wire the decorative Blue Ridge ridgeline SVG into the page header.
+ * Wire the decorative Blue Ridge mountain skyline SVG into the hero section.
+ * Uses the gradient variant (sunrise/sunset) for the hero area.
+ * Falls back to static ridgeline SVG if MountainSkyline module is unavailable.
  */
 function initRidgelineHeader() {
   try {
-    const ridgeline = $w('#ridgelineHeader');
-    if (!ridgeline) return;
-
-    ridgeline.src = 'https://static.wixstatic.com/media/cf-asset-01-ridgeline-header.svg';
-    ridgeline.alt = 'Blue Ridge Mountain ridgeline decoration';
-    try { ridgeline.accessibility.ariaLabel = 'Decorative mountain ridgeline'; } catch (e) {}
+    import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
+      initMountainSkyline($w, { variant: 'gradient', containerId: '#heroSkyline' });
+    }).catch(() => {
+      // Fallback to static ridgeline if MountainSkyline not yet available
+      try {
+        const ridgeline = $w('#ridgelineHeader');
+        if (!ridgeline) return;
+        ridgeline.src = 'https://static.wixstatic.com/media/cf-asset-01-ridgeline-header.svg';
+        ridgeline.alt = 'Blue Ridge Mountain ridgeline decoration';
+        try { ridgeline.accessibility.ariaLabel = 'Decorative mountain ridgeline'; } catch (e) {}
+      } catch (e) {}
+    });
   } catch (e) {
     // Ridgeline header is decorative, non-critical
   }
