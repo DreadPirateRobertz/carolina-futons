@@ -265,11 +265,11 @@ async function loadCartSuggestions(cart) {
 
     const crossSellStyles = getCrossSellCardStyles();
     repeater.onItemReady(($item, itemData) => {
-      $item('#sugImage').src = itemData.mainMedia;
-      $item('#sugImage').alt = `${itemData.name} - add to cart`;
-      $item('#sugName').text = itemData.name;
+      try { $item('#sugImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#sugImage').alt = `${itemData.name} - add to cart`; } catch (e) {}
+      try { $item('#sugName').text = itemData.name; } catch (e) {}
       try { $item('#sugName').style.color = crossSellStyles.nameColor; } catch (e) {}
-      $item('#sugPrice').text = itemData.formattedPrice;
+      try { $item('#sugPrice').text = itemData.formattedPrice; } catch (e) {}
       try { $item('#sugPrice').style.color = crossSellStyles.priceColor; } catch (e) {}
 
       // Coral CTA button for add-to-cart

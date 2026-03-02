@@ -742,14 +742,15 @@ function initHeroAnimation() {
     try {
       const heroOverlay = $w('#heroOverlay');
       if (heroOverlay) {
-        heroOverlay.style.backgroundColor = 'rgba(58, 37, 24, 0.6)';
+        heroOverlay.style.backgroundColor = colors.overlay;
         heroOverlay.show('fade', { duration: 300, delay: 0 });
       }
     } catch (e) {}
 
-    const heroTitle = $w('#heroTitle');
-    const heroSubtitle = $w('#heroSubtitle');
-    const heroCta = $w('#heroCTA');
+    let heroTitle, heroSubtitle, heroCta;
+    try { heroTitle = $w('#heroTitle'); } catch (e) {}
+    try { heroSubtitle = $w('#heroSubtitle'); } catch (e) {}
+    try { heroCta = $w('#heroCTA'); } catch (e) {}
 
     // Staggered fade-in: title → subtitle → CTA
     if (heroTitle) {
@@ -764,9 +765,12 @@ function initHeroAnimation() {
       heroCta.label = 'Explore Our Collection';
       heroCta.show('fade', { duration: 300, delay: 600 });
       try { heroCta.accessibility.ariaLabel = 'Explore our furniture collection'; } catch (e) {}
-      heroCta.onClick(() => {
-        import('wix-location-frontend').then(({ to }) => to('/shop-main'));
-      });
+      if (!heroCta._ctaWired) {
+        heroCta._ctaWired = true;
+        heroCta.onClick(() => {
+          import('wix-location-frontend').then(({ to }) => to('/shop-main'));
+        });
+      }
     }
   } catch (e) {
     // Hero elements may not exist

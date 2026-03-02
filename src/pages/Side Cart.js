@@ -30,6 +30,7 @@ import {
 let currentSideSugProduct = null;
 let _legacySugHandlerRegistered = false;
 let _repeaterInitialized = false;
+let _sideCartEscapeRegistered = false;
 
 $w.onReady(function () {
   initSideCart();
@@ -74,8 +75,9 @@ function initSideCart() {
     });
   } catch (e) {}
 
-  // Escape key closes side cart
-  if (typeof document !== 'undefined') {
+  // Escape key closes side cart (guarded to prevent listener accumulation on SPA re-nav)
+  if (typeof document !== 'undefined' && !_sideCartEscapeRegistered) {
+    _sideCartEscapeRegistered = true;
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         try {

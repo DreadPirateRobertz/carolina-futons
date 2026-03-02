@@ -7,7 +7,7 @@ import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
-import { colors } from 'public/sharedTokens.js';
+import { colors } from 'public/designTokens.js';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';
 import { validateAddressField, getFieldValidationState } from 'public/checkoutValidation.js';
@@ -536,7 +536,7 @@ async function initOrderSummarySidebar() {
  */
 async function updateOrderSummaryDisplay(items, state, shippingMethod) {
   try {
-    const result = calculateOrderSummary({ items, state, shippingMethod });
+    const result = await calculateOrderSummary({ items, state, shippingMethod });
     if (!result.success) return;
 
     const { data } = result;
@@ -638,7 +638,7 @@ async function initExpressCheckout() {
           zip: $w('#addressZip').value || '',
         };
 
-        const result = getExpressCheckoutSummary({ items, address });
+        const result = await getExpressCheckoutSummary({ items, address });
 
         if (result.success) {
           // Show express summary
