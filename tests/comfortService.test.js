@@ -91,6 +91,20 @@ describe('getComfortLevels', () => {
     const levels = await getComfortLevels();
     expect(Array.isArray(levels)).toBe(true);
   });
+
+  it('sorts correctly when seeded in reverse order', async () => {
+    __seed('ComfortLevels', [
+      { _id: 'cl-z', slug: 'firm', name: 'Firm', tagline: 'z', description: 'z', illustration: 'z', illustrationAlt: 'z', sortOrder: 3 },
+      { _id: 'cl-a', slug: 'plush', name: 'Plush', tagline: 'a', description: 'a', illustration: 'a', illustrationAlt: 'a', sortOrder: 1 },
+      { _id: 'cl-m', slug: 'medium', name: 'Medium', tagline: 'm', description: 'm', illustration: 'm', illustrationAlt: 'm', sortOrder: 2 },
+    ]);
+
+    const levels = await getComfortLevels();
+    expect(levels).toHaveLength(3);
+    expect(levels[0].name).toBe('Plush');
+    expect(levels[1].name).toBe('Medium');
+    expect(levels[2].name).toBe('Firm');
+  });
 });
 
 // ── getProductComfort ───────────────────────────────────────────────
@@ -137,6 +151,23 @@ describe('getProductComfort', () => {
     expect(comfort.slug).toBe('firm');
     expect(comfort.description).toContain('Solid support');
   });
+
+  it('does not expose raw CMS fields like _id and sortOrder', async () => {
+    const comfort = await getProductComfort('prod-1');
+    expect(comfort).not.toBeNull();
+    expect(comfort._id).toBeUndefined();
+    expect(comfort.sortOrder).toBeUndefined();
+  });
+
+  it('returns null when mapping exists but comfort level is missing', async () => {
+    __seed('ProductComfort', [
+      { _id: 'pc-orphan', productId: 'prod-orphan', comfortLevelId: 'cl-nonexistent', sortOrder: 1 },
+    ]);
+    __seed('ComfortLevels', []);
+
+    const comfort = await getProductComfort('prod-orphan');
+    expect(comfort).toBeNull();
+  });
 });
 
 // ── getComfortProducts ──────────────────────────────────────────────
@@ -172,8 +203,37 @@ describe('getComfortProducts', () => {
     expect(Array.isArray(productIds)).toBe(true);
   });
 
-  it('returns empty array on error', async () => {
+  it('returns empty array for null slug', async () => {
     const productIds = await getComfortProducts(null);
     expect(Array.isArray(productIds)).toBe(true);
+    expect(productIds).toHaveLength(0);
+  });
+
+  it('returns empty array for undefined slug', async () => {
+    const productIds = await getComfortProducts(undefined);
+    expect(Array.isArray(productIds)).toBe(true);
+    expect(productIds).toHaveLength(0);
+  });
+
+  it('returns products sorted by sortOrder ascending', async () => {
+    __seed('ProductComfort', [
+      { _id: 'pc-z', productId: 'prod-last', comfortLevelId: 'cl-plush', sortOrder: 99 },
+      { _id: 'pc-a', productId: 'prod-first', comfortLevelId: 'cl-plush', sortOrder: 1 },
+      { _id: 'pc-m', productId: 'prod-middle', comfortLevelId: 'cl-plush', sortOrder: 50 },
+    ]);
+
+    const productIds = await getComfortProducts('plush');
+    expect(productIds).toHaveLength(3);
+    expect(productIds[0]).toBe('prod-first');
+    expect(productIds[1]).toBe('prod-middle');
+    expect(productIds[2]).toBe('prod-last');
+  });
+
+  it('returns only string product IDs with no extra fields', async () => {
+    const productIds = await getComfortProducts('plush');
+    expect(productIds.length).toBeGreaterThan(0);
+    productIds.forEach(id => {
+      expect(typeof id).toBe('string');
+    });
   });
 });

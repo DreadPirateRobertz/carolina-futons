@@ -161,7 +161,7 @@ export async function initSwatchRequestFlow($w, state) {
       } catch (e) {}
       try { $item('#srLabel').text = itemData.swatchName || ''; } catch (e) {}
       try {
-        $item('#srThumb').onClick(() => {
+        $item('#srThumb').onClick(async () => {
           const result = toggleSwatchSelection(itemData);
           updateSwatchSelectionUI($w, grid);
           if (result.limitReached) {
@@ -169,6 +169,18 @@ export async function initSwatchRequestFlow($w, state) {
           } else {
             try { $w('#swatchRequestError').hide(); } catch (e) {}
           }
+          // Screen reader announcement for swatch selection changes
+          try {
+            const { announce } = await import('public/a11yHelpers');
+            const count = getSelectedSwatches().length;
+            if (result.limitReached) {
+              announce($w, `Maximum ${MAX_SWATCHES} swatches reached. Deselect one to choose another.`);
+            } else if (result.selected) {
+              announce($w, `${itemData.swatchName} selected. ${count} of ${MAX_SWATCHES} swatches chosen.`);
+            } else {
+              announce($w, `${itemData.swatchName} deselected. ${count} of ${MAX_SWATCHES} swatches chosen.`);
+            }
+          } catch (e) {}
         });
       } catch (e) {}
     });

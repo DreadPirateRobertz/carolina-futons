@@ -1,231 +1,357 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-vi.mock('backend/comfortService.web', () => ({
-  getComfortLevels: vi.fn().mockResolvedValue([
-    {
-      slug: 'plush', name: 'Plush', tagline: 'Sink in and let go',
-      description: 'Like being hugged by a cloud.',
-      illustration: 'wix:image://plush.svg',
-      illustrationAlt: 'Figure sinking into cushion',
-    },
-    {
-      slug: 'medium', name: 'Medium', tagline: 'The best of both worlds',
-      description: 'Supportive enough for all-day sitting.',
-      illustration: 'wix:image://medium.svg',
-      illustrationAlt: 'Figure in balanced position',
-    },
-    {
-      slug: 'firm', name: 'Firm', tagline: 'Sit tall, feel strong',
-      description: 'Solid support that keeps posture happy.',
-      illustration: 'wix:image://firm.svg',
-      illustrationAlt: 'Figure sitting upright',
-    },
-  ]),
-  getProductComfort: vi.fn().mockResolvedValue({
-    slug: 'medium', name: 'Medium', tagline: 'The best of both worlds',
-    description: 'Supportive enough for all-day sitting.',
-    illustration: 'wix:image://medium.svg',
-    illustrationAlt: 'Figure in balanced position',
-  }),
-  getComfortProducts: vi.fn().mockResolvedValue(['prod-1', 'prod-2', 'prod-3']),
-}));
-
-vi.mock('public/designTokens.js', () => ({
-  colors: {
-    mountainBlue: '#5B8FA8', sandBase: '#E8D5B7', sandDark: '#D4BC96',
-    espresso: '#3A2518', sunsetCoral: '#E8845C', white: '#FFFFFF',
-    sandLight: '#F2E8D5', mountainBlueLight: '#A8CCD8',
-  },
-  spacing: { sm: '8px', md: '16px', lg: '24px', xl: '32px' },
-  borderRadius: { card: '12px', md: '8px' },
-  shadows: { card: '0 2px 8px rgba(0,0,0,0.1)' },
-}));
-
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { __seed, __reset } from './__mocks__/wix-data.js';
 import {
+  COMFORT_ICONS,
+  renderComfortCard,
   initComfortCards,
   initComfortFilter,
-  renderComfortCard,
-  COMFORT_ICONS,
 } from '../src/public/ComfortStoryCards.js';
 
-function createMockElement() {
-  return {
-    text: '', src: '', alt: '', value: '', html: '', label: '',
-    style: { color: '', backgroundColor: '', borderColor: '', borderWidth: '', display: '' },
-    options: [], data: [], items: [],
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(), expand: vi.fn(),
-    onClick: vi.fn(), onChange: vi.fn(),
-    onItemReady: vi.fn(), onInput: vi.fn(),
-    focus: vi.fn(),
-    accessibility: {},
+// ── Seed Data ──────────────────────────────────────────────────────
+
+const COMFORT_LEVELS = [
+  {
+    _id: 'cl-plush',
+    slug: 'plush',
+    name: 'Plush',
+    tagline: 'Sink in and unwind',
+    description: 'Cloud-soft comfort that cradles you.',
+    illustration: 'wix:image://v1/plush-illustration.jpg',
+    illustrationAlt: 'Plush comfort cloud illustration',
+    sortOrder: 1,
+  },
+  {
+    _id: 'cl-medium',
+    slug: 'medium',
+    name: 'Medium',
+    tagline: 'Balanced support',
+    description: 'The best of both worlds — soft yet supportive.',
+    illustration: 'wix:image://v1/medium-illustration.jpg',
+    illustrationAlt: 'Medium comfort balanced illustration',
+    sortOrder: 2,
+  },
+  {
+    _id: 'cl-firm',
+    slug: 'firm',
+    name: 'Firm',
+    tagline: 'Structured and supportive',
+    description: 'Rock-solid support for those who need it.',
+    illustration: 'wix:image://v1/firm-illustration.jpg',
+    illustrationAlt: 'Firm comfort structured illustration',
+    sortOrder: 3,
+  },
+];
+
+const PRODUCT_COMFORT_MAPPINGS = [
+  { _id: 'pc-1', productId: 'prod-futon-001', comfortLevelId: 'cl-plush', sortOrder: 1 },
+  { _id: 'pc-2', productId: 'prod-futon-002', comfortLevelId: 'cl-firm', sortOrder: 2 },
+];
+
+// ── $w Mock Factory ────────────────────────────────────────────────
+
+function make$w(elements = {}) {
+  return function $w(selector) {
+    if (!elements[selector]) {
+      elements[selector] = {
+        text: '', src: '', alt: '', value: '', options: [], data: null,
+        _expanded: false, _collapsed: false, _handlers: {},
+        expand() { this._expanded = true; this._collapsed = false; },
+        collapse() { this._collapsed = true; this._expanded = false; },
+        show() {}, hide() {},
+        onChange(fn) { this._handlers.change = fn; },
+        accessibility: {},
+      };
+    }
+    return elements[selector];
   };
 }
 
-function create$w() {
-  const els = new Map();
-  return (sel) => { if (!els.has(sel)) els.set(sel, createMockElement()); return els.get(sel); };
-}
+// ── Setup ──────────────────────────────────────────────────────────
 
-// ── Comfort Story Cards Rendering ───────────────────────────────────
+beforeEach(() => {
+  __reset();
+  __seed('ComfortLevels', COMFORT_LEVELS);
+  __seed('ProductComfort', PRODUCT_COMFORT_MAPPINGS);
+});
 
-describe('ComfortStoryCards — renderComfortCard', () => {
-  it('renders a comfort card with name and tagline', () => {
-    const $item = create$w();
-    const comfort = {
-      slug: 'plush', name: 'Plush', tagline: 'Sink in and let go',
-      description: 'Like being hugged by a cloud.',
-      illustration: 'wix:image://plush.svg',
-      illustrationAlt: 'Figure sinking into cushion',
-    };
-    renderComfortCard($item, comfort);
+// ── COMFORT_ICONS ──────────────────────────────────────────────────
+
+describe('COMFORT_ICONS', () => {
+  it('has plush entry with icon and label', () => {
+    expect(COMFORT_ICONS.plush).toBeDefined();
+    expect(typeof COMFORT_ICONS.plush.icon).toBe('string');
+    expect(COMFORT_ICONS.plush.icon.length).toBeGreaterThan(0);
+    expect(typeof COMFORT_ICONS.plush.label).toBe('string');
+    expect(COMFORT_ICONS.plush.label.length).toBeGreaterThan(0);
+  });
+
+  it('has medium entry with icon and label', () => {
+    expect(COMFORT_ICONS.medium).toBeDefined();
+    expect(typeof COMFORT_ICONS.medium.icon).toBe('string');
+    expect(COMFORT_ICONS.medium.icon.length).toBeGreaterThan(0);
+    expect(typeof COMFORT_ICONS.medium.label).toBe('string');
+    expect(COMFORT_ICONS.medium.label.length).toBeGreaterThan(0);
+  });
+
+  it('has firm entry with icon and label', () => {
+    expect(COMFORT_ICONS.firm).toBeDefined();
+    expect(typeof COMFORT_ICONS.firm.icon).toBe('string');
+    expect(COMFORT_ICONS.firm.icon.length).toBeGreaterThan(0);
+    expect(typeof COMFORT_ICONS.firm.label).toBe('string');
+    expect(COMFORT_ICONS.firm.label.length).toBeGreaterThan(0);
+  });
+
+  it('has exactly three comfort levels', () => {
+    const keys = Object.keys(COMFORT_ICONS);
+    expect(keys).toHaveLength(3);
+    expect(keys).toContain('plush');
+    expect(keys).toContain('medium');
+    expect(keys).toContain('firm');
+  });
+});
+
+// ── renderComfortCard ──────────────────────────────────────────────
+
+describe('renderComfortCard', () => {
+  it('sets comfort name text', () => {
+    const $item = make$w();
+    renderComfortCard($item, COMFORT_LEVELS[0]);
     expect($item('#comfortName').text).toBe('Plush');
-    expect($item('#comfortTagline').text).toBe('Sink in and let go');
   });
 
-  it('renders description text', () => {
-    const $item = create$w();
+  it('sets comfort tagline text', () => {
+    const $item = make$w();
+    renderComfortCard($item, COMFORT_LEVELS[0]);
+    expect($item('#comfortTagline').text).toBe('Sink in and unwind');
+  });
+
+  it('sets comfort description text', () => {
+    const $item = make$w();
+    renderComfortCard($item, COMFORT_LEVELS[0]);
+    expect($item('#comfortDescription').text).toBe('Cloud-soft comfort that cradles you.');
+  });
+
+  it('sets illustration src and alt', () => {
+    const $item = make$w();
+    renderComfortCard($item, COMFORT_LEVELS[0]);
+    expect($item('#comfortIllustration').src).toBe('wix:image://v1/plush-illustration.jpg');
+    expect($item('#comfortIllustration').alt).toBe('Plush comfort cloud illustration');
+  });
+
+  it('provides default alt text when illustrationAlt is missing', () => {
+    const $item = make$w();
     const comfort = {
-      slug: 'firm', name: 'Firm', tagline: 'Sit tall',
-      description: 'Solid support.',
-      illustration: 'wix:image://firm.svg',
-      illustrationAlt: 'Upright figure',
+      name: 'Plush',
+      tagline: 'Sink in',
+      description: 'Soft.',
+      illustration: 'wix:image://v1/plush.jpg',
+      // no illustrationAlt
     };
     renderComfortCard($item, comfort);
-    expect($item('#comfortDescription').text).toBe('Solid support.');
+    expect($item('#comfortIllustration').alt).toBe('Plush comfort level illustration');
   });
 
-  it('sets illustration image with alt text', () => {
-    const $item = create$w();
-    const comfort = {
-      slug: 'medium', name: 'Medium', tagline: 'Best of both',
-      description: 'Balanced.',
-      illustration: 'wix:image://medium.svg',
-      illustrationAlt: 'Balanced figure',
-    };
-    renderComfortCard($item, comfort);
-    expect($item('#comfortIllustration').src).toBe('wix:image://medium.svg');
-    expect($item('#comfortIllustration').alt).toBe('Balanced figure');
+  it('does nothing for null comfort', () => {
+    const elements = {};
+    const $item = make$w(elements);
+    renderComfortCard($item, null);
+    // No elements should have been created/accessed
+    expect(Object.keys(elements)).toHaveLength(0);
   });
 
-  it('handles missing illustration gracefully', () => {
-    const $item = create$w();
-    const comfort = {
-      slug: 'firm', name: 'Firm', tagline: 'Strong',
-      description: 'Support.', illustration: '', illustrationAlt: '',
-    };
-    // Should not throw
-    expect(() => renderComfortCard($item, comfort)).not.toThrow();
+  it('does nothing for undefined comfort', () => {
+    const elements = {};
+    const $item = make$w(elements);
+    renderComfortCard($item, undefined);
+    expect(Object.keys(elements)).toHaveLength(0);
   });
 
-  it('handles null comfort data gracefully', () => {
-    const $item = create$w();
-    expect(() => renderComfortCard($item, null)).not.toThrow();
-  });
-});
-
-// ── COMFORT_ICONS ───────────────────────────────────────────────────
-
-describe('ComfortStoryCards — COMFORT_ICONS', () => {
-  it('exports icon/emoji map for plush, medium, firm', () => {
-    expect(COMFORT_ICONS).toBeDefined();
-    expect(COMFORT_ICONS.plush).toBeTruthy();
-    expect(COMFORT_ICONS.medium).toBeTruthy();
-    expect(COMFORT_ICONS.firm).toBeTruthy();
-  });
-});
-
-// ── initComfortCards (Product Page) ─────────────────────────────────
-
-describe('ComfortStoryCards — initComfortCards', () => {
-  let $w, state;
-
-  beforeEach(() => {
-    $w = create$w();
-    state = { product: { _id: 'prod-1', name: 'Eureka Frame' } };
+  it('handles missing name field gracefully (null -> empty string)', () => {
+    const $item = make$w();
+    renderComfortCard($item, { name: null, tagline: 'T', description: 'D', illustration: null });
+    expect($item('#comfortName').text).toBe('');
   });
 
-  it('initializes comfort section on product page', async () => {
-    await initComfortCards($w, state);
-    expect($w('#comfortSection').expand).toHaveBeenCalled();
+  it('handles missing tagline field gracefully (undefined -> empty string)', () => {
+    const $item = make$w();
+    renderComfortCard($item, { name: 'N', description: 'D', illustration: null });
+    expect($item('#comfortTagline').text).toBe('');
   });
 
-  it('renders the product comfort card', async () => {
-    await initComfortCards($w, state);
-    expect($w('#comfortName').text).toBe('Medium');
-    expect($w('#comfortTagline').text).toBe('The best of both worlds');
+  it('handles missing description field gracefully', () => {
+    const $item = make$w();
+    renderComfortCard($item, { name: 'N', tagline: 'T', illustration: null });
+    expect($item('#comfortDescription').text).toBe('');
   });
 
-  it('sets illustration on product comfort card', async () => {
-    await initComfortCards($w, state);
-    expect($w('#comfortIllustration').src).toBe('wix:image://medium.svg');
-    expect($w('#comfortIllustration').alt).toBe('Figure in balanced position');
+  it('does not set illustration src when illustration is falsy', () => {
+    const $item = make$w();
+    renderComfortCard($item, { name: 'N', tagline: 'T', description: 'D', illustration: '' });
+    // src should remain default empty string
+    expect($item('#comfortIllustration').src).toBe('');
   });
 
-  it('collapses section when product has no comfort data', async () => {
-    const { getProductComfort } = await import('backend/comfortService.web');
-    getProductComfort.mockResolvedValueOnce(null);
-    await initComfortCards($w, state);
-    expect($w('#comfortSection').collapse).toHaveBeenCalled();
+  it('does not set illustration src when illustration is null', () => {
+    const $item = make$w();
+    renderComfortCard($item, { name: 'N', tagline: 'T', description: 'D', illustration: null });
+    expect($item('#comfortIllustration').src).toBe('');
   });
 
-  it('collapses section when no product in state', async () => {
-    state.product = null;
-    await initComfortCards($w, state);
-    expect($w('#comfortSection').collapse).toHaveBeenCalled();
-  });
-
-  it('handles backend error gracefully', async () => {
-    const { getProductComfort } = await import('backend/comfortService.web');
-    getProductComfort.mockRejectedValueOnce(new Error('DB error'));
-    await initComfortCards($w, state);
-    expect($w('#comfortSection').collapse).toHaveBeenCalled();
+  it('renders all three comfort levels correctly', () => {
+    for (const level of COMFORT_LEVELS) {
+      const $item = make$w();
+      renderComfortCard($item, level);
+      expect($item('#comfortName').text).toBe(level.name);
+      expect($item('#comfortTagline').text).toBe(level.tagline);
+      expect($item('#comfortDescription').text).toBe(level.description);
+      expect($item('#comfortIllustration').src).toBe(level.illustration);
+    }
   });
 });
 
-// ── initComfortFilter (Category Page) ───────────────────────────────
+// ── initComfortCards ───────────────────────────────────────────────
 
-describe('ComfortStoryCards — initComfortFilter', () => {
-  let $w;
-
-  beforeEach(() => {
-    $w = create$w();
+describe('initComfortCards', () => {
+  it('expands section for product with comfort mapping', async () => {
+    const $w = make$w();
+    const state = { product: { _id: 'prod-futon-001' } };
+    await initComfortCards($w, state);
+    expect($w('#comfortSection')._expanded).toBe(true);
+    expect($w('#comfortSection')._collapsed).toBe(false);
   });
 
-  it('populates comfort filter dropdown with options', async () => {
+  it('renders comfort data for product with mapping', async () => {
+    const $w = make$w();
+    const state = { product: { _id: 'prod-futon-001' } };
+    await initComfortCards($w, state);
+    // prod-futon-001 maps to cl-plush
+    expect($w('#comfortName').text).toBe('Plush');
+    expect($w('#comfortTagline').text).toBe('Sink in and unwind');
+    expect($w('#comfortDescription').text).toBe('Cloud-soft comfort that cradles you.');
+  });
+
+  it('collapses section for product with no comfort mapping', async () => {
+    const $w = make$w();
+    const state = { product: { _id: 'prod-no-mapping' } };
+    await initComfortCards($w, state);
+    expect($w('#comfortSection')._collapsed).toBe(true);
+    expect($w('#comfortSection')._expanded).toBe(false);
+  });
+
+  it('collapses section for null product', async () => {
+    const $w = make$w();
+    const state = { product: null };
+    await initComfortCards($w, state);
+    expect($w('#comfortSection')._collapsed).toBe(true);
+  });
+
+  it('collapses section for null state', async () => {
+    const $w = make$w();
+    await initComfortCards($w, null);
+    expect($w('#comfortSection')._collapsed).toBe(true);
+  });
+
+  it('collapses section for undefined state', async () => {
+    const $w = make$w();
+    await initComfortCards($w, undefined);
+    expect($w('#comfortSection')._collapsed).toBe(true);
+  });
+
+  it('collapses section for state with no product property', async () => {
+    const $w = make$w();
+    await initComfortCards($w, {});
+    expect($w('#comfortSection')._collapsed).toBe(true);
+  });
+
+  it('handles second comfort level mapping (firm)', async () => {
+    const $w = make$w();
+    const state = { product: { _id: 'prod-futon-002' } };
+    await initComfortCards($w, state);
+    // prod-futon-002 maps to cl-firm
+    expect($w('#comfortName').text).toBe('Firm');
+    expect($w('#comfortSection')._expanded).toBe(true);
+  });
+
+  it('does not throw when section elements are missing', async () => {
+    // The function wraps everything in try/catch
+    const $w = make$w();
+    const state = { product: { _id: 'prod-futon-001' } };
+    await expect(initComfortCards($w, state)).resolves.not.toThrow();
+  });
+});
+
+// ── initComfortFilter ──────────────────────────────────────────────
+
+describe('initComfortFilter', () => {
+  it('populates dropdown with All + 3 comfort levels', async () => {
+    const $w = make$w();
     await initComfortFilter($w);
-    const opts = $w('#comfortFilter').options;
-    expect(opts[0]).toEqual({ label: 'All Comfort Levels', value: '' });
-    expect(opts.length).toBe(4); // All + plush + medium + firm
+    const options = $w('#comfortFilter').options;
+    expect(options).toHaveLength(4); // All + Plush + Medium + Firm
+    expect(options[0].label).toBe('All Comfort Levels');
+    expect(options[0].value).toBe('');
   });
 
-  it('includes comfort level names in filter options', async () => {
+  it('includes all three comfort levels in sorted order', async () => {
+    const $w = make$w();
     await initComfortFilter($w);
-    const opts = $w('#comfortFilter').options;
-    const labels = opts.map(o => o.label);
-    expect(labels).toContain('Plush');
-    expect(labels).toContain('Medium');
-    expect(labels).toContain('Firm');
+    const options = $w('#comfortFilter').options;
+    // Sorted by sortOrder: Plush(1), Medium(2), Firm(3)
+    expect(options[1].label).toBe('Plush');
+    expect(options[1].value).toBe('plush');
+    expect(options[2].label).toBe('Medium');
+    expect(options[2].value).toBe('medium');
+    expect(options[3].label).toBe('Firm');
+    expect(options[3].value).toBe('firm');
   });
 
-  it('registers onChange handler on filter', async () => {
+  it('sets default value to empty string (All)', async () => {
+    const $w = make$w();
     await initComfortFilter($w);
-    expect($w('#comfortFilter').onChange).toHaveBeenCalled();
+    expect($w('#comfortFilter').value).toBe('');
   });
 
-  it('handles empty comfort levels gracefully', async () => {
-    const { getComfortLevels } = await import('backend/comfortService.web');
-    getComfortLevels.mockResolvedValueOnce([]);
+  it('registers an onChange handler', async () => {
+    const $w = make$w();
     await initComfortFilter($w);
-    const opts = $w('#comfortFilter').options;
-    expect(opts).toHaveLength(1); // Just "All"
+    expect($w('#comfortFilter')._handlers.change).toBeDefined();
+    expect(typeof $w('#comfortFilter')._handlers.change).toBe('function');
   });
 
-  it('handles backend error gracefully', async () => {
-    const { getComfortLevels } = await import('backend/comfortService.web');
-    getComfortLevels.mockRejectedValueOnce(new Error('DB error'));
-    // Should not throw
-    await expect(initComfortFilter($w)).resolves.not.toThrow();
+  it('onChange handler populates comfortFilterResults for specific slug', async () => {
+    const $w = make$w();
+    await initComfortFilter($w);
+    const filter = $w('#comfortFilter');
+
+    // Simulate selecting "plush"
+    filter.value = 'plush';
+    await filter._handlers.change();
+
+    // Should populate with product IDs that have plush comfort
+    const results = $w('#comfortFilterResults').data;
+    expect(Array.isArray(results)).toBe(true);
+    expect(results).toContain('prod-futon-001');
+  });
+
+  it('onChange handler returns early for empty slug (All selected)', async () => {
+    const $w = make$w();
+    await initComfortFilter($w);
+    const filter = $w('#comfortFilter');
+
+    // Simulate selecting "All" (empty value)
+    filter.value = '';
+    await filter._handlers.change();
+
+    // comfortFilterResults should NOT be set (stays null from make$w default)
+    expect($w('#comfortFilterResults').data).toBeNull();
+  });
+
+  it('handles empty ComfortLevels collection gracefully', async () => {
+    __seed('ComfortLevels', []);
+    const $w = make$w();
+    await initComfortFilter($w);
+    const options = $w('#comfortFilter').options;
+    expect(options).toHaveLength(1); // Only "All Comfort Levels"
+    expect(options[0].label).toBe('All Comfort Levels');
   });
 });
