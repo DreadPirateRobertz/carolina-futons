@@ -1014,4 +1014,48 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       await expect(onReadyHandler()).resolves.not.toThrow();
     });
   });
+
+  // ── Transition Timing (300ms standard) ──────────────────────────────
+
+  describe('transition timing normalization', () => {
+    it('hero title fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroTitle').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero subtitle fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroSubtitle').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero CTA fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroCTA').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('trust bar items fade in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#trustItem1').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero overlay fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroOverlay').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+  });
+
+  // ── Category 6-Card Limit ───────────────────────────────────────────
+
+  describe('category 6-card limit', () => {
+    it('category repeater receives exactly 6 items for homepage', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      expect(repeater.data.length).toBe(6);
+    });
+  });
 });
