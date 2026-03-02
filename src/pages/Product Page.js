@@ -1,6 +1,6 @@
 // Product Page.js - Orchestrator
 // Coordinates component initialization and cross-sell sections
-import { getRelatedProducts, getSameCollection } from 'backend/productRecommendations.web';
+import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
 import { cacheProduct } from 'public/productCache';
 import { trackProductPageView } from 'public/engagementTracker';
@@ -79,6 +79,7 @@ async function initProductPage() {
       { name: 'relatedProducts', init: loadRelatedProducts },
       { name: 'collectionProducts', init: loadCollectionProducts },
       { name: 'recentlyViewed', init: loadRecentlyViewed },
+      { name: 'alsoBought', init: loadAlsoBought },
       { name: 'productSchema', init: () => injectProductSchema($w, state) },
       { name: 'productMeta', init: () => injectProductMeta(state) },
       { name: 'imageGallery', init: () => initImageGallery($w, state) },
@@ -128,7 +129,7 @@ async function initProductPage() {
       { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
       { name: 'lifestyleGallery', init: () => initLifestyleGallery($w, state) },
       { name: 'designTokens', init: () => applyProductPageTokens($w) },
-      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection']) },
+      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']) },
       { name: 'backToTop', init: () => initBackToTop($w) },
       { name: 'browseTracking', init: () => initBrowseTracking(state) },
     ];
@@ -223,17 +224,95 @@ async function loadRecentlyViewed() {
       return;
     }
     $w('#recentlyViewedSection').expand();
+    try {
+      $w('#recentlyViewedSection').accessibility.ariaLabel = 'Recently viewed products';
+      $w('#recentlyViewedSection').accessibility.role = 'region';
+    } catch (e) {}
     repeater.data = recent;
     repeater.onItemReady(($item, itemData) => {
-      $item('#recentImage').src = itemData.mainMedia;
-      $item('#recentImage').alt = buildGridAlt(itemData);
-      $item('#recentName').text = itemData.name;
-      $item('#recentPrice').text = itemData.price;
+      try { $item('#recentImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#recentImage').alt = buildGridAlt(itemData); } catch (e) {}
+      try { $item('#recentName').text = itemData.name; } catch (e) {}
+      try { $item('#recentPrice').text = itemData.price; } catch (e) {}
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
       makeClickable($item('#recentImage'), nav, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), nav, { ariaLabel: `View ${itemData.name} details` });
+      // Quick-add-to-cart button
+      try {
+        const addBtn = $item('#recentAddToCart');
+        if (addBtn) {
+          try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+          addBtn.onClick(async () => {
+            try {
+              addBtn.disable();
+              addBtn.label = 'Adding...';
+              const { addToCart } = await import('public/cartService.js');
+              await addToCart(itemData._id);
+              addBtn.label = 'Added!';
+              setTimeout(() => { try { addBtn.label = 'Add to Cart'; addBtn.enable(); } catch (e) {} }, 2000);
+            } catch (err) {
+              addBtn.label = 'Add to Cart';
+              addBtn.enable();
+            }
+          });
+        }
+      } catch (e) {}
     });
   } catch (e) {}
+}
+
+async function loadAlsoBought() {
+  try {
+    if (!state.product?._id) return;
+    const result = await getCustomersAlsoBought(state.product._id, 4);
+    if (!result?.success || !result.products?.length) {
+      try { $w('#alsoBoughtSection').collapse(); } catch (e) {}
+      return;
+    }
+    const repeater = $w('#alsoBoughtRepeater');
+    if (!repeater) {
+      try { $w('#alsoBoughtSection').collapse(); } catch (e) {}
+      return;
+    }
+    try { $w('#alsoBoughtSection').expand(); } catch (e) {}
+    try {
+      $w('#alsoBoughtSection').accessibility.ariaLabel = 'Customers also bought';
+      $w('#alsoBoughtSection').accessibility.role = 'region';
+    } catch (e) {}
+    repeater.data = result.products;
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#alsoBoughtImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#alsoBoughtImage').alt = buildGridAlt(itemData); } catch (e) {}
+      try { $item('#alsoBoughtName').text = itemData.name; } catch (e) {}
+      try { $item('#alsoBoughtPrice').text = itemData.formattedPrice; } catch (e) {}
+      if (itemData.ribbon) {
+        try { $item('#alsoBoughtBadge').text = itemData.ribbon; $item('#alsoBoughtBadge').show(); } catch (e) {}
+      }
+      const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
+      makeClickable($item('#alsoBoughtImage'), nav, { ariaLabel: `View ${itemData.name}` });
+      makeClickable($item('#alsoBoughtName'), nav, { ariaLabel: `View ${itemData.name} details` });
+      // Quick-add-to-cart button
+      try {
+        const addBtn = $item('#alsoBoughtAddToCart');
+        if (addBtn) {
+          try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+          addBtn.onClick(async () => {
+            try {
+              addBtn.disable();
+              addBtn.label = 'Adding...';
+              const { addToCart } = await import('public/cartService.js');
+              await addToCart(itemData._id);
+              addBtn.label = 'Added!';
+              setTimeout(() => { try { addBtn.label = 'Add to Cart'; addBtn.enable(); } catch (e) {} }, 2000);
+            } catch (err) {
+              addBtn.label = 'Add to Cart';
+              addBtn.enable();
+            }
+          });
+        }
+      } catch (e) {}
+    });
+  } catch (err) { console.error('Error loading also bought:', err); }
 }
 
 // ── Inventory Stock Display ─────────────────────────────────────────

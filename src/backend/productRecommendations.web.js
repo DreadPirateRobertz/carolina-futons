@@ -510,6 +510,94 @@ export const getSimilarProducts = webMethod(
   }
 );
 
+/**
+ * Get "Customers Also Bought" products based on co-purchase data.
+ * Queries orders containing the given product and ranks other products
+ * by how frequently they appear in those same orders.
+ * Falls back to category-based related products if no order data exists.
+ *
+ * @param {string} productId - Source product ID.
+ * @param {number} [limit=4] - Max products to return.
+ * @returns {Promise<{success: boolean, products: Array}>}
+ */
+export const getCustomersAlsoBought = webMethod(
+  Permissions.Anyone,
+  async (productId, limit = 4) => {
+    try {
+      const pid = validateId(productId);
+      if (!pid) return { success: false, products: [] };
+
+      const safeLimit = Math.max(1, Math.min(12, Math.round(limit)));
+
+      // Find orders containing this product
+      // lineItems is a nested array of objects, so we fetch recent orders
+      // and filter client-side since hasSome doesn't support nested fields
+      const orders = await wixData.query('Stores/Orders')
+        .limit(100)
+        .find();
+
+      const matchingOrders = orders.items.filter(order =>
+        order.lineItems && order.lineItems.some(li => li.productId === pid)
+      );
+
+      if (matchingOrders.length === 0) {
+        // Fallback: use category-based related products
+        const product = await wixData.get('Stores/Products', pid);
+        if (!product) return { success: true, products: [] };
+
+        const collections = Array.isArray(product.collections)
+          ? product.collections
+          : product.collections ? [product.collections] : [];
+
+        if (collections.length === 0) return { success: true, products: [] };
+
+        const related = await wixData.query('Stores/Products')
+          .hasSome('collections', collections)
+          .ne('_id', pid)
+          .limit(safeLimit)
+          .find();
+
+        return { success: true, products: related.items.map(formatProduct) };
+      }
+
+      // Count co-purchase frequency for each product
+      const frequency = {};
+      for (const order of matchingOrders) {
+        for (const li of order.lineItems) {
+          if (li.productId && li.productId !== pid) {
+            frequency[li.productId] = (frequency[li.productId] || 0) + 1;
+          }
+        }
+      }
+
+      // Sort by frequency descending
+      const ranked = Object.entries(frequency)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, safeLimit)
+        .map(([id]) => id);
+
+      if (ranked.length === 0) return { success: true, products: [] };
+
+      // Fetch full product details
+      const products = await wixData.query('Stores/Products')
+        .hasSome('_id', ranked)
+        .find();
+
+      // Maintain frequency order
+      const productMap = new Map(products.items.map(p => [p._id, p]));
+      const ordered = ranked
+        .map(id => productMap.get(id))
+        .filter(Boolean)
+        .map(formatProduct);
+
+      return { success: true, products: ordered };
+    } catch (err) {
+      console.error('[productRecommendations] getCustomersAlsoBought error:', err);
+      return { success: false, products: [] };
+    }
+  }
+);
+
 function formatProduct(item) {
   return {
     _id: item._id,

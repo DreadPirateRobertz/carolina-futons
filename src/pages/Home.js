@@ -436,6 +436,11 @@ async function initRecentlyViewed() {
       return;
     }
 
+    try {
+      $w('#recentSection').accessibility.ariaLabel = 'Recently viewed products';
+      $w('#recentSection').accessibility.role = 'region';
+    } catch (e) {}
+
     buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
       $item('#recentImage').src = itemData.mainMedia;
       $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
@@ -448,6 +453,27 @@ async function initRecentlyViewed() {
       const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
       makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${itemData.name} details` });
+
+      // Quick-add-to-cart button
+      try {
+        const addBtn = $item('#recentAddToCart');
+        if (addBtn) {
+          try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+          addBtn.onClick(async () => {
+            try {
+              addBtn.disable();
+              addBtn.label = 'Adding...';
+              const { addToCart } = await import('public/cartService.js');
+              await addToCart(itemData._id);
+              addBtn.label = 'Added!';
+              setTimeout(() => { try { addBtn.label = 'Add to Cart'; addBtn.enable(); } catch (e) {} }, 2000);
+            } catch (err) {
+              addBtn.label = 'Add to Cart';
+              addBtn.enable();
+            }
+          });
+        }
+      } catch (e) {}
     });
 
     $w('#recentSection').expand();
