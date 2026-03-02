@@ -21,6 +21,7 @@ import {
 } from 'public/footerContent';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
+import { colors, transitions } from 'public/designTokens';
 
 /**
  * Initialize the 4-column link grid and store info section.
@@ -227,10 +228,94 @@ export function initFooterAria($w) {
 }
 
 /**
+ * Apply brand token colors to all footer elements.
+ * background → espresso, text → sandLight, links → mountainBlue/coral hover,
+ * newsletter input → offWhite bg/espresso text, social icons → sandLight/coral hover.
+ * @param {Function} $w - Wix selector function
+ */
+export function applyFooterStyles($w) {
+  try {
+    // Footer background
+    try { $w('#siteFooter').style.backgroundColor = colors.espresso; } catch (e) {}
+
+    // Heading colors
+    const headings = ['#footerShopHeading', '#footerServiceHeading', '#footerAboutHeading', '#footerInfoHeading'];
+    headings.forEach((sel) => {
+      try { $w(sel).style.color = colors.sandLight; } catch (e) {}
+    });
+
+    // Store info text
+    const infoEls = ['#footerStoreName', '#footerStoreAddress', '#footerStorePhone', '#footerStoreHours'];
+    infoEls.forEach((sel) => {
+      try { $w(sel).style.color = colors.sandLight; } catch (e) {}
+    });
+
+    // Copyright text
+    try { $w('#footerCopyright').style.color = colors.sandLight; } catch (e) {}
+
+    // Newsletter input: offWhite bg, espresso text
+    try {
+      $w('#footerEmailInput').style.backgroundColor = colors.offWhite;
+      $w('#footerEmailInput').style.color = colors.espresso;
+    } catch (e) {}
+
+    // Newsletter submit button: coral
+    try { $w('#footerEmailSubmit').style.backgroundColor = colors.sunsetCoral; } catch (e) {}
+
+    // Link repeaters: mountainBlue default, coral on hover
+    const linkRepeaters = ['#footerShopRepeater', '#footerServiceRepeater', '#footerAboutRepeater'];
+    linkRepeaters.forEach((sel) => {
+      try {
+        $w(sel).onItemReady(($item) => {
+          try {
+            $item('#footerLink').style.color = colors.mountainBlue;
+            $item('#footerLink').onMouseIn(() => {
+              try { $item('#footerLink').style.color = colors.sunsetCoral; } catch (e) {}
+            });
+            $item('#footerLink').onMouseOut(() => {
+              try { $item('#footerLink').style.color = colors.mountainBlue; } catch (e) {}
+            });
+          } catch (e) {}
+        });
+      } catch (e) {}
+    });
+
+    // Social icons: sandLight default, coral on hover
+    try {
+      $w('#footerSocialRepeater').onItemReady(($item) => {
+        try {
+          $item('#socialIcon').style.color = colors.sandLight;
+          $item('#socialIcon').onMouseIn(() => {
+            try { $item('#socialIcon').style.color = colors.sunsetCoral; } catch (e) {}
+          });
+          $item('#socialIcon').onMouseOut(() => {
+            try { $item('#socialIcon').style.color = colors.sandLight; } catch (e) {}
+          });
+        } catch (e) {}
+      });
+    } catch (e) {}
+  } catch (e) {}
+}
+
+/**
+ * Render a subtle mountain silhouette SVG divider above the footer.
+ * Uses espresso token color for the mountain fill against transparent bg.
+ * @param {Function} $w - Wix selector function
+ */
+export function initMountainDivider($w) {
+  try {
+    const divider = $w('#footerMountainDivider');
+    if (!divider) return;
+    divider.html = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" style="display:block;width:100%;height:auto;"><path d="M0,80 L0,50 Q60,30 120,45 Q180,60 240,35 Q320,10 400,30 Q460,45 520,25 Q600,5 680,20 Q740,32 800,15 Q880,0 960,25 Q1020,40 1080,20 Q1160,5 1240,30 Q1320,48 1380,35 Q1420,28 1440,32 L1440,80 Z" fill="${colors.espresso}"/></svg>`;
+  } catch (e) {}
+}
+
+/**
  * Initialize entire footer — orchestrates all subsections.
  * @param {Function} $w - Wix selector function
  */
 export function initFooter($w) {
+  initMountainDivider($w);
   initFooterColumns($w);
   initFooterNewsletter($w);
   initFooterSocial($w);
@@ -238,4 +323,5 @@ export function initFooter($w) {
   initFooterPayment($w);
   initFooterCopyright($w);
   initFooterAria($w);
+  applyFooterStyles($w);
 }
