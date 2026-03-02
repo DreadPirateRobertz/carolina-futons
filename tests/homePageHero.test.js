@@ -33,6 +33,8 @@ function createMockElement() {
     onItemClicked: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),
     onCurrentIndexChanged: vi.fn(),
+    next: vi.fn(),
+    previous: vi.fn(),
     getCurrentItem: vi.fn(),
     getTotalCount: vi.fn(() => 0),
     getItems: vi.fn(() => ({ items: [] })),
@@ -880,6 +882,63 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       await onReadyHandler();
       const subtitle = getEl('#featuredSubtitle');
       expect(subtitle.text).toBeTruthy();
+    });
+  });
+
+  // ── Skeleton Loading States ──────────────────────────────────────────
+
+  describe('skeleton loading states', () => {
+    it('shows featured skeleton during product load', async () => {
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides featured skeleton after products load', async () => {
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('shows category skeleton during count fetch', async () => {
+      await onReadyHandler();
+      expect(getEl('#categorySkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides category skeleton after counts load', async () => {
+      await onReadyHandler();
+      expect(getEl('#categorySkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('shows sale skeleton during sale product load', async () => {
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides sale skeleton after sale products load', async () => {
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('hides featured skeleton even when backend fails', async () => {
+      const { getFeaturedProducts } = await import('backend/productRecommendations.web');
+      getFeaturedProducts.mockRejectedValueOnce(new Error('timeout'));
+
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('hides sale skeleton even when backend fails', async () => {
+      const { getSaleProducts } = await import('backend/productRecommendations.web');
+      getSaleProducts.mockRejectedValueOnce(new Error('timeout'));
+
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('page loads when skeleton elements do not exist in editor', async () => {
+      elements.delete('#featuredSkeleton');
+      elements.delete('#categorySkeleton');
+      elements.delete('#saleSkeleton');
+      await expect(onReadyHandler()).resolves.not.toThrow();
     });
   });
 });
