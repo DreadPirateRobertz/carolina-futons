@@ -21,6 +21,7 @@ import {
 } from 'public/footerContent';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
+import { colors, transitions, spacing } from 'public/designTokens.js';
 
 /**
  * Initialize the 4-column link grid and store info section.
