@@ -175,7 +175,7 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
       for (let i = 1; i <= 5; i++) {
         expect(getEl(`#trustItem${i}`).show).toHaveBeenCalledWith(
           'fade',
-          expect.objectContaining({ duration: 400 })
+          expect.objectContaining({ duration: 300 })
         );
       }
     });

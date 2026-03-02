@@ -264,7 +264,7 @@ describe('Home Page', () => {
       await onReadyHandler();
       expect(getEl('#heroTitle').show).toHaveBeenCalledWith(
         'fade',
-        expect.objectContaining({ duration: 600, delay: 200 })
+        expect.objectContaining({ duration: 300, delay: 200 })
       );
     });
 
@@ -272,7 +272,7 @@ describe('Home Page', () => {
       await onReadyHandler();
       expect(getEl('#heroSubtitle').show).toHaveBeenCalledWith(
         'fade',
-        expect.objectContaining({ duration: 600, delay: 500 })
+        expect.objectContaining({ duration: 300, delay: 400 })
       );
     });
 
@@ -280,7 +280,7 @@ describe('Home Page', () => {
       await onReadyHandler();
       expect(getEl('#heroCTA').show).toHaveBeenCalledWith(
         'fade',
-        expect.objectContaining({ duration: 400, delay: 800 })
+        expect.objectContaining({ duration: 300, delay: 600 })
       );
     });
 

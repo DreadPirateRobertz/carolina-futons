@@ -18,6 +18,9 @@ import wixData from 'wix-data';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_RE = /^[a-z0-9-]+$/;
 
+let testimonialPaused = false;
+let testimonialTimer = null;
+
 /**
  * Sanitize a product slug for safe URL construction.
  * Strips anything that isn't lowercase alphanumeric or hyphens.
@@ -114,6 +117,7 @@ let currentFeaturedQvProduct = null;
  * @returns {Promise<void>}
  */
 async function loadFeaturedProducts() {
+  try { $w('#featuredSkeleton').show(); } catch (e) {}
   try {
     // Set section heading
     try { $w('#featuredTitle').text = 'Our Favorite Finds'; } catch (e) {}
@@ -188,8 +192,10 @@ async function loadFeaturedProducts() {
       makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${itemData.name} details` });
     });
     repeater.data = featured;
+    try { $w('#featuredSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   } catch (err) {
     console.error('[Home] Error loading featured products:', err);
+    try { $w('#featuredSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   }
 }
 
@@ -291,6 +297,7 @@ function openFeaturedQuickView(product) {
  * @returns {Promise<void>}
  */
 async function loadSaleHighlights() {
+  try { $w('#saleSkeleton').show(); } catch (e) {}
   try {
     const saleItems = await getSaleProducts(6);
     const repeater = $w('#saleRepeater');
@@ -326,8 +333,10 @@ async function loadSaleHighlights() {
       }, { ariaLabel: `View ${itemData.name} on sale` });
     });
     repeater.data = saleItems;
+    try { $w('#saleSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   } catch (err) {
     console.error('[Home] Error loading sale highlights:', err);
+    try { $w('#saleSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
   }
 }
 
@@ -340,6 +349,7 @@ async function loadSaleHighlights() {
  * @returns {Promise<void>}
  */
 async function initCategoryShowcase() {
+  try { $w('#categorySkeleton').show(); } catch (e) {}
   // Fetch product counts for all categories in parallel
   const countPromises = CATEGORIES.map(async (cat) => {
     if (!cat.collection) return { ...cat, count: null };
@@ -354,12 +364,13 @@ async function initCategoryShowcase() {
   });
 
   const categoriesWithCounts = await Promise.all(countPromises);
+  try { $w('#categorySkeleton').hide('fade', { duration: 300 }); } catch (e) {}
 
   // Set up repeater if it exists (preferred: shared element IDs per card)
   try {
     const repeater = $w('#categoryRepeater');
     if (repeater) {
-      repeater.data = categoriesWithCounts;
+      repeater.data = categoriesWithCounts.slice(0, 6);
       repeater.onItemReady(($item, itemData) => {
         try { $item('#categoryCardTitle').text = itemData.name; } catch (e) {}
         try { $item('#categoryCardTagline').text = itemData.tagline; } catch (e) {}
@@ -425,6 +436,11 @@ async function initRecentlyViewed() {
       return;
     }
 
+    try {
+      $w('#recentSection').accessibility.ariaLabel = 'Recently viewed products';
+      $w('#recentSection').accessibility.role = 'region';
+    } catch (e) {}
+
     buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
       $item('#recentImage').src = itemData.mainMedia;
       $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
@@ -437,6 +453,27 @@ async function initRecentlyViewed() {
       const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
       makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${itemData.name} details` });
+
+      // Quick-add-to-cart button
+      try {
+        const addBtn = $item('#recentAddToCart');
+        if (addBtn) {
+          try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+          addBtn.onClick(async () => {
+            try {
+              addBtn.disable();
+              addBtn.label = 'Adding...';
+              const { addToCart } = await import('public/cartService.js');
+              await addToCart(itemData._id);
+              addBtn.label = 'Added!';
+              setTimeout(() => { try { addBtn.label = 'Add to Cart'; addBtn.enable(); } catch (e) {} }, 2000);
+            } catch (err) {
+              addBtn.label = 'Add to Cart';
+              addBtn.enable();
+            }
+          });
+        }
+      } catch (e) {}
     });
 
     $w('#recentSection').expand();
@@ -471,7 +508,7 @@ function initTrustBar() {
       try {
         const element = $w(signal.id);
         if (element) {
-          element.show('fade', { duration: 400, delay: 200 + (index * 150) });
+          element.show('fade', { duration: 300, delay: 200 + (index * 150) });
           try { element.accessibility.ariaLabel = signal.text; } catch (e) {}
         }
       } catch (e) {}
@@ -542,6 +579,27 @@ async function initTestimonials() {
         if (ratingEl && itemData.rating) { ratingEl.text = '\u2605'.repeat(itemData.rating); }
       } catch (e) {}
     });
+
+    // Auto-rotation: advance testimonial every 5 seconds
+    try {
+      const slideshow = $w('#testimonialSlideshow');
+      if (slideshow) {
+        testimonialTimer = setInterval(() => {
+          if (!testimonialPaused) {
+            try { slideshow.next(); } catch (e) {}
+          }
+        }, 5000);
+      }
+    } catch (e) {}
+
+    // Pause on hover, resume on mouse out
+    try {
+      const section = $w('#testimonialSection');
+      if (section) {
+        section.onMouseIn(() => { testimonialPaused = true; });
+        section.onMouseOut(() => { testimonialPaused = false; });
+      }
+    } catch (e) {}
   } catch (e) {
     console.error('[Home] Testimonials section failed:', e);
   }
@@ -684,31 +742,35 @@ function initHeroAnimation() {
     try {
       const heroOverlay = $w('#heroOverlay');
       if (heroOverlay) {
-        heroOverlay.style.backgroundColor = 'rgba(58, 37, 24, 0.6)';
-        heroOverlay.show('fade', { duration: 400, delay: 0 });
+        heroOverlay.style.backgroundColor = colors.overlay;
+        heroOverlay.show('fade', { duration: 300, delay: 0 });
       }
     } catch (e) {}
 
-    const heroTitle = $w('#heroTitle');
-    const heroSubtitle = $w('#heroSubtitle');
-    const heroCta = $w('#heroCTA');
+    let heroTitle, heroSubtitle, heroCta;
+    try { heroTitle = $w('#heroTitle'); } catch (e) {}
+    try { heroSubtitle = $w('#heroSubtitle'); } catch (e) {}
+    try { heroCta = $w('#heroCTA'); } catch (e) {}
 
     // Staggered fade-in: title → subtitle → CTA
     if (heroTitle) {
       heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
-      heroTitle.show('fade', { duration: 600, delay: 200 });
+      heroTitle.show('fade', { duration: 300, delay: 200 });
     }
     if (heroSubtitle) {
       heroSubtitle.text = 'Hendersonville\'s largest selection of futons, Murphy beds & platform beds since 1991.';
-      heroSubtitle.show('fade', { duration: 600, delay: 500 });
+      heroSubtitle.show('fade', { duration: 300, delay: 400 });
     }
     if (heroCta) {
       heroCta.label = 'Explore Our Collection';
-      heroCta.show('fade', { duration: 400, delay: 800 });
+      heroCta.show('fade', { duration: 300, delay: 600 });
       try { heroCta.accessibility.ariaLabel = 'Explore our furniture collection'; } catch (e) {}
-      heroCta.onClick(() => {
-        import('wix-location-frontend').then(({ to }) => to('/shop-main'));
-      });
+      if (!heroCta._ctaWired) {
+        heroCta._ctaWired = true;
+        heroCta.onClick(() => {
+          import('wix-location-frontend').then(({ to }) => to('/shop-main'));
+        });
+      }
     }
   } catch (e) {
     // Hero elements may not exist

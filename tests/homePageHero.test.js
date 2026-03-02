@@ -33,6 +33,8 @@ function createMockElement() {
     onItemClicked: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),
     onCurrentIndexChanged: vi.fn(),
+    next: vi.fn(),
+    previous: vi.fn(),
     getCurrentItem: vi.fn(),
     getTotalCount: vi.fn(() => 0),
     getItems: vi.fn(() => ({ items: [] })),
@@ -69,6 +71,11 @@ vi.mock('backend/seoHelpers.web', () => ({
 
 vi.mock('backend/newsletterService.web', () => ({
   subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
+}));
+
+vi.mock('backend/testimonialService.web', () => ({
+  getFeaturedTestimonials: vi.fn().mockResolvedValue({ success: true, items: [] }),
+  getTestimonialSchema: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('public/galleryHelpers.js', () => ({
@@ -880,6 +887,175 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       await onReadyHandler();
       const subtitle = getEl('#featuredSubtitle');
       expect(subtitle.text).toBeTruthy();
+    });
+  });
+
+  // ── Skeleton Loading States ──────────────────────────────────────────
+
+  describe('skeleton loading states', () => {
+    it('shows featured skeleton during product load', async () => {
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides featured skeleton after products load', async () => {
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('shows category skeleton during count fetch', async () => {
+      await onReadyHandler();
+      expect(getEl('#categorySkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides category skeleton after counts load', async () => {
+      await onReadyHandler();
+      expect(getEl('#categorySkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('shows sale skeleton during sale product load', async () => {
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').show).toHaveBeenCalled();
+    });
+
+    it('hides sale skeleton after sale products load', async () => {
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('hides featured skeleton even when backend fails', async () => {
+      const { getFeaturedProducts } = await import('backend/productRecommendations.web');
+      getFeaturedProducts.mockRejectedValueOnce(new Error('timeout'));
+
+      await onReadyHandler();
+      expect(getEl('#featuredSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('hides sale skeleton even when backend fails', async () => {
+      const { getSaleProducts } = await import('backend/productRecommendations.web');
+      getSaleProducts.mockRejectedValueOnce(new Error('timeout'));
+
+      await onReadyHandler();
+      expect(getEl('#saleSkeleton').hide).toHaveBeenCalled();
+    });
+
+    it('page loads when skeleton elements do not exist in editor', async () => {
+      elements.delete('#featuredSkeleton');
+      elements.delete('#categorySkeleton');
+      elements.delete('#saleSkeleton');
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+  });
+
+  // ── Testimonial Auto-Rotation ────────────────────────────────────────
+
+  describe('testimonial auto-rotation', () => {
+    async function waitForDeferred() {
+      // Deferred sections are fire-and-forget — wait for async chains to settle
+      await new Promise(r => setTimeout(r, 50));
+    }
+
+    it('registers mouseIn handler on testimonial section for pause', async () => {
+      await onReadyHandler();
+      await waitForDeferred();
+      expect(getEl('#testimonialSection').onMouseIn).toHaveBeenCalled();
+    });
+
+    it('registers mouseOut handler on testimonial section for resume', async () => {
+      await onReadyHandler();
+      await waitForDeferred();
+      expect(getEl('#testimonialSection').onMouseOut).toHaveBeenCalled();
+    });
+
+    it('calls slideshow next after rotation interval', async () => {
+      vi.useFakeTimers();
+      await onReadyHandler();
+      // Flush deferred microtasks within fake timer context
+      await vi.advanceTimersByTimeAsync(100);
+      getEl('#testimonialSlideshow').next.mockClear();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('does not call next when paused via mouseIn', async () => {
+      vi.useFakeTimers();
+      await onReadyHandler();
+      await vi.advanceTimersByTimeAsync(100);
+      const section = getEl('#testimonialSection');
+      const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
+
+      if (mouseInHandler) mouseInHandler();
+      getEl('#testimonialSlideshow').next.mockClear();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('resumes rotation after mouseOut', async () => {
+      vi.useFakeTimers();
+      await onReadyHandler();
+      await vi.advanceTimersByTimeAsync(100);
+      const section = getEl('#testimonialSection');
+      const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
+      const mouseOutHandler = section.onMouseOut.mock.calls[0]?.[0];
+
+      if (mouseInHandler) mouseInHandler();
+      if (mouseOutHandler) mouseOutHandler();
+      getEl('#testimonialSlideshow').next.mockClear();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('page loads when testimonial slideshow element is missing', async () => {
+      elements.delete('#testimonialSlideshow');
+      elements.delete('#testimonialSection');
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+  });
+
+  // ── Transition Timing (300ms standard) ──────────────────────────────
+
+  describe('transition timing normalization', () => {
+    it('hero title fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroTitle').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero subtitle fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroSubtitle').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero CTA fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroCTA').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('trust bar items fade in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#trustItem1').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+
+    it('hero overlay fades in with 300ms duration', async () => {
+      await onReadyHandler();
+      const call = getEl('#heroOverlay').show.mock.calls[0];
+      expect(call[1].duration).toBe(300);
+    });
+  });
+
+  // ── Category 6-Card Limit ───────────────────────────────────────────
+
+  describe('category 6-card limit', () => {
+    it('category repeater receives exactly 6 items for homepage', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#categoryRepeater');
+      expect(repeater.data.length).toBe(6);
     });
   });
 });

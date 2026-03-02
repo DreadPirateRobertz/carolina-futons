@@ -104,12 +104,23 @@ describe('Time-based triggers', () => {
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
   });
 
-  it('uses default delay when none specified (30s product, 15s checkout)', () => {
+  it('uses default delay when none specified (30s product, 10s checkout)', () => {
     const $w = make$w();
     initProactiveTriggers($w, { page: 'product' });
 
-    // Default delay should be 30s for product per melania brief
+    // Default delay should be 30s for product per AC
     vi.advanceTimersByTime(29999);
+    expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect($w('#proactiveBubble').show).toHaveBeenCalled();
+  });
+
+  it('uses 10s default delay for checkout', () => {
+    const $w = make$w();
+    initProactiveTriggers($w, { page: 'checkout' });
+
+    // Default delay should be 10s for checkout per AC
+    vi.advanceTimersByTime(9999);
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1);
     expect($w('#proactiveBubble').show).toHaveBeenCalled();
@@ -559,11 +570,11 @@ describe('Edge cases', () => {
     const $w = make$w();
     initProactiveTriggers($w, { page: 'checkout', delayMs: 'fast' });
 
-    // Should use default checkout delay (15s), not throw
+    // Should use default checkout delay (10s), not throw
     vi.advanceTimersByTime(0);
     expect($w('#proactiveBubble').show).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(15000);
+    vi.advanceTimersByTime(10000);
     expect($w('#proactiveBubble').show).toHaveBeenCalled();
   });
 

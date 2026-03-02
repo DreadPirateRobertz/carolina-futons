@@ -57,7 +57,12 @@ $w.onReady(async function () {
       const page = path.includes('product-page') ? 'product'
         : path.includes('checkout') ? 'checkout'
         : undefined;
-      initLiveChat($w, { page });
+      const pageUrl = '/' + path;
+      let productName = '';
+      try {
+        productName = $w('#productTitle')?.text || '';
+      } catch (e) {}
+      initLiveChat($w, { page, pageUrl, productName });
     }).catch(err => console.error('[masterPage] LiveChat init failed:', err.message));
   }, 2000);
 

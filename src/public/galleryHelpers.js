@@ -151,6 +151,21 @@ export function getBrowseData() {
   }
 }
 
+/**
+ * Clear all recently viewed products and browse data from session storage.
+ * Call on logout to ensure no PII-adjacent data persists.
+ */
+export function clearRecentlyViewed() {
+  try {
+    session.removeItem(RECENTLY_VIEWED_KEY);
+  } catch (e) {}
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(BROWSE_DATA_KEY);
+    }
+  } catch (e) {}
+}
+
 export function getRecentlyViewed(excludeId = null) {
   try {
     const stored = session.getItem(RECENTLY_VIEWED_KEY);

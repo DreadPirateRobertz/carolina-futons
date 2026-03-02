@@ -208,6 +208,8 @@ export default defineConfig({
       'public/lifestyleImages': path.resolve(__dirname, 'src/public/lifestyleImages.js'),
       'public/LifestyleGallery.js': path.resolve(__dirname, 'src/public/LifestyleGallery.js'),
       'public/LifestyleGallery': path.resolve(__dirname, 'src/public/LifestyleGallery.js'),
+      'public/FeelAndComfort.js': path.resolve(__dirname, 'src/public/FeelAndComfort.js'),
+      'public/FeelAndComfort': path.resolve(__dirname, 'src/public/FeelAndComfort.js'),
     },
   },
 });
