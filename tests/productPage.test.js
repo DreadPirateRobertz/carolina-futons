@@ -59,6 +59,18 @@ const mockCollection = [
   { ...wallHuggerFrame, _id: 'col-1' },
 ];
 
+vi.mock('public/ProductPagePolish.js', () => ({
+  styleReviewStars: vi.fn((rating) => {
+    const r = Math.max(0, Math.min(5, Number(rating) || 0));
+    const filled = Math.floor(r);
+    const half = r - filled >= 0.5;
+    const empty = 5 - filled - (half ? 1 : 0);
+    return { filled, half, empty, filledColor: '#E8845C', emptyColor: '#D4BC96' };
+  }),
+  styleReviewCard: vi.fn(),
+  applyProductPageTokens: vi.fn(),
+}));
+
 vi.mock('backend/productRecommendations.web', () => ({
   getRelatedProducts: vi.fn().mockResolvedValue(mockRelated),
   getSameCollection: vi.fn().mockResolvedValue(mockCollection),

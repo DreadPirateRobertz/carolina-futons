@@ -1,6 +1,7 @@
 // ProductReviews.js - Customer reviews section
 // Displays product reviews with star ratings, sorting, pagination,
 // submission form for logged-in members, and helpful voting.
+import { styleReviewStars, styleReviewCard } from 'public/ProductPagePolish.js';
 
 // Page-scoped review state — reset on every init to prevent SPA bleed
 const DEFAULT_SORT = 'newest';
@@ -101,13 +102,12 @@ function renderStars($w, selector, rating) {
   try {
     const el = $w(selector);
     if (!el) return;
-    // Generate star string: ★★★★☆ format
-    const fullStars = Math.floor(rating);
-    const halfStar = rating - fullStars >= 0.5;
-    let stars = '★'.repeat(fullStars);
-    if (halfStar) stars += '½';
-    stars += '☆'.repeat(5 - fullStars - (halfStar ? 1 : 0));
+    const starData = styleReviewStars(rating);
+    let stars = '★'.repeat(starData.filled);
+    if (starData.half) stars += '½';
+    stars += '☆'.repeat(starData.empty);
     el.text = stars;
+    try { el.style.color = starData.filledColor; } catch (e) {}
   } catch (e) {}
 }
 
