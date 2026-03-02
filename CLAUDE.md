@@ -71,3 +71,109 @@ When a PR is successfully merged:
 
 ## Key Files
 `memory.md`, `WIX-STUDIO-BUILD-SPEC.md`, `PLUGIN-RECOMMENDATIONS.md`, `SOCIAL-MEDIA-STRATEGY.md`, `design.jpeg`, `report_to_human.md`
+
+---
+
+## Figma MCP Design System Rules
+
+### The Soul: Blue Ridge Mountain Illustrative Aesthetic
+
+**`design.jpeg` is the north star.** Every design decision must honor:
+- Hand-illustrated mountain cabin feel — warm, rustic, personal
+- Watercolor mountain skyline borders (signature repeating element across page headers)
+- Sand/espresso/coral warmth — NOT cold minimalist furniture-site template
+- Hand-lettered logo personality, wood textures, cozy lifestyle photography
+- This site has CHARACTER. Generic = failure.
+
+### Design Tokens — Single Source of Truth
+
+- IMPORTANT: All brand tokens live in `src/public/sharedTokens.js` (platform-agnostic)
+- Web-specific tokens (typography scale, grid, SEO) in `src/public/designTokens.js` (imports from sharedTokens)
+- IMPORTANT: Never hardcode colors. Always import from `designTokens.js`:
+  - Primary: Sand `#E8D5B7`, Espresso `#3A2518`, Mountain Blue `#5B8FA8`, Coral `#E8845C`
+  - Backgrounds: `offWhite #FAF7F2`, `sandLight #F2E8D5`
+  - CTAs: ALWAYS `sunsetCoral #E8845C` — never green, never blue
+  - Decorative: `skyGradientTop #B8D4E3` → `skyGradientBottom #F0C87A` for mountain skyline fills
+- Typography: Playfair Display (headings), Source Sans 3 (body) — from `fontFamilies`
+- Spacing uses 4px base scale (xs=4, sm=8, md=16, lg=24, xl=32, xxl=48, xxxl=64)
+- Shadows: warm espresso-tinted (`rgba(58,37,24,...)`) — NOT neutral gray
+- Transitions: fast=150ms, medium=250ms, slow=400ms — all ease timing
+
+### Project Structure
+
+```
+src/
+├── pages/           ← Full page modules (Wix Velo $w model), one per route
+│   ├── Home.js, masterPage.js, Product Page.js, Category Page.js, ...
+├── public/          ← Shared frontend helpers, components, design tokens
+│   ├── sharedTokens.js      ← BRAND TOKENS (cross-platform source of truth)
+│   ├── designTokens.js      ← WEB tokens (imports sharedTokens + web-specific)
+│   ├── navigationHelpers.js ← Mobile drawer, nav links, focus traps
+│   ├── mobileHelpers.js     ← isMobile(), getViewport(), responsive utils
+│   ├── a11yHelpers.js       ← Announce, focus management, ARIA
+│   ├── galleryHelpers.js    ← Product image gallery logic
+│   ├── productCardHelpers.js← Card rendering, badges, wishlist hearts
+│   ├── FooterSection.js, LiveChat.js, StarRatingCard.js, ...
+├── backend/         ← Wix Velo backend (webMethod pattern)
+│   ├── utils/sanitize ← Input sanitization (ALWAYS use for user input)
+│   ├── *.web.js     ← Backend web modules (webMethod exports)
+tests/               ← Vitest test files (TDD — tests BEFORE implementation)
+design-vision/       ← Competitor analysis, screenshots, design vision HTML doc
+```
+
+### Figma MCP Integration Flow
+
+When implementing any design from Figma:
+
+1. **Get context first**: Call `get_design_context` with nodeId + fileKey for structured representation
+2. **Get screenshot**: Call `get_screenshot` for visual reference — compare against `design.jpeg` aesthetic
+3. **Download assets**: If Figma MCP returns localhost image/SVG sources, use them directly
+4. **Translate, don't copy**: Figma output is React+Tailwind reference — translate to Wix Velo `$w` model:
+   - Replace Tailwind classes with `$w` element style properties
+   - Replace React state with Wix Velo `$w` element show/hide/collapse
+   - Replace React event handlers with `$w('#element').onClick()` pattern
+5. **Reuse existing components**: Check `src/public/` for existing helpers before creating new ones
+6. **Validate**: Compare final UI against Figma screenshot for 1:1 visual parity
+
+### Illustration & Asset Strategy
+
+- **SVG**: Mountain skyline silhouettes, decorative borders, sunrise/sunset gradients — programmatic, lightweight, repeatable
+- **Photography**: Hero lifestyle shots, product context imagery — stock or custom
+- **Icons**: Use existing codebase icons. DO NOT install new icon packages
+- **Assets**: Store in appropriate Wix media directories
+- IMPORTANT: If Figma MCP returns a localhost source for an image/SVG, use that source directly — DO NOT create placeholders
+
+### Styling in Wix Velo
+
+- Wix Velo uses `$w('#elementId').style.property` for runtime styling
+- Layout is primarily set in Wix Studio editor — code handles dynamic state
+- Responsive behavior: use `mobileHelpers.js` (`isMobile()`, `getViewport()`) for viewport detection
+- Animations: use `$w('#el').show('fade', { duration: 250 })` / `.hide()` with design token durations
+- IMPORTANT: All try/catch around `$w()` calls — elements may not exist on all pages
+
+### Component Conventions
+
+- Page modules export `$w.onReady(() => {...})` lifecycle
+- Helper modules in `src/public/` export pure functions or initializers (e.g., `initMobileDrawer($w, path)`)
+- Backend modules use `webMethod(Permissions.Anyone, async (args) => {...})` pattern
+- JSDoc on all exports. Try/catch on all async. Sanitize all user input via `backend/utils/sanitize`
+- Naming: PascalCase for component files (`StarRatingCard.js`), camelCase for helper files (`galleryHelpers.js`)
+
+### Responsive Breakpoints
+
+| Name | Width | Grid |
+|------|-------|------|
+| mobile | 320px | 1 col, 16px gap |
+| mobileLarge | 480px | 1 col |
+| tablet | 768px | 2 col, 20px gap |
+| desktop | 1024px | 3 col, 24px gap |
+| wide | 1280px | max-width container |
+| ultraWide | 1440px | centered content |
+
+### Accessibility (WCAG AA)
+
+- All interactive elements: keyboard-navigable, visible focus rings
+- Color contrast: 4.5:1 minimum (espresso on sand passes, coral on white needs verification)
+- ARIA labels on all buttons, live regions for dynamic content (`a11yHelpers.js`)
+- Focus traps on modals/drawers (`createFocusTrap` from navigationHelpers)
+- Screen reader announcements via `announce($w, 'message')`
