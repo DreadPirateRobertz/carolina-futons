@@ -73,6 +73,11 @@ vi.mock('backend/newsletterService.web', () => ({
   subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
 }));
 
+vi.mock('backend/testimonialService.web', () => ({
+  getFeaturedTestimonials: vi.fn().mockResolvedValue({ success: true, items: [] }),
+  getTestimonialSchema: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock('public/galleryHelpers.js', () => ({
   getRecentlyViewed: vi.fn().mockReturnValue([]),
   buildRecentlyViewedSection: vi.fn(),
@@ -945,32 +950,38 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
   // ── Testimonial Auto-Rotation ────────────────────────────────────────
 
   describe('testimonial auto-rotation', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
+    async function waitForDeferred() {
+      // Deferred sections are fire-and-forget — wait for async chains to settle
+      await new Promise(r => setTimeout(r, 50));
+    }
 
     it('registers mouseIn handler on testimonial section for pause', async () => {
       await onReadyHandler();
+      await waitForDeferred();
       expect(getEl('#testimonialSection').onMouseIn).toHaveBeenCalled();
     });
 
     it('registers mouseOut handler on testimonial section for resume', async () => {
       await onReadyHandler();
+      await waitForDeferred();
       expect(getEl('#testimonialSection').onMouseOut).toHaveBeenCalled();
     });
 
     it('calls slideshow next after rotation interval', async () => {
+      vi.useFakeTimers();
       await onReadyHandler();
+      // Flush deferred microtasks within fake timer context
+      await vi.advanceTimersByTimeAsync(100);
+      getEl('#testimonialSlideshow').next.mockClear();
       vi.advanceTimersByTime(5000);
       expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+      vi.useRealTimers();
     });
 
     it('does not call next when paused via mouseIn', async () => {
+      vi.useFakeTimers();
       await onReadyHandler();
+      await vi.advanceTimersByTimeAsync(100);
       const section = getEl('#testimonialSection');
       const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
 
@@ -978,10 +989,13 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       getEl('#testimonialSlideshow').next.mockClear();
       vi.advanceTimersByTime(5000);
       expect(getEl('#testimonialSlideshow').next).not.toHaveBeenCalled();
+      vi.useRealTimers();
     });
 
     it('resumes rotation after mouseOut', async () => {
+      vi.useFakeTimers();
       await onReadyHandler();
+      await vi.advanceTimersByTimeAsync(100);
       const section = getEl('#testimonialSection');
       const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
       const mouseOutHandler = section.onMouseOut.mock.calls[0]?.[0];
@@ -991,6 +1005,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       getEl('#testimonialSlideshow').next.mockClear();
       vi.advanceTimersByTime(5000);
       expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+      vi.useRealTimers();
     });
 
     it('page loads when testimonial slideshow element is missing', async () => {

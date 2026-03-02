@@ -18,6 +18,9 @@ import wixData from 'wix-data';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_RE = /^[a-z0-9-]+$/;
 
+let testimonialPaused = false;
+let testimonialTimer = null;
+
 /**
  * Sanitize a product slug for safe URL construction.
  * Strips anything that isn't lowercase alphanumeric or hyphens.
@@ -550,6 +553,27 @@ async function initTestimonials() {
         if (ratingEl && itemData.rating) { ratingEl.text = '\u2605'.repeat(itemData.rating); }
       } catch (e) {}
     });
+
+    // Auto-rotation: advance testimonial every 5 seconds
+    try {
+      const slideshow = $w('#testimonialSlideshow');
+      if (slideshow) {
+        testimonialTimer = setInterval(() => {
+          if (!testimonialPaused) {
+            try { slideshow.next(); } catch (e) {}
+          }
+        }, 5000);
+      }
+    } catch (e) {}
+
+    // Pause on hover, resume on mouse out
+    try {
+      const section = $w('#testimonialSection');
+      if (section) {
+        section.onMouseIn(() => { testimonialPaused = true; });
+        section.onMouseOut(() => { testimonialPaused = false; });
+      }
+    } catch (e) {}
   } catch (e) {
     console.error('[Home] Testimonials section failed:', e);
   }
