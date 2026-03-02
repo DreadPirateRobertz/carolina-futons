@@ -1,31 +1,83 @@
 // Product image fallback system for Carolina Futons
-// Category hero/card images use Unsplash placeholders (replaced when real assets uploaded to Wix Media Manager)
+// Category hero/card images use curated Unsplash lifestyle photography matching Blue Ridge aesthetic
 // Product fallback images use real wixstatic.com URLs from the live catalog
+//
+// ═══════════════════════════════════════════════════════════════════════
+// PHOTOGRAPHY BRIEF — Replace with brand photography when available
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Homepage Hero (1920x800):
+//   Scene: Cozy mountain cabin living room at golden hour. Futon/sofa as focal
+//   point with warm wood floors, stone fireplace, mountain views through windows.
+//   Mood: Warm, inviting, aspirational — "come home to comfort."
+//
+// Category Heroes (1920x600):
+//   futon-frames:        Styled living room with hardwood futon frame, plush cushions,
+//                        warm throw blankets. Natural light from large windows.
+//   mattresses:          Cozy bedroom with layered bedding, natural fiber mattress.
+//                        Warm wood headboard, soft morning light.
+//   murphy-cabinet-beds: Compact guest room or studio showing cabinet bed closed/open.
+//                        Space-efficient mountain retreat aesthetic.
+//   platform-beds:       Modern-rustic bedroom with low platform bed, natural wood.
+//                        Clean lines meeting cabin warmth.
+//   casegoods-accessories: Vignette of styled shelving, side tables, and home accents.
+//                        Warm wood finishes, curated decor items.
+//   wall-huggers:        Intimate living space with wall-hugger recliner/futon near
+//                        wood stove. Cozy reading nook feel.
+//   unfinished-wood:     Workshop or showroom featuring raw wood furniture pieces.
+//                        Beautiful grain visible, natural finish, artisan craft.
+//
+// All images: warm tones, natural light, wood accents, Blue Ridge mountain feel.
+// Avoid: cold/sterile lighting, stark modern spaces, generic stock feel.
+// ═══════════════════════════════════════════════════════════════════════
 
 // ── Category Hero Images (1920x600) ─────────────────────────────────
-// These are page-level decorative images — replace with Wix Media uploads per MEDIA_MANIFEST.md
-// Curated lifestyle room scenes — warm interiors, styled rooms matching Blue Ridge aesthetic
+// Curated lifestyle room scenes — warm interiors matching Blue Ridge aesthetic
+// Replace with Wix Media uploads per MEDIA_MANIFEST.md when real assets are ready
 const categoryHeroImages = {
-  'futon-frames': 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=1920&h=600&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1920&h=600&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=1920&h=600&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1616627561839-074385245ff6?w=1920&h=600&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&h=600&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=1920&h=600&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=1920&h=600&fit=crop&crop=center',
+  'futon-frames': 'https://images.unsplash.com/photo-1757416654883-c73c67b3382b?w=1920&h=600&fit=crop&crop=center',
+  'mattresses': 'https://images.unsplash.com/photo-1752407828784-67a92663c866?w=1920&h=600&fit=crop&crop=center',
+  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1752407828561-2450ced77979?w=1920&h=600&fit=crop&crop=center',
+  'platform-beds': 'https://images.unsplash.com/photo-1757344454333-cc666252e596?w=1920&h=600&fit=crop&crop=center',
+  'casegoods-accessories': 'https://images.unsplash.com/photo-1549758225-1610a3b4c8f8?w=1920&h=600&fit=crop&crop=center',
+  'wall-huggers': 'https://images.unsplash.com/photo-1759203111456-b63e81a03cec?w=1920&h=600&fit=crop&crop=center',
+  'unfinished-wood': 'https://images.unsplash.com/photo-1650424990277-12554d065923?w=1920&h=600&fit=crop&crop=center',
+};
+
+// ── Category Hero Alt Text ──────────────────────────────────────────
+const categoryHeroAltText = {
+  'futon-frames': 'Warm living room with hardwood futon frame and plush cushions in mountain cabin setting',
+  'mattresses': 'Cozy bedroom with natural fiber mattress, warm bedding, and soft morning light',
+  'murphy-cabinet-beds': 'Compact room with elegant cabinet bed — space-saving design for mountain retreats',
+  'platform-beds': 'Modern bedroom with low-profile platform bed and natural wood accents',
+  'casegoods-accessories': 'Rustic home accessories and shelving styled with warm wood finishes',
+  'wall-huggers': 'Intimate living space with wall-hugger futon near cozy wood stove',
+  'unfinished-wood': 'Natural unfinished wood furniture showcasing beautiful grain and artisan craftsmanship',
 };
 
 // ── Category Card Images (600x400, 3:2 ratio for homepage) ──────────
-// Curated lifestyle room scenes — Castlery/Article style (warm, styled rooms)
+// Curated lifestyle room scenes — warm, styled rooms for category showcase grid
 const categoryCategoryCards = {
-  'futon-frames': 'https://images.unsplash.com/photo-1540574163026-643ea20ade25?w=600&h=400&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=600&h=400&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=600&h=400&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1616627561839-074385245ff6?w=600&h=400&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=600&h=400&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1595515106969-1ce29566ff1c?w=600&h=400&fit=crop&crop=center',
-  'sales': 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=400&fit=crop&crop=center',
+  'futon-frames': 'https://images.unsplash.com/photo-1757416654883-c73c67b3382b?w=600&h=400&fit=crop&crop=center',
+  'mattresses': 'https://images.unsplash.com/photo-1752407828784-67a92663c866?w=600&h=400&fit=crop&crop=center',
+  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1752407828561-2450ced77979?w=600&h=400&fit=crop&crop=center',
+  'platform-beds': 'https://images.unsplash.com/photo-1757344454333-cc666252e596?w=600&h=400&fit=crop&crop=center',
+  'casegoods-accessories': 'https://images.unsplash.com/photo-1549758225-1610a3b4c8f8?w=600&h=400&fit=crop&crop=center',
+  'wall-huggers': 'https://images.unsplash.com/photo-1759203111456-b63e81a03cec?w=600&h=400&fit=crop&crop=center',
+  'unfinished-wood': 'https://images.unsplash.com/photo-1650424990277-12554d065923?w=600&h=400&fit=crop&crop=center',
+  'sales': 'https://images.unsplash.com/photo-1762544968153-b9b47435fefd?w=600&h=400&fit=crop&crop=center',
+};
+
+// ── Category Card Alt Text ──────────────────────────────────────────
+const categoryCardAltText = {
+  'futon-frames': 'Browse futon frames — hardwood craftsmanship for your living room',
+  'mattresses': 'Browse mattresses — natural comfort for restful sleep',
+  'murphy-cabinet-beds': 'Browse murphy cabinet beds — stylish space-saving solutions',
+  'platform-beds': 'Browse platform beds — modern low-profile design in natural wood',
+  'casegoods-accessories': 'Browse casegoods and accessories — curated home accents',
+  'wall-huggers': 'Browse wall hugger frames — compact comfort for any room',
+  'unfinished-wood': 'Browse unfinished wood furniture — customize your own finish',
+  'sales': 'Browse sale and clearance — handcrafted furniture at great prices',
 };
 
 // ── Product Fallback Images (real wixstatic.com catalog images) ──────
@@ -83,13 +135,16 @@ const productImages = {
 };
 
 // ── Homepage Hero Image (1920x800, Blue Ridge cabin lifestyle) ────────
-// Full-bleed lifestyle hero — warm wood, natural light, mountain cabin aesthetic
+// Full-bleed lifestyle hero — cozy living room with fireplace, warm cabin ambiance
 // Replace with Wix Media upload per MEDIA_MANIFEST.md when real asset is ready
-const HOMEPAGE_HERO = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&h=800&fit=crop&crop=center';
+const HOMEPAGE_HERO = 'https://images.unsplash.com/photo-1757605327126-9baefea3348b?w=1920&h=800&fit=crop&crop=center';
+const HOMEPAGE_HERO_ALT = 'Cozy mountain cabin living room with warm fireplace — Carolina Futons, Hendersonville NC';
 
 // ── Fallback (generic product image from catalog) ────────────────────
 const FALLBACK_IMAGE = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
-const FALLBACK_HERO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&h=600&fit=crop&crop=center';
+const FALLBACK_HERO = 'https://images.unsplash.com/photo-1751013781739-4f10e714ef53?w=1920&h=600&fit=crop&crop=center';
+const FALLBACK_HERO_ALT = 'Mountain cabin nestled in Blue Ridge nature';
+const FALLBACK_CARD_ALT = 'Carolina Futons — handcrafted comfort';
 
 /**
  * Get the homepage hero image — full-bleed Blue Ridge cabin lifestyle photo.
@@ -97,6 +152,14 @@ const FALLBACK_HERO = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc
  */
 export function getHomepageHeroImage() {
   return HOMEPAGE_HERO;
+}
+
+/**
+ * Get alt text for the homepage hero image.
+ * @returns {string} Descriptive alt text for SEO and accessibility
+ */
+export function getHomepageHeroAlt() {
+  return HOMEPAGE_HERO_ALT;
 }
 
 /**
@@ -109,12 +172,30 @@ export function getCategoryHeroImage(categorySlug) {
 }
 
 /**
+ * Get alt text for a category hero image.
+ * @param {string} categorySlug - e.g. 'futon-frames', 'mattresses'
+ * @returns {string} Descriptive alt text for the category hero
+ */
+export function getCategoryHeroAlt(categorySlug) {
+  return categoryHeroAltText[categorySlug] || FALLBACK_HERO_ALT;
+}
+
+/**
  * Get a category card image for homepage showcase.
  * @param {string} categorySlug
  * @returns {string} Image URL sized 600x400 (3:2)
  */
 export function getCategoryCardImage(categorySlug) {
   return categoryCategoryCards[categorySlug] || FALLBACK_IMAGE;
+}
+
+/**
+ * Get alt text for a category card image.
+ * @param {string} categorySlug
+ * @returns {string} Descriptive alt text for the category card
+ */
+export function getCategoryCardAlt(categorySlug) {
+  return categoryCardAltText[categorySlug] || FALLBACK_CARD_ALT;
 }
 
 /**

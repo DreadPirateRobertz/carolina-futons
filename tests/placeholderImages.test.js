@@ -2,10 +2,14 @@ import { describe, it, expect } from 'vitest';
 import {
   getCategoryHeroImage,
   getCategoryCardImage,
+  getHomepageHeroImage,
   getPlaceholderProductImages,
   getProductFallbackImage,
   getGridThumbnail,
   getGalleryThumbnail,
+  getHomepageHeroAlt,
+  getCategoryHeroAlt,
+  getCategoryCardAlt,
 } from '../src/public/placeholderImages.js';
 import { getGalleryConfig } from '../src/public/galleryConfig.js';
 
@@ -224,5 +228,93 @@ describe('getGalleryThumbnail', () => {
       expect(thumb).toContain('w_100');
       expect(thumb).not.toContain('w_800');
     }
+  });
+});
+
+// ── getHomepageHeroImage ─────────────────────────────────────────
+
+describe('getHomepageHeroImage', () => {
+  it('returns a valid Unsplash URL', () => {
+    const url = getHomepageHeroImage();
+    expect(url).toMatch(UNSPLASH_URL_PATTERN);
+  });
+
+  it('returns 1920x800 dimensions', () => {
+    const url = getHomepageHeroImage();
+    expect(url).toContain('w=1920&h=800');
+  });
+});
+
+// ── Alt text helpers ─────────────────────────────────────────────
+
+describe('getHomepageHeroAlt', () => {
+  it('returns descriptive alt text', () => {
+    const alt = getHomepageHeroAlt();
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(10);
+  });
+
+  it('includes brand name for SEO', () => {
+    const alt = getHomepageHeroAlt();
+    expect(alt).toContain('Carolina Futons');
+  });
+
+  it('describes the scene content', () => {
+    const alt = getHomepageHeroAlt();
+    expect(alt.toLowerCase()).toMatch(/cabin|mountain|living room|cozy/);
+  });
+});
+
+describe('getCategoryHeroAlt', () => {
+  it.each(ALL_CATEGORIES)('returns non-empty alt text for %s', (cat) => {
+    const alt = getCategoryHeroAlt(cat);
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(10);
+  });
+
+  it('returns fallback alt for unknown category', () => {
+    const alt = getCategoryHeroAlt('nonexistent');
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(5);
+  });
+
+  it('all 7 categories have unique alt text', () => {
+    const alts = ALL_CATEGORIES.map(getCategoryHeroAlt);
+    expect(new Set(alts).size).toBe(7);
+  });
+
+  it('futon-frames alt mentions futon or living room', () => {
+    const alt = getCategoryHeroAlt('futon-frames');
+    expect(alt.toLowerCase()).toMatch(/futon|living room/);
+  });
+
+  it('mattresses alt mentions bedroom or mattress', () => {
+    const alt = getCategoryHeroAlt('mattresses');
+    expect(alt.toLowerCase()).toMatch(/bedroom|mattress/);
+  });
+});
+
+describe('getCategoryCardAlt', () => {
+  it.each(ALL_CATEGORIES)('returns non-empty alt text for %s', (cat) => {
+    const alt = getCategoryCardAlt(cat);
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(10);
+  });
+
+  it('returns fallback alt for unknown category', () => {
+    const alt = getCategoryCardAlt('nonexistent');
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(5);
+  });
+
+  it('sales category has card alt text', () => {
+    const alt = getCategoryCardAlt('sales');
+    expect(typeof alt).toBe('string');
+    expect(alt.length).toBeGreaterThan(5);
+  });
+
+  it('all 7 categories have unique card alt text', () => {
+    const alts = ALL_CATEGORIES.map(getCategoryCardAlt);
+    expect(new Set(alts).size).toBe(7);
   });
 });
