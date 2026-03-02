@@ -13,7 +13,8 @@
  * All functions accept $w selector and follow Wix Velo patterns.
  */
 
-import { colors, fontFamilies, transitions } from 'public/sharedTokens';
+import { colors, spacing, shadows } from 'public/designTokens.js';
+import { transitions } from 'public/sharedTokens';
 import { announce, makeClickable, createFocusTrap } from 'public/a11yHelpers';
 import { isMobile, getViewport } from 'public/mobileHelpers';
 
@@ -666,7 +667,7 @@ export function initStickyNav($w, headerId = '#headerStrip') {
           if (!header) return;
           if (event.scrollY > 50) {
             // Wix Studio handles CSS sticky; we add a visual shadow class
-            try { header.style.boxShadow = '0 2px 8px rgba(58, 37, 24, 0.06)'; } catch (e) {}
+            try { header.style.boxShadow = shadows.nav; } catch (e) {}
           } else {
             try { header.style.boxShadow = 'none'; } catch (e) {}
           }

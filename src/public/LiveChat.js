@@ -5,7 +5,7 @@
 
 import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHistory, createSupportTicket } from 'backend/liveChatService.web';
 import { trackEvent } from 'public/engagementTracker';
-import { colors } from 'public/designTokens.js';
+import { colors, transitions, spacing } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 import { announce } from 'public/a11yHelpers';
 import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
@@ -34,7 +34,7 @@ export async function initLiveChat($w, options = {}) {
       const indicator = $w('#chatStatusIndicator');
       if (indicator) {
         indicator.text = status.online ? 'Online' : 'Offline';
-        indicator.style.color = status.online ? colors.successGreen : colors.textMuted;
+        indicator.style.color = status.online ? colors.success : colors.muted;
       }
     } catch (e) {}
 
