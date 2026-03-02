@@ -429,6 +429,59 @@ describe('Category Page', () => {
       expect(getEl('#qvImage').src).toBe(futonFrame.mainMedia);
       expect(getEl('#quickViewModal').show).toHaveBeenCalled();
     });
+
+    it('quick view populates size selector when product has size option', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#productGridRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '', options: [], value: '',
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      itemReadyCb($item, futonFrame);
+
+      const quickViewClick = itemElements['#quickViewBtn'].onClick.mock.calls[0][0];
+      quickViewClick();
+
+      // Quick view should show size dropdown with options
+      const sizeSelect = getEl('#qvSizeSelect');
+      expect(sizeSelect.options.length).toBeGreaterThan(0);
+      expect(sizeSelect.show).toHaveBeenCalled();
+    });
+
+    it('quick view hides size selector when product has no size option', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#productGridRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '', options: [], value: '',
+            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      // wallHuggerFrame has no size option
+      itemReadyCb($item, wallHuggerFrame);
+
+      const quickViewClick = itemElements['#quickViewBtn'].onClick.mock.calls[0][0];
+      quickViewClick();
+
+      const sizeSelect = getEl('#qvSizeSelect');
+      expect(sizeSelect.hide).toHaveBeenCalled();
+    });
   });
 
   // ── Result Count ──────────────────────────────────────────────────

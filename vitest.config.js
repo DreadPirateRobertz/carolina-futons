@@ -210,6 +210,8 @@ export default defineConfig({
       'public/LifestyleGallery': path.resolve(__dirname, 'src/public/LifestyleGallery.js'),
       'public/FeelAndComfort.js': path.resolve(__dirname, 'src/public/FeelAndComfort.js'),
       'public/FeelAndComfort': path.resolve(__dirname, 'src/public/FeelAndComfort.js'),
+      'public/categoryFilterHelpers.js': path.resolve(__dirname, 'src/public/categoryFilterHelpers.js'),
+      'public/categoryFilterHelpers': path.resolve(__dirname, 'src/public/categoryFilterHelpers.js'),
     },
   },
 });
