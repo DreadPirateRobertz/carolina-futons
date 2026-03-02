@@ -9,6 +9,7 @@ import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { colors } from 'public/designTokens.js';
 import {
   getCategories,
   filterPostsByCategory,
@@ -126,8 +127,8 @@ function initCategoryFilters(posts) {
         $item('#filterLabel').text = itemData.label;
         const isActive = itemData.value === _activeCategory;
         try {
-          $item('#filterChip').style.backgroundColor = isActive ? '#5B8FA8' : '#F2E8D5';
-          $item('#filterLabel').style.color = isActive ? '#FFFFFF' : '#3A2518';
+          $item('#filterChip').style.backgroundColor = isActive ? colors.mountainBlue : colors.sandLight;
+          $item('#filterLabel').style.color = isActive ? colors.white : colors.espresso;
         } catch (e) {}
 
         makeClickable($item('#filterChip'), () => {

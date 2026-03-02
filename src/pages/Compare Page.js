@@ -194,7 +194,7 @@ function renderComparisonRows() {
 
         // Highlight differing cells
         if (itemData.differs) {
-          try { $item(cellId).style.backgroundColor = colors.sandLight || '#FFF8F0'; } catch (e) {}
+          try { $item(cellId).style.backgroundColor = colors.sandLight; } catch (e) {}
         }
       }
 

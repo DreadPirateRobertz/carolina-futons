@@ -4,6 +4,7 @@ import { submitSwatchRequest } from 'backend/emailService.web';
 import { getCategoryFromCollections, addBusinessDays } from 'public/productPageUtils.js';
 import { trackSocialShare } from 'public/engagementTracker';
 import { makeClickable } from 'public/a11yHelpers';
+import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 
 // ── Breadcrumbs ───────────────────────────────────────────────────────
@@ -302,8 +303,8 @@ export function initSwatchCTA($w, state) {
     if (!btn || !state?.product) return;
     const hasFabricOptions = state.product.productOptions?.some(opt => /finish|fabric|color|cover/i.test(opt.name));
     btn.label = hasFabricOptions ? 'Get Free Swatches' : 'Request Free Swatches';
-    try { btn.style.backgroundColor = '#E8845C'; } catch (e) {}
-    try { btn.style.color = '#FFFFFF'; } catch (e) {}
+    try { btn.style.backgroundColor = colors.sunsetCoral; } catch (e) {}
+    try { btn.style.color = colors.white; } catch (e) {}
     try { btn.accessibility.ariaLabel = 'Request free fabric swatches shipped to your door'; } catch (e) {}
     btn.show();
     btn.onClick(() => openSwatchModal($w, state));

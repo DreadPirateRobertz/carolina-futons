@@ -4,6 +4,7 @@ import { getQuizRecommendations, getQuizOptions } from 'backend/styleQuiz.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
+import { colors } from 'public/designTokens.js';
 
 const state = {
   step: 0,
@@ -115,10 +116,10 @@ function renderOptions(key) {
       // Highlight if already selected
       const isSelected = state.answers[key] === itemData.value;
       try {
-        $item('#optionContainer').style.backgroundColor = isSelected ? '#5B8FA8' : '#FFFFFF';
+        $item('#optionContainer').style.backgroundColor = isSelected ? colors.mountainBlue : colors.white;
       } catch (e) {}
       try {
-        $item('#optionLabel').style.color = isSelected ? '#FFFFFF' : '#3A2518';
+        $item('#optionLabel').style.color = isSelected ? colors.white : colors.espresso;
       } catch (e) {}
 
       // ARIA

@@ -40,6 +40,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { colors } from 'public/sharedTokens.js';
 
 const SUSTAINABILITY_COLLECTION = 'ProductSustainability';
 const TRADEIN_COLLECTION = 'TradeInRequests';
@@ -154,23 +155,23 @@ export const getBatchSustainabilityBadges = webMethod(
         const badgeList = [];
 
         if (item.ecoScore === 'A' || item.ecoScore === 'B') {
-          badgeList.push({ type: 'eco-score', label: `Eco Score: ${item.ecoScore}`, color: item.ecoScore === 'A' ? '#2E7D32' : '#558B2F' });
+          badgeList.push({ type: 'eco-score', label: `Eco Score: ${item.ecoScore}`, color: colors.success });
         }
 
         if (item.certifications && item.certifications.length > 0) {
-          badgeList.push({ type: 'certified', label: item.certifications[0], color: '#1565C0' });
+          badgeList.push({ type: 'certified', label: item.certifications[0], color: colors.mountainBlue });
         }
 
         if (item.durabilityRating >= 4) {
-          badgeList.push({ type: 'durable', label: `${item.durabilityRating}/5 Durability`, color: '#6A1B9A' });
+          badgeList.push({ type: 'durable', label: `${item.durabilityRating}/5 Durability`, color: colors.espressoLight });
         }
 
         if (item.recyclabilityPercent >= 75) {
-          badgeList.push({ type: 'recyclable', label: `${item.recyclabilityPercent}% Recyclable`, color: '#00695C' });
+          badgeList.push({ type: 'recyclable', label: `${item.recyclabilityPercent}% Recyclable`, color: colors.success });
         }
 
         if (item.tradeInEligible) {
-          badgeList.push({ type: 'trade-in', label: 'Trade-In Eligible', color: '#E65100' });
+          badgeList.push({ type: 'trade-in', label: 'Trade-In Eligible', color: colors.sunsetCoral });
         }
 
         if (badgeList.length > 0) {
