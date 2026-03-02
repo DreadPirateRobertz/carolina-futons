@@ -7,6 +7,7 @@ import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationS
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
+import { colors } from 'public/sharedTokens';
 
 // ── Security Helpers ──────────────────────────────────────────────────
 
@@ -345,8 +346,8 @@ export function get_manifest() {
     description: 'Handcrafted futon frames, mattresses, Murphy beds & platform beds. Made in the USA.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#E8D5B7',
-    theme_color: '#5B8FA8',
+    background_color: colors.sandBase,
+    theme_color: colors.mountainBlue,
     orientation: 'any',
     categories: ['shopping', 'lifestyle'],
     icons: [

@@ -35,6 +35,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+import { colors } from 'public/sharedTokens';
 
 // Category relationships for smart bundling
 const BUNDLE_RULES = {
@@ -67,10 +68,10 @@ const BUNDLE_RULES = {
 
 // Tier definitions for upselling
 const TIERS = {
-  starter: { maxPrice: 500, label: 'Starter Bundle', badgeColor: '#5B8FA8' },
-  essentials: { maxPrice: 1000, label: 'Essentials Bundle', badgeColor: '#E8845C' },
-  premium: { maxPrice: 1500, label: 'Premium Bundle', badgeColor: '#3A2518' },
-  deluxe: { maxPrice: Infinity, label: 'Deluxe Bundle', badgeColor: '#5B8FA8' },
+  starter: { maxPrice: 500, label: 'Starter Bundle', badgeColor: colors.mountainBlue },
+  essentials: { maxPrice: 1000, label: 'Essentials Bundle', badgeColor: colors.sunsetCoral },
+  premium: { maxPrice: 1500, label: 'Premium Bundle', badgeColor: colors.espresso },
+  deluxe: { maxPrice: Infinity, label: 'Deluxe Bundle', badgeColor: colors.mountainBlue },
 };
 
 /**
