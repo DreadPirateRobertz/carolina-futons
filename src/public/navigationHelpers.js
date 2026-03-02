@@ -241,6 +241,7 @@ export function initMobileDrawer($w, currentPath) {
       $w('#mobileMenuOverlay').show('fade', { duration: transitions.medium });
       try { $w('#mobileMenuButton').accessibility.ariaExpanded = true; } catch (e) {}
       lockScroll();
+      addEscHandler();
 
       // Create focus trap inside the drawer
       focusTrap = createFocusTrap($w, '#mobileMenuOverlay', [
@@ -254,6 +255,26 @@ export function initMobileDrawer($w, currentPath) {
     } catch (e) {}
   }
 
+  function addEscHandler() {
+    try {
+      if (typeof document !== 'undefined' && !escHandler) {
+        escHandler = (e) => {
+          if (e.key === 'Escape') close();
+        };
+        document.addEventListener('keydown', escHandler);
+      }
+    } catch (e) {}
+  }
+
+  function removeEscHandler() {
+    try {
+      if (typeof document !== 'undefined' && escHandler) {
+        document.removeEventListener('keydown', escHandler);
+        escHandler = null;
+      }
+    } catch (e) {}
+  }
+
   function close() {
     if (!isOpen) return;
     isOpen = false;
@@ -261,6 +282,7 @@ export function initMobileDrawer($w, currentPath) {
       $w('#mobileMenuOverlay').hide('slide', { direction: 'left', duration: transitions.medium });
       try { $w('#mobileMenuButton').accessibility.ariaExpanded = false; } catch (e) {}
       unlockScroll();
+      removeEscHandler();
       if (focusTrap) {
         focusTrap.release();
         focusTrap = null;
@@ -270,22 +292,14 @@ export function initMobileDrawer($w, currentPath) {
     } catch (e) {}
   }
 
-  // Escape key closes menu
-  try {
-    if (typeof document !== 'undefined') {
-      escHandler = (e) => {
-        if (e.key === 'Escape') close();
-      };
-      document.addEventListener('keydown', escHandler);
-    }
-  } catch (e) {}
-
-  // Responsive: show/hide button based on viewport
+  // Responsive: show/hide nav elements based on viewport
   try {
     if (isMobile()) {
       $w('#mobileMenuButton').show();
+      try { $w('#desktopNavBar').hide(); } catch (e) {}
     } else {
       $w('#mobileMenuButton').hide();
+      try { $w('#desktopNavBar').show(); } catch (e) {}
     }
   } catch (e) {}
 

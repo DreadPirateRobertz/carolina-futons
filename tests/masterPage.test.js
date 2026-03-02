@@ -434,6 +434,29 @@ describe('Navigation Helpers', () => {
         // Menu should still be open — hide should not have been called
         expect(getEl('#mobileMenuOverlay').hide).not.toHaveBeenCalled();
       });
+
+      it('removes escape keydown listener on close so it does not leak', () => {
+        // Track which specific handlers are added/removed for 'keydown'
+        const addedFns = [];
+        const removedFns = [];
+        globalThis.document.addEventListener = vi.fn((event, fn) => {
+          if (event === 'keydown') addedFns.push(fn);
+        });
+        globalThis.document.removeEventListener = vi.fn((event, fn) => {
+          if (event === 'keydown') removedFns.push(fn);
+        });
+
+        const ctrl = initMobileDrawer(getEl);
+        ctrl.open();
+        const addedDuringInitAndOpen = [...addedFns];
+
+        ctrl.close();
+
+        // Every keydown handler added should have a matching removeEventListener
+        for (const fn of addedDuringInitAndOpen) {
+          expect(removedFns).toContain(fn);
+        }
+      });
     });
 
     describe('overlay backdrop click closes menu', () => {
@@ -522,6 +545,25 @@ describe('Navigation Helpers', () => {
         expect(getEl('#mobileMenuButton').show).toHaveBeenCalled();
         mockIsMobile.mockReturnValue(false);
         mockGetViewport.mockReturnValue('desktop');
+      });
+
+      it('hides desktop nav elements at mobile breakpoint', () => {
+        mockIsMobile.mockReturnValue(true);
+        mockGetViewport.mockReturnValue('mobile');
+        initMobileDrawer(getEl);
+
+        // Desktop nav bar should be hidden on mobile
+        expect(getEl('#desktopNavBar').hide).toHaveBeenCalled();
+        mockIsMobile.mockReturnValue(false);
+        mockGetViewport.mockReturnValue('desktop');
+      });
+
+      it('shows desktop nav elements on desktop', () => {
+        mockIsMobile.mockReturnValue(false);
+        mockGetViewport.mockReturnValue('desktop');
+        initMobileDrawer(getEl);
+
+        expect(getEl('#desktopNavBar').show).toHaveBeenCalled();
       });
     });
   });

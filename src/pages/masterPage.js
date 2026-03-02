@@ -106,8 +106,7 @@ function initAccessibility() {
           // Close promo lightbox
           try { $w('#promoLightbox').hide('fade', { duration: 200 }); } catch (e) {}
           try { $w('#promoOverlay').hide('fade', { duration: 200 }); } catch (e) {}
-          // Close mobile menu
-          try { $w('#mobileMenuOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+          // Mobile menu Escape is handled by initMobileDrawer's own keydown handler
           // Close exit intent popup
           try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
           try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
