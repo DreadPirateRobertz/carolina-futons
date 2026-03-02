@@ -6,6 +6,7 @@ import {
   initComfortCards,
   initComfortFilter,
 } from '../src/public/ComfortStoryCards.js';
+import { getComfortSvg } from '../src/public/comfortIllustrations.js';
 
 // ── Seed Data ──────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ function make$w(elements = {}) {
   return function $w(selector) {
     if (!elements[selector]) {
       elements[selector] = {
-        text: '', src: '', alt: '', value: '', options: [], data: null,
+        text: '', src: '', alt: '', html: '', value: '', options: [], data: null,
         _expanded: false, _collapsed: false, _handlers: {},
         expand() { this._expanded = true; this._collapsed = false; },
         collapse() { this._collapsed = true; this._expanded = false; },
@@ -205,6 +206,65 @@ describe('renderComfortCard', () => {
       expect($item('#comfortTagline').text).toBe(level.tagline);
       expect($item('#comfortDescription').text).toBe(level.description);
       expect($item('#comfortIllustration').src).toBe(level.illustration);
+    }
+  });
+});
+
+// ── renderComfortCard — SVG fallback ─────────────────────────────
+
+describe('renderComfortCard — SVG fallback', () => {
+  it('sets SVG html when illustration missing and slug is valid', () => {
+    const $item = make$w();
+    const comfort = { name: 'Plush', tagline: 'Soft', description: 'Cloud-soft.', slug: 'plush', illustration: null };
+    renderComfortCard($item, comfort);
+    expect($item('#comfortIllustrationSvg').html).toBe(getComfortSvg('plush'));
+  });
+
+  it('prefers CMS illustration over SVG', () => {
+    const $item = make$w();
+    const comfort = {
+      name: 'Plush', tagline: 'Soft', description: 'Cloud-soft.',
+      slug: 'plush', illustration: 'wix:image://v1/plush.jpg',
+    };
+    renderComfortCard($item, comfort);
+    expect($item('#comfortIllustration').src).toBe('wix:image://v1/plush.jpg');
+    expect($item('#comfortIllustrationSvg').html).toBeFalsy();
+  });
+
+  it('handles unknown slug gracefully', () => {
+    const $item = make$w();
+    const comfort = { name: 'Custom', tagline: 'T', description: 'D', slug: 'custom', illustration: null };
+    renderComfortCard($item, comfort);
+    expect($item('#comfortIllustrationSvg').html).toBeFalsy();
+  });
+
+  it('handles missing #comfortIllustrationSvg element gracefully', () => {
+    const elements = {};
+    const $item = function (selector) {
+      if (selector === '#comfortIllustrationSvg') throw new Error('Element not found');
+      if (!elements[selector]) {
+        elements[selector] = {
+          text: '', src: '', alt: '', html: '', value: '', options: [], data: null,
+          _expanded: false, _collapsed: false, _handlers: {},
+          expand() { this._expanded = true; this._collapsed = false; },
+          collapse() { this._collapsed = true; this._expanded = false; },
+          show() {}, hide() {},
+          onChange(fn) { this._handlers.change = fn; },
+          accessibility: {},
+        };
+      }
+      return elements[selector];
+    };
+    const comfort = { name: 'Plush', tagline: 'Soft', description: 'D', slug: 'plush', illustration: null };
+    expect(() => renderComfortCard($item, comfort)).not.toThrow();
+  });
+
+  it('sets SVG for all three comfort levels', () => {
+    for (const slug of ['plush', 'medium', 'firm']) {
+      const $item = make$w();
+      const comfort = { name: slug, tagline: 'T', description: 'D', slug, illustration: null };
+      renderComfortCard($item, comfort);
+      expect($item('#comfortIllustrationSvg').html).toBe(getComfortSvg(slug));
     }
   });
 });
