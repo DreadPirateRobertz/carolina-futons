@@ -147,9 +147,11 @@ When implementing any design from Figma:
 
 **design.jpeg is the quality bar. Flat vector shapes with opacity = REJECTED.**
 
+**Mountains MUST look like Blue Ridge Mountains** — soft rolling ridgelines, 5-7 overlapping layers fading into distance with atmospheric haze between them, morning/evening light. NOT jagged Rockies, NOT flat hills, NOT generic peaks. Study Blue Ridge Parkway photos for reference. The signature look: layered ridgelines where each successive range is lighter and hazier.
+
 Every SVG illustration MUST include:
 1. **SVG filter effects** — `feTurbulence` + `feDisplacementMap` for watercolor texture on fills. No flat shapes.
-2. **Organic hand-drawn paths** — Add wobble/irregularity to bezier curves. Real mountains aren't smooth. Add extra control points.
+2. **Organic hand-drawn paths** — Add wobble/irregularity to bezier curves. Blue Ridge ridgelines are soft and rolling, not smooth mathematical curves. Add extra control points for natural undulation.
 3. **Detail elements** — Birds (V shapes in sky), pine tree branch layers (not blobs), wildflowers at base, chimney smoke, stars. Minimum 15 SVG elements per scene.
 4. **Rich gradients** — 5+ stops for sky transitions, not 2-stop linear. Layer multiple gradients for depth.
 5. **Paper grain overlay** — Subtle `feNoise` or texture filter for hand-drawn feel.
