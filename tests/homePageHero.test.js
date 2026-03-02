@@ -941,4 +941,62 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       await expect(onReadyHandler()).resolves.not.toThrow();
     });
   });
+
+  // ── Testimonial Auto-Rotation ────────────────────────────────────────
+
+  describe('testimonial auto-rotation', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('registers mouseIn handler on testimonial section for pause', async () => {
+      await onReadyHandler();
+      expect(getEl('#testimonialSection').onMouseIn).toHaveBeenCalled();
+    });
+
+    it('registers mouseOut handler on testimonial section for resume', async () => {
+      await onReadyHandler();
+      expect(getEl('#testimonialSection').onMouseOut).toHaveBeenCalled();
+    });
+
+    it('calls slideshow next after rotation interval', async () => {
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+    });
+
+    it('does not call next when paused via mouseIn', async () => {
+      await onReadyHandler();
+      const section = getEl('#testimonialSection');
+      const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
+
+      if (mouseInHandler) mouseInHandler();
+      getEl('#testimonialSlideshow').next.mockClear();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).not.toHaveBeenCalled();
+    });
+
+    it('resumes rotation after mouseOut', async () => {
+      await onReadyHandler();
+      const section = getEl('#testimonialSection');
+      const mouseInHandler = section.onMouseIn.mock.calls[0]?.[0];
+      const mouseOutHandler = section.onMouseOut.mock.calls[0]?.[0];
+
+      if (mouseInHandler) mouseInHandler();
+      if (mouseOutHandler) mouseOutHandler();
+      getEl('#testimonialSlideshow').next.mockClear();
+      vi.advanceTimersByTime(5000);
+      expect(getEl('#testimonialSlideshow').next).toHaveBeenCalled();
+    });
+
+    it('page loads when testimonial slideshow element is missing', async () => {
+      elements.delete('#testimonialSlideshow');
+      elements.delete('#testimonialSection');
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+  });
 });
