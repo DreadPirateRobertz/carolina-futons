@@ -370,7 +370,7 @@ async function initCategoryShowcase() {
   try {
     const repeater = $w('#categoryRepeater');
     if (repeater) {
-      repeater.data = categoriesWithCounts;
+      repeater.data = categoriesWithCounts.slice(0, 6);
       repeater.onItemReady(($item, itemData) => {
         try { $item('#categoryCardTitle').text = itemData.name; } catch (e) {}
         try { $item('#categoryCardTagline').text = itemData.tagline; } catch (e) {}
@@ -482,7 +482,7 @@ function initTrustBar() {
       try {
         const element = $w(signal.id);
         if (element) {
-          element.show('fade', { duration: 400, delay: 200 + (index * 150) });
+          element.show('fade', { duration: 300, delay: 200 + (index * 150) });
           try { element.accessibility.ariaLabel = signal.text; } catch (e) {}
         }
       } catch (e) {}
@@ -717,7 +717,7 @@ function initHeroAnimation() {
       const heroOverlay = $w('#heroOverlay');
       if (heroOverlay) {
         heroOverlay.style.backgroundColor = 'rgba(58, 37, 24, 0.6)';
-        heroOverlay.show('fade', { duration: 400, delay: 0 });
+        heroOverlay.show('fade', { duration: 300, delay: 0 });
       }
     } catch (e) {}
 
@@ -728,15 +728,15 @@ function initHeroAnimation() {
     // Staggered fade-in: title → subtitle → CTA
     if (heroTitle) {
       heroTitle.text = 'Handcrafted Comfort, Mountain Inspired.';
-      heroTitle.show('fade', { duration: 600, delay: 200 });
+      heroTitle.show('fade', { duration: 300, delay: 200 });
     }
     if (heroSubtitle) {
       heroSubtitle.text = 'Hendersonville\'s largest selection of futons, Murphy beds & platform beds since 1991.';
-      heroSubtitle.show('fade', { duration: 600, delay: 500 });
+      heroSubtitle.show('fade', { duration: 300, delay: 400 });
     }
     if (heroCta) {
       heroCta.label = 'Explore Our Collection';
-      heroCta.show('fade', { duration: 400, delay: 800 });
+      heroCta.show('fade', { duration: 300, delay: 600 });
       try { heroCta.accessibility.ariaLabel = 'Explore our furniture collection'; } catch (e) {}
       heroCta.onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/shop-main'));
