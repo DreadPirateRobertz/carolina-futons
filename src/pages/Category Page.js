@@ -8,8 +8,9 @@ import { getCollectionSchema, getBreadcrumbSchema, getCategoryMetaDescription, g
 import { getProductBadge, getRecentlyViewed, addToCompare, removeFromCompare, getCompareList } from 'public/galleryHelpers';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
-import { searchProducts, getFilterValues } from 'backend/searchService.web';
-import { suggestFilterRelaxation } from 'backend/categorySearch.web';
+import { getFilterValues } from 'backend/searchService.web';
+import { searchProducts, suggestFilterRelaxation, getFacetMetadata } from 'backend/categorySearch.web';
+import { buildFilterChips, removeFilter, clearAllFilters, serializeFiltersToUrl, deserializeFiltersFromUrl, formatFeatureLabel, sanitizeFilterInput } from 'public/categoryFilterHelpers';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { colors } from 'public/designTokens.js';
@@ -29,17 +30,8 @@ let _debounceTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
 let _wishlistSet = new Set(); // cached wishlist status for product cards
 
-/**
- * Sanitize user input from URL params — strip HTML tags, decode entities, limit length.
- * Frontend-safe equivalent of backend/utils/sanitize for page code.
- */
-function sanitizeInput(str, maxLen = 200) {
-  if (typeof str !== 'string') return '';
-  let result = str.replace(/<[^>]*>/g, '');
-  result = result.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-  result = result.replace(/<[^>]*>/g, '');
-  return result.trim().slice(0, maxLen);
-}
+// sanitizeInput aliased from shared module
+const sanitizeInput = sanitizeFilterInput;
 
 // ── Category Content Map ─────────────────────────────────────────────
 // Marketing copy and hero config for each category
@@ -624,6 +616,21 @@ function openQuickView(product) {
     $w('#qvAddToCart').label = 'Add to Cart';
     $w('#qvAddToCart').enable();
 
+    // Size selector — show if product has size option
+    try {
+      const sizeSelect = $w('#qvSizeSelect');
+      const productSize = product.options?.size;
+      if (productSize) {
+        const sizes = ['Twin', 'Full', 'Queen', 'King'].filter(s => s);
+        sizeSelect.options = sizes.map(s => ({ label: s, value: s }));
+        sizeSelect.value = productSize;
+        sizeSelect.show();
+        try { sizeSelect.accessibility.ariaLabel = 'Select size'; } catch (e) {}
+      } else {
+        sizeSelect.hide();
+      }
+    } catch (e) {}
+
     // Set dialog ARIA attributes for quick view modal
     try { $w('#quickViewModal').accessibility.role = 'dialog'; } catch (e) {}
     try { $w('#quickViewModal').accessibility.ariaModal = true; } catch (e) {}
@@ -955,37 +962,44 @@ async function applyAdvancedFilters(currentPath) {
     try { $w('#filterLoadingIndicator').show(); } catch (e) {}
     try { $w('#productGridRepeater').hide('fade', { duration: 150 }); } catch (e) {}
 
+    // Parse price range string into min/max numbers
+    let priceMin, priceMax;
+    if (currentFilters.priceRange) {
+      const parts = currentFilters.priceRange.split('-').map(Number);
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        priceMin = parts[0];
+        priceMax = parts[1];
+      }
+    }
+
     const result = await searchProducts({
       category: currentPath,
-      priceRange: currentFilters.priceRange || undefined,
-      material: currentFilters.material || undefined,
-      color: currentFilters.color || undefined,
-      features: currentFilters.features || undefined,
-      widthRange: currentFilters.widthRange || undefined,
-      depthRange: currentFilters.depthRange || undefined,
-      sortBy: currentSort === 'bestselling' ? 'bestselling'
-        : currentSort === 'price-asc' ? 'price-asc'
-        : currentSort === 'price-desc' ? 'price-desc'
-        : currentSort === 'name-asc' ? 'name-asc'
-        : currentSort === 'name-desc' ? 'name-desc'
-        : currentSort === 'date-desc' ? 'newest'
-        : 'bestselling',
+      priceMin,
+      priceMax,
+      materials: currentFilters.material ? [currentFilters.material] : undefined,
+      colors: currentFilters.color ? [currentFilters.color] : undefined,
+      featureTags: currentFilters.features || undefined,
+      widthMin: currentFilters.widthRange?.[0] || undefined,
+      widthMax: currentFilters.widthRange?.[1] || undefined,
+      depthMin: currentFilters.depthRange?.[0] || undefined,
+      depthMax: currentFilters.depthRange?.[1] || undefined,
+      sort: currentSort,
       limit: 50,
     });
 
     // Update live result count
     try {
-      $w('#filterResultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''}`;
+      $w('#filterResultCount').text = `${result.totalCount} product${result.totalCount !== 1 ? 's' : ''}`;
     } catch (e) {}
     try {
-      $w('#resultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''}`;
+      $w('#resultCount').text = `${result.totalCount} product${result.totalCount !== 1 ? 's' : ''}`;
     } catch (e) {}
 
     // Announce result count to screen readers
-    announce($w, `Showing ${result.total} product${result.total !== 1 ? 's' : ''}`);
+    announce($w, `Showing ${result.totalCount} product${result.totalCount !== 1 ? 's' : ''}`);
 
     // Handle zero results
-    if (result.total === 0) {
+    if (result.totalCount === 0) {
       showNoMatchesState(currentPath);
     } else {
       try { $w('#noMatchesSection').hide(); } catch (e) {}
@@ -1002,7 +1016,7 @@ async function applyAdvancedFilters(currentPath) {
     trackEvent('filter_applied', {
       category: currentPath,
       filters: Object.keys(currentFilters).filter(k => currentFilters[k]),
-      resultCount: result.total,
+      resultCount: result.totalCount,
     });
 
     // Hide loading indicator and restore grid
@@ -1021,7 +1035,7 @@ async function applyAdvancedFilters(currentPath) {
 }
 
 function clearAllAdvancedFilters(currentPath) {
-  currentFilters = {};
+  currentFilters = clearAllFilters();
 
   // Reset all filter UI elements
   try { $w('#filterMaterial').value = ''; } catch (e) {}
@@ -1058,20 +1072,7 @@ function renderFilterChips() {
     const container = $w('#activeFilterChips');
     if (!container) return;
 
-    const chips = [];
-    if (currentFilters.material) chips.push({ _id: 'chip-material', label: `Material: ${currentFilters.material}`, key: 'material' });
-    if (currentFilters.color) chips.push({ _id: 'chip-color', label: `Color: ${currentFilters.color}`, key: 'color' });
-    if (currentFilters.features && currentFilters.features.length > 0) {
-      currentFilters.features.forEach((f, i) => {
-        chips.push({ _id: `chip-feature-${i}`, label: `Feature: ${formatFeatureLabel(f)}`, key: 'features', value: f });
-      });
-    }
-    if (currentFilters.priceRange) chips.push({ _id: 'chip-price', label: `Price: ${currentFilters.priceRange}`, key: 'priceRange' });
-    if (currentFilters.brand) chips.push({ _id: 'chip-brand', label: `Brand: ${currentFilters.brand}`, key: 'brand' });
-    if (currentFilters.size) chips.push({ _id: 'chip-size', label: `Size: ${currentFilters.size}`, key: 'size' });
-    if (currentFilters.comfortLevel) chips.push({ _id: 'chip-comfort', label: `Comfort: ${currentFilters.comfortLevel}`, key: 'comfortLevel' });
-    if (currentFilters.widthRange) chips.push({ _id: 'chip-width', label: `Width: ${currentFilters.widthRange[0]}"-${currentFilters.widthRange[1]}"`, key: 'widthRange' });
-    if (currentFilters.depthRange) chips.push({ _id: 'chip-depth', label: `Depth: ${currentFilters.depthRange[0]}"-${currentFilters.depthRange[1]}"`, key: 'depthRange' });
+    const chips = buildFilterChips(currentFilters);
 
     if (chips.length === 0) {
       container.hide();
@@ -1112,32 +1113,28 @@ function renderFilterChips() {
 function removeFilterChip(key, value) {
   const currentPath = wixLocationFrontend.path?.[0] || '';
 
-  if (key === 'features' && value) {
-    currentFilters.features = (currentFilters.features || []).filter(f => f !== value);
-    if (currentFilters.features.length === 0) delete currentFilters.features;
+  currentFilters = removeFilter(currentFilters, key, value);
+
+  // Reset corresponding filter UI elements
+  const filterUiMap = {
+    material: '#filterMaterial',
+    color: '#filterColor',
+    priceRange: '#filterPriceRange',
+    brand: '#filterBrand',
+    size: '#filterSize',
+    comfortLevel: '#filterComfortLevel',
+  };
+
+  if (key === 'features') {
     try { $w('#filterFeatures').value = currentFilters.features || []; } catch (e) {}
   } else if (key === 'widthRange') {
-    delete currentFilters.widthRange;
     try { $w('#filterWidthMin').value = ''; } catch (e) {}
     try { $w('#filterWidthMax').value = ''; } catch (e) {}
   } else if (key === 'depthRange') {
-    delete currentFilters.depthRange;
     try { $w('#filterDepthMin').value = ''; } catch (e) {}
     try { $w('#filterDepthMax').value = ''; } catch (e) {}
-  } else {
-    delete currentFilters[key];
-    // Reset corresponding filter UI
-    const filterMap = {
-      material: '#filterMaterial',
-      color: '#filterColor',
-      priceRange: '#filterPriceRange',
-      brand: '#filterBrand',
-      size: '#filterSize',
-      comfortLevel: '#filterComfortLevel',
-    };
-    if (filterMap[key]) {
-      try { $w(filterMap[key]).value = ''; } catch (e) {}
-    }
+  } else if (filterUiMap[key]) {
+    try { $w(filterUiMap[key]).value = ''; } catch (e) {}
   }
 
   debouncedApplyAdvancedFilters(currentPath);
@@ -1195,21 +1192,7 @@ async function showNoMatchesState(currentPath) {
 
 function updateUrlWithFilters(filters) {
   try {
-    const params = {};
-    if (filters.priceRange) params.price = filters.priceRange;
-    if (filters.material) params.material = filters.material;
-    if (filters.color) params.color = filters.color;
-    if (filters.features && filters.features.length > 0) params.features = filters.features.join(',');
-    if (filters.widthRange) params.width = filters.widthRange.join('-');
-    if (filters.depthRange) params.depth = filters.depthRange.join('-');
-    if (filters.brand) params.brand = filters.brand;
-    if (filters.price) params.priceDropdown = filters.price;
-    if (filters.size) params.size = filters.size;
-    if (filters.comfortLevel) params.comfort = filters.comfortLevel;
-
-    const queryString = Object.entries(params)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
-      .join('&');
+    const queryString = serializeFiltersToUrl(filters);
 
     // Update URL without page reload using pushState (not wixLocationFrontend.to which navigates)
     try {
@@ -1227,28 +1210,14 @@ function updateUrlWithFilters(filters) {
 function restoreFiltersFromUrl(currentPath) {
   try {
     const query = wixLocationFrontend.query || {};
-
-    // Restore from URL params (sanitized to prevent XSS via crafted URLs)
-    if (query.price) currentFilters.priceRange = sanitizeInput(query.price, 20);
-    if (query.material) currentFilters.material = sanitizeInput(query.material, 100);
-    if (query.color) currentFilters.color = sanitizeInput(query.color, 50);
-    if (query.features) currentFilters.features = sanitizeInput(query.features, 500).split(',').map(f => sanitizeInput(f, 50)).filter(Boolean);
-    if (query.width) {
-      const [min, max] = sanitizeInput(query.width, 20).split('-').map(Number);
-      if (!isNaN(min) && !isNaN(max)) currentFilters.widthRange = [min, max];
-    }
-    if (query.depth) {
-      const [min, max] = sanitizeInput(query.depth, 20).split('-').map(Number);
-      if (!isNaN(min) && !isNaN(max)) currentFilters.depthRange = [min, max];
-    }
-    if (query.brand) currentFilters.brand = sanitizeInput(query.brand, 100);
-    if (query.size) currentFilters.size = sanitizeInput(query.size, 50);
-    if (query.comfort) currentFilters.comfortLevel = sanitizeInput(query.comfort, 50);
+    const restored = deserializeFiltersFromUrl(query);
 
     // Or restore from session state if no URL params
-    if (Object.keys(currentFilters).length === 0 && _filterSessionState[currentPath]) {
-      Object.assign(currentFilters, _filterSessionState[currentPath]);
+    if (Object.keys(restored).length === 0 && _filterSessionState[currentPath]) {
+      Object.assign(restored, _filterSessionState[currentPath]);
     }
+
+    Object.assign(currentFilters, restored);
 
     // Apply restored filters if any
     if (Object.keys(currentFilters).length > 0) {
@@ -1324,9 +1293,7 @@ function initFilterDrawer() {
   } catch (e) {}
 }
 
-function formatFeatureLabel(tag) {
-  return tag.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-}
+// formatFeatureLabel imported from categoryFilterHelpers
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
