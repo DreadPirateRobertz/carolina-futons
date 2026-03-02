@@ -183,7 +183,7 @@ function renderTimeline(timeline, order) {
           } else if (step.current) {
             dotEl.style.backgroundColor = colors.mountainBlue;
           } else {
-            dotEl.style.backgroundColor = colors.muted || '#D1D5DB';
+            dotEl.style.backgroundColor = colors.muted;
           }
         }
 
@@ -196,7 +196,7 @@ function renderTimeline(timeline, order) {
             labelEl.style.color = colors.success;
             try { labelEl.accessibility.ariaLabel = `Completed: ${step.label}`; } catch (e) {}
           } else {
-            labelEl.style.color = colors.mutedBrown || colors.muted || '#9CA3AF';
+            labelEl.style.color = colors.mutedBrown || colors.muted;
             try { labelEl.accessibility.ariaLabel = `Pending: ${step.label}`; } catch (e) {}
           }
         }
@@ -540,6 +540,6 @@ function getStatusColor(fulfillmentStatus) {
     case 'LABEL_CREATED': return colors.mountainBlue;
     case 'EXCEPTION':
     case 'RETURNED': return colors.sunsetCoral;
-    default: return colors.mutedBrown || colors.muted || '#6B7280';
+    default: return colors.mutedBrown || colors.muted;
   }
 }

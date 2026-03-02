@@ -21,6 +21,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
+import { colors } from 'public/sharedTokens.js';
 
 // Afterpay configuration
 const AFTERPAY_CONFIG = {
@@ -119,8 +120,8 @@ export const getBatchPaymentBadges = webMethod(
           badgeList.push({
             type: 'afterpay',
             label: `4 payments of $${afterpay.installmentAmount}`,
-            color: '#B2FCE4',
-            textColor: '#000000',
+            color: colors.sandLight,
+            textColor: colors.espresso,
           });
         }
 
@@ -128,8 +129,8 @@ export const getBatchPaymentBadges = webMethod(
           badgeList.push({
             type: 'financing',
             label: financing.bestTier.label,
-            color: '#E8F5E9',
-            textColor: '#1B5E20',
+            color: colors.sandLight,
+            textColor: colors.espresso,
           });
         }
 
@@ -341,7 +342,7 @@ function getAvailableMethods(price) {
 
 function getPaymentBadges(price) {
   const badges = [
-    { type: 'secure', label: 'Secure Checkout', icon: 'lock', color: '#1B5E20' },
+    { type: 'secure', label: 'Secure Checkout', icon: 'lock', color: colors.success },
   ];
 
   if (price >= AFTERPAY_CONFIG.minAmount && price <= AFTERPAY_CONFIG.maxAmount) {
@@ -349,7 +350,7 @@ function getPaymentBadges(price) {
       type: 'afterpay',
       label: `4 payments of $${(price / 4).toFixed(2)}`,
       icon: 'afterpay',
-      color: '#B2FCE4',
+      color: colors.sandLight,
     });
   }
 
@@ -359,7 +360,7 @@ function getPaymentBadges(price) {
       type: 'financing',
       label: financing.bestTier.label,
       icon: 'calendar',
-      color: '#E8F5E9',
+      color: colors.sandLight,
     });
   }
 
@@ -368,7 +369,7 @@ function getPaymentBadges(price) {
       type: 'free-shipping',
       label: 'Free Shipping',
       icon: 'truck',
-      color: '#E3F2FD',
+      color: colors.mountainBlueLight,
     });
   }
 
