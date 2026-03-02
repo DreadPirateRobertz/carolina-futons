@@ -212,6 +212,8 @@ export default defineConfig({
       'public/FeelAndComfort': path.resolve(__dirname, 'src/public/FeelAndComfort.js'),
       'public/categoryFilterHelpers.js': path.resolve(__dirname, 'src/public/categoryFilterHelpers.js'),
       'public/categoryFilterHelpers': path.resolve(__dirname, 'src/public/categoryFilterHelpers.js'),
+      'public/emptyStateIllustrations.js': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
+      'public/emptyStateIllustrations': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
     },
   },
 });
