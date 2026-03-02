@@ -73,6 +73,15 @@ async function initProductPage() {
     trackProductPageView(state.product);
     fireViewContent(state.product);
 
+    // Mountain skyline SVG border — gradient variant for product hero
+    try {
+      import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
+        initMountainSkyline($w, { variant: 'gradient', containerId: '#productHeroSkyline' });
+      }).catch(() => {
+        // MountainSkyline module not yet available — silently skip
+      });
+    } catch (e) {}
+
     const productSections = [
       { name: 'variantSelector', init: () => initVariantSelector($w, state) },
       { name: 'swatchSelector', init: () => initSwatchSelector($w, state) },

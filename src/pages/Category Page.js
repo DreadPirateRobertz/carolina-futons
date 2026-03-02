@@ -137,6 +137,15 @@ function initCategoryHero(currentPath) {
       $w('#categoryHeroSection').style.backgroundColor = solidColor;
     } catch (e2) {}
   }
+
+  // Mountain skyline SVG border — gradient variant for category hero
+  try {
+    import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
+      initMountainSkyline($w, { variant: 'gradient', containerId: '#categoryHeroSkyline' });
+    }).catch(() => {
+      // MountainSkyline module not yet available — silently skip
+    });
+  } catch (e) {}
 }
 
 // ── SEO Meta Description ─────────────────────────────────────────────
