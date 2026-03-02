@@ -18,6 +18,14 @@ import {
 import { initBackToTop, isMobile, collapseOnMobile, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import {
+  getCartItemStyles,
+  getProgressBarStyles,
+  getEmptyCartStyles,
+  getCheckoutButtonStyles,
+  getQuantitySpinnerStyles,
+  getCrossSellCardStyles,
+} from 'public/cartStyles.js';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -56,16 +64,22 @@ async function initCartPage() {
 }
 
 function showEmptyCart() {
+  const emptyStyles = getEmptyCartStyles();
+  const btnStyles = getCheckoutButtonStyles();
   try {
     try { $w('#emptyCartSection').expand(); } catch (e) {}
     try {
       $w('#emptyCartTitle').text = 'Your cart is empty';
+      $w('#emptyCartTitle').style.color = emptyStyles.headingColor;
       $w('#emptyCartTitle').accessibility.role = 'heading';
     } catch (e) {}
     try {
       $w('#emptyCartMessage').text = 'Browse our collection to find the perfect futon for your home.';
+      $w('#emptyCartMessage').style.color = emptyStyles.messageColor;
     } catch (e) {}
     try {
+      $w('#continueShoppingBtn').style.backgroundColor = btnStyles.background;
+      $w('#continueShoppingBtn').style.color = btnStyles.textColor;
       $w('#continueShoppingBtn').accessibility.ariaLabel = 'Continue shopping — browse our collection';
       $w('#continueShoppingBtn').onClick(() => {
         import('wix-location-frontend').then(({ to }) => to('/'));
@@ -98,12 +112,15 @@ function updateShippingProgressFromCart(currentCart) {
   try {
     const subtotal = currentCart.totals?.subtotal || 0;
     const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
+    const barStyles = getProgressBarStyles('shipping', qualifies);
 
     const progressBar = $w('#shippingProgressBar');
     const progressText = $w('#shippingProgressText');
 
     if (progressBar) {
       progressBar.value = progressPct;
+      try { progressBar.style.backgroundColor = barStyles.trackColor; } catch (e) {}
+      try { progressBar.style.color = barStyles.fillColor; } catch (e) {}
     }
 
     if (progressText) {
@@ -115,6 +132,7 @@ function updateShippingProgressFromCart(currentCart) {
           $w('#shippingProgressIcon').show();
         } catch (e) {}
       }
+      try { progressText.style.color = barStyles.textColor; } catch (e) {}
       try { progressText.accessibility.ariaLive = 'polite'; } catch (e) {}
       try { progressText.accessibility.role = 'status'; } catch (e) {}
     }
@@ -142,16 +160,20 @@ function updateTierProgressFromCart(currentCart) {
   try {
     const subtotal = currentCart.totals?.subtotal || 0;
     const { tier, remaining, progressPct } = getTierProgress(subtotal);
+    const barStyles = getProgressBarStyles('tier');
 
     const progressBar = $w('#tierProgressBar');
     const progressText = $w('#tierProgressText');
 
     if (progressBar) {
       progressBar.value = progressPct;
+      try { progressBar.style.backgroundColor = barStyles.trackColor; } catch (e) {}
+      try { progressBar.style.color = barStyles.fillColor; } catch (e) {}
     }
 
     if (progressText) {
       progressText.text = tier.label(remaining.toFixed(2));
+      try { progressText.style.color = barStyles.textColor; } catch (e) {}
       try { progressText.accessibility.ariaLive = 'polite'; } catch (e) {}
       try { progressText.accessibility.role = 'status'; } catch (e) {}
     }
@@ -241,12 +263,18 @@ async function loadCartSuggestions(cart) {
     const repeater = $w('#suggestionsRepeater');
     if (!repeater) return;
 
+    const crossSellStyles = getCrossSellCardStyles();
     repeater.onItemReady(($item, itemData) => {
       $item('#sugImage').src = itemData.mainMedia;
       $item('#sugImage').alt = `${itemData.name} - add to cart`;
       $item('#sugName').text = itemData.name;
+      try { $item('#sugName').style.color = crossSellStyles.nameColor; } catch (e) {}
       $item('#sugPrice').text = itemData.formattedPrice;
+      try { $item('#sugPrice').style.color = crossSellStyles.priceColor; } catch (e) {}
 
+      // Coral CTA button for add-to-cart
+      try { $item('#sugAddBtn').style.backgroundColor = crossSellStyles.addBtnBackground; } catch (e) {}
+      try { $item('#sugAddBtn').style.color = crossSellStyles.addBtnTextColor; } catch (e) {}
       try { $item('#sugAddBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
 
       // Quick add to cart button
@@ -347,7 +375,22 @@ function initQuantityControls() {
     const cartRepeater = $w('#cartItemsRepeater');
     if (!cartRepeater) return;
 
+    const itemStyles = getCartItemStyles();
+    const spinnerStyles = getQuantitySpinnerStyles();
+
     cartRepeater.onItemReady(($item, itemData) => {
+      // Brand-consistent styling for cart items
+      try { $item('#cartItemName').style.color = itemStyles.nameColor; } catch (e) {}
+      try { $item('#cartItemPrice').style.color = itemStyles.priceColor; } catch (e) {}
+
+      // Quantity spinner styling — mountain blue buttons
+      try { $item('#qtyMinus').style.color = spinnerStyles.buttonColor; } catch (e) {}
+      try { $item('#qtyPlus').style.color = spinnerStyles.buttonColor; } catch (e) {}
+      try { $item('#qtyInput').style.color = spinnerStyles.valueColor; } catch (e) {}
+
+      // Remove button — coral accent
+      try { $item('#removeItem').style.color = itemStyles.removeColor; } catch (e) {}
+
       // ARIA labels for cart item controls
       try { $item('#qtyMinus').accessibility.ariaLabel = `Decrease quantity of ${itemData.name}`; } catch (e) {}
       try { $item('#qtyPlus').accessibility.ariaLabel = `Increase quantity of ${itemData.name}`; } catch (e) {}
@@ -430,9 +473,10 @@ async function refreshCartTotals() {
     const currentCart = await getCurrentCart();
     if (currentCart && currentCart.totals) {
       const fmt = (n) => `$${Number(n).toFixed(2)}`;
-      try { $w('#cartSubtotal').text = fmt(currentCart.totals.subtotal); } catch (e) {}
+      const itemStyles = getCartItemStyles();
+      try { $w('#cartSubtotal').text = fmt(currentCart.totals.subtotal); $w('#cartSubtotal').style.color = itemStyles.nameColor; } catch (e) {}
       try { $w('#cartShipping').text = currentCart.totals.shipping > 0 ? fmt(currentCart.totals.shipping) : 'Calculated at checkout'; } catch (e) {}
-      try { $w('#cartTotal').text = fmt(currentCart.totals.total); } catch (e) {}
+      try { $w('#cartTotal').text = fmt(currentCart.totals.total); $w('#cartTotal').style.color = itemStyles.nameColor; $w('#cartTotal').style.fontWeight = 'bold'; } catch (e) {}
     }
     await updateShippingProgress();
     await updateCartFinancing();

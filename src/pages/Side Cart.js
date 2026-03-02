@@ -18,6 +18,14 @@ import {
 } from 'public/cartService';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { addSwipeHandler } from 'public/mobileHelpers';
+import {
+  getCartItemStyles,
+  getProgressBarStyles,
+  getSideCartPanelStyles,
+  getCheckoutButtonStyles,
+  getQuantitySpinnerStyles,
+  getCrossSellCardStyles,
+} from 'public/cartStyles.js';
 
 let currentSideSugProduct = null;
 let _legacySugHandlerRegistered = false;
@@ -28,16 +36,25 @@ $w.onReady(function () {
 });
 
 function initSideCart() {
+  const panelStyles = getSideCartPanelStyles();
+  const btnStyles = getCheckoutButtonStyles();
+
   // Listen for cart changes to update the side cart
   onCartChanged(async () => {
     await refreshSideCart();
   });
 
-  // Set ARIA dialog attributes on side cart panel
+  // Set ARIA dialog attributes and brand styling on side cart panel
   try {
     $w('#sideCartPanel').accessibility.role = 'dialog';
     $w('#sideCartPanel').accessibility.ariaModal = true;
     $w('#sideCartPanel').accessibility.ariaLabel = 'Shopping cart';
+    $w('#sideCartPanel').style.backgroundColor = panelStyles.panelBackground;
+  } catch (e) {}
+
+  // Brand-styled header
+  try {
+    $w('#sideCartTitle').style.color = panelStyles.headerColor;
   } catch (e) {}
 
   // Close button
@@ -79,11 +96,18 @@ function initSideCart() {
     });
   } catch (e) {}
 
-  // Checkout button
+  // Checkout button — coral CTA
   try {
+    $w('#sideCartCheckout').style.backgroundColor = btnStyles.background;
+    $w('#sideCartCheckout').style.color = btnStyles.textColor;
     $w('#sideCartCheckout').onClick(() => {
       import('wix-location-frontend').then(({ to }) => to('/checkout'));
     });
+  } catch (e) {}
+
+  // View full cart link — mountain blue
+  try {
+    $w('#viewFullCart').style.color = panelStyles.viewCartLinkColor;
   } catch (e) {}
 
   // Swipe right to close side cart on mobile
@@ -106,11 +130,16 @@ function initSideCartRepeater() {
     const repeater = $w('#sideCartRepeater');
     if (!repeater) return;
 
+    const itemStyles = getCartItemStyles();
+    const spinnerStyles = getQuantitySpinnerStyles();
+
     repeater.onItemReady(($item, itemData) => {
       $item('#sideItemImage').src = itemData.image;
       try { $item('#sideItemImage').alt = `${itemData.name}`; } catch (e) {}
       $item('#sideItemName').text = itemData.name;
+      try { $item('#sideItemName').style.color = itemStyles.nameColor; } catch (e) {}
       $item('#sideItemPrice').text = `$${Number(itemData.price).toFixed(2)}`;
+      try { $item('#sideItemPrice').style.color = itemStyles.priceColor; } catch (e) {}
 
       // Quantity spinner: −/qty/+ controls
       try {
@@ -119,8 +148,9 @@ function initSideCartRepeater() {
         $item('#sideItemQty').accessibility.role = 'status';
       } catch (e) {}
 
-      // Minus button
+      // Minus button — mountain blue
       try {
+        $item('#sideQtyMinus').style.color = spinnerStyles.buttonColor;
         $item('#sideQtyMinus').accessibility.ariaLabel = `Decrease quantity of ${itemData.name}`;
         $item('#sideQtyMinus').onClick(async () => {
           const currentQty = itemData.quantity || MIN_QUANTITY;
@@ -136,8 +166,9 @@ function initSideCartRepeater() {
         });
       } catch (e) {}
 
-      // Plus button
+      // Plus button — mountain blue
       try {
+        $item('#sideQtyPlus').style.color = spinnerStyles.buttonColor;
         $item('#sideQtyPlus').accessibility.ariaLabel = `Increase quantity of ${itemData.name}`;
         $item('#sideQtyPlus').onClick(async () => {
           const currentQty = itemData.quantity || MIN_QUANTITY;
@@ -171,7 +202,8 @@ function initSideCartRepeater() {
         } catch (e) {}
       }
 
-      // ARIA label for remove button
+      // Remove button — coral accent
+      try { $item('#sideItemRemove').style.color = itemStyles.removeColor; } catch (e) {}
       try { $item('#sideItemRemove').accessibility.ariaLabel = `Remove ${itemData.name} from cart`; } catch (e) {}
 
       // Remove: animated slide-out + actual cart removal
@@ -261,6 +293,7 @@ async function refreshSideCart() {
 
 function updateSideCartShipping(subtotal) {
   const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
+  const barStyles = getProgressBarStyles('shipping', qualifies);
 
   try {
     const bar = $w('#sideShippingBar');
@@ -268,6 +301,8 @@ function updateSideCartShipping(subtotal) {
 
     if (bar) {
       bar.value = progressPct;
+      try { bar.style.backgroundColor = barStyles.trackColor; } catch (e) {}
+      try { bar.style.color = barStyles.fillColor; } catch (e) {}
     }
 
     if (text) {
@@ -276,6 +311,7 @@ function updateSideCartShipping(subtotal) {
       } else {
         text.text = 'FREE shipping!';
       }
+      try { text.style.color = barStyles.textColor; } catch (e) {}
       try { text.accessibility.ariaLive = 'polite'; } catch (e) {}
       try { text.accessibility.role = 'status'; } catch (e) {}
     }
@@ -287,16 +323,20 @@ function updateSideCartShipping(subtotal) {
 function updateSideTierProgress(subtotal) {
   try {
     const { tier, remaining, progressPct } = getTierProgress(subtotal);
+    const barStyles = getProgressBarStyles('tier');
 
     const bar = $w('#sideTierBar');
     const text = $w('#sideTierText');
 
     if (bar) {
       bar.value = progressPct;
+      try { bar.style.backgroundColor = barStyles.trackColor; } catch (e) {}
+      try { bar.style.color = barStyles.fillColor; } catch (e) {}
     }
 
     if (text) {
       text.text = tier.label(remaining.toFixed(2));
+      try { text.style.color = barStyles.textColor; } catch (e) {}
     }
   } catch (e) {}
 }
@@ -333,11 +373,14 @@ async function loadSideCartSuggestions(lineItems) {
       // Register onItemReady ONCE to prevent handler accumulation (CF-1b86)
       if (!_repeaterInitialized) {
         _repeaterInitialized = true;
+        const crossSellStyles = getCrossSellCardStyles();
         sugRepeater.onItemReady(($item, product) => {
           try { $item('#sideSugImage').src = product.mainMedia; } catch (e) {}
           try { $item('#sideSugImage').alt = `${product.name} - add to cart`; } catch (e) {}
           try { $item('#sideSugName').text = product.name; } catch (e) {}
+          try { $item('#sideSugName').style.color = crossSellStyles.nameColor; } catch (e) {}
           try { $item('#sideSugPrice').text = product.formattedPrice; } catch (e) {}
+          try { $item('#sideSugPrice').style.color = crossSellStyles.priceColor; } catch (e) {}
 
           try {
             $item('#sideSugAdd').onClick(async () => {
