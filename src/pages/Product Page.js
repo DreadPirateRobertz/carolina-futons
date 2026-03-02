@@ -27,6 +27,7 @@ import { initProductSocialProof } from 'public/socialProofToast';
 import { validateEmail } from 'public/validators.js';
 import { initProductARViewer } from 'public/ProductARViewer.js';
 import { initLifestyleGallery } from 'public/LifestyleGallery.js';
+import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 
 const state = {
   product: null,
@@ -126,6 +127,7 @@ async function initProductPage() {
       { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
       { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
       { name: 'lifestyleGallery', init: () => initLifestyleGallery($w, state) },
+      { name: 'designTokens', init: () => applyProductPageTokens($w) },
       { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection']) },
       { name: 'backToTop', init: () => initBackToTop($w) },
       { name: 'browseTracking', init: () => initBrowseTracking(state) },
