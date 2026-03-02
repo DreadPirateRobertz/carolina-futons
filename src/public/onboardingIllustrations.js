@@ -68,9 +68,12 @@ export const ONBOARDING_SVGS = {
     <!-- Sky through window -->
     <rect x="97" y="27" width="126" height="96" rx="2" fill="url(#w-sky)"/>
     <circle cx="160" cy="55" r="35" fill="url(#w-glow)"/>
-    <!-- Mountains through window — organic wobble -->
-    <path d="M97 85 Q108 62 118 68 Q125 55 135 60 Q142 48 152 55 Q160 42 170 52 Q178 45 188 56 Q195 50 205 62 Q215 58 223 72 L223 123 L97 123Z" fill="${mountainBlueDark}" opacity="0.5"/>
-    <path d="M97 95 Q110 78 122 82 Q132 72 145 78 Q155 68 165 75 Q178 65 190 76 Q200 70 212 80 Q220 76 223 85 L223 123 L97 123Z" fill="${mountainBlue}" opacity="0.45"/>
+    <!-- Blue Ridge mountains through window — soft rolling ridgelines, 5 atmospheric layers -->
+    <path d="M97 72 Q110 68 125 70 Q140 66 155 69 Q170 65 185 68 Q200 64 210 67 Q218 65 223 68 L223 123 L97 123Z" fill="${mountainBlueLight}" opacity="0.18"/>
+    <path d="M97 78 Q115 73 130 76 Q148 72 162 75 Q178 71 192 74 Q208 70 218 73 Q222 72 223 74 L223 123 L97 123Z" fill="${mountainBlue}" opacity="0.25"/>
+    <path d="M97 85 Q112 80 128 83 Q145 78 160 82 Q175 77 190 81 Q205 76 215 80 Q221 78 223 82 L223 123 L97 123Z" fill="${mountainBlue}" opacity="0.35"/>
+    <path d="M97 93 Q108 88 122 91 Q138 86 152 90 Q168 85 182 89 Q198 84 210 88 Q220 86 223 90 L223 123 L97 123Z" fill="${mountainBlueDark}" opacity="0.38"/>
+    <path d="M97 100 Q112 96 128 99 Q142 95 158 98 Q172 94 188 97 Q202 93 214 96 Q220 95 223 98 L223 123 L97 123Z" fill="${mountainBlueDark}" opacity="0.45"/>
     <!-- Birds in sky (V shapes) -->
     <path d="M120 42 L123 40 L126 42" fill="none" stroke="${offWhite}" stroke-width="0.8" opacity="0.6"/>
     <path d="M185 38 L187 36 L189 38" fill="none" stroke="${offWhite}" stroke-width="0.6" opacity="0.5"/>
@@ -227,15 +230,22 @@ export const ONBOARDING_SVGS = {
     <!-- Sky -->
     <rect x="0" y="0" width="320" height="160" fill="url(#sc-sky)"/>
     <circle cx="240" cy="50" r="45" fill="url(#sc-sun)"/>
-    <!-- Mountains — organic wobble, layered depth -->
-    <path d="M0 110 Q15 85 32 90 Q48 72 65 78 Q82 60 100 68 Q115 52 135 62 Q150 48 168 58 Q185 45 200 55 Q218 42 235 52 Q250 48 268 58 Q285 52 300 65 Q310 60 320 72 L320 160 L0 160Z" fill="${mountainBlueDark}" opacity="0.4"/>
-    <path d="M0 125 Q20 105 42 110 Q60 95 82 102 Q100 88 120 96 Q140 82 160 92 Q180 78 200 88 Q220 76 240 86 Q260 80 280 92 Q300 85 320 98 L320 160 L0 160Z" fill="${mountainBlue}" opacity="0.38"/>
-    <path d="M0 138 Q30 128 60 132 Q90 124 120 130 Q150 122 180 128 Q210 120 240 128 Q270 122 300 130 Q310 128 320 132 L320 160 L0 160Z" fill="${mountainBlueLight}" opacity="0.25"/>
-    <!-- Pine tree silhouettes on ridge -->
-    <path d="M42 128 L42 115 Q45 105 48 115 L48 128" fill="${mountainBlueDark}" opacity="0.35"/>
-    <path d="M38 118 Q45 108 52 118" fill="${mountainBlue}" opacity="0.25"/>
-    <path d="M270 126 L270 112 Q273 100 276 112 L276 126" fill="${mountainBlueDark}" opacity="0.3"/>
-    <path d="M266 115 Q273 104 280 115" fill="${mountainBlue}" opacity="0.22"/>
+    <!-- Blue Ridge mountains — 7 soft rolling ridgelines fading into atmospheric haze -->
+    <path d="M0 78 Q40 72 80 75 Q120 70 160 74 Q200 68 240 73 Q280 69 320 74 L320 160 L0 160Z" fill="${mountainBlueLight}" opacity="0.12"/>
+    <path d="M0 86 Q35 80 75 83 Q115 78 155 82 Q195 76 235 81 Q275 77 320 82 L320 160 L0 160Z" fill="${mountainBlueLight}" opacity="0.18"/>
+    <path d="M0 95 Q45 88 90 92 Q130 86 170 90 Q210 84 250 89 Q290 85 320 90 L320 160 L0 160Z" fill="${mountainBlue}" opacity="0.22"/>
+    <path d="M0 105 Q50 98 95 102 Q140 96 180 100 Q220 94 260 99 Q295 95 320 100 L320 160 L0 160Z" fill="${mountainBlue}" opacity="0.28"/>
+    <path d="M0 116 Q40 110 85 113 Q130 107 175 112 Q215 106 255 111 Q290 107 320 112 L320 160 L0 160Z" fill="${mountainBlueDark}" opacity="0.32"/>
+    <path d="M0 126 Q50 120 100 124 Q145 118 190 122 Q230 116 270 121 Q300 118 320 123 L320 160 L0 160Z" fill="${mountainBlueDark}" opacity="0.38"/>
+    <path d="M0 136 Q35 131 75 134 Q120 129 165 133 Q210 128 255 132 Q295 129 320 133 L320 160 L0 160Z" fill="${sandDark}" opacity="0.3"/>
+    <!-- Pine tree silhouettes on foreground ridge -->
+    <path d="M42 132 L42 118 Q45 108 48 118 L48 132" fill="${mountainBlueDark}" opacity="0.35"/>
+    <path d="M38 122 Q45 112 52 122" fill="${mountainBlue}" opacity="0.25"/>
+    <path d="M270 130 L270 116 Q273 104 276 116 L276 130" fill="${mountainBlueDark}" opacity="0.3"/>
+    <path d="M266 120 Q273 108 280 120" fill="${mountainBlue}" opacity="0.22"/>
+    <!-- Atmospheric haze between layers -->
+    <ellipse cx="160" cy="95" rx="120" ry="6" fill="${mountainBlueLight}" opacity="0.1"/>
+    <ellipse cx="100" cy="112" rx="80" ry="5" fill="${offWhite}" opacity="0.08"/>
     <!-- Birds in sky -->
     <path d="M180 35 L183 33 L186 35" fill="none" stroke="${offWhite}" stroke-width="0.7" opacity="0.5"/>
     <path d="M210 42 L212 40 L214 42" fill="none" stroke="${offWhite}" stroke-width="0.6" opacity="0.4"/>
