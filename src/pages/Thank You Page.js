@@ -4,6 +4,7 @@
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
+import { trackPurchase } from 'backend/analyticsHelpers.web';
 import { colors, typography } from 'public/designTokens.js';
 import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -41,6 +42,17 @@ $w.onReady(async function () {
     lineItems: orderCtx?.lineItems || [],
     totals: { total: orderCtx?.total || 0 },
   });
+
+  // Increment purchaseCount in ProductAnalytics for each purchased item
+  try {
+    const lineItems = orderCtx?.lineItems || [];
+    for (const item of lineItems) {
+      const pid = item.catalogItemId || item.productId || '';
+      if (pid) {
+        trackPurchase(pid).catch(err => console.error('[ThankYou] trackPurchase failed:', err.message));
+      }
+    }
+  } catch (e) {}
 
   // Mark browse session as converted to cancel recovery emails
   try {

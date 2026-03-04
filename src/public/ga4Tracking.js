@@ -11,6 +11,9 @@ import {
   buildCheckoutEvent,
   buildPurchaseEvent,
   buildWishlistEvent,
+  buildViewItemListEvent,
+  buildSearchEvent,
+  buildViewCartEvent,
 } from 'backend/analyticsHelpers.web';
 
 let _wixWindow = null;
@@ -124,4 +127,110 @@ export async function fireCustomEvent(eventName, params = {}) {
       ...params,
     });
   } catch (e) {}
+}
+
+/**
+ * Fire a GA4 view_item_list event for category/collection page impressions.
+ * @param {Array} items - Array of product objects in the list
+ * @param {string} listName - Category or list name
+ */
+export async function fireViewItemList(items, listName) {
+  try {
+    const ww = await getWixWindow();
+    if (!ww?.trackEvent) return;
+    const payload = await buildViewItemListEvent(items, listName);
+    if (payload && payload.items) {
+      ww.trackEvent('CustomEvent', {
+        event: 'view_item_list',
+        ...payload,
+      });
+    }
+  } catch (e) {}
+}
+
+/**
+ * Fire a GA4 search event when a user performs a search.
+ * @param {string} query - Search query string
+ * @param {number} resultCount - Number of results
+ */
+export async function fireSearch(query, resultCount) {
+  try {
+    const ww = await getWixWindow();
+    if (!ww?.trackEvent) return;
+    const payload = await buildSearchEvent(query, resultCount);
+    if (payload) {
+      ww.trackEvent('CustomEvent', {
+        event: 'search',
+        ...payload,
+      });
+    }
+  } catch (e) {}
+}
+
+/**
+ * Fire a GA4 view_cart event for cart funnel tracking.
+ * @param {Array} cartItems - Array of cart line items
+ * @param {number} cartTotal - Cart subtotal
+ */
+export async function fireViewCart(cartItems, cartTotal) {
+  try {
+    const ww = await getWixWindow();
+    if (!ww?.trackEvent) return;
+    const payload = await buildViewCartEvent(cartItems, cartTotal);
+    if (payload) {
+      ww.trackEvent('CustomEvent', {
+        event: 'view_cart',
+        ...payload,
+      });
+    }
+  } catch (e) {}
+}
+
+/**
+ * Initialize scroll depth tracking. Fires GA4 events at 25%, 50%, 75%, 100%.
+ * @returns {Function} Cleanup function to remove the scroll listener
+ */
+export function initScrollDepthTracking() {
+  const thresholds = [25, 50, 75, 100];
+  const fired = new Set();
+
+  function handleScroll() {
+    try {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (docHeight <= 0) return;
+
+      const pct = Math.round((scrollTop / docHeight) * 100);
+
+      for (const threshold of thresholds) {
+        if (pct >= threshold && !fired.has(threshold)) {
+          fired.add(threshold);
+          getWixWindow().then(ww => {
+            if (ww?.trackEvent) {
+              ww.trackEvent('CustomEvent', {
+                event: 'scroll_depth',
+                percent_scrolled: threshold,
+                page: (typeof window !== 'undefined' && window.location?.pathname) || '/',
+              });
+            }
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    } catch (e) {}
+  }
+
+  return function cleanup() {
+    if (typeof window !== 'undefined') {
+      try {
+        window.removeEventListener('scroll', handleScroll);
+      } catch (e) {}
+    }
+  };
 }

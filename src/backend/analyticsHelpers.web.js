@@ -335,3 +335,101 @@ export const buildWishlistEvent = webMethod(
     };
   }
 );
+
+/**
+ * Build GA4 view_item_list event payload for category/collection page impressions.
+ *
+ * @function buildViewItemListEvent
+ * @param {Array} items - Array of product objects displayed in the list
+ * @param {string} listName - Category or list name (e.g., 'futon-frames')
+ * @returns {Object} GA4-compatible view_item_list payload
+ * @permission Anyone
+ */
+export const buildViewItemListEvent = webMethod(
+  Permissions.Anyone,
+  async (items, listName) => {
+    const products = Array.isArray(items) ? items : [];
+    return {
+      item_list_name: listName || '',
+      items: products.map((p, index) => ({
+        item_id: p._id || '',
+        item_name: sanitize(p.name || '', 200),
+        price: p.price || 0,
+        item_category: (p.collections || [])[0] || '',
+        index,
+      })),
+    };
+  }
+);
+
+/**
+ * Build GA4 search event payload.
+ *
+ * @function buildSearchEvent
+ * @param {string} query - Search query string
+ * @param {number} resultCount - Number of results returned
+ * @returns {Object} GA4-compatible search payload
+ * @permission Anyone
+ */
+export const buildSearchEvent = webMethod(
+  Permissions.Anyone,
+  async (query, resultCount) => {
+    return {
+      search_term: sanitize(query || '', 200),
+      results_count: resultCount || 0,
+    };
+  }
+);
+
+/**
+ * Track a purchase event for a product. Increments purchaseCount in ProductAnalytics.
+ *
+ * @function trackPurchase
+ * @param {string} productId - The Wix product _id
+ * @returns {Promise<void>}
+ * @permission Anyone
+ */
+export const trackPurchase = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    try {
+      const existing = await wixData.query('ProductAnalytics')
+        .eq('productId', sanitize(productId, 50))
+        .find();
+
+      if (existing.items.length > 0) {
+        const record = existing.items[0];
+        record.purchaseCount = (record.purchaseCount || 0) + 1;
+        await wixData.update('ProductAnalytics', record);
+      }
+    } catch (err) {
+      console.error('Purchase tracking error:', err);
+    }
+  }
+);
+
+/**
+ * Build GA4 view_cart event payload for cart funnel tracking.
+ *
+ * @function buildViewCartEvent
+ * @param {Array} cartItems - Array of cart line items
+ * @param {number} cartTotal - Cart subtotal
+ * @returns {Object} GA4-compatible view_cart payload
+ * @permission Anyone
+ */
+export const buildViewCartEvent = webMethod(
+  Permissions.Anyone,
+  async (cartItems, cartTotal) => {
+    const items = Array.isArray(cartItems) ? cartItems : [];
+    return {
+      currency: 'USD',
+      value: cartTotal || 0,
+      items: items.map(item => ({
+        item_id: item._id || item.productId || '',
+        item_name: sanitize(item.name || item.productName || '', 200),
+        price: item.price || 0,
+        quantity: item.quantity || 1,
+      })),
+    };
+  }
+);

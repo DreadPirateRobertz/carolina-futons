@@ -2,6 +2,7 @@
 // Full-text search with autocomplete, filters, sorting via searchService backend
 import wixLocationFrontend from 'wix-location-frontend';
 import { trackEvent } from 'public/engagementTracker';
+import { fireSearch, fireViewItemList } from 'public/ga4Tracking';
 import { addToCart } from 'public/cartService';
 import { limitForViewport, initBackToTop, getViewport } from 'public/mobileHelpers';
 import {
@@ -76,6 +77,8 @@ async function performSearch(query) {
     }
 
     trackEvent('search_results', { query, resultCount: result.total });
+    fireSearch(query, result.total).catch(() => {});
+    fireViewItemList(result.products, 'search_results').catch(() => {});
 
     try {
       $w('#resultCount').text = `${result.total} product${result.total !== 1 ? 's' : ''} found`;

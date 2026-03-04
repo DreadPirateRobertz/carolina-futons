@@ -13,6 +13,7 @@ import { searchProducts, suggestFilterRelaxation, getFacetMetadata } from 'backe
 import { buildFilterChips, removeFilter, clearAllFilters, serializeFiltersToUrl, deserializeFiltersFromUrl, formatFeatureLabel, sanitizeFilterInput } from 'public/categoryFilterHelpers';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
@@ -676,6 +677,11 @@ function updateResultCount(currentPath) {
 
     dataset.onReady(() => {
       refreshCount();
+      // Fire GA4 view_item_list for category impression tracking
+      try {
+        const items = dataset.getCurrentItem ? [dataset.getCurrentItem()] : [];
+        fireViewItemList(items, currentPath).catch(() => {});
+      } catch (e) {}
       // Re-count when dataset content changes (after filter/sort)
       try {
         dataset.onCurrentIndexChanged(() => refreshCount());
@@ -1006,6 +1012,11 @@ async function applyAdvancedFilters(currentPath) {
 
     // Announce result count to screen readers
     announce($w, `Showing ${result.totalCount} product${result.totalCount !== 1 ? 's' : ''}`);
+
+    // Fire GA4 view_item_list for filtered results
+    try {
+      fireViewItemList(result.items || [], currentPath).catch(() => {});
+    } catch (e) {}
 
     // Handle zero results
     if (result.totalCount === 0) {

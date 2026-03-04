@@ -17,6 +17,7 @@ import {
 } from 'public/cartService';
 import { initBackToTop, isMobile, collapseOnMobile, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
+import { fireViewCart } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import {
   getCartItemStyles,
@@ -45,6 +46,12 @@ async function initCartPage() {
     }
 
     trackEvent('page_view', { page: 'cart', itemCount: cart.lineItems.length });
+
+    // Fire GA4 view_cart for funnel drop-off tracking (Cart→Checkout)
+    try {
+      const subtotal = cart.totals?.subtotal || 0;
+      fireViewCart(cart.lineItems, subtotal).catch(() => {});
+    } catch (e) {}
 
     // Collapse non-essential sections on mobile for faster paint
     collapseOnMobile($w, ['#cartRecentSection', '#cartFinancingSection']);

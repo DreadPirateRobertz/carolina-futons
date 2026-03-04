@@ -15,7 +15,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
 import { isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
-import { fireCustomEvent } from 'public/ga4Tracking';
+import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
 import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
@@ -53,6 +53,7 @@ $w.onReady(async function () {
   initNewsletterModal();
   initInstallBanner();
   injectCanonicalUrl();
+  initScrollDepthTracking();
   await injectBusinessSchema();
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
