@@ -132,12 +132,15 @@ function renderReviews($w, reviewsResult) {
       try { $item('#reviewDate').text = itemData.date; } catch (e) {}
       try { $item('#reviewTitle').text = itemData.title || ''; } catch (e) {}
       try { $item('#reviewBody').text = itemData.body; } catch (e) {}
+      // Render stars for this review item
       try {
-        renderStars({ [sel => sel]: null, ...createItemStarHelper($item) }, '#reviewStars', itemData.rating);
-      } catch (e) {
-        // Fallback: set star text directly
-        try { $item('#reviewStars').text = '★'.repeat(itemData.rating) + '☆'.repeat(5 - itemData.rating); } catch (e2) {}
-      }
+        const starData = styleReviewStars(itemData.rating);
+        let stars = '★'.repeat(starData.filled);
+        if (starData.half) stars += '½';
+        stars += '☆'.repeat(starData.empty);
+        $item('#reviewStars').text = stars;
+        try { $item('#reviewStars').style.color = starData.filledColor; } catch (e2) {}
+      } catch (e) {}
 
       // Verified purchase badge
       try {
@@ -169,12 +172,6 @@ function renderReviews($w, reviewsResult) {
 
     repeater.data = reviewsResult.reviews.map((r, i) => ({ ...r, _id: r._id || `rev-${i}` }));
   } catch (e) {}
-}
-
-function createItemStarHelper($item) {
-  return new Proxy({}, {
-    get: (_, prop) => (sel) => $item(sel),
-  });
 }
 
 // ── Sort Dropdown ─────────────────────────────────────────────────────
