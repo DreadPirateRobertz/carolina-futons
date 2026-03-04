@@ -25,8 +25,8 @@ import {
   getEmptyCartStyles,
   getCheckoutButtonStyles,
   getQuantitySpinnerStyles,
-  getCrossSellCardStyles,
 } from 'public/cartStyles.js';
+import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -242,8 +242,8 @@ async function loadRecentlyViewed(cart) {
   } catch (e) {}
 }
 
-// ── Intelligent Cross-Sell ("Complete Your Futon") ──────────────────
-// Analyzes cart contents and suggests complementary products
+// ── Intelligent Cross-Sell ("Complete the Room") ──────────────────
+// Analyzes cart contents and suggests complementary products with bundle savings
 
 async function loadCartSuggestions(cart) {
   try {
@@ -261,55 +261,40 @@ async function loadCartSuggestions(cart) {
       return;
     }
 
-    // Display first suggestion group
-    const suggestion = suggestions[0];
-    try {
-      $w('#suggestionsHeading').text = suggestion.heading;
-    } catch (e) {}
+    const cartSubtotal = currentCart.totals?.subtotal || 0;
+    const bundles = buildRoomBundles(suggestions, cartSubtotal);
 
-    const repeater = $w('#suggestionsRepeater');
-    if (!repeater) return;
-
-    const crossSellStyles = getCrossSellCardStyles();
-    repeater.onItemReady(($item, itemData) => {
-      try { $item('#sugImage').src = itemData.mainMedia; } catch (e) {}
-      try { $item('#sugImage').alt = `${itemData.name} - add to cart`; } catch (e) {}
-      try { $item('#sugName').text = itemData.name; } catch (e) {}
-      try { $item('#sugName').style.color = crossSellStyles.nameColor; } catch (e) {}
-      try { $item('#sugPrice').text = itemData.formattedPrice; } catch (e) {}
-      try { $item('#sugPrice').style.color = crossSellStyles.priceColor; } catch (e) {}
-
-      // Coral CTA button for add-to-cart
-      try { $item('#sugAddBtn').style.backgroundColor = crossSellStyles.addBtnBackground; } catch (e) {}
-      try { $item('#sugAddBtn').style.color = crossSellStyles.addBtnTextColor; } catch (e) {}
-      try { $item('#sugAddBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
-
-      // Quick add to cart button
-      $item('#sugAddBtn').onClick(async () => {
-        try {
-          await addToCart(itemData._id);
-          $item('#sugAddBtn').label = 'Added!';
-          $item('#sugAddBtn').disable();
-          announce($w, `${itemData.name} added to cart`);
-          setTimeout(() => {
-            updateShippingProgress();
-            loadCartSuggestions();
-          }, 1000);
-        } catch (err) {
-          console.error('Error adding suggestion to cart:', err);
-        }
-      });
-
-      // Click image/name to view product
-      const navigate = () => {
+    initCrossSellWidget($w, {
+      bundles,
+      addToCart,
+      announce,
+      elements: {
+        section: '#suggestionsSection',
+        heading: '#suggestionsHeading',
+        subheading: '#suggestionsSubheading',
+        savingsBadge: '#sugSavingsBadge',
+        repeater: '#suggestionsRepeater',
+        bundlePrice: '#sugBundlePrice',
+        originalPrice: '#sugOriginalPrice',
+      },
+      cardElements: {
+        image: '#sugImage',
+        name: '#sugName',
+        price: '#sugPrice',
+        addBtn: '#sugAddBtn',
+      },
+      onProductClick: (product) => {
         import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
+          to(`/product-page/${product.slug}`);
         });
-      };
-      makeClickable($item('#sugImage'), navigate, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#sugName'), navigate, { ariaLabel: `View ${itemData.name} details` });
+      },
+      onAdded: () => {
+        setTimeout(() => {
+          updateShippingProgress();
+          loadCartSuggestions();
+        }, 1000);
+      },
     });
-    repeater.data = limitForViewport(suggestion.products, { mobile: 2, tablet: 3, desktop: 4 });
   } catch (err) {
     console.error('Error loading cart suggestions:', err);
   }
