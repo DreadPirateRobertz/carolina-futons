@@ -143,21 +143,30 @@ When implementing any design from Figma:
 - **Assets**: Store in appropriate Wix media directories
 - IMPORTANT: If Figma MCP returns a localhost source for an image/SVG, use that source directly — DO NOT create placeholders
 
-### SVG Illustration Quality Bar (PM Directive 2026-03-02)
+### Illustration Quality — FIGMA-FIRST (PM Directive 2026-03-04)
 
-**design.jpeg is the quality bar. Flat vector shapes with opacity = REJECTED.**
+**NO MORE PROGRAMMATIC SVG ILLUSTRATIONS.** All illustrations must be designed in Figma Draw, not coded as JS template strings.
 
-**Mountains MUST look like Blue Ridge Mountains** — soft rolling ridgelines, 5-7 overlapping layers fading into distance with atmospheric haze between them, morning/evening light. NOT jagged Rockies, NOT flat hills, NOT generic peaks. Study Blue Ridge Parkway photos for reference. The signature look: layered ridgelines where each successive range is lighter and hazier.
+**MANDATORY PRE-READ**: Before ANY illustration work, read `docs/guides/figma-draw-tool-reference.md`. This is the comprehensive reference for tools, effects, workflow, and community resources.
 
-Every SVG illustration MUST include:
-1. **SVG filter effects** — `feTurbulence` + `feDisplacementMap` for watercolor texture on fills. No flat shapes.
-2. **Organic hand-drawn paths** — Add wobble/irregularity to bezier curves. Blue Ridge ridgelines are soft and rolling, not smooth mathematical curves. Add extra control points for natural undulation.
-3. **Detail elements** — Birds (V shapes in sky), pine tree branch layers (not blobs), wildflowers at base, chimney smoke, stars. Minimum 15 SVG elements per scene.
-4. **Rich gradients** — 5+ stops for sky transitions, not 2-stop linear. Layer multiple gradients for depth.
-5. **Paper grain overlay** — Subtle `feNoise` or texture filter for hand-drawn feel.
-6. **Atmospheric depth** — Foreground/midground/background layers with varying opacity. Fog, haze, light rays.
-7. **All colors from sharedTokens** — Zero hardcoded hex. Destructure from `colors`.
-8. **ALWAYS render and visually verify** — Tests passing is necessary but NOT sufficient. Screenshot the SVG and compare against design.jpeg before submitting PR.
+**design.jpeg is the quality bar.** Mountains MUST look like Blue Ridge Mountains — soft rolling ridgelines, 5-7 overlapping layers fading into distance with atmospheric haze.
+
+**Figma-First Workflow:**
+1. **Design in Figma Draw** — Use Pencil (ridgelines), Brush (watercolor texture), custom scatter brushes (foliage, birds, flowers)
+2. **Apply Figma effects** — Texture effect (edge distressing), Noise effect (paper grain), Progressive Blur (atmospheric haze), Dynamic Strokes (hand-drawn wiggle)
+3. **Export optimized SVG** — Figma Export → SVGO optimization → remove Figma metadata
+4. **Brand token injection** — Replace hardcoded hex colors with sharedTokens.js variable references
+5. **Integrate into codebase** — Inject via `$w('#container').html = svgString` (HtmlComponent)
+6. **Visually verify** — Render and compare against design.jpeg before PR submission
+
+**Quality requirements remain:**
+- 5+ gradient stops for sky transitions
+- 15+ distinct elements per scene (trees, birds, flowers, smoke, stars)
+- All colors from sharedTokens (zero hardcoded hex)
+- Atmospheric depth (FG/MG/BG layers with varying opacity)
+- design.jpeg comparison PASS required
+
+**What's DEPRECATED**: Writing SVG as JavaScript template strings, using feTurbulence/feDisplacementMap/feNoise filters in code. These produced "too abstract" results per overseer directive.
 
 ### Styling in Wix Velo
 
