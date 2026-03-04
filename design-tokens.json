@@ -32,9 +32,9 @@
     },
     "semantic": {
       "success": { "value": "#4A7C59", "description": "Forest green — in stock, success" },
-      "error": { "value": "#E8845C", "description": "Coral — errors, low stock" },
-      "muted": { "value": "#999999", "description": "Grey — disabled, inactive" },
-      "mutedBrown": { "value": "#8B7355", "description": "Warm brown — pending states" }
+      "error": { "value": "#C0392B", "description": "Red — errors, low stock" },
+      "muted": { "value": "#767676", "description": "Grey — disabled, inactive (WCAG AA compliant)" },
+      "mutedBrown": { "value": "#816D51", "description": "Warm brown — pending states" }
     }
   },
   "fontFamilies": {

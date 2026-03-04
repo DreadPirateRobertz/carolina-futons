@@ -109,9 +109,9 @@ describe('shared colors', () => {
 
   it('has semantic colors', () => {
     expect(colors.success).toBe('#4A7C59');
-    expect(colors.error).toBe('#E8845C');
-    expect(colors.muted).toBe('#999999');
-    expect(colors.mutedBrown).toBe('#8B7355');
+    expect(colors.error).toBe('#C0392B');
+    expect(colors.muted).toBe('#767676');
+    expect(colors.mutedBrown).toBe('#816D51');
   });
 
   it('all values are valid hex or rgba', () => {

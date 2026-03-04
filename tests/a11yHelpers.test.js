@@ -393,8 +393,8 @@ describe('initSkipNav', () => {
   it('registers onClick handler when element exists', () => {
     let clickHandler = null;
     const $w = (id) => {
-      if (id === '#skipNav') {
-        return { onClick: (fn) => { clickHandler = fn; } };
+      if (id === '#skipToContent') {
+        return { accessibility: {}, onClick: (fn) => { clickHandler = fn; } };
       }
       return { scrollTo: () => {} };
     };
@@ -406,8 +406,8 @@ describe('initSkipNav', () => {
   it('clicking skip nav scrolls to main content', () => {
     let scrolled = false;
     const $w = (id) => {
-      if (id === '#skipNav') {
-        return { onClick: (fn) => fn() };
+      if (id === '#skipToContent') {
+        return { accessibility: {}, onClick: (fn) => fn() };
       }
       if (id === '#mainContent') {
         return { scrollTo: () => { scrolled = true; } };

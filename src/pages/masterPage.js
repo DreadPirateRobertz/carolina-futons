@@ -20,6 +20,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
+import { initSkipNav, setupAccessibleDialog, announce } from 'public/a11yHelpers';
 import {
   applyActiveNavState,
   initMegaMenu,
@@ -34,6 +35,9 @@ import {
 
 let _previousCartItemCount = null;
 let _lastFocusedBeforeOverlay = null;
+let _newsletterDialog = null;
+let _exitIntentDialog = null;
+let _promoDialog = null;
 
 $w.onReady(async function () {
   captureInstallPrompt();
@@ -81,16 +85,8 @@ $w.onReady(async function () {
 // Skip-to-content link, keyboard Escape for modals, focus management
 
 function initAccessibility() {
-  // Skip-to-content link — visible on Tab focus for keyboard users
-  try {
-    const skipLink = $w('#skipToContent');
-    if (skipLink) {
-      try { skipLink.accessibility.ariaLabel = 'Skip to main content'; } catch (e) {}
-      skipLink.onClick(() => {
-        try { $w('#mainContent').scrollTo(); } catch (e) {}
-      });
-    }
-  } catch (e) {}
+  // Skip-to-content link — delegates to a11yHelpers.initSkipNav
+  initSkipNav($w, '#mainContent', '#skipToContent');
 
   // aria-live region for screen reader announcements (used by a11yHelpers.announce)
   try {
@@ -102,31 +98,14 @@ function initAccessibility() {
     }
   } catch (e) {}
 
-  // Global Escape key handler — closes any open overlay and restores focus
+  // Global Escape key handler — side cart (dialogs handle their own Escape via setupAccessibleDialog)
   try {
     if (typeof document !== 'undefined') {
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          // Close side cart
+          // Close side cart (not managed by setupAccessibleDialog)
           try { $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 200 }); } catch (e) {}
-          // Close promo lightbox
-          try { $w('#promoLightbox').hide('fade', { duration: 200 }); } catch (e) {}
-          try { $w('#promoOverlay').hide('fade', { duration: 200 }); } catch (e) {}
           // Mobile menu Escape is handled by initMobileDrawer's own keydown handler
-          // Close exit intent popup
-          try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
-          try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
-          // Close newsletter modal
-          try { $w('#newsletterModal').hide('fade', { duration: 200 }); } catch (e) {}
-          try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
-          // Restore focus to previously active element
-          try {
-            if (document.activeElement && document.activeElement !== document.body) {
-              // Focus stays on current element
-            } else if (_lastFocusedBeforeOverlay) {
-              _lastFocusedBeforeOverlay.focus();
-            }
-          } catch (e) {}
         }
       });
     }
@@ -383,17 +362,20 @@ async function initPromoLightbox() {
     initPromoEmailCapture();
     initPromoCTA(promo.ctaUrl);
 
-    // Set dialog ARIA attributes
-    try { lightbox.accessibility.role = 'dialog'; } catch (e) {}
-    try { lightbox.accessibility.ariaModal = true; } catch (e) {}
-    try { lightbox.accessibility.ariaLabel = 'Promotional offer'; } catch (e) {}
-
-    // Store focus for restoration
-    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
+    // Accessible dialog: ARIA, focus trap, Escape key, focus restore
+    _promoDialog = setupAccessibleDialog($w, {
+      panelId: '#promoLightbox',
+      closeId: '#promoClose',
+      titleId: '#promoTitle',
+      focusableIds: ['#promoClose', '#promoCopyCode', '#promoEmailInput', '#promoEmailSubmit', '#promoCTA'],
+      onClose: () => {
+        dismissLightbox(dismissKey);
+      },
+    });
 
     // Show the lightbox
     $w('#promoOverlay').show('fade', { duration: 300 });
-    lightbox.show('fade', { duration: 300 });
+    _promoDialog.open();
   } catch (e) {
     // Promo lightbox is non-critical — never block the page
   }
@@ -510,15 +492,20 @@ function dismissLightbox(dismissKey) {
 }
 
 function initPromoDismiss(promoId, dismissKey) {
+  // #promoClose is wired by setupAccessibleDialog (handles focus restore)
+  try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
+  // Route dismiss/overlay through dialog.close() for WCAG 2.4.3 focus restoration
   try {
-    $w('#promoClose').onClick(() => dismissLightbox(dismissKey));
-    try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
+    $w('#promoDismiss').onClick(() => {
+      if (_promoDialog) _promoDialog.close();
+      else dismissLightbox(dismissKey);
+    });
   } catch (e) {}
   try {
-    $w('#promoDismiss').onClick(() => dismissLightbox(dismissKey));
-  } catch (e) {}
-  try {
-    $w('#promoOverlay').onClick(() => dismissLightbox(dismissKey));
+    $w('#promoOverlay').onClick(() => {
+      if (_promoDialog) _promoDialog.close();
+      else dismissLightbox(dismissKey);
+    });
   } catch (e) {}
 }
 
@@ -691,41 +678,28 @@ function showExitPopup() {
 
     const config = getExitIntentConfig();
 
-    // Store focus for restoration
-    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
-
     // Populate content from config
     try { $w('#exitTitle').text = config.title; } catch (e) {}
     try { $w('#exitSubtitle').text = config.subtitle; } catch (e) {}
 
-    // Set dialog ARIA attributes
-    try { popup.accessibility.role = 'dialog'; } catch (e) {}
-    try { popup.accessibility.ariaModal = true; } catch (e) {}
-    try { popup.accessibility.ariaLabel = config.ariaLabel; } catch (e) {}
+    // Accessible dialog: ARIA, focus trap, Escape key, focus restore
+    _exitIntentDialog = setupAccessibleDialog($w, {
+      panelId: '#exitIntentPopup',
+      closeId: '#exitClose',
+      titleId: '#exitTitle',
+      focusableIds: ['#exitClose', '#exitEmailInput', '#exitEmailSubmit', '#exitSwatchLink'],
+      onClose: () => {
+        markExitIntentDismissed();
+        try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+      },
+    });
 
-    popup.show('fade', { duration: 300 });
     try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
+    _exitIntentDialog.open();
 
     trackEvent('exit_intent_shown', { page: wixLocationFrontend.path?.join('/') || '' });
 
-    // Escape key closes popup
-    try {
-      if (typeof document !== 'undefined') {
-        const escHandler = (e) => {
-          if (e.key === 'Escape') {
-            dismissExitPopup();
-            document.removeEventListener('keydown', escHandler);
-          }
-        };
-        document.addEventListener('keydown', escHandler);
-      }
-    } catch (e) {}
-
-    // Close handlers
-    try {
-      $w('#exitClose').onClick(() => dismissExitPopup());
-      try { $w('#exitClose').accessibility.ariaLabel = config.closeAriaLabel; } catch (e) {}
-    } catch (e) {}
+    // Overlay click to close
     try {
       $w('#exitOverlay').onClick(() => dismissExitPopup());
     } catch (e) {}
@@ -799,29 +773,11 @@ function showExitPopup() {
         import('wix-location-frontend').then(({ to }) => to('/contact'));
       });
     } catch (e) {}
-
-    // Focus trap: keep focus within the popup dialog
-    try {
-      if (typeof document !== 'undefined') {
-        const focusableSelector = 'input, button, [tabindex]:not([tabindex="-1"]), a[href]';
-        popup.onViewportEnter(() => {
-          try { $w('#exitEmailInput').focus(); } catch (e) {}
-        });
-      }
-    } catch (e) {}
   } catch (e) {}
 }
 
 function dismissExitPopup() {
-  markExitIntentDismissed();
-  try { $w('#exitIntentPopup').hide('fade', { duration: 200 }); } catch (e) {}
-  try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
-  // Restore focus to element that was focused before popup
-  try {
-    if (_lastFocusedBeforeOverlay && typeof _lastFocusedBeforeOverlay.focus === 'function') {
-      _lastFocusedBeforeOverlay.focus();
-    }
-  } catch (e) {}
+  if (_exitIntentDialog) _exitIntentDialog.close();
 }
 
 // ── Header Shipping Progress Bar ─────────────────────────────────
@@ -864,16 +820,22 @@ function initNewsletterModal() {
     const modal = $w('#newsletterModal');
     if (!trigger && !modal) return;
 
+    // Accessible dialog: ARIA, focus trap, Escape key, focus restore
+    _newsletterDialog = setupAccessibleDialog($w, {
+      panelId: '#newsletterModal',
+      closeId: '#newsletterModalClose',
+      focusableIds: ['#newsletterModalClose', '#newsletterModalEmail', '#newsletterModalSubmit'],
+      onClose: () => {
+        try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+      },
+    });
+
     // Open modal on trigger click (e.g., CTA button in hero or footer)
     if (trigger) {
       trigger.onClick(() => showNewsletterModal());
     }
 
-    // Close handlers
-    try {
-      $w('#newsletterModalClose').onClick(() => dismissNewsletterModal());
-      try { $w('#newsletterModalClose').accessibility.ariaLabel = 'Close newsletter signup'; } catch (e) {}
-    } catch (e) {}
+    // Overlay click to close
     try {
       $w('#newsletterModalOverlay').onClick(() => dismissNewsletterModal());
     } catch (e) {}
@@ -942,23 +904,13 @@ function showNewsletterModal() {
       } catch (e) {}
     }
 
-    try { if (typeof document !== 'undefined') _lastFocusedBeforeOverlay = document.activeElement; } catch (e) {}
-
-    const modal = $w('#newsletterModal');
-    if (!modal) return;
-
-    try { modal.accessibility.role = 'dialog'; } catch (e) {}
-    try { modal.accessibility.ariaModal = true; } catch (e) {}
-    try { modal.accessibility.ariaLabel = 'Newsletter signup — 10% off your first order'; } catch (e) {}
-
     try { $w('#newsletterModalOverlay').show('fade', { duration: 300 }); } catch (e) {}
-    modal.show('fade', { duration: 300 });
+    if (_newsletterDialog) _newsletterDialog.open();
   } catch (e) {}
 }
 
 function dismissNewsletterModal() {
-  try { $w('#newsletterModal').hide('fade', { duration: 200 }); } catch (e) {}
-  try { $w('#newsletterModalOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+  if (_newsletterDialog) _newsletterDialog.close();
 }
 
 // ── Mountain Skyline Header ──────────────────────────────────────

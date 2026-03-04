@@ -34,9 +34,9 @@ export const colors = {
 
   // Semantic / status
   success: '#4A7C59',
-  error: '#E8845C',
-  muted: '#999999',
-  mutedBrown: '#8B7355',
+  error: '#C0392B',
+  muted: '#767676',
+  mutedBrown: '#816D51',
 };
 
 export const fontFamilies = {

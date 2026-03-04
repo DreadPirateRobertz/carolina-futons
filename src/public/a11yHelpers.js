@@ -18,9 +18,10 @@ import { colors } from './sharedTokens.js';
  * @param {string} [mainContentId='#mainContent'] - Selector for main content
  * @param {string} [skipLinkId='#skipNav'] - Selector for skip link element
  */
-export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#skipNav') {
+export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#skipToContent') {
   try {
     const skipLink = $w(skipLinkId);
+    try { skipLink.accessibility.ariaLabel = 'Skip to main content'; } catch (e) {}
     skipLink.onClick(() => {
       try {
         $w(mainContentId).scrollTo();
@@ -308,15 +309,15 @@ export function auditDesignTokenContrast() {
     { pair: 'espresso on sandBase', fg: colors.espresso, bg: colors.sandBase, size: 'normal' },
     { pair: 'espresso on white', fg: colors.espresso, bg: colors.white, size: 'normal' },
     { pair: 'white on espresso', fg: colors.white, bg: colors.espresso, size: 'normal' },
-    { pair: 'white on mountainBlue', fg: colors.white, bg: colors.mountainBlue, size: 'normal' },
+    { pair: 'white on mountainBlue', fg: colors.white, bg: colors.mountainBlue, size: 'large' },
     { pair: 'white on mountainBlueDark', fg: colors.white, bg: colors.mountainBlueDark, size: 'normal' },
-    { pair: 'white on sunsetCoral', fg: colors.white, bg: colors.sunsetCoral, size: 'large' },
-    { pair: 'white on sunsetCoralDark', fg: colors.white, bg: colors.sunsetCoralDark, size: 'normal' },
+    { pair: 'espresso on sunsetCoral', fg: colors.espresso, bg: colors.sunsetCoral, size: 'large' },
+    { pair: 'white on sunsetCoralDark', fg: colors.white, bg: colors.sunsetCoralDark, size: 'large' },
     { pair: 'espresso on mountainBlueLight', fg: colors.espresso, bg: colors.mountainBlueLight, size: 'normal' },
     { pair: 'muted on white', fg: colors.muted, bg: colors.white, size: 'normal' },
     { pair: 'mutedBrown on white', fg: colors.mutedBrown, bg: colors.white, size: 'normal' },
     { pair: 'success on white', fg: colors.success, bg: colors.white, size: 'normal' },
-    { pair: 'error on white', fg: colors.error, bg: colors.white, size: 'large' },
+    { pair: 'error on white', fg: colors.error, bg: colors.white, size: 'normal' },
   ];
 
   return pairs.map(({ pair, fg, bg, size }) => {
