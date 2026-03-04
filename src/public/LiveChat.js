@@ -6,13 +6,11 @@
 
 import { isOnline, getCannedResponses, getCannedResponse, sendMessage, getChatHistory, createSupportTicket } from 'backend/liveChatService.web';
 import { trackEvent } from 'public/engagementTracker';
-import { colors, transitions, spacing } from 'public/designTokens.js';
+import { colors, transitions, spacing, breakpoints } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 import { announce, createFocusTrap } from 'public/a11yHelpers';
 import { initProactiveTriggers, cleanupProactiveTriggers } from 'public/proactiveChatTriggers.js';
 import wixLocationFrontend from 'wix-location-frontend';
-
-const MOBILE_BREAKPOINT = 768;
 
 let _sessionId = null;
 let _userName = '';
@@ -384,7 +382,7 @@ function _releaseFocusTrap() {
 function _isMobile() {
   try {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < MOBILE_BREAKPOINT;
+      return window.innerWidth < breakpoints.tablet;
     }
   } catch (e) {}
   return false;

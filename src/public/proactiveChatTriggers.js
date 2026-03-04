@@ -4,10 +4,9 @@
 // Integrated from LiveChat.js via initProactiveTriggers() after chat widget init.
 
 import { trackEvent } from 'public/engagementTracker';
+import { breakpoints } from 'public/designTokens.js';
 
 // ── Constants ───────────────────────────────────────────────────────
-
-const MOBILE_BREAKPOINT = 768;
 const MAX_IMPRESSIONS_PER_SESSION = 2;
 const SESSION_KEY_DISMISSED = 'cf_chat_proactive_dismissed';
 const SESSION_KEY_IMPRESSIONS = 'cf_chat_proactive_impressions';
@@ -244,7 +243,7 @@ function _registerKeyboard($w) {
 function _detectMobile() {
   try {
     if (typeof window !== 'undefined') {
-      return window.innerWidth <= MOBILE_BREAKPOINT;
+      return window.innerWidth <= breakpoints.tablet;
     }
   } catch (e) {}
   return false;

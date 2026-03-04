@@ -17,7 +17,7 @@ import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
-import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { announce, makeClickable, createFocusTrap } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
@@ -1259,6 +1259,19 @@ function restoreFiltersFromUrl(currentPath) {
 // ── Mobile Filter Drawer ────────────────────────────────────────
 
 function initFilterDrawer() {
+  let filterFocusTrap = null;
+
+  function closeFilterDrawer() {
+    try { $w('#filterDrawer').hide('slide', { duration: 300, direction: 'bottom' }); } catch (e) {}
+    try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+    try { $w('#filterToggleBtn').accessibility.ariaExpanded = false; } catch (e) {}
+    if (filterFocusTrap) {
+      try { filterFocusTrap.release(); } catch (e) {}
+      filterFocusTrap = null;
+    }
+    announce($w, 'Filters panel closed');
+  }
+
   try {
     // Toggle filter drawer as bottom sheet on mobile
     $w('#filterToggleBtn').onClick(() => {
@@ -1268,12 +1281,15 @@ function initFilterDrawer() {
           drawer.show('slide', { duration: 300, direction: 'bottom' });
           try { $w('#filterDrawerOverlay').show('fade', { duration: 200 }); } catch (e) {}
           try { $w('#filterToggleBtn').accessibility.ariaExpanded = true; } catch (e) {}
+          try {
+            filterFocusTrap = createFocusTrap($w, '#filterDrawer', [
+              '#filterDrawerApply',
+              '#filterToggleBtn',
+            ]);
+          } catch (e) {}
           announce($w, 'Filters panel opened');
         } else {
-          drawer.hide('slide', { duration: 300, direction: 'bottom' });
-          try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
-          try { $w('#filterToggleBtn').accessibility.ariaExpanded = false; } catch (e) {}
-          announce($w, 'Filters panel closed');
+          closeFilterDrawer();
         }
       } catch (e) {}
     });
@@ -1281,18 +1297,30 @@ function initFilterDrawer() {
     // Close drawer on overlay tap
     try {
       $w('#filterDrawerOverlay').onClick(() => {
-        try { $w('#filterDrawer').hide('slide', { duration: 300, direction: 'bottom' }); } catch (e) {}
-        try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+        closeFilterDrawer();
       });
     } catch (e) {}
 
     // "Apply" button in drawer
     try {
       $w('#filterDrawerApply').onClick(() => {
-        try { $w('#filterDrawer').hide('slide', { duration: 300, direction: 'bottom' }); } catch (e) {}
-        try { $w('#filterDrawerOverlay').hide('fade', { duration: 200 }); } catch (e) {}
+        closeFilterDrawer();
       });
     } catch (e) {}
+
+    // Escape key closes filter drawer
+    if (typeof document !== 'undefined') {
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          try {
+            const drawer = $w('#filterDrawer');
+            if (drawer && !drawer.hidden) {
+              closeFilterDrawer();
+            }
+          } catch (e2) {}
+        }
+      });
+    }
 
     // Show toggle button, keep drawer collapsed initially
     try { $w('#filterToggleBtn').show(); } catch (e) {}
