@@ -96,6 +96,10 @@ vi.mock('public/Product360Viewer.js', () => ({
   initProduct360Viewer: vi.fn().mockResolvedValue({ destroy() {} }),
 }));
 
+vi.mock('public/ProductQA.js', () => ({
+  initProductQA: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Product Page', () => {
