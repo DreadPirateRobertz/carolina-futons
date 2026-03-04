@@ -364,14 +364,14 @@ describe('Empty State Illustrations', () => {
 
   describe('Quality bar — detail elements', () => {
     REQUIRED_KEYS.forEach(key => {
-      it(`${key}: has detail elements (birds, trees, or wildflowers)`, () => {
+      it(`${key}: has birds (V-shaped line pairs) or wildflowers (small circles)`, () => {
         const svg = ILLUSTRATION_SVGS[key];
-        // Birds = V-shaped line pairs, trees = triangular/trunk paths, flowers = small circles with stems
-        const hasBirds = /stroke-width="1[^"]*"[^>]*opacity="0\.[2-3]/.test(svg);
+        // Birds = V-shaped line pairs with subtle opacity
+        const hasBirds = /stroke-width="[01][^"]*"[^>]*opacity="0\.[2-3]/.test(svg);
+        // Wildflowers = small circles r < 3 (at least 2 per scene)
         const hasSmallCircles = (svg.match(/<circle[^>]*r="[1-3](\.\d)?"/g) || []).length >= 2;
-        const hasDetailPaths = countShapeElements(svg) >= 15;
-        expect(hasBirds || hasSmallCircles || hasDetailPaths,
-          `${key} lacks detail elements`).toBe(true);
+        expect(hasBirds || hasSmallCircles,
+          `${key} lacks detail elements (needs birds or wildflowers)`).toBe(true);
       });
     });
   });

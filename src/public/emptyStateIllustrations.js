@@ -121,8 +121,8 @@ export const ILLUSTRATION_SVGS = {
       <line x1="155" y1="15" x2="160" y2="20" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
     </g>
     <g id="midground" opacity="0.7">
-      <path d="M0 120 L45 72 L80 100 Q110 62 150 55 L195 90 L240 65 L280 88 L280 160 L0 160Z" fill="${mountainBlueDark}" opacity="0.3" filter="url(#wc-search)"/>
-      <path d="M0 140 L40 98 L80 120 Q120 85 160 80 L200 110 L240 88 L280 108 L280 175 L0 175Z" fill="${mountainBlue}" opacity="0.35" filter="url(#wc-search)"/>
+      <path d="M0 120 Q22 85 45 78 Q62 72 80 95 Q110 62 150 60 Q172 65 195 85 Q218 68 240 72 Q260 75 280 88 L280 160 L0 160Z" fill="${mountainBlueDark}" opacity="0.3" filter="url(#wc-search)"/>
+      <path d="M0 140 Q20 115 40 108 Q60 100 80 118 Q110 88 150 85 Q175 90 200 108 Q220 92 240 95 Q260 98 280 108 L280 175 L0 175Z" fill="${mountainBlue}" opacity="0.35" filter="url(#wc-search)"/>
       <rect y="105" width="280" height="25" fill="url(#search-mist)"/>
       <ellipse cx="70" cy="125" rx="45" ry="8" fill="${offWhite}" opacity="0.5"/>
       <ellipse cx="210" cy="118" rx="35" ry="7" fill="${offWhite}" opacity="0.4"/>
@@ -230,8 +230,8 @@ export const ILLUSTRATION_SVGS = {
       <line x1="205" y1="30" x2="210" y2="35" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
     </g>
     <g id="midground" opacity="0.75">
-      <path d="M0 125 L35 90 L70 112 Q100 72 140 75 L175 100 L210 78 L250 98 L280 85 L280 165 L0 165Z" fill="${espresso}" opacity="0.3" filter="url(#wc-rev)"/>
-      <path d="M0 148 L45 118 L90 138 Q125 105 160 110 L195 132 L230 115 L280 132 L280 180 L0 180Z" fill="${espressoLight}" opacity="0.35" filter="url(#wc-rev)"/>
+      <path d="M0 125 Q18 98 35 95 Q52 88 70 108 Q100 72 140 75 Q158 80 175 98 Q192 78 210 82 Q232 88 250 95 Q265 88 280 90 L280 165 L0 165Z" fill="${espresso}" opacity="0.3" filter="url(#wc-rev)"/>
+      <path d="M0 148 Q22 125 45 122 Q68 118 90 135 Q108 108 140 112 Q168 115 195 128 Q212 115 230 118 Q255 122 280 132 L280 180 L0 180Z" fill="${espressoLight}" opacity="0.35" filter="url(#wc-rev)"/>
       <path d="M60 160 L65 142 Q68 136 71 142 L75 160Z" fill="${success}" opacity="0.3"/>
       <path d="M220 158 L224 140 Q227 134 230 140 L234 158Z" fill="${success}" opacity="0.3"/>
     </g>
@@ -338,8 +338,8 @@ export const ILLUSTRATION_SVGS = {
     <g id="midground" opacity="0.75">
       <path d="M140 58 L143 78 L137 78 L141 98" stroke="${sunsetCoral}" stroke-width="1.5" fill="none" opacity="0.6"/>
       <circle cx="141" cy="70" r="22" fill="url(#err-lightning)"/>
-      <path d="M0 130 L40 98 L80 115 Q115 82 150 90 L190 108 L235 95 L280 112 L280 170 L0 170Z" fill="${espresso}" opacity="0.28" filter="url(#wc-err)"/>
-      <path d="M0 150 Q55 132 110 142 Q150 125 195 135 Q235 122 280 138 L280 185 L0 185Z" fill="${espressoLight}" opacity="0.32" filter="url(#wc-err)"/>
+      <path d="M0 130 Q20 108 40 105 Q60 98 80 112 Q98 85 115 88 Q132 82 150 90 Q170 95 190 105 Q212 92 235 98 Q258 100 280 112 L280 170 L0 170Z" fill="${espresso}" opacity="0.28" filter="url(#wc-err)"/>
+      <path d="M0 150 Q28 135 55 138 Q82 132 110 142 Q130 128 150 132 Q172 125 195 135 Q215 125 235 128 Q258 130 280 138 L280 185 L0 185Z" fill="${espressoLight}" opacity="0.32" filter="url(#wc-err)"/>
       <path d="M50 165 L54 148 Q57 142 60 148 L64 165Z" fill="${mountainBlueDark}" opacity="0.35"/>
       <path d="M215 162 L219 145 Q222 140 225 145 L229 162Z" fill="${mountainBlueDark}" opacity="0.3"/>
     </g>
@@ -389,9 +389,9 @@ export const ILLUSTRATION_SVGS = {
       <line x1="135" y1="15" x2="140" y2="20" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
     </g>
     <g id="midground" opacity="0.7">
-      <path d="M0 102 L35 72 L70 88 Q105 52 140 55 L180 78 L225 58 L280 82 L280 155 L0 155Z" fill="${mountainBlue}" opacity="0.22" filter="url(#wc-nf)"/>
+      <path d="M0 102 Q18 80 35 78 Q52 72 70 85 Q88 58 105 58 Q122 52 140 60 Q160 62 180 75 Q202 60 225 65 Q252 68 280 82 L280 155 L0 155Z" fill="${mountainBlue}" opacity="0.22" filter="url(#wc-nf)"/>
       <rect y="90" width="280" height="32" fill="url(#nf-fog)"/>
-      <path d="M0 130 L50 112 L100 125 Q140 105 180 110 L230 122 L280 115 L280 168 L0 168Z" fill="${mountainBlueDark}" opacity="0.18" filter="url(#wc-nf)"/>
+      <path d="M0 130 Q25 118 50 118 Q75 112 100 122 Q120 108 140 110 Q160 105 180 115 Q205 112 230 118 Q255 115 280 120 L280 168 L0 168Z" fill="${mountainBlueDark}" opacity="0.18" filter="url(#wc-nf)"/>
       <rect y="122" width="280" height="22" fill="url(#nf-fog)" opacity="0.7"/>
       <ellipse cx="90" cy="112" rx="50" ry="10" fill="${offWhite}" opacity="0.55"/>
       <ellipse cx="200" cy="130" rx="42" ry="8" fill="${offWhite}" opacity="0.48"/>
