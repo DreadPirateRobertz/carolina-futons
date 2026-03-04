@@ -83,17 +83,23 @@ export function initFooterColumns($w) {
       }
     } catch (e) {}
 
-    // Column 4: Store Info
+    // Column 4: Store Info (wire both legacy #footerStore* and BUILD-SPEC #footer* IDs)
     try {
       const info = getStoreInfo();
+      const phoneLabel = `Call ${info.name} at ${info.phone}`;
+      const hoursText = info.hours.map(h => `${h.days}: ${h.time}`).join('\n');
+
       try { $w('#footerStoreName').text = info.name; } catch (e) {}
       try { $w('#footerStoreAddress').text = info.address; } catch (e) {}
       try { $w('#footerStorePhone').text = info.phone; } catch (e) {}
-      try { $w('#footerStorePhone').accessibility.ariaLabel = `Call ${info.name} at ${info.phone}`; } catch (e) {}
-      try {
-        const hoursText = info.hours.map(h => `${h.days}: ${h.time}`).join('\n');
-        $w('#footerStoreHours').text = hoursText;
-      } catch (e) {}
+      try { $w('#footerStorePhone').accessibility.ariaLabel = phoneLabel; } catch (e) {}
+      try { $w('#footerStoreHours').text = hoursText; } catch (e) {}
+
+      // BUILD-SPEC element IDs
+      try { $w('#footerPhone').text = info.phone; } catch (e) {}
+      try { $w('#footerPhone').accessibility.ariaLabel = phoneLabel; } catch (e) {}
+      try { $w('#footerAddress').text = info.address; } catch (e) {}
+      try { $w('#footerHours').text = hoursText; } catch (e) {}
     } catch (e) {}
   } catch (e) {}
 }
@@ -152,17 +158,40 @@ export function initFooterNewsletter($w) {
  */
 export function initFooterSocial($w) {
   try {
-    const socialRepeater = $w('#footerSocialRepeater');
-    if (!socialRepeater) return;
-
     const links = getFooterSocialLinks();
-    socialRepeater.data = links.map((l, i) => ({ ...l, _id: `social-${i}` }));
-    socialRepeater.onItemReady(($item, itemData) => {
-      try { $item('#socialIcon').text = itemData.platform; } catch (e) {}
-      try { $item('#socialIcon').accessibility.ariaLabel = itemData.ariaLabel; } catch (e) {}
+
+    // Repeater-based social icons (legacy pattern)
+    try {
+      const socialRepeater = $w('#footerSocialRepeater');
+      if (socialRepeater) {
+        socialRepeater.data = links.map((l, i) => ({ ...l, _id: `social-${i}` }));
+        socialRepeater.onItemReady(($item, itemData) => {
+          try { $item('#socialIcon').text = itemData.platform; } catch (e) {}
+          try { $item('#socialIcon').accessibility.ariaLabel = itemData.ariaLabel; } catch (e) {}
+          try {
+            $item('#socialIcon').onClick(() => {
+              if (typeof window !== 'undefined') window.open(itemData.url, '_blank');
+            });
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+
+    // Individual BUILD-SPEC social button elements
+    const socialMap = {
+      '#socialFacebook': links.find(l => l.platform === 'facebook'),
+      '#socialInstagram': links.find(l => l.platform === 'instagram'),
+      '#socialPinterest': links.find(l => l.platform === 'pinterest'),
+    };
+
+    Object.entries(socialMap).forEach(([selector, linkData]) => {
+      if (!linkData) return;
       try {
-        $item('#socialIcon').onClick(() => {
-          if (typeof window !== 'undefined') window.open(itemData.url, '_blank');
+        const el = $w(selector);
+        if (!el) return;
+        try { el.accessibility.ariaLabel = linkData.ariaLabel; } catch (e) {}
+        el.onClick(() => {
+          if (typeof window !== 'undefined') window.open(linkData.url, '_blank');
         });
       } catch (e) {}
     });
@@ -311,11 +340,30 @@ export function initMountainDivider($w) {
 }
 
 /**
+ * Initialize footer logo with navigation and ARIA.
+ * @param {Function} $w - Wix selector function
+ */
+export function initFooterLogo($w) {
+  try {
+    const logo = $w('#footerLogo');
+    if (!logo) return;
+
+    try { logo.alt = 'Carolina Futons'; } catch (e) {}
+    try { logo.accessibility.ariaLabel = 'Carolina Futons - Go to homepage'; } catch (e) {}
+
+    logo.onClick(() => {
+      import('wix-location-frontend').then(({ to }) => to('/'));
+    });
+  } catch (e) {}
+}
+
+/**
  * Initialize entire footer — orchestrates all subsections.
  * @param {Function} $w - Wix selector function
  */
 export function initFooter($w) {
   initMountainDivider($w);
+  initFooterLogo($w);
   initFooterColumns($w);
   initFooterNewsletter($w);
   initFooterSocial($w);

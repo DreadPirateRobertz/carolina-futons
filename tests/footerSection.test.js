@@ -16,6 +16,7 @@ import {
   initFooterPayment,
   initFooterCopyright,
   initFooterAria,
+  initFooterLogo,
   initFooter,
 } from '../src/public/FooterSection.js';
 
@@ -435,6 +436,88 @@ describe('initFooterAria', () => {
   it('survives missing footer element', () => {
     const broken$w = () => null;
     expect(() => initFooterAria(broken$w)).not.toThrow();
+  });
+});
+
+// ── initFooterLogo (cf-0z2w) ─────────────────────────────────────────
+
+describe('initFooterLogo', () => {
+  it('sets ariaLabel on #footerLogo', () => {
+    initFooterLogo($w);
+    expect($w('#footerLogo').accessibility.ariaLabel).toBe('Carolina Futons - Go to homepage');
+  });
+
+  it('wires onClick on #footerLogo to navigate home', () => {
+    initFooterLogo($w);
+    expect($w('#footerLogo').onClick).toHaveBeenCalled();
+  });
+
+  it('sets alt text on #footerLogo', () => {
+    initFooterLogo($w);
+    expect($w('#footerLogo').alt).toBe('Carolina Futons');
+  });
+
+  it('survives missing footer logo element', () => {
+    const broken$w = () => null;
+    expect(() => initFooterLogo(broken$w)).not.toThrow();
+  });
+});
+
+// ── BUILD-SPEC footer contact IDs (cf-0z2w) ─────────────────────────
+
+describe('initFooterColumns — BUILD-SPEC contact IDs', () => {
+  it('populates #footerPhone with phone number', () => {
+    initFooterColumns($w);
+    expect($w('#footerPhone').text).toMatch(/\d/);
+  });
+
+  it('sets ariaLabel on #footerPhone', () => {
+    initFooterColumns($w);
+    expect($w('#footerPhone').accessibility.ariaLabel).toContain('Call');
+  });
+
+  it('populates #footerAddress with address', () => {
+    initFooterColumns($w);
+    expect($w('#footerAddress').text).toContain('Hendersonville');
+  });
+
+  it('populates #footerHours with hours', () => {
+    initFooterColumns($w);
+    expect($w('#footerHours').text).toContain('Wednesday');
+  });
+});
+
+// ── Individual social buttons (cf-0z2w) ──────────────────────────────
+
+describe('initFooterSocial — individual social buttons', () => {
+  it('wires onClick on #socialFacebook', () => {
+    initFooterSocial($w);
+    expect($w('#socialFacebook').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ariaLabel on #socialFacebook', () => {
+    initFooterSocial($w);
+    expect($w('#socialFacebook').accessibility.ariaLabel).toContain('Facebook');
+  });
+
+  it('wires onClick on #socialInstagram', () => {
+    initFooterSocial($w);
+    expect($w('#socialInstagram').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ariaLabel on #socialInstagram', () => {
+    initFooterSocial($w);
+    expect($w('#socialInstagram').accessibility.ariaLabel).toContain('Instagram');
+  });
+
+  it('wires onClick on #socialPinterest', () => {
+    initFooterSocial($w);
+    expect($w('#socialPinterest').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ariaLabel on #socialPinterest', () => {
+    initFooterSocial($w);
+    expect($w('#socialPinterest').accessibility.ariaLabel).toContain('Pinterest');
   });
 });
 
