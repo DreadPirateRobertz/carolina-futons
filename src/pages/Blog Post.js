@@ -2,6 +2,7 @@
 // Wix Blog app renders the post content — this code adds SEO schema,
 // reading time, social share buttons, author bio, and related posts
 import { getBlogArticleSchema, getBlogFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
+import { getGuidePinData } from 'backend/pinterestRichPins.web';
 import { getBlogPost, getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';
@@ -64,6 +65,9 @@ $w.onReady(async function () {
       ]);
       try { $w('#postMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
     } catch (e) {}
+
+    // ── Pinterest Article Pin Meta ────────────────────────────────────
+    injectPinterestArticleMeta(post);
 
     fireCustomEvent('blog_post_view', { slug, category: post.category });
   } catch (err) {
@@ -185,5 +189,34 @@ function initRelatedPosts(currentPost) {
     try { $w('#relatedPostsSection').expand(); } catch (e) {}
   } catch (err) {
     console.error('Related posts error:', err);
+  }
+}
+
+// ── Pinterest Article Pin Meta ──────────────────────────────────────────
+
+async function injectPinterestArticleMeta(post) {
+  try {
+    if (!post) return;
+
+    const pinResult = await getGuidePinData({
+      slug: post.slug,
+      title: post.title,
+      description: post.excerpt || post.description,
+      heroImage: post.heroImage,
+      publishDate: post.publishDate,
+      author: post.author,
+    });
+
+    if (!pinResult?.success || !pinResult.meta) return;
+
+    const { head } = await import('wix-seo-frontend');
+    const pinterestKeys = ['pinterest-rich-pin', 'pinterest:description', 'article:author', 'article:published_time'];
+    for (const key of pinterestKeys) {
+      if (pinResult.meta[key]) {
+        head.setMetaTag(key, pinResult.meta[key]);
+      }
+    }
+  } catch (e) {
+    // Pinterest meta injection is non-critical
   }
 }

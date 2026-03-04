@@ -22,9 +22,11 @@ export function initSocialShare($w, product) {
     try { $w('#shareEmail').accessibility.ariaLabel = 'Share via email'; } catch (e) {}
     try { $w('#shareCopyLink').accessibility.ariaLabel = 'Copy product link'; } catch (e) {}
 
+    const productId = product._id || '';
+
     try {
       $w('#shareFacebook').onClick(() => {
-        trackSocialShare('facebook', 'product');
+        trackSocialShare('facebook', 'product', productId);
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
         });
@@ -33,7 +35,7 @@ export function initSocialShare($w, product) {
 
     try {
       $w('#sharePinterest').onClick(() => {
-        trackSocialShare('pinterest', 'product');
+        trackSocialShare('pinterest', 'product', productId);
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(image)}&description=${encodeURIComponent(title)}`);
         });
@@ -42,7 +44,7 @@ export function initSocialShare($w, product) {
 
     try {
       $w('#shareEmail').onClick(() => {
-        trackSocialShare('email', 'product');
+        trackSocialShare('email', 'product', productId);
         const subject = encodeURIComponent(`Check out ${title} from Carolina Futons`);
         const body = encodeURIComponent(`I thought you might like this: ${title}\n\n${url}`);
         import('wix-window-frontend').then(({ openUrl }) => {
@@ -53,7 +55,7 @@ export function initSocialShare($w, product) {
 
     try {
       $w('#shareCopyLink').onClick(() => {
-        trackSocialShare('copy_link', 'product');
+        trackSocialShare('copy_link', 'product', productId);
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
           navigator.clipboard.writeText(url).then(() => {
             $w('#shareCopyLink').label = 'Copied!';

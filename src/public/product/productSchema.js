@@ -98,6 +98,8 @@ export async function injectProductMeta(product) {
         }
       }
     }
+    // Set Pinterest Rich Pin meta tags
+    await injectPinterestMeta(product, head);
   } catch (e) {
     // Meta tag injection is non-critical
   }

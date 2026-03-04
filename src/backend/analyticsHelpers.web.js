@@ -105,6 +105,39 @@ export const trackAddToCart = webMethod(
 );
 
 /**
+ * Track a social share event for a product.
+ * Increments the `shareCount` field and records the platform.
+ *
+ * @function trackSocialShare
+ * @param {string} productId - The Wix product `_id`.
+ * @param {string} platform - Social platform name (e.g., 'facebook', 'pinterest').
+ * @returns {Promise<void>} Resolves silently.
+ * @permission Anyone
+ */
+export const trackSocialShare = webMethod(
+  Permissions.Anyone,
+  async (productId, platform) => {
+    try {
+      const cleanId = sanitize(productId, 50);
+      const cleanPlatform = sanitize(platform || '', 50);
+
+      const existing = await wixData.query('ProductAnalytics')
+        .eq('productId', cleanId)
+        .find();
+
+      if (existing.items.length > 0) {
+        const record = existing.items[0];
+        record.shareCount = (record.shareCount || 0) + 1;
+        record.lastSharePlatform = cleanPlatform;
+        await wixData.update('ProductAnalytics', record);
+      }
+    } catch (err) {
+      console.error('Social share tracking error:', err);
+    }
+  }
+);
+
+/**
  * Get the most-viewed products across all time.
  * Joins analytics data with the Stores/Products collection to return
  * full product info sorted by view count.

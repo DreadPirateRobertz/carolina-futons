@@ -98,6 +98,9 @@ vi.mock('public/ga4Tracking', () => ({
   fireCustomEvent: vi.fn(),
   initScrollDepthTracking: vi.fn(() => vi.fn()),
 }));
+vi.mock('public/tikTokPixel', () => ({
+  initTikTokPixel: vi.fn(),
+}));
 vi.mock('public/pwaHelpers', () => ({
   captureInstallPrompt: vi.fn(),
   canShowInstallPrompt: vi.fn(() => false),

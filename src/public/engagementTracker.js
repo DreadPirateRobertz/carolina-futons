@@ -3,7 +3,7 @@
 // Events are batched and sent to the backend analytics module.
 // Integrates with Wix Analytics and custom ProductAnalytics CMS.
 
-import { trackProductView as backendTrackView, trackAddToCart } from 'backend/analyticsHelpers.web';
+import { trackProductView as backendTrackView, trackAddToCart, trackSocialShare as backendTrackShare } from 'backend/analyticsHelpers.web';
 
 // ── Event Queue ──────────────────────────────────────────────────────
 // Batch events to reduce backend calls
@@ -60,6 +60,11 @@ export async function flushEvents() {
           break;
         case 'add_to_cart':
           await trackAddToCart(event.data.productId);
+          break;
+        case 'social_share':
+          if (event.data.productId) {
+            await backendTrackShare(event.data.productId, event.data.platform);
+          }
           break;
         // Other events are tracked in session storage for local funnel analysis
         default:
@@ -156,9 +161,14 @@ export function trackPurchaseComplete(orderId, orderTotal) {
   trackEvent('purchase_complete', { orderId, orderTotal });
 }
 
-/** Track social share action. */
-export function trackSocialShare(platform, contentType) {
-  trackEvent('social_share', { platform, contentType });
+/**
+ * Track social share action.
+ * @param {string} platform - Platform name (facebook, pinterest, email, etc.)
+ * @param {string} contentType - Content type (product, purchase, blog)
+ * @param {string} [productId] - Product ID for per-product share tracking
+ */
+export function trackSocialShare(platform, contentType, productId) {
+  trackEvent('social_share', { platform, contentType, productId });
 }
 
 /** Track newsletter signup. */
