@@ -237,6 +237,9 @@ export default defineConfig({
       'public/UGCGallery': path.resolve(__dirname, 'src/public/UGCGallery.js'),
       'public/ugcVoting.js': path.resolve(__dirname, 'src/public/ugcVoting.js'),
       'public/ugcVoting': path.resolve(__dirname, 'src/public/ugcVoting.js'),
+      'backend/promotionsEngine.web': path.resolve(__dirname, 'src/backend/promotionsEngine.web.js'),
+      'public/promotionHelpers.js': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
+      'public/promotionHelpers': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
     },
   },
 });
