@@ -364,14 +364,19 @@ describe('Empty State Illustrations', () => {
 
   describe('Quality bar — detail elements', () => {
     REQUIRED_KEYS.forEach(key => {
-      it(`${key}: has birds (V-shaped line pairs) or wildflowers (small circles)`, () => {
+      it(`${key}: has bird V-shapes (espresso-stroked line pairs) or wildflower stems (success-stroked paths)`, () => {
         const svg = ILLUSTRATION_SVGS[key];
-        // Birds = V-shaped line pairs with subtle opacity
-        const hasBirds = /stroke-width="[01][^"]*"[^>]*opacity="0\.[2-3]/.test(svg);
-        // Wildflowers = small circles r < 3 (at least 2 per scene)
-        const hasSmallCircles = (svg.match(/<circle[^>]*r="[1-3](\.\d)?"/g) || []).length >= 2;
-        expect(hasBirds || hasSmallCircles,
-          `${key} lacks detail elements (needs birds or wildflowers)`).toBe(true);
+        const espressoHex = colors.espresso.toLowerCase();
+        const successHex = colors.success.toLowerCase();
+        const svgLower = svg.toLowerCase();
+        // Birds = V-shaped line pairs with espresso stroke (2 lines per V)
+        const birdLineRe = new RegExp(`<line[^>]*stroke="${espressoHex}"`, 'g');
+        const birdLineCount = (svgLower.match(birdLineRe) || []).length;
+        const hasBirds = birdLineCount >= 2;
+        // Wildflower stems = thin paths with success/green stroke
+        const hasWildflowerStems = svgLower.includes(`stroke="${successHex}"`);
+        expect(hasBirds || hasWildflowerStems,
+          `${key} lacks detail elements (needs espresso bird lines or success wildflower stems)`).toBe(true);
       });
     });
   });

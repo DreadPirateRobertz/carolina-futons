@@ -334,6 +334,10 @@ export const ILLUSTRATION_SVGS = {
       <ellipse cx="120" cy="38" rx="45" ry="18" fill="${espresso}" opacity="0.4"/>
       <ellipse cx="175" cy="48" rx="50" ry="18" fill="${espressoLight}" opacity="0.42"/>
       <ellipse cx="155" cy="35" rx="40" ry="15" fill="${espresso}" opacity="0.35"/>
+      <line x1="30" y1="25" x2="35" y2="20" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
+      <line x1="35" y1="20" x2="40" y2="25" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
+      <line x1="248" y1="22" x2="252" y2="18" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
+      <line x1="252" y1="18" x2="256" y2="22" stroke="${espresso}" stroke-width="0.8" opacity="0.2"/>
     </g>
     <g id="midground" opacity="0.75">
       <path d="M140 58 L143 78 L137 78 L141 98" stroke="${sunsetCoral}" stroke-width="1.5" fill="none" opacity="0.6"/>
