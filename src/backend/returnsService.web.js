@@ -582,6 +582,58 @@ export const generateReturnLabel = webMethod(
   }
 );
 
+// ─── Member Return Label Access ──────────────────────────────────────
+
+/**
+ * Get the return shipping label for a member's approved return.
+ * Returns label data if the return belongs to the current member,
+ * has been approved, and a label has been generated.
+ *
+ * @param {string} rmaNumber - RMA number
+ * @returns {Promise<{success: boolean, trackingNumber?: string, labelBase64?: string, error?: string}>}
+ */
+export const getMyReturnLabel = webMethod(
+  Permissions.SiteMember,
+  async (rmaNumber) => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Please log in.' };
+
+      const rma = sanitize(rmaNumber, 30);
+      if (!rma) return { success: false, error: 'RMA number is required.' };
+
+      const result = await wixData.query(COLLECTION)
+        .eq('rmaNumber', rma)
+        .eq('memberId', member._id)
+        .find();
+
+      if (result.items.length === 0) {
+        return { success: false, error: 'Return not found.' };
+      }
+
+      const record = result.items[0];
+
+      if (record.status !== 'approved' && record.status !== 'shipped') {
+        return { success: false, error: 'Return must be approved before a label is available.' };
+      }
+
+      if (!record.returnTrackingNumber || !record.returnLabelBase64) {
+        return { success: false, error: 'Return label has not yet been generated. Please check back later.' };
+      }
+
+      return {
+        success: true,
+        trackingNumber: record.returnTrackingNumber,
+        labelBase64: record.returnLabelBase64,
+        rmaNumber: record.rmaNumber,
+      };
+    } catch (err) {
+      console.error('[returnsService] getMyReturnLabel error:', err);
+      return { success: false, error: 'Unable to retrieve return label.' };
+    }
+  }
+);
+
 // ─── Return Shipment Tracking ───────────────────────────────────────
 
 /**
