@@ -30,6 +30,7 @@ import { initProductARViewer } from 'public/ProductARViewer.js';
 import { initLifestyleGallery } from 'public/LifestyleGallery.js';
 import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
+import { initCustomizationBuilder } from 'public/CustomizationBuilder.js';
 
 const state = {
   product: null,
@@ -107,6 +108,7 @@ async function initProductPage() {
       { name: 'wishlistButton', init: () => initWishlistButton($w, state) },
       { name: 'productReviews', init: () => initProductReviews($w, state) },
       { name: 'financingOptions', init: () => initFinancingOptions($w, state) },
+      { name: 'customizationBuilder', init: () => initCustomizationBuilder($w, state) },
     ];
 
     const results = await Promise.allSettled(productSections.map(s => s.init()));
