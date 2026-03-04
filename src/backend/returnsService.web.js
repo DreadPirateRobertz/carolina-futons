@@ -738,15 +738,15 @@ export const getReturnStats = webMethod(
   async () => {
     try {
       const statuses = ['requested', 'approved', 'shipped', 'received', 'refunded', 'denied'];
+
+      const results = await Promise.all(
+        statuses.map(status =>
+          wixData.query(COLLECTION).eq('status', status).count()
+        )
+      );
+
       const counts = {};
-
-      for (const status of statuses) {
-        const result = await wixData.query(COLLECTION)
-          .eq('status', status)
-          .count();
-        counts[status] = result;
-      }
-
+      statuses.forEach((status, i) => { counts[status] = results[i]; });
       const total = Object.values(counts).reduce((sum, c) => sum + c, 0);
 
       return {

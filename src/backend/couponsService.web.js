@@ -65,7 +65,7 @@ export const createWelcomeCoupon = webMethod(
  * @permission SiteMember
  */
 export const getActiveCoupons = webMethod(
-  Permissions.Admin,
+  Permissions.SiteMember,
   async () => {
     try {
       const result = await coupons.queryAllCoupons()

@@ -58,9 +58,9 @@ export function validateEmail(email) {
  * @param {number} [maxLen=50] - Maximum length.
  * @returns {string} Sanitized ID, or empty string if invalid.
  */
-export function validateId(id) {
+export function validateId(id, maxLen = 50) {
   if (typeof id !== 'string') return '';
-  const cleaned = id.trim().slice(0, 50);
+  const cleaned = id.trim().slice(0, maxLen);
   return /^[a-zA-Z0-9_-]+$/.test(cleaned) ? cleaned : '';
 }
 
