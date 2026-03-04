@@ -5,6 +5,8 @@ import { colors } from '../src/public/sharedTokens.js';
 import {
   CONTACT_ILLUSTRATIONS,
   svgToDataUri,
+  generateHeroSVG,
+  generateShowroomSVG,
   initContactHeroSkyline,
   initContactShowroomScene,
 } from '../src/public/contactIllustrations.js';
@@ -346,6 +348,121 @@ describe('Contact Illustrations', () => {
 
     it('initContactShowroomScene does not throw if $w is null', () => {
       expect(() => initContactShowroomScene(null)).not.toThrow();
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════
+  // SECURITY
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ══════════════════════════════════════════════════════════════════════
+  // GENERATE FUNCTIONS & HEIGHT PASS-THROUGH
+  // ══════════════════════════════════════════════════════════════════════
+
+  describe('generateHeroSVG', () => {
+    it('returns hero SVG without options', () => {
+      const svg = generateHeroSVG();
+      expect(svg).toContain('<svg');
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('returns hero SVG with null options', () => {
+      const svg = generateHeroSVG(null);
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('returns hero SVG with empty options', () => {
+      const svg = generateHeroSVG({});
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('replaces height when positive number', () => {
+      const svg = generateHeroSVG({ height: 300 });
+      expect(svg).toContain('height="300"');
+      expect(svg).not.toContain('height="100%"');
+    });
+
+    it('ignores zero height', () => {
+      const svg = generateHeroSVG({ height: 0 });
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('ignores negative height', () => {
+      const svg = generateHeroSVG({ height: -50 });
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('ignores string height', () => {
+      const svg = generateHeroSVG({ height: '200px' });
+      expect(svg).toContain('height="100%"');
+    });
+  });
+
+  describe('generateShowroomSVG', () => {
+    it('returns showroom SVG without options', () => {
+      const svg = generateShowroomSVG();
+      expect(svg).toContain('<svg');
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('returns showroom SVG with null options', () => {
+      const svg = generateShowroomSVG(null);
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('replaces height when positive number', () => {
+      const svg = generateShowroomSVG({ height: 250 });
+      expect(svg).toContain('height="250"');
+      expect(svg).not.toContain('height="100%"');
+    });
+
+    it('ignores zero height', () => {
+      const svg = generateShowroomSVG({ height: 0 });
+      expect(svg).toContain('height="100%"');
+    });
+
+    it('ignores negative height', () => {
+      const svg = generateShowroomSVG({ height: -10 });
+      expect(svg).toContain('height="100%"');
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════
+  // BOUNDARY CONDITIONS
+  // ══════════════════════════════════════════════════════════════════════
+
+  describe('boundary conditions', () => {
+    it('initContactHeroSkyline passes height through to SVG', () => {
+      const mockEl = { html: '' };
+      const mock$w = (sel) => sel === '#contactHeroSkyline' ? mockEl : null;
+      initContactHeroSkyline(mock$w, { height: 400 });
+      expect(mockEl.html).toContain('height="400"');
+    });
+
+    it('initContactShowroomScene passes height through to SVG', () => {
+      const mockEl = { html: '' };
+      const mock$w = (sel) => sel === '#contactShowroomScene' ? mockEl : null;
+      initContactShowroomScene(mock$w, { height: 350 });
+      expect(mockEl.html).toContain('height="350"');
+    });
+
+    it('init functions handle undefined options gracefully', () => {
+      const mockEl = { html: '' };
+      const mock$w = (sel) => sel === '#contactHeroSkyline' ? mockEl : null;
+      expect(() => initContactHeroSkyline(mock$w, undefined)).not.toThrow();
+      expect(mockEl.html).toContain('<svg');
+    });
+
+    it('init functions handle $w returning undefined', () => {
+      const mock$w = () => undefined;
+      expect(() => initContactHeroSkyline(mock$w)).not.toThrow();
+      expect(() => initContactShowroomScene(mock$w)).not.toThrow();
+    });
+
+    it('init functions handle $w throwing', () => {
+      const mock$w = () => { throw new Error('element not found'); };
+      expect(() => initContactHeroSkyline(mock$w)).not.toThrow();
+      expect(() => initContactShowroomScene(mock$w)).not.toThrow();
     });
   });
 
