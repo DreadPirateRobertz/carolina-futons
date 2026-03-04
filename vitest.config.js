@@ -62,6 +62,7 @@ export default defineConfig({
       'backend/bundleAnalytics.web': path.resolve(__dirname, 'src/backend/bundleAnalytics.web.js'),
       'backend/seoContentHub.web': path.resolve(__dirname, 'src/backend/seoContentHub.web.js'),
       'backend/pinterestRichPins.web': path.resolve(__dirname, 'src/backend/pinterestRichPins.web.js'),
+      'backend/pinterestCatalogSync.web': path.resolve(__dirname, 'src/backend/pinterestCatalogSync.web.js'),
       'backend/photoReviews.web': path.resolve(__dirname, 'src/backend/photoReviews.web.js'),
       'backend/sustainability.web': path.resolve(__dirname, 'src/backend/sustainability.web.js'),
       'backend/roomPlanner.web': path.resolve(__dirname, 'src/backend/roomPlanner.web.js'),
