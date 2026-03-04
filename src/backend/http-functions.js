@@ -11,6 +11,7 @@ import { getAllBlogPosts } from 'backend/blogContent';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 
 // ── Security Helpers ──────────────────────────────────────────────────
 
@@ -277,10 +278,12 @@ export async function get_facebookCatalogFeed() {
     const SITE_URL = 'https://www.carolinafutons.com';
     const productItems = await fetchAllProducts();
 
-    // Facebook catalog TSV format (tab-separated values)
+    // Facebook catalog TSV format with DPA-enhanced fields
     const headers = ['id', 'title', 'description', 'availability', 'condition', 'price',
       'link', 'image_link', 'brand', 'google_product_category', 'fb_product_category',
-      'sale_price', 'item_group_id', 'content_type'].join('\t');
+      'sale_price', 'item_group_id', 'content_type',
+      'product_type', 'color', 'material', 'additional_image_link',
+      'custom_label_0', 'custom_label_1', 'custom_label_2', 'custom_label_3', 'custom_label_4'].join('\t');
 
     const rows = productItems.map(p => {
       const availability = p.inStock !== false ? 'in stock' : 'out of stock';
@@ -290,6 +293,7 @@ export async function get_facebookCatalogFeed() {
       const description = stripHtmlSafe(p.description || '').replace(/[\t\n\r]/g, ' ').substring(0, 5000);
       const category = detectGoogleCategory(p);
       const imageUrl = getImageUrl(p.mainMedia);
+      const dpa = getEnhancedCatalogFields(p);
 
       return [
         p._id || '',
@@ -306,6 +310,15 @@ export async function get_facebookCatalogFeed() {
         salePrice,
         (p.collections || [])[0] || '',
         'product',
+        dpa.product_type || '',
+        dpa.color || '',
+        dpa.material || '',
+        dpa.additional_image_link || '',
+        dpa.custom_label_0 || '',
+        dpa.custom_label_1 || '',
+        dpa.custom_label_2 || '',
+        dpa.custom_label_3 || '',
+        dpa.custom_label_4 || '',
       ].join('\t');
     });
 
@@ -323,6 +336,61 @@ export async function get_facebookCatalogFeed() {
     return serverError({
       body: 'Error generating Facebook catalog feed',
       headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// Facebook Custom Audience Export (Admin-only, secret-authenticated)
+// URL: GET https://www.carolinafutons.com/_functions/facebookCustomAudience
+// Returns hashed customer data for Custom Audience upload / Lookalike Audiences.
+// Requires FB_AUDIENCE_SECRET header for authentication.
+export async function get_facebookCustomAudience(request) {
+  try {
+    // Authenticate with secret key
+    let audienceSecret;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      audienceSecret = await getSecret('FB_AUDIENCE_SECRET');
+    } catch (_) {
+      // Secret not configured
+    }
+
+    const requestSecret = request.headers['x-fb-audience-secret'];
+
+    if (!audienceSecret || !requestSecret || !timingSafeEqual(requestSecret, audienceSecret)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await exportCustomerAudienceData();
+
+    if (!result.success) {
+      return serverError({
+        body: JSON.stringify({ error: result.error || 'Export failed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return ok({
+      body: JSON.stringify({
+        schema: ['EMAIL', 'FN', 'LN', 'PHONE', 'CT', 'ST', 'ZIP', 'COUNTRY', 'VALUE'],
+        data: result.customers.map(c => [
+          c.email, c.fn, c.ln, c.phone, c.ct, c.st, c.zip, c.country, c.value,
+        ]),
+        total: result.customers.length,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (facebookCustomAudience):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }

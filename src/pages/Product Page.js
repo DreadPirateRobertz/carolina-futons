@@ -35,6 +35,7 @@ import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initCustomizationBuilder } from 'public/CustomizationBuilder.js';
 import { initProductVideoSection } from 'public/ProductVideoSection.js';
 import { initProduct360Viewer } from 'public/Product360Viewer.js';
+import { initProductQA } from 'public/ProductQA.js';
 
 const state = {
   product: null,
@@ -114,6 +115,7 @@ async function initProductPage() {
       { name: 'productReviews', init: () => initProductReviews($w, state) },
       { name: 'financingOptions', init: () => initFinancingOptions($w, state) },
       { name: 'customizationBuilder', init: () => initCustomizationBuilder($w, state) },
+      { name: 'productQA', init: () => initProductQA($w, state) },
     ];
 
     const results = await Promise.allSettled(productSections.map(s => s.init()));

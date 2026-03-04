@@ -81,6 +81,10 @@ vi.mock('public/ProductFinancing.js', () => ({
   initFinancingOptions: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('public/ProductQA.js', () => ({
+  initProductQA: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('backend/seoHelpers.web', () => ({
   getProductSchema: vi.fn().mockReturnValue('{"@type":"Product"}'),
   generateAltText: vi.fn().mockResolvedValue('Eureka Futon Frame - Night & Day - Carolina Futons'),
@@ -94,6 +98,10 @@ vi.mock('public/ProductVideoSection.js', () => ({
 
 vi.mock('public/Product360Viewer.js', () => ({
   initProduct360Viewer: vi.fn().mockResolvedValue({ destroy() {} }),
+}));
+
+vi.mock('public/ProductQA.js', () => ({
+  initProductQA: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ── Import Page ─────────────────────────────────────────────────────
