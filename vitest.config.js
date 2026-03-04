@@ -220,6 +220,9 @@ export default defineConfig({
       'public/emptyStateIllustrations': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
       'public/comfortIllustrations.js': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
       'public/comfortIllustrations': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
+      'public/CustomizationBuilder.js': path.resolve(__dirname, 'src/public/CustomizationBuilder.js'),
+      'public/CustomizationBuilder': path.resolve(__dirname, 'src/public/CustomizationBuilder.js'),
+      'backend/customizationService.web': path.resolve(__dirname, 'src/backend/customizationService.web.js'),
     },
   },
 });
