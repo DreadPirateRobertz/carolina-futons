@@ -230,6 +230,7 @@ export function initSwatchRequest($w, state) {
     const hasOptions = state.product.productOptions?.some(opt => /finish|fabric|color|cover/i.test(opt.name));
     if (!hasOptions) { btn.hide(); return; }
     btn.show();
+    try { $w('#swatchModal').hide(); } catch (e) {}
     btn.onClick(() => openSwatchModal($w, state));
     try { $w('#swatchSubmit').onClick(() => handleSwatchSubmit($w, state)); } catch (e) {}
   } catch (e) {}

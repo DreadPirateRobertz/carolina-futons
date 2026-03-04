@@ -19,6 +19,7 @@ import { initProductReviews } from 'public/ProductReviews.js';
 import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initComfortCards } from 'public/ComfortStoryCards.js';
+import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { initDimensionDisplay, initRoomFitChecker, initSizeComparisonTable, initDimensionOverlay, initDoorwayPresets, initShippingDimensions, initVisualSizeComparison } from 'public/ProductSizeGuide.js';
 import { getStockStatus } from 'backend/inventoryService.web';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
