@@ -171,12 +171,13 @@ The mountain ridgeline illustration goes behind/above the nav bar.
 |---------|------|----|-------|
 | Hero Container | Section | `#heroSection` | Full-width, mountain cabin illustration frame |
 | Hero Background | Image | `#heroBg` | Illustrated mountain/cabin scene |
+| Hero Overlay | Box | `#heroOverlay` | Semi-transparent overlay for text readability (rgba(58,37,24,0.6)) |
 | Hero Title | Text (H1) | `#heroTitle` | "Handcrafted Comfort, Mountain Inspired." |
 | Hero Subtitle | Text | `#heroSubtitle` | Supporting tagline |
 | Hero CTA Button | Button | `#heroCTA` | "Explore Our Collection" → /shop-main |
 
 ### Category Showcase
-6 clickable category cards with illustration/photo backgrounds:
+8 clickable category cards with illustration/photo backgrounds:
 
 | Element | Type | ID | Links To |
 |---------|------|----|----------|
@@ -186,17 +187,35 @@ The mountain ridgeline illustration goes behind/above the nav bar.
 | Platform Beds Card | Box | `#categoryPlatformBeds` | /platform-beds |
 | Casegoods Card | Box | `#categoryCasegoods` | /casegoods-accessories |
 | Sale Card | Box | `#categorySale` | /sales |
+| Wall Huggers Card | Box | `#categoryWallHuggers` | /wall-hugger-futons |
+| Unfinished Wood Card | Box | `#categoryUnfinished` | /unfinished-wood |
 
 ### "Our Favorite Finds" - Featured Products
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
-| Section Title | Text (H2) | — | "Our Favorite Finds" |
+| Section Title | Text (H2) | `#featuredTitle` | "Our Favorite Finds" |
+| Section Subtitle | Text | `#featuredSubtitle` | Supporting text below title |
 | Product Repeater | Repeater | `#featuredRepeater` | 4-col grid desktop, 2-col tablet, 1-col mobile |
 | → Product Image | Image | `#featuredImage` | Card image, 8px radius |
 | → Product Name | Text | `#featuredName` | Product title |
 | → Product Price | Text | `#featuredPrice` | Current price |
 | → Original Price | Text | `#featuredOriginalPrice` | Strikethrough, hidden default |
 | → Sale Badge | Text/Box | `#featuredSaleBadge` | Coral badge, hidden default |
+| → Ribbon Badge | Text | `#featuredRibbon` | Featured/New/Clearance ribbon, hidden default |
+| → Color Text | Text | `#featuredColorText` | "X finishes available" |
+| → Swatch Container | Box | `#featuredSwatchContainer` | Color swatch dots inside card |
+| → Quick View Button | Button | `#featuredQuickViewBtn` | Opens quick view modal |
+
+### Featured Quick View Modal
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Modal Container | Box | `#featuredQuickViewModal` | Overlay modal, hidden default, dialog role |
+| Product Image | Image | `#featuredQvImage` | Product preview image |
+| Product Name | Text | `#featuredQvName` | Product title |
+| Product Price | Text | `#featuredQvPrice` | Current price |
+| View Full Details | Button | `#featuredQvViewFull` | → Product page link |
+| Add to Cart | Button | `#featuredQvAddToCart` | Quick add to cart |
+| Close Button | Button | `#featuredQvClose` | X icon, closes modal |
 
 ### Sale Highlights Section
 | Element | Type | ID | Notes |
@@ -210,11 +229,13 @@ The mountain ridgeline illustration goes behind/above the nav bar.
 | → Original Price | Text | `#saleOrigPrice` | Strikethrough |
 
 ### Category Repeater (Alternative to Static Cards)
-Code uses a repeater for the 6 category cards:
+Code uses a repeater for the 8 category cards:
 
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
-| Category Repeater | Repeater | `#categoryRepeater` | 6 items, 3-col desktop, 2-col tablet |
+| Category Repeater | Repeater | `#categoryRepeater` | 8 items, 3-col desktop, 2-col tablet |
+| → Card Container | Box | `#categoryCard` | Clickable card wrapper (hover effects) |
+| → Card Image | Image | `#categoryCardImage` | Category hero image |
 | → Card Title | Text | `#categoryCardTitle` | Category name |
 | → Card Tagline | Text | `#categoryCardTagline` | Subtitle/description |
 | → Product Count | Text | `#categoryCardCount` | "X products" |
@@ -222,9 +243,13 @@ Code uses a repeater for the 6 category cards:
 ### Testimonials Section
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
+| Section Container | Section | `#testimonialSection` | Collapsible on mobile |
 | Testimonial Repeater | Repeater | `#testimonialRepeater` | Rotating customer quotes |
 | → Quote Text | Text | `#testimonialQuote` | |
 | → Customer Name | Text | `#testimonialName` | |
+| → Customer Photo | Image | `#testimonialPhoto` | Customer avatar, hidden default |
+| → Star Rating | Text | `#testimonialRating` | ★★★★★ display |
+| Testimonial Schema | HtmlComponent | `#testimonialSchemaScript` | Hidden, Review JSON-LD |
 
 ### Video Showcase Section
 | Element | Type | ID | Notes |
@@ -232,6 +257,9 @@ Code uses a repeater for the 6 category cards:
 | Section Container | Section | `#videoShowcaseSection` | Collapsible |
 | Section Title | Text (H2) | `#videoShowcaseTitle` | |
 | Section Subtitle | Text | `#videoShowcaseSubtitle` | |
+| Video Thumbnail 1 | Image/Box | `#videoThumb1` | Clickable video preview |
+| Video Thumbnail 2 | Image/Box | `#videoThumb2` | Clickable video preview |
+| Video Thumbnail 3 | Image/Box | `#videoThumb3` | Clickable video preview |
 | View All CTA | Button | `#viewAllVideosCTA` | → /product-videos |
 
 ### Style Quiz CTA Section
@@ -246,7 +274,7 @@ Code uses a repeater for the 6 category cards:
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Section Container | Section | `#recentSection` | Collapsible, hidden if empty |
-| Repeater | Repeater | — | Reuses standard product card layout |
+| Repeater | Repeater | `#recentRepeater` | Reuses standard product card layout |
 | → Image | Image | `#recentImage` | |
 | → Name | Text | `#recentName` | |
 | → Price | Text | `#recentPrice` | |
@@ -255,8 +283,55 @@ Code uses a repeater for the 6 category cards:
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Trust Bar Container | Strip | `#trustBar` | Horizontal strip |
+| Trust Item 1 | Box | `#trustItem1` | "Largest Selection in the Carolinas" |
+| Trust Icon 1 | Text/Image | `#trustIcon1` | Icon for trust signal 1 |
+| Trust Text 1 | Text | `#trustText1` | Label for trust signal 1 |
+| Trust Item 2 | Box | `#trustItem2` | "Family Owned Since 1991" |
+| Trust Icon 2 | Text/Image | `#trustIcon2` | Icon for trust signal 2 |
+| Trust Text 2 | Text | `#trustText2` | Label for trust signal 2 |
+| Trust Item 3 | Box | `#trustItem3` | "700+ Fabric Swatches" |
+| Trust Icon 3 | Text/Image | `#trustIcon3` | Icon for trust signal 3 |
+| Trust Text 3 | Text | `#trustText3` | Label for trust signal 3 |
+| Trust Item 4 | Box | `#trustItem4` | "Free Shipping Over $999" |
+| Trust Icon 4 | Text/Image | `#trustIcon4` | Icon for trust signal 4 |
+| Trust Text 4 | Text | `#trustText4` | Label for trust signal 4 |
+| Trust Item 5 | Box | `#trustItem5` | "White-Glove Delivery" |
+| Trust Icon 5 | Text/Image | `#trustIcon5` | Icon for trust signal 5 |
+| Trust Text 5 | Text | `#trustText5` | Label for trust signal 5 |
 
-Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "700+ Fabric Swatches" · "Free Shipping Over $999"
+### Swatch Promo Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#swatchPromoSection` | CTA for free fabric swatches |
+| Title | Text (H2) | `#swatchPromoTitle` | "Feel the Quality" |
+| Subtitle | Text | `#swatchPromoSubtitle` | Supporting text |
+| CTA Button | Button | `#swatchPromoCTA` | "Request Free Fabric Swatches" → /request-swatches |
+
+### Newsletter Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#newsletterSection` | Email signup area |
+| Title | Text (H2) | `#newsletterTitle` | "Stay in the Loop" |
+| Subtitle | Text | `#newsletterSubtitle` | "Get exclusive deals..." |
+| Email Input | Input | `#newsletterEmail` | Email field with placeholder |
+| Submit Button | Button | `#newsletterSubmit` | "Subscribe" |
+| Success Message | Text | `#newsletterSuccess` | Hidden default, "You're subscribed!" |
+| Error Message | Text | `#newsletterError` | Hidden default, validation error |
+
+### Mountain Ridgeline Header
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Ridgeline SVG | HtmlComponent | `#ridgelineHeader` | Mountain skyline SVG border (MountainSkyline.js) |
+
+### Scroll Anchors
+Invisible anchor elements for smooth-scroll navigation:
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Scroll to Featured | Button/Anchor | `#scrollToFeatured` | Anchor for "Our Favorite Finds" |
+| Scroll to Categories | Button/Anchor | `#scrollToCategories` | Anchor for category showcase |
+| Scroll to Sale | Button/Anchor | `#scrollToSale` | Anchor for sale highlights |
+| Scroll to Reviews | Button/Anchor | `#scrollToReviews` | Anchor for testimonials |
 
 ### Website Schema
 | Element | Type | ID | Notes |
@@ -286,6 +361,7 @@ Content: "Largest Selection in the Carolinas" · "Family Owned Since 1991" · "7
 |---------|------|----|-------|
 | Product Dataset | Dataset | `#productDataset` | Connected to Stores/Products |
 | Product Name | Text (H1) | `#productName` | Product title (also bound to dataset) |
+| Product Description | RichText | `#productDescription` | For "not found" fallback message |
 | Product Price | Text | `#productPrice` | Bold, 20px |
 | Compare Price | Text | `#productComparePrice` | Strikethrough, hidden default |
 | Stock Status | Text | `#stockStatus` | "In Stock" / "Special Order" |
@@ -467,6 +543,13 @@ Collapsible sections for Description, Dimensions, Care, and Shipping info.
 | Wishlist Button | Button | `#wishlistBtn` | Heart icon toggle, hidden if Members API unavailable |
 | Wishlist Icon | Image | `#wishlistIcon` | Swaps between outline and filled heart SVG |
 
+### Variant Stock Display
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Variant Stock Repeater | Repeater | `#variantStockRepeater` | Per-variant stock indicator grid |
+| → Variant Label | Text | `#variantStockLabel` | Variant name (e.g., "Queen / Natural Oak") |
+| → Variant Status | Text | `#variantStockStatus` | Stock status text per variant |
+
 ### Stock Urgency & Popularity
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
@@ -533,6 +616,18 @@ Fixed bottom bar that appears when the main Add to Cart button scrolls out of vi
 | → Image | Image | `#recentImage` | |
 | → Name | Text | `#recentName` | |
 | → Price | Text | `#recentPrice` | |
+
+### Browse Abandonment / Remind Me Popup
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Popup Container | Box | `#remindMePopup` | Modal, hidden default, dialog role |
+| Title | Text (H3) | `#remindMeTitle` | "Still deciding?" |
+| Subtitle | Text | `#remindMeSubtitle` | Supporting text |
+| Email Input | Input | `#remindMeEmailInput` | Email for browse reminder |
+| Submit Button | Button | `#remindMeSubmit` | "Remind Me" |
+| Close Button | Button | `#remindMeClose` | X icon, closes popup |
+| Error Message | Text | `#remindMeError` | Hidden default, validation error |
+| Success Message | Text | `#remindMeSuccess` | Hidden default, confirmation |
 
 ---
 
