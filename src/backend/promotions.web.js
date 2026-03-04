@@ -1,7 +1,8 @@
-// Backend web module for promotional lightbox system
+// Backend web module for promotional campaigns and flash sales
 // Queries the Promotions CMS collection for active campaigns
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { validateSlug } from 'backend/utils/sanitize';
 
 // Get the currently active promotion (if any)
 // Returns the first active promotion whose date range includes today, or null
@@ -63,6 +64,61 @@ export const getActivePromotion = webMethod(
     } catch (err) {
       console.error('Error fetching active promotion:', err);
       return null;
+    }
+  }
+);
+
+/**
+ * Get active flash sale promotions, optionally filtered by category.
+ * Returns deals sorted by endDate ascending (soonest ending first).
+ * @param {string} [categorySlug] - Optional category slug to filter by.
+ * @returns {Promise<Array<{_id: string, title: string, subtitle: string, type: string, startDate: Date, endDate: Date, discountCode: string, discountPercent: number, bannerMessage: string, categoryScope: string, urgencyThreshold: number, ctaUrl: string, ctaText: string}>>}
+ */
+export const getFlashSales = webMethod(
+  Permissions.Anyone,
+  async (categorySlug) => {
+    try {
+      const now = new Date();
+
+      let query = wixData.query('Promotions')
+        .eq('isActive', true)
+        .eq('type', 'flash_sale')
+        .le('startDate', now)
+        .ge('endDate', now)
+        .ascending('endDate')
+        .limit(10);
+
+      const results = await query.find();
+
+      let items = results.items;
+
+      // Filter by category if provided
+      if (categorySlug) {
+        const cleanSlug = validateSlug(categorySlug);
+        if (!cleanSlug) return [];
+        items = items.filter(item =>
+          !item.categoryScope || item.categoryScope === cleanSlug
+        );
+      }
+
+      return items.map(promo => ({
+        _id: promo._id,
+        title: promo.title,
+        subtitle: promo.subtitle,
+        type: promo.type,
+        startDate: promo.startDate,
+        endDate: promo.endDate,
+        discountCode: promo.discountCode,
+        discountPercent: promo.discountPercent,
+        bannerMessage: promo.bannerMessage,
+        categoryScope: promo.categoryScope,
+        urgencyThreshold: promo.urgencyThreshold,
+        ctaUrl: promo.ctaUrl,
+        ctaText: promo.ctaText,
+      }));
+    } catch (err) {
+      console.error('Error fetching flash sales:', err);
+      return [];
     }
   }
 );

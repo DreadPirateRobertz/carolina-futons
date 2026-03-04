@@ -2,7 +2,8 @@
 // Runs on every page: navigation behavior, announcement bar, SEO injection,
 // mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
 import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
-import { getActivePromotion } from 'backend/promotions.web';
+import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
+import { buildAnnouncementMessage } from 'public/flashSaleHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import {
   shouldShowExitIntent,
@@ -207,7 +208,7 @@ function initEnhancedNavigation() {
 // ── Announcement Bar ────────────────────────────────────────────────
 // Rotating promotional messages at top of site
 
-function initAnnouncementBar() {
+async function initAnnouncementBar() {
   const messages = [
     'Free Shipping on Orders Over $999!',
     'Visit Our Showroom: Wed–Sat 10–5, Hendersonville NC',
@@ -215,6 +216,17 @@ function initAnnouncementBar() {
     'Request FREE fabric swatches — shipped to your door!',
     'Family Owned Since 1991 — Now Carolina Futons',
   ];
+
+  // Prepend active flash sale messages for urgency
+  try {
+    const flashSales = await getFlashSales();
+    for (const deal of flashSales) {
+      const msg = buildAnnouncementMessage(deal);
+      if (msg) messages.unshift(msg);
+    }
+  } catch (_) {
+    // Flash sales fetch failed — continue with static messages
+  }
 
   try {
     initAnnouncementBarHelper($w, messages, { interval: 5000 });

@@ -19,6 +19,8 @@ import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCach
 import { enableSwipe } from 'public/touchHelpers';
 import { announce, makeClickable, createFocusTrap } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
+import { getFlashSales } from 'backend/promotions.web';
+import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
@@ -85,6 +87,7 @@ $w.onReady(async function () {
   const currentPath = wixLocationFrontend.path?.[0] || '';
 
   initCategoryHero(currentPath);
+  initCategoryFlashSale(currentPath);
   initSortControls();
   initFilterControls();
   initAdvancedFilters(currentPath);
@@ -147,6 +150,24 @@ function initCategoryHero(currentPath) {
       // MountainSkyline module not yet available — silently skip
     });
   } catch (e) {}
+}
+
+// ── Flash Sale Banner ────────────────────────────────────────────────
+
+let _flashSaleCleanup = null;
+
+async function initCategoryFlashSale(currentPath) {
+  try {
+    const deals = await getFlashSales(currentPath);
+    if (!deals || deals.length === 0) {
+      try { $w('#flashSaleBanner').collapse(); } catch (_) {}
+      return;
+    }
+    // Show the most urgent deal (soonest ending)
+    _flashSaleCleanup = initFlashSaleBanner($w, { deal: deals[0] });
+  } catch (_) {
+    // Flash sale banner is non-critical — silent fail
+  }
 }
 
 // ── SEO Meta Description ─────────────────────────────────────────────

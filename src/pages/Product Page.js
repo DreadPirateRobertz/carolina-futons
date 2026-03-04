@@ -27,6 +27,8 @@ import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { validateEmail } from 'public/validators.js';
 import { initProductARViewer } from 'public/ProductARViewer.js';
+import { getFlashSales } from 'backend/promotions.web';
+import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { initLifestyleGallery } from 'public/LifestyleGallery.js';
 import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
@@ -106,6 +108,7 @@ async function initProductPage() {
       { name: 'productVideo', init: () => initProductVideo($w, state) },
       { name: 'bundleSection', init: () => initBundleSection($w, state) },
       { name: 'stockUrgency', init: () => initStockUrgency($w, state) },
+      { name: 'flashSaleBadge', init: () => initFlashSaleUrgency() },
       { name: 'backInStock', init: () => initBackInStockNotification($w, state) },
       { name: 'wishlistButton', init: () => initWishlistButton($w, state) },
       { name: 'productReviews', init: () => initProductReviews($w, state) },
@@ -169,6 +172,22 @@ async function initProductPage() {
     initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});
   } catch (err) {
     console.error('Error initializing product page:', err);
+  }
+}
+
+// ── Flash Sale Urgency Badge ──────────────────────────────────────────
+
+async function initFlashSaleUrgency() {
+  try {
+    if (!state.product) return;
+    const deals = await getFlashSales();
+    if (!deals || deals.length === 0) return;
+
+    // Find a deal that applies to this product (sitewide or matching product)
+    const deal = deals[0]; // Use the most urgent (soonest ending) deal
+    initProductUrgencyBadge($w, { deal });
+  } catch (e) {
+    // Flash sale badge is non-critical — silent fail
   }
 }
 

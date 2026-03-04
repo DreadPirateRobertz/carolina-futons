@@ -224,6 +224,8 @@ export default defineConfig({
       'public/CustomizationBuilder.js': path.resolve(__dirname, 'src/public/CustomizationBuilder.js'),
       'public/CustomizationBuilder': path.resolve(__dirname, 'src/public/CustomizationBuilder.js'),
       'backend/customizationService.web': path.resolve(__dirname, 'src/backend/customizationService.web.js'),
+      'public/flashSaleHelpers.js': path.resolve(__dirname, 'src/public/flashSaleHelpers.js'),
+      'public/flashSaleHelpers': path.resolve(__dirname, 'src/public/flashSaleHelpers.js'),
     },
   },
 });
