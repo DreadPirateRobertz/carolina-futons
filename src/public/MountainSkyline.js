@@ -26,17 +26,17 @@ const VB_H = 200;
 const GRADIENT_PRESETS = {
   sunrise: [
     { offset: '0%', color: colors.skyGradientTop, opacity: 1 },
-    { offset: '20%', color: '#C5DCE8', opacity: 0.9 },
+    { offset: '20%', color: colors.mountainBlueLight, opacity: 0.9 },
     { offset: '45%', color: colors.skyGradientBottom, opacity: 0.7 },
-    { offset: '70%', color: '#F2D898', opacity: 0.8 },
+    { offset: '70%', color: colors.sandLight, opacity: 0.8 },
     { offset: '85%', color: colors.sunsetCoralLight, opacity: 0.5 },
     { offset: '100%', color: colors.sandLight, opacity: 0.6 },
   ],
   sunset: [
-    { offset: '0%', color: '#6B4E71', opacity: 0.6 },
+    { offset: '0%', color: colors.mountainBlueDark, opacity: 0.6 },
     { offset: '15%', color: colors.sunsetCoral, opacity: 0.7 },
     { offset: '35%', color: colors.skyGradientBottom, opacity: 0.8 },
-    { offset: '55%', color: '#E8A84C', opacity: 0.7 },
+    { offset: '55%', color: colors.sunsetCoralLight, opacity: 0.7 },
     { offset: '80%', color: colors.sunsetCoralLight, opacity: 0.5 },
     { offset: '100%', color: colors.sandLight, opacity: 0.4 },
   ],
