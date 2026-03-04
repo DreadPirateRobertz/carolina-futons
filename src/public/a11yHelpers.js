@@ -18,7 +18,7 @@ import { colors } from './sharedTokens.js';
  * @param {string} [mainContentId='#mainContent'] - Selector for main content
  * @param {string} [skipLinkId='#skipNav'] - Selector for skip link element
  */
-export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#skipNav') {
+export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#skipToContent') {
   try {
     const skipLink = $w(skipLinkId);
     try { skipLink.accessibility.ariaLabel = 'Skip to main content'; } catch (e) {}
@@ -317,7 +317,7 @@ export function auditDesignTokenContrast() {
     { pair: 'muted on white', fg: colors.muted, bg: colors.white, size: 'normal' },
     { pair: 'mutedBrown on white', fg: colors.mutedBrown, bg: colors.white, size: 'normal' },
     { pair: 'success on white', fg: colors.success, bg: colors.white, size: 'normal' },
-    { pair: 'error on white', fg: colors.error, bg: colors.white, size: 'large' },
+    { pair: 'error on white', fg: colors.error, bg: colors.white, size: 'normal' },
   ];
 
   return pairs.map(({ pair, fg, bg, size }) => {

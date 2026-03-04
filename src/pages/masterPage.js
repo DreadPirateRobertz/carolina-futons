@@ -492,15 +492,20 @@ function dismissLightbox(dismissKey) {
 }
 
 function initPromoDismiss(promoId, dismissKey) {
+  // #promoClose is wired by setupAccessibleDialog (handles focus restore)
+  try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
+  // Route dismiss/overlay through dialog.close() for WCAG 2.4.3 focus restoration
   try {
-    $w('#promoClose').onClick(() => dismissLightbox(dismissKey));
-    try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
+    $w('#promoDismiss').onClick(() => {
+      if (_promoDialog) _promoDialog.close();
+      else dismissLightbox(dismissKey);
+    });
   } catch (e) {}
   try {
-    $w('#promoDismiss').onClick(() => dismissLightbox(dismissKey));
-  } catch (e) {}
-  try {
-    $w('#promoOverlay').onClick(() => dismissLightbox(dismissKey));
+    $w('#promoOverlay').onClick(() => {
+      if (_promoDialog) _promoDialog.close();
+      else dismissLightbox(dismissKey);
+    });
   } catch (e) {}
 }
 

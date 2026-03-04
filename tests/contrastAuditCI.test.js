@@ -19,15 +19,10 @@ describe('CI: Design Token Contrast Audit', () => {
   });
 
   it('every color pair meets WCAG AA contrast requirements', () => {
-    const failures = results.filter(r => !r.passes);
-    if (failures.length > 0) {
-      const report = failures.map(f =>
-        `  FAIL: ${f.pair} — ratio ${f.ratio}:1 (requires ${f.textSize === 'large' ? '3' : '4.5'}:1)`
-      ).join('\n');
-      expect.fail(
-        `${failures.length} color pair(s) fail WCAG AA contrast:\n${report}`
-      );
-    }
+    const failures = results
+      .filter(r => !r.passes)
+      .map(f => `${f.pair}: ${f.ratio}:1 (needs ${f.textSize === 'large' ? '3' : '4.5'}:1)`);
+    expect(failures).toEqual([]);
   });
 
   it.each(results.map(r => [r.pair, r]))('%s passes contrast check', (pair, result) => {
