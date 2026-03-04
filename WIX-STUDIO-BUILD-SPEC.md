@@ -802,6 +802,45 @@ Sticky bottom bar showing selected products for comparison.
 | → Description | Text | `#timelineDesc` | |
 | Schema | HtmlComponent | `#aboutSchemaHtml` | |
 
+### Brand Story
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Story Repeater | Repeater | `#brandStoryRepeater` | Brand story sections |
+| → Heading | Text (H2) | `#storyHeading` | Repeater child — section heading |
+| → Body | Text | `#storyBody` | Repeater child — section body |
+| → Image | Image | `#storyImage` | Repeater child — section image |
+
+### Team Members
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Team Repeater | Repeater | `#teamRepeater` | Team member cards |
+| → Name | Text (H3) | `#teamName` | Repeater child — member name |
+| → Role | Text | `#teamRole` | Repeater child — member role |
+| → Bio | Text | `#teamBio` | Repeater child — member bio |
+
+### Showroom Info
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Address | Text | `#aboutAddress` | Showroom street address |
+| Phone | Text | `#aboutPhone` | Showroom phone number |
+| Today's Hours | Text | `#aboutTodayHours` | Open/closed status for today |
+| Features Repeater | Repeater | `#showroomFeatures` | Showroom feature badges |
+| → Feature | Text | `#featureText` | Repeater child — feature text |
+| Directions | Button | `#aboutDirectionsBtn` | Opens Google Maps directions |
+
+### Testimonials & Links
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Testimonials Repeater | Repeater | `#aboutTestimonials` | Customer testimonials |
+| → Quote | Text | `#testimonialQuote` | Repeater child — quote text |
+| → Author | Text | `#testimonialAuthor` | Repeater child — author name |
+| → Stars | Text | `#testimonialStars` | Repeater child — star rating |
+| FAQ Link | Button | `#aboutFaqLink` | Link to /faq page |
+
 ---
 
 ## Page: CONTACT (k14wx)
@@ -809,6 +848,7 @@ Sticky bottom bar showing selected products for comparison.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Map Section | Section | — | Illustrated map background |
+| Form Container | Box | `#contactForm` | Form container (hidden on success) |
 | Contact Form Name | Input | `#contactName` | |
 | Contact Form Email | Input | `#contactEmail` | |
 | Contact Form Phone | Input | `#contactPhone` | Optional |
@@ -820,12 +860,56 @@ Sticky bottom bar showing selected products for comparison.
 | Name Error | Text | `#contactNameError` | Hidden default |
 | Email Error | Text | `#contactEmailError` | Hidden default |
 | Message Error | Text | `#contactMessageError` | Hidden default |
+| Phone Error | Text | `#contactPhoneError` | Hidden default, phone validation |
+| Meta Tags | HtmlComponent | `#contactMetaHtml` | Hidden, meta tag injection |
 | Address | Text | `#infoAddress` | |
 | Phone | Text | `#infoPhone` | |
 | Phone Link | Button | `#infoPhoneLink` | Click-to-call |
-| Hours | Text | `#infoHours` | |
+| Today's Status | Text | `#todayStatus` | Open/closed status for today |
 | Directions | Button | `#directionsBtn` | → Google Maps |
 | Schema | HtmlComponent | `#contactSchemaHtml` | |
+
+### Showroom Features
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Features Repeater | Repeater | `#contactFeatures` | Showroom feature badges |
+| → Feature | Text | `#featureItem` | Repeater child |
+
+### Business Hours
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Hours Repeater | Repeater | `#hoursRepeater` | Weekly schedule |
+| → Day | Text | `#hourDay` | Repeater child — day name |
+| → Time | Text | `#hourTime` | Repeater child — hours |
+
+### Testimonials & Links
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Testimonials Repeater | Repeater | `#contactTestimonials` | Customer testimonials |
+| → Quote | Text | `#testimonialQuote` | Repeater child — quote text |
+| → Author | Text | `#testimonialAuthor` | Repeater child — author name |
+| → Stars | Text | `#testimonialStars` | Repeater child — star rating |
+| FAQ Link | Button | `#contactFaqLink` | Link to FAQ page |
+
+### Appointment Booking
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Book Visit Button | Button | `#appointmentBookBtn` | Opens appointment form |
+| Appointment Form | Box | `#appointmentForm` | Appointment form container |
+| Visit Type | Dropdown | `#appointmentVisitType` | Visit type selection |
+| Date | Dropdown | `#appointmentDate` | Date selection |
+| Time Slot | Dropdown | `#appointmentTimeSlot` | Time slot selection |
+| Name | Input | `#appointmentName` | Customer name |
+| Email | Input | `#appointmentEmail` | Customer email |
+| Phone | Input | `#appointmentPhone` | Customer phone |
+| Interests | TextArea | `#appointmentInterests` | Product interests |
+| Error | Text | `#appointmentError` | Hidden default, booking error |
+| Success | Box | `#appointmentSuccess` | Hidden default, success state |
+| Confirmation | Text | `#appointmentConfirmation` | Booking confirmation details |
 
 ---
 
@@ -1131,6 +1215,47 @@ Individual blog post page. Wix Blog renders content; this adds Article + FAQ JSO
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | SEO Schema | HtmlComponent | `#postSeoSchema` | Hidden, Article + FAQPage JSON-LD |
+| Meta Tags | HtmlComponent | `#postMetaHtml` | Hidden, meta tag injection (title, description, canonical) |
+
+---
+
+## Page: NEWSLETTER
+
+> **Code file:** `src/pages/Newsletter.js`
+
+Dedicated newsletter signup page with benefits, email subscription form, and social links.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Hero Title | Text (H1) | `#newsletterHeroTitle` | "Stay in the Loop" |
+| Hero Subtitle | Text | `#newsletterHeroSubtitle` | Subtitle copy |
+
+### Signup Form
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Email Input | Input | `#nlEmailInput` | Placeholder "your@email.com" |
+| Name Input | Input | `#nlNameInput` | First name (optional) |
+| Submit Button | Button | `#nlSubmitBtn` | "Subscribe" |
+| Success Message | Text | `#nlSuccessMessage` | Hidden default, success feedback |
+| Error Message | Text | `#nlErrorMessage` | Hidden default, error feedback |
+
+### Benefits
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Benefits Repeater | Repeater | `#benefitsRepeater` | 4 benefit items |
+| → Title | Text (H3) | `#benefitTitle` | Repeater child — benefit title |
+| → Description | Text | `#benefitDescription` | Repeater child — benefit description |
+
+### Social Links
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Social Title | Text (H2) | `#nlSocialTitle` | "Follow Us" |
+| Pinterest | Button | `#nlPinterestBtn` | Pinterest link |
+| Instagram | Button | `#nlInstagramBtn` | Instagram link |
+| Facebook | Button | `#nlFacebookBtn` | Facebook link |
 
 ---
 
