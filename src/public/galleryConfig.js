@@ -2,6 +2,8 @@
 // Image sizing constants matching WIX-STUDIO-BUILD-SPEC.md element dimensions
 // Per-category gallery settings for consistent product display
 
+import { breakpoints } from 'public/designTokens.js';
+
 // ── Image Sizing Constants ──────────────────────────────────────────
 export const imageSizes = {
   hero: { width: 1920, height: 600 },
@@ -11,12 +13,8 @@ export const imageSizes = {
   categoryCard: { width: 600, height: 400 },       // 3:2 ratio
 };
 
-// ── Responsive Breakpoints ──────────────────────────────────────────
-export const breakpoints = {
-  desktop: 1200,   // 1200px+
-  tablet: 768,     // 768-1199px
-  mobile: 0,       // <768px
-};
+// Re-export breakpoints from design tokens for consumers that import from here
+export { breakpoints };
 
 // ── Default Gallery Settings ────────────────────────────────────────
 const defaultGalleryConfig = {

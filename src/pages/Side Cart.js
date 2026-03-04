@@ -17,7 +17,7 @@ import {
   safeMultiply,
 } from 'public/cartService';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
-import { addSwipeHandler } from 'public/mobileHelpers';
+import { enableSwipe } from 'public/touchHelpers';
 import {
   getCartItemStyles,
   getProgressBarStyles,
@@ -114,12 +114,15 @@ function initSideCart() {
 
   // Swipe right to close side cart on mobile
   try {
-    addSwipeHandler($w('#sideCartPanel'), {
-      onRight: () => {
-        $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
-        announce($w, 'Cart closed');
-      },
-    });
+    const panel = $w('#sideCartPanel');
+    if (panel && panel.htmlElement) {
+      enableSwipe(panel.htmlElement, (direction) => {
+        if (direction === 'right') {
+          panel.hide('slide', { direction: 'right', duration: 300 });
+          announce($w, 'Cart closed');
+        }
+      }, { threshold: 50, maxTime: 400 });
+    }
   } catch (e) {}
 
   // Register repeater handlers once (not on every refresh)

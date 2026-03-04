@@ -13,7 +13,7 @@ import {
 } from 'public/exitIntentCapture';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
-import { isMobile } from 'public/mobileHelpers';
+import { isMobile, getViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
 import { initTikTokPixel } from 'public/tikTokPixel';
@@ -953,9 +953,9 @@ function collectCoreWebVitals() {
 
     const page = '/' + (wixLocationFrontend.path || []).join('/');
 
-    // Detect device type
-    const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
-    const deviceType = width < 768 ? 'mobile' : width < 1024 ? 'tablet' : 'desktop';
+    // Detect device type via canonical viewport helper
+    const viewport = getViewport();
+    const deviceType = viewport === 'wide' ? 'desktop' : viewport;
 
     // Detect connection type
     let connectionType = 'unknown';
