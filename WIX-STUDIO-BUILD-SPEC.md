@@ -569,6 +569,7 @@ Powered by `searchService.web.js` — dynamically populated from category produc
 | Material Filter | CheckboxGroup/Dropdown | `#filterMaterial` | Dynamically populated with counts, e.g. "Wood (12)" |
 | Color Filter | CheckboxGroup/Dropdown | `#filterColor` | Dynamically populated with counts |
 | Features Filter | CheckboxGroup/Dropdown | `#filterFeatures` | Tag-based feature toggles, e.g. "Space Saving", "Storage" |
+| Comfort Level | CheckboxGroup/Dropdown | `#filterComfortLevel` | Firm/Medium/Plush comfort filter |
 | Price Range Slider | Slider/Dropdown | `#filterPriceRange` | Enhanced price range control |
 | Width Min | Input | `#filterWidthMin` | Minimum width in inches, placeholder from facet data |
 | Width Max | Input | `#filterWidthMax` | Maximum width in inches, placeholder from facet data |
@@ -583,6 +584,7 @@ Bottom sheet for filter controls on mobile devices.
 
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
+| Mobile Sort Bar | Box | `#mobileSortBar` | Sticky sort bar on mobile, hidden on desktop |
 | Toggle Button | Button | `#filterToggleBtn` | "Filters" — opens drawer, shown only on mobile |
 | Drawer | Box | `#filterDrawer` | Slide-up bottom sheet containing all filter controls, hidden default |
 | Drawer Overlay | Box | `#filterDrawerOverlay` | Semi-transparent backdrop, hidden default |
@@ -603,6 +605,8 @@ Bottom sheet for filter controls on mobile devices.
 | → Quick View | Button | `#quickViewBtn` | Appears on hover |
 | → Badge | Text/Box | `#gridBadge` | "New", "Featured", etc., hidden default |
 | → Fabric Badge | Text | `#gridFabricBadge` | "700+ Fabric Options", hidden default |
+| → Review Stars | Box/Text | `#gridReviewStars` | Star rating display on product card |
+| → Review Count | Text | `#gridReviewCount` | Review count "(X)" on product card |
 | → Compare Button | Button | `#gridCompareBtn` | Add to compare bar |
 | → Swatch Preview | Box | `#gridSwatchPreview` | Container for swatch color dots, collapsible |
 | →→ Swatch Dot 1 | Box | `#swatchDot1` | Small color circle inside repeater, hidden default |
@@ -650,11 +654,24 @@ Shown when advanced filters produce no results. Different from empty state.
 | → Name | Text | `#recentName` | |
 | → Price | Text | `#recentPrice` | |
 
+### Active Filter Chips
+Removable badge chips showing currently active filters.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Chips Container | Box | `#activeFilterChips` | Container for active filter chip badges, hidden default |
+| Chips Repeater | Repeater | `#filterChipRepeater` | Repeater showing removable filter chips |
+| → Chip Label | Text | `#chipLabel` | Label text on each filter chip |
+| → Chip Remove | Button | `#chipRemove` | Remove button on each filter chip |
+| Chips Text | Text | `#filterChipsText` | Fallback text summary of active filters |
+| Clear All Chip | Button | `#clearAllFiltersChip` | "Clear All" chip button |
+
 ### Product Comparison Bar
 Sticky bottom bar showing selected products for comparison.
 
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
+| Compare View Button | Button | `#compareViewBtn` | "Compare X Items" — navigates to compare page |
 | Compare Bar | Box | `#compareBar` | Sticky bottom, hidden default |
 | Compare Repeater | Repeater | `#compareRepeater` | 2-4 selected items |
 | → Thumbnail | Image | `#compareThumb` | Small product image |
@@ -818,29 +835,89 @@ Sticky bottom bar showing selected products for comparison.
 |---------|------|----|-------|
 | Page Title | Text (H1) | — | "Frequently Asked Questions" |
 | Search Input | Input | `#faqSearchInput` | Filter FAQs by keyword |
+| Category Filter Tabs | Repeater | `#faqCategoryRepeater` | Category filter tabs (All, Shipping, Returns, Products, Financing, Showroom) |
+| → Category Label | Text | `#categoryLabel` | Text label for each category tab |
 | FAQ Repeater | Repeater | `#faqRepeater` | Accordion style |
 | → Question | Text (H3) | `#faqQuestion` | Clickable |
 | → Answer | Text | `#faqAnswer` | Collapsible |
 | → Toggle Icon | Text | `#faqToggle` | +/− |
 | No Results | Text | `#faqNoResults` | "No matching questions", hidden default |
 | Schema | HtmlComponent | `#faqSchemaHtml` | |
+| Meta | HtmlComponent | `#faqMetaHtml` | Hidden, page meta tags |
 
 ---
 
 ## Page: SEARCH RESULTS (evr2j)
 
-| Element | Type | ID |
-|---------|------|----|
-| Search Query Display | Text (H1) | `#searchQuery` |
-| Result Count | Text | `#resultCount` |
-| Results Repeater | Repeater | `#searchRepeater` |
-| → Image | Image | `#searchImage` |
-| → Name | Text | `#searchName` |
-| → Price | Text | `#searchPrice` |
-| → Description | Text | `#searchDesc` |
-| No Results Box | Box | `#noResultsBox` |
-| No Results Text | Text | `#noResultsText` |
+> **Code file:** `src/pages/Search Results.js`
+
+### Search Input
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Search Input | Input | `#searchInput` | Main search input field |
+| Search Button | Button | `#searchBtn` | Search submit button |
+
+### Results Display
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Search Query Display | Text (H1) | `#searchQuery` | Shows "Results for '…'" |
+| Result Count | Text | `#resultCount` | "X products found" |
+| Sort Dropdown | Dropdown | `#sortDropdown` | Sort by: Relevance, Price, Name, Newest |
+
+### Autocomplete Suggestions
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Suggestions Container | Box | `#suggestionsBox` | Autocomplete dropdown, hidden default |
+| Suggestions Repeater | Repeater | `#suggestionsRepeater` | List of suggestion items |
+| → Suggestion Text | Text | `#suggestionText` | Suggestion label text |
+| → Suggestion Type | Text | `#suggestionType` | "Category" / "Trending" / "Product" type label |
+
+### Filter Bar
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Category Filter | Dropdown | `#categoryFilter` | Filter by product category |
+| Price Filter | Dropdown | `#priceFilter` | Filter by price range |
+| Material Filter | Dropdown | `#materialFilter` | Filter by material |
+| Color Filter | Dropdown | `#colorFilter` | Filter by color |
+| Filter Toggle | Button | `#filterToggleBtn` | Mobile filter sidebar toggle |
+| Filter Sidebar | Box | `#filterSidebar` | Mobile filter sidebar panel, hidden default |
+| Clear Filters | Button | `#clearFiltersBtn` | Clear all filters button |
+| Filter Badge | Text/Box | `#filterBadge` | Active filter count badge, hidden default |
+
+### Results Grid
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Results Repeater | Repeater | `#searchRepeater` | Product results grid |
+| → Image | Image | `#searchImage` | Product image |
+| → Name | Text | `#searchName` | Product name |
+| → Price | Text | `#searchPrice` | Current price |
+| → Original Price | Text | `#searchOrigPrice` | Strikethrough original price, hidden default |
+| → Description | Text | `#searchDesc` | Product description snippet |
+| → Ribbon Badge | Text/Box | `#searchRibbon` | "New", "Sale" badge overlay, hidden default |
 | → Add to Cart | Button | `#searchAddBtn` | Quick add from search results |
+| → Swatch Preview | Box | `#searchSwatchPreview` | Swatch color dots container, hidden default |
+| →→ Swatch Dot 1 | Box | `#searchSwatchDot1` | Color preview dot, hidden default |
+| →→ Swatch Dot 2 | Box | `#searchSwatchDot2` | Color preview dot, hidden default |
+| →→ Swatch Dot 3 | Box | `#searchSwatchDot3` | Color preview dot, hidden default |
+| →→ Swatch Dot 4 | Box | `#searchSwatchDot4` | Color preview dot, hidden default |
+
+### Popular Search Chips
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Chips Repeater | Repeater | `#searchChipsRepeater` | Popular/trending search term chips |
+| → Chip Label | Text | `#chipLabel` | Search term text |
+
+### Pagination & Loading
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Load More | Button | `#loadMoreBtn` | "Load More" pagination button |
+| Loading Indicator | Box/Image | `#loadingIndicator` | Loading spinner, hidden default |
+
+### Empty State
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| No Results Box | Box | `#noResultsBox` | Shown when search returns 0 results |
+| No Results Text | Text | `#noResultsText` | "No products found for '…'" |
 
 ---
 
@@ -1134,6 +1211,98 @@ Logged-in member account page with order history, wishlist, loyalty, address boo
 |---------|------|----|-------|
 | Error Box | Box | `#memberErrorFallback` | Hidden default |
 | Error Text | Text | `#memberErrorText` | Error message |
+
+---
+
+## Page: STYLE QUIZ
+
+> **Code file:** `src/pages/Style Quiz.js`
+>
+> Interactive 5-step quiz: room type → primary use → style preference → size needs → budget range → personalized product recommendations. Uses `backend/styleQuiz.web` for recommendation engine.
+
+### Quiz Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Quiz Container | Section/Box | `#quizSection` | Main quiz container, visible during quiz |
+| Progress Bar | ProgressBar/Slider | `#quizProgressBar` | Visual progress (0-100%), updates per step |
+| Progress Text | Text | `#quizProgressText` | "Step X of 5" |
+| Step Title | Text (H2) | `#quizStepTitle` | Current step question, e.g. "Where will your futon live?" |
+| Step Subtitle | Text | `#quizStepSubtitle` | Step description/hint |
+| Options Repeater | Repeater | `#quizOptionsRepeater` | Grid of answer option cards |
+| → Option Container | Box | `#optionContainer` | Clickable card — Mountain Blue highlight on select, role=radio |
+| → Option Label | Text | `#optionLabel` | Option name |
+| → Option Description | Text | `#optionDescription` | Option description |
+| Next Button | Button | `#quizNextBtn` | "Next" / "See My Recommendations" on final step |
+| Back Button | Button | `#quizBackBtn` | Previous step — collapsed on step 1 |
+| Restart Button | Button | `#quizRestartBtn` | Start quiz over |
+| Validation Message | Text | `#quizValidation` | "Please select an option" — collapsed default |
+
+### Loading State
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Loading Container | Section/Box | `#quizLoadingState` | Shown while fetching recommendations — collapsed default |
+| Loading Text | Text | `#quizLoadingText` | "Finding your perfect match…" |
+
+### Results Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Results Container | Section/Box | `#quizResults` | Recommendation results — collapsed default |
+| Results Title | Text (H2) | `#resultsTitle` | "Your Top X Matches" |
+| Results Subtitle | Text | `#resultsSubtitle` | "Based on your preferences…" |
+| Results Repeater | Repeater | `#resultsRepeater` | Recommended product cards |
+| → Product Image | Image | `#resultProductImage` | Recommended product image |
+| → Product Name | Text (H3) | `#resultProductName` | Product name, role=heading |
+| → Product Price | Text | `#resultProductPrice` | Formatted price |
+| → Match Reason | Text | `#resultMatchReason` | Why this product was recommended |
+| → Match Badge | Text/Box | `#resultMatchBadge` | "Top Pick" / "Great Match" / "Good Option" |
+| → View Product | Button | `#resultViewBtn` | Navigate to product page |
+| Browse All Button | Button | `#resultsBrowseBtn` | "Browse full collection" fallback — collapsed default |
+
+---
+
+## Page: COMPARE PAGE
+
+> **Code file:** `src/pages/Compare Page.js`
+>
+> Side-by-side product comparison (2-4 products). Uses dynamic column visibility. Products loaded from `galleryHelpers` compare list, specs from `backend/comparisonService.web`. Shareable via URL.
+
+### Loading & Empty States
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Loading Spinner | Box/Image | `#compareLoading` | Hidden default, shown during data fetch |
+| Content Container | Section/Box | `#compareContent` | Main comparison content — hidden until loaded |
+| Empty State | Section/Box | `#compareEmptyState` | Shown when <2 products selected — hidden default |
+| Empty Title | Text (H2) | `#emptyStateTitle` | "Compare Products" |
+| Empty Text | Text | `#emptyStateText` | Instructions to add products from category page |
+| Browse Products | Button | `#browseProductsBtn` | Navigate to category page |
+
+### Comparison Header
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Page Title | Text (H1) | `#comparePageTitle` | "Comparing X Products" |
+| Add Product | Button | `#addProductBtn` | "Add another product" — hidden when 4 products |
+| Share Compare | Button | `#shareCompareBtn` | Copy shareable comparison link to clipboard |
+| Share URL Text | Text | `#shareUrlText` | Displays copied URL confirmation — hidden default |
+
+### Product Columns (1–4)
+Dynamic columns — show/hide based on number of products being compared.
+
+| Element Pattern | Type | ID Pattern | Notes |
+|-----------------|------|------------|-------|
+| Column Container | Box | `#compareCol1`–`#compareCol4` | Product column container, hidden default |
+| Product Image | Image | `#compareImage1`–`#compareImage4` | Product image |
+| Product Name | Text (H3) | `#compareName1`–`#compareName4` | Product name |
+| Product Price | Text | `#comparePrice1`–`#comparePrice4` | Product price |
+| Product Badge | Text/Box | `#compareBadge1`–`#compareBadge4` | Ribbon badge — hidden default |
+| Winner Badge | Text/Box | `#winnerBadge1`–`#winnerBadge4` | "Best Value" / "Best Rated" — hidden default |
+| Remove Button | Button | `#removeProduct1`–`#removeProduct4` | Remove from comparison |
+
+### Spec Comparison Rows
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Row Repeater | Repeater | `#comparisonRowRepeater` | Spec comparison rows |
+| → Row Label | Text | `#rowLabel` | Spec attribute name (e.g., "Material", "Weight") |
+| → Cell 1–4 | Text | `#rowCell1`–`#rowCell4` | Value for each product column |
 
 ---
 
