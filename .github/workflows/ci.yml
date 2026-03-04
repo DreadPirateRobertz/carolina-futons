@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '0 6 * * *'  # Nightly at 6am UTC
 
 jobs:
   test:
@@ -44,4 +46,9 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Check for syntax errors
-        run: node --check src/**/*.js || true
+        run: |
+          failed=0
+          for f in src/pages/*.js src/public/*.js src/backend/*.js; do
+            node --check "$f" 2>&1 || failed=1
+          done
+          exit $failed
