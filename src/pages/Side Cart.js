@@ -16,7 +16,7 @@ import {
   MAX_QUANTITY,
   safeMultiply,
 } from 'public/cartService';
-import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { announce } from 'public/a11yHelpers.js';
 import { enableSwipe } from 'public/touchHelpers';
 import {
   getCartItemStyles,

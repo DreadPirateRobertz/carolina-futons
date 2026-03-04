@@ -264,8 +264,14 @@ async function loadCartSuggestions(cart) {
     const cartSubtotal = currentCart.totals?.subtotal || 0;
     const bundles = buildRoomBundles(suggestions, cartSubtotal);
 
+    // Limit displayed products per viewport (mobile: 2, tablet: 3, desktop: 4)
+    const viewportBundles = bundles.map(b => ({
+      ...b,
+      products: limitForViewport(b.products, { mobile: 2, tablet: 3, desktop: 4 }),
+    }));
+
     initCrossSellWidget($w, {
-      bundles,
+      bundles: viewportBundles,
       addToCart,
       announce,
       elements: {
