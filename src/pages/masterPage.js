@@ -650,6 +650,13 @@ function initInstallBanner() {
       try {
         if (!canShowInstallPrompt()) return;
 
+        // Don't show if already dismissed this session
+        if (typeof sessionStorage !== 'undefined') {
+          try {
+            if (sessionStorage.getItem('cf_install_dismissed')) return;
+          } catch (e) {}
+        }
+
         const banner = $w('#installBanner');
         if (!banner) return;
 
@@ -670,13 +677,6 @@ function initInstallBanner() {
             }
           });
         } catch (e) {}
-
-        // Don't show if already dismissed this session
-        if (typeof sessionStorage !== 'undefined') {
-          try {
-            if (sessionStorage.getItem('cf_install_dismissed')) return;
-          } catch (e) {}
-        }
 
         banner.show('slide', { direction: 'bottom', duration: 300 });
         trackEvent('pwa_install_banner_shown', {});

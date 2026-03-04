@@ -341,8 +341,10 @@ export const generateReferralCode = webMethod(
         return { success: true, code: existing.items[0].code };
       }
 
-      // Generate unique code: CF-<first 8 chars of memberId uppercase>
-      const code = 'CF-' + memberId.replace(/-/g, '').slice(0, 8).toUpperCase();
+      // Generate unique code: CF-<6 chars from memberId>-<4 random chars>
+      const base = memberId.replace(/-/g, '').slice(0, 6).toUpperCase();
+      const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
+      const code = `CF-${base}${rand}`;
 
       await wixData.insert('ReferralCodes', {
         code,

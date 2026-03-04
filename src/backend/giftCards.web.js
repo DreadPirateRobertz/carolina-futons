@@ -176,14 +176,15 @@ export const redeemGiftCard = webMethod(
         return { success: false, message: 'Gift card has no remaining balance' };
       }
 
-      // RACE FIX: Claim card by setting status='processing' BEFORE calculating.
-      // Concurrent requests querying status='active' will not find this card.
+      // RACE FIX: Use unique claimId to detect concurrent modifications.
+      // Each request stamps a unique token; on re-read, only the winner's token persists.
+      const claimId = `claim-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const originalBalance = card.balance;
-      await wixData.update('GiftCards', { ...card, status: 'processing' });
+      await wixData.update('GiftCards', { ...card, status: 'processing', claimId });
 
-      // Re-read to confirm we won the claim (another request may have set processing first)
+      // Re-read to confirm we won the claim — only one request's claimId can be current
       const claimed = await wixData.get('GiftCards', card._id);
-      if (claimed.status !== 'processing' || claimed.balance !== originalBalance) {
+      if (claimed.claimId !== claimId || claimed.balance !== originalBalance) {
         return { success: false, message: 'Gift card was modified concurrently, please retry' };
       }
 
