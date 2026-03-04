@@ -19,11 +19,18 @@ import {
   calculateOrderSummary,
   getExpressCheckoutSummary,
 } from 'backend/checkoutOptimization.web';
+import {
+  getProtectionPlans,
+  addProtectionPlan,
+  removeProtectionPlan,
+  PLAN_TIERS,
+} from 'backend/protectionPlan.web';
 
 // Shared state for cross-section communication
 let _currentCart = null;
 let _addressValid = false;
 let _selectedShippingMethod = 'standard';
+let _sessionId = null;
 
 $w.onReady(async function () {
   const sections = [
@@ -32,6 +39,7 @@ $w.onReady(async function () {
     { name: 'orderNotes', init: initOrderNotes },
     { name: 'checkoutSummary', init: initCheckoutSummary },
     { name: 'orderSummarySidebar', init: initOrderSummarySidebar },
+    { name: 'protectionPlan', init: initProtectionPlanUpsell },
     { name: 'deliveryEstimate', init: initDeliveryEstimate },
     { name: 'expressCheckout', init: initExpressCheckout },
   ];
@@ -171,6 +179,9 @@ async function initCheckoutSummary() {
     const subtotal = cart.totals?.subtotal || 0;
     const lineItems = Array.isArray(cart.lineItems) ? cart.lineItems : [];
     const itemCount = lineItems.reduce((s, i) => s + (i.quantity || 0), 0);
+
+    // Generate session ID for protection plan tracking
+    _sessionId = `checkout-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     // Empty cart — redirect to cart page instead of showing blank checkout
     if (itemCount === 0) {
@@ -668,6 +679,169 @@ async function initExpressCheckout() {
 
     section.show();
   } catch (e) {}
+}
+
+// ── Protection Plan Upsell ────────────────────────────────────────────
+// Offers tiered warranty plans for eligible products in the cart
+
+async function initProtectionPlanUpsell() {
+  try {
+    const section = $w('#protectionPlanSection');
+    if (!section) return;
+
+    const cart = _currentCart || await getCurrentCart();
+    if (!cart) return;
+
+    const lineItems = Array.isArray(cart.lineItems) ? cart.lineItems : [];
+    const productIds = lineItems
+      .map(item => item.productId || item._id)
+      .filter(Boolean);
+
+    if (productIds.length === 0) return;
+
+    const result = await getProtectionPlans(productIds, _sessionId);
+    if (!result.success || result.plans.length === 0) return;
+
+    // Set section header
+    try {
+      $w('#protectionPlanTitle').text = 'Protect Your Furniture';
+      try { $w('#protectionPlanTitle').accessibility.role = 'heading'; } catch (e) {}
+    } catch (e) {}
+
+    try {
+      $w('#protectionPlanSubtitle').text =
+        'Add a protection plan for peace of mind — covers accidental damage, defects, and more.';
+    } catch (e) {}
+
+    // Populate product protection repeater
+    const repeater = $w('#protectionPlanRepeater');
+    if (!repeater) return;
+
+    repeater.data = result.plans.map(plan => ({
+      _id: plan.productId,
+      ...plan,
+    }));
+
+    repeater.onItemReady(($item, planData) => {
+      try { $item('#protPlanProductName').text = planData.productName; } catch (e) {}
+      try {
+        $item('#protPlanProductPrice').text = `$${planData.productPrice.toFixed(2)}`;
+      } catch (e) {}
+
+      // Render tier options
+      const tierRepeater = $item('#protPlanTierRepeater');
+      if (tierRepeater) {
+        tierRepeater.data = planData.tiers.map(tier => ({
+          _id: `${planData.productId}-${tier.id}`,
+          ...tier,
+          productId: planData.productId,
+        }));
+
+        tierRepeater.onItemReady(($tierItem, tierData) => {
+          try { $tierItem('#tierName').text = tierData.name; } catch (e) {}
+          try { $tierItem('#tierPrice').text = `+$${tierData.price.toFixed(2)}`; } catch (e) {}
+          try {
+            $tierItem('#tierDuration').text = `${tierData.durationYears}-year coverage`;
+          } catch (e) {}
+
+          // Coverage details
+          try {
+            $tierItem('#tierCoverage').text = tierData.coverage.join(' · ');
+          } catch (e) {}
+
+          // Highlight selected tier
+          try {
+            if (planData.selectedTier === tierData.id) {
+              $tierItem('#tierCard').style.borderColor = colors.mountainBlue;
+              $tierItem('#tierSelectBtn').label = 'Selected';
+              $tierItem('#tierSelectBtn').style.backgroundColor = colors.mountainBlue;
+              $tierItem('#tierSelectBtn').style.color = colors.white;
+            } else {
+              $tierItem('#tierCard').style.borderColor = colors.sandDark;
+              $tierItem('#tierSelectBtn').label = 'Add Protection';
+              $tierItem('#tierSelectBtn').style.backgroundColor = colors.sunsetCoral;
+              $tierItem('#tierSelectBtn').style.color = colors.white;
+            }
+          } catch (e) {}
+
+          // ARIA
+          try {
+            $tierItem('#tierSelectBtn').accessibility.ariaLabel =
+              `Add ${tierData.name} for $${tierData.price.toFixed(2)} to ${planData.productName}`;
+          } catch (e) {}
+
+          // Click handler — toggle protection plan
+          try {
+            $tierItem('#tierSelectBtn').onClick(async () => {
+              try {
+                const isSelected = planData.selectedTier === tierData.id;
+
+                if (isSelected) {
+                  // Remove protection plan
+                  const removeResult = await removeProtectionPlan(tierData.productId, _sessionId);
+                  if (removeResult.success) {
+                    planData.selectedTier = null;
+                    $tierItem('#tierCard').style.borderColor = colors.sandDark;
+                    $tierItem('#tierSelectBtn').label = 'Add Protection';
+                    $tierItem('#tierSelectBtn').style.backgroundColor = colors.sunsetCoral;
+                    announce($w, `${tierData.name} removed from ${planData.productName}`);
+                  }
+                } else {
+                  // Add/change protection plan
+                  const addResult = await addProtectionPlan(
+                    tierData.productId,
+                    tierData.id,
+                    _sessionId
+                  );
+                  if (addResult.success) {
+                    planData.selectedTier = tierData.id;
+                    // Reset all tier cards for this product, highlight selected
+                    try {
+                      // Re-trigger the repeater to update visual state
+                      tierRepeater.data = [...tierRepeater.data];
+                    } catch (e) {}
+                    announce(
+                      $w,
+                      `${addResult.data.planName} added for ${planData.productName} — $${addResult.data.price.toFixed(2)}`
+                    );
+                  }
+                }
+              } catch (err) {
+                console.error('[Checkout] Protection plan toggle error:', err);
+              }
+            });
+          } catch (e) {}
+        });
+      }
+
+      // "No thanks" decline link
+      try {
+        const declineBtn = $item('#protPlanDecline');
+        if (declineBtn) {
+          declineBtn.onClick(async () => {
+            try {
+              await removeProtectionPlan(planData.productId, _sessionId);
+              planData.selectedTier = null;
+              announce($w, `Protection plan declined for ${planData.productName}`);
+              try { $item('#protPlanTierRepeater').collapse(); } catch (e) {}
+              try { declineBtn.text = 'Protection declined'; } catch (e) {}
+            } catch (e) {}
+          });
+          try {
+            declineBtn.accessibility.ariaLabel = `Decline protection for ${planData.productName}`;
+          } catch (e) {}
+        }
+      } catch (e) {}
+    });
+
+    // ARIA for section
+    try { section.accessibility.role = 'region'; } catch (e) {}
+    try { section.accessibility.ariaLabel = 'Furniture protection plans'; } catch (e) {}
+
+    section.show('fade', { duration: 250 });
+  } catch (e) {
+    console.error('[Checkout] Error loading protection plans:', e);
+  }
 }
 
 function addBusinessDays(startDate, days) {
