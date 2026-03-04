@@ -7,6 +7,7 @@
  */
 import { getComfortLevels, getProductComfort, getComfortProducts } from 'backend/comfortService.web';
 import { colors } from 'public/designTokens.js';
+import { getComfortSvg } from 'public/comfortIllustrations.js';
 
 /**
  * Icon/label map for comfort levels (used as fallback when illustrations unavailable).
@@ -33,6 +34,11 @@ export function renderComfortCard($item, comfort) {
     if (comfort.illustration) {
       $item('#comfortIllustration').src = comfort.illustration;
       $item('#comfortIllustration').alt = comfort.illustrationAlt || `${comfort.name} comfort level illustration`;
+    } else {
+      const svg = getComfortSvg(comfort.slug);
+      if (svg) {
+        try { $item('#comfortIllustrationSvg').html = svg; } catch (e) {}
+      }
     }
   } catch (e) {}
 }

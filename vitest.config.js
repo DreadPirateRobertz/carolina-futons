@@ -214,6 +214,8 @@ export default defineConfig({
       'public/categoryFilterHelpers': path.resolve(__dirname, 'src/public/categoryFilterHelpers.js'),
       'public/emptyStateIllustrations.js': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
       'public/emptyStateIllustrations': path.resolve(__dirname, 'src/public/emptyStateIllustrations.js'),
+      'public/comfortIllustrations.js': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
+      'public/comfortIllustrations': path.resolve(__dirname, 'src/public/comfortIllustrations.js'),
     },
   },
 });
