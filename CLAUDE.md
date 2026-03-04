@@ -147,7 +147,12 @@ When implementing any design from Figma:
 
 **NO MORE PROGRAMMATIC SVG ILLUSTRATIONS.** All illustrations must be designed in Figma Draw, not coded as JS template strings.
 
-**MANDATORY PRE-READ**: Before ANY illustration work, read `docs/guides/figma-draw-tool-reference.md`. This is the comprehensive reference for tools, effects, workflow, and community resources.
+**MANDATORY READ + UPDATE CYCLE**: Before ANY illustration work:
+1. READ `docs/guides/figma-draw-tool-reference.md` (tools, effects, workflow)
+2. READ all files in `docs/guides/` (community asset study, plugin evaluations, SVG pipeline, crew workflow)
+3. After completing your illustration bead: UPDATE the relevant guide docs with new techniques or lessons learned
+4. REFERENCE docs/guides/ in your PR description to confirm you followed the workflow
+These docs are living references — every illustration bead makes them better.
 
 **design.jpeg is the quality bar.** Mountains MUST look like Blue Ridge Mountains — soft rolling ridgelines, 5-7 overlapping layers fading into distance with atmospheric haze.
 

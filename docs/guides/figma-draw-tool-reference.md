@@ -152,12 +152,26 @@ Figma Draw provides purpose-built tools for hand-drawn work that produces higher
 
 ## Plugins to Evaluate
 
-| Plugin | Purpose | Priority |
-|--------|---------|----------|
-| Hand Draw | Transforms precise vectors → sketchy hand-drawn style | P1 (radahn evaluating) |
-| Noise & Texture | Dynamic seamless noise/texture generation | P2 |
-| Noise Effect Generator | Multiple noise types (fiber, waves, spots) | P2 |
-| Figma Brush for Draw | Additional brush styles | P2 |
+| Plugin | Purpose | Priority | Verdict |
+|--------|---------|----------|---------|
+| Hand Draw | Transforms precise vectors → sketchy hand-drawn style | EVALUATED | **NOT recommended for ridgelines** — uniform roughness destroys atmospheric depth. OK for small detail elements only. See `docs/guides/hand-draw-plugin-evaluation.md` |
+| Rough / Roughly | Similar sketch-style transforms | EVALUATED | **Same problem** — uniform edge treatment breaks layered mountain composition |
+| Noise & Texture | Dynamic seamless noise/texture generation | P2 | Not yet evaluated |
+| Noise Effect Generator | Multiple noise types (fiber, waves, spots) | P2 | Not yet evaluated |
+| Figma Brush for Draw | Additional brush styles | P2 | Not yet evaluated |
+
+**Plugin Decision (radahn 2026-03-04):** Use native Figma Draw tools (Texture effect + Pencil/Pen + Progressive Blur) for mountain ridgelines. Plugins only for small detail elements where uniform roughness is acceptable.
+
+---
+
+## Living Document Protocol
+
+**This document is a living reference.** Every crew member working on an illustration bead MUST:
+1. **READ** this doc + all files in `docs/guides/` before starting illustration work
+2. **UPDATE** this doc with any new techniques, findings, or lessons learned during their bead
+3. **REFERENCE** this doc in their PR description to confirm they followed the workflow
+
+New findings go in the relevant section. If a new guide file is created (like `hand-draw-plugin-evaluation.md`), add it to the Resources table and summarize key findings here.
 
 ---
 
