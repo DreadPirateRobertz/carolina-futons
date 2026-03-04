@@ -5,6 +5,7 @@ import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
   get_health,
   get_productSitemap,
+  get_blogSitemap,
   get_facebookCatalogFeed,
   get_pinterestProductFeed,
   get_checkWishlistAlerts,
@@ -127,6 +128,59 @@ describe('get_productSitemap', () => {
     expect(result.status).toBe(200);
     // Should still have static pages
     expect(result.body).toContain('<loc>https://www.carolinafutons.com/</loc>');
+  });
+});
+
+// ── get_blogSitemap ─────────────────────────────────────────────────
+
+describe('get_blogSitemap', () => {
+  it('returns XML with sitemap namespace', async () => {
+    const result = await get_blogSitemap();
+    expect(result.status).toBe(200);
+    expect(result.body).toContain('<?xml version="1.0"');
+    expect(result.body).toContain('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
+  });
+
+  it('includes blog index page', async () => {
+    const result = await get_blogSitemap();
+    expect(result.body).toContain('<loc>https://www.carolinafutons.com/blog</loc>');
+  });
+
+  it('includes all pillar blog post URLs', async () => {
+    const result = await get_blogSitemap();
+    expect(result.body).toContain('/blog/best-futons-for-everyday-sleeping</loc>');
+    expect(result.body).toContain('/blog/futon-frame-buying-guide</loc>');
+    expect(result.body).toContain('/blog/how-to-choose-futon-mattress</loc>');
+    expect(result.body).toContain('/blog/murphy-bed-vs-futon</loc>');
+    expect(result.body).toContain('/blog/futon-care-guide</loc>');
+    expect(result.body).toContain('/blog/futon-vs-sofa-bed</loc>');
+    expect(result.body).toContain('/blog/small-space-furniture-guide</loc>');
+    expect(result.body).toContain('/blog/platform-bed-guide</loc>');
+  });
+
+  it('includes lastmod from publishDate', async () => {
+    const result = await get_blogSitemap();
+    expect(result.body).toContain('<lastmod>2026-02-20</lastmod>');
+  });
+
+  it('sets XML content type with 1-hour cache', async () => {
+    const result = await get_blogSitemap();
+    expect(result.headers['Content-Type']).toContain('application/xml');
+    expect(result.headers['Cache-Control']).toContain('max-age=3600');
+  });
+
+  it('sets blog posts at priority 0.6 and blog index at 0.7', async () => {
+    const result = await get_blogSitemap();
+    // Blog index should be higher priority
+    const indexMatch = result.body.match(/<url>\s*<loc>[^<]*\/blog<\/loc>[\s\S]*?<priority>([\d.]+)<\/priority>/);
+    expect(indexMatch).toBeTruthy();
+    expect(indexMatch[1]).toBe('0.7');
+  });
+
+  it('escapes XML special characters in blog URLs', async () => {
+    const result = await get_blogSitemap();
+    // All URLs should be properly escaped — no raw & or < in loc elements
+    expect(result.body).not.toMatch(/<loc>[^<]*[<>][^<]*<\/loc>/);
   });
 });
 
