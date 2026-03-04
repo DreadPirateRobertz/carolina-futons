@@ -3920,14 +3920,14 @@
       <!-- ════════ POLICY PAGES (grouped) ════════ -->
       <div class="page-rendering">
         <div class="page-title-bar">
-          <h4>Policy &amp; Admin Pages (8 pages)</h4>
+          <h4>Policy &amp; Utility Pages (7 pages)</h4>
           <span class="page-route">Various routes &nbsp;&bull;&nbsp; Minimal logic, mostly content</span>
         </div>
         <div class="page-wireframe" style="border-top: 1px solid var(--sand-dark);">
           <div class="wire-section">
             <div class="wire-label">Shared Template: Policy Pages</div>
             <div style="font-size: 11px; color: var(--espresso-light); line-height: 1.8;">
-              All policy and admin pages follow the same pattern: Playfair Display heading, body copy in Source Sans 3, brand-consistent styling. Minimal JavaScript &mdash; mostly static content with SEO meta tags.
+              All policy and utility pages follow the same pattern: Playfair Display heading, body copy in Source Sans 3, brand-consistent styling. Minimal JavaScript &mdash; mostly static content with SEO meta tags.
             </div>
           </div>
           <div class="wire-section">
@@ -3949,28 +3949,8 @@
                 <div style="font-size: 10px; color: var(--muted-brown);">/refund-policy &bull; Eligibility, process, timeline</div>
               </div>
               <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
-                <div style="font-weight: 600; font-size: 12px;">Returns</div>
-                <div style="font-size: 10px; color: var(--muted-brown);">/returns &bull; Return process, conditions</div>
-              </div>
-              <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
                 <div style="font-weight: 600; font-size: 12px;">Accessibility Statement</div>
                 <div style="font-size: 10px; color: var(--muted-brown);">/accessibility &bull; WCAG AA commitment</div>
-              </div>
-              <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
-                <div style="font-weight: 600; font-size: 12px;">Admin Returns</div>
-                <div style="font-size: 10px; color: var(--muted-brown);">/admin/returns &bull; Internal return processing</div>
-              </div>
-              <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
-                <div style="font-weight: 600; font-size: 12px;">Order Tracking</div>
-                <div style="font-size: 10px; color: var(--muted-brown);">/order-tracking &bull; Track by order number</div>
-              </div>
-            </div>
-          </div>
-          <div class="wire-section">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
-                <div style="font-weight: 600; font-size: 12px;">Newsletter</div>
-                <div style="font-size: 10px; color: var(--muted-brown);">/newsletter &bull; Email signup landing page</div>
               </div>
               <div style="background: var(--white); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--sand-dark);">
                 <div style="font-weight: 600; font-size: 12px;">Fullscreen Page</div>
@@ -3984,7 +3964,7 @@
           </div>
         </div>
         <div class="page-features">
-          <h5>Common Features (Policy/Admin)</h5>
+          <h5>Common Features (Policy/Utility)</h5>
           <div class="feature-list">
             <span class="feature-tag implemented">SEO meta tags</span>
             <span class="feature-tag implemented">Canonical URLs</span>
@@ -3998,10 +3978,375 @@
     </div>
   </div>
 
+  <!-- ── PRIORITY GROUP 5: CUSTOMER SERVICE & ADMIN ── -->
+  <div class="priority-group">
+    <h3>Customer Service &amp; Admin</h3>
+    <p class="group-desc">Post-purchase tools for customers (order tracking, returns, newsletter) and internal admin dashboards. High-complexity pages with forms, API integration, and real-time updates.</p>
+
+    <div class="page-rendering-grid">
+
+      <!-- ════════ ORDER TRACKING ════════ -->
+      <div class="page-rendering">
+        <div class="page-title-bar">
+          <h4>Order Tracking</h4>
+          <span class="page-route">/order-tracking &nbsp;&bull;&nbsp; Order Tracking.js (545 lines)</span>
+        </div>
+        <div class="page-wireframe" style="border-top: 1px solid var(--sand-dark);">
+          <div class="wire-section" style="text-align: center; padding: 20px;">
+            <div style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--espresso);">Track Your Order</div>
+            <div style="font-size: 12px; color: var(--muted-brown);">Enter your order number and email address to view your shipment status.</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Lookup Form</div>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+              <div style="flex: 1; background: var(--white); border: 1px solid var(--sand-dark); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--muted);">Order Number</div>
+              <div style="flex: 1; background: var(--white); border: 1px solid var(--sand-dark); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--muted);">Email Address</div>
+              <span class="wire-btn coral">Track Order</span>
+            </div>
+            <div style="font-size: 10px; color: var(--muted-brown); margin-top: 4px;">Prefills from URL params (?order=XXX&amp;email=YYY) &bull; Enter key submits</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Order Summary (on lookup)</div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0;">
+              <span style="font-weight: 600;">Order #12345</span>
+              <span>Placed March 1, 2026</span>
+              <span style="color: var(--mountain-blue); font-weight: 600;">IN TRANSIT</span>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Tracking Timeline (step visualization)</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px;">
+              <div style="text-align: center;"><div style="width: 14px; height: 14px; border-radius: 50%; background: var(--success); margin: 0 auto 4px;"></div>Ordered</div>
+              <div style="flex: 1; height: 2px; background: var(--success); margin: 0 4px;"></div>
+              <div style="text-align: center;"><div style="width: 14px; height: 14px; border-radius: 50%; background: var(--success); margin: 0 auto 4px;"></div>Shipped</div>
+              <div style="flex: 1; height: 2px; background: var(--success); margin: 0 4px;"></div>
+              <div style="text-align: center;"><div style="width: 16px; height: 16px; border-radius: 50%; background: var(--mountain-blue); margin: 0 auto 4px; border: 2px solid var(--mountain-blue);"></div><strong>In Transit</strong></div>
+              <div style="flex: 1; height: 2px; background: var(--sand-dark); margin: 0 4px;"></div>
+              <div style="text-align: center;"><div style="width: 14px; height: 14px; border-radius: 50%; background: var(--sand-dark); margin: 0 auto 4px;"></div>Delivered</div>
+            </div>
+            <div style="font-size: 10px; color: var(--muted-brown); margin-top: 6px;">Mobile: shows completed + current + next step only &bull; Exception states show coral dots</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Shipping Details</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px;">
+              <div><span style="color: var(--muted-brown);">Carrier:</span> UPS</div>
+              <div><span style="color: var(--muted-brown);">Service:</span> Ground</div>
+              <div><span style="color: var(--muted-brown);">Tracking:</span> 1Z999AA10123456784</div>
+              <div><span style="color: var(--muted-brown);">Est. Delivery:</span> Friday, March 7</div>
+            </div>
+            <div style="margin-top: 6px;"><span class="wire-btn blue" style="font-size: 10px;">View on UPS &rarr;</span></div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Line Items (repeater)</div>
+            <div class="wire-card-grid">
+              <div class="wire-card" style="display: flex; gap: 8px; align-items: center;"><div class="card-img" style="width: 40px; height: 40px;">[Img]</div><div><div style="font-size: 11px;">Blue Ridge Queen Frame</div><div style="font-size: 10px; color: var(--muted-brown);">Qty: 1 &bull; $449.00</div></div></div>
+              <div class="wire-card" style="display: flex; gap: 8px; align-items: center;"><div class="card-img" style="width: 40px; height: 40px;">[Img]</div><div><div style="font-size: 11px;">Premium Futon Mattress</div><div style="font-size: 10px; color: var(--muted-brown);">Qty: 1 &bull; $299.00</div></div></div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Activity Log (delivery history)</div>
+            <div style="font-size: 10px; line-height: 1.8; color: var(--espresso-light);">
+              <div>Mar 3 2:15 PM &bull; <strong>In Transit</strong> &bull; Charlotte, NC</div>
+              <div>Mar 2 8:30 AM &bull; Departed Facility &bull; Greensboro, NC</div>
+              <div>Mar 1 4:00 PM &bull; Shipment Picked Up &bull; Asheville, NC</div>
+            </div>
+          </div>
+          <div class="wire-section" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="wire-label">Email Notifications</div>
+              <div style="font-size: 10px; color: var(--muted-brown);">Toggle on/off &bull; Subscribe/unsubscribe via backend API</div>
+            </div>
+            <div style="width: 36px; height: 20px; border-radius: 10px; background: var(--mountain-blue); position: relative;"><div style="width: 16px; height: 16px; border-radius: 50%; background: var(--white); position: absolute; right: 2px; top: 2px;"></div></div>
+          </div>
+        </div>
+        <div class="page-features">
+          <h5>Features (Order Tracking.js)</h5>
+          <div class="feature-list">
+            <span class="feature-tag implemented">Order lookup form</span>
+            <span class="feature-tag implemented">URL prefill (?order=&amp;email=)</span>
+            <span class="feature-tag implemented">Real-time UPS tracking</span>
+            <span class="feature-tag implemented">Step timeline visualization</span>
+            <span class="feature-tag implemented">Mobile-responsive timeline</span>
+            <span class="feature-tag implemented">Shipping details + UPS link</span>
+            <span class="feature-tag implemented">Line items repeater</span>
+            <span class="feature-tag implemented">Order totals breakdown</span>
+            <span class="feature-tag implemented">Activity log (delivery history)</span>
+            <span class="feature-tag implemented">Notification toggle</span>
+            <span class="feature-tag implemented">Auto-refresh (5min, active shipments)</span>
+            <span class="feature-tag implemented">Exception/returned status handling</span>
+            <span class="feature-tag implemented">Loading + error states</span>
+            <span class="feature-tag implemented">a11y (ARIA labels, announce)</span>
+            <span class="feature-tag implemented">GA4 tracking events</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ RETURNS ════════ -->
+      <div class="page-rendering">
+        <div class="page-title-bar">
+          <h4>Returns &amp; Exchanges</h4>
+          <span class="page-route">/returns &nbsp;&bull;&nbsp; Returns.js (559 lines)</span>
+        </div>
+        <div class="page-wireframe" style="border-top: 1px solid var(--sand-dark);">
+          <div class="wire-section" style="text-align: center; padding: 20px;">
+            <div style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--espresso);">Returns &amp; Exchanges</div>
+            <div style="font-size: 12px; color: var(--muted-brown);">Start a return, exchange, or check the status of an existing return.</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Dual Lookup: Order or RMA</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div style="background: var(--sand-light); border-radius: 8px; padding: 12px;">
+                <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Look Up by Order</div>
+                <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 4px; padding: 6px 10px; font-size: 10px; color: var(--muted); margin-bottom: 4px;">Order Number</div>
+                <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 4px; padding: 6px 10px; font-size: 10px; color: var(--muted); margin-bottom: 6px;">Email Address</div>
+                <span class="wire-btn coral" style="font-size: 10px;">Look Up Order</span>
+              </div>
+              <div style="background: var(--sand-light); border-radius: 8px; padding: 12px;">
+                <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px;">Track by RMA Number</div>
+                <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 4px; padding: 6px 10px; font-size: 10px; color: var(--muted); margin-bottom: 6px;">RMA Number</div>
+                <span class="wire-btn blue" style="font-size: 10px;">Track Return</span>
+              </div>
+            </div>
+            <div style="font-size: 10px; color: var(--muted-brown); margin-top: 4px;">Prefills from URL params (?order= or ?rma=) &bull; Enter key submits</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Order Details (on lookup)</div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+              <span style="font-weight: 600;">Order #12345</span>
+              <span>$748.00</span>
+              <span style="color: var(--success);">Within 30-day return window</span>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Existing Returns (if any &mdash; repeater)</div>
+            <div style="background: var(--sand-light); border-radius: 6px; padding: 10px; font-size: 11px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-weight: 600;">RMA-2026-0042</span>
+                <span>Return</span>
+                <span style="color: var(--mountain-blue); font-weight: 600;">Shipped</span>
+              </div>
+              <div style="font-size: 10px; color: var(--muted-brown);">
+                &#10003; Requested &rarr; &#10003; Approved &rarr; &#9679; Shipped &rarr; &#9675; Received &rarr; &#9675; Refunded
+              </div>
+              <div style="font-size: 10px; margin-top: 4px;">Tracking: 1Z999AA10123456799</div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">New Return Form (if no existing returns)</div>
+            <div style="font-size: 11px; line-height: 2;">
+              <div><strong>Item Selection</strong> (repeater with checkboxes per line item)</div>
+              <div style="display: flex; gap: 6px; margin: 4px 0;">
+                <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 4px; padding: 4px 8px; font-size: 10px;">&#9745; Blue Ridge Queen &mdash; $449</div>
+                <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 4px; padding: 4px 8px; font-size: 10px; color: var(--muted);">&#9744; Mattress (non-returnable)</div>
+              </div>
+              <div><strong>Return Reason</strong> (dropdown &mdash; loaded from backend)</div>
+              <div><strong>Return or Exchange</strong> (dropdown)</div>
+              <div><strong>Additional Details</strong> (textarea, sanitized, 2000 char limit)</div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <span class="wire-btn coral">Submit Return</span>
+              <span class="wire-btn sand">Cancel</span>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">RMA Tracking Result (on RMA lookup)</div>
+            <div style="font-size: 11px;">
+              Status badge + color-coded timeline + tracking number + activity log repeater
+            </div>
+          </div>
+        </div>
+        <div class="page-features">
+          <h5>Features (Returns.js)</h5>
+          <div class="feature-list">
+            <span class="feature-tag implemented">Order lookup form</span>
+            <span class="feature-tag implemented">RMA tracking form</span>
+            <span class="feature-tag implemented">URL prefill (?order= / ?rma=)</span>
+            <span class="feature-tag implemented">Return window validation</span>
+            <span class="feature-tag implemented">Existing returns display</span>
+            <span class="feature-tag implemented">Status timeline visualization</span>
+            <span class="feature-tag implemented">Item selection (returnable check)</span>
+            <span class="feature-tag implemented">Return reason dropdown (backend)</span>
+            <span class="feature-tag implemented">Return vs exchange type</span>
+            <span class="feature-tag implemented">Guest return submission</span>
+            <span class="feature-tag implemented">Input sanitization</span>
+            <span class="feature-tag implemented">RMA shipment tracking</span>
+            <span class="feature-tag implemented">Success message + RMA number</span>
+            <span class="feature-tag implemented">Loading + error + form error states</span>
+            <span class="feature-tag implemented">a11y (ARIA, roles, announce)</span>
+            <span class="feature-tag implemented">GA4 tracking events</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ ADMIN RETURNS ════════ -->
+      <div class="page-rendering">
+        <div class="page-title-bar">
+          <h4>Admin Returns Dashboard</h4>
+          <span class="page-route">/admin/returns &nbsp;&bull;&nbsp; Admin Returns.js (550 lines)</span>
+        </div>
+        <div class="page-wireframe" style="border-top: 1px solid var(--sand-dark);">
+          <div class="wire-section" style="background: var(--espresso); padding: 12px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--white);">Returns Management</div>
+              <div style="font-size: 10px; color: var(--sand-light);">Admin Only &bull; Role-gated access</div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Stats Cards (4-up)</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <div style="background: var(--white); border-radius: 8px; padding: 12px; text-align: center; border: 1px solid var(--sand-dark);">
+                <div style="font-size: 24px; font-weight: 700; color: var(--espresso);">47</div>
+                <div style="font-size: 10px; color: var(--muted-brown);">Total Returns</div>
+              </div>
+              <div style="background: var(--white); border-radius: 8px; padding: 12px; text-align: center; border: 1px solid var(--sand-dark);">
+                <div style="font-size: 24px; font-weight: 700; color: var(--sunset-coral);">8</div>
+                <div style="font-size: 10px; color: var(--muted-brown);">Action Required</div>
+              </div>
+              <div style="background: var(--white); border-radius: 8px; padding: 12px; text-align: center; border: 1px solid var(--sand-dark);">
+                <div style="font-size: 24px; font-weight: 700; color: var(--mountain-blue);">12</div>
+                <div style="font-size: 10px; color: var(--muted-brown);">In Progress</div>
+              </div>
+              <div style="background: var(--white); border-radius: 8px; padding: 12px; text-align: center; border: 1px solid var(--sand-dark);">
+                <div style="font-size: 24px; font-weight: 700; color: var(--success);">27</div>
+                <div style="font-size: 10px; color: var(--muted-brown);">Completed</div>
+              </div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Filter &amp; Actions</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div style="background: var(--white); border: 1px solid var(--sand-dark); border-radius: 6px; padding: 6px 12px; font-size: 11px; flex: 1;">Filter by status &#9662;</div>
+              <span class="wire-btn sand" style="font-size: 10px;">&#8635; Refresh</span>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Returns List (repeater)</div>
+            <div style="font-size: 10px; border: 1px solid var(--sand-dark); border-radius: 6px; overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 100px 80px 1fr 80px 80px 60px 60px; gap: 0; padding: 8px 10px; background: var(--sand-light); font-weight: 600; border-bottom: 1px solid var(--sand-dark);">
+                <span>RMA</span><span>Order</span><span>Customer</span><span>Type</span><span>Date</span><span>Status</span><span></span>
+              </div>
+              <div style="display: grid; grid-template-columns: 100px 80px 1fr 80px 80px 60px 60px; gap: 0; padding: 8px 10px; border-bottom: 1px solid var(--sand-light);">
+                <span>RMA-0042</span><span>#12345</span><span>Jane Smith</span><span>Return</span><span>Mar 1</span><span style="color: var(--sunset-coral);">&#9679; New</span><span style="color: var(--mountain-blue); cursor: pointer;">View</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 100px 80px 1fr 80px 80px 60px 60px; gap: 0; padding: 8px 10px;">
+                <span>RMA-0041</span><span>#12300</span><span>John Doe</span><span>Exchange</span><span>Feb 28</span><span style="color: var(--mountain-blue);">Shipped</span><span style="color: var(--mountain-blue); cursor: pointer;">View</span>
+              </div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Detail Panel (slide-out on row click)</div>
+            <div style="background: var(--sand-light); border-radius: 8px; padding: 12px; font-size: 11px; line-height: 2;">
+              <div><strong>RMA-0042</strong> &bull; <span style="color: var(--sunset-coral);">Requested</span></div>
+              <div>Customer: Jane Smith (jane@example.com) &bull; Order #12345</div>
+              <div>Type: Return &bull; Reason: Wrong size &bull; 2 items</div>
+              <div style="margin: 4px 0;"><strong>Admin Notes:</strong> <span style="color: var(--muted);">[textarea]</span></div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                <span class="wire-btn green" style="font-size: 10px;">&#10003; Approve</span>
+                <span class="wire-btn coral" style="font-size: 10px;">&#10007; Deny</span>
+                <span class="wire-btn blue" style="font-size: 10px;">Generate Label</span>
+                <span class="wire-btn sand" style="font-size: 10px;">Process Refund</span>
+              </div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Refund Modal</div>
+            <div style="font-size: 10px; color: var(--espresso-light); line-height: 1.8;">
+              Amount input (validated) &bull; Notes &bull; Confirm/Cancel &bull; Processes via backend API
+            </div>
+          </div>
+        </div>
+        <div class="page-features">
+          <h5>Features (Admin Returns.js)</h5>
+          <div class="feature-list">
+            <span class="feature-tag implemented">Admin role gate (redirect)</span>
+            <span class="feature-tag implemented">Stats dashboard (4 cards)</span>
+            <span class="feature-tag implemented">Status filter dropdown</span>
+            <span class="feature-tag implemented">Returns list repeater</span>
+            <span class="feature-tag implemented">Action-required indicator</span>
+            <span class="feature-tag implemented">Detail panel (expand/collapse)</span>
+            <span class="feature-tag implemented">Status transitions (approve/deny/ship/receive)</span>
+            <span class="feature-tag implemented">Return label generation (UPS)</span>
+            <span class="feature-tag implemented">Shipment tracking</span>
+            <span class="feature-tag implemented">Refund processing modal</span>
+            <span class="feature-tag implemented">Refund validation</span>
+            <span class="feature-tag implemented">Admin notes</span>
+            <span class="feature-tag implemented">Bulk action loading states</span>
+            <span class="feature-tag implemented">a11y (ARIA labels, announce)</span>
+            <span class="feature-tag implemented">GA4 admin events</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ NEWSLETTER ════════ -->
+      <div class="page-rendering">
+        <div class="page-title-bar">
+          <h4>Newsletter</h4>
+          <span class="page-route">/newsletter &nbsp;&bull;&nbsp; Newsletter.js (157 lines)</span>
+        </div>
+        <div class="page-wireframe" style="border-top: 1px solid var(--sand-dark);">
+          <div class="wire-section" style="text-align: center; padding: 24px 20px; background: linear-gradient(180deg, var(--sand-light), var(--off-white));">
+            <div style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--espresso);">Stay in the Loop</div>
+            <div style="font-size: 12px; color: var(--muted-brown); margin-top: 4px; max-width: 400px; margin-left: auto; margin-right: auto;">Get exclusive deals, new product alerts, and furniture tips delivered to your inbox. Plus, enjoy 10% off your first order.</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Signup Form</div>
+            <div style="display: flex; gap: 8px; align-items: flex-end; max-width: 480px; margin: 0 auto;">
+              <div style="flex: 1; background: var(--white); border: 1px solid var(--sand-dark); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--muted);">your@email.com</div>
+              <div style="flex: 0.6; background: var(--white); border: 1px solid var(--sand-dark); border-radius: 6px; padding: 8px 12px; font-size: 11px; color: var(--muted);">First name (optional)</div>
+              <span class="wire-btn coral">Subscribe</span>
+            </div>
+            <div style="font-size: 10px; color: var(--muted-brown); margin-top: 4px; text-align: center;">Wix CRM contact creation &bull; Klaviyo label applied &bull; GA4 + Meta Pixel events fired</div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Success State (replaces form)</div>
+            <div style="text-align: center; padding: 16px; background: var(--sand-light); border-radius: 8px; font-size: 12px; color: var(--espresso);">
+              You&rsquo;re in! Check your inbox for your 10% welcome discount. Use code <strong>WELCOME10</strong> at checkout.
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Benefits (4-up repeater)</div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <div style="text-align: center; font-size: 10px;"><div style="font-weight: 600;">Exclusive Deals</div><div style="color: var(--muted-brown);">Subscriber-only discounts</div></div>
+              <div style="text-align: center; font-size: 10px;"><div style="font-weight: 600;">New Arrivals</div><div style="color: var(--muted-brown);">First to know</div></div>
+              <div style="text-align: center; font-size: 10px;"><div style="font-weight: 600;">Furniture Tips</div><div style="color: var(--muted-brown);">Care &amp; styling guides</div></div>
+              <div style="text-align: center; font-size: 10px;"><div style="font-weight: 600;">No Spam</div><div style="color: var(--muted-brown);">2-4 emails/month</div></div>
+            </div>
+          </div>
+          <div class="wire-section">
+            <div class="wire-label">Social Links (Follow Us)</div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <span class="wire-badge blue" style="font-size: 10px;">Pinterest</span>
+              <span class="wire-badge coral" style="font-size: 10px;">Instagram</span>
+              <span class="wire-badge sand" style="font-size: 10px;">Facebook</span>
+            </div>
+          </div>
+        </div>
+        <div class="page-features">
+          <h5>Features (Newsletter.js)</h5>
+          <div class="feature-list">
+            <span class="feature-tag implemented">Hero with value prop</span>
+            <span class="feature-tag implemented">Email + name signup form</span>
+            <span class="feature-tag implemented">Email validation</span>
+            <span class="feature-tag implemented">Wix CRM contact creation</span>
+            <span class="feature-tag implemented">Klaviyo label tagging</span>
+            <span class="feature-tag implemented">GA4 + Meta Pixel events</span>
+            <span class="feature-tag implemented">Success state (form replaced)</span>
+            <span class="feature-tag implemented">WELCOME10 code display</span>
+            <span class="feature-tag implemented">Benefits repeater (4 cards)</span>
+            <span class="feature-tag implemented">Social follow links</span>
+            <span class="feature-tag implemented">a11y (ARIA labels, announce)</span>
+            <span class="feature-tag implemented">Error handling + loading</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Summary Stats -->
   <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1); margin-top: 32px;">
     <h3 style="margin-bottom: 16px;">Page Inventory Summary</h3>
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; text-align: center;">
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; text-align: center;">
       <div>
         <div style="font-size: 36px; font-weight: 700; color: var(--sunset-coral); font-family: 'Playfair Display', serif;">28</div>
         <div style="font-size: 12px; color: var(--muted-brown);">Total Pages</div>
@@ -4012,15 +4357,19 @@
       </div>
       <div>
         <div style="font-size: 36px; font-weight: 700; color: var(--mountain-blue); font-family: 'Playfair Display', serif;">9</div>
-        <div style="font-size: 12px; color: var(--muted-brown);">Discovery &amp; Engagement</div>
+        <div style="font-size: 12px; color: var(--muted-brown);">Discovery &amp; Global</div>
       </div>
       <div>
-        <div style="font-size: 36px; font-weight: 700; color: var(--espresso); font-family: 'Playfair Display', serif;">14</div>
-        <div style="font-size: 12px; color: var(--muted-brown);">Trust, Info &amp; Admin</div>
+        <div style="font-size: 36px; font-weight: 700; color: var(--espresso); font-family: 'Playfair Display', serif;">10</div>
+        <div style="font-size: 12px; color: var(--muted-brown);">Trust &amp; Information</div>
+      </div>
+      <div>
+        <div style="font-size: 36px; font-weight: 700; color: var(--sunset-coral); font-family: 'Playfair Display', serif;">4</div>
+        <div style="font-size: 12px; color: var(--muted-brown);">Service &amp; Admin</div>
       </div>
     </div>
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--sand-light); font-size: 13px; color: var(--espresso-light);">
-      <strong>Implementation status:</strong> All 28 pages have code in <code>src/pages/</code>. All feature implementations use design tokens from <code>sharedTokens.js</code>/<code>designTokens.js</code>. SVG illustrations integrated on Product Page (comfort cards), Cart Page (empty state), and Search Results (empty state). Mountain skyline border upgrade in progress (cf-989f).
+      <strong>Implementation status:</strong> All 28 pages have code in <code>src/pages/</code> with 22 detailed renderings across 5 priority groups. All feature implementations use design tokens from <code>sharedTokens.js</code>/<code>designTokens.js</code>. SVG illustrations integrated on Product Page (comfort cards), Cart Page (empty state), and Search Results (empty state). Mountain skyline border upgrade in progress (cf-989f).
     </div>
   </div>
 
