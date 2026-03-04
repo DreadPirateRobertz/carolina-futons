@@ -47,6 +47,9 @@ $w.onReady(async function () {
   initEnhancedNavigation();
   initAnnouncementBar();
   initSearch();
+  initCartIcon();
+  initCartBadge();
+  initSiteLogo();
   initSideCartAutoOpen();
   initFooter($w);
   initMountainSkylineHeader();
@@ -293,6 +296,64 @@ function openSideCart(cart) {
         try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
       }, 3000);
     }
+  } catch (e) {}
+}
+
+// ── Cart Icon & Badge ────────────────────────────────────────────────
+// Wires cart icon click → open side cart, and badge with item count
+
+function initCartIcon() {
+  try {
+    const cartIcon = $w('#cartIcon');
+    if (!cartIcon) return;
+
+    try { cartIcon.accessibility.ariaLabel = 'Shopping cart'; } catch (e) {}
+
+    cartIcon.onClick(() => {
+      try {
+        $w('#sideCartPanel').show('slide', { direction: 'right', duration: 300 });
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
+function initCartBadge() {
+  async function updateBadge() {
+    try {
+      const cart = await getCurrentCart();
+      const count = cart
+        ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
+        : 0;
+
+      const badge = $w('#cartBadge');
+      if (!badge) return;
+
+      if (count > 0) {
+        badge.text = String(count);
+        badge.show();
+      } else {
+        badge.hide();
+      }
+    } catch (e) {}
+  }
+
+  updateBadge();
+  onCartChanged(() => updateBadge());
+}
+
+// ── Site Logo ───────────────────────────────────────────────────────
+// Logo click → navigate to homepage
+
+function initSiteLogo() {
+  try {
+    const logo = $w('#siteLogo');
+    if (!logo) return;
+
+    try { logo.accessibility.ariaLabel = 'Carolina Futons - Go to homepage'; } catch (e) {}
+
+    logo.onClick(() => {
+      wixLocationFrontend.to('/');
+    });
   } catch (e) {}
 }
 

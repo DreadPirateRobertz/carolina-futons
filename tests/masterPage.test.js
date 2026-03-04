@@ -73,15 +73,19 @@ vi.mock('backend/contactSubmissions.web', () => ({
 vi.mock('backend/coreWebVitals.web', () => ({
   reportMetrics: vi.fn().mockResolvedValue({}),
 }));
+const mockWixLocationTo = vi.fn();
 vi.mock('wix-location-frontend', () => ({
-  default: { path: [], to: vi.fn() },
+  default: { path: [], to: mockWixLocationTo },
   path: [],
-  to: vi.fn(),
+  to: mockWixLocationTo,
 }));
 vi.mock('public/cartService', () => ({
   getCurrentCart: vi.fn().mockResolvedValue({ lineItems: [] }),
   onCartChanged: vi.fn(),
+  getShippingProgress: vi.fn(() => ({ remaining: 999, progressPct: 0, qualifies: false })),
 }));
+
+import { getCurrentCart, onCartChanged } from 'public/cartService';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -1059,6 +1063,84 @@ describe('masterPage.js', () => {
     it('wires dismiss button with click handler', async () => {
       await onReadyHandler();
       expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── Cart Icon & Badge (cf-0z2w) ──────────────────────────────────
+
+  describe('cart icon', () => {
+    it('wires onClick on #cartIcon', async () => {
+      await onReadyHandler();
+      expect(getEl('#cartIcon').onClick).toHaveBeenCalled();
+    });
+
+    it('sets ariaLabel on #cartIcon', async () => {
+      await onReadyHandler();
+      expect(getEl('#cartIcon').accessibility.ariaLabel).toBe('Shopping cart');
+    });
+
+    it('click opens side cart panel', async () => {
+      await onReadyHandler();
+      const clickHandler = getEl('#cartIcon').onClick.mock.calls[0][0];
+      clickHandler();
+      expect(getEl('#sideCartPanel').show).toHaveBeenCalledWith(
+        'slide',
+        expect.objectContaining({ direction: 'right' })
+      );
+    });
+  });
+
+  describe('cart badge', () => {
+    it('hides #cartBadge when cart is empty', async () => {
+      getCurrentCart.mockResolvedValueOnce({ lineItems: [] });
+      elements.clear();
+      await onReadyHandler();
+      // Allow async cart fetch to resolve
+      await vi.waitFor(() => {
+        expect(getEl('#cartBadge').hide).toHaveBeenCalled();
+      });
+    });
+
+    it('shows #cartBadge with count when cart has items', async () => {
+      getCurrentCart.mockResolvedValueOnce({
+        lineItems: [
+          { _id: '1', quantity: 2 },
+          { _id: '2', quantity: 1 },
+        ],
+      });
+      elements.clear();
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#cartBadge').text).toBe('3');
+        expect(getEl('#cartBadge').show).toHaveBeenCalled();
+      });
+    });
+
+    it('updates badge on cart change via onCartChanged callback', async () => {
+      await onReadyHandler();
+      // onCartChanged should have been called with a handler
+      expect(onCartChanged).toHaveBeenCalled();
+    });
+  });
+
+  // ── Site Logo (cf-0z2w) ──────────────────────────────────────────
+
+  describe('site logo', () => {
+    it('wires onClick on #siteLogo', async () => {
+      await onReadyHandler();
+      expect(getEl('#siteLogo').onClick).toHaveBeenCalled();
+    });
+
+    it('sets ariaLabel on #siteLogo', async () => {
+      await onReadyHandler();
+      expect(getEl('#siteLogo').accessibility.ariaLabel).toBe('Carolina Futons - Go to homepage');
+    });
+
+    it('click navigates to homepage', async () => {
+      await onReadyHandler();
+      const clickHandler = getEl('#siteLogo').onClick.mock.calls[0][0];
+      clickHandler();
+      expect(mockWixLocationTo).toHaveBeenCalledWith('/');
     });
   });
 });
