@@ -27,6 +27,7 @@ import { initProductSocialProof } from 'public/socialProofToast';
 import { validateEmail } from 'public/validators.js';
 import { initProductARViewer } from 'public/ProductARViewer.js';
 import { initLifestyleGallery } from 'public/LifestyleGallery.js';
+import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 
 const state = {
