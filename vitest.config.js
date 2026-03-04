@@ -33,6 +33,7 @@ export default defineConfig({
       'wix-media-backend': path.resolve(__dirname, 'tests/__mocks__/wix-media-backend.js'),
       // Backend modules
       'backend/ups-shipping.web': path.resolve(__dirname, 'src/backend/ups-shipping.web.js'),
+      'backend/deliveryScheduling.web': path.resolve(__dirname, 'src/backend/deliveryScheduling.web.js'),
       'backend/productRecommendations.web': path.resolve(__dirname, 'src/backend/productRecommendations.web.js'),
       'backend/seoHelpers.web': path.resolve(__dirname, 'src/backend/seoHelpers.web.js'),
       'backend/swatchService.web': path.resolve(__dirname, 'src/backend/swatchService.web.js'),
@@ -126,6 +127,8 @@ export default defineConfig({
       'public/LiveChat': path.resolve(__dirname, 'src/public/LiveChat.js'),
       'public/ReturnsPortal.js': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
+      'public/schedulerHelpers.js': path.resolve(__dirname, 'src/public/schedulerHelpers.js'),
+      'public/schedulerHelpers': path.resolve(__dirname, 'src/public/schedulerHelpers.js'),
       'public/ReturnsAdmin.js': path.resolve(__dirname, 'src/public/ReturnsAdmin.js'),
       'public/ReturnsAdmin': path.resolve(__dirname, 'src/public/ReturnsAdmin.js'),
       'backend/returnsService.web': path.resolve(__dirname, 'src/backend/returnsService.web.js'),
