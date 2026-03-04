@@ -3,6 +3,7 @@
 // and product category/brand detection for alt text generation.
 
 import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema, getPageTitle, getPageMetaDescription, getCanonicalUrl } from 'backend/seoHelpers.web';
+import { getProductPinData } from 'backend/pinterestRichPins.web';
 
 /**
  * Inject JSON-LD product schema, FAQ schema, and OG tags.
@@ -99,6 +100,53 @@ export async function injectProductMeta(product) {
     }
   } catch (e) {
     // Meta tag injection is non-critical
+  }
+}
+
+/**
+ * Inject Pinterest Rich Pin meta tags via wix-seo-frontend.
+ * Adds Pinterest-specific product metadata (pinterest:description,
+ * pinterest-rich-pin, product:retailer_item_id, sale price) that
+ * complement the standard OG tags already set by injectProductMeta.
+ */
+export async function injectPinterestMeta(product) {
+  try {
+    if (!product) return;
+
+    const { head } = await import('wix-seo-frontend');
+
+    const pinResult = await getProductPinData({
+      name: product.name,
+      slug: product.slug,
+      description: product.description,
+      image: product.mainMedia,
+      price: product.price,
+      salePrice: product.discountedPrice || undefined,
+      inStock: product.inStock !== false,
+      brand: detectProductBrand(product) || undefined,
+      category: detectProductCategory(product) || undefined,
+      sku: product.sku || product._id,
+    });
+
+    if (!pinResult.success || !pinResult.meta) return;
+
+    // Set Pinterest-specific tags that aren't covered by standard OG injection
+    const pinterestTags = [
+      'pinterest:description',
+      'pinterest-rich-pin',
+      'product:retailer_item_id',
+      'product:category',
+      'product:sale_price:amount',
+      'product:sale_price:currency',
+    ];
+
+    for (const tag of pinterestTags) {
+      if (pinResult.meta[tag]) {
+        head.setMetaTag(tag, pinResult.meta[tag]);
+      }
+    }
+  } catch (e) {
+    // Pinterest meta injection is non-critical
   }
 }
 

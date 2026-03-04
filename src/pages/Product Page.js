@@ -91,6 +91,7 @@ async function initProductPage() {
       { name: 'alsoBought', init: loadAlsoBought },
       { name: 'productSchema', init: () => injectProductSchema($w, state) },
       { name: 'productMeta', init: () => injectProductMeta(state) },
+      { name: 'pinterestMeta', init: () => injectPinterestMeta(state) },
       { name: 'imageGallery', init: () => initImageGallery($w, state) },
       { name: 'arViewer', init: () => initProductARViewer($w, state) },
       { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state) },
@@ -172,6 +173,18 @@ async function injectProductMeta(state) {
     await injectMeta(state.product);
   } catch (e) {
     console.error('[ProductPage] Failed to set meta:', e?.message || e);
+  }
+}
+
+// ── Pinterest Rich Pins Meta ──────────────────────────────────────────
+
+async function injectPinterestMeta(state) {
+  try {
+    if (!state.product) return;
+    const { injectPinterestMeta: injectPins } = await import('public/product/productSchema.js');
+    await injectPins(state.product);
+  } catch (e) {
+    console.error('[ProductPage] Failed to set Pinterest meta:', e?.message || e);
   }
 }
 

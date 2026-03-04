@@ -6,6 +6,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
+import { getAllBlogPosts } from 'backend/blogContent';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
 
@@ -213,6 +214,54 @@ export async function get_productSitemap() {
     console.error('HTTP function error (productSitemap):', err);
     return serverError({
       body: 'Error generating sitemap',
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// Dynamic blog sitemap for SEO
+// URL: GET https://www.carolinafutons.com/_functions/blogSitemap
+// Submit alongside productSitemap to Google Search Console
+export async function get_blogSitemap() {
+  try {
+    const SITE_URL = 'https://www.carolinafutons.com';
+    const blogPosts = getAllBlogPosts();
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    // Blog index page
+    xml += '  <url>\n';
+    xml += `    <loc>${escapeXml(SITE_URL + '/blog')}</loc>\n`;
+    xml += '    <changefreq>weekly</changefreq>\n';
+    xml += '    <priority>0.7</priority>\n';
+    xml += '  </url>\n';
+
+    // Individual blog posts
+    for (const post of blogPosts) {
+      xml += '  <url>\n';
+      xml += `    <loc>${escapeXml(SITE_URL + '/blog/' + post.slug)}</loc>\n`;
+      if (post.publishDate) {
+        xml += `    <lastmod>${escapeXml(post.publishDate)}</lastmod>\n`;
+      }
+      xml += '    <changefreq>monthly</changefreq>\n';
+      xml += '    <priority>0.6</priority>\n';
+      xml += '  </url>\n';
+    }
+
+    xml += '</urlset>';
+
+    return ok({
+      body: xml,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (blogSitemap):', err);
+    return serverError({
+      body: 'Error generating blog sitemap',
       headers: { 'Content-Type': 'text/plain' },
     });
   }
@@ -565,9 +614,11 @@ export function get_robots() {
     'Disallow: /account',
     'Disallow: /search-results',
     'Allow: /_functions/productSitemap',
+    'Allow: /_functions/blogSitemap',
     'Disallow: /_functions/',
     '',
     'Sitemap: https://www.carolinafutons.com/_functions/productSitemap',
+    'Sitemap: https://www.carolinafutons.com/_functions/blogSitemap',
   ].join('\n');
 
   return ok({
