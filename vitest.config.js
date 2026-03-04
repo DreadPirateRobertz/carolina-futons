@@ -240,6 +240,7 @@ export default defineConfig({
       'backend/promotionsEngine.web': path.resolve(__dirname, 'src/backend/promotionsEngine.web.js'),
       'public/promotionHelpers.js': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
       'public/promotionHelpers': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
+      'backend/facebookCatalog.web': path.resolve(__dirname, 'src/backend/facebookCatalog.web.js'),
     },
   },
 });
