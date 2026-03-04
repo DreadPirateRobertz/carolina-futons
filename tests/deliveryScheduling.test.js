@@ -197,7 +197,9 @@ describe('scheduleDelivery', () => {
     while (![3, 4, 5, 6].includes(farFuture.getDay())) {
       farFuture.setDate(farFuture.getDate() + 1);
     }
-    const dateStr = farFuture.toISOString().split('T')[0];
+    // Format as local date (not UTC via toISOString) to match implementation's
+    // new Date(date + 'T12:00:00') parsing which interprets as local time
+    const dateStr = `${farFuture.getFullYear()}-${String(farFuture.getMonth() + 1).padStart(2, '0')}-${String(farFuture.getDate()).padStart(2, '0')}`;
     const result = await scheduleDelivery({
       orderId: 'order-far',
       date: dateStr,
