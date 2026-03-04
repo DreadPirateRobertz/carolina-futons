@@ -5,6 +5,17 @@ import { announce } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { initReturnsSection } from 'public/ReturnsPortal.js';
+import {
+  formatPoints,
+  formatProgressText,
+  getProgressPercent,
+  getTierColor,
+  getTierIcon,
+  canAffordReward,
+  formatRewardCost,
+  buildTierComparisonData,
+  getNextMilestone,
+} from 'public/loyaltyHelpers.js';
 
 // Status badge color mapping
 const STATUS_COLORS = {
@@ -39,6 +50,7 @@ async function initMemberPage() {
 
     const sections = [
       { name: 'dashboard', init: initDashboard },
+      { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
       { name: 'accountSettings', init: initAccountSettings },
@@ -124,25 +136,27 @@ async function initDashboard() {
       console.error('[MemberPage] Error loading dashboard counts:', e);
     }
 
-    // Loyalty points display
+    // Loyalty summary cards (points + tier text)
     try {
-      const pointsEl = $w('#memberPointsDisplay');
-      if (pointsEl) {
-        const { getMyLoyaltyAccount } = await import('backend/loyaltyService.web');
-        const account = await getMyLoyaltyAccount();
-        if (account && account.points !== undefined) {
-          pointsEl.text = `${account.points.toLocaleString()} pts`;
-          // Show tier if available
-          try {
-            const tierEl = $w('#memberTierDisplay');
-            if (tierEl && account.tier) {
-              tierEl.text = account.tier;
-            }
-          } catch (e) {}
-        } else {
-          pointsEl.text = 'Join Rewards';
+      const { getMyLoyaltyAccount } = await import('backend/loyaltyService.web');
+      const account = await getMyLoyaltyAccount();
+
+      try {
+        const pointsEl = $w('#memberPointsDisplay');
+        if (pointsEl) {
+          pointsEl.text = (account && account.points !== undefined)
+            ? formatPoints(account.points)
+            : 'Join Rewards';
         }
-      }
+      } catch (e) {}
+
+      try {
+        const tierEl = $w('#memberTierDisplay');
+        if (tierEl && account && account.tier) {
+          tierEl.text = `${getTierIcon(account.tier)} ${account.tier}`;
+          tierEl.style.color = getTierColor(account.tier);
+        }
+      } catch (e) {}
     } catch (e) {
       try { $w('#memberPointsDisplay').text = 'Join Rewards'; } catch (e2) {}
     }
@@ -163,6 +177,153 @@ async function initDashboard() {
     }
   } catch (e) {
     console.error('[MemberPage] Error initializing dashboard:', e);
+  }
+}
+
+// ── Loyalty Dashboard ───────────────────────────────────────────────
+
+async function initLoyaltyDashboard() {
+  try {
+    const { getMyLoyaltyAccount, getAvailableRewards, redeemReward, getLoyaltyTiers } =
+      await import('backend/loyaltyService.web');
+
+    const [account, rewards, tiers] = await Promise.all([
+      getMyLoyaltyAccount(),
+      getAvailableRewards(),
+      getLoyaltyTiers(),
+    ]);
+
+    // ── Tier Progress Bar ──────────────────────────────────────────
+    try {
+      const progressBar = $w('#tierProgressBar');
+      if (progressBar) {
+        const pct = getProgressPercent(account);
+        progressBar.value = pct;
+        try { progressBar.style.foregroundColor = getTierColor(account?.tier); } catch (e) {}
+      }
+    } catch (e) {}
+
+    try {
+      const progressText = $w('#tierProgressText');
+      if (progressText) {
+        progressText.text = formatProgressText(account);
+      }
+    } catch (e) {}
+
+    // ── Milestone Message ──────────────────────────────────────────
+    try {
+      const milestoneEl = $w('#loyaltyMilestone');
+      if (milestoneEl) {
+        const msg = getNextMilestone(account);
+        if (msg) {
+          milestoneEl.text = msg;
+          milestoneEl.show('fade', { duration: 250 });
+        } else {
+          milestoneEl.collapse();
+        }
+      }
+    } catch (e) {}
+
+    // ── Tier Comparison / Benefits ─────────────────────────────────
+    try {
+      const tierRepeater = $w('#tierComparisonRepeater');
+      if (tierRepeater) {
+        const comparisonData = buildTierComparisonData(tiers, account?.tier);
+
+        tierRepeater.onItemReady(($item, itemData) => {
+          try { $item('#tierName').text = `${getTierIcon(itemData.name)} ${itemData.name}`; } catch (e) {}
+          try { $item('#tierMinPoints').text = `${itemData.minPoints.toLocaleString()} pts`; } catch (e) {}
+
+          // Benefits list
+          try {
+            $item('#tierBenefits').text = itemData.benefits.join('\n');
+          } catch (e) {}
+
+          // Highlight current tier
+          try {
+            if (itemData.isCurrent) {
+              $item('#tierCard').style.borderColor = getTierColor(itemData.name);
+              $item('#tierCurrentBadge').show();
+              try { $item('#tierCurrentBadge').text = 'Your Tier'; } catch (e) {}
+            } else {
+              $item('#tierCurrentBadge').hide();
+            }
+          } catch (e) {}
+
+          // Dim future tiers
+          try {
+            if (!itemData.isAchieved && !itemData.isCurrent) {
+              $item('#tierCard').style.opacity = 0.6;
+            }
+          } catch (e) {}
+        });
+
+        tierRepeater.data = comparisonData.map((t, i) => ({ _id: `tier-${i}`, ...t }));
+      }
+    } catch (e) {}
+
+    // ── Rewards Redemption ─────────────────────────────────────────
+    try {
+      const rewardsRepeater = $w('#rewardsRepeater');
+      if (rewardsRepeater && rewards.length > 0) {
+        rewardsRepeater.onItemReady(($item, itemData) => {
+          try { $item('#rewardName').text = itemData.name; } catch (e) {}
+          try { $item('#rewardDescription').text = itemData.description; } catch (e) {}
+          try { $item('#rewardCost').text = formatRewardCost(itemData, account?.points || 0); } catch (e) {}
+
+          // Redeem button
+          try {
+            const redeemBtn = $item('#redeemBtn');
+            const affordable = canAffordReward(itemData, account?.points || 0);
+            if (!affordable) {
+              redeemBtn.disable();
+              try { redeemBtn.label = 'Not Enough Points'; } catch (e) {}
+            }
+            try { redeemBtn.accessibility.ariaLabel = `Redeem ${itemData.name} for ${itemData.pointsCost} points`; } catch (e) {}
+
+            redeemBtn.onClick(async () => {
+              try {
+                redeemBtn.disable();
+                redeemBtn.label = 'Redeeming...';
+                const result = await redeemReward(itemData._id);
+                if (result.success) {
+                  redeemBtn.label = 'Redeemed!';
+                  announce($w, `${itemData.name} redeemed${result.couponCode ? `. Code: ${result.couponCode}` : ''}`);
+                  try {
+                    $item('#rewardCouponCode').text = result.couponCode || '';
+                    if (result.couponCode) $item('#rewardCouponCode').show('fade', { duration: 250 });
+                  } catch (e) {}
+                  trackEvent('reward_redeemed', { rewardId: itemData._id, name: itemData.name });
+                } else {
+                  redeemBtn.label = result.message || 'Failed';
+                  redeemBtn.enable();
+                  announce($w, `Could not redeem: ${result.message}`);
+                }
+              } catch (err) {
+                console.error('[MemberPage] Redeem error:', err);
+                redeemBtn.label = 'Try Again';
+                redeemBtn.enable();
+              }
+            });
+          } catch (e) {}
+        });
+
+        rewardsRepeater.data = rewards.map(r => ({ ...r, _id: r._id }));
+        try { $w('#rewardsSection').show('fade', { duration: 250 }); } catch (e) {}
+      } else {
+        try { $w('#rewardsEmpty').show(); } catch (e) {}
+        try { $w('#rewardsRepeater').collapse(); } catch (e) {}
+      }
+    } catch (e) {}
+
+    trackEvent('loyalty_dashboard_view', {
+      tier: account?.tier || 'none',
+      points: account?.points || 0,
+      rewardsAvailable: rewards.length,
+    });
+
+  } catch (e) {
+    console.error('[MemberPage] Error initializing loyalty dashboard:', e);
   }
 }
 
