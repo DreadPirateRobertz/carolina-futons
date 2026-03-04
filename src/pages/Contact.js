@@ -242,6 +242,21 @@ function initAppointmentBooking() {
     const bookBtn = $w('#appointmentBookBtn');
     if (!bookBtn) return;
 
+    // ARIA attributes for appointment form fields
+    try { $w('#appointmentName').accessibility.ariaLabel = 'Your name'; } catch (e) {}
+    try { $w('#appointmentName').accessibility.ariaRequired = true; } catch (e) {}
+    try { $w('#appointmentEmail').accessibility.ariaLabel = 'Your email address'; } catch (e) {}
+    try { $w('#appointmentEmail').accessibility.ariaRequired = true; } catch (e) {}
+    try { $w('#appointmentPhone').accessibility.ariaLabel = 'Your phone number (optional)'; } catch (e) {}
+    try { $w('#appointmentVisitType').accessibility.ariaLabel = 'Type of visit'; } catch (e) {}
+    try { $w('#appointmentVisitType').accessibility.ariaRequired = true; } catch (e) {}
+    try { $w('#appointmentDate').accessibility.ariaLabel = 'Preferred date'; } catch (e) {}
+    try { $w('#appointmentDate').accessibility.ariaRequired = true; } catch (e) {}
+    try { $w('#appointmentTimeSlot').accessibility.ariaLabel = 'Preferred time slot'; } catch (e) {}
+    try { $w('#appointmentTimeSlot').accessibility.ariaRequired = true; } catch (e) {}
+    try { $w('#appointmentInterests').accessibility.ariaLabel = 'What are you interested in? (optional)'; } catch (e) {}
+    try { bookBtn.accessibility.ariaLabel = 'Book showroom appointment'; } catch (e) {}
+
     loadVisitTypes();
 
     try {

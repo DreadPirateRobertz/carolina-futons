@@ -3,7 +3,7 @@
 import { getQuizRecommendations, getQuizOptions } from 'backend/styleQuiz.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 
 const state = {
@@ -46,10 +46,10 @@ function initQuiz() {
   // Show quiz section
   try { $w('#quizSection').expand(); } catch (e) {}
 
-  // Wire navigation buttons
-  try { $w('#quizNextBtn').onClick(() => goNext()); } catch (e) {}
-  try { $w('#quizBackBtn').onClick(() => goBack()); } catch (e) {}
-  try { $w('#quizRestartBtn').onClick(() => restartQuiz()); } catch (e) {}
+  // Wire navigation buttons with keyboard accessibility
+  try { makeClickable($w('#quizNextBtn'), () => goNext(), { ariaLabel: 'Next step' }); } catch (e) {}
+  try { makeClickable($w('#quizBackBtn'), () => goBack(), { ariaLabel: 'Previous step' }); } catch (e) {}
+  try { makeClickable($w('#quizRestartBtn'), () => restartQuiz(), { ariaLabel: 'Restart quiz' }); } catch (e) {}
 
   renderStep();
 }
@@ -122,17 +122,27 @@ function renderOptions(key) {
         $item('#optionLabel').style.color = isSelected ? colors.white : colors.espresso;
       } catch (e) {}
 
-      // ARIA
+      // ARIA + keyboard accessibility
       try { $item('#optionContainer').accessibility.role = 'radio'; } catch (e) {}
       try { $item('#optionContainer').accessibility.ariaLabel = itemData.label; } catch (e) {}
       try { $item('#optionContainer').accessibility.ariaChecked = isSelected; } catch (e) {}
+      try { $item('#optionContainer').accessibility.tabIndex = 0; } catch (e) {}
 
-      // Selection handler
-      $item('#optionContainer').onClick(() => {
+      // Selection handler (click + keyboard Enter/Space)
+      const selectOption = () => {
         state.answers[key] = itemData.value;
         trackEvent('quiz_answer', { step: key, answer: itemData.value });
         renderOptions(key); // re-render to update selection highlight
-      });
+      };
+      $item('#optionContainer').onClick(selectOption);
+      try {
+        $item('#optionContainer').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            try { event.preventDefault?.(); } catch (e) {}
+            selectOption();
+          }
+        });
+      } catch (e) {}
     });
 
     repeater.data = options.map((opt, i) => ({ ...opt, _id: `opt-${i}` }));

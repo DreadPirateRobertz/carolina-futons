@@ -40,6 +40,7 @@ function initSignupForm() {
 
     // ARIA labels
     try { emailInput.accessibility.ariaLabel = 'Your email address'; } catch (e) {}
+    try { emailInput.accessibility.ariaRequired = true; } catch (e) {}
     try { nameInput.accessibility.ariaLabel = 'Your first name (optional)'; } catch (e) {}
     try { submitBtn.accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
 
