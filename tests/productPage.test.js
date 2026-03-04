@@ -88,6 +88,14 @@ vi.mock('backend/seoHelpers.web', () => ({
   getProductOgTags: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock('public/ProductVideoSection.js', () => ({
+  initProductVideoSection: vi.fn().mockResolvedValue({ destroy() {} }),
+}));
+
+vi.mock('public/Product360Viewer.js', () => ({
+  initProduct360Viewer: vi.fn().mockResolvedValue({ destroy() {} }),
+}));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Product Page', () => {

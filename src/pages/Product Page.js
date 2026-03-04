@@ -31,6 +31,8 @@ import { initLifestyleGallery } from 'public/LifestyleGallery.js';
 import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initCustomizationBuilder } from 'public/CustomizationBuilder.js';
+import { initProductVideoSection } from 'public/ProductVideoSection.js';
+import { initProduct360Viewer } from 'public/Product360Viewer.js';
 
 const state = {
   product: null,
@@ -147,6 +149,8 @@ async function initProductPage() {
       { name: 'visualSizeComparison', init: () => initVisualSizeComparison($w, state) },
       { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
       { name: 'lifestyleGallery', init: () => initLifestyleGallery($w, state) },
+      { name: 'videoSection', init: () => initProductVideoSection($w, state) },
+      { name: 'viewer360', init: () => initProduct360Viewer($w, state) },
       { name: 'designTokens', init: () => applyProductPageTokens($w) },
       { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']) },
       { name: 'backToTop', init: () => initBackToTop($w) },
