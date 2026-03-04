@@ -1,9 +1,12 @@
 // Store Locator.js - Showroom Finder Page
 // Interactive showroom finder with hours, directions, photos, amenities,
 // embedded Google Map, and LocalBusiness JSON-LD schema for SEO
-import { getStoreLocatorSchema } from 'backend/storeLocatorService.web';
-import { isShowroomOpen, getNearbyCities } from 'backend/storeLocatorService.web';
-import { getDirectionsUrl } from 'backend/storeLocatorService.web';
+import {
+  getStoreLocatorSchema,
+  isShowroomOpen,
+  getNearbyCities,
+  getDirectionsUrl,
+} from 'backend/storeLocatorService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
