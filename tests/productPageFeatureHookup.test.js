@@ -42,6 +42,7 @@ function createTrackingMock() {
       onReady: vi.fn(() => Promise.resolve()),
       disable: vi.fn(),
       enable: vi.fn(),
+      focus: vi.fn(),
       getCurrentItem: vi.fn(() => null),
     };
   }
@@ -120,6 +121,7 @@ vi.mock('public/a11yHelpers.js', () => ({
   announce: vi.fn(),
   makeClickable: vi.fn(),
   createFocusTrap: vi.fn(() => ({ activate: vi.fn(), deactivate: vi.fn() })),
+  setupAccessibleDialog: vi.fn(() => ({ open: vi.fn(), close: vi.fn() })),
 }));
 
 vi.mock('public/ComfortStoryCards.js', () => ({
@@ -160,9 +162,7 @@ const testState = { product: testProduct, selectedSwatchId: null, selectedQuanti
 
 describe('Product Page Feature Hookup — Orchestrator', () => {
 
-  it('imports initFeelAndComfort from FeelAndComfort.js (currently missing)', async () => {
-    // This test verifies the import exists — if initFeelAndComfort is
-    // called but not imported, it will be a ReferenceError caught by try/catch.
+  it('imports initFeelAndComfort from FeelAndComfort.js', async () => {
     const pageSource = await import('fs').then(fs =>
       fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
     );
@@ -193,6 +193,26 @@ describe('Product Page Feature Hookup — Orchestrator', () => {
     expect(pageSource).toContain('initSwatchCTA');
     expect(pageSource).toContain('initFeelAndComfort');
   });
+
+  it('places all 7 feature inits in productSections or secondaryInits', async () => {
+    const pageSource = await import('fs').then(fs =>
+      fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
+    );
+
+    // Primary sections (Promise.allSettled)
+    expect(pageSource).toMatch(/productSections[\s\S]*?swatchSelector/);
+    expect(pageSource).toMatch(/productSections[\s\S]*?breadcrumbs/);
+    expect(pageSource).toMatch(/productSections[\s\S]*?quantitySelector/);
+    expect(pageSource).toMatch(/productSections[\s\S]*?financingOptions/);
+
+    // Secondary sections (try/catch loop)
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?socialShare/);
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?stickyCartBar/);
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?feelAndComfort/);
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?swatchRequest/);
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?swatchCTA/);
+    expect(pageSource).toMatch(/secondaryInits[\s\S]*?productInfoAccordion/);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -210,10 +230,19 @@ describe('Breadcrumbs (4 IDs)', () => {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
   });
+
+  it('sets breadcrumb text from product data', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initBreadcrumbs } = await import('../src/public/ProductDetails.js');
+    await initBreadcrumbs($w, testState);
+
+    // Last breadcrumb should contain product name
+    expect(elements.get('#breadcrumb3').text).toContain(testProduct.name);
+  });
 });
 
 describe('Product Info Accordion (12 IDs)', () => {
-  it('accesses all accordion spec IDs', async () => {
+  it('accesses all 12 accordion spec IDs (4 sections × 3)', async () => {
     const { $w, accessedIds } = createTrackingMock();
     const { initProductInfoAccordion } = await import('../src/public/ProductDetails.js');
     initProductInfoAccordion($w);
@@ -225,18 +254,83 @@ describe('Product Info Accordion (12 IDs)', () => {
       expect(accessedIds.has(`#infoArrow${section}`), `Missing: #infoArrow${section}`).toBe(true);
     }
   });
+
+  it('registers click handlers on all section headers', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initProductInfoAccordion } = await import('../src/public/ProductDetails.js');
+    initProductInfoAccordion($w);
+
+    const sections = ['Description', 'Dimensions', 'Care', 'Shipping'];
+    for (const section of sections) {
+      expect(elements.get(`#infoHeader${section}`).onClick).toHaveBeenCalled();
+    }
+  });
+
+  it('expands Description and collapses other sections initially', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initProductInfoAccordion } = await import('../src/public/ProductDetails.js');
+    initProductInfoAccordion($w);
+
+    // Description expanded by default
+    expect(elements.get('#infoContentDescription').expand).toHaveBeenCalled();
+
+    // Others collapsed
+    for (const section of ['Dimensions', 'Care', 'Shipping']) {
+      expect(elements.get(`#infoContent${section}`).collapse).toHaveBeenCalled();
+    }
+  });
 });
 
-describe('Financing Modal (16+ IDs)', () => {
-  it('accesses financing section, teaser, and repeater IDs', async () => {
+describe('Financing Modal (16 IDs)', () => {
+  it('accesses core financing IDs during init', async () => {
     const { $w, accessedIds } = createTrackingMock();
     const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
     await initFinancingOptions($w, testState);
 
-    const expected = ['#financingSection', '#financingTeaser', '#financingRepeater', '#financingLearnMore'];
+    const expected = [
+      '#financingSection', '#financingTeaser', '#financingRepeater',
+      '#financingLearnMore', '#financingClose', '#financingOverlay',
+    ];
     for (const id of expected) {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
+  });
+
+  it('sets teaser text from backend response', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
+    await initFinancingOptions($w, testState);
+
+    expect(elements.get('#financingTeaser').text).toBe('As low as $125/mo');
+  });
+
+  it('populates plan repeater with financing data', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
+    await initFinancingOptions($w, testState);
+
+    const repeater = elements.get('#financingRepeater');
+    expect(repeater.onItemReady).toHaveBeenCalled();
+    expect(repeater.data.length).toBeGreaterThan(0);
+  });
+
+  it('collapses section when product has no price', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
+    await initFinancingOptions($w, { product: { ...testProduct, price: 0 } });
+
+    expect(elements.get('#financingSection').collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when backend returns no plans', async () => {
+    const { getFinancingOptions } = await import('backend/financingService.web');
+    getFinancingOptions.mockResolvedValueOnce([]);
+
+    const { $w, elements } = createTrackingMock();
+    const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
+    await initFinancingOptions($w, testState);
+
+    expect(elements.get('#financingSection').collapse).toHaveBeenCalled();
   });
 });
 
@@ -251,6 +345,23 @@ describe('Sticky Add-to-Cart Bar (4 IDs)', () => {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
   });
+
+  it('displays product name and price in sticky bar', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initStickyCartBar } = await import('../src/public/AddToCart.js');
+    await initStickyCartBar($w, testState);
+
+    expect(elements.get('#stickyProductName').text).toBe(testProduct.name);
+    expect(elements.get('#stickyPrice').text).toBe(testProduct.formattedPrice);
+  });
+
+  it('registers click handler on sticky add button', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initStickyCartBar } = await import('../src/public/AddToCart.js');
+    await initStickyCartBar($w, testState);
+
+    expect(elements.get('#stickyAddBtn').onClick).toHaveBeenCalled();
+  });
 });
 
 describe('Social Share Buttons (4 IDs)', () => {
@@ -263,6 +374,18 @@ describe('Social Share Buttons (4 IDs)', () => {
     for (const id of expected) {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
+  });
+
+  it('registers click handlers via makeClickable on share buttons', async () => {
+    const { $w } = createTrackingMock();
+    const { makeClickable } = await import('public/a11yHelpers.js');
+    makeClickable.mockClear();
+
+    const { initSocialShare } = await import('../src/public/ProductDetails.js');
+    initSocialShare($w, testState);
+
+    // makeClickable should be called for each share button
+    expect(makeClickable.mock.calls.length).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -277,34 +400,90 @@ describe('Quantity Selector (3 IDs)', () => {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
   });
+
+  it('sets initial quantity to 1', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initQuantitySelector } = await import('../src/public/AddToCart.js');
+    initQuantitySelector($w, testState);
+
+    expect(String(elements.get('#quantityInput').value)).toBe('1');
+  });
+
+  it('registers click handlers on plus and minus buttons', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initQuantitySelector } = await import('../src/public/AddToCart.js');
+    initQuantitySelector($w, testState);
+
+    expect(elements.get('#quantityMinus').onClick).toHaveBeenCalled();
+    expect(elements.get('#quantityPlus').onClick).toHaveBeenCalled();
+  });
 });
 
 describe('Fabric Swatch System', () => {
-  it('initSwatchSelector accesses swatch grid IDs', async () => {
+  it('initSwatchSelector accesses all 6 swatch grid IDs', async () => {
     const { $w, accessedIds } = createTrackingMock();
     const { initSwatchSelector } = await import('../src/public/ProductOptions.js');
     await initSwatchSelector($w, testState);
 
-    const expected = ['#swatchSection', '#swatchGrid'];
+    const expected = [
+      '#swatchSection', '#swatchGrid', '#swatchCount',
+      '#swatchViewAll', '#swatchRequestLink', '#swatchColorFilter',
+    ];
     for (const id of expected) {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
   });
 
-  it('initSwatchRequest accesses swatch request modal IDs', async () => {
+  it('initSwatchRequest accesses request button, modal, and submit IDs', async () => {
     const { $w, accessedIds } = createTrackingMock();
     const { initSwatchRequest } = await import('../src/public/ProductDetails.js');
     await initSwatchRequest($w, testState);
 
-    const expected = ['#swatchRequestBtn', '#swatchModal'];
+    const expected = ['#swatchRequestBtn', '#swatchModal', '#swatchSubmit'];
     for (const id of expected) {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
     }
   });
+
+  it('initSwatchCTA accesses the CTA button', async () => {
+    const { $w, accessedIds } = createTrackingMock();
+    const { initSwatchCTA } = await import('../src/public/ProductDetails.js');
+    initSwatchCTA($w, testState);
+
+    expect(accessedIds.has('#swatchCTABtn'), 'Missing ID: #swatchCTABtn').toBe(true);
+  });
+
+  it('initSwatchCTA sets coral styling on CTA button', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initSwatchCTA } = await import('../src/public/ProductDetails.js');
+    initSwatchCTA($w, testState);
+
+    expect(elements.get('#swatchCTABtn').style.backgroundColor).toBe('#E8845C');
+  });
+
+  it('initSwatchSelector populates grid with swatch data', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initSwatchSelector } = await import('../src/public/ProductOptions.js');
+    await initSwatchSelector($w, testState);
+
+    const grid = elements.get('#swatchGrid');
+    expect(grid.onItemReady).toHaveBeenCalled();
+  });
+
+  it('initSwatchRequest hides when product has no fabric options', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initSwatchRequest } = await import('../src/public/ProductDetails.js');
+    const noFabricState = {
+      product: { ...testProduct, productOptions: [{ name: 'Size', choices: [{ value: 'Small' }] }] },
+    };
+    await initSwatchRequest($w, noFabricState);
+
+    expect(elements.get('#swatchRequestBtn').hide).toHaveBeenCalled();
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// 3. FEEL & COMFORT INTEGRATION — the missing import bug
+// 3. FEEL & COMFORT INTEGRATION
 // ═══════════════════════════════════════════════════════════════════
 
 describe('Feel & Comfort section (initFeelAndComfort)', () => {
@@ -313,18 +492,63 @@ describe('Feel & Comfort section (initFeelAndComfort)', () => {
     expect(typeof mod.initFeelAndComfort).toBe('function');
   });
 
-  it('accesses feelAndComfortSection and related IDs', async () => {
+  it('accesses all section-level IDs', async () => {
     const { $w, accessedIds } = createTrackingMock();
     const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
     await initFeelAndComfort($w, testState);
 
-    expect(accessedIds.has('#feelAndComfortSection')).toBe(true);
+    const expected = [
+      '#feelAndComfortSection', '#feelAndComfortTitle',
+      '#comfortSection', '#feelSwatchPreview', '#feelSwatchCTA',
+    ];
+    for (const id of expected) {
+      expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
+    }
   });
 
   it('collapses section when product is null', async () => {
     const { $w, elements } = createTrackingMock();
     const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
     await initFeelAndComfort($w, { product: null });
+
+    expect(elements.get('#feelAndComfortSection').collapse).toHaveBeenCalled();
+  });
+
+  it('expands comfort subsection when comfort data is available', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
+    await initFeelAndComfort($w, testState);
+
+    expect(elements.get('#comfortSection').expand).toHaveBeenCalled();
+  });
+
+  it('sets title text to "Feel & Comfort"', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
+    await initFeelAndComfort($w, testState);
+
+    expect(elements.get('#feelAndComfortTitle').text).toBe('Feel & Comfort');
+  });
+
+  it('shows CTA with coral styling when swatches available', async () => {
+    const { $w, elements } = createTrackingMock();
+    const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
+    await initFeelAndComfort($w, testState);
+
+    const cta = elements.get('#feelSwatchCTA');
+    expect(cta.show).toHaveBeenCalled();
+    expect(cta.style.backgroundColor).toBe('#E8845C');
+  });
+
+  it('collapses section when both comfort and swatches are empty', async () => {
+    const { getProductComfort } = await import('backend/comfortService.web');
+    const { getProductSwatches } = await import('backend/swatchService.web');
+    getProductComfort.mockResolvedValueOnce(null);
+    getProductSwatches.mockResolvedValueOnce([]);
+
+    const { $w, elements } = createTrackingMock();
+    const { initFeelAndComfort } = await import('../src/public/FeelAndComfort.js');
+    await initFeelAndComfort($w, testState);
 
     expect(elements.get('#feelAndComfortSection').collapse).toHaveBeenCalled();
   });
@@ -351,5 +575,55 @@ describe('Error isolation', () => {
     );
 
     expect(pageSource).toContain('Promise.allSettled(productSections.map');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 5. NULL / MISSING PRODUCT GRACEFUL DEGRADATION
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Graceful degradation with null product', () => {
+  const nullState = { product: null };
+
+  it('initBreadcrumbs handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initBreadcrumbs } = await import('../src/public/ProductDetails.js');
+    await expect(initBreadcrumbs($w, nullState)).resolves.not.toThrow();
+  });
+
+  it('initFinancingOptions handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
+    await expect(initFinancingOptions($w, nullState)).resolves.not.toThrow();
+  });
+
+  it('initStickyCartBar handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initStickyCartBar } = await import('../src/public/AddToCart.js');
+    expect(() => initStickyCartBar($w, nullState)).not.toThrow();
+  });
+
+  it('initSwatchSelector handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initSwatchSelector } = await import('../src/public/ProductOptions.js');
+    await expect(initSwatchSelector($w, nullState)).resolves.not.toThrow();
+  });
+
+  it('initQuantitySelector handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initQuantitySelector } = await import('../src/public/AddToCart.js');
+    expect(() => initQuantitySelector($w, nullState)).not.toThrow();
+  });
+
+  it('initSocialShare handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initSocialShare } = await import('../src/public/ProductDetails.js');
+    expect(() => initSocialShare($w, nullState)).not.toThrow();
+  });
+
+  it('initSwatchCTA handles null product without throwing', async () => {
+    const { $w } = createTrackingMock();
+    const { initSwatchCTA } = await import('../src/public/ProductDetails.js');
+    expect(() => initSwatchCTA($w, nullState)).not.toThrow();
   });
 });
