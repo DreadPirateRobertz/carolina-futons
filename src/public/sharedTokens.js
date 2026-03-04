@@ -115,6 +115,86 @@ export const shippingConfig = {
   },
 };
 
+// Supported currencies for multi-currency display
+export const supportedCurrencies = {
+  USD: { code: 'USD', symbol: '$', name: 'US Dollar', locale: 'en-US' },
+  CAD: { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar', locale: 'en-CA' },
+  GBP: { code: 'GBP', symbol: '£', name: 'British Pound', locale: 'en-GB' },
+  EUR: { code: 'EUR', symbol: '€', name: 'Euro', locale: 'de-DE' },
+  AUD: { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', locale: 'en-AU' },
+  JPY: { code: 'JPY', symbol: '¥', name: 'Japanese Yen', locale: 'ja-JP' },
+};
+
+export const defaultCurrency = 'USD';
+
+// International shipping zones and rate multipliers
+export const internationalShippingConfig = {
+  zones: {
+    canada: {
+      countries: ['CA'],
+      name: 'Canada',
+      baseRate: 79.99,
+      perPoundRate: 1.25,
+      estimatedDays: '7-14',
+    },
+    europe: {
+      countries: ['GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE', 'PT', 'SE', 'DK', 'FI', 'NO', 'CH'],
+      name: 'Europe',
+      baseRate: 149.99,
+      perPoundRate: 2.50,
+      estimatedDays: '14-21',
+    },
+    asia_pacific: {
+      countries: ['JP', 'AU', 'NZ', 'KR', 'SG', 'HK', 'TW'],
+      name: 'Asia Pacific',
+      baseRate: 199.99,
+      perPoundRate: 3.25,
+      estimatedDays: '14-28',
+    },
+    other: {
+      countries: [],
+      name: 'International',
+      baseRate: 249.99,
+      perPoundRate: 4.00,
+      estimatedDays: '21-35',
+    },
+  },
+  // Countries we ship to (ISO 3166 alpha-2)
+  restrictedCountries: ['CU', 'IR', 'KP', 'SY', 'SD'],
+  freeInternationalThreshold: 2999,
+};
+
+// Customs / duties estimation config
+export const customsConfig = {
+  // HS code for furniture (9403 = other furniture and parts)
+  defaultHSCode: '9403',
+  // Typical duty rates by destination region (percentage of declared value)
+  dutyRates: {
+    CA: { rate: 0, description: 'Duty-free under USMCA for qualifying goods' },
+    MX: { rate: 0, description: 'Duty-free under USMCA for qualifying goods' },
+    GB: { rate: 0.02, description: '~2% duty + 20% VAT on furniture' },
+    DE: { rate: 0.027, description: '~2.7% duty + 19% VAT on furniture' },
+    FR: { rate: 0.027, description: '~2.7% duty + 20% VAT on furniture' },
+    IT: { rate: 0.027, description: '~2.7% duty + 22% VAT on furniture' },
+    ES: { rate: 0.027, description: '~2.7% duty + 21% VAT on furniture' },
+    JP: { rate: 0, description: 'Generally duty-free for furniture' },
+    AU: { rate: 0.05, description: '~5% duty + 10% GST on furniture' },
+    NZ: { rate: 0.05, description: '~5% duty + 15% GST on furniture' },
+  },
+  // VAT/GST rates
+  vatRates: {
+    GB: 0.20, DE: 0.19, FR: 0.20, IT: 0.22, ES: 0.21,
+    NL: 0.21, BE: 0.21, AT: 0.20, IE: 0.23, PT: 0.23,
+    SE: 0.25, DK: 0.25, FI: 0.24, NO: 0.25, CH: 0.077,
+    AU: 0.10, NZ: 0.15, JP: 0.10, KR: 0.10, SG: 0.09,
+    CA: 0.05, HK: 0, TW: 0.05,
+  },
+  // De minimis thresholds (value below which no duty is charged, in local currency equivalent USD)
+  deMinimisUSD: {
+    CA: 150, GB: 135, DE: 150, FR: 150, AU: 1000, NZ: 1000, JP: 10000,
+  },
+};
+
 // Helper: format shadow for CSS (web consumers)
 export function shadowToCSS(shadow) {
   return `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}`;

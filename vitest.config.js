@@ -136,6 +136,9 @@ export default defineConfig({
       'backend/storeLocatorService.web': path.resolve(__dirname, 'src/backend/storeLocatorService.web.js'),
       'backend/bundleBuilder.web': path.resolve(__dirname, 'src/backend/bundleBuilder.web.js'),
       'backend/checkoutOptimization.web': path.resolve(__dirname, 'src/backend/checkoutOptimization.web.js'),
+      'backend/currencyService.web': path.resolve(__dirname, 'src/backend/currencyService.web.js'),
+      'backend/internationalShipping.web': path.resolve(__dirname, 'src/backend/internationalShipping.web.js'),
+      'backend/customsEstimator.web': path.resolve(__dirname, 'src/backend/customsEstimator.web.js'),
       'backend/sustainabilityService.web': path.resolve(__dirname, 'src/backend/sustainabilityService.web.js'),
       'backend/deliveryExperience.web': path.resolve(__dirname, 'src/backend/deliveryExperience.web.js'),
       'backend/topicClusters.web': path.resolve(__dirname, 'src/backend/topicClusters.web.js'),
@@ -227,6 +230,8 @@ export default defineConfig({
       'backend/customizationService.web': path.resolve(__dirname, 'src/backend/customizationService.web.js'),
       'public/flashSaleHelpers.js': path.resolve(__dirname, 'src/public/flashSaleHelpers.js'),
       'public/flashSaleHelpers': path.resolve(__dirname, 'src/public/flashSaleHelpers.js'),
+      'public/currencySelector.js': path.resolve(__dirname, 'src/public/currencySelector.js'),
+      'public/currencySelector': path.resolve(__dirname, 'src/public/currencySelector.js'),
     },
   },
 });

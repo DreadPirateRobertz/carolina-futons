@@ -9,7 +9,8 @@
 // must be exported. Wix calls this automatically during checkout.
 
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
-import { business, shippingConfig } from 'public/sharedTokens.js';
+import { getInternationalShippingRates } from 'backend/internationalShipping.web';
+import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, localPrice: WHITE_GLOVE_LOCAL_PRICE, regionalPrice: WHITE_GLOVE_REGIONAL_PRICE } = whiteGlove;
@@ -61,6 +62,41 @@ export const getShippingRates = async (options) => {
     if (!destination.postalCode) {
       // Can't calculate without a postal code
       return { shippingRates: [] };
+    }
+
+    // International shipping: route to international service for non-US destinations
+    if (destination.country && destination.country !== 'US') {
+      const restricted = internationalShippingConfig.restrictedCountries || [];
+      if (restricted.includes(destination.country)) {
+        return { shippingRates: [] };
+      }
+
+      const intlResult = await getInternationalShippingRates(destination, packages, orderSubtotal);
+      if (intlResult.success && intlResult.rates) {
+        const intlRates = intlResult.rates.map(rate => ({
+          code: rate.code,
+          title: rate.title,
+          logistics: {
+            deliveryTime: rate.estimatedDays || '',
+          },
+          cost: {
+            price: String(rate.cost.toFixed(2)),
+            currency: rate.currency || 'USD',
+            additionalCharges: [],
+          },
+        }));
+        return { shippingRates: intlRates };
+      }
+
+      // Fallback: return flat international rate
+      return {
+        shippingRates: [{
+          code: 'intl-flat',
+          title: 'International Shipping (Estimated)',
+          logistics: { deliveryTime: '14-28 business days' },
+          cost: { price: '199.99', currency: 'USD', additionalCharges: [] },
+        }],
+      };
     }
 
     // Get live UPS rates

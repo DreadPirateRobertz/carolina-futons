@@ -1,11 +1,32 @@
 // productPageUtils.js - Shared utilities for Product Page components
 import { colors } from 'public/designTokens.js';
+import { supportedCurrencies } from 'public/sharedTokens.js';
 
-export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
+/**
+ * Format an amount as currency. Supports multi-currency via optional currencyCode param.
+ * @param {number} amount - Amount to format.
+ * @param {string} [currencyCode='USD'] - ISO 4217 currency code.
+ * @returns {string} Formatted currency string.
+ */
+export function formatCurrency(amount, currencyCode = 'USD') {
+  const code = String(currencyCode || 'USD').toUpperCase();
+  const info = supportedCurrencies[code];
+  const locale = info?.locale || 'en-US';
+  const currency = info ? code : 'USD';
+
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+      maximumFractionDigits: currency === 'JPY' ? 0 : 2,
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  }
 }
 
 export function buildGridAlt(product) {
