@@ -1,12 +1,14 @@
 # Carolina Futons — MASTER HOOKUP GUIDE
 
 > **The one file that tells you everything about connecting this codebase to a live Wix website.**
-> Last updated: 2026-02-28 by melania (Production Manager)
+> Last updated: 2026-03-04 by melania (Production Manager)
+> **Consolidated from**: FRONTEND-HOOKUP-GUIDE.md + 5 hookup audit files (homepage, product, browse, commerce, content)
 
 ---
 
 ## Table of Contents
 
+### Part 1: Deployment & Setup
 1. [How This All Works (ELI5)](#how-this-all-works)
 2. [What is a CDN and Why You Don't Need to Worry](#cdn-explained)
 3. [The 10-Step Hookup Checklist](#hookup-checklist)
@@ -20,11 +22,20 @@
 11. [Step 8: Set Up Email Templates](#step-8-email-templates)
 12. [Step 9: Configure Scheduled Jobs](#step-9-scheduled-jobs)
 13. [Step 10: Publish & Verify](#step-10-publish-verify)
+
+### Part 2: Feature-Specific Hookup
 14. [Fabric Swatch System Hookup](#swatch-hookup)
 15. [Social Media Platform Hookup](#social-media-hookup)
-16. [Complete Module Reference](#module-reference)
-17. [CMS Collection Reference](#cms-reference)
-18. [Troubleshooting](#troubleshooting)
+
+### Part 3: Frontend Element Wiring (consolidated from audit files)
+16. [Frontend Element Wiring Guide](#frontend-element-wiring-guide)
+17. [Page-by-Page Element Reference](#page-by-page-element-reference)
+
+### Part 4: Reference
+18. [Backend Services](#backend-services-already-built)
+19. [Complete Module Reference](#module-reference)
+20. [CMS Collection Reference](#cms-reference)
+21. [Troubleshooting](#troubleshooting)
 
 ---
 
