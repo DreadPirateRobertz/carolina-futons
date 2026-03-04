@@ -147,6 +147,7 @@ export default defineConfig({
       'backend/catalogImport.web': path.resolve(__dirname, 'src/backend/catalogImport.web.js'),
       'backend/loyaltyTiers.web': path.resolve(__dirname, 'src/backend/loyaltyTiers.web.js'),
       'backend/catalogContent.web': path.resolve(__dirname, 'src/backend/catalogContent.web.js'),
+      'backend/subscriptionService.web': path.resolve(__dirname, 'src/backend/subscriptionService.web.js'),
       'backend/productVideos.web': path.resolve(__dirname, 'src/backend/productVideos.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
