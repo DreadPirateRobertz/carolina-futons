@@ -62,8 +62,8 @@ const SEQUENCES = {
   },
   post_purchase: {
     steps: [
-      { step: 1, templateId: 'post_purchase_1', delayHours: 0, description: 'Thank you + tracking' },
-      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Assembly tips + review request' },
+      { step: 1, templateId: 'post_purchase_1', delayHours: 72, description: 'Assembly follow-up — How\'s setup going?' },
+      { step: 2, templateId: 'post_purchase_2', delayHours: 168, description: 'Review solicitation — Enjoying your furniture?' },
       { step: 3, templateId: 'post_purchase_3', delayHours: 720, description: 'Care guide + accessory upsell' },
     ],
   },
@@ -248,6 +248,10 @@ export const triggerPostPurchaseSequence = webMethod(
         .filter(Boolean)
         .join(', ');
 
+      const SITE_URL = 'https://www.carolinafutons.com';
+      const assemblyGuideUrl = `${SITE_URL}/getting-it-home#assembly`;
+      const reviewUrl = `${SITE_URL}/product-page/${cleanOrderNumber}#reviews`;
+
       const now = new Date();
       let queued = 0;
 
@@ -264,6 +268,8 @@ export const triggerPostPurchaseSequence = webMethod(
             total: String(total),
             productNames,
             email: cleanEmail,
+            assemblyGuideUrl,
+            reviewUrl,
           },
           sequenceType: 'post_purchase',
           sequenceStep: step.step,

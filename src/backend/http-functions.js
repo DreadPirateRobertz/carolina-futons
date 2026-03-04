@@ -5,7 +5,8 @@ import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence } from 'backend/emailAutomation.web';
+import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
@@ -704,6 +705,49 @@ export async function get_triggerReengagementCron(request) {
     });
   } catch (err) {
     console.error('HTTP function error (triggerReengagementCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Post-Purchase Care Cron ────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/processPostPurchaseCareCron
+// Schedule daily via Wix Automations or external cron.
+// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Processes pending post-purchase care sequences (assembly follow-ups, review solicitations).
+export async function get_processPostPurchaseCareCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.query?.key;
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Process the email queue (handles all sequences including post-purchase)
+    const result = await processEmailQueue();
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        sent: result.sent || 0,
+        failed: result.failed || 0,
+        cancelled: result.cancelled || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (processPostPurchaseCareCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },

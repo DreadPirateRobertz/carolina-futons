@@ -7,6 +7,8 @@ import {
   getUpsellRecommendations,
   trackGuideEngagement,
   logUpsellConversion,
+  getAssemblyFollowUpData,
+  getReviewSolicitationData,
 } from '../src/backend/postPurchaseCare.web.js';
 
 beforeEach(() => {
@@ -337,5 +339,118 @@ describe('logUpsellConversion', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+// ── getAssemblyFollowUpData ───────────────────────────────────────────
+
+describe('getAssemblyFollowUpData', () => {
+  it('returns assembly guides and support info for an order', async () => {
+    __seed('ProductCareGuides', [
+      { _id: 'g-1', productCategory: 'futon-frames', guideType: 'assembly', title: 'Frame Assembly Guide', summary: 'How to assemble', content: 'Step by step...', steps: '["Unbox","Attach legs","Secure bolts"]', videoUrl: 'https://example.com/video', priority: 1, active: true },
+    ]);
+
+    const result = await getAssemblyFollowUpData('order-123', ['futon-frames']);
+    expect(result.success).toBe(true);
+    expect(result.guides).toHaveLength(1);
+    expect(result.guides[0].title).toBe('Frame Assembly Guide');
+    expect(result.guides[0].videoUrl).toBeTruthy();
+    expect(result.supportPhone).toBeTruthy();
+    expect(result.supportEmail).toBeTruthy();
+  });
+
+  it('returns guides across multiple product categories', async () => {
+    __seed('ProductCareGuides', [
+      { _id: 'g-1', productCategory: 'futon-frames', guideType: 'assembly', title: 'Frame Assembly', summary: 'Assemble frame', content: 'Steps...', steps: '[]', priority: 1, active: true },
+      { _id: 'g-2', productCategory: 'mattresses', guideType: 'assembly', title: 'Mattress Setup', summary: 'Setup mattress', content: 'Steps...', steps: '[]', priority: 1, active: true },
+    ]);
+
+    const result = await getAssemblyFollowUpData('order-456', ['futon-frames', 'mattresses']);
+    expect(result.success).toBe(true);
+    expect(result.guides).toHaveLength(2);
+  });
+
+  it('returns empty guides when no assembly guides exist for categories', async () => {
+    __seed('ProductCareGuides', [
+      { _id: 'g-1', productCategory: 'covers', guideType: 'fabric_care', title: 'Cover Care', summary: 'Care', content: 'Tips', steps: '[]', priority: 1, active: true },
+    ]);
+
+    const result = await getAssemblyFollowUpData('order-789', ['covers']);
+    expect(result.success).toBe(true);
+    expect(result.guides).toHaveLength(0);
+    expect(result.supportPhone).toBeTruthy();
+  });
+
+  it('requires valid order ID', async () => {
+    const result = await getAssemblyFollowUpData('', ['futon-frames']);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('order ID');
+  });
+
+  it('requires product categories', async () => {
+    const result = await getAssemblyFollowUpData('order-123', []);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('categories');
+  });
+
+  it('handles null categories', async () => {
+    const result = await getAssemblyFollowUpData('order-123', null);
+    expect(result.success).toBe(false);
+  });
+
+  it('sanitizes input', async () => {
+    __seed('ProductCareGuides', []);
+    const result = await getAssemblyFollowUpData('order-123', ['<script>alert(1)</script>']);
+    expect(result.success).toBe(true);
+    expect(result.guides).toHaveLength(0);
+  });
+});
+
+// ── getReviewSolicitationData ─────────────────────────────────────────
+
+describe('getReviewSolicitationData', () => {
+  it('returns review data for an order', async () => {
+    const result = await getReviewSolicitationData('order-123', 'Bob', [
+      { name: 'Eureka Frame', productId: 'prod-1' },
+      { name: 'Moonshadow Mattress', productId: 'prod-2' },
+    ]);
+    expect(result.success).toBe(true);
+    expect(result.reviewUrl).toBeTruthy();
+    expect(result.customerName).toBe('Bob');
+    expect(result.products).toHaveLength(2);
+    expect(result.products[0].name).toBe('Eureka Frame');
+    expect(result.products[0].reviewUrl).toBeTruthy();
+  });
+
+  it('generates product-specific review URLs', async () => {
+    const result = await getReviewSolicitationData('order-456', 'Alice', [
+      { name: 'Eureka Frame', productId: 'prod-1' },
+    ]);
+    expect(result.success).toBe(true);
+    expect(result.products[0].reviewUrl).toContain('prod-1');
+  });
+
+  it('requires valid order ID', async () => {
+    const result = await getReviewSolicitationData('', 'Bob', []);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('order ID');
+  });
+
+  it('handles empty product list', async () => {
+    const result = await getReviewSolicitationData('order-123', 'Bob', []);
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('handles null product list', async () => {
+    const result = await getReviewSolicitationData('order-123', 'Bob', null);
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('sanitizes customer name', async () => {
+    const result = await getReviewSolicitationData('order-123', '<script>alert(1)</script>Bob', []);
+    expect(result.success).toBe(true);
+    expect(result.customerName).not.toContain('<script>');
   });
 });

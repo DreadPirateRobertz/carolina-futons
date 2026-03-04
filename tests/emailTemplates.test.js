@@ -30,9 +30,23 @@ describe('_TEMPLATE_REGISTRY', () => {
     expect(cart).toHaveLength(3);
   });
 
-  it('contains post-purchase templates (3 steps)', () => {
+  it('contains post-purchase templates (3 steps) with day 3/7/30 focus', () => {
     const pp = Object.values(_TEMPLATE_REGISTRY).filter(t => t.sequence === 'post_purchase');
     expect(pp).toHaveLength(3);
+    const sorted = pp.sort((a, b) => a.step - b.step);
+
+    // Step 1 (Day 3): Assembly follow-up
+    expect(sorted[0].name).toContain('Assembly');
+    expect(sorted[0].subjectLine).toMatch(/assembly|setup/i);
+    expect(sorted[0].variables).toContain('assemblyGuideUrl');
+
+    // Step 2 (Day 7): Review solicitation
+    expect(sorted[1].name).toContain('Review');
+    expect(sorted[1].subjectLine).toMatch(/review|enjoying/i);
+    expect(sorted[1].variables).toContain('reviewUrl');
+
+    // Step 3 (Day 30): Care guide + upsell (unchanged)
+    expect(sorted[2].name).toContain('Care');
   });
 
   it('contains promotional templates', () => {
@@ -137,7 +151,8 @@ describe('getTemplateIndex', () => {
 describe('resolveSubjectLine', () => {
   it('substitutes variables in subject line', async () => {
     const subject = await resolveSubjectLine('post_purchase_1', { firstName: 'Jane' });
-    expect(subject).toBe('Thank you for your order, Jane!');
+    expect(subject).toContain('Jane');
+    expect(subject).toMatch(/setup|assembly/i);
   });
 
   it('substitutes multiple variables', async () => {
