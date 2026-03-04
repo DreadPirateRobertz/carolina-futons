@@ -955,6 +955,45 @@
     </div>
   </div>
 </div>
-<p class="timestamp">Generated 2026-03-03 18:12 — 17 total illustrations</p>
+<div class="category">
+  <h2>About / Our Story (cf-niux)</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Team Portrait</h3>
+      <div class="svg-container" id="about-team-portrait"></div>
+      <div class="quality-bar">
+        <span class="check">✓ feTurbulence</span> &nbsp;
+        <span class="check">✓ feDisplacementMap</span> &nbsp;
+        <span class="check">✓ fractalNoise</span> &nbsp;
+        <span class="check">✓ 5+ stops</span> &nbsp;
+        <span class="check">✓ 15+ elements</span> &nbsp;
+        <span class="check">✓ Layers</span> &nbsp;
+        <span class="check">✓ Token colors</span> &nbsp;
+        <span class="check">✓ Details</span> &nbsp;
+      </div>
+    </div>
+    <div class="card">
+      <h3>Blue Ridge Timeline</h3>
+      <div class="svg-container" id="about-timeline"></div>
+      <div class="quality-bar">
+        <span class="check">✓ feTurbulence</span> &nbsp;
+        <span class="check">✓ feDisplacementMap</span> &nbsp;
+        <span class="check">✓ fractalNoise</span> &nbsp;
+        <span class="check">✓ 5+ stops</span> &nbsp;
+        <span class="check">✓ 15+ elements</span> &nbsp;
+        <span class="check">✓ Layers</span> &nbsp;
+        <span class="check">✓ Token colors</span> &nbsp;
+        <span class="check">✓ Details</span> &nbsp;
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { getTeamPortraitSvg, getTimelineSvg } from '../src/public/aboutIllustrations.js';
+  // Safe: SVGs are trusted static template literals from our own module, not user input
+  document.getElementById('about-team-portrait').innerHTML = getTeamPortraitSvg();
+  document.getElementById('about-timeline').innerHTML = getTimelineSvg();
+</script>
+<p class="timestamp">Generated 2026-03-04 — 19 total illustrations (17 + 2 about page)</p>
 </body>
 </html>
