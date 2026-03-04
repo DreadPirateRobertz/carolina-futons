@@ -17,4 +17,8 @@ export function forbidden({ body, headers }) {
   return { status: 403, body, headers: headers || {} };
 }
 
+export function badRequest({ body, headers }) {
+  return { status: 400, body, headers: headers || {} };
+}
+
 export function __reset() {}

@@ -1,6 +1,6 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, serverError, forbidden } from 'wix-http-functions';
+import { ok, serverError, forbidden, badRequest } from 'wix-http-functions';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -8,6 +8,7 @@ import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement } from 'backend/emailAutomation.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
+import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 // ── Security Helpers ──────────────────────────────────────────────────
 
@@ -690,4 +691,102 @@ function detectProductType(product) {
   if (collections.some(c => c.includes('platform'))) return 'Bedroom > Platform Beds';
   if (collections.some(c => c.includes('casegood'))) return 'Bedroom > Casegoods & Accessories';
   return 'Bedroom > Futon Frames';
+}
+
+// ── Klaviyo Webhook Endpoint ──────────────────────────────────────────
+// URL: POST https://www.carolinafutons.com/_functions/klaviyoWebhook
+// Configure in Klaviyo > Settings > Webhooks with the KLAVIYO_WEBHOOK_SECRET.
+// Handles subscriber events (unsubscribe, bounce, etc.) from Klaviyo.
+
+/**
+ * @function post_klaviyoWebhook
+ * @param {Object} request - Wix HTTP request object.
+ * @returns {Promise<Object>} HTTP response.
+ */
+export async function post_klaviyoWebhook(request) {
+  try {
+    // Authenticate webhook
+    let webhookSecret;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      webhookSecret = await getSecret('KLAVIYO_WEBHOOK_SECRET');
+    } catch (_) {
+      // Secret not configured
+    }
+
+    const requestSecret = request.headers['x-klaviyo-webhook-secret'];
+
+    if (!webhookSecret || !requestSecret || !timingSafeEqual(requestSecret, webhookSecret)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Parse body
+    let payload;
+    try {
+      const bodyText = await request.body.text();
+      payload = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate required fields
+    if (!payload.type || typeof payload.type !== 'string') {
+      return badRequest({
+        body: JSON.stringify({ error: 'Missing required field: type' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!payload.email || typeof payload.email !== 'string') {
+      return badRequest({
+        body: JSON.stringify({ error: 'Missing required field: email' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cleanEmail = sanitize(payload.email, 254).toLowerCase().trim();
+    if (!validateEmail(cleanEmail)) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid email format' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Route by event type
+    if (payload.type === 'unsubscribed') {
+      const existing = await wixData.query('NewsletterSubscribers')
+        .eq('email', cleanEmail)
+        .find();
+
+      if (existing.items.length > 0) {
+        const record = existing.items[0];
+        await wixData.update('NewsletterSubscribers', {
+          ...record,
+          status: 'unsubscribed',
+          unsubscribedAt: new Date(),
+        });
+      }
+    }
+    // Unknown event types are acknowledged without action
+
+    return ok({
+      body: JSON.stringify({ status: 'ok', received: payload.type }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (klaviyoWebhook):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
