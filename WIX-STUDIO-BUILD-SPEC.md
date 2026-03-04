@@ -732,6 +732,14 @@ Sticky bottom bar showing selected products for comparison.
 | → Name | Text | `#cartRecentName` | |
 | → Price | Text | `#cartRecentPrice` | |
 
+### Financing Options
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#cartFinancingSection` | Collapsible, hidden default |
+| Threshold Message | Text | `#financingThreshold` | "Add $X more to unlock financing" |
+| Monthly Teaser | Text | `#cartFinancingTeaser` | Lowest monthly payment teaser |
+| Afterpay Message | Text | `#cartAfterpayMessage` | Afterpay eligibility message |
+
 ---
 
 ## Page: SIDE CART (ego5s)
@@ -748,6 +756,8 @@ Sticky bottom bar showing selected products for comparison.
 | → Item Name | Text | `#sideItemName` | |
 | → Item Price | Text | `#sideItemPrice` | |
 | → Item Qty | Text | `#sideItemQty` | |
+| → Qty Minus | Button | `#sideQtyMinus` | Decrease quantity button |
+| → Qty Plus | Button | `#sideQtyPlus` | Increase quantity button |
 | → Item Variant | Text | `#sideItemVariant` | Hidden default |
 | → Line Total | Text | `#sideItemLineTotal` | Price × qty |
 | → Remove | Button | `#sideItemRemove` | X icon |
@@ -930,6 +940,51 @@ Sticky bottom bar showing selected products for comparison.
 | Total | Text | `#orderSummaryTotal` | Bold |
 | Savings | Text | `#orderSummarySavings` | Hidden default, shows shipping savings |
 
+### Payment Methods
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Methods Repeater | Repeater | `#paymentMethodsRepeater` | Payment method cards |
+| → Method Name | Text | `#paymentMethodName` | "Credit Card", "PayPal", etc. |
+| → Method Icon | Image | `#paymentMethodIcon` | Card brand or provider logo |
+| → Card Brands | Text | `#paymentBrands` | "Visa, Mastercard, Amex, Discover" |
+| → Trust Icon | Image | `#trustIcon` | Trust badge icon (repeater child of `#trustRepeater`) |
+
+### Afterpay Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#checkoutAfterpay` | Hidden default, shows when eligible |
+| Afterpay Message | Text | `#afterpayMessage` | Promotional text |
+| Installment Amount | Text | `#afterpayInstallment` | "4 payments of $X.XX" |
+
+### Financing Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#checkoutFinancing` | Hidden default, shows when qualifying |
+| Financing Message | Text | `#financingMessage` | Monthly payment promo text |
+
+### Shipping Options
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Shipping Message | Text | `#checkoutShippingMessage` | Shipping status/info message |
+| Options Repeater | Repeater | `#shippingOptionsRepeater` | Shipping method selection |
+| → Label | Text | `#shippingOptionLabel` | Method name ("UPS Ground") |
+| → Price | Text | `#shippingOptionPrice` | "$49.99" or "FREE" |
+| → Description | Text | `#shippingOptionDesc` | Method description |
+| → Days | Text | `#shippingOptionDays` | "3-5 business days" |
+| → Radio | RadioButton | `#shippingOptionRadio` | Selection radio |
+
+### Address Validation Form
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Validate Button | Button | `#validateAddressBtn` | "Validate Address" CTA |
+| Full Name | Input | `#addressFullName` | Required |
+| Street Address | Input | `#addressLine1` | Required |
+| City | Input | `#addressCity` | Required |
+| State | Input | `#addressState` | Required |
+| ZIP Code | Input | `#addressZip` | Required, 5-digit validation |
+| Address Errors | Text | `#addressErrors` | General error text, hidden default |
+| Address Success | Text | `#addressSuccess` | Validation success text, hidden default |
+
 ### Express Checkout
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
@@ -963,6 +1018,10 @@ Sticky bottom bar showing selected products for comparison.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Timeline | Box | `#deliveryTimeline` | Visual delivery status steps |
+| Step 1 | Text | `#step1` | "Order confirmed" |
+| Step 2 | Text | `#step2` | "Preparing your items" |
+| Step 3 | Text | `#step3` | "Shipped with tracking" |
+| Step 4 | Text | `#step4` | "Delivered to your door" |
 | Estimate Text | Text | `#deliveryEstimateText` | "Expected delivery: Mar 5-12" |
 
 ### Social Sharing
@@ -973,6 +1032,18 @@ Sticky bottom bar showing selected products for comparison.
 | Share Pinterest | Button | `#sharePinterest` | |
 | Share Instagram | Button | `#shareInstagram` | |
 
+### Testimonial Submission
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#testimonialSection` | Collapsible |
+| Title | Text (H3) | `#testimonialTitle` | "Share Your Experience" |
+| Prompt | Text | `#testimonialPrompt` | Prompt text inviting review |
+| Name Input | Input | `#testimonialNameInput` | Customer name |
+| Story Input | TextArea | `#testimonialStoryInput` | Story/review textarea |
+| Submit Button | Button | `#testimonialSubmitBtn` | Primary coral CTA |
+| Error | Text | `#testimonialError` | Hidden default, role="alert" |
+| Success | Text | `#testimonialSuccess` | Hidden default |
+
 ### Newsletter Signup
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
@@ -980,6 +1051,7 @@ Sticky bottom bar showing selected products for comparison.
 | Newsletter Email | Input | `#newsletterEmail` | |
 | Newsletter Signup | Button | `#newsletterSignup` | |
 | Newsletter Success | Text | `#newsletterSuccess` | Hidden default |
+| Newsletter Error | Text | `#newsletterError` | Hidden default, role="alert" |
 
 ### Referral Program
 | Element | Type | ID | Notes |
@@ -1106,6 +1178,12 @@ Logged-in member account page with order history, wishlist, loyalty, address boo
 | Share Pinterest | Button | `#wishSharePinterest` | |
 | Share Email | Button | `#wishShareEmail` | |
 | Share Facebook | Button | `#wishShareFacebook` | |
+| Wishlist Empty | Box | `#wishlistEmpty` | Empty state when wishlist has 0 items |
+
+### Returns
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Start Return | Button | `#startReturnBtn` | Global returns button, clicked programmatically from per-order return handler |
 
 ### Address Book
 | Element | Type | ID | Notes |
@@ -1353,6 +1431,206 @@ Terms sections use anchor IDs for TOC navigation:
 - **Auto-refresh**: Page refreshes tracking every 5 min for active shipments (not delivered/returned)
 - **Accessibility**: All interactive elements have aria-labels, form validates on Enter key
 - **Prefill**: Accepts `?order=XXXXX&email=x@x.com` query params from Member Page links
+
+---
+
+## Page: RETURNS (Self-Service Returns & Exchanges)
+
+**Purpose**: Guest-accessible returns portal — lookup by order number + email, initiate returns/exchanges, track return shipment status via RMA number.
+
+**Code file**: `src/pages/Returns.js`
+**Backend**: `src/backend/returnsService.web.js` (lookupReturn, submitGuestReturn, trackReturnShipment, getReturnReasons)
+
+### Lookup Form
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Title | Text (H1) | `#returnsTitle` | "Returns & Exchanges" |
+| Subtitle | Text | `#returnsSubtitle` | Instructions for lookup |
+| Order Number | Input | `#returnOrderNumberInput` | Text input, required |
+| Email | Input | `#returnEmailInput` | Text input, required |
+| Lookup Button | Button | `#lookupReturnBtn` | Primary CTA |
+
+### RMA Tracker
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| RMA Input | Input | `#rmaInput` | Track existing RMA by number |
+| Track RMA Button | Button | `#trackRmaBtn` | "Track Return" |
+
+### Results Section
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#returnResultsSection` | Collapsed by default |
+| Order Number | Text | `#returnOrderNumber` | "Order #12345" |
+| Order Date | Text | `#returnOrderDate` | Formatted date |
+| Order Total | Text | `#returnOrderTotal` | "$X.XX" |
+| Return Window | Text | `#returnWindowStatus` | "X days remaining" or "Window closed" |
+
+### Existing Returns
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#existingReturnsSection` | Shows previously filed returns |
+| Returns Repeater | Repeater | `#existingReturnsRepeater` | List of existing returns |
+| → RMA Number | Text | `#existingRma` | "RMA-12345" |
+| → Return Date | Text | `#existingReturnDate` | Formatted date |
+| → Type | Text | `#existingReturnType` | "Return" or "Exchange" |
+| → Reason | Text | `#existingReturnReason` | Return reason text |
+| → Status | Text | `#existingReturnStatus` | Color-coded status badge |
+| → Timeline | Text | `#existingReturnTimeline` | Status timeline text |
+| → Tracking | Text | `#existingTrackingNumber` | Return shipment tracking number |
+
+### Return Form
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#returnFormSection` | Shown after order lookup |
+| Reason | Dropdown | `#returnReasonSelect` | Populated from getReturnReasons |
+| Type | Dropdown | `#returnTypeSelect` | "Return" or "Exchange" |
+| Items Repeater | Repeater | `#returnItemsSelector` | Selectable order items |
+| → Item Name | Text | `#selectItemName` | Product name |
+| → Item Qty | Text | `#selectItemQty` | "Qty: 1" |
+| → Item Price | Text | `#selectItemPrice` | "$X.XX" |
+| → Item Image | Image | `#selectItemImage` | Product thumbnail |
+| → Checkbox | Checkbox | `#selectItemCheckbox` | Select item for return |
+| → Block Reason | Text | `#selectItemBlockReason` | Why item can't be returned, hidden default |
+| Details | TextArea | `#returnDetailsTextbox` | Additional details |
+| Submit | Button | `#submitGuestReturnBtn` | "Submit Return Request" |
+| Cancel | Button | `#cancelReturnFormBtn` | Cancel and go back |
+
+### RMA Status
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#rmaResultsSection` | Collapsed by default |
+| RMA Number | Text | `#rmaStatusNumber` | "RMA-12345" |
+| Status Label | Text | `#rmaStatusLabel` | Color-coded status |
+| Timeline | Box | `#rmaTimeline` | Visual status timeline |
+| Tracking Section | Box | `#rmaTrackingSection` | Shows when label generated |
+| Tracking Number | Text | `#rmaTrackingNumber` | Return shipment tracking |
+| Tracking Status | Text | `#rmaTrackingStatus` | Shipment status text |
+| Activity Repeater | Repeater | `#rmaActivityRepeater` | Tracking activity log |
+| → Status | Text | `#rmaActivityStatus` | Activity description |
+| → Location | Text | `#rmaActivityLocation` | Location text |
+| → Date | Text | `#rmaActivityDate` | Formatted date/time |
+| No Tracking | Text | `#rmaNoTracking` | Shown when no tracking yet |
+
+### UI States
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Success Message | Text | `#returnSuccessMessage` | Hidden default, shown after submit |
+| Error | Text | `#returnError` | Hidden default, role="alert" |
+| Form Error | Text | `#returnFormError` | Hidden default, form validation errors |
+| Loader | Element | `#returnLoader` | Spinner, hidden by default |
+| New Search | Button | `#newReturnSearchBtn` | "Start New Lookup" |
+
+### Design Notes
+- **Color coding**: Use `getStatusColor()` from ReturnsPortal.js — success=approved, mountainBlue=in-progress, coral=denied, muted=pending
+- **Return window**: Shows days remaining in green, "Window closed" in coral
+- **Guest flow**: No login required — lookup by order number + email
+- **Accessibility**: All form inputs have labels, errors announced via `announce()`, focus management on section transitions
+
+---
+
+## Page: ADMIN RETURNS (Returns Management Dashboard)
+
+**Purpose**: Admin-only dashboard for managing return requests — view all returns, update statuses, generate shipping labels, process refunds.
+
+**Code file**: `src/pages/Admin Returns.js`
+**Backend**: `src/backend/returnsService.web.js` (getAdminReturns, getReturnStats, updateReturnStatus, generateReturnLabel, processRefund, trackReturnShipment)
+
+### Stats Cards
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Total Count | Text | `#statTotal` | Total returns count |
+| Total Label | Text | `#statTotalLabel` | "Total Returns" |
+| Action Required | Text | `#statActionRequired` | Returns needing action |
+| Action Label | Text | `#statActionLabel` | "Action Required" |
+| In Progress | Text | `#statInProgress` | In-progress count |
+| Progress Label | Text | `#statProgressLabel` | "In Progress" |
+| Completed | Text | `#statCompleted` | Completed count |
+| Completed Label | Text | `#statCompletedLabel` | "Completed" |
+
+### Filter & Refresh
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Status Filter | Dropdown | `#statusFilterDropdown` | Filter by return status |
+| Refresh | Button | `#refreshBtn` | Refresh dashboard data |
+
+### Returns List
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Returns Repeater | Repeater | `#returnsRepeater` | All return requests |
+| → RMA Number | Text | `#rmaNumber` | "RMA-12345" |
+| → Order Number | Text | `#orderNumber` | Linked order |
+| → Customer Name | Text | `#customerName` | Customer full name |
+| → Return Type | Text | `#returnType` | "Return" or "Exchange" |
+| → Date | Text | `#returnDate` | Formatted date |
+| → Reason | Text | `#returnReason` | Return reason |
+| → Status Badge | Text | `#statusBadge` | Color-coded status |
+| → Action Dot | Box | `#actionDot` | Red dot for items needing action |
+| → Item Count | Text | `#itemCount` | Number of items in return |
+| → View Details | Button | `#viewDetailsBtn` | Opens detail panel |
+
+### Detail Panel
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Panel | Box | `#detailPanel` | Slide-in panel, hidden default |
+| Close | Button | `#closeDetailBtn` | Close panel |
+| RMA Number | Text | `#detailRma` | "RMA-12345" |
+| Status | Text | `#detailStatus` | Color-coded status |
+| Customer | Text | `#detailCustomer` | Customer name |
+| Email | Text | `#detailEmail` | Customer email |
+| Order | Text | `#detailOrder` | Order number |
+| Date | Text | `#detailDate` | Return date |
+| Type | Text | `#detailType` | "Return" or "Exchange" |
+| Reason | Text | `#detailReason` | Return reason |
+| Description | Text | `#detailDescription` | Customer's description |
+| Notes | Text | `#detailNotes` | Admin notes |
+| Tracking Section | Box | `#trackingSection` | Shows when label exists |
+| Tracking Number | Text | `#detailTracking` | Return tracking number |
+| Refund Amount | Text | `#detailRefundAmount` | Refund amount |
+
+### Status Actions
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section | Box | `#statusActionsSection` | Action buttons, visibility varies by status |
+| Approve | Button | `#approveBtn` | Approve return request |
+| Deny | Button | `#denyBtn` | Deny return request |
+| Mark Shipped | Button | `#markShippedBtn` | Mark as shipped by customer |
+| Mark Received | Button | `#markReceivedBtn` | Mark as received at warehouse |
+
+### Label & Tracking
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Generate Label | Button | `#generateLabelBtn` | Generate return shipping label |
+| Track Shipment | Button | `#trackShipmentBtn` | Check return shipment status |
+| Tracking Status | Text | `#trackingStatus` | Shipment status text |
+| Tracking ETA | Text | `#trackingEta` | Estimated arrival |
+
+### Refund Modal
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Modal | Box | `#refundModal` | Lightbox/modal, hidden default |
+| Cancel | Button | `#cancelRefundBtn` | Cancel refund |
+| Confirm | Button | `#confirmRefundBtn` | Confirm refund details |
+| Process | Button | `#processRefundBtn` | Execute refund |
+| RMA Label | Text | `#refundRmaLabel` | RMA number in modal |
+| Customer Label | Text | `#refundCustomerLabel` | Customer name in modal |
+| Amount Input | Input | `#refundAmountInput` | Editable refund amount |
+| Notes Input | TextArea | `#refundNotesInput` | Refund notes |
+| Error | Text | `#refundError` | Hidden default, role="alert" |
+
+### UI States
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Empty State | Box | `#emptyState` | "No returns found" |
+| Loader | Element | `#dashboardLoader` | Spinner, hidden by default |
+| Error | Text | `#dashboardError` | Hidden default, role="alert" |
+
+### Design Notes
+- **Admin only**: Page requires admin role — non-admins see access denied
+- **Color coding**: Use `getAdminStatusColor()` from ReturnsAdmin.js for status badges
+- **Action dot**: Red dot on returns needing action (`needsAction()` helper)
+- **Detail panel**: Slides in from right, similar to Side Cart pattern
+- **Refund modal**: Validates via `validateRefund()` before processing
+- **Stats cards**: 4-column grid on desktop, 2×2 on tablet, stacked on mobile
 
 ---
 
