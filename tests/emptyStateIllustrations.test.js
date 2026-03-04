@@ -13,6 +13,40 @@ const REQUIRED_KEYS = [
   'category', 'error', 'notFound', 'sideCart',
 ];
 
+// ── Helpers (from comfort illustration tests) ────────────────────────
+
+/** Collect all hex color values from sharedTokens.colors as an allowlist. */
+function buildTokenHexAllowlist() {
+  const hexes = new Set();
+  for (const value of Object.values(colors)) {
+    if (typeof value === 'string') {
+      const match = value.match(/^#[0-9A-Fa-f]{3,8}$/);
+      if (match) hexes.add(value.toUpperCase());
+    }
+  }
+  return hexes;
+}
+
+/** Extract all hex colors (#RGB, #RRGGBB, #RRGGBBAA) from a string. */
+function extractHexColors(str) {
+  const matches = str.match(/#[0-9A-Fa-f]{3,8}\b/g) || [];
+  return matches.map((h) => h.toUpperCase());
+}
+
+/** Count SVG shape/path elements in a string. */
+function countShapeElements(svg) {
+  const tags = ['path', 'circle', 'ellipse', 'rect', 'polygon', 'polyline', 'line'];
+  let count = 0;
+  for (const tag of tags) {
+    const re = new RegExp(`<${tag}[\\s/>]`, 'gi');
+    const matches = svg.match(re);
+    if (matches) count += matches.length;
+  }
+  return count;
+}
+
+const TOKEN_HEXES = buildTokenHexAllowlist();
+
 describe('Empty State Illustrations', () => {
 
   // ── Registry completeness ──────────────────────────────────────────
@@ -203,6 +237,146 @@ describe('Empty State Illustrations', () => {
       REQUIRED_KEYS.forEach(key => {
         expect(ILLUSTRATION_SVGS[key]).not.toMatch(/xlink:href="http/i);
         expect(ILLUSTRATION_SVGS[key]).not.toMatch(/href="http/i);
+      });
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════════════════
+  // 8-POINT QUALITY BAR (cf-37uy retrofit)
+  // Matching comfortIllustrations quality standard
+  // ══════════════════════════════════════════════════════════════════════
+
+  // ── 1. Watercolor filter (feTurbulence + feDisplacementMap) ────────
+
+  describe('Quality bar — watercolor filter', () => {
+    REQUIRED_KEYS.forEach(key => {
+      describe(`${key}`, () => {
+        it('contains feTurbulence filter for watercolor texture', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/<feTurbulence/);
+        });
+
+        it('contains feDisplacementMap', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/<feDisplacementMap/);
+        });
+      });
+    });
+  });
+
+  // ── 2. Paper grain overlay (fractalNoise) ─────────────────────────
+
+  describe('Quality bar — paper grain', () => {
+    REQUIRED_KEYS.forEach(key => {
+      it(`${key} contains paper grain noise filter (type="fractalNoise")`, () => {
+        expect(ILLUSTRATION_SVGS[key]).toMatch(/type="fractalNoise"/);
+      });
+    });
+  });
+
+  // ── 3. Brand tokens only (no hardcoded hex) ───────────────────────
+
+  describe('Quality bar — brand tokens only', () => {
+    REQUIRED_KEYS.forEach(key => {
+      it(`${key}: all hex colors come from sharedTokens.colors`, () => {
+        const svg = ILLUSTRATION_SVGS[key];
+        const foundHexes = extractHexColors(svg);
+        expect(foundHexes.length).toBeGreaterThan(0);
+        for (const hex of foundHexes) {
+          expect(TOKEN_HEXES, `${key} has non-token hex: ${hex}`).toContain(hex);
+        }
+      });
+    });
+  });
+
+  // ── 4. Rich gradients (5+ stops) ─────────────────────────────────
+
+  describe('Quality bar — gradients', () => {
+    REQUIRED_KEYS.forEach(key => {
+      describe(`${key}`, () => {
+        it('has at least one gradient', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/<(linearGradient|radialGradient)/);
+        });
+
+        it('has 5+ gradient stops total', () => {
+          const stops = ILLUSTRATION_SVGS[key].match(/<stop[\s/]/g) || [];
+          expect(stops.length, `${key} has ${stops.length} stops`).toBeGreaterThanOrEqual(5);
+        });
+      });
+    });
+  });
+
+  // ── 5. Element count (15+ shapes per scene) ──────────────────────
+
+  describe('Quality bar — element count', () => {
+    REQUIRED_KEYS.forEach(key => {
+      it(`${key}: has 15+ SVG shape/path elements`, () => {
+        const count = countShapeElements(ILLUSTRATION_SVGS[key]);
+        expect(count, `${key} has ${count} elements`).toBeGreaterThanOrEqual(15);
+      });
+    });
+  });
+
+  // ── 6. Atmospheric depth layers ───────────────────────────────────
+
+  describe('Quality bar — atmospheric layers', () => {
+    REQUIRED_KEYS.forEach(key => {
+      describe(`${key}`, () => {
+        it('has a group with id="background"', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/id="background"/);
+        });
+
+        it('has a group with id="midground"', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/id="midground"/);
+        });
+
+        it('has a group with id="foreground"', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/id="foreground"/);
+        });
+      });
+    });
+  });
+
+  // ── 7. Accessibility ─────────────────────────────────────────────
+
+  describe('Quality bar — accessibility', () => {
+    REQUIRED_KEYS.forEach(key => {
+      describe(`${key}`, () => {
+        it('has role="img"', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/role="img"/);
+        });
+
+        it('has a <title> element', () => {
+          expect(ILLUSTRATION_SVGS[key]).toMatch(/<title[^>]*>.*<\/title>/s);
+        });
+
+        it('has aria-labelledby referencing the title id', () => {
+          const titleIdMatch = ILLUSTRATION_SVGS[key].match(/<title\s+id="([^"]+)"/);
+          expect(titleIdMatch, `${key} missing title id`).not.toBeNull();
+          const titleId = titleIdMatch[1];
+          expect(ILLUSTRATION_SVGS[key]).toMatch(
+            new RegExp(`aria-labelledby="[^"]*${titleId}[^"]*"`)
+          );
+        });
+      });
+    });
+  });
+
+  // ── 8. Detail elements (birds, trees, flowers) ───────────────────
+
+  describe('Quality bar — detail elements', () => {
+    REQUIRED_KEYS.forEach(key => {
+      it(`${key}: has bird V-shapes (espresso-stroked line pairs) or wildflower stems (success-stroked paths)`, () => {
+        const svg = ILLUSTRATION_SVGS[key];
+        const espressoHex = colors.espresso.toLowerCase();
+        const successHex = colors.success.toLowerCase();
+        const svgLower = svg.toLowerCase();
+        // Birds = V-shaped line pairs with espresso stroke (2 lines per V)
+        const birdLineRe = new RegExp(`<line[^>]*stroke="${espressoHex}"`, 'g');
+        const birdLineCount = (svgLower.match(birdLineRe) || []).length;
+        const hasBirds = birdLineCount >= 2;
+        // Wildflower stems = thin paths with success/green stroke
+        const hasWildflowerStems = svgLower.includes(`stroke="${successHex}"`);
+        expect(hasBirds || hasWildflowerStems,
+          `${key} lacks detail elements (needs espresso bird lines or success wildflower stems)`).toBe(true);
       });
     });
   });
