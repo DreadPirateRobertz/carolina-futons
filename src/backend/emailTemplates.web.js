@@ -87,25 +87,25 @@ const TEMPLATE_REGISTRY = {
     category: 'recovery',
   },
 
-  // Post-Purchase Follow-up
+  // Post-Purchase Care Sequence (Day 3/7/30)
   post_purchase_1: {
     id: 'post_purchase_1',
-    name: 'Post-Purchase — Thank You + Tracking',
+    name: 'Post-Purchase — Assembly Follow-Up',
     sequence: 'post_purchase',
     step: 1,
-    subjectLine: 'Thank you for your order, {firstName}!',
-    previewText: 'Your order is confirmed. Here\'s what happens next.',
-    variables: ['firstName', 'orderNumber', 'total', 'productNames', 'email'],
+    subjectLine: 'How\'s setup going, {firstName}? Need help with assembly?',
+    previewText: 'Quick-start guide and video walkthrough for easy setup. We\'re here to help.',
+    variables: ['firstName', 'orderNumber', 'total', 'productNames', 'assemblyGuideUrl', 'email'],
     category: 'transactional',
   },
   post_purchase_2: {
     id: 'post_purchase_2',
-    name: 'Post-Purchase — Assembly Tips + Review Request',
+    name: 'Post-Purchase — Review Solicitation',
     sequence: 'post_purchase',
     step: 2,
-    subjectLine: 'Assembly tips for your new furniture',
-    previewText: 'Quick-start guide and video walkthrough for easy setup.',
-    variables: ['firstName', 'orderNumber', 'productNames', 'email'],
+    subjectLine: 'Enjoying your new furniture, {firstName}? Leave a review!',
+    previewText: 'Your feedback helps other customers find the perfect piece.',
+    variables: ['firstName', 'orderNumber', 'productNames', 'reviewUrl', 'email'],
     category: 'transactional',
   },
   post_purchase_3: {

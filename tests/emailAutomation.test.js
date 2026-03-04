@@ -43,11 +43,17 @@ describe('sequence definitions', () => {
     expect(_SEQUENCES.cart_recovery.steps[2].delayHours).toBe(72);
   });
 
-  it('has post_purchase sequence with 3 steps', () => {
+  it('has post_purchase sequence with day 3/7/30 timing', () => {
     expect(_SEQUENCES.post_purchase.steps).toHaveLength(3);
-    expect(_SEQUENCES.post_purchase.steps[0].delayHours).toBe(0);
-    expect(_SEQUENCES.post_purchase.steps[1].delayHours).toBe(168);
-    expect(_SEQUENCES.post_purchase.steps[2].delayHours).toBe(720);
+    expect(_SEQUENCES.post_purchase.steps[0].delayHours).toBe(72);   // Day 3: Assembly follow-up
+    expect(_SEQUENCES.post_purchase.steps[1].delayHours).toBe(168);  // Day 7: Review solicitation
+    expect(_SEQUENCES.post_purchase.steps[2].delayHours).toBe(720);  // Day 30: Care guide + upsell
+  });
+
+  it('has post_purchase step descriptions matching day 3/7/30 redesign', () => {
+    expect(_SEQUENCES.post_purchase.steps[0].description).toContain('Assembly follow-up');
+    expect(_SEQUENCES.post_purchase.steps[1].description).toContain('Review solicitation');
+    expect(_SEQUENCES.post_purchase.steps[2].description).toContain('Care guide');
   });
 
   it('has reengagement sequence with 1 step', () => {
@@ -260,10 +266,11 @@ describe('triggerPostPurchaseSequence', () => {
     expect(insertedItems[0].variables.productNames).toBe('');
   });
 
-  it('schedules post-purchase at correct delays', async () => {
+  it('schedules post-purchase at day 3/7/30 delays', async () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
+    const before = Date.now();
     await triggerPostPurchaseSequence(
       'contact-1', 'buyer@test.com', 'Bob', 'ORD-001', 100, []
     );
@@ -272,11 +279,33 @@ describe('triggerPostPurchaseSequence', () => {
     const step2Time = new Date(insertedItems[1].scheduledFor).getTime();
     const step3Time = new Date(insertedItems[2].scheduledFor).getTime();
 
-    // Step 2: 168h (1 week) after step 1
-    expect(step2Time - step1Time).toBeGreaterThanOrEqual(168 * 60 * 60 * 1000 - 1000);
+    // Step 1: 72h (day 3) after queue time
+    expect(step1Time - before).toBeGreaterThanOrEqual(72 * 60 * 60 * 1000 - 1000);
 
-    // Step 3: 720h (30 days) after step 1
-    expect(step3Time - step1Time).toBeGreaterThanOrEqual(720 * 60 * 60 * 1000 - 1000);
+    // Step 2: 168h (day 7) after queue time
+    expect(step2Time - before).toBeGreaterThanOrEqual(168 * 60 * 60 * 1000 - 1000);
+
+    // Step 3: 720h (day 30) after queue time
+    expect(step3Time - before).toBeGreaterThanOrEqual(720 * 60 * 60 * 1000 - 1000);
+  });
+
+  it('includes assemblyGuideUrl and reviewUrl in post-purchase variables', async () => {
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    await triggerPostPurchaseSequence(
+      'contact-1', 'buyer@test.com', 'Bob', 'ORD-001', 899, [
+        { name: 'Eureka Frame', quantity: 1, price: 599 },
+      ]
+    );
+
+    // All steps should have assemblyGuideUrl and reviewUrl
+    for (const item of insertedItems) {
+      expect(item.variables).toHaveProperty('assemblyGuideUrl');
+      expect(item.variables).toHaveProperty('reviewUrl');
+      expect(item.variables.assemblyGuideUrl).toBeTruthy();
+      expect(item.variables.reviewUrl).toBeTruthy();
+    }
   });
 });
 
