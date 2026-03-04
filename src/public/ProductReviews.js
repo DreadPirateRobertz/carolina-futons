@@ -132,12 +132,8 @@ function renderReviews($w, reviewsResult) {
       try { $item('#reviewDate').text = itemData.date; } catch (e) {}
       try { $item('#reviewTitle').text = itemData.title || ''; } catch (e) {}
       try { $item('#reviewBody').text = itemData.body; } catch (e) {}
-      try {
-        renderStars({ [sel => sel]: null, ...createItemStarHelper($item) }, '#reviewStars', itemData.rating);
-      } catch (e) {
-        // Fallback: set star text directly
-        try { $item('#reviewStars').text = '★'.repeat(itemData.rating) + '☆'.repeat(5 - itemData.rating); } catch (e2) {}
-      }
+      // $item is a scoped selector — works like $w for the repeater row
+      renderStars($item, '#reviewStars', itemData.rating);
 
       // Verified purchase badge
       try {
@@ -169,12 +165,6 @@ function renderReviews($w, reviewsResult) {
 
     repeater.data = reviewsResult.reviews.map((r, i) => ({ ...r, _id: r._id || `rev-${i}` }));
   } catch (e) {}
-}
-
-function createItemStarHelper($item) {
-  return new Proxy({}, {
-    get: (_, prop) => (sel) => $item(sel),
-  });
 }
 
 // ── Sort Dropdown ─────────────────────────────────────────────────────
