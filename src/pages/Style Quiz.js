@@ -257,7 +257,6 @@ function renderResults(results) {
       try {
         $item('#resultViewBtn').onClick(() => {
           trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
-          $w('#resultViewBtn').target = '_self';
           const slug = product.slug || product._id;
           import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
         });
