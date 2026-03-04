@@ -29,6 +29,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 const PRICE_DROP_THRESHOLD = 0.10; // 10%
 const PRICE_DROP_LOOKBACK_DAYS = 30;
 const ALERT_COOLDOWN_DAYS = 7;
+const LOW_STOCK_THRESHOLD = 5; // default units
 
 // ── Price History ───────────────────────────────────────────────────
 
@@ -276,6 +277,88 @@ export const checkBackInStock = webMethod(
   }
 );
 
+// ── Low Stock Detection ─────────────────────────────────────────────
+
+/**
+ * Check wishlisted products with low stock and notify members.
+ * Uses per-product thresholds from InventoryThresholds collection,
+ * falling back to default LOW_STOCK_THRESHOLD (5 units).
+ *
+ * @returns {Promise<{success: boolean, alertsSent: number}>}
+ */
+export const checkLowStock = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const cooldownSince = new Date(Date.now() - ALERT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+
+      // Get all wishlisted product IDs
+      const wishlistResult = await wixData.query('Wishlist').find();
+      if (wishlistResult.items.length === 0) {
+        return { success: true, alertsSent: 0 };
+      }
+
+      const productIds = [...new Set(wishlistResult.items.map(i => i.productId).filter(Boolean))];
+      let alertsSent = 0;
+
+      for (const productId of productIds) {
+        const productResult = await wixData.query('Stores/Products')
+          .eq('_id', productId)
+          .find();
+
+        const product = productResult.items[0];
+        if (!product || !product.inStock) continue;
+
+        // Determine threshold: per-product override or default
+        let threshold = LOW_STOCK_THRESHOLD;
+        const thresholdResult = await wixData.query('InventoryThresholds')
+          .eq('productId', productId)
+          .find();
+
+        if (thresholdResult.items.length > 0 && thresholdResult.items[0].lowStockThreshold != null) {
+          threshold = thresholdResult.items[0].lowStockThreshold;
+        }
+
+        const qty = product.quantityInStock;
+        if (qty == null || qty >= threshold) continue;
+
+        // Product is low stock — notify wishlisted members
+        const members = wishlistResult.items.filter(w => w.productId === productId);
+
+        for (const wishItem of members) {
+          if (!wishItem.memberId) continue;
+
+          // Check cooldown
+          const recentAlert = await wixData.query('WishlistAlertsSent')
+            .eq('memberId', wishItem.memberId)
+            .eq('productId', productId)
+            .eq('alertType', 'low_stock')
+            .ge('sentAt', cooldownSince)
+            .find();
+
+          if (recentAlert.items.length > 0) continue;
+
+          await wixData.insert('WishlistAlertsSent', {
+            memberId: wishItem.memberId,
+            productId,
+            alertType: 'low_stock',
+            sentAt: new Date(),
+            productName: product.name || '',
+            quantityInStock: qty,
+          });
+
+          alertsSent++;
+        }
+      }
+
+      return { success: true, alertsSent };
+    } catch (err) {
+      console.error('Error checking low stock:', err);
+      return { success: false, alertsSent: 0 };
+    }
+  }
+);
+
 // ── Notification Preferences ────────────────────────────────────────
 
 /**
@@ -376,3 +459,4 @@ async function isAlertDisabled(memberId, productId, alertField) {
 // Export constants for testing
 export const _PRICE_DROP_THRESHOLD = PRICE_DROP_THRESHOLD;
 export const _ALERT_COOLDOWN_DAYS = ALERT_COOLDOWN_DAYS;
+export const _LOW_STOCK_THRESHOLD = LOW_STOCK_THRESHOLD;

@@ -6,10 +6,12 @@ import {
   getPriceHistory,
   checkPriceDrops,
   checkBackInStock,
+  checkLowStock,
   getAlertPrefs,
   updateAlertPrefs,
   _PRICE_DROP_THRESHOLD,
   _ALERT_COOLDOWN_DAYS,
+  _LOW_STOCK_THRESHOLD,
 } from '../src/backend/wishlistAlerts.web.js';
 
 beforeEach(() => {
@@ -18,6 +20,7 @@ beforeEach(() => {
   __seed('WishlistAlertPrefs', []);
   __seed('Wishlist', []);
   __seed('Stores/Products', []);
+  __seed('InventoryThresholds', []);
 });
 
 // ── recordPriceSnapshot ────────────────────────────────────────────
@@ -398,6 +401,118 @@ describe('updateAlertPrefs', () => {
   });
 });
 
+// ── checkLowStock ─────────────────────────────────────────────────
+
+describe('checkLowStock', () => {
+  it('sends alert when wishlisted product stock falls below threshold', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 3 },
+    ]);
+
+    let insertedAlerts = [];
+    __onInsert((collection, item) => {
+      if (collection === 'WishlistAlertsSent') insertedAlerts.push(item);
+    });
+
+    const result = await checkLowStock();
+    expect(result.success).toBe(true);
+    expect(result.alertsSent).toBe(1);
+    expect(insertedAlerts[0].alertType).toBe('low_stock');
+    expect(insertedAlerts[0].quantityInStock).toBe(3);
+  });
+
+  it('does not alert when stock is above threshold', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 20 },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(0);
+  });
+
+  it('does not alert for out-of-stock products', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: false, quantityInStock: 0 },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(0);
+  });
+
+  it('respects cooldown window', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 3 },
+    ]);
+    __seed('WishlistAlertsSent', [
+      { _id: 'wa-1', memberId: 'member-1', productId: 'prod-1', alertType: 'low_stock', sentAt: new Date() },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(0);
+  });
+
+  it('sends alert if last low-stock alert was outside cooldown', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 3 },
+    ]);
+    __seed('WishlistAlertsSent', [
+      { _id: 'wa-1', memberId: 'member-1', productId: 'prod-1', alertType: 'low_stock', sentAt: new Date(Date.now() - 10 * 86400000) },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(1);
+  });
+
+  it('sends to multiple members with same product', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+      { _id: 'w-2', memberId: 'member-2', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 2 },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(2);
+  });
+
+  it('returns zero when no wishlisted products', async () => {
+    const result = await checkLowStock();
+    expect(result.success).toBe(true);
+    expect(result.alertsSent).toBe(0);
+  });
+
+  it('uses custom threshold from InventoryThresholds collection', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Futon Frame', inStock: true, quantityInStock: 8 },
+    ]);
+    __seed('InventoryThresholds', [
+      { _id: 'it-1', productId: 'prod-1', lowStockThreshold: 10 },
+    ]);
+
+    const result = await checkLowStock();
+    expect(result.alertsSent).toBe(1);
+  });
+});
+
 // ── Constants ───────────────────────────────────────────────────────
 
 describe('constants', () => {
@@ -407,5 +522,9 @@ describe('constants', () => {
 
   it('alert cooldown is 7 days', () => {
     expect(_ALERT_COOLDOWN_DAYS).toBe(7);
+  });
+
+  it('low stock threshold default is 5', () => {
+    expect(_LOW_STOCK_THRESHOLD).toBe(5);
   });
 });
