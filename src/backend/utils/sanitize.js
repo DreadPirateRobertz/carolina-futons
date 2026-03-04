@@ -71,6 +71,32 @@ export function validateId(id) {
  * @param {number} [maxLen=100] - Maximum length.
  * @returns {string} Sanitized slug, or empty string if invalid.
  */
+/**
+ * Validate a US phone number (10-11 digits with optional formatting).
+ * @param {*} phone - Phone number to validate.
+ * @returns {boolean} True if valid US phone format.
+ */
+export function validatePhone(phone) {
+  if (typeof phone !== 'string') return false;
+  const digits = phone.replace(/[\s()\-+.]/g, '');
+  if (!/^\d+$/.test(digits)) return false;
+  if (digits.length === 10) return true;
+  if (digits.length === 11 && digits.startsWith('1')) return true;
+  return false;
+}
+
+/**
+ * Format a US phone number to E.164 format (+1XXXXXXXXXX).
+ * @param {*} phone - Phone number to format.
+ * @returns {string} E.164 formatted phone or empty string if invalid.
+ */
+export function formatPhoneE164(phone) {
+  if (!validatePhone(phone)) return '';
+  const digits = phone.replace(/[\s()\-+.]/g, '');
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+  return `+1${digits}`;
+}
+
 export function validateSlug(slug) {
   if (typeof slug !== 'string') return '';
   const cleaned = slug.trim().toLowerCase().slice(0, 100);
