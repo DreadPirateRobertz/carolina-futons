@@ -143,6 +143,7 @@ export default defineConfig({
       'backend/accountDashboard.web': path.resolve(__dirname, 'src/backend/accountDashboard.web.js'),
       'backend/giftRegistry.web': path.resolve(__dirname, 'src/backend/giftRegistry.web.js'),
       'backend/paymentOptions.web': path.resolve(__dirname, 'src/backend/paymentOptions.web.js'),
+      'backend/warrantyService.web': path.resolve(__dirname, 'src/backend/warrantyService.web.js'),
       'backend/productQA.web': path.resolve(__dirname, 'src/backend/productQA.web.js'),
       'backend/catalogImport.web': path.resolve(__dirname, 'src/backend/catalogImport.web.js'),
       'backend/loyaltyTiers.web': path.resolve(__dirname, 'src/backend/loyaltyTiers.web.js'),
