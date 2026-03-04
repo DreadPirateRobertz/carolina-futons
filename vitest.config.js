@@ -232,6 +232,11 @@ export default defineConfig({
       'public/flashSaleHelpers': path.resolve(__dirname, 'src/public/flashSaleHelpers.js'),
       'public/currencySelector.js': path.resolve(__dirname, 'src/public/currencySelector.js'),
       'public/currencySelector': path.resolve(__dirname, 'src/public/currencySelector.js'),
+      'backend/ugcService.web': path.resolve(__dirname, 'src/backend/ugcService.web.js'),
+      'public/UGCGallery.js': path.resolve(__dirname, 'src/public/UGCGallery.js'),
+      'public/UGCGallery': path.resolve(__dirname, 'src/public/UGCGallery.js'),
+      'public/ugcVoting.js': path.resolve(__dirname, 'src/public/ugcVoting.js'),
+      'public/ugcVoting': path.resolve(__dirname, 'src/public/ugcVoting.js'),
     },
   },
 });
