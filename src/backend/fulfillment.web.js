@@ -1,6 +1,24 @@
-// Order Fulfillment Backend Module
-// Manages the workflow from order received → label printed → shipped → delivered
-// Integrates with UPS shipping and Wix Stores orders
+/**
+ * @module fulfillment
+ * @description Order fulfillment backend — manages the lifecycle from
+ * "order paid" through "label printed" to "delivered". Creates UPS shipments,
+ * stores fulfillment records, and batch-updates tracking status.
+ *
+ * CMS collections:
+ * - Stores/Orders (read) — Wix-managed order data with billing/shipping info
+ * - Fulfillments (read/write) — Custom collection storing tracking numbers,
+ *   labels, carrier info, and delivery status per order
+ *
+ * Key responsibilities:
+ * - List paid-but-unfulfilled orders for the fulfillment dashboard
+ * - Create UPS shipments and persist tracking + label data
+ * - Poll UPS for tracking updates (single + batch)
+ * - Expose fulfillment history for admin reporting
+ *
+ * @requires backend/ups-shipping.web   - createShipment, trackShipment
+ * @requires backend/utils/sanitize     - Input sanitization and ID validation
+ * @requires wix-members-backend        - Admin role verification
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
@@ -26,7 +44,16 @@ async function requireAdmin() {
 
 // ── Order Processing ────────────────────────────────────────────────
 
-// Get orders ready for fulfillment (paid, not yet shipped)
+/**
+ * Retrieve orders that are paid but not yet shipped, for the fulfillment
+ * dashboard. Results are sorted newest-first and capped at 200.
+ *
+ * Permission: SiteMember (further restricted to Admin role internally).
+ *
+ * @param {number} [limit=50] - Maximum orders to return (clamped 1-200)
+ * @returns {Promise<Array<{_id: string, number: string, createdDate: Date, buyerName: string, buyerEmail: string, shippingAddress: Object, lineItems: Array, subtotal: number, shipping: number, total: number, fulfillmentStatus: string, shippingMethod: string, buyerNote: string}>>}
+ *   Simplified order objects. Returns empty array on error.
+ */
 export const getPendingOrders = webMethod(
   Permissions.SiteMember,
   async (limit = 50) => {
@@ -68,7 +95,21 @@ export const getPendingOrders = webMethod(
   }
 );
 
-// Create UPS shipment for an order and save tracking info
+/**
+ * Create a UPS shipment for an order, generate labels, and persist the
+ * fulfillment record to the Fulfillments collection. This is the primary
+ * action on the fulfillment dashboard "Ship" button.
+ *
+ * Permission: SiteMember (further restricted to Admin role internally).
+ *
+ * @param {string} orderId - Wix Stores order ID
+ * @param {Object} packageDetails - Shipment configuration
+ * @param {string} [packageDetails.serviceCode='03'] - UPS service code (default Ground)
+ * @param {Array<{length: number, width: number, height: number, weight: number, description: string}>} [packageDetails.packages]
+ *   Package dimensions. Falls back to a single 48x30x12 default package.
+ * @param {number} [packageDetails.totalWeight=50] - Fallback weight when packages not specified
+ * @returns {Promise<{success: boolean, trackingNumber?: string, labels?: Array, shippingCost?: number, error?: string}>}
+ */
 export const fulfillOrder = webMethod(
   Permissions.SiteMember,
   async (orderId, packageDetails) => {
@@ -142,7 +183,15 @@ export const fulfillOrder = webMethod(
 
 // ── Tracking Updates ────────────────────────────────────────────────
 
-// Get tracking status for a fulfillment record (admin only — writes to CMS)
+/**
+ * Fetch the latest UPS tracking status for a single fulfillment record
+ * and persist the update to the Fulfillments collection.
+ *
+ * Permission: Admin — writes tracking state to CMS.
+ *
+ * @param {string} trackingNumber - UPS tracking number
+ * @returns {Promise<{success: boolean, trackingNumber?: string, status?: string, activities?: Array, error?: string}>}
+ */
 export const getTrackingUpdate = webMethod(
   Permissions.Admin,
   async (trackingNumber) => {

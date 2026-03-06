@@ -606,6 +606,16 @@ const GUIDE_SLUGS = Object.keys(GUIDES);
 
 // ── getBuyingGuide ──────────────────────────────────────────────────
 
+/**
+ * Retrieves a single buying guide by category slug, with related product
+ * sidebar pulled from Stores/Products. Returns a "coming soon" stub for
+ * categories that don't yet have a full guide defined.
+ *
+ * @param {string} slug - URL-safe category identifier (e.g. "futon-frames").
+ * @returns {Promise<{success: boolean, guide?: Object, error?: string}>}
+ *   guide includes sections, FAQs, comparison table, and up to 6 related products.
+ * @permission Permissions.Anyone
+ */
 export const getBuyingGuide = webMethod(
   Permissions.Anyone,
   async (slug) => {
@@ -666,6 +676,14 @@ export const getBuyingGuide = webMethod(
 
 // ── getAllBuyingGuides ───────────────────────────────────────────────
 
+/**
+ * Returns summary metadata for every available buying guide. Used on the
+ * buying guides index page to render cards with title, hero image, and
+ * category label.
+ *
+ * @returns {Promise<{success: boolean, guides?: Array<Object>, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getAllBuyingGuides = webMethod(
   Permissions.Anyone,
   async () => {
@@ -693,6 +711,13 @@ export const getAllBuyingGuides = webMethod(
 
 // ── getBuyingGuideSlugs ─────────────────────────────────────────────
 
+/**
+ * Returns the list of valid buying guide slugs. Used by the router to
+ * pre-register dynamic routes and by sitemaps to enumerate guide URLs.
+ *
+ * @returns {Promise<{success: boolean, slugs: string[]}>}
+ * @permission Permissions.Anyone
+ */
 export const getBuyingGuideSlugs = webMethod(
   Permissions.Anyone,
   async () => {
@@ -702,6 +727,15 @@ export const getBuyingGuideSlugs = webMethod(
 
 // ── getBuyingGuideSchema ────────────────────────────────────────────
 
+/**
+ * Generates JSON-LD structured data for a buying guide — both Article
+ * and FAQPage schemas — so Google can render rich results in search.
+ *
+ * @param {string} slug - Category slug identifying the guide.
+ * @returns {Promise<{success: boolean, articleSchema?: string, faqSchema?: string, error?: string}>}
+ *   Schemas are returned as JSON strings ready for injection into a script tag.
+ * @permission Permissions.Anyone
+ */
 export const getBuyingGuideSchema = webMethod(
   Permissions.Anyone,
   async (slug) => {
@@ -758,6 +792,15 @@ export const getBuyingGuideSchema = webMethod(
 
 // ── getGuideComparisonTable ─────────────────────────────────────────
 
+/**
+ * Extracts just the comparison table from a buying guide. Useful when
+ * the full guide is already cached on the client but the table needs
+ * to be rendered in an isolated component (e.g. a product-compare widget).
+ *
+ * @param {string} slug - Category slug identifying the guide.
+ * @returns {Promise<{success: boolean, table?: Object|null, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getGuideComparisonTable = webMethod(
   Permissions.Anyone,
   async (slug) => {
@@ -783,6 +826,15 @@ export const getGuideComparisonTable = webMethod(
 
 // ── getGuideFaqs ────────────────────────────────────────────────────
 
+/**
+ * Extracts just the FAQ list from a buying guide. Rendered in an
+ * accordion on the guide page and also used to build the FAQPage
+ * structured data independently of the full guide payload.
+ *
+ * @param {string} slug - Category slug identifying the guide.
+ * @returns {Promise<{success: boolean, faqs?: Array<{question: string, answer: string}>|null, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getGuideFaqs = webMethod(
   Permissions.Anyone,
   async (slug) => {
@@ -806,6 +858,15 @@ export const getGuideFaqs = webMethod(
 
 // ── getSocialShareLinks ─────────────────────────────────────────────
 
+/**
+ * Builds pre-formatted share URLs for Facebook, Twitter/X, Pinterest,
+ * and email for a given buying guide. The frontend renders these as
+ * share buttons at the top and bottom of each guide page.
+ *
+ * @param {string} slug - Category slug identifying the guide.
+ * @returns {Promise<{success: boolean, links?: {facebook: string, twitter: string, pinterest: string, email: string, url: string}|null, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getSocialShareLinks = webMethod(
   Permissions.Anyone,
   async (slug) => {

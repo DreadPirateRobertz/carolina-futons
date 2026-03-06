@@ -104,6 +104,17 @@ const DEFAULT_CANNED_RESPONSES = [
 
 // ── getOfficeHoursStatus ────────────────────────────────────────────
 
+/**
+ * Determines whether the support team is currently online based on
+ * configurable office hours (EST). Checks the ChatConfig CMS collection
+ * for custom schedules, falling back to hardcoded defaults. The frontend
+ * uses this to toggle between live chat and the offline message form.
+ *
+ * Queries CMS: ChatConfig
+ *
+ * @returns {Promise<{isOnline: boolean, message: string, nextOpen?: string|null, closesAt?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getOfficeHoursStatus = webMethod(
   Permissions.Anyone,
   async () => {
@@ -170,6 +181,17 @@ export const getOfficeHoursStatus = webMethod(
 
 // ── getCannedResponses ──────────────────────────────────────────────
 
+/**
+ * Returns the list of canned (pre-written) responses available to the
+ * chat widget. Attempts to load custom responses from ChatConfig CMS;
+ * falls back to built-in defaults covering shipping, returns, assembly,
+ * fabrics, store hours, and warranty.
+ *
+ * Queries CMS: ChatConfig
+ *
+ * @returns {Promise<{success: boolean, responses: Array<{id: string, category: string, trigger: string, title: string, response: string}>}>}
+ * @permission Permissions.Anyone
+ */
 export const getCannedResponses = webMethod(
   Permissions.Anyone,
   async () => {
@@ -202,6 +224,16 @@ export const getCannedResponses = webMethod(
 
 // ── matchCannedResponse ─────────────────────────────────────────────
 
+/**
+ * Attempts to match a customer's chat message to a canned response by
+ * scanning for trigger keywords (e.g. "shipping", "return", "warranty").
+ * Also detects common pricing questions. Used for instant auto-replies
+ * before a human agent picks up the conversation.
+ *
+ * @param {string} userMessage - The customer's chat input text.
+ * @returns {Promise<{matched: boolean, response?: {id: string, category: string, title: string, response: string}}>}
+ * @permission Permissions.Anyone
+ */
 export const matchCannedResponse = webMethod(
   Permissions.Anyone,
   async (userMessage) => {
@@ -245,6 +277,21 @@ export const matchCannedResponse = webMethod(
 
 // ── createSupportTicket ─────────────────────────────────────────────
 
+/**
+ * Creates a support ticket from an after-hours chat message or contact
+ * form submission. Stored in the SupportTickets CMS collection for
+ * staff follow-up during business hours.
+ *
+ * Writes CMS: SupportTickets
+ *
+ * @param {Object} [ticketData={}]
+ * @param {string} [ticketData.name]    - Customer name (defaults to "Anonymous").
+ * @param {string} [ticketData.email]   - Customer email (validated if provided).
+ * @param {string}  ticketData.message  - The support message (required, max 5000 chars).
+ * @param {string} [ticketData.page]    - URL path where the chat was initiated.
+ * @returns {Promise<{success: boolean, ticketId?: string, message?: string, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const createSupportTicket = webMethod(
   Permissions.Anyone,
   async (ticketData = {}) => {
@@ -292,8 +339,20 @@ export const createSupportTicket = webMethod(
 );
 
 // ── getChatContext ───────────────────────────────────────────────────
-// Pre-populate chat with customer info from session
 
+/**
+ * Pre-populates the chat widget with the logged-in member's name, email,
+ * and up to 3 recent orders so support agents have immediate context.
+ * Uses the caller's authenticated session — never accepts arbitrary
+ * member IDs — to prevent information disclosure.
+ *
+ * Queries CMS: Members/PrivateMembersData, Stores/Orders
+ *
+ * @param {Object} [sessionInfo={}]
+ * @param {string} [sessionInfo.currentPage] - The page path the customer is viewing.
+ * @returns {Promise<{success: boolean, context: {page: string, userName: string, userEmail: string, isLoggedIn: boolean, recentOrders: Array<{number: string, date: Date, status: string}>}}>}
+ * @permission Permissions.SiteMember
+ */
 export const getChatContext = webMethod(
   Permissions.SiteMember,
   async (sessionInfo = {}) => {

@@ -1,4 +1,12 @@
-// ProductDetails.js - Breadcrumbs, info accordion, social share, delivery, SEO, swatch request
+/**
+ * @module ProductDetails
+ * Supplementary Product Page sections — breadcrumbs, info accordion,
+ * social sharing, delivery estimate with zip-code lookup, structured-data
+ * SEO injection, and the free swatch request flow.
+ *
+ * Each exported `init*` function wires up a self-contained section and is
+ * called from the Product Page onReady lifecycle.
+ */
 import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema } from 'backend/seoHelpers.web';
 import { submitSwatchRequest } from 'backend/emailService.web';
 import { getCategoryFromCollections, addBusinessDays } from 'public/productPageUtils.js';
@@ -7,8 +15,16 @@ import { makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { validateEmail } from 'public/validators.js';
 
-// ── Breadcrumbs ───────────────────────────────────────────────────────
+// --- Breadcrumbs ---
 
+/**
+ * Build a three-level breadcrumb trail (Home > Category > Product) with
+ * clickable navigation and inject BreadcrumbList structured data for SEO.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
 export async function initBreadcrumbs($w, state) {
   try {
     if (!state.product) return;
@@ -29,8 +45,15 @@ export async function initBreadcrumbs($w, state) {
   } catch (e) {}
 }
 
-// ── Product Info Accordion ────────────────────────────────────────────
+// --- Product Info Accordion ---
 
+/**
+ * Set up collapsible Description / Dimensions / Care / Shipping sections.
+ * Description starts expanded; others start collapsed. Supports both click
+ * and keyboard (Enter/Space) toggling for accessibility.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @returns {void}
+ */
 export function initProductInfoAccordion($w) {
   try {
     const sections = ['Description', 'Dimensions', 'Care', 'Shipping'];
@@ -79,8 +102,16 @@ export function initProductInfoAccordion($w) {
   } catch (e) {}
 }
 
-// ── Social Share ──────────────────────────────────────────────────────
+// --- Social Sharing ---
 
+/**
+ * Wire up Facebook, Pinterest, email, and copy-link share buttons.
+ * Each click fires engagement tracking before opening the share target.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initSocialShare($w, state) {
   try {
     if (!state.product) return;
@@ -121,8 +152,16 @@ export function initSocialShare($w, state) {
   } catch (e) {}
 }
 
-// ── Delivery Estimate ─────────────────────────────────────────────────
+// --- Delivery Estimate ---
 
+/**
+ * Show a default 5-10 business day delivery estimate and wire up the
+ * zip-code input for zone-specific estimates (local WNC / Southeast / national).
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initDeliveryEstimate($w, state) {
   try {
     const el = $w('#deliveryEstimate');
@@ -207,8 +246,16 @@ function updateEstimateForZip($w, state, rawZip) {
   } catch (e) {}
 }
 
-// ── SEO Schema Injection ──────────────────────────────────────────────
+// --- SEO Schema Injection ---
 
+/**
+ * Inject Product, FAQ, and OpenGraph structured data into hidden
+ * HtmlComponent elements so search engines can index rich snippets.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
 export async function injectProductSchema($w, state) {
   try {
     if (!state.product) return;
@@ -221,8 +268,17 @@ export async function injectProductSchema($w, state) {
   } catch (e) {}
 }
 
-// ── Swatch Request Form ───────────────────────────────────────────────
+// --- Swatch Request Form ---
 
+/**
+ * Show the "Request Free Swatches" button for products that have
+ * finish/fabric/color options. Opens a modal where users select swatches
+ * and submit their mailing address via the emailService backend.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initSwatchRequest($w, state) {
   try {
     const btn = $w('#swatchRequestBtn');
@@ -296,10 +352,17 @@ async function handleSwatchSubmit($w, state) {
   }
 }
 
-// ── Prominent "Get Free Swatches" CTA ────────────────────────────────
-// Always-visible branded button that opens the swatch request modal.
-// Uses Coral (#E8845C) background per brand palette for high visibility.
+// --- Prominent "Get Free Swatches" CTA ---
 
+/**
+ * Always-visible branded button that opens the swatch request modal.
+ * Uses Coral (#E8845C) background per brand palette for high visibility.
+ * Adapts label text based on whether the product has fabric options.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initSwatchCTA($w, state) {
   try {
     const btn = $w('#swatchCTABtn');

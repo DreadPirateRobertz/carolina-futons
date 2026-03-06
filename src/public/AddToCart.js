@@ -1,4 +1,13 @@
-// AddToCart.js - Quantity, cart, sticky bar, bundle, stock, wishlist
+/**
+ * @module AddToCart
+ * Product Page add-to-cart orchestration — quantity selector, cart button,
+ * sticky cart bar, bundle upsell, stock urgency badges, back-in-stock
+ * notifications, and wishlist toggling.
+ *
+ * Each exported `init*` function wires up a self-contained UI section and is
+ * called from the Product Page onReady lifecycle. All DOM access is wrapped
+ * in try/catch because elements may not exist on every product template.
+ */
 import { getProductVariants, addToCart, onCartChanged, clampQuantity, MIN_QUANTITY, MAX_QUANTITY } from 'public/cartService';
 import { getBundleSuggestion } from 'backend/productRecommendations.web';
 import { trackCartAdd } from 'public/engagementTracker';
@@ -7,8 +16,16 @@ import { formatCurrency, HEART_FILLED_SVG, HEART_OUTLINE_SVG } from 'public/prod
 import wixWindowFrontend from 'wix-window-frontend';
 import { validateEmail } from 'public/validators.js';
 
-// ── Quantity Selector ─────────────────────────────────────────────────
+// --- Quantity Selector ---
 
+/**
+ * Wire up the +/- quantity input so users can pick how many units to add.
+ * Clamps value between MIN_QUANTITY and MAX_QUANTITY from cartService.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {number} state.selectedQuantity - Mutated in-place as the user changes quantity
+ * @returns {void}
+ */
 export function initQuantitySelector($w, state) {
   try {
     const input = $w('#quantityInput');
@@ -31,8 +48,18 @@ export function initQuantitySelector($w, state) {
   } catch (e) {}
 }
 
-// ── Add to Cart Button ────────────────────────────────────────────────
+// --- Add to Cart Button ---
 
+/**
+ * Enhance the Add to Cart button with loading/success/error states,
+ * analytics tracking (GA4 + engagement), and a brief success toast.
+ * Also listens for cart changes to show a confirmation banner.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @param {number} state.selectedQuantity - Quantity chosen by user
+ * @returns {void}
+ */
 export function initAddToCartEnhancements($w, state) {
   try {
     const btn = $w('#addToCartButton');
@@ -60,12 +87,30 @@ export function initAddToCartEnhancements($w, state) {
   } catch (e) {}
 }
 
-// ── Sticky Cart Bar ───────────────────────────────────────────────────
+// --- Sticky Cart Bar ---
 
+/**
+ * Update the sticky bar's price label when a variant changes.
+ * Called from ProductOptions when the user picks a new size/finish.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} variant - Selected variant object from cartService
+ * @param {number} [variant.price] - Numeric price to format and display
+ * @returns {void}
+ */
 export function updateStickyPrice($w, variant) {
   try { if (variant?.price) $w('#stickyPrice').text = formatCurrency(variant.price); } catch (e) {}
 }
 
+/**
+ * Initialize the sticky cart bar that slides up from the bottom once the
+ * main Add to Cart button scrolls out of view. Mirrors the primary
+ * add-to-cart action so users always have a visible purchase CTA.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @param {number} state.selectedQuantity - Quantity chosen by user
+ * @returns {void}
+ */
 export function initStickyCartBar($w, state) {
   try {
     const bar = $w('#stickyCartBar');
@@ -101,8 +146,18 @@ export function initStickyCartBar($w, state) {
   } catch (e) {}
 }
 
-// ── Bundle Section ────────────────────────────────────────────────────
+// --- Bundle Upsell Section ---
 
+/**
+ * Fetch and display a "Complete the Set" bundle suggestion powered by the
+ * productRecommendations backend. Shows bundle image, savings, and an
+ * "Add Both to Cart" button. Collapses the section when no bundle exists.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @param {Object} [state.bundleProduct] - Populated with the suggested bundle product on success
+ * @returns {Promise<void>}
+ */
 export async function initBundleSection($w, state) {
   try {
     if (!state.product) return;
@@ -142,8 +197,18 @@ export async function initBundleSection($w, state) {
   } catch (err) { console.error('Error loading bundle section:', err); }
 }
 
-// ── Stock Urgency ─────────────────────────────────────────────────────
+// --- Stock Urgency & Popularity ---
 
+/**
+ * Show a low-stock urgency message when fewer than 5 units remain and a
+ * popularity badge when the product has recent sales. Adds a pulse
+ * animation at critically low inventory (2 or fewer) to drive urgency.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @param {number} [state.product.quantityInStock] - Current inventory count
+ * @returns {Promise<void>}
+ */
 export async function initStockUrgency($w, state) {
   try {
     if (!state.product) return;
@@ -171,8 +236,17 @@ export async function initStockUrgency($w, state) {
   } catch (e) {}
 }
 
-// ── Back-in-Stock Notification ────────────────────────────────────────
+// --- Back-in-Stock Notification ---
 
+/**
+ * Show an email signup form when the selected variant is out of stock.
+ * Logged-in members with the product in their wishlist see an auto-enrolled
+ * message instead. Submits to contactSubmissions backend for CRM capture.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
 export async function initBackInStockNotification($w, state) {
   try {
     const section = $w('#backInStockSection');
@@ -218,6 +292,15 @@ export async function initBackInStockNotification($w, state) {
   } catch (e) {}
 }
 
+/**
+ * Check whether the currently selected variant is out of stock and
+ * expand/collapse the back-in-stock section accordingly.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} section - The #backInStockSection Wix element
+ * @returns {Promise<void>}
+ * @private
+ */
 async function checkBackInStock($w, state, section) {
   try {
     const size = $w('#sizeDropdown')?.value;
@@ -236,8 +319,18 @@ async function checkBackInStock($w, state, section) {
   } catch (e) {}
 }
 
-// ── Wishlist ──────────────────────────────────────────────────────────
+// --- Wishlist ---
 
+/**
+ * Initialize the wishlist heart toggle. Checks if the current member already
+ * has this product wishlisted (fills the heart). On click, toggles the
+ * wishlist entry in the Wishlist collection and fires GA4 tracking.
+ * Prompts login for anonymous visitors.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
 export async function initWishlistButton($w, state) {
   try {
     const btn = $w('#wishlistBtn');
@@ -278,6 +371,13 @@ export async function initWishlistButton($w, state) {
   } catch (e) { console.error('[AddToCart] Wishlist operation failed:', e.message); try { $w('#wishlistBtn').hide(); } catch (e2) {} }
 }
 
+/**
+ * Swap the wishlist icon between filled/outline and update ARIA label.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {boolean} active - Whether the product is currently wishlisted
+ * @returns {void}
+ * @private
+ */
 function setWishlistActive($w, active) {
   try {
     const icon = $w('#wishlistIcon');
