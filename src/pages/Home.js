@@ -496,7 +496,7 @@ function initTrustBar() {
     { id: '#trustItem1', iconId: '#trustIcon1', textId: '#trustText1', text: 'Largest Selection in the Carolinas', icon: 'mountain' },
     { id: '#trustItem2', iconId: '#trustIcon2', textId: '#trustText2', text: 'Family Owned Since 1991', icon: 'heart' },
     { id: '#trustItem3', iconId: '#trustIcon3', textId: '#trustText3', text: '700+ Fabric Swatches', icon: 'palette' },
-    { id: '#trustItem4', iconId: '#trustIcon4', textId: '#trustText4', text: 'Free Shipping on Orders $999+', icon: 'truck' },
+    // { id: '#trustItem4', iconId: '#trustIcon4', textId: '#trustText4', text: 'Free Shipping on Orders $999+', icon: 'truck' }, // Disabled: free shipping currently inactive
     { id: '#trustItem5', iconId: '#trustIcon5', textId: '#trustText5', text: 'White Glove Delivery', icon: 'gloves' },
   ];
 

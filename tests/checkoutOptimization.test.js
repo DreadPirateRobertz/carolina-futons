@@ -62,29 +62,28 @@ describe('calculateOrderSummary', () => {
     expect(result.data.taxRate).toBe(0.065);
   });
 
-  it('free shipping at $999+', () => {
+  it('does NOT give free shipping at $999 (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 999, quantity: 1 }],
     });
-    expect(result.data.shipping.amount).toBe(0);
-    expect(result.data.freeShippingProgress.qualifies).toBe(true);
-    expect(result.data.savings).toBe(49.99);
+    expect(result.data.shipping.amount).toBe(49.99);
+    expect(result.data.freeShippingProgress.qualifies).toBe(false);
   });
 
-  it('charges shipping below $999', () => {
+  it('charges shipping at $500 (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 500, quantity: 1 }],
     });
     expect(result.data.shipping.amount).toBe(49.99);
     expect(result.data.freeShippingProgress.qualifies).toBe(false);
-    expect(result.data.freeShippingProgress.remaining).toBe(499);
+    expect(result.data.freeShippingProgress.remaining).toBe(999499);
   });
 
-  it('calculates free shipping progress percentage', () => {
+  it('calculates near-zero free shipping progress percentage (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 500, quantity: 1 }],
     });
-    expect(result.data.freeShippingProgress.percentage).toBe(50);
+    expect(result.data.freeShippingProgress.percentage).toBe(0);
   });
 
   it('white glove local shipping', () => {
@@ -103,21 +102,21 @@ describe('calculateOrderSummary', () => {
     expect(result.data.shipping.amount).toBe(249);
   });
 
-  it('free white glove at $1999+', () => {
+  it('does NOT give free white glove at $2000 (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 2000, quantity: 1 }],
       shippingMethod: 'white_glove_local',
     });
-    expect(result.data.shipping.amount).toBe(0);
+    expect(result.data.shipping.amount).toBe(149);
   });
 
-  it('calculates correct total', () => {
+  it('calculates correct total with shipping (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 1000, quantity: 1 }],
       state: 'NC',
     });
-    // 1000 + 0 (free shipping) + 67.5 (tax) = 1067.5
-    expect(result.data.total).toBe(1067.5);
+    // 1000 + 49.99 (shipping) + 67.5 (tax) = 1117.49
+    expect(result.data.total).toBe(1117.49);
   });
 
   it('fails with empty items', () => {
@@ -247,11 +246,10 @@ describe('getShippingOptions', () => {
     expect(result.options).toHaveLength(3);
   });
 
-  it('shows free standard shipping at $999+', () => {
+  it('does NOT show free standard shipping at $1000 (free shipping disabled)', () => {
     const result = getShippingOptions(1000);
     const standard = result.options.find(o => o.id === 'standard');
-    expect(standard.price).toBe(0);
-    expect(standard.label).toContain('FREE');
+    expect(standard.price).toBe(49.99);
   });
 
   it('charges standard shipping below $999', () => {
@@ -260,10 +258,10 @@ describe('getShippingOptions', () => {
     expect(standard.price).toBe(49.99);
   });
 
-  it('shows free white glove at $1999+', () => {
+  it('does NOT show free white glove at $2000 (free shipping disabled)', () => {
     const result = getShippingOptions(2000);
     const wgLocal = result.options.find(o => o.id === 'white_glove_local');
-    expect(wgLocal.price).toBe(0);
+    expect(wgLocal.price).toBe(149);
   });
 
   it('includes delivery time estimates', () => {
@@ -459,7 +457,7 @@ describe('getExpressCheckoutSummary', () => {
 
     expect(result.success).toBe(true);
     expect(result.data.subtotal).toBe(1200);
-    expect(result.data.shipping.amount).toBe(0); // Free over $999
+    expect(result.data.shipping.amount).toBe(49.99); // Free shipping disabled
     expect(result.data.expressReady).toBe(true);
     expect(result.data.shippingAddress.state).toBe('NC');
   });

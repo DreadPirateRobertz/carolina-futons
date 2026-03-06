@@ -12,6 +12,7 @@ import {
   onCartChanged,
   getShippingProgress,
   getTierProgress,
+  FREE_SHIPPING_THRESHOLD,
   MIN_QUANTITY,
   MAX_QUANTITY,
 } from 'public/cartService';
@@ -117,6 +118,13 @@ async function updateShippingProgress(cart) {
 
 function updateShippingProgressFromCart(currentCart) {
   try {
+    // Free shipping is currently disabled (threshold set to unreachable value)
+    if (FREE_SHIPPING_THRESHOLD >= 100000) {
+      try { $w('#shippingProgressBar').hide(); } catch (e) {}
+      try { $w('#shippingProgressText').hide(); } catch (e) {}
+      try { $w('#shippingProgressIcon').hide(); } catch (e) {}
+      return;
+    }
     const subtotal = currentCart.totals?.subtotal || 0;
     const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
     const barStyles = getProgressBarStyles('shipping', qualifies);

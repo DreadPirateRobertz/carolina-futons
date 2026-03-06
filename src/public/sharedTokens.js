@@ -247,10 +247,10 @@ export const business = {
  */
 export const shippingConfig = {
   /** Orders at or above this amount (USD) qualify for free standard shipping */
-  freeThreshold: 999,
+  freeThreshold: 999999,
   whiteGlove: {
     /** Orders at or above this amount get free white-glove delivery */
-    freeThreshold: 1999,
+    freeThreshold: 999999,
     /** White-glove price for local zone (WNC — within ~50 miles) */
     localPrice: 149,
     /** White-glove price for regional zone (Southeast — NC/SC/GA/TN/VA) */

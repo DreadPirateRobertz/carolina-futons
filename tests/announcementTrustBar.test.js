@@ -113,14 +113,14 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
   // AC: TRUST BAR — 5-icon Joybird-style trust strip
   // ═══════════════════════════════════════════════════════════════════
 
-  describe('trust bar — 5 trust signals', () => {
-    it('renders all 5 trust item texts', async () => {
+  describe('trust bar — 4 trust signals (free shipping disabled)', () => {
+    it('renders 4 trust item texts (free shipping hidden)', async () => {
       await onReadyHandler();
       const texts = [];
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         texts.push(getEl(`#trustText${i}`).text);
       }
-      expect(texts.filter(t => t.length > 0)).toHaveLength(5);
+      expect(texts.filter(t => t.length > 0)).toHaveLength(4);
     });
 
     it('includes "White Glove Delivery" as 5th signal', async () => {
@@ -144,35 +144,36 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
       expect(getEl('#trustText3').text).toBe('700+ Fabric Swatches');
     });
 
-    it('preserves "Free Shipping on Orders $999+"', async () => {
+    it('free shipping trust signal is hidden', async () => {
       await onReadyHandler();
-      expect(getEl('#trustText4').text).toBe('Free Shipping on Orders $999+');
+      // trustItem4 (free shipping) is commented out — element should not be set
+      expect(getEl('#trustText4').text).toBeFalsy();
     });
   });
 
   describe('trust bar — icons', () => {
-    it('wires icon content for each of the 5 trust items', async () => {
+    it('wires icon content for active trust items', async () => {
       await onReadyHandler();
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         expect(getEl(`#trustIcon${i}`).text).toBeTruthy();
       }
     });
 
-    it('each icon has distinct content', async () => {
+    it('active icons have distinct content', async () => {
       await onReadyHandler();
       const icons = [];
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         icons.push(getEl(`#trustIcon${i}`).text);
       }
       const unique = new Set(icons);
-      expect(unique.size).toBe(5);
+      expect(unique.size).toBe(4);
     });
   });
 
   describe('trust bar — staggered animation', () => {
-    it('shows each trust item with fade-in', async () => {
+    it('shows each active trust item with fade-in', async () => {
       await onReadyHandler();
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         expect(getEl(`#trustItem${i}`).show).toHaveBeenCalledWith(
           'fade',
           expect.objectContaining({ duration: 300 })
@@ -180,10 +181,10 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
       }
     });
 
-    it('staggers animation delay across items', async () => {
+    it('staggers animation delay across active items', async () => {
       await onReadyHandler();
       const delays = [];
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         const call = getEl(`#trustItem${i}`).show.mock.calls[0];
         delays.push(call[1].delay);
       }
@@ -195,9 +196,9 @@ describe('CF-c94m: Announcement Bar + Trust Bar', () => {
   });
 
   describe('trust bar — accessibility', () => {
-    it('sets aria-label on each trust item', async () => {
+    it('sets aria-label on active trust items', async () => {
       await onReadyHandler();
-      for (let i = 1; i <= 5; i++) {
+      for (const i of [1, 2, 3, 5]) {
         const el = getEl(`#trustItem${i}`);
         expect(el.accessibility.ariaLabel).toBeTruthy();
       }

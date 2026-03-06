@@ -65,11 +65,11 @@ describe('business', () => {
 
 describe('shippingConfig', () => {
   it('has free shipping threshold', () => {
-    expect(shippingConfig.freeThreshold).toBe(999);
+    expect(shippingConfig.freeThreshold).toBe(999999);
   });
 
   it('has white glove pricing', () => {
-    expect(shippingConfig.whiteGlove.freeThreshold).toBe(1999);
+    expect(shippingConfig.whiteGlove.freeThreshold).toBe(999999);
     expect(shippingConfig.whiteGlove.localPrice).toBe(149);
     expect(shippingConfig.whiteGlove.regionalPrice).toBe(249);
   });

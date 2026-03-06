@@ -334,26 +334,25 @@ describe('Order summary sidebar via calculateOrderSummary', () => {
     expect(wgLocal.data.total).toBeGreaterThan(standard.data.total);
   });
 
-  it('shows free shipping progress for qualifying orders', () => {
+  it('does not qualify for free shipping at $1000 (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 1000, quantity: 1 }],
       state: 'NC',
     });
 
-    expect(result.data.freeShippingProgress.qualifies).toBe(true);
-    expect(result.data.freeShippingProgress.percentage).toBe(100);
-    expect(result.data.freeShippingProgress.remaining).toBe(0);
+    expect(result.data.freeShippingProgress.qualifies).toBe(false);
+    expect(result.data.freeShippingProgress.remaining).toBe(999999 - 1000);
   });
 
-  it('shows accurate remaining for free shipping', () => {
+  it('shows accurate remaining for free shipping (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 700, quantity: 1 }],
       state: 'NC',
     });
 
     expect(result.data.freeShippingProgress.qualifies).toBe(false);
-    expect(result.data.freeShippingProgress.remaining).toBe(299);
-    expect(result.data.freeShippingProgress.percentage).toBe(70);
+    expect(result.data.freeShippingProgress.remaining).toBe(999999 - 700);
+    expect(result.data.freeShippingProgress.percentage).toBe(0);
   });
 });
 
@@ -393,7 +392,7 @@ describe('Express checkout flow', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.data.shipping.amount).toBe(0);
+    expect(result.data.shipping.amount).toBe(49.99); // Free shipping disabled
     expect(result.data.tax).toBeCloseTo(1200 * 0.06, 2);
   });
 
