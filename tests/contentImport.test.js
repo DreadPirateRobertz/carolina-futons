@@ -20,7 +20,7 @@ function makeFaqData(overrides = {}) {
         title: 'Ordering & Shipping',
         faqs: [
           { question: 'How long does shipping take?', answer: 'Most items ship in 3-5 business days.' },
-          { question: 'Do you offer free shipping?', answer: 'Free shipping on orders over $1,999.' },
+          { question: 'Do you offer free shipping?', answer: 'Free shipping on orders over $999.' },
         ],
       },
       {
