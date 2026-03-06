@@ -1,12 +1,26 @@
-// ProductOptions.js - Variant selector, swatch grid, swatch gallery modal
+/**
+ * @module ProductOptions
+ * Product Page variant selection — size/finish dropdowns that update price,
+ * stock status, and gallery images; an inline swatch grid for fabric
+ * browsing; and a full-screen swatch gallery modal with search and detail view.
+ */
 import { getProductVariants } from 'public/cartService';
 import { getProductSwatches, getSwatchCount, getAllSwatchFamilies } from 'backend/swatchService.web';
 import { colors } from 'public/designTokens.js';
 import { formatCurrency } from 'public/productPageUtils.js';
 import { updateStickyPrice } from 'public/AddToCart.js';
 
-// ── Variant Selector ──────────────────────────────────────────────────
+// --- Variant Selector ---
 
+/**
+ * Attach onChange handlers to the size and finish dropdowns so variant
+ * changes cascade to price, stock badge, gallery, and sticky bar.
+ * Also listens to the product dataset for external updates.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object (mutated on dataset change)
+ * @returns {void}
+ */
 export function initVariantSelector($w, state) {
   try {
     const size = $w('#sizeDropdown');
@@ -22,6 +36,14 @@ export function initVariantSelector($w, state) {
   } catch (e) {}
 }
 
+/**
+ * Read current size/finish dropdown values, fetch matching variants from
+ * cartService, and update the display (price, stock, image, sticky bar).
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {Promise<void>}
+ */
 export async function handleCustomVariantChange($w, state) {
   try {
     const size = $w('#sizeDropdown').value;
@@ -78,8 +100,18 @@ function updateVariantDisplay($w, state, selected) {
   } catch (e) {}
 }
 
-// ── Swatch Selector (Inline Grid) ────────────────────────────────────
+// --- Swatch Selector (Inline Grid) ---
 
+/**
+ * Fetch available fabric swatches for this product and render an inline
+ * swatch grid with color-family filtering. Provides a "View All" button
+ * that opens the full swatch gallery modal.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @param {string} [state.selectedSwatchId] - ID of the currently selected swatch (mutated on selection)
+ * @returns {Promise<void>}
+ */
 export async function initSwatchSelector($w, state) {
   try {
     const section = $w('#swatchSection');

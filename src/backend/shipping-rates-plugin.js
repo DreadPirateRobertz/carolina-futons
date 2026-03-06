@@ -1,12 +1,26 @@
-// Wix eCommerce Shipping Rates Service Plugin
-// This file hooks into Wix's checkout flow to display real-time UPS rates
-//
-// File location: must be registered as a shipping rates plugin in Wix
-// See: https://dev.wix.com/docs/develop-websites/articles/code-tutorials/
-//      wix-e-commerce-stores/e-commerce-shipping-rates-service-plugin
-//
-// IMPORTANT: The function name must be exactly "getShippingRates" and
-// must be exported. Wix calls this automatically during checkout.
+/**
+ * @module shipping-rates-plugin
+ * @description Wix eCommerce Shipping Rates SPI (Service Provider Interface).
+ * Hooks into the Wix checkout flow to return real-time UPS rates, local
+ * pickup/delivery options, white-glove delivery, and international shipping.
+ * Wix calls `getShippingRates` automatically during checkout — the function
+ * name and export are mandatory per the SPI contract.
+ *
+ * Key responsibilities:
+ * - Resolve package dimensions from product category via ups-shipping.web
+ * - Route international destinations to internationalShipping.web
+ * - Offer in-store pickup for Hendersonville-area ZIP prefixes
+ * - Offer local delivery + white-glove for NC/SC/GA/TN ZIP prefixes
+ * - Fall back to flat estimated rates when UPS API is unavailable
+ *
+ * No CMS collections — reads shipping config from sharedTokens.js.
+ *
+ * @requires backend/ups-shipping.web     - Live UPS rate lookup
+ * @requires backend/internationalShipping.web - Non-US rate lookup
+ * @requires public/sharedTokens.js       - Business address, shipping zones, thresholds
+ *
+ * @see https://dev.wix.com/docs/develop-websites/articles/code-tutorials/wix-e-commerce-stores/e-commerce-shipping-rates-service-plugin
+ */
 
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
@@ -15,6 +29,20 @@ import { business, shippingConfig, internationalShippingConfig } from 'public/sh
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, localPrice: WHITE_GLOVE_LOCAL_PRICE, regionalPrice: WHITE_GLOVE_REGIONAL_PRICE } = whiteGlove;
 
+/**
+ * Calculate available shipping rates for the current checkout.
+ * Wix calls this automatically — the function name is mandated by the SPI.
+ *
+ * Flow: build destination → size packages by category → check international →
+ * fetch UPS rates → append local pickup / delivery / white-glove options.
+ *
+ * @param {Object} options - Wix-provided checkout context
+ * @param {Array}  options.lineItems - Cart line items with name, sku, price, quantity, physicalProperties
+ * @param {Object} options.shippingDestination - Buyer address with contactDetails + address fields
+ * @param {Object} options.shippingOrigin - Store origin address (not used; we hardcode from sharedTokens)
+ * @returns {Promise<{shippingRates: Array<{code: string, title: string, logistics: Object, cost: Object}>}>}
+ *   Wix-formatted shipping rates array. Returns flat fallback rates on error.
+ */
 export const getShippingRates = async (options) => {
   const { lineItems, shippingDestination, shippingOrigin } = options;
 
@@ -199,7 +227,14 @@ export const getShippingRates = async (options) => {
   }
 };
 
-// Detect product category from line item data for package sizing
+/**
+ * Detect product category from line item data for package sizing.
+ * Uses name/SKU (Stock Keeping Unit) keyword matching because Wix checkout
+ * line items don't carry a structured category field.
+ *
+ * @param {Object} item - Wix line item with name and sku fields
+ * @returns {string} Category key matching PACKAGE_DEFAULTS in ups-shipping.web
+ */
 function detectCategory(item) {
   const name = (item.name || '').toLowerCase();
   const sku = (item.sku || '').toLowerCase();

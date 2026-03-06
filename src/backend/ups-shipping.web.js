@@ -1,14 +1,32 @@
-// UPS Shipping Integration - Backend Web Module
-// Handles OAuth 2.0 auth, rate calculation, label generation, and tracking
-// Uses UPS REST API (OAuth 2.0 client credentials flow)
-//
-// SETUP REQUIRED:
-// 1. Create app at https://developer.ups.com/ → get Client ID + Client Secret
-// 2. In Wix Dashboard → Secrets Manager, add:
-//    - "UPS_CLIENT_ID" → your Client ID
-//    - "UPS_CLIENT_SECRET" → your Client Secret
-//    - "UPS_ACCOUNT_NUMBER" → your UPS account number
-// 3. For testing, set UPS_SANDBOX=true in secrets; remove for production
+/**
+ * @module ups-shipping
+ * @description UPS REST API integration for shipping rates, label generation,
+ * package tracking, and address validation. Authenticates via OAuth 2.0
+ * client-credentials flow with token caching.
+ *
+ * Key responsibilities:
+ * - Fetch live multi-service shipping rates (Shop endpoint)
+ * - Create shipments and generate PDF shipping labels (forward + return)
+ * - Track packages by tracking number
+ * - Validate destination addresses before shipment creation
+ * - Provide fallback estimated rates when UPS API is unavailable
+ * - Map product categories to default package dimensions for furniture
+ *
+ * No CMS collections — secrets stored in Wix Secrets Manager.
+ *
+ * @requires wix-secrets-backend - UPS_CLIENT_ID, UPS_CLIENT_SECRET, UPS_ACCOUNT_NUMBER
+ * @requires wix-fetch           - HTTP calls to UPS REST API
+ * @requires public/sharedTokens.js - Brand name, business address, shipping config
+ * @requires backend/utils/sanitize - Input sanitization for address fields
+ *
+ * SETUP REQUIRED:
+ * 1. Create app at https://developer.ups.com/ → get Client ID + Client Secret
+ * 2. In Wix Dashboard → Secrets Manager, add:
+ *    - "UPS_CLIENT_ID" → your Client ID
+ *    - "UPS_CLIENT_SECRET" → your Client Secret
+ *    - "UPS_ACCOUNT_NUMBER" → your UPS account number
+ * 3. For testing, set UPS_SANDBOX=true in secrets; remove for production
+ */
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { getSecret } from 'wix-secrets-backend';
@@ -58,6 +76,13 @@ const FREE_SHIPPING_THRESHOLD = shippingConfig.freeThreshold;
 let cachedToken = null;
 let tokenExpiry = 0;
 
+/**
+ * Obtain a UPS OAuth 2.0 access token, returning a cached token when possible.
+ * Tokens are refreshed 5 minutes before expiry to avoid mid-request failures.
+ *
+ * @returns {Promise<string>} Bearer access token
+ * @throws {Error} If UPS OAuth endpoint rejects credentials
+ */
 async function getUPSToken() {
   // Return cached token if still valid (with 5-minute buffer)
   if (cachedToken && Date.now() < tokenExpiry - 300000) {
@@ -103,6 +128,10 @@ async function getUPSToken() {
   return cachedToken;
 }
 
+/**
+ * Resolve the UPS API base URL (sandbox vs production) from Wix Secrets.
+ * @returns {Promise<string>} Base URL for UPS REST endpoints
+ */
 async function getBaseUrl() {
   let sandbox = false;
   try {
@@ -115,8 +144,27 @@ async function getBaseUrl() {
 
 // ── Rate Calculation ────────────────────────────────────────────────
 
-// Get shipping rates for a destination address and package details
-// Called by the Wix Shipping Rates plugin and also directly from cart
+/**
+ * Fetch live UPS shipping rates for a destination and set of packages.
+ * Called by the shipping-rates-plugin SPI during checkout and by the cart
+ * page for rate estimates. Returns free-ground when order exceeds the
+ * free-shipping threshold.
+ *
+ * Permission: Anyone — rate quotes must work for anonymous shoppers.
+ *
+ * @param {Object} destinationAddress - Recipient address
+ * @param {string} destinationAddress.name - Recipient name
+ * @param {string} destinationAddress.addressLine1 - Street address
+ * @param {string} destinationAddress.city - City
+ * @param {string} destinationAddress.state - State/province code
+ * @param {string} destinationAddress.postalCode - ZIP/postal code
+ * @param {string} destinationAddress.country - ISO country code (default 'US')
+ * @param {Array<{length: number, width: number, height: number, weight: number, description: string}>} packages
+ *   Package dimensions in inches/lbs. Capped at 20 to prevent API amplification.
+ * @param {number} [orderSubtotal=0] - Cart subtotal for free-shipping eligibility
+ * @returns {Promise<Array<{code: string, title: string, cost: number, estimatedDelivery: string, currency: string}>>}
+ *   Sorted by cost ascending. Falls back to estimated flat rates on API error.
+ */
 export const getUPSRates = webMethod(
   Permissions.Anyone,
   async (destinationAddress, packages, orderSubtotal = 0) => {
@@ -246,7 +294,14 @@ export const getUPSRates = webMethod(
   }
 );
 
-// Fallback rates when API is unavailable
+/**
+ * Generate estimated flat-rate shipping prices when the UPS API is down.
+ * Uses 3-digit ZIP prefix to apply regional pricing tiers so customers
+ * still get a reasonable estimate during outages.
+ *
+ * @param {string|undefined} postalCode - Destination ZIP code
+ * @returns {Array<{code: string, title: string, cost: number, estimatedDelivery: string, isEstimate: boolean}>}
+ */
 function getFallbackRates(postalCode) {
   const prefix = postalCode ? parseInt(postalCode.substring(0, 3)) : 0;
   let groundRate = 49.99;
@@ -265,8 +320,28 @@ function getFallbackRates(postalCode) {
 
 // ── Shipment Creation & Label Generation ────────────────────────────
 
-// Create a shipment and generate a shipping label
-// Called from the order fulfillment dashboard
+/**
+ * Create a UPS shipment and generate a PDF shipping label.
+ * Supports both outbound and return (RMA) labels — when `orderData.returnLabel`
+ * is true, ShipTo/ShipFrom are swapped so the label routes back to Carolina Futons.
+ *
+ * Permission: Admin — only staff should generate labels and incur shipping charges.
+ *
+ * @param {Object} orderData - Shipment details
+ * @param {string} orderData.orderId - Wix order number (used in UPS transaction reference)
+ * @param {string} orderData.recipientName - Full name of the recipient
+ * @param {string} [orderData.recipientPhone] - Recipient phone number
+ * @param {string} orderData.addressLine1 - Street address line 1
+ * @param {string} [orderData.addressLine2] - Street address line 2
+ * @param {string} orderData.city - City
+ * @param {string} orderData.state - State/province code
+ * @param {string} orderData.postalCode - ZIP/postal code
+ * @param {string} [orderData.country='US'] - ISO country code
+ * @param {string} [orderData.serviceCode='03'] - UPS service code (default Ground)
+ * @param {boolean} [orderData.returnLabel=false] - If true, generate a return label
+ * @param {Array<{length: number, width: number, height: number, weight: number, description: string}>} orderData.packages
+ * @returns {Promise<{success: boolean, trackingNumber?: string, labels?: Array, totalCharge?: number, currency?: string, error?: string}>}
+ */
 export const createShipment = webMethod(
   Permissions.Admin,
   async (orderData) => {
@@ -433,7 +508,15 @@ export const createShipment = webMethod(
 
 // ── Shipment Tracking ───────────────────────────────────────────────
 
-// Track a package by tracking number
+/**
+ * Look up real-time tracking status and activity history for a UPS package.
+ * Sanitizes the tracking number to alphanumeric only (UPS format: 1Z + digits).
+ *
+ * Permission: Anyone — customers need to track their own packages.
+ *
+ * @param {string} trackingNumber - UPS tracking number (10-35 alphanumeric chars)
+ * @returns {Promise<{success: boolean, trackingNumber?: string, status?: string, statusCode?: string, estimatedDelivery?: string|null, activities?: Array<{status: string, location: string, date: string, time: string}>, error?: string}>}
+ */
 export const trackShipment = webMethod(
   Permissions.Anyone,
   async (trackingNumber) => {
@@ -511,7 +594,22 @@ export const trackShipment = webMethod(
 
 // ── Address Validation ──────────────────────────────────────────────
 
-// Validate a shipping address with UPS before creating shipment
+/**
+ * Validate a shipping address against UPS Address Validation (XAV) API.
+ * Returns whether the address is valid, ambiguous (with candidate suggestions),
+ * or invalid. Gracefully degrades — returns `unavailable: true` if the API is down,
+ * so checkout is never blocked by validation outages.
+ *
+ * Permission: Anyone — used during checkout address entry.
+ *
+ * @param {Object} address - Address to validate
+ * @param {string} address.addressLine1 - Street address
+ * @param {string} address.city - City
+ * @param {string} address.state - State/province code
+ * @param {string} address.postalCode - ZIP/postal code
+ * @param {string} [address.country='US'] - ISO country code
+ * @returns {Promise<{valid: boolean, ambiguous?: boolean, candidates: Array<{addressLine1: string, city: string, state: string, postalCode: string}>, unavailable?: boolean, error?: string}>}
+ */
 export const validateAddress = webMethod(
   Permissions.Anyone,
   async (address) => {
@@ -578,6 +676,16 @@ export const validateAddress = webMethod(
 
 // ── Helper: Get package dimensions from product category ────────────
 
+/**
+ * Look up default package dimensions for a furniture product category.
+ * The shipping-rates-plugin calls this to size packages when Wix line items
+ * lack physical dimension data.
+ *
+ * Permission: Anyone — called indirectly during checkout rate calculation.
+ *
+ * @param {string} category - Category key (e.g. 'futon-frame', 'murphy-bed', 'casegoods')
+ * @returns {{length: number, width: number, height: number, weight: number}} Dimensions in inches, weight in lbs
+ */
 export const getPackageDimensions = webMethod(
   Permissions.Anyone,
   (category) => {

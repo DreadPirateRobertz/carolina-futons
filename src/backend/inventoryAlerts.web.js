@@ -59,6 +59,17 @@ async function requireAdmin() {
 
 // ── getStockStatus (public) ─────────────────────────────────────────
 
+/**
+ * Returns the customer-facing stock status for a single product. When
+ * quantity (QTY) is at or below the urgency threshold, the response
+ * includes a "Only X left!" message for the product page badge.
+ *
+ * Queries CMS: InventoryThresholds
+ *
+ * @param {string} productId - Wix Stores product ID.
+ * @returns {Promise<{success: boolean, showUrgency?: boolean, inStock?: boolean, message?: string, stockLevel?: number, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getStockStatus = webMethod(
   Permissions.Anyone,
   async (productId) => {
@@ -123,6 +134,17 @@ export const getStockStatus = webMethod(
 
 // ── getBatchStockStatus (public, for category pages) ────────────────
 
+/**
+ * Batch version of getStockStatus for category page grids. Accepts up
+ * to 50 product IDs and returns a map of productId to stock status,
+ * avoiding N+1 queries when rendering product cards.
+ *
+ * Queries CMS: InventoryThresholds
+ *
+ * @param {string[]} [productIds=[]] - Array of Wix Stores product IDs (max 50).
+ * @returns {Promise<{success: boolean, statuses?: Object.<string, {showUrgency: boolean, inStock: boolean, message: string, stockLevel: number}>, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getBatchStockStatus = webMethod(
   Permissions.Anyone,
   async (productIds = []) => {
@@ -184,6 +206,22 @@ export const getBatchStockStatus = webMethod(
 
 // ── syncInventory (admin — updates stock levels) ────────────────────
 
+/**
+ * Ingests stock level updates from an external inventory source (e.g.
+ * warehouse feed or manual CSV import). For each product, upserts its
+ * threshold config and creates a reorder alert in LowStockAlerts when
+ * QTY (quantity) drops below the reorder threshold. Processes up to
+ * 100 updates per call.
+ *
+ * SKU = Stock Keeping Unit, a unique product identifier from the warehouse.
+ *
+ * Queries/Writes CMS: InventoryThresholds, LowStockAlerts
+ *
+ * @param {Array<{productId: string, sku?: string, productName?: string, stock: number}>} [inventoryUpdates=[]]
+ *   Each entry maps a product to its current stock count.
+ * @returns {Promise<{success: boolean, synced?: number, alertsCreated?: number, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const syncInventory = webMethod(
   Permissions.SiteMember,
   async (inventoryUpdates = []) => {
@@ -288,6 +326,19 @@ export const syncInventory = webMethod(
 
 // ── getLowStockAlerts (admin dashboard) ─────────────────────────────
 
+/**
+ * Lists low-stock alerts for the admin dashboard, filtered by status.
+ * Newest alerts appear first. Used to populate the inventory alerts
+ * panel so admins can acknowledge and resolve stock issues.
+ *
+ * Queries CMS: LowStockAlerts
+ *
+ * @param {Object} [options={}]
+ * @param {string} [options.status='active'] - Filter: "active" | "acknowledged" | "resolved" | "all".
+ * @param {number} [options.limit=50] - Max alerts to return (capped at 100).
+ * @returns {Promise<{success: boolean, alerts?: Array<Object>, totalCount?: number, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const getLowStockAlerts = webMethod(
   Permissions.SiteMember,
   async (options = {}) => {
@@ -337,6 +388,17 @@ export const getLowStockAlerts = webMethod(
 
 // ── acknowledgeAlert (admin) ────────────────────────────────────────
 
+/**
+ * Marks an active low-stock alert as acknowledged, recording which admin
+ * took ownership. Prevents duplicate action — only "active" alerts can
+ * be acknowledged.
+ *
+ * Writes CMS: LowStockAlerts
+ *
+ * @param {string} alertId - The _id of the LowStockAlerts record.
+ * @returns {Promise<{success: boolean, status?: string, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const acknowledgeAlert = webMethod(
   Permissions.SiteMember,
   async (alertId) => {
@@ -370,6 +432,16 @@ export const acknowledgeAlert = webMethod(
 
 // ── resolveAlert (admin) ────────────────────────────────────────────
 
+/**
+ * Marks a low-stock alert as resolved (e.g. after restocking). Only
+ * non-resolved alerts can transition to resolved.
+ *
+ * Writes CMS: LowStockAlerts
+ *
+ * @param {string} alertId - The _id of the LowStockAlerts record.
+ * @returns {Promise<{success: boolean, status?: string, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const resolveAlert = webMethod(
   Permissions.SiteMember,
   async (alertId) => {
@@ -401,6 +473,21 @@ export const resolveAlert = webMethod(
 
 // ── updateThreshold (admin) ─────────────────────────────────────────
 
+/**
+ * Adjusts the urgency and/or reorder thresholds for a specific product.
+ * The product must already have a threshold config (created via syncInventory).
+ * Urgency threshold controls the "Only X left!" badge; reorder threshold
+ * triggers admin alerts.
+ *
+ * Writes CMS: InventoryThresholds
+ *
+ * @param {string} productId - Wix Stores product ID.
+ * @param {Object} [thresholds={}]
+ * @param {number} [thresholds.urgencyThreshold] - New urgency threshold (>= 0).
+ * @param {number} [thresholds.reorderThreshold] - New reorder threshold (>= 0).
+ * @returns {Promise<{success: boolean, urgencyThreshold?: number, reorderThreshold?: number, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const updateThreshold = webMethod(
   Permissions.SiteMember,
   async (productId, thresholds = {}) => {
@@ -445,6 +532,17 @@ export const updateThreshold = webMethod(
 
 // ── getLowStockSummary (admin dashboard) ────────────────────────────
 
+/**
+ * Aggregates inventory health across all tracked products into four
+ * buckets: out-of-stock, urgency-level, reorder-level, and healthy.
+ * Also counts active (unacknowledged) alerts. Powers the admin
+ * dashboard summary cards.
+ *
+ * Queries CMS: InventoryThresholds, LowStockAlerts
+ *
+ * @returns {Promise<{success: boolean, summary?: {totalProducts: number, outOfStock: number, urgencyLevel: number, reorderLevel: number, healthy: number, activeAlerts: number}, error?: string}>}
+ * @permission Permissions.SiteMember (admin role enforced at runtime)
+ */
 export const getLowStockSummary = webMethod(
   Permissions.SiteMember,
   async () => {
