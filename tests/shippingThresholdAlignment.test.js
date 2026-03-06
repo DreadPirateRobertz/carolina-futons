@@ -9,10 +9,10 @@ import categoryDescriptions from '../content/category-descriptions.json';
 // Bead: cf-k3o
 //
 // Verifies:
-// 1. Content files match sharedTokens thresholds
-// 2. Free shipping triggers at $999 boundary
+// 1. Content files match sharedTokens thresholds (999999 = disabled)
+// 2. Free shipping disabled (threshold unreachable at $999,999)
 // 3. Local pickup restricted to WNC zips (287-289)
-// 4. White glove pricing: local $149, regional $249, free >$1,999
+// 4. White glove pricing: local $149, regional $249, free disabled
 // 5. Fallback rates when UPS API is down
 // 6. Edge cases: boundary zips, exact thresholds, international
 // ══════════════════════════════════════════════════════════════════════
@@ -20,17 +20,17 @@ import categoryDescriptions from '../content/category-descriptions.json';
 // ── 1. THRESHOLD ALIGNMENT (content vs sharedTokens) ─────────────────
 
 describe('Threshold alignment — content files match sharedTokens', () => {
-  const STANDARD_FREE = shippingConfig.freeThreshold;       // 999
-  const WHITE_GLOVE_FREE = shippingConfig.whiteGlove.freeThreshold; // 1999
+  const STANDARD_FREE = shippingConfig.freeThreshold;       // 999999 (disabled)
+  const WHITE_GLOVE_FREE = shippingConfig.whiteGlove.freeThreshold; // 999999 (disabled)
   const WHITE_GLOVE_LOCAL = shippingConfig.whiteGlove.localPrice;   // 149
   const WHITE_GLOVE_REGIONAL = shippingConfig.whiteGlove.regionalPrice; // 249
 
-  it('sharedTokens standard free shipping threshold is $999', () => {
-    expect(STANDARD_FREE).toBe(999);
+  it('sharedTokens standard free shipping threshold is $999,999 (disabled)', () => {
+    expect(STANDARD_FREE).toBe(999999);
   });
 
-  it('sharedTokens white glove free threshold is $1,999', () => {
-    expect(WHITE_GLOVE_FREE).toBe(1999);
+  it('sharedTokens white glove free threshold is $999,999 (disabled)', () => {
+    expect(WHITE_GLOVE_FREE).toBe(999999);
   });
 
   it('sharedTokens white glove local price is $149', () => {
@@ -41,7 +41,7 @@ describe('Threshold alignment — content files match sharedTokens', () => {
     expect(WHITE_GLOVE_REGIONAL).toBe(249);
   });
 
-  it('shipping-info.json standard shipping freeThreshold matches sharedTokens ($999)', () => {
+  it('shipping-info.json standard shipping freeThreshold matches sharedTokens ($999,999)', () => {
     const standardMethod = shippingInfo.shippingPolicy.methods.find(
       m => m.name === 'Standard Shipping'
     );
@@ -49,12 +49,11 @@ describe('Threshold alignment — content files match sharedTokens', () => {
     expect(standardMethod.freeThreshold).toBe(STANDARD_FREE);
   });
 
-  it('shipping-info.json standard shipping note says $999 not $1,999', () => {
+  it('shipping-info.json standard shipping note reflects disabled free shipping', () => {
     const standardMethod = shippingInfo.shippingPolicy.methods.find(
       m => m.name === 'Standard Shipping'
     );
-    expect(standardMethod.note).toContain('$999');
-    expect(standardMethod.note).not.toContain('$1,999');
+    expect(standardMethod.note).toContain('calculated at checkout');
   });
 
   it('shipping-info.json white glove local price matches sharedTokens ($149)', () => {
@@ -104,22 +103,21 @@ describe('Threshold alignment — content files match sharedTokens', () => {
   });
 });
 
-// ── 2. FREE SHIPPING BOUNDARY ($999) ─────────────────────────────────
+// ── 2. FREE SHIPPING DISABLED (threshold $999,999 = unreachable) ─────
 
-describe('Free shipping triggers at correct threshold', () => {
-  // We test the logic from ups-shipping.web.js getUPSRates
-  // by importing shippingConfig and verifying the threshold behavior
+describe('Free shipping disabled — threshold unreachable', () => {
+  // With freeThreshold at 999999, no realistic order qualifies
 
   it('$998.99 does NOT qualify for free shipping', () => {
     expect(998.99 >= shippingConfig.freeThreshold).toBe(false);
   });
 
-  it('$999.00 DOES qualify for free shipping', () => {
-    expect(999 >= shippingConfig.freeThreshold).toBe(true);
+  it('$999.00 does NOT qualify for free shipping (threshold now $999,999)', () => {
+    expect(999 >= shippingConfig.freeThreshold).toBe(false);
   });
 
-  it('$999.01 DOES qualify for free shipping', () => {
-    expect(999.01 >= shippingConfig.freeThreshold).toBe(true);
+  it('$999.01 does NOT qualify for free shipping (threshold now $999,999)', () => {
+    expect(999.01 >= shippingConfig.freeThreshold).toBe(false);
   });
 
   it('$0 does NOT qualify for free shipping', () => {
@@ -191,24 +189,24 @@ describe('Local pickup — WNC zip codes only (287-289)', () => {
 describe('White glove delivery pricing', () => {
   const { whiteGlove, zones } = shippingConfig;
 
-  it('local white glove costs $149 for orders under $1,999', () => {
+  it('local white glove costs $149 (free threshold disabled)', () => {
     const price = getWhiteGlovePrice(1500, '28792', zones, whiteGlove);
     expect(price).toBe(149);
   });
 
-  it('regional white glove costs $249 for orders under $1,999', () => {
+  it('regional white glove costs $249 (free threshold disabled)', () => {
     const price = getWhiteGlovePrice(1500, '27601', zones, whiteGlove);
     expect(price).toBe(249);
   });
 
-  it('white glove is FREE for orders >= $1,999 (local)', () => {
+  it('white glove at $1,999 is NOT free — threshold disabled (local)', () => {
     const price = getWhiteGlovePrice(1999, '28792', zones, whiteGlove);
-    expect(price).toBe(0);
+    expect(price).toBe(149);
   });
 
-  it('white glove is FREE for orders >= $1,999 (regional)', () => {
+  it('white glove at $2,000 is NOT free — threshold disabled (regional)', () => {
     const price = getWhiteGlovePrice(2000, '27601', zones, whiteGlove);
-    expect(price).toBe(0);
+    expect(price).toBe(249);
   });
 
   it('white glove at $1,998.99 is NOT free (local)', () => {
@@ -221,9 +219,9 @@ describe('White glove delivery pricing', () => {
     expect(price).toBe(249);
   });
 
-  it('white glove for $5,000 order is free', () => {
+  it('white glove for $5,000 order is NOT free — threshold disabled', () => {
     const price = getWhiteGlovePrice(5000, '28792', zones, whiteGlove);
-    expect(price).toBe(0);
+    expect(price).toBe(149);
   });
 });
 
