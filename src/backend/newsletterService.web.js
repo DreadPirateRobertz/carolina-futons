@@ -43,36 +43,63 @@ async function loadESPSecrets() {
 }
 
 /**
- * Create or update a profile in Klaviyo and subscribe to the configured list.
- * Returns immediately with `{ synced: false, reason: 'no_esp_configured' }` when
- * no ESP API key is set.
+ * Internal ESP sync logic — not wrapped in webMethod permissions.
+ * Called directly by subscribeToNewsletter (Anyone context) and
+ * by the syncToESP webMethod (SiteMember context).
  *
- * @function syncToESP
  * @param {string} email - Subscriber email.
  * @param {string} source - Capture source (e.g. 'exit_intent_popup', 'footer').
  * @returns {Promise<{synced: boolean, reason?: string}>}
- * @permission SiteMember — only called from backend, not directly by visitors.
  */
-export const syncToESP = webMethod(
-  Permissions.SiteMember,
-  async (email, source) => {
-    try {
-      if (!email || typeof email !== 'string' || !validateEmail(email.trim())) {
-        return { synced: false, reason: 'invalid_email' };
+async function _syncToESPInternal(email, source) {
+  try {
+    if (!email || typeof email !== 'string' || !validateEmail(email.trim())) {
+      return { synced: false, reason: 'invalid_email' };
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanSource = sanitize((source || ''), 50);
+
+    const { espKey, listId } = await loadESPSecrets();
+    if (!espKey) {
+      return { synced: false, reason: 'no_esp_configured' };
+    }
+
+    const { fetch } = await import('wix-fetch');
+
+    // Step 1: Create or update profile via Klaviyo Profiles API
+    const profileRes = await fetch(`${KLAVIYO_API_BASE}/profiles/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Klaviyo-API-Key ${espKey}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'revision': KLAVIYO_API_REVISION,
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'profile',
+          attributes: {
+            email: cleanEmail,
+            properties: {
+              source: cleanSource,
+              subscribed_via: 'carolina_futons_website',
+            },
+          },
+        },
+      }),
+    });
+
+    if (!profileRes.ok) {
+      if (profileRes.status === 429) {
+        return { synced: false, reason: 'esp_rate_limited' };
       }
+      return { synced: false, reason: 'esp_api_error' };
+    }
 
-      const cleanEmail = email.trim().toLowerCase();
-      const cleanSource = sanitize((source || ''), 50);
-
-      const { espKey, listId } = await loadESPSecrets();
-      if (!espKey) {
-        return { synced: false, reason: 'no_esp_configured' };
-      }
-
-      const { fetch } = await import('wix-fetch');
-
-      // Step 1: Create or update profile via Klaviyo Profiles API
-      const profileRes = await fetch(`${KLAVIYO_API_BASE}/profiles/`, {
+    // Step 2: Subscribe profile to the list (triggers welcome flow)
+    if (listId) {
+      const subscribeRes = await fetch(`${KLAVIYO_API_BASE}/lists/${listId}/relationships/profiles/`, {
         method: 'POST',
         headers: {
           'Authorization': `Klaviyo-API-Key ${espKey}`,
@@ -81,55 +108,38 @@ export const syncToESP = webMethod(
           'revision': KLAVIYO_API_REVISION,
         },
         body: JSON.stringify({
-          data: {
+          data: [{
             type: 'profile',
-            attributes: {
-              email: cleanEmail,
-              properties: {
-                source: cleanSource,
-                subscribed_via: 'carolina_futons_website',
-              },
-            },
-          },
+            id: (await profileRes.json()).data.id,
+          }],
         }),
       });
 
-      if (!profileRes.ok) {
-        if (profileRes.status === 429) {
-          return { synced: false, reason: 'esp_rate_limited' };
-        }
-        return { synced: false, reason: 'esp_api_error' };
+      if (!subscribeRes.ok && subscribeRes.status === 429) {
+        return { synced: false, reason: 'esp_rate_limited' };
       }
-
-      // Step 2: Subscribe profile to the list (triggers welcome flow)
-      if (listId) {
-        const subscribeRes = await fetch(`${KLAVIYO_API_BASE}/lists/${listId}/relationships/profiles/`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Klaviyo-API-Key ${espKey}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'revision': KLAVIYO_API_REVISION,
-          },
-          body: JSON.stringify({
-            data: [{
-              type: 'profile',
-              id: (await profileRes.json()).data.id,
-            }],
-          }),
-        });
-
-        if (!subscribeRes.ok && subscribeRes.status === 429) {
-          return { synced: false, reason: 'esp_rate_limited' };
-        }
-      }
-
-      return { synced: true };
-    } catch (err) {
-      console.error('ESP sync error:', err);
-      return { synced: false, reason: 'sync_failed' };
     }
+
+    return { synced: true };
+  } catch (err) {
+    console.error('ESP sync error:', err);
+    return { synced: false, reason: 'sync_failed' };
   }
+}
+
+/**
+ * Create or update a profile in Klaviyo and subscribe to the configured list.
+ * Delegates to _syncToESPInternal.
+ *
+ * @function syncToESP
+ * @param {string} email - Subscriber email.
+ * @param {string} source - Capture source (e.g. 'exit_intent_popup', 'footer').
+ * @returns {Promise<{synced: boolean, reason?: string}>}
+ * @permission SiteMember — exposed endpoint for admin/member use.
+ */
+export const syncToESP = webMethod(
+  Permissions.SiteMember,
+  (email, source) => _syncToESPInternal(email, source)
 );
 
 /**
@@ -269,8 +279,10 @@ export const subscribeToNewsletter = webMethod(
         loyaltyTier: 'Bronze',
       });
 
-      // Non-blocking ESP sync — don't block the user response
-      syncToESP(cleaned, source).catch(() => {});
+      // Non-blocking ESP sync — uses internal function to bypass
+      // webMethod permission layer (subscribeToNewsletter is Anyone,
+      // but syncToESP webMethod requires SiteMember)
+      _syncToESPInternal(cleaned, source).catch(() => {});
 
       return { success: true, discountCode: DISCOUNT_CODE };
     } catch (err) {
