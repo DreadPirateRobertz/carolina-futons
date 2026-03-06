@@ -236,7 +236,7 @@ function renderResults(results) {
     repeater.onItemReady(($item, itemData) => {
       const { product, score, reason } = itemData;
 
-      $item('#resultProductName').text = product.name || 'Futon';
+      try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
       try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
       try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
 

@@ -10,8 +10,6 @@ import {
   onCartChanged,
   getShippingProgress,
   getTierProgress,
-  clampQuantity,
-  FREE_SHIPPING_THRESHOLD,
   MIN_QUANTITY,
   MAX_QUANTITY,
   safeMultiply,

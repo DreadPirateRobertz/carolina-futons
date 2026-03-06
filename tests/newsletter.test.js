@@ -29,10 +29,10 @@ describe('Newsletter Page', () => {
       expect(content).toContain("from 'public/ga4Tracking'");
     });
 
-    it('imports designTokens for brand styling', async () => {
+    it('does not import unused designTokens', async () => {
       const fs = await import('fs');
       const content = fs.readFileSync('src/pages/Newsletter.js', 'utf8');
-      expect(content).toContain("from 'public/designTokens.js'");
+      expect(content).not.toContain("from 'public/designTokens.js'");
     });
 
     it('imports a11yHelpers for accessibility', async () => {

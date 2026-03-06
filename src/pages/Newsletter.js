@@ -3,7 +3,6 @@
 // and promotional links. Integrates with Wix CRM and GA4 tracking.
 import { trackEvent, trackNewsletterSignup } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
-import { colors } from 'public/designTokens.js';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
 

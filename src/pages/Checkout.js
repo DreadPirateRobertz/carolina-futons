@@ -6,7 +6,7 @@
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
-import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { announce } from 'public/a11yHelpers.js';
 import { colors } from 'public/designTokens.js';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';

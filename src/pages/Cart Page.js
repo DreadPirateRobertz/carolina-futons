@@ -15,7 +15,7 @@ import {
   MIN_QUANTITY,
   MAX_QUANTITY,
 } from 'public/cartService';
-import { initBackToTop, isMobile, collapseOnMobile, limitForViewport } from 'public/mobileHelpers';
+import { initBackToTop, collapseOnMobile, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireViewCart } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
