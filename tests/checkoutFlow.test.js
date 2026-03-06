@@ -163,7 +163,7 @@ describe('E2E: Standard checkout flow', () => {
 // ── FLOW 2: Free shipping checkout ($999+) ──────────────────────────
 
 describe('E2E: Free shipping checkout flow', () => {
-  it('qualifies for free standard shipping at $999+', () => {
+  it('does NOT qualify for free standard shipping at $1026 (free shipping disabled)', () => {
     const items = [
       CART_FUTON_FRAME, // $549
       CART_MATTRESS,    // $299
@@ -173,11 +173,10 @@ describe('E2E: Free shipping checkout flow', () => {
     const summary = calculateOrderSummary({ items, state: 'NC', shippingMethod: 'standard' });
     expect(summary.success).toBe(true);
     expect(summary.data.subtotal).toBe(1026);
-    expect(summary.data.shipping.amount).toBe(0); // Free at $999+
-    expect(summary.data.shipping.label).toBe('FREE');
+    expect(summary.data.shipping.amount).toBe(49.99); // Free shipping disabled
   });
 
-  it('qualifies for free white glove at $1,999+', () => {
+  it('does NOT qualify for free white glove at $2099 (free shipping disabled)', () => {
     const items = [
       { name: 'Premium Frame', price: 1200, quantity: 1 },
       { name: 'Premium Mattress', price: 899, quantity: 1 },
@@ -190,8 +189,7 @@ describe('E2E: Free shipping checkout flow', () => {
     });
     expect(summary.success).toBe(true);
     expect(summary.data.subtotal).toBe(2099);
-    expect(summary.data.shipping.amount).toBe(0); // Free white glove at $1,999+
-    expect(summary.data.shipping.label).toBe('FREE');
+    expect(summary.data.shipping.amount).toBe(149); // Free shipping disabled
   });
 });
 
@@ -334,9 +332,9 @@ describe('E2E: Checkout payment summary', () => {
     expect(summary.summary.financing).toBeTruthy();
   });
 
-  it('shows free shipping message at $999+', async () => {
+  it('does NOT show free shipping message at $1000 (free shipping disabled)', async () => {
     const summary = await getCheckoutPaymentSummary(1000);
-    expect(summary.summary.shippingMessage).toBe('Free shipping included');
+    expect(summary.summary.shippingMessage).not.toBe('Free shipping included');
   });
 });
 
@@ -427,9 +425,9 @@ describe('E2E: Complex multi-item checkout', () => {
     });
     expect(summary.success).toBe(true);
     expect(summary.data.subtotal).toBe(2226);
-    // $2,226 > $1,999 → free white glove
-    expect(summary.data.shipping.amount).toBe(0);
-    expect(summary.data.freeShippingProgress.qualifies).toBe(true);
+    // Free shipping disabled — white glove charged
+    expect(summary.data.shipping.amount).toBe(149);
+    expect(summary.data.freeShippingProgress.qualifies).toBe(false);
 
     // Step 2: Validate address
     const addr = validateShippingAddress(VALID_NC_ADDRESS);

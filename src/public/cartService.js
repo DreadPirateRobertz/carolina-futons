@@ -18,7 +18,7 @@ import wixStoresFrontend from 'wix-stores-frontend';
 // ── Constants ────────────────────────────────────────────────────────
 // Single source of truth — previously duplicated in Cart Page and Side Cart
 
-export const FREE_SHIPPING_THRESHOLD = 999;
+export const FREE_SHIPPING_THRESHOLD = 999999;
 
 export const TIER_THRESHOLDS = [
   { min: 0, max: 500, discount: 5, label: pct => `Spend $${pct} more for 5% off your order` },

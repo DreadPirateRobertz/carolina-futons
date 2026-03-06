@@ -139,31 +139,28 @@ describe('Free shipping progress bar calculations', () => {
     expect(result.qualifies).toBe(false);
   });
 
-  it('shows correct progress at $500', () => {
+  it('shows correct progress at $500 (free shipping disabled)', () => {
     const result = getShippingProgress(500);
-    expect(result.remaining).toBeCloseTo(499, 0);
+    expect(result.remaining).toBeCloseTo(999499, 0);
     expect(result.qualifies).toBe(false);
     expect(result.progressPct).toBeGreaterThan(0);
-    expect(result.progressPct).toBeLessThan(100);
+    expect(result.progressPct).toBeLessThan(1);
   });
 
-  it('qualifies at exactly $999', () => {
+  it('does not qualify at exactly $999 (free shipping disabled)', () => {
     const result = getShippingProgress(999);
-    expect(result.qualifies).toBe(true);
-    expect(result.remaining).toBe(0);
-    expect(result.progressPct).toBe(100);
+    expect(result.qualifies).toBe(false);
+    expect(result.remaining).toBe(999999 - 999);
   });
 
-  it('qualifies above $999', () => {
+  it('does not qualify at $1500 (free shipping disabled)', () => {
     const result = getShippingProgress(1500);
-    expect(result.qualifies).toBe(true);
-    expect(result.progressPct).toBe(100);
+    expect(result.qualifies).toBe(false);
   });
 
-  it('Add $X more message accuracy at $998.01', () => {
+  it('Add $X more message accuracy at $998.01 (free shipping disabled)', () => {
     const result = getShippingProgress(998.01);
-    // Should be $0.99 remaining
-    expect(result.remaining).toBeCloseTo(0.99, 1);
+    expect(result.remaining).toBeCloseTo(999999 - 998.01, 1);
     expect(result.qualifies).toBe(false);
   });
 });
@@ -264,12 +261,12 @@ describe('Checkout payment summary integration', () => {
     expect(result.summary.financing.bestTier).toBeDefined();
   });
 
-  it('shows free shipping message at $999+', async () => {
+  it('does not show free shipping at $1000 (free shipping disabled)', async () => {
     const result = await getCheckoutPaymentSummary(1000);
-    expect(result.summary.shippingMessage).toBe('Free shipping included');
+    expect(result.summary.shippingMessage).not.toBe('Free shipping included');
   });
 
-  it('shows shipping add-more message below $999', async () => {
+  it('shows shipping add-more message below threshold (free shipping disabled)', async () => {
     const result = await getCheckoutPaymentSummary(549);
     expect(result.summary.shippingMessage).toContain('Add $');
     expect(result.summary.shippingMessage).toContain('more for free shipping');
@@ -526,18 +523,16 @@ describe('Shipping options for cart/checkout display', () => {
     expect(standard.price).toBe(49.99);
   });
 
-  it('standard shipping is free at $999+', () => {
+  it('standard shipping is NOT free at $999 (free shipping disabled)', () => {
     const result = getShippingOptions(999);
     const standard = result.options.find(o => o.id === 'standard');
-    expect(standard.price).toBe(0);
-    expect(standard.label).toContain('FREE');
+    expect(standard.price).toBeGreaterThan(0);
   });
 
-  it('white glove is free at $1999+', () => {
+  it('white glove is NOT free at $1999 (free shipping disabled)', () => {
     const result = getShippingOptions(1999);
     const wgLocal = result.options.find(o => o.id === 'white_glove_local');
-    expect(wgLocal.price).toBe(0);
-    expect(wgLocal.label).toContain('FREE');
+    expect(wgLocal.price).toBeGreaterThan(0);
   });
 
   it('all options have estimated delivery days', () => {
@@ -590,16 +585,16 @@ describe('Order summary for cart display', () => {
     });
     expect(result.data.freeShippingProgress).toBeDefined();
     expect(result.data.freeShippingProgress.qualifies).toBe(false);
-    expect(result.data.freeShippingProgress.remaining).toBe(499);
+    expect(result.data.freeShippingProgress.remaining).toBe(999999 - 500);
   });
 
-  it('shows qualified free shipping progress', () => {
+  it('does not qualify for free shipping at $1000 (free shipping disabled)', () => {
     const result = calculateOrderSummary({
       items: [{ price: 1000, quantity: 1 }],
       state: 'NC',
     });
-    expect(result.data.freeShippingProgress.qualifies).toBe(true);
-    expect(result.data.freeShippingProgress.remaining).toBe(0);
+    expect(result.data.freeShippingProgress.qualifies).toBe(false);
+    expect(result.data.freeShippingProgress.remaining).toBe(999999 - 1000);
   });
 
   it('handles items with zero price', () => {

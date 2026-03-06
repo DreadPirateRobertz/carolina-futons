@@ -98,9 +98,9 @@ describe('getPaymentOptions', () => {
     expect(result.afterpay.eligible).toBe(false);
   });
 
-  it('includes free shipping badge at $999+', async () => {
+  it('excludes free shipping badge at $999 (free shipping disabled)', async () => {
     const result = await getPaymentOptions(999);
-    expect(result.badges.some(b => b.type === 'free-shipping')).toBe(true);
+    expect(result.badges.some(b => b.type === 'free-shipping')).toBe(false);
   });
 
   it('excludes free shipping badge below $999', async () => {
@@ -218,13 +218,13 @@ describe('getCheckoutPaymentSummary', () => {
     // Financing
     expect(result.summary.financing).toBeTruthy();
 
-    // Shipping message (below $999)
-    expect(result.summary.shippingMessage).toContain('$249.00 more for free shipping');
+    // Shipping message (free shipping disabled — all orders show add-more message)
+    expect(result.summary.shippingMessage).toContain('more for free shipping');
   });
 
-  it('shows free shipping for $999+ cart', async () => {
+  it('does NOT show free shipping for $1000 cart (free shipping disabled)', async () => {
     const result = await getCheckoutPaymentSummary(1000);
-    expect(result.summary.shippingMessage).toBe('Free shipping included');
+    expect(result.summary.shippingMessage).not.toBe('Free shipping included');
   });
 
   it('excludes afterpay for $1500 cart', async () => {

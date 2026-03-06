@@ -22,11 +22,11 @@ import { sanitize } from 'backend/utils/sanitize';
 
 // ── Constants ──────────────────────────────────────────────────────
 
-const FREE_SHIPPING_THRESHOLD = 999;
+const FREE_SHIPPING_THRESHOLD = 999999;
 const STANDARD_SHIPPING_RATE = 49.99;
 const WHITE_GLOVE_LOCAL = 149;
 const WHITE_GLOVE_REGIONAL = 249;
-const WHITE_GLOVE_FREE_THRESHOLD = 1999;
+const WHITE_GLOVE_FREE_THRESHOLD = 999999;
 
 const TAX_RATES = {
   NC: 0.0675,

@@ -210,7 +210,7 @@ function initEnhancedNavigation() {
 
 async function initAnnouncementBar() {
   const messages = [
-    'Free Shipping on Orders Over $999!',
+    // 'Free Shipping on Orders Over $999!', // Disabled: free shipping currently inactive
     'Visit Our Showroom: Wed–Sat 10–5, Hendersonville NC',
     'Over 700 Fabric Swatches Available In-Store',
     'Request FREE fabric swatches — shipped to your door!',

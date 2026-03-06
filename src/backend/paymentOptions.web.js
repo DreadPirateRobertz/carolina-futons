@@ -188,7 +188,7 @@ export const getCheckoutPaymentSummary = webMethod(
       }
 
       // Free shipping threshold messaging
-      const FREE_SHIPPING_THRESHOLD = 999;
+      const FREE_SHIPPING_THRESHOLD = 999999;
       if (numTotal < FREE_SHIPPING_THRESHOLD) {
         const remaining = FREE_SHIPPING_THRESHOLD - numTotal;
         summary.shippingMessage = `Add $${remaining.toFixed(2)} more for free shipping`;
@@ -364,7 +364,7 @@ function getPaymentBadges(price) {
     });
   }
 
-  if (price >= 999) {
+  if (price >= 999999) {
     badges.push({
       type: 'free-shipping',
       label: 'Free Shipping',

@@ -118,7 +118,7 @@ function initTrustSignals() {
     { icon: 'lock', text: 'Secure SSL Checkout' },
     { icon: 'shield', text: '30-Day Money-Back Guarantee' },
     { icon: 'credit-card', text: 'Secure Payment' },
-    { icon: 'truck', text: 'Free shipping on orders $999+' },
+    // { icon: 'truck', text: 'Free shipping on orders $999+' }, // Disabled: free shipping currently inactive
     { icon: 'phone', text: 'Questions? Call (828) 252-9449' },
   ];
 

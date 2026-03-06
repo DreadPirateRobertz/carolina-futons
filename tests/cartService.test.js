@@ -25,8 +25,8 @@ beforeEach(() => {
 // ── Constants ────────────────────────────────────────────────────────
 
 describe('cartService constants', () => {
-  it('exports FREE_SHIPPING_THRESHOLD as 999', () => {
-    expect(FREE_SHIPPING_THRESHOLD).toBe(999);
+  it('exports FREE_SHIPPING_THRESHOLD as 999999 (free shipping disabled)', () => {
+    expect(FREE_SHIPPING_THRESHOLD).toBe(999999);
   });
 
   it('exports TIER_THRESHOLDS with 3 tiers', () => {
@@ -49,29 +49,29 @@ describe('cartService constants', () => {
 describe('getShippingProgress', () => {
   it('returns 0% progress for $0 subtotal', () => {
     const result = getShippingProgress(0);
-    expect(result.remaining).toBe(999);
+    expect(result.remaining).toBe(999999);
     expect(result.progressPct).toBe(0);
     expect(result.qualifies).toBe(false);
   });
 
-  it('returns 50% progress for ~$500 subtotal', () => {
+  it('returns near-0% progress for ~$500 subtotal (free shipping disabled)', () => {
     const result = getShippingProgress(499.5);
-    expect(result.progressPct).toBeCloseTo(50, 0);
+    expect(result.progressPct).toBeCloseTo(0.05, 0);
     expect(result.qualifies).toBe(false);
   });
 
-  it('returns 100% and qualifies at $999', () => {
+  it('does not qualify at $999 (free shipping disabled)', () => {
     const result = getShippingProgress(999);
-    expect(result.remaining).toBe(0);
-    expect(result.progressPct).toBe(100);
-    expect(result.qualifies).toBe(true);
+    expect(result.remaining).toBe(999999 - 999);
+    expect(result.progressPct).toBeCloseTo(0.1, 0);
+    expect(result.qualifies).toBe(false);
   });
 
-  it('returns 100% for amounts over threshold', () => {
+  it('does not qualify at $1500 (free shipping disabled)', () => {
     const result = getShippingProgress(1500);
-    expect(result.progressPct).toBe(100);
-    expect(result.qualifies).toBe(true);
-    expect(result.remaining).toBe(0);
+    expect(result.progressPct).toBeCloseTo(0.15, 0);
+    expect(result.qualifies).toBe(false);
+    expect(result.remaining).toBe(999999 - 1500);
   });
 });
 
