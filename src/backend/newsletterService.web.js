@@ -51,7 +51,7 @@ async function loadESPSecrets() {
  * @param {string} source - Capture source (e.g. 'exit_intent_popup', 'footer').
  * @returns {Promise<{synced: boolean, reason?: string}>}
  */
-export async function _syncToESPInternal(email, source) {
+async function _syncToESPInternal(email, source) {
   try {
     if (!email || typeof email !== 'string' || !validateEmail(email.trim())) {
       return { synced: false, reason: 'invalid_email' };

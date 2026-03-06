@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __reset as resetCrm, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __reset as resetMarketing, coupons } from './__mocks__/wix-marketing-backend.js';
-import { subscribeToNewsletter, syncToESP, _syncToESPInternal } from '../src/backend/newsletterService.web.js';
+import { subscribeToNewsletter, syncToESP } from '../src/backend/newsletterService.web.js';
 import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler, __reset as resetFetch } from './__mocks__/wix-fetch.js';
 
@@ -194,39 +194,6 @@ describe('subscribeToNewsletter', () => {
     expect(result.message || '').not.toContain('Sensitive');
 
     wixData.insert = originalInsert;
-  });
-});
-
-// ── _syncToESPInternal (permission-bypass internal function) ─────────
-
-describe('_syncToESPInternal', () => {
-  it('is exported as a plain function (not a webMethod)', () => {
-    expect(typeof _syncToESPInternal).toBe('function');
-  });
-
-  it('performs ESP sync without permission wrapper', async () => {
-    __setSecrets({ ESP_API_KEY: 'pk_test_abc', ESP_LIST_ID: 'LIST_test' });
-    const calls = [];
-    __setHandler((url, options) => {
-      calls.push({ url, method: options.method });
-      return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
-    });
-
-    const result = await _syncToESPInternal('test@example.com', 'footer');
-    expect(result.synced).toBe(true);
-    expect(calls.length).toBeGreaterThan(0);
-  });
-
-  it('validates email the same as syncToESP', async () => {
-    const result = await _syncToESPInternal('notanemail', 'footer');
-    expect(result.synced).toBe(false);
-    expect(result.reason).toBe('invalid_email');
-  });
-
-  it('returns no_esp_configured when secrets missing', async () => {
-    const result = await _syncToESPInternal('test@example.com', 'footer');
-    expect(result.synced).toBe(false);
-    expect(result.reason).toBe('no_esp_configured');
   });
 });
 
