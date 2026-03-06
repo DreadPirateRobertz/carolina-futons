@@ -19,9 +19,15 @@ import {
   formatBusinessHours,
   getSocialProofSnippets,
 } from 'public/aboutContactHelpers.js';
+import {
+  initContactHeroSkyline,
+  initContactShowroomScene,
+} from 'public/contactIllustrations.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initContactHeroSkyline($w);
+  initContactShowroomScene($w);
   initContactForm();
   initBusinessInfo();
   initBusinessHoursDisplay();
