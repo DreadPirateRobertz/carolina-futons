@@ -10,8 +10,8 @@
         "name": "Standard Shipping",
         "description": "Curbside delivery via common carrier. Items are delivered to the curb or first dry area. You are responsible for bringing items inside.",
         "timeline": "5-10 business days",
-        "freeThreshold": 1999,
-        "note": "Free on orders over $1,999"
+        "freeThreshold": 999,
+        "note": "Free on orders over $999"
       },
       {
         "name": "Local White-Glove Delivery",
