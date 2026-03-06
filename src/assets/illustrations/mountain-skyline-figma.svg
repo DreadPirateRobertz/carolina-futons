@@ -18,19 +18,6 @@
       <stop offset="100%" stop-color="#F2E8D5" stop-opacity="0.55"/>
     </linearGradient>
 
-    <!-- Watercolor texture filter: organic edge distortion -->
-    <filter id="watercolor" x="-5%" y="-5%" width="110%" height="110%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="5" seed="31" result="turb"/>
-      <feDisplacementMap in="SourceGraphic" in2="turb" scale="4" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-
-    <!-- Paper grain overlay for hand-drawn feel -->
-    <filter id="paper-grain" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="4" seed="11" result="grain"/>
-      <feColorMatrix in="grain" type="saturate" values="0" result="grey"/>
-      <feBlend in="SourceGraphic" in2="grey" mode="multiply"/>
-    </filter>
-
     <!-- Atmospheric haze blur -->
     <filter id="haze">
       <feGaussianBlur stdDeviation="2.5"/>
@@ -58,30 +45,30 @@
 
   <!-- Layer 2: Far ridge — blue-grey, slightly more defined -->
   <path d="M0,200 L0,115 C38,110 62,88 108,82 C154,76 178,92 225,86 C272,80 298,60 348,55 C398,50 425,68 472,62 C519,56 548,40 598,44 C648,48 675,65 722,60 C769,55 798,38 848,42 C898,46 925,62 972,58 C1019,54 1048,42 1098,46 C1148,50 1175,64 1222,60 C1269,56 1298,44 1348,48 C1398,52 1422,66 1440,70 L1440,200 Z"
-    fill="#5B8FA8" opacity="0.16" filter="url(#watercolor)"/>
+    fill="#5B8FA8" opacity="0.16"/>
 
   <!-- Layer 3: Back ridge — transition to espresso tones -->
   <path d="M0,200 L0,128 C35,123 55,100 98,92 C141,84 162,102 208,94 C254,86 278,62 328,56 C378,50 402,70 448,65 C494,60 522,42 572,38 C622,34 648,58 698,54 C748,50 775,35 825,40 C875,45 902,64 948,58 C994,52 1022,42 1068,46 C1114,50 1142,68 1188,62 C1234,56 1262,44 1308,48 C1354,52 1382,68 1440,74 L1440,200 Z"
-    fill="#3A2518" opacity="0.22" filter="url(#watercolor)"/>
+    fill="#3A2518" opacity="0.22"/>
 
   <!-- Layer 4: Mid-far ridge -->
   <path d="M0,200 L0,138 C42,133 65,112 112,106 C159,100 185,118 232,112 C279,106 308,86 358,82 C408,78 435,96 482,90 C529,84 558,68 608,64 C658,60 685,78 732,74 C779,70 808,55 858,58 C908,61 935,78 982,72 C1029,66 1058,82 1108,78 C1158,74 1185,62 1232,66 C1279,70 1308,84 1358,80 C1408,76 1428,88 1440,92 L1440,200 Z"
-    fill="#3A2518" opacity="0.32" filter="url(#watercolor)"/>
+    fill="#3A2518" opacity="0.32"/>
 
   <!-- Atmospheric haze band between mid and far ranges -->
   <rect x="0" y="65" width="1440" height="45" fill="url(#haze-grad)" filter="url(#haze)"/>
 
   <!-- Layer 5: Mid ridge — more defined, darker -->
   <path d="M0,200 L0,146 C38,140 60,118 108,112 C156,106 182,126 230,120 C278,114 305,92 355,88 C405,84 432,104 480,98 C528,92 558,72 608,68 C658,64 685,85 732,80 C779,75 808,62 858,66 C908,70 935,88 982,82 C1029,76 1058,92 1108,88 C1158,84 1188,72 1238,76 C1288,80 1318,96 1368,90 C1418,84 1432,98 1440,104 L1440,200 Z"
-    fill="#3A2518" opacity="0.45" filter="url(#watercolor)"/>
+    fill="#3A2518" opacity="0.45"/>
 
   <!-- Layer 6: Near-mid ridge -->
   <path d="M0,200 L0,154 C35,150 58,136 105,131 C152,126 178,140 228,136 C278,132 305,118 355,114 C405,110 432,126 482,122 C532,118 562,106 612,102 C662,98 688,114 738,110 C788,106 818,96 868,100 C918,104 948,118 998,114 C1048,110 1078,122 1128,118 C1178,114 1208,102 1258,106 C1308,110 1338,126 1388,122 C1418,120 1432,130 1440,134 L1440,200 Z"
-    fill="#5C4033" opacity="0.60" filter="url(#watercolor)"/>
+    fill="#5C4033" opacity="0.60"/>
 
   <!-- Layer 7: Front ridge — closest, darkest, most defined -->
   <path d="M0,200 L0,162 C32,158 55,144 100,140 C145,136 172,150 222,146 C272,142 302,128 352,125 C402,122 432,136 482,132 C532,128 562,116 612,112 C662,108 692,126 742,122 C792,118 822,108 872,112 C922,116 952,130 1002,126 C1052,122 1082,134 1132,130 C1182,126 1212,116 1262,120 C1312,124 1342,138 1392,134 C1422,132 1434,142 1440,146 L1440,200 Z"
-    fill="#3A2518" opacity="0.78" filter="url(#watercolor)"/>
+    fill="#3A2518" opacity="0.78"/>
 
   <!-- Birds in V-formation — organic hand-drawn strokes -->
   <g class="birds" opacity="0.35">
@@ -139,6 +126,4 @@
   <rect x="0" y="105" width="1440" height="25" fill="#B8D4E3" opacity="0.06" filter="url(#haze)"/>
   <rect x="0" y="130" width="1440" height="18" fill="#B8D4E3" opacity="0.04"/>
 
-  <!-- Paper grain overlay for hand-drawn feel -->
-  <rect width="1440" height="200" filter="url(#paper-grain)" opacity="0.05" fill="#3A2518"/>
 </svg>
