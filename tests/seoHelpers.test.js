@@ -498,6 +498,21 @@ describe('getProductOgTags', () => {
   it('returns empty string for null product', () => {
     expect(getProductOgTags(null)).toBe('');
   });
+
+  it('includes detected brand instead of hardcoded Carolina Futons', () => {
+    const tags = JSON.parse(getProductOgTags(wallHuggerFrame));
+    expect(tags['product:brand']).toBe('Strata Furniture');
+  });
+
+  it('includes Night & Day Furniture brand for futon frames', () => {
+    const tags = JSON.parse(getProductOgTags(futonFrame));
+    expect(tags['product:brand']).toBe('Night & Day Furniture');
+  });
+
+  it('includes product:condition as NewCondition', () => {
+    const tags = JSON.parse(getProductOgTags(futonFrame));
+    expect(tags['product:condition']).toBe('new');
+  });
 });
 
 // ── getCategoryOgTags ───────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { futonFrame, murphyBed } from './fixtures/products.js';
+import { futonFrame, murphyBed, wallHuggerFrame } from './fixtures/products.js';
 
 // ── Mock wix-seo-frontend ─────────────────────────────────────────
 const mockHead = {
@@ -36,7 +36,15 @@ vi.mock('backend/pinterestRichPins.web', () => ({
   getProductPinData: vi.fn(() => ({ success: false, meta: null })),
 }));
 
-const { injectProductMeta } = await import('../src/public/product/productSchema.js');
+const {
+  injectProductMeta,
+  injectPinterestMeta,
+  injectProductSchema,
+  buildGridAlt,
+  detectProductBrand,
+  detectProductCategory,
+  getCategoryFromCollections,
+} = await import('../src/public/product/productSchema.js');
 
 // ── Tests ─────────────────────────────────────────────────────────
 
@@ -119,5 +127,174 @@ describe('injectProductMeta — structured data injection', () => {
     await expect(injectProductMeta(futonFrame)).resolves.not.toThrow();
     // Should still set title/description even if schema fails
     expect(mockHead.setTitle).toHaveBeenCalled();
+  });
+
+  it('does not call injectPinterestMeta internally (Product Page calls it separately)', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockClear();
+
+    await injectProductMeta(futonFrame);
+
+    // injectProductMeta should NOT trigger Pinterest pin data fetch
+    // because Product Page.js calls injectPinterestMeta as a separate section
+    expect(getProductPinData).not.toHaveBeenCalled();
+  });
+});
+
+// ── injectProductSchema (HtmlComponent approach) ─────────────────
+
+describe('injectProductSchema — HtmlComponent injection', () => {
+  let mock$w;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mock$w = vi.fn((selector) => {
+      const el = { postMessage: vi.fn() };
+      return el;
+    });
+  });
+
+  it('posts product schema to #productSchemaHtml', async () => {
+    const el = { postMessage: vi.fn() };
+    mock$w.mockImplementation((sel) => {
+      if (sel === '#productSchemaHtml') return el;
+      return { postMessage: vi.fn() };
+    });
+
+    await injectProductSchema(mock$w, futonFrame);
+
+    expect(el.postMessage).toHaveBeenCalled();
+    const arg = el.postMessage.mock.calls[0][0];
+    expect(arg).toBeTruthy();
+  });
+
+  it('does nothing for null product', async () => {
+    await injectProductSchema(mock$w, null);
+
+    expect(mock$w).not.toHaveBeenCalled();
+  });
+
+  it('handles missing HtmlComponent gracefully', async () => {
+    mock$w.mockImplementation(() => { throw new Error('Element not found'); });
+
+    await expect(
+      injectProductSchema(mock$w, futonFrame)
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── injectPinterestMeta ──────────────────────────────────────────
+
+describe('injectPinterestMeta — Pinterest Rich Pin injection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('does nothing for null product', async () => {
+    await expect(injectPinterestMeta(null)).resolves.not.toThrow();
+    expect(mockHead.setMetaTag).not.toHaveBeenCalled();
+  });
+
+  it('sets Pinterest meta tags when pin data succeeds', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockReturnValueOnce({
+      success: true,
+      meta: {
+        'pinterest:description': 'Test pin description',
+        'pinterest-rich-pin': 'true',
+        'product:retailer_item_id': 'EUR-FRM-001',
+        'product:category': 'Furniture > Futon Frames',
+      },
+    });
+
+    await injectPinterestMeta(futonFrame);
+
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('pinterest:description', 'Test pin description');
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('pinterest-rich-pin', 'true');
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:retailer_item_id', 'EUR-FRM-001');
+  });
+
+  it('does nothing when pin data returns failure', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockReturnValueOnce({ success: false, meta: null });
+
+    await injectPinterestMeta(futonFrame);
+
+    expect(mockHead.setMetaTag).not.toHaveBeenCalled();
+  });
+});
+
+// ── buildGridAlt ─────────────────────────────────────────────────
+
+describe('buildGridAlt', () => {
+  it('builds alt text with name, brand, category, and store', () => {
+    const alt = buildGridAlt(futonFrame);
+    expect(alt).toContain('Eureka Futon Frame');
+    expect(alt).toContain('Night & Day Furniture');
+    expect(alt).toContain('Futon Frame');
+    expect(alt).toContain('Carolina Futons');
+  });
+
+  it('truncates to 125 characters', () => {
+    const longName = { ...futonFrame, name: 'A'.repeat(200) };
+    const alt = buildGridAlt(longName);
+    expect(alt.length).toBeLessThanOrEqual(125);
+    expect(alt).toMatch(/\.\.\.$/);
+  });
+
+  it('detects wall hugger brand', () => {
+    const alt = buildGridAlt(wallHuggerFrame);
+    expect(alt).toContain('Strata Furniture');
+  });
+});
+
+// ── detectProductBrand / detectProductCategory ───────────────────
+
+describe('detectProductBrand', () => {
+  it('returns Strata Furniture for wall-hugger', () => {
+    expect(detectProductBrand(wallHuggerFrame)).toBe('Strata Furniture');
+  });
+
+  it('returns Night & Day Furniture as default', () => {
+    expect(detectProductBrand(futonFrame)).toBe('Night & Day Furniture');
+  });
+
+  it('returns empty string for no collections', () => {
+    expect(detectProductBrand({ name: 'Test' })).toBe('');
+  });
+});
+
+describe('detectProductCategory', () => {
+  it('returns Murphy Cabinet Bed for murphy collection', () => {
+    expect(detectProductCategory(murphyBed)).toBe('Murphy Cabinet Bed');
+  });
+
+  it('returns Futon Frame for futon collection', () => {
+    expect(detectProductCategory(futonFrame)).toBe('Futon Frame');
+  });
+
+  it('returns empty string for no collections', () => {
+    expect(detectProductCategory({ name: 'Test' })).toBe('');
+  });
+});
+
+// ── getCategoryFromCollections ───────────────────────────────────
+
+describe('getCategoryFromCollections', () => {
+  it('returns Murphy category for murphy collection', () => {
+    const cat = getCategoryFromCollections(['murphy-cabinet-beds']);
+    expect(cat.label).toBe('Murphy Cabinet Beds');
+    expect(cat.path).toBe('/murphy-cabinet-beds');
+  });
+
+  it('returns Shop fallback for null', () => {
+    const cat = getCategoryFromCollections(null);
+    expect(cat.label).toBe('Shop');
+    expect(cat.path).toBe('/shop-main');
+  });
+
+  it('handles non-array collection value', () => {
+    const cat = getCategoryFromCollections('platform-beds');
+    expect(cat.label).toBe('Platform Beds');
   });
 });
