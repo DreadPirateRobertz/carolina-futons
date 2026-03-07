@@ -86,6 +86,11 @@ export async function injectProductMeta(product) {
     const canonical = await getCanonicalUrl('product', product.slug);
     if (canonical) head.setLinks([{ rel: 'canonical', href: canonical }]);
 
+    // Robots meta — noindex out-of-stock products to avoid thin content
+    if (product.inStock === false) {
+      head.setMetaTag('robots', 'noindex, follow');
+    }
+
     // Set OG meta tags via wix-seo-frontend for crawler access
     const ogTags = await getProductOgTags(product);
     if (ogTags) {
@@ -98,6 +103,34 @@ export async function injectProductMeta(product) {
         }
       }
     }
+
+    // Inject JSON-LD structured data via wix-seo-frontend for SSR
+    const schemas = [];
+    try {
+      const productSchemaJson = await getProductSchema(product);
+      if (productSchemaJson) schemas.push(JSON.parse(productSchemaJson));
+    } catch (e) { /* schema generation failed — continue */ }
+
+    try {
+      const category = getCategoryFromCollections(product.collections);
+      const breadcrumbs = [
+        { name: 'Home', url: '/' },
+        { name: category.label, url: category.path },
+        { name: product.name, url: null },
+      ];
+      const breadcrumbJson = await getBreadcrumbSchema(breadcrumbs);
+      if (breadcrumbJson) schemas.push(JSON.parse(breadcrumbJson));
+    } catch (e) { /* breadcrumb schema failed — continue */ }
+
+    try {
+      const faqJson = await getProductFaqSchema(product);
+      if (faqJson) schemas.push(JSON.parse(faqJson));
+    } catch (e) { /* FAQ schema failed — continue */ }
+
+    if (schemas.length > 0) {
+      head.setStructuredData(schemas);
+    }
+
     // Set Pinterest Rich Pin meta tags
     await injectPinterestMeta(product, head);
   } catch (e) {
