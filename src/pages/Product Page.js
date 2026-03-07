@@ -17,7 +17,7 @@ import { getImageDimensions } from 'public/galleryConfig.js';
 // Critical above-fold components (statically imported)
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
-import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
+import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
@@ -102,6 +102,8 @@ async function initProductPage() {
       { name: 'productMeta', init: () => injectProductSeoMeta(state.product), critical: true },
 
       // ── Deferred (below-fold, fire-and-forget) ──
+      { name: 'productSchema', init: () => injectProductSchema($w, state), critical: false },
+      { name: 'pinterestMeta', init: () => injectPinterestMeta(state), critical: false },
       { name: 'flashSaleBadge', init: () => initFlashSaleUrgency(), critical: false },
       { name: 'socialShare', init: () => initSocialShare($w, state), critical: false },
       { name: 'stickyCartBar', init: () => initStickyCartBar($w, state), critical: false },
