@@ -135,12 +135,16 @@ describe('scheduleDelivery', () => {
   });
 
   it('rejects duplicate scheduling for same order', async () => {
+    const nextWed = getNextDayOfWeek(3);
+    const dateStr = nextWed.toISOString().split('T')[0];
+    const nextThu = getNextDayOfWeek(4);
+    const dateStr2 = nextThu.toISOString().split('T')[0];
     __seed('DeliverySchedule', [
-      { _id: 'ds-1', orderId: 'order-123', date: '2026-03-04', timeWindow: 'morning', type: 'standard', status: 'scheduled' },
+      { _id: 'ds-1', orderId: 'order-123', date: dateStr, timeWindow: 'morning', type: 'standard', status: 'scheduled' },
     ]);
     const result = await scheduleDelivery({
       orderId: 'order-123',
-      date: '2026-03-05',
+      date: dateStr2,
       timeWindow: 'afternoon',
       type: 'standard',
     });
