@@ -16,7 +16,7 @@ import { prioritizeSections } from 'public/performanceHelpers.js';
 // Critical above-fold components (statically imported)
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
-import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
+import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
@@ -25,6 +25,7 @@ import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
+import { injectProductMeta as injectProductSeoMeta } from 'public/product/productSchema.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -97,11 +98,10 @@ async function initProductPage() {
       { name: 'backInStock', init: () => initBackInStockNotification($w, state), critical: true },
       { name: 'wishlistButton', init: () => initWishlistButton($w, state), critical: true },
       { name: 'designTokens', init: () => applyProductPageTokens($w), critical: true },
+      // JSON-LD structured data via wix-seo-frontend (SSR-compatible, must be critical for crawlers)
+      { name: 'productMeta', init: () => injectProductSeoMeta(state.product), critical: true },
 
       // ── Deferred (below-fold, fire-and-forget) ──
-      { name: 'productSchema', init: () => injectProductSchema($w, state), critical: false },
-      { name: 'productMeta', init: () => injectProductMeta(state), critical: false },
-      { name: 'pinterestMeta', init: () => injectPinterestMeta(state), critical: false },
       { name: 'flashSaleBadge', init: () => initFlashSaleUrgency(), critical: false },
       { name: 'socialShare', init: () => initSocialShare($w, state), critical: false },
       { name: 'stickyCartBar', init: () => initStickyCartBar($w, state), critical: false },
@@ -196,29 +196,6 @@ async function initFlashSaleUrgency() {
   }
 }
 
-// ── Product Meta Description & Title ─────────────────────────────────
-
-async function injectProductMeta(state) {
-  try {
-    if (!state.product) return;
-    const { injectProductMeta: injectMeta } = await import('public/product/productSchema.js');
-    await injectMeta(state.product);
-  } catch (e) {
-    console.error('[ProductPage] Failed to set meta:', e?.message || e);
-  }
-}
-
-// ── Pinterest Rich Pins Meta ──────────────────────────────────────────
-
-async function injectPinterestMeta(state) {
-  try {
-    if (!state.product) return;
-    const { injectPinterestMeta: injectPins } = await import('public/product/productSchema.js');
-    await injectPins(state.product);
-  } catch (e) {
-    console.error('[ProductPage] Failed to set Pinterest meta:', e?.message || e);
-  }
-}
 
 // ── Cross-Sell Sections ───────────────────────────────────────────────
 

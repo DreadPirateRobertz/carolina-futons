@@ -198,7 +198,7 @@ export function buildGridAlt(product) {
 }
 
 export function detectProductBrand(product) {
-  if (!product.collections) return '';
+  if (!product || !product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
   if (colls.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
   if (colls.some(c => c.includes('unfinished'))) return 'KD Frames';
@@ -207,7 +207,7 @@ export function detectProductBrand(product) {
 }
 
 export function detectProductCategory(product) {
-  if (!product.collections) return '';
+  if (!product || !product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
   if (colls.some(c => c.includes('murphy'))) return 'Murphy Cabinet Bed';
   if (colls.some(c => c.includes('platform'))) return 'Platform Bed';
