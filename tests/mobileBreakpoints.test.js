@@ -124,12 +124,12 @@ describe('limitForViewport — mobileLarge support', () => {
     expect(result).toHaveLength(3);
   });
 
-  it('uses default mobileLarge limit (6) when no limits specified', async () => {
+  it('falls back to mobile default (4) on mobileLarge when no limits specified', async () => {
     setWindowWidth(500);
     const { limitForViewport } = await import('public/mobileHelpers');
     const items = Array.from({ length: 20 }, (_, i) => ({ id: i }));
     const result = limitForViewport(items);
-    expect(result).toHaveLength(6);
+    expect(result).toHaveLength(4);
   });
 
   it('uses default wide limit (12) on wide viewport (1280px+)', async () => {

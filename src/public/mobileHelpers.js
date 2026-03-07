@@ -155,7 +155,7 @@ export function addSwipeHandler(element, handlers, threshold = 50) {
  */
 export function limitForViewport(items, limits = {}) {
   if (!Array.isArray(items)) return [];
-  const defaults = { mobile: 4, mobileLarge: 6, tablet: 8, desktop: 12, wide: 12 };
+  const defaults = { mobile: 4, tablet: 8, desktop: 12, wide: 12 };
   const merged = { ...defaults, ...limits };
   const limit = getResponsiveValue(merged);
   return items.slice(0, limit);
