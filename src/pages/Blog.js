@@ -301,18 +301,19 @@ function initBlogNewsletter() {
 
       try {
         submitBtn.disable();
-        const { submitContactForm } = await import('backend/contactSubmissions.web');
-        await submitContactForm({
-          email,
-          source: 'blog_newsletter',
-          status: 'newsletter_signup',
-        });
+        const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+        const result = await subscribeToNewsletter(email, { source: 'blog_newsletter' });
 
-        try { $w('#blogNewsletterSuccess').show(); } catch (e) {}
-        try { $w('#blogNewsletterError').hide(); } catch (e) {}
-        fireCustomEvent('newsletter_signup', { source: 'blog' });
-        announce($w, 'Successfully subscribed to newsletter');
-        emailInput.value = '';
+        if (result.success) {
+          try { $w('#blogNewsletterSuccess').show(); } catch (e) {}
+          try { $w('#blogNewsletterError').hide(); } catch (e) {}
+          fireCustomEvent('newsletter_signup', { source: 'blog' });
+          announce($w, 'Successfully subscribed to newsletter');
+          emailInput.value = '';
+        } else {
+          try { $w('#blogNewsletterError').text = result.message || 'Something went wrong. Please try again.'; } catch (e) {}
+          try { $w('#blogNewsletterError').show(); } catch (e) {}
+        }
       } catch (err) {
         try { $w('#blogNewsletterError').text = 'Something went wrong. Please try again.'; } catch (e) {}
         try { $w('#blogNewsletterError').show(); } catch (e) {}
