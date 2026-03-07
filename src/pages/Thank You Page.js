@@ -11,20 +11,28 @@ import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { validateEmail, sanitizeText } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
+import { getReferralLink } from 'backend/referralService.web';
+import { submitReview } from 'backend/reviewsService.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
+
+  // Get order context early so sections can use it
+  const wixWindow = await import('wix-window-frontend');
+  const orderCtx = wixWindow.lightbox?.getContext?.() || null;
+
   const sections = [
     { name: 'orderSummary', init: initOrderSummary },
     { name: 'brendaMessage', init: initBrendaMessage },
     { name: 'deliveryTimeline', init: initDeliveryTimeline },
-    { name: 'socialSharing', init: initSocialSharing },
+    { name: 'socialSharing', init: () => initSocialSharing(orderCtx) },
     { name: 'newsletterSignup', init: initNewsletterSignup },
     { name: 'referralSection', init: initReferralSection },
     { name: 'postPurchaseSuggestions', init: loadPostPurchaseSuggestions },
     { name: 'postPurchaseCare', init: initPostPurchaseCareSequence },
     { name: 'assemblyGuideLink', init: initAssemblyGuideLink },
     { name: 'testimonialPrompt', init: initTestimonialPrompt },
+    { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
@@ -35,8 +43,6 @@ $w.onReady(async function () {
     }
   });
   // Track purchase completion in engagement funnel + GA4/Meta Pixel
-  const wixWindow = await import('wix-window-frontend');
-  const orderCtx = wixWindow.lightbox?.getContext?.() || null;
   trackPurchaseComplete(orderCtx?.orderId || '', orderCtx?.total || 0);
   firePurchase({
     _id: orderCtx?.orderId || '',
@@ -183,18 +189,38 @@ function initDeliveryTimeline() {
 
 // ── Social Sharing ─────────────────────────────────────────────────
 
-function initSocialSharing() {
+/**
+ * Initialize social sharing section with dynamic content from order context.
+ * Wires Facebook, Pinterest, Instagram, and Twitter/X share buttons with
+ * engagement tracking and product-specific share text.
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+function initSocialSharing(orderCtx) {
   try {
-    $w('#shareText').text = 'Love your new furniture? Share with friends!';
+    // Build dynamic share text from purchased product names (sanitized)
+    const lineItems = orderCtx?.lineItems || [];
+    const productNames = lineItems
+      .map(item => item.name)
+      .filter(Boolean)
+      .map(name => sanitizeText(name, 100));
+    const sharePrompt = productNames.length > 0
+      ? `Love your new ${productNames[0]}? Share with friends!`
+      : 'Love your new furniture? Share with friends!';
+    $w('#shareText').text = sharePrompt;
+
+    const shareText = productNames.length > 0
+      ? `Just ordered ${productNames.join(' and ')} from Carolina Futons in Hendersonville, NC!`
+      : 'Just ordered beautiful furniture from Carolina Futons in Hendersonville, NC!';
 
     try { $w('#shareFacebook').accessibility.ariaLabel = 'Share on Facebook (opens in new window)'; } catch (e) {}
     try { $w('#sharePinterest').accessibility.ariaLabel = 'Share on Pinterest (opens in new window)'; } catch (e) {}
     try { $w('#shareInstagram').accessibility.ariaLabel = 'Follow us on Instagram (opens in new window)'; } catch (e) {}
+    try { $w('#shareTwitter').accessibility.ariaLabel = 'Share on Twitter (opens in new window)'; } catch (e) {}
 
     $w('#shareFacebook').onClick(() => {
       trackSocialShare('facebook', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
-      const text = encodeURIComponent('Just ordered beautiful furniture from Carolina Futons in Hendersonville, NC!');
+      const text = encodeURIComponent(shareText);
       import('wix-window-frontend').then(({ openUrl }) => {
         openUrl(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
       });
@@ -203,7 +229,7 @@ function initSocialSharing() {
     $w('#sharePinterest').onClick(() => {
       trackSocialShare('pinterest', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
-      const desc = encodeURIComponent('Quality futon furniture from Carolina Futons - Hendersonville, NC');
+      const desc = encodeURIComponent(shareText);
       import('wix-window-frontend').then(({ openUrl }) => {
         openUrl(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
       });
@@ -215,6 +241,18 @@ function initSocialSharing() {
         trackSocialShare('instagram', 'purchase');
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl('https://www.instagram.com/carolinafutons/');
+        });
+      });
+    } catch (e) {}
+
+    // Twitter/X share
+    try {
+      $w('#shareTwitter').onClick(() => {
+        trackSocialShare('twitter', 'purchase');
+        const url = encodeURIComponent('https://www.carolinafutons.com');
+        const text = encodeURIComponent(shareText);
+        import('wix-window-frontend').then(({ openUrl }) => {
+          openUrl(`https://twitter.com/intent/tweet?url=${url}&text=${text}`);
         });
       });
     } catch (e) {}
@@ -256,7 +294,7 @@ function initNewsletterSignup() {
 // ── Referral Section ───────────────────────────────────────────────
 // Encourage customers to share with friends
 
-function initReferralSection() {
+async function initReferralSection() {
   try {
     const section = $w('#referralSection');
     if (!section) return;
@@ -265,10 +303,27 @@ function initReferralSection() {
       $w('#referralTitle').text = 'Share the Love';
     } catch (e) {}
 
+    // Try to get unique referral code for logged-in users
+    let referralCode = '';
     try {
-      $w('#referralMessage').text =
-        'Know someone who\'d love our furniture? Tell a friend about Carolina Futons ' +
-        'and help them discover handcrafted comfort at mountain-town prices.';
+      const result = await getReferralLink();
+      if (result.success && result.referralCode) {
+        referralCode = result.referralCode;
+      }
+    } catch (e) {
+      // Not logged in or service error — use generic link
+    }
+
+    const referralUrl = referralCode
+      ? `https://www.carolinafutons.com?ref=${referralCode}`
+      : 'https://www.carolinafutons.com?ref=friend';
+
+    try {
+      $w('#referralMessage').text = referralCode
+        ? `Share your code ${referralCode} with friends! You both earn store credit ` +
+          'when they make a purchase. Handcrafted comfort at mountain-town prices.'
+        : 'Know someone who\'d love our furniture? Tell a friend about Carolina Futons ' +
+          'and help them discover handcrafted comfort at mountain-town prices.';
     } catch (e) {}
 
     // Copy referral link
@@ -276,9 +331,8 @@ function initReferralSection() {
       try { $w('#referralCopyBtn').accessibility.ariaLabel = 'Copy referral link'; } catch (e) {}
       $w('#referralCopyBtn').onClick(() => {
         trackReferralAction('copy_link');
-        const link = 'https://www.carolinafutons.com?ref=friend';
         if (typeof navigator !== 'undefined' && navigator.clipboard) {
-          navigator.clipboard.writeText(link).then(() => {
+          navigator.clipboard.writeText(referralUrl).then(() => {
             $w('#referralCopyBtn').label = 'Link Copied!';
             setTimeout(() => {
               try { $w('#referralCopyBtn').label = 'Copy Link'; } catch (e) {}
@@ -296,7 +350,7 @@ function initReferralSection() {
         const subject = encodeURIComponent('Check out Carolina Futons!');
         const body = encodeURIComponent(
           'I just ordered from Carolina Futons — great handcrafted furniture at mountain-town prices. ' +
-          'Check them out: https://www.carolinafutons.com'
+          `Check them out: ${referralUrl}`
         );
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`mailto:?subject=${subject}&body=${body}`);
@@ -489,6 +543,103 @@ async function initTestimonialPrompt() {
     section.expand();
   } catch (e) {
     // Testimonial prompt is non-critical
+  }
+}
+
+/**
+ * Initialize star-rating review request section.
+ * Uses reviewsService.submitReview which requires productId, rating, title, and body (min 10 chars).
+ * Submits review for the first product in the order.
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
+function initReviewRequest(orderCtx) {
+  try {
+    const section = $w('#reviewSection');
+    if (!section) return;
+
+    // Need at least one product to review
+    const lineItems = orderCtx?.lineItems || [];
+    const firstItem = lineItems[0];
+    const productId = firstItem?.catalogItemId || firstItem?.productId || '';
+
+    try { $w('#reviewTitle').text = 'Rate Your Experience'; } catch (e) {}
+    try { $w('#reviewPrompt').text = 'How was your shopping experience? A quick rating helps us improve.'; } catch (e) {}
+
+    let selectedRating = 0;
+
+    // Wire up 5 star buttons
+    for (let i = 1; i <= 5; i++) {
+      try {
+        $w(`#reviewStar${i}`).accessibility.ariaLabel = `${i} star${i > 1 ? 's' : ''}`;
+        $w(`#reviewStar${i}`).onClick(() => {
+          selectedRating = i;
+          try { $w('#reviewRating').text = `${i} of 5 stars`; } catch (e) {}
+          // Update star visuals
+          for (let j = 1; j <= 5; j++) {
+            try {
+              $w(`#reviewStar${j}`).style.color = j <= i ? colors.coral : colors.mutedBrown;
+            } catch (e) {}
+          }
+        });
+      } catch (e) {}
+    }
+
+    // Submit review
+    try {
+      try { $w('#reviewSubmitBtn').accessibility.ariaLabel = 'Submit your rating'; } catch (e) {}
+      $w('#reviewSubmitBtn').onClick(async () => {
+        try {
+          if (!selectedRating) {
+            try {
+              $w('#reviewError').text = 'Please select a rating before submitting.';
+              $w('#reviewError').show();
+            } catch (e) {}
+            announce($w, 'Please select a rating before submitting');
+            return;
+          }
+
+          $w('#reviewSubmitBtn').disable();
+          $w('#reviewSubmitBtn').label = 'Submitting...';
+
+          const reviewBody = sanitizeText(
+            $w('#reviewBodyInput')?.value || 'Great shopping experience!',
+            5000
+          );
+          // reviewsService.submitReview expects { productId, rating, title, body }
+          const result = await submitReview({
+            productId,
+            rating: selectedRating,
+            title: `${selectedRating}-star review`,
+            body: reviewBody.length >= 10 ? reviewBody : 'Great shopping experience at Carolina Futons!',
+          });
+
+          if (result.success) {
+            try {
+              $w('#reviewSuccess').text = 'Thank you for your feedback!';
+              $w('#reviewSuccess').show('fade', { duration: 300 });
+              announce($w, 'Thank you for your feedback');
+            } catch (e) {}
+            try { $w('#reviewSubmitBtn').hide(); } catch (e) {}
+            try { $w('#reviewError').hide(); } catch (e) {}
+          } else {
+            try {
+              $w('#reviewError').text = result.error || 'Something went wrong. Please try again.';
+              $w('#reviewError').show();
+            } catch (e) {}
+            announce($w, result.error || 'Something went wrong. Please try again.');
+            $w('#reviewSubmitBtn').enable();
+            $w('#reviewSubmitBtn').label = 'Submit Rating';
+          }
+        } catch (err) {
+          console.error('Review submission error:', err);
+          try { $w('#reviewSubmitBtn').enable(); $w('#reviewSubmitBtn').label = 'Submit Rating'; } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
+    section.expand();
+  } catch (e) {
+    // Review request section is non-critical
   }
 }
 
