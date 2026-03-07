@@ -131,6 +131,22 @@ describe('limitForViewport — mobileLarge support', () => {
     const result = limitForViewport(items);
     expect(result).toHaveLength(6);
   });
+
+  it('uses default wide limit (12) on wide viewport (1280px+)', async () => {
+    setWindowWidth(1400);
+    const { limitForViewport } = await import('public/mobileHelpers');
+    const items = Array.from({ length: 20 }, (_, i) => ({ id: i }));
+    const result = limitForViewport(items);
+    expect(result).toHaveLength(12);
+  });
+
+  it('uses caller wide limit when specified', async () => {
+    setWindowWidth(1400);
+    const { limitForViewport } = await import('public/mobileHelpers');
+    const items = Array.from({ length: 20 }, (_, i) => ({ id: i }));
+    const result = limitForViewport(items, { mobile: 2, desktop: 8, wide: 16 });
+    expect(result).toHaveLength(16);
+  });
 });
 
 // ── Phase 5: collapseOnMobile works for mobileLarge too ──────────────
