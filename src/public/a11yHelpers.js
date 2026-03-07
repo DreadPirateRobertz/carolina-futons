@@ -280,6 +280,37 @@ export function getFocusIndicatorStyle() {
   };
 }
 
+/**
+ * Apply visible focus ring to an interactive element.
+ * Sets borderColor to Mountain Blue on focus and restores on blur.
+ *
+ * @param {Object} element - Wix element with onFocus/onBlur and style
+ * @param {Object} [opts]
+ * @param {string} [opts.color] - Custom focus color (defaults to mountainBlue)
+ */
+export function applyFocusRing(element, opts = {}) {
+  if (!element || !element.onFocus || !element.onBlur) return;
+
+  const focusColor = opts.color || colors.mountainBlue;
+  const focusWidth = '2px';
+
+  element.onFocus(() => {
+    try {
+      element._preFocusBorderColor = element.style.borderColor;
+      element._preFocusBorderWidth = element.style.borderWidth;
+      element.style.borderColor = focusColor;
+      element.style.borderWidth = focusWidth;
+    } catch (e) {}
+  });
+
+  element.onBlur(() => {
+    try {
+      element.style.borderColor = element._preFocusBorderColor;
+      element.style.borderWidth = element._preFocusBorderWidth;
+    } catch (e) {}
+  });
+}
+
 // ── Form Accessibility ──────────────────────────────────────────────
 
 /**

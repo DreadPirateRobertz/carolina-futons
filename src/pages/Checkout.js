@@ -6,7 +6,7 @@
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, applyFocusRing } from 'public/a11yHelpers.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
@@ -52,6 +52,7 @@ $w.onReady(async function () {
     }
   });
 
+  try { initCheckoutFocusIndicators(); } catch (e) {}
   try { collapseOnMobile($w, ['#checkoutFinancing', '#expressCheckoutSection']); } catch (e) {}
   try { initBackToTop($w); } catch (e) {}
 });
@@ -329,6 +330,7 @@ async function initShippingOptions(subtotal) {
       try {
         $item('#shippingOptionRadio').accessibility.ariaLabel = `${option.label} - ${option.description}`;
       } catch (e) {}
+      try { applyFocusRing($item('#shippingOptionRadio')); } catch (e) {}
 
       // Shipping method selection
       try {
@@ -773,6 +775,7 @@ async function initProtectionPlanUpsell() {
             $tierItem('#tierSelectBtn').accessibility.ariaLabel =
               `Add ${tierData.name} for $${tierData.price.toFixed(2)} to ${planData.productName}`;
           } catch (e) {}
+          try { applyFocusRing($tierItem('#tierSelectBtn')); } catch (e) {}
 
           // Click handler — toggle protection plan
           try {
@@ -834,6 +837,7 @@ async function initProtectionPlanUpsell() {
           try {
             declineBtn.accessibility.ariaLabel = `Decline protection for ${planData.productName}`;
           } catch (e) {}
+          try { applyFocusRing(declineBtn); } catch (e) {}
         }
       } catch (e) {}
     });
@@ -846,6 +850,28 @@ async function initProtectionPlanUpsell() {
   } catch (e) {
     console.error('[Checkout] Error loading protection plans:', e);
   }
+}
+
+// ── Focus Indicators ────────────────────────────────────────────
+// Visible focus rings on all interactive checkout elements (WCAG 2.1 AA)
+
+function initCheckoutFocusIndicators() {
+  // Standalone interactive elements
+  const elementIds = [
+    '#addressFullName',
+    '#addressLine1',
+    '#addressCity',
+    '#addressState',
+    '#addressZip',
+    '#validateAddressBtn',
+    '#expressCheckoutBtn',
+    '#orderNotesToggle',
+    '#orderNotesField',
+  ];
+
+  elementIds.forEach(id => {
+    try { applyFocusRing($w(id)); } catch (e) {}
+  });
 }
 
 function addBusinessDays(startDate, days) {
