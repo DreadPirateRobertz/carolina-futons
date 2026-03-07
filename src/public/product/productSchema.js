@@ -148,6 +148,7 @@ export async function injectPinterestMeta(product) {
     const pinterestTags = [
       'pinterest:description',
       'pinterest-rich-pin',
+      'product:availability',
       'product:retailer_item_id',
       'product:category',
       'product:sale_price:amount',
