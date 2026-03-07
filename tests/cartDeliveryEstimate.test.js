@@ -203,6 +203,22 @@ describe('cartDeliveryEstimate', () => {
       expect($w('#cartDeliverySection').collapse).toHaveBeenCalled();
     });
 
+    it('collapses section for null cart on update', async () => {
+      await updateCartDeliveryEstimate($w, null);
+
+      expect($w('#cartDeliverySection').collapse).toHaveBeenCalled();
+      expect(mockGetDeliveryEstimate).not.toHaveBeenCalled();
+    });
+
+    it('collapses section when API throws on update', async () => {
+      mockGetDeliveryEstimate.mockRejectedValue(new Error('Network error'));
+
+      await updateCartDeliveryEstimate($w, MOCK_CART);
+
+      expect($w('#cartDeliverySection').collapse).toHaveBeenCalled();
+      expect(announce).not.toHaveBeenCalled();
+    });
+
     it('handles missing $w elements gracefully', async () => {
       const broken$w = () => { throw new Error('Element not found'); };
       // Should not throw

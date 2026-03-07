@@ -67,7 +67,7 @@ async function initCartPage() {
     updateShippingProgressFromCart(cart);
     updateTierProgressFromCart(cart);
     updateCartFinancingFromCart(cart);
-    initCartDeliveryEstimate($w, cart);
+    await initCartDeliveryEstimate($w, cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     initQuantityControls();
@@ -501,7 +501,9 @@ function initCartListeners() {
         updateCartDeliveryEstimate($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error refreshing cart on change:', e);
+      }
     }, 300);
   });
 }
