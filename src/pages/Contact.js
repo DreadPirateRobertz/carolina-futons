@@ -23,6 +23,7 @@ import {
   initContactHeroSkyline,
   initContactShowroomScene,
 } from 'public/contactIllustrations.js';
+import { injectContactSeoSsr } from 'public/localBusinessSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -37,6 +38,7 @@ $w.onReady(async function () {
   await Promise.allSettled([
     injectContactSchema(),
     injectContactMeta(),
+    injectContactSeoSsr(),
   ]);
   trackEvent('page_view', { page: 'contact' });
 });
