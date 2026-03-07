@@ -712,6 +712,7 @@ export const getProductOgTags = webMethod(
     const image = product.mainMedia || '';
     const url = `https://www.carolinafutons.com/product-page/${product.slug || ''}`;
     const price = product.price || 0;
+    const brand = getBrandName(product);
 
     return JSON.stringify({
       'og:type': 'product',
@@ -724,6 +725,8 @@ export const getProductOgTags = webMethod(
       'product:price:amount': String(price),
       'product:price:currency': 'USD',
       'product:availability': product.inStock !== false ? 'in stock' : 'out of stock',
+      'product:brand': brand || 'Carolina Futons',
+      'product:condition': 'new',
       'twitter:card': 'summary_large_image',
       'twitter:title': title,
       'twitter:description': description,
