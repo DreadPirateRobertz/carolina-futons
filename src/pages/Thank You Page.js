@@ -2,6 +2,7 @@
 // Personalized order summary, Brenda's message, social sharing, newsletter,
 // delivery timeline, referral prompt, and product suggestions
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
+import { subscribeToNewsletter } from 'backend/newsletterService.web';
 import { trackPurchaseComplete, trackSocialShare, trackNewsletterSignup, trackReferralAction } from 'public/engagementTracker';
 import { firePurchase, fireCustomEvent } from 'public/ga4Tracking';
 import { trackPurchase } from 'backend/analyticsHelpers.web';
@@ -237,16 +238,14 @@ function initNewsletterSignup() {
         return;
       }
       try {
-        const { contacts } = await import('wix-crm-frontend');
-        await contacts.appendOrCreateContact({
-          emails: [email],
-          labelKeys: ['custom.newsletter'],
-        });
-        trackNewsletterSignup('thank_you_page');
-        fireCustomEvent('newsletter_signup', { source: 'thank_you_page' });
-        $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
-        $w('#newsletterSuccess').show();
-        $w('#newsletterSignup').disable();
+        const result = await subscribeToNewsletter(email, { source: 'thank_you_page' });
+        if (result.success) {
+          trackNewsletterSignup('thank_you_page');
+          fireCustomEvent('newsletter_signup', { source: 'thank_you_page' });
+          $w('#newsletterSuccess').text = 'You\'re subscribed! Watch for exclusive deals.';
+          $w('#newsletterSuccess').show();
+          $w('#newsletterSignup').disable();
+        }
       } catch (e) {
         console.error('Newsletter signup error:', e);
       }

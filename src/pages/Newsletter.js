@@ -1,6 +1,8 @@
 // Newsletter.js - Newsletter & Email Signup Landing Page
 // Dedicated landing page for email capture from ad campaigns, social media,
-// and promotional links. Integrates with Wix CRM and GA4 tracking.
+// and promotional links. Uses centralized newsletterService for CMS persistence,
+// Klaviyo ESP sync, and Bronze loyalty enrollment.
+import { subscribeToNewsletter } from 'backend/newsletterService.web';
 import { trackEvent, trackNewsletterSignup } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { initBackToTop } from 'public/mobileHelpers';
@@ -67,15 +69,17 @@ function initSignupForm() {
       submitBtn.label = 'Subscribing...';
 
       try {
-        const firstName = nameInput.value?.trim() || '';
-        const { contacts } = await import('wix-crm-frontend');
+        const result = await subscribeToNewsletter(email, { source: 'newsletter_page' });
 
-        const contactInfo = { emails: [email], labelKeys: ['custom.newsletter'] };
-        if (firstName) {
-          contactInfo.name = { first: firstName };
+        if (!result.success) {
+          submitBtn.enable();
+          submitBtn.label = 'Subscribe';
+          try {
+            errorMsg.text = result.message || 'Something went wrong. Please try again.';
+            errorMsg.show();
+          } catch (e) {}
+          return;
         }
-
-        await contacts.appendOrCreateContact(contactInfo);
 
         // Track in both engagement system and GA4/Meta Pixel
         trackNewsletterSignup('newsletter_page');
@@ -89,9 +93,10 @@ function initSignupForm() {
         try { emailInput.hide(); } catch (e) {}
         try { nameInput.hide(); } catch (e) {}
         submitBtn.hide();
+        const code = result.discountCode || 'WELCOME10';
         successMsg.text =
-          'You\'re in! Check your inbox for your 10% welcome discount. ' +
-          'Use code WELCOME10 at checkout.';
+          `You're in! Check your inbox for your 10% welcome discount. ` +
+          `Use code ${code} at checkout.`;
         successMsg.show('fade', { duration: 300 });
         announce($w, 'Successfully subscribed to newsletter');
       } catch (err) {

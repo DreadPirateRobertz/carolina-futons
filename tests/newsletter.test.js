@@ -60,17 +60,11 @@ describe('Newsletter Page', () => {
       expect(content).toContain("trackEvent('page_view'");
     });
 
-    it('uses wix-crm-frontend for contact creation', async () => {
+    it('uses centralized newsletterService for subscriptions', async () => {
       const fs = await import('fs');
       const content = fs.readFileSync('src/pages/Newsletter.js', 'utf8');
-      expect(content).toContain('wix-crm-frontend');
-      expect(content).toContain('appendOrCreateContact');
-    });
-
-    it('labels contacts with custom.newsletter', async () => {
-      const fs = await import('fs');
-      const content = fs.readFileSync('src/pages/Newsletter.js', 'utf8');
-      expect(content).toContain("'custom.newsletter'");
+      expect(content).toContain('newsletterService.web');
+      expect(content).toContain('subscribeToNewsletter');
     });
 
     it('includes ARIA labels for accessibility', async () => {

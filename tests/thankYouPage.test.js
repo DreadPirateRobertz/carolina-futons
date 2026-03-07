@@ -166,6 +166,11 @@ vi.mock('wix-crm-frontend', () => ({
   },
 }));
 
+// Mock newsletterService.web (used by newsletter signup section)
+vi.mock('backend/newsletterService.web', () => ({
+  subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
+}));
+
 // Mock wix-members-frontend
 vi.mock('wix-members-frontend', () => ({
   currentMember: {
@@ -479,14 +484,14 @@ describe('Thank You Page', () => {
       expect(trackNewsletterSignup).toHaveBeenCalled();
     });
 
-    it('handles CRM API failure silently without showing success', async () => {
-      const { contacts } = await import('wix-crm-frontend');
-      contacts.appendOrCreateContact.mockRejectedValueOnce(new Error('CRM unavailable'));
+    it('handles newsletter service failure silently without showing success', async () => {
+      const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+      subscribeToNewsletter.mockRejectedValueOnce(new Error('Service unavailable'));
       await onReadyHandler();
       getEl('#newsletterEmail').value = 'test@example.com';
       const clickHandler = getEl('#newsletterSignup').onClick.mock.calls[0][0];
       await clickHandler();
-      // CRM failure is caught — success message should NOT be shown
+      // Service failure is caught — success message should NOT be shown
       expect(getEl('#newsletterSuccess').show).not.toHaveBeenCalled();
       // Tracking should NOT fire since signup didn't complete
       expect(trackNewsletterSignup).not.toHaveBeenCalled();
