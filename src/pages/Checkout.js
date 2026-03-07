@@ -876,6 +876,7 @@ async function initProtectionPlanUpsell() {
                     $tierItem('#tierCard').style.borderColor = colors.sandDark;
                     $tierItem('#tierSelectBtn').label = 'Add Protection';
                     $tierItem('#tierSelectBtn').style.backgroundColor = colors.sunsetCoral;
+                    $tierItem('#tierSelectBtn').style.color = colors.espresso;
                     announce($w, `${tierData.name} removed from ${planData.productName}`);
                   }
                 } else {

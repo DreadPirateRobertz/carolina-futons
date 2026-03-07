@@ -101,6 +101,7 @@ describe('A11y: CTA buttons with coral bg set espresso text color', () => {
     { path: 'src/public/ProductDetails.js', bgElement: 'swatchCTABtn' },
     { path: 'src/public/ProductPagePolish.js', bgElement: null }, // multiple CTAs
     { path: 'src/public/FeelAndComfort.js', bgElement: null },
+    { path: 'src/pages/Checkout.js', bgElement: null }, // protection plan tier buttons
   ];
 
   for (const { path } of ctaFiles) {

@@ -512,6 +512,7 @@ async function handleProcessRefund() {
     try {
       $w('#refundError').text = 'Failed to process refund.';
       $w('#refundError').show('fade', { duration: 200 });
+      $w('#refundError').style.color = colors.error;
     } catch (e) {}
   }
   setActionLoading(false);

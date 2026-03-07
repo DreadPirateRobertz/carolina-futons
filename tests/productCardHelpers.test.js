@@ -152,6 +152,13 @@ describe('styleBadge', () => {
     expect(el.style.color).toBe('#FFFFFF');
   });
 
+  it('applies coral bg and espresso text for Clearance badge (WCAG AA)', () => {
+    const el = mockElement();
+    styleBadge(el, 'Clearance');
+    expect(el.style.backgroundColor).toBe('#E8845C');
+    expect(el.style.color).toBe('#3A2518');
+  });
+
   it('applies mountainBlue bg for Bestseller badge', () => {
     const el = mockElement();
     styleBadge(el, 'Bestseller');
