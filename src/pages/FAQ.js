@@ -1,15 +1,14 @@
 // FAQ.js - Frequently Asked Questions
 // Accordion-style FAQ with category filters, search, SEO schema markup, and engagement tracking
-import { getFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
+import { injectFaqSeo } from 'public/faqSeo.js';
 import {
   getFaqData,
   getFaqCategories,
   filterFaqsByCategory,
   searchFaqs,
-  buildFaqSchemaData,
 } from 'public/faqHelpers.js';
 
 let currentCategory = null;
@@ -20,10 +19,7 @@ $w.onReady(async function () {
   initCategoryFilters();
   initFaqAccordion();
   initFaqSearch();
-  await Promise.allSettled([
-    injectFaqSchema(),
-    injectFaqMeta(),
-  ]);
+  await injectFaqSeo();
   trackEvent('page_view', { page: 'faq' });
 });
 
@@ -172,25 +168,3 @@ function applyFilters() {
   } catch (e) {}
 }
 
-// ── FAQ Schema for SEO ──────────────────────────────────────────────
-
-async function injectFaqMeta() {
-  try {
-    const [title, description, canonical] = await Promise.all([
-      getPageTitle('faq'),
-      getPageMetaDescription('faq'),
-      getCanonicalUrl('faq'),
-    ]);
-    try { $w('#faqMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
-  } catch (e) {}
-}
-
-async function injectFaqSchema() {
-  try {
-    const schemaData = buildFaqSchemaData(getFaqData());
-    const schema = await getFaqSchema(schemaData);
-    if (schema) {
-      $w('#faqSchemaHtml').postMessage(schema);
-    }
-  } catch (e) {}
-}
