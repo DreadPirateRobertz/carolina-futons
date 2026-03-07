@@ -31,10 +31,16 @@ describe('mobileHelpers', () => {
       expect(getViewport()).toBe('desktop');
     });
 
-    it('returns "wide" for widths above wide breakpoint (1280)', async () => {
-      setWindowWidth(1440);
+    it('returns "wide" for widths between wide (1280) and ultraWide (1440)', async () => {
+      setWindowWidth(1300);
       const { getViewport } = await import('public/mobileHelpers');
       expect(getViewport()).toBe('wide');
+    });
+
+    it('returns "ultraWide" for widths at or above ultraWide breakpoint (1440)', async () => {
+      setWindowWidth(1440);
+      const { getViewport } = await import('public/mobileHelpers');
+      expect(getViewport()).toBe('ultraWide');
     });
 
     it('returns "desktop" when window is undefined (SSR)', async () => {

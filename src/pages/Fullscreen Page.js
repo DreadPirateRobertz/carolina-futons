@@ -4,11 +4,14 @@ import wixData from 'wix-data';
 import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
 import { typography } from 'public/designTokens.js';
 import { announce } from 'public/a11yHelpers';
+import { initBackToTop, collapseOnMobile } from 'public/mobileHelpers';
 
 $w.onReady(function () {
   initVideoGallery();
   initProductVideoGrid();
   trackEvent('page_view', { page: 'product_videos' });
+  try { collapseOnMobile($w, ['#videoOverlay']); } catch (e) {}
+  try { initBackToTop($w); } catch (e) {}
 });
 
 // ── Product Video Gallery ───────────────────────────────────────────

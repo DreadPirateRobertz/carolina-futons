@@ -214,7 +214,7 @@ function showSkeletonGrid() {
     if (!repeater) return;
 
     const viewport = getViewport();
-    const count = viewport === 'mobile' ? 4 : viewport === 'tablet' ? 6 : 8;
+    const count = (viewport === 'mobile' || viewport === 'mobileLarge') ? 4 : viewport === 'tablet' ? 6 : 8;
     const skeletons = buildSkeletonData(count);
 
     repeater.onItemReady(($item, itemData) => {

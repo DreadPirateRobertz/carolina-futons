@@ -3,6 +3,7 @@
 import wixData from 'wix-data';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
+import { isMobile } from 'public/mobileHelpers';
 
 $w.onReady(function () {
   initSearchSuggestions();
@@ -75,9 +76,10 @@ function initSearchSuggestions() {
 
 async function searchProducts(query) {
   try {
+    const limit = isMobile() ? 3 : 5;
     const results = await wixData.query('Stores/Products')
       .contains('name', query)
-      .limit(5)
+      .limit(limit)
       .find();
 
     return results.items.map(item => ({

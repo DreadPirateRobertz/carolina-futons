@@ -10,7 +10,7 @@
  *
  * Dependencies: designTokens (breakpoints), wix-window-frontend (scroll events, lazy-loaded).
  */
-import { breakpoints } from 'public/designTokens';
+import { breakpoints, grid } from 'public/designTokens';
 
 // ── Viewport Detection ───────────────────────────────────────────────
 
@@ -19,23 +19,36 @@ let _resizeListeners = [];
 
 /**
  * Get current viewport category based on window width.
- * @returns {'mobile'|'tablet'|'desktop'|'wide'} Current viewport
+ * Returns all 6 breakpoint categories for granular responsive behavior.
+ * @returns {'mobile'|'mobileLarge'|'tablet'|'desktop'|'wide'|'ultraWide'} Current viewport
  */
 export function getViewport() {
   if (typeof window === 'undefined') return 'desktop';
   const w = window.innerWidth;
-  if (w < breakpoints.tablet) return 'mobile';
+  if (w < breakpoints.mobileLarge) return 'mobile';
+  if (w < breakpoints.tablet) return 'mobileLarge';
   if (w < breakpoints.desktop) return 'tablet';
   if (w < breakpoints.wide) return 'desktop';
-  return 'wide';
+  if (w < breakpoints.ultraWide) return 'wide';
+  return 'ultraWide';
 }
 
 /**
- * Check if current viewport is mobile (< tablet breakpoint).
+ * Check if current viewport is mobile (< tablet breakpoint, includes mobileLarge).
  * @returns {boolean}
  */
 export function isMobile() {
-  return getViewport() === 'mobile';
+  const vp = getViewport();
+  return vp === 'mobile' || vp === 'mobileLarge';
+}
+
+/**
+ * Check if current viewport is tablet or smaller.
+ * @returns {boolean}
+ */
+export function isTabletOrBelow() {
+  const vp = getViewport();
+  return vp === 'mobile' || vp === 'mobileLarge' || vp === 'tablet';
 }
 
 /**
@@ -44,7 +57,7 @@ export function isMobile() {
  */
 export function isTouchDevice() {
   const vp = getViewport();
-  if (vp === 'mobile' || vp === 'tablet') return true;
+  if (vp === 'mobile' || vp === 'mobileLarge' || vp === 'tablet') return true;
   if (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) return true;
   return false;
 }
@@ -135,17 +148,74 @@ export function addSwipeHandler(element, handlers, threshold = 50) {
  * Adapt a repeater grid for mobile — collapses to fewer columns.
  * Wix Studio handles CSS layout, but this controls data loading
  * (e.g., showing fewer items on mobile for performance).
+ * Supports all 6 breakpoints with fallback: mobileLarge→mobile, wide/ultraWide→desktop.
  * @param {Array} items - Full item array
- * @param {Object} [limits] - { mobile: 4, tablet: 6, desktop: 8 }
+ * @param {Object} [limits] - { mobile: 4, mobileLarge: 6, tablet: 6, desktop: 8, wide: 10, ultraWide: 12 }
  * @returns {Array} Sliced items for current viewport
  */
 export function limitForViewport(items, limits = {}) {
   if (!Array.isArray(items)) return [];
   const defaults = { mobile: 4, tablet: 6, desktop: 12 };
   const merged = { ...defaults, ...limits };
-  const vp = getViewport();
-  const limit = merged[vp] || merged.desktop;
+  const limit = getResponsiveValue(merged);
   return items.slice(0, limit);
+}
+
+/**
+ * Get a value adapted to the current viewport from a breakpoint map.
+ * Falls back gracefully: mobileLarge→mobile, wide→desktop, ultraWide→wide→desktop.
+ * @param {Object} values - Map of viewport→value (e.g., { mobile: 1, tablet: 2, desktop: 3 })
+ * @returns {*} The value for the current viewport
+ */
+export function getResponsiveValue(values) {
+  const vp = getViewport();
+  if (values[vp] !== undefined) return values[vp];
+  // Fallback chain
+  if (vp === 'mobileLarge') return values.mobile;
+  if (vp === 'wide') return values.desktop;
+  if (vp === 'ultraWide') return values.wide !== undefined ? values.wide : values.desktop;
+  return values.desktop;
+}
+
+/**
+ * Get responsive spacing values for the current viewport.
+ * @returns {{ pagePadding: string, sectionGap: string, gridGap: string }}
+ */
+export function getResponsiveSpacing() {
+  return {
+    pagePadding: getResponsiveValue({ mobile: '16px', tablet: '24px', desktop: '80px' }),
+    sectionGap: getResponsiveValue({ mobile: '48px', tablet: '64px', desktop: '80px' }),
+    gridGap: getResponsiveValue({ mobile: grid.mobile.gap, tablet: grid.tablet.gap, desktop: grid.desktop.gap }),
+  };
+}
+
+/**
+ * Get responsive typography sizes for the current viewport.
+ * Scales down headings on mobile/tablet while keeping body text readable.
+ * @returns {{ heroTitle: string, h1: string, h2: string, h3: string, h4: string, body: string, bodySmall: string }}
+ */
+export function getResponsiveTypography() {
+  return {
+    heroTitle: getResponsiveValue({ mobile: '32px', tablet: '42px', desktop: '56px' }),
+    h1: getResponsiveValue({ mobile: '28px', tablet: '34px', desktop: '42px' }),
+    h2: getResponsiveValue({ mobile: '24px', tablet: '28px', desktop: '32px' }),
+    h3: getResponsiveValue({ mobile: '20px', tablet: '22px', desktop: '24px' }),
+    h4: getResponsiveValue({ mobile: '18px', tablet: '19px', desktop: '20px' }),
+    body: getResponsiveValue({ mobile: '16px', tablet: '16px', desktop: '16px' }),
+    bodySmall: getResponsiveValue({ mobile: '14px', tablet: '14px', desktop: '14px' }),
+  };
+}
+
+/**
+ * Get the number of grid columns for the current viewport.
+ * @returns {number}
+ */
+export function getResponsiveColumns() {
+  return getResponsiveValue({
+    mobile: Number(grid.mobile.columns),
+    tablet: Number(grid.tablet.columns),
+    desktop: Number(grid.desktop.columns),
+  });
 }
 
 /**

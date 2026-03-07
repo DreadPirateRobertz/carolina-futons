@@ -1,8 +1,11 @@
 // Terms & Conditions.js - Terms of Service Page
 // Standard legal page with table of contents navigation
+import { initBackToTop, collapseOnMobile } from 'public/mobileHelpers';
 
 $w.onReady(function () {
   initTermsNavigation();
+  try { collapseOnMobile($w, ['#termsTocRepeater']); } catch (e) {}
+  try { initBackToTop($w); } catch (e) {}
 });
 
 function initTermsNavigation() {

@@ -1,8 +1,10 @@
 // Refund Policy.js - Return & Refund Policy Page
 // Clean display with accordion sections for easy scanning
+import { initBackToTop } from 'public/mobileHelpers';
 
 $w.onReady(function () {
   initPolicyAccordion();
+  try { initBackToTop($w); } catch (e) {}
 });
 
 function initPolicyAccordion() {

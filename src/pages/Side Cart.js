@@ -16,6 +16,7 @@ import {
 } from 'public/cartService';
 import { announce } from 'public/a11yHelpers.js';
 import { enableSwipe } from 'public/touchHelpers';
+import { isMobile, collapseOnMobile } from 'public/mobileHelpers';
 import {
   getCartItemStyles,
   getProgressBarStyles,
@@ -119,6 +120,9 @@ function initSideCart() {
       }, { threshold: 50, maxTime: 400 });
     }
   } catch (e) {}
+
+  // Collapse non-essential sections on mobile for faster paint
+  try { collapseOnMobile($w, ['#sideCartSuggestion']); } catch (e) {}
 
   // Register repeater handlers once (not on every refresh)
   initSideCartRepeater();

@@ -8,6 +8,7 @@ import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
 import { announce } from 'public/a11yHelpers.js';
 import { colors } from 'public/designTokens.js';
+import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';
 import { validateAddressField, getFieldValidationState } from 'public/checkoutValidation.js';
@@ -50,6 +51,9 @@ $w.onReady(async function () {
       console.error(`[Checkout] Section "${sections[i].name}" failed:`, result.reason);
     }
   });
+
+  try { collapseOnMobile($w, ['#checkoutFinancing', '#expressCheckoutSection']); } catch (e) {}
+  try { initBackToTop($w); } catch (e) {}
 });
 
 // ── Checkout Progress Indicator ──────────────────────────────────────

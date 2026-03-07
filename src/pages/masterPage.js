@@ -1028,7 +1028,7 @@ function collectCoreWebVitals() {
 
     // Detect device type via canonical viewport helper
     const viewport = getViewport();
-    const deviceType = viewport === 'wide' ? 'desktop' : viewport;
+    const deviceType = (viewport === 'wide' || viewport === 'ultraWide') ? 'desktop' : (viewport === 'mobileLarge' ? 'mobile' : viewport);
 
     // Detect connection type
     let connectionType = 'unknown';
