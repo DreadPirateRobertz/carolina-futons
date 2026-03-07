@@ -14,6 +14,27 @@ import { announce, makeClickable } from 'public/a11yHelpers.js';
 import { isMobile } from 'public/mobileHelpers.js';
 import { initImageLightbox } from 'public/galleryHelpers.js';
 
+// ── Data Mapping ─────────────────────────────────────────────────────
+
+/**
+ * Map a backend UGCPhotos record to the field names expected by the frontend.
+ * Backend uses CMS field names (photoUrl, voteCount, memberDisplayName);
+ * frontend rendering expects (imageUrl, votes, submittedBy).
+ *
+ * @param {Object|null} photo - Backend photo record
+ * @returns {Object} Mapped photo with frontend field names
+ */
+export function mapPhotoForDisplay(photo) {
+  if (!photo || typeof photo !== 'object') return {};
+  return {
+    ...photo,
+    imageUrl: photo.photoUrl || '',
+    votes: photo.voteCount != null ? photo.voteCount : 0,
+    submittedBy: photo.memberDisplayName || '',
+    caption: photo.caption || '',
+  };
+}
+
 // ── Filter Tab Definitions ────────────────────────────────────────────
 
 const FILTER_TABS = [

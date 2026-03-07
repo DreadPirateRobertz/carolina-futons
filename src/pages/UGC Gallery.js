@@ -3,7 +3,7 @@
 // Gallery grid, filter tabs, sorting, featured carousel, photo submission
 
 import { getApprovedPhotos, getBeforeAfterPairs, getUGCStats } from 'backend/ugcService.web';
-import { initUGCGallery, renderPhotoCards, buildBeforeAfterSlider } from 'public/UGCGallery.js';
+import { initUGCGallery, renderPhotoCards, buildBeforeAfterSlider, mapPhotoForDisplay } from 'public/UGCGallery.js';
 import { initVoting, handleVoteClick, isVotedByUser, getVotedPhotoIds } from 'public/ugcVoting.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -86,7 +86,7 @@ async function loadGallery() {
       return;
     }
 
-    _allPhotos = result.photos || [];
+    _allPhotos = (result.photos || []).map(mapPhotoForDisplay);
 
     // Initialize the full gallery with filter/sort callbacks
     initUGCGallery($w, {
@@ -123,7 +123,7 @@ async function refreshGallery() {
     });
 
     if (result && result.success) {
-      _allPhotos = result.photos || [];
+      _allPhotos = (result.photos || []).map(mapPhotoForDisplay);
       renderPhotoCards($w, _allPhotos);
     }
   } catch (err) {
@@ -143,9 +143,9 @@ async function loadBeforeAfter() {
       return;
     }
 
-    // Show the first pair in the slider
+    // Show the first pair in the slider (map field names for frontend)
     const firstPair = result.pairs[0];
-    buildBeforeAfterSlider($w, firstPair.before, firstPair.after);
+    buildBeforeAfterSlider($w, mapPhotoForDisplay(firstPair.before), mapPhotoForDisplay(firstPair.after));
 
     try { $w('#ugcBeforeAfterSection').expand(); } catch (e) {}
 

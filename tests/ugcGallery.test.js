@@ -626,3 +626,77 @@ describe('initUGCGallery', () => {
     expect(elements['#ugcSection'].expand).toHaveBeenCalled();
   });
 });
+
+// ── mapPhotoForDisplay ──────────────────────────────────────────────
+
+import { mapPhotoForDisplay } from '../src/public/UGCGallery.js';
+
+describe('mapPhotoForDisplay', () => {
+  it('maps backend field names to frontend field names', () => {
+    const backendPhoto = {
+      _id: 'photo-1',
+      photoUrl: 'https://example.com/photo.jpg',
+      voteCount: 12,
+      memberDisplayName: 'Sarah D.',
+      caption: 'My new futon!',
+      productName: 'Kodiak Frame',
+      roomType: 'living-room',
+      status: 'approved',
+      tags: ['lifestyle'],
+    };
+    const result = mapPhotoForDisplay(backendPhoto);
+    expect(result.imageUrl).toBe('https://example.com/photo.jpg');
+    expect(result.votes).toBe(12);
+    expect(result.submittedBy).toBe('Sarah D.');
+    expect(result._id).toBe('photo-1');
+    expect(result.caption).toBe('My new futon!');
+    expect(result.productName).toBe('Kodiak Frame');
+    expect(result.roomType).toBe('living-room');
+    expect(result.status).toBe('approved');
+    expect(result.tags).toEqual(['lifestyle']);
+  });
+
+  it('handles null/undefined input', () => {
+    expect(mapPhotoForDisplay(null)).toEqual({});
+    expect(mapPhotoForDisplay(undefined)).toEqual({});
+  });
+
+  it('defaults missing fields', () => {
+    const result = mapPhotoForDisplay({ _id: 'p1' });
+    expect(result.imageUrl).toBe('');
+    expect(result.votes).toBe(0);
+    expect(result.submittedBy).toBe('');
+    expect(result.caption).toBe('');
+  });
+
+  it('preserves extra fields from backend', () => {
+    const result = mapPhotoForDisplay({
+      _id: 'p1',
+      photoUrl: 'url',
+      voteCount: 3,
+      memberDisplayName: 'Test',
+      socialSource: 'instagram',
+      beforeAfterId: 'pair-1',
+      beforeAfterType: 'before',
+    });
+    expect(result.socialSource).toBe('instagram');
+    expect(result.beforeAfterId).toBe('pair-1');
+    expect(result.beforeAfterType).toBe('before');
+  });
+
+  it('handles zero vote count', () => {
+    const result = mapPhotoForDisplay({ _id: 'p1', voteCount: 0 });
+    expect(result.votes).toBe(0);
+  });
+
+  it('maps a batch of photos', () => {
+    const photos = [
+      { _id: 'p1', photoUrl: 'url1', voteCount: 5, memberDisplayName: 'A' },
+      { _id: 'p2', photoUrl: 'url2', voteCount: 10, memberDisplayName: 'B' },
+    ];
+    const mapped = photos.map(mapPhotoForDisplay);
+    expect(mapped).toHaveLength(2);
+    expect(mapped[0].imageUrl).toBe('url1');
+    expect(mapped[1].votes).toBe(10);
+  });
+});
