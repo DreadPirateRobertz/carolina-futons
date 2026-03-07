@@ -1,8 +1,9 @@
 # Carolina Futons — MASTER HOOKUP GUIDE
 
 > **The one file that tells you everything about connecting this codebase to a live Wix website.**
-> Last updated: 2026-03-04 by melania (Production Manager)
+> Last updated: 2026-03-07 by melania (Production Manager)
 > **Consolidated from**: FRONTEND-HOOKUP-GUIDE.md + 5 hookup audit files (homepage, product, browse, commerce, content)
+> **Codebase stats**: 39 pages | 109 public helpers | 100 backend modules | 11,067+ tests passing
 
 ---
 
@@ -26,16 +27,19 @@
 ### Part 2: Feature-Specific Hookup
 14. [Fabric Swatch System Hookup](#swatch-hookup)
 15. [Social Media Platform Hookup](#social-media-hookup)
+16. [Room Planner Hookup](#room-planner-hookup)
+17. [Wishlist Alerts Hookup](#wishlist-alerts-hookup)
+18. [Store Credit Hookup](#store-credit-hookup)
 
 ### Part 3: Frontend Element Wiring (consolidated from audit files)
-16. [Frontend Element Wiring Guide](#frontend-element-wiring-guide)
-17. [Page-by-Page Element Reference](#page-by-page-element-reference)
+19. [Frontend Element Wiring Guide](#frontend-element-wiring-guide)
+20. [Page-by-Page Element Reference](#page-by-page-element-reference)
 
 ### Part 4: Reference
-18. [Backend Services](#backend-services-already-built)
-19. [Complete Module Reference](#module-reference)
-20. [CMS Collection Reference](#cms-reference)
-21. [Troubleshooting](#troubleshooting)
+21. [Backend Services](#backend-services-already-built)
+22. [Complete Module Reference](#module-reference)
+23. [CMS Collection Reference](#cms-reference)
+24. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -48,7 +52,7 @@ Think of the Carolina Futons website like a restaurant:
 - **The walk-in fridge** = where the data lives (products, prices, customer info). This is the **CMS** (Content Management System).
 - **The recipes** = the instructions that tell the kitchen what to do. These are the **code modules**.
 
-**What we built:** 78 kitchen recipes (backend modules), 28 dining room layouts (pages), 43 shared tools (utilities), and a complete inventory list (88 products).
+**What we built:** 100 kitchen recipes (backend modules), 39 dining room layouts (pages), 109 shared tools (utilities), and a complete inventory list (88 products).
 
 **What you need to do:** Put the recipes in the kitchen, set up the fridge, and open the doors.
 
@@ -113,9 +117,9 @@ If you ever want to use a **custom domain** (carolinafutons.com instead of usern
 Print this out and check off as you go:
 
 ```
-[ ] 1. Deploy 78 backend .web.js/.js files to Wix Velo backend/
-[ ] 2. Deploy 28 page .js files to Wix page code editor
-[ ] 3. Deploy 43 public utility .js files to Wix public/
+[ ] 1. Deploy 100 backend .web.js/.js files to Wix Velo backend/
+[ ] 2. Deploy 39 page .js files to Wix page code editor
+[ ] 3. Deploy 109 public utility .js files to Wix public/
 [ ] 4. Create 16 priority CMS collections in Dashboard
 [ ] 5. Verify 8 secrets in Secrets Manager
 [ ] 6. Install 7 free plugins (GA4, Meta Pixel, etc.)
@@ -125,9 +129,9 @@ Print this out and check off as you go:
 [ ] 10. Connect domain, publish, verify 14-point checklist
 ```
 
-### What's Ready vs. In Progress (Feb 28 evening status)
+### What's Ready vs. In Progress (Mar 7 status)
 
-**SHIPPED (merged to main, ready to deploy):**
+**SHIPPED (merged to main, ready to deploy) — 50+ PRs merged:**
 - Homepage hero overhaul (full-bleed lifestyle, gradient overlay, staggered animations)
 - Announcement bar (rotating messages, dark espresso bg)
 - 5-icon trust bar (white-glove, financing, handcrafted, swatches, guarantee)
@@ -138,25 +142,41 @@ Print this out and check off as you go:
 - Email capture popup (exit-intent, WELCOME10, session gating, ARIA)
 - Financing calculator + BNPL display (monthly payments, Afterpay)
 - offWhite token (#FAF7F2) replacing pink backgrounds
-
-**IN REVIEW (PR #83, pending merge):**
 - Footer redesign (4-column links, newsletter signup, social icons, trust badges, payment methods)
+- Cart Page ARIA live regions + keyboard navigation
+- Side Cart ARIA live regions
+- Checkout visible focus rings on all interactive elements
+- Category Page SSR breadcrumbs + structured data + keyboard nav
+- FAQ page structured data JSON-LD via SSR
+- Product Page structured data JSON-LD via SSR + OG brand detection
+- Category Page SSR Open Graph + Twitter Card meta tags
+- LocalBusiness SSR structured data (Contact + Store Locator)
+- Brand detection consolidation (3 duplicate functions -> 1 canonical in productPageUtils)
+- Store credit integration (Member Page + Checkout auto-apply)
+- Wishlist price drop email notifications (best-effort pattern)
+- Room Planner full interactive hookup (dimension inputs, presets, canvas, save/share)
+- Buying Guides page (category filtering + reading time)
+- Illustration pipeline: 6 Figma SVGs processed (mountain-skyline, timeline, contact-hero, contact-showroom, footer-divider, team-portrait)
 
 **IN PROGRESS (crew working now):**
-- Swatch kit CTA + free swatches promotion (CF-y8je — rennala)
-- Live chat widget (CF-5ggk — godfrey)
-- Product size/dimension guide (CF-p03z — miquella)
+- Product Page Open Graph tags (CF-203 — godfrey)
+- Member: loyalty tier dashboard (CF-v7cr — rennala)
+- Member: gift card flow (CF-ic6o — radahn)
+- Member: order history and tracking (CF-bpvo — miquella)
 
-**IN PROGRESS (convoy polecats):**
-- Performance optimization — lazy loading, code splitting, Core Web Vitals (cf-2epn)
-- SEO & metadata — dynamic meta tags, JSON-LD, OpenGraph (cf-k9ot)
-- Checkout flow polish — progress indicator, form validation (cf-7nky)
-- Mobile responsive audit — breakpoints, hamburger nav, touch targets (cf-wn17)
-- Wishlist & save for later (cf-ogdt)
+**IN PROGRESS (polecats):**
+- Team portrait illustration rework (CF-3qt — atom)
+- Contact showroom illustration rework (CF-6ds — brahmin)
 
-**NOT STARTED (ready queue):**
-- Lifestyle product photography (CF-x8pd) — needs actual photos
-- Email integration with Klaviyo/Mailchimp (cf-tcww) — current popup uses built-in newsletter service
+**READY QUEUE (38 beads, prioritized):**
+- Member: wishlist management (CF-wpfs)
+- Engagement: Pinterest Rich Pins, Thank You social, social proof toasts, UGC gallery, referral, exit-intent
+- Product: financing calc, swatch request, video, Q&A, size guide, 360 viewer
+- Cart/Checkout: cross-sell, delivery dates, address autocomplete, order summary, debounce, coupon UX
+- Performance: prioritizeSections, CLS prevention, filter optimization, JS deferral, import budgets, lazy loading
+- A11y: alt text audit, CTA contrast audit
+- SEO: canonical URLs + Twitter Cards
+- CI: coverage thresholds, test reorg, coverage reporting
 
 ---
 
@@ -314,7 +334,32 @@ These are the "kitchen recipes" — the server-side logic. All files go in the W
 | `utils/sanitize.js` | `backend/utils/` | Input sanitization (required by all modules) |
 | `permissions.json` | `backend/` | Backend permissions config |
 
-**Total: 77 backend files**
+**New since Sprint 2 (Mar 1-7):**
+
+| # | File | What It Does |
+|---|------|-------------|
+| 79 | `storeCreditService.web.js` | Store credit balance, FIFO application, expiration tracking |
+| 80 | `wishlistAlerts.web.js` | Wishlist price drop/back-in-stock/low-stock alerts + email notifications |
+| 81 | `customizationService.web.js` | Product customization options |
+| 82 | `dynamicPricing.web.js` | Dynamic pricing engine |
+| 83 | `affiliateProgram.web.js` | Affiliate tracking & commissions |
+| 84 | `currencyService.web.js` | Multi-currency support |
+| 85 | `customsEstimator.web.js` | International customs estimates |
+| 86 | `internationalShipping.web.js` | International shipping rates |
+| 87 | `pinterestCatalogSync.web.js` | Pinterest catalog synchronization |
+| 88 | `productReviews.web.js` | Product review management |
+| 89 | `promotionsEngine.web.js` | Advanced promotions logic |
+| 90 | `protectionPlan.web.js` | Tiered warranty/protection plans |
+| 91 | `smsService.web.js` | SMS notifications |
+| 92 | `socialMediaKit.web.js` | Social media content toolkit |
+| 93 | `subscriptionService.web.js` | Subscription/recurring orders |
+| 94 | `ugcService.web.js` | User-generated content management |
+| 95 | `virtualConsultation.web.js` | Virtual design consultation booking |
+| 96 | `warrantyService.web.js` | Warranty management |
+| 97 | `tradeProgram.web.js` | Trade/designer program |
+| 98 | `loadCatalogMaster.web.js` | Master catalog loader |
+
+**Total: 95+ backend files**
 
 ---
 
@@ -329,53 +374,66 @@ Each page in your Wix Editor has a code panel at the bottom. Click the `{ }` ico
 3. Paste the corresponding code from `src/pages/`
 4. Repeat for each page
 
-### Page Code Files (28 files)
+### Page Code Files (39 files)
 
-**Main Pages:**
+**Main Pages (Revenue Pipeline):**
 
-| Page | File | Size | What It Does |
-|------|------|------|-------------|
-| Homepage | `Home.js` | 20KB | Hero, 6 category cards, featured products, testimonials, video, quiz CTA |
-| Product Page | `Product Page.js` | 20KB | Gallery, variants, swatches, cross-sell, reviews, wishlist, bundles |
-| Category Page | `Category Page.js` | 44KB | Filters (brand/price/size/color), product grid, quick view, compare bar |
-| Cart | `Cart Page.js` | 11KB | Cart items, shipping progress, loyalty tier, cross-sell |
-| Side Cart | `Side Cart.js` | 10KB | Slide-out mini cart |
-| Checkout | `Checkout.js` | 4KB | Trust signals, order notes, delivery estimate |
-| Thank You | `Thank You Page.js` | 18KB | Confirmation, delivery timeline, social sharing, referral |
-| Master Page | `masterPage.js` | 27KB | Global header, footer, nav, announcement bar, schema injection |
+| Page | File | What It Does |
+|------|------|-------------|
+| Homepage | `Home.js` | Hero, 6 category cards, featured products, testimonials, video, quiz CTA |
+| Product Page | `Product Page.js` | Gallery, variants, swatches, cross-sell, reviews, wishlist, bundles, JSON-LD SSR |
+| Category Page | `Category Page.js` | Filters (brand/price/size/color), product grid, quick view, compare bar, SSR breadcrumbs |
+| Cart | `Cart Page.js` | Cart items, shipping progress, loyalty tier, cross-sell, ARIA live regions |
+| Side Cart | `Side Cart.js` | Slide-out mini cart, ARIA live regions |
+| Checkout | `Checkout.js` | Trust signals, order notes, delivery estimate, store credit, focus rings |
+| Thank You | `Thank You Page.js` | Confirmation, delivery timeline, social sharing, referral |
+| Master Page | `masterPage.js` | Global header, footer, nav, announcement bar, schema injection |
 
 **Content Pages:**
 
-| Page | File | Size |
-|------|------|------|
-| About | `About.js` | 3KB |
-| Contact | `Contact.js` | 6KB |
-| FAQ | `FAQ.js` | 7KB |
-| Shipping Policy | `Shipping Policy.js` | 5KB |
-| Blog | `Blog.js` | 7KB |
-| Blog Post | `Blog Post.js` | 2KB |
+| Page | File | Notes |
+|------|------|-------|
+| About | `About.js` | Brand story, team, showroom, testimonials |
+| Contact | `Contact.js` | Contact form, appointment booking, LocalBusiness SSR |
+| FAQ | `FAQ.js` | FAQ listing, JSON-LD structured data SSR |
+| Blog | `Blog.js` | Blog listing, category filters |
+| Blog Post | `Blog Post.js` | Individual article renderer |
+| Newsletter | `Newsletter.js` | Newsletter signup page |
+| Sustainability | `Sustainability.js` | Eco-badge, sustainability info |
+| Assembly Guides | `Assembly Guides.js` | Product assembly documentation |
+| Buying Guides | `Buying Guides.js` | **NEW** — Category filtering + reading time |
+| Buying Guide | `Buying Guide.js` | **NEW** — Individual guide detail |
 
 **Feature Pages:**
 
-| Page | File | Size |
-|------|------|------|
-| Member Page | `Member Page.js` | 23KB |
-| Search Results | `Search Results.js` | 4KB |
-| Search Suggestions | `Search Suggestions Box.js` | 3KB |
-| Compare | `Compare Page.js` | 10KB |
-| Product Videos | `Fullscreen Page.js` | 5KB |
+| Page | File | Notes |
+|------|------|-------|
+| Member Page | `Member Page.js` | Orders, wishlist, loyalty, store credit, returns |
+| Search Results | `Search Results.js` | Search results with filters |
+| Search Suggestions | `Search Suggestions Box.js` | Autocomplete dropdown |
+| Compare | `Compare Page.js` | Side-by-side product specs |
+| Room Planner | `Room Planner.js` | **NEW** — Interactive room layout with save/share |
+| Style Quiz | `Style Quiz.js` | Style preference quiz |
+| Store Locator | `Store Locator.js` | Showroom finder, LocalBusiness SSR |
+| Financing | `Financing.js` | Financing calculator page |
+| Gift Cards | `Gift Cards.js` | Gift card purchase/redemption |
+| UGC Gallery | `UGC Gallery.js` | User-generated content gallery |
+| Referral Page | `Referral Page.js` | Referral program page |
+| Order Tracking | `Order Tracking.js` | Order status/tracking |
+| Returns | `Returns.js` | Self-service returns portal |
+| Admin Returns | `Admin Returns.js` | Admin returns management |
+| Fullscreen Page | `Fullscreen Page.js` | Full-screen modal container |
 
 **Static/Legal:**
 
-| Page | File | Size |
-|------|------|------|
-| Privacy Policy | `Privacy Policy.js` | 1KB |
-| Terms | `Terms & Conditions.js` | 1KB |
-| Refund Policy | `Refund Policy.js` | 3KB |
-| Accessibility | `Accessibility Statement.js` | 0.3KB |
-| Returns | `Returns.js` | 6KB |
-| Admin Returns | `Admin Returns.js` | 19KB |
-| Style Quiz | `Style Quiz.js` | 8KB |
+| Page | File |
+|------|------|
+| Accessibility Statement | `Accessibility Statement.js` |
+| Privacy Policy | `Privacy Policy.js` |
+| Terms & Conditions | `Terms & Conditions.js` |
+| Refund Policy | `Refund Policy.js` |
+| Shipping Policy | `Shipping Policy.js` |
+| Price Match Guarantee | `Price Match Guarantee.js` |
 
 ---
 
@@ -388,7 +446,7 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 1. In the Wix Editor file tree, click `public/`
 2. Create each file and paste the code from `src/public/`
 
-### Public Utility Files (40 files)
+### Public Utility Files (98 files)
 
 | File | Size | What It Does |
 |------|------|-------------|
@@ -446,7 +504,36 @@ These go in the Wix Velo `public/` directory (visible to both frontend and backe
 | `FooterSection.js` | 8KB | Extracted footer component (4-column links, newsletter, social icons, trust badges, payment methods) |
 | `ProductFinancing.js` | 6KB | Updated: financing calculator with BNPL monthly payments modal |
 
-**Also create `public/product/` subdirectory with:**
+**New in Mar 1-7 sprints:**
+
+| File | What It Does |
+|------|-------------|
+| `localBusinessSeo.js` | SSR injection of LocalBusiness/FurnitureStore structured data (Contact + Store Locator) |
+| `storeCreditHelpers.js` | Store credit dashboard + checkout auto-apply |
+| `roomPlannerHelpers.js` | Room dimension formatting, scale calculation, placement labels |
+| `buyingGuidesHelpers.js` | Buying guide category filtering + reading time |
+| `faqSeo.js` | FAQ page structured data helpers |
+| `categoryFilterHelpers.js` | Category page filter optimization |
+| `MountainSkylineFigma.js` | Figma-pipeline header skyline (replaces MountainSkyline.js) |
+| `CartIllustrationsFigma.js` | Figma-pipeline cart illustrations |
+| `OnboardingIllustrationsFigma.js` | Figma-pipeline onboarding illustrations |
+| `aboutContactHelpers.js` | About/Contact page shared helpers |
+| `affiliateHelpers.js` | Affiliate program frontend |
+| `consultationHelpers.js` | Virtual consultation booking |
+| `financingPageHelpers.js` | Financing page calculator helpers |
+| `flashSaleHelpers.js` | Flash sale countdown + urgency |
+| `footerContent.js` | Footer content data |
+| `loyaltyHelpers.js` | Loyalty tier display helpers |
+| `schedulerHelpers.js` | Delivery scheduling frontend |
+| `sustainabilityHelpers.js` | Sustainability page helpers |
+| `tradeHelpers.js` | Trade program frontend |
+| `ugcVoting.js` | UGC gallery voting |
+| `WishlistCardButton.js` | Wishlist heart button component |
+| `performanceHelpers.js` | Performance monitoring helpers |
+| `checkoutProgress.js` | Checkout step progress indicator |
+| `checkoutValidation.js` | Checkout form validation |
+
+**Also deploy `public/product/` subdirectory with:**
 
 | File | What It Does |
 |------|-------------|
@@ -1114,6 +1201,114 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | JSON-LD Product schema | Google rich results (price, rating, availability) | Built |
 | JSON-LD LocalBusiness schema | Google Maps, knowledge panel | Built |
 
+## Room Planner Hookup
+
+**Backend:** `roomPlanner.web.js` — CRUD for room layouts, dimension validation, furniture placement
+**Frontend:** `roomPlannerHelpers.js` — Canvas interactions, drag/drop, measurement display
+**Page:** `Room Planner.js` — Full interactive page (merged PR #207)
+**CMS:** `RoomLayouts` collection — stores saved room designs per member
+
+### Wix Studio Setup
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Room Canvas | HtmlComponent | `#roomCanvas` | Main interactive area. 100% width, 600px min height. |
+| Dimension Inputs | Input | `#roomWidth`, `#roomLength` | Number inputs for room dimensions (feet). Min 5, max 50. |
+| Furniture Palette | Repeater | `#furniturePalette` | Draggable product thumbnails from catalog. |
+| Save Layout Button | Button | `#saveLayoutBtn` | Requires member login. Saves to RoomLayouts CMS. |
+| Reset Button | Button | `#resetRoomBtn` | Clears canvas to empty room state. |
+| Screenshot Button | Button | `#screenshotBtn` | Captures canvas as PNG for sharing/saving. |
+
+### Verification Checklist
+
+```
+[ ] Room dimensions accept valid range (5-50 ft), reject invalid
+[ ] Furniture items drag from palette to canvas
+[ ] Placed items can be rotated, resized, and deleted
+[ ] Save requires member login (redirect to login if logged out)
+[ ] Saved layouts appear in Member Page "My Room Plans" section
+[ ] Reset clears all placed items
+[ ] Mobile: touch drag works, palette scrolls horizontally
+```
+
+---
+
+## Wishlist Alerts Hookup
+
+**Backend:** `wishlistAlerts.web.js` — Price drop, back-in-stock, and low-stock email notifications
+**Frontend:** `WishlistCardButton.js` — Heart toggle on product cards
+**Page Integration:** `Member Page.js` — Wishlist management tab (merged PR #211)
+**CMS:** `Wishlist`, `WishlistAlertPrefs` collections
+
+### Wix Studio Setup
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Wishlist Heart | Button | `#wishlistHeart` | On every product card. Toggle adds/removes from wishlist. |
+| Alert Preferences | Repeater | `#alertPrefsRepeater` | In Member Page. Shows per-item alert toggles (price drop, back-in-stock). |
+| Wishlist Grid | Repeater | `#wishlistGrid` | In Member Page. Shows all wishlisted products with current price and status. |
+| Move to Cart | Button | `#moveToCartBtn` | Per-item button in wishlist grid. Adds to cart and removes from wishlist. |
+
+### Email Triggers
+
+| Trigger | Backend Method | Template |
+|---------|---------------|----------|
+| Price drops ≥10% | `checkPriceDropAlerts()` | `PriceDropAlert` triggered email |
+| Item back in stock | `checkBackInStockAlerts()` | `BackInStockAlert` triggered email |
+| Low stock (≤5 units) | `checkLowStockAlerts()` | `LowStockAlert` triggered email |
+
+### Verification Checklist
+
+```
+[ ] Heart button toggles on product cards (filled = wishlisted)
+[ ] Wishlisted items appear in Member Page wishlist tab
+[ ] Alert preferences toggle per-item (price drop, back-in-stock)
+[ ] Move to Cart transfers item correctly
+[ ] Price drop email fires when product price decreases ≥10%
+[ ] Back-in-stock email fires when inventory goes from 0 to >0
+[ ] imageUrl validated as http/https only (no javascript: or data: URIs)
+[ ] Missing price stored as null (not 0) to prevent false alerts
+```
+
+---
+
+## Store Credit Hookup
+
+**Backend:** `storeCreditService.web.js` — Issue, redeem, check balance, transaction history
+**Frontend:** `storeCreditHelpers.js` — Balance display, redemption UI, status colors
+**Page Integration:** `Member Page.js` (balance display), `Checkout.js` (redemption), `Thank You Page.js` (earning)
+**CMS:** `StoreCredits` collection — balance, transactions, expiry per member
+
+### Wix Studio Setup
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Credit Balance | Text | `#storeCreditBalance` | In Member Page header. Shows current balance formatted as currency. |
+| Transaction History | Repeater | `#creditHistoryRepeater` | In Member Page. Lists earned/spent/expired transactions with dates. |
+| Apply Credit Toggle | Checkbox | `#applyStoreCredit` | In Checkout. Toggles store credit application to order total. |
+| Credit Applied Amount | Text | `#creditAppliedAmount` | In Checkout. Shows amount being applied. |
+
+### How Credits Are Earned
+
+| Action | Credit Amount | Backend Method |
+|--------|-------------|---------------|
+| Referral signup | Configurable | `issueReferralCredit()` |
+| Product review | Configurable | `issueReviewCredit()` |
+| Return refund (store credit option) | Order amount | `issueReturnCredit()` |
+| Promotion/gift | Variable | `issuePromoCredit()` |
+
+### Verification Checklist
+
+```
+[ ] Member Page shows current store credit balance
+[ ] Transaction history lists all credit events with dates
+[ ] Checkout "Apply Store Credit" reduces order total
+[ ] Credits cannot exceed order total (partial application)
+[ ] Zero balance hides the apply option in checkout
+[ ] Credits have expiry dates, expired credits are excluded
+[ ] Credit issuance requires valid member authentication
+```
+
 ---
 
 ## Module Reference (Quick Lookup)
@@ -1173,6 +1368,13 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 | **Returns admin** | returnsService | ReturnsAdmin, ReturnsPortal | — |
 | **Newsletter/email capture** | newsletterService | exitIntentCapture | ContactSubmissions |
 | **Footer** | — | FooterSection | — |
+| **Store credit** | storeCreditService | storeCreditHelpers | StoreCredits |
+| **Protection plans** | protectionPlan | Checkout.js | — |
+| **Room planner** | roomPlanner | roomPlannerHelpers | RoomLayouts |
+| **Buying guides** | buyingGuides | buyingGuidesHelpers | — |
+| **LocalBusiness SEO** | seoHelpers, storeLocatorService | localBusinessSeo | — |
+| **Illustrations** | — | *Illustrations.js (7 modules) | — |
+| **Brand detection** | — | productPageUtils (canonical) | — |
 
 ---
 
@@ -1180,12 +1382,12 @@ Our code automatically generates these meta tags on every page (via `seoHelpers.
 
 | Constant | Value |
 |----------|-------|
-| Free shipping threshold | $999 |
+| Free shipping threshold | DISABLED ($999,999 — code intact, threshold unreachable) |
 | Bundle discount | 5% (frame + mattress) |
 | Tiered discount | 5% over $500, 10% over $1,000 |
 | White-glove local | $149 (ZIP 287-289) |
 | White-glove regional | $249 (ZIP 270-399) |
-| White-glove free | Orders over $1,999 |
+| White-glove free | DISABLED ($999,999 — code intact, threshold unreachable) |
 | Store hours | Wed-Sat 10am-5pm, Mon-Tue by appointment |
 | Store address | 824 Locust St Ste 200, Hendersonville NC 28792 |
 | Phone | (828) 252-9449 |
@@ -1219,10 +1421,56 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 5,819 tests across 158 files — all passing (2 pre-existing notificationService failures unrelated to new code).
+**Current status:** 11,067+ tests across 290 files — all passing, zero failures.
+
+---
+
+## Hookup Readiness Summary
+
+| Category | Pages | Code IDs | In Spec | Missing | % Ready |
+|----------|-------|----------|---------|---------|---------|
+| Commerce (8 pages) | Cart, Side Cart, Checkout, Thank You, Member, Order Tracking, Gift Cards, Financing | 371 | 216 | 154 | 58% |
+| Browse (5 pages) | Category, Search, FAQ, Style Quiz, Compare | 158 | 126 | 32 | 80% |
+| Content (5 pages) | Blog, Blog Post, Newsletter, About, Contact | 100 | 40 | 60 | 40% |
+| Homepage (1 page) | Home | 74 | 31 | 43 | 42% |
+| Product (1 page) | Product Page | 34+ | 17 | 14+ | 50% |
+| **TOTAL** | **20 audited** | **737** | **430** | **307** | **58%** |
+
+**Production-ready pages (100% spec match):** Order Tracking, Blog
+
+**Critical gaps (entire pages missing from spec):** Returns (51 IDs), Admin Returns (57 IDs), Style Quiz (25 IDs), Compare (24 IDs), Newsletter (14 IDs)
+
+**Not yet audited (10 pages):** Room Planner, Buying Guides, Buying Guide, Store Locator, Sustainability, Gift Cards, Financing, Referral Page, UGC Gallery, Assembly Guides
+
+---
+
+## Illustration Assets
+
+### Figma Pipeline SVGs (src/assets/illustrations/)
+
+| Asset | Description | Pipeline Status |
+|-------|-------------|----------------|
+| `mountain-skyline-figma` | Header skyline silhouette | .svg -> .optimized -> .tokenized -> .wix.html |
+| `blue-ridge-timeline` | About page timeline | Complete |
+| `contact-hero` | Contact page hero scene | Complete |
+| `contact-showroom` | Showroom building illustration | Complete (rework in progress) |
+| `footer-mountain-divider` | Footer decorative divider | Complete |
+| `team-portrait` | Team illustration | Complete (rework in progress) |
+
+### Illustration JS Modules (src/public/)
+
+| Module | Scenes | Status |
+|--------|--------|--------|
+| `comfortIllustrations.js` | 3 (plush/medium/firm) | Active (JS template — migration pending) |
+| `CartIllustrations.js` | 3 (skyline/empty/progress) | Active (Figma variant exists) |
+| `emptyStateIllustrations.js` | 8 empty states | Active (migration pending) |
+| `aboutIllustrations.js` | Brand story scenes | Active (migration pending) |
+| `contactIllustrations.js` | Hero + showroom | Active (Figma SVGs exist) |
+| `onboardingIllustrations.js` | Onboarding scenes | Active (Figma variant exists) |
+| `MountainSkyline.js` | Header skyline | Active (Figma variant exists) |
 
 ---
 
 *Generated by melania (Production Manager) — Carolina Futons cfutons rig*
 *Source files: refinery/rig/src/ (canonical codebase)*
-*Last verified: 2026-03-01 05:15 MST (updated: AR viewer hookup, test count 5,819, AR Sprint modules)*
+*Last verified: 2026-03-07 (test count 11,067+, 39 pages, 109 helpers, 100 backend modules)*
