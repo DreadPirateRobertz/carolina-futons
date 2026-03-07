@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carolina Futons — Design System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Brand Colors */
+    --sand: #E8D5B7;
+    --espresso: #3A2518;
+    --mountain-blue: #5B8FA8;
+    --coral: #E8845C;
+    /* Backgrounds */
+    --off-white: #FAF7F2;
+    --sand-light: #F2E8D5;
+    /* Extended */
+    --mountain-blue-light: #8BB5C9;
+    --coral-light: #F0A882;
+    --espresso-light: #6B4D3A;
+    --sky-gradient-top: #B8D4E3;
+    --sky-gradient-bottom: #F0C87A;
+    /* Spacing */
+    --xs: 4px; --sm: 8px; --md: 16px; --lg: 24px; --xl: 32px; --xxl: 48px; --xxxl: 64px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--off-white); color: var(--espresso); font-family: 'Source Sans 3', sans-serif; }
+
+  /* Page container */
+  .page { max-width: 1440px; margin: 0 auto; padding: 48px; }
+
+  /* Section headers */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px; font-weight: 700;
+    color: var(--espresso);
+    border-bottom: 3px solid var(--coral);
+    padding-bottom: 12px;
+    margin-bottom: 32px;
+    margin-top: 64px;
+  }
+  .section-title:first-of-type { margin-top: 0; }
+  .subsection-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; font-weight: 600;
+    color: var(--espresso);
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+  .label {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--espresso-light);
+    margin-bottom: 4px;
+  }
+
+  /* ── HERO BANNER ── */
+  .hero {
+    background: linear-gradient(135deg, var(--sand) 0%, var(--sand-light) 50%, var(--off-white) 100%);
+    border: 3px solid var(--espresso);
+    border-radius: 12px;
+    padding: 64px;
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 8px;
+    background: linear-gradient(90deg, var(--coral), var(--mountain-blue), var(--coral));
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 56px; font-weight: 700;
+    color: var(--espresso);
+    margin-bottom: 8px;
+  }
+  .hero .subtitle {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 20px; font-weight: 400;
+    color: var(--espresso-light);
+    margin-bottom: 4px;
+  }
+  .hero .tagline {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; font-style: italic;
+    color: var(--mountain-blue);
+  }
+
+  /* ── COLOR SWATCHES ── */
+  .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+  .color-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(58,37,24,0.12);
+    background: white;
+  }
+  .color-swatch { height: 120px; }
+  .color-info { padding: 16px; }
+  .color-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .color-hex { font-family: monospace; font-size: 14px; color: var(--espresso-light); }
+  .color-usage { font-size: 13px; color: var(--espresso-light); margin-top: 8px; line-height: 1.4; }
+
+  /* ── TYPOGRAPHY ── */
+  .type-specimen {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+  }
+  .type-sample-heading {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 8px;
+  }
+  .type-sample-body {
+    font-family: 'Source Sans 3', sans-serif;
+    margin-bottom: 8px;
+  }
+  .type-meta {
+    font-size: 12px;
+    color: var(--espresso-light);
+    font-family: monospace;
+    border-top: 1px solid var(--sand);
+    padding-top: 8px;
+    margin-top: 12px;
+  }
+
+  /* ── SPACING ── */
+  .spacing-grid { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; margin-bottom: 32px; }
+  .spacing-item { text-align: center; }
+  .spacing-box {
+    background: var(--mountain-blue);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .spacing-label { font-size: 12px; font-weight: 600; color: var(--espresso); }
+  .spacing-value { font-size: 11px; font-family: monospace; color: var(--espresso-light); }
+
+  /* ── SHADOWS ── */
+  .shadow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+  .shadow-card {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── GRID / BREAKPOINTS ── */
+  .breakpoint-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+    margin-bottom: 32px;
+  }
+  .breakpoint-table th {
+    background: var(--espresso);
+    color: var(--sand);
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+  }
+  .breakpoint-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sand-light);
+    font-size: 14px;
+  }
+  .breakpoint-table tr:last-child td { border-bottom: none; }
+
+  /* ── BUTTONS ── */
+  .button-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .btn {
+    display: inline-block;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 250ms ease;
+  }
+  .btn-primary { background: var(--coral); color: white; }
+  .btn-secondary { background: transparent; border-color: var(--espresso); color: var(--espresso); }
+  .btn-ghost { background: transparent; color: var(--mountain-blue); border-color: var(--mountain-blue); }
+  .btn-sm { padding: 8px 20px; font-size: 14px; }
+  .btn-lg { padding: 16px 40px; font-size: 18px; }
+
+  /* ── ILLUSTRATION ZONES ── */
+  .zone-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
+  .zone-card {
+    border: 2px dashed var(--mountain-blue);
+    border-radius: 12px;
+    padding: 24px;
+    background: white;
+    min-height: 200px;
+  }
+  .zone-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--mountain-blue);
+    margin-bottom: 8px;
+  }
+  .zone-card .dimensions {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--espresso-light);
+    margin-bottom: 12px;
+  }
+  .zone-card ul { list-style: none; padding: 0; }
+  .zone-card li {
+    font-size: 14px;
+    padding: 4px 0;
+    color: var(--espresso-light);
+  }
+  .zone-card li::before {
+    content: '\2022';
+    color: var(--coral);
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  /* ── STYLE GUIDE ── */
+  .guideline-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
+  .guideline {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+  }
+  .guideline.do { border-left: 4px solid #4CAF50; }
+  .guideline.dont { border-left: 4px solid #E53935; }
+  .guideline-label {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .guideline.do .guideline-label { color: #4CAF50; }
+  .guideline.dont .guideline-label { color: #E53935; }
+  .guideline p { font-size: 14px; line-height: 1.6; color: var(--espresso-light); }
+
+  /* ── GRADIENT SAMPLES ── */
+  .gradient-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+  .gradient-card {
+    height: 160px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(58,37,24,0.12);
+  }
+  .gradient-card span {
+    background: rgba(255,255,255,0.9);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ── PALETTE ROWS ── */
+  .palette-row {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 60px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+  }
+  .palette-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: monospace;
+  }
+
+  /* ── PAGE DIVIDER ── */
+  .divider {
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--sand), var(--coral), var(--mountain-blue), var(--sand), transparent);
+    margin: 64px 0;
+    border-radius: 2px;
+  }
+
+  /* ── TRANSITIONS ── */
+  .transition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+  .transition-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+  }
+  .transition-card .speed { font-size: 32px; font-weight: 700; color: var(--coral); font-family: 'Playfair Display', serif; }
+  .transition-card .name { font-weight: 600; margin-top: 4px; }
+  .transition-card .use { font-size: 13px; color: var(--espresso-light); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- HERO -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="hero">
+    <h1>Carolina Futons</h1>
+    <p class="subtitle">Design System v1.0 — Brand Tokens, Typography, Illustration Zones</p>
+    <p class="tagline">Blue Ridge Mountain Aesthetic — Warm, Rustic, Personal</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 1. BRAND COLORS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">1. Brand Colors</h2>
+
+  <h3 class="subsection-title">Primary Palette</h3>
+  <div class="color-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #E8D5B7;"></div>
+      <div class="color-info">
+        <div class="color-name">Sand</div>
+        <div class="color-hex">#E8D5B7</div>
+        <div class="color-usage">Primary background, card fills, warm base tone</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #3A2518;"></div>
+      <div class="color-info">
+        <div class="color-name">Espresso</div>
+        <div class="color-hex">#3A2518</div>
+        <div class="color-usage">Primary text, headings, borders, shadows</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #5B8FA8;"></div>
+      <div class="color-info">
+        <div class="color-name">Mountain Blue</div>
+        <div class="color-hex">#5B8FA8</div>
+        <div class="color-usage">Accents, links, secondary actions, mountain illustrations</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #E8845C;"></div>
+      <div class="color-info">
+        <div class="color-name">Sunset Coral</div>
+        <div class="color-hex">#E8845C</div>
+        <div class="color-usage">CTAs (ALWAYS), badges, highlights. Never green/blue for CTAs</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">Background Colors</h3>
+  <div class="color-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #FAF7F2; border-bottom: 1px solid #E8D5B7;"></div>
+      <div class="color-info">
+        <div class="color-name">Off White</div>
+        <div class="color-hex">#FAF7F2</div>
+        <div class="color-usage">Page background, default canvas</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F2E8D5;"></div>
+      <div class="color-info">
+        <div class="color-name">Sand Light</div>
+        <div class="color-hex">#F2E8D5</div>
+        <div class="color-usage">Alternate sections, hover states, subtle backgrounds</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">Extended Palette</h3>
+  <div class="color-grid">
+    <div class="color-card">
+      <div class="color-swatch" style="background: #8BB5C9;"></div>
+      <div class="color-info">
+        <div class="color-name">Mountain Blue Light</div>
+        <div class="color-hex">#8BB5C9</div>
+        <div class="color-usage">Badges, info states, light accents</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #F0A882;"></div>
+      <div class="color-info">
+        <div class="color-name">Coral Light</div>
+        <div class="color-hex">#F0A882</div>
+        <div class="color-usage">Hover states, softer highlights</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: #6B4D3A;"></div>
+      <div class="color-info">
+        <div class="color-name">Espresso Light</div>
+        <div class="color-hex">#6B4D3A</div>
+        <div class="color-usage">Secondary text, captions, metadata</div>
+      </div>
+    </div>
+    <div class="color-card">
+      <div class="color-swatch" style="background: linear-gradient(180deg, #B8D4E3 0%, #F0C87A 100%);"></div>
+      <div class="color-info">
+        <div class="color-name">Sky Gradient</div>
+        <div class="color-hex">#B8D4E3 -> #F0C87A</div>
+        <div class="color-usage">Mountain skyline fills, decorative headers</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">Illustration Palettes</h3>
+  <div class="palette-row">
+    <div class="palette-cell" style="background: #B8D4E3; color: #3A2518;">Sky Top</div>
+    <div class="palette-cell" style="background: #C5DBE8; color: #3A2518;">Sky Mid</div>
+    <div class="palette-cell" style="background: #D4E4EE; color: #3A2518;">Sky Light</div>
+    <div class="palette-cell" style="background: #E8D5B7; color: #3A2518;">Sand</div>
+    <div class="palette-cell" style="background: #F0C87A; color: #3A2518;">Sun Gold</div>
+    <div class="palette-cell" style="background: #E8845C; color: white;">Sunset</div>
+  </div>
+  <div class="label">Mountain Skyline — Dawn/Dusk Palette (5+ gradient stops required)</div>
+
+  <div class="palette-row" style="margin-top: 16px;">
+    <div class="palette-cell" style="background: #2D5A3D; color: white;">Forest Deep</div>
+    <div class="palette-cell" style="background: #4A7C5C; color: white;">Forest Mid</div>
+    <div class="palette-cell" style="background: #6B9E7A; color: white;">Forest Light</div>
+    <div class="palette-cell" style="background: #8DB89A; color: #3A2518;">Sage</div>
+    <div class="palette-cell" style="background: #B0D4B8; color: #3A2518;">Meadow</div>
+    <div class="palette-cell" style="background: #D4EBD8; color: #3A2518;">Mint</div>
+  </div>
+  <div class="label">Mountain Vegetation — Foliage Palette (foreground trees, bushes)</div>
+
+  <div class="palette-row" style="margin-top: 16px;">
+    <div class="palette-cell" style="background: #5B8FA8; color: white;">Range 1</div>
+    <div class="palette-cell" style="background: #7AABBD; color: #3A2518;">Range 2</div>
+    <div class="palette-cell" style="background: #99C0CF; color: #3A2518;">Range 3</div>
+    <div class="palette-cell" style="background: #B1D1DC; color: #3A2518;">Range 4</div>
+    <div class="palette-cell" style="background: #C8DEE7; color: #3A2518;">Range 5</div>
+    <div class="palette-cell" style="background: #DEEAF0; color: #3A2518;">Range 6</div>
+    <div class="palette-cell" style="background: #ECF2F6; color: #3A2518;">Range 7</div>
+  </div>
+  <div class="label">Mountain Ridgelines — 7 layers, back-to-front with atmospheric haze (opacity: 30% -> 100%)</div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 2. GRADIENTS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">2. Decorative Gradients</h2>
+  <div class="gradient-row">
+    <div class="gradient-card" style="background: linear-gradient(180deg, #B8D4E3 0%, #C5DBE8 25%, #D4E4EE 50%, #E8D5B7 75%, #F0C87A 100%);">
+      <span>Sky-to-Gold (Sunrise)</span>
+    </div>
+    <div class="gradient-card" style="background: linear-gradient(180deg, #5B8FA8 0%, #8BB5C9 30%, #B8D4E3 55%, #E8845C 80%, #F0C87A 100%);">
+      <span>Mountain Sunset</span>
+    </div>
+    <div class="gradient-card" style="background: linear-gradient(135deg, #E8D5B7 0%, #F2E8D5 50%, #FAF7F2 100%);">
+      <span>Sand Fade (Section BG)</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 3. TYPOGRAPHY -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">3. Typography</h2>
+
+  <div class="type-specimen">
+    <div class="label">Headings — Playfair Display</div>
+    <div class="type-sample-heading" style="font-size: 48px; font-weight: 700;">H1 — The Blue Ridge Collection</div>
+    <div class="type-meta">Playfair Display 700 / 48px / Line-height 1.2 / Letter-spacing -0.02em</div>
+  </div>
+  <div class="type-specimen">
+    <div class="type-sample-heading" style="font-size: 36px; font-weight: 700;">H2 — Handcrafted Comfort</div>
+    <div class="type-meta">Playfair Display 700 / 36px / Line-height 1.25</div>
+  </div>
+  <div class="type-specimen">
+    <div class="type-sample-heading" style="font-size: 28px; font-weight: 600;">H3 — Mountain Blue Fabric Series</div>
+    <div class="type-meta">Playfair Display 600 / 28px / Line-height 1.3</div>
+  </div>
+  <div class="type-specimen">
+    <div class="type-sample-heading" style="font-size: 22px; font-weight: 600;">H4 — Quality Since 1991</div>
+    <div class="type-meta">Playfair Display 600 / 22px / Line-height 1.35</div>
+  </div>
+  <div class="type-specimen">
+    <div class="type-sample-heading" style="font-size: 18px; font-weight: 500;">H5 — Delivery Schedule</div>
+    <div class="type-meta">Playfair Display 500 / 18px / Line-height 1.4</div>
+  </div>
+
+  <div style="height: 24px;"></div>
+
+  <div class="type-specimen">
+    <div class="label">Body — Source Sans 3</div>
+    <div class="type-sample-body" style="font-size: 18px; font-weight: 400; line-height: 1.7; max-width: 680px;">
+      Carolina Futons has been Hendersonville's premier futon destination since 1991. Our showroom features the largest selection of quality futon frames, mattresses, Murphy cabinet beds, and platform beds in the Carolinas. Every piece is chosen for craftsmanship, comfort, and lasting value.
+    </div>
+    <div class="type-meta">Source Sans 3 400 / 18px / Line-height 1.7 / Max-width 680px for readability</div>
+  </div>
+  <div class="type-specimen">
+    <div class="label">Body Small / Captions</div>
+    <div class="type-sample-body" style="font-size: 14px; font-weight: 400; color: #6B4D3A; line-height: 1.6;">
+      Ships within 3-5 business days. White-glove delivery available in the Southeast US.
+    </div>
+    <div class="type-meta">Source Sans 3 400 / 14px / Line-height 1.6 / Color: Espresso Light</div>
+  </div>
+  <div class="type-specimen">
+    <div class="label">UI Labels / Buttons</div>
+    <div class="type-sample-body" style="font-size: 16px; font-weight: 600; letter-spacing: 0.02em;">
+      ADD TO CART &nbsp;&middot;&nbsp; SHOP NOW &nbsp;&middot;&nbsp; VIEW DETAILS &nbsp;&middot;&nbsp; COMPARE
+    </div>
+    <div class="type-meta">Source Sans 3 600 / 16px / Letter-spacing 0.02em / Uppercase for CTAs</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 4. SPACING SCALE -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">4. Spacing Scale (4px Base)</h2>
+  <div class="spacing-grid">
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 4px; height: 4px;"></div>
+      <div class="spacing-label">xs</div>
+      <div class="spacing-value">4px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 8px; height: 8px;"></div>
+      <div class="spacing-label">sm</div>
+      <div class="spacing-value">8px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 16px; height: 16px;"></div>
+      <div class="spacing-label">md</div>
+      <div class="spacing-value">16px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 24px; height: 24px;"></div>
+      <div class="spacing-label">lg</div>
+      <div class="spacing-value">24px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 32px; height: 32px;"></div>
+      <div class="spacing-label">xl</div>
+      <div class="spacing-value">32px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 48px; height: 48px;"></div>
+      <div class="spacing-label">xxl</div>
+      <div class="spacing-value">48px</div>
+    </div>
+    <div class="spacing-item">
+      <div class="spacing-box" style="width: 64px; height: 64px;"></div>
+      <div class="spacing-label">xxxl</div>
+      <div class="spacing-value">64px</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 5. SHADOWS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">5. Shadows (Espresso-Tinted)</h2>
+  <div class="shadow-grid">
+    <div class="shadow-card" style="box-shadow: 0 2px 8px rgba(58,37,24,0.08);">
+      <div class="label">Subtle</div>
+      <div style="font-family: monospace; font-size: 12px; color: #6B4D3A; margin-top: 8px;">0 2px 8px rgba(58,37,24,0.08)</div>
+      <div style="font-size: 13px; color: #6B4D3A; margin-top: 4px;">Cards, inputs, resting state</div>
+    </div>
+    <div class="shadow-card" style="box-shadow: 0 4px 16px rgba(58,37,24,0.12);">
+      <div class="label">Medium</div>
+      <div style="font-family: monospace; font-size: 12px; color: #6B4D3A; margin-top: 8px;">0 4px 16px rgba(58,37,24,0.12)</div>
+      <div style="font-size: 13px; color: #6B4D3A; margin-top: 4px;">Hover, dropdowns, elevated</div>
+    </div>
+    <div class="shadow-card" style="box-shadow: 0 8px 32px rgba(58,37,24,0.18);">
+      <div class="label">Heavy</div>
+      <div style="font-family: monospace; font-size: 12px; color: #6B4D3A; margin-top: 8px;">0 8px 32px rgba(58,37,24,0.18)</div>
+      <div style="font-size: 13px; color: #6B4D3A; margin-top: 4px;">Modals, overlays, hero cards</div>
+    </div>
+  </div>
+  <p style="font-size: 14px; color: #6B4D3A; font-style: italic;">All shadows use espresso-tinted rgba(58,37,24,...) — NEVER neutral gray.</p>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 6. TRANSITIONS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">6. Transitions</h2>
+  <div class="transition-grid">
+    <div class="transition-card">
+      <div class="speed">150ms</div>
+      <div class="name">Fast</div>
+      <div class="use">Hover states, toggles, micro-interactions</div>
+    </div>
+    <div class="transition-card">
+      <div class="speed">250ms</div>
+      <div class="name">Medium</div>
+      <div class="use">Page transitions, fade-in, show/hide</div>
+    </div>
+    <div class="transition-card">
+      <div class="speed">400ms</div>
+      <div class="name">Slow</div>
+      <div class="use">Modal open, drawer slide, hero animations</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 7. BUTTONS -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">7. Buttons & CTAs</h2>
+
+  <h3 class="subsection-title">Button Styles</h3>
+  <div class="button-row">
+    <a class="btn btn-primary">Add to Cart</a>
+    <a class="btn btn-secondary">View Details</a>
+    <a class="btn btn-ghost">Compare</a>
+  </div>
+  <div class="button-row" style="margin-top: 16px;">
+    <a class="btn btn-primary btn-sm">Small CTA</a>
+    <a class="btn btn-primary">Default CTA</a>
+    <a class="btn btn-primary btn-lg">Large CTA</a>
+  </div>
+  <p style="font-size: 14px; color: #6B4D3A; margin-top: 12px; font-style: italic;">CTAs are ALWAYS Sunset Coral (#E8845C). Never use green or blue for primary actions.</p>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 8. RESPONSIVE GRID -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">8. Responsive Grid & Breakpoints</h2>
+  <table class="breakpoint-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Min Width</th>
+        <th>Columns</th>
+        <th>Gap</th>
+        <th>Usage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Mobile</td><td>320px</td><td>1</td><td>16px</td><td>Phone portrait</td></tr>
+      <tr><td>Mobile Large</td><td>480px</td><td>1</td><td>16px</td><td>Phone landscape</td></tr>
+      <tr><td>Tablet</td><td>768px</td><td>2</td><td>20px</td><td>Tablet portrait</td></tr>
+      <tr><td>Desktop</td><td>1024px</td><td>3</td><td>24px</td><td>Standard desktop</td></tr>
+      <tr><td>Wide</td><td>1280px</td><td>3</td><td>24px</td><td>Max-width container</td></tr>
+      <tr><td>Ultra Wide</td><td>1440px</td><td>3</td><td>24px</td><td>Centered content, max canvas</td></tr>
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 9. ILLUSTRATION ZONES -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">9. Illustration Zones by Page</h2>
+  <p style="margin-bottom: 24px; color: #6B4D3A;">Each page has designated illustration zones for mountain skyline borders, decorative elements, and lifestyle imagery. All illustrations use Figma Draw (not coded SVG).</p>
+
+  <div class="zone-grid">
+    <div class="zone-card">
+      <h3>Home Page</h3>
+      <div class="dimensions">1440 x 600px hero / 1440 x 200px skyline</div>
+      <ul>
+        <li>Hero background: Mountain skyline with sunrise gradient</li>
+        <li>Watercolor mountain border below hero</li>
+        <li>Trust bar icons (mountain, heart, palette, gloves)</li>
+        <li>Section divider: rolling ridgeline silhouette</li>
+        <li>Footer: sunset mountain silhouette</li>
+      </ul>
+    </div>
+    <div class="zone-card">
+      <h3>Product Page</h3>
+      <div class="dimensions">1440 x 120px header / contextual spots</div>
+      <ul>
+        <li>Top: thin mountain skyline header border</li>
+        <li>Quality badge: mountain-framed seal</li>
+        <li>Tab section dividers: subtle wave pattern</li>
+        <li>Review stars: hand-drawn star shapes</li>
+        <li>Bottom: "Complete your room" mountain scene</li>
+      </ul>
+    </div>
+    <div class="zone-card">
+      <h3>Category Page</h3>
+      <div class="dimensions">1440 x 300px banner / filter area accents</div>
+      <ul>
+        <li>Category banner: mountain landscape per category</li>
+        <li>Filter sidebar: leaf/branch decorative borders</li>
+        <li>Empty state: "No results" mountain mist illustration</li>
+        <li>Pagination: trail marker icons</li>
+      </ul>
+    </div>
+    <div class="zone-card">
+      <h3>Cart / Checkout</h3>
+      <div class="dimensions">Contextual spots / progress bar</div>
+      <ul>
+        <li>Progress bar: mountain trail markers</li>
+        <li>Empty cart: lone cabin illustration</li>
+        <li>Trust signals: hand-drawn lock, shield, truck icons</li>
+        <li>Order confirmation: celebration mountain scene</li>
+      </ul>
+    </div>
+    <div class="zone-card">
+      <h3>Shipping Policy</h3>
+      <div class="dimensions">1440 x 200px header / map zone</div>
+      <ul>
+        <li>Header: mountain delivery truck illustration</li>
+        <li>Delivery zone map: Blue Ridge region highlighted</li>
+        <li>Timeline: hand-drawn path with milestones</li>
+        <li>Assembly guide: sketch-style tool illustrations</li>
+      </ul>
+    </div>
+    <div class="zone-card">
+      <h3>Blog / About / Contact</h3>
+      <div class="dimensions">Variable per page</div>
+      <ul>
+        <li>Blog: post header with seasonal mountain scenes</li>
+        <li>About: showroom watercolor illustration</li>
+        <li>Contact: hand-drawn map to Hendersonville</li>
+        <li>All: consistent mountain skyline page borders</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 10. ILLUSTRATION STYLE GUIDE -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">10. Illustration Style Guide</h2>
+
+  <h3 class="subsection-title">Blue Ridge Mountain Reference</h3>
+  <div class="type-specimen" style="background: linear-gradient(180deg, #B8D4E3 0%, #C5DBE8 20%, #D4E4EE 40%, #E8D5B7 70%, #F0C87A 100%); min-height: 200px; display: flex; align-items: center; justify-content: center; color: #3A2518; font-family: 'Playfair Display', serif; font-size: 24px; font-style: italic; text-align: center;">
+    Soft rolling ridgelines &mdash; 5-7 overlapping layers<br>fading into distance with atmospheric haze<br><span style="font-size: 16px; font-style: normal; color: #6B4D3A;">design.jpeg is the quality bar</span>
+  </div>
+
+  <h3 class="subsection-title">Quality Requirements</h3>
+  <div class="type-specimen">
+    <ul style="list-style: none; padding: 0;">
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">1.</span> 5+ gradient stops for sky transitions</li>
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">2.</span> 15+ distinct elements per scene (trees, birds, flowers, smoke, stars)</li>
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">3.</span> All colors from sharedTokens.js (zero hardcoded hex)</li>
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">4.</span> Atmospheric depth: FG/MG/BG layers with varying opacity</li>
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">5.</span> design.jpeg visual comparison PASS required</li>
+      <li style="padding: 6px 0; font-size: 15px;"><span style="color: #E8845C; font-weight: bold; margin-right: 8px;">6.</span> Figma Draw only — no coded SVG template strings</li>
+    </ul>
+  </div>
+
+  <h3 class="subsection-title">Approved Brush Styles</h3>
+  <div class="type-specimen">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+      <div>
+        <div class="label">Pencil Tool</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Mountain ridgeline sketching. Smooth, flowing paths that follow the rolling terrain of the Blue Ridge. Variable width for natural feel.</p>
+      </div>
+      <div>
+        <div class="label">Brush Tool</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Watercolor texture fills. Soft, feathered edges for sky washes and mountain face shading. Layer multiple strokes for depth.</p>
+      </div>
+      <div>
+        <div class="label">Scatter Brush</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Foliage distribution, wildflower meadows, birds in flight, stars. Random scatter with controlled density creates organic feel.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">Figma Effects for Illustration</h3>
+  <div class="type-specimen">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
+      <div>
+        <div class="label">Texture Effect</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Edge distressing for hand-made paper feel. Apply to illustration borders for authentic watercolor edge treatment.</p>
+      </div>
+      <div>
+        <div class="label">Noise Effect</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Paper grain texture overlay. Subtle 3-5% noise on solid fills creates tactile warmth. Essential for non-digital feel.</p>
+      </div>
+      <div>
+        <div class="label">Progressive Blur</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Atmospheric haze for distant mountain layers. Blur increases with distance: 0px foreground, 2px midground, 4-8px background.</p>
+      </div>
+      <div>
+        <div class="label">Dynamic Strokes</div>
+        <p style="font-size: 14px; line-height: 1.6; color: #6B4D3A;">Hand-drawn wiggle on vector paths. Converts precise lines to organic, imperfect strokes that feel human-made.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">Do / Don't</h3>
+  <div class="guideline-grid">
+    <div class="guideline do">
+      <div class="guideline-label">Do</div>
+      <p>Use soft, rolling ridgelines with 5-7 overlapping mountain layers. Each layer slightly lighter and more blurred than the one in front. Colors from the brand palette only.</p>
+    </div>
+    <div class="guideline dont">
+      <div class="guideline-label">Don't</div>
+      <p>Use sharp, geometric mountain shapes or flat solid-color triangles. No programmatic feTurbulence/feDisplacementMap SVG filters — they produce abstract, not illustrative results.</p>
+    </div>
+    <div class="guideline do">
+      <div class="guideline-label">Do</div>
+      <p>Design in Figma Draw with Pencil, Brush, and Scatter tools. Export as optimized SVG. Inject brand token colors before integration.</p>
+    </div>
+    <div class="guideline dont">
+      <div class="guideline-label">Don't</div>
+      <p>Write SVG as JavaScript template strings with inline filter effects. This approach is deprecated — it can't match hand-drawn quality.</p>
+    </div>
+    <div class="guideline do">
+      <div class="guideline-label">Do</div>
+      <p>Include 15+ distinct natural elements: varied trees, birds, wildflowers, cabin smoke, stars, clouds. Layer foreground, midground, and background at different opacities.</p>
+    </div>
+    <div class="guideline dont">
+      <div class="guideline-label">Don't</div>
+      <p>Use fewer than 5 elements per scene. Avoid symmetrical, computer-perfect arrangements. Nature is organic and imperfect — embrace that.</p>
+    </div>
+    <div class="guideline do">
+      <div class="guideline-label">Do</div>
+      <p>Use warm, espresso-tinted shadows (rgba(58,37,24,...)). Warm gradients for sky (blue-to-gold). Sand and coral warmth throughout.</p>
+    </div>
+    <div class="guideline dont">
+      <div class="guideline-label">Don't</div>
+      <p>Use cold gray shadows, pure black outlines, or neutral/clinical colors. This site has CHARACTER — generic minimalist furniture-site template is failure.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- 11. TOKEN MAPPING -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <h2 class="section-title">11. Code Token Reference</h2>
+  <table class="breakpoint-table">
+    <thead>
+      <tr>
+        <th>Figma Style</th>
+        <th>sharedTokens.js Key</th>
+        <th>Value</th>
+        <th>Usage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Brand/Sand</td><td>colors.sand</td><td>#E8D5B7</td><td>Primary warm background</td></tr>
+      <tr><td>Brand/Espresso</td><td>colors.espresso</td><td>#3A2518</td><td>Text, borders, shadows</td></tr>
+      <tr><td>Brand/Mountain Blue</td><td>colors.mountainBlue</td><td>#5B8FA8</td><td>Accents, links, illustrations</td></tr>
+      <tr><td>Brand/Coral</td><td>colors.sunsetCoral</td><td>#E8845C</td><td>CTAs (ALWAYS), highlights</td></tr>
+      <tr><td>BG/Off White</td><td>colors.offWhite</td><td>#FAF7F2</td><td>Page canvas</td></tr>
+      <tr><td>BG/Sand Light</td><td>colors.sandLight</td><td>#F2E8D5</td><td>Alt sections, hovers</td></tr>
+      <tr><td>Type/Heading</td><td>fontFamilies.heading</td><td>Playfair Display</td><td>All headings H1-H5</td></tr>
+      <tr><td>Type/Body</td><td>fontFamilies.body</td><td>Source Sans 3</td><td>Body text, UI labels</td></tr>
+      <tr><td>Spacing/xs...xxxl</td><td>spacing.xs...xxxl</td><td>4-64px</td><td>4px base scale</td></tr>
+      <tr><td>Shadow/Subtle</td><td>shadows.subtle</td><td>0 2px 8px</td><td>Cards at rest</td></tr>
+      <tr><td>Shadow/Medium</td><td>shadows.medium</td><td>0 4px 16px</td><td>Hover, elevated</td></tr>
+      <tr><td>Transition/Fast</td><td>transitions.fast</td><td>150ms</td><td>Micro-interactions</td></tr>
+      <tr><td>Transition/Medium</td><td>transitions.medium</td><td>250ms</td><td>Show/hide, fade</td></tr>
+    </tbody>
+  </table>
+
+  <div style="height: 64px;"></div>
+  <p style="text-align: center; color: #6B4D3A; font-size: 14px;">Carolina Futons Design System v1.0 — Source: sharedTokens.js + designTokens.js</p>
+  <div style="height: 32px;"></div>
+
+</div>
+</body>
+</html>
