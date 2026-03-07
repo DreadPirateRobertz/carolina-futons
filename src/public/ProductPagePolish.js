@@ -39,7 +39,7 @@ export function styleStickyCartBar($w) {
     const btn = $w('#stickyAddBtn');
     if (btn) {
       btn.style.backgroundColor = colors.sunsetCoral;
-      btn.style.color = colors.white;
+      btn.style.color = colors.espresso;
     }
   } catch (e) {}
 }
@@ -167,7 +167,7 @@ export function applyProductPageTokens($w) {
     const cta = $w('#addToCartButton');
     if (cta) {
       cta.style.backgroundColor = colors.sunsetCoral;
-      cta.style.color = colors.white;
+      cta.style.color = colors.espresso;
     }
   } catch (e) {}
 

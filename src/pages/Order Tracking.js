@@ -506,7 +506,7 @@ function showError(message) {
   try {
     $w('#trackingError').text = message;
     $w('#trackingError').show('fade', { duration: 200 });
-    $w('#trackingError').style.color = colors.sunsetCoral;
+    $w('#trackingError').style.color = colors.error;
     announce($w, message);
   } catch (e) {}
 }

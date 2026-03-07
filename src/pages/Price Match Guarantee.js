@@ -352,7 +352,7 @@ function hideAllErrors() {
 function showFormError(message) {
   try {
     $w('#pmFormError').text = message;
-    $w('#pmFormError').style.color = colors.sunsetCoral;
+    $w('#pmFormError').style.color = colors.error;
     try { $w('#pmFormError').accessibility.role = 'alert'; } catch (e) {}
     try { $w('#pmFormError').accessibility.ariaLive = 'assertive'; } catch (e) {}
     $w('#pmFormError').show('fade', { duration: 200 });

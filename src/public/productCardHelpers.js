@@ -49,7 +49,7 @@ export function styleBadge($el, badgeType) {
     try {
       const bgColor = getBadgeColor(badgeType);
       $el.style.backgroundColor = bgColor;
-      $el.style.color = colors.white;
+      $el.style.color = bgColor === colors.sunsetCoral ? colors.espresso : colors.white;
       $el.style.borderRadius = borderRadius.sm;
     } catch (e) { /* style props optional */ }
   } catch (e) { /* element may not exist */ }

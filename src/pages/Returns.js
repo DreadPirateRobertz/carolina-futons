@@ -522,7 +522,7 @@ function showError(message) {
     try { $w('#returnError').accessibility.role = 'alert'; } catch (e) {}
     try { $w('#returnError').accessibility.ariaLive = 'assertive'; } catch (e) {}
     $w('#returnError').show('fade', { duration: 200 });
-    $w('#returnError').style.color = colors.sunsetCoral;
+    $w('#returnError').style.color = colors.error;
   } catch (e) {}
 }
 
@@ -536,7 +536,7 @@ function showFormError(message) {
     try { $w('#returnFormError').accessibility.role = 'alert'; } catch (e) {}
     try { $w('#returnFormError').accessibility.ariaLive = 'assertive'; } catch (e) {}
     $w('#returnFormError').show('fade', { duration: 200 });
-    $w('#returnFormError').style.color = colors.sunsetCoral;
+    $w('#returnFormError').style.color = colors.error;
   } catch (e) {}
 }
 

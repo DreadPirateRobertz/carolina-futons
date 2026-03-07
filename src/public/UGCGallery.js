@@ -186,7 +186,7 @@ export function initFilterTabs($w, onFilterChange) {
         const el = $w(tab.id);
         if (tab.id === selectedId) {
           el.style.backgroundColor = colors.sunsetCoral || '#E8845C';
-          el.style.color = colors.white || '#FFFFFF';
+          el.style.color = colors.espresso || '#3A2518';
           el.style.borderColor = colors.sunsetCoral || '#E8845C';
         } else {
           el.style.backgroundColor = colors.sandLight || '#F2E8D5';
