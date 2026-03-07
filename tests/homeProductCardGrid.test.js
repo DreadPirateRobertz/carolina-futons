@@ -139,6 +139,35 @@ vi.mock('public/a11yHelpers', () => ({
       try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
     }
   }),
+  setupAccessibleDialog: vi.fn(($w, config) => {
+    // Wire close button and set ARIA attrs like the real implementation
+    try {
+      const panel = $w(config.panelId);
+      if (panel) {
+        try { panel.accessibility.role = 'dialog'; } catch (e) {}
+        try { panel.accessibility.ariaModal = true; } catch (e) {}
+      }
+    } catch (e) {}
+    try {
+      const closeBtn = $w(config.closeId);
+      if (closeBtn) {
+        closeBtn.onClick(() => {
+          try { $w(config.panelId).hide('fade', { duration: 200 }); } catch (e) {}
+          if (config.onClose) config.onClose();
+        });
+        closeBtn.onKeyPress(() => {});
+      }
+    } catch (e) {}
+    return {
+      open: vi.fn(() => {
+        try { $w(config.panelId).show('fade', { duration: 200 }); } catch (e) {}
+      }),
+      close: vi.fn(() => {
+        try { $w(config.panelId).hide('fade', { duration: 200 }); } catch (e) {}
+        if (config.onClose) config.onClose();
+      }),
+    };
+  }),
 }));
 
 vi.mock('wix-data', () => {
@@ -360,7 +389,7 @@ describe('Home Page — Product Card Grid', () => {
     it('registers Quick View modal handlers during page init', async () => {
       await onReadyHandler();
 
-      // Close button should have onClick registered
+      // Close button wired by setupAccessibleDialog (onClick + onKeyPress)
       expect(getEl('#featuredQvClose').onClick).toHaveBeenCalled();
       // View Full button should have onClick registered
       expect(getEl('#featuredQvViewFull').onClick).toHaveBeenCalled();
@@ -403,7 +432,7 @@ describe('Home Page — Product Card Grid', () => {
     it('closing Quick View hides the modal', async () => {
       await onReadyHandler();
 
-      // Trigger close
+      // Close button wired by setupAccessibleDialog — trigger its onClick
       const closeHandler = getEl('#featuredQvClose').onClick.mock.calls[0][0];
       closeHandler();
 
@@ -415,13 +444,8 @@ describe('Home Page — Product Card Grid', () => {
 
     it('Quick View modal has ARIA dialog attributes', async () => {
       await onReadyHandler();
-      const cb = getItemReadyCb('#featuredRepeater');
-      const { $item, itemElements } = createItemScope();
 
-      cb($item, featuredWithColor);
-      const qvClickHandler = itemElements['#featuredQuickViewBtn'].onClick.mock.calls[0][0];
-      qvClickHandler();
-
+      // ARIA attrs set by setupAccessibleDialog during init
       const modal = getEl('#featuredQuickViewModal');
       expect(modal.accessibility.role).toBe('dialog');
       expect(modal.accessibility.ariaModal).toBe(true);

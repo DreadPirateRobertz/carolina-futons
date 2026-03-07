@@ -137,7 +137,7 @@ function initTrustSignals() {
 
     repeater.onItemReady(($item, itemData) => {
       $item('#trustText').text = itemData.text;
-      try { $item('#trustIcon').alt = itemData.text; } catch (e) {}
+      try { $item('#trustIcon').alt = ''; } catch (e) {}
       try { $item('#trustIcon').accessibility.ariaHidden = true; } catch (e) {}
     });
   } catch (e) {}

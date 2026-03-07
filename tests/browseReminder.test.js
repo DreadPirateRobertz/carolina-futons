@@ -16,6 +16,7 @@ vi.mock('wix-location-frontend', () => ({
 const mockTrapRelease = vi.fn();
 vi.mock('public/a11yHelpers.js', () => ({
   createFocusTrap: vi.fn(() => ({ release: mockTrapRelease, isActive: () => true })),
+  announce: vi.fn(),
 }));
 
 import { initBrowseTracking, showRemindMePopup, _createBrowseState } from '../src/public/BrowseReminder.js';

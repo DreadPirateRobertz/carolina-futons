@@ -3,7 +3,7 @@
 import wixData from 'wix-data';
 import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
 import { typography } from 'public/designTokens.js';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import { initBackToTop, collapseOnMobile } from 'public/mobileHelpers';
 
 $w.onReady(function () {
@@ -73,11 +73,10 @@ function initProductVideoGrid() {
         } catch (e) {}
       }
 
-      // Click to play
-      try { $item('#videoThumb').accessibility.ariaLabel = `Play ${itemData.title} video`; } catch (e) {}
-      $item('#videoThumb').onClick(() => {
+      // Click/keyboard to play (WCAG 2.1.1 Keyboard)
+      makeClickable($item('#videoThumb'), () => {
         playVideo(itemData);
-      });
+      }, { ariaLabel: `Play ${itemData.title} video`, role: 'button' });
     });
 
     // Register product link handler once (slug updated via playVideo)

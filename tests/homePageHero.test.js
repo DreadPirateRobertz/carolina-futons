@@ -110,6 +110,33 @@ vi.mock('public/a11yHelpers', () => ({
       try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
     }
   }),
+  setupAccessibleDialog: vi.fn(($w, config) => {
+    try {
+      const panel = $w(config.panelId);
+      if (panel) {
+        try { panel.accessibility.role = 'dialog'; } catch (e) {}
+        try { panel.accessibility.ariaModal = true; } catch (e) {}
+      }
+    } catch (e) {}
+    try {
+      const closeBtn = $w(config.closeId);
+      if (closeBtn) {
+        closeBtn.onClick(() => {
+          try { $w(config.panelId).hide('fade', { duration: 200 }); } catch (e) {}
+          if (config.onClose) config.onClose();
+        });
+      }
+    } catch (e) {}
+    return {
+      open: vi.fn(() => {
+        try { $w(config.panelId).show('fade', { duration: 200 }); } catch (e) {}
+      }),
+      close: vi.fn(() => {
+        try { $w(config.panelId).hide('fade', { duration: 200 }); } catch (e) {}
+        if (config.onClose) config.onClose();
+      }),
+    };
+  }),
 }));
 
 vi.mock('wix-data', () => ({

@@ -168,13 +168,13 @@ async function initSubmitCTA() {
         } catch (e) {
           // Fallback: try to show inline modal
           try {
-            setupAccessibleDialog($w, {
+            const dialog = setupAccessibleDialog($w, {
               panelId: '#ugcSubmitModal',
               closeId: '#ugcSubmitModalClose',
               titleId: '#ugcSubmitModalTitle',
               onClose: () => {},
             });
-            $w('#ugcSubmitModal').show('fade', { duration: 250 });
+            dialog.open();
           } catch (ex) {}
         }
       });

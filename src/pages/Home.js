@@ -7,7 +7,7 @@ import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHel
 import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
-import { announce, makeClickable } from 'public/a11yHelpers';
+import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
@@ -108,6 +108,7 @@ $w.onReady(async function () {
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
 
 let currentFeaturedQvProduct = null;
+let _featuredQvDialog = null;
 
 /**
  * Load and display featured product cards in the homepage grid.
@@ -253,9 +254,14 @@ function initFeaturedQuickView() {
       }
     });
 
-    $w('#featuredQvClose').onClick(() => {
-      $w('#featuredQuickViewModal').hide('fade', { duration: 200 });
-      announce('Quick view closed');
+    // Accessible dialog: focus trap, Escape key, focus restore (WCAG 2.4.3)
+    _featuredQvDialog = setupAccessibleDialog($w, {
+      panelId: '#featuredQuickViewModal',
+      closeId: '#featuredQvClose',
+      focusableIds: ['#featuredQvClose', '#featuredQvAddToCart', '#featuredQvViewFull'],
+      onClose: () => {
+        announce('Quick view closed');
+      },
     });
   } catch (e) {
     // Quick View modal elements may not exist in editor
@@ -277,12 +283,13 @@ function openFeaturedQuickView(product) {
     try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
     try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
 
-    // ARIA dialog attributes
-    try { $w('#featuredQuickViewModal').accessibility.role = 'dialog'; } catch (e) {}
-    try { $w('#featuredQuickViewModal').accessibility.ariaModal = true; } catch (e) {}
     try { $w('#featuredQuickViewModal').accessibility.ariaLabel = `Quick view: ${product.name}`; } catch (e) {}
 
-    $w('#featuredQuickViewModal').show('fade', { duration: 200 });
+    if (_featuredQvDialog) {
+      _featuredQvDialog.open();
+    } else {
+      $w('#featuredQuickViewModal').show('fade', { duration: 200 });
+    }
     announce(`Quick view opened for ${product.name}`);
   } catch (e) {
     console.error('[Home] Error opening Quick View:', e);
@@ -598,6 +605,24 @@ async function initTestimonials() {
       if (section) {
         section.onMouseIn(() => { testimonialPaused = true; });
         section.onMouseOut(() => { testimonialPaused = false; });
+      }
+    } catch (e) {}
+
+    // Keyboard pause control (WCAG 2.2.2 Pause, Stop, Hide)
+    try {
+      const pauseBtn = $w('#testimonialPauseBtn');
+      if (pauseBtn) {
+        try { pauseBtn.accessibility.ariaLabel = 'Pause testimonial slideshow'; } catch (e) {}
+        pauseBtn.onClick(() => {
+          testimonialPaused = !testimonialPaused;
+          try {
+            pauseBtn.accessibility.ariaLabel = testimonialPaused
+              ? 'Resume testimonial slideshow'
+              : 'Pause testimonial slideshow';
+            pauseBtn.label = testimonialPaused ? 'Play' : 'Pause';
+          } catch (e) {}
+          announce(testimonialPaused ? 'Slideshow paused' : 'Slideshow resumed');
+        });
       }
     } catch (e) {}
   } catch (e) {

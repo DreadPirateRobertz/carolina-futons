@@ -18,7 +18,7 @@ import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
-import { announce, makeClickable, createFocusTrap } from 'public/a11yHelpers.js';
+import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
 import { initFlashSaleBanner } from 'public/flashSaleHelpers';
@@ -30,6 +30,7 @@ import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
+let _qvDialog = null;
 let _debounceTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
 let _wishlistSet = new Set(); // cached wishlist status for product cards
@@ -651,9 +652,14 @@ function initQuickViewHandlers() {
       }
     });
 
-    $w('#qvClose').onClick(() => {
-      $w('#quickViewModal').hide('fade', { duration: 200 });
-      announce($w, 'Quick view closed');
+    // Accessible dialog: focus trap, Escape key, focus restore (WCAG 2.4.3)
+    _qvDialog = setupAccessibleDialog($w, {
+      panelId: '#quickViewModal',
+      closeId: '#qvClose',
+      focusableIds: ['#qvClose', '#qvAddToCart', '#qvViewFull'],
+      onClose: () => {
+        announce($w, 'Quick view closed');
+      },
     });
   } catch (e) {}
 }
@@ -684,12 +690,13 @@ function openQuickView(product) {
       }
     } catch (e) {}
 
-    // Set dialog ARIA attributes for quick view modal
-    try { $w('#quickViewModal').accessibility.role = 'dialog'; } catch (e) {}
-    try { $w('#quickViewModal').accessibility.ariaModal = true; } catch (e) {}
     try { $w('#quickViewModal').accessibility.ariaLabel = `Quick view: ${product.name}`; } catch (e) {}
 
-    $w('#quickViewModal').show('fade', { duration: 200 });
+    if (_qvDialog) {
+      _qvDialog.open();
+    } else {
+      $w('#quickViewModal').show('fade', { duration: 200 });
+    }
     announce($w, `Quick view opened for ${product.name}`);
     // Close handler is registered once in initQuickViewHandlers — not here
   } catch (e) {}

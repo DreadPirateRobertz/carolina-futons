@@ -5,7 +5,7 @@
  */
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { validateEmail } from 'public/validators.js';
-import { createFocusTrap } from 'public/a11yHelpers.js';
+import { createFocusTrap, announce } from 'public/a11yHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 
 /**
@@ -183,6 +183,7 @@ export function showRemindMePopup($w, browseState) {
             const errEl = $w('#remindMeError');
             if (errEl) { errEl.text = 'Please enter a valid email address.'; errEl.show('fade', { duration: 300 }); }
           } catch (e) {}
+          announce($w, 'Please enter a valid email address.');
           return;
         }
 
@@ -210,6 +211,7 @@ export function showRemindMePopup($w, browseState) {
             const errEl = $w('#remindMeError');
             if (errEl) { errEl.text = 'Something went wrong. Please try again.'; errEl.show('fade', { duration: 300 }); }
           } catch (e) {}
+          announce($w, 'Something went wrong. Please try again.');
         }
       });
     } catch (e) {}

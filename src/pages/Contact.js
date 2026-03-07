@@ -289,6 +289,7 @@ function initAppointmentBooking() {
           $w('#appointmentError').text = 'Please fill in all required fields.';
           $w('#appointmentError').show();
         } catch (e) {}
+        announce($w, 'Please fill in all required fields.');
         return;
       }
 
@@ -298,6 +299,7 @@ function initAppointmentBooking() {
           $w('#appointmentError').text = 'Please enter a valid email address.';
           $w('#appointmentError').show();
         } catch (e) {}
+        announce($w, 'Please enter a valid email address.');
         return;
       }
 
@@ -329,17 +331,21 @@ function initAppointmentBooking() {
             $w('#appointmentSuccess').show('fade', { duration: 300 });
           } catch (e) {}
         } else {
+          const errMsg = result.message || 'Unable to book. Please call (828) 252-9449.';
           try {
-            $w('#appointmentError').text = result.message || 'Unable to book. Please call (828) 252-9449.';
+            $w('#appointmentError').text = errMsg;
             $w('#appointmentError').show();
           } catch (e) {}
+          announce($w, errMsg);
         }
       } catch (err) {
         console.error('Error booking appointment:', err);
+        const errMsg = 'Something went wrong. Please call us at (828) 252-9449.';
         try {
-          $w('#appointmentError').text = 'Something went wrong. Please call us at (828) 252-9449.';
+          $w('#appointmentError').text = errMsg;
           $w('#appointmentError').show();
         } catch (e) {}
+        announce($w, errMsg);
       } finally {
         bookBtn.enable();
         bookBtn.label = 'Book Visit';

@@ -55,21 +55,25 @@ function initSideCart() {
     $w('#sideCartTitle').style.color = panelStyles.headerColor;
   } catch (e) {}
 
-  // Close button
-  try {
-    $w('#sideCartClose').onClick(() => {
+  // Close side cart and restore focus to cart icon (WCAG 2.4.3 Focus Order)
+  function closeSideCart() {
+    try {
       $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
       announce($w, 'Cart closed');
-    });
+      // Restore focus to cart icon that opened the panel
+      try { $w('#cartIcon').focus(); } catch (e) {}
+    } catch (e) {}
+  }
+
+  // Close button
+  try {
+    $w('#sideCartClose').onClick(() => closeSideCart());
     $w('#sideCartClose').accessibility.ariaLabel = 'Close cart';
   } catch (e) {}
 
   // Overlay click to close
   try {
-    $w('#sideCartOverlay').onClick(() => {
-      $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 300 });
-      announce($w, 'Cart closed');
-    });
+    $w('#sideCartOverlay').onClick(() => closeSideCart());
   } catch (e) {}
 
   // Escape key closes side cart (guarded to prevent listener accumulation on SPA re-nav)
@@ -80,8 +84,7 @@ function initSideCart() {
         try {
           const panel = $w('#sideCartPanel');
           if (!panel.hidden) {
-            panel.hide('slide', { direction: 'right', duration: 300 });
-            announce($w, 'Cart closed');
+            closeSideCart();
           }
         } catch (e2) {}
       }
@@ -115,8 +118,7 @@ function initSideCart() {
     if (panel && panel.htmlElement) {
       enableSwipe(panel.htmlElement, (direction) => {
         if (direction === 'right') {
-          panel.hide('slide', { direction: 'right', duration: 300 });
-          announce($w, 'Cart closed');
+          closeSideCart();
         }
       }, { threshold: 50, maxTime: 400 });
     }
