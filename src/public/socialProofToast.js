@@ -124,6 +124,8 @@ function showToast($w, notification, config) {
         toastIcon.text = '\u26A0'; // Warning
       } else if (notification.type === 'recent_purchase') {
         toastIcon.text = '\u2705'; // Checkmark
+      } else if (notification.type === 'review_count') {
+        toastIcon.text = '\u2B50'; // Star
       } else {
         toastIcon.text = '\uD83D\uDC41'; // Eye
       }

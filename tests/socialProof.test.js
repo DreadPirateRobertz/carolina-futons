@@ -244,6 +244,86 @@ describe('getCategorySocialProof', () => {
   });
 });
 
+// ── getProductSocialProof — review count ─────────────────────────────
+
+describe('getProductSocialProof — review count', () => {
+  it('returns review_count notification when product has 5+ reviews', async () => {
+    const reviews = [];
+    for (let i = 0; i < 8; i++) {
+      reviews.push({
+        _id: `rev-${i}`,
+        productId: 'prod-reviewed',
+        status: 'approved',
+        rating: 4 + (i % 2),
+      });
+    }
+    __seed('Reviews', reviews);
+    const result = await getProductSocialProof('prod-reviewed', 'Comfy Futon');
+    const reviewNotif = result.notifications.find(n => n.type === 'review_count');
+    expect(reviewNotif).toBeDefined();
+    expect(reviewNotif.message).toContain('8');
+    expect(reviewNotif.message).toMatch(/review/i);
+    expect(reviewNotif.priority).toBe(4);
+  });
+
+  it('includes average rating in review_count message', async () => {
+    const reviews = [];
+    for (let i = 0; i < 6; i++) {
+      reviews.push({
+        _id: `rev-${i}`,
+        productId: 'prod-rated',
+        status: 'approved',
+        rating: 5,
+      });
+    }
+    __seed('Reviews', reviews);
+    const result = await getProductSocialProof('prod-rated');
+    const reviewNotif = result.notifications.find(n => n.type === 'review_count');
+    expect(reviewNotif).toBeDefined();
+    expect(reviewNotif.message).toContain('5');
+  });
+
+  it('does not show review_count when fewer than 5 reviews', async () => {
+    __seed('Reviews', [
+      { _id: 'rev-1', productId: 'prod-few-rev', status: 'approved', rating: 5 },
+      { _id: 'rev-2', productId: 'prod-few-rev', status: 'approved', rating: 4 },
+    ]);
+    const result = await getProductSocialProof('prod-few-rev');
+    const reviewNotif = result.notifications.find(n => n.type === 'review_count');
+    expect(reviewNotif).toBeUndefined();
+  });
+
+  it('only counts approved reviews', async () => {
+    const reviews = [
+      { _id: 'rev-1', productId: 'prod-mix', status: 'approved', rating: 5 },
+      { _id: 'rev-2', productId: 'prod-mix', status: 'approved', rating: 4 },
+      { _id: 'rev-3', productId: 'prod-mix', status: 'pending', rating: 5 },
+      { _id: 'rev-4', productId: 'prod-mix', status: 'rejected', rating: 1 },
+    ];
+    __seed('Reviews', reviews);
+    const result = await getProductSocialProof('prod-mix');
+    const reviewNotif = result.notifications.find(n => n.type === 'review_count');
+    // Only 2 approved reviews, below threshold of 5
+    expect(reviewNotif).toBeUndefined();
+  });
+
+  it('does not count reviews for other products', async () => {
+    const reviews = [];
+    for (let i = 0; i < 10; i++) {
+      reviews.push({
+        _id: `rev-${i}`,
+        productId: 'prod-other',
+        status: 'approved',
+        rating: 5,
+      });
+    }
+    __seed('Reviews', reviews);
+    const result = await getProductSocialProof('prod-target');
+    const reviewNotif = result.notifications.find(n => n.type === 'review_count');
+    expect(reviewNotif).toBeUndefined();
+  });
+});
+
 // ── getSocialProofConfig ─────────────────────────────────────────────
 
 describe('getSocialProofConfig', () => {
