@@ -8,6 +8,4 @@
 {"key":"compact_tier2_dep_levels","value":"5"}
 {"key":"compaction_enabled","value":"false"}
 {"key":"issue_prefix","value":"CF"}
-{"key":"kv.memory.cross-rig-gt-mail-is-unreliable-messages-from","value":"Cross-rig gt mail is unreliable — messages from gastown Dolt don't land in cfutons inbox. Always use gt nudge for PM-to-PM communication across rigs. Mail only for same-rig handoffs."}
 {"key":"schema_version","value":"6"}
-{"key":"types.custom","value":"agent,role,rig,convoy,slot,queue,event,message,molecule,gate,merge-request"}
