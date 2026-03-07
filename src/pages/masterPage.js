@@ -3,21 +3,13 @@
 // mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
 import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
-import { buildAnnouncementMessage } from 'public/flashSaleHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
-import {
-  shouldShowExitIntent,
-  markExitIntentShown,
-  markExitIntentDismissed,
-  validateCaptureEmail,
-  getExitIntentConfig,
-} from 'public/exitIntentCapture';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
+import { sharePromise, deferInit } from 'public/performanceHelpers';
 import { isMobile, getViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
-import { initTikTokPixel } from 'public/tikTokPixel';
 import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
@@ -40,6 +32,11 @@ let _lastFocusedBeforeOverlay = null;
 let _newsletterDialog = null;
 let _exitIntentDialog = null;
 let _promoDialog = null;
+// Lazy-loaded exit intent module functions (populated by initExitIntent)
+let _exitIntent = null;
+
+// Deduplicate concurrent getCurrentCart() calls across init functions
+const getSharedCart = sharePromise(() => getCurrentCart());
 
 $w.onReady(async function () {
   captureInstallPrompt();
@@ -59,7 +56,7 @@ $w.onReady(async function () {
   initInstallBanner();
   injectCanonicalUrl();
   initScrollDepthTracking();
-  initTikTokPixel();
+  deferInit(() => import('public/tikTokPixel').then(m => m.initTikTokPixel()));
   await injectBusinessSchema();
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
@@ -220,6 +217,7 @@ async function initAnnouncementBar() {
   // Prepend active flash sale messages for urgency
   try {
     const flashSales = await getFlashSales();
+    const { buildAnnouncementMessage } = await import('public/flashSaleHelpers');
     for (const deal of flashSales) {
       const msg = buildAnnouncementMessage(deal);
       if (msg) messages.unshift(msg);
@@ -263,7 +261,7 @@ function initSearch() {
 
 function initSideCartAutoOpen() {
   // Capture initial cart count so we can detect additions
-  getCurrentCart().then((cart) => {
+  getSharedCart().then((cart) => {
     _previousCartItemCount = cart
       ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
@@ -332,7 +330,7 @@ function initCartIcon() {
 function initCartBadge() {
   async function updateBadge() {
     try {
-      const cart = await getCurrentCart();
+      const cart = await getSharedCart();
       const count = cart
         ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
         : 0;
@@ -703,13 +701,14 @@ function initInstallBanner() {
 // Only shows once per session, doesn't interrupt checkout/cart pages,
 // and respects promo lightbox (only shows if promo didn't fire).
 
-function initExitIntent() {
+async function initExitIntent() {
   try {
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
+    _exitIntent = await import('public/exitIntentCapture');
     const path = wixLocationFrontend.path?.join('/') || '';
-    if (!shouldShowExitIntent(path)) return;
+    if (!_exitIntent.shouldShowExitIntent(path)) return;
 
     // Don't show if promo lightbox is already visible
     try {
@@ -747,12 +746,13 @@ function initExitIntent() {
 
 function showExitPopup() {
   try {
-    markExitIntentShown();
+    if (!_exitIntent) return;
+    _exitIntent.markExitIntentShown();
 
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
-    const config = getExitIntentConfig();
+    const config = _exitIntent.getExitIntentConfig();
 
     // Populate content from config
     try { $w('#exitTitle').text = config.title; } catch (e) {}
@@ -765,7 +765,7 @@ function showExitPopup() {
       titleId: '#exitTitle',
       focusableIds: ['#exitClose', '#exitEmailInput', '#exitEmailSubmit', '#exitSwatchLink'],
       onClose: () => {
-        markExitIntentDismissed();
+        _exitIntent.markExitIntentDismissed();
         try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
       },
     });
@@ -787,7 +787,7 @@ function showExitPopup() {
       try { $w('#exitEmailSubmit').label = config.ctaText; } catch (e) {}
       $w('#exitEmailSubmit').onClick(async () => {
         const email = $w('#exitEmailInput').value?.trim();
-        if (!validateCaptureEmail(email)) {
+        if (!_exitIntent.validateCaptureEmail(email)) {
           try {
             $w('#exitEmailError').text = 'Please enter a valid email address.';
             $w('#exitEmailError').show('fade', { duration: 200 });
@@ -862,7 +862,7 @@ function dismissExitPopup() {
 function initHeaderShippingProgress() {
   async function updateHeaderShipping() {
     try {
-      const cart = await getCurrentCart();
+      const cart = await getSharedCart();
       const subtotal = cart?.totals?.subtotal || 0;
       const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
 

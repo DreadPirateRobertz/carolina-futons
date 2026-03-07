@@ -182,3 +182,24 @@ export function getImageDimensionsForCategory(category) {
   if (!category) return DEFAULT_DIMENSIONS;
   return IMAGE_DIMENSIONS[category] || DEFAULT_DIMENSIONS;
 }
+
+// ── sharePromise ─────────────────────────────────────────────────────
+// Deduplicates concurrent calls to the same async function.
+// While a call is in-flight, subsequent calls return the same promise.
+// After the promise settles, the next call triggers a fresh invocation.
+
+/**
+ * Wrap an async function so concurrent calls share one in-flight promise.
+ * After the promise settles (resolve or reject), the next call starts fresh.
+ * @param {Function} fn - Async function to wrap
+ * @returns {Function} Wrapped function that deduplicates concurrent calls
+ */
+export function sharePromise(fn) {
+  let pending = null;
+  return (...args) => {
+    if (!pending) {
+      pending = fn(...args).finally(() => { pending = null; });
+    }
+    return pending;
+  };
+}

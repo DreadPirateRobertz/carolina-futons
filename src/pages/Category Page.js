@@ -12,6 +12,7 @@ import { getFilterValues } from 'backend/searchService.web';
 import { searchProducts, suggestFilterRelaxation, getFacetMetadata } from 'backend/categorySearch.web';
 import { buildFilterChips, removeFilter, clearAllFilters, serializeFiltersToUrl, deserializeFiltersFromUrl, formatFeatureLabel, sanitizeFilterInput } from 'public/categoryFilterHelpers';
 import { isMobile, initBackToTop } from 'public/mobileHelpers';
+import { prioritizeSections } from 'public/performanceHelpers.js';
 import { trackEvent } from 'public/engagementTracker';
 import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
@@ -86,21 +87,42 @@ $w.onReady(async function () {
   resetRatingsCache();
   const currentPath = wixLocationFrontend.path?.[0] || '';
 
-  initCategoryHero(currentPath);
-  initCategoryFlashSale(currentPath);
-  initSortControls();
-  initFilterControls();
-  initAdvancedFilters(currentPath);
-  initProductGrid();
-  preloadWishlistStatus();
-  updateResultCount(currentPath);
-  initRecentlyViewed();
-  initQuickViewHandlers();
-  injectCategoryMeta(currentPath);
-  await injectCategorySchema();
-  initCategorySwipe(currentPath);
-  initBackToTop($w);
-  restoreFiltersFromUrl(currentPath);
+  // Critical: above-fold content that affects LCP (hero, product grid, sort)
+  // Deferred: below-fold or interaction-gated features (filters, recently viewed, SEO, etc.)
+  const sections = [
+    // ── Critical (above-fold, affects LCP) ──
+    { name: 'categoryHero', init: () => initCategoryHero(currentPath), critical: true },
+    { name: 'sortControls', init: () => initSortControls(), critical: true },
+    { name: 'productGrid', init: () => initProductGrid(), critical: true },
+    { name: 'resultCount', init: () => updateResultCount(currentPath), critical: true },
+    { name: 'restoreFilters', init: () => restoreFiltersFromUrl(currentPath), critical: true },
+
+    // ── Deferred (below-fold or interaction-gated) ──
+    { name: 'flashSale', init: () => initCategoryFlashSale(currentPath), critical: false },
+    { name: 'filterControls', init: () => initFilterControls(), critical: false },
+    { name: 'advancedFilters', init: () => initAdvancedFilters(currentPath), critical: false },
+    { name: 'wishlistStatus', init: () => preloadWishlistStatus(), critical: false },
+    { name: 'recentlyViewed', init: () => initRecentlyViewed(), critical: false },
+    { name: 'quickView', init: () => initQuickViewHandlers(), critical: false },
+    { name: 'categoryMeta', init: () => injectCategoryMeta(currentPath), critical: false },
+    { name: 'categorySchema', init: () => injectCategorySchema(), critical: false },
+    { name: 'categorySwipe', init: () => initCategorySwipe(currentPath), critical: false },
+    { name: 'backToTop', init: () => initBackToTop($w), critical: false },
+  ];
+
+  const { critical: criticalResults } = await prioritizeSections(sections, {
+    onError: (section, reason) => {
+      console.error(`[CategoryPage] Deferred section "${section.name}" failed:`, reason);
+    },
+  });
+
+  criticalResults.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      const criticalSections = sections.filter(s => s.critical);
+      console.error(`[CategoryPage] Critical section "${criticalSections[i].name}" failed:`, result.reason);
+    }
+  });
+
   trackEvent('page_view', { page: 'category', category: currentPath });
 
   // Social proof toast (non-blocking, delayed)

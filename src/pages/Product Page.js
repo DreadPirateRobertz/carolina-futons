@@ -1,5 +1,7 @@
 // Product Page.js - Orchestrator
 // Coordinates component initialization and cross-sell sections
+// Performance: uses prioritizeSections for critical/deferred split,
+// dynamic import() for below-fold components to reduce initial bundle
 import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
 import { cacheProduct } from 'public/productCache';
@@ -9,30 +11,25 @@ import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers'
 import { buildGridAlt } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
+import { prioritizeSections } from 'public/performanceHelpers.js';
 
-// Components
+// Critical above-fold components (statically imported)
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
 import { initVariantSelector, initSwatchSelector } from 'public/ProductOptions.js';
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from 'public/ProductDetails.js';
-import { initProductReviews } from 'public/ProductReviews.js';
-import { initFinancingOptions } from 'public/ProductFinancing.js';
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
-import { initComfortCards } from 'public/ComfortStoryCards.js';
-import { initFeelAndComfort } from 'public/FeelAndComfort.js';
-import { initDimensionDisplay, initRoomFitChecker, initSizeComparisonTable, initDimensionOverlay, initDoorwayPresets, initShippingDimensions, initVisualSizeComparison } from 'public/ProductSizeGuide.js';
-import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
-import { initProductARViewer } from 'public/ProductARViewer.js';
 import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
-import { initLifestyleGallery } from 'public/LifestyleGallery.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
-import { initCustomizationBuilder } from 'public/CustomizationBuilder.js';
-import { initProductVideoSection } from 'public/ProductVideoSection.js';
-import { initProduct360Viewer } from 'public/Product360Viewer.js';
-import { initProductQA } from 'public/ProductQA.js';
+import { initInventoryDisplay } from 'public/InventoryDisplay.js';
+
+// Below-fold components: dynamically imported in deferred section inits
+// ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
+// LifestyleGallery, ComfortStoryCards, FeelAndComfort, ProductQA,
+// ProductReviews, ProductFinancing, ProductSizeGuide
 
 const state = {
   product: null,
@@ -83,85 +80,98 @@ async function initProductPage() {
       });
     } catch (e) {}
 
-    const productSections = [
-      { name: 'variantSelector', init: () => initVariantSelector($w, state) },
-      { name: 'swatchSelector', init: () => initSwatchSelector($w, state) },
-      { name: 'relatedProducts', init: loadRelatedProducts },
-      { name: 'collectionProducts', init: loadCollectionProducts },
-      { name: 'recentlyViewed', init: loadRecentlyViewed },
-      { name: 'alsoBought', init: loadAlsoBought },
-      { name: 'productSchema', init: () => injectProductSchema($w, state) },
-      { name: 'productMeta', init: () => injectProductMeta(state) },
-      { name: 'pinterestMeta', init: () => injectPinterestMeta(state) },
-      { name: 'imageGallery', init: () => initImageGallery($w, state) },
-      { name: 'arViewer', init: () => initProductARViewer($w, state) },
-      { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state) },
-      { name: 'addToCart', init: () => initAddToCartEnhancements($w, state) },
-      { name: 'quantitySelector', init: () => initQuantitySelector($w, state) },
-      { name: 'productBadge', init: () => initProductBadge($w, state) },
-      { name: 'productVideo', init: () => initProductVideo($w, state) },
-      { name: 'bundleSection', init: () => initBundleSection($w, state) },
-      { name: 'stockUrgency', init: () => initStockUrgency($w, state) },
-      { name: 'flashSaleBadge', init: () => initFlashSaleUrgency() },
-      { name: 'backInStock', init: () => initBackInStockNotification($w, state) },
-      { name: 'wishlistButton', init: () => initWishlistButton($w, state) },
-      { name: 'productReviews', init: () => initProductReviews($w, state) },
-      { name: 'financingOptions', init: () => initFinancingOptions($w, state) },
-      { name: 'customizationBuilder', init: () => initCustomizationBuilder($w, state) },
-      { name: 'productQA', init: () => initProductQA($w, state) },
+    // Critical: above-fold content that affects LCP (variant selector, gallery, add-to-cart, breadcrumbs)
+    // Deferred: below-fold content loaded fire-and-forget (reviews, cross-sell, AR, video, etc.)
+    const sections = [
+      // ── Critical (above-fold, affects LCP) ──
+      { name: 'variantSelector', init: () => initVariantSelector($w, state), critical: true },
+      { name: 'swatchSelector', init: () => initSwatchSelector($w, state), critical: true },
+      { name: 'imageGallery', init: () => initImageGallery($w, state), critical: true },
+      { name: 'breadcrumbs', init: () => initBreadcrumbs($w, state), critical: true },
+      { name: 'addToCart', init: () => initAddToCartEnhancements($w, state), critical: true },
+      { name: 'quantitySelector', init: () => initQuantitySelector($w, state), critical: true },
+      { name: 'productBadge', init: () => initProductBadge($w, state), critical: true },
+      { name: 'productVideo', init: () => initProductVideo($w, state), critical: true },
+      { name: 'stockUrgency', init: () => initStockUrgency($w, state), critical: true },
+      { name: 'bundleSection', init: () => initBundleSection($w, state), critical: true },
+      { name: 'backInStock', init: () => initBackInStockNotification($w, state), critical: true },
+      { name: 'wishlistButton', init: () => initWishlistButton($w, state), critical: true },
+      { name: 'designTokens', init: () => applyProductPageTokens($w), critical: true },
+
+      // ── Deferred (below-fold, fire-and-forget) ──
+      { name: 'productSchema', init: () => injectProductSchema($w, state), critical: false },
+      { name: 'productMeta', init: () => injectProductMeta(state), critical: false },
+      { name: 'pinterestMeta', init: () => injectPinterestMeta(state), critical: false },
+      { name: 'flashSaleBadge', init: () => initFlashSaleUrgency(), critical: false },
+      { name: 'socialShare', init: () => initSocialShare($w, state), critical: false },
+      { name: 'stickyCartBar', init: () => initStickyCartBar($w, state), critical: false },
+      { name: 'deliveryEstimate', init: () => initDeliveryEstimate($w, state), critical: false },
+      { name: 'swatchRequest', init: () => initSwatchRequest($w, state), critical: false },
+      { name: 'swatchCTA', init: () => initSwatchCTA($w, state), critical: false },
+      { name: 'productInfoAccordion', init: () => initProductInfoAccordion($w), critical: false },
+      { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state), critical: false },
+      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']), critical: false },
+      { name: 'backToTop', init: () => initBackToTop($w), critical: false },
+      { name: 'browseTracking', init: () => initBrowseTrackingModule($w, state, _browseState), critical: false },
+      // Cross-sell sections (below fold, backend calls)
+      { name: 'relatedProducts', init: loadRelatedProducts, critical: false },
+      { name: 'collectionProducts', init: loadCollectionProducts, critical: false },
+      { name: 'recentlyViewed', init: loadRecentlyViewed, critical: false },
+      { name: 'alsoBought', init: loadAlsoBought, critical: false },
+      // Dynamically imported below-fold components
+      { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
+      { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
+      { name: 'arViewer', init: async () => { const m = await import('public/ProductARViewer.js'); m.initProductARViewer($w, state); }, critical: false },
+      { name: 'customizationBuilder', init: async () => { const m = await import('public/CustomizationBuilder.js'); m.initCustomizationBuilder($w, state); }, critical: false },
+      { name: 'productQA', init: async () => { const m = await import('public/ProductQA.js'); m.initProductQA($w, state); }, critical: false },
+      { name: 'feelAndComfort', init: async () => { const m = await import('public/FeelAndComfort.js'); m.initFeelAndComfort($w, state); }, critical: false },
+      { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
+      { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
+      { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
+      { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
+      // Size guide (dynamically imported — 7 init functions, all below fold)
+      { name: 'sizeGuide', init: async () => {
+        const m = await import('public/ProductSizeGuide.js');
+        m.initDimensionDisplay($w, state);
+        m.initRoomFitChecker($w, state);
+        m.initDoorwayPresets($w);
+        m.initSizeComparisonTable($w, state);
+        m.initDimensionOverlay($w, state);
+        m.initShippingDimensions($w, state);
+        m.initVisualSizeComparison($w, state);
+      }, critical: false },
     ];
 
-    const results = await Promise.allSettled(productSections.map(s => s.init()));
-
-    results.forEach((result, i) => {
-      if (result.status === 'rejected') {
-        console.error(`[ProductPage] Section "${productSections[i].name}" failed:`, result.reason);
+    const { critical: criticalResults } = await prioritizeSections(sections, {
+      onError: (section, reason) => {
+        console.error(`[ProductPage] Deferred section "${section.name}" failed:`, reason);
         import('backend/errorMonitoring.web').then(({ logError }) => {
           logError({
-            message: `Product page section "${productSections[i].name}" failed`,
+            message: `Product page section "${section.name}" failed`,
+            stack: reason?.stack || String(reason),
+            page: 'Product Page',
+            context: `initProductPage/deferred/${section.name}`,
+            severity: 'warning',
+          });
+        }).catch(err => console.error('[ProductPage] Error logging failed:', err.message));
+      },
+    });
+
+    criticalResults.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        const criticalSections = sections.filter(s => s.critical);
+        console.error(`[ProductPage] Critical section "${criticalSections[i].name}" failed:`, result.reason);
+        import('backend/errorMonitoring.web').then(({ logError }) => {
+          logError({
+            message: `Product page section "${criticalSections[i].name}" failed`,
             stack: result.reason?.stack || String(result.reason),
             page: 'Product Page',
-            context: `initProductPage/${productSections[i].name}`,
+            context: `initProductPage/${criticalSections[i].name}`,
             severity: 'error',
           });
         }).catch(err => console.error('[ProductPage] Error logging failed:', err.message));
       }
     });
-
-    // Each init wrapped individually so one failure doesn't block the rest
-    const secondaryInits = [
-      { name: 'socialShare', init: () => initSocialShare($w, state) },
-      { name: 'stickyCartBar', init: () => initStickyCartBar($w, state) },
-      { name: 'deliveryEstimate', init: () => initDeliveryEstimate($w, state) },
-      { name: 'feelAndComfort', init: () => initFeelAndComfort($w, state) },
-      { name: 'swatchRequest', init: () => initSwatchRequest($w, state) },
-      { name: 'swatchCTA', init: () => initSwatchCTA($w, state) },
-      { name: 'productInfoAccordion', init: () => initProductInfoAccordion($w) },
-      { name: 'comfortCards', init: () => initComfortCards($w, state) },
-      { name: 'dimensionDisplay', init: () => initDimensionDisplay($w, state) },
-      { name: 'roomFitChecker', init: () => initRoomFitChecker($w, state) },
-      { name: 'doorwayPresets', init: () => initDoorwayPresets($w) },
-      { name: 'sizeComparisonTable', init: () => initSizeComparisonTable($w, state) },
-      { name: 'dimensionOverlay', init: () => initDimensionOverlay($w, state) },
-      { name: 'shippingDimensions', init: () => initShippingDimensions($w, state) },
-      { name: 'visualSizeComparison', init: () => initVisualSizeComparison($w, state) },
-      { name: 'inventoryDisplay', init: () => initInventoryDisplay($w, state) },
-      { name: 'lifestyleGallery', init: () => initLifestyleGallery($w, state) },
-      { name: 'videoSection', init: () => initProductVideoSection($w, state) },
-      { name: 'viewer360', init: () => initProduct360Viewer($w, state) },
-      { name: 'designTokens', init: () => applyProductPageTokens($w) },
-      { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']) },
-      { name: 'backToTop', init: () => initBackToTop($w) },
-      { name: 'browseTracking', init: () => initBrowseTrackingModule($w, state, _browseState) },
-    ];
-
-    for (const section of secondaryInits) {
-      try {
-        section.init();
-      } catch (e) {
-        console.error(`[ProductPage] "${section.name}" init failed:`, e);
-      }
-    }
 
     // Social proof toast (non-blocking, delayed)
     initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});

@@ -241,6 +241,8 @@ export default defineConfig({
       'public/promotionHelpers.js': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
       'public/promotionHelpers': path.resolve(__dirname, 'src/public/promotionHelpers.js'),
       'backend/facebookCatalog.web': path.resolve(__dirname, 'src/backend/facebookCatalog.web.js'),
+      'public/tikTokPixel.js': path.resolve(__dirname, 'src/public/tikTokPixel.js'),
+      'public/tikTokPixel': path.resolve(__dirname, 'src/public/tikTokPixel.js'),
     },
   },
 });

@@ -734,6 +734,8 @@ describe('Category Page', () => {
     it('detects futon-frames category from URL path', async () => {
       __setPath(['futon-frames']);
       await onReadyHandler();
+      // Schema injection is deferred (fire-and-forget) — wait for it to settle
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#categorySchemaHtml').postMessage).toHaveBeenCalled();
     });
 
@@ -741,12 +743,14 @@ describe('Category Page', () => {
       elements.clear();
       __setPath(['murphy-cabinet-beds']);
       await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#categorySchemaHtml').postMessage).toHaveBeenCalled();
     });
 
     it('injects breadcrumb schema for category page', async () => {
       __setPath(['mattresses']);
       await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#categoryBreadcrumbSchemaHtml').postMessage).toHaveBeenCalled();
     });
   });

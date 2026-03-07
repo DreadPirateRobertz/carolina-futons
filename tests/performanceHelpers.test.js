@@ -425,3 +425,91 @@ describe('getImageDimensionsForCategory', () => {
     expect(getImageDimensionsForCategory(undefined)).toEqual({ width: 400, height: 400 });
   });
 });
+
+// ── sharePromise ─────────────────────────────────────────────────────
+
+describe('sharePromise', () => {
+  let sharePromise;
+
+  beforeEach(async () => {
+    ({ sharePromise } = await import('../src/public/performanceHelpers.js'));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it('deduplicates concurrent calls to same async function', async () => {
+    let callCount = 0;
+    const fn = vi.fn(() => {
+      callCount++;
+      return new Promise(resolve => setTimeout(() => resolve(`result-${callCount}`), 50));
+    });
+
+    const shared = sharePromise(fn);
+
+    // Three concurrent calls should produce same promise
+    const [r1, r2, r3] = await Promise.all([shared(), shared(), shared()]);
+
+    expect(fn).toHaveBeenCalledOnce();
+    expect(r1).toBe('result-1');
+    expect(r2).toBe('result-1');
+    expect(r3).toBe('result-1');
+  });
+
+  it('allows new call after previous resolves', async () => {
+    let callCount = 0;
+    const fn = vi.fn(() => {
+      callCount++;
+      return Promise.resolve(`result-${callCount}`);
+    });
+
+    const shared = sharePromise(fn);
+
+    const r1 = await shared();
+    expect(r1).toBe('result-1');
+
+    const r2 = await shared();
+    expect(r2).toBe('result-2');
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('allows new call after previous rejects', async () => {
+    let callCount = 0;
+    const fn = vi.fn(() => {
+      callCount++;
+      if (callCount === 1) return Promise.reject(new Error('fail'));
+      return Promise.resolve('ok');
+    });
+
+    const shared = sharePromise(fn);
+
+    await expect(shared()).rejects.toThrow('fail');
+
+    const r2 = await shared();
+    expect(r2).toBe('ok');
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes arguments to underlying function', async () => {
+    const fn = vi.fn((a, b) => Promise.resolve(a + b));
+    const shared = sharePromise(fn);
+
+    const result = await shared(2, 3);
+    expect(result).toBe(5);
+    expect(fn).toHaveBeenCalledWith(2, 3);
+  });
+
+  it('returns same rejected promise for concurrent calls', async () => {
+    const fn = vi.fn(() => new Promise((_, reject) => setTimeout(() => reject(new Error('boom')), 50)));
+    const shared = sharePromise(fn);
+
+    const results = await Promise.allSettled([shared(), shared()]);
+
+    expect(fn).toHaveBeenCalledOnce();
+    expect(results[0].status).toBe('rejected');
+    expect(results[1].status).toBe('rejected');
+    expect(results[0].reason.message).toBe('boom');
+  });
+});

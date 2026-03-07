@@ -162,12 +162,13 @@ const testState = { product: testProduct, selectedSwatchId: null, selectedQuanti
 
 describe('Product Page Feature Hookup — Orchestrator', () => {
 
-  it('imports initFeelAndComfort from FeelAndComfort.js', async () => {
+  it('references initFeelAndComfort from FeelAndComfort.js', async () => {
     const pageSource = await import('fs').then(fs =>
       fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
     );
-    expect(pageSource).toContain("import { initFeelAndComfort }");
-    expect(pageSource).toContain("from 'public/FeelAndComfort.js'");
+    // May be statically imported or dynamically imported — either is valid
+    expect(pageSource).toContain("initFeelAndComfort");
+    expect(pageSource).toContain("FeelAndComfort.js");
   });
 
   it('imports all 7 feature block init functions', async () => {
@@ -194,24 +195,22 @@ describe('Product Page Feature Hookup — Orchestrator', () => {
     expect(pageSource).toContain('initFeelAndComfort');
   });
 
-  it('places all 7 feature inits in productSections or secondaryInits', async () => {
+  it('places all 7 feature inits in the sections array', async () => {
     const pageSource = await import('fs').then(fs =>
       fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
     );
 
-    // Primary sections (Promise.allSettled)
-    expect(pageSource).toMatch(/productSections[\s\S]*?swatchSelector/);
-    expect(pageSource).toMatch(/productSections[\s\S]*?breadcrumbs/);
-    expect(pageSource).toMatch(/productSections[\s\S]*?quantitySelector/);
-    expect(pageSource).toMatch(/productSections[\s\S]*?financingOptions/);
-
-    // Secondary sections (try/catch loop)
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?socialShare/);
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?stickyCartBar/);
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?feelAndComfort/);
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?swatchRequest/);
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?swatchCTA/);
-    expect(pageSource).toMatch(/secondaryInits[\s\S]*?productInfoAccordion/);
+    // All features present in the unified sections array (critical or deferred)
+    expect(pageSource).toMatch(/sections[\s\S]*?swatchSelector/);
+    expect(pageSource).toMatch(/sections[\s\S]*?breadcrumbs/);
+    expect(pageSource).toMatch(/sections[\s\S]*?quantitySelector/);
+    expect(pageSource).toMatch(/sections[\s\S]*?financingOptions/);
+    expect(pageSource).toMatch(/sections[\s\S]*?socialShare/);
+    expect(pageSource).toMatch(/sections[\s\S]*?stickyCartBar/);
+    expect(pageSource).toMatch(/sections[\s\S]*?feelAndComfort/);
+    expect(pageSource).toMatch(/sections[\s\S]*?swatchRequest/);
+    expect(pageSource).toMatch(/sections[\s\S]*?swatchCTA/);
+    expect(pageSource).toMatch(/sections[\s\S]*?productInfoAccordion/);
   });
 });
 
@@ -559,22 +558,24 @@ describe('Feel & Comfort section (initFeelAndComfort)', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 describe('Error isolation', () => {
-  it('secondary inits use try/catch so one failure does not stop others', async () => {
+  it('uses prioritizeSections for error-isolated critical/deferred split', async () => {
     const pageSource = await import('fs').then(fs =>
       fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
     );
 
-    // The secondaryInits loop must have try/catch
-    expect(pageSource).toContain('for (const section of secondaryInits)');
-    expect(pageSource).toMatch(/for \(const section of secondaryInits\)[\s\S]*?try[\s\S]*?catch/);
+    // Uses prioritizeSections which internally uses Promise.allSettled
+    expect(pageSource).toContain('prioritizeSections(sections');
+    // Has both critical and deferred sections
+    expect(pageSource).toContain('critical: true');
+    expect(pageSource).toContain('critical: false');
   });
 
-  it('primary inits use Promise.allSettled for error isolation', async () => {
+  it('has onError callback for deferred section failures', async () => {
     const pageSource = await import('fs').then(fs =>
       fs.readFileSync(new URL('../src/pages/Product Page.js', import.meta.url), 'utf8')
     );
 
-    expect(pageSource).toContain('Promise.allSettled(productSections.map');
+    expect(pageSource).toContain('onError:');
   });
 });
 
