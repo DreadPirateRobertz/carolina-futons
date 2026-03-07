@@ -1,12 +1,12 @@
 // ProductFinancing.js - BNPL financing options display
-// Shows available payment plans on product pages with a modal breakdown.
-// Integrates with financingService.web.js backend.
+// Shows available payment plans and Afterpay on product pages with a modal breakdown.
+// Integrates with financingCalc.web.js backend.
 
 import { makeClickable, setupAccessibleDialog, announce } from 'public/a11yHelpers';
 
 /**
  * Initialize the financing section on a product page.
- * Shows "As low as $XX/mo" teaser and expandable plan list.
+ * Shows "As low as $XX/mo" teaser, Afterpay message, and expandable plan list.
  *
  * @param {Function} $w - Wix selector function.
  * @param {Object} state - Product page state with state.product.
@@ -19,25 +19,17 @@ export async function initFinancingOptions($w, state) {
     const price = state.product?.price;
     if (!price || price <= 0) { section.collapse(); return; }
 
-    const { getFinancingOptions, getLowestMonthlyDisplay } = await import('backend/financingService.web');
+    const { getFinancingWidget } = await import('backend/financingCalc.web');
+    const result = await getFinancingWidget(price);
 
-    const [plans, teaser] = await Promise.all([
-      getFinancingOptions(price),
-      getLowestMonthlyDisplay(price),
-    ]);
-
-    if (!plans || plans.length === 0) { section.collapse(); return; }
+    if (!result.success || !result.eligible) { section.collapse(); return; }
 
     section.expand();
 
-    // Teaser line: "As low as $XX/mo"
-    renderTeaser($w, teaser);
-
-    // Plan repeater
-    renderPlans($w, plans);
-
-    // Modal toggle
-    initFinancingModal($w, plans);
+    renderTeaser($w, result.lowestMonthly);
+    renderAfterpayMessage($w, result.afterpay);
+    renderPlans($w, result.widgetData.sections);
+    initFinancingModal($w, result.widgetData.sections);
   } catch (e) {
     try { $w('#financingSection').collapse(); } catch (e2) {}
   }
@@ -56,18 +48,15 @@ export async function updateFinancingPrice($w, price) {
 
     if (!price || price <= 0) { section.collapse(); return; }
 
-    const { getFinancingOptions, getLowestMonthlyDisplay } = await import('backend/financingService.web');
+    const { getFinancingWidget } = await import('backend/financingCalc.web');
+    const result = await getFinancingWidget(price);
 
-    const [plans, teaser] = await Promise.all([
-      getFinancingOptions(price),
-      getLowestMonthlyDisplay(price),
-    ]);
-
-    if (!plans || plans.length === 0) { section.collapse(); return; }
+    if (!result.success || !result.eligible) { section.collapse(); return; }
 
     section.expand();
-    renderTeaser($w, teaser);
-    renderPlans($w, plans);
+    renderTeaser($w, result.lowestMonthly);
+    renderAfterpayMessage($w, result.afterpay);
+    renderPlans($w, result.widgetData.sections);
   } catch (e) {
     try { $w('#financingSection').collapse(); } catch (e2) {}
   }
@@ -75,11 +64,11 @@ export async function updateFinancingPrice($w, price) {
 
 // ── Teaser ─────────────────────────────────────────────────────────────
 
-function renderTeaser($w, teaser) {
+function renderTeaser($w, lowestMonthly) {
   try {
     const el = $w('#financingTeaser');
-    if (el && teaser) {
-      el.text = teaser;
+    if (el && lowestMonthly) {
+      el.text = lowestMonthly;
       el.show();
     } else if (el) {
       el.hide();
@@ -87,24 +76,42 @@ function renderTeaser($w, teaser) {
   } catch (e) {}
 }
 
+// ── Afterpay Message ──────────────────────────────────────────────────
+
+function renderAfterpayMessage($w, afterpay) {
+  try {
+    const el = $w('#afterpayMessage');
+    if (!el) return;
+
+    if (afterpay && afterpay.eligible && afterpay.message) {
+      el.text = afterpay.message;
+      el.show();
+    } else {
+      el.hide();
+    }
+  } catch (e) {}
+}
+
 // ── Plan Repeater ──────────────────────────────────────────────────────
 
-function renderPlans($w, plans) {
+function renderPlans($w, sections) {
   try {
     const repeater = $w('#financingRepeater');
     if (!repeater) return;
 
     repeater.onItemReady(($item, itemData) => {
-      try { $item('#planLabel').text = itemData.label; } catch (e) {}
-      try { $item('#planMonthly').text = `$${itemData.monthly}/mo`; } catch (e) {}
-      try { $item('#planDescription').text = itemData.description; } catch (e) {}
+      try { $item('#planLabel').text = itemData.title; } catch (e) {}
+      try { $item('#planMonthly').text = itemData.highlight; } catch (e) {}
+      try { $item('#planDescription').text = itemData.subtitle; } catch (e) {}
 
-      // Show interest info for non-zero APR plans
       try {
         const interestEl = $item('#planInterest');
         if (interestEl) {
-          if (itemData.apr > 0) {
-            interestEl.text = `$${itemData.total} total (${itemData.apr}% APR)`;
+          if (itemData.type === 'afterpay') {
+            interestEl.text = 'No interest';
+            interestEl.show();
+          } else if (itemData.details && itemData.details.apr > 0) {
+            interestEl.text = `$${itemData.details.total} total (${itemData.details.apr}% APR)`;
             interestEl.show();
           } else {
             interestEl.text = 'No interest';
@@ -114,13 +121,13 @@ function renderPlans($w, plans) {
       } catch (e) {}
     });
 
-    repeater.data = plans.map((p, i) => ({ ...p, _id: `plan-${i}` }));
+    repeater.data = sections.map((s, i) => ({ ...s, _id: `plan-${i}` }));
   } catch (e) {}
 }
 
 // ── Financing Modal ────────────────────────────────────────────────────
 
-function initFinancingModal($w, plans) {
+function initFinancingModal($w, sections) {
   try {
     const learnMore = $w('#financingLearnMore');
     if (!learnMore) return;
@@ -138,41 +145,49 @@ function initFinancingModal($w, plans) {
       },
     });
 
-    makeClickable(learnMore, () => openFinancingModal($w, plans, dialog), { ariaLabel: 'Learn more about financing options' });
+    makeClickable(learnMore, () => openFinancingModal($w, sections, dialog), { ariaLabel: 'Learn more about financing options' });
   } catch (e) {}
 
-  // Overlay click to close
   try {
     const overlay = $w('#financingOverlay');
     if (overlay) overlay.onClick(() => closeFinancingModal($w));
   } catch (e) {}
 }
 
-function openFinancingModal($w, plans, dialog) {
+function openFinancingModal($w, sections, dialog) {
   try {
-    // Populate modal details repeater
     const detailRepeater = $w('#financingDetailRepeater');
     if (detailRepeater) {
       detailRepeater.onItemReady(($item, itemData) => {
-        try { $item('#detailLabel').text = itemData.label; } catch (e) {}
-        try { $item('#detailTerm').text = `${itemData.term} payments`; } catch (e) {}
-        try { $item('#detailMonthly').text = `$${itemData.monthly}/mo`; } catch (e) {}
-        try { $item('#detailTotal').text = `Total: $${itemData.total}`; } catch (e) {}
+        try { $item('#detailLabel').text = itemData.title; } catch (e) {}
+        try { $item('#detailMonthly').text = itemData.highlight; } catch (e) {}
+
         try {
           const aprEl = $item('#detailApr');
           if (aprEl) {
-            aprEl.text = itemData.apr > 0 ? `${itemData.apr}% APR` : '0% APR';
+            if (itemData.type === 'afterpay') {
+              aprEl.text = '0% APR';
+            } else if (itemData.details && itemData.details.apr > 0) {
+              aprEl.text = `${itemData.details.apr}% APR`;
+            } else {
+              aprEl.text = '0% APR';
+            }
           }
         } catch (e) {}
+
         try {
           const interestEl = $item('#detailInterest');
           if (interestEl) {
-            interestEl.text = itemData.interest > 0 ? `Interest: $${itemData.interest}` : 'No interest charges';
+            if (itemData.type === 'afterpay' || !itemData.details || itemData.details.interest <= 0) {
+              interestEl.text = 'No interest charges';
+            } else {
+              interestEl.text = `Interest: $${itemData.details.interest}`;
+            }
           }
         } catch (e) {}
       });
 
-      detailRepeater.data = plans.map((p, i) => ({ ...p, _id: `detail-${i}` }));
+      detailRepeater.data = sections.map((s, i) => ({ ...s, _id: `detail-${i}` }));
     }
 
     $w('#financingOverlay').show('fade', { duration: 200 });
@@ -186,6 +201,5 @@ function closeFinancingModal($w) {
   try { $w('#financingModal').hide('fade', { duration: 200 }); } catch (e) {}
   try { $w('#financingOverlay').hide('fade', { duration: 200 }); } catch (e) {}
   announce($w, 'Financing details closed');
-  // Restore focus to the learn more link that opened the modal
   try { $w('#financingLearnMore').focus(); } catch (e) {}
 }
