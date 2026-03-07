@@ -34,6 +34,8 @@ let _exitIntentDialog = null;
 let _promoDialog = null;
 // Lazy-loaded exit intent module functions (populated by initExitIntent)
 let _exitIntent = null;
+let _exitPopupShown = false;
+let _exitScrollAbort = null;
 
 // Deduplicate concurrent getCurrentCart() calls across init functions
 const getSharedCart = sharePromise(() => getCurrentCart());
@@ -730,6 +732,29 @@ async function initExitIntent() {
             } catch (e) {}
           }
         });
+
+        // Mobile: rapid upward scroll detection as additional exit signal
+        // Uses AbortController so listener is removed after popup fires
+        _exitScrollAbort = new AbortController();
+        let lastScrollY = 0;
+        let lastScrollTime = 0;
+        document.addEventListener('scroll', () => {
+          try {
+            if (_exitPopupShown) return;
+            const now = Date.now();
+            const currentY = window.scrollY || 0;
+            const elapsed = now - lastScrollTime;
+            if (elapsed > 0 && lastScrollTime > 0) {
+              const deltaY = lastScrollY - currentY; // positive = scrolling up
+              const velocity = deltaY / elapsed;
+              if (_exitIntent.detectScrollExit(velocity) && currentY < 100) {
+                showExitPopup();
+              }
+            }
+            lastScrollY = currentY;
+            lastScrollTime = now;
+          } catch (e) {}
+        }, { passive: true, signal: _exitScrollAbort.signal });
       }
     } else {
       // Desktop: mouse leave detection (cursor above viewport)
@@ -746,13 +771,23 @@ async function initExitIntent() {
 
 function showExitPopup() {
   try {
-    if (!_exitIntent) return;
+    if (!_exitIntent || _exitPopupShown) return;
+    _exitPopupShown = true;
     _exitIntent.markExitIntentShown();
+
+    // Remove scroll listener now that popup has fired
+    if (_exitScrollAbort) {
+      try { _exitScrollAbort.abort(); } catch (e) {}
+      _exitScrollAbort = null;
+    }
 
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
-    const config = _exitIntent.getExitIntentConfig();
+    const mobile = isMobile();
+    const config = mobile
+      ? _exitIntent.getMobileExitIntentConfig()
+      : _exitIntent.getExitIntentConfig();
 
     // Populate content from config
     try { $w('#exitTitle').text = config.title; } catch (e) {}
@@ -766,14 +801,27 @@ function showExitPopup() {
       focusableIds: ['#exitClose', '#exitEmailInput', '#exitEmailSubmit', '#exitSwatchLink'],
       onClose: () => {
         _exitIntent.markExitIntentDismissed();
+        if (mobile) {
+          try { $w('#exitIntentPopup').hide('slide', { direction: 'bottom', duration: 200 }); } catch (e) {}
+        }
         try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
       },
     });
 
+    // Show popup — mobile uses bottom sheet slide-up, desktop uses dialog open
     try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
+    if (mobile) {
+      try { popup.show('slide', { direction: 'bottom', duration: 300 }); } catch (e) {}
+      // Show drag handle for bottom sheet affordance
+      try { $w('#exitDragHandle').show(); } catch (e) {}
+      initExitSwipeDismiss(config.swipeDismissThreshold);
+    }
     _exitIntentDialog.open();
 
-    trackEvent('exit_intent_shown', { page: wixLocationFrontend.path?.join('/') || '' });
+    trackEvent('exit_intent_shown', {
+      page: wixLocationFrontend.path?.join('/') || '',
+      variant: mobile ? 'mobile_bottom_sheet' : 'desktop_overlay',
+    });
 
     // Overlay click to close
     try {
@@ -852,7 +900,41 @@ function showExitPopup() {
   } catch (e) {}
 }
 
+/**
+ * Initialize swipe-to-dismiss gesture on mobile exit-intent bottom sheet.
+ * Tracks touch start/end and dismisses if swipe-down exceeds threshold.
+ * @param {number} threshold - Minimum swipe distance in px to dismiss
+ */
+function initExitSwipeDismiss(threshold) {
+  try {
+    if (typeof document === 'undefined') return;
+    let touchStartY = 0;
+
+    const popup = $w('#exitIntentPopup');
+    if (!popup) return;
+
+    // Scoped touch events — only track swipes when popup is visible
+    const swipeAbort = new AbortController();
+
+    document.addEventListener('touchstart', (e) => {
+      if (!_exitPopupShown) return;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true, signal: swipeAbort.signal });
+
+    document.addEventListener('touchend', (e) => {
+      if (!_exitPopupShown) return;
+      const touchEndY = e.changedTouches[0].clientY;
+      const swipeDistance = touchEndY - touchStartY;
+      if (swipeDistance > threshold) {
+        swipeAbort.abort();
+        dismissExitPopup();
+      }
+    }, { passive: true, signal: swipeAbort.signal });
+  } catch (e) {}
+}
+
 function dismissExitPopup() {
+  _exitPopupShown = false;
   if (_exitIntentDialog) _exitIntentDialog.close();
 }
 

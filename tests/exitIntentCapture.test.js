@@ -5,6 +5,9 @@ import {
   markExitIntentDismissed,
   validateCaptureEmail,
   getExitIntentConfig,
+  getMobileExitIntentConfig,
+  detectScrollExit,
+  SCROLL_EXIT_VELOCITY_THRESHOLD,
   EXIT_INTENT_STORAGE_KEY,
 } from '../src/public/exitIntentCapture.js';
 
@@ -175,5 +178,89 @@ describe('getExitIntentConfig', () => {
   it('returns close button ARIA label', () => {
     const config = getExitIntentConfig();
     expect(config.closeAriaLabel).toBeTruthy();
+  });
+});
+
+// ── getMobileExitIntentConfig ────────────────────────────────────
+
+describe('getMobileExitIntentConfig', () => {
+  it('returns all base config fields', () => {
+    const config = getMobileExitIntentConfig();
+    expect(config.title).toBeTruthy();
+    expect(config.subtitle).toBeTruthy();
+    expect(config.ctaText).toBeTruthy();
+    expect(config.successMessage).toBeTruthy();
+    expect(config.emailPlaceholder).toBeTruthy();
+  });
+
+  it('returns mobile-specific animation config', () => {
+    const config = getMobileExitIntentConfig();
+    expect(config.animation).toBe('slide');
+    expect(config.animationDirection).toBe('bottom');
+  });
+
+  it('returns swipe dismiss threshold', () => {
+    const config = getMobileExitIntentConfig();
+    expect(typeof config.swipeDismissThreshold).toBe('number');
+    expect(config.swipeDismissThreshold).toBeGreaterThan(0);
+  });
+
+  it('includes ARIA label for bottom sheet', () => {
+    const config = getMobileExitIntentConfig();
+    expect(config.ariaLabel).toBeTruthy();
+  });
+
+  it('includes close ARIA label', () => {
+    const config = getMobileExitIntentConfig();
+    expect(config.closeAriaLabel).toBeTruthy();
+  });
+
+  it('includes discount code matching desktop config', () => {
+    const desktopConfig = getExitIntentConfig();
+    const mobileConfig = getMobileExitIntentConfig();
+    expect(mobileConfig.discountCode).toBe(desktopConfig.discountCode);
+  });
+});
+
+// ── detectScrollExit ─────────────────────────────────────────────
+
+describe('detectScrollExit', () => {
+  it('returns true when velocity exceeds threshold', () => {
+    const highVelocity = SCROLL_EXIT_VELOCITY_THRESHOLD + 1;
+    expect(detectScrollExit(highVelocity)).toBe(true);
+  });
+
+  it('returns false when velocity is below threshold', () => {
+    const lowVelocity = SCROLL_EXIT_VELOCITY_THRESHOLD - 0.5;
+    expect(detectScrollExit(lowVelocity)).toBe(false);
+  });
+
+  it('returns false for zero velocity', () => {
+    expect(detectScrollExit(0)).toBe(false);
+  });
+
+  it('returns false for negative velocity (scrolling down)', () => {
+    expect(detectScrollExit(-5)).toBe(false);
+  });
+
+  it('returns true at exact threshold', () => {
+    expect(detectScrollExit(SCROLL_EXIT_VELOCITY_THRESHOLD)).toBe(true);
+  });
+
+  it('returns false for NaN', () => {
+    expect(detectScrollExit(NaN)).toBe(false);
+  });
+
+  it('returns false for undefined', () => {
+    expect(detectScrollExit(undefined)).toBe(false);
+  });
+
+  it('returns false for null', () => {
+    expect(detectScrollExit(null)).toBe(false);
+  });
+
+  it('exports a positive threshold constant', () => {
+    expect(SCROLL_EXIT_VELOCITY_THRESHOLD).toBeGreaterThan(0);
+    expect(typeof SCROLL_EXIT_VELOCITY_THRESHOLD).toBe('number');
   });
 });

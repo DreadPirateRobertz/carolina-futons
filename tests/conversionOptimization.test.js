@@ -250,6 +250,116 @@ describe('Exit-Intent Popup', () => {
       expect(dismissed).toBe(true);
     });
   });
+
+  describe('Mobile bottom sheet variant', () => {
+    it('getMobileExitIntentConfig returns slide-from-bottom animation', async () => {
+      const { getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      const config = getMobileExitIntentConfig();
+      expect(config.animation).toBe('slide');
+      expect(config.animationDirection).toBe('bottom');
+    });
+
+    it('getMobileExitIntentConfig includes swipe dismiss threshold', async () => {
+      const { getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      const config = getMobileExitIntentConfig();
+      expect(config.swipeDismissThreshold).toBe(80);
+    });
+
+    it('getMobileExitIntentConfig shares discount code with desktop', async () => {
+      const { getExitIntentConfig, getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      expect(getMobileExitIntentConfig().discountCode).toBe(getExitIntentConfig().discountCode);
+    });
+
+    it('swipe-down exceeding threshold triggers dismiss', () => {
+      // Models the scoped swipe-dismiss logic in initExitSwipeDismiss
+      let touchStartY = 0;
+      let dismissed = false;
+      const popupVisible = true;
+      const threshold = 80;
+
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
+      const onTouchEnd = (e) => {
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
+      };
+
+      onTouchStart({ touches: [{ clientY: 200 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 350 }] });
+      expect(dismissed).toBe(true);
+    });
+
+    it('swipe-down below threshold does not dismiss', () => {
+      let touchStartY = 0;
+      let dismissed = false;
+      const popupVisible = true;
+      const threshold = 80;
+
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
+      const onTouchEnd = (e) => {
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
+      };
+
+      onTouchStart({ touches: [{ clientY: 200 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 230 }] });
+      expect(dismissed).toBe(false);
+    });
+
+    it('swipe events are gated by popup visibility flag', () => {
+      let touchStartY = 0;
+      let dismissed = false;
+      const popupVisible = false; // popup not visible
+      const threshold = 80;
+
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
+      const onTouchEnd = (e) => {
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
+      };
+
+      // Large swipe that would normally dismiss — but popup isn't visible
+      onTouchStart({ touches: [{ clientY: 100 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 400 }] });
+      expect(dismissed).toBe(false);
+    });
+
+    it('scroll velocity exit detection triggers on rapid upward scroll', async () => {
+      const { detectScrollExit } = await import('../src/public/exitIntentCapture.js');
+      expect(detectScrollExit(5)).toBe(true);
+    });
+
+    it('scroll velocity exit detection ignores slow scroll', async () => {
+      const { detectScrollExit } = await import('../src/public/exitIntentCapture.js');
+      expect(detectScrollExit(1)).toBe(false);
+    });
+
+    it('scroll listener respects shown flag to prevent re-trigger', () => {
+      // Models the _exitPopupShown guard in the scroll handler
+      let popupShown = true;
+      let showCalled = 0;
+
+      const scrollHandler = () => {
+        if (popupShown) return; // guard prevents re-trigger
+        showCalled++;
+      };
+
+      scrollHandler();
+      scrollHandler();
+      expect(showCalled).toBe(0);
+    });
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -7,6 +7,12 @@
 
 export const EXIT_INTENT_STORAGE_KEY = 'cf_exit_shown';
 
+/**
+ * Scroll velocity threshold (px/ms) for detecting mobile exit intent.
+ * A rapid upward scroll indicates the user may be trying to leave.
+ */
+export const SCROLL_EXIT_VELOCITY_THRESHOLD = 3;
+
 const EXCLUDED_PATHS = ['cart', 'checkout', 'thank-you'];
 
 /**
@@ -71,4 +77,30 @@ export function getExitIntentConfig() {
     closeAriaLabel: 'Close popup',
     discountCode: 'WELCOME10',
   };
+}
+
+/**
+ * Get mobile-specific exit-intent config. Extends base config with
+ * bottom sheet animation and swipe dismiss settings.
+ * @returns {Object}
+ */
+export function getMobileExitIntentConfig() {
+  const base = getExitIntentConfig();
+  return {
+    ...base,
+    animation: 'slide',
+    animationDirection: 'bottom',
+    swipeDismissThreshold: 80,
+  };
+}
+
+/**
+ * Detect whether a scroll velocity indicates mobile exit intent.
+ * Positive velocity = scrolling up (toward top of page / leaving).
+ * @param {number} velocityPxPerMs - Scroll velocity in px/ms (positive = upward)
+ * @returns {boolean}
+ */
+export function detectScrollExit(velocityPxPerMs) {
+  if (typeof velocityPxPerMs !== 'number' || isNaN(velocityPxPerMs)) return false;
+  return velocityPxPerMs >= SCROLL_EXIT_VELOCITY_THRESHOLD;
 }
