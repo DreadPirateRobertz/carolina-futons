@@ -53,11 +53,27 @@ globalThis.$w = Object.assign(
   { onReady: (fn) => { onReadyHandler = fn; } }
 );
 
+// ── Mock wix-seo-frontend ─────────────────────────────────────────
+
+const mockHead = {
+  setTitle: vi.fn(),
+  setMetaTag: vi.fn(),
+  setLinks: vi.fn(),
+  setStructuredData: vi.fn(),
+};
+
+vi.mock('wix-seo-frontend', () => ({
+  head: mockHead,
+}));
+
 // ── Mock Backend Modules ────────────────────────────────────────────
 
 vi.mock('backend/seoHelpers.web', () => ({
   getCollectionSchema: vi.fn().mockResolvedValue('{"@type":"ItemList"}'),
-  getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList"}'),
+  getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList","itemListElement":[]}'),
+  getCategoryMetaDescription: vi.fn().mockResolvedValue('Test category description'),
+  getCategoryOgTags: vi.fn().mockResolvedValue('{"og:type":"website"}'),
+  getCanonicalUrl: vi.fn().mockResolvedValue('https://www.carolinafutons.com/futon-frames'),
 }));
 
 // ── Import Page ─────────────────────────────────────────────────────
@@ -69,6 +85,10 @@ describe('Category Page', () => {
 
   beforeEach(() => {
     elements.clear();
+    mockHead.setTitle.mockClear();
+    mockHead.setMetaTag.mockClear();
+    mockHead.setLinks.mockClear();
+    mockHead.setStructuredData.mockClear();
   });
 
   // ── Sort Controls ─────────────────────────────────────────────────
@@ -752,6 +772,56 @@ describe('Category Page', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
       expect(getEl('#categoryBreadcrumbSchemaHtml').postMessage).toHaveBeenCalled();
+    });
+  });
+
+  // ── SSR SEO Meta (wix-seo-frontend) ──────────────────────────────
+
+  describe('SSR SEO meta injection via wix-seo-frontend', () => {
+    it('sets page title via head.setTitle', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setTitle).toHaveBeenCalled();
+      const title = mockHead.setTitle.mock.calls[0][0];
+      expect(title).toContain('Futon Frames');
+      expect(title).toContain('Carolina Futons');
+    });
+
+    it('sets meta description via head.setMetaTag', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('description', 'Test category description');
+    });
+
+    it('sets canonical URL via head.setLinks', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setLinks).toHaveBeenCalledWith([
+        { rel: 'canonical', href: 'https://www.carolinafutons.com/futon-frames' },
+      ]);
+    });
+
+    it('injects BreadcrumbList structured data via head.setStructuredData for SSR', async () => {
+      __setPath(['mattresses']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      const breadcrumb = schemas.find(s => s['@type'] === 'BreadcrumbList');
+      expect(breadcrumb).toBeDefined();
+    });
+
+    it('injects CollectionPage structured data via head.setStructuredData for SSR', async () => {
+      __setPath(['platform-beds']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      const collection = schemas.find(s => s['@type'] === 'ItemList');
+      expect(collection).toBeDefined();
     });
   });
 });

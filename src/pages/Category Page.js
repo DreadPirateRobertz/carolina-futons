@@ -222,6 +222,40 @@ async function injectCategoryMeta(currentPath) {
     if (canonical) {
       head.setLinks([{ rel: 'canonical', href: canonical }]);
     }
+
+    // Inject structured data via SSR for crawler indexability
+    const schemas = [];
+    try {
+      // Fetch products from dataset for SSR CollectionPage schema
+      const dataset = $w('#categoryDataset');
+      if (dataset) {
+        await dataset.onReady();
+        const total = Math.min(dataset.getTotalCount(), 30);
+        const result = await dataset.getItems(0, total);
+        const products = (result?.items || []).map(item => ({
+          slug: item.slug, name: item.name, mainMedia: item.mainMedia,
+        }));
+        if (products.length > 0) {
+          const collectionJson = await getCollectionSchema(
+            { slug: currentPath, title: content?.title || currentPath },
+            products
+          );
+          if (collectionJson) schemas.push(JSON.parse(collectionJson));
+        }
+      }
+    } catch (e) { /* collection schema failed */ }
+
+    try {
+      const breadcrumbJson = await getBreadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: content?.title || currentPath, url: null },
+      ]);
+      if (breadcrumbJson) schemas.push(JSON.parse(breadcrumbJson));
+    } catch (e) { /* breadcrumb schema failed */ }
+
+    if (schemas.length > 0) {
+      head.setStructuredData(schemas);
+    }
   } catch (e) {}
 }
 
