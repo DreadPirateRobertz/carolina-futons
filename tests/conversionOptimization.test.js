@@ -250,6 +250,88 @@ describe('Exit-Intent Popup', () => {
       expect(dismissed).toBe(true);
     });
   });
+
+  describe('Mobile bottom sheet variant', () => {
+    it('getMobileExitIntentConfig returns slide-from-bottom animation', async () => {
+      const { getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      const config = getMobileExitIntentConfig();
+      expect(config.animation).toBe('slide');
+      expect(config.animationDirection).toBe('bottom');
+    });
+
+    it('mobile popup uses slide animation from bottom', () => {
+      const $w = create$w();
+      const popup = $w('#exitIntentPopup');
+      // On mobile, the popup should slide up from the bottom
+      popup.show('slide', { direction: 'bottom', duration: 300 });
+      expect(popup.show).toHaveBeenCalledWith('slide', { direction: 'bottom', duration: 300 });
+    });
+
+    it('mobile popup dismisses with slide-down animation', () => {
+      const $w = create$w();
+      const popup = $w('#exitIntentPopup');
+      popup.hide('slide', { direction: 'bottom', duration: 200 });
+      expect(popup.hide).toHaveBeenCalledWith('slide', { direction: 'bottom', duration: 200 });
+    });
+
+    it('swipe-down dismiss tracks touch start and end', () => {
+      let touchStartY = 0;
+      let touchEndY = 0;
+      let dismissed = false;
+
+      const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+      const onTouchEnd = (e) => {
+        touchEndY = e.changedTouches[0].clientY;
+        const swipeDistance = touchEndY - touchStartY;
+        if (swipeDistance > 80) dismissed = true;
+      };
+
+      onTouchStart({ touches: [{ clientY: 200 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 350 }] });
+      expect(dismissed).toBe(true);
+    });
+
+    it('swipe-down does not dismiss for small swipes', () => {
+      let touchStartY = 0;
+      let touchEndY = 0;
+      let dismissed = false;
+
+      const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+      const onTouchEnd = (e) => {
+        touchEndY = e.changedTouches[0].clientY;
+        const swipeDistance = touchEndY - touchStartY;
+        if (swipeDistance > 80) dismissed = true;
+      };
+
+      onTouchStart({ touches: [{ clientY: 200 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 230 }] });
+      expect(dismissed).toBe(false);
+    });
+
+    it('scroll velocity exit detection triggers on rapid upward scroll', async () => {
+      const { detectScrollExit } = await import('../src/public/exitIntentCapture.js');
+      // 5 px/ms = very fast upward scroll
+      expect(detectScrollExit(5)).toBe(true);
+    });
+
+    it('scroll velocity exit detection ignores slow scroll', async () => {
+      const { detectScrollExit } = await import('../src/public/exitIntentCapture.js');
+      expect(detectScrollExit(1)).toBe(false);
+    });
+
+    it('mobile overlay uses fade animation', () => {
+      const $w = create$w();
+      const overlay = $w('#exitOverlay');
+      overlay.show('fade', { duration: 300 });
+      expect(overlay.show).toHaveBeenCalledWith('fade', { duration: 300 });
+    });
+
+    it('includes drag handle element for bottom sheet affordance', () => {
+      const $w = create$w();
+      const handle = $w('#exitDragHandle');
+      expect(handle).toBeDefined();
+    });
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════

@@ -730,6 +730,26 @@ async function initExitIntent() {
             } catch (e) {}
           }
         });
+
+        // Mobile: rapid upward scroll detection as additional exit signal
+        let lastScrollY = 0;
+        let lastScrollTime = 0;
+        document.addEventListener('scroll', () => {
+          try {
+            const now = Date.now();
+            const currentY = window.scrollY || 0;
+            const elapsed = now - lastScrollTime;
+            if (elapsed > 0 && lastScrollTime > 0) {
+              const deltaY = lastScrollY - currentY; // positive = scrolling up
+              const velocity = deltaY / elapsed;
+              if (_exitIntent.detectScrollExit(velocity) && currentY < 100) {
+                showExitPopup();
+              }
+            }
+            lastScrollY = currentY;
+            lastScrollTime = now;
+          } catch (e) {}
+        }, { passive: true });
       }
     } else {
       // Desktop: mouse leave detection (cursor above viewport)
@@ -752,7 +772,10 @@ function showExitPopup() {
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
-    const config = _exitIntent.getExitIntentConfig();
+    const mobile = isMobile();
+    const config = mobile
+      ? _exitIntent.getMobileExitIntentConfig()
+      : _exitIntent.getExitIntentConfig();
 
     // Populate content from config
     try { $w('#exitTitle').text = config.title; } catch (e) {}
@@ -766,14 +789,27 @@ function showExitPopup() {
       focusableIds: ['#exitClose', '#exitEmailInput', '#exitEmailSubmit', '#exitSwatchLink'],
       onClose: () => {
         _exitIntent.markExitIntentDismissed();
+        if (mobile) {
+          try { $w('#exitIntentPopup').hide('slide', { direction: 'bottom', duration: 200 }); } catch (e) {}
+        }
         try { $w('#exitOverlay').hide('fade', { duration: 200 }); } catch (e) {}
       },
     });
 
+    // Show popup — mobile uses bottom sheet slide-up, desktop uses dialog open
     try { $w('#exitOverlay').show('fade', { duration: 300 }); } catch (e) {}
+    if (mobile) {
+      try { popup.show('slide', { direction: 'bottom', duration: 300 }); } catch (e) {}
+      // Show drag handle for bottom sheet affordance
+      try { $w('#exitDragHandle').show(); } catch (e) {}
+      initExitSwipeDismiss(config.swipeDismissThreshold);
+    }
     _exitIntentDialog.open();
 
-    trackEvent('exit_intent_shown', { page: wixLocationFrontend.path?.join('/') || '' });
+    trackEvent('exit_intent_shown', {
+      page: wixLocationFrontend.path?.join('/') || '',
+      variant: mobile ? 'mobile_bottom_sheet' : 'desktop_overlay',
+    });
 
     // Overlay click to close
     try {
@@ -849,6 +885,34 @@ function showExitPopup() {
         import('wix-location-frontend').then(({ to }) => to('/contact'));
       });
     } catch (e) {}
+  } catch (e) {}
+}
+
+/**
+ * Initialize swipe-to-dismiss gesture on mobile exit-intent bottom sheet.
+ * Tracks touch start/end and dismisses if swipe-down exceeds threshold.
+ * @param {number} threshold - Minimum swipe distance in px to dismiss
+ */
+function initExitSwipeDismiss(threshold) {
+  try {
+    if (typeof document === 'undefined') return;
+    let touchStartY = 0;
+
+    const popup = $w('#exitIntentPopup');
+    if (!popup) return;
+
+    // Use document-level touch events scoped to the popup area
+    document.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const swipeDistance = touchEndY - touchStartY;
+      if (swipeDistance > threshold) {
+        dismissExitPopup();
+      }
+    }, { passive: true });
   } catch (e) {}
 }
 
