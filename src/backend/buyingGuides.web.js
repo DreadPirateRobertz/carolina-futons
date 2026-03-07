@@ -692,13 +692,23 @@ export const getAllBuyingGuides = webMethod(
         success: true,
         guides: GUIDE_SLUGS.map(slug => {
           const g = GUIDES[slug];
+          let wordCount = 0;
+          if (g.sections) {
+            for (const s of g.sections) {
+              if (s.body) wordCount += s.body.split(/\s+/).filter(Boolean).length;
+              if (s.heading) wordCount += s.heading.split(/\s+/).filter(Boolean).length;
+            }
+          }
+          const readingTime = wordCount > 0 ? Math.max(1, Math.round(wordCount / 200)) : 0;
           return {
             slug: g.slug,
             title: g.title,
             metaDescription: g.metaDescription,
+            category: g.category,
             categoryLabel: g.categoryLabel,
             heroImage: g.heroImage,
             publishDate: g.publishDate,
+            readingTime,
           };
         }),
       };

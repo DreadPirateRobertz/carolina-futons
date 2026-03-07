@@ -12,6 +12,7 @@ import {
   getCategoryIcon,
   buildFaqAccordionData,
   buildHubCardData,
+  filterGuidesByCategory,
 } from '../src/public/buyingGuidesHelpers.js';
 
 // ── Guide Categories ──────────────────────────────────────────────────
@@ -311,6 +312,42 @@ describe('buildFaqAccordionData', () => {
   });
 });
 
+// ── Filter Guides By Category ─────────────────────────────────────────
+
+describe('filterGuidesByCategory', () => {
+  const guides = [
+    { slug: 'futon-frames', title: 'Frames', category: 'futon-frames', categoryLabel: 'Futon Frames' },
+    { slug: 'mattresses', title: 'Mattresses', category: 'mattresses', categoryLabel: 'Mattresses' },
+    { slug: 'covers', title: 'Covers', category: 'covers', categoryLabel: 'Covers' },
+    { slug: 'pillows', title: 'Pillows', category: 'pillows', categoryLabel: 'Pillows' },
+  ];
+
+  it('returns all guides when category is null/undefined/empty', () => {
+    expect(filterGuidesByCategory(guides, null)).toEqual(guides);
+    expect(filterGuidesByCategory(guides, undefined)).toEqual(guides);
+    expect(filterGuidesByCategory(guides, '')).toEqual(guides);
+  });
+
+  it('returns all guides when category is "all"', () => {
+    expect(filterGuidesByCategory(guides, 'all')).toEqual(guides);
+  });
+
+  it('filters guides by category slug', () => {
+    const result = filterGuidesByCategory(guides, 'futon-frames');
+    expect(result).toHaveLength(1);
+    expect(result[0].slug).toBe('futon-frames');
+  });
+
+  it('returns empty array when no guides match', () => {
+    expect(filterGuidesByCategory(guides, 'nonexistent')).toEqual([]);
+  });
+
+  it('returns empty array for null/empty guides input', () => {
+    expect(filterGuidesByCategory(null, 'futon-frames')).toEqual([]);
+    expect(filterGuidesByCategory([], 'futon-frames')).toEqual([]);
+  });
+});
+
 // ── Hub Card Data ─────────────────────────────────────────────────────
 
 describe('buildHubCardData', () => {
@@ -319,9 +356,11 @@ describe('buildHubCardData', () => {
       slug: 'futon-frames',
       title: 'Complete Frame Guide',
       metaDescription: 'Everything about frames',
+      category: 'futon-frames',
       categoryLabel: 'Futon Frames',
       heroImage: '/hero.jpg',
       publishDate: '2026-02-20',
+      readingTime: 5,
     },
   ];
 
@@ -334,6 +373,8 @@ describe('buildHubCardData', () => {
     expect(cards[0].url).toBe('/buying-guides/futon-frames');
     expect(cards[0].description).toBe('Everything about frames');
     expect(cards[0].heroImage).toBe('/hero.jpg');
+    expect(cards[0].category).toBe('futon-frames');
+    expect(cards[0].readingTime).toBe(5);
   });
 
   it('returns empty array for null/empty', () => {

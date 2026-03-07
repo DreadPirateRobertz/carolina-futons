@@ -65,6 +65,22 @@ describe('getAllBuyingGuides', () => {
       expect(guide.metaDescription.length).toBeLessThanOrEqual(160);
     }
   });
+
+  it('each summary includes category slug', async () => {
+    const result = await getAllBuyingGuides();
+    for (const guide of result.guides) {
+      expect(typeof guide.category).toBe('string');
+      expect(guide.category.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('each summary includes readingTime as positive number', async () => {
+    const result = await getAllBuyingGuides();
+    for (const guide of result.guides) {
+      expect(typeof guide.readingTime).toBe('number');
+      expect(guide.readingTime).toBeGreaterThanOrEqual(1);
+    }
+  });
 });
 
 // ── getBuyingGuide ──────────────────────────────────────────────────
