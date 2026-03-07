@@ -57,12 +57,20 @@ function $wFn(sel) {
   return getEl(sel);
 }
 
-// ── Mock initMountainSkyline ─────────────────────────────────────────
+// ── Mock initMountainSkyline (deprecated — used by Home, Category, Product pages) ──
 
 const mockInitMountainSkyline = vi.fn();
 
 vi.mock('public/MountainSkyline.js', () => ({
   initMountainSkyline: mockInitMountainSkyline,
+}));
+
+// ── Mock initMountainSkylineFigma (masterPage header uses Figma-first version) ──
+
+const mockInitMountainSkylineFigma = vi.fn();
+
+vi.mock('public/MountainSkylineFigma.js', () => ({
+  initMountainSkylineFigma: mockInitMountainSkylineFigma,
 }));
 
 // ── Tests ────────────────────────────────────────────────────────────
@@ -71,30 +79,29 @@ describe('Mountain Skyline Integration', () => {
   beforeEach(() => {
     elements.clear();
     mockInitMountainSkyline.mockReset();
+    mockInitMountainSkylineFigma.mockReset();
   });
 
-  describe('masterPage integration', () => {
-    it('should call initMountainSkyline with silhouette variant for global header', async () => {
-      // Simulate how masterPage calls the skyline init
-      const { initMountainSkyline } = await import('public/MountainSkyline.js');
-      initMountainSkyline($wFn, { variant: 'silhouette', containerId: '#headerSkyline' });
+  describe('masterPage integration (Figma-first)', () => {
+    it('should call initMountainSkylineFigma with #headerSkyline for global header', async () => {
+      const { initMountainSkylineFigma } = await import('public/MountainSkylineFigma.js');
+      initMountainSkylineFigma($wFn, { containerId: '#headerSkyline' });
 
-      expect(mockInitMountainSkyline).toHaveBeenCalledTimes(1);
-      expect(mockInitMountainSkyline).toHaveBeenCalledWith(
+      expect(mockInitMountainSkylineFigma).toHaveBeenCalledTimes(1);
+      expect(mockInitMountainSkylineFigma).toHaveBeenCalledWith(
         $wFn,
-        expect.objectContaining({ variant: 'silhouette', containerId: '#headerSkyline' })
+        expect.objectContaining({ containerId: '#headerSkyline' })
       );
     });
 
-    it('should not break if initMountainSkyline throws', async () => {
-      mockInitMountainSkyline.mockImplementation(() => {
+    it('should not break if initMountainSkylineFigma throws', async () => {
+      mockInitMountainSkylineFigma.mockImplementation(() => {
         throw new Error('SVG render failed');
       });
 
-      // Wrapped in try/catch as the integration code does
       expect(() => {
         try {
-          mockInitMountainSkyline($wFn, { variant: 'silhouette', containerId: '#headerSkyline' });
+          mockInitMountainSkylineFigma($wFn, { containerId: '#headerSkyline' });
         } catch (e) {
           // Should be caught silently
         }
@@ -232,10 +239,10 @@ describe('Mountain Skyline Integration', () => {
   });
 
   describe('variant selection per page', () => {
-    it('masterPage uses silhouette variant', () => {
-      mockInitMountainSkyline($wFn, { variant: 'silhouette', containerId: '#headerSkyline' });
-      const call = mockInitMountainSkyline.mock.calls[0];
-      expect(call[1].variant).toBe('silhouette');
+    it('masterPage uses Figma-first version (no variant needed)', () => {
+      mockInitMountainSkylineFigma($wFn, { containerId: '#headerSkyline' });
+      const call = mockInitMountainSkylineFigma.mock.calls[0];
+      expect(call[1].containerId).toBe('#headerSkyline');
     });
 
     it('Home uses gradient variant', () => {
@@ -258,18 +265,18 @@ describe('Mountain Skyline Integration', () => {
   });
 
   describe('multiple skylines on same page', () => {
-    it('masterPage silhouette should not conflict with page-level gradient', () => {
-      // masterPage init (runs on all pages)
-      mockInitMountainSkyline($wFn, { variant: 'silhouette', containerId: '#headerSkyline' });
-      // Home page init (runs additionally on home page)
+    it('masterPage Figma skyline should not conflict with page-level gradient', () => {
+      // masterPage init (runs on all pages) — uses Figma version
+      mockInitMountainSkylineFigma($wFn, { containerId: '#headerSkyline' });
+      // Home page init (runs additionally on home page) — still uses old version
       mockInitMountainSkyline($wFn, { variant: 'gradient', containerId: '#heroSkyline' });
 
-      expect(mockInitMountainSkyline).toHaveBeenCalledTimes(2);
+      expect(mockInitMountainSkylineFigma).toHaveBeenCalledTimes(1);
+      expect(mockInitMountainSkyline).toHaveBeenCalledTimes(1);
 
       // Verify different containers used
-      const calls = mockInitMountainSkyline.mock.calls;
-      expect(calls[0][1].containerId).toBe('#headerSkyline');
-      expect(calls[1][1].containerId).toBe('#heroSkyline');
+      expect(mockInitMountainSkylineFigma.mock.calls[0][1].containerId).toBe('#headerSkyline');
+      expect(mockInitMountainSkyline.mock.calls[0][1].containerId).toBe('#heroSkyline');
     });
   });
 });
