@@ -129,16 +129,10 @@ async function initProductPage() {
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
       { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
-      // Size guide (dynamically imported — 7 init functions, all below fold)
+      // Size guide modal (lazy-loads ProductSizeGuide components on open)
       { name: 'sizeGuide', init: async () => {
-        const m = await import('public/ProductSizeGuide.js');
-        m.initDimensionDisplay($w, state);
-        m.initRoomFitChecker($w, state);
-        m.initDoorwayPresets($w);
-        m.initSizeComparisonTable($w, state);
-        m.initDimensionOverlay($w, state);
-        m.initShippingDimensions($w, state);
-        m.initVisualSizeComparison($w, state);
+        const m = await import('public/SizeGuideModal.js');
+        await m.initSizeGuideModal($w, state);
       }, critical: false },
     ];
 
