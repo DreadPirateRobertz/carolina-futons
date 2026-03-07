@@ -1,11 +1,27 @@
-// Backend web module for promotional campaigns and flash sales
-// Queries the Promotions CMS collection for active campaigns
+/** @module promotions - Backend module for promotional campaigns and flash sales.
+ *
+ * Queries the Promotions CMS collection for active campaigns (date-range filtered).
+ * Supports standard promotions (with enriched product data) and flash sales
+ * (time-limited, optionally category-scoped, sorted by urgency).
+ *
+ * CMS collection: Promotions (fields: isActive, type, startDate, endDate,
+ * title, subtitle, theme, heroImage, discountCode, discountPercent,
+ * productIds, categoryScope, urgencyThreshold, bannerMessage, ctaUrl, ctaText).
+ *
+ * Dependencies: wix-web-module, wix-data, backend/utils/sanitize.
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { validateSlug } from 'backend/utils/sanitize';
 
-// Get the currently active promotion (if any)
-// Returns the first active promotion whose date range includes today, or null
+/**
+ * Get the currently active promotion, if any.
+ * Returns the most recently started active promotion whose date range includes today.
+ * Enriches the result with full product data (up to 50 products) by resolving
+ * the comma-separated productIds field against the Stores/Products collection.
+ * @returns {Promise<{_id: string, title: string, subtitle: string, theme: string, heroImage: string, startDate: Date, endDate: Date, discountCode: string, discountPercent: number, ctaUrl: string, ctaText: string, products: Array<Object>}|null>} Promotion object or null
+ * @permission Anyone
+ */
 export const getActivePromotion = webMethod(
   Permissions.Anyone,
   async () => {

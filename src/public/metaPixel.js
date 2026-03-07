@@ -1,12 +1,19 @@
-// metaPixel.js - Dedicated Meta Pixel (fbq) Event Helper
-// Fires Meta-specific events for Dynamic Product Ads, retargeting, and
-// lookalike audience optimization via wixWindow.trackEvent().
-//
-// This module extends ga4Tracking.js with Meta-specific event parameters
-// that enable DPA retargeting, custom audiences, and conversion optimization.
-//
-// Setup: Enable Meta Pixel in Wix Dashboard > Marketing Integrations.
-// The pixel ID is configured there — no hardcoded IDs in code.
+/** @module metaPixel - Client-side Meta Pixel (fbq) event helper.
+ *
+ * Fires Meta-standard events (ViewContent, AddToCart, InitiateCheckout, Purchase,
+ * Search, CompleteRegistration, AddToWishlist, Lead) via wixWindow.trackEvent()
+ * for Dynamic Product Ads (DPA) retargeting, custom audiences, and conversion
+ * optimization. Also provides buildEnhancedMatchParams for advanced matching
+ * (user data normalization per Meta's requirements).
+ *
+ * This module complements ga4Tracking.js with Meta-specific event parameters.
+ * All event fires are non-critical and wrapped in try/catch to never break the page.
+ *
+ * Setup: Enable Meta Pixel in Wix Dashboard > Marketing Integrations.
+ * The pixel ID is configured there — no hardcoded IDs in code.
+ *
+ * Dependencies: wix-window-frontend (lazy-loaded).
+ */
 
 let _wixWindow = null;
 

@@ -1,5 +1,12 @@
-// Gallery and product engagement helpers
-// Used across multiple pages for consistent product display behavior
+/** @module galleryHelpers - Product gallery interaction and engagement tracking.
+ *
+ * Provides recently-viewed tracking (session storage), product comparison lists,
+ * abandoned-browse data capture (time-on-page, scroll-to-pricing, variant clicks),
+ * image lightbox/zoom initializers, lazy loading, and a floating comparison bar.
+ *
+ * Dependencies: wix-storage-frontend (session), designTokens (colors),
+ * touchHelpers (swipe gestures for mobile lightbox).
+ */
 import { session } from 'wix-storage-frontend';
 import { colors } from 'public/designTokens.js';
 import { enableSwipe } from 'public/touchHelpers';
@@ -8,6 +15,14 @@ import { enableSwipe } from 'public/touchHelpers';
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
 const MAX_RECENT = 12;
 
+/**
+ * Record a product view in session storage for "Recently Viewed" display.
+ * Deduplicates by product ID (moves to front if already present) and caps
+ * the list at MAX_RECENT (12) items. Also kicks off browse-tracking for
+ * abandoned-browse recovery signals.
+ * @param {Object} product - Wix product object (must have _id)
+ * @returns {void}
+ */
 export function trackProductView(product) {
   if (!product || !product._id) return;
 
@@ -142,6 +157,13 @@ export function cleanupBrowseTracking() {
   } catch (e) {}
 }
 
+/**
+ * Retrieve accumulated browse engagement data from sessionStorage.
+ * Returns a map of productId to engagement signals (timeSpentMs,
+ * scrolledToPricing, variantInteractions, timestamp) for use by
+ * cart-recovery and abandoned-browse emails.
+ * @returns {Object.<string, {timeSpentMs: number, scrolledToPricing: boolean, variantInteractions: number, timestamp: string}>}
+ */
 export function getBrowseData() {
   try {
     const stored = sessionStorage.getItem(BROWSE_DATA_KEY);
@@ -166,6 +188,12 @@ export function clearRecentlyViewed() {
   } catch (e) {}
 }
 
+/**
+ * Get the list of recently viewed products from session storage.
+ * Optionally excludes a product (e.g., the one currently being viewed).
+ * @param {string|null} [excludeId=null] - Product ID to exclude from results
+ * @returns {Array<{_id: string, name: string, slug: string, price: string, mainMedia: string}>}
+ */
 export function getRecentlyViewed(excludeId = null) {
   try {
     const stored = session.getItem(RECENTLY_VIEWED_KEY);
@@ -186,6 +214,13 @@ export function getRecentlyViewed(excludeId = null) {
 const COMPARE_KEY = 'cf_compare_list';
 const MAX_COMPARE = 4;
 
+/**
+ * Add a product to the comparison list (session storage).
+ * Rejects duplicates and enforces a maximum of 4 items.
+ * Validates product._id format to prevent injection.
+ * @param {Object} product - Wix product object (must have _id, name, slug, formattedPrice, mainMedia)
+ * @returns {boolean} True if added, false if duplicate/full/invalid
+ */
 export function addToCompare(product) {
   try {
     if (!product || !product._id) return false;
@@ -213,6 +248,11 @@ export function addToCompare(product) {
   }
 }
 
+/**
+ * Remove a product from the comparison list by ID.
+ * @param {string} productId - Product ID to remove
+ * @returns {void}
+ */
 export function removeFromCompare(productId) {
   try {
     const stored = session.getItem(COMPARE_KEY);
@@ -226,6 +266,10 @@ export function removeFromCompare(productId) {
   }
 }
 
+/**
+ * Get the current product comparison list from session storage.
+ * @returns {Array<{_id: string, name: string, slug: string, price: string, mainMedia: string}>}
+ */
 export function getCompareList() {
   try {
     const stored = session.getItem(COMPARE_KEY);
@@ -235,14 +279,23 @@ export function getCompareList() {
   }
 }
 
+/**
+ * Clear the entire comparison list from session storage.
+ * @returns {void}
+ */
 export function clearCompareList() {
   try {
     session.removeItem(COMPARE_KEY);
   } catch (e) {}
 }
 
-// Smooth scroll to element (for in-page navigation)
-// Caller must pass $w from page context since public modules don't have access to $w
+/**
+ * Smooth-scroll to a page element by Wix selector.
+ * Caller must pass $w from page context because public modules lack direct $w access.
+ * @param {Function} $w - Wix page selector function
+ * @param {string} selector - Element selector (e.g. '#reviewsSection')
+ * @returns {void}
+ */
 export function scrollToElement($w, selector) {
   try {
     const element = $w(selector);
@@ -252,7 +305,13 @@ export function scrollToElement($w, selector) {
   } catch (e) {}
 }
 
-// Format product description for display (strip HTML, truncate)
+/**
+ * Strip HTML tags from a product description and truncate to a maximum length.
+ * Truncation breaks at word boundaries and appends an ellipsis.
+ * @param {string} html - Raw HTML description string
+ * @param {number} [maxLength=200] - Maximum character length
+ * @returns {string} Plain text, truncated with '...' if needed
+ */
 export function formatDescription(html, maxLength = 200) {
   if (!html) return '';
   const text = html.replace(/<[^>]*>/g, '').trim();
@@ -260,7 +319,12 @@ export function formatDescription(html, maxLength = 200) {
   return text.substring(0, maxLength).replace(/\s+\S*$/, '') + '...';
 }
 
-// Determine product badge text based on product data
+/**
+ * Determine the badge label for a product card overlay.
+ * Priority: explicit ribbon > active discount ('Sale') > in-store-only > new (within 30 days) > null.
+ * @param {Object} product - Wix product object
+ * @returns {string|null} Badge text or null if no badge applies
+ */
 export function getProductBadge(product) {
   if (!product) return null;
 
@@ -287,6 +351,15 @@ export function getProductBadge(product) {
 // Renders a 'Recently Viewed' horizontal scroll from session storage.
 // Naming convention: containerId '#xyzSection' → repeater '#xyzRepeater'
 
+/**
+ * Populate a "Recently Viewed" section with data from session storage.
+ * Collapses the container if no recent products exist; otherwise populates
+ * the derived repeater (e.g., '#xyzSection' derives '#xyzRepeater') and expands.
+ * @param {Function} $w - Wix page selector function
+ * @param {string} containerId - Container element ID (e.g., '#recentlyViewedSection')
+ * @param {Function} repeaterItemHandler - onItemReady callback for repeater items
+ * @returns {void}
+ */
 export function buildRecentlyViewedSection($w, containerId, repeaterItemHandler) {
   const recent = getRecentlyViewed();
 
@@ -316,6 +389,12 @@ export function buildRecentlyViewedSection($w, containerId, repeaterItemHandler)
 // ── Product Badge Overlay Config ────────────────────────────────────
 // Returns { text, bgColor, textColor } using designTokens for badge state
 
+/**
+ * Build badge overlay styling for a product card using design tokens.
+ * Returns text, background color, and text color keyed to badge state (Sale, New, Featured, In-Store Only).
+ * @param {Object} product - Wix product object
+ * @returns {{text: string, bgColor: string, textColor: string}|null} Badge config or null if no badge
+ */
 export function buildProductBadgeOverlay(product) {
   const badge = getProductBadge(product);
   if (!badge) return null;
@@ -336,6 +415,17 @@ export function buildProductBadgeOverlay(product) {
 // Page elements: #lightboxOverlay, #lightboxImage, #lightboxClose,
 //   #lightboxPrev, #lightboxNext, #lightboxCounter
 
+/**
+ * Initialize a fullscreen image lightbox with prev/next navigation.
+ * Binds gallery thumbnail clicks, main image clicks, keyboard shortcuts
+ * (Escape, ArrowLeft, ArrowRight), and mobile swipe gestures.
+ * Page elements required: #lightboxOverlay, #lightboxImage, #lightboxClose,
+ * #lightboxPrev, #lightboxNext, #lightboxCounter.
+ * @param {Function} $w - Wix page selector function
+ * @param {Object} galleryElement - Wix gallery $w element with .items and .onItemClicked
+ * @param {Object} mainImageElement - Wix image $w element for the main product photo
+ * @returns {{open: Function, close: Function, handleKeydown: Function, destroy: Function}|null} Lightbox controller or null if no images
+ */
 export function initImageLightbox($w, galleryElement, mainImageElement) {
   let images = [];
   let currentIndex = 0;
@@ -463,6 +553,15 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
 // Page elements: #imageZoomOverlay, #imageZoomImage
 // Desktop: hover to zoom; mobile: pinch handled natively by platform.
 
+/**
+ * Initialize hover-zoom on a product image (desktop only; mobile uses native pinch).
+ * Shows a zoomed overlay on mouse-enter and hides on mouse-leave.
+ * Page elements required: #imageZoomOverlay, #imageZoomImage.
+ * @param {Function} $w - Wix page selector function
+ * @param {Object} imageElement - Wix image $w element to attach zoom behavior to
+ * @param {number} [zoomFactor=2] - Magnification level
+ * @returns {{zoomFactor: number, show: Function, hide: Function}|null} Zoom controller or null if no element
+ */
 export function initImageZoom($w, imageElement, zoomFactor = 2) {
   if (!imageElement) return null;
 
@@ -500,6 +599,17 @@ export function initImageZoom($w, imageElement, zoomFactor = 2) {
 
 const DEFAULT_IMAGE_IDS = ['#productImage', '#gridImage', '#featuredImage', '#saleImage', '#collectionImage'];
 
+/**
+ * Initialize viewport-triggered lazy loading for product images in a repeater.
+ * Uses Wix onViewportEnter for intersection observation. Supports explicit
+ * dimensions to prevent Cumulative Layout Shift (CLS).
+ * @param {Object} repeaterItems - Wix repeater element with .forEachItem method
+ * @param {Object} [opts] - Options
+ * @param {Array<string>} [opts.imageIds] - Image element IDs to look for in each repeater item
+ * @param {number} [opts.fadeDuration=300] - Fade-in duration in ms
+ * @param {{width: number, height: number}|null} [opts.dimensions=null] - Explicit image dimensions to prevent CLS
+ * @returns {void}
+ */
 export function initLazyLoadImages(repeaterItems, opts = {}) {
   if (!repeaterItems) return;
 
@@ -550,6 +660,15 @@ function revealImageOnViewport($item, imageIds, fadeDuration, dimensions) {
 // Page elements: #compareBar, #compareBarRepeater, #compareButton,
 //   #compareClearBtn, #compareCount
 
+/**
+ * Build and populate the floating product comparison bar at the bottom of the page.
+ * Collapses if the comparison list is empty; otherwise shows thumbnails, a count label,
+ * a "Compare" button (enabled at 2+ items), and a "Clear All" button.
+ * Page elements required: #compareBar, #compareBarRepeater, #compareButton,
+ * #compareClearBtn, #compareCount.
+ * @param {Function} $w - Wix page selector function
+ * @returns {void}
+ */
 export function buildComparisonBar($w) {
   const compareList = getCompareList();
 

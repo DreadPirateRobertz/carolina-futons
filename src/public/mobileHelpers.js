@@ -1,7 +1,15 @@
-// mobileHelpers.js - Mobile-First Responsive Utilities
-// Provides viewport detection, touch handling, and mobile-specific UI behaviors
-// for Wix Velo pages. Works alongside Wix Studio's responsive layout system.
-
+/** @module mobileHelpers - Mobile-first responsive utilities for Wix Velo pages.
+ *
+ * Provides viewport detection (mobile/tablet/desktop/wide), touch-capability checks,
+ * debounced viewport-change listeners, swipe gesture handlers, adaptive data loading
+ * (limitForViewport), "show more" progressive disclosure, mobile section collapsing,
+ * smooth scrolling, and a "back to top" button initializer.
+ *
+ * Works alongside Wix Studio's CSS responsive layout system — this module handles
+ * runtime JS behavior, not CSS breakpoints.
+ *
+ * Dependencies: designTokens (breakpoints), wix-window-frontend (scroll events, lazy-loaded).
+ */
 import { breakpoints } from 'public/designTokens';
 
 // ── Viewport Detection ───────────────────────────────────────────────

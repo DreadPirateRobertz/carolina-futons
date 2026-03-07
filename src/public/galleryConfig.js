@@ -1,10 +1,18 @@
-// Gallery image configuration for Carolina Futons
-// Image sizing constants matching WIX-STUDIO-BUILD-SPEC.md element dimensions
-// Per-category gallery settings for consistent product display
-
+/** @module galleryConfig - Gallery image configuration for Carolina Futons.
+ *
+ * Defines image sizing constants matching WIX-STUDIO-BUILD-SPEC.md element dimensions,
+ * per-category gallery settings (thumbnail count, zoom level, thumbnail position,
+ * auto-play), responsive grid column calculations, and re-exports breakpoints
+ * from designTokens for consumers that import gallery config.
+ *
+ * Dependencies: designTokens (breakpoints).
+ */
 import { breakpoints } from 'public/designTokens.js';
 
-// ── Image Sizing Constants ──────────────────────────────────────────
+/**
+ * Standard image dimensions by context, matching WIX-STUDIO-BUILD-SPEC.md.
+ * @type {{hero: {width: number, height: number}, productGridCard: {width: number, height: number}, productPageMain: {width: number, height: number}, thumbnail: {width: number, height: number}, categoryCard: {width: number, height: number}}}
+ */
 export const imageSizes = {
   hero: { width: 1920, height: 600 },
   productGridCard: { width: 400, height: 400 },   // 1:1 ratio

@@ -1,6 +1,15 @@
-// Cart & Checkout UI Style Helpers
-// Returns design token–based style objects for cart/checkout components.
-// Centralizes brand styling so Cart Page and Side Cart stay consistent.
+/** @module cartStyles - Cart and checkout UI style helpers.
+ *
+ * Returns design-token-based style objects for cart/checkout components so that
+ * Cart Page, Side Cart, and cross-sell cards all render with consistent brand
+ * styling. Each function returns a plain object of CSS-ready values (colors,
+ * durations, sizes) derived from sharedTokens.
+ *
+ * All call-to-action (CTA) buttons use sunsetCoral per brand guidelines.
+ * Touch targets meet WCAG AA minimum (44px).
+ *
+ * Dependencies: sharedTokens (colors, transitions, spacing).
+ */
 import { colors, transitions, spacing } from 'public/sharedTokens.js';
 
 /**

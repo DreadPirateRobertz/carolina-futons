@@ -1,5 +1,17 @@
-// Backend web module for product recommendations
-// Handles cross-sell, related products, recently viewed, and "Complete Your Futon" bundles
+/** @module productRecommendations - Backend product recommendation engine.
+ *
+ * Powers cross-sell ("Complete Your Futon"), related products, same-collection
+ * suggestions, featured/bestselling/sale product queries, bundle pricing,
+ * server-side recently-viewed tracking (CMS-backed for logged-in members),
+ * similar-product matching by price range, and co-purchase ("Customers Also Bought")
+ * analysis from order history.
+ *
+ * All exports use the webMethod pattern. Most use Permissions.Anyone;
+ * member-specific endpoints (trackRecentlyViewed, getRecentlyViewed) use
+ * Permissions.SiteMember.
+ *
+ * Dependencies: wix-web-module, wix-data, wix-members-backend, backend/utils/sanitize.
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
@@ -8,8 +20,15 @@ import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
 const RECENTLY_VIEWED_COLLECTION = 'RecentlyViewed';
 const MAX_RECENTLY_VIEWED = 20;
 
-// Get related products for cross-selling on product pages
-// Returns products from complementary categories
+/**
+ * Get related products from complementary categories for cross-selling on product pages.
+ * Maps each category to its logical complement (e.g., frames suggest mattresses).
+ * @param {string} productId - Current product ID to exclude from results
+ * @param {string} categorySlug - Current product's category slug
+ * @param {number} [limit=4] - Maximum products to return
+ * @returns {Promise<Array<Object>>} Formatted product summaries
+ * @permission Anyone
+ */
 export const getRelatedProducts = webMethod(
   Permissions.Anyone,
   async (productId, categorySlug, limit = 4) => {
@@ -53,8 +72,15 @@ export const getRelatedProducts = webMethod(
   }
 );
 
-// Get "Complete Your Futon" suggestions based on what's in the cart
-// If cart has a frame but no mattress, suggest mattresses and vice versa
+/**
+ * Get "Complete Your Futon" suggestions based on current cart contents.
+ * Analyzes cart categories to identify missing complements (frame without mattress,
+ * Murphy bed without casegoods, etc.) and returns headed suggestion groups.
+ * Falls back to bestsellers if no specific match is found.
+ * @param {Array<string>} cartProductIds - Product IDs currently in the cart
+ * @returns {Promise<Array<{heading: string, products: Array<Object>}>>} Suggestion groups
+ * @permission Anyone
+ */
 export const getCompletionSuggestions = webMethod(
   Permissions.Anyone,
   async (cartProductIds) => {
@@ -155,8 +181,15 @@ export const getCompletionSuggestions = webMethod(
   }
 );
 
-// Get products in the same collection/finish family
-// For "More in this collection" section on product pages
+/**
+ * Get products in the same collection or finish family.
+ * Used for the "More in this Collection" section on product pages.
+ * @param {string} productId - Current product ID to exclude
+ * @param {Array<string>} collections - Collection slugs to match
+ * @param {number} [limit=6] - Maximum products to return
+ * @returns {Promise<Array<Object>>} Formatted product summaries
+ * @permission Anyone
+ */
 export const getSameCollection = webMethod(
   Permissions.Anyone,
   async (productId, collections, limit = 6) => {
@@ -177,7 +210,13 @@ export const getSameCollection = webMethod(
   }
 );
 
-// Get featured/bestselling products for homepage
+/**
+ * Get featured products for the homepage hero section.
+ * Prioritizes products with a "Featured" ribbon; falls back to newest products.
+ * @param {number} [limit=8] - Maximum products to return
+ * @returns {Promise<Array<Object>>} Formatted product summaries
+ * @permission Anyone
+ */
 export const getFeaturedProducts = webMethod(
   Permissions.Anyone,
   async (limit = 8) => {
@@ -204,7 +243,13 @@ export const getFeaturedProducts = webMethod(
   }
 );
 
-// Get sale/clearance products
+/**
+ * Get sale/clearance products sorted by largest discount first.
+ * Queries products with a discounted price and ranks by savings amount.
+ * @param {number} [limit=12] - Maximum products to return
+ * @returns {Promise<Array<Object>>} Formatted product summaries sorted by discount
+ * @permission Anyone
+ */
 export const getSaleProducts = webMethod(
   Permissions.Anyone,
   async (limit = 12) => {
@@ -229,8 +274,14 @@ export const getSaleProducts = webMethod(
   }
 );
 
-// Get bundle suggestion for a product on PDP
-// Pairs frames with mattresses, Murphy beds with casegoods
+/**
+ * Get a bundle suggestion for a product on the Product Detail Page (PDP).
+ * Pairs frames with the lowest-priced mattress (and vice versa), Murphy beds
+ * with casegoods, platform beds with accessories. Calculates a 5% bundle discount.
+ * @param {string} productId - Current product ID
+ * @returns {Promise<{heading: string, product: Object, originalTotal: number, bundlePrice: number, savings: number}|null>} Bundle offer or null
+ * @permission Anyone
+ */
 export const getBundleSuggestion = webMethod(
   Permissions.Anyone,
   async (productId) => {
@@ -299,8 +350,14 @@ export const getBundleSuggestion = webMethod(
   }
 );
 
-// Get bestselling products based on analytics data
-// Falls back to featured ribbon, then newest products
+/**
+ * Get bestselling products based on analytics data.
+ * Tries ProductAnalytics CMS collection (weekSales descending) first,
+ * then falls back to "Bestseller" ribbon, then newest products.
+ * @param {number} [limit=4] - Maximum products to return
+ * @returns {Promise<Array<Object>>} Formatted product summaries
+ * @permission Anyone
+ */
 export const getBestsellers = webMethod(
   Permissions.Anyone,
   async (limit = 4) => {
