@@ -6,7 +6,6 @@ import { cacheProduct } from 'public/productCache';
 import { trackProductPageView } from 'public/engagementTracker';
 import { fireViewContent } from 'public/ga4Tracking';
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
-import { colors } from 'public/designTokens.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
@@ -21,16 +20,14 @@ import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, ini
 import { initComfortCards } from 'public/ComfortStoryCards.js';
 import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { initDimensionDisplay, initRoomFitChecker, initSizeComparisonTable, initDimensionOverlay, initDoorwayPresets, initShippingDimensions, initVisualSizeComparison } from 'public/ProductSizeGuide.js';
-import { getStockStatus } from 'backend/inventoryService.web';
-import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
+import { initInventoryDisplay } from 'public/InventoryDisplay.js';
+import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
-import { validateEmail } from 'public/validators.js';
 import { initProductARViewer } from 'public/ProductARViewer.js';
 import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { initLifestyleGallery } from 'public/LifestyleGallery.js';
-import { initFeelAndComfort } from 'public/FeelAndComfort.js';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initCustomizationBuilder } from 'public/CustomizationBuilder.js';
 import { initProductVideoSection } from 'public/ProductVideoSection.js';
@@ -44,11 +41,7 @@ const state = {
   bundleProduct: null,
 };
 
-const _browseState = {
-  sessionId: '',
-  startTime: Date.now(),
-  productsViewed: [],
-};
+const _browseState = _createBrowseState();
 
 $w.onReady(async function () {
   await initProductPage();
@@ -159,7 +152,7 @@ async function initProductPage() {
       { name: 'designTokens', init: () => applyProductPageTokens($w) },
       { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']) },
       { name: 'backToTop', init: () => initBackToTop($w) },
-      { name: 'browseTracking', init: () => initBrowseTracking(state) },
+      { name: 'browseTracking', init: () => initBrowseTrackingModule($w, state, _browseState) },
     ];
 
     for (const section of secondaryInits) {
@@ -371,211 +364,3 @@ async function loadAlsoBought() {
   } catch (err) { console.error('Error loading also bought:', err); }
 }
 
-// ── Inventory Stock Display ─────────────────────────────────────────
-
-async function initInventoryDisplay($w, state) {
-  try {
-    if (!state.product?._id) return;
-
-    const stockInfo = await getStockStatus(state.product._id);
-
-    // Stock status badge
-    try {
-      const badge = $w('#stockStatus');
-      if (badge) {
-        if (stockInfo.preOrder) {
-          badge.text = 'Pre-Order Available';
-          badge.style.color = colors.mountainBlue;
-        } else if (stockInfo.status === 'out_of_stock') {
-          badge.text = 'Out of Stock';
-          badge.style.color = colors.error;
-        } else if (stockInfo.status === 'low_stock') {
-          badge.text = 'Low Stock — Order Soon';
-          badge.style.color = colors.sunsetCoral;
-        } else {
-          badge.text = 'In Stock';
-          badge.style.color = colors.success;
-        }
-        try { badge.accessibility.ariaLabel = `Stock status: ${badge.text}`; } catch (e) {}
-        try { badge.accessibility.ariaLive = 'polite'; } catch (e) {}
-      }
-    } catch (e) {}
-
-    // Variant stock indicators (if variant selector exists)
-    if (stockInfo.variants.length > 0) {
-      try {
-        const variantRepeater = $w('#variantStockRepeater');
-        if (variantRepeater) {
-          variantRepeater.data = stockInfo.variants.map(v => ({
-            _id: v.variantId,
-            ...v,
-          }));
-          variantRepeater.onItemReady(($item, itemData) => {
-            try { $item('#variantStockLabel').text = itemData.variantLabel; } catch (e) {}
-            try {
-              const statusEl = $item('#variantStockStatus');
-              if (statusEl) {
-                statusEl.text = itemData.status === 'out_of_stock' ? 'Sold Out'
-                  : itemData.status === 'low_stock' ? `Only ${itemData.quantity} left`
-                  : 'Available';
-                statusEl.style.color = itemData.status === 'out_of_stock' ? colors.error
-                  : itemData.status === 'low_stock' ? colors.sunsetCoral
-                  : colors.success;
-              }
-            } catch (e) {}
-          });
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-}
-
-// ── Browse Abandonment Tracking ─────────────────────────────────
-
-function initBrowseTracking(state) {
-  try {
-    if (!state.product) return;
-
-    // Generate or retrieve session ID
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        _browseState.sessionId = sessionStorage.getItem('cf_browse_session') || '';
-        if (!_browseState.sessionId) {
-          _browseState.sessionId = 'bs_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          sessionStorage.setItem('cf_browse_session', _browseState.sessionId);
-        }
-      } catch (e) {}
-    }
-    if (!_browseState.sessionId) {
-      _browseState.sessionId = 'bs_' + Date.now();
-    }
-
-    // Record this product view
-    _browseState.productsViewed.push({
-      productId: state.product._id,
-      productName: state.product.name || '',
-      price: state.product.price || 0,
-      viewStart: Date.now(),
-    });
-
-    // Send session data on page visibility change (tab switch, navigate away)
-    // Guard against double-send from both visibilitychange and beforeunload
-    let _browseSessionSent = false;
-    const sendOnce = () => {
-      if (_browseSessionSent) return;
-      _browseSessionSent = true;
-      sendBrowseSession();
-    };
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') sendOnce();
-      });
-    }
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', sendOnce);
-    }
-
-    // Show "Remind Me" popup after 2 minutes of viewing
-    setTimeout(() => {
-      showRemindMePopup();
-    }, 2 * 60 * 1000);
-  } catch (e) {
-    // Browse tracking is non-critical
-  }
-}
-
-function sendBrowseSession() {
-  try {
-    const now = Date.now();
-    const products = _browseState.productsViewed.map(p => ({
-      productId: p.productId,
-      productName: p.productName,
-      price: p.price,
-      viewDuration: now - p.viewStart,
-    }));
-
-    const currentPath = '/' + (wixLocationFrontend.path || []).join('/');
-
-    trackBrowseSession({
-      sessionId: _browseState.sessionId,
-      productsViewed: products,
-      totalDuration: now - _browseState.startTime,
-      entryPage: currentPath,
-      exitPage: currentPath,
-    }).catch(err => console.error('[ProductPage] trackBrowseSession failed:', err.message));
-  } catch (e) {}
-}
-
-function showRemindMePopup() {
-  try {
-    const popup = $w('#remindMePopup');
-    if (!popup) return;
-
-    // Don't show if already dismissed this session
-    if (typeof sessionStorage !== 'undefined') {
-      try {
-        if (sessionStorage.getItem('cf_remind_shown')) return;
-      } catch (e) {}
-    }
-
-    try { $w('#remindMeTitle').text = 'Still deciding?'; } catch (e) {}
-    try { $w('#remindMeSubtitle').text = "We'll remind you about this item — no spam, just a gentle nudge."; } catch (e) {}
-    try { $w('#remindMeEmailInput').accessibility.ariaLabel = 'Enter your email for reminder'; } catch (e) {}
-    try { $w('#remindMeSubmit').accessibility.ariaLabel = 'Get reminded about this product'; } catch (e) {}
-    try { $w('#remindMeClose').accessibility.ariaLabel = 'Close reminder popup'; } catch (e) {}
-
-    // Set dialog ARIA attributes
-    try { popup.accessibility.role = 'dialog'; } catch (e) {}
-    try { popup.accessibility.ariaModal = true; } catch (e) {}
-    try { popup.accessibility.ariaLabel = 'Product reminder signup'; } catch (e) {}
-
-    popup.show('fade', { duration: 300 });
-
-    if (typeof sessionStorage !== 'undefined') {
-      try { sessionStorage.setItem('cf_remind_shown', '1'); } catch (e) {}
-    }
-
-    // Close handler
-    try {
-      $w('#remindMeClose').onClick(() => {
-        popup.hide('fade', { duration: 200 });
-      });
-    } catch (e) {}
-
-    // Submit handler
-    try {
-      $w('#remindMeSubmit').onClick(async () => {
-        const email = $w('#remindMeEmailInput').value?.trim();
-        if (!email || !validateEmail(email)) {
-          try {
-            const errEl = $w('#remindMeError');
-            if (errEl) { errEl.text = 'Please enter a valid email address.'; errEl.show('fade', { duration: 300 }); }
-          } catch (e) {}
-          return;
-        }
-
-        try {
-          $w('#remindMeSubmit').disable();
-          $w('#remindMeSubmit').label = 'Saving...';
-
-          await captureRemindMeRequest(_browseState.sessionId, email);
-
-          $w('#remindMeSubmit').label = 'Saved!';
-          try { $w('#remindMeSuccess').text = "We'll send you a reminder."; } catch (e) {}
-          try { $w('#remindMeSuccess').show('fade', { duration: 300 }); } catch (e) {}
-
-          setTimeout(() => {
-            try { popup.hide('fade', { duration: 200 }); } catch (e) {}
-          }, 3000);
-        } catch (err) {
-          $w('#remindMeSubmit').enable();
-          $w('#remindMeSubmit').label = 'Remind Me';
-        }
-      });
-    } catch (e) {}
-  } catch (e) {
-    // Remind Me popup is non-critical
-  }
-}
