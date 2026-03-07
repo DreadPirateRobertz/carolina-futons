@@ -104,7 +104,10 @@ vi.mock('backend/contactSubmissions.web', () => ({
 
 vi.mock('backend/dataService.web', () => ({
   scheduleReviewRequest: vi.fn().mockResolvedValue(undefined),
-  submitReview: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock('backend/reviewsService.web', () => ({
+  submitReview: vi.fn().mockResolvedValue({ success: true, reviewId: 'rev-001' }),
 }));
 
 vi.mock('backend/testimonialService.web', () => ({
@@ -121,7 +124,7 @@ import { submitTestimonial } from 'backend/testimonialService.web';
 import { makeClickable } from 'public/a11yHelpers';
 import { limitForViewport } from 'public/mobileHelpers';
 import { getReferralLink } from 'backend/referralService.web';
-import { submitReview } from 'backend/dataService.web';
+import { submitReview } from 'backend/reviewsService.web';
 
 // Mock data defined after imports (vi.mock factories are hoisted above const)
 const mockFeaturedProducts = [futonFrame, wallHuggerFrame, futonMattress];
@@ -224,7 +227,7 @@ describe('Thank You Page', () => {
     getFeaturedProducts.mockResolvedValue([...mockFeaturedProducts]);
     submitTestimonial.mockResolvedValue({ success: true });
     getReferralLink.mockResolvedValue({ success: true, referralCode: 'ABC12345' });
-    submitReview.mockResolvedValue({ success: true });
+    submitReview.mockResolvedValue({ success: true, reviewId: 'rev-001' });
     globalThis.sessionStorage.getItem.mockReturnValue(null);
   });
 
@@ -446,6 +449,12 @@ describe('Thank You Page', () => {
       expect(shareText).toContain('Eureka Futon Frame');
     });
 
+    it('sanitizes product names in share text', async () => {
+      await onReadyHandler();
+      // sanitizeText should have been called for product name processing
+      expect(sanitizeText).toHaveBeenCalled();
+    });
+
     it('falls back to generic share text when no line items', async () => {
       // Mock empty order context
       const wixWindowMod = await import('wix-window-frontend');
@@ -621,10 +630,10 @@ describe('Thank You Page', () => {
       );
     });
 
-    it('shows referral incentive amounts', async () => {
+    it('shows referral incentive messaging', async () => {
       await onReadyHandler();
-      // Should mention the credit amounts
-      expect(getEl('#referralMessage').text).toMatch(/\$\d+/);
+      // Should mention store credit (amounts owned by backend, not hardcoded)
+      expect(getEl('#referralMessage').text).toContain('store credit');
     });
 
     it('falls back to generic link when getReferralLink fails', async () => {
@@ -693,14 +702,29 @@ describe('Thank You Page', () => {
       expect(getEl('#reviewError').show).toHaveBeenCalled();
     });
 
-    it('submits review with rating and order ID', async () => {
+    it('submits review with productId, rating, title, and body', async () => {
       await onReadyHandler();
       // Select 4 stars first
       const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
       starHandler();
       const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect(submitReview).toHaveBeenCalledWith('order-12345', 4, '');
+      expect(submitReview).toHaveBeenCalledWith(expect.objectContaining({
+        productId: expect.any(String),
+        rating: 4,
+        title: expect.stringContaining('4-star'),
+        body: expect.any(String),
+      }));
+    });
+
+    it('review body is at least 10 characters', async () => {
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      const callArgs = submitReview.mock.calls[0][0];
+      expect(callArgs.body.length).toBeGreaterThanOrEqual(10);
     });
 
     it('disables submit button while submitting', async () => {

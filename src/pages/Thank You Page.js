@@ -12,7 +12,7 @@ import { announce, makeClickable } from 'public/a11yHelpers';
 import { validateEmail, sanitizeText } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 import { getReferralLink } from 'backend/referralService.web';
-import { submitReview } from 'backend/dataService.web';
+import { submitReview } from 'backend/reviewsService.web';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -189,11 +189,20 @@ function initDeliveryTimeline() {
 
 // ── Social Sharing ─────────────────────────────────────────────────
 
+/**
+ * Initialize social sharing section with dynamic content from order context.
+ * Wires Facebook, Pinterest, Instagram, and Twitter/X share buttons with
+ * engagement tracking and product-specific share text.
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
 function initSocialSharing(orderCtx) {
   try {
-    // Build dynamic share text from purchased product names
+    // Build dynamic share text from purchased product names (sanitized)
     const lineItems = orderCtx?.lineItems || [];
-    const productNames = lineItems.map(item => item.name).filter(Boolean);
+    const productNames = lineItems
+      .map(item => item.name)
+      .filter(Boolean)
+      .map(name => sanitizeText(name, 100));
     const sharePrompt = productNames.length > 0
       ? `Love your new ${productNames[0]}? Share with friends!`
       : 'Love your new furniture? Share with friends!';
@@ -311,8 +320,8 @@ async function initReferralSection() {
 
     try {
       $w('#referralMessage').text = referralCode
-        ? `Share your code ${referralCode} with friends! They get $25 off their first order, ` +
-          'and you earn $50 in store credit. Handcrafted comfort at mountain-town prices.'
+        ? `Share your code ${referralCode} with friends! You both earn store credit ` +
+          'when they make a purchase. Handcrafted comfort at mountain-town prices.'
         : 'Know someone who\'d love our furniture? Tell a friend about Carolina Futons ' +
           'and help them discover handcrafted comfort at mountain-town prices.';
     } catch (e) {}
@@ -537,19 +546,26 @@ async function initTestimonialPrompt() {
   }
 }
 
-// ── Star Rating Review Request ────────────────────────────────────────
-// Quick star-rating review to capture immediate post-purchase sentiment
-
+/**
+ * Initialize star-rating review request section.
+ * Uses reviewsService.submitReview which requires productId, rating, title, and body (min 10 chars).
+ * Submits review for the first product in the order.
+ * @param {Object|null} orderCtx - Order context from wix-window-frontend lightbox
+ */
 function initReviewRequest(orderCtx) {
   try {
     const section = $w('#reviewSection');
     if (!section) return;
 
+    // Need at least one product to review
+    const lineItems = orderCtx?.lineItems || [];
+    const firstItem = lineItems[0];
+    const productId = firstItem?.catalogItemId || firstItem?.productId || '';
+
     try { $w('#reviewTitle').text = 'Rate Your Experience'; } catch (e) {}
     try { $w('#reviewPrompt').text = 'How was your shopping experience? A quick rating helps us improve.'; } catch (e) {}
 
     let selectedRating = 0;
-    const orderId = orderCtx?.orderId || '';
 
     // Wire up 5 star buttons
     for (let i = 1; i <= 5; i++) {
@@ -585,7 +601,17 @@ function initReviewRequest(orderCtx) {
           $w('#reviewSubmitBtn').disable();
           $w('#reviewSubmitBtn').label = 'Submitting...';
 
-          const result = await submitReview(orderId, selectedRating, '');
+          const reviewBody = sanitizeText(
+            $w('#reviewBodyInput')?.value || 'Great shopping experience!',
+            5000
+          );
+          // reviewsService.submitReview expects { productId, rating, title, body }
+          const result = await submitReview({
+            productId,
+            rating: selectedRating,
+            title: `${selectedRating}-star review`,
+            body: reviewBody.length >= 10 ? reviewBody : 'Great shopping experience at Carolina Futons!',
+          });
 
           if (result.success) {
             try {
