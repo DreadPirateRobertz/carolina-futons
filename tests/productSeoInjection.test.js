@@ -129,6 +129,7 @@ describe('injectProductMeta — structured data injection', () => {
     expect(mockHead.setTitle).toHaveBeenCalled();
   });
 
+
   it('calls injectPinterestMeta internally', async () => {
     const { getProductPinData } = await import('backend/pinterestRichPins.web');
     getProductPinData.mockClear();
