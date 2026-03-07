@@ -95,11 +95,30 @@ vi.mock('public/ProductQA.js', () => ({
   initProductQA: vi.fn().mockResolvedValue(undefined),
 }));
 
+const mockSeoHead = {
+  setTitle: vi.fn(),
+  setMetaTag: vi.fn(),
+  setLinks: vi.fn(),
+  setStructuredData: vi.fn(),
+};
+
+vi.mock('wix-seo-frontend', () => ({
+  head: mockSeoHead,
+}));
+
+vi.mock('backend/pinterestRichPins.web', () => ({
+  getProductPinData: vi.fn(() => ({ success: false, meta: null })),
+}));
+
 vi.mock('backend/seoHelpers.web', () => ({
-  getProductSchema: vi.fn().mockReturnValue('{"@type":"Product"}'),
+  getProductSchema: vi.fn().mockReturnValue('{"@context":"https://schema.org","@type":"Product"}'),
   generateAltText: vi.fn().mockResolvedValue('Eureka Futon Frame - Night & Day - Carolina Futons'),
-  getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList"}'),
-  getProductOgTags: vi.fn().mockResolvedValue(null),
+  getBreadcrumbSchema: vi.fn().mockReturnValue('{"@context":"https://schema.org","@type":"BreadcrumbList"}'),
+  getProductFaqSchema: vi.fn().mockReturnValue('{"@context":"https://schema.org","@type":"FAQPage"}'),
+  getProductOgTags: vi.fn().mockReturnValue(null),
+  getPageTitle: vi.fn().mockReturnValue('Eureka Futon Frame | Carolina Futons'),
+  getPageMetaDescription: vi.fn().mockReturnValue('Solid hardwood futon frame.'),
+  getCanonicalUrl: vi.fn().mockReturnValue('https://www.carolinafutons.com/product-page/eureka-futon-frame'),
 }));
 
 vi.mock('public/ProductVideoSection.js', () => ({
@@ -149,11 +168,13 @@ describe('Product Page', () => {
       expect(getEl('#productGallery').onItemClicked).toHaveBeenCalled();
     });
 
-    it('injects product schema into HTML element', async () => {
+    it('injects product structured data via wix-seo-frontend', async () => {
       await onReadyHandler();
-      expect(getEl('#productSchemaHtml').postMessage).toHaveBeenCalledWith(
-        '{"@type":"Product"}'
-      );
+      expect(mockSeoHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockSeoHead.setStructuredData.mock.calls[0][0];
+      const productSchema = schemas.find(s => s['@type'] === 'Product');
+      expect(productSchema).toBeDefined();
+      expect(productSchema['@context']).toBe('https://schema.org');
     });
 
     it('sets SEO-optimized alt text on main product image', async () => {
@@ -237,11 +258,12 @@ describe('Product Page', () => {
       expect(getEl('#breadcrumb2').onClick).toHaveBeenCalled();
     });
 
-    it('injects breadcrumb schema', async () => {
+    it('injects breadcrumb schema via wix-seo-frontend', async () => {
       await onReadyHandler();
-      expect(getEl('#breadcrumbSchemaHtml').postMessage).toHaveBeenCalledWith(
-        '{"@type":"BreadcrumbList"}'
-      );
+      expect(mockSeoHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockSeoHead.setStructuredData.mock.calls[0][0];
+      const breadcrumbSchema = schemas.find(s => s['@type'] === 'BreadcrumbList');
+      expect(breadcrumbSchema).toBeDefined();
     });
   });
 
