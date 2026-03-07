@@ -21,14 +21,40 @@ import { colors } from './sharedTokens.js';
 export function initSkipNav($w, mainContentId = '#mainContent', skipLinkId = '#skipToContent') {
   try {
     const skipLink = $w(skipLinkId);
+    const scrollToMain = () => {
+      try { $w(mainContentId).scrollTo(); } catch (e) {}
+    };
+
     try { skipLink.accessibility.ariaLabel = 'Skip to main content'; } catch (e) {}
-    skipLink.onClick(() => {
-      try {
-        $w(mainContentId).scrollTo();
-      } catch (e) {
-        // Main content element might not exist
-      }
-    });
+    try { skipLink.accessibility.role = 'link'; } catch (e) {}
+    try { skipLink.accessibility.tabIndex = 0; } catch (e) {}
+
+    // Initially hidden — becomes visible on keyboard focus
+    try { skipLink.hide(); } catch (e) {}
+
+    skipLink.onClick(scrollToMain);
+
+    // Keyboard activation (Enter/Space)
+    try {
+      skipLink.onKeyPress((event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          try { event.preventDefault?.(); } catch (e) {}
+          scrollToMain();
+        }
+      });
+    } catch (e) {}
+
+    // Visible on focus, hidden on blur
+    try {
+      skipLink.onFocus(() => {
+        try { skipLink.show(); } catch (e) {}
+      });
+    } catch (e) {}
+    try {
+      skipLink.onBlur(() => {
+        try { skipLink.hide(); } catch (e) {}
+      });
+    } catch (e) {}
   } catch (e) {
     // Skip link element doesn't exist on this page
   }
