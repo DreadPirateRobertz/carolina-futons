@@ -24,6 +24,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { triggeredEmails } from 'wix-crm-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10%
@@ -185,6 +186,20 @@ export const checkPriceDrops = webMethod(
             dropPercent: Math.round(dropPercent * 100),
           });
 
+          // Send email notification (best-effort — failure doesn't block alert)
+          try {
+            await triggeredEmails.emailMember('wishlist_price_drop', wishItem.memberId, {
+              variables: {
+                productName: wishItem.name || '',
+                currentPrice: `$${prices.current.toFixed(2)}`,
+                previousHigh: `$${prices.high.toFixed(2)}`,
+                dropPercent: String(Math.round(dropPercent * 100)),
+              },
+            });
+          } catch (emailErr) {
+            console.error('Failed to send price drop email:', emailErr);
+          }
+
           alertsSent++;
         }
       }
@@ -258,6 +273,17 @@ export const checkBackInStock = webMethod(
             sentAt: new Date(),
             productName: product.name || wishItem.name || '',
           });
+
+          // Send email notification (best-effort)
+          try {
+            await triggeredEmails.emailMember('wishlist_back_in_stock', wishItem.memberId, {
+              variables: {
+                productName: product.name || wishItem.name || '',
+              },
+            });
+          } catch (emailErr) {
+            console.error('Failed to send back-in-stock email:', emailErr);
+          }
 
           // Update wishlist item stock status
           await wixData.update('Wishlist', {
@@ -347,6 +373,18 @@ export const checkLowStock = webMethod(
             quantityInStock: qty,
           });
 
+          // Send email notification (best-effort)
+          try {
+            await triggeredEmails.emailMember('wishlist_low_stock', wishItem.memberId, {
+              variables: {
+                productName: product.name || '',
+                quantityInStock: String(qty),
+              },
+            });
+          } catch (emailErr) {
+            console.error('Failed to send low stock email:', emailErr);
+          }
+
           alertsSent++;
         }
       }
@@ -433,6 +471,45 @@ export const updateAlertPrefs = webMethod(
     } catch (err) {
       console.error('Error updating alert prefs:', err);
       return { success: false };
+    }
+  }
+);
+
+// ── Alert History ──────────────────────────────────────────────────
+
+/**
+ * Get the current member's wishlist alert history (most recent first).
+ *
+ * @returns {Promise<{alerts: Array<{productId: string, alertType: string, sentAt: Date, price?: number, productName?: string}>}>}
+ */
+export const getAlertHistory = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      const member = await currentMember.getMember();
+      if (!member?._id) return { alerts: [] };
+
+      const result = await wixData.query('WishlistAlertsSent')
+        .eq('memberId', member._id)
+        .descending('sentAt')
+        .limit(50)
+        .find();
+
+      return {
+        alerts: result.items.map(i => ({
+          productId: i.productId,
+          alertType: i.alertType,
+          sentAt: i.sentAt,
+          price: i.price,
+          previousHigh: i.previousHigh,
+          dropPercent: i.dropPercent,
+          productName: i.productName,
+          quantityInStock: i.quantityInStock,
+        })),
+      };
+    } catch (err) {
+      console.error('Error fetching alert history:', err);
+      return { alerts: [] };
     }
   }
 );

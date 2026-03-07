@@ -24,4 +24,12 @@ export const triggeredEmails = {
     _emailLog.push({ templateId, contactId, options });
     return { success: true };
   },
+  async emailMember(templateId, memberId, options) {
+    if (_shouldFail) {
+      _shouldFail = false;
+      throw new Error('Email service unavailable');
+    }
+    _emailLog.push({ templateId, memberId, options });
+    return { success: true };
+  },
 };
