@@ -11,7 +11,7 @@ import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';
-import { validateAddressField, getFieldValidationState } from 'public/checkoutValidation.js';
+import { validateAddressField, getFieldValidationState, applyAutocompleteHints } from 'public/checkoutValidation.js';
 import { getCheckoutPaymentSummary } from 'backend/paymentOptions.web';
 import {
   validateShippingAddress,
@@ -383,6 +383,9 @@ async function initAddressValidation() {
       validateBtn.style.backgroundColor = btnStyles.background;
       validateBtn.style.color = btnStyles.textColor;
     } catch (e) {}
+
+    // Apply browser autofill hints to address fields
+    applyAutocompleteHints($w);
 
     // Field configuration with element IDs and validation field names
     const fields = [
