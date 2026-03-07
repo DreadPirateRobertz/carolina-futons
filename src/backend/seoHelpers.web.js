@@ -1,5 +1,12 @@
-// Backend web module for SEO utilities
-// Generates structured data, alt text, and meta tags
+/** @module seoHelpers - Backend SEO utilities for structured data, alt text, and meta tags.
+ *
+ * Generates JSON-LD schemas (Product, LocalBusiness/FurnitureStore, WebSite, CollectionPage,
+ * BreadcrumbList, FAQPage, Article), Open Graph / Twitter Card meta tags, canonical URLs,
+ * page titles, and keyword-rich image alt text. All exports use the webMethod pattern
+ * with Permissions.Anyone unless noted otherwise.
+ *
+ * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs).
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import { getBlogFaqs } from 'backend/blogContent';
 
@@ -40,7 +47,14 @@ function sanitizeForJsonLd(str) {
     .replace(/&/g, '\\u0026');
 }
 
-// Generate JSON-LD Product schema for a product page
+/**
+ * Generate a JSON-LD Product schema for a product page.
+ * Includes offers, shipping details, return policy, aggregate rating, reviews,
+ * material, color, size, and weight when available.
+ * @param {Object} product - Wix product object
+ * @returns {string|null} Stringified JSON-LD schema, or null if product is invalid
+ * @permission Anyone
+ */
 export const getProductSchema = webMethod(
   Permissions.Anyone,
   (product) => {
@@ -200,7 +214,12 @@ export const getProductSchema = webMethod(
   }
 );
 
-// Generate JSON-LD LocalBusiness schema for the business
+/**
+ * Generate a JSON-LD FurnitureStore/LocalBusiness schema for the business.
+ * Includes address, hours, geo coordinates, payment methods, and social links.
+ * @returns {string} Stringified JSON-LD schema
+ * @permission Anyone
+ */
 export const getBusinessSchema = webMethod(
   Permissions.Anyone,
   () => {
@@ -250,7 +269,11 @@ export const getBusinessSchema = webMethod(
   }
 );
 
-// Generate JSON-LD WebSite schema with SearchAction for sitelinks searchbox
+/**
+ * Generate a JSON-LD WebSite schema with a SearchAction for Google sitelinks searchbox.
+ * @returns {string} Stringified JSON-LD schema
+ * @permission Anyone
+ */
 export const getWebSiteSchema = webMethod(
   Permissions.Anyone,
   () => {
@@ -277,7 +300,14 @@ export const getWebSiteSchema = webMethod(
   }
 );
 
-// Generate JSON-LD CollectionPage + ItemList for category pages
+/**
+ * Generate a JSON-LD CollectionPage + ItemList schema for category pages.
+ * Lists up to 30 products with breadcrumb navigation.
+ * @param {Object} categoryInfo - Category metadata with title, slug, description
+ * @param {Array<Object>} products - Array of Wix product objects
+ * @returns {string|null} Stringified JSON-LD schema, or null if inputs are invalid
+ * @permission Anyone
+ */
 export const getCollectionSchema = webMethod(
   Permissions.Anyone,
   (categoryInfo, products) => {
@@ -316,7 +346,13 @@ export const getCollectionSchema = webMethod(
   }
 );
 
-// Generate JSON-LD BreadcrumbList for navigation
+/**
+ * Generate a JSON-LD BreadcrumbList schema for page navigation.
+ * Per Google guidelines, the last item omits its URL.
+ * @param {Array<{name: string, url?: string}>} breadcrumbs - Ordered breadcrumb items
+ * @returns {string|null} Stringified JSON-LD schema, or null if breadcrumbs are empty
+ * @permission Anyone
+ */
 export const getBreadcrumbSchema = webMethod(
   Permissions.Anyone,
   (breadcrumbs) => {
@@ -343,7 +379,12 @@ export const getBreadcrumbSchema = webMethod(
   }
 );
 
-// Generate JSON-LD FAQPage schema
+/**
+ * Generate a JSON-LD FAQPage schema from an array of question/answer pairs.
+ * @param {Array<{question: string, answer: string}>} faqs - FAQ data
+ * @returns {string|null} Stringified JSON-LD schema, or null if faqs are empty
+ * @permission Anyone
+ */
 export const getFaqSchema = webMethod(
   Permissions.Anyone,
   (faqs) => {
@@ -366,8 +407,14 @@ export const getFaqSchema = webMethod(
   }
 );
 
-// Generate product-specific FAQ schema for product pages
-// Creates category-relevant Q&A pairs for SEO structured data
+/**
+ * Generate a product-specific FAQ schema for product pages.
+ * Dynamically builds category-relevant Q&A pairs (return policy, free shipping,
+ * assembly, mattress compatibility, etc.) for SEO structured data.
+ * @param {Object} product - Wix product object
+ * @returns {string|null} Stringified JSON-LD FAQPage schema, or null if product is invalid
+ * @permission Anyone
+ */
 export const getProductFaqSchema = webMethod(
   Permissions.Anyone,
   (product) => {
@@ -462,7 +509,16 @@ export const getProductFaqSchema = webMethod(
   }
 );
 
-// Generate smart, keyword-rich alt text for product images
+/**
+ * Generate smart, keyword-rich alt text for product images.
+ * Varies output by image type (main, lifestyle, detail, open, sofa, gallery, grid)
+ * and incorporates brand, material, finish, and size for SEO value.
+ * Truncated to 125 characters for accessibility best practices.
+ * @param {Object} product - Wix product object
+ * @param {string} [imageType='main'] - Image context: 'main'|'lifestyle'|'detail'|'open'|'sofa'|'gallery'|'grid'
+ * @returns {string} Alt text string (max 125 chars)
+ * @permission Anyone
+ */
 export const generateAltText = webMethod(
   Permissions.Anyone,
   (product, imageType = 'main') => {
@@ -525,7 +581,13 @@ export const generateAltText = webMethod(
   }
 );
 
-// Generate category-specific meta description
+/**
+ * Get a category-specific meta description for SEO.
+ * Returns a curated description per category slug, or a generic Carolina Futons description.
+ * @param {string} categorySlug - Category URL slug (e.g. 'futon-frames', 'mattresses')
+ * @returns {string} Meta description text
+ * @permission Anyone
+ */
 export const getCategoryMetaDescription = webMethod(
   Permissions.Anyone,
   (categorySlug) => {
@@ -809,7 +871,13 @@ export const getCategoryMetaTags = webMethod(
   }
 );
 
-// Generate Article JSON-LD schema for blog posts
+/**
+ * Generate a JSON-LD Article schema for blog posts.
+ * Includes headline, author/publisher org, dates, cover image, and keywords.
+ * @param {Object} post - Blog post object with title, slug, metaDescription, publishDate, etc.
+ * @returns {string|null} Stringified JSON-LD schema, or null if post is invalid
+ * @permission Anyone
+ */
 export const getBlogArticleSchema = webMethod(
   Permissions.Anyone,
   (post) => {
@@ -853,7 +921,13 @@ export const getBlogArticleSchema = webMethod(
   }
 );
 
-// Generate FAQ schema for a blog post using blogContent data
+/**
+ * Generate a JSON-LD FAQPage schema for a blog post, using pre-authored FAQ data
+ * from the blogContent module keyed by post slug.
+ * @param {string} slug - Blog post URL slug
+ * @returns {string|null} Stringified JSON-LD schema, or null if no FAQs exist for this post
+ * @permission Anyone
+ */
 export const getBlogFaqSchema = webMethod(
   Permissions.Anyone,
   (slug) => {

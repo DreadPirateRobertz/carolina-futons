@@ -1,12 +1,19 @@
-// facebookCatalog.web.js - Meta/Facebook Catalog & CAPI Backend
-// Provides server-side Conversions API event building, product set params
-// for DPA retargeting, enhanced catalog fields, and customer audience export.
-//
-// Used by:
-// - metaPixel.js (client-side) for DPA retargeting params
-// - http-functions.js for enhanced catalog feed columns
-// - Custom audience export endpoint
-
+/** @module facebookCatalog - Meta/Facebook Catalog and Conversions API (CAPI) backend.
+ *
+ * Provides server-side Conversions API event building for all standard Meta events
+ * (ViewContent, AddToCart, InitiateCheckout, Purchase, Search, CompleteRegistration,
+ * AddToWishlist, Lead), Dynamic Product Ad (DPA) retargeting parameters,
+ * enhanced catalog feed fields (custom_label_0-4, product_type, additional images),
+ * and customer audience export for Custom/Lookalike Audiences.
+ *
+ * Used by: metaPixel.js (client-side DPA params), http-functions.js (catalog feed),
+ * and admin audience export endpoint.
+ *
+ * buildCapiEvent, buildProductSetParams, and getEnhancedCatalogFields are pure
+ * functions (not webMethods). exportCustomerAudienceData uses Permissions.Admin.
+ *
+ * Dependencies: wix-web-module, wix-data, backend/utils/sanitize, backend/utils/mediaHelpers.
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';

@@ -1,10 +1,25 @@
-// Performance optimization helpers
-// Deferred loading, IntersectionObserver image lazy loading, CLS prevention
+/** @module performanceHelpers - Performance optimization utilities.
+ *
+ * Provides deferred initialization (requestIdleCallback with setTimeout fallback),
+ * critical/deferred section prioritization for faster Largest Contentful Paint (LCP),
+ * IntersectionObserver-based image lazy loading, explicit image dimension setting
+ * to prevent Cumulative Layout Shift (CLS), and recommended dimension lookups
+ * by usage context.
+ */
 
 // ── deferInit ────────────────────────────────────────────────────────
 // Schedule non-critical initialization for idle time.
 // Uses requestIdleCallback when available, falls back to setTimeout.
 
+/**
+ * Schedule a non-critical initialization function for idle time.
+ * Uses requestIdleCallback when available; falls back to setTimeout.
+ * Wraps the callback in try/catch so deferred failures never crash the page.
+ * @param {Function} fn - Initialization function to defer
+ * @param {Object} [opts] - Options
+ * @param {number} [opts.fallbackDelay=1] - setTimeout delay in ms when requestIdleCallback is unavailable
+ * @returns {void}
+ */
 export function deferInit(fn, opts = {}) {
   if (typeof fn !== 'function') return;
   const { fallbackDelay = 1 } = opts;
@@ -27,6 +42,16 @@ export function deferInit(fn, opts = {}) {
 // (load during idle time). Critical sections are awaited; deferred
 // sections are fire-and-forget so they don't block LCP.
 
+/**
+ * Split page sections into critical (awaited) and deferred (fire-and-forget).
+ * Critical sections run first and block — they affect LCP. Deferred sections
+ * run afterward without blocking, so $w.onReady returns as soon as critical
+ * content paints. Failures are logged; deferred failures also invoke onError.
+ * @param {Array<{name: string, critical: boolean, init: Function}>} sections - Section descriptors
+ * @param {Object} [opts] - Options
+ * @param {Function} [opts.onError] - Callback invoked on deferred section failure: (section, reason)
+ * @returns {Promise<{critical: Array<PromiseSettledResult>}>} Results of critical section initialization
+ */
 export async function prioritizeSections(sections, opts = {}) {
   if (!sections || sections.length === 0) {
     return { critical: [] };
@@ -71,6 +96,16 @@ export async function prioritizeSections(sections, opts = {}) {
 // IntersectionObserver-based lazy loading for images.
 // Watches elements and calls onVisible when they enter the viewport.
 
+/**
+ * Create an IntersectionObserver-based lazy loader for images.
+ * Automatically unobserves each element after it enters the viewport.
+ * Returns null in environments where IntersectionObserver is unavailable.
+ * @param {Object} [opts] - Options
+ * @param {string} [opts.rootMargin='200px 0px'] - Viewport margin for early loading
+ * @param {number} [opts.threshold=0.01] - Intersection ratio to trigger visibility
+ * @param {Function} [opts.onVisible] - Callback when element enters viewport: (element)
+ * @returns {{observe: Function, disconnect: Function}|null} Observer controller or null
+ */
 export function createImageObserver(opts = {}) {
   if (typeof IntersectionObserver === 'undefined') return null;
 
@@ -101,6 +136,14 @@ export function createImageObserver(opts = {}) {
 // ── setImageDimensions ──────────────────────────────────────────────
 // Set explicit dimensions on an image element to prevent CLS.
 
+/**
+ * Set explicit width, height, and aspect-ratio on an image element to prevent CLS.
+ * Silently fails if the element's style property is read-only.
+ * @param {Object} el - DOM or Wix element with a .style property
+ * @param {number} width - Width in pixels
+ * @param {number} height - Height in pixels
+ * @returns {void}
+ */
 export function setImageDimensions(el, width, height) {
   if (!el || !el.style) return;
 
@@ -128,6 +171,13 @@ const IMAGE_DIMENSIONS = {
 
 const DEFAULT_DIMENSIONS = { width: 400, height: 400 };
 
+/**
+ * Get recommended image dimensions by usage context to prevent CLS.
+ * Supported contexts: 'product-grid', 'hero', 'category-card', 'thumbnail',
+ * 'gallery-main', 'recently-viewed', 'sale-card'. Returns 400x400 default.
+ * @param {string} category - Usage context key
+ * @returns {{width: number, height: number}} Recommended dimensions
+ */
 export function getImageDimensionsForCategory(category) {
   if (!category) return DEFAULT_DIMENSIONS;
   return IMAGE_DIMENSIONS[category] || DEFAULT_DIMENSIONS;

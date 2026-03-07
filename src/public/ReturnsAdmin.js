@@ -1,6 +1,14 @@
-// ReturnsAdmin.js — Admin dashboard helpers for returns management
-// Testable pure-JS logic consumed by the Admin Returns page.
-
+/** @module ReturnsAdmin - Admin dashboard helpers for returns management.
+ *
+ * Pure-JS logic for the Admin Returns page: status labels, state-machine transitions,
+ * badge coloring (design tokens), row formatting, dashboard stat cards, refund
+ * validation, shipping-label eligibility checks, and priority sorting (action-required first).
+ *
+ * Statuses follow the lifecycle: requested -> approved -> shipped -> received -> refunded.
+ * Denied is a terminal state reachable from requested, approved, or received.
+ *
+ * Dependencies: designTokens (colors).
+ */
 import { colors } from 'public/designTokens.js';
 
 // ── Status Constants ─────────────────────────────────────────────

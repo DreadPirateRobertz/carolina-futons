@@ -1,18 +1,16 @@
-// cartService.js - Centralized Cart Operations
-// Abstracts wix-stores-frontend cart API into a single module.
-// When Wix migrates to wix-ecom-frontend, update only this file.
-//
-// Exports:
-//   addToCart(productId, quantity, options)   - Add item to cart
-//   getCurrentCart()                         - Get full cart object
-//   getCartItemCount()                       - Get total item quantity
-//   updateCartItemQuantity(cartItemId, qty)  - Update line item quantity
-//   removeCartItem(cartItemId)               - Remove line item from cart
-//   onCartChanged(callback)                  - Register cart change listener
-//   getProductVariants(productId, choices)   - Get product variant pricing
-//   FREE_SHIPPING_THRESHOLD                  - $999 threshold
-//   TIER_THRESHOLDS                          - Tiered discount brackets
-
+/** @module cartService - Centralized cart operations abstraction.
+ *
+ * Wraps the wix-stores-frontend cart API into a single module so that when
+ * Wix migrates to wix-ecom-frontend, only this file needs updating. Provides
+ * add/remove/update operations, cart-change listeners, variant lookup, quantity
+ * validation, safe currency math, and progress calculations for free-shipping
+ * and tiered-discount thresholds.
+ *
+ * Constants: FREE_SHIPPING_THRESHOLD ($999,999 — currently disabled),
+ * TIER_THRESHOLDS (5% at $500, 10% at $1,000), MIN/MAX_QUANTITY (1–99).
+ *
+ * Dependencies: wix-stores-frontend.
+ */
 import wixStoresFrontend from 'wix-stores-frontend';
 
 // ── Constants ────────────────────────────────────────────────────────

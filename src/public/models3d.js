@@ -1,7 +1,13 @@
-// 3D model asset catalog for AR "View in Your Room" feature.
-// Ported from cfutons_mobile models3d.ts — shared catalog across web+mobile.
+/** @module models3d - 3D model asset catalog for Augmented Reality (AR) "View in Your Room" feature.
+ *
+ * Shared catalog across web and mobile (ported from cfutons_mobile models3d.ts).
+ * Contains GLB (Android/web) and USDZ (iOS Quick Look) asset URLs, physical
+ * dimensions in meters, file sizes for bandwidth budgeting, and content hashes
+ * for cache invalidation. Covers futon frames, Murphy cabinet beds, and
+ * selected furniture pieces.
+ */
 
-/** CDN base URL for 3D model assets */
+/** CDN base URL for 3D model assets (GLB and USDZ directories). */
 export const MODEL_CDN_BASE = 'https://cdn.carolinafutons.com/models';
 
 /** Convert inches to meters */
@@ -9,7 +15,12 @@ function inToM(inches) {
   return Math.round(inches * 0.0254 * 1000) / 1000;
 }
 
-/** 3D model catalog — futons, frames, murphy-beds only */
+/**
+ * 3D model catalog — futons, frames, and Murphy cabinet beds.
+ * Each entry contains GLB/USDZ URLs, physical dimensions (meters), file size,
+ * a content hash for cache-busting, and whether fabric variant swapping is supported.
+ * @type {Array<{productId: string, glbUrl: string, usdzUrl: string, dimensions: {width: number, depth: number, height: number}, fileSizeBytes: number, contentHash: string, hasFabricVariants: boolean}>}
+ */
 export const MODELS_3D = [
   {
     productId: 'prod-murphy-queen-vertical',
@@ -112,13 +123,22 @@ export const MODELS_3D = [
   },
 ];
 
-/** Look up 3D model asset for a product */
+/**
+ * Look up the 3D model asset entry for a product by its product ID.
+ * @param {string} productId - Wix product ID
+ * @returns {Object|undefined} Model entry with glbUrl, usdzUrl, dimensions, etc., or undefined if not found
+ */
 export function getModel3DForProduct(productId) {
   if (!productId) return undefined;
   return MODELS_3D.find(m => m.productId === productId);
 }
 
-/** Check whether a product has an AR model available */
+/**
+ * Check whether a product has an AR model available in the catalog.
+ * Use this to conditionally show the "View in Your Room" button on product pages.
+ * @param {string} productId - Wix product ID
+ * @returns {boolean} True if an AR model exists for this product
+ */
 export function hasARModel(productId) {
   if (!productId) return false;
   return MODELS_3D.some(m => m.productId === productId);

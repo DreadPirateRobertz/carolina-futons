@@ -1,5 +1,16 @@
-// Backend web module for product customization builder
-// Handles customization options, pricing, and saved configurations
+/** @module customizationService - Backend product customization builder.
+ *
+ * Powers the "Customize Your Futon" feature: fetches available fabric swatches
+ * and pricing tiers from CMS, calculates surcharges (percentage or flat) for
+ * premium/luxury fabrics, and persists/retrieves saved configurations for
+ * logged-in members.
+ *
+ * CMS collections: FabricSwatches, CustomizationPricing, SavedCustomizations.
+ * calculateCustomizationPrice is a pure function (not a webMethod) so it can
+ * run on either client or server.
+ *
+ * Dependencies: wix-web-module, wix-data, backend/utils/sanitize.
+ */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';

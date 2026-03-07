@@ -1,5 +1,12 @@
-// faqHelpers.js — Testable helpers for FAQ page
-// FAQ data with categories, filtering, search, and schema generation
+/** @module faqHelpers - Testable helpers for the FAQ page.
+ *
+ * Contains the complete FAQ dataset organized by category (products, shipping,
+ * returns, financing, showroom), plus pure functions for category filtering,
+ * case-insensitive search, and FAQ schema data generation for SEO structured data.
+ *
+ * FAQ content is hardcoded here rather than fetched from CMS because it rarely
+ * changes and this avoids a network round-trip on page load.
+ */
 
 const CATEGORIES = [
   { id: 'products', label: 'Products', description: 'Questions about futons, mattresses, frames, and Murphy beds' },

@@ -1,4 +1,13 @@
-// Product image fallback system for Carolina Futons
+/** @module placeholderImages - Product image fallback and placeholder system.
+ *
+ * Provides curated lifestyle photography (Unsplash) for category hero banners
+ * and homepage cards, plus real wixstatic.com product photos as fallbacks when
+ * a product has no mainMedia. Also offers image resizing helpers for Wix CDN
+ * and Unsplash URL transform params.
+ *
+ * All hero/card images are temporary — replace with Wix Media uploads per
+ * MEDIA_MANIFEST.md when brand photography is available.
+ */
 // Category hero/card images use curated Unsplash lifestyle photography matching Blue Ridge aesthetic
 // Product fallback images use real wixstatic.com URLs from the live catalog
 //
