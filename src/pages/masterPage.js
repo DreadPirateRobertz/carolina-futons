@@ -34,6 +34,8 @@ let _exitIntentDialog = null;
 let _promoDialog = null;
 // Lazy-loaded exit intent module functions (populated by initExitIntent)
 let _exitIntent = null;
+let _exitPopupShown = false;
+let _exitScrollAbort = null;
 
 // Deduplicate concurrent getCurrentCart() calls across init functions
 const getSharedCart = sharePromise(() => getCurrentCart());
@@ -732,10 +734,13 @@ async function initExitIntent() {
         });
 
         // Mobile: rapid upward scroll detection as additional exit signal
+        // Uses AbortController so listener is removed after popup fires
+        _exitScrollAbort = new AbortController();
         let lastScrollY = 0;
         let lastScrollTime = 0;
         document.addEventListener('scroll', () => {
           try {
+            if (_exitPopupShown) return;
             const now = Date.now();
             const currentY = window.scrollY || 0;
             const elapsed = now - lastScrollTime;
@@ -749,7 +754,7 @@ async function initExitIntent() {
             lastScrollY = currentY;
             lastScrollTime = now;
           } catch (e) {}
-        }, { passive: true });
+        }, { passive: true, signal: _exitScrollAbort.signal });
       }
     } else {
       // Desktop: mouse leave detection (cursor above viewport)
@@ -766,8 +771,15 @@ async function initExitIntent() {
 
 function showExitPopup() {
   try {
-    if (!_exitIntent) return;
+    if (!_exitIntent || _exitPopupShown) return;
+    _exitPopupShown = true;
     _exitIntent.markExitIntentShown();
+
+    // Remove scroll listener now that popup has fired
+    if (_exitScrollAbort) {
+      try { _exitScrollAbort.abort(); } catch (e) {}
+      _exitScrollAbort = null;
+    }
 
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
@@ -901,22 +913,28 @@ function initExitSwipeDismiss(threshold) {
     const popup = $w('#exitIntentPopup');
     if (!popup) return;
 
-    // Use document-level touch events scoped to the popup area
+    // Scoped touch events — only track swipes when popup is visible
+    const swipeAbort = new AbortController();
+
     document.addEventListener('touchstart', (e) => {
+      if (!_exitPopupShown) return;
       touchStartY = e.touches[0].clientY;
-    }, { passive: true });
+    }, { passive: true, signal: swipeAbort.signal });
 
     document.addEventListener('touchend', (e) => {
+      if (!_exitPopupShown) return;
       const touchEndY = e.changedTouches[0].clientY;
       const swipeDistance = touchEndY - touchStartY;
       if (swipeDistance > threshold) {
+        swipeAbort.abort();
         dismissExitPopup();
       }
-    }, { passive: true });
+    }, { passive: true, signal: swipeAbort.signal });
   } catch (e) {}
 }
 
 function dismissExitPopup() {
+  _exitPopupShown = false;
   if (_exitIntentDialog) _exitIntentDialog.close();
 }
 

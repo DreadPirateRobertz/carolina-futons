@@ -259,31 +259,32 @@ describe('Exit-Intent Popup', () => {
       expect(config.animationDirection).toBe('bottom');
     });
 
-    it('mobile popup uses slide animation from bottom', () => {
-      const $w = create$w();
-      const popup = $w('#exitIntentPopup');
-      // On mobile, the popup should slide up from the bottom
-      popup.show('slide', { direction: 'bottom', duration: 300 });
-      expect(popup.show).toHaveBeenCalledWith('slide', { direction: 'bottom', duration: 300 });
+    it('getMobileExitIntentConfig includes swipe dismiss threshold', async () => {
+      const { getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      const config = getMobileExitIntentConfig();
+      expect(config.swipeDismissThreshold).toBe(80);
     });
 
-    it('mobile popup dismisses with slide-down animation', () => {
-      const $w = create$w();
-      const popup = $w('#exitIntentPopup');
-      popup.hide('slide', { direction: 'bottom', duration: 200 });
-      expect(popup.hide).toHaveBeenCalledWith('slide', { direction: 'bottom', duration: 200 });
+    it('getMobileExitIntentConfig shares discount code with desktop', async () => {
+      const { getExitIntentConfig, getMobileExitIntentConfig } = await import('../src/public/exitIntentCapture.js');
+      expect(getMobileExitIntentConfig().discountCode).toBe(getExitIntentConfig().discountCode);
     });
 
-    it('swipe-down dismiss tracks touch start and end', () => {
+    it('swipe-down exceeding threshold triggers dismiss', () => {
+      // Models the scoped swipe-dismiss logic in initExitSwipeDismiss
       let touchStartY = 0;
-      let touchEndY = 0;
       let dismissed = false;
+      const popupVisible = true;
+      const threshold = 80;
 
-      const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
       const onTouchEnd = (e) => {
-        touchEndY = e.changedTouches[0].clientY;
-        const swipeDistance = touchEndY - touchStartY;
-        if (swipeDistance > 80) dismissed = true;
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
       };
 
       onTouchStart({ touches: [{ clientY: 200 }] });
@@ -291,16 +292,20 @@ describe('Exit-Intent Popup', () => {
       expect(dismissed).toBe(true);
     });
 
-    it('swipe-down does not dismiss for small swipes', () => {
+    it('swipe-down below threshold does not dismiss', () => {
       let touchStartY = 0;
-      let touchEndY = 0;
       let dismissed = false;
+      const popupVisible = true;
+      const threshold = 80;
 
-      const onTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
       const onTouchEnd = (e) => {
-        touchEndY = e.changedTouches[0].clientY;
-        const swipeDistance = touchEndY - touchStartY;
-        if (swipeDistance > 80) dismissed = true;
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
       };
 
       onTouchStart({ touches: [{ clientY: 200 }] });
@@ -308,9 +313,30 @@ describe('Exit-Intent Popup', () => {
       expect(dismissed).toBe(false);
     });
 
+    it('swipe events are gated by popup visibility flag', () => {
+      let touchStartY = 0;
+      let dismissed = false;
+      const popupVisible = false; // popup not visible
+      const threshold = 80;
+
+      const onTouchStart = (e) => {
+        if (!popupVisible) return;
+        touchStartY = e.touches[0].clientY;
+      };
+      const onTouchEnd = (e) => {
+        if (!popupVisible) return;
+        const swipeDistance = e.changedTouches[0].clientY - touchStartY;
+        if (swipeDistance > threshold) dismissed = true;
+      };
+
+      // Large swipe that would normally dismiss — but popup isn't visible
+      onTouchStart({ touches: [{ clientY: 100 }] });
+      onTouchEnd({ changedTouches: [{ clientY: 400 }] });
+      expect(dismissed).toBe(false);
+    });
+
     it('scroll velocity exit detection triggers on rapid upward scroll', async () => {
       const { detectScrollExit } = await import('../src/public/exitIntentCapture.js');
-      // 5 px/ms = very fast upward scroll
       expect(detectScrollExit(5)).toBe(true);
     });
 
@@ -319,17 +345,19 @@ describe('Exit-Intent Popup', () => {
       expect(detectScrollExit(1)).toBe(false);
     });
 
-    it('mobile overlay uses fade animation', () => {
-      const $w = create$w();
-      const overlay = $w('#exitOverlay');
-      overlay.show('fade', { duration: 300 });
-      expect(overlay.show).toHaveBeenCalledWith('fade', { duration: 300 });
-    });
+    it('scroll listener respects shown flag to prevent re-trigger', () => {
+      // Models the _exitPopupShown guard in the scroll handler
+      let popupShown = true;
+      let showCalled = 0;
 
-    it('includes drag handle element for bottom sheet affordance', () => {
-      const $w = create$w();
-      const handle = $w('#exitDragHandle');
-      expect(handle).toBeDefined();
+      const scrollHandler = () => {
+        if (popupShown) return; // guard prevents re-trigger
+        showCalled++;
+      };
+
+      scrollHandler();
+      scrollHandler();
+      expect(showCalled).toBe(0);
     });
   });
 });
