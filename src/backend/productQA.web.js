@@ -145,7 +145,8 @@ export const answerQuestion = webMethod(Permissions.Admin, async (questionId, an
 /**
  * Returns paginated Q&A for a product. Public-facing.
  * @param {string} productId - Product ID
- * @param {Object} opts - { page, pageSize, answeredOnly }
+ * @param {Object} opts - { page, pageSize, answeredOnly, searchText }
+ * @param {string} [opts.searchText] - Filter questions containing this text (sanitized, case-insensitive)
  */
 export const getProductQuestions = webMethod(Permissions.Anyone, async (productId, opts = {}) => {
   try {
@@ -163,6 +164,14 @@ export const getProductQuestions = webMethod(Permissions.Anyone, async (productI
 
     if (opts.answeredOnly) {
       query = query.eq('status', 'answered');
+    }
+
+    // Text search in question field
+    if (opts.searchText && typeof opts.searchText === 'string') {
+      const searchTerm = sanitize(opts.searchText, 100).toLowerCase();
+      if (searchTerm) {
+        query = query.contains('question', searchTerm);
+      }
     }
 
     query = query.descending('helpfulVotes')

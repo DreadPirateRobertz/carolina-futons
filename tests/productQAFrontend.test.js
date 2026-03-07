@@ -71,6 +71,7 @@ function createMockElement() {
     disable: vi.fn(),
     onClick: vi.fn(),
     onChange: vi.fn(),
+    onInput: vi.fn(),
     onKeyPress: vi.fn(),
     onItemReady: vi.fn(),
     data: [],
@@ -467,6 +468,125 @@ describe('ProductQA — initProductQA', () => {
 
     expect($w('#qaFormError').show).toHaveBeenCalled();
     expect($w('#qaSubmitBtn').enable).toHaveBeenCalled();
+  });
+
+  // ── Search/filter questions ──────────────────────────────────────
+
+  it('registers search input handler', async () => {
+    await initProductQA($w, state);
+    expect($w('#qaSearchInput').onInput).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on search input', async () => {
+    await initProductQA($w, state);
+    expect($w('#qaSearchInput').accessibility.ariaLabel).toBeTruthy();
+  });
+
+  it('filters questions by search text and re-renders', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = 'mattress';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(mockGetProductQuestions).toHaveBeenCalledWith(
+      futonFrame._id,
+      expect.objectContaining({ searchText: 'mattress' })
+    );
+    vi.useRealTimers();
+  });
+
+  it('resets to full list when search input is cleared', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = '';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    // Should call without searchText (empty object)
+    const lastCall = mockGetProductQuestions.mock.calls[mockGetProductQuestions.mock.calls.length - 1];
+    expect(!lastCall[1]?.searchText || lastCall[1].searchText === '').toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('trims search input before querying', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = '  color  ';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(mockGetProductQuestions).toHaveBeenCalledWith(
+      futonFrame._id,
+      expect.objectContaining({ searchText: 'color' })
+    );
+    vi.useRealTimers();
+  });
+
+  it('resets Load More button on search (pagination reset)', async () => {
+    // Set up initial state with more questions than loaded (triggers Load More)
+    mockGetProductQuestions = vi.fn(async () => ({
+      success: true,
+      data: {
+        questions: mockQuestions.data.questions,
+        page: 1,
+        pageSize: 10,
+        totalCount: 25,
+      },
+    }));
+
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    // Load More should be visible initially (25 total > 2 loaded)
+    expect($w('#qaLoadMoreBtn').show).toHaveBeenCalled();
+
+    // Now search — results are fewer, Load More should be hidden
+    mockGetProductQuestions = vi.fn(async () => ({
+      success: true,
+      data: {
+        questions: [mockQuestions.data.questions[0]],
+        page: 1,
+        pageSize: 10,
+        totalCount: 1,
+      },
+    }));
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+    $w('#qaSearchInput').value = 'mattress';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    // Load More should now be hidden (1 total <= 1 loaded)
+    expect($w('#qaLoadMoreBtn').hide).toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('shows error feedback on search failure', async () => {
+    mockGetProductQuestions = vi.fn(async () => mockQuestions);
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    // Make search call throw
+    mockGetProductQuestions = vi.fn(async () => { throw new Error('Network error'); });
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+    $w('#qaSearchInput').value = 'test';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect($w('#qaSearchError').text).toBe('Search failed. Please try again.');
+    expect($w('#qaSearchError').show).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   // ── Accessibility ────────────────────────────────────────────────

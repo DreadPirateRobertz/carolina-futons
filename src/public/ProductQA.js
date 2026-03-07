@@ -47,6 +47,9 @@ export async function initProductQA($w, state) {
     // Pagination
     initLoadMore($w, productId, questions.length, totalCount, pageSize, currentPage);
 
+    // Search input
+    initSearchInput($w, productId);
+
     // Submit form
     initSubmitForm($w, state, productId);
 
@@ -202,6 +205,60 @@ function initLoadMore($w, productId, loadedCount, totalCount, pageSize, currentP
       }
     });
   } catch (e) {}
+}
+
+// ── Search Input ─────────────────────────────────────────────────────
+
+/**
+ * Initialize the search/filter input for Q&A questions.
+ * Debounces input (300ms), queries backend with searchText, re-renders
+ * the question list and resets pagination on each search.
+ * @param {Function} $w - Wix selector function.
+ * @param {string} productId - Product ID to search questions for.
+ */
+function initSearchInput($w, productId) {
+  try {
+    const input = $w('#qaSearchInput');
+    if (!input) return;
+
+    try { input.accessibility.ariaLabel = 'Search questions about this product'; } catch (e) {}
+
+    let debounceTimer = null;
+
+    input.onInput(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        try {
+          const searchText = (input.value || '').trim();
+          const opts = searchText ? { searchText } : {};
+          const result = await getProductQuestions(productId, opts);
+
+          if (result.success) {
+            renderCount($w, result.data.totalCount);
+            renderQuestions($w, result.data.questions);
+            // Reset pagination — search results start from page 1
+            initLoadMore(
+              $w, productId,
+              result.data.questions.length,
+              result.data.totalCount,
+              result.data.pageSize,
+              1
+            );
+          } else {
+            console.error('[ProductQA] Search failed:', result.error);
+          }
+        } catch (err) {
+          console.error('[ProductQA] Search error:', err.message);
+          try {
+            $w('#qaSearchError').text = 'Search failed. Please try again.';
+            $w('#qaSearchError').show('fade', { duration: 200 });
+          } catch (e) {}
+        }
+      }, 300);
+    });
+  } catch (err) {
+    console.error('[ProductQA] initSearchInput failed:', err.message);
+  }
 }
 
 // ── Submit Question Form ─────────────────────────────────────────────
