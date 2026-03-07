@@ -58,6 +58,10 @@ async function initCartPage() {
     // Collapse non-essential sections on mobile for faster paint
     collapseOnMobile($w, ['#cartRecentSection', '#cartFinancingSection']);
 
+    // ARIA live regions for cart totals (announce updates to screen readers)
+    try { $w('#cartSubtotal').accessibility.ariaLive = 'polite'; $w('#cartSubtotal').accessibility.role = 'status'; } catch (e) {}
+    try { $w('#cartTotal').accessibility.ariaLive = 'polite'; $w('#cartTotal').accessibility.role = 'status'; } catch (e) {}
+
     // Pass fetched cart to avoid redundant API calls
     updateShippingProgressFromCart(cart);
     updateTierProgressFromCart(cart);
@@ -504,9 +508,21 @@ async function refreshCartTotals() {
     if (currentCart && currentCart.totals) {
       const fmt = (n) => `$${Number(n).toFixed(2)}`;
       const itemStyles = getCartItemStyles();
-      try { $w('#cartSubtotal').text = fmt(currentCart.totals.subtotal); $w('#cartSubtotal').style.color = itemStyles.nameColor; } catch (e) {}
+      try {
+        $w('#cartSubtotal').text = fmt(currentCart.totals.subtotal);
+        $w('#cartSubtotal').style.color = itemStyles.nameColor;
+        $w('#cartSubtotal').accessibility.ariaLive = 'polite';
+        $w('#cartSubtotal').accessibility.role = 'status';
+      } catch (e) {}
       try { $w('#cartShipping').text = currentCart.totals.shipping > 0 ? fmt(currentCart.totals.shipping) : 'Calculated at checkout'; } catch (e) {}
-      try { $w('#cartTotal').text = fmt(currentCart.totals.total); $w('#cartTotal').style.color = itemStyles.nameColor; $w('#cartTotal').style.fontWeight = 'bold'; } catch (e) {}
+      try {
+        $w('#cartTotal').text = fmt(currentCart.totals.total);
+        $w('#cartTotal').style.color = itemStyles.nameColor;
+        $w('#cartTotal').style.fontWeight = 'bold';
+        $w('#cartTotal').accessibility.ariaLive = 'polite';
+        $w('#cartTotal').accessibility.role = 'status';
+      } catch (e) {}
+      announce($w, `Cart total updated to ${fmt(currentCart.totals.total)}`);
     }
     await updateShippingProgress();
     await updateCartFinancing();
