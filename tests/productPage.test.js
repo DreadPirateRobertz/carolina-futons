@@ -59,6 +59,16 @@ const mockCollection = [
   { ...wallHuggerFrame, _id: 'col-1' },
 ];
 
+vi.mock('public/InventoryDisplay.js', () => ({
+  initInventoryDisplay: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('public/BrowseReminder.js', () => ({
+  initBrowseTracking: vi.fn(),
+  showRemindMePopup: vi.fn(),
+  _createBrowseState: vi.fn(() => ({ sessionId: '', startTime: Date.now(), productsViewed: [] })),
+}));
+
 vi.mock('public/ProductPagePolish.js', () => ({
   styleReviewStars: vi.fn((rating) => {
     const r = Math.max(0, Math.min(5, Number(rating) || 0));
