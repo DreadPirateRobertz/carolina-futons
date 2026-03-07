@@ -49,13 +49,8 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts
 
-      - name: Check for syntax errors
-        run: |
-          failed=0
-          for f in src/pages/*.js src/public/*.js src/backend/*.js; do
-            node --check "$f" 2>&1 || failed=1
-          done
-          exit $failed
+      - name: Lint
+        run: npm run lint
 
   nightly-integration:
     if: github.event_name == 'schedule'

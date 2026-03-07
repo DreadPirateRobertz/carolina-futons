@@ -9,7 +9,6 @@ import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'pu
 import { announce } from 'public/a11yHelpers.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
-import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';
 import { validateAddressField, getFieldValidationState } from 'public/checkoutValidation.js';
