@@ -115,6 +115,7 @@ vi.mock('public/mobileHelpers', () => ({
   limitForViewport: vi.fn((data) => data),
   initBackToTop: mockInitBackToTop,
   getViewport: vi.fn(() => 'desktop'),
+  onViewportChange: vi.fn(() => () => {}),
 }));
 
 // ── Mock a11y helpers ───────────────────────────────────────────────

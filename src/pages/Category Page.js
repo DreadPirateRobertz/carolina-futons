@@ -11,7 +11,7 @@ import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { getFilterValues } from 'backend/searchService.web';
 import { searchProducts, suggestFilterRelaxation, getFacetMetadata } from 'backend/categorySearch.web';
 import { buildFilterChips, removeFilter, clearAllFilters, serializeFiltersToUrl, deserializeFiltersFromUrl, formatFeatureLabel, sanitizeFilterInput } from 'public/categoryFilterHelpers';
-import { isMobile, initBackToTop } from 'public/mobileHelpers';
+import { isMobile, initBackToTop, onViewportChange } from 'public/mobileHelpers';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { trackEvent } from 'public/engagementTracker';
 import { fireViewItemList } from 'public/ga4Tracking';
@@ -125,6 +125,11 @@ $w.onReady(async function () {
   });
 
   trackEvent('page_view', { page: 'category', category: currentPath });
+
+  // Re-render product grid when viewport changes (e.g. device rotation)
+  onViewportChange(() => {
+    try { loadCategoryProducts(currentPath); } catch (e) {}
+  });
 
   // Social proof toast (non-blocking, delayed)
   initCategorySocialProof($w, currentPath).catch(() => {});

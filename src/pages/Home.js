@@ -5,7 +5,7 @@ import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendat
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
 import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
-import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
+import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
@@ -103,6 +103,11 @@ $w.onReady(async function () {
 
   // On mobile: defer non-critical sections for faster first paint
   collapseOnMobile($w, ['#testimonialSection', '#videoShowcaseSection']);
+
+  // Re-render grids when viewport changes (e.g. device rotation)
+  onViewportChange(() => {
+    try { loadFeaturedProducts(); } catch (e) {}
+  });
 });
 
 // ── Featured Products ("Our Favorite Finds") ────────────────────────
