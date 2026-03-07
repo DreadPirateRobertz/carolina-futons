@@ -33,6 +33,7 @@
 {"issue_id":"CF-cfutons-polecat-vault","label":"gt:agent"}
 {"issue_id":"CF-cfutons-refinery","label":"gt:agent"}
 {"issue_id":"CF-cfutons-witness","label":"gt:agent"}
+{"issue_id":"CF-wisp-1q1f","label":"gt:merge-request"}
 {"issue_id":"CF-wisp-56yw","label":"gt:merge-request"}
 {"issue_id":"CF-wisp-f5vo","label":"gt:merge-request"}
 {"issue_id":"CF-wisp-nt5a","label":"gt:merge-request"}
