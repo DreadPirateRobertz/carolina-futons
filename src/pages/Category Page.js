@@ -144,12 +144,12 @@ function initCategoryHero(currentPath) {
     $w('#categoryHeroSubtitle').text = content.subtitle;
   } catch (e) {}
 
-  // Visible breadcrumb row: Home > Category
+  // Visible breadcrumb row: Home > Category (keyboard-accessible)
   try {
     $w('#breadcrumbHome').text = 'Home';
-    $w('#breadcrumbHome').onClick(() => {
+    makeClickable($w('#breadcrumbHome'), () => {
       import('wix-location-frontend').then(({ to }) => to('/'));
-    });
+    }, { ariaLabel: 'Navigate to home page', role: 'link' });
     $w('#breadcrumbCurrent').text = content.title;
   } catch (e) {}
 
@@ -296,8 +296,6 @@ function initFilterControls() {
   try { $w('#filterBrand').accessibility.ariaLabel = 'Filter by brand'; } catch (e) {}
   try { $w('#filterPrice').accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
   try { $w('#filterSize').accessibility.ariaLabel = 'Filter by size'; } catch (e) {}
-  try { $w('#clearFilters').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
-
   // Brand filter — includes Wall Hugger and Unfinished Wood brands
   try {
     const brandFilter = $w('#filterBrand');
@@ -357,14 +355,17 @@ function initFilterControls() {
     }
   } catch (e) {}
 
-  // Clear all filters button
+  // Clear all filters button (keyboard-accessible)
   try {
-    $w('#clearFilters').onClick(() => {
+    const clearHandler = () => {
       currentFilters = {};
       try { $w('#filterBrand').value = ''; } catch (e) {}
       try { $w('#filterPrice').value = ''; } catch (e) {}
       try { $w('#filterSize').value = ''; } catch (e) {}
       applyFilters();
+    };
+    makeClickable($w('#clearFilters'), clearHandler, {
+      ariaLabel: 'Clear all filters',
     });
   } catch (e) {}
 }
@@ -508,10 +509,11 @@ function initProductGrid() {
         renderCardStarRating($item, itemData._id, ratingsMap);
       }).catch(() => {});
 
-      // Quick view button
+      // Quick view button (keyboard-accessible)
       try {
-        $item('#quickViewBtn').onClick(() => {
-          openQuickView(itemData);
+        const qvHandler = () => { openQuickView(itemData); };
+        makeClickable($item('#quickViewBtn'), qvHandler, {
+          ariaLabel: `Quick view ${itemData.name}`,
         });
       } catch (e) {}
 
@@ -529,7 +531,7 @@ function initProductGrid() {
         }
       } catch (e) {}
 
-      // Compare button
+      // Compare button (keyboard-accessible)
       try {
         const compareBtn = $item('#gridCompareBtn');
         if (compareBtn) {
@@ -538,13 +540,14 @@ function initProductGrid() {
           const isInList = currentList.some(p => p._id === itemData._id);
           compareBtn.label = isInList ? 'Remove from Compare' : 'Compare';
 
-          compareBtn.onClick(() => {
+          const compareHandler = () => {
             const list = getCompareList();
             const alreadyComparing = list.some(p => p._id === itemData._id);
 
             if (alreadyComparing) {
               removeFromCompare(itemData._id);
               compareBtn.label = 'Compare';
+              announce($w, `${itemData.name} removed from compare`);
             } else {
               const added = addToCompare({
                 _id: itemData._id,
@@ -555,11 +558,16 @@ function initProductGrid() {
               });
               if (added) {
                 compareBtn.label = 'Remove from Compare';
+                announce($w, `${itemData.name} added to compare`);
               }
             }
 
             // Refresh the global compare bar on masterPage
             refreshCompareBarUI();
+          };
+
+          makeClickable(compareBtn, compareHandler, {
+            ariaLabel: isInList ? `Remove ${itemData.name} from compare` : `Compare ${itemData.name}`,
           });
         }
       } catch (e) {}
@@ -997,12 +1005,18 @@ async function initAdvancedFilters(currentPath) {
       $w('#filterResultCount').text = `${facets.totalProducts} products`;
     } catch (e) {}
 
-    // Clear All button (enhanced)
+    // Clear All button (keyboard-accessible)
     try {
-      $w('#clearAllFilters').onClick(() => {
+      makeClickable($w('#clearAllFilters'), () => {
         clearAllAdvancedFilters(currentPath);
-      });
-      try { $w('#clearAllFilters').accessibility.ariaLabel = 'Clear all filters'; } catch (e) {}
+      }, { ariaLabel: 'Clear all filters' });
+    } catch (e) {}
+
+    // Clear All chip button (keyboard-accessible)
+    try {
+      makeClickable($w('#clearAllFiltersChip'), () => {
+        clearAllAdvancedFilters(currentPath);
+      }, { ariaLabel: 'Clear all active filters' });
     } catch (e) {}
 
     // Mobile: filter drawer toggle
@@ -1172,8 +1186,14 @@ function renderFilterChips() {
       $w('#filterChipsText').text = chips.map(c => c.label).join(' · ');
     } catch (e) {}
 
-    // Show Clear All chip button
-    try { $w('#clearAllFiltersChip').show(); } catch (e) {}
+    // Show Clear All chip button (keyboard-accessible)
+    try {
+      const currentPath = wixLocationFrontend.path?.[0] || '';
+      makeClickable($w('#clearAllFiltersChip'), () => {
+        clearAllAdvancedFilters(currentPath);
+      }, { ariaLabel: 'Clear all active filters' });
+      $w('#clearAllFiltersChip').show();
+    } catch (e) {}
 
     container.show();
     announce($w, `${chips.length} filter${chips.length !== 1 ? 's' : ''} active`);
@@ -1460,12 +1480,14 @@ function refreshCompareBarUI() {
       });
     }
 
-    // Compare view button
+    // Compare view button (keyboard-accessible)
     try {
       const compareViewBtn = $w('#compareViewBtn');
       if (compareViewBtn) {
         compareViewBtn.label = `Compare ${items.length} Items`;
-        compareViewBtn.onClick(() => openCompareView());
+        makeClickable(compareViewBtn, () => openCompareView(), {
+          ariaLabel: `Compare ${items.length} items side by side`,
+        });
         if (items.length >= 2) {
           compareViewBtn.enable();
         } else {
