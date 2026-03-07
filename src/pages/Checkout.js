@@ -26,6 +26,7 @@ import {
   removeProtectionPlan,
   PLAN_TIERS,
 } from 'backend/protectionPlan.web';
+import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCreditHelpers.js';
 
 // Shared state for cross-section communication
 let _currentCart = null;
@@ -41,6 +42,7 @@ $w.onReady(async function () {
     { name: 'checkoutSummary', init: initCheckoutSummary },
     { name: 'orderSummarySidebar', init: initOrderSummarySidebar },
     { name: 'protectionPlan', init: initProtectionPlanUpsell },
+    { name: 'storeCredit', init: initStoreCreditSection },
     { name: 'deliveryEstimate', init: initDeliveryEstimate },
     { name: 'expressCheckout', init: initExpressCheckout },
   ];
@@ -685,6 +687,75 @@ async function initExpressCheckout() {
 
     section.show();
   } catch (e) {}
+}
+
+// ── Store Credit Auto-Apply ──────────────────────────────────────────
+// Checks member's store credit balance and offers to apply it to the order
+
+async function initStoreCreditSection() {
+  try {
+    const cart = _currentCart || await getCurrentCart();
+    if (!cart) return;
+
+    const subtotal = cart.totals?.subtotal || 0;
+    if (subtotal <= 0) return;
+
+    const creditInfo = await initCheckoutStoreCredit($w, subtotal);
+    if (!creditInfo.available) return;
+
+    // Wire up the apply button
+    try {
+      const applyBtn = $w('#storeCreditApplyBtn');
+      if (applyBtn) {
+        try { applyBtn.accessibility.ariaLabel = `Apply ${formatCreditBalance(creditInfo.applicableAmount)} store credit to this order`; } catch (e) {}
+
+        applyBtn.onClick(async () => {
+          try {
+            applyBtn.disable();
+            applyBtn.label = 'Applying...';
+
+            const { applyStoreCredit } = await import('backend/storeCreditService.web');
+            const { currentMember } = await import('wix-members-frontend');
+            const member = await currentMember.getMember();
+
+            if (!member || !member._id) {
+              applyBtn.label = 'Apply Store Credit';
+              applyBtn.enable();
+              return;
+            }
+
+            const result = await applyStoreCredit(member._id, subtotal);
+            if (result.success && result.amountApplied > 0) {
+              try {
+                $w('#storeCreditAppliedAmount').text = `-${formatCreditBalance(result.amountApplied)}`;
+                $w('#storeCreditAppliedSection').show('fade', { duration: 250 });
+              } catch (_) { /* elements may not exist */ }
+
+              applyBtn.label = 'Applied!';
+              announce($w, `${formatCreditBalance(result.amountApplied)} store credit applied to your order`);
+
+              // Update order summary with new total
+              try {
+                const newTotal = result.remainingOrderBalance;
+                $w('#orderSummaryStoreCredit').text = `-${formatCreditBalance(result.amountApplied)}`;
+                try { $w('#orderSummaryStoreCreditRow').show(); } catch (_) { /* */ }
+              } catch (_) { /* */ }
+            } else {
+              applyBtn.label = 'Apply Store Credit';
+              applyBtn.enable();
+              announce($w, 'No store credit was applied');
+            }
+          } catch (err) {
+            console.error('[Checkout] Error applying store credit:', err);
+            applyBtn.label = 'Apply Store Credit';
+            applyBtn.enable();
+          }
+        });
+      }
+    } catch (e) {}
+  } catch (e) {
+    console.error('[Checkout] Error initializing store credit section:', e);
+  }
 }
 
 // ── Protection Plan Upsell ────────────────────────────────────────────

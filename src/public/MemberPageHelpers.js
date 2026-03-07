@@ -263,6 +263,7 @@ export const DEFAULT_COMM_PREFS = {
 /** Names of all page sections for init orchestration */
 export const PAGE_SECTIONS = [
   'dashboard',
+  'storeCredit',
   'orderHistory',
   'wishlist',
   'accountSettings',
