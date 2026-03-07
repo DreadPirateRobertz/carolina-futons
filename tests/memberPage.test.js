@@ -117,10 +117,11 @@ describe('Member Page — Dashboard init', () => {
   });
 
   describe('PAGE_SECTIONS', () => {
-    it('lists all 8 sections in initialization order', () => {
-      expect(PAGE_SECTIONS).toHaveLength(8);
+    it('lists all 9 sections in initialization order', () => {
+      expect(PAGE_SECTIONS).toHaveLength(9);
       expect(PAGE_SECTIONS).toContain('dashboard');
       expect(PAGE_SECTIONS).toContain('storeCredit');
+      expect(PAGE_SECTIONS).toContain('loyaltyDashboard');
       expect(PAGE_SECTIONS).toContain('orderHistory');
       expect(PAGE_SECTIONS).toContain('wishlist');
       expect(PAGE_SECTIONS).toContain('accountSettings');
