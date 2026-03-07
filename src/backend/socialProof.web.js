@@ -27,7 +27,10 @@ const NOTIFICATION_TYPES = {
   recent_purchase: 'recent_purchase',
   low_stock: 'low_stock',
   popularity: 'popularity',
+  review_count: 'review_count',
 };
+
+const MIN_REVIEW_COUNT = 5;
 
 /**
  * Get social proof notifications for a product.
@@ -48,10 +51,11 @@ export const getProductSocialProof = webMethod(
       const id = sanitize(productId, 50);
       const name = sanitize(productName || '', 200);
 
-      const [recentPurchases, stockLevel, viewCount] = await Promise.all([
+      const [recentPurchases, stockLevel, viewCount, reviewData] = await Promise.all([
         getRecentPurchases(id),
         getStockLevel(id),
         getApproxViewCount(id),
+        getReviewCount(id),
       ]);
 
       const notifications = [];
@@ -83,6 +87,15 @@ export const getProductSocialProof = webMethod(
           type: NOTIFICATION_TYPES.popularity,
           message: `${viewCount} people viewed this recently`,
           priority: 3,
+        });
+      }
+
+      // Priority 4: Review count
+      if (reviewData.count >= MIN_REVIEW_COUNT) {
+        notifications.push({
+          type: NOTIFICATION_TYPES.review_count,
+          message: `${reviewData.count} reviews — rated ${reviewData.averageRating}/5 stars`,
+          priority: 4,
         });
       }
 
@@ -241,6 +254,25 @@ function anonymizeName(firstName) {
   // Return first name only, capitalized
   const name = firstName.trim();
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+async function getReviewCount(productId) {
+  try {
+    const result = await wixData.query('Reviews')
+      .eq('productId', productId)
+      .eq('status', 'approved')
+      .find();
+
+    const items = result.items || [];
+    if (items.length === 0) return { count: 0, averageRating: 0 };
+
+    const sum = items.reduce((acc, r) => acc + (r.rating || 0), 0);
+    const avg = Math.round((sum / items.length) * 10) / 10;
+
+    return { count: items.length, averageRating: avg };
+  } catch (err) {
+    return { count: 0, averageRating: 0 };
+  }
 }
 
 function anonymizeCity(city) {
