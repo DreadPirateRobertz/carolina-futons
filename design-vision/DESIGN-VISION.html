@@ -4393,7 +4393,7 @@
       </div>
     </div>
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--sand-light); font-size: 13px; color: var(--espresso-light);">
-      <strong>Implementation status:</strong> All 28 pages have code in <code>src/pages/</code> with 22 detailed renderings across 5 priority groups. All feature implementations use design tokens from <code>sharedTokens.js</code>/<code>designTokens.js</code>. SVG illustrations integrated on Product Page (comfort cards), Cart Page (empty state), and Search Results (empty state). All 4 illustration modules (17 SVGs) pass 8/8 quality bar. Expansion to Cart, About, Contact, Thank You pages in progress.
+      <strong>Implementation status (2026-03-06):</strong> All 28 pages have code in <code>src/pages/</code> with 22 detailed renderings across 5 priority groups. All feature implementations use design tokens from <code>sharedTokens.js</code>/<code>designTokens.js</code>. <strong>FIGMA-FIRST PIVOT:</strong> All illustrations now follow the Figma Draw pipeline (design in Figma &rarr; export SVG &rarr; SVGO optimize &rarr; tokenize colors &rarr; static file load). Programmatic SVG generation is DEPRECATED. MountainSkyline Figma POC merged (PR #169). Figma design system reference merged (PR #174). Active illustration sprint: comfort (cf-pdv), about/contact (cf-g4f), empty states (cf-t3c), cart/onboarding (cf-aij), header skyline (CF-b99), footer divider (CF-jqb). 5 frontend feature beads queued for Phase 3.
     </div>
   </div>
 
@@ -4407,42 +4407,56 @@
     </h2>
     <p style="color: var(--muted-brown); font-size: 16px; margin-bottom: 32px;">
       Hand-illustrated Blue Ridge Mountain aesthetic &mdash; the soul of Carolina Futons.
-      Every illustration uses watercolor filters, organic paths, and brand tokens.
-      <a href="illustration-preview-all.html" style="color: var(--mountain-blue); font-weight: 600;">View full rendered preview with 17 SVGs &rarr;</a>
+      Every illustration is designed in <strong>Figma Draw</strong> with brush/pencil paths, then exported through the SVG pipeline. Programmatic SVG generation is deprecated.
+      <a href="illustration-preview-all.html" style="color: var(--mountain-blue); font-weight: 600;">View full rendered preview &rarr;</a>
     </p>
 
     <!-- Quality Bar -->
     <div style="background: var(--white); border-radius: 12px; padding: 20px 28px; margin-bottom: 32px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
-      <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">8-Point SVG Quality Bar</h4>
+      <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">10-Point Figma-First Quality Bar (2026-03-06)</h4>
       <p style="font-size: 13px; color: var(--espresso-light); line-height: 1.8; margin: 0;">
-        <span style="color: var(--sunset-coral); font-weight: 600;">1.</span> feTurbulence + feDisplacementMap watercolor filter &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">2.</span> Organic hand-drawn paths &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">3.</span> 15+ SVG elements per scene &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">4.</span> 5+ gradient stops &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">5.</span> Paper grain feNoise overlay &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">6.</span> Atmospheric depth layers &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">7.</span> All colors from sharedTokens &bull;
-        <span style="color: var(--sunset-coral); font-weight: 600;">8.</span> Visually verified against design.jpeg
+        <span style="color: var(--sunset-coral); font-weight: 600;">1.</span> Designed in Figma Draw (not coded in JS) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">2.</span> Brush/Pencil paths (natural wobble) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">3.</span> Figma effects (Texture, Noise, Progressive Blur) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">4.</span> 5-7 atmospheric ridgeline layers &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">5.</span> 15+ distinct SVG elements &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">6.</span> 5+ gradient stops in sky &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">7.</span> All colors from sharedTokens (zero hardcoded hex) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">8.</span> Pipeline processed (.optimized.svg, .tokenized.svg, .wix.html) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">9.</span> Accessibility (aria-hidden or role="img" + title) &bull;
+        <span style="color: var(--sunset-coral); font-weight: 600;">10.</span> Visual approval against design.jpeg (PM approves)
       </p>
     </div>
 
     <!-- Status Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px;">
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
-        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Comfort Illustrations</h4>
-        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">3 scenes (plush, medium, firm) &bull; <strong style="color: var(--success);">8/8 PASS</strong><br>Used on Product Page comfort story cards. 32-37 elements/scene.</p>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Comfort Illustrations <span style="font-size: 11px; color: var(--sunset-coral);">cf-pdv &mdash; IN PROGRESS</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">3 scenes (plush, medium, firm) &bull; <strong style="color: var(--sunset-coral);">Figma redesign in progress (godfrey)</strong><br>Product Page comfort story cards. Upgrading from programmatic to Figma Draw pipeline.</p>
+      </div>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Cart + Onboarding Illustrations <span style="font-size: 11px; color: var(--sunset-coral);">cf-aij &mdash; QUEUED</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Cart + 3 onboarding scenes &bull; <strong style="color: var(--sunset-coral);">Figma redesign queued (radahn)</strong><br>Dark editorial theme for mobile onboarding + cart scene. Upgrading to Figma Draw pipeline.</p>
+      </div>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Empty State Illustrations <span style="font-size: 11px; color: var(--sunset-coral);">cf-t3c &mdash; QUEUED</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">8 scenes (cart, search, wishlist, etc.) &bull; <strong style="color: var(--sunset-coral);">Figma redesign queued (rennala)</strong><br>Upgrading from programmatic to Figma Draw pipeline. All brand tokens preserved.</p>
+      </div>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">About + Contact Illustrations <span style="font-size: 11px; color: var(--sunset-coral);">cf-g4f &mdash; IN PROGRESS</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Brand story + showroom scenes &bull; <strong style="color: var(--sunset-coral);">Figma design in progress (miquella)</strong><br>Replaces stale PRs #153/#158. About page brand story + Contact page showroom hero.</p>
       </div>
       <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
-        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Onboarding Illustrations</h4>
-        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">3 scenes (welcome, arPreview, shopWithConfidence) &bull; <strong style="color: var(--success);">8/8 PASS</strong><br>Dark editorial theme for mobile. 34-49 elements/scene.</p>
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Mountain Skyline (Figma POC) <span style="font-size: 11px; color: var(--success);">hq-zvz2 &mdash; MERGED</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Figma Draw pipeline validated &bull; <strong style="color: var(--success);">PR #169 merged</strong><br>MountainSkylineFigma.js + static SVG assets. Proves Figma-first approach. Pipeline: .svg &rarr; .optimized.svg &rarr; .tokenized.svg &rarr; .wix.html</p>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
-        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Empty State Illustrations</h4>
-        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">8 scenes (cart, search, wishlist, etc.) &bull; <strong style="color: var(--success);">8/8 PASS &mdash; retrofitted (PR #139 merged)</strong><br>Watercolor filters, organic paths, atmospheric depth. All brand tokens.</p>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Header Skyline Upgrade <span style="font-size: 11px; color: var(--mountain-blue);">CF-b99 &mdash; PLANNED</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Site-wide header illustration &bull; <strong style="color: var(--mountain-blue);">P1 &mdash; planned</strong><br>Upgrade masterPage header from programmatic MountainSkyline.js to Figma pipeline. Consistent site-wide branding.</p>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
-        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Mountain Skyline Variants</h4>
-        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">3 variants (default, sunrise, sunset) &bull; <strong style="color: var(--success);">8/8 PASS &mdash; upgraded (PR #131 merged)</strong><br>7 ridgeline layers, feTurbulence filters, birds, pine trees, wildflowers. 46 tests.</p>
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+        <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Footer Mountain Divider <span style="font-size: 11px; color: var(--mountain-blue);">CF-jqb &mdash; PLANNED</span></h4>
+        <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Footer illustration upgrade &bull; <strong style="color: var(--mountain-blue);">P1 &mdash; planned</strong><br>Upgrade FooterSection mountain divider to Figma Draw. Add ridgeline layers, birds, wildflowers. Match header skyline aesthetic.</p>
       </div>
     </div>
 
