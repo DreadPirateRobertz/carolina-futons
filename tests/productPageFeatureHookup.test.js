@@ -87,6 +87,37 @@ vi.mock('backend/financingService.web', () => ({
   getLowestMonthlyDisplay: vi.fn().mockResolvedValue('As low as $125/mo'),
 }));
 
+vi.mock('backend/financingCalc.web', () => ({
+  getFinancingWidget: vi.fn().mockResolvedValue({
+    success: true,
+    price: 500,
+    eligible: true,
+    minimumAmount: 200,
+    terms: [
+      { months: 6, apr: 0, label: '6 Months', description: '0% APR for 6 months', monthly: 83.33, total: 500, interest: 0, isZeroInterest: true },
+    ],
+    afterpay: {
+      eligible: true,
+      installments: 4,
+      installmentAmount: 125,
+      total: 500,
+      message: 'or 4 interest-free payments of $125.00 with Afterpay',
+    },
+    lowestMonthly: 'As low as $84/mo',
+    widgetData: {
+      showWidget: true,
+      sections: [
+        { type: 'afterpay', title: 'Pay in 4', subtitle: 'Interest-free with Afterpay', highlight: '$125.00/payment' },
+        { type: 'financing', title: '6 Months', subtitle: '0% APR for 6 months', highlight: '$83.33/mo', details: { monthly: 83.33, total: 500, interest: 0, apr: 0 } },
+      ],
+      defaultSection: 0,
+      minimumAmount: 200,
+      belowMinimum: false,
+      belowMinimumMessage: null,
+    },
+  }),
+}));
+
 vi.mock('backend/contactSubmissions.web', () => ({
   submitContactForm: vi.fn().mockResolvedValue({ success: true }),
 }));
@@ -289,6 +320,7 @@ describe('Financing Modal (16 IDs)', () => {
     const expected = [
       '#financingSection', '#financingTeaser', '#financingRepeater',
       '#financingLearnMore', '#financingClose', '#financingOverlay',
+      '#afterpayMessage',
     ];
     for (const id of expected) {
       expect(accessedIds.has(id), `Missing ID: ${id}`).toBe(true);
@@ -300,7 +332,7 @@ describe('Financing Modal (16 IDs)', () => {
     const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
     await initFinancingOptions($w, testState);
 
-    expect(elements.get('#financingTeaser').text).toBe('As low as $125/mo');
+    expect(elements.get('#financingTeaser').text).toBe('As low as $84/mo');
   });
 
   it('populates plan repeater with financing data', async () => {
@@ -321,9 +353,13 @@ describe('Financing Modal (16 IDs)', () => {
     expect(elements.get('#financingSection').collapse).toHaveBeenCalled();
   });
 
-  it('collapses section when backend returns no plans', async () => {
-    const { getFinancingOptions } = await import('backend/financingService.web');
-    getFinancingOptions.mockResolvedValueOnce([]);
+  it('collapses section when backend returns not eligible', async () => {
+    const { getFinancingWidget } = await import('backend/financingCalc.web');
+    getFinancingWidget.mockResolvedValueOnce({
+      success: true,
+      eligible: false,
+      widgetData: { showWidget: false, sections: [] },
+    });
 
     const { $w, elements } = createTrackingMock();
     const { initFinancingOptions } = await import('../src/public/ProductFinancing.js');
