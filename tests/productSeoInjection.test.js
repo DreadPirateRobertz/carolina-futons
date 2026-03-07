@@ -39,7 +39,6 @@ vi.mock('backend/pinterestRichPins.web', () => ({
 const {
   injectProductMeta,
   injectPinterestMeta,
-  injectProductSchema,
   buildGridAlt,
   detectProductBrand,
   detectProductCategory,
@@ -129,57 +128,14 @@ describe('injectProductMeta — structured data injection', () => {
     expect(mockHead.setTitle).toHaveBeenCalled();
   });
 
-  it('does not call injectPinterestMeta internally (Product Page calls it separately)', async () => {
+  it('calls injectPinterestMeta internally', async () => {
     const { getProductPinData } = await import('backend/pinterestRichPins.web');
     getProductPinData.mockClear();
 
     await injectProductMeta(futonFrame);
 
-    // injectProductMeta should NOT trigger Pinterest pin data fetch
-    // because Product Page.js calls injectPinterestMeta as a separate section
-    expect(getProductPinData).not.toHaveBeenCalled();
-  });
-});
-
-// ── injectProductSchema (HtmlComponent approach) ─────────────────
-
-describe('injectProductSchema — HtmlComponent injection', () => {
-  let mock$w;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mock$w = vi.fn((selector) => {
-      const el = { postMessage: vi.fn() };
-      return el;
-    });
-  });
-
-  it('posts product schema to #productSchemaHtml', async () => {
-    const el = { postMessage: vi.fn() };
-    mock$w.mockImplementation((sel) => {
-      if (sel === '#productSchemaHtml') return el;
-      return { postMessage: vi.fn() };
-    });
-
-    await injectProductSchema(mock$w, futonFrame);
-
-    expect(el.postMessage).toHaveBeenCalled();
-    const arg = el.postMessage.mock.calls[0][0];
-    expect(arg).toBeTruthy();
-  });
-
-  it('does nothing for null product', async () => {
-    await injectProductSchema(mock$w, null);
-
-    expect(mock$w).not.toHaveBeenCalled();
-  });
-
-  it('handles missing HtmlComponent gracefully', async () => {
-    mock$w.mockImplementation(() => { throw new Error('Element not found'); });
-
-    await expect(
-      injectProductSchema(mock$w, futonFrame)
-    ).resolves.not.toThrow();
+    // injectProductMeta handles Pinterest meta as part of the SSR injection
+    expect(getProductPinData).toHaveBeenCalled();
   });
 });
 
