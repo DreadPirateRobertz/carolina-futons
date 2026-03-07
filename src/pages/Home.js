@@ -3,6 +3,7 @@
 // Hero, categories, featured products, trust bar, newsletter, testimonials
 import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
+import { initPageSeo } from 'public/pageSeo.js';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
 import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';
@@ -65,6 +66,7 @@ $w.onReady(async function () {
     { name: 'newsletter', init: initNewsletterSection, critical: false },
     { name: 'ridgeline', init: initRidgelineHeader, critical: false },
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
+    { name: 'homeSeo', init: () => initPageSeo('home'), critical: false },
   ];
 
   const { critical: criticalResults } = await prioritizeSections(sections, {

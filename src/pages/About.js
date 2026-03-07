@@ -2,6 +2,7 @@
 // Brand story, team section, business timeline, social proof,
 // and trust-building content with local SEO signals
 import { getBusinessSchema } from 'backend/seoHelpers.web';
+import { initPageSeo } from 'public/pageSeo.js';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { makeClickable } from 'public/a11yHelpers.js';
@@ -23,6 +24,7 @@ $w.onReady(async function () {
   initSocialProof();
   initFaqLink();
   await injectLocalSchema();
+  initPageSeo('about');
   trackEvent('page_view', { page: 'about' });
 });
 

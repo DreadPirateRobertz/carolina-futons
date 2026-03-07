@@ -986,6 +986,44 @@ export const getPageTitle = webMethod(
         return `Contact Us — Visit Our Hendersonville NC Showroom | ${SITE_NAME}`;
       case 'about':
         return `About Us — Family-Owned Since 1991 | ${SITE_NAME}`;
+      case 'styleQuiz':
+        return `Style Quiz — Find Your Perfect Furniture | ${SITE_NAME}`;
+      case 'giftCards':
+        return `Gift Cards — Give the Gift of Comfort | ${SITE_NAME}`;
+      case 'financing':
+        return `Financing Options — Affordable Monthly Payments | ${SITE_NAME}`;
+      case 'storeLocator':
+        return `Store Locator — Visit Our Hendersonville NC Showroom | ${SITE_NAME}`;
+      case 'assemblyGuides':
+        return `Assembly Guides — Furniture Setup Instructions | ${SITE_NAME}`;
+      case 'roomPlanner':
+        return `Room Planner — Design Your Space | ${SITE_NAME}`;
+      case 'compareProducts':
+        return `Compare Products — Side-by-Side Furniture Comparison | ${SITE_NAME}`;
+      case 'ugcGallery':
+        return `Customer Gallery — See Our Furniture in Your Home | ${SITE_NAME}`;
+      case 'referral':
+        return `Refer a Friend — Earn Rewards | ${SITE_NAME}`;
+      case 'returns':
+        return `Returns & Exchanges | ${SITE_NAME}`;
+      case 'priceMatch':
+        return `Price Match Guarantee | ${SITE_NAME}`;
+      case 'privacyPolicy':
+        return `Privacy Policy | ${SITE_NAME}`;
+      case 'refundPolicy':
+        return `Refund Policy | ${SITE_NAME}`;
+      case 'termsConditions':
+        return `Terms & Conditions | ${SITE_NAME}`;
+      case 'shippingPolicy':
+        return `Shipping Policy | ${SITE_NAME}`;
+      case 'accessibility':
+        return `Accessibility Statement | ${SITE_NAME}`;
+      case 'newsletter':
+        return `Newsletter — Furniture Deals & Style Tips | ${SITE_NAME}`;
+      case 'sustainability':
+        return `Sustainability — Our Environmental Commitment | ${SITE_NAME}`;
+      case 'buyingGuides':
+        return `Buying Guides — Expert Furniture Advice | ${SITE_NAME}`;
       default:
         return SITE_NAME;
     }
@@ -1034,6 +1072,25 @@ const PAGE_META_DESCRIPTIONS = {
   contact: 'Contact Carolina Futons in Hendersonville, NC. Visit our showroom Wednesday–Saturday 10 AM–5 PM. Call (828) 252-9449 or book an appointment online.',
   about: 'Carolina Futons has served Western NC since 1991. Family-owned furniture store specializing in quality futon frames, mattresses, Murphy beds, and platform beds in Hendersonville, NC.',
   blog: 'Furniture tips, style inspiration, and product guides from Carolina Futons. Learn about futon care, room design ideas, and choosing the perfect furniture.',
+  styleQuiz: 'Take our style quiz to find the perfect futon, Murphy bed, or platform bed for your space. Personalized furniture recommendations from Carolina Futons.',
+  giftCards: 'Give the gift of comfort with Carolina Futons gift cards. Available in any amount, redeemable on futons, Murphy beds, mattresses, and more.',
+  financing: 'Affordable financing options for quality furniture at Carolina Futons. Low monthly payments on futon frames, Murphy beds, and platform beds.',
+  storeLocator: 'Visit the Carolina Futons showroom in Hendersonville, NC. Open Wednesday–Saturday 10 AM–5 PM. See our full selection of futons, Murphy beds, and more.',
+  assemblyGuides: 'Step-by-step assembly guides for Carolina Futons furniture. Easy-to-follow instructions for futon frames, platform beds, and Murphy cabinet beds.',
+  roomPlanner: 'Plan your room layout with our interactive room planner. Visualize Carolina Futons furniture in your space before you buy.',
+  compareProducts: 'Compare futons, Murphy beds, and platform beds side by side. Find the best furniture for your space and budget at Carolina Futons.',
+  ugcGallery: 'See how real customers style their Carolina Futons furniture. Browse customer photos and share your own setup.',
+  referral: 'Refer a friend to Carolina Futons and earn rewards. Share the comfort of quality futon furniture with friends and family.',
+  returns: 'Carolina Futons return policy — 30-day returns on unused items in original packaging. Easy returns and exchanges on furniture purchases.',
+  priceMatch: 'Carolina Futons price match guarantee. Found a lower price? We will match it. Shop with confidence for futons, Murphy beds, and more.',
+  privacyPolicy: 'Carolina Futons privacy policy. How we collect, use, and protect your personal information when you shop with us.',
+  refundPolicy: 'Carolina Futons refund policy. Details on refund eligibility, processing times, and how to request a refund on furniture purchases.',
+  termsConditions: 'Terms and conditions for shopping at Carolina Futons. Policies on orders, shipping, returns, and use of our website.',
+  shippingPolicy: 'Carolina Futons shipping policy. Free shipping on orders over $999. White-glove delivery available in Western NC and the Southeast.',
+  accessibility: 'Carolina Futons is committed to making our website accessible to everyone. Learn about our accessibility efforts and contact us for assistance.',
+  newsletter: 'Subscribe to the Carolina Futons newsletter for exclusive furniture deals, style tips, and new product announcements.',
+  sustainability: 'Our commitment to sustainability at Carolina Futons. Learn about our eco-friendly practices and sustainable furniture sourcing.',
+  buyingGuides: 'Expert buying guides from Carolina Futons. Learn how to choose the right futon, Murphy bed, mattress, or platform bed for your needs.',
 };
 
 /**

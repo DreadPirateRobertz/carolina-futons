@@ -4,6 +4,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
 import { injectFaqSeo } from 'public/faqSeo.js';
+import { initPageSeo } from 'public/pageSeo.js';
 import {
   getFaqData,
   getFaqCategories,
@@ -20,6 +21,7 @@ $w.onReady(async function () {
   initFaqAccordion();
   initFaqSearch();
   await injectFaqSeo();
+  initPageSeo('faq');
   trackEvent('page_view', { page: 'faq' });
 });
 
