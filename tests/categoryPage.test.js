@@ -72,7 +72,17 @@ vi.mock('backend/seoHelpers.web', () => ({
   getCollectionSchema: vi.fn().mockResolvedValue('{"@type":"ItemList"}'),
   getBreadcrumbSchema: vi.fn().mockResolvedValue('{"@type":"BreadcrumbList","itemListElement":[]}'),
   getCategoryMetaDescription: vi.fn().mockResolvedValue('Test category description'),
-  getCategoryOgTags: vi.fn().mockResolvedValue('{"og:type":"website"}'),
+  getCategoryOgTags: vi.fn().mockResolvedValue(JSON.stringify({
+    'og:type': 'website',
+    'og:title': 'Futon Frames | Carolina Futons',
+    'og:description': 'Shop quality futon frames',
+    'og:url': 'https://www.carolinafutons.com/futon-frames',
+    'og:site_name': 'Carolina Futons',
+    'og:locale': 'en_US',
+    'twitter:card': 'summary',
+    'twitter:title': 'Futon Frames | Carolina Futons',
+    'twitter:description': 'Shop quality futon frames',
+  })),
   getCanonicalUrl: vi.fn().mockResolvedValue('https://www.carolinafutons.com/futon-frames'),
 }));
 
@@ -822,6 +832,48 @@ describe('Category Page', () => {
       const schemas = mockHead.setStructuredData.mock.calls[0][0];
       const collection = schemas.find(s => s['@type'] === 'ItemList');
       expect(collection).toBeDefined();
+    });
+
+    it('sets og:type via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('og:type', 'website');
+    });
+
+    it('sets og:url via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('og:url', 'https://www.carolinafutons.com/futon-frames');
+    });
+
+    it('sets og:site_name via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('og:site_name', 'Carolina Futons');
+    });
+
+    it('sets twitter:card via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('twitter:card', 'summary');
+    });
+
+    it('sets twitter:title via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('twitter:title', 'Futon Frames | Carolina Futons');
+    });
+
+    it('sets twitter:description via head.setMetaTag for SSR', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      expect(mockHead.setMetaTag).toHaveBeenCalledWith('twitter:description', 'Shop quality futon frames');
     });
   });
 });

@@ -223,6 +223,19 @@ async function injectCategoryMeta(currentPath) {
       head.setLinks([{ rel: 'canonical', href: canonical }]);
     }
 
+    // Set OG + Twitter Card meta tags via SSR for social sharing
+    try {
+      const ogJson = await getCategoryOgTags(currentPath);
+      if (ogJson) {
+        const tags = JSON.parse(ogJson);
+        for (const [key, value] of Object.entries(tags)) {
+          if (key.startsWith('og:') || key.startsWith('twitter:')) {
+            head.setMetaTag(key, value);
+          }
+        }
+      }
+    } catch (e) { /* OG tag injection failed */ }
+
     // Inject structured data via SSR for crawler indexability
     const schemas = [];
     try {
