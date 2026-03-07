@@ -11,15 +11,7 @@ import {
 // ── AUTOCOMPLETE_HINTS mapping ──────────────────────────────────────
 
 describe('AUTOCOMPLETE_HINTS', () => {
-  it('maps all five address fields', () => {
-    expect(AUTOCOMPLETE_HINTS).toHaveProperty('#addressFullName');
-    expect(AUTOCOMPLETE_HINTS).toHaveProperty('#addressLine1');
-    expect(AUTOCOMPLETE_HINTS).toHaveProperty('#addressCity');
-    expect(AUTOCOMPLETE_HINTS).toHaveProperty('#addressState');
-    expect(AUTOCOMPLETE_HINTS).toHaveProperty('#addressZip');
-  });
-
-  it('uses shipping-scoped autocomplete values', () => {
+  it('maps all five address fields with shipping-scoped values', () => {
     expect(AUTOCOMPLETE_HINTS['#addressFullName']).toBe('shipping name');
     expect(AUTOCOMPLETE_HINTS['#addressLine1']).toBe('shipping address-line1');
     expect(AUTOCOMPLETE_HINTS['#addressCity']).toBe('shipping address-level2');
@@ -39,7 +31,6 @@ describe('applyAutocompleteHints', () => {
     Object.keys(AUTOCOMPLETE_HINTS).forEach(id => {
       elements[id] = {
         autocomplete: undefined,
-        accessibility: {},
       };
     });
     $w = (selector) => elements[selector] || null;
@@ -67,27 +58,34 @@ describe('applyAutocompleteHints', () => {
     expect(elements['#addressZip'].autocomplete).toBe('shipping postal-code');
   });
 
-  it('does not throw when $w is null or undefined', () => {
+  it('logs warning and returns when $w is null or undefined', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(() => applyAutocompleteHints(null)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('invalid $w'),
+      expect.any(String),
+    );
+    warnSpy.mockClear();
     expect(() => applyAutocompleteHints(undefined)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
-  it('handles element that throws on property assignment', () => {
+  it('logs warning and continues when element throws on property assignment', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const throwingEl = {
       get autocomplete() { return undefined; },
       set autocomplete(_) { throw new Error('readonly'); },
-      accessibility: {},
     };
     elements['#addressFullName'] = throwingEl;
 
     expect(() => applyAutocompleteHints($w)).not.toThrow();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('#addressFullName'),
+      'readonly',
+    );
     // Other fields still get set
     expect(elements['#addressLine1'].autocomplete).toBe('shipping address-line1');
-  });
-
-  it('does not overwrite existing autocomplete if already set correctly', () => {
-    elements['#addressFullName'].autocomplete = 'shipping name';
-    applyAutocompleteHints($w);
-    expect(elements['#addressFullName'].autocomplete).toBe('shipping name');
+    warnSpy.mockRestore();
   });
 });

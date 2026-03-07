@@ -107,6 +107,12 @@ export function validateAddressField(fieldName, value) {
  * @param {{ valid: boolean }} [validationResult] - Result from validateField
  * @returns {'idle'|'valid'|'error'}
  */
+export function getFieldValidationState(value, touched, validationResult) {
+  if (!touched) return 'idle';
+  if (!validationResult) return 'idle';
+  return validationResult.valid ? 'valid' : 'error';
+}
+
 /**
  * Browser autofill hint mapping for checkout address fields.
  * Uses shipping-scoped values per HTML autocomplete spec.
@@ -121,20 +127,20 @@ export const AUTOCOMPLETE_HINTS = {
 
 /**
  * Apply browser autocomplete hints to checkout address input elements.
+ * Silently skips elements that are missing or throw on property assignment.
  * @param {Function} $w - Wix Velo $w selector function
  */
 export function applyAutocompleteHints($w) {
-  if (typeof $w !== 'function') return;
+  if (typeof $w !== 'function') {
+    console.warn('[checkoutValidation] applyAutocompleteHints called with invalid $w:', typeof $w);
+    return;
+  }
   Object.entries(AUTOCOMPLETE_HINTS).forEach(([id, hint]) => {
     try {
       const el = $w(id);
       if (el) el.autocomplete = hint;
-    } catch (e) {}
+    } catch (e) {
+      console.warn(`[checkoutValidation] Failed to set autocomplete on ${id}:`, e?.message);
+    }
   });
-}
-
-export function getFieldValidationState(value, touched, validationResult) {
-  if (!touched) return 'idle';
-  if (!validationResult) return 'idle';
-  return validationResult.valid ? 'valid' : 'error';
 }
