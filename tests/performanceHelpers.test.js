@@ -426,6 +426,115 @@ describe('getImageDimensionsForCategory', () => {
   });
 });
 
+// ── lazyLoadImage ────────────────────────────────────────────────────
+
+describe('lazyLoadImage', () => {
+  let lazyLoadImage;
+
+  beforeEach(async () => {
+    ({ lazyLoadImage } = await import('../src/public/performanceHelpers.js'));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it('does not set src immediately — defers until viewport enter', () => {
+    let viewportEnterCb = null;
+    const el = {
+      src: '',
+      alt: '',
+      onViewportEnter: vi.fn(cb => { viewportEnterCb = cb; }),
+    };
+
+    lazyLoadImage(el, 'https://example.com/photo.jpg');
+
+    // src should NOT be set yet
+    expect(el.src).toBe('');
+    expect(el.onViewportEnter).toHaveBeenCalledOnce();
+
+    // Simulate viewport enter
+    viewportEnterCb();
+    expect(el.src).toBe('https://example.com/photo.jpg');
+  });
+
+  it('sets alt text immediately (before lazy load triggers)', () => {
+    const el = {
+      src: '',
+      alt: '',
+      onViewportEnter: vi.fn(),
+    };
+
+    lazyLoadImage(el, 'https://example.com/photo.jpg', { alt: 'A futon' });
+    expect(el.alt).toBe('A futon');
+  });
+
+  it('falls back to immediate src if onViewportEnter is unavailable', () => {
+    const el = { src: '', alt: '' };
+
+    lazyLoadImage(el, 'https://example.com/photo.jpg');
+    expect(el.src).toBe('https://example.com/photo.jpg');
+  });
+
+  it('does nothing for null/undefined element', () => {
+    expect(() => lazyLoadImage(null, 'url')).not.toThrow();
+    expect(() => lazyLoadImage(undefined, 'url')).not.toThrow();
+  });
+
+  it('does nothing for empty src', () => {
+    const el = {
+      src: '',
+      onViewportEnter: vi.fn(),
+    };
+    lazyLoadImage(el, '');
+    expect(el.onViewportEnter).not.toHaveBeenCalled();
+    expect(el.src).toBe('');
+  });
+
+  it('does nothing for null src', () => {
+    const el = {
+      src: '',
+      onViewportEnter: vi.fn(),
+    };
+    lazyLoadImage(el, null);
+    expect(el.onViewportEnter).not.toHaveBeenCalled();
+  });
+
+  it('handles onViewportEnter throwing gracefully', () => {
+    const el = {
+      src: '',
+      alt: '',
+      onViewportEnter: vi.fn(() => { throw new Error('boom'); }),
+    };
+
+    // Should fall back to immediate loading
+    expect(() => lazyLoadImage(el, 'https://example.com/photo.jpg')).not.toThrow();
+    expect(el.src).toBe('https://example.com/photo.jpg');
+  });
+
+  it('only sets src once even if onViewportEnter fires multiple times', () => {
+    let viewportEnterCb = null;
+    const srcSetter = vi.fn();
+    const el = {
+      _src: '',
+      get src() { return this._src; },
+      set src(v) { this._src = v; srcSetter(v); },
+      alt: '',
+      onViewportEnter: vi.fn(cb => { viewportEnterCb = cb; }),
+    };
+
+    lazyLoadImage(el, 'https://example.com/photo.jpg');
+
+    viewportEnterCb();
+    viewportEnterCb();
+
+    // src setter called once during viewport enter (not for initial empty)
+    const realCalls = srcSetter.mock.calls.filter(c => c[0] === 'https://example.com/photo.jpg');
+    expect(realCalls).toHaveLength(1);
+  });
+});
+
 // ── sharePromise ─────────────────────────────────────────────────────
 
 describe('sharePromise', () => {

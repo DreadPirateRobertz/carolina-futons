@@ -133,6 +133,45 @@ export function createImageObserver(opts = {}) {
   };
 }
 
+// ── lazyLoadImage ────────────────────────────────────────────────────
+// Wix Velo-compatible lazy loading using onViewportEnter.
+// Defers image src assignment until the element scrolls into view.
+
+/**
+ * Lazy-load an image by deferring src assignment until viewport entry.
+ * Uses Wix Velo's onViewportEnter for $w elements. Falls back to
+ * immediate src assignment if onViewportEnter is unavailable.
+ * @param {Object} el - Wix $w image element
+ * @param {string} src - Image URL to load
+ * @param {Object} [opts] - Options
+ * @param {string} [opts.alt] - Alt text to set immediately (before lazy load)
+ * @returns {void}
+ */
+export function lazyLoadImage(el, src, opts = {}) {
+  if (!el || !src) return;
+
+  if (opts.alt) {
+    el.alt = opts.alt;
+  }
+
+  try {
+    if (typeof el.onViewportEnter === 'function') {
+      let loaded = false;
+      el.onViewportEnter(() => {
+        if (!loaded) {
+          loaded = true;
+          el.src = src;
+        }
+      });
+      return;
+    }
+  } catch (e) {
+    // onViewportEnter failed — fall through to immediate load
+  }
+
+  el.src = src;
+}
+
 // ── setImageDimensions ──────────────────────────────────────────────
 // Set explicit dimensions on an image element to prevent CLS.
 

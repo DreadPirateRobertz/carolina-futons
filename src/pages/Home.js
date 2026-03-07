@@ -9,7 +9,7 @@ import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewport
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
-import { prioritizeSections } from 'public/performanceHelpers.js';
+import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
@@ -323,9 +323,15 @@ async function loadSaleHighlights() {
       try { styleCardContainer($item('#saleCard')); } catch (e) {}
       try { initCardHover($item('#saleCard')); } catch (e) {}
 
-      // Product image with placeholder fallback
-      setCardImage($item('#saleImage'), itemData);
-      $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
+      // Lazy-load product image (below-fold section)
+      try {
+        const saleImg = $item('#saleImage');
+        const saleSrc = itemData.mainMedia || '';
+        lazyLoadImage(saleImg, saleSrc, { alt: buildProductAlt(itemData, 'sale') });
+      } catch (e) {
+        setCardImage($item('#saleImage'), itemData);
+        $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
+      }
       $item('#saleName').text = itemData.name;
       try { $item('#saleImage').accessibility.ariaLabel = `View ${itemData.name} on sale`; } catch (e) {}
 
@@ -454,8 +460,15 @@ async function initRecentlyViewed() {
     } catch (e) {}
 
     buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
-      $item('#recentImage').src = itemData.mainMedia;
-      $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
+      // Lazy-load recently viewed images (below-fold section)
+      try {
+        lazyLoadImage($item('#recentImage'), itemData.mainMedia, {
+          alt: `${itemData.name} - Carolina Futons`,
+        });
+      } catch (e) {
+        $item('#recentImage').src = itemData.mainMedia;
+        $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
+      }
       $item('#recentName').text = itemData.name;
       $item('#recentPrice').text = itemData.price;
       try { $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
@@ -583,8 +596,10 @@ async function initTestimonials() {
       try { $item('#testimonialName').text = `— ${itemData.name}`; } catch (e) {}
       try {
         const photoEl = $item('#testimonialPhoto');
-        if (photoEl && itemData.photo) { photoEl.src = itemData.photo; photoEl.show(); }
-        else if (photoEl) { photoEl.hide(); }
+        if (photoEl && itemData.photo) {
+          lazyLoadImage(photoEl, itemData.photo, { alt: `${itemData.name} photo` });
+          photoEl.show();
+        } else if (photoEl) { photoEl.hide(); }
       } catch (e) {}
       try {
         const ratingEl = $item('#testimonialRating');
