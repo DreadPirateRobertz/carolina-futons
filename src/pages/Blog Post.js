@@ -3,6 +3,7 @@
 // reading time, social share buttons, author bio, and related posts
 import { getBlogArticleSchema, getBlogFaqSchema, getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
 import { getGuidePinData } from 'backend/pinterestRichPins.web';
+// eslint-disable-next-line @wix/cli/no-invalid-backend-import
 import { getBlogPost, getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';

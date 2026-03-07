@@ -3,6 +3,7 @@
 // reading time badges, SEO schema, social sharing, and related products sidebar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
+// eslint-disable-next-line @wix/cli/no-invalid-backend-import
 import { getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop, onViewportChange } from 'public/mobileHelpers';
