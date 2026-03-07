@@ -25,6 +25,7 @@ export async function initProductReviews($w, state) {
     // Reset review state on each init to prevent SPA navigation bleed
     state.reviewSort = DEFAULT_SORT;
     state.reviewPage = DEFAULT_PAGE;
+    state.reviewFilterStars = undefined;
 
     // Load aggregate + reviews in parallel
     const { getAggregateRating, getProductReviews } = await import('backend/reviewsService.web');
@@ -40,11 +41,17 @@ export async function initProductReviews($w, state) {
     // Render aggregate rating summary
     renderAggregate($w, aggregate);
 
+    // Inject review schema for SEO
+    injectReviewSchema($w, aggregate, state.product);
+
     // Render reviews list
     renderReviews($w, reviewsResult);
 
     // Sort dropdown
     initSortDropdown($w, state, getProductReviews);
+
+    // Star filter
+    initStarFilter($w, state, getProductReviews);
 
     // Pagination
     initPagination($w, state, reviewsResult, getProductReviews);
@@ -128,6 +135,9 @@ function renderReviews($w, reviewsResult) {
     repeater.expand();
 
     repeater.onItemReady(($item, itemData) => {
+      // Brand-token card styling
+      try { styleReviewCard($item('#reviewCard')); } catch (e) {}
+
       try { $item('#reviewAuthor').text = itemData.authorName; } catch (e) {}
       try { $item('#reviewDate').text = itemData.date; } catch (e) {}
       try { $item('#reviewTitle').text = itemData.title || ''; } catch (e) {}
@@ -161,6 +171,51 @@ function renderReviews($w, reviewsResult) {
           $item('#reviewPhotos').hide();
         }
       } catch (e) {}
+
+      // Owner response
+      try {
+        if (itemData.ownerResponse) {
+          $item('#reviewOwnerResponse').show();
+          try { $item('#reviewOwnerResponse').accessibility.ariaLabel = 'Store response'; } catch (e) {}
+          try { $item('#reviewOwnerResponseText').text = itemData.ownerResponse; } catch (e) {}
+          try { $item('#reviewOwnerResponseDate').text = itemData.ownerResponseDate || ''; } catch (e) {}
+        } else {
+          $item('#reviewOwnerResponse').hide();
+        }
+      } catch (e) {}
+
+      // Report button
+      try {
+        const reportBtn = $item('#reviewReportBtn');
+        if (reportBtn) {
+          try { reportBtn.accessibility.ariaLabel = 'Report this review'; } catch (e) {}
+          reportBtn.onClick(() => {
+            try {
+              const dropdown = $item('#reviewReportDropdown');
+              if (dropdown) {
+                dropdown.options = [
+                  { label: 'Spam', value: 'spam' },
+                  { label: 'Offensive', value: 'offensive' },
+                  { label: 'Fake review', value: 'fake' },
+                  { label: 'Other', value: 'other' },
+                ];
+                dropdown.show();
+                dropdown.onChange(async () => {
+                  try {
+                    const { flagReview } = await import('backend/reviewsService.web');
+                    const result = await flagReview(itemData._id, dropdown.value);
+                    if (result.success) {
+                      reportBtn.disable();
+                      reportBtn.label = 'Reported';
+                      try { dropdown.hide(); } catch (e) {}
+                    }
+                  } catch (e) {}
+                });
+              }
+            } catch (e) {}
+          });
+        }
+      } catch (e) {}
     });
 
     repeater.data = reviewsResult.reviews.map((r, i) => ({ ...r, _id: r._id || `rev-${i}` }));
@@ -186,7 +241,7 @@ function initSortDropdown($w, state, getProductReviews) {
     dropdown.onChange(async () => {
       state.reviewSort = dropdown.value;
       state.reviewPage = 0;
-      const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: 0 });
+      const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: 0, filterStars: state.reviewFilterStars });
       renderReviews($w, result);
       updatePaginationState($w, state, result);
     });
@@ -204,7 +259,7 @@ function initPagination($w, state, initialResult, getProductReviews) {
       try { nextBtn.accessibility.ariaLabel = 'Next page of reviews'; } catch (e) {}
       nextBtn.onClick(async () => {
         state.reviewPage++;
-        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage });
+        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage, filterStars: state.reviewFilterStars });
         renderReviews($w, result);
         updatePaginationState($w, state, result);
       });
@@ -217,7 +272,7 @@ function initPagination($w, state, initialResult, getProductReviews) {
       try { prevBtn.accessibility.ariaLabel = 'Previous page of reviews'; } catch (e) {}
       prevBtn.onClick(async () => {
         state.reviewPage = Math.max(0, state.reviewPage - 1);
-        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage });
+        const result = await getProductReviews(state.product._id, { sort: state.reviewSort, page: state.reviewPage, filterStars: state.reviewFilterStars });
         renderReviews($w, result);
         updatePaginationState($w, state, result);
       });
@@ -239,6 +294,67 @@ function updatePaginationState($w, state, result) {
     $w('#reviewsPageInfo').text = totalPages > 0
       ? `Page ${state.reviewPage + 1} of ${totalPages}`
       : '';
+  } catch (e) {}
+}
+
+// ── Star Filter ──────────────────────────────────────────────────────
+
+function initStarFilter($w, state, getProductReviews) {
+  // "All" button
+  try {
+    const allBtn = $w('#starFilterAll');
+    if (allBtn) {
+      try { allBtn.accessibility.ariaLabel = 'Show all reviews'; } catch (e) {}
+      allBtn.onClick(async () => {
+        state.reviewFilterStars = undefined;
+        state.reviewPage = 0;
+        const result = await getProductReviews(state.product._id, {
+          sort: state.reviewSort, page: 0,
+        });
+        renderReviews($w, result);
+        updatePaginationState($w, state, result);
+      });
+    }
+  } catch (e) {}
+
+  // Star buttons 1-5
+  for (let star = 1; star <= 5; star++) {
+    try {
+      const btn = $w(`#starFilter${star}`);
+      if (!btn) continue;
+      try { btn.accessibility.ariaLabel = `Show ${star} star reviews`; } catch (e) {}
+      btn.onClick(async () => {
+        state.reviewFilterStars = star;
+        state.reviewPage = 0;
+        const result = await getProductReviews(state.product._id, {
+          sort: state.reviewSort, page: 0, filterStars: star,
+        });
+        renderReviews($w, result);
+        updatePaginationState($w, state, result);
+      });
+    } catch (e) {}
+  }
+}
+
+// ── Review Schema Markup ─────────────────────────────────────────────
+
+function injectReviewSchema($w, aggregate, product) {
+  if (!aggregate || aggregate.total === 0) return;
+  try {
+    const schema = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product?.name || '',
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: aggregate.average,
+        bestRating: 5,
+        worstRating: 1,
+        reviewCount: aggregate.total,
+      },
+    });
+    const el = $w('#reviewSchemaMarkup');
+    if (el) el.postMessage(schema);
   } catch (e) {}
 }
 

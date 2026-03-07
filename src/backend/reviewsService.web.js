@@ -50,11 +50,16 @@ export const getProductReviews = webMethod(
     const pid = validateId(productId);
     if (!pid) return { reviews: [], total: 0, page: 0, pageSize: PAGE_SIZE };
 
-    const { sort = 'newest', page = 0 } = options;
+    const { sort = 'newest', page = 0, filterStars } = options;
 
     let query = wixData.query(COLLECTION)
       .eq('productId', pid)
       .eq('status', 'approved');
+
+    // Star filter
+    if (filterStars >= 1 && filterStars <= 5) {
+      query = query.eq('rating', Math.round(filterStars));
+    }
 
     switch (sort) {
       case 'highest':

@@ -6,7 +6,7 @@ import { futonFrame } from './fixtures/products.js';
 const mockAggregate = { average: 4.5, total: 12, breakdown: { 5: 6, 4: 3, 3: 2, 2: 1, 1: 0 } };
 const mockReviews = {
   reviews: [
-    { _id: 'rev-1', authorName: 'Sarah M.', rating: 5, title: 'Great', body: 'Solid build.', photos: [], verifiedPurchase: true, helpful: 3, date: 'January 15, 2026' },
+    { _id: 'rev-1', authorName: 'Sarah M.', rating: 5, title: 'Great', body: 'Solid build.', photos: [], verifiedPurchase: true, helpful: 3, date: 'January 15, 2026', ownerResponse: 'Thank you for your kind words!', ownerResponseDate: 'January 20, 2026' },
     { _id: 'rev-2', authorName: 'Tom B.', rating: 4, title: 'Good', body: 'Nice finish.', photos: ['photo.jpg'], verifiedPurchase: false, helpful: 1, date: 'January 10, 2026' },
   ],
   total: 2,
@@ -30,6 +30,7 @@ vi.mock('backend/reviewsService.web', () => ({
   getProductReviews: vi.fn(async () => mockReviews),
   submitReview: vi.fn(async () => ({ success: true, reviewId: 'new-001' })),
   markHelpful: vi.fn(async () => ({ success: true, helpful: 4 })),
+  flagReview: vi.fn(async () => ({ success: true })),
 }));
 
 function createMockElement() {
@@ -49,6 +50,7 @@ function createMockElement() {
     data: [],
     options: [],
     items: [],
+    postMessage: vi.fn(),
     accessibility: { ariaLabel: '', ariaExpanded: false },
   };
 }
@@ -280,6 +282,37 @@ describe('ProductReviews', () => {
       expect($item('#reviewPhotos').hide).toHaveBeenCalled();
     });
 
+    // ── Owner Response ──────────────────────────────────────────────
+
+    it('shows #reviewOwnerResponse when owner response exists', () => {
+      renderHandler($item, mockReviews.reviews[0]); // has ownerResponse
+      expect($item('#reviewOwnerResponse').show).toHaveBeenCalled();
+      expect($item('#reviewOwnerResponseText').text).toBe('Thank you for your kind words!');
+    });
+
+    it('shows #reviewOwnerResponseDate when owner response exists', () => {
+      renderHandler($item, mockReviews.reviews[0]);
+      expect($item('#reviewOwnerResponseDate').text).toBe('January 20, 2026');
+    });
+
+    it('hides #reviewOwnerResponse when no owner response', () => {
+      renderHandler($item, mockReviews.reviews[1]); // no ownerResponse
+      expect($item('#reviewOwnerResponse').hide).toHaveBeenCalled();
+    });
+
+    it('sets owner response ARIA label', () => {
+      renderHandler($item, mockReviews.reviews[0]);
+      expect($item('#reviewOwnerResponse').accessibility.ariaLabel).toBe('Store response');
+    });
+
+    // ── styleReviewCard ─────────────────────────────────────────────
+
+    it('calls styleReviewCard on each review item container', async () => {
+      const { styleReviewCard } = await import('public/ProductPagePolish.js');
+      renderHandler($item, mockReviews.reviews[0]);
+      expect(styleReviewCard).toHaveBeenCalled();
+    });
+
     it('sets #reviewHelpfulCount text with count', () => {
       renderHandler($item, mockReviews.reviews[0]); // helpful: 3
       expect($item('#reviewHelpfulCount').text).toBe('Helpful (3)');
@@ -369,6 +402,201 @@ describe('ProductReviews', () => {
       await clickHandler();
 
       expect($item('#reviewHelpfulBtn').enable).toHaveBeenCalled();
+    });
+  });
+
+  // ── Star Filter ──────────────────────────────────────────────────────
+
+  describe('star filter', () => {
+    it('sets up star filter buttons for 5 through 1', async () => {
+      await initProductReviews($w, state);
+      for (let star = 1; star <= 5; star++) {
+        expect($w(`#starFilter${star}`).onClick).toHaveBeenCalled();
+      }
+    });
+
+    it('sets up "All" filter button', async () => {
+      await initProductReviews($w, state);
+      expect($w('#starFilterAll').onClick).toHaveBeenCalled();
+    });
+
+    it('re-fetches reviews with filterStars on star click', async () => {
+      const { getProductReviews } = await import('backend/reviewsService.web');
+      await initProductReviews($w, state);
+
+      const clickHandler = $w('#starFilter5').onClick.mock.calls[0][0];
+      await clickHandler();
+
+      expect(getProductReviews).toHaveBeenCalledWith(
+        state.product._id,
+        expect.objectContaining({ filterStars: 5, page: 0 })
+      );
+    });
+
+    it('clears filter on "All" click', async () => {
+      const { getProductReviews } = await import('backend/reviewsService.web');
+      await initProductReviews($w, state);
+
+      // First filter to 5 stars
+      const filter5Handler = $w('#starFilter5').onClick.mock.calls[0][0];
+      await filter5Handler();
+
+      // Then click All
+      const allHandler = $w('#starFilterAll').onClick.mock.calls[0][0];
+      await allHandler();
+
+      expect(getProductReviews).toHaveBeenLastCalledWith(
+        state.product._id,
+        expect.objectContaining({ page: 0 })
+      );
+      // filterStars should be undefined
+      const lastCall = getProductReviews.mock.calls[getProductReviews.mock.calls.length - 1];
+      expect(lastCall[1].filterStars).toBeUndefined();
+    });
+
+    it('resets page to 0 when filtering', async () => {
+      const { getProductReviews } = await import('backend/reviewsService.web');
+      // Use mockResolvedValueOnce to avoid bleeding into subsequent tests
+      getProductReviews.mockResolvedValueOnce(mockReviews); // init
+      getProductReviews.mockResolvedValueOnce({ reviews: mockReviews.reviews, total: 25, page: 1, pageSize: 10 }); // next
+      getProductReviews.mockResolvedValueOnce({ reviews: mockReviews.reviews, total: 25, page: 0, pageSize: 10 }); // filter
+
+      await initProductReviews($w, state);
+
+      // Navigate to page 1
+      const nextHandler = $w('#reviewsNextBtn').onClick.mock.calls[0][0];
+      await nextHandler();
+
+      // Filter by 4 stars
+      const filter4Handler = $w('#starFilter4').onClick.mock.calls[0][0];
+      await filter4Handler();
+
+      expect(getProductReviews).toHaveBeenLastCalledWith(
+        state.product._id,
+        expect.objectContaining({ filterStars: 4, page: 0 })
+      );
+    });
+
+    it('sets ARIA labels on star filter buttons', async () => {
+      await initProductReviews($w, state);
+      expect($w('#starFilter5').accessibility.ariaLabel).toBe('Show 5 star reviews');
+      expect($w('#starFilterAll').accessibility.ariaLabel).toBe('Show all reviews');
+    });
+  });
+
+  // ── Flag/Report Review ───────────────────────────────────────────────
+
+  describe('flag/report review', () => {
+    let $item;
+    let renderHandler;
+
+    beforeEach(async () => {
+      await initProductReviews($w, state);
+      const repeater = $w('#reviewsRepeater');
+      renderHandler = repeater.onItemReady.mock.calls[0][0];
+      $item = create$w();
+    });
+
+    it('sets up report button on each review', () => {
+      renderHandler($item, mockReviews.reviews[0]);
+      expect($item('#reviewReportBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('shows reason dropdown on report click', () => {
+      renderHandler($item, mockReviews.reviews[0]);
+      const clickHandler = $item('#reviewReportBtn').onClick.mock.calls[0][0];
+      clickHandler();
+      expect($item('#reviewReportDropdown').show).toHaveBeenCalled();
+    });
+
+    it('calls flagReview with reason on dropdown change', async () => {
+      const { flagReview } = await import('backend/reviewsService.web');
+      renderHandler($item, mockReviews.reviews[0]);
+
+      const clickHandler = $item('#reviewReportBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      $item('#reviewReportDropdown').value = 'spam';
+      const changeHandler = $item('#reviewReportDropdown').onChange.mock.calls[0][0];
+      await changeHandler();
+
+      expect(flagReview).toHaveBeenCalledWith('rev-1', 'spam');
+    });
+
+    it('disables report button after successful flag', async () => {
+      renderHandler($item, mockReviews.reviews[0]);
+
+      const clickHandler = $item('#reviewReportBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      $item('#reviewReportDropdown').value = 'offensive';
+      const changeHandler = $item('#reviewReportDropdown').onChange.mock.calls[0][0];
+      await changeHandler();
+
+      expect($item('#reviewReportBtn').disable).toHaveBeenCalled();
+    });
+
+    it('shows confirmation text after flagging', async () => {
+      renderHandler($item, mockReviews.reviews[0]);
+
+      const clickHandler = $item('#reviewReportBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      $item('#reviewReportDropdown').value = 'fake';
+      const changeHandler = $item('#reviewReportDropdown').onChange.mock.calls[0][0];
+      await changeHandler();
+
+      expect($item('#reviewReportBtn').label).toBe('Reported');
+    });
+
+    it('sets ARIA label on report button', () => {
+      renderHandler($item, mockReviews.reviews[0]);
+      expect($item('#reviewReportBtn').accessibility.ariaLabel).toBe('Report this review');
+    });
+
+    it('handles flag failure gracefully', async () => {
+      const { flagReview } = await import('backend/reviewsService.web');
+      flagReview.mockResolvedValueOnce({ success: false, error: 'Failed' });
+
+      renderHandler($item, mockReviews.reviews[0]);
+
+      const clickHandler = $item('#reviewReportBtn').onClick.mock.calls[0][0];
+      clickHandler();
+
+      $item('#reviewReportDropdown').value = 'spam';
+      const changeHandler = $item('#reviewReportDropdown').onChange.mock.calls[0][0];
+      await changeHandler();
+
+      // Should NOT disable button on failure
+      expect($item('#reviewReportBtn').disable).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Review Schema Markup ─────────────────────────────────────────────
+
+  describe('review schema markup', () => {
+    it('injects JSON-LD AggregateRating into #reviewSchemaMarkup', async () => {
+      await initProductReviews($w, state);
+      const schemaEl = $w('#reviewSchemaMarkup');
+      expect(schemaEl.postMessage).toHaveBeenCalled();
+    });
+
+    it('includes correct aggregate values in schema', async () => {
+      await initProductReviews($w, state);
+      const schemaEl = $w('#reviewSchemaMarkup');
+      const schemaArg = schemaEl.postMessage.mock.calls[0][0];
+      expect(schemaArg).toContain('"ratingValue":4.5');
+      expect(schemaArg).toContain('"reviewCount":12');
+      expect(schemaArg).toContain('"AggregateRating"');
+    });
+
+    it('skips schema when no reviews', async () => {
+      const { getAggregateRating } = await import('backend/reviewsService.web');
+      getAggregateRating.mockResolvedValueOnce({ average: 0, total: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } });
+
+      await initProductReviews($w, state);
+      const schemaEl = $w('#reviewSchemaMarkup');
+      expect(schemaEl.postMessage).not.toHaveBeenCalled();
     });
   });
 
