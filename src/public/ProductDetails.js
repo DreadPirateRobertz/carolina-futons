@@ -370,7 +370,7 @@ export function initSwatchCTA($w, state) {
     const hasFabricOptions = state.product.productOptions?.some(opt => /finish|fabric|color|cover/i.test(opt.name));
     btn.label = hasFabricOptions ? 'Get Free Swatches' : 'Request Free Swatches';
     try { btn.style.backgroundColor = colors.sunsetCoral; } catch (e) {}
-    try { btn.style.color = colors.white; } catch (e) {}
+    try { btn.style.color = colors.espresso; } catch (e) {}
     try { btn.accessibility.ariaLabel = 'Request free fabric swatches shipped to your door'; } catch (e) {}
     btn.show();
     btn.onClick(() => openSwatchModal($w, state));

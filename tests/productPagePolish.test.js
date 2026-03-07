@@ -134,9 +134,9 @@ describe('Sticky Cart Bar Styling', () => {
     expect($w('#stickyAddBtn').style.backgroundColor).toBe(colors.sunsetCoral);
   });
 
-  it('applies white text to CTA button', () => {
+  it('applies espresso text to CTA button for WCAG AA contrast', () => {
     styleStickyCartBar($w);
-    expect($w('#stickyAddBtn').style.color).toBe(colors.white);
+    expect($w('#stickyAddBtn').style.color).toBe(colors.espresso);
   });
 
   it('applies warm shadow to bar', () => {
@@ -389,7 +389,7 @@ describe('applyProductPageTokens', () => {
   it('applies coral color to all CTA buttons', () => {
     applyProductPageTokens($w);
     expect($w('#addToCartButton').style.backgroundColor).toBe(colors.sunsetCoral);
-    expect($w('#addToCartButton').style.color).toBe(colors.white);
+    expect($w('#addToCartButton').style.color).toBe(colors.espresso);
   });
 
   it('styles wishlist button with Mountain Blue', () => {

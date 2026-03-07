@@ -297,6 +297,7 @@ export function applyFooterStyles($w) {
 
     // Newsletter submit button: coral
     try { $w('#footerEmailSubmit').style.backgroundColor = colors.sunsetCoral; } catch (e) {}
+    try { $w('#footerEmailSubmit').style.color = colors.espresso; } catch (e) {}
 
     // Link repeaters: mountainBlue default, coral on hover
     const linkRepeaters = ['#footerShopRepeater', '#footerServiceRepeater', '#footerAboutRepeater'];

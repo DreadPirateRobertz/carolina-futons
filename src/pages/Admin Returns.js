@@ -484,7 +484,7 @@ async function handleProcessRefund() {
       try {
         $w('#refundError').text = validation.errors[0];
         $w('#refundError').show('fade', { duration: 200 });
-        $w('#refundError').style.color = colors.sunsetCoral;
+        $w('#refundError').style.color = colors.error;
       } catch (e) {}
       return;
     }
@@ -504,7 +504,7 @@ async function handleProcessRefund() {
       try {
         $w('#refundError').text = result.error || 'Failed to process refund.';
         $w('#refundError').show('fade', { duration: 200 });
-        $w('#refundError').style.color = colors.sunsetCoral;
+        $w('#refundError').style.color = colors.error;
       } catch (e) {}
     }
   } catch (err) {
@@ -546,7 +546,7 @@ function showError(message) {
   try {
     $w('#dashboardError').text = message;
     $w('#dashboardError').show('fade', { duration: 200 });
-    $w('#dashboardError').style.color = colors.sunsetCoral;
+    $w('#dashboardError').style.color = colors.error;
     announce($w, message);
   } catch (e) {}
 }

@@ -138,11 +138,11 @@ describe('getBadgeColor', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('styleBadge', () => {
-  it('applies coral bg and white text for Sale badge', () => {
+  it('applies coral bg and espresso text for Sale badge (WCAG AA)', () => {
     const el = mockElement();
     styleBadge(el, 'Sale');
     expect(el.style.backgroundColor).toBe('#E8845C');
-    expect(el.style.color).toBe('#FFFFFF');
+    expect(el.style.color).toBe('#3A2518');
   });
 
   it('applies mountainBlue bg and white text for New badge', () => {

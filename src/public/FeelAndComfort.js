@@ -83,7 +83,7 @@ export async function initFeelAndComfort($w, state) {
         const cta = $w('#feelSwatchCTA');
         cta.label = "Can't decide? Get free swatches";
         try { cta.style.backgroundColor = colors.sunsetCoral; } catch (e) {}
-        try { cta.style.color = colors.white; } catch (e) {}
+        try { cta.style.color = colors.espresso; } catch (e) {}
         try { cta.accessibility.ariaLabel = 'Request free fabric swatches shipped to your door'; } catch (e) {}
         cta.show();
         cta.onClick(() => {

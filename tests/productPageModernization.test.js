@@ -174,13 +174,13 @@ describe('CF-isru: Prominent Swatch CTA', () => {
     expect(btn.show).toHaveBeenCalled();
   });
 
-  it('applies brand styling to swatch CTA (coral bg, white text)', () => {
+  it('applies brand styling to swatch CTA (coral bg, espresso text for WCAG AA)', () => {
     const state = { product: { name: 'Eureka', productOptions: [{ name: 'Fabric' }] } };
     initSwatchCTA($w, state);
 
     const btn = $w._elements['#swatchCTABtn'];
     expect(btn.style.backgroundColor).toBe('#E8845C');
-    expect(btn.style.color).toBe('#FFFFFF');
+    expect(btn.style.color).toBe('#3A2518');
   });
 
   it('sets ARIA label on swatch CTA', () => {
