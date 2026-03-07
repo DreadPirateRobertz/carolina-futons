@@ -994,10 +994,10 @@ function dismissNewsletterModal() {
 
 function initMountainSkylineHeader() {
   try {
-    import('public/MountainSkyline.js').then(({ initMountainSkyline }) => {
-      initMountainSkyline($w, { variant: 'silhouette', containerId: '#headerSkyline' });
+    import('public/MountainSkylineFigma.js').then(({ initMountainSkylineFigma }) => {
+      initMountainSkylineFigma($w, { containerId: '#headerSkyline' });
     }).catch(() => {
-      // MountainSkyline module not yet available — silently skip
+      // MountainSkylineFigma module not yet available — silently skip
     });
   } catch (e) {
     // Non-critical decorative element
