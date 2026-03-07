@@ -171,6 +171,56 @@ describe('injectPinterestMeta — Pinterest Rich Pin injection', () => {
     expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:retailer_item_id', 'EUR-FRM-001');
   });
 
+  it('overrides product:availability with Pinterest format (instock/oos)', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockReturnValueOnce({
+      success: true,
+      meta: {
+        'pinterest:description': 'Test',
+        'pinterest-rich-pin': 'true',
+        'product:availability': 'instock',
+      },
+    });
+
+    await injectPinterestMeta(futonFrame);
+
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:availability', 'instock');
+  });
+
+  it('sets oos availability for out-of-stock products', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockReturnValueOnce({
+      success: true,
+      meta: {
+        'pinterest:description': 'Test',
+        'pinterest-rich-pin': 'true',
+        'product:availability': 'oos',
+      },
+    });
+
+    await injectPinterestMeta({ ...futonFrame, inStock: false });
+
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:availability', 'oos');
+  });
+
+  it('sets sale price tags when present', async () => {
+    const { getProductPinData } = await import('backend/pinterestRichPins.web');
+    getProductPinData.mockReturnValueOnce({
+      success: true,
+      meta: {
+        'pinterest:description': 'Test',
+        'pinterest-rich-pin': 'true',
+        'product:sale_price:amount': '449.99',
+        'product:sale_price:currency': 'USD',
+      },
+    });
+
+    await injectPinterestMeta(futonFrame);
+
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:sale_price:amount', '449.99');
+    expect(mockHead.setMetaTag).toHaveBeenCalledWith('product:sale_price:currency', 'USD');
+  });
+
   it('does nothing when pin data returns failure', async () => {
     const { getProductPinData } = await import('backend/pinterestRichPins.web');
     getProductPinData.mockReturnValueOnce({ success: false, meta: null });
