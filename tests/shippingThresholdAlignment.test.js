@@ -72,34 +72,29 @@ describe('Threshold alignment — content files match sharedTokens', () => {
     expect(regionalWhiteGlove.price).toBe(WHITE_GLOVE_REGIONAL);
   });
 
-  it('faq.json shipping answer says free standard at $999', () => {
-    const shippingFaq = findFaqByKeyword(faqContent, 'free shipping');
-    expect(shippingFaq, 'No FAQ about free shipping found').toBeDefined();
-    // Should mention $999 for standard, $1,999 only for white-glove context
-    expect(shippingFaq.answer).toContain('$999');
-  });
-
-  it('faq.json shipping answer does not claim standard shipping free at $1,999', () => {
-    const shippingFaq = findFaqByKeyword(faqContent, 'free shipping');
-    if (!shippingFaq) return; // covered by prior test
-    // The answer should NOT say "free standard shipping on orders over $1,999"
+  it('faq.json shipping cost answer does NOT claim free shipping (disabled)', () => {
+    const shippingFaq = findFaqByKeyword(faqContent, 'shipping cost');
+    expect(shippingFaq, 'No FAQ about shipping cost found').toBeDefined();
     const lower = shippingFaq.answer.toLowerCase();
-    const claimsStandardAt1999 = lower.includes('free standard shipping on orders over $1,999') ||
-      lower.includes('free shipping on orders over $1,999');
-    expect(claimsStandardAt1999, 'FAQ incorrectly says standard shipping free at $1,999').toBe(false);
+    expect(lower, 'FAQ should not claim free shipping').not.toContain('free shipping');
+    expect(lower, 'FAQ should not claim free delivery').not.toContain('free delivery');
+    expect(lower, 'FAQ should not claim free white-glove').not.toContain('free white-glove');
   });
 
-  it('category-descriptions.json shipping references say $999 not $1,999', () => {
+  it('faq.json shipping cost answer mentions zone-based rates', () => {
+    const shippingFaq = findFaqByKeyword(faqContent, 'shipping cost');
+    if (!shippingFaq) return; // covered by prior test
+    expect(shippingFaq.answer).toContain('$29.99');
+    expect(shippingFaq.answer).toContain('$149');
+    expect(shippingFaq.answer).toContain('$249');
+  });
+
+  it('category-descriptions.json does NOT claim free shipping (disabled)', () => {
     const allDescriptions = getAllCategoryText(categoryDescriptions);
-    const shippingMentions = allDescriptions.filter(
+    const freeShippingMentions = allDescriptions.filter(
       t => /free shipping/i.test(t)
     );
-    for (const text of shippingMentions) {
-      // Any "free shipping over $X" should use $999
-      if (/free shipping over \$[\d,]+/i.test(text)) {
-        expect(text, `Category text has wrong threshold: "${text}"`).toMatch(/free shipping over \$999/i);
-      }
-    }
+    expect(freeShippingMentions, 'Category descriptions should not mention free shipping').toHaveLength(0);
   });
 });
 
