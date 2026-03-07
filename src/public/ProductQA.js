@@ -47,6 +47,9 @@ export async function initProductQA($w, state) {
     // Pagination
     initLoadMore($w, productId, questions.length, totalCount, pageSize, currentPage);
 
+    // Search input
+    initSearchInput($w, productId);
+
     // Submit form
     initSubmitForm($w, state, productId);
 
@@ -200,6 +203,35 @@ function initLoadMore($w, productId, loadedCount, totalCount, pageSize, currentP
         loadMoreBtn.enable();
         loadMoreBtn.label = 'Load More Questions';
       }
+    });
+  } catch (e) {}
+}
+
+// ── Search Input ─────────────────────────────────────────────────────
+
+function initSearchInput($w, productId) {
+  try {
+    const input = $w('#qaSearchInput');
+    if (!input) return;
+
+    try { input.accessibility.ariaLabel = 'Search questions about this product'; } catch (e) {}
+
+    let debounceTimer = null;
+
+    input.onInput(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        try {
+          const searchText = (input.value || '').trim();
+          const opts = searchText ? { searchText } : {};
+          const result = await getProductQuestions(productId, opts);
+
+          if (result.success) {
+            renderCount($w, result.data.totalCount);
+            renderQuestions($w, result.data.questions);
+          }
+        } catch (e) {}
+      }, 300);
     });
   } catch (e) {}
 }

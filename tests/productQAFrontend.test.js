@@ -71,6 +71,7 @@ function createMockElement() {
     disable: vi.fn(),
     onClick: vi.fn(),
     onChange: vi.fn(),
+    onInput: vi.fn(),
     onKeyPress: vi.fn(),
     onItemReady: vi.fn(),
     data: [],
@@ -467,6 +468,68 @@ describe('ProductQA — initProductQA', () => {
 
     expect($w('#qaFormError').show).toHaveBeenCalled();
     expect($w('#qaSubmitBtn').enable).toHaveBeenCalled();
+  });
+
+  // ── Search/filter questions ──────────────────────────────────────
+
+  it('registers search input handler', async () => {
+    await initProductQA($w, state);
+    expect($w('#qaSearchInput').onInput).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on search input', async () => {
+    await initProductQA($w, state);
+    expect($w('#qaSearchInput').accessibility.ariaLabel).toBeTruthy();
+  });
+
+  it('filters questions by search text and re-renders', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = 'mattress';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(mockGetProductQuestions).toHaveBeenCalledWith(
+      futonFrame._id,
+      expect.objectContaining({ searchText: 'mattress' })
+    );
+    vi.useRealTimers();
+  });
+
+  it('resets to full list when search input is cleared', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = '';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    // Should call without searchText (empty object)
+    const lastCall = mockGetProductQuestions.mock.calls[mockGetProductQuestions.mock.calls.length - 1];
+    expect(!lastCall[1]?.searchText || lastCall[1].searchText === '').toBe(true);
+    vi.useRealTimers();
+  });
+
+  it('trims search input before querying', async () => {
+    vi.useFakeTimers();
+    await initProductQA($w, state);
+
+    const inputHandler = $w('#qaSearchInput').onInput.mock.calls[0][0];
+
+    $w('#qaSearchInput').value = '  color  ';
+    inputHandler();
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(mockGetProductQuestions).toHaveBeenCalledWith(
+      futonFrame._id,
+      expect.objectContaining({ searchText: 'color' })
+    );
+    vi.useRealTimers();
   });
 
   // ── Accessibility ────────────────────────────────────────────────

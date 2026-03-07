@@ -165,6 +165,14 @@ export const getProductQuestions = webMethod(Permissions.Anyone, async (productI
       query = query.eq('status', 'answered');
     }
 
+    // Text search in question field
+    if (opts.searchText && typeof opts.searchText === 'string') {
+      const searchTerm = sanitize(opts.searchText, 100).toLowerCase();
+      if (searchTerm) {
+        query = query.contains('question', searchTerm);
+      }
+    }
+
     query = query.descending('helpfulVotes')
       .skip((page - 1) * pageSize)
       .limit(pageSize);

@@ -182,6 +182,39 @@ describe('getProductQuestions', () => {
     const result = await getProductQuestions('product-1');
     expect(result.data.questions).toHaveLength(0);
   });
+
+  it('filters questions by searchText (case-insensitive match in question field)', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Does this come with a mattress?', status: 'answered', helpfulVotes: 5 },
+      { _id: 'q-2', productId: 'product-1', question: 'What colors are available?', status: 'pending', helpfulVotes: 2 },
+      { _id: 'q-3', productId: 'product-1', question: 'Is assembly required?', status: 'answered', helpfulVotes: 1 },
+    ]);
+
+    const result = await getProductQuestions('product-1', { searchText: 'mattress' });
+    expect(result.success).toBe(true);
+    expect(result.data.questions).toHaveLength(1);
+    expect(result.data.questions[0].question).toContain('mattress');
+  });
+
+  it('returns all questions when searchText is empty', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Q1?', status: 'answered', helpfulVotes: 0 },
+      { _id: 'q-2', productId: 'product-1', question: 'Q2?', status: 'pending', helpfulVotes: 0 },
+    ]);
+
+    const result = await getProductQuestions('product-1', { searchText: '' });
+    expect(result.data.questions).toHaveLength(2);
+  });
+
+  it('searchText is sanitized', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Normal question?', status: 'pending', helpfulVotes: 0 },
+    ]);
+
+    // Even with XSS in search, it should not break — sanitize strips tags
+    const result = await getProductQuestions('product-1', { searchText: '<script>alert("x")</script>' });
+    expect(result.success).toBe(true);
+  });
 });
 
 // ── voteHelpful ──────────────────────────────────────────────────────
