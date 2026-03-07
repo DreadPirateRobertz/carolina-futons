@@ -9,7 +9,7 @@ import {
   HEART_FILLED_SVG,
   HEART_OUTLINE_SVG,
 } from '../src/public/productPageUtils.js';
-import { futonFrame, wallHuggerFrame, futonMattress, murphyBed, casegoodsItem } from './fixtures/products.js';
+import { futonFrame, wallHuggerFrame, futonMattress, murphyBed, casegoodsItem, unfinishedFrame, otisMattress, arizonaFrame } from './fixtures/products.js';
 
 describe('productPageUtils', () => {
   describe('formatCurrency', () => {
@@ -31,8 +31,20 @@ describe('productPageUtils', () => {
       expect(detectProductBrand(wallHuggerFrame)).toBe('Strata Furniture');
     });
 
-    it('detects Otis Bed for mattress', () => {
+    it('detects KD Frames for unfinished collection', () => {
+      expect(detectProductBrand(unfinishedFrame)).toBe('KD Frames');
+    });
+
+    it('detects Otis Bed for mattress collection', () => {
       expect(detectProductBrand(futonMattress)).toBe('Otis Bed');
+    });
+
+    it('detects Otis Bed for otis collection', () => {
+      expect(detectProductBrand(otisMattress)).toBe('Otis Bed');
+    });
+
+    it('detects Arizona brand', () => {
+      expect(detectProductBrand(arizonaFrame)).toBe('Arizona');
     });
 
     it('defaults to Night & Day Furniture', () => {
@@ -41,6 +53,18 @@ describe('productPageUtils', () => {
 
     it('returns empty string when no collections', () => {
       expect(detectProductBrand({})).toBe('');
+    });
+
+    it('returns empty string for null product', () => {
+      expect(detectProductBrand(null)).toBe('');
+    });
+
+    it('returns empty string for undefined product', () => {
+      expect(detectProductBrand(undefined)).toBe('');
+    });
+
+    it('handles single string collection (non-array)', () => {
+      expect(detectProductBrand({ collections: 'wall-hugger-frames' })).toBe('Strata Furniture');
     });
   });
 

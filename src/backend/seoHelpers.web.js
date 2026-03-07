@@ -9,6 +9,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { getBlogFaqs } from 'backend/blogContent';
+import { detectProductBrand } from 'public/productPageUtils.js';
 
 const BUSINESS_INFO = {
   name: 'Carolina Futons',
@@ -62,7 +63,7 @@ export const getProductSchema = webMethod(
 
     const slug = typeof product.slug === 'string' ? product.slug : '';
     const productUrl = `${BUSINESS_INFO.url}/product-page/${slug}`;
-    const brand = getBrandName(product);
+    const brand = detectProductBrand(product);
     const category = getCategoryLabel(product);
 
     const schema = {
@@ -421,7 +422,7 @@ export const getProductFaqSchema = webMethod(
     if (!product) return null;
 
     const category = getCategoryLabel(product);
-    const brand = getBrandName(product);
+    const brand = detectProductBrand(product);
     const faqs = [];
 
     // Return policy — universal
@@ -524,7 +525,7 @@ export const generateAltText = webMethod(
   (product, imageType = 'main') => {
     if (!product) return '';
 
-    const brand = getBrandName(product);
+    const brand = detectProductBrand(product);
     const category = getCategoryLabel(product);
     const material = detectMaterial(product);
     const finish = product.options?.finish || product.options?.color || '';
@@ -604,21 +605,6 @@ export const getCategoryMetaDescription = webMethod(
     return descriptions[categorySlug] || 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.';
   }
 );
-
-// Helper: determine brand from product data
-function getBrandName(product) {
-  if (!product || !product.collections) return '';
-
-  const collections = Array.isArray(product.collections)
-    ? product.collections
-    : [product.collections];
-
-  if (collections.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
-  if (collections.some(c => c.includes('unfinished'))) return 'KD Frames';
-  if (collections.some(c => c.includes('otis') || c.includes('mattress'))) return 'Otis Bed';
-  if (collections.some(c => c.includes('arizona'))) return 'Arizona';
-  return 'Night & Day Furniture';
-}
 
 // Helper: get human-readable category label
 function getCategoryLabel(product) {
@@ -712,7 +698,7 @@ export const getProductOgTags = webMethod(
     const image = product.mainMedia || '';
     const url = `https://www.carolinafutons.com/product-page/${product.slug || ''}`;
     const price = product.price || 0;
-    const brand = getBrandName(product);
+    const brand = detectProductBrand(product);
 
     return JSON.stringify({
       'og:type': 'product',

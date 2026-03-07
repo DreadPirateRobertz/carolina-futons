@@ -40,12 +40,19 @@ export function buildGridAlt(product) {
   return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
 }
 
+/**
+ * Detect product brand from collections. Canonical brand detection — all other
+ * copies (productSchema, seoHelpers) should import this function.
+ * @param {Object|null|undefined} product - Wix product object
+ * @returns {string} Brand name, or empty string if undetectable
+ */
 export function detectProductBrand(product) {
-  if (!product.collections) return '';
+  if (!product || !product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
   if (colls.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
   if (colls.some(c => c.includes('unfinished'))) return 'KD Frames';
-  if (colls.some(c => c.includes('mattress'))) return 'Otis Bed';
+  if (colls.some(c => c.includes('otis') || c.includes('mattress'))) return 'Otis Bed';
+  if (colls.some(c => c.includes('arizona'))) return 'Arizona';
   return 'Night & Day Furniture';
 }
 
