@@ -5,8 +5,8 @@
 import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
 import { cacheProduct } from 'public/productCache';
-import { trackProductPageView } from 'public/engagementTracker';
-import { fireViewContent } from 'public/ga4Tracking';
+// engagementTracker and ga4Tracking are dynamically imported in deferred sections
+// to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
@@ -69,8 +69,6 @@ async function initProductPage() {
 
     trackProductView(state.product);
     cacheProduct(state.product);
-    trackProductPageView(state.product);
-    fireViewContent(state.product);
 
     // Mountain skyline SVG border — gradient variant for product hero
     try {
@@ -113,6 +111,8 @@ async function initProductPage() {
       { name: 'collapseOnMobile', init: () => collapseOnMobile($w, ['#recentlyViewedSection', '#relatedSection', '#alsoBoughtSection']), critical: false },
       { name: 'backToTop', init: () => initBackToTop($w), critical: false },
       { name: 'browseTracking', init: () => initBrowseTrackingModule($w, state, _browseState), critical: false },
+      { name: 'engagementTracking', init: async () => { const m = await import('public/engagementTracker'); m.trackProductPageView(state.product); }, critical: false },
+      { name: 'ga4Tracking', init: async () => { const m = await import('public/ga4Tracking'); m.fireViewContent(state.product); }, critical: false },
       // Cross-sell sections (below fold, backend calls)
       { name: 'relatedProducts', init: loadRelatedProducts, critical: false },
       { name: 'collectionProducts', init: loadCollectionProducts, critical: false },
