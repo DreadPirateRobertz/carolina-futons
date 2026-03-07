@@ -145,7 +145,8 @@ export const answerQuestion = webMethod(Permissions.Admin, async (questionId, an
 /**
  * Returns paginated Q&A for a product. Public-facing.
  * @param {string} productId - Product ID
- * @param {Object} opts - { page, pageSize, answeredOnly }
+ * @param {Object} opts - { page, pageSize, answeredOnly, searchText }
+ * @param {string} [opts.searchText] - Filter questions containing this text (sanitized, case-insensitive)
  */
 export const getProductQuestions = webMethod(Permissions.Anyone, async (productId, opts = {}) => {
   try {

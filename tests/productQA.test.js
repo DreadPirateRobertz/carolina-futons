@@ -206,14 +206,48 @@ describe('getProductQuestions', () => {
     expect(result.data.questions).toHaveLength(2);
   });
 
-  it('searchText is sanitized', async () => {
+  it('searchText is sanitized and does not match stripped tags', async () => {
     __seed('ProductQuestions', [
-      { _id: 'q-1', productId: 'product-1', question: 'Normal question?', status: 'pending', helpfulVotes: 0 },
+      { _id: 'q-1', productId: 'product-1', question: 'Normal question about scripts?', status: 'pending', helpfulVotes: 0 },
     ]);
 
-    // Even with XSS in search, it should not break — sanitize strips tags
     const result = await getProductQuestions('product-1', { searchText: '<script>alert("x")</script>' });
     expect(result.success).toBe(true);
+    // Sanitized search should not match — raw HTML tags are stripped
+    expect(result.data.questions.every(q => !q.question.includes('<script>'))).toBe(true);
+  });
+
+  it('searchText combined with answeredOnly filter', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Does this come with a mattress?', status: 'answered', helpfulVotes: 5 },
+      { _id: 'q-2', productId: 'product-1', question: 'Is the mattress comfortable?', status: 'pending', helpfulVotes: 2 },
+    ]);
+
+    const result = await getProductQuestions('product-1', { searchText: 'mattress', answeredOnly: true });
+    expect(result.success).toBe(true);
+    expect(result.data.questions).toHaveLength(1);
+    expect(result.data.questions[0].status).toBe('answered');
+  });
+
+  it('ignores non-string searchText values', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Q1?', status: 'pending', helpfulVotes: 0 },
+    ]);
+
+    const result = await getProductQuestions('product-1', { searchText: 12345 });
+    expect(result.success).toBe(true);
+    // Non-string searchText should be ignored, returning all questions
+    expect(result.data.questions).toHaveLength(1);
+  });
+
+  it('ignores null searchText', async () => {
+    __seed('ProductQuestions', [
+      { _id: 'q-1', productId: 'product-1', question: 'Q1?', status: 'pending', helpfulVotes: 0 },
+    ]);
+
+    const result = await getProductQuestions('product-1', { searchText: null });
+    expect(result.success).toBe(true);
+    expect(result.data.questions).toHaveLength(1);
   });
 });
 

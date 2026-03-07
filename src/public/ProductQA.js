@@ -209,6 +209,13 @@ function initLoadMore($w, productId, loadedCount, totalCount, pageSize, currentP
 
 // ── Search Input ─────────────────────────────────────────────────────
 
+/**
+ * Initialize the search/filter input for Q&A questions.
+ * Debounces input (300ms), queries backend with searchText, re-renders
+ * the question list and resets pagination on each search.
+ * @param {Function} $w - Wix selector function.
+ * @param {string} productId - Product ID to search questions for.
+ */
 function initSearchInput($w, productId) {
   try {
     const input = $w('#qaSearchInput');
@@ -229,11 +236,29 @@ function initSearchInput($w, productId) {
           if (result.success) {
             renderCount($w, result.data.totalCount);
             renderQuestions($w, result.data.questions);
+            // Reset pagination — search results start from page 1
+            initLoadMore(
+              $w, productId,
+              result.data.questions.length,
+              result.data.totalCount,
+              result.data.pageSize,
+              1
+            );
+          } else {
+            console.error('[ProductQA] Search failed:', result.error);
           }
-        } catch (e) {}
+        } catch (err) {
+          console.error('[ProductQA] Search error:', err.message);
+          try {
+            $w('#qaSearchError').text = 'Search failed. Please try again.';
+            $w('#qaSearchError').show('fade', { duration: 200 });
+          } catch (e) {}
+        }
       }, 300);
     });
-  } catch (e) {}
+  } catch (err) {
+    console.error('[ProductQA] initSearchInput failed:', err.message);
+  }
 }
 
 // ── Submit Question Form ─────────────────────────────────────────────
