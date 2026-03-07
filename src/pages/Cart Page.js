@@ -29,6 +29,7 @@ import {
 } from 'public/cartStyles.js';
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 import { saveForLater } from 'public/SaveForLater.js';
+import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -66,6 +67,7 @@ async function initCartPage() {
     updateShippingProgressFromCart(cart);
     updateTierProgressFromCart(cart);
     updateCartFinancingFromCart(cart);
+    initCartDeliveryEstimate($w, cart);
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     initQuantityControls();
@@ -106,6 +108,7 @@ function showEmptyCart() {
     try { $w('#shippingProgressText').hide(); } catch (e) {}
     try { $w('#tierProgressBar').hide(); } catch (e) {}
     try { $w('#tierProgressText').hide(); } catch (e) {}
+    try { $w('#cartDeliverySection').collapse(); } catch (e) {}
   } catch (e) {}
 }
 
@@ -495,6 +498,7 @@ function initCartListeners() {
         updateShippingProgress(cart);
         updateTierProgress(cart);
         updateCartFinancing(cart);
+        updateCartDeliveryEstimate($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
       } catch (e) {}
@@ -526,5 +530,6 @@ async function refreshCartTotals() {
     }
     await updateShippingProgress();
     await updateCartFinancing();
+    await updateCartDeliveryEstimate($w, currentCart);
   } catch (e) {}
 }

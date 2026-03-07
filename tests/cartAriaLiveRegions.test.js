@@ -69,6 +69,11 @@ vi.mock('public/SaveForLater.js', () => ({
   saveForLater: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('public/cartDeliveryEstimate.js', () => ({
+  initCartDeliveryEstimate: vi.fn().mockResolvedValue(),
+  updateCartDeliveryEstimate: vi.fn().mockResolvedValue(),
+}));
+
 vi.mock('public/touchHelpers', () => ({
   enableSwipe: vi.fn(),
 }));
