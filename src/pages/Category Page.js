@@ -412,6 +412,7 @@ function initFilterControls() {
   try {
     const clearHandler = () => {
       currentFilters = {};
+      if (_basicFilterTimer) { clearTimeout(_basicFilterTimer); _basicFilterTimer = null; }
       try { $w('#filterBrand').value = ''; } catch (e) {}
       try { $w('#filterPrice').value = ''; } catch (e) {}
       try { $w('#filterSize').value = ''; } catch (e) {}
@@ -423,6 +424,10 @@ function initFilterControls() {
   } catch (e) {}
 }
 
+/**
+ * Debounced wrapper for applyFilters — coalesces rapid basic filter changes.
+ * Uses 300ms delay matching advanced filter debounce.
+ */
 function debouncedApplyFilters() {
   if (_basicFilterTimer) clearTimeout(_basicFilterTimer);
   _basicFilterTimer = setTimeout(() => {
@@ -494,9 +499,14 @@ function initProductGrid() {
     try {
       const allProductIds = (repeater.data || []).map(p => p._id).filter(Boolean);
       if (allProductIds.length > 0) {
-        _ratingsMapPromise = batchLoadRatings(allProductIds).catch(() => ({}));
+        _ratingsMapPromise = batchLoadRatings(allProductIds).catch((e) => {
+          console.warn('[CategoryPage] batchLoadRatings failed:', e?.message);
+          return {};
+        });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[CategoryPage] ratings batch init failed:', e?.message);
+    }
 
     repeater.onItemReady(($item, itemData) => {
       // Card container structure: white bg, 12px radius, shadow, hover
