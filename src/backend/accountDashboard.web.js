@@ -274,8 +274,10 @@ export const addToWishlist = webMethod(Permissions.SiteMember, async (product) =
 
     const cleanProductId = sanitize(product.productId, 50);
     const cleanName = sanitize(product.productName || '', 200);
+    const rawImageUrl = product.imageUrl ? sanitize(product.imageUrl, 500) : null;
+    const cleanImageUrl = rawImageUrl && /^https?:\/\//i.test(rawImageUrl) ? rawImageUrl : null;
     const price = Number(product.productPrice);
-    if (price < 0 || (!isFinite(price) && product.productPrice != null)) {
+    if (price < 0 || (product.productPrice != null && !isFinite(price))) {
       return { success: false, error: 'Invalid price' };
     }
 
@@ -293,8 +295,8 @@ export const addToWishlist = webMethod(Permissions.SiteMember, async (product) =
       memberId: member._id,
       productId: cleanProductId,
       productName: cleanName,
-      productPrice: isFinite(price) ? price : 0,
-      imageUrl: product.imageUrl || null,
+      productPrice: isFinite(price) ? price : null,
+      imageUrl: cleanImageUrl,
       addedAt: new Date(),
     });
 

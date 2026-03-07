@@ -396,6 +396,81 @@ describe('addToWishlist', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects NaN price', async () => {
+    __seed('Wishlist', []);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'X', productPrice: NaN });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity price', async () => {
+    __seed('Wishlist', []);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'X', productPrice: Infinity });
+    expect(result.success).toBe(false);
+  });
+
+  it('stores null price when price is omitted', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({ productId: 'p-1', productName: 'Futon' });
+    expect(inserted.productPrice).toBeNull();
+  });
+
+  it('rejects javascript: imageUrl (stored XSS prevention)', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'javascript:alert("xss")',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBeNull();
+  });
+
+  it('accepts valid https imageUrl', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'https://static.wixstatic.com/media/frame.jpg',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBe('https://static.wixstatic.com/media/frame.jpg');
+  });
+
+  it('rejects data: URI imageUrl', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'data:text/html,<script>alert(1)</script>',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBeNull();
+  });
+
+  it('stores null imageUrl when not provided', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({ productId: 'p-1', productName: 'Futon', productPrice: 100 });
+    expect(inserted.imageUrl).toBeNull();
+  });
+
   it('fails when not authenticated', async () => {
     __setMember(null);
     const result = await addToWishlist({ productId: 'p-1', productName: 'Futon' });
