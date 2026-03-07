@@ -447,7 +447,7 @@ async function initWishlist() {
     const wishlistRepeater = $w('#wishlistRepeater');
     if (!wishlistRepeater) return;
 
-    // Load wishlist data
+    // Load wishlist data via backend service
     await loadWishlistData();
 
     // Sort dropdown
@@ -578,22 +578,38 @@ async function initWishlist() {
         }
       } catch (e) {}
 
-      // Add to Cart button
+      // Move to Cart button — uses backend service
       try {
-        try { $item('#wishAddToCartBtn').accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
+        try { $item('#wishAddToCartBtn').accessibility.ariaLabel = `Move ${itemData.name} to cart`; } catch (e) {}
         $item('#wishAddToCartBtn').onClick(async () => {
           try {
-            const { addToCart } = await import('public/cartService');
-            await addToCart(itemData.productId || itemData._id);
-            $item('#wishAddToCartBtn').label = 'Added!';
+            $item('#wishAddToCartBtn').label = 'Moving...';
             $item('#wishAddToCartBtn').disable();
-            announce($w, `${itemData.name} added to cart`);
-            setTimeout(() => {
-              $item('#wishAddToCartBtn').label = 'Add to Cart';
+            const { moveWishlistToCart } = await import('backend/accountDashboard.web');
+            const result = await moveWishlistToCart(itemData._id);
+            if (result.success) {
+              const { addToCart } = await import('public/cartService');
+              await addToCart(result.data.productId);
+              $item('#wishAddToCartBtn').label = 'Moved to Cart!';
+              announce($w, `${itemData.name} moved to cart`);
+              trackEvent('wishlist_move_to_cart', { productId: result.data.productId });
+              // Update dashboard count
+              try {
+                const countEl = $w('#memberWishCount');
+                if (countEl) {
+                  const current = parseInt(countEl.text) || 0;
+                  countEl.text = String(Math.max(0, current - 1));
+                }
+              } catch (e2) {}
+              setTimeout(() => { try { $item('#wishCard').collapse(); } catch (e) {} }, 1500);
+            } else {
+              $item('#wishAddToCartBtn').label = 'Try Again';
               $item('#wishAddToCartBtn').enable();
-            }, 3000);
+            }
           } catch (err) {
-            console.error('[MemberPage] Add to cart from wishlist error:', err);
+            console.error('[MemberPage] Move to cart error:', err);
+            $item('#wishAddToCartBtn').label = 'Add to Cart';
+            $item('#wishAddToCartBtn').enable();
           }
         });
       } catch (e) {}
@@ -623,15 +639,15 @@ async function initWishlist() {
         }
       } catch (e) {}
 
-      // Remove from wishlist
+      // Remove from wishlist — uses backend service
       try { $item('#wishRemoveBtn').accessibility.ariaLabel = `Remove ${itemData.name} from wishlist`; } catch (e) {}
-      $item('#wishRemoveBtn').onClick(() => {
-        import('wix-data').then(async (mod) => {
-          try {
-            await mod.default.remove('Wishlist', itemData._id);
+      $item('#wishRemoveBtn').onClick(async () => {
+        try {
+          const { removeFromWishlist } = await import('backend/accountDashboard.web');
+          const result = await removeFromWishlist(itemData._id);
+          if (result.success) {
             $item('#wishCard').collapse();
             announce($w, `${itemData.name} removed from wishlist`);
-            // Update dashboard count
             try {
               const countEl = $w('#memberWishCount');
               if (countEl) {
@@ -639,14 +655,14 @@ async function initWishlist() {
                 countEl.text = String(Math.max(0, current - 1));
               }
             } catch (e2) {}
-          } catch (e) {
-            console.error('[MemberPage] Wishlist remove error:', e);
           }
-        });
+        } catch (e) {
+          console.error('[MemberPage] Wishlist remove error:', e);
+        }
       });
     });
 
-    // Set initial data on the repeater (was only set on sort change)
+    // Set initial data on the repeater
     applyWishlistSort();
 
     // Show empty state if no items
@@ -655,24 +671,56 @@ async function initWishlist() {
       try { wishlistRepeater.collapse(); } catch (e) {}
     }
 
+    // Load and display alert history
+    initWishlistAlertHistory();
+
   } catch (e) {
     console.error('[MemberPage] Error initializing wishlist:', e);
   }
 }
 
+async function initWishlistAlertHistory() {
+  try {
+    const alertRepeater = $w('#wishAlertHistoryRepeater');
+    if (!alertRepeater) return;
+
+    const { getWishlistAlertHistory } = await import('backend/accountDashboard.web');
+    const { formatAlertForDisplay } = await import('public/MemberPageHelpers');
+    const result = await getWishlistAlertHistory();
+
+    if (!result.success || !result.data.alerts.length) {
+      try { alertRepeater.collapse(); } catch (e) {}
+      return;
+    }
+
+    alertRepeater.onItemReady(($item, itemData) => {
+      const display = formatAlertForDisplay(itemData);
+      try { $item('#alertTypeLabel').text = display.typeLabel; } catch (e) {}
+      try { $item('#alertProductName').text = display.productName; } catch (e) {}
+      try { $item('#alertMessage').text = display.message; } catch (e) {}
+      try { $item('#alertDate').text = display.date; } catch (e) {}
+    });
+
+    alertRepeater.data = result.data.alerts.slice(0, 10).map(a => ({ ...a, _id: a._id }));
+    try { $w('#wishAlertHistorySection').show('fade', { duration: 250 }); } catch (e) {}
+  } catch (e) {
+    console.error('[MemberPage] Error loading alert history:', e);
+  }
+}
+
 async function loadWishlistData() {
   try {
-    const wixData = (await import('wix-data')).default;
-    const memberId = currentMember?._id;
-    if (!memberId) return;
+    const { getWishlist } = await import('backend/accountDashboard.web');
+    const result = await getWishlist({ pageSize: 50 });
 
-    const result = await wixData.query('Wishlist')
-      .eq('memberId', memberId)
-      .find();
-
-    wishlistData = result.items || [];
+    if (result.success) {
+      wishlistData = result.data.items || [];
+    } else {
+      wishlistData = [];
+    }
   } catch (e) {
     console.error('[MemberPage] Error loading wishlist data:', e);
+    wishlistData = [];
   }
 }
 
@@ -680,19 +728,19 @@ function applyWishlistSort() {
   const sorted = [...wishlistData];
   switch (wishlistSortOrder) {
     case 'date-desc':
-      sorted.sort((a, b) => new Date(b._createdDate) - new Date(a._createdDate));
+      sorted.sort((a, b) => new Date(b._createdDate || b.addedAt) - new Date(a._createdDate || a.addedAt));
       break;
     case 'date-asc':
-      sorted.sort((a, b) => new Date(a._createdDate) - new Date(b._createdDate));
+      sorted.sort((a, b) => new Date(a._createdDate || a.addedAt) - new Date(b._createdDate || b.addedAt));
       break;
     case 'price-asc':
-      sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+      sorted.sort((a, b) => (a.price || a.productPrice || 0) - (b.price || b.productPrice || 0));
       break;
     case 'price-desc':
-      sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+      sorted.sort((a, b) => (b.price || b.productPrice || 0) - (a.price || a.productPrice || 0));
       break;
     case 'name-asc':
-      sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      sorted.sort((a, b) => (a.name || a.productName || '').localeCompare(b.name || b.productName || ''));
       break;
   }
 

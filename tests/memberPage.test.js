@@ -21,6 +21,8 @@ import {
   getWishlistStockStatus,
   getWishlistSaleInfo,
   buildWishlistShareUrl,
+  formatAlertForDisplay,
+  ALERT_TYPE_LABELS,
   getWelcomeMessage,
   formatLoyaltyDisplay,
   DASHBOARD_QUICK_LINKS,
@@ -662,6 +664,101 @@ describe('Member Page — Empty states', () => {
   it('getWishlistSaleInfo handles null item', () => {
     const result = getWishlistSaleInfo(null);
     expect(result.onSale).toBe(false);
+  });
+});
+
+// ── Alert History Helpers ────────────────────────────────────────────
+
+describe('Member Page — Alert history helpers', () => {
+  describe('ALERT_TYPE_LABELS', () => {
+    it('has labels for all alert types', () => {
+      expect(ALERT_TYPE_LABELS.price_drop).toBeDefined();
+      expect(ALERT_TYPE_LABELS.back_in_stock).toBeDefined();
+      expect(ALERT_TYPE_LABELS.low_stock).toBeDefined();
+    });
+
+    it('labels are user-friendly strings', () => {
+      expect(typeof ALERT_TYPE_LABELS.price_drop).toBe('string');
+      expect(ALERT_TYPE_LABELS.price_drop.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('formatAlertForDisplay', () => {
+    it('formats a price drop alert', () => {
+      const alert = {
+        alertType: 'price_drop',
+        productName: 'Futon Frame',
+        price: 449,
+        previousHigh: 549,
+        dropPercent: 18,
+        sentAt: new Date('2026-03-05'),
+      };
+
+      const result = formatAlertForDisplay(alert);
+      expect(result.typeLabel).toBe(ALERT_TYPE_LABELS.price_drop);
+      expect(result.productName).toBe('Futon Frame');
+      expect(result.message).toContain('18%');
+      expect(result.message).toContain('$449');
+      expect(result.date).toContain('March');
+    });
+
+    it('formats a back-in-stock alert', () => {
+      const alert = {
+        alertType: 'back_in_stock',
+        productName: 'Mattress',
+        sentAt: new Date('2026-03-04'),
+      };
+
+      const result = formatAlertForDisplay(alert);
+      expect(result.typeLabel).toBe(ALERT_TYPE_LABELS.back_in_stock);
+      expect(result.productName).toBe('Mattress');
+      expect(result.message).toContain('back in stock');
+    });
+
+    it('formats a low stock alert', () => {
+      const alert = {
+        alertType: 'low_stock',
+        productName: 'Cover Set',
+        quantityInStock: 3,
+        sentAt: new Date('2026-03-03'),
+      };
+
+      const result = formatAlertForDisplay(alert);
+      expect(result.typeLabel).toBe(ALERT_TYPE_LABELS.low_stock);
+      expect(result.message).toContain('3');
+    });
+
+    it('handles unknown alert type gracefully', () => {
+      const alert = {
+        alertType: 'unknown_type',
+        productName: 'Widget',
+        sentAt: new Date(),
+      };
+
+      const result = formatAlertForDisplay(alert);
+      expect(result.typeLabel).toBe('Alert');
+      expect(result.productName).toBe('Widget');
+    });
+
+    it('handles null alert', () => {
+      const result = formatAlertForDisplay(null);
+      expect(result.typeLabel).toBe('Alert');
+      expect(result.productName).toBe('');
+      expect(result.message).toBe('');
+      expect(result.date).toBe('');
+    });
+
+    it('handles missing sentAt', () => {
+      const alert = { alertType: 'price_drop', productName: 'Futon' };
+      const result = formatAlertForDisplay(alert);
+      expect(result.date).toBe('');
+    });
+
+    it('handles missing productName', () => {
+      const alert = { alertType: 'back_in_stock', sentAt: new Date() };
+      const result = formatAlertForDisplay(alert);
+      expect(result.productName).toBe('');
+    });
   });
 });
 

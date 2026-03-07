@@ -7,6 +7,9 @@ import {
   getActiveDeliveries,
   getWishlist,
   removeFromWishlist,
+  addToWishlist,
+  moveWishlistToCart,
+  getWishlistAlertHistory,
   updatePreferences,
   getPreferences,
   getReorderItems,
@@ -320,6 +323,262 @@ describe('removeFromWishlist', () => {
   it('fails when not authenticated', async () => {
     __setMember(null);
     const result = await removeFromWishlist('w-1');
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── addToWishlist ────────────────────────────────────────────────────
+
+describe('addToWishlist', () => {
+  it('adds a product to the wishlist', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    const result = await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon Frame',
+      productPrice: 549,
+      imageUrl: 'https://img.com/frame.jpg',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data.productId).toBe('p-1');
+    expect(inserted).not.toBeNull();
+    expect(inserted.memberId).toBe('member-1');
+    expect(inserted.productName).toBe('Futon Frame');
+    expect(inserted.productPrice).toBe(549);
+    expect(inserted.imageUrl).toBe('https://img.com/frame.jpg');
+    expect(inserted.addedAt).toBeInstanceOf(Date);
+  });
+
+  it('deduplicates — returns existing if already wishlisted', async () => {
+    let insertCount = 0;
+    __onInsert(() => { insertCount++; });
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'p-1', productName: 'Futon Frame' },
+    ]);
+
+    const result = await addToWishlist({ productId: 'p-1', productName: 'Futon Frame' });
+    expect(result.success).toBe(true);
+    expect(result.data._id).toBe('w-1');
+    expect(insertCount).toBe(0);
+  });
+
+  it('rejects missing productId', async () => {
+    const result = await addToWishlist({ productName: 'Futon' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('productId');
+  });
+
+  it('rejects empty input', async () => {
+    const result = await addToWishlist(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('sanitizes productName input', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: '<script>alert("xss")</script>Futon',
+      productPrice: 100,
+    });
+
+    expect(inserted.productName).not.toContain('<script>');
+  });
+
+  it('rejects negative price', async () => {
+    __seed('Wishlist', []);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'X', productPrice: -50 });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects NaN price', async () => {
+    __seed('Wishlist', []);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'X', productPrice: NaN });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects Infinity price', async () => {
+    __seed('Wishlist', []);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'X', productPrice: Infinity });
+    expect(result.success).toBe(false);
+  });
+
+  it('stores null price when price is omitted', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({ productId: 'p-1', productName: 'Futon' });
+    expect(inserted.productPrice).toBeNull();
+  });
+
+  it('rejects javascript: imageUrl (stored XSS prevention)', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'javascript:alert("xss")',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBeNull();
+  });
+
+  it('accepts valid https imageUrl', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'https://static.wixstatic.com/media/frame.jpg',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBe('https://static.wixstatic.com/media/frame.jpg');
+  });
+
+  it('rejects data: URI imageUrl', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({
+      productId: 'p-1',
+      productName: 'Futon',
+      imageUrl: 'data:text/html,<script>alert(1)</script>',
+      productPrice: 100,
+    });
+
+    expect(inserted.imageUrl).toBeNull();
+  });
+
+  it('stores null imageUrl when not provided', async () => {
+    let inserted = null;
+    __onInsert((col, item) => { if (col === 'Wishlist') inserted = item; });
+    __seed('Wishlist', []);
+
+    await addToWishlist({ productId: 'p-1', productName: 'Futon', productPrice: 100 });
+    expect(inserted.imageUrl).toBeNull();
+  });
+
+  it('fails when not authenticated', async () => {
+    __setMember(null);
+    const result = await addToWishlist({ productId: 'p-1', productName: 'Futon' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('authenticated');
+  });
+});
+
+// ── moveWishlistToCart ───────────────────────────────────────────────
+
+describe('moveWishlistToCart', () => {
+  it('removes wishlist item and returns product info for cart', async () => {
+    let removed = null;
+    __onRemove((col, id) => { if (col === 'Wishlist') removed = id; });
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'p-1', productName: 'Futon Frame', productPrice: 549 },
+    ]);
+
+    const result = await moveWishlistToCart('w-1');
+    expect(result.success).toBe(true);
+    expect(result.data.productId).toBe('p-1');
+    expect(result.data.productName).toBe('Futon Frame');
+    expect(removed).toBe('w-1');
+  });
+
+  it('rejects item owned by another member', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'other-member', productId: 'p-1', productName: 'Futon' },
+    ]);
+
+    const result = await moveWishlistToCart('w-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('not found');
+  });
+
+  it('rejects non-existent item', async () => {
+    __seed('Wishlist', []);
+    const result = await moveWishlistToCart('w-nonexistent');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects empty item ID', async () => {
+    const result = await moveWishlistToCart('');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects null item ID', async () => {
+    const result = await moveWishlistToCart(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('fails when not authenticated', async () => {
+    __setMember(null);
+    const result = await moveWishlistToCart('w-1');
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── getWishlistAlertHistory ─────────────────────────────────────────
+
+describe('getWishlistAlertHistory', () => {
+  it('returns recent alert history for the member', async () => {
+    __seed('WishlistAlertsSent', [
+      { _id: 'a-1', memberId: 'member-1', productId: 'p-1', alertType: 'price_drop', sentAt: new Date('2026-03-05'), price: 449, previousHigh: 549, dropPercent: 18, productName: 'Futon Frame' },
+      { _id: 'a-2', memberId: 'member-1', productId: 'p-2', alertType: 'back_in_stock', sentAt: new Date('2026-03-04'), productName: 'Mattress' },
+    ]);
+
+    const result = await getWishlistAlertHistory();
+    expect(result.success).toBe(true);
+    expect(result.data.alerts).toHaveLength(2);
+    expect(result.data.alerts[0].alertType).toBe('price_drop');
+    expect(result.data.alerts[0].productName).toBe('Futon Frame');
+    expect(result.data.alerts[0].dropPercent).toBe(18);
+    expect(result.data.alerts[1].alertType).toBe('back_in_stock');
+  });
+
+  it('returns empty array when no alerts', async () => {
+    __seed('WishlistAlertsSent', []);
+    const result = await getWishlistAlertHistory();
+    expect(result.success).toBe(true);
+    expect(result.data.alerts).toEqual([]);
+  });
+
+  it('only returns own alerts', async () => {
+    __seed('WishlistAlertsSent', [
+      { _id: 'a-1', memberId: 'other-member', productId: 'p-1', alertType: 'price_drop', sentAt: new Date() },
+      { _id: 'a-2', memberId: 'member-1', productId: 'p-2', alertType: 'back_in_stock', sentAt: new Date() },
+    ]);
+
+    const result = await getWishlistAlertHistory();
+    expect(result.data.alerts).toHaveLength(1);
+    expect(result.data.alerts[0].productId).toBe('p-2');
+  });
+
+  it('limits results to 50', async () => {
+    const alerts = Array.from({ length: 60 }, (_, i) => ({
+      _id: `a-${i}`, memberId: 'member-1', productId: `p-${i}`,
+      alertType: 'price_drop', sentAt: new Date(),
+    }));
+    __seed('WishlistAlertsSent', alerts);
+
+    const result = await getWishlistAlertHistory();
+    expect(result.data.alerts.length).toBeLessThanOrEqual(50);
+  });
+
+  it('fails when not authenticated', async () => {
+    __setMember(null);
+    const result = await getWishlistAlertHistory();
     expect(result.success).toBe(false);
   });
 });
