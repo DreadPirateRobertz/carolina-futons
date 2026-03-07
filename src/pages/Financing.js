@@ -16,11 +16,13 @@ import {
   getPriceRangeLabel,
   QUICK_PRICES,
 } from 'public/financingPageHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let currentPrice = null;
 
 $w.onReady(function () {
   initBackToTop($w);
+  initPageSeo('financing');
   initPriceInput();
   initQuickPrices();
   initProviderInfo();

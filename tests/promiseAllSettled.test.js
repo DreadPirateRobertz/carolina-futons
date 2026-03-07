@@ -75,6 +75,8 @@ vi.mock('backend/testimonialService.web', () => ({
   getTestimonialSchema: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Home Page Tests ─────────────────────────────────────────────────
 
 describe('Promise.allSettled — Home Page partial failures', () => {

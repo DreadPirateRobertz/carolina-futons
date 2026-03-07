@@ -190,6 +190,8 @@ vi.mock('public/cartService', () => ({
   addToCart: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — Product Card Grid', () => {

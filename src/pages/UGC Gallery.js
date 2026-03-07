@@ -10,12 +10,14 @@ import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
 import { colors, spacing } from 'public/designTokens.js';
 import { prioritizeSections } from 'public/performanceHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _currentRoomType = null;
 let _currentSort = 'recent';
 let _allPhotos = [];
 
 $w.onReady(async function () {
+  initPageSeo('ugcGallery');
   trackEvent('page_view', { page: 'ugc-gallery' });
 
   const sections = [

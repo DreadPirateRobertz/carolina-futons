@@ -154,3 +154,89 @@ describe('initPageSeo', () => {
     expect(ogType.content).toBe('website');
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// Source-level: verify all pages import and call initPageSeo
+// ═══════════════════════════════════════════════════════════════════════
+
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+const PAGES_DIR = resolve(__dirname, '../src/pages');
+
+const PAGES_WITH_SEO = [
+  { file: 'Home.js', type: 'home' },
+  { file: 'About.js', type: 'about' },
+  { file: 'FAQ.js', type: 'faq' },
+  { file: 'Style Quiz.js', type: 'styleQuiz' },
+  { file: 'Gift Cards.js', type: 'giftCards' },
+  { file: 'Financing.js', type: 'financing' },
+  { file: 'Assembly Guides.js', type: 'assemblyGuides' },
+  { file: 'Room Planner.js', type: 'roomPlanner' },
+  { file: 'Compare Page.js', type: 'compareProducts' },
+  { file: 'UGC Gallery.js', type: 'ugcGallery' },
+  { file: 'Referral Page.js', type: 'referral' },
+  { file: 'Returns.js', type: 'returns' },
+  { file: 'Price Match Guarantee.js', type: 'priceMatch' },
+  { file: 'Privacy Policy.js', type: 'privacyPolicy' },
+  { file: 'Refund Policy.js', type: 'refundPolicy' },
+  { file: 'Terms & Conditions.js', type: 'termsConditions' },
+  { file: 'Shipping Policy.js', type: 'shippingPolicy' },
+  { file: 'Accessibility Statement.js', type: 'accessibility' },
+  { file: 'Newsletter.js', type: 'newsletter' },
+  { file: 'Sustainability.js', type: 'sustainability' },
+  { file: 'Cart Page.js', type: 'cart' },
+  { file: 'Checkout.js', type: 'checkout' },
+  { file: 'Thank You Page.js', type: 'thankYou' },
+  { file: 'Member Page.js', type: 'member' },
+  { file: 'Order Tracking.js', type: 'orderTracking' },
+  { file: 'Search Results.js', type: 'searchResults' },
+  { file: 'Blog.js', type: 'blog' },
+];
+
+describe('source-level: all pages import and call initPageSeo', () => {
+  PAGES_WITH_SEO.forEach(({ file, type }) => {
+    const src = readFileSync(resolve(PAGES_DIR, file), 'utf8');
+
+    it(`${file} imports initPageSeo`, () => {
+      expect(src).toContain("import { initPageSeo } from 'public/pageSeo.js'");
+    });
+
+    it(`${file} calls initPageSeo('${type}')`, () => {
+      expect(src).toContain(`initPageSeo('${type}')`);
+    });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Source-level: backend seoHelpers has all page type descriptions
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('source-level: seoHelpers.web.js PAGE_META_DESCRIPTIONS', () => {
+  const backendSrc = readFileSync(
+    resolve(__dirname, '../src/backend/seoHelpers.web.js'),
+    'utf8'
+  );
+
+  const ALL_PAGE_TYPES = [
+    'home', 'faq', 'contact', 'about', 'blog',
+    'styleQuiz', 'giftCards', 'financing', 'storeLocator',
+    'assemblyGuides', 'roomPlanner', 'compareProducts', 'ugcGallery',
+    'referral', 'returns', 'priceMatch', 'privacyPolicy', 'refundPolicy',
+    'termsConditions', 'shippingPolicy', 'accessibility', 'newsletter',
+    'sustainability', 'buyingGuides', 'cart', 'checkout', 'thankYou',
+    'member', 'orderTracking', 'searchResults',
+  ];
+
+  ALL_PAGE_TYPES.forEach(type => {
+    it(`has meta description for '${type}'`, () => {
+      expect(backendSrc).toContain(`${type}:`);
+    });
+  });
+
+  ALL_PAGE_TYPES.forEach(type => {
+    it(`has getPageTitle case for '${type}'`, () => {
+      expect(backendSrc).toContain(`case '${type}':`);
+    });
+  });
+});

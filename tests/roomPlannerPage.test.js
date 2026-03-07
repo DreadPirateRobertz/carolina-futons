@@ -84,6 +84,8 @@ vi.mock('public/roomPlannerHelpers.js', async () => {
   return actual;
 });
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Tests ───────────────────────────────────────────────────────────
 
 describe('Room Planner Page', () => {

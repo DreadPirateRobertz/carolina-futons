@@ -6,12 +6,14 @@ import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { colors, typography } from 'public/designTokens.js';
 import { initBackToTop, isMobile } from 'public/mobileHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _currentOrder = null;
 let _autoRefreshTimer = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('orderTracking');
   initLookupForm();
   initResultsSection();
   prefillFromQueryParams();

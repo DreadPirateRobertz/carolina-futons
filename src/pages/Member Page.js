@@ -18,6 +18,7 @@ import {
   buildTierComparisonData,
   getNextMilestone,
 } from 'public/loyaltyHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let currentMember = null;
 let wishlistData = [];
@@ -26,6 +27,7 @@ let wishlistSortOrder = 'date-desc';
 $w.onReady(async function () {
   collapseOnMobile($w, ['#ordersRepeater', '#wishlistRepeater', '#addressBook']);
   initBackToTop($w);
+  initPageSeo('member');
   await initMemberPage();
   trackEvent('page_view', { page: 'member_account' });
 });

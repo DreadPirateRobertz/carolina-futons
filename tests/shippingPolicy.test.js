@@ -93,6 +93,8 @@ vi.mock('public/designTokens.js', () => ({
   spacing: { sm: 8, md: 16, lg: 24 },
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { initBackToTop } from 'public/mobileHelpers';

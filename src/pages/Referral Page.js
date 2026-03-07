@@ -12,6 +12,7 @@ import {
   calculateReferralProgress,
   buildReferralHistoryItems,
 } from 'public/referralPageHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let referralCode = '';
 let currentMember = null;
@@ -19,6 +20,7 @@ let currentMember = null;
 $w.onReady(async function () {
   collapseOnMobile($w, ['#referralHistorySection', '#referralStatsSection']);
   initBackToTop($w);
+  initPageSeo('referral');
   trackEvent('page_view', { page: 'referral' });
   await initReferralPage();
 });

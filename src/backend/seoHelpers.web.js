@@ -1024,6 +1024,18 @@ export const getPageTitle = webMethod(
         return `Sustainability — Our Environmental Commitment | ${SITE_NAME}`;
       case 'buyingGuides':
         return `Buying Guides — Expert Furniture Advice | ${SITE_NAME}`;
+      case 'cart':
+        return `Shopping Cart | ${SITE_NAME}`;
+      case 'checkout':
+        return `Checkout | ${SITE_NAME}`;
+      case 'thankYou':
+        return `Order Confirmed — Thank You! | ${SITE_NAME}`;
+      case 'member':
+        return `My Account | ${SITE_NAME}`;
+      case 'orderTracking':
+        return `Track Your Order | ${SITE_NAME}`;
+      case 'searchResults':
+        return data.query ? `Search: ${data.query} | ${SITE_NAME}` : `Search Results | ${SITE_NAME}`;
       default:
         return SITE_NAME;
     }
@@ -1091,6 +1103,12 @@ const PAGE_META_DESCRIPTIONS = {
   newsletter: 'Subscribe to the Carolina Futons newsletter for exclusive furniture deals, style tips, and new product announcements.',
   sustainability: 'Our commitment to sustainability at Carolina Futons. Learn about our eco-friendly practices and sustainable furniture sourcing.',
   buyingGuides: 'Expert buying guides from Carolina Futons. Learn how to choose the right futon, Murphy bed, mattress, or platform bed for your needs.',
+  cart: 'Review your shopping cart at Carolina Futons. Quality futon frames, mattresses, Murphy beds, and more with free shipping on orders over $999.',
+  checkout: 'Complete your Carolina Futons order. Secure checkout with multiple payment options and fast, reliable shipping.',
+  thankYou: 'Thank you for your Carolina Futons order! Track your delivery, share with friends, and explore more quality furniture.',
+  member: 'Manage your Carolina Futons account. View orders, track deliveries, manage your wishlist, and earn loyalty rewards.',
+  orderTracking: 'Track your Carolina Futons order. Enter your order number to view real-time shipping status and delivery updates.',
+  searchResults: 'Search results for furniture at Carolina Futons. Find futon frames, mattresses, Murphy beds, and platform beds.',
 };
 
 /**

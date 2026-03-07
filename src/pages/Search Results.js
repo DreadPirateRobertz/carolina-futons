@@ -16,6 +16,7 @@ import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/Wishlis
 import { buildProductBadgeOverlay } from 'public/galleryHelpers';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
 import { buildSkeletonData, getActiveFilterCount, buildSearchChips } from 'public/SearchResultsHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _debounceTimer = null;
 let _currentQuery = '';
@@ -29,6 +30,7 @@ const PAGE_SIZE = 24;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('searchResults');
 
   const query = wixLocationFrontend.query?.q || '';
   _currentQuery = query;

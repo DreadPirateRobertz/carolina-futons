@@ -31,8 +31,10 @@ import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js
 import { saveForLater } from 'public/SaveForLater.js';
 import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
 import { initCouponCodeInput } from 'public/CouponCodeInput.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
+  initPageSeo('cart');
   await initCartPage();
 });
 

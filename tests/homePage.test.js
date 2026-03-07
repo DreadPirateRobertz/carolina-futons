@@ -61,6 +61,8 @@ vi.mock('backend/seoHelpers.web', () => ({
   getWebSiteSchema: vi.fn().mockResolvedValue('{"@type":"WebSite"}'),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page', () => {

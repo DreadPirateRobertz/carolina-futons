@@ -15,9 +15,11 @@ import {
   formatCarbonData,
   estimateCreditRange,
 } from 'public/sustainabilityHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('sustainability');
   initHero();
   initMaterials();
   initCertifications();
