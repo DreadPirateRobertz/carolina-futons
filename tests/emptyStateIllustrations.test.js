@@ -246,28 +246,12 @@ describe('Empty State Illustrations', () => {
   // Matching comfortIllustrations quality standard
   // ══════════════════════════════════════════════════════════════════════
 
-  // ── 1. Watercolor filter (feTurbulence + feDisplacementMap) ────────
+  // ── 1. No programmatic SVG filters (deprecated per overseer directive) ──
 
-  describe('Quality bar — watercolor filter', () => {
+  describe('Quality bar — no SVG filters', () => {
     REQUIRED_KEYS.forEach(key => {
-      describe(`${key}`, () => {
-        it('contains feTurbulence filter for watercolor texture', () => {
-          expect(ILLUSTRATION_SVGS[key]).toMatch(/<feTurbulence/);
-        });
-
-        it('contains feDisplacementMap', () => {
-          expect(ILLUSTRATION_SVGS[key]).toMatch(/<feDisplacementMap/);
-        });
-      });
-    });
-  });
-
-  // ── 2. Paper grain overlay (fractalNoise) ─────────────────────────
-
-  describe('Quality bar — paper grain', () => {
-    REQUIRED_KEYS.forEach(key => {
-      it(`${key} contains paper grain noise filter (type="fractalNoise")`, () => {
-        expect(ILLUSTRATION_SVGS[key]).toMatch(/type="fractalNoise"/);
+      it(`${key} does not use <filter> elements (deprecated)`, () => {
+        expect(ILLUSTRATION_SVGS[key]).not.toMatch(/<filter[\s>]/);
       });
     });
   });
