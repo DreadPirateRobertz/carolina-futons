@@ -145,6 +145,28 @@ describe('reviewsService', () => {
       expect(first.productId).toBeUndefined();
     });
 
+    it('filters reviews by star rating when filterStars provided', async () => {
+      resetData();
+      __seed('Reviews', [
+        { _id: 'r1', productId: 'prod-001', rating: 5, status: 'approved', body: 'Great', authorName: 'A', _createdDate: new Date() },
+        { _id: 'r2', productId: 'prod-001', rating: 3, status: 'approved', body: 'OK', authorName: 'B', _createdDate: new Date() },
+        { _id: 'r3', productId: 'prod-001', rating: 5, status: 'approved', body: 'Awesome', authorName: 'C', _createdDate: new Date() },
+      ]);
+      const result = await getProductReviews('prod-001', { filterStars: 5 });
+      expect(result.reviews.every(r => r.rating === 5)).toBe(true);
+      expect(result.total).toBe(2);
+    });
+
+    it('returns all reviews when filterStars not provided', async () => {
+      const result = await getProductReviews('prod-001', {});
+      expect(result.total).toBe(3);
+    });
+
+    it('ignores invalid filterStars values', async () => {
+      const result = await getProductReviews('prod-001', { filterStars: 0 });
+      expect(result.total).toBe(3); // 0 is invalid, should return all
+    });
+
     it('returns only approved reviews', async () => {
       __seed('Reviews', [
         ...sampleReviews,
