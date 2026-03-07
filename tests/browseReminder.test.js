@@ -13,9 +13,15 @@ vi.mock('wix-location-frontend', () => ({
   default: { path: ['product-page', 'eureka-futon'] },
 }));
 
+const mockTrapRelease = vi.fn();
+vi.mock('public/a11yHelpers.js', () => ({
+  createFocusTrap: vi.fn(() => ({ release: mockTrapRelease, isActive: () => true })),
+}));
+
 import { initBrowseTracking, showRemindMePopup, _createBrowseState } from '../src/public/BrowseReminder.js';
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { validateEmail } from 'public/validators.js';
+import { createFocusTrap } from 'public/a11yHelpers.js';
 
 function createMockElement() {
   return {
@@ -24,7 +30,7 @@ function createMockElement() {
     show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
     collapse: vi.fn(), expand: vi.fn(),
     onClick: vi.fn(), onChange: vi.fn(),
-    disable: vi.fn(), enable: vi.fn(),
+    disable: vi.fn(), enable: vi.fn(), focus: vi.fn(),
     accessibility: {},
   };
 }
@@ -39,6 +45,7 @@ describe('BrowseReminder', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockTrapRelease.mockClear();
     vi.useFakeTimers();
     $w = create$w();
     state = { product: { _id: 'prod-1', name: 'Test Futon', price: 499 } };
@@ -228,6 +235,44 @@ describe('BrowseReminder', () => {
       await submitCb();
       expect($w('#remindMeSubmit').enable).toHaveBeenCalled();
       expect($w('#remindMeSubmit').label).toBe('Remind Me');
+    });
+
+    it('submit shows error message on API failure', async () => {
+      captureRemindMeRequest.mockRejectedValueOnce(new Error('Network error'));
+      showRemindMePopup($w, browseState);
+      $w('#remindMeEmailInput').value = 'test@example.com';
+      validateEmail.mockReturnValueOnce(true);
+      const submitCb = $w('#remindMeSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+      expect($w('#remindMeError').text).toContain('Something went wrong');
+      expect($w('#remindMeError').show).toHaveBeenCalled();
+    });
+
+    it('creates focus trap on popup open', () => {
+      showRemindMePopup($w, browseState);
+      expect(createFocusTrap).toHaveBeenCalledWith(
+        $w, '#remindMePopup', ['#remindMeEmailInput', '#remindMeSubmit', '#remindMeClose']
+      );
+    });
+
+    it('Escape key dismisses popup and releases focus trap', () => {
+      const listeners = {};
+      vi.stubGlobal('document', {
+        addEventListener: vi.fn((evt, cb) => { listeners[evt] = cb; }),
+        removeEventListener: vi.fn(),
+      });
+      showRemindMePopup($w, browseState);
+      expect(listeners.keydown).toBeDefined();
+      listeners.keydown({ key: 'Escape' });
+      expect($w('#remindMePopup').hide).toHaveBeenCalledWith('fade', { duration: 200 });
+      expect(mockTrapRelease).toHaveBeenCalled();
+    });
+
+    it('close button releases focus trap', () => {
+      showRemindMePopup($w, browseState);
+      const closeCb = $w('#remindMeClose').onClick.mock.calls[0][0];
+      closeCb();
+      expect(mockTrapRelease).toHaveBeenCalled();
     });
 
     it('does not throw when popup element is missing', () => {

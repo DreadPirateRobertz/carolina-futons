@@ -5,6 +5,7 @@
  */
 import { trackBrowseSession, captureRemindMeRequest } from 'backend/browseAbandonment.web';
 import { validateEmail } from 'public/validators.js';
+import { createFocusTrap } from 'public/a11yHelpers.js';
 import wixLocationFrontend from 'wix-location-frontend';
 
 /**
@@ -141,6 +142,25 @@ export function showRemindMePopup($w, browseState) {
 
     popup.show('fade', { duration: 300 });
 
+    // Focus trap for modal accessibility
+    let trap = null;
+    try {
+      trap = createFocusTrap($w, '#remindMePopup', ['#remindMeEmailInput', '#remindMeSubmit', '#remindMeClose']);
+      $w('#remindMeEmailInput').focus();
+    } catch (e) {}
+
+    // Escape key dismiss
+    const onEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (trap) trap.release();
+        popup.hide('fade', { duration: 200 });
+        if (typeof document !== 'undefined') document.removeEventListener('keydown', onEscape);
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('keydown', onEscape);
+    }
+
     if (typeof sessionStorage !== 'undefined') {
       try { sessionStorage.setItem('cf_remind_shown', '1'); } catch (e) {}
     }
@@ -148,7 +168,9 @@ export function showRemindMePopup($w, browseState) {
     // Close handler
     try {
       $w('#remindMeClose').onClick(() => {
+        if (trap) trap.release();
         popup.hide('fade', { duration: 200 });
+        if (typeof document !== 'undefined') document.removeEventListener('keydown', onEscape);
       });
     } catch (e) {}
 
@@ -175,11 +197,19 @@ export function showRemindMePopup($w, browseState) {
           try { $w('#remindMeSuccess').show('fade', { duration: 300 }); } catch (e) {}
 
           setTimeout(() => {
-            try { popup.hide('fade', { duration: 200 }); } catch (e) {}
+            try {
+              if (trap) trap.release();
+              popup.hide('fade', { duration: 200 });
+              if (typeof document !== 'undefined') document.removeEventListener('keydown', onEscape);
+            } catch (e) {}
           }, 3000);
         } catch (err) {
           $w('#remindMeSubmit').enable();
           $w('#remindMeSubmit').label = 'Remind Me';
+          try {
+            const errEl = $w('#remindMeError');
+            if (errEl) { errEl.text = 'Something went wrong. Please try again.'; errEl.show('fade', { duration: 300 }); }
+          } catch (e) {}
         }
       });
     } catch (e) {}
