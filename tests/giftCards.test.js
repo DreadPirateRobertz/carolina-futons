@@ -67,6 +67,18 @@ describe('purchaseGiftCard', () => {
     expect(result.success).toBe(false);
     expect(result.message).toContain('Invalid email');
   });
+
+  it('allows self-gift (purchaser === recipient)', async () => {
+    const result = await purchaseGiftCard({
+      amount: 50,
+      purchaserEmail: 'me@test.com',
+      recipientEmail: 'me@test.com',
+      recipientName: 'Me',
+      message: 'Treat yourself!',
+    });
+    expect(result.success).toBe(true);
+    expect(result.code).toBeDefined();
+  });
 });
 
 // ── checkBalance ─────────────────────────────────────────────────────

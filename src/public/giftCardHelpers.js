@@ -147,19 +147,6 @@ export function formatGiftCardCode(code) {
 }
 
 /**
- * Mask a gift card code for display (show only last segment).
- * @param {string|null|undefined} code
- * @returns {string} Masked code e.g. "CF-****-****-****-NPQR"
- */
-export function maskGiftCardCode(code) {
-  if (!code || typeof code !== 'string') return '';
-  const upper = code.trim().toUpperCase();
-  if (!validateGiftCardCode(upper)) return '';
-  const parts = upper.split('-');
-  return `${parts[0]}-****-****-****-${parts[4]}`;
-}
-
-/**
  * Build the display text for an applied gift card discount.
  * @param {number|null} amount - Amount applied
  * @returns {string}
@@ -247,7 +234,7 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
       applyBtn.label = 'Checking...';
 
       try {
-        const { checkBalance } = await import('backend/giftCards.web');
+        const { checkBalance, redeemGiftCard } = await import('backend/giftCards.web');
         const balanceResult = await checkBalance(code);
 
         if (!balanceResult.found || balanceResult.status !== 'active' || balanceResult.balance <= 0) {
@@ -261,6 +248,16 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
         // Read subtotal at click time, not init time
         const currentSubtotal = typeof getSubtotal === 'function' ? getSubtotal() : (Number(getSubtotal) || 0);
         const { amountToApply } = calculateGiftCardDiscount(balanceResult.balance, currentSubtotal);
+
+        // Deduct balance before updating UI — only show success if redemption works
+        const redeemResult = await redeemGiftCard(code, amountToApply);
+        if (!redeemResult.success) {
+          try {
+            $w('#giftCardCheckoutError').text = redeemResult.message || 'Unable to apply gift card. Please try again.';
+            $w('#giftCardCheckoutError').show();
+          } catch (_) {}
+          return;
+        }
 
         try {
           $w('#giftCardAppliedAmount').text = buildGiftCardAppliedText(amountToApply);
