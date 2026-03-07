@@ -264,6 +264,7 @@ export const DEFAULT_COMM_PREFS = {
 export const PAGE_SECTIONS = [
   'dashboard',
   'storeCredit',
+  'loyaltyDashboard',
   'orderHistory',
   'wishlist',
   'accountSettings',
