@@ -55,6 +55,11 @@ function initSideCart() {
     $w('#sideCartTitle').style.color = panelStyles.headerColor;
   } catch (e) {}
 
+  // ARIA live regions for dynamic cart content
+  try { $w('#sideCartSubtotal').accessibility.ariaLive = 'polite'; $w('#sideCartSubtotal').accessibility.role = 'status'; } catch (e) {}
+  try { $w('#sideTierText').accessibility.ariaLive = 'polite'; $w('#sideTierText').accessibility.role = 'status'; } catch (e) {}
+  try { $w('#cartBadge').accessibility.ariaLive = 'polite'; $w('#cartBadge').accessibility.role = 'status'; } catch (e) {}
+
   // Close side cart and restore focus to cart icon (WCAG 2.4.3 Focus Order)
   function closeSideCart() {
     try {
@@ -153,6 +158,7 @@ function initSideCartRepeater() {
         $item('#sideItemQty').text = String(itemData.quantity);
         $item('#sideItemQty').accessibility.ariaLabel = `Quantity of ${itemData.name}`;
         $item('#sideItemQty').accessibility.role = 'status';
+        $item('#sideItemQty').accessibility.ariaLive = 'polite';
       } catch (e) {}
 
       // Minus button — mountain blue
