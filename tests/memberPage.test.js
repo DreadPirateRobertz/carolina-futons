@@ -117,9 +117,10 @@ describe('Member Page — Dashboard init', () => {
   });
 
   describe('PAGE_SECTIONS', () => {
-    it('lists all 7 sections in initialization order', () => {
-      expect(PAGE_SECTIONS).toHaveLength(7);
+    it('lists all 8 sections in initialization order', () => {
+      expect(PAGE_SECTIONS).toHaveLength(8);
       expect(PAGE_SECTIONS).toContain('dashboard');
+      expect(PAGE_SECTIONS).toContain('storeCredit');
       expect(PAGE_SECTIONS).toContain('orderHistory');
       expect(PAGE_SECTIONS).toContain('wishlist');
       expect(PAGE_SECTIONS).toContain('accountSettings');
@@ -660,6 +661,20 @@ describe('Member Page — Empty states', () => {
   it('getWishlistSaleInfo handles null item', () => {
     const result = getWishlistSaleInfo(null);
     expect(result.onSale).toBe(false);
+  });
+});
+
+// ── Store Credit Section ────────────────────────────────────────────
+
+describe('Member Page — Store credit section', () => {
+  it('PAGE_SECTIONS includes storeCredit', () => {
+    expect(PAGE_SECTIONS).toContain('storeCredit');
+  });
+
+  it('storeCredit appears after dashboard in section order', () => {
+    const dashIdx = PAGE_SECTIONS.indexOf('dashboard');
+    const creditIdx = PAGE_SECTIONS.indexOf('storeCredit');
+    expect(creditIdx).toBeGreaterThan(dashIdx);
   });
 });
 

@@ -5,6 +5,7 @@ import { announce } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { initReturnsSection } from 'public/ReturnsPortal.js';
+import { initStoreCreditDashboard } from 'public/storeCreditHelpers.js';
 import {
   formatPoints,
   formatProgressText,
@@ -50,6 +51,7 @@ async function initMemberPage() {
 
     const sections = [
       { name: 'dashboard', init: initDashboard },
+      { name: 'storeCredit', init: () => initStoreCreditDashboard($w) },
       { name: 'loyaltyDashboard', init: initLoyaltyDashboard },
       { name: 'orderHistory', init: initOrderHistory },
       { name: 'wishlist', init: initWishlist },
