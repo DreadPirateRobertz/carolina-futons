@@ -35,9 +35,9 @@ export async function initCouponCodeInput($w, options = {}) {
     // ARIA
     try { $w('#couponInput').accessibility.ariaLabel = 'Enter coupon code'; } catch (e) { console.warn('[CouponCodeInput] ARIA input failed:', e?.message); }
     try { $w('#couponApplyBtn').accessibility.ariaLabel = 'Apply coupon code'; } catch (e) { console.warn('[CouponCodeInput] ARIA btn failed:', e?.message); }
-    try { $w('#couponError').accessibility.ariaLive = 'assertive'; } catch (e) {}
-    try { $w('#couponError').accessibility.role = 'alert'; } catch (e) {}
-    try { $w('#couponSuccess').accessibility.ariaLive = 'polite'; } catch (e) {}
+    try { $w('#couponError').accessibility.ariaLive = 'assertive'; } catch (e) { console.warn('[CouponCodeInput] ARIA error live failed:', e?.message); }
+    try { $w('#couponError').accessibility.role = 'alert'; } catch (e) { console.warn('[CouponCodeInput] ARIA error role failed:', e?.message); }
+    try { $w('#couponSuccess').accessibility.ariaLive = 'polite'; } catch (e) { console.warn('[CouponCodeInput] ARIA success live failed:', e?.message); }
 
     // If coupon already applied, show success state
     if (options.appliedCoupon?.code) {
@@ -57,13 +57,15 @@ export async function initCouponCodeInput($w, options = {}) {
       }
     });
 
-    // Wire Enter key
-    $w('#couponInput').onKeyPress((event) => {
+    // Wire Enter key — triggers apply via the same code path as button click
+    $w('#couponInput').onKeyPress(async (event) => {
       try {
         if (event.key === 'Enter') {
-          $w('#couponApplyBtn').onClick.mock
-            ? null // test environment
-            : $w('#couponApplyBtn').click?.();
+          const code = $w('#couponInput').value;
+          const result = await applyCouponCode($w, code);
+          if (result.success && typeof options.onApplied === 'function') {
+            options.onApplied(result);
+          }
         }
       } catch (e) {
         console.warn('[CouponCodeInput] keypress handler failed:', e?.message);
@@ -97,8 +99,8 @@ export async function initCouponCodeInput($w, options = {}) {
  */
 export async function applyCouponCode($w, code) {
   // Hide previous messages
-  try { $w('#couponError').hide(); } catch (e) {}
-  try { $w('#couponSuccess').hide(); } catch (e) {}
+  try { $w('#couponError').hide(); } catch (e) { console.warn('[CouponCodeInput] hide error failed:', e?.message); }
+  try { $w('#couponSuccess').hide(); } catch (e) { console.warn('[CouponCodeInput] hide success failed:', e?.message); }
 
   // ── Validation ──────────────────────────────────────────────────
   if (code == null || typeof code !== 'string') {
@@ -124,9 +126,9 @@ export async function applyCouponCode($w, code) {
   }
 
   // ── Loading state ───────────────────────────────────────────────
-  try { $w('#couponApplyBtn').disable(); } catch (e) {}
-  try { $w('#couponApplyBtn').label = 'Applying...'; } catch (e) {}
-  try { $w('#couponLoadingIcon').show(); } catch (e) {}
+  try { $w('#couponApplyBtn').disable(); } catch (e) { console.warn('[CouponCodeInput] disable btn failed:', e?.message); }
+  try { $w('#couponApplyBtn').label = 'Applying...'; } catch (e) { console.warn('[CouponCodeInput] set label failed:', e?.message); }
+  try { $w('#couponLoadingIcon').show(); } catch (e) { console.warn('[CouponCodeInput] show loading failed:', e?.message); }
 
   try {
     await wixStoresFrontend.cart.applyCoupon(trimmed);
@@ -137,6 +139,7 @@ export async function applyCouponCode($w, code) {
 
     return { success: true, code: trimmed };
   } catch (err) {
+    console.error('[CouponCodeInput] applyCoupon API error:', err?.message || err);
     const msg = parseCouponError(err);
     showError($w, msg);
     announce($w, `Coupon invalid: ${msg}`);
@@ -144,9 +147,9 @@ export async function applyCouponCode($w, code) {
     return { success: false, message: msg };
   } finally {
     // Re-enable button
-    try { $w('#couponApplyBtn').enable(); } catch (e) {}
-    try { $w('#couponApplyBtn').label = 'Apply'; } catch (e) {}
-    try { $w('#couponLoadingIcon').hide(); } catch (e) {}
+    try { $w('#couponApplyBtn').enable(); } catch (e) { console.warn('[CouponCodeInput] re-enable btn failed:', e?.message); }
+    try { $w('#couponApplyBtn').label = 'Apply'; } catch (e) { console.warn('[CouponCodeInput] reset label failed:', e?.message); }
+    try { $w('#couponLoadingIcon').hide(); } catch (e) { console.warn('[CouponCodeInput] hide loading failed:', e?.message); }
   }
 }
 
@@ -157,14 +160,20 @@ export async function applyCouponCode($w, code) {
  * @returns {Promise<{success: boolean, message?: string}>}
  */
 export async function removeCouponCode($w, couponId) {
+  if (!couponId || typeof couponId !== 'string') {
+    console.warn('[CouponCodeInput] removeCouponCode called without valid couponId');
+    showError($w, 'Unable to remove coupon — no coupon ID.');
+    return { success: false, message: 'No coupon ID provided.' };
+  }
+
   try {
     await wixStoresFrontend.cart.removeCoupon(couponId);
 
     // Reset to input state
-    try { $w('#couponSuccess').hide(); } catch (e) {}
-    try { $w('#couponInput').show(); } catch (e) {}
-    try { $w('#couponInput').value = ''; } catch (e) {}
-    try { $w('#couponApplyBtn').show(); } catch (e) {}
+    try { $w('#couponSuccess').hide(); } catch (e) { console.warn('[CouponCodeInput] hide success failed:', e?.message); }
+    try { $w('#couponInput').show(); } catch (e) { console.warn('[CouponCodeInput] show input failed:', e?.message); }
+    try { $w('#couponInput').value = ''; } catch (e) { console.warn('[CouponCodeInput] clear input failed:', e?.message); }
+    try { $w('#couponApplyBtn').show(); } catch (e) { console.warn('[CouponCodeInput] show btn failed:', e?.message); }
 
     announce($w, 'Coupon removed');
     return { success: true };
@@ -187,11 +196,11 @@ function showError($w, message) {
 }
 
 function showAppliedState($w, code) {
-  try { $w('#couponSuccessText').text = `Coupon ${code} applied`; } catch (e) {}
-  try { $w('#couponSuccess').show(); } catch (e) {}
-  try { $w('#couponError').hide(); } catch (e) {}
-  try { $w('#couponInput').hide(); } catch (e) {}
-  try { $w('#couponApplyBtn').hide(); } catch (e) {}
+  try { $w('#couponSuccessText').text = `Coupon ${code} applied`; } catch (e) { console.warn('[CouponCodeInput] set success text failed:', e?.message); }
+  try { $w('#couponSuccess').show(); } catch (e) { console.warn('[CouponCodeInput] show success failed:', e?.message); }
+  try { $w('#couponError').hide(); } catch (e) { console.warn('[CouponCodeInput] hide error failed:', e?.message); }
+  try { $w('#couponInput').hide(); } catch (e) { console.warn('[CouponCodeInput] hide input failed:', e?.message); }
+  try { $w('#couponApplyBtn').hide(); } catch (e) { console.warn('[CouponCodeInput] hide btn failed:', e?.message); }
 }
 
 function parseCouponError(err) {

@@ -113,6 +113,28 @@ describe('CouponCodeInput', () => {
       expect($w('#couponInput').onKeyPress).toHaveBeenCalled();
     });
 
+    it('Enter key triggers applyCouponCode with input value', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+      $w('#couponInput').value = 'ENTER10';
+
+      await initCouponCodeInput($w);
+
+      // Get the keypress handler and simulate Enter
+      const keyHandler = $w('#couponInput').onKeyPress.mock.calls[0][0];
+      await keyHandler({ key: 'Enter' });
+
+      expect(wixStoresFrontend.cart.applyCoupon).toHaveBeenCalledWith('ENTER10');
+    });
+
+    it('Enter key does not trigger apply for non-Enter keys', async () => {
+      await initCouponCodeInput($w);
+
+      const keyHandler = $w('#couponInput').onKeyPress.mock.calls[0][0];
+      await keyHandler({ key: 'a' });
+
+      expect(wixStoresFrontend.cart.applyCoupon).not.toHaveBeenCalled();
+    });
+
     it('does not throw when elements are missing', async () => {
       const broken$w = vi.fn(() => { throw new Error('Not found'); });
       await expect(initCouponCodeInput(broken$w)).resolves.not.toThrow();
@@ -241,6 +263,19 @@ describe('CouponCodeInput', () => {
       expect($w('#couponApplyBtn').enable).toHaveBeenCalled();
     });
 
+    it('logs raw API error before parsing user-facing message', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Server 500'));
+
+      await applyCouponCode($w, 'SAVE10');
+
+      expect(spy).toHaveBeenCalledWith(
+        '[CouponCodeInput] applyCoupon API error:',
+        'Server 500',
+      );
+      spy.mockRestore();
+    });
+
     it('hides error when a new code is submitted', async () => {
       wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
 
@@ -293,6 +328,34 @@ describe('CouponCodeInput', () => {
 
       expect(result.success).toBe(false);
       expect($w('#couponError').show).toHaveBeenCalled();
+    });
+
+    it('returns error for null couponId', async () => {
+      const result = await removeCouponCode($w, null);
+
+      expect(result.success).toBe(false);
+      expect(wixStoresFrontend.cart.removeCoupon).not.toHaveBeenCalled();
+    });
+
+    it('returns error for undefined couponId', async () => {
+      const result = await removeCouponCode($w, undefined);
+
+      expect(result.success).toBe(false);
+      expect(wixStoresFrontend.cart.removeCoupon).not.toHaveBeenCalled();
+    });
+
+    it('returns error for empty string couponId', async () => {
+      const result = await removeCouponCode($w, '');
+
+      expect(result.success).toBe(false);
+      expect(wixStoresFrontend.cart.removeCoupon).not.toHaveBeenCalled();
+    });
+
+    it('returns error for non-string couponId', async () => {
+      const result = await removeCouponCode($w, 12345);
+
+      expect(result.success).toBe(false);
+      expect(wixStoresFrontend.cart.removeCoupon).not.toHaveBeenCalled();
     });
   });
 
