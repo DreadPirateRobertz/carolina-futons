@@ -178,6 +178,51 @@ export function buildWishlistShareUrl(baseUrl, memberId) {
   return `${baseUrl || ''}/wishlist?member=${memberId || ''}`;
 }
 
+// ── Alert History Helpers ────────────────────────────────────────────
+
+/** Human-readable labels for alert types */
+export const ALERT_TYPE_LABELS = {
+  price_drop: 'Price Drop',
+  back_in_stock: 'Back in Stock',
+  low_stock: 'Low Stock',
+};
+
+/**
+ * Format a wishlist alert for display in the member page.
+ * @param {object|null} alert - Alert object from getWishlistAlertHistory
+ * @returns {{ typeLabel: string, productName: string, message: string, date: string }}
+ */
+export function formatAlertForDisplay(alert) {
+  if (!alert) {
+    return { typeLabel: 'Alert', productName: '', message: '', date: '' };
+  }
+
+  const typeLabel = ALERT_TYPE_LABELS[alert.alertType] || 'Alert';
+  const productName = alert.productName || '';
+
+  let message = '';
+  if (alert.alertType === 'price_drop') {
+    const price = alert.price != null ? `$${Number(alert.price).toFixed(2)}` : '';
+    const pct = alert.dropPercent != null ? `${alert.dropPercent}%` : '';
+    message = pct && price ? `Price dropped ${pct} to ${price}` : 'Price dropped';
+  } else if (alert.alertType === 'back_in_stock') {
+    message = 'Now back in stock';
+  } else if (alert.alertType === 'low_stock') {
+    const qty = alert.quantityInStock != null ? String(alert.quantityInStock) : 'few';
+    message = `Only ${qty} left in stock`;
+  }
+
+  let date = '';
+  if (alert.sentAt) {
+    const d = new Date(alert.sentAt);
+    if (!isNaN(d.getTime())) {
+      date = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+  }
+
+  return { typeLabel, productName, message, date };
+}
+
 // ── Dashboard Helpers ───────────────────────────────────────────────
 
 /**

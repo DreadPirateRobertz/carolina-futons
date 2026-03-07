@@ -255,6 +255,127 @@ export const removeFromWishlist = webMethod(Permissions.SiteMember, async (wishl
   }
 });
 
+// ── addToWishlist ────────────────────────────────────────────────────
+
+/**
+ * Adds a product to the authenticated member's wishlist.
+ * Deduplicates — returns existing item if already wishlisted.
+ * @param {Object} product - { productId, productName, productPrice, imageUrl }
+ * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+ */
+export const addToWishlist = webMethod(Permissions.SiteMember, async (product) => {
+  try {
+    if (!product || !product.productId) {
+      return { success: false, error: 'Missing productId' };
+    }
+
+    const member = await getMember();
+    if (!member) return { success: false, error: 'Not authenticated' };
+
+    const cleanProductId = sanitize(product.productId, 50);
+    const cleanName = sanitize(product.productName || '', 200);
+    const price = Number(product.productPrice);
+    if (price < 0 || (!isFinite(price) && product.productPrice != null)) {
+      return { success: false, error: 'Invalid price' };
+    }
+
+    // Dedup check
+    const existing = await wixData.query('Wishlist')
+      .eq('memberId', member._id)
+      .eq('productId', cleanProductId)
+      .find();
+
+    if (existing.items.length > 0) {
+      return { success: true, data: existing.items[0] };
+    }
+
+    const inserted = await wixData.insert('Wishlist', {
+      memberId: member._id,
+      productId: cleanProductId,
+      productName: cleanName,
+      productPrice: isFinite(price) ? price : 0,
+      imageUrl: product.imageUrl || null,
+      addedAt: new Date(),
+    });
+
+    return { success: true, data: inserted };
+  } catch (err) {
+    return { success: false, error: 'Failed to add to wishlist' };
+  }
+});
+
+// ── moveWishlistToCart ───────────────────────────────────────────────
+
+/**
+ * Removes a wishlist item and returns its product info for adding to cart.
+ * Cart addition is handled client-side via Wix cart API.
+ * @param {string} wishlistItemId - The wishlist item ID
+ * @returns {Promise<{success: boolean, data?: Object, error?: string}>}
+ */
+export const moveWishlistToCart = webMethod(Permissions.SiteMember, async (wishlistItemId) => {
+  try {
+    if (!validateId(wishlistItemId)) return { success: false, error: 'Invalid item ID' };
+
+    const member = await getMember();
+    if (!member) return { success: false, error: 'Not authenticated' };
+
+    const item = await wixData.get('Wishlist', wishlistItemId);
+    if (!item || item.memberId !== member._id) {
+      return { success: false, error: 'Item not found' };
+    }
+
+    await wixData.remove('Wishlist', wishlistItemId);
+
+    return {
+      success: true,
+      data: {
+        productId: item.productId,
+        productName: item.productName,
+        productPrice: item.productPrice,
+        imageUrl: item.imageUrl || null,
+      },
+    };
+  } catch (err) {
+    return { success: false, error: 'Failed to move item to cart' };
+  }
+});
+
+// ── getWishlistAlertHistory ─────────────────────────────────────────
+
+/**
+ * Returns recent wishlist alert history (price drops, back-in-stock, low stock)
+ * for the authenticated member.
+ * @returns {Promise<{success: boolean, data?: {alerts: Array}, error?: string}>}
+ */
+export const getWishlistAlertHistory = webMethod(Permissions.SiteMember, async () => {
+  try {
+    const member = await getMember();
+    if (!member) return { success: false, error: 'Not authenticated' };
+
+    const result = await wixData.query('WishlistAlertsSent')
+      .eq('memberId', member._id)
+      .descending('sentAt')
+      .limit(50)
+      .find();
+
+    const alerts = result.items.map(i => ({
+      _id: i._id,
+      productId: i.productId,
+      productName: i.productName || '',
+      alertType: i.alertType,
+      sentAt: i.sentAt,
+      price: i.price,
+      previousHigh: i.previousHigh,
+      dropPercent: i.dropPercent,
+      quantityInStock: i.quantityInStock,
+    }));
+
+    return { success: true, data: { alerts } };
+  } catch (err) {
+    return { success: false, error: 'Failed to load alert history' };
+  }
+});
+
 // ── updatePreferences ────────────────────────────────────────────────
 
 /**
