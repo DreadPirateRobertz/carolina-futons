@@ -109,6 +109,23 @@ function buildStaticUrl(fileName, options = {}) {
 
 // ── getProductMedia (public) ────────────────────────────────────────
 
+/**
+ * Retrieves all media items for a single product. First checks the
+ * MediaSync cache (populated by syncProductMedia); if no cache exists,
+ * falls back to reading mediaItems directly from Stores/Products.
+ * Returns permanent static wixstatic.com URLs with optional resize params.
+ *
+ * Queries CMS: MediaSync, Stores/Products
+ *
+ * @param {string} productId - Wix Stores product ID.
+ * @param {Object} [options={}]
+ * @param {number} [options.width]   - Desired image width in pixels.
+ * @param {number} [options.height]  - Desired image height in pixels.
+ * @param {number} [options.quality] - JPEG quality (1-100).
+ * @param {number} [options.limit=20] - Max media items to return (capped at 50).
+ * @returns {Promise<{success: boolean, productId?: string, mediaCount?: number, items?: Array<Object>, lastSynced?: Date|null, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getProductMedia = webMethod(
   Permissions.Anyone,
   async (productId, options = {}) => {
@@ -191,6 +208,21 @@ export const getProductMedia = webMethod(
 
 // ── getBatchProductThumbnails (public, for category pages) ──────────
 
+/**
+ * Batch-fetches the primary thumbnail for up to 50 products at once.
+ * Used on category pages to populate product card images without N+1
+ * queries. Returns static URLs with configurable dimensions.
+ *
+ * Queries CMS: Stores/Products
+ *
+ * @param {string[]} [productIds=[]] - Array of product IDs (max 50).
+ * @param {Object}  [options={}]
+ * @param {number}  [options.width=400]   - Thumbnail width in pixels.
+ * @param {number}  [options.height=400]  - Thumbnail height in pixels.
+ * @param {number}  [options.quality=85]  - JPEG quality.
+ * @returns {Promise<{success: boolean, thumbnails?: Object.<string, {src: string, staticUrl: string, thumbnailUrl: string, altText: string}>, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getBatchProductThumbnails = webMethod(
   Permissions.Anyone,
   async (productIds = [], options = {}) => {
@@ -241,6 +273,17 @@ export const getBatchProductThumbnails = webMethod(
 
 // ── listMediaFolder (admin) ─────────────────────────────────────────
 
+/**
+ * Lists files inside a specific Wix Media Manager folder. Used by the
+ * admin media browser to view product photos organized by category
+ * (e.g. "/products/futon-frames").
+ *
+ * @param {string} folderPath - Media Manager folder path or ID.
+ * @param {Object} [options={}]
+ * @param {number} [options.limit=50] - Max files to return (capped at 100).
+ * @returns {Promise<{success: boolean, folder?: string, files?: Array<Object>, totalCount?: number, error?: string}>}
+ * @permission Permissions.Admin
+ */
 export const listMediaFolder = webMethod(
   Permissions.Admin,
   async (folderPath, options = {}) => {
@@ -290,6 +333,13 @@ export const listMediaFolder = webMethod(
 
 // ── listMediaFolders (admin) ────────────────────────────────────────
 
+/**
+ * Lists all top-level folders in the Wix Media Manager. Provides the
+ * folder tree for the admin media browser navigation sidebar.
+ *
+ * @returns {Promise<{success: boolean, folders?: Array<{folderId: string, folderName: string, parentFolderId: string}>, error?: string}>}
+ * @permission Permissions.Admin
+ */
 export const listMediaFolders = webMethod(
   Permissions.Admin,
   async () => {
@@ -313,6 +363,18 @@ export const listMediaFolders = webMethod(
 
 // ── syncProductMedia (admin — pulls from Media Manager to cache) ────
 
+/**
+ * Snapshots a single product's media items from Stores/Products into
+ * the MediaSync CMS collection. This cache avoids repeated product
+ * queries and stores pre-extracted file names for fast static URL
+ * generation.
+ *
+ * Queries/Writes CMS: Stores/Products, MediaSync
+ *
+ * @param {string} productId - Wix Stores product ID to sync.
+ * @returns {Promise<{success: boolean, productId?: string, mediaCount?: number, lastSynced?: Date, error?: string}>}
+ * @permission Permissions.Admin
+ */
 export const syncProductMedia = webMethod(
   Permissions.Admin,
   async (productId) => {
@@ -383,6 +445,18 @@ export const syncProductMedia = webMethod(
 
 // ── batchSyncMedia (admin — sync all products) ─────────────────────
 
+/**
+ * Syncs media for multiple products in one call. Iterates through
+ * Stores/Products and upserts each product's media into MediaSync.
+ * Intended for periodic bulk cache refresh.
+ *
+ * Queries/Writes CMS: Stores/Products, MediaSync
+ *
+ * @param {Object} [options={}]
+ * @param {number} [options.limit=50] - Max products to sync (capped at 200).
+ * @returns {Promise<{success: boolean, synced?: number, totalProducts?: number, error?: string}>}
+ * @permission Permissions.Admin
+ */
 export const batchSyncMedia = webMethod(
   Permissions.Admin,
   async (options = {}) => {
@@ -445,6 +519,19 @@ export const batchSyncMedia = webMethod(
 
 // ── getImageUrl (public utility) ────────────────────────────────────
 
+/**
+ * Converts a Wix internal image URL (wix:image://v1/...) to a permanent
+ * static wixstatic.com URL with optional resize transforms. Useful when
+ * the frontend has a raw Wix image reference and needs a displayable src.
+ *
+ * @param {string} wixImageUrl - A wix:image:// or wixstatic.com URL.
+ * @param {Object} [options={}]
+ * @param {number} [options.width]   - Desired width in pixels.
+ * @param {number} [options.height]  - Desired height in pixels.
+ * @param {number} [options.quality] - JPEG quality (1-100).
+ * @returns {Promise<{success: boolean, fileName?: string, staticUrl?: string, thumbnailUrl?: string, originalUrl?: string, error?: string}>}
+ * @permission Permissions.Anyone
+ */
 export const getImageUrl = webMethod(
   Permissions.Anyone,
   async (wixImageUrl, options = {}) => {

@@ -51,6 +51,36 @@ const SORT_OPTIONS = {
 
 // ── searchProducts ──────────────────────────────────────────────────
 
+/**
+ * Full-text product search with multi-faceted filtering. Supports category,
+ * text query, price range, materials, colors, feature tags, brands,
+ * dimension ranges, stock status, and sort order. All string inputs are
+ * sanitized. Pagination is capped at 100 items per page.
+ *
+ * Queries CMS: Stores/Products
+ *
+ * @param {Object} [params={}] - Search and filter parameters.
+ * @param {string}   [params.category]     - Collection slug to filter by.
+ * @param {string}   [params.searchQuery]  - Free-text search (matched against product name).
+ * @param {number}   [params.priceMin]     - Minimum price (inclusive).
+ * @param {number}   [params.priceMax]     - Maximum price (inclusive).
+ * @param {string[]} [params.materials]    - Material values to include (multi-select OR).
+ * @param {string[]} [params.colors]       - Color values to include.
+ * @param {string[]} [params.featureTags]  - Feature tag values to include.
+ * @param {string[]} [params.brands]       - Brand names to include.
+ * @param {number}   [params.widthMin]     - Minimum width in inches.
+ * @param {number}   [params.widthMax]     - Maximum width in inches.
+ * @param {number}   [params.depthMin]     - Minimum depth in inches.
+ * @param {number}   [params.depthMax]     - Maximum depth in inches.
+ * @param {number}   [params.heightMin]    - Minimum height in inches.
+ * @param {number}   [params.heightMax]    - Maximum height in inches.
+ * @param {boolean}  [params.inStockOnly]  - When true, exclude out-of-stock items.
+ * @param {string}   [params.sort='bestselling'] - Sort key (see SORT_OPTIONS).
+ * @param {number}   [params.limit=50]     - Page size (max 100).
+ * @param {number}   [params.skip=0]       - Offset for pagination.
+ * @returns {Promise<{items: Object[], totalCount: number, hasMore: boolean}>}
+ * @permission Permissions.Anyone
+ */
 export const searchProducts = webMethod(
   Permissions.Anyone,
   async (params = {}) => {
@@ -196,6 +226,17 @@ export const searchProducts = webMethod(
 
 // ── getFilteredProductCount ─────────────────────────────────────────
 
+/**
+ * Returns just the matching product count for a given filter combination.
+ * Used by the UI to show "X products found" badges on filter chips before
+ * the user commits to a full search.
+ *
+ * Queries CMS: Stores/Products
+ *
+ * @param {Object} [params={}] - Same filter shape as searchProducts (minus sort/pagination).
+ * @returns {Promise<{count: number}>}
+ * @permission Permissions.Anyone
+ */
 export const getFilteredProductCount = webMethod(
   Permissions.Anyone,
   async (params = {}) => {
@@ -254,6 +295,18 @@ export const getFilteredProductCount = webMethod(
 
 // ── getFacetMetadata ────────────────────────────────────────────────
 
+/**
+ * Builds available filter facets for a category (or all products). Scans
+ * up to 100 products and extracts distinct materials, colors, feature tags,
+ * brands, price range, and dimension ranges. Results are cached for 5 min
+ * to avoid redundant queries on every page load.
+ *
+ * Queries CMS: Stores/Products
+ *
+ * @param {string} [category] - Optional collection slug. Omit for site-wide facets.
+ * @returns {Promise<{totalProducts: number, priceRange: {min: number, max: number}, materials: string[], colors: string[], featureTags: string[], brands: string[], dimensionRange: Object}>}
+ * @permission Permissions.Anyone
+ */
 export const getFacetMetadata = webMethod(
   Permissions.Anyone,
   async (category) => {
@@ -362,6 +415,18 @@ export const getFacetMetadata = webMethod(
 
 // ── suggestFilterRelaxation ─────────────────────────────────────────
 
+/**
+ * When a search returns zero results, this function identifies which single
+ * filter removal would yield results. It tries dropping each active filter
+ * one at a time and returns suggestions sorted by the most results gained.
+ * Helps the user recover from over-filtered dead ends.
+ *
+ * Queries CMS: Stores/Products
+ *
+ * @param {Object} [params={}] - The current filter set that produced zero results.
+ * @returns {Promise<{suggestions: Array<{filter: string, label: string, resultCount: number}>}>}
+ * @permission Permissions.Anyone
+ */
 export const suggestFilterRelaxation = webMethod(
   Permissions.Anyone,
   async (params = {}) => {

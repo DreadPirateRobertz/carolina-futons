@@ -6,7 +6,7 @@
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
 import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
-import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { announce } from 'public/a11yHelpers.js';
 import { colors } from 'public/designTokens.js';
 import { getCheckoutButtonStyles } from 'public/cartStyles.js';
 import { getCheckoutSteps, getStepAriaAttributes } from 'public/checkoutProgress.js';
@@ -118,7 +118,7 @@ function initTrustSignals() {
     { icon: 'lock', text: 'Secure SSL Checkout' },
     { icon: 'shield', text: '30-Day Money-Back Guarantee' },
     { icon: 'credit-card', text: 'Secure Payment' },
-    { icon: 'truck', text: 'Free shipping on orders $999+' },
+    // { icon: 'truck', text: 'Free shipping on orders $999+' }, // Disabled: free shipping currently inactive
     { icon: 'phone', text: 'Questions? Call (828) 252-9449' },
   ];
 

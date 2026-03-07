@@ -3,8 +3,8 @@
 import { getAdminReturns, getReturnStats, updateReturnStatus, generateReturnLabel, processRefund, trackReturnShipment } from 'backend/returnsService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
-import { colors, typography } from 'public/designTokens.js';
-import { getAdminStatusLabel, getAdminStatusColor, getNextStatuses, isValidTransition, getStatusFilterOptions, formatAdminReturnRow, formatReturnStats, validateRefund, canGenerateLabel, needsAction, sortAdminReturns } from 'public/ReturnsAdmin.js';
+import { colors } from 'public/designTokens.js';
+import { getAdminStatusLabel, getNextStatuses, getStatusFilterOptions, formatAdminReturnRow, formatReturnStats, validateRefund, canGenerateLabel, needsAction, sortAdminReturns } from 'public/ReturnsAdmin.js';
 import { initBackToTop } from 'public/mobileHelpers';
 
 let _returns = [];
@@ -195,6 +195,8 @@ function initDetailPanel() {
     try { $w('#closeDetailBtn').accessibility.ariaLabel = 'Close detail panel'; } catch (e) {}
     $w('#closeDetailBtn').onClick(() => closeDetail());
   } catch (e) {}
+
+  initTrackingButton();
 }
 
 function openDetail(ret) {

@@ -575,9 +575,9 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       expect(delay1).toBeLessThan(delay2);
     });
 
-    it('all 4 trust items receive show animation', async () => {
+    it('active trust items receive show animation (free shipping hidden)', async () => {
       await onReadyHandler();
-      ['#trustItem1', '#trustItem2', '#trustItem3', '#trustItem4'].forEach(id => {
+      ['#trustItem1', '#trustItem2', '#trustItem3', '#trustItem5'].forEach(id => {
         expect(getEl(id).show).toHaveBeenCalled();
       });
     });
@@ -695,10 +695,10 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       expect(icon3.text).toBeTruthy();
     });
 
-    it('trust icon 4 shows truck icon for shipping', async () => {
+    it('trust icon 4 is not set (free shipping disabled)', async () => {
       await onReadyHandler();
       const icon4 = getEl('#trustIcon4');
-      expect(icon4.text).toBeTruthy();
+      expect(icon4.text).toBeFalsy();
     });
 
     it('sets accessibility label on trust items', async () => {

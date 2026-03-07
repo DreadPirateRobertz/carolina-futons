@@ -402,36 +402,34 @@ describe('Social Proof Notifications', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('Free Shipping Progress Bar', () => {
-  it('calculates correct progress percentage', async () => {
+  it('calculates near-zero progress at $500 (free shipping disabled)', async () => {
     const { getShippingProgress } = await import('../src/public/cartService.js');
     const result = getShippingProgress(500);
-    expect(result.progressPct).toBeCloseTo(50.05, 0); // 500/999 * 100
-    expect(result.remaining).toBeCloseTo(499, 0);
+    expect(result.progressPct).toBeCloseTo(0.05, 0);
+    expect(result.remaining).toBeCloseTo(999499, 0);
     expect(result.qualifies).toBe(false);
   });
 
-  it('shows "FREE shipping!" at $999+ threshold', async () => {
+  it('does not qualify at $999 (free shipping disabled)', async () => {
     const { getShippingProgress } = await import('../src/public/cartService.js');
     const result = getShippingProgress(999);
-    expect(result.qualifies).toBe(true);
-    expect(result.remaining).toBe(0);
-    expect(result.progressPct).toBe(100);
+    expect(result.qualifies).toBe(false);
+    expect(result.remaining).toBe(999999 - 999);
   });
 
   it('handles $0 cart subtotal', async () => {
     const { getShippingProgress } = await import('../src/public/cartService.js');
     const result = getShippingProgress(0);
     expect(result.progressPct).toBe(0);
-    expect(result.remaining).toBe(999);
+    expect(result.remaining).toBe(999999);
     expect(result.qualifies).toBe(false);
   });
 
-  it('handles above-threshold values', async () => {
+  it('does not qualify at $1500 (free shipping disabled)', async () => {
     const { getShippingProgress } = await import('../src/public/cartService.js');
     const result = getShippingProgress(1500);
-    expect(result.progressPct).toBe(100);
-    expect(result.remaining).toBe(0);
-    expect(result.qualifies).toBe(true);
+    expect(result.qualifies).toBe(false);
+    expect(result.remaining).toBe(999999 - 1500);
   });
 
   it('side cart updates shipping text correctly', () => {

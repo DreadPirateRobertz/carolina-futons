@@ -157,6 +157,7 @@ export function wrapForWixHtmlComponent(svg) {
 ${svg}
 <script>
 window.addEventListener('message', function(event) {
+  if (!event.origin || event.origin === 'null') return;
   if (event.data && event.data.type === 'updateSvg') {
     var parser = new DOMParser();
     var doc = parser.parseFromString(event.data.svg, 'image/svg+xml');

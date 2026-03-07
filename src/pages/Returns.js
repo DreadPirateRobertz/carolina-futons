@@ -4,7 +4,7 @@
 import { lookupReturn, submitGuestReturn, trackReturnShipment, getReturnReasons } from 'backend/returnsService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { colors, typography } from 'public/designTokens.js';
-import { checkReturnWindow, isItemReturnable, getStatusTimeline, formatReturnStatus, getStatusColor, getReturnableItems } from 'public/ReturnsPortal.js';
+import { checkReturnWindow, getStatusTimeline, formatReturnStatus, getStatusColor, getReturnableItems } from 'public/ReturnsPortal.js';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
 import { sanitizeText } from 'public/validators';

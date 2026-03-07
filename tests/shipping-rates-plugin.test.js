@@ -115,7 +115,7 @@ describe('getShippingRates', () => {
     expect(codes).not.toContain('local-delivery');
   });
 
-  it('returns free shipping rates for orders >= $999', async () => {
+  it('does NOT return free shipping for $1899 order (free shipping disabled)', async () => {
     const result = await getShippingRates({
       lineItems: [
         { name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1899' },
@@ -126,8 +126,7 @@ describe('getShippingRates', () => {
     });
 
     const freeRate = result.shippingRates.find(r => r.code === 'free-ground');
-    expect(freeRate).toBeDefined();
-    expect(freeRate.cost.price).toBe('0.00');
+    expect(freeRate).toBeUndefined();
   });
 
   it('returns empty rates when no postal code', async () => {
@@ -182,8 +181,8 @@ describe('getShippingRates', () => {
       },
     });
 
-    // Murphy bed should trigger free shipping ($1899 > $999)
-    expect(result.shippingRates.some(r => r.code === 'free-ground')).toBe(true);
+    // Murphy bed does NOT trigger free shipping (free shipping disabled)
+    expect(result.shippingRates.some(r => r.code === 'free-ground')).toBe(false);
   });
 
   it('handles multiple items with quantity > 1', async () => {
@@ -239,7 +238,7 @@ describe('getShippingRates', () => {
     expect(wg.cost.price).toBe('249.00');
   });
 
-  it('offers free white-glove for orders >= $1999', async () => {
+  it('does NOT offer free white-glove at $2100 (free shipping disabled)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '2100' }],
       shippingDestination: {
@@ -249,8 +248,7 @@ describe('getShippingRates', () => {
 
     const wg = result.shippingRates.find(r => r.code === 'white-glove');
     expect(wg).toBeDefined();
-    expect(wg.cost.price).toBe('0.00');
-    expect(wg.title).toContain('Free');
+    expect(wg.cost.price).not.toBe('0.00');
   });
 
   it('does NOT offer white-glove for non-Southeast ZIP codes', async () => {
@@ -265,7 +263,7 @@ describe('getShippingRates', () => {
     expect(codes).not.toContain('white-glove');
   });
 
-  it('offers free local delivery for orders >= $999', async () => {
+  it('does NOT offer free local delivery at $1899 (free shipping disabled)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1899' }],
       shippingDestination: {
@@ -275,8 +273,7 @@ describe('getShippingRates', () => {
 
     const local = result.shippingRates.find(r => r.code === 'local-delivery');
     expect(local).toBeDefined();
-    expect(local.cost.price).toBe('0.00');
-    expect(local.title).toContain('Free');
+    expect(local.cost.price).not.toBe('0.00');
   });
 
   it('charges $49.99 local delivery for orders < $999', async () => {

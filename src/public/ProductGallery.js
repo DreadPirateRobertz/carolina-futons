@@ -1,4 +1,10 @@
-// ProductGallery.js - Image gallery, video, and badge overlay
+/**
+ * @module ProductGallery
+ * Product Page image gallery, video player, and badge overlay.
+ * Handles thumbnail navigation, mobile swipe, keyboard arrow-key
+ * navigation (WCAG 2.1.1), lightbox, zoom, placeholder fallbacks,
+ * and cleanup for SPA navigation.
+ */
 import { generateAltText } from 'backend/seoHelpers.web';
 import { getProductBadge, initImageLightbox, initImageZoom } from 'public/galleryHelpers.js';
 import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
@@ -6,6 +12,16 @@ import { enableSwipe } from 'public/touchHelpers';
 import { trackGalleryInteraction } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers.js';
 
+/**
+ * Initialize the main product image gallery with thumbnail clicks, mobile
+ * swipe, keyboard arrow navigation, lightbox, and zoom. Falls back to
+ * category-specific placeholder images when the product has fewer than 3
+ * media items.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {{ destroy: Function }} Cleanup handle — call destroy() on SPA navigation to remove keydown listeners
+ */
 export function initImageGallery($w, state) {
   try {
     const product = state.product;
@@ -121,6 +137,14 @@ export function initImageGallery($w, state) {
   return { destroy() {} };
 }
 
+/**
+ * Show or hide the product badge overlay (e.g., "Sale", "New", "In-Store Only")
+ * based on the product's ribbon, discount, or creation date.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initProductBadge($w, state) {
   try {
     const badge = getProductBadge(state.product);
@@ -131,6 +155,15 @@ export function initProductBadge($w, state) {
   } catch (e) {}
 }
 
+/**
+ * If the product has a video media item, expand the video section, load
+ * the player (muted for autoplay compliance), and wire up the "View All
+ * Videos" link. Collapses the section when no video exists.
+ * @param {Function} $w - Wix Velo selector function for querying page elements
+ * @param {Object} state - Shared product page state
+ * @param {Object} state.product - Current Wix Stores product object
+ * @returns {void}
+ */
 export function initProductVideo($w, state) {
   try {
     const section = $w('#productVideoSection');
@@ -157,5 +190,9 @@ export function initProductVideo($w, state) {
   }
 }
 
-// No-op stub: Wix gallery handles its own image loading
+/**
+ * No-op stub retained for backward compatibility — Wix gallery handles
+ * its own image loading natively.
+ * @returns {void}
+ */
 export function preloadGalleryThumbnails() {}
