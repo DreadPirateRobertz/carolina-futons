@@ -271,3 +271,102 @@ export const PAGE_SECTIONS = [
   'communicationPrefs',
   'returns',
 ];
+
+// ── Order History Helpers ───────────────────────────────────────────
+
+/** Status filter options for the order history dropdown */
+export const ORDER_FILTER_OPTIONS = [
+  { label: 'All Orders', value: 'all' },
+  { label: 'Processing', value: 'Processing' },
+  { label: 'Shipped', value: 'Shipped' },
+  { label: 'Delivered', value: 'Delivered' },
+  { label: 'Cancelled', value: 'Cancelled' },
+];
+
+/**
+ * Merge active delivery data into an orders array.
+ * @param {Array|null} orders
+ * @param {Array|null} deliveries
+ * @returns {Array} Orders with merged delivery data
+ */
+export function mergeDeliveryStatus(orders, deliveries) {
+  if (!Array.isArray(orders)) return [];
+  if (!Array.isArray(deliveries) || deliveries.length === 0) return [...orders];
+
+  const deliveryMap = new Map();
+  for (const d of deliveries) {
+    if (d.orderId && !deliveryMap.has(d.orderId)) {
+      deliveryMap.set(d.orderId, d);
+    }
+  }
+
+  return orders.map(order => {
+    const delivery = deliveryMap.get(order._id);
+    if (!delivery) return { ...order };
+    return {
+      ...order,
+      deliveryEta: delivery.estimatedDelivery,
+      liveStatus: delivery.status,
+      deliveryTrackingNumber: delivery.trackingNumber || null,
+      deliveryTier: delivery.deliveryTier || null,
+    };
+  });
+}
+
+/**
+ * Format an estimated delivery date for display.
+ * @param {string|Date|null} dateValue
+ * @returns {string} e.g. "Sunday, March 15" or ""
+ */
+export function formatDeliveryEstimate(dateValue) {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+/**
+ * Format item count for display.
+ * @param {number|null} count
+ * @returns {string} e.g. "1 item" or "3 items"
+ */
+export function formatItemCount(count) {
+  const n = Math.max(0, Math.round(Number(count) || 0));
+  return n === 1 ? '1 item' : `${n} items`;
+}
+
+/**
+ * Get order filter dropdown options.
+ * @returns {Array<{label: string, value: string}>}
+ */
+export function getOrderFilterOptions() {
+  return ORDER_FILTER_OPTIONS;
+}
+
+/**
+ * Filter orders by fulfillment status.
+ * @param {Array|null} orders
+ * @param {string|null} statusFilter - 'all' or a status string
+ * @returns {Array}
+ */
+export function filterOrdersByStatus(orders, statusFilter) {
+  if (!Array.isArray(orders)) return [];
+  if (!statusFilter || statusFilter === 'all') return orders;
+  return orders.filter(o => o.status === statusFilter);
+}
+
+/**
+ * Build the URL for the order tracking page.
+ * @param {string|null} orderNumber
+ * @param {string|null} email
+ * @returns {string}
+ */
+export function buildTrackingUrl(orderNumber, email) {
+  const num = orderNumber || '';
+  const mail = encodeURIComponent(email || '');
+  return `/tracking?order=${num}&email=${mail}`;
+}
