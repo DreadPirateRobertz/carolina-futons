@@ -1,16 +1,15 @@
 /**
- * About Page Illustration Tests (cf-niux)
+ * About Page Illustration Tests (cf-g4f)
  *
  * Team Portrait + Blue Ridge Timeline SVG illustrations.
- * Verifies 8/8 quality bar for each:
- *   1. feTurbulence watercolor filter
- *   2. feDisplacementMap
- *   3. Organic hand-drawn paths (15+ shape elements)
- *   4. 5+ gradient stops
- *   5. Paper grain noise (fractalNoise)
- *   6. Atmospheric depth (background/midground/foreground)
- *   7. All colors from sharedTokens
- *   8. Detail elements (birds, trees, etc.)
+ * Figma-first pipeline: static SVG, no deprecated filters.
+ * Verifies quality bar:
+ *   1. NO deprecated filters (feTurbulence, feDisplacementMap, fractalNoise)
+ *   2. Organic hand-drawn paths (15+ shape elements)
+ *   3. 5+ gradient stops
+ *   4. Atmospheric depth (background/midground/foreground)
+ *   5. All colors from sharedTokens
+ *   6. Detail elements (birds, trees, etc.)
  */
 import { describe, it, expect, beforeAll } from 'vitest';
 import { colors } from '../src/public/sharedTokens.js';
@@ -92,25 +91,27 @@ describe('Team Portrait (getTeamPortraitSvg)', () => {
     expect(svg).toMatch(new RegExp(`aria-labelledby="[^"]*${titleIdMatch[1]}[^"]*"`));
   });
 
-  // ── Quality bar 1: feTurbulence ──
+  // ── Quality bar 1: NO deprecated filters ──
 
-  it('contains feTurbulence filter for watercolor texture', () => {
-    expect(svg).toMatch(/<feTurbulence/);
+  it('does not contain feTurbulence (deprecated)', () => {
+    expect(svg).not.toMatch(/<feTurbulence/);
   });
 
-  // ── Quality bar 2: feDisplacementMap ──
-
-  it('contains feDisplacementMap', () => {
-    expect(svg).toMatch(/<feDisplacementMap/);
+  it('does not contain feDisplacementMap (deprecated)', () => {
+    expect(svg).not.toMatch(/<feDisplacementMap/);
   });
 
-  // ── Quality bar 3: 15+ shape/path elements (organic hand-drawn) ──
+  it('does not contain fractalNoise (deprecated)', () => {
+    expect(svg).not.toMatch(/type="fractalNoise"/);
+  });
+
+  // ── Quality bar 2: 15+ shape/path elements (organic hand-drawn) ──
 
   it('has 15+ SVG shape/path elements', () => {
     expect(countShapeElements(svg)).toBeGreaterThanOrEqual(15);
   });
 
-  // ── Quality bar 4: 5+ gradient stops ──
+  // ── Quality bar 3: 5+ gradient stops ──
 
   it('has at least one gradient', () => {
     expect(svg).toMatch(/<(linearGradient|radialGradient)/);
@@ -121,13 +122,7 @@ describe('Team Portrait (getTeamPortraitSvg)', () => {
     expect(stops.length).toBeGreaterThanOrEqual(5);
   });
 
-  // ── Quality bar 5: paper grain (fractalNoise) ──
-
-  it('contains paper grain noise filter', () => {
-    expect(svg).toMatch(/type="fractalNoise"/);
-  });
-
-  // ── Quality bar 6: atmospheric depth layers ──
+  // ── Quality bar 4: atmospheric depth layers ──
 
   it('has background layer group', () => {
     expect(svg).toMatch(/id="background"/);
@@ -212,25 +207,27 @@ describe('Blue Ridge Timeline (getTimelineSvg)', () => {
     expect(svg).toMatch(new RegExp(`aria-labelledby="[^"]*${titleIdMatch[1]}[^"]*"`));
   });
 
-  // ── Quality bar 1: feTurbulence ──
+  // ── Quality bar 1: NO deprecated filters ──
 
-  it('contains feTurbulence filter for watercolor texture', () => {
-    expect(svg).toMatch(/<feTurbulence/);
+  it('does not contain feTurbulence (deprecated)', () => {
+    expect(svg).not.toMatch(/<feTurbulence/);
   });
 
-  // ── Quality bar 2: feDisplacementMap ──
-
-  it('contains feDisplacementMap', () => {
-    expect(svg).toMatch(/<feDisplacementMap/);
+  it('does not contain feDisplacementMap (deprecated)', () => {
+    expect(svg).not.toMatch(/<feDisplacementMap/);
   });
 
-  // ── Quality bar 3: 15+ shape/path elements ──
+  it('does not contain fractalNoise (deprecated)', () => {
+    expect(svg).not.toMatch(/type="fractalNoise"/);
+  });
+
+  // ── Quality bar 2: 15+ shape/path elements ──
 
   it('has 15+ SVG shape/path elements', () => {
     expect(countShapeElements(svg)).toBeGreaterThanOrEqual(15);
   });
 
-  // ── Quality bar 4: 5+ gradient stops ──
+  // ── Quality bar 3: 5+ gradient stops ──
 
   it('has at least one gradient', () => {
     expect(svg).toMatch(/<(linearGradient|radialGradient)/);
@@ -241,13 +238,7 @@ describe('Blue Ridge Timeline (getTimelineSvg)', () => {
     expect(stops.length).toBeGreaterThanOrEqual(5);
   });
 
-  // ── Quality bar 5: paper grain (fractalNoise) ──
-
-  it('contains paper grain noise filter', () => {
-    expect(svg).toMatch(/type="fractalNoise"/);
-  });
-
-  // ── Quality bar 6: atmospheric depth layers ──
+  // ── Quality bar 4: atmospheric depth layers ──
 
   it('has background layer group', () => {
     expect(svg).toMatch(/id="background"/);
