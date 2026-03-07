@@ -74,6 +74,10 @@ vi.mock('public/cartDeliveryEstimate.js', () => ({
   updateCartDeliveryEstimate: vi.fn().mockResolvedValue(),
 }));
 
+vi.mock('public/CouponCodeInput.js', () => ({
+  initCouponCodeInput: vi.fn(),
+}));
+
 vi.mock('public/touchHelpers', () => ({
   enableSwipe: vi.fn(),
 }));

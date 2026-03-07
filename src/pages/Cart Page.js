@@ -30,6 +30,7 @@ import {
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
 import { saveForLater } from 'public/SaveForLater.js';
 import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
+import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -71,6 +72,11 @@ async function initCartPage() {
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     initQuantityControls();
+    initCouponCodeInput($w, {
+      appliedCoupon: cart.appliedCoupon || null,
+      onApplied: () => refreshCartTotals(),
+      onRemoved: () => refreshCartTotals(),
+    });
     initCartListeners();
     initBackToTop($w);
   } catch (err) {
