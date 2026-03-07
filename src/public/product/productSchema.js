@@ -6,30 +6,6 @@ import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqS
 import { getProductPinData } from 'backend/pinterestRichPins.web';
 
 /**
- * Inject JSON-LD product schema, FAQ schema, and OG tags.
- */
-export async function injectProductSchema($w, product) {
-  try {
-    if (!product) return;
-
-    const schema = await getProductSchema(product);
-    if (schema) {
-      $w('#productSchemaHtml').postMessage(schema);
-    }
-
-    const faqSchema = await getProductFaqSchema(product);
-    if (faqSchema) {
-      try { $w('#productFaqSchemaHtml').postMessage(faqSchema); } catch (e) {}
-    }
-
-    const ogTags = await getProductOgTags(product);
-    if (ogTags) {
-      try { $w('#productOgHtml').postMessage(ogTags); } catch (e) {}
-    }
-  } catch (e) {}
-}
-
-/**
  * Initialize breadcrumb navigation and inject breadcrumb schema.
  */
 export async function initBreadcrumbs($w, product) {
@@ -92,17 +68,19 @@ export async function injectProductMeta(product) {
     }
 
     // Set OG meta tags via wix-seo-frontend for crawler access
-    const ogTags = await getProductOgTags(product);
-    if (ogTags) {
-      const tags = JSON.parse(ogTags);
-      for (const [key, value] of Object.entries(tags)) {
-        if (key.startsWith('og:') || key.startsWith('product:')) {
-          head.setMetaTag(key, value);
-        } else if (key.startsWith('twitter:')) {
-          head.setMetaTag(key, value);
+    try {
+      const ogTags = await getProductOgTags(product);
+      if (ogTags) {
+        const tags = JSON.parse(ogTags);
+        for (const [key, value] of Object.entries(tags)) {
+          if (key.startsWith('og:') || key.startsWith('product:')) {
+            head.setMetaTag(key, value);
+          } else if (key.startsWith('twitter:')) {
+            head.setMetaTag(key, value);
+          }
         }
       }
-    }
+    } catch (e) { /* OG tag parsing failed — continue with structured data */ }
 
     // Inject JSON-LD structured data via wix-seo-frontend for SSR
     const schemas = [];
@@ -130,6 +108,9 @@ export async function injectProductMeta(product) {
     if (schemas.length > 0) {
       head.setStructuredData(schemas);
     }
+
+    // Set Pinterest Rich Pin meta tags
+    await injectPinterestMeta(product);
   } catch (e) {
     // Meta tag injection is non-critical
   }
@@ -187,6 +168,7 @@ export async function injectPinterestMeta(product) {
  * Used by crossSell and productGallery for repeater items.
  */
 export function buildGridAlt(product) {
+  if (!product) return 'Carolina Futons';
   const brand = detectProductBrand(product);
   const category = detectProductCategory(product);
   const parts = [product.name];
@@ -197,6 +179,11 @@ export function buildGridAlt(product) {
   return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
 }
 
+/**
+ * Detect brand name from product collections.
+ * @param {Object|null} product - Wix product object
+ * @returns {string} Brand name, or empty string if undetectable
+ */
 export function detectProductBrand(product) {
   if (!product || !product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
@@ -206,6 +193,11 @@ export function detectProductBrand(product) {
   return 'Night & Day Furniture';
 }
 
+/**
+ * Detect product category label from collections.
+ * @param {Object|null} product - Wix product object
+ * @returns {string} Category label, or empty string if undetectable
+ */
 export function detectProductCategory(product) {
   if (!product || !product.collections) return '';
   const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
@@ -218,6 +210,11 @@ export function detectProductCategory(product) {
   return 'Furniture';
 }
 
+/**
+ * Map product collections to a category label and URL path for breadcrumbs.
+ * @param {Array<string>|string|null} collections - Product collection slugs
+ * @returns {{label: string, path: string}} Category label and URL path
+ */
 export function getCategoryFromCollections(collections) {
   if (!collections) return { label: 'Shop', path: '/shop-main' };
 

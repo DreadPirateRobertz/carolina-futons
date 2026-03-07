@@ -284,6 +284,17 @@ describe('Product Page JSON-LD — injectProductMeta', () => {
       const ogCalls = mockHead.setMetaTag.mock.calls.filter(c => c[0].startsWith('og:'));
       expect(ogCalls).toHaveLength(0);
     });
+
+    it('still injects structured data when OG tags return malformed JSON', async () => {
+      getProductOgTags.mockReturnValueOnce('not-valid-json{{{');
+
+      await injectProductMeta(futonFrame);
+
+      // Structured data should still be injected despite OG parse failure
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'Product')).toBeDefined();
+    });
   });
 
   // ── Robots Meta ───────────────────────────────────────────────
@@ -509,6 +520,11 @@ describe('buildGridAlt', () => {
     const noCollections = { ...futonFrame, collections: undefined };
     const alt = buildGridAlt(noCollections);
     expect(alt).toContain('Eureka Futon Frame');
+    expect(alt).toContain('Carolina Futons');
+  });
+
+  it('handles null product gracefully', () => {
+    const alt = buildGridAlt(null);
     expect(alt).toContain('Carolina Futons');
   });
 });
