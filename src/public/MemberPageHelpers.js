@@ -366,7 +366,7 @@ export function filterOrdersByStatus(orders, statusFilter) {
  * @returns {string}
  */
 export function buildTrackingUrl(orderNumber, email) {
-  const num = orderNumber || '';
+  const num = encodeURIComponent(orderNumber || '');
   const mail = encodeURIComponent(email || '');
   return `/tracking?order=${num}&email=${mail}`;
 }

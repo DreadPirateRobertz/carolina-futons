@@ -580,4 +580,9 @@ describe('buildTrackingUrl', () => {
     const url = buildTrackingUrl('1234', 'user+test@example.com');
     expect(url).toContain('user%2Btest%40example.com');
   });
+
+  it('encodes special characters in order number', () => {
+    const url = buildTrackingUrl('CF-001&evil=1', 'test@example.com');
+    expect(url).toBe('/tracking?order=CF-001%26evil%3D1&email=test%40example.com');
+  });
 });

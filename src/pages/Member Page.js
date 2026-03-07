@@ -331,6 +331,12 @@ let _deliveries = [];
 
 async function initOrderHistory() {
   try {
+    // Reset state on each init (handles re-navigation)
+    _orderData = [];
+    _orderPage = 1;
+    _orderFilter = 'all';
+    _deliveries = [];
+
     const ordersRepeater = $w('#ordersRepeater');
     if (!ordersRepeater) return;
 
@@ -413,11 +419,11 @@ async function initOrderHistory() {
             reorderBtn.label = 'Adding...';
             const { getReorderItems } = await import('backend/accountDashboard.web');
             const result = await getReorderItems(itemData._id);
-            if (result.success && result.data.items.length > 0) {
+            if (result.success && result.data?.items?.length > 0) {
               const { addToCart } = await import('public/cartService');
-              for (const item of result.data.items) {
-                await addToCart(item.productId, item.quantity || 1);
-              }
+              await Promise.all(result.data.items.map(
+                item => addToCart(item.productId, item.quantity || 1)
+              ));
               reorderBtn.label = 'Added to Cart!';
               announce($w, `Items from order ${itemData.number} added to cart`);
               trackEvent('reorder', { orderNumber: itemData.number });
@@ -507,6 +513,17 @@ async function initOrderHistory() {
       }
     } catch (e) {}
 
+    // Setup Retry button (wired once to avoid stacking handlers)
+    try {
+      const retryBtn = $w('#ordersRetryBtn');
+      if (retryBtn) {
+        retryBtn.onClick(async () => {
+          _orderPage = 1;
+          await loadOrders();
+        });
+      }
+    } catch (e) {}
+
     // Initial load
     await loadOrders();
 
@@ -592,15 +609,6 @@ function showOrdersError(message) {
     const errorEl = $w('#ordersError');
     errorEl.text = message;
     errorEl.show('fade', { duration: 200 });
-  } catch (e) {}
-  try {
-    const retryBtn = $w('#ordersRetryBtn');
-    if (retryBtn) {
-      retryBtn.onClick(async () => {
-        _orderPage = 1;
-        await loadOrders();
-      });
-    }
   } catch (e) {}
 }
 
