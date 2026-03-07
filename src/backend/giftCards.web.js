@@ -17,6 +17,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { triggeredEmails, contacts } from 'wix-crm-backend';
 
 const GIFT_CARD_AMOUNTS = [25, 50, 100, 150, 200, 500];
 const EXPIRATION_DAYS = 365;
@@ -69,6 +70,17 @@ export const purchaseGiftCard = webMethod(
         createdDate: new Date(),
         expirationDate,
       });
+
+      // Fire-and-forget email delivery — don't block purchase on email
+      sendGiftCardEmails({
+        code,
+        amount,
+        purchaserEmail,
+        recipientEmail,
+        recipientName: sanitize(data.recipientName || '', 200),
+        message: sanitize(data.message || '', 500),
+        expirationDate: expirationDate.toISOString(),
+      }).catch(err => console.error('Gift card email delivery failed:', err));
 
       return {
         success: true,
@@ -224,6 +236,115 @@ export const getGiftCardOptions = webMethod(
       amount,
       label: `$${amount}`,
     }));
+  }
+);
+
+/**
+ * Send gift card confirmation emails to purchaser and recipient.
+ *
+ * @function sendGiftCardEmails
+ * @param {Object} data
+ * @param {string} data.code - Gift card code
+ * @param {number} data.amount - Gift card amount
+ * @param {string} data.purchaserEmail - Buyer's email
+ * @param {string} data.recipientEmail - Recipient's email
+ * @param {string} [data.recipientName] - Recipient name
+ * @param {string} [data.message] - Personal message
+ * @param {string} [data.expirationDate] - ISO expiration date
+ * @returns {Promise<{success: boolean}>}
+ * @permission SiteMember
+ */
+export const sendGiftCardEmails = webMethod(
+  Permissions.SiteMember,
+  async (data) => {
+    try {
+      if (!data || !data.code || !data.purchaserEmail || !data.recipientEmail || !data.amount) {
+        return { success: false, message: 'Missing required email data' };
+      }
+
+      const formattedAmount = `$${Number(data.amount).toFixed(2)}`;
+
+      const [purchaserContact, recipientContact] = await Promise.all([
+        contacts.appendOrCreateContact({ emails: [{ email: data.purchaserEmail }] }),
+        contacts.appendOrCreateContact({ emails: [{ email: data.recipientEmail }] }),
+      ]);
+
+      await triggeredEmails.emailContact(
+        'gift_card_purchase_confirmation',
+        purchaserContact.contactId,
+        {
+          variables: {
+            code: data.code,
+            amount: formattedAmount,
+            recipientEmail: data.recipientEmail,
+            recipientName: data.recipientName || 'your recipient',
+            expirationDate: data.expirationDate || '',
+          },
+        }
+      );
+
+      await triggeredEmails.emailContact(
+        'gift_card_received',
+        recipientContact.contactId,
+        {
+          variables: {
+            code: data.code,
+            amount: formattedAmount,
+            recipientName: data.recipientName || '',
+            message: data.message || '',
+            purchaserEmail: data.purchaserEmail,
+            expirationDate: data.expirationDate || '',
+          },
+        }
+      );
+
+      return { success: true };
+    } catch (err) {
+      console.error('Error sending gift card emails:', err);
+      return { success: false, message: 'Failed to send emails' };
+    }
+  }
+);
+
+/**
+ * Get gift cards associated with a member's email.
+ * Returns both purchased and received cards.
+ *
+ * @function getMyGiftCards
+ * @param {string} email - Member's email address
+ * @returns {Promise<{success: boolean, purchased: Array, received: Array}>}
+ * @permission SiteMember
+ */
+export const getMyGiftCards = webMethod(
+  Permissions.SiteMember,
+  async (email) => {
+    try {
+      if (!email) return { success: false, message: 'Email required' };
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, message: 'Invalid email' };
+      }
+
+      const [purchasedResult, receivedResult] = await Promise.all([
+        wixData.query('GiftCards')
+          .eq('purchaserEmail', cleanEmail)
+          .descending('createdDate')
+          .find(),
+        wixData.query('GiftCards')
+          .eq('recipientEmail', cleanEmail)
+          .descending('createdDate')
+          .find(),
+      ]);
+
+      return {
+        success: true,
+        purchased: purchasedResult.items,
+        received: receivedResult.items,
+      };
+    } catch (err) {
+      console.error('Error fetching gift cards:', err);
+      return { success: false, message: 'Failed to fetch gift cards' };
+    }
   }
 );
 

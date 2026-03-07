@@ -8,6 +8,9 @@ import {
   getBalanceStatusDisplay,
   getCardUsageText,
   formatGiftCardCode,
+  maskGiftCardCode,
+  buildGiftCardAppliedText,
+  calculateGiftCardDiscount,
 } from '../src/public/giftCardHelpers.js';
 
 // ── GIFT_CARD_DENOMINATIONS ─────────────────────────────────────────
@@ -333,5 +336,93 @@ describe('formatGiftCardCode', () => {
 
   it('handles null', () => {
     expect(formatGiftCardCode(null)).toBe('');
+  });
+});
+
+// ── maskGiftCardCode ──────────────────────────────────────────────
+
+describe('maskGiftCardCode', () => {
+  it('masks middle segments', () => {
+    expect(maskGiftCardCode('CF-ABCD-EFGH-JKLM-NPQR')).toBe('CF-****-****-****-NPQR');
+  });
+
+  it('handles lowercase input', () => {
+    expect(maskGiftCardCode('cf-abcd-efgh-jklm-npqr')).toBe('CF-****-****-****-NPQR');
+  });
+
+  it('returns empty for null', () => {
+    expect(maskGiftCardCode(null)).toBe('');
+  });
+
+  it('returns empty for undefined', () => {
+    expect(maskGiftCardCode(undefined)).toBe('');
+  });
+
+  it('returns empty for invalid format', () => {
+    expect(maskGiftCardCode('not-a-code')).toBe('');
+  });
+
+  it('returns empty for empty string', () => {
+    expect(maskGiftCardCode('')).toBe('');
+  });
+});
+
+// ── buildGiftCardAppliedText ──────────────────────────────────────
+
+describe('buildGiftCardAppliedText', () => {
+  it('formats applied amount', () => {
+    expect(buildGiftCardAppliedText(50)).toBe('-$50.00 Gift Card');
+  });
+
+  it('handles zero', () => {
+    expect(buildGiftCardAppliedText(0)).toBe('-$0.00 Gift Card');
+  });
+
+  it('handles null', () => {
+    expect(buildGiftCardAppliedText(null)).toBe('-$0.00 Gift Card');
+  });
+
+  it('handles decimal', () => {
+    expect(buildGiftCardAppliedText(25.5)).toBe('-$25.50 Gift Card');
+  });
+});
+
+// ── calculateGiftCardDiscount ─────────────────────────────────────
+
+describe('calculateGiftCardDiscount', () => {
+  it('applies full card when balance < subtotal', () => {
+    const result = calculateGiftCardDiscount(50, 100);
+    expect(result.amountToApply).toBe(50);
+    expect(result.remainingSubtotal).toBe(50);
+  });
+
+  it('caps at subtotal when balance > subtotal', () => {
+    const result = calculateGiftCardDiscount(200, 100);
+    expect(result.amountToApply).toBe(100);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles exact match', () => {
+    const result = calculateGiftCardDiscount(100, 100);
+    expect(result.amountToApply).toBe(100);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles zero balance', () => {
+    const result = calculateGiftCardDiscount(0, 100);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(100);
+  });
+
+  it('handles null inputs', () => {
+    const result = calculateGiftCardDiscount(null, null);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles negative balance gracefully', () => {
+    const result = calculateGiftCardDiscount(-10, 100);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(100);
   });
 });
