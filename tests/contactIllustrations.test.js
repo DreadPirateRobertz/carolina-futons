@@ -97,31 +97,25 @@ describe('Contact Illustrations', () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════
-  // 8-POINT QUALITY BAR
+  // 10-POINT QUALITY BAR
   // ══════════════════════════════════════════════════════════════════════
 
-  // ── 1. Watercolor filter (feTurbulence + feDisplacementMap) ────────
+  // ── 1. NO deprecated filters (Figma-first pipeline) ────────
 
-  describe('Quality bar — watercolor filter', () => {
+  describe('Quality bar — no deprecated filters', () => {
     REQUIRED_KEYS.forEach(key => {
       describe(`${key}`, () => {
-        it('contains feTurbulence filter for watercolor texture', () => {
-          expect(CONTACT_ILLUSTRATIONS[key]).toMatch(/<feTurbulence/);
+        it('does not contain feTurbulence (deprecated)', () => {
+          expect(CONTACT_ILLUSTRATIONS[key]).not.toMatch(/<feTurbulence/);
         });
 
-        it('contains feDisplacementMap', () => {
-          expect(CONTACT_ILLUSTRATIONS[key]).toMatch(/<feDisplacementMap/);
+        it('does not contain feDisplacementMap (deprecated)', () => {
+          expect(CONTACT_ILLUSTRATIONS[key]).not.toMatch(/<feDisplacementMap/);
         });
-      });
-    });
-  });
 
-  // ── 2. Paper grain overlay (fractalNoise) ─────────────────────────
-
-  describe('Quality bar — paper grain', () => {
-    REQUIRED_KEYS.forEach(key => {
-      it(`${key} contains paper grain noise filter (type="fractalNoise")`, () => {
-        expect(CONTACT_ILLUSTRATIONS[key]).toMatch(/type="fractalNoise"/);
+        it('does not contain fractalNoise (deprecated)', () => {
+          expect(CONTACT_ILLUSTRATIONS[key]).not.toMatch(/type="fractalNoise"/);
+        });
       });
     });
   });
