@@ -13,19 +13,19 @@ import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
  */
 export async function initSizeGuideModal($w, state) {
   try {
-    try { $w('#sizeGuideModal').collapse(); } catch (e) {}
+    try { $w('#sizeGuideModal').collapse(); } catch (e) { console.warn('[SizeGuideModal] collapse failed:', e?.message); }
 
     const hasProduct = state?.product?._id;
 
     if (!hasProduct) {
-      try { $w('#sizeGuideBtn').hide(); } catch (e) {}
+      try { $w('#sizeGuideBtn').hide(); } catch (e) { console.warn('[SizeGuideModal] hide btn failed:', e?.message); }
       return;
     }
 
     // ARIA attributes
-    try { $w('#sizeGuideBtn').accessibility.ariaLabel = 'Open size guide'; } catch (e) {}
-    try { $w('#sizeGuideModal').accessibility.role = 'dialog'; } catch (e) {}
-    try { $w('#sizeGuideModal').accessibility.ariaModal = true; } catch (e) {}
+    try { $w('#sizeGuideBtn').accessibility.ariaLabel = 'Open size guide'; } catch (e) { console.warn('[SizeGuideModal] ARIA label failed:', e?.message); }
+    try { $w('#sizeGuideModal').accessibility.role = 'dialog'; } catch (e) { console.warn('[SizeGuideModal] ARIA role failed:', e?.message); }
+    try { $w('#sizeGuideModal').accessibility.ariaModal = true; } catch (e) { console.warn('[SizeGuideModal] ARIA modal failed:', e?.message); }
 
     // Set up accessible dialog (handles focus trap, escape, close button)
     const dialog = setupAccessibleDialog($w, {
@@ -50,15 +50,19 @@ export async function initSizeGuideModal($w, state) {
     let initialized = false;
 
     $w('#sizeGuideBtn').onClick(async () => {
-      if (!initialized) {
-        await loadSizeGuideComponents($w, state);
-        initialized = true;
+      try {
+        if (!initialized) {
+          await loadSizeGuideComponents($w, state);
+          initialized = true;
+        }
+        announce($w, 'Size guide opened');
+        dialog.open();
+      } catch (e) {
+        console.error('[SizeGuideModal] onClick failed:', e?.message || e);
       }
-      announce($w, 'Size guide opened');
-      dialog.open();
     });
   } catch (e) {
-    // Element may not exist on this page — fail silently
+    console.error('[SizeGuideModal] Init failed:', e?.message || e);
   }
 }
 
@@ -83,7 +87,7 @@ async function loadSizeGuideComponents($w, state) {
   ];
 
   for (const init of inits) {
-    try { init(); } catch (e) {
+    try { await init(); } catch (e) {
       console.error('[SizeGuideModal] Component init failed:', e?.message || e);
     }
   }
