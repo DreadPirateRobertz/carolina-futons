@@ -40,10 +40,11 @@ const {
   injectProductMeta,
   injectPinterestMeta,
   buildGridAlt,
-  detectProductBrand,
   detectProductCategory,
   getCategoryFromCollections,
 } = await import('../src/public/product/productSchema.js');
+
+const { detectProductBrand } = await import('../src/public/productPageUtils.js');
 
 // ── Tests ─────────────────────────────────────────────────────────
 

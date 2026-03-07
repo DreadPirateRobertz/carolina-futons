@@ -4,6 +4,7 @@
 
 import { getProductSchema, getBreadcrumbSchema, getProductOgTags, getProductFaqSchema, getPageTitle, getPageMetaDescription, getCanonicalUrl } from 'backend/seoHelpers.web';
 import { getProductPinData } from 'backend/pinterestRichPins.web';
+import { detectProductBrand } from 'public/productPageUtils.js';
 
 /**
  * Initialize breadcrumb navigation and inject breadcrumb schema.
@@ -179,19 +180,6 @@ export function buildGridAlt(product) {
   return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
 }
 
-/**
- * Detect brand name from product collections.
- * @param {Object|null} product - Wix product object
- * @returns {string} Brand name, or empty string if undetectable
- */
-export function detectProductBrand(product) {
-  if (!product || !product.collections) return '';
-  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
-  if (colls.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
-  if (colls.some(c => c.includes('unfinished'))) return 'KD Frames';
-  if (colls.some(c => c.includes('mattress'))) return 'Otis Bed';
-  return 'Night & Day Furniture';
-}
 
 /**
  * Detect product category label from collections.

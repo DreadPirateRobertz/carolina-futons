@@ -92,7 +92,7 @@ describe('searchProducts', () => {
 
   it('filters by multiple materials', async () => {
     const result = await searchProducts({ materials: ['metal', 'fabric'] });
-    expect(result.items).toHaveLength(2);
+    expect(result.items).toHaveLength(3);
     const ids = result.items.map(i => i._id);
     expect(ids).toContain(metalFrame._id);
     expect(ids).toContain(futonMattress._id);
@@ -141,7 +141,7 @@ describe('searchProducts', () => {
 
   it('filters by multiple brands', async () => {
     const result = await searchProducts({ brands: ['Strata', 'KD Frames'] });
-    expect(result.items).toHaveLength(2);
+    expect(result.items).toHaveLength(3);
   });
 
   it('filters by width range', async () => {
@@ -422,8 +422,8 @@ describe('getFacetMetadata', () => {
 
   it('returns correct price range for category', async () => {
     const facets = await getFacetMetadata('futon-frames');
-    // futon-frames: 499, 699, 499, 299, 849
-    expect(facets.priceRange.min).toBe(299);
+    // futon-frames: 499, 699, 499, 299, 849, 249
+    expect(facets.priceRange.min).toBe(249);
     expect(facets.priceRange.max).toBe(849);
   });
 

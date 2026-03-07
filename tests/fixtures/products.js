@@ -219,6 +219,75 @@ export const outdoorFrame = {
   numericRating: 4.8,
 };
 
+export const unfinishedFrame = {
+  _id: 'prod-frame-005',
+  name: 'Nomad Unfinished Futon Frame',
+  slug: 'nomad-unfinished-futon-frame',
+  price: 249,
+  formattedPrice: '$249.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/nomad.jpg',
+  sku: 'NMD-UNF-001',
+  ribbon: '',
+  collections: ['futon-frames', 'unfinished-frames'],
+  description: 'Raw unfinished hardwood futon frame — sand and stain yourself.',
+  inStock: true,
+  _createdDate: new Date('2025-09-01'),
+  discount: 0,
+  dimensions: { width: 54, depth: 38, height: 33 },
+  material: 'hardwood',
+  color: 'unfinished',
+  featureTags: ['sleeper'],
+  brand: 'KD Frames',
+};
+
+export const otisMattress = {
+  _id: 'prod-matt-002',
+  name: 'Otis Haley 110 Futon Mattress',
+  slug: 'otis-haley-110-futon-mattress',
+  price: 449,
+  formattedPrice: '$449.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/otis-haley.jpg',
+  sku: 'OTS-HAL-001',
+  ribbon: '',
+  collections: ['otis-mattresses'],
+  description: 'Premium Otis innerspring futon mattress.',
+  inStock: true,
+  _createdDate: new Date('2025-10-01'),
+  discount: 0,
+  dimensions: { width: 54, depth: 75, height: 8 },
+  material: 'fabric',
+  color: 'white',
+  featureTags: [],
+  brand: 'Otis',
+};
+
+export const arizonaFrame = {
+  _id: 'prod-frame-006',
+  name: 'Arizona Rustic Futon Frame',
+  slug: 'arizona-rustic-futon-frame',
+  price: 599,
+  formattedPrice: '$599.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/arizona-rustic.jpg',
+  sku: 'AZ-RST-001',
+  ribbon: '',
+  collections: ['arizona-collection'],
+  description: 'Southwestern-style futon frame from the Arizona line.',
+  inStock: true,
+  _createdDate: new Date('2025-11-01'),
+  discount: 0,
+  dimensions: { width: 56, depth: 40, height: 34 },
+  material: 'hardwood',
+  color: 'honey',
+  featureTags: ['sleeper'],
+  brand: 'Arizona',
+};
+
 // All products for seeding collections
 export const allProducts = [
   futonFrame,
@@ -230,6 +299,9 @@ export const allProducts = [
   saleProduct,
   metalFrame,
   outdoorFrame,
+  unfinishedFrame,
+  otisMattress,
+  arizonaFrame,
 ];
 
 // Sample analytics records
