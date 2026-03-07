@@ -15,6 +15,7 @@ import {
   safeMultiply,
 } from 'public/cartService';
 import { announce } from 'public/a11yHelpers.js';
+import { saveForLater } from 'public/SaveForLater.js';
 import { enableSwipe } from 'public/touchHelpers';
 import {
   getCartItemStyles,
@@ -220,6 +221,32 @@ function initSideCartRepeater() {
         }
         setTimeout(() => refreshSideCart(), 250);
       });
+
+      // Save for Later — move to wishlist
+      try {
+        $item('#sideSaveForLater').accessibility.ariaLabel = `Save ${itemData.name} for later`;
+        $item('#sideSaveForLater').onClick(async () => {
+          try {
+            $item('#sideSaveForLater').disable();
+            const result = await saveForLater({
+              _id: itemData._id,
+              productId: itemData.productId || itemData._id,
+              name: itemData.name,
+              price: itemData.price,
+              image: itemData.mediaItem?.src || itemData.image,
+            });
+            if (result.success) {
+              announce($w, `${itemData.name} saved to your wishlist`);
+              setTimeout(() => refreshSideCart(), 250);
+            } else if (result.reason === 'not_authenticated') {
+              announce($w, 'Please log in to save items for later');
+              try { $item('#sideSaveForLater').enable(); } catch (e) {}
+            }
+          } catch (e) {
+            try { $item('#sideSaveForLater').enable(); } catch (e2) {}
+          }
+        });
+      } catch (e) { /* sideSaveForLater may not exist in layout */ }
     });
   } catch (e) {}
 }

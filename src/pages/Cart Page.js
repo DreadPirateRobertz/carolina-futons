@@ -28,6 +28,7 @@ import {
   getQuantitySpinnerStyles,
 } from 'public/cartStyles.js';
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
+import { saveForLater } from 'public/SaveForLater.js';
 
 $w.onReady(async function () {
   await initCartPage();
@@ -448,6 +449,29 @@ function initQuantityControls() {
           }
           try { await refreshCartTotals(); } catch (e) {}
         });
+
+        // Save for Later — move to wishlist
+        try {
+          $item('#saveForLaterBtn').accessibility.ariaLabel = `Save ${itemData.name} for later`;
+          $item('#saveForLaterBtn').onClick(async () => {
+            try {
+              $item('#saveForLaterBtn').disable();
+              const result = await saveForLater({
+                _id: itemData._id,
+                productId: itemData.productId || itemData._id,
+                name: itemData.name,
+                price: itemData.price,
+                image: itemData.mediaItem?.src || itemData.image,
+              });
+              if (result.success) {
+                announce($w, `${itemData.name} saved to your wishlist`);
+              } else if (result.reason === 'not_authenticated') {
+                announce($w, 'Please log in to save items for later');
+              }
+            } catch (e) {}
+            try { await refreshCartTotals(); } catch (e) {}
+          });
+        } catch (e) { /* saveForLaterBtn may not exist in layout */ }
       } catch (e) {}
     });
   } catch (e) {}
