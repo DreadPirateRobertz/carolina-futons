@@ -11,8 +11,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   generateCartSkylineSVG,
   generateEmptyCartSVG,
+  generateCheckoutProgressSVG,
   initCartSkyline,
   initEmptyCartIllustration,
+  initCheckoutProgress,
 } from '../src/public/CartIllustrations.js';
 import { colors } from '../src/public/sharedTokens.js';
 
@@ -389,6 +391,139 @@ describe('initCartSkyline', () => {
   it('does not throw when element is missing', () => {
     const $w = () => null;
     expect(() => initCartSkyline($w)).not.toThrow();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════
+// ── Checkout Progress Illustration ───────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+
+describe('generateCheckoutProgressSVG', () => {
+
+  describe('SVG structure', () => {
+    it('returns a valid SVG string', () => {
+      const svg = generateCheckoutProgressSVG({ step: 1 });
+      expect(svg).toContain('<svg');
+      expect(svg).toContain('</svg>');
+    });
+
+    it('has a viewBox for responsive sizing', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toMatch(/viewBox="[^"]+"/);
+    });
+
+    it('sets width to 100%', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toContain('width="100%"');
+    });
+
+    it('is aria-hidden (decorative)', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toContain('aria-hidden="true"');
+    });
+  });
+
+  describe('step progression', () => {
+    it('defaults to step 1 when no options provided', () => {
+      const svg = generateCheckoutProgressSVG();
+      expect(svg).toContain('<svg');
+    });
+
+    it('accepts step values 1 through 4', () => {
+      for (let s = 1; s <= 4; s++) {
+        const svg = generateCheckoutProgressSVG({ step: s });
+        expect(svg).toContain('<svg');
+      }
+    });
+
+    it('clamps step below 1 to 1', () => {
+      const svg = generateCheckoutProgressSVG({ step: 0 });
+      expect(svg).toContain('<svg');
+    });
+
+    it('clamps step above 4 to 4', () => {
+      const svg = generateCheckoutProgressSVG({ step: 5 });
+      expect(svg).toContain('<svg');
+    });
+
+    it('uses sunsetCoral for completed/active step markers', () => {
+      const svg = generateCheckoutProgressSVG({ step: 2 });
+      expect(svg).toContain(colors.sunsetCoral);
+    });
+
+    it('uses mountainBlue or muted for inactive step markers', () => {
+      const svg = generateCheckoutProgressSVG({ step: 1 });
+      const hasMuted = svg.includes(colors.muted) || svg.includes(colors.mutedBrown) || svg.includes(colors.mountainBlueLight);
+      expect(hasMuted).toBe(true);
+    });
+
+    it('renders different SVG for different steps', () => {
+      const svg1 = generateCheckoutProgressSVG({ step: 1 });
+      const svg3 = generateCheckoutProgressSVG({ step: 3 });
+      expect(svg1).not.toBe(svg3);
+    });
+  });
+
+  describe('quality bar', () => {
+    it('contains 15+ SVG shape elements', () => {
+      expect(countShapeElements(generateCheckoutProgressSVG({ step: 2 }))).toBeGreaterThanOrEqual(15);
+    });
+
+    it('has 5+ gradient stops', () => {
+      const stops = (generateCheckoutProgressSVG({ step: 1 }).match(/<stop /g) || []).length;
+      expect(stops).toBeGreaterThanOrEqual(5);
+    });
+
+    it('uses organic bezier curves', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toMatch(/C\s*[\d.-]/);
+    });
+
+    it('uses only brand token hex colors', () => {
+      for (let s = 1; s <= 4; s++) {
+        const usedHexes = extractHexColors(generateCheckoutProgressSVG({ step: s }));
+        const violations = usedHexes.filter(h => !TOKEN_HEXES.has(h));
+        expect(violations, `Step ${s} non-token hex: ${violations.join(', ')}`).toEqual([]);
+      }
+    });
+
+    it('includes mountain ridgeline elements', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toMatch(/ridge/);
+    });
+  });
+
+  describe('brand tokens', () => {
+    it('uses skyGradientTop', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toContain(colors.skyGradientTop);
+    });
+
+    it('uses espresso for foreground', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).toContain(colors.espresso);
+    });
+  });
+
+  describe('security', () => {
+    it('contains no script tags', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).not.toMatch(/<script/i);
+    });
+
+    it('contains no event handler attributes', () => {
+      expect(generateCheckoutProgressSVG({ step: 1 })).not.toMatch(/\son\w+=/i);
+    });
+  });
+});
+
+describe('initCheckoutProgress', () => {
+  it('injects SVG into #checkoutProgress element', () => {
+    const el = createMockElement();
+    const $w = create$w({ '#checkoutProgress': el });
+    initCheckoutProgress($w, { step: 2 });
+    expect(el.html).toContain('<svg');
+  });
+
+  it('does not throw when $w is null', () => {
+    expect(() => initCheckoutProgress(null)).not.toThrow();
+  });
+
+  it('does not throw when element is missing', () => {
+    const $w = () => null;
+    expect(() => initCheckoutProgress($w)).not.toThrow();
   });
 });
 

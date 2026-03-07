@@ -7,8 +7,8 @@ import {
 
 import { colors } from '../src/public/sharedTokens.js';
 
-// 3 required onboarding scene keys
-const REQUIRED_KEYS = ['welcome', 'arPreview', 'shopWithConfidence'];
+// 4 required onboarding scene keys (added firstVisitBanner)
+const REQUIRED_KEYS = ['welcome', 'arPreview', 'shopWithConfidence', 'firstVisitBanner'];
 
 // Brand colors allowed for dark bg scenes (light/bright accents)
 const DARK_BG_SAFE_COLORS = [
@@ -32,7 +32,7 @@ describe('Onboarding Illustrations', () => {
       });
     });
 
-    it('contains no extra keys beyond the required 3', () => {
+    it('contains no extra keys beyond the required 4', () => {
       expect(Object.keys(ONBOARDING_SVGS).sort()).toEqual([...REQUIRED_KEYS].sort());
     });
   });
@@ -203,6 +203,18 @@ describe('Onboarding Illustrations', () => {
     it('shopWithConfidence scene has delivery/home elements', () => {
       const svg = ONBOARDING_SVGS.shopWithConfidence;
       expect(svg).toMatch(/<(path|rect|polygon)[\s>]/);
+    });
+
+    it('firstVisitBanner scene has mountain landscape elements', () => {
+      const svg = ONBOARDING_SVGS.firstVisitBanner;
+      expect(svg).toMatch(/<path[\s>]/);
+    });
+
+    it('firstVisitBanner is wider banner format (viewBox width > height)', () => {
+      const svg = ONBOARDING_SVGS.firstVisitBanner;
+      const vbMatch = svg.match(/viewBox="0 0 (\d+) (\d+)"/);
+      expect(vbMatch).toBeTruthy();
+      expect(parseInt(vbMatch[1])).toBeGreaterThan(parseInt(vbMatch[2]));
     });
 
     it('all scenes contain at least one gradient', () => {

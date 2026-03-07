@@ -461,6 +461,163 @@ export function generateEmptyCartSVG() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
+// ── Checkout Progress (full-width, 1440×120) ─────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+
+const PROG_VB_W = 1440;
+const PROG_VB_H = 120;
+const PROG_STEPS = 4;
+
+const PROG_SKY_GRADIENT = [
+  { offset: '0%', color: colors.skyGradientTop, opacity: 0.85 },
+  { offset: '25%', color: colors.mountainBlueLight, opacity: 0.7 },
+  { offset: '50%', color: colors.skyGradientBottom, opacity: 0.55 },
+  { offset: '75%', color: colors.sandLight, opacity: 0.65 },
+  { offset: '100%', color: colors.sandBase, opacity: 0.5 },
+];
+
+const PROG_RIDGELINES = [
+  {
+    name: 'ridge-distant',
+    path: 'M0,120 L0,58 C80,50 160,38 280,42 C400,46 480,32 600,28 C720,24 800,36 920,32 C1040,28 1120,40 1240,36 C1320,34 1400,44 1440,40 L1440,120 Z',
+    color: colors.mountainBlue,
+    opacity: 0.15,
+  },
+  {
+    name: 'ridge-mid',
+    path: 'M0,120 L0,72 C100,66 180,54 300,58 C420,62 500,48 620,44 C740,40 820,52 940,48 C1060,44 1140,56 1260,52 C1340,50 1410,58 1440,56 L1440,120 Z',
+    color: colors.mountainBlueDark,
+    opacity: 0.25,
+  },
+  {
+    name: 'ridge-near',
+    path: 'M0,120 L0,86 C120,80 200,70 320,74 C440,78 520,64 640,60 C760,56 840,68 960,64 C1080,60 1160,72 1280,68 C1360,66 1420,74 1440,72 L1440,120 Z',
+    color: colors.espresso,
+    opacity: 0.35,
+  },
+  {
+    name: 'ridge-front',
+    path: 'M0,120 L0,96 C140,92 220,84 340,88 C460,92 540,80 660,76 C780,72 860,84 980,80 C1100,76 1180,86 1300,82 C1380,80 1430,88 1440,86 L1440,120 Z',
+    color: colors.espresso,
+    opacity: 0.55,
+  },
+];
+
+// Trail marker x-positions for 4 steps, evenly spaced
+const MARKER_POSITIONS = [240, 560, 880, 1200];
+
+function buildProgressTrailPath() {
+  return `M${MARKER_POSITIONS[0] - 60},90 C${MARKER_POSITIONS[0]},82 ${MARKER_POSITIONS[1] - 80},78 ${MARKER_POSITIONS[1]},74 C${MARKER_POSITIONS[1] + 80},70 ${MARKER_POSITIONS[2] - 80},72 ${MARKER_POSITIONS[2]},68 C${MARKER_POSITIONS[2] + 80},64 ${MARKER_POSITIONS[3] - 80},66 ${MARKER_POSITIONS[3] + 60},62`;
+}
+
+function buildProgressMarker(x, y, isActive, isCompleted) {
+  const fill = (isActive || isCompleted) ? colors.sunsetCoral : colors.mountainBlueLight;
+  const ringColor = (isActive || isCompleted) ? colors.sunsetCoralLight : colors.mutedBrown;
+  const innerOpacity = isCompleted ? 1 : (isActive ? 0.85 : 0.4);
+  const parts = [];
+  // Outer glow for active
+  if (isActive) {
+    parts.push(`<circle cx="${x}" cy="${y}" r="18" fill="${colors.sunsetCoralLight}" opacity="0.2"/>`);
+  }
+  // Ring
+  parts.push(`<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="${ringColor}" stroke-width="2" opacity="0.6"/>`);
+  // Inner fill
+  parts.push(`<circle cx="${x}" cy="${y}" r="8" fill="${fill}" opacity="${innerOpacity}"/>`);
+  // Checkmark for completed steps
+  if (isCompleted) {
+    parts.push(`<path d="M${x - 4},${y} L${x - 1},${y + 3} L${x + 4},${y - 3}" fill="none" stroke="${colors.offWhite}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+  return parts.join('');
+}
+
+function buildProgressBirds() {
+  const c = colors.espresso;
+  return [
+    `<path d="M400,22 C403,19 406,17 408,19 C410,17 413,19 416,22" fill="none" stroke="${c}" stroke-width="0.8" stroke-linecap="round" opacity="0.3"/>`,
+    `<path d="M1020,16 C1022,14 1024,13 1025,14 C1026,13 1028,14 1030,16" fill="none" stroke="${c}" stroke-width="0.6" stroke-linecap="round" opacity="0.25"/>`,
+    `<path d="M700,12 C703,9 706,8 708,10 C710,8 713,9 716,12" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round" opacity="0.28"/>`,
+  ].join('');
+}
+
+function buildProgressPines() {
+  const c = colors.espresso;
+  return [
+    // Left cluster
+    `<rect x="120" y="86" width="3" height="18" fill="${c}" opacity="0.4" rx="1"/>`,
+    `<path d="M112,90 C116,82 120,78 122,74 C124,78 128,82 132,90" fill="${c}" opacity="0.25"/>`,
+    `<path d="M114,86 C117,80 120,77 122,73 C124,77 127,80 130,86" fill="${c}" opacity="0.32"/>`,
+    // Right cluster
+    `<rect x="1340" y="78" width="3" height="16" fill="${c}" opacity="0.35" rx="1"/>`,
+    `<path d="M1332,82 C1335,76 1339,72 1342,68 C1345,72 1349,76 1352,82" fill="${c}" opacity="0.22"/>`,
+    `<path d="M1334,78 C1337,73 1340,70 1342,67 C1344,70 1347,73 1350,78" fill="${c}" opacity="0.3"/>`,
+  ].join('');
+}
+
+function buildProgressFlora() {
+  const p = colors.sunsetCoral;
+  const g = colors.success;
+  return [
+    `<line x1="160" y1="98" x2="160" y2="92" stroke="${g}" stroke-width="0.7" opacity="0.4"/>`,
+    `<circle cx="160" cy="91" r="1.8" fill="${p}" opacity="0.45"/>`,
+    `<line x1="1380" y1="90" x2="1380" y2="84" stroke="${g}" stroke-width="0.6" opacity="0.35"/>`,
+    `<circle cx="1380" cy="83" r="1.5" fill="${colors.sandBase}" opacity="0.4"/>`,
+    `<line x1="720" y1="78" x2="720" y2="72" stroke="${g}" stroke-width="0.6" opacity="0.35"/>`,
+    `<circle cx="720" cy="71" r="1.5" fill="${p}" opacity="0.4"/>`,
+  ].join('');
+}
+
+/**
+ * Generate checkout progress illustration SVG — a mountain trail with
+ * step markers showing progress through Cart, Shipping, Payment, Confirmation.
+ * @param {Object} [options]
+ * @param {number} [options.step=1] - Current step (1-4)
+ * @returns {string} Complete inline SVG markup
+ */
+export function generateCheckoutProgressSVG(options) {
+  const opts = options || {};
+  const step = Math.max(1, Math.min(PROG_STEPS, typeof opts.step === 'number' ? opts.step : 1));
+
+  const gradId = 'prog-sky-grad';
+  const stops = PROG_SKY_GRADIENT.map(
+    (s) => `<stop offset="${s.offset}" stop-color="${s.color}" stop-opacity="${s.opacity}"/>`
+  ).join('');
+
+  const ridges = PROG_RIDGELINES.map(
+    (r) => `<path class="${r.name}" d="${r.path}" fill="${r.color}" opacity="${r.opacity}"/>`
+  ).join('');
+
+  const trailPath = buildProgressTrailPath();
+  // Trail segments: completed portion in coral, remaining in muted
+  const trail = [
+    `<path d="${trailPath}" fill="none" stroke="${colors.mutedBrown}" stroke-width="2" stroke-dasharray="8 4" opacity="0.3"/>`,
+  ].join('');
+
+  // Y positions along the trail for each marker
+  const markerYs = [90, 74, 68, 62];
+  const markers = MARKER_POSITIONS.map((x, i) => {
+    const stepNum = i + 1;
+    const isCompleted = stepNum < step;
+    const isActive = stepNum === step;
+    return buildProgressMarker(x, markerYs[i], isActive, isCompleted);
+  }).join('');
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="80" viewBox="0 0 ${PROG_VB_W} ${PROG_VB_H}" preserveAspectRatio="none" aria-hidden="true" role="presentation">`,
+    `<defs>`,
+    `<linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">${stops}</linearGradient>`,
+    `</defs>`,
+    `<rect width="${PROG_VB_W}" height="${PROG_VB_H}" fill="url(#${gradId})"/>`,
+    buildProgressBirds(),
+    ridges,
+    trail,
+    buildProgressPines(),
+    buildProgressFlora(),
+    markers,
+    '</svg>',
+  ].join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
 // ── Init Wrappers ────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════
 
@@ -476,6 +633,21 @@ export function initCartSkyline($w, options) {
     const container = $w('#cartHeroSkyline');
     if (!container) return;
     container.html = generateCartSkylineSVG(options);
+  } catch (_e) { /* Element may not exist */ }
+}
+
+/**
+ * Inject checkout progress illustration into a Wix HtmlComponent.
+ * @param {Function} $w - Wix selector function
+ * @param {Object} [options]
+ * @param {number} [options.step=1] - Current checkout step (1-4)
+ */
+export function initCheckoutProgress($w, options) {
+  try {
+    if (!$w) return;
+    const container = $w('#checkoutProgress');
+    if (!container) return;
+    container.html = generateCheckoutProgressSVG(options);
   } catch (_e) { /* Element may not exist */ }
 }
 

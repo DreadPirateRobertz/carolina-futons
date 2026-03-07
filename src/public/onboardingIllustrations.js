@@ -293,4 +293,91 @@ export const ONBOARDING_SVGS = {
   <!-- Paper grain overlay -->
   <rect width="320" height="240" filter="url(#sc-grain)" opacity="0.08" fill="${offWhite}"/>
 </svg>`,
+
+  // Scene 4 — FIRST VISIT BANNER: Wide mountain panorama with welcoming cabin, warm sunrise
+  firstVisitBanner: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" width="100%" height="100%">
+  <defs>
+    <filter id="fv-watercolor" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="42" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="fv-grain" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" seed="88" result="grain"/>
+      <feColorMatrix type="saturate" values="0" in="grain" result="graygrain"/>
+      <feBlend in="SourceGraphic" in2="graygrain" mode="multiply"/>
+    </filter>
+    <linearGradient id="fv-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${skyGradientTop}" stop-opacity="0.55"/>
+      <stop offset="20%" stop-color="${mountainBlueLight}" stop-opacity="0.45"/>
+      <stop offset="40%" stop-color="${skyGradientBottom}" stop-opacity="0.35"/>
+      <stop offset="65%" stop-color="${sunsetCoralLight}" stop-opacity="0.28"/>
+      <stop offset="85%" stop-color="${sandBase}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="${sandLight}" stop-opacity="0.18"/>
+    </linearGradient>
+    <radialGradient id="fv-sunrise" cx="50%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="${skyGradientBottom}" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="${sunsetCoralLight}" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="${sunsetCoral}" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fv-ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${sandBase}" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="${sandLight}" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#fv-watercolor)">
+    <!-- Sky -->
+    <rect x="0" y="0" width="640" height="130" fill="url(#fv-sky)"/>
+    <circle cx="320" cy="45" r="50" fill="url(#fv-sunrise)"/>
+    <!-- Blue Ridge mountains — 6 soft rolling ridgelines with atmospheric haze -->
+    <path d="M0 62 Q60 56 120 59 Q200 52 280 56 Q360 50 440 54 Q520 48 580 52 Q620 50 640 54 L640 130 L0 130Z" fill="${mountainBlueLight}" opacity="0.12"/>
+    <path d="M0 70 Q70 64 140 67 Q220 60 300 64 Q380 58 460 62 Q540 56 600 60 Q630 58 640 62 L640 130 L0 130Z" fill="${mountainBlueLight}" opacity="0.18"/>
+    <path d="M0 80 Q80 74 160 77 Q240 70 320 74 Q400 68 480 72 Q560 66 620 70 Q636 68 640 72 L640 130 L0 130Z" fill="${mountainBlue}" opacity="0.24"/>
+    <path d="M0 90 Q65 84 130 87 Q210 80 290 84 Q370 78 450 82 Q530 76 590 80 Q625 78 640 82 L640 130 L0 130Z" fill="${mountainBlue}" opacity="0.30"/>
+    <path d="M0 100 Q75 94 150 97 Q230 90 310 94 Q390 88 470 92 Q550 86 610 90 Q632 88 640 92 L640 130 L0 130Z" fill="${mountainBlueDark}" opacity="0.35"/>
+    <path d="M0 110 Q55 106 110 108 Q190 102 270 106 Q350 100 430 104 Q510 98 570 102 Q620 100 640 104 L640 130 L0 130Z" fill="${mountainBlueDark}" opacity="0.40"/>
+    <!-- Atmospheric haze between mountain layers -->
+    <ellipse cx="320" cy="80" rx="200" ry="8" fill="${mountainBlueLight}" opacity="0.08"/>
+    <ellipse cx="200" cy="100" rx="120" ry="5" fill="${offWhite}" opacity="0.06"/>
+    <!-- Birds in sky -->
+    <path d="M150 30 L153 28 L156 30" fill="none" stroke="${offWhite}" stroke-width="0.7" opacity="0.5"/>
+    <path d="M420 25 L422 23 L424 25" fill="none" stroke="${offWhite}" stroke-width="0.6" opacity="0.4"/>
+    <path d="M280 20 L282 18 L284 20" fill="none" stroke="${offWhite}" stroke-width="0.5" opacity="0.35"/>
+    <path d="M510 32 L512 30 L514 32" fill="none" stroke="${offWhite}" stroke-width="0.55" opacity="0.38"/>
+    <!-- Ground -->
+    <rect x="0" y="125" width="640" height="55" fill="url(#fv-ground)"/>
+    <!-- Welcoming cabin — center -->
+    <rect x="290" y="98" width="60" height="32" rx="2" fill="${sandBase}" opacity="0.5"/>
+    <polygon points="320,78 285,100 355,100" fill="${sunsetCoralLight}" opacity="0.40"/>
+    <rect x="310" y="112" width="16" height="18" fill="${sandLight}" opacity="0.45"/>
+    <!-- Chimney with smoke -->
+    <rect x="340" y="82" width="8" height="18" fill="${sandBase}" opacity="0.4"/>
+    <path d="M344 82 Q341 74 344 66 Q347 58 343 52" fill="none" stroke="${offWhite}" stroke-width="1.2" opacity="0.25"/>
+    <path d="M344 80 Q347 72 344 64 Q341 56 345 50" fill="none" stroke="${offWhite}" stroke-width="0.8" opacity="0.18"/>
+    <!-- Windows on cabin -->
+    <rect x="296" y="104" width="10" height="8" rx="1" fill="${skyGradientTop}" opacity="0.4"/>
+    <rect x="334" y="104" width="10" height="8" rx="1" fill="${skyGradientTop}" opacity="0.35"/>
+    <circle cx="301" cy="108" r="1.5" fill="${sunsetCoralLight}" opacity="0.35"/>
+    <!-- Pine trees -->
+    <line x1="100" y1="120" x2="100" y2="100" stroke="${mountainBlueDark}" stroke-width="2" opacity="0.35"/>
+    <path d="M90 106 Q100 92 110 106" fill="${mountainBlue}" opacity="0.25"/>
+    <path d="M92 100 Q100 88 108 100" fill="${mountainBlue}" opacity="0.30"/>
+    <line x1="540" y1="118" x2="540" y2="98" stroke="${mountainBlueDark}" stroke-width="2" opacity="0.3"/>
+    <path d="M530 104 Q540 90 550 104" fill="${mountainBlue}" opacity="0.22"/>
+    <path d="M532 98 Q540 86 548 98" fill="${mountainBlue}" opacity="0.28"/>
+    <!-- Smaller tree -->
+    <line x1="130" y1="122" x2="130" y2="110" stroke="${mountainBlueDark}" stroke-width="1.5" opacity="0.28"/>
+    <path d="M123 114 Q130 104 137 114" fill="${mountainBlue}" opacity="0.2"/>
+    <!-- Wildflowers at base -->
+    <circle cx="200" cy="128" r="2" fill="${sunsetCoralLight}" opacity="0.45"/>
+    <circle cx="210" cy="130" r="1.5" fill="${sandBase}" opacity="0.35"/>
+    <circle cx="440" cy="126" r="1.8" fill="${sunsetCoralLight}" opacity="0.4"/>
+    <circle cx="450" cy="129" r="1.3" fill="${mountainBlueLight}" opacity="0.35"/>
+    <!-- Light rays from sunrise -->
+    <line x1="320" y1="45" x2="280" y2="20" stroke="${skyGradientBottom}" stroke-width="0.8" opacity="0.2"/>
+    <line x1="320" y1="45" x2="360" y2="18" stroke="${skyGradientBottom}" stroke-width="0.6" opacity="0.15"/>
+    <line x1="320" y1="45" x2="320" y2="12" stroke="${sunsetCoralLight}" stroke-width="0.5" opacity="0.12"/>
+  </g>
+  <!-- Paper grain overlay -->
+  <rect width="640" height="180" filter="url(#fv-grain)" opacity="0.08" fill="${offWhite}"/>
+</svg>`,
 };
