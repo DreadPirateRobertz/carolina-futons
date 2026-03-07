@@ -12,6 +12,8 @@ import {
   buildHubCardData,
   formatGuideDate,
   getCategoryIcon,
+  getGuideCategories,
+  filterGuidesByCategory,
 } from 'public/buyingGuidesHelpers';
 
 $w.onReady(async function () {
@@ -32,6 +34,7 @@ $w.onReady(async function () {
       : null;
 
     initBreadcrumbs();
+    initCategoryFilters(guides);
     initGuideGrid(guides);
     initHubSeo(hub);
     initHubMeta();
@@ -64,6 +67,41 @@ function initBreadcrumbs() {
   } catch (e) {}
 }
 
+// ── Category Filters ─────────────────────────────────────────────────
+
+let allGuides = [];
+let activeCategory = 'all';
+
+function initCategoryFilters(guides) {
+  allGuides = guides;
+
+  try {
+    const filterRepeater = $w('#categoryFilterRepeater');
+    if (!filterRepeater) return;
+
+    const categories = getGuideCategories();
+    const filterItems = [
+      { _id: 'filter-all', slug: 'all', label: 'All Guides' },
+      ...categories.map(c => ({ _id: `filter-${c.slug}`, slug: c.slug, label: c.label })),
+    ];
+
+    filterRepeater.data = filterItems;
+    filterRepeater.onItemReady(($item, itemData) => {
+      try { $item('#filterLabel').text = itemData.label; } catch (e) {}
+      try {
+        $item('#filterButton').label = itemData.label;
+        $item('#filterButton').onClick(() => {
+          activeCategory = itemData.slug;
+          const filtered = filterGuidesByCategory(allGuides, activeCategory);
+          initGuideGrid(filtered);
+          trackEvent('guide_category_filter', { category: itemData.slug });
+          announce($w, `Showing ${filtered.length} guides for ${itemData.label}`);
+        });
+      } catch (e) {}
+    });
+  } catch (e) {}
+}
+
 // ── Guide Grid ────────────────────────────────────────────────────────
 
 function initGuideGrid(guides) {
@@ -79,6 +117,7 @@ function initGuideGrid(guides) {
     }
 
     try { $w('#emptyStateBox').hide(); } catch (e) {}
+    try { gridRepeater.show(); } catch (e) {}
     gridRepeater.data = cards;
 
     gridRepeater.onItemReady(($item, itemData) => {
@@ -86,6 +125,11 @@ function initGuideGrid(guides) {
       try { $item('#guideDescription').text = itemData.description; } catch (e) {}
       try { $item('#guideCategoryLabel').text = itemData.categoryLabel; } catch (e) {}
       try { $item('#guideDate').text = formatGuideDate(itemData.publishDate); } catch (e) {}
+      try {
+        if (itemData.readingTime) {
+          $item('#guideReadTime').text = `${itemData.readingTime} min read`;
+        }
+      } catch (e) {}
       try { $item('#guideHeroImage').src = itemData.heroImage; } catch (e) {}
       try { $item('#guideHeroImage').alt = `${itemData.title} hero image`; } catch (e) {}
 

@@ -226,6 +226,20 @@ export function buildFaqAccordionData(faqs) {
   }));
 }
 
+// ── Filter By Category ───────────────────────────────────────────────
+
+/**
+ * Filters guide summaries by category slug.
+ * @param {Array} guides - Guide summaries with category field.
+ * @param {string} [category] - Category slug to filter by, or null/'all' for all.
+ * @returns {Array}
+ */
+export function filterGuidesByCategory(guides, category) {
+  if (!guides || !guides.length) return [];
+  if (!category || category === 'all') return guides;
+  return guides.filter(g => g.category === category);
+}
+
 // ── Hub Card Data ─────────────────────────────────────────────────────
 
 /**
@@ -240,9 +254,11 @@ export function buildHubCardData(guides) {
     slug: g.slug,
     title: g.title,
     description: truncateDescription(g.metaDescription, 160),
+    category: g.category,
     categoryLabel: g.categoryLabel,
     heroImage: g.heroImage,
     url: `/buying-guides/${g.slug}`,
     publishDate: g.publishDate,
+    readingTime: g.readingTime || 0,
   }));
 }
