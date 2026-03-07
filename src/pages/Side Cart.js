@@ -386,7 +386,9 @@ async function loadSideCartSuggestions(lineItems, subtotal) {
       return;
     }
 
-    const bundles = buildRoomBundles(suggestions, subtotal || 0);
+    // Limit cross-sell suggestions on mobile for cleaner side cart
+    const maxSuggestions = isMobile() ? 2 : suggestions.length;
+    const bundles = buildRoomBundles(suggestions.slice(0, maxSuggestions), subtotal || 0);
 
     if (!bundles || bundles.length === 0) {
       try { $w('#sideCartSuggestion').collapse(); } catch (e) {}

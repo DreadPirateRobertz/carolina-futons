@@ -4,7 +4,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { trackEvent } from 'public/engagementTracker';
 import { fireSearch, fireViewItemList } from 'public/ga4Tracking';
 import { addToCart } from 'public/cartService';
-import { limitForViewport, initBackToTop, getViewport } from 'public/mobileHelpers';
+import { limitForViewport, initBackToTop, getViewport, onViewportChange } from 'public/mobileHelpers';
 import {
   fullTextSearch,
   getAutocompleteSuggestions,
@@ -43,6 +43,13 @@ $w.onReady(async function () {
   } else {
     showEmptyState();
   }
+
+  // Re-render results when viewport changes (e.g. device rotation)
+  onViewportChange(() => {
+    if (_currentQuery) {
+      try { performSearch(_currentQuery); } catch (e) {}
+    }
+  });
 });
 
 // ─── Search ──────────────────────────────────────────────────────

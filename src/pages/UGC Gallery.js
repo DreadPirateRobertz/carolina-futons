@@ -5,7 +5,7 @@
 import { getApprovedPhotos, getBeforeAfterPairs, getUGCStats } from 'backend/ugcService.web';
 import { initUGCGallery, renderPhotoCards, buildBeforeAfterSlider } from 'public/UGCGallery.js';
 import { initVoting, handleVoteClick, isVotedByUser, getVotedPhotoIds } from 'public/ugcVoting.js';
-import { isMobile, collapseOnMobile, initBackToTop, limitForViewport } from 'public/mobileHelpers';
+import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
 import { colors, spacing } from 'public/designTokens.js';
@@ -39,6 +39,11 @@ $w.onReady(async function () {
   try {
     collapseOnMobile($w, ['#ugcBeforeAfterSection', '#ugcSubmitSection']);
     initBackToTop($w);
+
+    // Re-render gallery when viewport changes (e.g. device rotation)
+    onViewportChange(() => {
+      try { loadGallery(); } catch (e) {}
+    });
   } catch (e) { /* mobile helpers may fail */ }
 });
 

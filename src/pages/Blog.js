@@ -5,7 +5,7 @@ import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
-import { limitForViewport, initBackToTop } from 'public/mobileHelpers';
+import { limitForViewport, initBackToTop, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -37,6 +37,11 @@ $w.onReady(async function () {
 
     // ── Blog Card Grid ──────────────────────────────────────────────
     renderBlogGrid(_allPosts);
+
+    // Re-render grid when viewport changes (e.g. device rotation)
+    onViewportChange(() => {
+      try { renderBlogGrid(_allPosts); } catch (e) {}
+    });
 
     // ── SEO Schema Injection ────────────────────────────────────────
     const businessSchema = await getBusinessSchema();

@@ -96,6 +96,7 @@ vi.mock('public/mobileHelpers', () => ({
   collapseOnMobile: vi.fn(),
   initBackToTop: vi.fn(),
   limitForViewport: vi.fn((items) => items),
+  onViewportChange: vi.fn(() => () => {}),
 }));
 
 vi.mock('public/engagementTracker', () => ({
