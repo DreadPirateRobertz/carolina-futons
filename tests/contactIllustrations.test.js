@@ -97,7 +97,7 @@ describe('Contact Illustrations', () => {
   });
 
   // ══════════════════════════════════════════════════════════════════════
-  // 8-POINT QUALITY BAR
+  // 10-POINT QUALITY BAR
   // ══════════════════════════════════════════════════════════════════════
 
   // ── 1. NO deprecated filters (Figma-first pipeline) ────────
