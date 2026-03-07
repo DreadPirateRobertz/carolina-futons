@@ -145,3 +145,209 @@ export function formatGiftCardCode(code) {
   if (!code || typeof code !== 'string') return '';
   return code.trim().toUpperCase();
 }
+
+/**
+ * Build the display text for an applied gift card discount.
+ * @param {number|null} amount - Amount applied
+ * @returns {string}
+ */
+export function buildGiftCardAppliedText(amount) {
+  return `-${formatBalance(amount)} Gift Card`;
+}
+
+/**
+ * Calculate how much gift card balance to apply to a subtotal.
+ * @param {number|null} balance - Gift card balance
+ * @param {number|null} subtotal - Order subtotal
+ * @returns {{ amountToApply: number, remainingSubtotal: number }}
+ */
+export function calculateGiftCardDiscount(balance, subtotal) {
+  const bal = Math.max(0, Number(balance) || 0);
+  const sub = Math.max(0, Number(subtotal) || 0);
+  const amountToApply = Math.min(bal, sub);
+  return {
+    amountToApply,
+    remainingSubtotal: sub - amountToApply,
+  };
+}
+
+// Shared state for gift card applied at checkout — readable by Checkout page
+let _giftCardState = { applied: false, amountApplied: 0, code: '' };
+
+/**
+ * Get the current gift card applied state at checkout.
+ * @returns {{ applied: boolean, amountApplied: number, code: string }}
+ */
+export function getCheckoutGiftCardState() {
+  return { ..._giftCardState };
+}
+
+/**
+ * Get the error message for a failed balance check.
+ * @param {Object} balanceResult - Result from checkBalance
+ * @returns {string}
+ */
+export function getBalanceCheckError(balanceResult) {
+  if (!balanceResult.found) {
+    return 'Gift card not found.';
+  }
+  if (balanceResult.status === 'expired') {
+    return 'This gift card has expired.';
+  }
+  return 'This gift card has no remaining balance.';
+}
+
+/**
+ * Initialize gift card code entry at checkout.
+ * Uses shared state pattern — caller reads state via getCheckoutGiftCardState().
+ *
+ * @param {Function} $w - Wix Velo selector
+ * @param {Function} getSubtotal - Returns current subtotal at call time
+ * @returns {Promise<void>}
+ */
+export async function initCheckoutGiftCard($w, getSubtotal) {
+  try {
+    const applyBtn = $w('#giftCardApplyBtn');
+    if (!applyBtn) return;
+
+    _giftCardState = { applied: false, amountApplied: 0, code: '' };
+
+    try { $w('#giftCardCodeInput').accessibility.ariaLabel = 'Enter gift card code'; } catch (_) {}
+    try { applyBtn.accessibility.ariaLabel = 'Apply gift card to order'; } catch (_) {}
+
+    applyBtn.onClick(async () => {
+      try { $w('#giftCardCheckoutError').hide(); } catch (_) {}
+      try { $w('#giftCardAppliedSection').hide(); } catch (_) {}
+
+      const rawCode = ($w('#giftCardCodeInput').value || '').trim();
+      const code = formatGiftCardCode(rawCode);
+
+      if (!validateGiftCardCode(code)) {
+        try {
+          $w('#giftCardCheckoutError').text = 'Please enter a valid gift card code (CF-XXXX-XXXX-XXXX-XXXX).';
+          $w('#giftCardCheckoutError').show();
+        } catch (_) {}
+        return;
+      }
+
+      applyBtn.disable();
+      applyBtn.label = 'Checking...';
+
+      try {
+        const { checkBalance, redeemGiftCard } = await import('backend/giftCards.web');
+        const balanceResult = await checkBalance(code);
+
+        if (!balanceResult.found || balanceResult.status !== 'active' || balanceResult.balance <= 0) {
+          try {
+            $w('#giftCardCheckoutError').text = getBalanceCheckError(balanceResult);
+            $w('#giftCardCheckoutError').show();
+          } catch (_) {}
+          return;
+        }
+
+        // Read subtotal at click time, not init time
+        const currentSubtotal = typeof getSubtotal === 'function' ? getSubtotal() : (Number(getSubtotal) || 0);
+        const { amountToApply } = calculateGiftCardDiscount(balanceResult.balance, currentSubtotal);
+
+        // Deduct balance before updating UI — only show success if redemption works
+        const redeemResult = await redeemGiftCard(code, amountToApply);
+        if (!redeemResult.success) {
+          try {
+            $w('#giftCardCheckoutError').text = redeemResult.message || 'Unable to apply gift card. Please try again.';
+            $w('#giftCardCheckoutError').show();
+          } catch (_) {}
+          return;
+        }
+
+        try {
+          $w('#giftCardAppliedAmount').text = buildGiftCardAppliedText(amountToApply);
+          $w('#giftCardAppliedSection').show('fade', { duration: 250 });
+          try { $w('#orderSummaryGiftCard').text = `-${formatBalance(amountToApply)}`; } catch (_) {}
+          try { $w('#orderSummaryGiftCardRow').show(); } catch (_) {}
+        } catch (_) {}
+
+        _giftCardState = { applied: true, amountApplied: amountToApply, code };
+
+        const { announce } = await import('public/a11yHelpers');
+        announce($w, `${formatBalance(amountToApply)} gift card applied to your order`);
+      } catch (err) {
+        console.error('[Checkout] Error applying gift card:', err);
+        try {
+          $w('#giftCardCheckoutError').text = 'Unable to apply gift card. Please try again.';
+          $w('#giftCardCheckoutError').show();
+        } catch (_) {}
+      } finally {
+        applyBtn.enable();
+        applyBtn.label = 'Apply';
+      }
+    });
+
+    try { $w('#giftCardCheckoutSection').show('fade', { duration: 250 }); } catch (_) {}
+  } catch (err) {
+    console.error('[giftCardHelpers] Error initializing checkout gift card:', err);
+  }
+}
+
+/**
+ * Initialize the gift card dashboard on Member Page.
+ * Shows purchased and received gift cards with balances.
+ * @param {Function} $w - Wix Velo selector
+ * @returns {Promise<void>}
+ */
+export async function initGiftCardDashboard($w) {
+  try {
+    const { getMyGiftCards } = await import('backend/giftCards.web');
+    const { currentMember } = await import('wix-members-frontend');
+    const member = await currentMember.getMember();
+
+    if (!member || !member.loginEmail) {
+      try { $w('#giftCardDashboardSection').hide(); } catch (_) {}
+      return;
+    }
+
+    const result = await getMyGiftCards(member.loginEmail);
+
+    if (!result.success) {
+      try { $w('#giftCardDashboardSection').hide(); } catch (_) {}
+      return;
+    }
+
+    const allCards = [...(result.purchased || []), ...(result.received || [])];
+
+    if (allCards.length === 0) {
+      try { $w('#giftCardDashboardSection').hide(); } catch (_) {}
+      return;
+    }
+
+    const activeCards = allCards.filter(c => c.status === 'active' && c.balance > 0);
+    const totalBalance = activeCards.reduce((sum, c) => sum + (c.balance || 0), 0);
+
+    try { $w('#giftCardTotalBalance').text = formatBalance(totalBalance); } catch (_) {}
+    try { $w('#giftCardCount').text = `${activeCards.length} active card${activeCards.length !== 1 ? 's' : ''}`; } catch (_) {}
+
+    try {
+      const repeater = $w('#giftCardRepeater');
+      if (repeater) {
+        repeater.onItemReady(($item, itemData) => {
+          try { $item('#gcDashCode').text = itemData.maskedCode || '****'; } catch (_) {}
+          try { $item('#gcDashBalance').text = formatBalance(itemData.balance); } catch (_) {}
+          try {
+            const statusDisplay = getBalanceStatusDisplay({ found: true, ...itemData });
+            $item('#gcDashStatus').text = statusDisplay.label;
+          } catch (_) {}
+          try { $item('#gcDashExpiry').text = formatExpirationDate(itemData.expirationDate); } catch (_) {}
+        });
+
+        repeater.data = allCards.map((card, i) => ({
+          ...card,
+          _id: card._id || `gc-dash-${i}`,
+        }));
+      }
+    } catch (_) {}
+
+    try { $w('#giftCardDashboardSection').show('fade', { duration: 250 }); } catch (_) {}
+  } catch (err) {
+    console.error('[giftCardHelpers] Error initializing gift card dashboard:', err);
+    try { $w('#giftCardDashboardSection').hide(); } catch (_) {}
+  }
+}

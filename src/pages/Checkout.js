@@ -27,6 +27,7 @@ import {
   PLAN_TIERS,
 } from 'backend/protectionPlan.web';
 import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCreditHelpers.js';
+import { initCheckoutGiftCard } from 'public/giftCardHelpers.js';
 
 // Shared state for cross-section communication
 let _currentCart = null;
@@ -43,6 +44,7 @@ $w.onReady(async function () {
     { name: 'orderSummarySidebar', init: initOrderSummarySidebar },
     { name: 'protectionPlan', init: initProtectionPlanUpsell },
     { name: 'storeCredit', init: initStoreCreditSection },
+    { name: 'giftCard', init: initGiftCardSection },
     { name: 'deliveryEstimate', init: initDeliveryEstimate },
     { name: 'expressCheckout', init: initExpressCheckout },
   ];
@@ -755,6 +757,18 @@ async function initStoreCreditSection() {
     } catch (e) {}
   } catch (e) {
     console.error('[Checkout] Error initializing store credit section:', e);
+  }
+}
+
+// ── Gift Card Application ────────────────────────────────────────────
+// Allows customers to enter and apply a gift card code to the order
+
+async function initGiftCardSection() {
+  try {
+    // Pass getter so subtotal is read at click time, accounting for store credit
+    await initCheckoutGiftCard($w, () => _currentCart?.subtotal?.amount || 0);
+  } catch (e) {
+    console.error('[Checkout] Error initializing gift card section:', e);
   }
 }
 

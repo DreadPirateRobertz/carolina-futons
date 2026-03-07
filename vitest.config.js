@@ -128,6 +128,8 @@ export default defineConfig({
       'public/LiveChat': path.resolve(__dirname, 'src/public/LiveChat.js'),
       'public/ReturnsPortal.js': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
       'public/ReturnsPortal': path.resolve(__dirname, 'src/public/ReturnsPortal.js'),
+      'public/giftCardHelpers.js': path.resolve(__dirname, 'src/public/giftCardHelpers.js'),
+      'public/giftCardHelpers': path.resolve(__dirname, 'src/public/giftCardHelpers.js'),
       'public/schedulerHelpers.js': path.resolve(__dirname, 'src/public/schedulerHelpers.js'),
       'public/schedulerHelpers': path.resolve(__dirname, 'src/public/schedulerHelpers.js'),
       'public/ReturnsAdmin.js': path.resolve(__dirname, 'src/public/ReturnsAdmin.js'),

@@ -1,10 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset } from './__mocks__/wix-data.js';
 import {
+  __getEmailLog,
+  __reset as __resetCrm,
+  __failNextEmail,
+} from './__mocks__/wix-crm-backend.js';
+import {
   purchaseGiftCard,
   checkBalance,
   redeemGiftCard,
   getGiftCardOptions,
+  _sendGiftCardEmails as sendGiftCardEmails,
+  getMyGiftCards,
 } from '../src/backend/giftCards.web.js';
 
 // ── purchaseGiftCard ─────────────────────────────────────────────────
@@ -59,6 +66,18 @@ describe('purchaseGiftCard', () => {
     });
     expect(result.success).toBe(false);
     expect(result.message).toContain('Invalid email');
+  });
+
+  it('allows self-gift (purchaser === recipient)', async () => {
+    const result = await purchaseGiftCard({
+      amount: 50,
+      purchaserEmail: 'me@test.com',
+      recipientEmail: 'me@test.com',
+      recipientName: 'Me',
+      message: 'Treat yourself!',
+    });
+    expect(result.success).toBe(true);
+    expect(result.code).toBeDefined();
   });
 });
 
@@ -234,5 +253,211 @@ describe('getGiftCardOptions', () => {
     const options = await getGiftCardOptions();
     expect(options[0].label).toBe('$25');
     expect(options[5].label).toBe('$500');
+  });
+});
+
+// ── sendGiftCardEmails ──────────────────────────────────────────────
+
+describe('sendGiftCardEmails', () => {
+  beforeEach(() => {
+    __resetCrm();
+  });
+
+  it('sends confirmation to purchaser and notification to recipient', async () => {
+    const result = await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 100,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+      recipientName: 'Friend',
+      message: 'Happy birthday!',
+      expirationDate: '2027-03-07T00:00:00.000Z',
+    });
+    expect(result.success).toBe(true);
+    const log = __getEmailLog();
+    expect(log).toHaveLength(2);
+    expect(log[0].templateId).toBe('gift_card_purchase_confirmation');
+    expect(log[1].templateId).toBe('gift_card_received');
+  });
+
+  it('includes correct template variables for recipient', async () => {
+    await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 50,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+      recipientName: 'Jane',
+      message: 'Enjoy!',
+      expirationDate: '2027-06-01T00:00:00.000Z',
+    });
+    const log = __getEmailLog();
+    const recipientEmail = log[1];
+    expect(recipientEmail.options.variables.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
+    expect(recipientEmail.options.variables.amount).toBe('$50.00');
+    expect(recipientEmail.options.variables.recipientName).toBe('Jane');
+    expect(recipientEmail.options.variables.message).toBe('Enjoy!');
+  });
+
+  it('handles missing optional fields gracefully', async () => {
+    const result = await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 25,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+    });
+    expect(result.success).toBe(true);
+    const log = __getEmailLog();
+    expect(log).toHaveLength(2);
+    expect(log[1].options.variables.recipientName).toBe('');
+    expect(log[1].options.variables.message).toBe('');
+  });
+
+  it('still sends recipient email when purchaser email fails', async () => {
+    __failNextEmail(); // first email (purchaser) will fail
+    const result = await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 100,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+    });
+    expect(result.success).toBe(true); // at least one sent
+    expect(result.purchaserSent).toBe(false);
+    expect(result.recipientSent).toBe(true);
+    const log = __getEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].templateId).toBe('gift_card_received');
+  });
+
+  it('returns both sent flags when all succeed', async () => {
+    const result = await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 50,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+    });
+    expect(result.purchaserSent).toBe(true);
+    expect(result.recipientSent).toBe(true);
+  });
+
+  it('rejects missing required fields', async () => {
+    const result = await sendGiftCardEmails({});
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects null input', async () => {
+    const result = await sendGiftCardEmails(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('maps correct template to correct contact', async () => {
+    await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 100,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+      recipientName: 'Jane',
+    });
+    const log = __getEmailLog();
+    // Purchaser email should NOT contain personal message
+    expect(log[0].templateId).toBe('gift_card_purchase_confirmation');
+    expect(log[0].options.variables.recipientName).toBe('Jane');
+    // Recipient email should contain the code
+    expect(log[1].templateId).toBe('gift_card_received');
+    expect(log[1].options.variables.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
+    // Contacts should be different
+    expect(log[0].contactId).not.toBe(log[1].contactId);
+  });
+});
+
+// ── getMyGiftCards ──────────────────────────────────────────────────
+
+describe('getMyGiftCards', () => {
+  beforeEach(() => {
+    __seed('GiftCards', [
+      {
+        _id: 'gc-bought',
+        code: 'CF-AAAA-BBBB-CCCC-DDDD',
+        balance: 75,
+        initialAmount: 100,
+        purchaserEmail: 'me@test.com',
+        recipientEmail: 'friend@test.com',
+        status: 'active',
+        expirationDate: new Date(Date.now() + 86400000 * 30).toISOString(),
+      },
+      {
+        _id: 'gc-received',
+        code: 'CF-XXXX-YYYY-ZZZZ-WWWW',
+        balance: 50,
+        initialAmount: 50,
+        purchaserEmail: 'someone@test.com',
+        recipientEmail: 'me@test.com',
+        status: 'active',
+        expirationDate: new Date(Date.now() + 86400000 * 60).toISOString(),
+      },
+      {
+        _id: 'gc-other',
+        code: 'CF-NOPE-NOPE-NOPE-NOPE',
+        balance: 200,
+        initialAmount: 200,
+        purchaserEmail: 'other@test.com',
+        recipientEmail: 'other2@test.com',
+        status: 'active',
+        expirationDate: new Date(Date.now() + 86400000 * 90).toISOString(),
+      },
+    ]);
+  });
+
+  it('returns purchased and received cards for email', async () => {
+    const result = await getMyGiftCards('me@test.com');
+    expect(result.success).toBe(true);
+    expect(result.purchased).toHaveLength(1);
+    expect(result.received).toHaveLength(1);
+    expect(result.purchased[0].maskedCode).toBe('CF-****-****-****-DDDD');
+    expect(result.received[0].maskedCode).toBe('CF-****-****-****-WWWW');
+  });
+
+  it('does not leak full gift card codes to frontend', async () => {
+    const result = await getMyGiftCards('me@test.com');
+    expect(result.purchased[0].code).toBeUndefined();
+    expect(result.received[0].code).toBeUndefined();
+    expect(result.purchased[0].purchaserEmail).toBeUndefined();
+    expect(result.purchased[0].recipientEmail).toBeUndefined();
+  });
+
+  it('returns empty arrays when no cards found', async () => {
+    const result = await getMyGiftCards('nobody@test.com');
+    expect(result.success).toBe(true);
+    expect(result.purchased).toHaveLength(0);
+    expect(result.received).toHaveLength(0);
+  });
+
+  it('rejects missing email', async () => {
+    const result = await getMyGiftCards(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid email', async () => {
+    const result = await getMyGiftCards('not-an-email');
+    expect(result.success).toBe(false);
+  });
+
+  it('is case-insensitive on email', async () => {
+    const result = await getMyGiftCards('ME@TEST.COM');
+    expect(result.success).toBe(true);
+    expect(result.purchased).toHaveLength(1);
+    expect(result.received).toHaveLength(1);
+  });
+
+  it('strips internal wixData fields from results', async () => {
+    const result = await getMyGiftCards('me@test.com');
+    const card = result.purchased[0];
+    expect(card._id).toBeDefined();
+    expect(card.balance).toBeDefined();
+    expect(card.initialAmount).toBeDefined();
+    expect(card.status).toBeDefined();
+    expect(card.maskedCode).toBeDefined();
+    // Internal fields should be stripped
+    expect(card.message).toBeUndefined();
+    expect(card.recipientName).toBeUndefined();
   });
 });

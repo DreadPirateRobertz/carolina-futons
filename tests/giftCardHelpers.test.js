@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   GIFT_CARD_DENOMINATIONS,
   validatePurchaseForm,
@@ -8,6 +8,11 @@ import {
   getBalanceStatusDisplay,
   getCardUsageText,
   formatGiftCardCode,
+  buildGiftCardAppliedText,
+  calculateGiftCardDiscount,
+  getCheckoutGiftCardState,
+  getBalanceCheckError,
+  initCheckoutGiftCard,
 } from '../src/public/giftCardHelpers.js';
 
 // ── GIFT_CARD_DENOMINATIONS ─────────────────────────────────────────
@@ -333,5 +338,217 @@ describe('formatGiftCardCode', () => {
 
   it('handles null', () => {
     expect(formatGiftCardCode(null)).toBe('');
+  });
+});
+
+// ── buildGiftCardAppliedText ──────────────────────────────────────
+
+describe('buildGiftCardAppliedText', () => {
+  it('formats applied amount', () => {
+    expect(buildGiftCardAppliedText(50)).toBe('-$50.00 Gift Card');
+  });
+
+  it('handles zero', () => {
+    expect(buildGiftCardAppliedText(0)).toBe('-$0.00 Gift Card');
+  });
+
+  it('handles null', () => {
+    expect(buildGiftCardAppliedText(null)).toBe('-$0.00 Gift Card');
+  });
+
+  it('handles decimal', () => {
+    expect(buildGiftCardAppliedText(25.5)).toBe('-$25.50 Gift Card');
+  });
+});
+
+// ── calculateGiftCardDiscount ─────────────────────────────────────
+
+describe('calculateGiftCardDiscount', () => {
+  it('applies full card when balance < subtotal', () => {
+    const result = calculateGiftCardDiscount(50, 100);
+    expect(result.amountToApply).toBe(50);
+    expect(result.remainingSubtotal).toBe(50);
+  });
+
+  it('caps at subtotal when balance > subtotal', () => {
+    const result = calculateGiftCardDiscount(200, 100);
+    expect(result.amountToApply).toBe(100);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles exact match', () => {
+    const result = calculateGiftCardDiscount(100, 100);
+    expect(result.amountToApply).toBe(100);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles zero balance', () => {
+    const result = calculateGiftCardDiscount(0, 100);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(100);
+  });
+
+  it('handles null inputs', () => {
+    const result = calculateGiftCardDiscount(null, null);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(0);
+  });
+
+  it('handles negative balance gracefully', () => {
+    const result = calculateGiftCardDiscount(-10, 100);
+    expect(result.amountToApply).toBe(0);
+    expect(result.remainingSubtotal).toBe(100);
+  });
+});
+
+// ── getCheckoutGiftCardState ──────────────────────────────────────
+
+describe('getCheckoutGiftCardState', () => {
+  it('returns default state before any gift card is applied', () => {
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(false);
+    expect(state.amountApplied).toBe(0);
+    expect(state.code).toBe('');
+  });
+
+  it('returns a copy, not a reference', () => {
+    const state1 = getCheckoutGiftCardState();
+    const state2 = getCheckoutGiftCardState();
+    expect(state1).not.toBe(state2);
+    expect(state1).toEqual(state2);
+  });
+});
+
+// ── getBalanceCheckError ──────────────────────────────────────────
+
+describe('getBalanceCheckError', () => {
+  it('returns not found message', () => {
+    expect(getBalanceCheckError({ found: false })).toBe('Gift card not found.');
+  });
+
+  it('returns expired message', () => {
+    expect(getBalanceCheckError({ found: true, status: 'expired' })).toBe('This gift card has expired.');
+  });
+
+  it('returns no balance message for redeemed', () => {
+    expect(getBalanceCheckError({ found: true, status: 'redeemed' })).toBe('This gift card has no remaining balance.');
+  });
+
+  it('returns no balance message for active with zero', () => {
+    expect(getBalanceCheckError({ found: true, status: 'active', balance: 0 })).toBe('This gift card has no remaining balance.');
+  });
+});
+
+// ── initCheckoutGiftCard — redeemGiftCard integration ─────────────
+
+const mockCheckBalance = vi.fn();
+const mockRedeemGiftCard = vi.fn();
+
+vi.mock('backend/giftCards.web', () => ({
+  checkBalance: (...args) => mockCheckBalance(...args),
+  redeemGiftCard: (...args) => mockRedeemGiftCard(...args),
+}));
+
+vi.mock('public/a11yHelpers', () => ({
+  announce: vi.fn(),
+}));
+
+function createMockElement() {
+  return {
+    text: '',
+    value: '',
+    label: '',
+    show: vi.fn(() => Promise.resolve()),
+    hide: vi.fn(() => Promise.resolve()),
+    enable: vi.fn(),
+    disable: vi.fn(),
+    onClick: vi.fn(),
+    focus: vi.fn(),
+    accessibility: { ariaLabel: '' },
+  };
+}
+
+function createMock$w(overrides = {}) {
+  const elements = {};
+  const $w = (selector) => {
+    if (overrides[selector] === null) return null;
+    if (!elements[selector]) elements[selector] = createMockElement();
+    return elements[selector];
+  };
+  for (const [sel, val] of Object.entries(overrides)) {
+    if (val !== null) elements[sel] = val;
+  }
+  return $w;
+}
+
+describe('initCheckoutGiftCard — redeemGiftCard integration', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockCheckBalance.mockResolvedValue({ found: true, status: 'active', balance: 100 });
+    mockRedeemGiftCard.mockResolvedValue({ success: true, amountApplied: 50, remainingBalance: 50 });
+  });
+
+  it('calls redeemGiftCard after successful balance check', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    // Simulate clicking the apply button
+    const applyBtn = $w('#giftCardApplyBtn');
+    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(mockCheckBalance).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD');
+    expect(mockRedeemGiftCard).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD', 50);
+  });
+
+  it('does not call redeemGiftCard when balance check fails', async () => {
+    mockCheckBalance.mockResolvedValue({ found: false });
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const applyBtn = $w('#giftCardApplyBtn');
+    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
+  });
+
+  it('does not update state when redeemGiftCard fails', async () => {
+    mockRedeemGiftCard.mockResolvedValue({ success: false, message: 'Concurrent modification' });
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const applyBtn = $w('#giftCardApplyBtn');
+    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(mockRedeemGiftCard).toHaveBeenCalled();
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(false);
+  });
+
+  it('updates state only when redeemGiftCard succeeds', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const applyBtn = $w('#giftCardApplyBtn');
+    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(mockRedeemGiftCard).toHaveBeenCalled();
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(true);
+    expect(state.amountApplied).toBe(50);
+    expect(state.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
   });
 });
