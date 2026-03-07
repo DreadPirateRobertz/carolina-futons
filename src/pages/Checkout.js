@@ -765,8 +765,8 @@ async function initStoreCreditSection() {
 
 async function initGiftCardSection() {
   try {
-    const subtotal = _currentCart?.subtotal?.amount || 0;
-    await initCheckoutGiftCard($w, subtotal);
+    // Pass getter so subtotal is read at click time, accounting for store credit
+    await initCheckoutGiftCard($w, () => _currentCart?.subtotal?.amount || 0);
   } catch (e) {
     console.error('[Checkout] Error initializing gift card section:', e);
   }

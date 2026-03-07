@@ -10,7 +10,7 @@ import {
   checkBalance,
   redeemGiftCard,
   getGiftCardOptions,
-  sendGiftCardEmails,
+  _sendGiftCardEmails as sendGiftCardEmails,
   getMyGiftCards,
 } from '../src/backend/giftCards.web.js';
 
@@ -300,15 +300,31 @@ describe('sendGiftCardEmails', () => {
     expect(log[1].options.variables.message).toBe('');
   });
 
-  it('returns success false on email failure', async () => {
-    __failNextEmail();
+  it('still sends recipient email when purchaser email fails', async () => {
+    __failNextEmail(); // first email (purchaser) will fail
     const result = await sendGiftCardEmails({
       code: 'CF-AAAA-BBBB-CCCC-DDDD',
       amount: 100,
       purchaserEmail: 'buyer@test.com',
       recipientEmail: 'friend@test.com',
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true); // at least one sent
+    expect(result.purchaserSent).toBe(false);
+    expect(result.recipientSent).toBe(true);
+    const log = __getEmailLog();
+    expect(log).toHaveLength(1);
+    expect(log[0].templateId).toBe('gift_card_received');
+  });
+
+  it('returns both sent flags when all succeed', async () => {
+    const result = await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 50,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+    });
+    expect(result.purchaserSent).toBe(true);
+    expect(result.recipientSent).toBe(true);
   });
 
   it('rejects missing required fields', async () => {
@@ -319,6 +335,25 @@ describe('sendGiftCardEmails', () => {
   it('rejects null input', async () => {
     const result = await sendGiftCardEmails(null);
     expect(result.success).toBe(false);
+  });
+
+  it('maps correct template to correct contact', async () => {
+    await sendGiftCardEmails({
+      code: 'CF-AAAA-BBBB-CCCC-DDDD',
+      amount: 100,
+      purchaserEmail: 'buyer@test.com',
+      recipientEmail: 'friend@test.com',
+      recipientName: 'Jane',
+    });
+    const log = __getEmailLog();
+    // Purchaser email should NOT contain personal message
+    expect(log[0].templateId).toBe('gift_card_purchase_confirmation');
+    expect(log[0].options.variables.recipientName).toBe('Jane');
+    // Recipient email should contain the code
+    expect(log[1].templateId).toBe('gift_card_received');
+    expect(log[1].options.variables.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
+    // Contacts should be different
+    expect(log[0].contactId).not.toBe(log[1].contactId);
   });
 });
 
@@ -365,8 +400,16 @@ describe('getMyGiftCards', () => {
     expect(result.success).toBe(true);
     expect(result.purchased).toHaveLength(1);
     expect(result.received).toHaveLength(1);
-    expect(result.purchased[0].code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
-    expect(result.received[0].code).toBe('CF-XXXX-YYYY-ZZZZ-WWWW');
+    expect(result.purchased[0].maskedCode).toBe('CF-****-****-****-DDDD');
+    expect(result.received[0].maskedCode).toBe('CF-****-****-****-WWWW');
+  });
+
+  it('does not leak full gift card codes to frontend', async () => {
+    const result = await getMyGiftCards('me@test.com');
+    expect(result.purchased[0].code).toBeUndefined();
+    expect(result.received[0].code).toBeUndefined();
+    expect(result.purchased[0].purchaserEmail).toBeUndefined();
+    expect(result.purchased[0].recipientEmail).toBeUndefined();
   });
 
   it('returns empty arrays when no cards found', async () => {
@@ -391,5 +434,18 @@ describe('getMyGiftCards', () => {
     expect(result.success).toBe(true);
     expect(result.purchased).toHaveLength(1);
     expect(result.received).toHaveLength(1);
+  });
+
+  it('strips internal wixData fields from results', async () => {
+    const result = await getMyGiftCards('me@test.com');
+    const card = result.purchased[0];
+    expect(card._id).toBeDefined();
+    expect(card.balance).toBeDefined();
+    expect(card.initialAmount).toBeDefined();
+    expect(card.status).toBeDefined();
+    expect(card.maskedCode).toBeDefined();
+    // Internal fields should be stripped
+    expect(card.message).toBeUndefined();
+    expect(card.recipientName).toBeUndefined();
   });
 });

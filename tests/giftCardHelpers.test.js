@@ -11,6 +11,8 @@ import {
   maskGiftCardCode,
   buildGiftCardAppliedText,
   calculateGiftCardDiscount,
+  getCheckoutGiftCardState,
+  getBalanceCheckError,
 } from '../src/public/giftCardHelpers.js';
 
 // ── GIFT_CARD_DENOMINATIONS ─────────────────────────────────────────
@@ -424,5 +426,43 @@ describe('calculateGiftCardDiscount', () => {
     const result = calculateGiftCardDiscount(-10, 100);
     expect(result.amountToApply).toBe(0);
     expect(result.remainingSubtotal).toBe(100);
+  });
+});
+
+// ── getCheckoutGiftCardState ──────────────────────────────────────
+
+describe('getCheckoutGiftCardState', () => {
+  it('returns default state before any gift card is applied', () => {
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(false);
+    expect(state.amountApplied).toBe(0);
+    expect(state.code).toBe('');
+  });
+
+  it('returns a copy, not a reference', () => {
+    const state1 = getCheckoutGiftCardState();
+    const state2 = getCheckoutGiftCardState();
+    expect(state1).not.toBe(state2);
+    expect(state1).toEqual(state2);
+  });
+});
+
+// ── getBalanceCheckError ──────────────────────────────────────────
+
+describe('getBalanceCheckError', () => {
+  it('returns not found message', () => {
+    expect(getBalanceCheckError({ found: false })).toBe('Gift card not found.');
+  });
+
+  it('returns expired message', () => {
+    expect(getBalanceCheckError({ found: true, status: 'expired' })).toBe('This gift card has expired.');
+  });
+
+  it('returns no balance message for redeemed', () => {
+    expect(getBalanceCheckError({ found: true, status: 'redeemed' })).toBe('This gift card has no remaining balance.');
+  });
+
+  it('returns no balance message for active with zero', () => {
+    expect(getBalanceCheckError({ found: true, status: 'active', balance: 0 })).toBe('This gift card has no remaining balance.');
   });
 });
