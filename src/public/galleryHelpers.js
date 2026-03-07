@@ -709,7 +709,7 @@ export function buildComparisonBar($w) {
       $w('#compareButton').onClick(() => {
         const ids = compareList.map(p => encodeURIComponent(p._id)).join(',');
         import('wix-location-frontend').then(({ to }) => {
-          to(`/compare?products=${ids}`);
+          to(`/compare?ids=${ids}`);
         });
       });
       if (compareList.length >= 2) {

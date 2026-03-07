@@ -1486,9 +1486,9 @@ function openCompareView() {
       return;
     }
 
-    const slugs = items.map(p => p.slug).join(',');
+    const ids = items.map(p => encodeURIComponent(p._id)).join(',');
     import('wix-location-frontend').then(({ to }) => {
-      to(`/compare?products=${slugs}`);
+      to(`/compare?ids=${ids}`);
     }).catch(() => {});
   } catch (e) {}
 }
