@@ -24,6 +24,13 @@ import {
   COMM_PREF_TOGGLES,
   DEFAULT_COMM_PREFS,
   PAGE_SECTIONS,
+  mergeDeliveryStatus,
+  formatDeliveryEstimate,
+  formatItemCount,
+  getOrderFilterOptions,
+  filterOrdersByStatus,
+  buildTrackingUrl,
+  ORDER_FILTER_OPTIONS,
 } from '../src/public/MemberPageHelpers.js';
 
 // ── getStatusColor ────────────────────────────────────────────────────
@@ -392,5 +399,190 @@ describe('constants', () => {
     expect(STATUS_COLORS).toHaveProperty('Shipped');
     expect(STATUS_COLORS).toHaveProperty('Delivered');
     expect(STATUS_COLORS).toHaveProperty('Cancelled');
+  });
+});
+
+// ── mergeDeliveryStatus ──────────────────────────────────────────────
+
+describe('mergeDeliveryStatus', () => {
+  it('merges matching delivery into order', () => {
+    const orders = [{ _id: 'o1', status: 'Processing' }];
+    const deliveries = [{ orderId: 'o1', estimatedDelivery: '2026-03-15', status: 'in_transit', trackingNumber: '1Z999' }];
+    const result = mergeDeliveryStatus(orders, deliveries);
+    expect(result[0].deliveryEta).toBe('2026-03-15');
+    expect(result[0].liveStatus).toBe('in_transit');
+    expect(result[0].deliveryTrackingNumber).toBe('1Z999');
+  });
+
+  it('leaves order unchanged when no matching delivery', () => {
+    const orders = [{ _id: 'o1', status: 'Delivered' }];
+    const deliveries = [{ orderId: 'o2', status: 'in_transit' }];
+    const result = mergeDeliveryStatus(orders, deliveries);
+    expect(result[0].deliveryEta).toBeUndefined();
+    expect(result[0].liveStatus).toBeUndefined();
+  });
+
+  it('handles empty orders array', () => {
+    expect(mergeDeliveryStatus([], [{ orderId: 'o1' }])).toEqual([]);
+  });
+
+  it('handles empty deliveries array', () => {
+    const orders = [{ _id: 'o1', status: 'Processing' }];
+    const result = mergeDeliveryStatus(orders, []);
+    expect(result).toEqual(orders);
+  });
+
+  it('handles null/undefined inputs', () => {
+    expect(mergeDeliveryStatus(null, [])).toEqual([]);
+    expect(mergeDeliveryStatus([], null)).toEqual([]);
+    expect(mergeDeliveryStatus(undefined, undefined)).toEqual([]);
+  });
+
+  it('uses first delivery when multiple match same orderId', () => {
+    const orders = [{ _id: 'o1' }];
+    const deliveries = [
+      { orderId: 'o1', status: 'in_transit', estimatedDelivery: '2026-03-15' },
+      { orderId: 'o1', status: 'delivered', estimatedDelivery: '2026-03-10' },
+    ];
+    const result = mergeDeliveryStatus(orders, deliveries);
+    expect(result[0].liveStatus).toBe('in_transit');
+  });
+});
+
+// ── formatDeliveryEstimate ───────────────────────────────────────────
+
+describe('formatDeliveryEstimate', () => {
+  it('formats valid date', () => {
+    const result = formatDeliveryEstimate(new Date(2026, 2, 15));
+    expect(result).toContain('March');
+    expect(result).toContain('15');
+  });
+
+  it('formats Date object', () => {
+    const result = formatDeliveryEstimate(new Date('2026-03-15'));
+    expect(result).toContain('March');
+  });
+
+  it('returns empty string for null/undefined', () => {
+    expect(formatDeliveryEstimate(null)).toBe('');
+    expect(formatDeliveryEstimate(undefined)).toBe('');
+  });
+
+  it('returns empty string for invalid date', () => {
+    expect(formatDeliveryEstimate('not-a-date')).toBe('');
+  });
+
+  it('includes weekday', () => {
+    // Use a Date object with explicit time to avoid timezone shifting
+    const result = formatDeliveryEstimate(new Date(2026, 2, 15)); // March 15, 2026 (Sunday)
+    expect(result).toContain('Sunday');
+  });
+});
+
+// ── formatItemCount ─────────────────────────────────────────────────
+
+describe('formatItemCount', () => {
+  it('returns "1 item" for 1', () => {
+    expect(formatItemCount(1)).toBe('1 item');
+  });
+
+  it('returns plural for > 1', () => {
+    expect(formatItemCount(3)).toBe('3 items');
+  });
+
+  it('returns "0 items" for 0', () => {
+    expect(formatItemCount(0)).toBe('0 items');
+  });
+
+  it('returns "0 items" for negative', () => {
+    expect(formatItemCount(-1)).toBe('0 items');
+  });
+
+  it('returns "0 items" for null/undefined', () => {
+    expect(formatItemCount(null)).toBe('0 items');
+    expect(formatItemCount(undefined)).toBe('0 items');
+  });
+});
+
+// ── getOrderFilterOptions ────────────────────────────────────────────
+
+describe('getOrderFilterOptions', () => {
+  it('returns array with All Orders as first option', () => {
+    const opts = getOrderFilterOptions();
+    expect(opts[0]).toEqual({ label: 'All Orders', value: 'all' });
+  });
+
+  it('includes Processing, Shipped, Delivered, Cancelled', () => {
+    const opts = getOrderFilterOptions();
+    const values = opts.map(o => o.value);
+    expect(values).toContain('Processing');
+    expect(values).toContain('Shipped');
+    expect(values).toContain('Delivered');
+    expect(values).toContain('Cancelled');
+  });
+});
+
+// ── filterOrdersByStatus ────────────────────────────────────────────
+
+describe('filterOrdersByStatus', () => {
+  const orders = [
+    { _id: '1', status: 'Processing' },
+    { _id: '2', status: 'Shipped' },
+    { _id: '3', status: 'Delivered' },
+    { _id: '4', status: 'Cancelled' },
+  ];
+
+  it('returns all orders for "all"', () => {
+    expect(filterOrdersByStatus(orders, 'all')).toEqual(orders);
+  });
+
+  it('filters by Processing', () => {
+    const result = filterOrdersByStatus(orders, 'Processing');
+    expect(result).toHaveLength(1);
+    expect(result[0]._id).toBe('1');
+  });
+
+  it('filters by Delivered', () => {
+    const result = filterOrdersByStatus(orders, 'Delivered');
+    expect(result).toHaveLength(1);
+    expect(result[0]._id).toBe('3');
+  });
+
+  it('returns empty array for unknown status', () => {
+    expect(filterOrdersByStatus(orders, 'Unknown')).toEqual([]);
+  });
+
+  it('handles empty orders array', () => {
+    expect(filterOrdersByStatus([], 'Processing')).toEqual([]);
+  });
+
+  it('handles null/undefined inputs', () => {
+    expect(filterOrdersByStatus(null, 'all')).toEqual([]);
+    expect(filterOrdersByStatus(orders, null)).toEqual(orders);
+    expect(filterOrdersByStatus(orders, undefined)).toEqual(orders);
+  });
+});
+
+// ── buildTrackingUrl ────────────────────────────────────────────────
+
+describe('buildTrackingUrl', () => {
+  it('builds URL with order number and email', () => {
+    expect(buildTrackingUrl('1234', 'test@example.com'))
+      .toBe('/tracking?order=1234&email=test%40example.com');
+  });
+
+  it('returns /tracking with empty params for missing inputs', () => {
+    expect(buildTrackingUrl('', '')).toBe('/tracking?order=&email=');
+    expect(buildTrackingUrl(null, null)).toBe('/tracking?order=&email=');
+  });
+
+  it('encodes special characters in email', () => {
+    const url = buildTrackingUrl('1234', 'user+test@example.com');
+    expect(url).toContain('user%2Btest%40example.com');
+  });
+
+  it('encodes special characters in order number', () => {
+    const url = buildTrackingUrl('CF-001&evil=1', 'test@example.com');
+    expect(url).toBe('/tracking?order=CF-001%26evil%3D1&email=test%40example.com');
   });
 });

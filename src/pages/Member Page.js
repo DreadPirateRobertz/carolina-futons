@@ -18,14 +18,6 @@ import {
   getNextMilestone,
 } from 'public/loyaltyHelpers.js';
 
-// Status badge color mapping
-const STATUS_COLORS = {
-  Processing: colors.mountainBlue,
-  Shipped: colors.sunsetCoral,
-  Delivered: colors.success,
-  Cancelled: colors.muted,
-};
-
 let currentMember = null;
 let wishlistData = [];
 let wishlistSortOrder = 'date-desc';
@@ -331,89 +323,137 @@ async function initLoyaltyDashboard() {
 
 // ── Order History ───────────────────────────────────────────────────
 
-function initOrderHistory() {
+let _orderData = [];
+let _orderPage = 1;
+let _orderFilter = 'all';
+let _memberEmail = '';
+let _deliveries = [];
+
+async function initOrderHistory() {
   try {
+    // Reset state on each init (handles re-navigation)
+    _orderData = [];
+    _orderPage = 1;
+    _orderFilter = 'all';
+    _deliveries = [];
+
     const ordersRepeater = $w('#ordersRepeater');
     if (!ordersRepeater) return;
 
-    ordersRepeater.onItemReady(($item, itemData) => {
-      $item('#orderNumber').text = `Order #${itemData.number}`;
-      $item('#orderDate').text = new Date(itemData._createdDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-      $item('#orderTotal').text = `$${Number(itemData.totals?.total || 0).toFixed(2)}`;
+    const {
+      mergeDeliveryStatus,
+      formatOrderDate,
+      formatOrderTotal,
+      formatOrderNumber,
+      formatDeliveryEstimate,
+      formatItemCount,
+      getOrderFilterOptions,
+      filterOrdersByStatus,
+      buildTrackingUrl,
+      isReturnEligible,
+      buildOrderGalleryItems,
+      getStatusColor,
+    } = await import('public/MemberPageHelpers.js');
 
-      // Status badge with color coding
-      const status = itemData.fulfillmentStatus || 'Processing';
+    _memberEmail = currentMember?.loginEmail || currentMember?.contactDetails?.emails?.[0] || '';
+
+    ordersRepeater.onItemReady(($item, itemData) => {
+      try { $item('#orderNumber').text = formatOrderNumber(itemData.number); } catch (e) {}
+      try { $item('#orderDate').text = formatOrderDate(itemData.createdDate); } catch (e) {}
+      try { $item('#orderTotal').text = formatOrderTotal({ total: itemData.total }); } catch (e) {}
+      try { $item('#orderItemCount').text = formatItemCount(itemData.itemCount); } catch (e) {}
+
+      // Status badge
       try {
+        const status = itemData.status || 'Processing';
         const badgeEl = $item('#orderStatusBadge');
         if (badgeEl) {
           badgeEl.text = status;
-          badgeEl.style.color = STATUS_COLORS[status] || colors.mountainBlue;
+          badgeEl.style.color = getStatusColor(status);
           try { badgeEl.accessibility.ariaLabel = `Order status: ${status}`; } catch (e) {}
         } else {
-          $item('#orderStatus').text = status;
-        }
-      } catch (e) {
-        try { $item('#orderStatus').text = status; } catch (e2) {}
-      }
-
-      // Track Order button
-      try {
-        $item('#orderTrackBtn').onClick(() => {
-          const trackingNumber = itemData.shippingInfo?.trackingNumber;
-          if (trackingNumber) {
-            import('wix-location-frontend').then(({ to }) => {
-              to(`/tracking?order=${itemData.number}&tracking=${trackingNumber}`);
-            });
-          }
-        });
-        try { $item('#orderTrackBtn').accessibility.ariaLabel = `Track order ${itemData.number}`; } catch (e) {}
-
-        // Hide track button if no tracking info
-        if (!itemData.shippingInfo?.trackingNumber) {
-          $item('#orderTrackBtn').hide();
+          try { $item('#orderStatus').text = status; } catch (e) {}
         }
       } catch (e) {}
 
-      // Reorder button - adds all items from past order to cart
+      // Delivery ETA
       try {
-        try { $item('#orderReorderBtn').accessibility.ariaLabel = `Reorder items from order ${itemData.number}`; } catch (e) {}
-        $item('#orderReorderBtn').onClick(async () => {
-          try {
-            const { addToCart } = await import('public/cartService');
-            const lineItems = itemData.lineItems || [];
-            if (lineItems.length === 0) return;
+        const etaEl = $item('#orderDeliveryEta');
+        if (etaEl) {
+          if (itemData.deliveryEta) {
+            const formatted = formatDeliveryEstimate(itemData.deliveryEta);
+            etaEl.text = itemData.status === 'Delivered'
+              ? `Delivered ${formatted}`
+              : `Est. delivery: ${formatted}`;
+            etaEl.show('fade', { duration: 250 });
+          } else {
+            etaEl.hide();
+          }
+        }
+      } catch (e) {}
 
-            for (const item of lineItems) {
-              await addToCart(item.productId, item.quantity || 1);
+      // Track Order button
+      try {
+        const trackBtn = $item('#orderTrackBtn');
+        const hasTracking = itemData.trackingNumber || itemData.deliveryTrackingNumber;
+        if (hasTracking) {
+          trackBtn.show();
+          try { trackBtn.accessibility.ariaLabel = `Track order ${itemData.number}`; } catch (e) {}
+          trackBtn.onClick(() => {
+            import('wix-location-frontend').then(({ to }) => {
+              to(buildTrackingUrl(itemData.number, _memberEmail));
+            });
+          });
+        } else {
+          trackBtn.hide();
+        }
+      } catch (e) {}
+
+      // Reorder button
+      try {
+        const reorderBtn = $item('#orderReorderBtn');
+        try { reorderBtn.accessibility.ariaLabel = `Reorder items from order ${itemData.number}`; } catch (e) {}
+        reorderBtn.onClick(async () => {
+          try {
+            reorderBtn.disable();
+            reorderBtn.label = 'Adding...';
+            const { getReorderItems } = await import('backend/accountDashboard.web');
+            const result = await getReorderItems(itemData._id);
+            if (result.success && result.data?.items?.length > 0) {
+              const { addToCart } = await import('public/cartService');
+              await Promise.all(result.data.items.map(
+                item => addToCart(item.productId, item.quantity || 1)
+              ));
+              reorderBtn.label = 'Added to Cart!';
+              announce($w, `Items from order ${itemData.number} added to cart`);
+              trackEvent('reorder', { orderNumber: itemData.number });
+            } else {
+              reorderBtn.label = 'No Items';
             }
-            $item('#orderReorderBtn').label = 'Added to Cart!';
-            $item('#orderReorderBtn').disable();
-            announce($w, `Items from order ${itemData.number} added to cart`);
+            reorderBtn.disable();
             setTimeout(() => {
-              $item('#orderReorderBtn').label = 'Reorder';
-              $item('#orderReorderBtn').enable();
+              reorderBtn.label = 'Reorder';
+              reorderBtn.enable();
             }, 3000);
           } catch (err) {
             console.error('[MemberPage] Reorder error:', err);
+            reorderBtn.label = 'Reorder';
+            reorderBtn.enable();
           }
         });
       } catch (e) {}
 
       // Start a Return button
       try {
-        try { $item('#orderStartReturnBtn').accessibility.ariaLabel = `Start a return for order ${itemData.number}`; } catch (e) {}
-        $item('#orderStartReturnBtn').onClick(() => {
-          try { $w('#startReturnBtn').click(); } catch (e) {}
-          trackEvent('return_started', { orderNumber: itemData.number });
-        });
-
-        // Hide return button for cancelled orders
-        if (status === 'Cancelled') {
-          $item('#orderStartReturnBtn').hide();
+        const returnBtn = $item('#orderStartReturnBtn');
+        try { returnBtn.accessibility.ariaLabel = `Start a return for order ${itemData.number}`; } catch (e) {}
+        if (!isReturnEligible(itemData.status)) {
+          returnBtn.hide();
+        } else {
+          returnBtn.onClick(() => {
+            try { $w('#startReturnBtn').click(); } catch (e) {}
+            trackEvent('return_started', { orderNumber: itemData.number });
+          });
         }
       } catch (e) {}
 
@@ -421,13 +461,12 @@ function initOrderHistory() {
       try {
         const gallery = $item('#orderItemsGallery');
         if (gallery && itemData.lineItems) {
-          const galleryItems = itemData.lineItems
-            .filter(li => li.mediaItem?.src)
-            .map(li => ({
-              src: li.mediaItem.src,
-              alt: li.name ? `Ordered item: ${li.name}` : 'Ordered item',
-              title: li.name,
-            }));
+          const galleryItems = buildOrderGalleryItems(
+            itemData.lineItems.map(li => ({
+              mediaItem: { src: li.imageUrl },
+              name: li.name,
+            }))
+          );
           if (galleryItems.length > 0) {
             gallery.items = galleryItems;
           }
@@ -435,9 +474,142 @@ function initOrderHistory() {
       } catch (e) {}
     });
 
+    // Setup filter dropdown
+    try {
+      const filterDropdown = $w('#orderFilterDropdown');
+      if (filterDropdown) {
+        filterDropdown.options = getOrderFilterOptions();
+        filterDropdown.value = 'all';
+        try { filterDropdown.accessibility.ariaLabel = 'Filter orders by status'; } catch (e) {}
+        filterDropdown.onChange(async () => {
+          _orderFilter = filterDropdown.value || 'all';
+          _orderPage = 1;
+          await loadOrders();
+          announce($w, `Showing ${filterDropdown.options.find(o => o.value === _orderFilter)?.label || 'all'} orders`);
+        });
+      }
+    } catch (e) {}
+
+    // Setup Load More button
+    try {
+      const loadMoreBtn = $w('#ordersLoadMoreBtn');
+      if (loadMoreBtn) {
+        loadMoreBtn.hide();
+        try { loadMoreBtn.accessibility.ariaLabel = 'Load more orders'; } catch (e) {}
+        loadMoreBtn.onClick(async () => {
+          try {
+            loadMoreBtn.disable();
+            loadMoreBtn.label = 'Loading...';
+            _orderPage += 1;
+            await loadOrders(true);
+            loadMoreBtn.label = 'Load More Orders';
+            loadMoreBtn.enable();
+          } catch (err) {
+            console.error('[MemberPage] Load more error:', err);
+            loadMoreBtn.label = 'Retry';
+            loadMoreBtn.enable();
+          }
+        });
+      }
+    } catch (e) {}
+
+    // Setup Retry button (wired once to avoid stacking handlers)
+    try {
+      const retryBtn = $w('#ordersRetryBtn');
+      if (retryBtn) {
+        retryBtn.onClick(async () => {
+          _orderPage = 1;
+          await loadOrders();
+        });
+      }
+    } catch (e) {}
+
+    // Initial load
+    await loadOrders();
+
   } catch (e) {
     console.error('[MemberPage] Error initializing order history:', e);
   }
+}
+
+async function loadOrders(append = false) {
+  const {
+    mergeDeliveryStatus,
+    filterOrdersByStatus,
+  } = await import('public/MemberPageHelpers.js');
+
+  try {
+    try { $w('#ordersLoader').show(); } catch (e) {}
+    try { $w('#ordersError').hide(); } catch (e) {}
+    if (!append) {
+      try { $w('#ordersRepeater').collapse(); } catch (e) {}
+      try { $w('#ordersEmpty').hide(); } catch (e) {}
+    }
+
+    const { getOrderHistory, getActiveDeliveries } = await import('backend/accountDashboard.web');
+
+    const promises = [getOrderHistory({ page: _orderPage })];
+    if (!append && _deliveries.length === 0) {
+      promises.push(getActiveDeliveries());
+    }
+
+    const results = await Promise.all(promises);
+    const orderResult = results[0];
+    const deliveryResult = results[1];
+
+    if (!orderResult.success) {
+      showOrdersError('Unable to load your orders. Please try again.');
+      return;
+    }
+
+    if (deliveryResult?.success) {
+      _deliveries = deliveryResult.data.deliveries || [];
+    }
+
+    const enrichedOrders = mergeDeliveryStatus(orderResult.data.orders, _deliveries);
+    const filtered = filterOrdersByStatus(enrichedOrders, _orderFilter);
+
+    if (append) {
+      _orderData = [..._orderData, ...filtered];
+    } else {
+      _orderData = filtered;
+    }
+
+    try { $w('#ordersLoader').hide(); } catch (e) {}
+
+    if (_orderData.length === 0 && !append) {
+      try { $w('#ordersEmpty').show(); } catch (e) {}
+      try { $w('#ordersRepeater').collapse(); } catch (e) {}
+      try { $w('#ordersLoadMoreBtn').hide(); } catch (e) {}
+      return;
+    }
+
+    try {
+      $w('#ordersRepeater').data = _orderData;
+      $w('#ordersRepeater').expand();
+    } catch (e) {}
+
+    try {
+      if (orderResult.data.hasNext) {
+        $w('#ordersLoadMoreBtn').show();
+      } else {
+        $w('#ordersLoadMoreBtn').hide();
+      }
+    } catch (e) {}
+
+  } catch (err) {
+    console.error('[MemberPage] Error loading orders:', err);
+    showOrdersError('Unable to load your orders. Please try again.');
+  }
+}
+
+function showOrdersError(message) {
+  try { $w('#ordersLoader').hide(); } catch (e) {}
+  try {
+    const errorEl = $w('#ordersError');
+    errorEl.text = message;
+    errorEl.show('fade', { duration: 200 });
+  } catch (e) {}
 }
 
 // ── Wishlist / Saved Items ──────────────────────────────────────────
