@@ -94,12 +94,17 @@ vi.mock('backend/browseAbandonment.web', () => ({
   markSessionConverted: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('backend/referralService.web', () => ({
+  getReferralLink: vi.fn().mockResolvedValue({ success: true, referralCode: 'ABC12345' }),
+}));
+
 vi.mock('backend/contactSubmissions.web', () => ({
   submitContactForm: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock('backend/dataService.web', () => ({
   scheduleReviewRequest: vi.fn().mockResolvedValue(undefined),
+  submitReview: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 vi.mock('backend/testimonialService.web', () => ({
@@ -115,6 +120,8 @@ import { submitContactForm } from 'backend/contactSubmissions.web';
 import { submitTestimonial } from 'backend/testimonialService.web';
 import { makeClickable } from 'public/a11yHelpers';
 import { limitForViewport } from 'public/mobileHelpers';
+import { getReferralLink } from 'backend/referralService.web';
+import { submitReview } from 'backend/dataService.web';
 
 // Mock data defined after imports (vi.mock factories are hoisted above const)
 const mockFeaturedProducts = [futonFrame, wallHuggerFrame, futonMattress];
@@ -216,6 +223,8 @@ describe('Thank You Page', () => {
     vi.clearAllMocks();
     getFeaturedProducts.mockResolvedValue([...mockFeaturedProducts]);
     submitTestimonial.mockResolvedValue({ success: true });
+    getReferralLink.mockResolvedValue({ success: true, referralCode: 'ABC12345' });
+    submitReview.mockResolvedValue({ success: true });
     globalThis.sessionStorage.getItem.mockReturnValue(null);
   });
 
@@ -361,7 +370,7 @@ describe('Thank You Page', () => {
   describe('social sharing', () => {
     it('sets share prompt text', async () => {
       await onReadyHandler();
-      expect(getEl('#shareText').text).toContain('Love your new furniture');
+      expect(getEl('#shareText').text).toContain('Love your new');
     });
 
     it('sets ARIA labels on social share buttons', async () => {
@@ -403,6 +412,48 @@ describe('Thank You Page', () => {
       const clickHandler = getEl('#shareInstagram').onClick.mock.calls[0][0];
       await clickHandler();
       expect(trackSocialShare).toHaveBeenCalledWith('instagram', 'purchase');
+    });
+  });
+
+  // ── Twitter/X Share ─────────────────────────────────────────
+
+  describe('Twitter/X share', () => {
+    it('sets ARIA label on Twitter share button', async () => {
+      await onReadyHandler();
+      expect(getEl('#shareTwitter').accessibility.ariaLabel).toContain('Twitter');
+      expect(getEl('#shareTwitter').accessibility.ariaLabel).toContain('opens in new window');
+    });
+
+    it('registers click handler on Twitter share button', async () => {
+      await onReadyHandler();
+      expect(getEl('#shareTwitter').onClick).toHaveBeenCalled();
+    });
+
+    it('tracks Twitter share on click', async () => {
+      await onReadyHandler();
+      const clickHandler = getEl('#shareTwitter').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(trackSocialShare).toHaveBeenCalledWith('twitter', 'purchase');
+    });
+  });
+
+  // ── Dynamic Share Content ──────────────────────────────────────
+
+  describe('dynamic share content', () => {
+    it('includes product names in share text when order context has line items', async () => {
+      await onReadyHandler();
+      const shareText = getEl('#shareText').text;
+      expect(shareText).toContain('Eureka Futon Frame');
+    });
+
+    it('falls back to generic share text when no line items', async () => {
+      // Mock empty order context
+      const wixWindowMod = await import('wix-window-frontend');
+      const origGetContext = wixWindowMod.lightbox.getContext;
+      wixWindowMod.lightbox.getContext = () => ({ orderId: 'order-999', total: 100, lineItems: [] });
+      await onReadyHandler();
+      expect(getEl('#shareText').text).toContain('furniture');
+      wixWindowMod.lightbox.getContext = origGetContext;
     });
   });
 
@@ -504,7 +555,7 @@ describe('Thank You Page', () => {
     it('sets referral title and message', async () => {
       await onReadyHandler();
       expect(getEl('#referralTitle').text).toBe('Share the Love');
-      expect(getEl('#referralMessage').text).toContain('Carolina Futons');
+      expect(getEl('#referralMessage').text).toContain('mountain-town prices');
     });
 
     it('sets ARIA labels on referral buttons', async () => {
@@ -545,6 +596,175 @@ describe('Thank You Page', () => {
     it('expands referral section', async () => {
       await onReadyHandler();
       expect(getEl('#referralSection').expand).toHaveBeenCalled();
+    });
+  });
+
+  // ── Referral Unique Codes ────────────────────────────────────
+
+  describe('referral unique codes', () => {
+    it('calls getReferralLink on init for logged-in users', async () => {
+      await onReadyHandler();
+      expect(getReferralLink).toHaveBeenCalled();
+    });
+
+    it('displays unique referral code in message', async () => {
+      await onReadyHandler();
+      expect(getEl('#referralMessage').text).toContain('ABC12345');
+    });
+
+    it('copy button copies unique referral URL', async () => {
+      await onReadyHandler();
+      const clickHandler = getEl('#referralCopyBtn').onClick.mock.calls[0][0];
+      clickHandler();
+      expect(globalThis.navigator.clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining('ref=ABC12345')
+      );
+    });
+
+    it('shows referral incentive amounts', async () => {
+      await onReadyHandler();
+      // Should mention the credit amounts
+      expect(getEl('#referralMessage').text).toMatch(/\$\d+/);
+    });
+
+    it('falls back to generic link when getReferralLink fails', async () => {
+      getReferralLink.mockRejectedValue(new Error('Not logged in'));
+      await onReadyHandler();
+      const clickHandler = getEl('#referralCopyBtn').onClick.mock.calls[0][0];
+      clickHandler();
+      // Should still copy a link (generic fallback)
+      expect(globalThis.navigator.clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining('carolinafutons.com')
+      );
+    });
+
+    it('falls back when getReferralLink returns failure', async () => {
+      getReferralLink.mockResolvedValue({ success: false, error: 'Not a member' });
+      await onReadyHandler();
+      // Should still show section with generic message
+      expect(getEl('#referralSection').expand).toHaveBeenCalled();
+    });
+  });
+
+  // ── Star Rating Review Request ──────────────────────────────
+
+  describe('review request', () => {
+    it('sets review section title and prompt', async () => {
+      await onReadyHandler();
+      expect(getEl('#reviewTitle').text).toContain('Rate');
+      expect(getEl('#reviewPrompt').text).toContain('experience');
+    });
+
+    it('registers click handlers on 5 star buttons', async () => {
+      await onReadyHandler();
+      for (let i = 1; i <= 5; i++) {
+        expect(getEl(`#reviewStar${i}`).onClick).toHaveBeenCalled();
+      }
+    });
+
+    it('sets ARIA labels on star buttons', async () => {
+      await onReadyHandler();
+      expect(getEl('#reviewStar1').accessibility.ariaLabel).toContain('1');
+      expect(getEl('#reviewStar5').accessibility.ariaLabel).toContain('5');
+    });
+
+    it('clicking star updates rating display', async () => {
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      expect(getEl('#reviewRating').text).toContain('4');
+    });
+
+    it('registers click handler on submit button', async () => {
+      await onReadyHandler();
+      expect(getEl('#reviewSubmitBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('sets ARIA label on submit button', async () => {
+      await onReadyHandler();
+      expect(getEl('#reviewSubmitBtn').accessibility.ariaLabel).toContain('Submit');
+    });
+
+    it('shows error when submitting without rating', async () => {
+      await onReadyHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewError').text).toContain('select a rating');
+      expect(getEl('#reviewError').show).toHaveBeenCalled();
+    });
+
+    it('submits review with rating and order ID', async () => {
+      await onReadyHandler();
+      // Select 4 stars first
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(submitReview).toHaveBeenCalledWith('order-12345', 4, '');
+    });
+
+    it('disables submit button while submitting', async () => {
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewSubmitBtn').disable).toHaveBeenCalled();
+    });
+
+    it('shows success message on successful review', async () => {
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar5').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewSuccess').text).toContain('Thank you');
+      expect(getEl('#reviewSuccess').show).toHaveBeenCalled();
+    });
+
+    it('hides form on successful submission', async () => {
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewSubmitBtn').hide).toHaveBeenCalled();
+    });
+
+    it('shows error on submitReview failure', async () => {
+      submitReview.mockResolvedValue({ success: false, error: 'Server error' });
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar3').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewError').text).toBe('Server error');
+      expect(getEl('#reviewSubmitBtn').enable).toHaveBeenCalled();
+    });
+
+    it('shows generic error when no specific error provided', async () => {
+      submitReview.mockResolvedValue({ success: false });
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar3').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewError').text).toContain('Something went wrong');
+    });
+
+    it('re-enables button on exception during submission', async () => {
+      submitReview.mockRejectedValue(new Error('Network failure'));
+      await onReadyHandler();
+      const starHandler = getEl('#reviewStar4').onClick.mock.calls[0][0];
+      starHandler();
+      const clickHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(getEl('#reviewSubmitBtn').enable).toHaveBeenCalled();
+    });
+
+    it('expands review section', async () => {
+      await onReadyHandler();
+      expect(getEl('#reviewSection').expand).toHaveBeenCalled();
     });
   });
 
@@ -804,7 +1024,7 @@ describe('Thank You Page', () => {
       // Delivery timeline should still work
       expect(getEl('#step1').text).toBe('Order confirmed');
       // Social sharing should still work
-      expect(getEl('#shareText').text).toContain('Love your new furniture');
+      expect(getEl('#shareText').text).toContain('Love your new');
     });
   });
 });
