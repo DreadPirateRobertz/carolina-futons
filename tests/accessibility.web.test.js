@@ -164,6 +164,17 @@ describe('getAnnouncement', () => {
     const msg = await getAnnouncement('quantityChanged', 0);
     expect(msg).toBe('Quantity set to 0');
   });
+
+  it('handles singular filter cleared result', async () => {
+    const msg = await getAnnouncement('filterCleared', 1);
+    expect(msg).toContain('1 product');
+    expect(msg).not.toContain('products');
+  });
+
+  it('handles zero items in cart update', async () => {
+    const msg = await getAnnouncement('cartUpdate', 0, '0.00');
+    expect(msg).toContain('0 items');
+  });
 });
 
 // ── getWcagChecklist ───────────────────────────────────────────────
@@ -334,6 +345,15 @@ describe('getFormErrorAttributes', () => {
       { fieldId: 'zipCode', message: 'Invalid' },
     ]);
     expect(result.zipCode.ariaDescribedBy).toBe('zipCode-error');
+  });
+
+  it('skips entries with null fieldId', async () => {
+    const result = await getFormErrorAttributes([
+      { fieldId: null, message: 'Error' },
+      { fieldId: 'valid', message: 'OK' },
+    ]);
+    expect(Object.keys(result)).toHaveLength(1);
+    expect(result.valid).toBeDefined();
   });
 });
 
@@ -738,6 +758,49 @@ describe('auditPageAccessibility', () => {
     // Should not crash — no image checks run
     expect(result).toBeDefined();
     expect(result.pageName).toBe('BadImages');
+  });
+
+  it('handles non-array forms gracefully', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'BadForms',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: 'not-an-array',
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+    expect(result.pageName).toBe('BadForms');
+    expect(typeof result.score).toBe('number');
+  });
+
+  it('handles non-array interactiveElements gracefully', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'BadElements',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [],
+      forms: [],
+      interactiveElements: 'not-an-array',
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+    expect(result.pageName).toBe('BadElements');
+    expect(typeof result.score).toBe('number');
+  });
+
+  it('flags images with undefined alt (not null)', async () => {
+    const result = await auditPageAccessibility({
+      pageName: 'UndefinedAlt',
+      landmarks: ['banner', 'navigation', 'main', 'contentinfo'],
+      images: [{ src: '/img.jpg' }], // alt is undefined
+      forms: [],
+      interactiveElements: [],
+      hasSkipNav: true,
+      hasLiveRegion: true,
+    });
+    const altIssue = result.issues.find(i => i.criterion === '1.1.1');
+    expect(altIssue).toBeDefined();
+    expect(altIssue.details).toContain('Missing alt');
   });
 
   it('returns score 0 for empty page data object', async () => {
