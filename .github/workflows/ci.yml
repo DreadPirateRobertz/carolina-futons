@@ -8,9 +8,15 @@ on:
   schedule:
     - cron: '0 6 * * *'  # Nightly at 6am UTC
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     timeout-minutes: 10
     strategy:
       matrix:
@@ -128,6 +134,9 @@ jobs:
   nightly-integration:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
