@@ -14,7 +14,7 @@ import { buildFilterChips, removeFilter, clearAllFilters, serializeFiltersToUrl,
 import { isMobile, initBackToTop, onViewportChange } from 'public/mobileHelpers';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { trackEvent } from 'public/engagementTracker';
-import { fireViewItemList } from 'public/ga4Tracking';
+// ga4Tracking dynamically imported at call sites to reduce static import count (CF-7bv)
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
@@ -22,11 +22,7 @@ import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
 import { initFlashSaleBanner } from 'public/flashSaleHelpers';
-import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
-import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
-import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
-import { getImageDimensions } from 'public/galleryConfig.js';
-import { getLifestyleOverlay } from 'public/lifestyleImages.js';
+import { initCardWishlistButton, batchCheckWishlistStatus, batchLoadRatings, renderCardStarRating, resetRatingsCache, styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getImageDimensions, getLifestyleOverlay } from 'public/cardKit';
 
 let currentSort = 'bestselling';
 let currentFilters = {};
@@ -847,7 +843,7 @@ function updateResultCount(currentPath) {
       // Fire GA4 view_item_list for category impression tracking
       try {
         const items = dataset.getCurrentItem ? [dataset.getCurrentItem()] : [];
-        fireViewItemList(items, currentPath).catch(() => {});
+        import('public/ga4Tracking').then(({ fireViewItemList }) => fireViewItemList(items, currentPath)).catch(() => {});
       } catch (e) {}
       // Re-count when dataset content changes (after filter/sort)
       try {
@@ -1185,7 +1181,7 @@ async function applyAdvancedFilters(currentPath) {
 
     // Fire GA4 view_item_list for filtered results
     try {
-      fireViewItemList(result.items || [], currentPath).catch(() => {});
+      import('public/ga4Tracking').then(({ fireViewItemList }) => fireViewItemList(result.items || [], currentPath)).catch(() => {});
     } catch (e) {}
 
     // Handle zero results

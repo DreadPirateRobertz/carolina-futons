@@ -4,12 +4,11 @@
 // dynamic import() for below-fold components to reduce initial bundle
 import { getRelatedProducts, getSameCollection, getCustomersAlsoBought } from 'backend/productRecommendations.web';
 import { trackProductView, getRecentlyViewed } from 'public/galleryHelpers.js';
-import { cacheProduct } from 'public/productCache';
+import { cacheProduct, getCachedProduct } from 'public/productCache';
 // engagementTracker and ga4Tracking are dynamically imported in deferred sections
 // to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { buildGridAlt } from 'public/productPageUtils.js';
-import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import { prioritizeSections } from 'public/performanceHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
@@ -23,7 +22,6 @@ import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } fr
 import { makeClickable } from 'public/a11yHelpers.js';
 import { setCardImage } from 'public/productCardHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
-import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
@@ -181,6 +179,7 @@ async function initProductPage() {
 async function initFlashSaleUrgency() {
   try {
     if (!state.product) return;
+    const { getFlashSales } = await import('backend/promotions.web');
     const deals = await getFlashSales();
     if (!deals || deals.length === 0) return;
 

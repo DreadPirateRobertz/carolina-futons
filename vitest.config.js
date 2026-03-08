@@ -222,6 +222,8 @@ export default defineConfig({
       'public/MemberPageHelpers': path.resolve(__dirname, 'src/public/MemberPageHelpers.js'),
       'public/StarRatingCard.js': path.resolve(__dirname, 'src/public/StarRatingCard.js'),
       'public/StarRatingCard': path.resolve(__dirname, 'src/public/StarRatingCard.js'),
+      'public/cardKit.js': path.resolve(__dirname, 'src/public/cardKit.js'),
+      'public/cardKit': path.resolve(__dirname, 'src/public/cardKit.js'),
       'public/productCardHelpers.js': path.resolve(__dirname, 'src/public/productCardHelpers.js'),
       'public/productCardHelpers': path.resolve(__dirname, 'src/public/productCardHelpers.js'),
       'public/blogHelpers.js': path.resolve(__dirname, 'src/public/blogHelpers.js'),
