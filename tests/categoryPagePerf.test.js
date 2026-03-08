@@ -222,7 +222,7 @@ describe('Category Page performance optimizations', () => {
       expect(batchCall[0]).toContain('prod-matt-001');
     });
 
-    it('does not call batchLoadRatings per-item inside onItemReady', async () => {
+    it('does not call batchLoadRatings per-item for products in initial batch', async () => {
       await onReadyHandler();
       mockBatchLoadRatings.mockClear();
 
@@ -245,12 +245,50 @@ describe('Category Page performance optimizations', () => {
         return itemElements[sel];
       };
 
-      // Call onItemReady for each product — should NOT trigger new batchLoadRatings calls
-      itemReadyCb($item, futonFrame);
-      itemReadyCb($item, wallHuggerFrame);
-      itemReadyCb($item, futonMattress);
+      // Call onItemReady for products already in the batch — should NOT trigger new calls
+      await itemReadyCb($item, futonFrame);
+      await itemReadyCb($item, wallHuggerFrame);
+      await itemReadyCb($item, futonMattress);
 
-      expect(mockBatchLoadRatings).not.toHaveBeenCalled();
+      // Allow promises to settle
+      await vi.waitFor(() => {
+        expect(mockBatchLoadRatings).not.toHaveBeenCalled();
+      });
+    });
+
+    it('falls back to per-item fetch for products not in initial batch (post-filter)', async () => {
+      await onReadyHandler();
+      mockBatchLoadRatings.mockClear();
+
+      const repeater = getEl('#productGridRepeater');
+      const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
+
+      const itemElements = {};
+      const $item = (sel) => {
+        if (!itemElements[sel]) {
+          itemElements[sel] = {
+            text: '', src: '', alt: '', value: '',
+            style: { color: '', backgroundColor: '' },
+            accessibility: {},
+            show: vi.fn(), hide: vi.fn(),
+            collapse: vi.fn(), expand: vi.fn(),
+            onClick: vi.fn(), onChange: vi.fn(),
+            onViewportEnter: vi.fn(),
+          };
+        }
+        return itemElements[sel];
+      };
+
+      // Simulate a product that was NOT in the initial batch (e.g. appeared after filter change)
+      const newProduct = { _id: 'prod-new-999', name: 'New Product', slug: 'new-product', price: 499 };
+      mockBatchLoadRatings.mockResolvedValueOnce({ 'prod-new-999': { avg: 4.5, count: 10 } });
+
+      await itemReadyCb($item, newProduct);
+
+      // Allow promises to settle
+      await vi.waitFor(() => {
+        expect(mockBatchLoadRatings).toHaveBeenCalledWith(['prod-new-999']);
+      });
     });
 
     it('handles empty repeater data without calling batchLoadRatings', async () => {

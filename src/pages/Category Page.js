@@ -413,6 +413,7 @@ function initFilterControls() {
     const clearHandler = () => {
       currentFilters = {};
       if (_basicFilterTimer) { clearTimeout(_basicFilterTimer); _basicFilterTimer = null; }
+      if (_debounceTimer) { clearTimeout(_debounceTimer); _debounceTimer = null; }
       try { $w('#filterBrand').value = ''; } catch (e) {}
       try { $w('#filterPrice').value = ''; } catch (e) {}
       try { $w('#filterSize').value = ''; } catch (e) {}
@@ -598,10 +599,22 @@ function initProductGrid() {
         }
       } catch (e) {}
 
-      // Review stars (from pre-batched ratings map)
+      // Review stars (from pre-batched ratings map, with per-item fallback)
       if (_ratingsMapPromise) {
         _ratingsMapPromise.then(ratingsMap => {
-          renderCardStarRating($item, itemData._id, ratingsMap);
+          if (ratingsMap[itemData._id] !== undefined) {
+            renderCardStarRating($item, itemData._id, ratingsMap);
+          } else {
+            // Product not in initial batch (e.g. after filter change) — fetch individually
+            batchLoadRatings([itemData._id]).then(singleMap => {
+              renderCardStarRating($item, itemData._id, singleMap);
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      } else {
+        // No pre-batch available — fetch individually
+        batchLoadRatings([itemData._id]).then(singleMap => {
+          renderCardStarRating($item, itemData._id, singleMap);
         }).catch(() => {});
       }
 
