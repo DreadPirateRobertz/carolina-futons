@@ -1,7 +1,7 @@
 /**
  * provisionCmsCollections.js — Provisions Wix CMS collections via REST API.
  *
- * Defines the 16 priority CMS collections from MASTER-HOOKUP.md Step 4 with
+ * Defines the priority CMS collections from MASTER-HOOKUP.md Step 4 with
  * their field schemas, types, and permissions. Can list existing collections,
  * create missing ones via the Wix Data Collections REST API, or generate a
  * status report.
@@ -20,11 +20,17 @@ const COLLECTIONS_API = 'https://www.wixapis.com/wix-data/v2/collections';
 const VALID_FIELD_TYPES = ['TEXT', 'NUMBER', 'DATETIME', 'BOOLEAN', 'IMAGE', 'URL', 'RICH_TEXT', 'TAGS'];
 const VALID_PERMISSIONS = ['ADMIN', 'MEMBER', 'ANYONE'];
 
+/** All operations restricted to admin. */
+const ADMIN_ONLY = { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' };
+
+/** Public read, admin write. */
+const PUBLIC_READ = { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' };
+
 /**
  * Helper to define a field.
- * @param {string} key
- * @param {string} displayName
- * @param {string} type
+ * @param {string} key - Field key (used in queries)
+ * @param {string} displayName - Human-readable field label
+ * @param {('TEXT'|'NUMBER'|'DATETIME'|'BOOLEAN'|'IMAGE'|'URL'|'RICH_TEXT'|'TAGS')} type
  * @returns {{ key: string, displayName: string, type: string }}
  */
 function field(key, displayName, type) {
@@ -32,8 +38,8 @@ function field(key, displayName, type) {
 }
 
 /**
- * Collection manifest — all 16 required collections per MASTER-HOOKUP.md Step 4.
- * Field schemas derived from backend module usage analysis.
+ * Collection manifest — required collections per MASTER-HOOKUP.md Step 4.
+ * Field schemas derived from backend module data access patterns (*.web.js files).
  */
 const COLLECTION_MANIFEST = [
   {
@@ -66,7 +72,7 @@ const COLLECTION_MANIFEST = [
       field('addToCartCount', 'Add to Cart Count', 'NUMBER'),
       field('purchaseCount', 'Purchase Count', 'NUMBER'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'Promotions',
@@ -84,7 +90,7 @@ const COLLECTION_MANIFEST = [
       field('ctaText', 'CTA Text', 'TEXT'),
       field('isActive', 'Is Active', 'BOOLEAN'),
     ],
-    permissions: { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: PUBLIC_READ,
   },
   {
     id: 'EmailQueue',
@@ -105,7 +111,7 @@ const COLLECTION_MANIFEST = [
       field('retryCount', 'Retry Count', 'NUMBER'),
       field('lastRetryAt', 'Last Retry At', 'DATETIME'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'Unsubscribes',
@@ -129,7 +135,7 @@ const COLLECTION_MANIFEST = [
       field('recoveryEmailSent', 'Recovery Email Sent', 'BOOLEAN'),
       field('lastEmailSent', 'Last Email Sent', 'DATETIME'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'Fulfillments',
@@ -149,7 +155,7 @@ const COLLECTION_MANIFEST = [
       field('packageWeight', 'Package Weight', 'TEXT'),
       field('packageDimensions', 'Package Dimensions', 'TEXT'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'GiftCards',
@@ -164,7 +170,7 @@ const COLLECTION_MANIFEST = [
       field('expirationDate', 'Expiration Date', 'DATETIME'),
       field('createdDate', 'Created Date', 'DATETIME'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'DeliverySchedule',
@@ -178,7 +184,7 @@ const COLLECTION_MANIFEST = [
       field('customerName', 'Customer Name', 'TEXT'),
       field('address', 'Address', 'TEXT'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'AssemblyGuides',
@@ -192,7 +198,7 @@ const COLLECTION_MANIFEST = [
       field('estimatedTime', 'Estimated Time', 'TEXT'),
       field('category', 'Category', 'TEXT'),
     ],
-    permissions: { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: PUBLIC_READ,
   },
   {
     id: 'FabricSwatches',
@@ -208,7 +214,7 @@ const COLLECTION_MANIFEST = [
       field('availableForProducts', 'Available For Products', 'TAGS'),
       field('sortOrder', 'Sort Order', 'NUMBER'),
     ],
-    permissions: { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: PUBLIC_READ,
   },
   {
     id: 'ProductBundles',
@@ -221,7 +227,7 @@ const COLLECTION_MANIFEST = [
       field('discountPercent', 'Discount Percent', 'NUMBER'),
       field('isActive', 'Is Active', 'BOOLEAN'),
     ],
-    permissions: { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: PUBLIC_READ,
   },
   {
     id: 'CustomerEngagement',
@@ -234,7 +240,7 @@ const COLLECTION_MANIFEST = [
       field('source', 'Source', 'TEXT'),
       field('productId', 'Product ID', 'TEXT'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'ReviewRequests',
@@ -247,7 +253,7 @@ const COLLECTION_MANIFEST = [
       field('sentAt', 'Sent At', 'DATETIME'),
       field('status', 'Status', 'TEXT'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'ReferralCodes',
@@ -261,7 +267,7 @@ const COLLECTION_MANIFEST = [
       field('usedAt', 'Used At', 'DATETIME'),
       field('status', 'Status', 'TEXT'),
     ],
-    permissions: { read: 'ADMIN', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: ADMIN_ONLY,
   },
   {
     id: 'Videos',
@@ -275,7 +281,7 @@ const COLLECTION_MANIFEST = [
       field('isFeatured', 'Is Featured', 'BOOLEAN'),
       field('thumbnailUrl', 'Thumbnail URL', 'TEXT'),
     ],
-    permissions: { read: 'ANYONE', insert: 'ADMIN', update: 'ADMIN', remove: 'ADMIN' },
+    permissions: PUBLIC_READ,
   },
 ];
 
@@ -348,27 +354,62 @@ function validateManifest(collections) {
 }
 
 /**
- * List existing CMS collections and compare with manifest.
- * @param {{ apiKey: string, siteId: string }} opts
- * @returns {Promise<Array<{ id: string, exists: boolean }>>}
+ * Fetch and parse existing collection IDs from the Wix API.
+ * @param {Object} headers - Request headers with auth
+ * @returns {Promise<Set<string>>} Set of existing collection IDs
+ * @throws {Error} If the API returns a non-OK response or non-JSON body
  */
-async function getCollectionStatus(opts) {
-  const { apiKey, siteId } = opts;
-  const headers = {
+async function fetchExistingIds(headers) {
+  const res = await fetch(COLLECTIONS_API, { method: 'GET', headers });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '(response body unreadable)');
+    throw new Error(`Failed to list collections (${res.status}): ${text}`);
+  }
+
+  const text = await res.text();
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    throw new Error(`Wix API returned non-JSON response (${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  if (!body || typeof body !== 'object' || !('dataCollections' in body)) {
+    const keys = body ? Object.keys(body).join(', ') : 'none';
+    throw new Error(`Wix API response missing "dataCollections" key. Response keys: ${keys}`);
+  }
+
+  const existing = body.dataCollections || [];
+  return new Set(existing.map((c) => c.id));
+}
+
+/**
+ * Build standard Wix API headers.
+ * @param {string} apiKey
+ * @param {string} siteId
+ * @returns {Object}
+ */
+function buildHeaders(apiKey, siteId) {
+  return {
     Authorization: apiKey,
     'wix-site-id': siteId,
     'Content-Type': 'application/json',
   };
+}
 
-  const res = await fetch(COLLECTIONS_API, { method: 'GET', headers });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to list collections (${res.status}): ${text}`);
+/**
+ * List existing CMS collections and compare with manifest.
+ * @param {{ apiKey: string, siteId: string }} opts
+ * @returns {Promise<Array<{ id: string, exists: boolean }>>}
+ * @throws {Error} If the Wix API returns a non-OK or non-JSON response
+ */
+async function getCollectionStatus(opts) {
+  const { apiKey, siteId } = opts;
+  if (!apiKey || !siteId) {
+    throw new Error('getCollectionStatus requires apiKey and siteId');
   }
-
-  const body = await res.json();
-  const existing = body.dataCollections || [];
-  const existingIds = new Set(existing.map((c) => c.id));
+  const headers = buildHeaders(apiKey, siteId);
+  const existingIds = await fetchExistingIds(headers);
 
   return COLLECTION_MANIFEST.map((entry) => ({
     id: entry.id,
@@ -379,27 +420,19 @@ async function getCollectionStatus(opts) {
 /**
  * Provision CMS collections via the Wix Data Collections REST API.
  * Creates collections that don't exist yet. Skips ones that do.
+ * Individual creation errors are captured in the results array.
  *
  * @param {{ apiKey: string, siteId: string, dryRun?: boolean }} opts
  * @returns {Promise<{ results: Array<{ id: string, status: string, detail: string }> }>}
+ * @throws {Error} If the initial collection listing API call fails
  */
 async function provisionCollections(opts) {
   const { apiKey, siteId, dryRun = false } = opts;
-  const headers = {
-    Authorization: apiKey,
-    'wix-site-id': siteId,
-    'Content-Type': 'application/json',
-  };
-
-  const listRes = await fetch(COLLECTIONS_API, { method: 'GET', headers });
-  if (!listRes.ok) {
-    const text = await listRes.text();
-    throw new Error(`Failed to list collections (${listRes.status}): ${text}`);
+  if (!apiKey || !siteId) {
+    throw new Error('provisionCollections requires apiKey and siteId');
   }
-
-  const body = await listRes.json();
-  const existing = body.dataCollections || [];
-  const existingIds = new Set(existing.map((c) => c.id));
+  const headers = buildHeaders(apiKey, siteId);
+  const existingIds = await fetchExistingIds(headers);
 
   const results = [];
 
@@ -439,7 +472,7 @@ async function provisionCollections(opts) {
       });
 
       if (!createRes.ok) {
-        const text = await createRes.text();
+        const text = await createRes.text().catch(() => '(response body unreadable)');
         results.push({
           id: entry.id,
           status: 'ERROR',
@@ -453,10 +486,12 @@ async function provisionCollections(opts) {
         });
       }
     } catch (err) {
+      // Log full error for debugging; include error type in result
+      console.error(`Error creating collection ${entry.id}:`, err);
       results.push({
         id: entry.id,
         status: 'ERROR',
-        detail: err.message,
+        detail: `${err.constructor.name}: ${err.message}`,
       });
     }
   }
@@ -464,9 +499,6 @@ async function provisionCollections(opts) {
   return { results };
 }
 
-/**
- * CLI entry point.
- */
 async function main() {
   const args = process.argv.slice(2);
   let mode = null;
@@ -523,6 +555,8 @@ Example:
     process.exit(1);
   }
 
+  const STATUS_ICONS = { ERROR: '✗', EXISTS: '○', CREATED: '✓', WOULD_CREATE: '✓' };
+
   if (mode === 'status') {
     try {
       const status = await getCollectionStatus({ apiKey, siteId });
@@ -542,7 +576,7 @@ Example:
     try {
       const { results } = await provisionCollections({ apiKey, siteId, dryRun });
       for (const r of results) {
-        const icon = r.status === 'ERROR' ? '✗' : r.status === 'EXISTS' ? '○' : '✓';
+        const icon = STATUS_ICONS[r.status] || '?';
         console.log(`  ${icon} ${r.id}: ${r.detail}`);
       }
 
@@ -559,7 +593,16 @@ Example:
   }
 }
 
-module.exports = { COLLECTION_MANIFEST, validateManifest, provisionCollections, getCollectionStatus };
+module.exports = {
+  COLLECTION_MANIFEST,
+  ADMIN_ONLY,
+  PUBLIC_READ,
+  validateManifest,
+  provisionCollections,
+  getCollectionStatus,
+  fetchExistingIds,
+  buildHeaders,
+};
 
 if (require.main === module) {
   main().catch((err) => {
