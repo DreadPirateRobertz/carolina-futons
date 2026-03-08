@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
     "@wix/cli": "^1.0.0",
     "@wix/eslint-plugin-cli": "^1.0.0",
     "eslint": "^8.25.0",
@@ -12,6 +13,7 @@
     "dev": "wix dev",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
   }
 }

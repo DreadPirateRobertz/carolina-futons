@@ -7,6 +7,17 @@ export default defineConfig({
     environment: 'node',
     include: ['tests/**/*.test.js'],
     setupFiles: ['tests/setup.js'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.js'],
+      exclude: ['src/**/__mocks__/**'],
+      thresholds: {
+        lines: 70,
+        branches: 60,
+        functions: 70,
+      },
+    },
   },
   resolve: {
     alias: {
