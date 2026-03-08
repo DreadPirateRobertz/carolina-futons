@@ -266,6 +266,7 @@ function showSwatchDetail($w, swatch) {
     if (swatch.swatchImage) {
       try {
         $w('#swatchDetailImage').src = swatch.swatchImage;
+        $w('#swatchDetailImage').alt = `${swatch.swatchName || 'Fabric'} swatch - enlarged view`;
         $w('#swatchDetailImage').show();
       } catch (e) {}
     }

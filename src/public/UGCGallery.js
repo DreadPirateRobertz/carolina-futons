@@ -78,9 +78,10 @@ export function renderPhotoCards($w, photos, opts = {}) {
     // Set up onItemReady handler
     repeater.onItemReady(($item, itemData) => {
       try {
-        // Set image source
+        // Set image source and alt text
         try {
           $item('#ugcImage').src = itemData.imageUrl || '';
+          $item('#ugcImage').alt = itemData.caption || itemData.alt || 'Customer photo';
         } catch (e) { /* element may not exist */ }
 
         // Set caption text

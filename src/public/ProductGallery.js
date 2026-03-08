@@ -62,7 +62,10 @@ export function initImageGallery($w, state) {
 
       // Thumbnail click switches main image
       gallery.onItemClicked((event) => {
-        try { $w('#productMainImage').src = event.item.src; } catch (e) {}
+        try {
+          $w('#productMainImage').src = event.item.src;
+          $w('#productMainImage').alt = event.item.title || product.name || 'Product image';
+        } catch (e) {}
       });
 
       // Mobile swipe navigation
@@ -78,6 +81,7 @@ export function initImageGallery($w, state) {
               if (direction === 'left') idx = Math.min(idx + 1, items.length - 1);
               else if (direction === 'right') idx = Math.max(idx - 1, 0);
               $w('#productMainImage').src = items[idx].src;
+              $w('#productMainImage').alt = items[idx].title || product.name || 'Product image';
               trackGalleryInteraction('swipe', direction);
             } catch (e) {}
           }, { threshold: 40 });
@@ -111,12 +115,14 @@ export function initImageGallery($w, state) {
               e.preventDefault();
               kbIdx = Math.min(kbIdx + 1, items.length - 1);
               $w('#productMainImage').src = items[kbIdx].src;
+              $w('#productMainImage').alt = items[kbIdx].title || product.name || 'Product image';
               announce($w, `Image ${kbIdx + 1} of ${items.length}`);
               trackGalleryInteraction('keyboard', 'next');
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
               e.preventDefault();
               kbIdx = Math.max(kbIdx - 1, 0);
               $w('#productMainImage').src = items[kbIdx].src;
+              $w('#productMainImage').alt = items[kbIdx].title || product.name || 'Product image';
               announce($w, `Image ${kbIdx + 1} of ${items.length}`);
               trackGalleryInteraction('keyboard', 'prev');
             }

@@ -428,19 +428,24 @@ export function buildProductBadgeOverlay(product) {
  */
 export function initImageLightbox($w, galleryElement, mainImageElement) {
   let images = [];
+  let imageAlts = [];
   let currentIndex = 0;
   let isOpen = false;
 
-  // Collect image sources from gallery
+  // Collect image sources and alt text from gallery
   try {
     if (galleryElement && galleryElement.items) {
       images = galleryElement.items.map(item => item.src);
+      imageAlts = galleryElement.items.map(item => item.title || item.alt || 'Product image');
     }
   } catch (e) {}
 
   // Fallback to main image if gallery is empty
   if (images.length === 0 && mainImageElement) {
-    try { images = [mainImageElement.src]; } catch (e) {}
+    try {
+      images = [mainImageElement.src];
+      imageAlts = [mainImageElement.alt || 'Product image'];
+    } catch (e) {}
   }
   if (images.length === 0) return null;
 
@@ -448,6 +453,7 @@ export function initImageLightbox($w, galleryElement, mainImageElement) {
     currentIndex = ((index % images.length) + images.length) % images.length;
     try {
       $w('#lightboxImage').src = images[currentIndex];
+      $w('#lightboxImage').alt = imageAlts[currentIndex] || 'Product image';
       $w('#lightboxCounter').text = `${currentIndex + 1} / ${images.length}`;
     } catch (e) {}
 
@@ -571,6 +577,7 @@ export function initImageZoom($w, imageElement, zoomFactor = 2) {
     isZoomed = true;
     try {
       $w('#imageZoomImage').src = imageElement.src;
+      try { $w('#imageZoomImage').alt = imageElement.alt || 'Zoomed product image'; } catch (e) {}
       $w('#imageZoomOverlay').show('fade', { duration: 150 });
     } catch (e) {}
   }
@@ -690,6 +697,7 @@ export function buildComparisonBar($w) {
       repeater.onItemReady(($item, itemData) => {
         try {
           $item('#compareItemImage').src = itemData.mainMedia;
+          $item('#compareItemImage').alt = `${itemData.name} - compare`;
           $item('#compareItemName').text = itemData.name;
           $item('#compareItemRemove').onClick(() => {
             removeFromCompare(itemData._id);

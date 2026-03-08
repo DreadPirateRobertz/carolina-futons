@@ -1575,6 +1575,7 @@ function refreshCompareBarUI() {
       repeater.data = items.map(p => ({ ...p, _id: p._id }));
       repeater.onItemReady(($item, itemData) => {
         setCardImage($item('#compareThumb'), itemData, '', getImageDimensions('thumbnail'));
+        try { $item('#compareThumb').alt = buildAltText(itemData); } catch (e) {}
         try { $item('#compareName').text = itemData.name; } catch (e) {}
         try { $item('#comparePrice').text = itemData.price; } catch (e) {}
         try {

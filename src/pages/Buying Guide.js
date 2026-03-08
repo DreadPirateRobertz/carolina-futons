@@ -353,6 +353,7 @@ function initRelatedProducts(products) {
       try {
         if (itemData.mainMedia) {
           $item('#productImage').src = itemData.mainMedia;
+          $item('#productImage').alt = `${itemData.name} - Carolina Futons`;
         }
       } catch (e) {}
       try {

@@ -63,6 +63,7 @@ export function initImageGallery($w, product) {
       gallery.onItemClicked((event) => {
         try {
           $w('#productMainImage').src = event.item.src;
+          $w('#productMainImage').alt = event.item.title || product?.name || 'Product image';
           // Sync swipe index with clicked item
           const items = gallery.items || [];
           const clickedIdx = items.findIndex(item => item.src === event.item.src);
@@ -85,6 +86,7 @@ export function initImageGallery($w, product) {
               currentGalleryIndex = Math.max(currentGalleryIndex - 1, 0);
             }
             $w('#productMainImage').src = items[currentGalleryIndex].src;
+            $w('#productMainImage').alt = items[currentGalleryIndex].title || product?.name || 'Product image';
             trackGalleryInteraction('swipe', direction);
           } catch (e) {}
         }, { threshold: 40 });

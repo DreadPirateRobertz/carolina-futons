@@ -86,7 +86,10 @@ function updateVariantDisplay($w, state, selected) {
   } catch (e) {}
   // Variant image
   try {
-    if (selected.imageSrc) $w('#productMainImage').src = selected.imageSrc;
+    if (selected.imageSrc) {
+      $w('#productMainImage').src = selected.imageSrc;
+      $w('#productMainImage').alt = `${state.product?.name || 'Product'} - ${selected.label || selected.value || 'variant'}`;
+    }
     if (selected.mediaItems?.length > 0) {
       try {
         const gallery = $w('#productGallery');
@@ -287,7 +290,7 @@ function showSwatchDetail($w, swatch) {
         ? `Color Family: ${swatch.colorFamily.charAt(0).toUpperCase() + swatch.colorFamily.slice(1)}` : '';
     } catch (e) {}
     if (swatch.swatchImage) {
-      try { $w('#swatchDetailImage').src = swatch.swatchImage; $w('#swatchDetailImage').show(); } catch (e) {}
+      try { $w('#swatchDetailImage').src = swatch.swatchImage; $w('#swatchDetailImage').alt = `${swatch.swatchName || 'Fabric'} swatch - enlarged view`; $w('#swatchDetailImage').show(); } catch (e) {}
     }
     detail.expand();
   } catch (e) {}

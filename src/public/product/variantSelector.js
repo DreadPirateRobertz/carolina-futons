@@ -110,6 +110,7 @@ function updateVariantImage($w, product, variant) {
   try {
     if (variant.imageSrc) {
       $w('#productMainImage').src = variant.imageSrc;
+      $w('#productMainImage').alt = `${product?.name || 'Product'} - ${variant.label || variant.value || 'variant'}`;
     }
 
     if (variant.mediaItems && variant.mediaItems.length > 0) {
