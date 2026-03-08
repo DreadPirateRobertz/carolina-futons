@@ -25,6 +25,7 @@ vi.mock('backend/seoHelpers.web', () => ({
     if (pageType === 'contact') return 'Contact Us | Carolina Futons';
     if (pageType === 'about') return 'About Us | Carolina Futons';
     if (pageType === 'product') return `${data?.name || 'Product'} | Carolina Futons`;
+    if (pageType === 'blogPost') return `${data?.name || 'Blog'} | Carolina Futons`;
     return 'Carolina Futons';
   }),
   getPageMetaDescription: vi.fn((pageType, data) => {
@@ -32,6 +33,12 @@ vi.mock('backend/seoHelpers.web', () => ({
     if (pageType === 'faq') return 'Frequently asked questions about futons.';
     if (pageType === 'product') return `Shop ${data?.name || 'furniture'} at CF.`;
     return 'Quality futon furniture since 1991.';
+  }),
+  getCanonicalUrl: vi.fn((pageType, slug) => {
+    if (pageType === 'home') return 'https://www.carolinafutons.com';
+    if (pageType === 'product') return `https://www.carolinafutons.com/product-page/${slug || ''}`;
+    if (pageType === 'blogPost') return `https://www.carolinafutons.com/post/${slug || ''}`;
+    return 'https://www.carolinafutons.com';
   }),
 }));
 
@@ -152,6 +159,53 @@ describe('initPageSeo', () => {
     const allTags = calls.flatMap(c => c[0]);
     const ogType = allTags.find(t => t.property === 'og:type');
     expect(ogType.content).toBe('website');
+  });
+
+  it('sets og:url from getCanonicalUrl', async () => {
+    await initPageSeo('home');
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const ogUrl = allTags.find(t => t.property === 'og:url');
+    expect(ogUrl).toBeDefined();
+    expect(ogUrl.content).toBe('https://www.carolinafutons.com');
+  });
+
+  it('sets og:url with slug for dynamic pages', async () => {
+    await initPageSeo('product', { name: 'Test', slug: 'eureka-futon' });
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const ogUrl = allTags.find(t => t.property === 'og:url');
+    expect(ogUrl.content).toBe('https://www.carolinafutons.com/product-page/eureka-futon');
+  });
+
+  it('sets twitter:site tag with brand handle', async () => {
+    await initPageSeo('home');
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const twitterSite = allTags.find(t => t.name === 'twitter:site');
+    expect(twitterSite).toBeDefined();
+    expect(twitterSite.content).toBe('@CarolinaFutons');
+  });
+
+  it('uses summary_large_image for blog posts with cover image', async () => {
+    await initPageSeo('blogPost', { name: 'Test Post', slug: 'test', image: 'https://example.com/cover.jpg' });
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const twitterCard = allTags.find(t => t.name === 'twitter:card');
+    expect(twitterCard.content).toBe('summary_large_image');
+  });
+
+  it('uses summary for blog posts without cover image', async () => {
+    await initPageSeo('blogPost', { name: 'Test Post', slug: 'test' });
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const twitterCard = allTags.find(t => t.name === 'twitter:card');
+    expect(twitterCard.content).toBe('summary');
   });
 });
 

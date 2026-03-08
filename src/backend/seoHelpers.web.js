@@ -1081,7 +1081,7 @@ export const getCanonicalUrl = webMethod(
 // ── Meta Description Generation ─────────────────────────────────────
 
 const PAGE_META_DESCRIPTIONS = {
-  home: 'Carolina Futons — the largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991. Free shipping on orders over $999.',
+  home: 'Carolina Futons — the largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991. White-glove delivery available.',
   faq: 'Frequently asked questions about futons, Murphy beds, mattress care, shipping, and visiting our Hendersonville NC showroom. Get answers from Carolina Futons.',
   contact: 'Contact Carolina Futons in Hendersonville, NC. Visit our showroom Wednesday–Saturday 10 AM–5 PM. Call (828) 252-9449 or book an appointment online.',
   about: 'Carolina Futons has served Western NC since 1991. Family-owned furniture store specializing in quality futon frames, mattresses, Murphy beds, and platform beds in Hendersonville, NC.',
@@ -1100,13 +1100,13 @@ const PAGE_META_DESCRIPTIONS = {
   privacyPolicy: 'Carolina Futons privacy policy. How we collect, use, and protect your personal information when you shop with us.',
   refundPolicy: 'Carolina Futons refund policy. Details on refund eligibility, processing times, and how to request a refund on furniture purchases.',
   termsConditions: 'Terms and conditions for shopping at Carolina Futons. Policies on orders, shipping, returns, and use of our website.',
-  shippingPolicy: 'Carolina Futons shipping policy. Free shipping on orders over $999. White-glove delivery available in Western NC and the Southeast.',
+  shippingPolicy: 'Carolina Futons shipping policy. Affordable shipping options with white-glove delivery available in Western NC and the Southeast.',
   accessibility: 'Carolina Futons is committed to making our website accessible to everyone. Learn about our accessibility efforts and contact us for assistance.',
   newsletter: 'Subscribe to the Carolina Futons newsletter for exclusive furniture deals, style tips, and new product announcements.',
   sustainability: 'Our commitment to sustainability at Carolina Futons. Learn about our eco-friendly practices and sustainable furniture sourcing.',
   buyingGuides: 'Expert buying guides from Carolina Futons. Learn how to choose the right futon, Murphy bed, mattress, or platform bed for your needs.',
   buyingGuide: 'In-depth buying guide from Carolina Futons. Expert advice on choosing the right furniture for your home, with comparisons and recommendations.',
-  cart: 'Review your shopping cart at Carolina Futons. Quality futon frames, mattresses, Murphy beds, and more with free shipping on orders over $999.',
+  cart: 'Review your shopping cart at Carolina Futons. Quality futon frames, mattresses, Murphy beds, and more with affordable shipping options.',
   checkout: 'Complete your Carolina Futons order. Secure checkout with multiple payment options and fast, reliable shipping.',
   thankYou: 'Thank you for your Carolina Futons order! Track your delivery, share with friends, and explore more quality furniture.',
   member: 'Manage your Carolina Futons account. View orders, track deliveries, manage your wishlist, and earn loyalty rewards.',
@@ -1128,7 +1128,7 @@ export const getPageMetaDescription = webMethod(
         if (data.description) {
           return stripHtml(data.description).substring(0, 155) + '...';
         }
-        return `Shop ${data.name || 'quality furniture'} at Carolina Futons. Free shipping on orders over $999. Visit our Hendersonville, NC showroom.`;
+        return `Shop ${data.name || 'quality furniture'} at Carolina Futons. Affordable shipping with white-glove delivery available. Visit our Hendersonville, NC showroom.`;
       case 'category':
         return getCategoryMetaDescriptionSync(data.slug);
       case 'blogPost':

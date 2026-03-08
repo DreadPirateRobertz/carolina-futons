@@ -5,11 +5,11 @@
  * Canonical URLs are handled globally by masterPage.js — this module handles per-page meta.
  */
 
-import { getPageTitle, getPageMetaDescription } from 'backend/seoHelpers.web';
+import { getPageTitle, getPageMetaDescription, getCanonicalUrl } from 'backend/seoHelpers.web';
 
-const BASE_URL = 'https://www.carolinafutons.com';
 const SITE_NAME = 'Carolina Futons';
 const DEFAULT_IMAGE = 'https://www.carolinafutons.com/logo.png';
+const TWITTER_HANDLE = '@CarolinaFutons';
 
 /**
  * Initialize SEO meta tags for a page.
@@ -22,21 +22,24 @@ export async function initPageSeo(pageType, data = {}) {
 
     const title = await getPageTitle(pageType, data);
     const description = await getPageMetaDescription(pageType, data);
+    const url = await getCanonicalUrl(pageType, data.slug);
     const image = data.image || DEFAULT_IMAGE;
-    const isProduct = pageType === 'product';
+    const useLargeImage = pageType === 'product' || (pageType === 'blogPost' && data.image);
 
     head.setTitle(title);
 
     head.setMetaTags([
       { name: 'description', content: description },
       // Open Graph
-      { property: 'og:type', content: isProduct ? 'product' : 'website' },
+      { property: 'og:type', content: pageType === 'product' ? 'product' : 'website' },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
+      { property: 'og:url', content: url },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:image', content: image },
       // Twitter Card
-      { name: 'twitter:card', content: isProduct ? 'summary_large_image' : 'summary' },
+      { name: 'twitter:card', content: useLargeImage ? 'summary_large_image' : 'summary' },
+      { name: 'twitter:site', content: TWITTER_HANDLE },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
       { name: 'twitter:image', content: image },
