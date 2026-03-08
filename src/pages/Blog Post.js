@@ -17,6 +17,7 @@ import {
   buildShareUrls,
   getRelatedPosts,
 } from 'public/blogHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -69,6 +70,9 @@ $w.onReady(async function () {
 
     // ── Pinterest Article Pin Meta ────────────────────────────────────
     injectPinterestArticleMeta(post);
+
+    // ── OG + Twitter Card meta ──────────────────────────────────────
+    initPageSeo('blogPost', { name: post.title, slug, image: post.coverImage });
 
     fireCustomEvent('blog_post_view', { slug, category: post.category });
   } catch (err) {

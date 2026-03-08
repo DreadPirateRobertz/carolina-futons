@@ -3,6 +3,7 @@
 import { getAllBuyingGuides } from 'backend/buyingGuides.web';
 import { getContentHub } from 'backend/seoContentHub.web';
 import { getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
+import { initPageSeo } from 'public/pageSeo.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -38,6 +39,7 @@ $w.onReady(async function () {
     initGuideGrid(guides);
     initHubSeo(hub);
     initHubMeta();
+    initPageSeo('buyingGuides');
   } catch (err) {
     console.error('Buying Guides hub init error:', err);
   }

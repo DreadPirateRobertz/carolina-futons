@@ -21,6 +21,7 @@ import {
   getShowroomContactInfo,
 } from 'public/storeLocatorHelpers.js';
 import { injectStoreLocatorSeoSsr } from 'public/localBusinessSeo.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -36,6 +37,7 @@ $w.onReady(async function () {
     initDirectionsCities(),
     injectStoreSchema(),
     injectStoreLocatorSeoSsr(),
+    initPageSeo('storeLocator'),
   ]);
   trackEvent('page_view', { page: 'store-locator' });
 });

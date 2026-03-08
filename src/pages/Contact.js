@@ -24,6 +24,7 @@ import {
   initContactShowroomScene,
 } from 'public/contactIllustrations.js';
 import { injectContactSeoSsr } from 'public/localBusinessSeo.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -39,6 +40,7 @@ $w.onReady(async function () {
     injectContactSchema(),
     injectContactMeta(),
     injectContactSeoSsr(),
+    initPageSeo('contact'),
   ]);
   trackEvent('page_view', { page: 'contact' });
 });

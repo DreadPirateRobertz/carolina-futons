@@ -1024,6 +1024,8 @@ export const getPageTitle = webMethod(
         return `Sustainability — Our Environmental Commitment | ${SITE_NAME}`;
       case 'buyingGuides':
         return `Buying Guides — Expert Furniture Advice | ${SITE_NAME}`;
+      case 'buyingGuide':
+        return data.name ? `${data.name} — Buying Guide | ${SITE_NAME}` : `Buying Guide | ${SITE_NAME}`;
       case 'cart':
         return `Shopping Cart | ${SITE_NAME}`;
       case 'checkout':
@@ -1103,6 +1105,7 @@ const PAGE_META_DESCRIPTIONS = {
   newsletter: 'Subscribe to the Carolina Futons newsletter for exclusive furniture deals, style tips, and new product announcements.',
   sustainability: 'Our commitment to sustainability at Carolina Futons. Learn about our eco-friendly practices and sustainable furniture sourcing.',
   buyingGuides: 'Expert buying guides from Carolina Futons. Learn how to choose the right futon, Murphy bed, mattress, or platform bed for your needs.',
+  buyingGuide: 'In-depth buying guide from Carolina Futons. Expert advice on choosing the right furniture for your home, with comparisons and recommendations.',
   cart: 'Review your shopping cart at Carolina Futons. Quality futon frames, mattresses, Murphy beds, and more with free shipping on orders over $999.',
   checkout: 'Complete your Carolina Futons order. Secure checkout with multiple payment options and fast, reliable shipping.',
   thankYou: 'Thank you for your Carolina Futons order! Track your delivery, share with friends, and explore more quality furniture.',

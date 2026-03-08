@@ -192,6 +192,11 @@ const PAGES_WITH_SEO = [
   { file: 'Order Tracking.js', type: 'orderTracking' },
   { file: 'Search Results.js', type: 'searchResults' },
   { file: 'Blog.js', type: 'blog' },
+  { file: 'Contact.js', type: 'contact' },
+  { file: 'Store Locator.js', type: 'storeLocator' },
+  { file: 'Buying Guides.js', type: 'buyingGuides' },
+  { file: 'Buying Guide.js', type: 'buyingGuide' },
+  { file: 'Blog Post.js', type: 'blogPost' },
 ];
 
 describe('source-level: all pages import and call initPageSeo', () => {
@@ -203,7 +208,7 @@ describe('source-level: all pages import and call initPageSeo', () => {
     });
 
     it(`${file} calls initPageSeo('${type}')`, () => {
-      expect(src).toContain(`initPageSeo('${type}')`);
+      expect(src).toContain(`initPageSeo('${type}'`);
     });
   });
 });
@@ -224,7 +229,7 @@ describe('source-level: seoHelpers.web.js PAGE_META_DESCRIPTIONS', () => {
     'assemblyGuides', 'roomPlanner', 'compareProducts', 'ugcGallery',
     'referral', 'returns', 'priceMatch', 'privacyPolicy', 'refundPolicy',
     'termsConditions', 'shippingPolicy', 'accessibility', 'newsletter',
-    'sustainability', 'buyingGuides', 'cart', 'checkout', 'thankYou',
+    'sustainability', 'buyingGuides', 'buyingGuide', 'cart', 'checkout', 'thankYou',
     'member', 'orderTracking', 'searchResults',
   ];
 
