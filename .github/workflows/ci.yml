@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests with coverage
         if: matrix.node-version == 20
-        run: npx vitest run --coverage --reporter=json-summary --outputFile=coverage/coverage-summary.json || true
+        run: npx vitest run --coverage || true
 
       - name: Post coverage comment on PR
         if: github.event_name == 'pull_request' && matrix.node-version == 20
