@@ -61,6 +61,17 @@ $w.onReady(async function () {
   try { initCheckoutFocusIndicators(); } catch (e) {}
   try { collapseOnMobile($w, ['#checkoutFinancing', '#expressCheckoutSection']); } catch (e) {}
   try { initBackToTop($w); } catch (e) {}
+
+  // CF-sy7r: Reset gift card state on checkout abandon (page navigation away).
+  // finalizeGiftCardRedemption is called by Thank You page on order completion.
+  try {
+    const wixWindow = await import('wix-window-frontend');
+    if (wixWindow.onBeforeUnload) {
+      wixWindow.onBeforeUnload(() => {
+        resetCheckoutGiftCard();
+      });
+    }
+  } catch (e) {}
 });
 
 // ── Checkout Progress Indicator ──────────────────────────────────────

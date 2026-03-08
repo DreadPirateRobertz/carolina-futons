@@ -604,6 +604,38 @@ describe('finalizeGiftCardRedemption', () => {
     expect(result.amountApplied).toBe(50);
   });
 
+  it('re-calculates amountToApply from currentSubtotal when provided', async () => {
+    mockCheckBalance.mockResolvedValue({ found: true, status: 'active', balance: 100 });
+    mockRedeemGiftCard.mockResolvedValue({ success: true, amountApplied: 30, remainingBalance: 70 });
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    // Apply with subtotal of 50
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    // Cart changed — subtotal is now 30
+    const result = await finalizeGiftCardRedemption(30);
+
+    // Should use recalculated amount (min(balance=100, subtotal=30) = 30), not stale 50
+    expect(mockRedeemGiftCard).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD', 30);
+    expect(result.amountApplied).toBe(30);
+  });
+
+  it('uses stored amountToApply when no currentSubtotal provided', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    const result = await finalizeGiftCardRedemption();
+
+    // Falls back to stored amountToApply
+    expect(mockRedeemGiftCard).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD', 50);
+  });
+
   it('sets state to applied after successful finalization', async () => {
     const $w = createMock$w();
     $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
@@ -662,7 +694,7 @@ describe('finalizeGiftCardRedemption', () => {
     expect(state.applied).toBe(false);
   });
 
-  it('prevents double finalization', async () => {
+  it('prevents double finalization (sequential)', async () => {
     const $w = createMock$w();
     $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
     await initCheckoutGiftCard($w, () => 50);
@@ -676,6 +708,37 @@ describe('finalizeGiftCardRedemption', () => {
     expect(mockRedeemGiftCard).toHaveBeenCalledTimes(1);
     expect(result2.success).toBe(true);
     expect(result2.amountApplied).toBe(0);
+  });
+
+  it('prevents double finalization (concurrent — race condition)', async () => {
+    // Simulate slow redeemGiftCard to expose race window
+    const resolvers = [];
+    mockRedeemGiftCard.mockImplementation(() => new Promise(resolve => {
+      resolvers.push(resolve);
+    }));
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    // Fire two concurrent finalizations (double-click "Place Order")
+    const promise1 = finalizeGiftCardRedemption();
+    const promise2 = finalizeGiftCardRedemption();
+
+    // Let microtasks settle so dynamic import resolves and redeemGiftCard is called
+    await new Promise(r => setTimeout(r, 10));
+
+    // Resolve any pending redeemGiftCard calls
+    resolvers.forEach(r => r({ success: true, amountApplied: 50, remainingBalance: 50 }));
+    const [result1, result2] = await Promise.all([promise1, promise2]);
+
+    // Only ONE call to redeemGiftCard — pending must be cleared synchronously
+    expect(mockRedeemGiftCard).toHaveBeenCalledTimes(1);
+    // One succeeds, one is a no-op
+    const successCount = [result1, result2].filter(r => r.amountApplied > 0).length;
+    expect(successCount).toBe(1);
   });
 });
 

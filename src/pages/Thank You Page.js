@@ -13,11 +13,27 @@ import { validateEmail, sanitizeText } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 import { getReferralLink } from 'backend/referralService.web';
 import { submitReview } from 'backend/reviewsService.web';
+import { finalizeGiftCardRedemption } from 'public/giftCardHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
   initPageSeo('thankYou');
+
+  // CF-sy7r: Finalize gift card redemption now that order is confirmed.
+  // Must happen before sections init — deducts the balance that was validated at checkout.
+  try {
+    const orderTotal = null; // Wix provides total via orderCtx below
+    const gcResult = await finalizeGiftCardRedemption();
+    if (gcResult.amountApplied > 0) {
+      console.log(`[ThankYou] Gift card redeemed: $${gcResult.amountApplied.toFixed(2)}`);
+    }
+    if (!gcResult.success) {
+      console.error('[ThankYou] Gift card finalization failed:', gcResult.message);
+    }
+  } catch (err) {
+    console.error('[ThankYou] Gift card finalization error:', err);
+  }
 
   // Get order context early so sections can use it
   const wixWindow = await import('wix-window-frontend');
