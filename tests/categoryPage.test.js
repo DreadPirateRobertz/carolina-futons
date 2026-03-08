@@ -915,12 +915,17 @@ describe('Category Page', () => {
       expect(mockHead.setStructuredData).toHaveBeenCalled();
       const schemas = mockHead.setStructuredData.mock.calls[0][0];
       expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
+      expect(schemas.find(s => s['@type'] === 'ItemList')).toBeUndefined();
     });
 
     it('handles unknown category path without crash', async () => {
       __setPath(['nonexistent-category-slug']);
-      // Should resolve without throwing — unknown paths handled gracefully
-      await expect(onReadyHandler()).resolves.not.toThrow();
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Unknown path still gets breadcrumb schema, but no collection schema crash
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
     });
 
     it('limits SSR products to MAX_SSR_PRODUCTS (30)', async () => {
@@ -934,10 +939,8 @@ describe('Category Page', () => {
       __setPath(['futon-frames']);
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
-      // getItems should have been called with max 30 items
-      expect(dataset.getItems).toHaveBeenCalled();
-      const lastCall = dataset.getItems.mock.calls[dataset.getItems.mock.calls.length - 1];
-      expect(lastCall[1]).toBeLessThanOrEqual(30);
+      // getItems should have been called with exactly 30 (capped from 100)
+      expect(dataset.getItems).toHaveBeenCalledWith(0, 30);
     });
   });
 });
