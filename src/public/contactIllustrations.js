@@ -55,7 +55,7 @@ export function generateHeroSVG(options) {
   const opts = options || {};
   const svg = CONTACT_ILLUSTRATIONS.hero;
   if (typeof opts.height === 'number' && opts.height > 0) {
-    return svg.replace(/height="100%"/, 'height="' + opts.height + '"');
+    return svg.replace(/^(<svg[^>]*?)height="100%"/, '$1height="' + opts.height + '"');
   }
   return svg;
 }
@@ -70,7 +70,7 @@ export function generateShowroomSVG(options) {
   const opts = options || {};
   const svg = CONTACT_ILLUSTRATIONS.showroom;
   if (typeof opts.height === 'number' && opts.height > 0) {
-    return svg.replace(/height="100%"/, 'height="' + opts.height + '"');
+    return svg.replace(/^(<svg[^>]*?)height="100%"/, '$1height="' + opts.height + '"');
   }
   return svg;
 }
