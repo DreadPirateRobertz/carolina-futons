@@ -27,6 +27,8 @@ import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCach
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
+const MAX_SSR_PRODUCTS = 30;
+
 let currentSort = 'bestselling';
 let currentFilters = {};
 let currentQuickViewProduct = null;
@@ -243,7 +245,7 @@ async function injectCategoryMeta(currentPath) {
       const dataset = $w('#categoryDataset');
       if (dataset) {
         await dataset.onReady();
-        const total = Math.min(dataset.getTotalCount(), 30);
+        const total = Math.min(dataset.getTotalCount(), MAX_SSR_PRODUCTS);
         const result = await dataset.getItems(0, total);
         const products = (result?.items || []).map(item => ({
           slug: item.slug, name: item.name, mainMedia: item.mainMedia,

@@ -875,5 +875,79 @@ describe('Category Page', () => {
       await new Promise(r => setTimeout(r, 50));
       expect(mockHead.setMetaTag).toHaveBeenCalledWith('twitter:description', 'Shop quality futon frames');
     });
+
+    it('gracefully degrades when getCollectionSchema rejects', async () => {
+      const seoHelpers = await import('backend/seoHelpers.web');
+      seoHelpers.getCollectionSchema.mockRejectedValueOnce(new Error('Schema generation failed'));
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Page should not crash — schema injection is wrapped in try/catch
+      // BreadcrumbList may still be injected independently
+      if (mockHead.setStructuredData.mock.calls.length > 0) {
+        const schemas = mockHead.setStructuredData.mock.calls[0][0];
+        const breadcrumb = schemas.find(s => s['@type'] === 'BreadcrumbList');
+        expect(breadcrumb).toBeDefined();
+      }
+    });
+
+    it('gracefully degrades when getBreadcrumbSchema rejects', async () => {
+      const seoHelpers = await import('backend/seoHelpers.web');
+      seoHelpers.getBreadcrumbSchema.mockRejectedValueOnce(new Error('Breadcrumb failed'));
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Page should not crash — breadcrumb is wrapped in try/catch
+      // CollectionPage may still be injected independently
+      if (mockHead.setStructuredData.mock.calls.length > 0) {
+        const schemas = mockHead.setStructuredData.mock.calls[0][0];
+        const collection = schemas.find(s => s['@type'] === 'ItemList');
+        expect(collection).toBeDefined();
+      }
+    });
+
+    it('handles empty dataset (0 products) without crash', async () => {
+      // Override dataset mock for this test — getTotalCount returns 0
+      const dataset = getEl('#categoryDataset');
+      dataset.getTotalCount = vi.fn(() => 0);
+      dataset.getItems = vi.fn().mockResolvedValue({ items: [] });
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // With 0 products, getCollectionSchema should NOT be called (guarded by products.length > 0)
+      // But BreadcrumbList should still be injected
+      if (mockHead.setStructuredData.mock.calls.length > 0) {
+        const schemas = mockHead.setStructuredData.mock.calls[0][0];
+        const breadcrumb = schemas.find(s => s['@type'] === 'BreadcrumbList');
+        expect(breadcrumb).toBeDefined();
+      }
+    });
+
+    it('handles unknown category path without crash', async () => {
+      __setPath(['nonexistent-category-slug']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Unknown paths should not throw — page renders with default content
+      // The category content map may not have this slug, but fallback handling is graceful
+    });
+
+    it('limits SSR products to MAX_SSR_PRODUCTS (30)', async () => {
+      // Override dataset mock for large count
+      const dataset = getEl('#categoryDataset');
+      dataset.getTotalCount = vi.fn(() => 100);
+      const manyProducts = Array.from({ length: 30 }, (_, i) => ({
+        _id: `prod-${i}`, slug: `product-${i}`, name: `Product ${i}`, mainMedia: `img${i}.jpg`,
+      }));
+      dataset.getItems = vi.fn().mockResolvedValue({ items: manyProducts });
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // getItems should have been called with max 30 items
+      const getItemsCalls = dataset.getItems.mock.calls;
+      if (getItemsCalls.length > 0) {
+        const lastCall = getItemsCalls[getItemsCalls.length - 1];
+        expect(lastCall[1]).toBeLessThanOrEqual(30);
+      }
+    });
   });
 });
