@@ -1,0 +1,50 @@
+# Codecov configuration for Carolina Futons
+# Docs: https://docs.codecov.com/docs/codecov-yaml
+#
+# Codecov uses a single aggregate target (70%). Per-metric thresholds
+# (lines 70%, branches 60%, functions 70%) are enforced by vitest.config.js.
+
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...90"
+
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+        if_ci_failed: error
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+flags:
+  unit:
+    paths:
+      - src/
+    carryforward: true  # reuse previous data when this flag's tests don't run
+  nightly:
+    paths:
+      - src/
+    carryforward: false
+
+ignore:
+  - "tests/"
+  - "src/**/__mocks__/**"
+  - "design-vision/"
+  - "docs/"
+  - "scripts/"
+  - "*.config.js"
+  - "*.config.ts"

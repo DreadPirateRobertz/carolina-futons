@@ -40,6 +40,15 @@ jobs:
         if: matrix.node-version == 20
         run: npx vitest run --coverage || true
 
+      - name: Upload coverage to Codecov
+        if: matrix.node-version == 20
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: unit
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Post coverage comment on PR
         if: github.event_name == 'pull_request' && matrix.node-version == 20
         uses: actions/github-script@v7
@@ -162,6 +171,15 @@ jobs:
         run: |
           npx vitest run --coverage --reporter=json \
             --outputFile=test-results/coverage.json || true
+
+      - name: Upload nightly coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/lcov.info
+          flags: nightly
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload test results
         if: always()
