@@ -32,6 +32,7 @@ let currentFilters = {};
 let currentQuickViewProduct = null;
 let _qvDialog = null;
 let _debounceTimer = null;
+let _basicFilterTimer = null;
 let _filterSessionState = {}; // persists across category nav within session
 let _wishlistSet = new Set(); // cached wishlist status for product cards
 
@@ -364,7 +365,7 @@ function initFilterControls() {
       brandFilter.value = '';
       brandFilter.onChange(() => {
         currentFilters.brand = brandFilter.value;
-        applyFilters();
+        debouncedApplyFilters();
       });
     }
   } catch (e) {}
@@ -384,7 +385,7 @@ function initFilterControls() {
       priceFilter.value = '';
       priceFilter.onChange(() => {
         currentFilters.price = priceFilter.value;
-        applyFilters();
+        debouncedApplyFilters();
       });
     }
   } catch (e) {}
@@ -402,7 +403,7 @@ function initFilterControls() {
       sizeFilter.value = '';
       sizeFilter.onChange(() => {
         currentFilters.size = sizeFilter.value;
-        applyFilters();
+        debouncedApplyFilters();
       });
     }
   } catch (e) {}
@@ -411,6 +412,8 @@ function initFilterControls() {
   try {
     const clearHandler = () => {
       currentFilters = {};
+      if (_basicFilterTimer) { clearTimeout(_basicFilterTimer); _basicFilterTimer = null; }
+      if (_debounceTimer) { clearTimeout(_debounceTimer); _debounceTimer = null; }
       try { $w('#filterBrand').value = ''; } catch (e) {}
       try { $w('#filterPrice').value = ''; } catch (e) {}
       try { $w('#filterSize').value = ''; } catch (e) {}
@@ -420,6 +423,17 @@ function initFilterControls() {
       ariaLabel: 'Clear all filters',
     });
   } catch (e) {}
+}
+
+/**
+ * Debounced wrapper for applyFilters — coalesces rapid basic filter changes.
+ * Uses 300ms delay matching advanced filter debounce.
+ */
+function debouncedApplyFilters() {
+  if (_basicFilterTimer) clearTimeout(_basicFilterTimer);
+  _basicFilterTimer = setTimeout(() => {
+    applyFilters();
+  }, 300);
 }
 
 function applyFilters() {
@@ -481,6 +495,20 @@ function initProductGrid() {
     const repeater = $w('#productGridRepeater');
     if (!repeater) return;
 
+    // Pre-batch all product IDs for ratings (single API call instead of per-item)
+    let _ratingsMapPromise = null;
+    try {
+      const allProductIds = (repeater.data || []).map(p => p._id).filter(Boolean);
+      if (allProductIds.length > 0) {
+        _ratingsMapPromise = batchLoadRatings(allProductIds).catch((e) => {
+          console.warn('[CategoryPage] batchLoadRatings failed:', e?.message);
+          return {};
+        });
+      }
+    } catch (e) {
+      console.warn('[CategoryPage] ratings batch init failed:', e?.message);
+    }
+
     repeater.onItemReady(($item, itemData) => {
       // Card container structure: white bg, 12px radius, shadow, hover
       try { styleCardContainer($item('#gridCard')); } catch (e) {}
@@ -537,8 +565,23 @@ function initProductGrid() {
       makeClickable($item('#gridImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#gridName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` });
 
-      // Fabric swatch preview dots (3-4 color circles)
-      initGridSwatchPreview($item, itemData);
+      // Fabric swatch preview dots — deferred until card enters viewport
+      try {
+        const card = $item('#gridCard');
+        if (card && typeof card.onViewportEnter === 'function') {
+          let swatchLoaded = false;
+          card.onViewportEnter(() => {
+            if (!swatchLoaded) {
+              swatchLoaded = true;
+              initGridSwatchPreview($item, itemData);
+            }
+          });
+        } else {
+          initGridSwatchPreview($item, itemData);
+        }
+      } catch (e) {
+        initGridSwatchPreview($item, itemData);
+      }
 
       // "Available in 700+ fabrics" badge
       try {
@@ -556,10 +599,24 @@ function initProductGrid() {
         }
       } catch (e) {}
 
-      // Review stars (loaded async from shared module)
-      batchLoadRatings([itemData._id]).then(ratingsMap => {
-        renderCardStarRating($item, itemData._id, ratingsMap);
-      }).catch(() => {});
+      // Review stars (from pre-batched ratings map, with per-item fallback)
+      if (_ratingsMapPromise) {
+        _ratingsMapPromise.then(ratingsMap => {
+          if (ratingsMap[itemData._id] !== undefined) {
+            renderCardStarRating($item, itemData._id, ratingsMap);
+          } else {
+            // Product not in initial batch (e.g. after filter change) — fetch individually
+            batchLoadRatings([itemData._id]).then(singleMap => {
+              renderCardStarRating($item, itemData._id, singleMap);
+            }).catch(() => {});
+          }
+        }).catch(() => {});
+      } else {
+        // No pre-batch available — fetch individually
+        batchLoadRatings([itemData._id]).then(singleMap => {
+          renderCardStarRating($item, itemData._id, singleMap);
+        }).catch(() => {});
+      }
 
       // Quick view button (keyboard-accessible)
       try {
