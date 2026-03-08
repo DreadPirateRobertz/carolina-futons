@@ -8,6 +8,7 @@ import { checkReturnWindow, getStatusTimeline, formatReturnStatus, getStatusColo
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
 import { sanitizeText } from 'public/validators';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _currentOrder = null;
 let _currentReturns = [];
@@ -15,6 +16,7 @@ let _reasons = [];
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('returns');
   await loadReturnReasons();
   initLookupForm();
   initRmaTracker();

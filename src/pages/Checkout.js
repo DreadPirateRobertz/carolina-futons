@@ -28,6 +28,7 @@ import {
 } from 'backend/protectionPlan.web';
 import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCreditHelpers.js';
 import { initCheckoutGiftCard } from 'public/giftCardHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 // Shared state for cross-section communication
 let _currentCart = null;
@@ -36,6 +37,7 @@ let _selectedShippingMethod = 'standard';
 let _sessionId = null;
 
 $w.onReady(async function () {
+  initPageSeo('checkout');
   const sections = [
     { name: 'checkoutProgress', init: initCheckoutProgress },
     { name: 'trustSignals', init: initTrustSignals },

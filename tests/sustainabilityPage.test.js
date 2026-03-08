@@ -63,6 +63,8 @@ vi.mock('public/sustainabilityHelpers.js', async () => {
   return actual;
 });
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Tests ───────────────────────────────────────────────────────────
 
 describe('Sustainability Page', () => {

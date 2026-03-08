@@ -172,6 +172,8 @@ vi.mock('backend/notificationService.web', () => ({
   toggleProductAlerts: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Test fixtures ──────────────────────────────────────────────────
 
 function makeSampleOrders(overrides = {}) {

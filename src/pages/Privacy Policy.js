@@ -2,8 +2,10 @@
 // Wix handles the privacy policy content via their legal pages system
 // This adds table of contents navigation for long policy text
 import { initBackToTop, collapseOnMobile } from 'public/mobileHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(function () {
+  initPageSeo('privacyPolicy');
   initPolicyNavigation();
   try { collapseOnMobile($w, ['#policyTocRepeater']); } catch (e) {}
   try { initBackToTop($w); } catch (e) {}

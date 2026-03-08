@@ -10,6 +10,7 @@ import {
 } from 'backend/buyingGuides.web';
 import { getPillarGuide } from 'backend/seoContentHub.web';
 import { getPageTitle, getCanonicalUrl, getPageMetaDescription } from 'backend/seoHelpers.web';
+import { initPageSeo } from 'public/pageSeo.js';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop, isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -83,6 +84,7 @@ $w.onReady(async function () {
     initRelatedGuides(pillar);
     initGuideSchema(schemas);
     initGuideMeta(slug, guide.title);
+    initPageSeo('buyingGuide', { name: guide.title, slug });
   } catch (err) {
     console.error('Buying Guide page init error:', err);
   }

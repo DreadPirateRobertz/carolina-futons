@@ -6,11 +6,13 @@ import { colors } from 'public/designTokens.js';
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
 import { trackProductPageView } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 import wixLocationFrontend from 'wix-location-frontend';
 
 let comparisonData = null;
 
 $w.onReady(async function () {
+  initPageSeo('compareProducts');
   await initComparePage();
 });
 

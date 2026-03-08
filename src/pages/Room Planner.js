@@ -14,12 +14,14 @@ import {
   calculateScale,
   formatPlacementLabel,
 } from 'public/roomPlannerHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 /** @type {string|null} */
 let currentLayoutId = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('roomPlanner');
   initHero();
   initInstructions();
   initRoomDimensionInputs();

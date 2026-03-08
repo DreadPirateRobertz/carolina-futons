@@ -171,6 +171,8 @@ vi.mock('public/SearchResultsHelpers.js', () => ({
   }),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Test data ───────────────────────────────────────────────────────
 
 const sampleProducts = [

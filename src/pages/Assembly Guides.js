@@ -15,6 +15,7 @@ import {
   getCategoryLabel,
   getCategoryIcon,
 } from 'public/assemblyGuideHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let allGuides = [];
 let currentCategory = null;
@@ -23,6 +24,7 @@ let activeGuideId = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('assemblyGuides');
   initCategoryFilters();
   initSearch();
   initGuideList();

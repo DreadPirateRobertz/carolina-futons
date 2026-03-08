@@ -20,11 +20,13 @@ import {
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers.js';
 import { sanitizeText } from 'public/validators';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _myRequests = [];
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('priceMatch');
   initPolicySection();
   initFormSection();
   initRequestsSection();

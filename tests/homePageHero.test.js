@@ -150,6 +150,8 @@ vi.mock('wix-data', () => ({
   },
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — CF-edk1 Hero & Visual Polish', () => {

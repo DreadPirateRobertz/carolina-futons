@@ -7,8 +7,10 @@ import { trackEvent, trackNewsletterSignup } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce } from 'public/a11yHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(function () {
+  initPageSeo('newsletter');
   initHero();
   initSignupForm();
   initBenefits();

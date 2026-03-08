@@ -109,6 +109,8 @@ vi.mock('wix-location-frontend', () => ({
   to: vi.fn(),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Test fixtures (backend format) ─────────────────────────────────
 
 const backendPhotos = {

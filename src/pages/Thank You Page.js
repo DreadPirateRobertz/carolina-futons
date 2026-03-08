@@ -13,9 +13,11 @@ import { validateEmail, sanitizeText } from 'public/validators.js';
 import { markSessionConverted } from 'backend/browseAbandonment.web';
 import { getReferralLink } from 'backend/referralService.web';
 import { submitReview } from 'backend/reviewsService.web';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('thankYou');
 
   // Get order context early so sections can use it
   const wixWindow = await import('wix-window-frontend');

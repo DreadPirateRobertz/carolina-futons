@@ -7,9 +7,11 @@ import { getAvailableDeliverySlots } from 'backend/deliveryScheduling.web';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { initBackToTop } from 'public/mobileHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('shippingPolicy');
   initShippingCalculator();
   initDeliveryInfo();
 

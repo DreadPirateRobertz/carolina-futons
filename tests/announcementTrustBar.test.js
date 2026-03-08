@@ -99,6 +99,8 @@ vi.mock('wix-data', () => ({
   },
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Import Home Page (registers $w.onReady) ─────────────────────────
 
 describe('CF-c94m: Announcement Bar + Trust Bar', () => {

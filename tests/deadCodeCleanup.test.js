@@ -7,6 +7,8 @@ function readSrc(relPath) {
   return readFileSync(resolve(__dirname, '..', relPath), 'utf8');
 }
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── 1-7: Unused Import Removal ──────────────────────────────────────
 
 describe('Unused imports removed', () => {

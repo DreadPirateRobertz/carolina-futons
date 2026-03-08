@@ -14,11 +14,13 @@ import {
   getCardUsageText,
   formatGiftCardCode,
 } from 'public/giftCardHelpers.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let selectedAmount = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('giftCards');
   initDenominationPicker();
   initPurchaseForm();
   initBalanceChecker();

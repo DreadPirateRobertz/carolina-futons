@@ -76,6 +76,8 @@ vi.mock('public/a11yHelpers', () => ({
   makeClickable: vi.fn(),
 }));
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 import { getComparisonData, buildShareableUrl, trackComparison } from 'backend/comparisonService.web';
 import { getCompareList, removeFromCompare } from 'public/galleryHelpers.js';
 import { isMobile } from 'public/mobileHelpers';

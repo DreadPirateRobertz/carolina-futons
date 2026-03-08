@@ -5,6 +5,7 @@ import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
+import { initPageSeo } from 'public/pageSeo.js';
 
 const state = {
   step: 0,
@@ -24,6 +25,7 @@ const STEPS = [
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('styleQuiz');
   trackEvent('page_view', { page: 'style-quiz' });
 
   // Load quiz options from backend

@@ -140,6 +140,8 @@ function createItemMock() {
   return { $item, itemElements };
 }
 
+vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
+
 // ── Cart Page Tests ─────────────────────────────────────────────────
 
 describe('Cart Page — ARIA Live Regions (CF-7ll)', () => {

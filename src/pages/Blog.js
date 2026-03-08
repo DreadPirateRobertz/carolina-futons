@@ -19,12 +19,14 @@ import {
   formatPublishDate,
   buildAuthorBio,
 } from 'public/blogHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
 
 let _allPosts = [];
 let _activeCategory = null;
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageSeo('blog');
   trackEvent('page_view', { page: 'blog' });
   try {
     // ── Load Blog Posts ─────────────────────────────────────────────
