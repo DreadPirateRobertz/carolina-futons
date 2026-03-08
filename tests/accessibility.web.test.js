@@ -125,11 +125,12 @@ describe('getAnnouncement', () => {
     expect(msg).toBe('');
   });
 
-  it('returns empty string when template throws', async () => {
-    // cartAdd expects (name, qty) — calling with no args triggers template error
-    const msg = await getAnnouncement('cartUpdate');
-    // template tries to access undefined args — should catch and return ''
+  it('handles missing template arguments gracefully', async () => {
+    // Templates don't throw with missing args — they produce degraded output
+    const msg = await getAnnouncement('cartAdd');
     expect(typeof msg).toBe('string');
+    expect(msg.length).toBeGreaterThan(0);
+    expect(msg).toContain('added to cart');
   });
 
   it('returns empty string for null event', async () => {
@@ -807,6 +808,6 @@ describe('auditPageAccessibility', () => {
     const result = await auditPageAccessibility({});
     expect(result.pageName).toBe('Unknown');
     expect(result.passes).toBe(false);
-    expect(result.score).toBeLessThan(100);
+    expect(result.score).toBe(0);
   });
 });
