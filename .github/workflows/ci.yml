@@ -12,6 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       matrix:
         node-version: [18, 20]
@@ -129,6 +132,9 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
