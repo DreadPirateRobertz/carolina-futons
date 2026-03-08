@@ -883,12 +883,10 @@ describe('Category Page', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
       // Page should not crash — schema injection is wrapped in try/catch
-      // BreadcrumbList may still be injected independently
-      if (mockHead.setStructuredData.mock.calls.length > 0) {
-        const schemas = mockHead.setStructuredData.mock.calls[0][0];
-        const breadcrumb = schemas.find(s => s['@type'] === 'BreadcrumbList');
-        expect(breadcrumb).toBeDefined();
-      }
+      // BreadcrumbList should still be injected independently
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
     });
 
     it('gracefully degrades when getBreadcrumbSchema rejects', async () => {
@@ -898,12 +896,10 @@ describe('Category Page', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
       // Page should not crash — breadcrumb is wrapped in try/catch
-      // CollectionPage may still be injected independently
-      if (mockHead.setStructuredData.mock.calls.length > 0) {
-        const schemas = mockHead.setStructuredData.mock.calls[0][0];
-        const collection = schemas.find(s => s['@type'] === 'ItemList');
-        expect(collection).toBeDefined();
-      }
+      // CollectionPage schema should still be injected independently
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'ItemList')).toBeDefined();
     });
 
     it('handles empty dataset (0 products) without crash', async () => {
@@ -914,21 +910,17 @@ describe('Category Page', () => {
       __setPath(['futon-frames']);
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
-      // With 0 products, getCollectionSchema should NOT be called (guarded by products.length > 0)
-      // But BreadcrumbList should still be injected
-      if (mockHead.setStructuredData.mock.calls.length > 0) {
-        const schemas = mockHead.setStructuredData.mock.calls[0][0];
-        const breadcrumb = schemas.find(s => s['@type'] === 'BreadcrumbList');
-        expect(breadcrumb).toBeDefined();
-      }
+      // With 0 products, ItemList should NOT be present
+      // BreadcrumbList should still be injected
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
     });
 
     it('handles unknown category path without crash', async () => {
       __setPath(['nonexistent-category-slug']);
-      await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      // Unknown paths should not throw — page renders with default content
-      // The category content map may not have this slug, but fallback handling is graceful
+      // Should resolve without throwing — unknown paths handled gracefully
+      await expect(onReadyHandler()).resolves.not.toThrow();
     });
 
     it('limits SSR products to MAX_SSR_PRODUCTS (30)', async () => {
@@ -943,11 +935,9 @@ describe('Category Page', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 50));
       // getItems should have been called with max 30 items
-      const getItemsCalls = dataset.getItems.mock.calls;
-      if (getItemsCalls.length > 0) {
-        const lastCall = getItemsCalls[getItemsCalls.length - 1];
-        expect(lastCall[1]).toBeLessThanOrEqual(30);
-      }
+      expect(dataset.getItems).toHaveBeenCalled();
+      const lastCall = dataset.getItems.mock.calls[dataset.getItems.mock.calls.length - 1];
+      expect(lastCall[1]).toBeLessThanOrEqual(30);
     });
   });
 });
