@@ -31,7 +31,106 @@ import {
   filterOrdersByStatus,
   buildTrackingUrl,
   ORDER_FILTER_OPTIONS,
+  ALERT_TYPE_LABELS,
+  formatAlertForDisplay,
 } from '../src/public/MemberPageHelpers.js';
+
+// ── ALERT_TYPE_LABELS ─────────────────────────────────────────────────
+
+describe('ALERT_TYPE_LABELS', () => {
+  it('has labels for price_drop, back_in_stock, low_stock', () => {
+    expect(ALERT_TYPE_LABELS).toHaveProperty('price_drop');
+    expect(ALERT_TYPE_LABELS).toHaveProperty('back_in_stock');
+    expect(ALERT_TYPE_LABELS).toHaveProperty('low_stock');
+  });
+
+  it('returns human-readable strings', () => {
+    expect(ALERT_TYPE_LABELS.price_drop).toBe('Price Drop');
+    expect(ALERT_TYPE_LABELS.back_in_stock).toBe('Back in Stock');
+    expect(ALERT_TYPE_LABELS.low_stock).toBe('Low Stock');
+  });
+});
+
+// ── formatAlertForDisplay ─────────────────────────────────────────────
+
+describe('formatAlertForDisplay', () => {
+  it('returns default for null', () => {
+    const result = formatAlertForDisplay(null);
+    expect(result.typeLabel).toBe('Alert');
+    expect(result.productName).toBe('');
+    expect(result.message).toBe('');
+    expect(result.date).toBe('');
+  });
+
+  it('returns default for undefined', () => {
+    const result = formatAlertForDisplay(undefined);
+    expect(result.typeLabel).toBe('Alert');
+  });
+
+  it('formats price_drop alert with price and percent', () => {
+    const alert = {
+      alertType: 'price_drop',
+      productName: 'Futon Frame',
+      price: 299.99,
+      dropPercent: 15,
+      sentAt: '2026-03-15T12:00:00',
+    };
+    const result = formatAlertForDisplay(alert);
+    expect(result.typeLabel).toBe('Price Drop');
+    expect(result.productName).toBe('Futon Frame');
+    expect(result.message).toContain('15%');
+    expect(result.message).toContain('$299.99');
+    expect(result.date).toContain('March');
+    expect(result.date).toContain('2026');
+  });
+
+  it('formats price_drop with missing price/percent', () => {
+    const alert = { alertType: 'price_drop' };
+    const result = formatAlertForDisplay(alert);
+    expect(result.message).toBe('Price dropped');
+  });
+
+  it('formats back_in_stock alert', () => {
+    const alert = { alertType: 'back_in_stock', productName: 'Mattress' };
+    const result = formatAlertForDisplay(alert);
+    expect(result.typeLabel).toBe('Back in Stock');
+    expect(result.message).toBe('Now back in stock');
+  });
+
+  it('formats low_stock alert with quantity', () => {
+    const alert = { alertType: 'low_stock', quantityInStock: 3 };
+    const result = formatAlertForDisplay(alert);
+    expect(result.typeLabel).toBe('Low Stock');
+    expect(result.message).toContain('3');
+  });
+
+  it('formats low_stock alert without quantity', () => {
+    const alert = { alertType: 'low_stock' };
+    const result = formatAlertForDisplay(alert);
+    expect(result.message).toContain('few');
+  });
+
+  it('uses "Alert" for unknown alertType', () => {
+    const alert = { alertType: 'unknown_type' };
+    const result = formatAlertForDisplay(alert);
+    expect(result.typeLabel).toBe('Alert');
+  });
+
+  it('handles missing sentAt gracefully', () => {
+    const alert = { alertType: 'back_in_stock' };
+    expect(formatAlertForDisplay(alert).date).toBe('');
+  });
+
+  it('handles invalid sentAt date', () => {
+    const alert = { alertType: 'back_in_stock', sentAt: 'not-a-date' };
+    expect(formatAlertForDisplay(alert).date).toBe('');
+  });
+
+  it('handles missing productName', () => {
+    const alert = { alertType: 'price_drop' };
+    expect(formatAlertForDisplay(alert).productName).toBe('');
+  });
+});
 
 // ── getStatusColor ────────────────────────────────────────────────────
 
