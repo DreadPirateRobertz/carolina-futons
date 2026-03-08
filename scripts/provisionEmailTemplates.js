@@ -113,6 +113,38 @@ const TEMPLATE_MANIFEST = [
     priority: 3,
     description: '72-hour cart recovery with discount incentive.',
   },
+
+  // Gift card emails (used by giftCards.web.js)
+  {
+    templateId: 'gift_card_purchase_confirmation',
+    subject: 'Your Carolina Futons Gift Card — {amount}',
+    variables: ['code', 'amount', 'recipientEmail', 'recipientName', 'expirationDate'],
+    priority: 1,
+    description: 'Confirms gift card purchase to the buyer with code and details.',
+  },
+  {
+    templateId: 'gift_card_received',
+    subject: 'You received a {amount} gift card from Carolina Futons!',
+    variables: ['code', 'amount', 'recipientName', 'message', 'purchaserEmail', 'expirationDate'],
+    priority: 1,
+    description: 'Notifies the recipient that they received a gift card.',
+  },
+
+  // Notification alerts (used by notificationService.web.js)
+  {
+    templateId: 'price_drop_alert',
+    subject: 'Price drop on {productName}!',
+    variables: ['productName', 'previousPrice', 'currentPrice', 'savings', 'productUrl', 'productImage'],
+    priority: 2,
+    description: 'Alerts subscribers when a watched product drops in price.',
+  },
+  {
+    templateId: 'back_in_stock_alert',
+    subject: '{productName} is back in stock!',
+    variables: ['productName', 'productUrl', 'productImage'],
+    priority: 2,
+    description: 'Alerts subscribers when a previously out-of-stock product returns.',
+  },
 ].sort((a, b) => a.priority - b.priority);
 
 
