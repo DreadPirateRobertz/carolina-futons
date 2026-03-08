@@ -724,11 +724,10 @@ describe('showToast — manual close handler', () => {
     // Close handler should have been bound
     expect(elements['#socialProofClose'].onClick).toHaveBeenCalled();
 
-    // Trigger close
-    if (closeClickHandler) {
-      closeClickHandler();
-      expect(elements['#socialProofToast'].hide).toHaveBeenCalled();
-    }
+    // Trigger close — assert handler was captured, then invoke it
+    expect(closeClickHandler).toBeDefined();
+    closeClickHandler();
+    expect(elements['#socialProofToast'].hide).toHaveBeenCalled();
   });
 });
 

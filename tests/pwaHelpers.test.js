@@ -259,9 +259,11 @@ describe('install prompt full flow', () => {
 
 describe('isInstalledPWA — navigator.standalone', () => {
   it('returns true when navigator.standalone is true (iOS)', () => {
+    const origWindow = globalThis.window;
     globalThis.window = globalThis.window || {};
     globalThis.window.matchMedia = vi.fn().mockReturnValue({ matches: false });
     globalThis.window.navigator = { standalone: true };
     expect(isInstalledPWA()).toBe(true);
+    globalThis.window = origWindow;
   });
 });
