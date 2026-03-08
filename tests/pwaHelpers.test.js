@@ -84,6 +84,23 @@ describe('captureInstallPrompt', () => {
     captureInstallPrompt();
     expect(globalThis.window.addEventListener).toHaveBeenCalledWith('beforeinstallprompt', expect.any(Function));
   });
+
+  it('captures the event and makes canShowInstallPrompt return true', () => {
+    // Simulate the actual event listener behavior
+    let capturedHandler;
+    globalThis.window = globalThis.window || {};
+    globalThis.window.addEventListener = vi.fn((event, handler) => {
+      capturedHandler = handler;
+    });
+    captureInstallPrompt();
+
+    // Simulate the browser firing beforeinstallprompt
+    const fakeEvent = { preventDefault: vi.fn(), prompt: vi.fn(), userChoice: Promise.resolve({ outcome: 'accepted' }) };
+    capturedHandler(fakeEvent);
+
+    expect(fakeEvent.preventDefault).toHaveBeenCalled();
+    expect(canShowInstallPrompt()).toBe(true);
+  });
 });
 
 describe('canShowInstallPrompt', () => {
@@ -105,6 +122,49 @@ describe('showInstallPrompt', () => {
     const result = await showInstallPrompt();
     expect(result).toBe('dismissed');
   });
+
+  it('returns "accepted" when user accepts the prompt', async () => {
+    // Set up the deferred prompt via captureInstallPrompt
+    let capturedHandler;
+    globalThis.window = globalThis.window || {};
+    globalThis.window.addEventListener = vi.fn((event, handler) => {
+      capturedHandler = handler;
+    });
+    captureInstallPrompt();
+
+    const fakeEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(),
+      userChoice: Promise.resolve({ outcome: 'accepted' }),
+    };
+    capturedHandler(fakeEvent);
+
+    const result = await showInstallPrompt();
+    expect(result).toBe('accepted');
+    expect(fakeEvent.prompt).toHaveBeenCalled();
+    // After showing, prompt should be cleared
+    expect(canShowInstallPrompt()).toBe(false);
+  });
+
+  it('returns "dismissed" outcome when user dismisses the prompt', async () => {
+    let capturedHandler;
+    globalThis.window = globalThis.window || {};
+    globalThis.window.addEventListener = vi.fn((event, handler) => {
+      capturedHandler = handler;
+    });
+    captureInstallPrompt();
+
+    const fakeEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(),
+      userChoice: Promise.resolve({ outcome: 'dismissed' }),
+    };
+    capturedHandler(fakeEvent);
+
+    const result = await showInstallPrompt();
+    expect(result).toBe('dismissed');
+    expect(canShowInstallPrompt()).toBe(false);
+  });
 });
 
 describe('isInstalledPWA', () => {
@@ -125,6 +185,13 @@ describe('isInstalledPWA', () => {
   it('returns true when in standalone mode', () => {
     globalThis.window = globalThis.window || {};
     globalThis.window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    expect(isInstalledPWA()).toBe(true);
+  });
+
+  it('returns true when navigator.standalone is true (iOS Safari)', () => {
+    globalThis.window = globalThis.window || {};
+    globalThis.window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    globalThis.window.navigator = { standalone: true };
     expect(isInstalledPWA()).toBe(true);
   });
 });

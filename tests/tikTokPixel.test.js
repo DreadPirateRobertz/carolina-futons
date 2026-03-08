@@ -55,6 +55,20 @@ describe('fireTikTokEvent', () => {
     expect(() => fireTikTokEvent('Purchase', {})).not.toThrow();
   });
 
+  it('does not throw when window is undefined', () => {
+    const origWindow = globalThis.window;
+    delete globalThis.window;
+    expect(() => fireTikTokEvent('ViewContent', { id: '123' })).not.toThrow();
+    globalThis.window = origWindow;
+  });
+
+  it('uses empty object as default params', () => {
+    const mockTrack = vi.fn();
+    globalThis.window.ttq = { track: mockTrack };
+    fireTikTokEvent('PageView');
+    expect(mockTrack).toHaveBeenCalledWith('PageView', {});
+  });
+
   afterEach(() => {
     delete globalThis.window?.ttq;
   });

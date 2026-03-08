@@ -56,6 +56,14 @@ describe('getTestProducts', () => {
   it('returns empty array for null', () => {
     expect(getTestProducts(null)).toEqual([]);
   });
+
+  it('returns empty array for undefined', () => {
+    expect(getTestProducts(undefined)).toEqual([]);
+  });
+
+  it('returns empty array for empty string', () => {
+    expect(getTestProducts('')).toEqual([]);
+  });
 });
 
 // ── getAllTestProducts ─────────────────────────────────────────────────
@@ -115,5 +123,50 @@ describe('getSaleTestProducts', () => {
 
   it('returns empty if no sale products match count', () => {
     expect(getSaleTestProducts(0)).toHaveLength(0);
+  });
+});
+
+// ── product data field types ───────────────────────────────────────────
+
+describe('product data integrity', () => {
+  it('all products have correct field types', () => {
+    const all = getAllTestProducts();
+    all.forEach(p => {
+      expect(typeof p._id).toBe('string');
+      expect(typeof p.name).toBe('string');
+      expect(typeof p.slug).toBe('string');
+      expect(typeof p.price).toBe('number');
+      expect(typeof p.formattedPrice).toBe('string');
+      expect(typeof p.inStock).toBe('boolean');
+      expect(p.formattedPrice).toMatch(/^\$\d+\.\d{2}$/);
+      expect(Array.isArray(p.mediaItems)).toBe(true);
+      expect(Array.isArray(p.collections)).toBe(true);
+    });
+  });
+
+  it('sale products have valid discounted prices', () => {
+    const sale = getSaleTestProducts(100);
+    sale.forEach(p => {
+      expect(p.formattedDiscountedPrice).toMatch(/^\$\d+\.\d{2}$/);
+    });
+  });
+
+  it('all categories are present', () => {
+    const expected = ['futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds', 'casegoods-accessories', 'wall-huggers', 'unfinished-wood'];
+    expected.forEach(cat => {
+      expect(testProductsByCategory).toHaveProperty(cat);
+    });
+  });
+
+  it('getFeaturedTestProducts fills from non-featured when not enough featured', () => {
+    const all = getAllTestProducts();
+    const featured = all.filter(p => p.ribbon === 'Best Seller' || p.ribbon === 'New');
+    // Request more than featured count — should fill from non-featured
+    const result = getFeaturedTestProducts(featured.length + 2);
+    expect(result.length).toBe(featured.length + 2);
+    // First items should be featured
+    result.slice(0, featured.length).forEach(p => {
+      expect(['Best Seller', 'New']).toContain(p.ribbon);
+    });
   });
 });

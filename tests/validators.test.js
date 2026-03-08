@@ -56,6 +56,15 @@ describe('validateEmail', () => {
   it('rejects empty string', () => {
     expect(validateEmail('')).toBe(false);
   });
+
+  it('rejects multiple @ symbols', () => {
+    expect(validateEmail('user@@example.com')).toBe(false);
+  });
+
+  it('accepts email with leading dot in local part (RFC simplified)', () => {
+    // Simplified RFC 5322 regex allows leading dots — acceptable for frontend validation
+    expect(validateEmail('.user@example.com')).toBe(true);
+  });
 });
 
 // ── validateDimension ─────────────────────────────────────────────────
@@ -151,5 +160,17 @@ describe('sanitizeText', () => {
   it('handles XSS vectors', () => {
     expect(sanitizeText('<img src=x onerror=alert(1)>')).toBe('');
     expect(sanitizeText('"><script>alert(1)</script>')).toBe('">alert(1)');
+  });
+
+  it('handles HTML entities (preserves them as text)', () => {
+    expect(sanitizeText('&lt;b&gt;bold&lt;/b&gt;')).toBe('&lt;b&gt;bold&lt;/b&gt;');
+  });
+
+  it('handles zero maxLen by returning empty string', () => {
+    expect(sanitizeText('some text', 0)).toBe('');
+  });
+
+  it('strips unclosed tags at start of string', () => {
+    expect(sanitizeText('<img src=x onerror=alert(1) followed by text')).toBe('');
   });
 });
