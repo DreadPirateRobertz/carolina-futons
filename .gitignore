@@ -18,3 +18,7 @@ jsconfig.json
 credentials*
 package-lock.json
 coverage/
+
+# Gas Town (added by gt)
+.claude/
+__pycache__/
