@@ -1,0 +1,45 @@
+# Codecov configuration for Carolina Futons
+# Docs: https://docs.codecov.com/docs/codecov-yaml
+#
+# Thresholds match vitest.config.js: lines 70%, branches 60%, functions 70%
+
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...90"
+
+  status:
+    project:
+      default:
+        target: 70%
+        threshold: 2%
+        if_ci_failed: error
+    patch:
+      default:
+        target: 70%
+        threshold: 5%
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+flags:
+  unit:
+    paths:
+      - src/
+    carryforward: true
+
+ignore:
+  - "tests/"
+  - "src/**/__mocks__/**"
+  - "design-vision/"
+  - "docs/"
+  - "scripts/"
+  - "*.config.js"
+  - "*.config.ts"
