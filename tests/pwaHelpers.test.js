@@ -202,3 +202,66 @@ describe('__resetPrompt', () => {
     expect(canShowInstallPrompt()).toBe(false);
   });
 });
+
+describe('install prompt full flow', () => {
+  beforeEach(() => {
+    __resetPrompt();
+  });
+
+  it('captures prompt, shows as available, triggers and returns outcome', async () => {
+    // Set up window with addEventListener
+    const listeners = {};
+    globalThis.window = globalThis.window || {};
+    globalThis.window.addEventListener = (event, handler) => {
+      listeners[event] = handler;
+    };
+
+    captureInstallPrompt();
+
+    // Simulate beforeinstallprompt event
+    const mockPromptEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(),
+      userChoice: Promise.resolve({ outcome: 'accepted' }),
+    };
+    listeners['beforeinstallprompt'](mockPromptEvent);
+
+    expect(canShowInstallPrompt()).toBe(true);
+
+    const outcome = await showInstallPrompt();
+    expect(outcome).toBe('accepted');
+    expect(mockPromptEvent.prompt).toHaveBeenCalled();
+
+    // Prompt is consumed after use
+    expect(canShowInstallPrompt()).toBe(false);
+  });
+
+  it('returns dismissed when user declines install', async () => {
+    const listeners = {};
+    globalThis.window = globalThis.window || {};
+    globalThis.window.addEventListener = (event, handler) => {
+      listeners[event] = handler;
+    };
+
+    captureInstallPrompt();
+
+    const mockPromptEvent = {
+      preventDefault: vi.fn(),
+      prompt: vi.fn(),
+      userChoice: Promise.resolve({ outcome: 'dismissed' }),
+    };
+    listeners['beforeinstallprompt'](mockPromptEvent);
+
+    const outcome = await showInstallPrompt();
+    expect(outcome).toBe('dismissed');
+  });
+});
+
+describe('isInstalledPWA — navigator.standalone', () => {
+  it('returns true when navigator.standalone is true (iOS)', () => {
+    globalThis.window = globalThis.window || {};
+    globalThis.window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    globalThis.window.navigator = { standalone: true };
+    expect(isInstalledPWA()).toBe(true);
+  });
+});

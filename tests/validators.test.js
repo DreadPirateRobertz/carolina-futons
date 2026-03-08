@@ -111,6 +111,16 @@ describe('validateDimension', () => {
     expect(validateDimension(Infinity)).toBe(false);
     expect(validateDimension(-Infinity)).toBe(false);
   });
+
+  it('accepts float values within range', () => {
+    expect(validateDimension(1.5)).toBe(true);
+    expect(validateDimension(299.99)).toBe(true);
+  });
+
+  it('rejects float at boundary just outside range', () => {
+    expect(validateDimension(0.99)).toBe(false);
+    expect(validateDimension(600.01)).toBe(false);
+  });
 });
 
 // ── sanitizeText ──────────────────────────────────────────────────────
@@ -171,7 +181,21 @@ describe('sanitizeText', () => {
   });
 
   it('strips entire string when it starts with unclosed tag (no closing bracket)', () => {
-    // The entire input is treated as one malformed tag — all content is removed
     expect(sanitizeText('<img src=x onerror=alert(1) followed by text')).toBe('');
+  });
+
+  it('handles string of only HTML tags', () => {
+    expect(sanitizeText('<br><hr><div></div>')).toBe('');
+  });
+
+  it('handles multiple nested XSS attempts', () => {
+    const xss = '<svg onload=alert(1)><img src=x onerror=alert(2)>';
+    const result = sanitizeText(xss);
+    expect(result).not.toContain('<');
+  });
+
+  it('preserves ampersands and normal special chars', () => {
+    expect(sanitizeText('Tom & Jerry')).toBe('Tom & Jerry');
+    expect(sanitizeText('Price: $9.99')).toBe('Price: $9.99');
   });
 });

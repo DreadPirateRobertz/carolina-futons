@@ -675,3 +675,102 @@ describe('showToast — icon types', () => {
     expect(elements['#socialProofToast'].hide).toHaveBeenCalled();
   });
 });
+
+describe('showToast — manual close handler', () => {
+  let initProductSocialProof;
+  let getProductSocialProof;
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    sessionStorage.clear();
+    const mod = await import('../src/public/socialProofToast.js');
+    initProductSocialProof = mod.initProductSocialProof;
+    mod.cleanupToast(); // Reset _closeHandlerBound
+    const backend = await import('backend/socialProof.web');
+    getProductSocialProof = backend.getProductSocialProof;
+    getProductSocialProof.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanupToast();
+  });
+
+  it('binds close handler on first show and hides toast on click', async () => {
+    getProductSocialProof.mockResolvedValue({
+      notifications: [{ type: 'recent_purchase', message: 'Test', priority: 1 }],
+      config: { maxPerSession: 5, minIntervalMs: 1000, autoDismissMs: 10000 },
+    });
+
+    let closeClickHandler;
+    const elements = {};
+    const $w = (sel) => {
+      if (!elements[sel]) {
+        elements[sel] = {
+          text: '',
+          show: vi.fn(),
+          hide: vi.fn(),
+          onClick: vi.fn((handler) => { closeClickHandler = handler; }),
+          style: {},
+          accessibility: {},
+        };
+      }
+      return elements[sel];
+    };
+
+    await initProductSocialProof($w, 'prod-close');
+    vi.advanceTimersByTime(5000);
+
+    // Close handler should have been bound
+    expect(elements['#socialProofClose'].onClick).toHaveBeenCalled();
+
+    // Trigger close
+    if (closeClickHandler) {
+      closeClickHandler();
+      expect(elements['#socialProofToast'].hide).toHaveBeenCalled();
+    }
+  });
+});
+
+describe('session state — corrupt storage', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    sessionStorage.clear();
+    cleanupToast();
+  });
+
+  it('handles corrupt sessionStorage JSON gracefully', async () => {
+    sessionStorage.setItem('cf_social_proof', 'NOT_JSON!!!');
+
+    const { getProductSocialProof } = await import('backend/socialProof.web');
+    getProductSocialProof.mockReset();
+    getProductSocialProof.mockResolvedValue({
+      notifications: [{ type: 'recent_purchase', message: 'Test', priority: 1 }],
+      config: { maxPerSession: 5, minIntervalMs: 1000, autoDismissMs: 5000 },
+    });
+
+    const mod = await import('../src/public/socialProofToast.js');
+
+    const elements = {};
+    const $w = (sel) => {
+      if (!elements[sel]) {
+        elements[sel] = {
+          text: '',
+          show: vi.fn(),
+          hide: vi.fn(),
+          onClick: vi.fn(),
+          style: {},
+          accessibility: {},
+        };
+      }
+      return elements[sel];
+    };
+
+    // Should not throw despite corrupt storage
+    await expect(mod.initProductSocialProof($w, 'prod-corrupt')).resolves.not.toThrow();
+  });
+});
