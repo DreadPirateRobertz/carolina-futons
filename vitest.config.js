@@ -9,7 +9,7 @@ export default defineConfig({
     setupFiles: ['tests/setup.js'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'json-summary', 'html'],
       include: ['src/**/*.js'],
       exclude: ['src/**/__mocks__/**'],
       thresholds: {
