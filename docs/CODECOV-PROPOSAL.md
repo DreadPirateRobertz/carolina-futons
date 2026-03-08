@@ -12,7 +12,7 @@ Adds Codecov integration to `carolina-futons` CI pipeline:
 - `.codecov.yml` — coverage thresholds, PR comment config, ignore patterns
 - CI uploads coverage on every PR and nightly run
 - Existing inline coverage comment preserved (Codecov adds its own too)
-- `lcov` reporter added to vitest for Codecov's preferred format
+- `lcov` reporter added to vitest — CI uploads `lcov.info` to Codecov
 
 ## Why Codecov Over Our Inline Script
 
