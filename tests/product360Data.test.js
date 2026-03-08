@@ -90,11 +90,8 @@ describe('register360SpinSet', () => {
   });
 
   it('accepts truthy non-string slugs without error but they are unretrievable', () => {
-    // register360SpinSet only guards with !slug — truthy non-strings pass through
-    // but get360Images requires typeof === 'string', so they're effectively dead entries
     expect(() => register360SpinSet(123, [{ src: 'x.jpg', alt: 'X' }])).not.toThrow();
     expect(() => register360SpinSet(true, [{ src: 'y.jpg', alt: 'Y' }])).not.toThrow();
-    // Cannot be retrieved because get360Images enforces string type
     expect(get360Images(123)).toEqual([]);
     expect(get360Images(true)).toEqual([]);
   });

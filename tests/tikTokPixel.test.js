@@ -79,3 +79,18 @@ describe('fireTikTokEvent', () => {
     delete globalThis.window?.ttq;
   });
 });
+
+describe('initTikTokPixel — double-init guard', () => {
+  it('does not re-initialize when ttq already exists on window', () => {
+    const existingTtq = { page: vi.fn(), track: vi.fn() };
+    globalThis.window = globalThis.window || {};
+    globalThis.window.ttq = existingTtq;
+
+    initTikTokPixel();
+
+    // ttq should remain the same object — not overwritten
+    expect(globalThis.window.ttq).toBe(existingTtq);
+
+    delete globalThis.window.ttq;
+  });
+});

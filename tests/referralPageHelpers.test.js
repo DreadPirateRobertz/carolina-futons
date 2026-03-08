@@ -58,6 +58,18 @@ describe('formatCreditAmount', () => {
   it('clamps negative to zero', () => {
     expect(formatCreditAmount(-10)).toBe('$0');
   });
+
+  it('formats zero as $0', () => {
+    expect(formatCreditAmount(0)).toBe('$0');
+  });
+
+  it('formats very large amounts', () => {
+    expect(formatCreditAmount(999999)).toBe('$999999');
+  });
+
+  it('handles undefined', () => {
+    expect(formatCreditAmount(undefined)).toBe('$0');
+  });
 });
 
 // ── getReferralStatusLabel ────────────────────────────────────────────
@@ -69,8 +81,19 @@ describe('getReferralStatusLabel', () => {
     expect(getReferralStatusLabel('expired')).toBe('Expired');
   });
 
+  it('maps all defined statuses correctly', () => {
+    expect(getReferralStatusLabel('signed_up')).toBe('Friend Joined');
+    expect(getReferralStatusLabel('purchased')).toBe('Purchase Made');
+    expect(getReferralStatusLabel('processing')).toBe('Processing');
+  });
+
   it('returns Unknown for unrecognized status', () => {
     expect(getReferralStatusLabel('bogus')).toBe('Unknown');
+  });
+
+  it('returns Unknown for null/undefined', () => {
+    expect(getReferralStatusLabel(null)).toBe('Unknown');
+    expect(getReferralStatusLabel(undefined)).toBe('Unknown');
   });
 });
 
@@ -201,6 +224,14 @@ describe('formatExpiryDate', () => {
   it('returns "No expiry" for undefined', () => {
     expect(formatExpiryDate(undefined)).toBe('No expiry');
   });
+
+  it('returns "No expiry" for empty string', () => {
+    expect(formatExpiryDate('')).toBe('No expiry');
+  });
+
+  it('returns "No expiry" for unparseable date string', () => {
+    expect(formatExpiryDate('not-a-date-at-all')).toBe('No expiry');
+  });
 });
 
 // ── buildReferralHistoryItems ─────────────────────────────────────────
@@ -238,12 +269,18 @@ describe('buildReferralHistoryItems', () => {
 
   it('handles items with missing optional fields', () => {
     const items = buildReferralHistoryItems([
-      { status: 'pending' }, // no refereeName, credit, createdDate, code
+      { status: 'pending' },
     ]);
     expect(items).toHaveLength(1);
     expect(items[0].friendName).toBe('Awaiting friend');
     expect(items[0].creditText).toBe('$0');
     expect(items[0].dateText).toBe('No expiry');
     expect(items[0].code).toBe('');
+  });
+
+  it('handles non-array input gracefully', () => {
+    expect(buildReferralHistoryItems('string')).toEqual([]);
+    expect(buildReferralHistoryItems(42)).toEqual([]);
+    expect(buildReferralHistoryItems({})).toEqual([]);
   });
 });

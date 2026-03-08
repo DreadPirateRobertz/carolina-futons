@@ -144,6 +144,28 @@ describe('product data integrity', () => {
     });
   });
 
+  it('all products have brand field', () => {
+    const all = getAllTestProducts();
+    all.forEach(p => {
+      expect(p.brand).toBeTruthy();
+    });
+  });
+
+  it('all products have valid _createdDate ISO string', () => {
+    const all = getAllTestProducts();
+    all.forEach(p => {
+      expect(p._createdDate).toBeTruthy();
+      expect(new Date(p._createdDate).getTime()).not.toBeNaN();
+    });
+  });
+
+  it('all products have at least 1 mediaItem', () => {
+    const all = getAllTestProducts();
+    all.forEach(p => {
+      expect(p.mediaItems.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   it('sale products have valid discounted prices', () => {
     const sale = getSaleTestProducts(100);
     sale.forEach(p => {
@@ -155,16 +177,15 @@ describe('product data integrity', () => {
     const expected = ['futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds', 'casegoods-accessories', 'wall-huggers', 'unfinished-wood'];
     expected.forEach(cat => {
       expect(testProductsByCategory).toHaveProperty(cat);
+      expect(testProductsByCategory[cat].length).toBeGreaterThan(0);
     });
   });
 
   it('getFeaturedTestProducts fills from non-featured when not enough featured', () => {
     const all = getAllTestProducts();
     const featured = all.filter(p => p.ribbon === 'Best Seller' || p.ribbon === 'New');
-    // Request more than featured count — should fill from non-featured
     const result = getFeaturedTestProducts(featured.length + 2);
     expect(result.length).toBe(featured.length + 2);
-    // First items should be featured
     result.slice(0, featured.length).forEach(p => {
       expect(['Best Seller', 'New']).toContain(p.ribbon);
     });
