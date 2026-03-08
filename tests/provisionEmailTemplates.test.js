@@ -19,8 +19,8 @@ import { _TEMPLATE_REGISTRY } from '../src/backend/emailTemplates.web.js';
 // ── TEMPLATE_MANIFEST ────────────────────────────────────────────────
 
 describe('TEMPLATE_MANIFEST', () => {
-  it('contains exactly 12 templates per MASTER-HOOKUP Step 8', () => {
-    expect(TEMPLATE_MANIFEST).toHaveLength(12);
+  it('contains all 16 templates (12 Step 8 + 4 additional backend templates)', () => {
+    expect(TEMPLATE_MANIFEST).toHaveLength(16);
   });
 
   it('has all P0 templates (contact_form_submission, new_order_notification)', () => {
@@ -55,11 +55,16 @@ describe('TEMPLATE_MANIFEST', () => {
     expect(ids).toContain('swatch_confirmation');
   });
 
-  it('does not include P4+ templates (reengagement, browse_recovery)', () => {
+  it('has gift card email templates', () => {
     const ids = TEMPLATE_MANIFEST.map((t) => t.templateId);
-    // These are P4+ per MASTER-HOOKUP — not in scope for Step 8's 12 templates
-    expect(ids).not.toContain('reengagement_1');
-    expect(ids).not.toContain('browse_recovery_1');
+    expect(ids).toContain('gift_card_purchase_confirmation');
+    expect(ids).toContain('gift_card_received');
+  });
+
+  it('has notification alert templates', () => {
+    const ids = TEMPLATE_MANIFEST.map((t) => t.templateId);
+    expect(ids).toContain('price_drop_alert');
+    expect(ids).toContain('back_in_stock_alert');
   });
 
   it('has unique template IDs', () => {
@@ -123,11 +128,15 @@ describe('TEMPLATE_MANIFEST', () => {
 describe('TEMPLATE_MANIFEST ↔ TEMPLATE_REGISTRY cross-reference', () => {
   const registryIds = Object.keys(_TEMPLATE_REGISTRY);
 
-  it('all 12 manifest templates exist in TEMPLATE_REGISTRY (where applicable)', () => {
-    // contact_form_submission and new_order_notification are in emailService, not the registry
-    // swatch_confirmation is also not in the registry (emailService handles it)
+  it('all sequence-managed manifest templates exist in TEMPLATE_REGISTRY', () => {
+    // These templates are NOT in the registry — they're used directly in backend services
+    const directUseTemplates = [
+      'contact_form_submission', 'new_order_notification', 'swatch_confirmation',
+      'gift_card_purchase_confirmation', 'gift_card_received',
+      'price_drop_alert', 'back_in_stock_alert',
+    ];
     const registryManaged = TEMPLATE_MANIFEST.filter(
-      (t) => !['contact_form_submission', 'new_order_notification', 'swatch_confirmation'].includes(t.templateId)
+      (t) => !directUseTemplates.includes(t.templateId)
     );
     for (const entry of registryManaged) {
       expect(registryIds).toContain(entry.templateId);
@@ -141,6 +150,82 @@ describe('TEMPLATE_MANIFEST ↔ TEMPLATE_REGISTRY cross-reference', () => {
       // Subject lines should match (registry uses subjectLine, manifest uses subject)
       expect(entry.subject).toBe(regEntry.subjectLine);
     }
+  });
+});
+
+// ── Backend template ID coverage ─────────────────────────────────────
+// Every template ID hardcoded in backend emailContact() calls must be in the manifest.
+
+describe('All backend template IDs are in TEMPLATE_MANIFEST', () => {
+  const manifestIds = TEMPLATE_MANIFEST.map((t) => t.templateId);
+
+  // Template IDs used directly in emailService.web.js
+  it('covers emailService templates (contact_form_submission, swatch_confirmation, new_order_notification)', () => {
+    expect(manifestIds).toContain('contact_form_submission');
+    expect(manifestIds).toContain('swatch_confirmation');
+    expect(manifestIds).toContain('new_order_notification');
+  });
+
+  // Template IDs used in giftCards.web.js
+  it('covers gift card email templates (gift_card_purchase_confirmation, gift_card_received)', () => {
+    expect(manifestIds).toContain('gift_card_purchase_confirmation');
+    expect(manifestIds).toContain('gift_card_received');
+  });
+
+  // Template IDs used in notificationService.web.js
+  it('covers notification alert templates (price_drop_alert, back_in_stock_alert)', () => {
+    expect(manifestIds).toContain('price_drop_alert');
+    expect(manifestIds).toContain('back_in_stock_alert');
+  });
+
+  // Template IDs used by emailAutomation.web.js via SEQUENCES
+  it('covers all emailAutomation SEQUENCES template IDs', () => {
+    // welcome: welcome_series_1, welcome_series_2, welcome_series_3
+    expect(manifestIds).toContain('welcome_series_1');
+    expect(manifestIds).toContain('welcome_series_2');
+    expect(manifestIds).toContain('welcome_series_3');
+    // cart_recovery: cart_recovery_1, cart_recovery_2, cart_recovery_3
+    expect(manifestIds).toContain('cart_recovery_1');
+    expect(manifestIds).toContain('cart_recovery_2');
+    expect(manifestIds).toContain('cart_recovery_3');
+    // post_purchase: post_purchase_1, post_purchase_2, post_purchase_3
+    expect(manifestIds).toContain('post_purchase_1');
+    expect(manifestIds).toContain('post_purchase_2');
+    expect(manifestIds).toContain('post_purchase_3');
+  });
+
+  it('manifest variables match backend emailContact() call variables', () => {
+    // gift_card_purchase_confirmation
+    const gcPurchase = TEMPLATE_MANIFEST.find((t) => t.templateId === 'gift_card_purchase_confirmation');
+    expect(gcPurchase.variables).toContain('code');
+    expect(gcPurchase.variables).toContain('amount');
+    expect(gcPurchase.variables).toContain('recipientEmail');
+    expect(gcPurchase.variables).toContain('recipientName');
+    expect(gcPurchase.variables).toContain('expirationDate');
+
+    // gift_card_received
+    const gcReceived = TEMPLATE_MANIFEST.find((t) => t.templateId === 'gift_card_received');
+    expect(gcReceived.variables).toContain('code');
+    expect(gcReceived.variables).toContain('amount');
+    expect(gcReceived.variables).toContain('recipientName');
+    expect(gcReceived.variables).toContain('message');
+    expect(gcReceived.variables).toContain('purchaserEmail');
+    expect(gcReceived.variables).toContain('expirationDate');
+
+    // price_drop_alert
+    const priceDrop = TEMPLATE_MANIFEST.find((t) => t.templateId === 'price_drop_alert');
+    expect(priceDrop.variables).toContain('productName');
+    expect(priceDrop.variables).toContain('previousPrice');
+    expect(priceDrop.variables).toContain('currentPrice');
+    expect(priceDrop.variables).toContain('savings');
+    expect(priceDrop.variables).toContain('productUrl');
+    expect(priceDrop.variables).toContain('productImage');
+
+    // back_in_stock_alert
+    const backInStock = TEMPLATE_MANIFEST.find((t) => t.templateId === 'back_in_stock_alert');
+    expect(backInStock.variables).toContain('productName');
+    expect(backInStock.variables).toContain('productUrl');
+    expect(backInStock.variables).toContain('productImage');
   });
 });
 
@@ -209,7 +294,7 @@ describe('getTemplateStatus', () => {
       siteId: 'test-site',
     });
 
-    expect(status).toHaveLength(12);
+    expect(status).toHaveLength(16);
     expect(status.every((s) => s.exists === false)).toBe(true);
   });
 
@@ -282,14 +367,14 @@ describe('provisionTemplates', () => {
     vi.stubGlobal('fetch', vi.fn());
   });
 
-  it('creates all 12 templates when none exist', async () => {
+  it('creates all 16 templates when none exist', async () => {
     // List returns empty
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ templates: [] }),
     });
     // 12 create calls
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 16; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -297,10 +382,10 @@ describe('provisionTemplates', () => {
     }
 
     const { results } = await provisionTemplates(opts);
-    expect(results).toHaveLength(12);
+    expect(results).toHaveLength(16);
     expect(results.every((r) => r.status === 'CREATED')).toBe(true);
-    // 1 list + 12 creates = 13 calls
-    expect(fetch).toHaveBeenCalledTimes(13);
+    // 1 list + 16 creates = 17 calls
+    expect(fetch).toHaveBeenCalledTimes(17);
   });
 
   it('skips existing templates', async () => {
@@ -337,7 +422,7 @@ describe('provisionTemplates', () => {
     });
 
     const { results } = await provisionTemplates({ ...opts, dryRun: true });
-    expect(results).toHaveLength(12);
+    expect(results).toHaveLength(16);
     expect(results.every((r) => r.status === 'WOULD_CREATE')).toBe(true);
     // Only the list call
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -355,7 +440,7 @@ describe('provisionTemplates', () => {
       text: async () => 'Forbidden',
     });
     // Rest succeed
-    for (let i = 1; i < 12; i++) {
+    for (let i = 1; i < 16; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -367,7 +452,7 @@ describe('provisionTemplates', () => {
     const created = results.filter((r) => r.status === 'CREATED');
     expect(errors).toHaveLength(1);
     expect(errors[0].detail).toContain('403');
-    expect(created).toHaveLength(11);
+    expect(created).toHaveLength(15);
   });
 
   it('throws if listing templates fails', async () => {
@@ -385,7 +470,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 16; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -410,7 +495,7 @@ describe('provisionTemplates', () => {
       json: async () => ({ templates: [] }),
     });
     fetch.mockRejectedValueOnce(new Error('Connection reset'));
-    for (let i = 1; i < 12; i++) {
+    for (let i = 1; i < 16; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -428,7 +513,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 16; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
