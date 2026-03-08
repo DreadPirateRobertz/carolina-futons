@@ -25,6 +25,7 @@ import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
+import { getImageDimensions } from 'public/galleryConfig.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
 let currentSort = 'bestselling';
@@ -516,7 +517,7 @@ function initProductGrid() {
 
       // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';
-      setCardImage($item('#gridImage'), itemData, category);
+      setCardImage($item('#gridImage'), itemData, category, getImageDimensions('productGridCard'));
       $item('#gridImage').alt = buildAltText(itemData);
 
       // Product info
@@ -784,8 +785,7 @@ function initQuickViewHandlers() {
 function openQuickView(product) {
   try {
     currentQuickViewProduct = product;
-    $w('#qvImage').src = product.mainMedia;
-    $w('#qvImage').alt = buildAltText(product);
+    setCardImage($w('#qvImage'), product, '', getImageDimensions('productPageMain'));
     $w('#qvName').text = product.name;
     $w('#qvPrice').text = product.formattedPrice;
     $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
@@ -914,10 +914,7 @@ function initRecentlyViewed() {
     repeater.data = recentItems.slice(0, 6);
 
     repeater.onItemReady(($item, itemData) => {
-      try {
-        $item('#recentImage').src = itemData.mainMedia;
-        $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
-      } catch (e) {}
+      setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
 
       try { $item('#recentName').text = itemData.name; } catch (e) {}
       try { $item('#recentPrice').text = itemData.price; } catch (e) {}
@@ -1577,7 +1574,7 @@ function refreshCompareBarUI() {
     if (repeater) {
       repeater.data = items.map(p => ({ ...p, _id: p._id }));
       repeater.onItemReady(($item, itemData) => {
-        try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        setCardImage($item('#compareThumb'), itemData, '', getImageDimensions('thumbnail'));
         try { $item('#compareName').text = itemData.name; } catch (e) {}
         try { $item('#comparePrice').text = itemData.price; } catch (e) {}
         try {

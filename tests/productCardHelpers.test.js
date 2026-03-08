@@ -372,4 +372,38 @@ describe('setCardImage', () => {
     setCardImage(el, { mainMedia: 'https://img.com/x.jpg' });
     expect(el.alt).toBe('Product image');
   });
+
+  // ── CLS Prevention: explicit dimensions ──────────────────────────
+  it('sets responsive width and aspect-ratio when dimensions provided', () => {
+    const el = mockElement();
+    setCardImage(el, { mainMedia: 'https://img.com/futon.jpg', name: 'Futon' }, 'futon-frames', { width: 400, height: 400 });
+    expect(el.style.width).toBe('100%');
+    expect(el.style.aspectRatio).toBe('400 / 400');
+  });
+
+  it('does not set dimensions when not provided', () => {
+    const el = mockElement();
+    setCardImage(el, { mainMedia: 'https://img.com/futon.jpg', name: 'Futon' });
+    expect(el.style.width).toBeUndefined();
+    expect(el.style.aspectRatio).toBeUndefined();
+  });
+
+  it('sets correct aspect-ratio for non-square dimensions', () => {
+    const el = mockElement();
+    setCardImage(el, { mainMedia: 'https://img.com/futon.jpg', name: 'Futon' }, '', { width: 600, height: 400 });
+    expect(el.style.aspectRatio).toBe('600 / 400');
+    expect(el.style.width).toBe('100%');
+  });
+
+  it('handles dimensions gracefully when style is not settable', () => {
+    const el = {
+      src: '',
+      alt: '',
+      style: {
+        get width() { return ''; },
+        set width(_) { throw new Error('not settable'); },
+      },
+    };
+    expect(() => setCardImage(el, { mainMedia: 'https://img.com/x.jpg', name: 'Y' }, '', { width: 400, height: 400 })).not.toThrow();
+  });
 });
