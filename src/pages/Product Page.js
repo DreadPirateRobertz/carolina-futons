@@ -27,7 +27,7 @@ import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
-import { injectProductMeta as injectProductSeoMeta } from 'public/product/productSchema.js';
+import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
