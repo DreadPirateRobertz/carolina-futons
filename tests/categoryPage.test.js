@@ -875,5 +875,72 @@ describe('Category Page', () => {
       await new Promise(r => setTimeout(r, 50));
       expect(mockHead.setMetaTag).toHaveBeenCalledWith('twitter:description', 'Shop quality futon frames');
     });
+
+    it('gracefully degrades when getCollectionSchema rejects', async () => {
+      const seoHelpers = await import('backend/seoHelpers.web');
+      seoHelpers.getCollectionSchema.mockRejectedValueOnce(new Error('Schema generation failed'));
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Page should not crash — schema injection is wrapped in try/catch
+      // BreadcrumbList should still be injected independently
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
+    });
+
+    it('gracefully degrades when getBreadcrumbSchema rejects', async () => {
+      const seoHelpers = await import('backend/seoHelpers.web');
+      seoHelpers.getBreadcrumbSchema.mockRejectedValueOnce(new Error('Breadcrumb failed'));
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Page should not crash — breadcrumb is wrapped in try/catch
+      // CollectionPage schema should still be injected independently
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'ItemList')).toBeDefined();
+    });
+
+    it('handles empty dataset (0 products) without crash', async () => {
+      // Override dataset mock for this test — getTotalCount returns 0
+      const dataset = getEl('#categoryDataset');
+      dataset.getTotalCount = vi.fn(() => 0);
+      dataset.getItems = vi.fn().mockResolvedValue({ items: [] });
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // With 0 products, ItemList should NOT be present
+      // BreadcrumbList should still be injected
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
+      expect(schemas.find(s => s['@type'] === 'ItemList')).toBeUndefined();
+    });
+
+    it('handles unknown category path without crash', async () => {
+      __setPath(['nonexistent-category-slug']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // Unknown path still gets breadcrumb schema, but no collection schema crash
+      expect(mockHead.setStructuredData).toHaveBeenCalled();
+      const schemas = mockHead.setStructuredData.mock.calls[0][0];
+      expect(schemas.find(s => s['@type'] === 'BreadcrumbList')).toBeDefined();
+    });
+
+    it('limits SSR products to MAX_SSR_PRODUCTS (30)', async () => {
+      // Override dataset mock for large count
+      const dataset = getEl('#categoryDataset');
+      dataset.getTotalCount = vi.fn(() => 100);
+      const manyProducts = Array.from({ length: 30 }, (_, i) => ({
+        _id: `prod-${i}`, slug: `product-${i}`, name: `Product ${i}`, mainMedia: `img${i}.jpg`,
+      }));
+      dataset.getItems = vi.fn().mockResolvedValue({ items: manyProducts });
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
+      // getItems should have been called with exactly 30 (capped from 100)
+      expect(dataset.getItems).toHaveBeenCalledWith(0, 30);
+    });
   });
 });
