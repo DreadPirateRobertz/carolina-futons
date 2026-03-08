@@ -25,15 +25,28 @@ const KNOWN_OVERBUDGET = {
 };
 
 /**
- * Count import statements in a file.
+ * Count static import statements in source text.
  * Matches `import ... from '...'` and `import '...'` patterns.
+ * NOTE: Line-commented imports are NOT counted since the regex anchors to
+ * line start. However, imports inside block comments that start at column 0
+ * WILL be counted. This is acceptable since commented-out imports should be
+ * deleted, not left around.
+ * @param {string} source - File content or source string
+ * @returns {number} Number of static import statements
+ */
+function countImportsFromSource(source) {
+  const importLines = source.match(/^import\s+/gm);
+  return importLines ? importLines.length : 0;
+}
+
+/**
+ * Count static import statements in a file.
  * @param {string} filePath - Absolute path to the file
  * @returns {number} Number of import statements
  */
 function countImports(filePath) {
   const content = readFileSync(filePath, 'utf8');
-  const importLines = content.match(/^import\s+/gm);
-  return importLines ? importLines.length : 0;
+  return countImportsFromSource(content);
 }
 
 /**
@@ -92,7 +105,10 @@ describe('Import count budget (performance)', () => {
 
     for (const [name, cap] of Object.entries(KNOWN_OVERBUDGET)) {
       const page = pages.find(p => p.name === name);
-      if (!page) continue; // page was deleted — allowlist entry is harmless
+      if (!page) {
+        console.warn(`KNOWN_OVERBUDGET: '${name}' no longer exists — remove stale entry`);
+        continue;
+      }
       const count = countImports(page.path);
       if (count <= IMPORT_BUDGET) {
         stale.push({ name, count, cap });
@@ -107,18 +123,11 @@ describe('Import count budget (performance)', () => {
     }
   });
 
-  it('reports individual page import counts', () => {
+  it('logs import counts per page for CI visibility (reporting only)', () => {
     const counts = pages
       .map(p => ({ name: p.name, count: countImports(p.path) }))
       .sort((a, b) => b.count - a.count);
 
-    // Snapshot the top importers for visibility
-    for (const { name, count } of counts) {
-      // This test always passes — it's for reporting/visibility
-      expect(count).toBeGreaterThanOrEqual(0);
-    }
-
-    // Log summary for CI output
     const summary = counts.map(c => {
       const status = c.count > IMPORT_BUDGET ? 'OVER' : 'ok';
       return `[${status}] ${c.name}: ${c.count}`;
@@ -137,20 +146,39 @@ describe('Import count budget (performance)', () => {
     }
   });
 
-  it('countImports handles edge cases correctly', () => {
-    // Verify our counter doesn't miscount
-    // Dynamic imports like `import('...')` should NOT be counted as static imports
-    // Re-exports like `export { x } from '...'` should NOT be counted
-    const samplePage = pages[0];
-    const count = countImports(samplePage.path);
-    expect(typeof count).toBe('number');
-    expect(count).toBeGreaterThanOrEqual(0);
-    expect(Number.isInteger(count)).toBe(true);
+  it('countImportsFromSource counts only static imports', () => {
+    // Build source with 'imp' + 'ort' to avoid Vite import analysis parsing
+    const imp = 'imp' + 'ort';
+    const source = [
+      `${imp} { foo } from 'bar';`,           // static — counted
+      `${imp} baz from 'qux';`,               // static — counted
+      `${imp} 'side-effect';`,                 // static — counted
+      `const x = await ${imp}('dynamic');`,    // dynamic — NOT counted
+      `export { y } from 'reexport';`,         // re-export — NOT counted
+      `// ${imp} { z } from 'commented';`,     // line comment — NOT counted (anchored to ^)
+      `const i = '${imp} fake';`,              // mid-line — NOT counted
+    ].join('\n');
+
+    expect(countImportsFromSource(source)).toBe(3);
   });
 
-  it('budget threshold is reasonable', () => {
-    // Budget should be between 5 and 30 — too low is restrictive, too high is useless
-    expect(IMPORT_BUDGET).toBeGreaterThanOrEqual(5);
-    expect(IMPORT_BUDGET).toBeLessThanOrEqual(30);
+  it('countImportsFromSource counts block-commented imports at line start', () => {
+    // Known limitation: block comments with import at line start ARE counted
+    const imp = 'imp' + 'ort';
+    const source = [
+      `${imp} { real } from 'mod';`,
+      '/* disabled:',
+      `${imp} { dead } from 'old';`,  // starts at line start inside block comment — counted
+      '*/',
+    ].join('\n');
+
+    // 1 real + 1 inside block comment = 2 (documented limitation)
+    expect(countImportsFromSource(source)).toBe(2);
+  });
+
+  it('countImportsFromSource returns 0 for empty or import-free content', () => {
+    expect(countImportsFromSource('')).toBe(0);
+    expect(countImportsFromSource('const x = 1;\nexport default x;')).toBe(0);
+    expect(countImportsFromSource('// just comments\n/* block */')).toBe(0);
   });
 });
