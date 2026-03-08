@@ -148,10 +148,16 @@ describe('Team Portrait (getTeamPortraitSvg)', () => {
 
   // ── Quality bar 8: detail elements ──
 
-  it('contains team figure silhouettes (multiple person shapes)', () => {
-    // Team portrait should have multiple figure/person elements
-    const figureGroups = svg.match(/id="[^"]*(?:person|figure|team)[^"]*"/gi) || [];
-    expect(figureGroups.length).toBeGreaterThanOrEqual(2);
+  it('contains team photo frame elements (rustic frame groups)', () => {
+    // Team portrait should have illustrated photo frames (matching design.jpeg "Our Story" section)
+    const frameGroups = svg.match(/id="[^"]*(?:team-frame|photo-frame)[^"]*"/gi) || [];
+    expect(frameGroups.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('photo frames have rough hand-drawn border paths', () => {
+    // Each frame should use organic bezier paths (not rectangles) for rustic borders
+    const frameBorders = svg.match(/id="[^"]*frame-border[^"]*"/gi) || [];
+    expect(frameBorders.length).toBeGreaterThanOrEqual(3);
   });
 
   it('contains Blue Ridge mountain backdrop', () => {
