@@ -103,16 +103,25 @@ export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
 
 /**
  * Set card image src with placeholder fallback when missing.
+ * Optionally sets explicit dimensions to prevent CLS (Cumulative Layout Shift).
  * @param {Object} $el - Wix image element
  * @param {Object} product - Product data with mainMedia and name
  * @param {string} [category] - Category slug for placeholder selection
+ * @param {{ width: number, height: number }} [dimensions] - Explicit image dimensions to prevent CLS
  */
-export function setCardImage($el, product, category) {
+export function setCardImage($el, product, category, dimensions) {
   if (!$el) return;
   try {
     const src = product?.mainMedia;
     const name = product?.name;
     $el.src = src || getProductFallbackImage(category || '');
     $el.alt = name ? `${name} - Carolina Futons` : 'Product image';
+    if (dimensions) {
+      try {
+        $el.style.width = `${dimensions.width}px`;
+        $el.style.height = `${dimensions.height}px`;
+        $el.style.aspectRatio = `${dimensions.width} / ${dimensions.height}`;
+      } catch (e) { /* style may not be settable */ }
+    }
   } catch (e) { /* element may not support src/alt */ }
 }

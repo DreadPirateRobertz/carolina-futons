@@ -12,6 +12,7 @@ import { buildGridAlt } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import { prioritizeSections } from 'public/performanceHelpers.js';
+import { getImageDimensions } from 'public/galleryConfig.js';
 
 // Critical above-fold components (statically imported)
 import { initImageGallery, initProductBadge, initProductVideo } from 'public/ProductGallery.js';
@@ -206,6 +207,7 @@ async function loadRelatedProducts() {
     repeater.onItemReady(($item, itemData) => {
       $item('#relatedImage').src = itemData.mainMedia;
       $item('#relatedImage').alt = buildGridAlt(itemData);
+      try { const d = getImageDimensions('productGridCard'); $item('#relatedImage').style.width = `${d.width}px`; $item('#relatedImage').style.height = `${d.height}px`; $item('#relatedImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
       $item('#relatedName').text = itemData.name;
       $item('#relatedPrice').text = itemData.formattedPrice;
       if (itemData.ribbon) {
@@ -231,6 +233,7 @@ async function loadCollectionProducts() {
     repeater.onItemReady(($item, itemData) => {
       $item('#collectionImage').src = itemData.mainMedia;
       $item('#collectionImage').alt = buildGridAlt(itemData);
+      try { const d = getImageDimensions('productGridCard'); $item('#collectionImage').style.width = `${d.width}px`; $item('#collectionImage').style.height = `${d.height}px`; $item('#collectionImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
       $item('#collectionName').text = itemData.name;
       $item('#collectionPrice').text = itemData.formattedPrice;
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
@@ -262,6 +265,7 @@ async function loadRecentlyViewed() {
     repeater.onItemReady(($item, itemData) => {
       try { $item('#recentImage').src = itemData.mainMedia; } catch (e) {}
       try { $item('#recentImage').alt = buildGridAlt(itemData); } catch (e) {}
+      try { const d = getImageDimensions('productGridCard'); $item('#recentImage').style.width = `${d.width}px`; $item('#recentImage').style.height = `${d.height}px`; $item('#recentImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
       try { $item('#recentName').text = itemData.name; } catch (e) {}
       try { $item('#recentPrice').text = itemData.price; } catch (e) {}
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
@@ -313,6 +317,7 @@ async function loadAlsoBought() {
     repeater.onItemReady(($item, itemData) => {
       try { $item('#alsoBoughtImage').src = itemData.mainMedia; } catch (e) {}
       try { $item('#alsoBoughtImage').alt = buildGridAlt(itemData); } catch (e) {}
+      try { const d = getImageDimensions('productGridCard'); $item('#alsoBoughtImage').style.width = `${d.width}px`; $item('#alsoBoughtImage').style.height = `${d.height}px`; $item('#alsoBoughtImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
       try { $item('#alsoBoughtName').text = itemData.name; } catch (e) {}
       try { $item('#alsoBoughtPrice').text = itemData.formattedPrice; } catch (e) {}
       if (itemData.ribbon) {

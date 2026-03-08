@@ -13,6 +13,7 @@ import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js'
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
+import { getImageDimensions } from 'public/galleryConfig.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -147,7 +148,7 @@ async function loadFeaturedProducts() {
       try { initCardHover($item('#featuredCard')); } catch (e) {}
 
       // Product image with placeholder fallback
-      setCardImage($item('#featuredImage'), itemData);
+      setCardImage($item('#featuredImage'), itemData, '', getImageDimensions('productGridCard'));
       $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
       $item('#featuredName').text = itemData.name;
       try { $item('#featuredImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
@@ -329,7 +330,7 @@ async function loadSaleHighlights() {
         const saleSrc = itemData.mainMedia || '';
         lazyLoadImage(saleImg, saleSrc, { alt: buildProductAlt(itemData, 'sale') });
       } catch (e) {
-        setCardImage($item('#saleImage'), itemData);
+        setCardImage($item('#saleImage'), itemData, '', getImageDimensions('productGridCard'));
         $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
       }
       $item('#saleName').text = itemData.name;

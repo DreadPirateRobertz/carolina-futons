@@ -7,6 +7,7 @@
  */
 import { generateAltText } from 'backend/seoHelpers.web';
 import { getProductBadge, initImageLightbox, initImageZoom } from 'public/galleryHelpers.js';
+import { getImageDimensions } from 'public/galleryConfig.js';
 import { getProductFallbackImage, getPlaceholderProductImages } from 'public/placeholderImages.js';
 import { enableSwipe } from 'public/touchHelpers';
 import { trackGalleryInteraction } from 'public/engagementTracker';
@@ -34,6 +35,14 @@ export function initImageGallery($w, state) {
         mainImage.src = getProductFallbackImage(category);
       }
       generateAltText(product, 'main').then(alt => { mainImage.alt = alt; });
+
+      // Set explicit dimensions to prevent CLS
+      try {
+        const dims = getImageDimensions('productPageMain');
+        mainImage.style.width = `${dims.width}px`;
+        mainImage.style.height = `${dims.height}px`;
+        mainImage.style.aspectRatio = `${dims.width} / ${dims.height}`;
+      } catch (e) { /* style may not be settable */ }
     }
 
     const gallery = $w('#productGallery');

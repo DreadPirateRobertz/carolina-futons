@@ -25,6 +25,7 @@ import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
+import { getImageDimensions } from 'public/galleryConfig.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
 let currentSort = 'bestselling';
@@ -488,7 +489,7 @@ function initProductGrid() {
 
       // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';
-      setCardImage($item('#gridImage'), itemData, category);
+      setCardImage($item('#gridImage'), itemData, category, getImageDimensions('productGridCard'));
       $item('#gridImage').alt = buildAltText(itemData);
 
       // Product info
@@ -729,6 +730,7 @@ function openQuickView(product) {
     currentQuickViewProduct = product;
     $w('#qvImage').src = product.mainMedia;
     $w('#qvImage').alt = buildAltText(product);
+    try { const d = getImageDimensions('productPageMain'); $w('#qvImage').style.width = `${d.width}px`; $w('#qvImage').style.height = `${d.height}px`; $w('#qvImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
     $w('#qvName').text = product.name;
     $w('#qvPrice').text = product.formattedPrice;
     $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
@@ -860,6 +862,7 @@ function initRecentlyViewed() {
       try {
         $item('#recentImage').src = itemData.mainMedia;
         $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
+        try { const d = getImageDimensions('productGridCard'); $item('#recentImage').style.width = `${d.width}px`; $item('#recentImage').style.height = `${d.height}px`; $item('#recentImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
       } catch (e) {}
 
       try { $item('#recentName').text = itemData.name; } catch (e) {}
@@ -1521,6 +1524,7 @@ function refreshCompareBarUI() {
       repeater.data = items.map(p => ({ ...p, _id: p._id }));
       repeater.onItemReady(($item, itemData) => {
         try { $item('#compareThumb').src = itemData.mainMedia; } catch (e) {}
+        try { const d = getImageDimensions('thumbnail'); $item('#compareThumb').style.width = `${d.width}px`; $item('#compareThumb').style.height = `${d.height}px`; $item('#compareThumb').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
         try { $item('#compareName').text = itemData.name; } catch (e) {}
         try { $item('#comparePrice').text = itemData.price; } catch (e) {}
         try {
