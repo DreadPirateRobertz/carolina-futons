@@ -258,6 +258,294 @@ describe('importProducts', () => {
     expect(productInsert.item.inStock).toBe(true);
   });
 
+  it('preserves slug field on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ slug: 'monterey' })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.slug).toBe('monterey');
+  });
+
+  it('preserves url field on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ url: 'https://www.carolinafutons.com/product-page/monterey' })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.url).toBe('https://www.carolinafutons.com/product-page/monterey');
+  });
+
+  it('preserves images array on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const images = ['https://static.wixstatic.com/media/img1.jpg', 'https://static.wixstatic.com/media/img2.jpg'];
+    const items = [makeProduct({ images })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.images).toEqual(images);
+  });
+
+  it('defaults images to empty array when not provided', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct()];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.images).toEqual([]);
+  });
+
+  it('validates images must be array if provided', async () => {
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ images: 'not-an-array' })];
+    const result = await importProducts(items);
+    expect(result.success).toBe(false);
+    expect(result.data.errors.some(e => e.field === 'images')).toBe(true);
+  });
+
+  it('preserves variants array on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const variants = [
+      { label: 'Full / Cherry', sku: null, price: null },
+      { label: 'Queen / Walnut', sku: 'Q-WAL', price: 599 },
+    ];
+    const items = [makeProduct({ variants })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.variants).toEqual(variants);
+  });
+
+  it('defaults variants to empty array when not provided', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct()];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.variants).toEqual([]);
+  });
+
+  it('validates variants must be array if provided', async () => {
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ variants: 'not-an-array' })];
+    const result = await importProducts(items);
+    expect(result.success).toBe(false);
+    expect(result.data.errors.some(e => e.field === 'variants')).toBe(true);
+  });
+
+  it('validates variant items must have label', async () => {
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ variants: [{ sku: 'X', price: 100 }] })];
+    const result = await importProducts(items);
+    expect(result.success).toBe(false);
+    expect(result.data.errors.some(e => e.field === 'variants')).toBe(true);
+  });
+
+  it('preserves dimensions object on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const dimensions = { width: 80, depth: 36, height: 32, weight: 85 };
+    const items = [makeProduct({ dimensions })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.dimensions).toEqual(dimensions);
+  });
+
+  it('defaults dimensions to null when not provided', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct()];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.dimensions).toBeNull();
+  });
+
+  it('preserves manufacturer field on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ manufacturer: 'Night & Day Furniture' })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.manufacturer).toBe('Night & Day Furniture');
+  });
+
+  it('preserves swatches array on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const swatches = ['Cherry', 'Chocolate', 'Dark Chocolate'];
+    const items = [makeProduct({ swatches })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.swatches).toEqual(swatches);
+  });
+
+  it('preserves sizes array on import', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const sizes = ['Full', 'Queen', 'King'];
+    const items = [makeProduct({ sizes })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.sizes).toEqual(sizes);
+  });
+
+  it('preserves bundleCompatible and availability flags', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ bundleCompatible: true, availability: 'OutOfStock' })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.bundleCompatible).toBe(true);
+    expect(productInsert.item.availability).toBe('OutOfStock');
+  });
+
+  it('preserves contactForPrice flag', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({ price: null, contactForPrice: true })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    const productInsert = inserts.find(i => i.col === 'Products');
+    expect(productInsert.item.contactForPrice).toBe(true);
+  });
+
+  it('imports full catalog-MASTER format product with all fields', async () => {
+    const inserts = [];
+    __onInsert((col, item) => { inserts.push({ col, item }); });
+    __seed('Products', []);
+    __seed('CatalogImports', []);
+
+    const fullProduct = {
+      name: 'Monterey Futon Frame',
+      slug: 'monterey',
+      sku: 'CF-FRAME-MONTEREY',
+      category: 'futon-frames',
+      url: 'https://www.carolinafutons.com/product-page/monterey',
+      price: 549,
+      description: 'The Monterey features mission-style arms.',
+      images: ['https://static.wixstatic.com/media/img1.jpg'],
+      variants: [{ label: 'Full / Cherry', sku: null, price: null }],
+      dimensions: { width: 80, depth: 36, height: 32, weight: 85 },
+      manufacturer: 'Night & Day Furniture',
+      inStock: true,
+      bundleCompatible: true,
+      availability: 'OutOfStock',
+      swatches: ['Cherry', 'Chocolate'],
+      sizes: ['Full', 'Queen'],
+      contactForPrice: false,
+    };
+    const result = await importProducts([fullProduct]);
+
+    expect(result.success).toBe(true);
+    expect(result.data.successCount).toBe(1);
+    const p = inserts.find(i => i.col === 'Products').item;
+    expect(p.slug).toBe('monterey');
+    expect(p.url).toBe('https://www.carolinafutons.com/product-page/monterey');
+    expect(p.images).toHaveLength(1);
+    expect(p.variants).toHaveLength(1);
+    expect(p.dimensions.width).toBe(80);
+    expect(p.manufacturer).toBe('Night & Day Furniture');
+    expect(p.swatches).toEqual(['Cherry', 'Chocolate']);
+    expect(p.sizes).toEqual(['Full', 'Queen']);
+    expect(p.bundleCompatible).toBe(true);
+    expect(p.availability).toBe('OutOfStock');
+    expect(p.contactForPrice).toBe(false);
+  });
+
+  it('upsert preserves new fields when updating by SKU', async () => {
+    let updated = null;
+    __onUpdate((col, item) => { updated = item; });
+    __seed('Products', [
+      { _id: 'existing-1', name: 'Old Name', price: 100, category: 'futon-frames', sku: 'FF-001' },
+    ]);
+    __seed('CatalogImports', []);
+
+    const items = [makeProduct({
+      sku: 'FF-001',
+      slug: 'updated-slug',
+      images: ['https://img.com/new.jpg'],
+      variants: [{ label: 'Queen / Cherry', sku: null, price: null }],
+      manufacturer: 'KD Frames',
+    })];
+    const result = await importProducts(items);
+
+    expect(result.success).toBe(true);
+    expect(updated.slug).toBe('updated-slug');
+    expect(updated.images).toEqual(['https://img.com/new.jpg']);
+    expect(updated.variants).toHaveLength(1);
+    expect(updated.manufacturer).toBe('KD Frames');
+  });
+
   it('records completed import in CatalogImports', async () => {
     const inserts = [];
     __onInsert((col, item) => { inserts.push({ col, item }); });

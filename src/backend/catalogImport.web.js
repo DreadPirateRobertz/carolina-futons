@@ -40,6 +40,11 @@ const VALID_CATEGORIES = [
 const MAX_NAME_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 5000;
 const MAX_SKU_LENGTH = 50;
+const MAX_SLUG_LENGTH = 200;
+const MAX_URL_LENGTH = 500;
+const MAX_MANUFACTURER_LENGTH = 200;
+const MAX_IMAGES = 20;
+const MAX_VARIANTS = 50;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -68,6 +73,22 @@ function validateProduct(item, index) {
 
   if (item.weight != null && (typeof item.weight !== 'number' || item.weight < 0)) {
     errors.push({ row: index, field: 'weight', error: 'Weight must be a non-negative number' });
+  }
+
+  if (item.images != null && !Array.isArray(item.images)) {
+    errors.push({ row: index, field: 'images', error: 'Images must be an array' });
+  }
+
+  if (item.variants != null && !Array.isArray(item.variants)) {
+    errors.push({ row: index, field: 'variants', error: 'Variants must be an array' });
+  } else if (Array.isArray(item.variants)) {
+    for (let vi = 0; vi < item.variants.length; vi++) {
+      const v = item.variants[vi];
+      if (!v || !v.label || typeof v.label !== 'string' || v.label.trim().length === 0) {
+        errors.push({ row: index, field: 'variants', error: `Variant ${vi} must have a label` });
+        break;
+      }
+    }
   }
 
   return errors;
@@ -149,8 +170,19 @@ export const importProducts = webMethod(Permissions.Admin, async (items, opts = 
         price: item.price,
         category: item.category,
         sku: item.sku ? sanitize(item.sku, MAX_SKU_LENGTH) : null,
+        slug: item.slug ? sanitize(item.slug, MAX_SLUG_LENGTH) : null,
+        url: item.url ? sanitize(item.url, MAX_URL_LENGTH) : null,
+        images: Array.isArray(item.images) ? item.images.slice(0, MAX_IMAGES) : [],
+        variants: Array.isArray(item.variants) ? item.variants.slice(0, MAX_VARIANTS) : [],
+        dimensions: item.dimensions && typeof item.dimensions === 'object' ? item.dimensions : null,
+        manufacturer: item.manufacturer ? sanitize(item.manufacturer, MAX_MANUFACTURER_LENGTH) : null,
         weight: item.weight || null,
         inStock: item.inStock !== false,
+        bundleCompatible: item.bundleCompatible === true,
+        availability: item.availability ? sanitize(String(item.availability), 50) : null,
+        swatches: Array.isArray(item.swatches) ? item.swatches : [],
+        sizes: Array.isArray(item.sizes) ? item.sizes : [],
+        contactForPrice: item.contactForPrice === true,
         lastImportId: importId,
       };
 
