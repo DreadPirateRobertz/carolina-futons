@@ -170,7 +170,8 @@ describe('sanitizeText', () => {
     expect(sanitizeText('some text', 0)).toBe('');
   });
 
-  it('strips unclosed tags at start of string', () => {
+  it('strips entire string when it starts with unclosed tag (no closing bracket)', () => {
+    // The entire input is treated as one malformed tag — all content is removed
     expect(sanitizeText('<img src=x onerror=alert(1) followed by text')).toBe('');
   });
 });

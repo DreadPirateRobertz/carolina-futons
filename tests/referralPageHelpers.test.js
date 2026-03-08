@@ -13,6 +13,7 @@ import {
   formatExpiryDate,
   buildReferralHistoryItems,
 } from '../src/public/referralPageHelpers.js';
+import { colors } from '../src/public/sharedTokens.js';
 
 // ── formatReferralLink ────────────────────────────────────────────────
 
@@ -77,21 +78,21 @@ describe('getReferralStatusLabel', () => {
 
 describe('getReferralStatusColor', () => {
   it('returns correct design-token colors for known statuses', () => {
-    expect(getReferralStatusColor('pending')).toBe('#5B8FA8'); // mountainBlue
-    expect(getReferralStatusColor('signed_up')).toBe('#E8845C'); // sunsetCoral
-    expect(getReferralStatusColor('purchased')).toBe('#E8845C'); // sunsetCoral
-    expect(getReferralStatusColor('processing')).toBe('#5B8FA8'); // mountainBlue
-    expect(getReferralStatusColor('credited')).toBe('#4A7C59'); // success
-    expect(getReferralStatusColor('expired')).toBe('#767676'); // muted
+    expect(getReferralStatusColor('pending')).toBe(colors.mountainBlue);
+    expect(getReferralStatusColor('signed_up')).toBe(colors.sunsetCoral);
+    expect(getReferralStatusColor('purchased')).toBe(colors.sunsetCoral);
+    expect(getReferralStatusColor('processing')).toBe(colors.mountainBlue);
+    expect(getReferralStatusColor('credited')).toBe(colors.success);
+    expect(getReferralStatusColor('expired')).toBe(colors.muted);
   });
 
   it('returns muted fallback for unknown status', () => {
-    expect(getReferralStatusColor('bogus')).toBe('#767676');
+    expect(getReferralStatusColor('bogus')).toBe(colors.muted);
   });
 
   it('returns muted for null/undefined status', () => {
-    expect(getReferralStatusColor(null)).toBe('#767676');
-    expect(getReferralStatusColor(undefined)).toBe('#767676');
+    expect(getReferralStatusColor(null)).toBe(colors.muted);
+    expect(getReferralStatusColor(undefined)).toBe(colors.muted);
   });
 });
 
