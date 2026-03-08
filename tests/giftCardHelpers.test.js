@@ -13,6 +13,8 @@ import {
   getCheckoutGiftCardState,
   getBalanceCheckError,
   initCheckoutGiftCard,
+  finalizeGiftCardRedemption,
+  resetCheckoutGiftCard,
 } from '../src/public/giftCardHelpers.js';
 
 // ── GIFT_CARD_DENOMINATIONS ─────────────────────────────────────────
@@ -439,7 +441,7 @@ describe('getBalanceCheckError', () => {
   });
 });
 
-// ── initCheckoutGiftCard — redeemGiftCard integration ─────────────
+// ── initCheckoutGiftCard — deferred redemption (CF-sy7r fix) ──────
 
 const mockCheckBalance = vi.fn();
 const mockRedeemGiftCard = vi.fn();
@@ -481,29 +483,45 @@ function createMock$w(overrides = {}) {
   return $w;
 }
 
-describe('initCheckoutGiftCard — redeemGiftCard integration', () => {
+describe('initCheckoutGiftCard — Apply button only checks balance (no deduction)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetCheckoutGiftCard();
     mockCheckBalance.mockResolvedValue({ found: true, status: 'active', balance: 100 });
     mockRedeemGiftCard.mockResolvedValue({ success: true, amountApplied: 50, remainingBalance: 50 });
   });
 
-  it('calls redeemGiftCard after successful balance check', async () => {
+  it('calls checkBalance but NOT redeemGiftCard on Apply click', async () => {
     const $w = createMock$w();
     $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
 
     await initCheckoutGiftCard($w, () => 50);
 
-    // Simulate clicking the apply button
     const applyBtn = $w('#giftCardApplyBtn');
     const clickHandler = applyBtn.onClick.mock.calls[0][0];
     await clickHandler();
 
     expect(mockCheckBalance).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD');
-    expect(mockRedeemGiftCard).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD', 50);
+    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
   });
 
-  it('does not call redeemGiftCard when balance check fails', async () => {
+  it('sets state to pending (not applied) after successful balance check', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    const state = getCheckoutGiftCardState();
+    expect(state.pending).toBe(true);
+    expect(state.applied).toBe(false);
+    expect(state.amountToApply).toBe(50);
+    expect(state.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
+  });
+
+  it('does not set pending state when balance check fails', async () => {
     mockCheckBalance.mockResolvedValue({ found: false });
 
     const $w = createMock$w();
@@ -511,44 +529,186 @@ describe('initCheckoutGiftCard — redeemGiftCard integration', () => {
 
     await initCheckoutGiftCard($w, () => 50);
 
-    const applyBtn = $w('#giftCardApplyBtn');
-    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
     await clickHandler();
 
-    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
+    const state = getCheckoutGiftCardState();
+    expect(state.pending).toBe(false);
+    expect(state.applied).toBe(false);
   });
 
-  it('does not update state when redeemGiftCard fails', async () => {
+  it('does not set pending state when card is expired', async () => {
+    mockCheckBalance.mockResolvedValue({ found: true, status: 'expired', balance: 0 });
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    const state = getCheckoutGiftCardState();
+    expect(state.pending).toBe(false);
+  });
+
+  it('shows applied UI even though redemption is deferred', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect($w('#giftCardAppliedSection').show).toHaveBeenCalled();
+  });
+
+  it('does not call redeemGiftCard when code is invalid', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'INVALID';
+
+    await initCheckoutGiftCard($w, () => 50);
+
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(mockCheckBalance).not.toHaveBeenCalled();
+    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
+  });
+});
+
+// ── finalizeGiftCardRedemption — called on order completion ───────
+
+describe('finalizeGiftCardRedemption', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetCheckoutGiftCard();
+    mockCheckBalance.mockResolvedValue({ found: true, status: 'active', balance: 100 });
+    mockRedeemGiftCard.mockResolvedValue({ success: true, amountApplied: 50, remainingBalance: 50 });
+  });
+
+  it('calls redeemGiftCard with pending code and amount', async () => {
+    // Set up pending state via Apply flow
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    // Now finalize on order completion
+    const result = await finalizeGiftCardRedemption();
+
+    expect(mockRedeemGiftCard).toHaveBeenCalledWith('CF-AAAA-BBBB-CCCC-DDDD', 50);
+    expect(result.success).toBe(true);
+    expect(result.amountApplied).toBe(50);
+  });
+
+  it('sets state to applied after successful finalization', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    await finalizeGiftCardRedemption();
+
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(true);
+    expect(state.pending).toBe(false);
+    expect(state.amountApplied).toBe(50);
+  });
+
+  it('returns no-op result when no gift card is pending', async () => {
+    const result = await finalizeGiftCardRedemption();
+
+    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+    expect(result.amountApplied).toBe(0);
+  });
+
+  it('returns failure and clears state when redeemGiftCard fails', async () => {
     mockRedeemGiftCard.mockResolvedValue({ success: false, message: 'Concurrent modification' });
 
     const $w = createMock$w();
     $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
-
     await initCheckoutGiftCard($w, () => 50);
-
-    const applyBtn = $w('#giftCardApplyBtn');
-    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
     await clickHandler();
 
-    expect(mockRedeemGiftCard).toHaveBeenCalled();
+    const result = await finalizeGiftCardRedemption();
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBeTruthy();
+
+    const state = getCheckoutGiftCardState();
+    expect(state.applied).toBe(false);
+    expect(state.pending).toBe(false);
+  });
+
+  it('handles redeemGiftCard throwing an error', async () => {
+    mockRedeemGiftCard.mockRejectedValue(new Error('Network error'));
+
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    const result = await finalizeGiftCardRedemption();
+
+    expect(result.success).toBe(false);
     const state = getCheckoutGiftCardState();
     expect(state.applied).toBe(false);
   });
 
-  it('updates state only when redeemGiftCard succeeds', async () => {
+  it('prevents double finalization', async () => {
     const $w = createMock$w();
     $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
-
     await initCheckoutGiftCard($w, () => 50);
-
-    const applyBtn = $w('#giftCardApplyBtn');
-    const clickHandler = applyBtn.onClick.mock.calls[0][0];
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
     await clickHandler();
 
-    expect(mockRedeemGiftCard).toHaveBeenCalled();
+    await finalizeGiftCardRedemption();
+    const result2 = await finalizeGiftCardRedemption();
+
+    // Second call is a no-op since state is no longer pending
+    expect(mockRedeemGiftCard).toHaveBeenCalledTimes(1);
+    expect(result2.success).toBe(true);
+    expect(result2.amountApplied).toBe(0);
+  });
+});
+
+// ── resetCheckoutGiftCard — abandon/reinit ────────────────────────
+
+describe('resetCheckoutGiftCard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetCheckoutGiftCard();
+    mockCheckBalance.mockResolvedValue({ found: true, status: 'active', balance: 100 });
+  });
+
+  it('clears pending state without calling redeemGiftCard', async () => {
+    const $w = createMock$w();
+    $w('#giftCardCodeInput').value = 'CF-AAAA-BBBB-CCCC-DDDD';
+    await initCheckoutGiftCard($w, () => 50);
+    const clickHandler = $w('#giftCardApplyBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    resetCheckoutGiftCard();
+
+    expect(mockRedeemGiftCard).not.toHaveBeenCalled();
     const state = getCheckoutGiftCardState();
-    expect(state.applied).toBe(true);
-    expect(state.amountApplied).toBe(50);
-    expect(state.code).toBe('CF-AAAA-BBBB-CCCC-DDDD');
+    expect(state.pending).toBe(false);
+    expect(state.applied).toBe(false);
+    expect(state.amountToApply).toBe(0);
+    expect(state.code).toBe('');
+  });
+
+  it('is safe to call when no gift card is pending', () => {
+    resetCheckoutGiftCard();
+    const state = getCheckoutGiftCardState();
+    expect(state.pending).toBe(false);
+    expect(state.applied).toBe(false);
   });
 });

@@ -27,7 +27,7 @@ import {
   PLAN_TIERS,
 } from 'backend/protectionPlan.web';
 import { initCheckoutStoreCredit, formatCreditBalance } from 'public/storeCreditHelpers.js';
-import { initCheckoutGiftCard } from 'public/giftCardHelpers.js';
+import { initCheckoutGiftCard, finalizeGiftCardRedemption, resetCheckoutGiftCard } from 'public/giftCardHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
 
 // Shared state for cross-section communication
