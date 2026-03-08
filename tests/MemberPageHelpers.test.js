@@ -130,6 +130,13 @@ describe('formatAlertForDisplay', () => {
     const alert = { alertType: 'price_drop' };
     expect(formatAlertForDisplay(alert).productName).toBe('');
   });
+
+  it('formats price_drop with price: 0 and dropPercent: 0', () => {
+    const alert = { alertType: 'price_drop', price: 0, dropPercent: 0 };
+    const result = formatAlertForDisplay(alert);
+    expect(result.message).toContain('$0.00');
+    expect(result.message).toContain('0%');
+  });
 });
 
 // ── getStatusColor ────────────────────────────────────────────────────

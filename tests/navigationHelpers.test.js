@@ -33,6 +33,13 @@ vi.mock('public/mobileHelpers', () => ({
   getViewport: vi.fn(() => ({ width: 1024 })),
 }));
 
+// Capture onScroll callbacks registered by initStickyNav / initBackToTop
+const _scrollCallbacks = [];
+vi.mock('wix-window-frontend', () => ({
+  onScroll: vi.fn((cb) => { _scrollCallbacks.push(cb); }),
+  scrollTo: vi.fn(),
+}));
+
 import {
   NAV_LINKS,
   MEGA_MENU_CATEGORIES,
@@ -224,23 +231,32 @@ describe('initMobileAccordions', () => {
 
 // ── renderBreadcrumbs ─────────────────────────────────────────────────
 
+/**
+ * Create a $w mock that auto-creates breadcrumb elements on access.
+ * @returns {{ $w: Function, elements: Object }}
+ */
+function createBreadcrumb$w() {
+  const elements = {};
+  const $w = (id) => {
+    if (!elements[id]) {
+      elements[id] = {
+        text: '',
+        style: {},
+        accessibility: {},
+        show: vi.fn(),
+        hide: vi.fn(),
+        onClick: vi.fn(),
+        postMessage: vi.fn(),
+      };
+    }
+    return elements[id];
+  };
+  return { $w, elements };
+}
+
 describe('renderBreadcrumbs', () => {
   it('sets text on breadcrumb elements', () => {
-    const elements = {};
-    const $w = (id) => {
-      if (!elements[id]) {
-        elements[id] = {
-          text: '',
-          style: {},
-          accessibility: {},
-          show: vi.fn(),
-          hide: vi.fn(),
-          onClick: vi.fn(),
-          postMessage: vi.fn(),
-        };
-      }
-      return elements[id];
-    };
+    const { $w, elements } = createBreadcrumb$w();
     renderBreadcrumbs($w, [
       { label: 'Home', path: '/' },
       { label: 'Futon Frames', path: '/futon-frames' },
@@ -250,42 +266,14 @@ describe('renderBreadcrumbs', () => {
   });
 
   it('hides unused breadcrumb slots', () => {
-    const elements = {};
-    const $w = (id) => {
-      if (!elements[id]) {
-        elements[id] = {
-          text: '',
-          style: {},
-          accessibility: {},
-          show: vi.fn(),
-          hide: vi.fn(),
-          onClick: vi.fn(),
-          postMessage: vi.fn(),
-        };
-      }
-      return elements[id];
-    };
+    const { $w, elements } = createBreadcrumb$w();
     renderBreadcrumbs($w, [{ label: 'Home', path: '/' }]);
     expect(elements['#breadcrumb2'].hide).toHaveBeenCalled();
     expect(elements['#breadcrumb3'].hide).toHaveBeenCalled();
   });
 
   it('posts schema JSON to #breadcrumbSchemaHtml', () => {
-    const elements = {};
-    const $w = (id) => {
-      if (!elements[id]) {
-        elements[id] = {
-          text: '',
-          style: {},
-          accessibility: {},
-          show: vi.fn(),
-          hide: vi.fn(),
-          onClick: vi.fn(),
-          postMessage: vi.fn(),
-        };
-      }
-      return elements[id];
-    };
+    const { $w, elements } = createBreadcrumb$w();
     renderBreadcrumbs($w, [{ label: 'Home', path: '/' }]);
     expect(elements['#breadcrumbSchemaHtml'].postMessage).toHaveBeenCalled();
     const schemaJson = elements['#breadcrumbSchemaHtml'].postMessage.mock.calls[0][0];
@@ -294,21 +282,7 @@ describe('renderBreadcrumbs', () => {
   });
 
   it('sets ariaCurrent on last breadcrumb', () => {
-    const elements = {};
-    const $w = (id) => {
-      if (!elements[id]) {
-        elements[id] = {
-          text: '',
-          style: {},
-          accessibility: {},
-          show: vi.fn(),
-          hide: vi.fn(),
-          onClick: vi.fn(),
-          postMessage: vi.fn(),
-        };
-      }
-      return elements[id];
-    };
+    const { $w, elements } = createBreadcrumb$w();
     renderBreadcrumbs($w, [
       { label: 'Home', path: '/' },
       { label: 'Current', path: '/current' },
@@ -459,9 +433,9 @@ describe('initAnnouncementBar', () => {
 // ── initBackToTop ────────────────────────────────────────────────────
 
 describe('initBackToTop', () => {
-  it('does not throw with mock $w', () => {
-    const $w = createMock$w();
-    expect(() => initBackToTop($w)).not.toThrow();
+  let scrollBefore;
+  beforeEach(() => {
+    scrollBefore = _scrollCallbacks.length;
   });
 
   it('hides button initially', () => {
@@ -471,10 +445,7 @@ describe('initBackToTop', () => {
       accessibility: {},
       onClick: vi.fn(),
     };
-    const $w = (id) => {
-      if (id === '#backToTop') return btn;
-      return createMock$w()(id);
-    };
+    const $w = (id) => id === '#backToTop' ? btn : createMock$w()(id);
     initBackToTop($w);
     expect(btn.hide).toHaveBeenCalled();
   });
@@ -486,12 +457,43 @@ describe('initBackToTop', () => {
       accessibility: {},
       onClick: vi.fn(),
     };
-    const $w = (id) => {
-      if (id === '#backToTop') return btn;
-      return createMock$w()(id);
-    };
+    const $w = (id) => id === '#backToTop' ? btn : createMock$w()(id);
     initBackToTop($w);
     expect(btn.accessibility.ariaLabel).toBe('Back to top');
+  });
+
+  it('registers onScroll handler for show/hide on threshold', async () => {
+    const countBefore = _scrollCallbacks.length;
+    const btn = {
+      hide: vi.fn(),
+      show: vi.fn(),
+      accessibility: {},
+      onClick: vi.fn(),
+    };
+    const $w = (id) => id === '#backToTop' ? btn : createMock$w()(id);
+    initBackToTop($w);
+    // Flush microtask queue for dynamic import().then() chain
+    for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+    // Verify onScroll was registered (behavioral contract)
+    expect(_scrollCallbacks.length).toBeGreaterThan(countBefore);
+  });
+
+  it('calls makeClickable with back-to-top aria label', async () => {
+    const { makeClickable } = await import('public/a11yHelpers');
+    makeClickable.mockClear();
+    const btn = {
+      hide: vi.fn(),
+      show: vi.fn(),
+      accessibility: {},
+      onClick: vi.fn(),
+    };
+    const $w = (id) => id === '#backToTop' ? btn : createMock$w()(id);
+    initBackToTop($w);
+    expect(makeClickable).toHaveBeenCalledWith(
+      btn,
+      expect.any(Function),
+      expect.objectContaining({ ariaLabel: 'Back to top' }),
+    );
   });
 
   it('accepts custom button ID', () => {
@@ -501,10 +503,7 @@ describe('initBackToTop', () => {
       accessibility: {},
       onClick: vi.fn(),
     };
-    const $w = (id) => {
-      if (id === '#customBtn') return btn;
-      return null;
-    };
+    const $w = (id) => id === '#customBtn' ? btn : null;
     expect(() => initBackToTop($w, '#customBtn')).not.toThrow();
     expect(btn.hide).toHaveBeenCalled();
   });
@@ -518,12 +517,18 @@ describe('initBackToTop', () => {
 // ── initFooterAccordions ─────────────────────────────────────────────
 
 describe('initFooterAccordions', () => {
-  it('does not throw on desktop (isMobile returns false)', () => {
-    const $w = createMock$w();
+  it('returns early on desktop without initializing accordions', () => {
+    const panel = { collapse: vi.fn(), expand: vi.fn() };
+    const $w = (id) => {
+      if (id === '#footerC1') return panel;
+      return createMock$w()(id);
+    };
     const columns = [
       { headerId: '#footerH1', contentId: '#footerC1', label: 'About' },
     ];
-    expect(() => initFooterAccordions($w, columns)).not.toThrow();
+    initFooterAccordions($w, columns);
+    // On desktop (isMobile=false), collapse should NOT be called
+    expect(panel.collapse).not.toHaveBeenCalled();
   });
 
   it('calls initMobileAccordions on mobile', async () => {
@@ -563,9 +568,36 @@ describe('initFooterAccordions', () => {
 // ── initStickyNav ────────────────────────────────────────────────────
 
 describe('initStickyNav', () => {
-  it('does not throw with mock $w', () => {
+  let scrollBefore;
+  beforeEach(() => {
+    scrollBefore = _scrollCallbacks.length;
+  });
+
+  it('registers an onScroll handler', async () => {
     const $w = createMock$w();
-    expect(() => initStickyNav($w)).not.toThrow();
+    initStickyNav($w);
+    await new Promise(r => setTimeout(r, 0));
+    expect(_scrollCallbacks.length).toBeGreaterThan(scrollBefore);
+  });
+
+  it('applies shadow when scrolled past 50px', async () => {
+    const header = { style: {} };
+    const $w = (id) => id === '#headerStrip' ? header : createMock$w()(id);
+    initStickyNav($w);
+    await new Promise(r => setTimeout(r, 0));
+    const cb = _scrollCallbacks[_scrollCallbacks.length - 1];
+    cb({ scrollY: 100 });
+    expect(header.style.boxShadow).toBe('0 2px 4px rgba(0,0,0,0.1)');
+  });
+
+  it('removes shadow when scrolled back to top', async () => {
+    const header = { style: { boxShadow: '0 2px 4px rgba(0,0,0,0.1)' } };
+    const $w = (id) => id === '#headerStrip' ? header : createMock$w()(id);
+    initStickyNav($w);
+    await new Promise(r => setTimeout(r, 0));
+    const cb = _scrollCallbacks[_scrollCallbacks.length - 1];
+    cb({ scrollY: 10 });
+    expect(header.style.boxShadow).toBe('none');
   });
 
   it('accepts custom header ID', () => {
