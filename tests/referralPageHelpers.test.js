@@ -13,6 +13,7 @@ import {
   formatExpiryDate,
   buildReferralHistoryItems,
 } from '../src/public/referralPageHelpers.js';
+import { colors } from '../src/public/sharedTokens.js';
 
 // ── formatReferralLink ────────────────────────────────────────────────
 
@@ -76,13 +77,22 @@ describe('getReferralStatusLabel', () => {
 // ── getReferralStatusColor ────────────────────────────────────────────
 
 describe('getReferralStatusColor', () => {
-  it('returns color for known statuses', () => {
-    expect(getReferralStatusColor('pending')).toBeTruthy();
-    expect(getReferralStatusColor('credited')).toBeTruthy();
+  it('returns correct design-token colors for known statuses', () => {
+    expect(getReferralStatusColor('pending')).toBe(colors.mountainBlue);
+    expect(getReferralStatusColor('signed_up')).toBe(colors.sunsetCoral);
+    expect(getReferralStatusColor('purchased')).toBe(colors.sunsetCoral);
+    expect(getReferralStatusColor('processing')).toBe(colors.mountainBlue);
+    expect(getReferralStatusColor('credited')).toBe(colors.success);
+    expect(getReferralStatusColor('expired')).toBe(colors.muted);
   });
 
   it('returns muted fallback for unknown status', () => {
-    expect(getReferralStatusColor('bogus')).toBeTruthy();
+    expect(getReferralStatusColor('bogus')).toBe(colors.muted);
+  });
+
+  it('returns muted for null/undefined status', () => {
+    expect(getReferralStatusColor(null)).toBe(colors.muted);
+    expect(getReferralStatusColor(undefined)).toBe(colors.muted);
   });
 });
 
@@ -187,6 +197,10 @@ describe('formatExpiryDate', () => {
   it('returns "No expiry" for invalid date', () => {
     expect(formatExpiryDate('invalid')).toBe('No expiry');
   });
+
+  it('returns "No expiry" for undefined', () => {
+    expect(formatExpiryDate(undefined)).toBe('No expiry');
+  });
 });
 
 // ── buildReferralHistoryItems ─────────────────────────────────────────
@@ -216,5 +230,20 @@ describe('buildReferralHistoryItems', () => {
       { status: 'pending', credit: 0 },
     ]);
     expect(items[0]._id).not.toBe(items[1]._id);
+  });
+
+  it('returns empty array for empty input array', () => {
+    expect(buildReferralHistoryItems([])).toEqual([]);
+  });
+
+  it('handles items with missing optional fields', () => {
+    const items = buildReferralHistoryItems([
+      { status: 'pending' }, // no refereeName, credit, createdDate, code
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0].friendName).toBe('Awaiting friend');
+    expect(items[0].creditText).toBe('$0');
+    expect(items[0].dateText).toBe('No expiry');
+    expect(items[0].code).toBe('');
   });
 });

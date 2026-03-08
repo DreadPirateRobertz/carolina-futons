@@ -12,9 +12,12 @@ describe('initTikTokPixel', () => {
 
   it('does not throw when window is undefined', () => {
     const origWindow = globalThis.window;
-    delete globalThis.window;
-    expect(() => initTikTokPixel()).not.toThrow();
-    globalThis.window = origWindow;
+    try {
+      delete globalThis.window;
+      expect(() => initTikTokPixel()).not.toThrow();
+    } finally {
+      globalThis.window = origWindow;
+    }
   });
 
   it('does not throw when called normally (PIXEL_ID is empty)', () => {
@@ -53,6 +56,23 @@ describe('fireTikTokEvent', () => {
       track: () => { throw new Error('network error'); },
     };
     expect(() => fireTikTokEvent('Purchase', {})).not.toThrow();
+  });
+
+  it('does not throw when window is undefined', () => {
+    const origWindow = globalThis.window;
+    try {
+      delete globalThis.window;
+      expect(() => fireTikTokEvent('ViewContent', { id: '123' })).not.toThrow();
+    } finally {
+      globalThis.window = origWindow;
+    }
+  });
+
+  it('uses empty object as default params', () => {
+    const mockTrack = vi.fn();
+    globalThis.window.ttq = { track: mockTrack };
+    fireTikTokEvent('PageView');
+    expect(mockTrack).toHaveBeenCalledWith('PageView', {});
   });
 
   afterEach(() => {

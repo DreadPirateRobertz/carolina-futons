@@ -56,6 +56,27 @@ describe('has360View', () => {
   });
 });
 
+describe('has360View — additional edge cases', () => {
+  it('returns false for product with neither slug nor _id', () => {
+    expect(has360View({})).toBe(false);
+    expect(has360View({ name: 'Test' })).toBe(false);
+  });
+
+  it('returns false for product with empty string slug and no _id', () => {
+    expect(has360View({ slug: '' })).toBe(false);
+  });
+
+  it('falls back to _id when slug is empty string', () => {
+    register360SpinSet('fallback-id', [{ src: 'f.jpg', alt: 'F' }]);
+    expect(has360View({ slug: '', _id: 'fallback-id' })).toBe(true);
+  });
+
+  it('returns false when registered spin set is empty array', () => {
+    register360SpinSet('empty-spin', []);
+    expect(has360View({ slug: 'empty-spin' })).toBe(false);
+  });
+});
+
 describe('register360SpinSet', () => {
   it('ignores null/empty slug', () => {
     register360SpinSet(null, [{ src: 'x.jpg', alt: 'X' }]);
@@ -68,9 +89,31 @@ describe('register360SpinSet', () => {
     expect(get360Images('bad-images')).toEqual([]);
   });
 
+  it('accepts truthy non-string slugs without error but they are unretrievable', () => {
+    // register360SpinSet only guards with !slug — truthy non-strings pass through
+    // but get360Images requires typeof === 'string', so they're effectively dead entries
+    expect(() => register360SpinSet(123, [{ src: 'x.jpg', alt: 'X' }])).not.toThrow();
+    expect(() => register360SpinSet(true, [{ src: 'y.jpg', alt: 'Y' }])).not.toThrow();
+    // Cannot be retrieved because get360Images enforces string type
+    expect(get360Images(123)).toEqual([]);
+    expect(get360Images(true)).toEqual([]);
+  });
+
+  it('stores empty array as valid spin set', () => {
+    register360SpinSet('empty-valid', []);
+    expect(get360Images('empty-valid')).toEqual([]);
+  });
+
   it('overwrites existing spin set', () => {
     register360SpinSet('overwrite-test', [{ src: 'old.jpg', alt: 'Old' }]);
     register360SpinSet('overwrite-test', [{ src: 'new.jpg', alt: 'New' }]);
     expect(get360Images('overwrite-test')).toEqual([{ src: 'new.jpg', alt: 'New' }]);
+  });
+
+  it('ignores undefined and null images arg', () => {
+    register360SpinSet('undef-imgs', undefined);
+    register360SpinSet('null-imgs', null);
+    expect(get360Images('undef-imgs')).toEqual([]);
+    expect(get360Images('null-imgs')).toEqual([]);
   });
 });
