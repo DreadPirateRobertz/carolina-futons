@@ -115,12 +115,6 @@ const TEMPLATE_MANIFEST = [
   },
 ].sort((a, b) => a.priority - b.priority);
 
-// Note: reengagement_1 from MASTER-HOOKUP is listed as P4+/later.
-// The 12-template scope per the bead title replaces browse_recovery with
-// swatch_confirmation (P2) since browse_recovery requires additional
-// infrastructure not yet built. Adding reengagement_1 here brings us to 12.
-// Wait — let me re-check the count. The bead says 12 templates.
-// MASTER-HOOKUP Step 8 lists: 2 P0 + 3 P1 + 4 P2 (incl swatch) + 3 P3 = 12. Correct.
 
 /**
  * Validate an array of template definitions.
