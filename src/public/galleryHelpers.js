@@ -10,6 +10,7 @@
 import { session } from 'wix-storage-frontend';
 import { colors } from 'public/designTokens.js';
 import { enableSwipe } from 'public/touchHelpers';
+import { buildGridAlt } from 'public/productPageUtils.js';
 
 // Recently viewed products tracking (stored in session storage)
 const RECENTLY_VIEWED_KEY = 'cf_recently_viewed';
@@ -697,7 +698,7 @@ export function buildComparisonBar($w) {
       repeater.onItemReady(($item, itemData) => {
         try {
           $item('#compareItemImage').src = itemData.mainMedia;
-          $item('#compareItemImage').alt = `${itemData.name} - compare`;
+          $item('#compareItemImage').alt = buildGridAlt(itemData);
           $item('#compareItemName').text = itemData.name;
           $item('#compareItemRemove').onClick(() => {
             removeFromCompare(itemData._id);
