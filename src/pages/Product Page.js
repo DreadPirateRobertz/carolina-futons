@@ -21,6 +21,7 @@ import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliver
 import { initQuantitySelector, initAddToCartEnhancements, initStickyCartBar, initBundleSection, initStockUrgency, initBackInStockNotification, initWishlistButton } from 'public/AddToCart.js';
 import { initBrowseTracking as initBrowseTrackingModule, _createBrowseState } from 'public/BrowseReminder.js';
 import { makeClickable } from 'public/a11yHelpers.js';
+import { setCardImage } from 'public/productCardHelpers.js';
 import { initProductSocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
 import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
@@ -205,9 +206,7 @@ async function loadRelatedProducts() {
       return;
     }
     repeater.onItemReady(($item, itemData) => {
-      $item('#relatedImage').src = itemData.mainMedia;
-      $item('#relatedImage').alt = buildGridAlt(itemData);
-      try { const d = getImageDimensions('productGridCard'); $item('#relatedImage').style.width = `${d.width}px`; $item('#relatedImage').style.height = `${d.height}px`; $item('#relatedImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
+      setCardImage($item('#relatedImage'), itemData, '', getImageDimensions('productGridCard'));
       $item('#relatedName').text = itemData.name;
       $item('#relatedPrice').text = itemData.formattedPrice;
       if (itemData.ribbon) {
@@ -231,9 +230,7 @@ async function loadCollectionProducts() {
       return;
     }
     repeater.onItemReady(($item, itemData) => {
-      $item('#collectionImage').src = itemData.mainMedia;
-      $item('#collectionImage').alt = buildGridAlt(itemData);
-      try { const d = getImageDimensions('productGridCard'); $item('#collectionImage').style.width = `${d.width}px`; $item('#collectionImage').style.height = `${d.height}px`; $item('#collectionImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
+      setCardImage($item('#collectionImage'), itemData, '', getImageDimensions('productGridCard'));
       $item('#collectionName').text = itemData.name;
       $item('#collectionPrice').text = itemData.formattedPrice;
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
@@ -263,9 +260,7 @@ async function loadRecentlyViewed() {
     } catch (e) {}
     repeater.data = recent;
     repeater.onItemReady(($item, itemData) => {
-      try { $item('#recentImage').src = itemData.mainMedia; } catch (e) {}
-      try { $item('#recentImage').alt = buildGridAlt(itemData); } catch (e) {}
-      try { const d = getImageDimensions('productGridCard'); $item('#recentImage').style.width = `${d.width}px`; $item('#recentImage').style.height = `${d.height}px`; $item('#recentImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
+      setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#recentName').text = itemData.name; } catch (e) {}
       try { $item('#recentPrice').text = itemData.price; } catch (e) {}
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
@@ -315,9 +310,7 @@ async function loadAlsoBought() {
     } catch (e) {}
     repeater.data = result.products;
     repeater.onItemReady(($item, itemData) => {
-      try { $item('#alsoBoughtImage').src = itemData.mainMedia; } catch (e) {}
-      try { $item('#alsoBoughtImage').alt = buildGridAlt(itemData); } catch (e) {}
-      try { const d = getImageDimensions('productGridCard'); $item('#alsoBoughtImage').style.width = `${d.width}px`; $item('#alsoBoughtImage').style.height = `${d.height}px`; $item('#alsoBoughtImage').style.aspectRatio = `${d.width} / ${d.height}`; } catch (e) {}
+      setCardImage($item('#alsoBoughtImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#alsoBoughtName').text = itemData.name; } catch (e) {}
       try { $item('#alsoBoughtPrice').text = itemData.formattedPrice; } catch (e) {}
       if (itemData.ribbon) {

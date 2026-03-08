@@ -118,8 +118,7 @@ export function setCardImage($el, product, category, dimensions) {
     $el.alt = name ? `${name} - Carolina Futons` : 'Product image';
     if (dimensions) {
       try {
-        $el.style.width = `${dimensions.width}px`;
-        $el.style.height = `${dimensions.height}px`;
+        $el.style.width = '100%';
         $el.style.aspectRatio = `${dimensions.width} / ${dimensions.height}`;
       } catch (e) { /* style may not be settable */ }
     }

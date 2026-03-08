@@ -73,6 +73,41 @@ describe('getImageDimensions', () => {
     const dims = getImageDimensions('unknown');
     expect(dims).toEqual(imageSizes.productGridCard);
   });
+
+  it('returns correct productGridCard dimensions', () => {
+    const dims = getImageDimensions('productGridCard');
+    expect(dims).toEqual({ width: 400, height: 400 });
+  });
+
+  it('returns correct productPageMain dimensions', () => {
+    const dims = getImageDimensions('productPageMain');
+    expect(dims).toEqual({ width: 800, height: 800 });
+  });
+
+  it('returns correct thumbnail dimensions', () => {
+    const dims = getImageDimensions('thumbnail');
+    expect(dims).toEqual({ width: 100, height: 100 });
+  });
+
+  it('returns correct categoryCard dimensions (3:2)', () => {
+    const dims = getImageDimensions('categoryCard');
+    expect(dims).toEqual({ width: 600, height: 400 });
+  });
+
+  it('always returns { width, height } shape', () => {
+    for (const context of ['hero', 'productGridCard', 'productPageMain', 'thumbnail', 'categoryCard', 'nonexistent']) {
+      const dims = getImageDimensions(context);
+      expect(dims).toHaveProperty('width');
+      expect(dims).toHaveProperty('height');
+      expect(typeof dims.width).toBe('number');
+      expect(typeof dims.height).toBe('number');
+    }
+  });
+
+  it('falls back to productGridCard for undefined/null', () => {
+    expect(getImageDimensions(undefined)).toEqual(imageSizes.productGridCard);
+    expect(getImageDimensions(null)).toEqual(imageSizes.productGridCard);
+  });
 });
 
 // ── getGridColumns ──────────────────────────────────────────────────

@@ -39,8 +39,7 @@ export function initImageGallery($w, state) {
       // Set explicit dimensions to prevent CLS
       try {
         const dims = getImageDimensions('productPageMain');
-        mainImage.style.width = `${dims.width}px`;
-        mainImage.style.height = `${dims.height}px`;
+        mainImage.style.width = '100%';
         mainImage.style.aspectRatio = `${dims.width} / ${dims.height}`;
       } catch (e) { /* style may not be settable */ }
     }
