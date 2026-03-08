@@ -6,6 +6,7 @@ import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { buildGridAlt } from 'public/productPageUtils.js';
 
 const state = {
   step: 0,
@@ -252,6 +253,7 @@ function renderResults(results) {
       try {
         if (product.mainMedia) {
           $item('#resultProductImage').src = product.mainMedia;
+          $item('#resultProductImage').alt = buildGridAlt(product);
         }
       } catch (e) {}
 

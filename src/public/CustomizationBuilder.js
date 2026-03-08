@@ -222,6 +222,7 @@ export function updateCustomizationPreview($w, state, colorHex, swatchImage) {
     try {
       if (swatchImage) {
         $w('#custPreviewSwatch').src = swatchImage;
+        $w('#custPreviewSwatch').alt = 'Selected fabric swatch preview';
         $w('#custPreviewSwatch').show('fade', { duration: 200 });
       } else {
         $w('#custPreviewSwatch').hide();

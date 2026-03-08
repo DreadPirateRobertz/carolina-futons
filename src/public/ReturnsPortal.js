@@ -265,7 +265,7 @@ function populateReturnItems($w, order) {
       try { $item('#returnItemPrice').text = `$${Number(itemData.price).toFixed(2)}`; } catch (e) {}
 
       if (itemData.image) {
-        try { $item('#returnItemImage').src = itemData.image; } catch (e) {}
+        try { $item('#returnItemImage').src = itemData.image; $item('#returnItemImage').alt = `${itemData.name} product image`; } catch (e) {}
       }
 
       if (!itemData.returnable) {

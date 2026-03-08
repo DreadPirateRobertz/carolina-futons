@@ -15,6 +15,7 @@ import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop, isMobile } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable } from 'public/a11yHelpers';
+import { buildGridAlt } from 'public/productPageUtils.js';
 import {
   buildBreadcrumbs,
   buildTableOfContents,
@@ -353,6 +354,7 @@ function initRelatedProducts(products) {
       try {
         if (itemData.mainMedia) {
           $item('#productImage').src = itemData.mainMedia;
+          $item('#productImage').alt = buildGridAlt(itemData);
         }
       } catch (e) {}
       try {

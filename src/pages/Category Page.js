@@ -18,6 +18,7 @@ import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
+import { buildGridAlt } from 'public/productPageUtils.js';
 import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
@@ -1575,6 +1576,7 @@ function refreshCompareBarUI() {
       repeater.data = items.map(p => ({ ...p, _id: p._id }));
       repeater.onItemReady(($item, itemData) => {
         setCardImage($item('#compareThumb'), itemData, '', getImageDimensions('thumbnail'));
+        try { $item('#compareThumb').alt = buildGridAlt(itemData); } catch (e) {}
         try { $item('#compareName').text = itemData.name; } catch (e) {}
         try { $item('#comparePrice').text = itemData.price; } catch (e) {}
         try {
