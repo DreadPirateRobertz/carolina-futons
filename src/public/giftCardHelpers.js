@@ -172,14 +172,73 @@ export function calculateGiftCardDiscount(balance, subtotal) {
 }
 
 // Shared state for gift card applied at checkout — readable by Checkout page
-let _giftCardState = { applied: false, amountApplied: 0, code: '' };
+// CF-sy7r: State now tracks pending (validated but not yet deducted) vs applied (deducted on order completion)
+let _giftCardState = { applied: false, pending: false, amountApplied: 0, amountToApply: 0, balance: 0, code: '' };
 
 /**
  * Get the current gift card applied state at checkout.
- * @returns {{ applied: boolean, amountApplied: number, code: string }}
+ * @returns {{ applied: boolean, pending: boolean, amountApplied: number, amountToApply: number, code: string }}
  */
 export function getCheckoutGiftCardState() {
   return { ..._giftCardState };
+}
+
+/**
+ * Reset gift card checkout state. Call when checkout is abandoned or reinitialized.
+ * Does NOT deduct any balance — safe to call at any time.
+ */
+export function resetCheckoutGiftCard() {
+  _giftCardState = { applied: false, pending: false, amountApplied: 0, amountToApply: 0, balance: 0, code: '' };
+}
+
+/**
+ * Finalize gift card redemption on order completion.
+ * Actually deducts the balance that was validated during Apply.
+ * CF-sy7r: Moved from Apply click to order completion to prevent premature deduction.
+ *
+ * @param {number} [currentSubtotal] - Current order subtotal to recalculate amount
+ *   (guards against stale amountToApply if cart changed since Apply click)
+ * @returns {Promise<{ success: boolean, amountApplied: number, message?: string }>}
+ */
+export async function finalizeGiftCardRedemption(currentSubtotal) {
+  if (!_giftCardState.pending || !_giftCardState.code || _giftCardState.amountToApply <= 0) {
+    return { success: true, amountApplied: 0 };
+  }
+
+  // Clear pending synchronously BEFORE await to prevent concurrent double-redemption
+  const { code, amountToApply, balance } = _giftCardState;
+  _giftCardState = { ..._giftCardState, pending: false };
+
+  // Recalculate amount if currentSubtotal provided (cart may have changed since Apply)
+  let finalAmount = amountToApply;
+  if (typeof currentSubtotal === 'number' && isFinite(currentSubtotal) && currentSubtotal >= 0) {
+    finalAmount = Math.min(balance || amountToApply, currentSubtotal);
+  }
+
+  try {
+    const { redeemGiftCard } = await import('backend/giftCards.web');
+    const result = await redeemGiftCard(code, finalAmount);
+
+    if (!result.success) {
+      _giftCardState = { applied: false, pending: false, amountApplied: 0, amountToApply: 0, balance: 0, code: '' };
+      return { success: false, message: result.message || 'Failed to redeem gift card' };
+    }
+
+    _giftCardState = {
+      applied: true,
+      pending: false,
+      amountApplied: result.amountApplied,
+      amountToApply: 0,
+      balance: 0,
+      code,
+    };
+
+    return { success: true, amountApplied: result.amountApplied };
+  } catch (err) {
+    console.error('[giftCardHelpers] Error finalizing gift card redemption:', err);
+    _giftCardState = { applied: false, pending: false, amountApplied: 0, amountToApply: 0, balance: 0, code: '' };
+    return { success: false, message: 'Failed to redeem gift card' };
+  }
 }
 
 /**
@@ -210,7 +269,7 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
     const applyBtn = $w('#giftCardApplyBtn');
     if (!applyBtn) return;
 
-    _giftCardState = { applied: false, amountApplied: 0, code: '' };
+    _giftCardState = { applied: false, pending: false, amountApplied: 0, amountToApply: 0, balance: 0, code: '' };
 
     try { $w('#giftCardCodeInput').accessibility.ariaLabel = 'Enter gift card code'; } catch (_) {}
     try { applyBtn.accessibility.ariaLabel = 'Apply gift card to order'; } catch (_) {}
@@ -234,7 +293,7 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
       applyBtn.label = 'Checking...';
 
       try {
-        const { checkBalance, redeemGiftCard } = await import('backend/giftCards.web');
+        const { checkBalance } = await import('backend/giftCards.web');
         const balanceResult = await checkBalance(code);
 
         if (!balanceResult.found || balanceResult.status !== 'active' || balanceResult.balance <= 0) {
@@ -249,16 +308,8 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
         const currentSubtotal = typeof getSubtotal === 'function' ? getSubtotal() : (Number(getSubtotal) || 0);
         const { amountToApply } = calculateGiftCardDiscount(balanceResult.balance, currentSubtotal);
 
-        // Deduct balance before updating UI — only show success if redemption works
-        const redeemResult = await redeemGiftCard(code, amountToApply);
-        if (!redeemResult.success) {
-          try {
-            $w('#giftCardCheckoutError').text = redeemResult.message || 'Unable to apply gift card. Please try again.';
-            $w('#giftCardCheckoutError').show();
-          } catch (_) {}
-          return;
-        }
-
+        // CF-sy7r: Do NOT redeem here — only validate and store intent.
+        // Actual deduction happens in finalizeGiftCardRedemption() on order completion.
         try {
           $w('#giftCardAppliedAmount').text = buildGiftCardAppliedText(amountToApply);
           $w('#giftCardAppliedSection').show('fade', { duration: 250 });
@@ -266,10 +317,10 @@ export async function initCheckoutGiftCard($w, getSubtotal) {
           try { $w('#orderSummaryGiftCardRow').show(); } catch (_) {}
         } catch (_) {}
 
-        _giftCardState = { applied: true, amountApplied: amountToApply, code };
+        _giftCardState = { applied: false, pending: true, amountApplied: 0, amountToApply, balance: balanceResult.balance, code };
 
         const { announce } = await import('public/a11yHelpers');
-        announce($w, `${formatBalance(amountToApply)} gift card applied to your order`);
+        announce($w, `${formatBalance(amountToApply)} gift card will be applied to your order`);
       } catch (err) {
         console.error('[Checkout] Error applying gift card:', err);
         try {
