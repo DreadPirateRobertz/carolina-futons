@@ -34,7 +34,7 @@
     "_comment": "BUILD-SPEC elements NOT in template — need manual editor placement",
 
     "heroSection": {
-      "id": "categoryHeroSection",
+      "ids": ["categoryHeroSection"],
       "type": "Section",
       "notes": "Dynamic bg per category. Template has static breadcrumb area — need styled hero section."
     },
@@ -106,7 +106,7 @@
     },
 
     "categorySidebar": {
-      "id": "browseBySidebar",
+      "ids": ["browseBySidebar"],
       "type": "Nav list",
       "notes": "Template HAS a 'Browse by' sidebar (All Products, Sofas, Lounge Chairs, Tables, Chairs). Not in our BUILD-SPEC as a named element — consider adopting or repurposing."
     }
@@ -116,6 +116,7 @@
     "matchedElements": 17,
     "gapElements": 56,
     "templateExtras": ["Browse by sidebar nav (not in BUILD-SPEC — repurpose or adopt)"],
-    "coverage": "~23% element coverage, but template covers core commerce grid (breadcrumbs, filters, sort, product cards with badges/swatches/sale pricing). Major gaps are advanced filters, mobile drawer, quick view, empty/no-match states, comparison bar, recently viewed, filter chips, and SEO schema."
+    "coveragePercent": 23,
+    "coverageNotes": "Template covers core commerce grid (breadcrumbs, filters, sort, product cards with badges/swatches/sale pricing). Major gaps are advanced filters, mobile drawer, quick view, empty/no-match states, comparison bar, recently viewed, filter chips, and SEO schema."
   }
 }
