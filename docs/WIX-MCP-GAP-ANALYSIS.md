@@ -3,13 +3,13 @@
 **Bead:** CF-mfcw (P1)
 **Date:** 2026-03-08
 **Author:** godfrey (cfutons/crew)
-**Target:** My Site 1 staging integration (`ec78177c-6912-40e1-957a-c6d6aa0c9ff9`)
+**Target:** My Site 2 staging integration (`49cd75b0-92f1-4978-93e2-f5b5da531142`)
 
 ---
 
 ## Executive Summary
 
-We have **two MCP servers** configured — the official Wix MCP and our custom wix-velo-mcp. Together they cover ~70% of what we need for full "My Site 1" staging integration. The critical gaps are: **CMS/collection management**, **member/CRM operations**, **media management**, and **environment-aware testing** (staging vs production). The official `CallWixSiteAPI` is a generic REST passthrough that *theoretically* covers most gaps, but lacks the ergonomics needed for routine agent workflows.
+We have **two MCP servers** configured — the official Wix MCP and our custom wix-velo-mcp. Together they cover ~70% of what we need for full "My Site 2" staging integration. The critical gaps are: **CMS/collection management**, **member/CRM operations**, **media management**, and **environment-aware testing** (staging vs production). The official `CallWixSiteAPI` is a generic REST passthrough that *theoretically* covers most gaps, but lacks the ergonomics needed for routine agent workflows.
 
 ---
 
@@ -109,7 +109,7 @@ These modules run in the browser or Wix runtime. They don't need MCP tools:
 
 ---
 
-## 3. Gap Analysis: What's Missing for My Site 1 Staging
+## 3. Gap Analysis: What's Missing for My Site 2 Staging
 
 ### Priority 1 — Critical Gaps (block staging workflow)
 
