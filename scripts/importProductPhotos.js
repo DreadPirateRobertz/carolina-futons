@@ -60,16 +60,25 @@ export function extractUniqueFolders(manifest) {
 
 /**
  * Infer MIME type from a wixstatic URL.
+ * Handles two URL formats:
+ *   - /media/hash_id.ext/v1/fit/... (current manifest format)
+ *   - /media/hash~mv2.ext/v1/fit/... (legacy Wix format)
+ * Falls back to image/jpeg if extension cannot be determined.
  * @param {string} url
  * @returns {string} MIME type string.
  */
 export function inferMimeType(url) {
-  // wixstatic URLs: .../media/hash~mv2.ext/v1/fit/.../file.ext
-  const match = url.match(/~mv2\.(\w+)/);
-  if (match) {
-    return MIME_MAP[match[1].toLowerCase()] || 'image/jpeg';
+  // Primary: match /media/hash.ext/ pattern (e.g., e04e89_cf15.jpg/v1/...)
+  const mediaMatch = url.match(/\/media\/[^/]+\.(\w+)\//);
+  if (mediaMatch) {
+    return MIME_MAP[mediaMatch[1].toLowerCase()] || 'image/jpeg';
   }
-  // Fallback: check file extension at end
+  // Legacy: match ~mv2.ext pattern
+  const mv2Match = url.match(/~mv2\.(\w+)/);
+  if (mv2Match) {
+    return MIME_MAP[mv2Match[1].toLowerCase()] || 'image/jpeg';
+  }
+  // Last resort: file extension at end of URL
   const extMatch = url.match(/\.(\w+)(?:\?|$)/);
   if (extMatch) {
     return MIME_MAP[extMatch[1].toLowerCase()] || 'image/jpeg';
@@ -88,15 +97,19 @@ export function buildImportRequests(manifest, folderIds) {
   for (const product of manifest) {
     if (!product.images || !product.images.length) continue;
     const parentFolderId = folderIds[product.folder] || 'media-root';
-    product.images.forEach((url, idx) => {
+    if (!folderIds[product.folder] && product.folder) {
+      console.warn(`Warning: No folder ID for "${product.folder}" — images will go to media-root`);
+    }
+    const slug = product.slug || String(product.name || 'product').toLowerCase().replace(/\s+/g, '-');
+    for (let idx = 0; idx < product.images.length; idx++) {
       requests.push({
-        url,
-        displayName: `${product.slug}-${idx + 1}`,
-        mimeType: inferMimeType(url),
+        url: product.images[idx],
+        displayName: `${slug}-${idx + 1}`,
+        mimeType: inferMimeType(product.images[idx]),
         mediaType: 'IMAGE',
         parentFolderId,
       });
-    });
+    }
   }
   return requests;
 }
@@ -197,12 +210,22 @@ export async function ensureFolderStructure(folderPaths, config) {
   const rootFolder = await createFolder('products', 'media-root', config);
   const rootId = rootFolder.id;
 
-  // Create each category sub-folder
+  // Create each category sub-folder (continue on individual failures)
   const folderIds = {};
+  const folderErrors = [];
   for (const path of folderPaths) {
     const categoryName = path.split('/').pop();
-    const folder = await createFolder(categoryName, rootId, config);
-    folderIds[path] = folder.id;
+    try {
+      const folder = await createFolder(categoryName, rootId, config);
+      folderIds[path] = folder.id;
+    } catch (err) {
+      console.error(`Failed to create folder "${categoryName}": ${err.message}`);
+      folderErrors.push({ path, error: err.message });
+    }
+  }
+
+  if (folderErrors.length) {
+    console.warn(`${folderErrors.length} folder(s) failed — their images will go to media-root`);
   }
 
   return folderIds;
@@ -244,19 +267,27 @@ export async function runImport(manifest, config, options = {}) {
     const batch = batches[i];
     console.log(`Importing batch ${i + 1}/${batches.length} (${batch.length} images)...`);
 
-    const result = await bulkImportFiles(batch, config);
+    try {
+      const result = await bulkImportFiles(batch, config);
 
-    totalSuccess += result.bulkActionMetadata?.totalSuccesses || 0;
-    totalFailed += result.bulkActionMetadata?.totalFailures || 0;
+      totalSuccess += result.bulkActionMetadata?.totalSuccesses || 0;
+      totalFailed += result.bulkActionMetadata?.totalFailures || 0;
 
-    // Track individual failures
-    for (const r of result.results || []) {
-      if (!r.itemMetadata?.success) {
-        failures.push({
-          index: r.itemMetadata?.originalIndex,
-          error: r.itemMetadata?.error,
-          url: batch[r.itemMetadata?.originalIndex]?.url,
-        });
+      // Track individual failures
+      for (const r of result.results || []) {
+        if (!r.itemMetadata?.success) {
+          failures.push({
+            index: r.itemMetadata?.originalIndex,
+            error: r.itemMetadata?.error,
+            url: batch[r.itemMetadata?.originalIndex]?.url,
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`Batch ${i + 1} failed: ${err.message}`);
+      totalFailed += batch.length;
+      for (const item of batch) {
+        failures.push({ url: item.url, error: { description: err.message } });
       }
     }
   }

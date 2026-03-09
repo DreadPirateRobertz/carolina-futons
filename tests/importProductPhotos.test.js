@@ -1,6 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // We'll import the module functions after mocking
 let importProductPhotos;
@@ -170,12 +168,31 @@ describe('importProductPhotos', () => {
       expect(requests[2].mimeType).toBe('image/webp');
     });
 
-    it('falls back to media-root if folder ID not found', () => {
+    it('falls back to media-root if folder ID not found and warns', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const manifest = [
         { slug: 'test', folder: '/unknown', images: ['https://example.com/img.jpg'] },
       ];
       const requests = importProductPhotos.buildImportRequests(manifest, {});
       expect(requests[0].parentFolderId).toBe('media-root');
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('/unknown'));
+      warnSpy.mockRestore();
+    });
+
+    it('falls back to name-based slug when slug field is missing', () => {
+      const manifest = [
+        { name: 'My Cool Product', folder: '/products/foo', images: ['https://example.com/1.jpg'] },
+      ];
+      const requests = importProductPhotos.buildImportRequests(manifest, { '/products/foo': 'f1' });
+      expect(requests[0].displayName).toBe('my-cool-product-1');
+    });
+
+    it('uses "product" fallback when both slug and name are missing', () => {
+      const manifest = [
+        { folder: '/products/foo', images: ['https://example.com/1.jpg'] },
+      ];
+      const requests = importProductPhotos.buildImportRequests(manifest, { '/products/foo': 'f1' });
+      expect(requests[0].displayName).toBe('product-1');
     });
 
     it('returns empty array for empty manifest', () => {
@@ -332,6 +349,32 @@ describe('importProductPhotos', () => {
       expect(result).toEqual({});
       expect(mockFetch).not.toHaveBeenCalled();
     });
+
+    it('continues when a sub-folder creation fails', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Root folder succeeds
+      mockFetch.mockResolvedValueOnce(folderResponse('rootId', 'products'));
+      // First sub-folder fails
+      mockFetch.mockResolvedValueOnce(errorResponse(500, 'Server Error'));
+      // Second sub-folder succeeds
+      mockFetch.mockResolvedValueOnce(folderResponse('ff2', 'mattresses', 'rootId'));
+
+      const result = await importProductPhotos.ensureFolderStructure(
+        ['/products/futon-frames', '/products/mattresses'],
+        { apiKey: 'IST.test', siteId: 'site123' }
+      );
+
+      // Only the successful folder should be in the map
+      expect(result).toEqual({ '/products/mattresses': 'ff2' });
+      expect(result['/products/futon-frames']).toBeUndefined();
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('futon-frames'));
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('1 folder(s) failed'));
+
+      errorSpy.mockRestore();
+      warnSpy.mockRestore();
+    });
   });
 
   describe('inferMimeType', () => {
@@ -344,44 +387,45 @@ describe('importProductPhotos', () => {
       )).toBe('image/png');
     });
 
+    it('handles legacy ~mv2 URL format', () => {
+      expect(importProductPhotos.inferMimeType(
+        'https://static.wixstatic.com/media/ed8a72_abc123~mv2.png'
+      )).toBe('image/png');
+    });
+
     it('defaults to image/jpeg for unknown extensions', () => {
       expect(importProductPhotos.inferMimeType('https://example.com/file')).toBe('image/jpeg');
     });
   });
 
   describe('getConfig', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
     it('reads config from environment variables', () => {
-      const original = { ...process.env };
-      process.env.WIX_BACKEND_KEY = 'IST.testkey';
-      process.env.WIX_SITE_ID = 'test-site-id';
+      vi.stubEnv('WIX_BACKEND_KEY', 'IST.testkey');
+      vi.stubEnv('WIX_SITE_ID', 'test-site-id');
 
       const config = importProductPhotos.getConfig();
       expect(config).toEqual({
         apiKey: 'IST.testkey',
         siteId: 'test-site-id',
       });
-
-      process.env = original;
     });
 
     it('throws if WIX_BACKEND_KEY is missing', () => {
-      const original = { ...process.env };
-      delete process.env.WIX_BACKEND_KEY;
-      process.env.WIX_SITE_ID = 'test';
+      vi.stubEnv('WIX_BACKEND_KEY', '');
+      vi.stubEnv('WIX_SITE_ID', 'test');
 
       expect(() => importProductPhotos.getConfig()).toThrow(/WIX_BACKEND_KEY/);
-
-      process.env = original;
     });
 
     it('throws if WIX_SITE_ID is missing', () => {
-      const original = { ...process.env };
-      process.env.WIX_BACKEND_KEY = 'IST.test';
-      delete process.env.WIX_SITE_ID;
+      vi.stubEnv('WIX_BACKEND_KEY', 'IST.test');
+      vi.stubEnv('WIX_SITE_ID', '');
 
       expect(() => importProductPhotos.getConfig()).toThrow(/WIX_SITE_ID/);
-
-      process.env = original;
     });
   });
 
@@ -487,6 +531,38 @@ describe('importProductPhotos', () => {
       expect(mockFetch).toHaveBeenCalledTimes(4);
     });
   });
+
+    it('continues remaining batches when one batch API call fails', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const images = Array.from({ length: 150 }, (_, i) =>
+        `https://static.wixstatic.com/media/e04e89_${i}.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg`
+      );
+      const manifest = [{ slug: 'prod', folder: '/products/cat', images }];
+
+      // Folders
+      mockFetch.mockResolvedValueOnce(folderResponse('rootId', 'products'));
+      mockFetch.mockResolvedValueOnce(folderResponse('catId', 'cat', 'rootId'));
+      // Batch 1 fails with API error
+      mockFetch.mockResolvedValueOnce(errorResponse(500, 'Internal Server Error'));
+      // Batch 2 succeeds
+      mockFetch.mockResolvedValueOnce(bulkImportResponse(
+        Array.from({ length: 50 }, (_, i) => ({ url: `u${i}`, displayName: `prod-${i + 101}` }))
+      ));
+
+      const result = await importProductPhotos.runImport(
+        manifest,
+        { apiKey: 'IST.test', siteId: 'site123' }
+      );
+
+      expect(result.totalSuccess).toBe(50);
+      expect(result.totalFailed).toBe(100); // Entire batch 1 counted as failed
+      expect(result.failures).toHaveLength(100);
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Batch 1 failed'));
+
+      errorSpy.mockRestore();
+      logSpy.mockRestore();
+    });
 
   describe('dry run mode', () => {
     it('does not call API in dry run mode', async () => {
