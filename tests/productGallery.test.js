@@ -52,6 +52,32 @@ function create$w() {
   return (sel) => { if (!els.has(sel)) els.set(sel, createMockElement()); return els.get(sel); };
 }
 
+/** Reusable 3-image mediaItems array (prevents placeholder fill which requires < 3 items) */
+function threeImageMedia() {
+  return [
+    { src: 'https://example.com/a.jpg', type: 'image', title: 'Image A' },
+    { src: 'https://example.com/b.jpg', type: 'image', title: 'Image B' },
+    { src: 'https://example.com/c.jpg', type: 'image', title: 'Image C' },
+  ];
+}
+
+/** Stub global document with keydown listener tracking */
+function stubDocumentWithKeydown() {
+  let keydownListeners = [];
+  vi.stubGlobal('document', {
+    addEventListener: vi.fn((event, handler) => {
+      if (event === 'keydown') keydownListeners.push(handler);
+    }),
+    removeEventListener: vi.fn((event, handler) => {
+      if (event === 'keydown') {
+        keydownListeners = keydownListeners.filter(h => h !== handler);
+      }
+    }),
+    activeElement: { id: 'productMainImage', closest: vi.fn(() => true) },
+  });
+  return { get listeners() { return keydownListeners; }, set listeners(v) { keydownListeners = v; } };
+}
+
 describe('ProductGallery', () => {
   let $w, state;
   beforeEach(() => {
@@ -222,6 +248,61 @@ describe('ProductGallery', () => {
       expect(trackGalleryInteraction).toHaveBeenCalledWith('swipe', 'left');
     });
 
+    it('swipe left updates alt text from item.title', async () => {
+      const { enableSwipe } = await import('public/touchHelpers');
+      enableSwipe.mockClear();
+      const gallery = $w('#productGallery');
+      gallery.getElement = vi.fn(() => ({}));
+      gallery.items = [
+        { src: 'https://example.com/a.jpg', title: 'Front View' },
+        { src: 'https://example.com/b.jpg', title: 'Side View' },
+        { src: 'https://example.com/c.jpg', title: 'Back View' },
+      ];
+      state.product.mediaItems = gallery.items.map(i => ({ ...i, type: 'image' }));
+      initImageGallery($w, state);
+      const swipeCallback = enableSwipe.mock.calls[0][1];
+      swipeCallback('left');
+      expect($w('#productMainImage').alt).toBe('Side View');
+    });
+
+    it('swipe left falls back to product.name for alt when no item.title', async () => {
+      const { enableSwipe } = await import('public/touchHelpers');
+      enableSwipe.mockClear();
+      const gallery = $w('#productGallery');
+      gallery.getElement = vi.fn(() => ({}));
+      gallery.items = [
+        { src: 'https://example.com/a.jpg' },
+        { src: 'https://example.com/b.jpg' },
+        { src: 'https://example.com/c.jpg' },
+      ];
+      state.product.mediaItems = gallery.items.map(i => ({ ...i, type: 'image' }));
+      initImageGallery($w, state);
+      const swipeCallback = enableSwipe.mock.calls[0][1];
+      swipeCallback('left');
+      expect($w('#productMainImage').alt).toBe('Eureka Futon Frame');
+    });
+
+    it('swipe right tracks interaction', async () => {
+      const { enableSwipe } = await import('public/touchHelpers');
+      const { trackGalleryInteraction } = await import('public/engagementTracker');
+      enableSwipe.mockClear();
+      trackGalleryInteraction.mockClear();
+      const gallery = $w('#productGallery');
+      gallery.getElement = vi.fn(() => ({}));
+      gallery.items = [
+        { src: 'https://example.com/a.jpg' },
+        { src: 'https://example.com/b.jpg' },
+        { src: 'https://example.com/c.jpg' },
+      ];
+      state.product.mediaItems = gallery.items.map(i => ({ ...i, type: 'image' }));
+      initImageGallery($w, state);
+      const swipeCallback = enableSwipe.mock.calls[0][1];
+      swipeCallback('left'); // go to idx 1
+      trackGalleryInteraction.mockClear();
+      swipeCallback('right'); // go back to idx 0
+      expect(trackGalleryInteraction).toHaveBeenCalledWith('swipe', 'right');
+    });
+
     it('swipe right does not go below index 0', async () => {
       const { enableSwipe } = await import('public/touchHelpers');
       enableSwipe.mockClear();
@@ -334,7 +415,7 @@ describe('ProductGallery', () => {
   });
 
   describe('initImageGallery — CLS prevention', () => {
-    it('sets main image width to 100%', async () => {
+    it('sets main image width to 100%', () => {
       initImageGallery($w, state);
       expect($w('#productMainImage').style.width).toBe('100%');
     });
@@ -347,7 +428,7 @@ describe('ProductGallery', () => {
       expect($w('#productMainImage').style.aspectRatio).toBe('800 / 800');
     });
 
-    it('does not crash when style is not settable', async () => {
+    it('does not crash when style is not settable', () => {
       const mainImage = $w('#productMainImage');
       Object.defineProperty(mainImage, 'style', {
         get() { throw new Error('style not available'); },
@@ -385,21 +466,10 @@ describe('ProductGallery', () => {
   });
 
   describe('initImageGallery — keyboard navigation', () => {
-    let keydownListeners;
+    let docStub;
 
     beforeEach(() => {
-      keydownListeners = [];
-      vi.stubGlobal('document', {
-        addEventListener: vi.fn((event, handler) => {
-          if (event === 'keydown') keydownListeners.push(handler);
-        }),
-        removeEventListener: vi.fn((event, handler) => {
-          if (event === 'keydown') {
-            keydownListeners = keydownListeners.filter(h => h !== handler);
-          }
-        }),
-        activeElement: { id: 'productMainImage', closest: vi.fn(() => true) },
-      });
+      docStub = stubDocumentWithKeydown();
     });
 
     afterEach(() => {
@@ -429,7 +499,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       expect($w('#productMainImage').src).toBe('https://example.com/b.jpg');
       expect(trackGalleryInteraction).toHaveBeenCalledWith('keyboard', 'next');
@@ -444,7 +514,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowDown', preventDefault: vi.fn() });
       expect($w('#productMainImage').src).toBe('https://example.com/b.jpg');
     });
@@ -460,7 +530,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       // Go forward first
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
@@ -480,7 +550,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       handler({ key: 'ArrowUp', preventDefault: vi.fn() });
       expect($w('#productMainImage').src).toBe('https://example.com/a.jpg');
@@ -495,7 +565,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowLeft', preventDefault: vi.fn() });
       expect($w('#productMainImage').src).toBe('https://example.com/a.jpg');
     });
@@ -509,7 +579,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       handler({ key: 'ArrowRight', preventDefault: vi.fn() }); // should stay at 2
@@ -525,7 +595,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       const event = { key: 'ArrowRight', preventDefault: vi.fn() };
       handler(event);
       expect(event.preventDefault).toHaveBeenCalled();
@@ -542,8 +612,27 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
+      expect(announce).toHaveBeenCalledWith($w, 'Image 2 of 3');
+    });
+
+    it('announces correct position on ArrowLeft (prev direction)', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      announce.mockClear();
+      const gallery = $w('#productGallery');
+      state.product.mediaItems = [
+        { src: 'https://example.com/a.jpg', type: 'image', title: 'A' },
+        { src: 'https://example.com/b.jpg', type: 'image', title: 'B' },
+        { src: 'https://example.com/c.jpg', type: 'image', title: 'C' },
+      ];
+      gallery.items = state.product.mediaItems;
+      initImageGallery($w, state);
+      const handler = docStub.listeners[0];
+      handler({ key: 'ArrowRight', preventDefault: vi.fn() }); // idx → 1
+      handler({ key: 'ArrowRight', preventDefault: vi.fn() }); // idx → 2
+      announce.mockClear();
+      handler({ key: 'ArrowLeft', preventDefault: vi.fn() }); // idx → 1
       expect(announce).toHaveBeenCalledWith($w, 'Image 2 of 3');
     });
 
@@ -556,7 +645,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       expect($w('#productMainImage').alt).toBe('Side View');
     });
@@ -570,7 +659,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       expect($w('#productMainImage').alt).toBe('Eureka Futon Frame');
     });
@@ -584,7 +673,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       const event = { key: 'Enter', preventDefault: vi.fn() };
       handler(event);
       // Should not navigate — preventDefault should NOT be called
@@ -602,7 +691,7 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       const prevSrc = $w('#productMainImage').src;
       handler({ key: 'ArrowRight', preventDefault: vi.fn() });
       // src should not have changed
@@ -619,27 +708,16 @@ describe('ProductGallery', () => {
       // Set items to empty after init to test runtime behavior
       initImageGallery($w, state);
       gallery.items = [];
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       expect(() => handler({ key: 'ArrowRight', preventDefault: vi.fn() })).not.toThrow();
     });
   });
 
   describe('initImageGallery — destroy cleanup', () => {
-    let keydownListeners;
+    let docStub;
 
     beforeEach(() => {
-      keydownListeners = [];
-      vi.stubGlobal('document', {
-        addEventListener: vi.fn((event, handler) => {
-          if (event === 'keydown') keydownListeners.push(handler);
-        }),
-        removeEventListener: vi.fn((event, handler) => {
-          if (event === 'keydown') {
-            keydownListeners = keydownListeners.filter(h => h !== handler);
-          }
-        }),
-        activeElement: { id: 'productMainImage', closest: vi.fn(() => true) },
-      });
+      docStub = stubDocumentWithKeydown();
     });
 
     afterEach(() => {
@@ -685,10 +763,10 @@ describe('ProductGallery', () => {
       ];
       gallery.items = state.product.mediaItems;
       const result = initImageGallery($w, state);
-      const handler = keydownListeners[0];
+      const handler = docStub.listeners[0];
       result.destroy();
-      // After destroy, the handler was removed — keydownListeners should be empty
-      expect(keydownListeners.length).toBe(0);
+      // After destroy, the handler was removed — listeners should be empty
+      expect(docStub.listeners.length).toBe(0);
     });
   });
 
