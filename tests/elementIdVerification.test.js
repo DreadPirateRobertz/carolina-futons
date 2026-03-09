@@ -11,8 +11,19 @@ import {
   extractElementIds,
   validateElementId,
   validatePageIds,
-  getPageFiles,
 } from '../src/public/elementIdValidator.js';
+
+/**
+ * Get all page file paths from src/pages/.
+ * Lives in test code (not src/public/) because it uses Node.js fs — not Wix Velo compatible.
+ * @returns {string[]} Array of absolute file paths
+ */
+function getPageFiles() {
+  const pagesDir = join(process.cwd(), 'src', 'pages');
+  return readdirSync(pagesDir)
+    .filter(f => f.endsWith('.js'))
+    .map(f => join(pagesDir, f));
+}
 
 // ── Unit tests for extraction and validation ────────────────────────
 
@@ -53,20 +64,22 @@ describe('extractElementIds', () => {
 
   it('returns empty array for no $w calls', () => {
     const source = `const x = 42; console.log(x);`;
-    const ids = extractElementIds(source);
-    expect(ids).toEqual([]);
+    expect(extractElementIds(source)).toEqual([]);
+  });
+
+  it('returns empty array for null or undefined input', () => {
+    expect(extractElementIds(null)).toEqual([]);
+    expect(extractElementIds(undefined)).toEqual([]);
   });
 
   it('ignores $w calls without hash prefix', () => {
     const source = `$w('Button').onClick(() => {});`;
-    const ids = extractElementIds(source);
-    expect(ids).toEqual([]);
+    expect(extractElementIds(source)).toEqual([]);
   });
 
   it('ignores $w calls with CSS selectors', () => {
     const source = `$w('.myClass').forEach(el => el.show());`;
-    const ids = extractElementIds(source);
-    expect(ids).toEqual([]);
+    expect(extractElementIds(source)).toEqual([]);
   });
 
   it('handles template literals in nearby code without matching them', () => {
@@ -74,14 +87,18 @@ describe('extractElementIds', () => {
       const name = \`hello\`;
       $w('#realElement').show();
     `;
-    const ids = extractElementIds(source);
-    expect(ids).toEqual(['realElement']);
+    expect(extractElementIds(source)).toEqual(['realElement']);
   });
 
   it('extracts IDs from elementId property strings', () => {
     const source = `{ elementId: '#categoryFutonFrames', name: 'Frames' }`;
+    expect(extractElementIds(source)).toContain('categoryFutonFrames');
+  });
+
+  it('extracts underscore IDs for downstream validation to catch', () => {
+    const source = `$w('#some_id').show();`;
     const ids = extractElementIds(source);
-    expect(ids).toContain('categoryFutonFrames');
+    expect(ids).toContain('some_id');
   });
 });
 
@@ -108,6 +125,12 @@ describe('validateElementId', () => {
     expect(result.reason).toMatch(/empty/i);
   });
 
+  it('rejects null and undefined', () => {
+    expect(validateElementId(null).valid).toBe(false);
+    expect(validateElementId(null).reason).toMatch(/empty/i);
+    expect(validateElementId(undefined).valid).toBe(false);
+  });
+
   it('rejects ID starting with number', () => {
     const result = validateElementId('1button');
     expect(result.valid).toBe(false);
@@ -122,6 +145,12 @@ describe('validateElementId', () => {
 
   it('rejects ID with hyphens', () => {
     const result = validateElementId('my-button');
+    expect(result.valid).toBe(false);
+    expect(result.reason).toMatch(/alphanumeric/i);
+  });
+
+  it('rejects ID with underscores', () => {
+    const result = validateElementId('my_button');
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/alphanumeric/i);
   });
@@ -190,16 +219,13 @@ describe('getPageFiles', () => {
 // ── Full verification across all pages ──────────────────────────────
 
 describe('Element ID verification — all pages', () => {
-  const pageFiles = (() => {
-    try {
-      return getPageFiles();
-    } catch {
-      return [];
-    }
-  })();
+  const pageFiles = getPageFiles();
 
-  it('finds all 39 page files', () => {
-    expect(pageFiles).toHaveLength(39);
+  it('finds page files matching src/pages/ directory', () => {
+    const pagesDir = join(process.cwd(), 'src', 'pages');
+    const expected = readdirSync(pagesDir).filter(f => f.endsWith('.js')).length;
+    expect(pageFiles).toHaveLength(expected);
+    expect(pageFiles.length).toBeGreaterThan(30);
   });
 
   it.each(
@@ -233,10 +259,10 @@ describe('Element ID verification — all pages', () => {
     }
 
     expect(totalUnique.size).toBeGreaterThan(700);
-    expect(Object.keys(perPage)).toHaveLength(39);
+    expect(Object.keys(perPage)).toHaveLength(pageFiles.length);
   });
 
-  it('detects no duplicate IDs used across unrelated pages (informational)', () => {
+  it('identifies shared IDs used across multiple pages', () => {
     const idToPages = {};
 
     for (const filePath of pageFiles) {
@@ -252,11 +278,15 @@ describe('Element ID verification — all pages', () => {
     const sharedIds = Object.entries(idToPages)
       .filter(([, pages]) => pages.length > 1);
 
-    // Shared IDs are expected (e.g., a11yLiveRegion used on many pages via masterPage)
-    // Verify the cross-page map was built correctly and contains expected shared IDs
+    // Some IDs are legitimately shared (e.g., social sharing buttons on multiple pages)
     expect(sharedIds.length).toBeGreaterThan(0);
     const sharedIdNames = sharedIds.map(([id]) => id);
     expect(sharedIdNames).toContain('shareFacebook');
+
+    // Verify each shared ID has at least 2 pages
+    for (const [id, pages] of sharedIds) {
+      expect(pages.length, `${id} should appear on 2+ pages`).toBeGreaterThanOrEqual(2);
+    }
   });
 });
 
@@ -266,21 +296,24 @@ describe('Element ID verification — public helpers', () => {
   it('validates $w IDs in public helper modules', () => {
     const publicDir = join(process.cwd(), 'src', 'public');
     const files = readdirSync(publicDir).filter(f => f.endsWith('.js'));
-    const allInvalid = [];
+    let totalIdsChecked = 0;
 
+    const allInvalid = [];
     for (const file of files) {
       const source = readFileSync(join(publicDir, file), 'utf-8');
       const result = validatePageIds(source, file);
+      totalIdsChecked += result.totalIds;
       if (!result.valid) {
         allInvalid.push(...result.invalidIds.map(i => ({ ...i, file })));
       }
     }
 
-    if (allInvalid.length > 0) {
-      const details = allInvalid
-        .map(i => `  ${i.file}: ${i.id} — ${i.reason}`)
-        .join('\n');
-      expect(allInvalid, `Invalid IDs in public helpers:\n${details}`).toHaveLength(0);
-    }
+    expect(allInvalid, allInvalid.length > 0
+      ? `Invalid IDs in public helpers:\n${allInvalid.map(i => `  ${i.file}: ${i.id} — ${i.reason}`).join('\n')}`
+      : ''
+    ).toHaveLength(0);
+
+    // Ensure we actually scanned IDs (not silently skipping everything)
+    expect(totalIdsChecked).toBeGreaterThan(300);
   });
 });

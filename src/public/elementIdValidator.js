@@ -1,32 +1,36 @@
 /**
  * Element ID Validator — Static analysis for Wix Velo $w element IDs.
  * Extracts and validates all $w('#id') references from page source code.
+ *
+ * Note: This module contains only pure functions (no fs/path imports)
+ * so it remains Wix Velo compatible. File I/O lives in test code.
  * @module elementIdValidator
  */
-import { readFileSync, readdirSync } from 'fs';
-import { join, basename } from 'path';
 
-/** Valid Wix element ID: starts with letter, alphanumeric only */
+/** Valid Wix element ID: starts with letter, alphanumeric only (no underscores) */
 const VALID_ID_RE = /^[a-zA-Z][a-zA-Z0-9]*$/;
 
 /**
  * Extract unique $w element IDs from source code.
+ * Captures broadly (letters, digits, underscores) so that IDs with underscores
+ * are extracted and then caught by validateElementId as invalid.
  * @param {string} source - JavaScript source code
  * @returns {string[]} Array of unique element IDs (without # prefix)
  */
 export function extractElementIds(source) {
+  if (typeof source !== 'string') return [];
+
   const ids = new Set();
 
-  // Extract broadly (including underscores) — validation rejects invalid IDs later
   const patterns = [
-    /\$w\(['"]#([a-zA-Z0-9_]*)['"]\)/g,       // $w('#id') and $w("#id")
-    /elementId:\s*['"]#([a-zA-Z0-9_]*)['"]/g,  // elementId: '#id' in config objects
+    /\$w\(['"]#([a-zA-Z0-9_]+)['"]\)/g,       // $w('#id') and $w("#id")
+    /elementId:\s*['"]#([a-zA-Z0-9_]+)['"]/g,  // elementId: '#id' in config objects
   ];
 
   for (const re of patterns) {
     let match;
     while ((match = re.exec(source)) !== null) {
-      if (match[1]) ids.add(match[1]);
+      ids.add(match[1]);
     }
   }
 
@@ -39,7 +43,7 @@ export function extractElementIds(source) {
  * @returns {{ valid: boolean, reason?: string }}
  */
 export function validateElementId(id) {
-  if (!id || id.length === 0) {
+  if (!id || typeof id !== 'string' || id.length === 0) {
     return { valid: false, reason: 'ID is empty' };
   }
   if (id.startsWith('#')) {
@@ -77,16 +81,4 @@ export function validatePageIds(source, pageName) {
     invalidIds,
     valid: invalidIds.length === 0,
   };
-}
-
-/**
- * Get all page file paths from src/pages/.
- * @returns {string[]} Array of absolute file paths
- */
-export function getPageFiles() {
-  const pagesDir = join(process.cwd(), 'src', 'pages');
-  const files = readdirSync(pagesDir)
-    .filter(f => f.endsWith('.js'))
-    .map(f => join(pagesDir, f));
-  return files;
 }
