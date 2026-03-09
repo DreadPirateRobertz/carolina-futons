@@ -15,7 +15,7 @@ We write Wix Velo code in carolina-futons but have no automated way to deploy it
 Three-repo architecture with official + custom MCP servers:
 
 1. **carolina-futons** (existing) — Dev repo, bleeding edge, active development
-2. **carolina_futons_velO** (new, exists on GitHub, connected to "My Site 1") — Production repo, receives only tagged release code
+2. **carolina_futons_velO** (new, exists on GitHub, connected to "My Site 2") — Production repo, receives only tagged release code
 3. **wix-velo-mcp** (new) — Custom MCP server wrapping Wix CLI for code deployment
 
 ## Release Flow
@@ -25,7 +25,7 @@ carolina-futons (dev) → tag release → velo_sync → carolina_futons_velO (pr
                                                           ↓
                                                    Wix GitHub Integration
                                                           ↓
-                                                   "My Site 1" (live)
+                                                   "My Site 2" (live)
                                                           ↓
                                                    velo_publish → production
 ```
@@ -45,12 +45,12 @@ DreadPirateRobertz/
 ├── carolina-futons          ← Dev (existing)
 │   └── tags: v0.0.0, v0.1.0, ...
 │
-├── carolina_futons_velO     ← Production (exists, connected to "My Site 1")
+├── carolina_futons_velO     ← Production (exists, connected to "My Site 2")
 │   ├── src/pages/
 │   ├── src/public/
 │   ├── src/backend/
 │   ├── tests/
-│   ├── wix.config.json      ← "My Site 1" siteId
+│   ├── wix.config.json      ← "My Site 2" siteId
 │   ├── package.json
 │   └── vitest.config.js
 │
@@ -155,7 +155,7 @@ Connect the central Wix MCP for site data operations:
 - No custom REST API wrappers (official MCP)
 - No CI/CD pipeline (agent-driven for now)
 - No web UI
-- No multi-site support (just "My Site 1")
+- No multi-site support (just "My Site 2")
 
 ## Implementation Sequence
 

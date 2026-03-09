@@ -1261,7 +1261,7 @@ Verify: tests pass, publish succeeds, site is live
 
 **Step 5: Test official Wix MCP**
 
-Run ListWixSites — verify "My Site 1" appears
+Run ListWixSites — verify "My Site 2" appears
 Run GetBusinessDetails — verify site info returns
 
 **Step 6: Tag wix-velo-mcp v0.0.0**
