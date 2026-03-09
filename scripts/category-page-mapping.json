@@ -1,0 +1,121 @@
+{
+  "_meta": {
+    "page": "Category Page",
+    "pageId": "u0gn0",
+    "templatePage": "Shop / Category (All Products)",
+    "notes": "Maps BUILD-SPEC element IDs to template element descriptions. Template Wix IDs (comp-xxx) TBD — discovered in editor. Gaps listed separately for manual placement."
+  },
+
+  "mapping": {
+    "_comment": "{ ourBuildSpecId: templateElementDescription }",
+
+    "breadcrumbHome": "Breadcrumbs > Home link ('Home > All Products' nav)",
+    "breadcrumbCurrent": "Breadcrumbs > Current page label",
+
+    "categoryHeroTitle": "Page title H1 ('All Products')",
+    "categoryHeroSubtitle": "Category description text (placeholder description under title)",
+
+    "filterPrice": "Filter by: Price slider ($130 - $1,200 range)",
+    "filterColor": "Filter by: Color checkboxes (14 color options)",
+    "sortDropdown": "Sort by dropdown ('Sort by: Recommended')",
+    "resultCount": "Product count text ('24 products')",
+
+    "productGridRepeater": "Product grid gallery (24 products, 3-col layout)",
+    "gridImage": "Product card > Image",
+    "gridName": "Product card > Name text",
+    "gridPrice": "Product card > Price text",
+    "gridOrigPrice": "Product card > Sale strikethrough price",
+    "gridSaleBadge": "Product card > SALE badge",
+    "gridBadge": "Product card > Badge (NEW / BEST SELLER)",
+    "gridSwatchPreview": "Product card > Color variant swatch dots"
+  },
+
+  "gaps": {
+    "_comment": "BUILD-SPEC elements NOT in template — need manual editor placement",
+
+    "heroSection": {
+      "id": "categoryHeroSection",
+      "type": "Section",
+      "notes": "Dynamic bg per category. Template has static breadcrumb area — need styled hero section."
+    },
+
+    "filterBar": {
+      "ids": ["filterBrand", "filterSize", "clearFilters"],
+      "type": "Dropdowns + Button",
+      "notes": "Template has price + color filters only. We need brand (Night & Day, Strata...) and size (Full, Queen, Twin) dropdowns plus clear button."
+    },
+
+    "advancedFacetedFilters": {
+      "ids": ["filterMaterial", "filterFeatures", "filterComfortLevel", "filterPriceRange", "filterWidthMin", "filterWidthMax", "filterDepthMin", "filterDepthMax", "filterResultCount", "clearAllFilters", "filterLoadingIndicator"],
+      "type": "CheckboxGroups + Inputs + Button + Spinner",
+      "notes": "Full faceted filter system powered by searchService.web.js. Template has basic price/color only."
+    },
+
+    "mobileFilterDrawer": {
+      "ids": ["mobileSortBar", "filterToggleBtn", "filterDrawer", "filterDrawerOverlay", "filterDrawerApply"],
+      "type": "Box + Buttons + Overlay",
+      "notes": "Bottom sheet mobile filter UX. Template may have responsive mobile nav but not a dedicated filter drawer."
+    },
+
+    "productCardExtras": {
+      "ids": ["gridRibbon", "gridFabricBadge", "gridReviewStars", "gridReviewCount", "gridCompareBtn", "swatchDot1", "swatchDot2", "swatchDot3", "swatchDot4"],
+      "type": "Mixed (Text, Box, Button)",
+      "notes": "Template has basic badge + swatches. We need ribbon, fabric badge, review stars/count, compare button, and 4 individual swatch dots."
+    },
+
+    "quickViewModal": {
+      "ids": ["quickViewModal", "qvImage", "qvName", "qvPrice", "qvDescription", "qvViewFull", "qvAddToCart", "qvClose"],
+      "type": "Lightbox/Box with children",
+      "notes": "Template does NOT have quick view on category page (only on product page cross-sell). Full lightbox needed."
+    },
+
+    "emptyState": {
+      "ids": ["emptyStateSection", "emptyStateTitle", "emptyStateMessage", "emptyStateIllustration"],
+      "type": "Section with text + image",
+      "notes": "No empty state in template — shows full grid always. Need custom section for zero-product categories."
+    },
+
+    "noMatchesState": {
+      "ids": ["noMatchesSection", "noMatchesTitle", "noMatchesMessage", "noMatchesSuggestion"],
+      "type": "Section with text",
+      "notes": "No filter-no-results state in template. Need custom section when advanced filters return zero."
+    },
+
+    "recentlyViewed": {
+      "ids": ["recentlyViewedSection", "recentlyViewedTitle", "recentlyViewedRepeater", "recentImage", "recentName", "recentPrice"],
+      "type": "Section with repeater",
+      "notes": "Not in template. Custom section below grid, collapsible, 6 items max."
+    },
+
+    "activeFilterChips": {
+      "ids": ["activeFilterChips", "filterChipRepeater", "chipLabel", "chipRemove", "filterChipsText", "clearAllFiltersChip"],
+      "type": "Box with repeater",
+      "notes": "Removable badge chips for active filters. Not in template."
+    },
+
+    "comparisonBar": {
+      "ids": ["compareViewBtn", "compareBar", "compareRepeater", "compareThumb", "compareName", "comparePrice", "compareRemove"],
+      "type": "Sticky bottom bar with repeater",
+      "notes": "Sticky comparison bar for 2-4 selected products. Not in template."
+    },
+
+    "schemaElements": {
+      "ids": ["categorySchemaHtml", "categoryBreadcrumbSchemaHtml", "categoryOgHtml"],
+      "type": "HtmlComponent (hidden)",
+      "notes": "SEO JSON-LD and Open Graph meta injection. Not in template."
+    },
+
+    "categorySidebar": {
+      "id": "browseBySidebar",
+      "type": "Nav list",
+      "notes": "Template HAS a 'Browse by' sidebar (All Products, Sofas, Lounge Chairs, Tables, Chairs). Not in our BUILD-SPEC as a named element — consider adopting or repurposing."
+    }
+  },
+
+  "summary": {
+    "matchedElements": 17,
+    "gapElements": 56,
+    "templateExtras": ["Browse by sidebar nav (not in BUILD-SPEC — repurpose or adopt)"],
+    "coverage": "~23% element coverage, but template covers core commerce grid (breadcrumbs, filters, sort, product cards with badges/swatches/sale pricing). Major gaps are advanced filters, mobile drawer, quick view, empty/no-match states, comparison bar, recently viewed, filter chips, and SEO schema."
+  }
+}
