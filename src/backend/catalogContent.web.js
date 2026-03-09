@@ -52,7 +52,7 @@ import { sanitize } from 'backend/utils/sanitize';
 
 const VALID_CATEGORIES = [
   'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
-  'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',
+  'casegoods-accessories', 'front-loading-nesting', 'wall-huggers', 'wall-hugger-frames',
   'unfinished-wood', 'covers', 'outdoor-furniture', 'log-frames', 'pillows',
 ];
 
