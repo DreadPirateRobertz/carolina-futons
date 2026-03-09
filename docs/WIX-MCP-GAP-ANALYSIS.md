@@ -3,7 +3,7 @@
 **Bead:** CF-mfcw (P1)
 **Date:** 2026-03-08
 **Author:** godfrey (cfutons/crew)
-**Target:** My Site 2 production integration (`49cd75b0-92f1-4978-93e2-f5b5da531142`)
+**Target:** My Site 2 staging integration (`49cd75b0-92f1-4978-93e2-f5b5da531142`)
 
 ---
 
