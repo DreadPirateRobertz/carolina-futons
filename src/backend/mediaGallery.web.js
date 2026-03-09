@@ -53,6 +53,10 @@ const CATEGORY_FOLDERS = {
   'casegoods-accessories': '/products/casegoods-accessories',
   'covers': '/products/covers',
   'pillows-702': '/products/pillows',
+  'wall-hugger-frames': '/products/wall-hugger-frames',
+  'front-loading-nesting': '/products/front-loading-nesting',
+  'log-frames': '/products/log-frames',
+  'unfinished-wood': '/products/unfinished-wood',
 };
 
 // ── Admin check ─────────────────────────────────────────────────────
