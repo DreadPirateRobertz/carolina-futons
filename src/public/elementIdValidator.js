@@ -17,17 +17,17 @@ const VALID_ID_RE = /^[a-zA-Z][a-zA-Z0-9]*$/;
 export function extractElementIds(source) {
   const ids = new Set();
 
-  // Match $w('#id') and $w("#id") patterns
-  const dwRe = /\$w\(['"]#([a-zA-Z0-9_]*)['"]\)/g;
-  let match;
-  while ((match = dwRe.exec(source)) !== null) {
-    if (match[1]) ids.add(match[1]);
-  }
+  // Extract broadly (including underscores) — validation rejects invalid IDs later
+  const patterns = [
+    /\$w\(['"]#([a-zA-Z0-9_]*)['"]\)/g,       // $w('#id') and $w("#id")
+    /elementId:\s*['"]#([a-zA-Z0-9_]*)['"]/g,  // elementId: '#id' in config objects
+  ];
 
-  // Match elementId: '#id' property patterns (e.g., in config objects)
-  const propRe = /elementId:\s*['"]#([a-zA-Z0-9_]*)['"]/g;
-  while ((match = propRe.exec(source)) !== null) {
-    if (match[1]) ids.add(match[1]);
+  for (const re of patterns) {
+    let match;
+    while ((match = re.exec(source)) !== null) {
+      if (match[1]) ids.add(match[1]);
+    }
   }
 
   return [...ids];

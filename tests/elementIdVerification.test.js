@@ -221,8 +221,8 @@ describe('Element ID verification — all pages', () => {
   });
 
   it('reports total ID count across all pages', () => {
-    let totalUnique = new Set();
-    let perPage = {};
+    const totalUnique = new Set();
+    const perPage = {};
 
     for (const filePath of pageFiles) {
       const source = readFileSync(filePath, 'utf-8');
@@ -252,9 +252,11 @@ describe('Element ID verification — all pages', () => {
     const sharedIds = Object.entries(idToPages)
       .filter(([, pages]) => pages.length > 1);
 
-    // Shared IDs are expected (e.g., a11yLiveRegion used on many pages)
-    // This test is informational — it passes but logs shared IDs
-    expect(Array.isArray(sharedIds)).toBe(true);
+    // Shared IDs are expected (e.g., a11yLiveRegion used on many pages via masterPage)
+    // Verify the cross-page map was built correctly and contains expected shared IDs
+    expect(sharedIds.length).toBeGreaterThan(0);
+    const sharedIdNames = sharedIds.map(([id]) => id);
+    expect(sharedIdNames).toContain('shareFacebook');
   });
 });
 
