@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-// Tests for Contact page form validation, appointment booking validation,
-// business hours display, and social proof wiring.
+// Tests for Contact page form validation, business hours display,
+// showroom info data integrity, and social proof wiring.
 
 import {
   validateContactFields,
@@ -384,7 +384,7 @@ describe('Contact page — message validation edge cases', () => {
     expect(result.errors.find(e => e.field === 'message')).toBeTruthy();
   });
 
-  it('accepts single character message', () => {
+  it('accepts short message', () => {
     const result = validateContactFields({
       name: 'Jane',
       email: 'jane@test.com',
@@ -481,6 +481,18 @@ describe('Contact page — business hours for specific days', () => {
     expect(hours.todayStatus).toMatch(/10:00 AM/);
   });
 
+  it('shows open status on Thursday (day 4)', () => {
+    const hours = formatBusinessHours(4);
+    expect(hours.isOpen).toBe(true);
+    expect(hours.todayStatus).toMatch(/open/i);
+  });
+
+  it('shows open status on Friday (day 5)', () => {
+    const hours = formatBusinessHours(5);
+    expect(hours.isOpen).toBe(true);
+    expect(hours.todayStatus).toMatch(/open/i);
+  });
+
   it('shows open status on Saturday (day 6)', () => {
     const hours = formatBusinessHours(6);
     expect(hours.isOpen).toBe(true);
@@ -499,7 +511,8 @@ describe('Contact page — business hours for specific days', () => {
     expect(hours.todayStatus).toMatch(/closed/i);
   });
 
-  it('shows closed status on Tuesday (day 2)', () => {
+  it('shows closed status on Tuesday (day 2) with next-open hint', () => {
+    // Tuesday's status includes "Wednesday" to hint when the store reopens
     const hours = formatBusinessHours(2);
     expect(hours.isOpen).toBe(false);
     expect(hours.todayStatus).toMatch(/Wednesday/);
@@ -516,6 +529,13 @@ describe('Contact page — business hours for specific days', () => {
     const hours = formatBusinessHours(0);
     expect(hours.schedule[0].day).toBe('Sunday');
     expect(hours.schedule[6].day).toBe('Saturday');
+  });
+
+  it('falls back to current day for out-of-range input', () => {
+    // formatBusinessHours uses Set.has() which returns false for invalid days
+    const hours = formatBusinessHours(99);
+    expect(hours.isOpen).toBe(false);
+    expect(hours.schedule).toHaveLength(7);
   });
 });
 
