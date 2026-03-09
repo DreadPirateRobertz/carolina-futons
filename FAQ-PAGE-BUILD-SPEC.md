@@ -24,7 +24,7 @@ Horizontal row of category filter tabs.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Category Repeater | Repeater | `#faqCategoryRepeater` | ARIA role: "tablist", label: "FAQ category filters". Horizontal layout |
-| → Category Label | Text | `#categoryLabel` | Repeater child: clickable category name. ARIA role: "tab", tabIndex: 0. Keyboard: Enter/Space to select |
+| → Category Label | Text | `#categoryLabel` | Repeater child: clickable category name. ARIA: role="tab", ariaLabel="Filter FAQs: \<label\>", tabIndex=0. Keyboard: Enter/Space to select |
 
 ---
 
@@ -43,9 +43,9 @@ Repeater of collapsible question/answer pairs.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | FAQ Repeater | Repeater | `#faqRepeater` | Main FAQ list. Each item is a collapsible accordion |
-| → Question | Text | `#faqQuestion` | Repeater child: clickable question text. ARIA role: "button", tabIndex: 0. Keyboard: Enter/Space to toggle |
+| → Question | Text | `#faqQuestion` | Repeater child: clickable question text. ARIA: role="button", ariaLabel="Toggle answer: \<question\>", tabIndex=0. Keyboard: Enter/Space to toggle |
 | → Answer | Text | `#faqAnswer` | Repeater child: answer text. **Collapsed by default** |
-| → Toggle | Text | `#faqToggle` | Repeater child: "+"/"\u2212" toggle indicator. ARIA: ariaExpanded=false initially. Keyboard: Enter/Space to toggle |
+| → Toggle | Text | `#faqToggle` | Repeater child: "+"/"\u2212" toggle indicator. ARIA: ariaExpanded=false, ariaLabel="Toggle answer: \<question\>", tabIndex=0. Keyboard: Enter/Space to toggle |
 
 ---
 
@@ -57,13 +57,9 @@ Repeater of collapsible question/answer pairs.
 
 ---
 
-## SECTION 5: ACCESSIBILITY (hidden)
+## SECTION 5: ACCESSIBILITY (DO NOT ADD)
 
-| Element | Type | ID | Notes |
-|---------|------|----|-------|
-| Live Region | Text | `#a11yLiveRegion` | Hidden, ARIA live region for screen reader announcements. Used by `announce($w, msg)` |
-
-**Note:** The `a11yLiveRegion` element is shared across pages via `a11yHelpers.js`. It may already exist in the masterPage. Check before adding — if it's on masterPage, skip this element.
+**`#a11yLiveRegion` lives on masterPage — do NOT duplicate it on the FAQ page.** The FAQ code uses `announce($w, msg)` from `a11yHelpers.js`, which targets the masterPage element automatically.
 
 ---
 

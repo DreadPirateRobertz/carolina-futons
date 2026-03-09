@@ -32,6 +32,8 @@ Two-column layout recommended: form on left, business info on right.
 
 ### 2A: Form Container
 
+**Note:** ARIA attributes listed below are set programmatically by Contact.js — do NOT set them manually in the Wix Studio editor.
+
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Form Container | Box | `#contactForm` | Contains all form fields. Hidden on successful submission |
@@ -44,7 +46,7 @@ Two-column layout recommended: form on left, business info on right.
 | Subject Input | Input | `#contactSubject` | Optional. ARIA: label="Message subject (optional)" |
 | Message Input | TextBox | `#contactMessage` | Required, max 5000 chars. ARIA: label="Your message", required=true, describedBy="contactMessageError" |
 | Message Error | Text | `#contactMessageError` | Validation error. Hidden default |
-| Submit Button | Button | `#contactSubmit` | "Send Message". Coral bg (#E8845C), white text. ARIA: label="Send message to Carolina Futons". Disables during submission, label changes to "Sending..." |
+| Submit Button | Button | `#contactSubmit` | Default label: "Send Message". Coral bg (#E8845C), white text. ARIA: label="Send message to Carolina Futons". Disables during submission (label → "Sending..."), reverts on completion |
 | Success Message | Text | `#contactSuccess` | "Message sent!" confirmation. Hidden default. Shown with fade animation on success |
 | Error Message | Text | `#contactError` | General submission error. Hidden default. Shows fallback phone number |
 
@@ -96,7 +98,7 @@ Two-column layout recommended: form on left, business info on right.
 
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
-| FAQ Link | Text/Link | `#contactFaqLink` | "Have questions? See our FAQ" — navigates to /faq. ARIA: role="link" |
+| FAQ Link | Text/Link | `#contactFaqLink` | "Have questions? See our FAQ" — navigates to /faq. ARIA: role="link", ariaLabel="Visit our frequently asked questions page" |
 
 ---
 
@@ -116,7 +118,7 @@ Full showroom appointment booking form with date/time slot selection.
 | Date Picker | DatePicker/Dropdown | `#appointmentDate` | Required. ARIA: label="Preferred date", required=true. Options loaded based on visit type |
 | Time Slot | Dropdown | `#appointmentTimeSlot` | Required. ARIA: label="Preferred time slot", required=true. Shows available slots with spots remaining |
 | Interests | TextBox | `#appointmentInterests` | Optional, max 1000 chars. ARIA: label="What are you interested in? (optional)" |
-| Book Button | Button | `#appointmentBookBtn` | "Book Visit". Coral bg. ARIA: label="Book showroom appointment". Disables during submission |
+| Book Button | Button | `#appointmentBookBtn` | Default label: "Book Visit". Coral bg. ARIA: label="Book showroom appointment". Disables during submission (label → "Booking..."), reverts on completion |
 
 ### 7B: Booking Feedback
 
@@ -141,7 +143,7 @@ Full showroom appointment booking form with date/time slot selection.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Business Schema | HtmlComponent | `#contactSchemaHtml` | Hidden, 0×0, LocalBusiness JSON-LD injection via postMessage |
-| Meta HTML | HtmlComponent | `#contactMetaHtml` | Hidden, 0×0, Open Graph / meta tag injection via postMessage |
+| Meta HTML | HtmlComponent | `#contactMetaHtml` | Hidden, 0×0, page meta (title, description, canonical URL) injection via postMessage |
 
 ---
 

@@ -63,7 +63,7 @@ Vertical timeline of business milestones.
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
 | Timeline Repeater | Repeater | `#timelineRepeater` | ARIA role: "list", label: "Business history timeline" |
-| → Timeline Year | Text | `#timelineYear` | Repeater child: year badge (e.g., "1991", "2000s", "Today") |
+| → Timeline Year | Text | `#timelineYear` | Repeater child: year badge (e.g., "1991", "2000s", "Today"). Code sets ariaLabel="\<year\>: \<title\>" |
 | → Timeline Title | Text | `#timelineTitle` | Repeater child: milestone title |
 | → Timeline Desc | Text | `#timelineDesc` | Repeater child: milestone description |
 
@@ -107,7 +107,7 @@ Customer testimonial cards.
 
 | Element | Type | ID | Notes |
 |---------|------|----|-------|
-| FAQ Link | Text/Link | `#aboutFaqLink` | "Have questions? See our FAQ" — navigates to /faq. ARIA: role="link" |
+| FAQ Link | Text/Link | `#aboutFaqLink` | "Have questions? See our FAQ" — navigates to /faq. ARIA: role="link", ariaLabel="Visit our frequently asked questions page" |
 
 ---
 
