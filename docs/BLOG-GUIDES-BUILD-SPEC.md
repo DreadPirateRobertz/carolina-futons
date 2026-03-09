@@ -499,12 +499,12 @@ In Wix Studio:
 
 | Page | Elements | Repeaters | Nested Repeaters |
 |------|----------|-----------|------------------|
-| Blog | 30 | 3 (categoryFilter, blogGrid, blogProducts) | 0 |
-| Blog Post | 18 | 1 (relatedPosts) | 0 |
-| Buying Guides Hub | 18 | 3 (breadcrumb, categoryFilter, guides) | 0 |
-| Buying Guide Detail | 48 | 8 (breadcrumb, toc, sections, comparisonHeader, comparisonRow, faq, relatedProduct, relatedGuide) | 1 (valueCellRepeater) |
-| Assembly Guides | 30 | 3 (guideCategory, guideList, careTips) | 0 |
-| **Total** | **144** | **18** | **1** |
+| Blog | 34 | 3 (categoryFilterRepeater, blogGridRepeater, blogProductsRepeater) | 0 |
+| Blog Post | 20 | 1 (relatedPostsRepeater) | 0 |
+| Buying Guides Hub | 19 | 3 (breadcrumbRepeater, categoryFilterRepeater, guidesRepeater) | 0 |
+| Buying Guide Detail | 50 | 8 (breadcrumbRepeater, tocRepeater, sectionsRepeater, comparisonHeaderRepeater, comparisonRowRepeater, faqRepeater, relatedProductRepeater, relatedGuideRepeater) | 1 (valueCellRepeater) |
+| Assembly Guides | 34 | 3 (guideCategoryRepeater, guideListRepeater, careTipsRepeater) | 0 |
+| **Total** | **157** | **18** | **1** |
 
 ---
 
@@ -514,13 +514,17 @@ Some element IDs are reused across pages (same name, independent instances):
 
 | Element ID | Used On | Notes |
 |------------|---------|-------|
-| `breadcrumbRepeater` | Buying Guides, Buying Guide | Same structure, different page instances |
-| `breadcrumbLabel` | Buying Guides, Buying Guide | Repeater child |
-| `breadcrumbSeparator` | Buying Guides, Buying Guide | Repeater child |
-| `shareFacebook/Twitter/Pinterest/Email` | Blog, Buying Guide | Same IDs, different pages |
-| `categoryFilterRepeater` | Blog, Buying Guides | Same structure |
-| `filterLabel` | Blog, Buying Guides | Repeater child |
-| `guideTitle` | Buying Guides (repeater child), Assembly Guides (repeater child) | Different contexts |
+| `breadcrumbRepeater` | Buying Guides Hub, Buying Guide Detail | Same structure, different page instances |
+| `breadcrumbLabel` | Buying Guides Hub, Buying Guide Detail | Repeater child |
+| `breadcrumbSeparator` | Buying Guides Hub, Buying Guide Detail | Repeater child |
+| `shareFacebook/Twitter/Pinterest/Email` | Blog, Buying Guide Detail | Same IDs, different pages |
+| `categoryFilterRepeater` | Blog, Buying Guides Hub | Different children: Blog uses `filterChip`+`filterLabel`, Buying Guides uses `filterLabel`+`filterButton` |
+| `filterLabel` | Blog (inside filterChip), Buying Guides Hub (direct child) | Different parent contexts |
+| `guideTitle` | Buying Guides Hub, Buying Guide Detail, Assembly Guides | Repeater child in all three |
+| `guideCategoryLabel` | Buying Guides Hub, Buying Guide Detail | Repeater child |
+| `guideDate` | Buying Guides Hub, Buying Guide Detail | Repeater child |
+| `guideReadTime` | Buying Guides Hub, Buying Guide Detail | Repeater child |
+| `guideHeroImage` | Buying Guides Hub, Buying Guide Detail | Repeater child |
 
 ---
 
@@ -540,31 +544,31 @@ Some element IDs are reused across pages (same name, independent instances):
 
 ## Build Order Recommendation
 
-1. **Blog** (30 elements) — Start here, most commonly visited content page
+1. **Blog** (34 elements) — Start here, most commonly visited content page
    - Featured hero section
    - Category filter repeater
    - Blog card grid repeater
    - Social share + newsletter
    - Products sidebar
 
-2. **Blog Post** (18 elements) — Simplest page, enhances existing Wix Blog app
+2. **Blog Post** (20 elements) — Simplest page, enhances existing Wix Blog app
    - Post metadata (read time, date, category)
    - Author bio section
    - Share buttons
    - Related posts repeater
 
-3. **Buying Guides Hub** (18 elements) — Simple grid page
+3. **Buying Guides Hub** (19 elements) — Simple grid page
    - Breadcrumbs
    - Category filters
    - Guide grid repeater with cards
 
-4. **Assembly Guides** (30 elements) — List/detail toggle pattern
+4. **Assembly Guides** (34 elements) — List/detail toggle pattern
    - Category filters + search
    - Guide list repeater
    - Detail view with steps, video, PDF, tips
    - Care tips section
 
-5. **Buying Guide Detail** (48 elements) — Most complex, has nested repeater
+5. **Buying Guide Detail** (50 elements) — Most complex, has nested repeater
    - Breadcrumbs + header
    - Table of contents (collapsible on mobile)
    - Content sections repeater
