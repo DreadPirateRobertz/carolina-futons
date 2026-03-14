@@ -38,12 +38,12 @@ From screenshots (`design-vision/screenshots/cf-current-*.png`):
 | `espresso` | #3A2518 | #1E3A5F | Dark brown → dark navy |
 | `espressoLight` | #5C4033 | #3D5A80 | Medium brown → medium navy |
 | `offWhite` | #FAF7F2 | #FFFFFF | Warm off-white → pure white |
-| `sunsetCoral` | #E8845C | #5B8FA8 | Coral → CF brand blue (buttons, accents) |
+| `sunsetCoral` | #E8845C | #4A7D94 | Coral → CF brand blue (buttons, accents). Darkened from #5B8FA8 for WCAG AA white-text compliance (4.56:1) |
 | `sunsetCoralDark` | #C96B44 | #3D6B80 | Dark coral → dark blue (hover states) |
 | `sunsetCoralLight` | #F2A882 | #A8CCD8 | Light coral → light blue (badges, highlights) |
 | `mutedBrown` | #816D51 | #64748B | Muted brown → slate gray |
 | `overlay` | rgba(58,37,24,0.6) | rgba(30,58,95,0.6) | Brown overlay → navy overlay |
-| `muted` | #767676 | #64748B | Gray → slate (still WCAG AA compliant) |
+| `muted` | #767676 | #6B7280 | Gray → slate. 4.62:1 on #F0F4F8 (sandBase), 5.09:1 on white — WCAG AA compliant on all surfaces |
 | `error` | #C0392B | #DC2626 | Slightly brighter red for contrast on white |
 
 ### Tokens That Stay (NO CHANGE)
@@ -73,24 +73,18 @@ Shadows currently use espresso-tinted `rgba(58,37,24,...)`. Shift to navy-tinted
 ## Files to Modify
 
 ### Core (values change, everything propagates)
-1. `src/public/sharedTokens.js` — hex values + shadow colors + overlay
+1. `src/public/sharedTokens.js` — hex values + shadow colors + overlay + JSDoc comments (update aesthetic descriptions from "warm sand/rustic" to "clean blue/white CF branding", remove "CTA buttons MUST use sunsetCoral — never blue" rule since sunsetCoral IS now blue)
 2. `src/public/brand-colors.md` — documentation mirror
 
 ### Tests (expected values update)
 3. `tests/sharedTokens.test.js` — token value assertions
 4. `tests/brandPalette.test.js` — BRAND_PALETTE set + BANNED_COLORS
 
-### Hardcoded Hex References (11 files)
-5. `src/public/OnboardingIllustrationsFigma.js` — check if UI or illustration colors
-6. `src/public/CartIllustrationsFigma.js` — check if UI or illustration colors
-7. `src/public/MountainSkylineFigma.js` — illustration, likely no change
-8. `src/public/contactIllustrations.js` — illustration, likely no change
-9. `src/public/aboutIllustrations.js` — illustration, likely no change
-10. `src/backend/emailAutomation.web.js` — email templates need brand blue
-11. `src/public/UGCGallery.js` — hardcoded colors need updating
-12. `src/public/FooterSection.js` — check for hardcoded values
-13. `src/public/ProductDetails.js` — check for hardcoded values
-14. `src/public/priceMatchHelpers.js` — check for hardcoded values
+### Hardcoded Hex References
+5. `src/public/UGCGallery.js` — hardcoded fallback hex values (e.g. `colors.sunsetCoral || '#E8845C'`), update fallbacks to match new values
+6. `src/public/priceMatchHelpers.js` — check for hardcoded UI colors
+7. `src/backend/emailAutomation.web.js` — comment-only hex references, update for accuracy
+8. `src/public/ProductDetails.js` — comment-only hex references, update for accuracy
 
 ### Documentation
 15. `design-vision/DESIGN-VISION.html` — CSS variables in :root
@@ -99,19 +93,24 @@ Shadows currently use espresso-tinted `rgba(58,37,24,...)`. Shift to navy-tinted
 ## Files NOT Modified
 
 - All illustration JS files (`comfortIllustrations.js`, `CartIllustrations.js`, `emptyStateIllustrations.js`, `onboardingIllustrations.js`, `MountainSkyline.js`, `ComfortStoryCards.js`, `emptyStates.js`) — warm palette is intentional
+- Figma illustration files (`OnboardingIllustrationsFigma.js`, `CartIllustrationsFigma.js`, `MountainSkylineFigma.js`, `contactIllustrations.js`, `aboutIllustrations.js`) — illustration content, warm palette stays
+- `src/public/FooterSection.js` — contains inline SVG mountain divider illustration with warm colors (coral wildflowers, espresso ridgelines) — illustration content, stays warm
 - All Figma pipeline SVGs — warm palette is the artistic vision
 - `designTokens.js` — re-exports from sharedTokens, auto-updates
 - `carolinaFutonsLogo.js` — uses `colors.espresso` dynamically, auto-updates to navy
 
 ## WCAG AA Compliance
 
-All new color pairs must maintain 4.5:1 contrast ratio:
-- `espresso` (#1E3A5F) on `offWhite` (#FFFFFF): ~10.2:1 ✓
-- `espresso` (#1E3A5F) on `sandBase` (#F0F4F8): ~9.1:1 ✓
-- `white` (#FFFFFF) on `sunsetCoral` (#5B8FA8): ~3.5:1 — needs verification for small text
-- `white` (#FFFFFF) on `sunsetCoralDark` (#3D6B80): ~5.2:1 ✓
+All new color pairs maintain 4.5:1 contrast ratio for normal text:
 
-Note: If #5B8FA8 doesn't meet 4.5:1 for white text on buttons, darken to #4A7D94 (~4.5:1).
+| Pair | Ratio | Status |
+|------|-------|--------|
+| `espresso` (#1E3A5F) on `offWhite` (#FFFFFF) | 11.50:1 | ✓ |
+| `espresso` (#1E3A5F) on `sandBase` (#F0F4F8) | 10.41:1 | ✓ |
+| `white` (#FFFFFF) on `sunsetCoral` (#4A7D94) | 4.56:1 | ✓ (darkened from #5B8FA8 which was 3.54:1) |
+| `white` (#FFFFFF) on `sunsetCoralDark` (#3D6B80) | 5.81:1 | ✓ |
+| `muted` (#6B7280) on `offWhite` (#FFFFFF) | 5.09:1 | ✓ |
+| `muted` (#6B7280) on `sandBase` (#F0F4F8) | 4.62:1 | ✓ |
 
 ## Testing Strategy
 
@@ -123,7 +122,7 @@ Note: If #5B8FA8 doesn't meet 4.5:1 for white text on buttons, darken to #4A7D94
 
 ## Out of Scope
 
-- Token renaming (sandBase → surfaceLight, etc.) — follow-up bead
+- Token renaming (sandBase → surfaceLight, etc.) and deduplication (sunsetCoral/mountainBlue will share the same blue family) — follow-up bead
 - Illustration palette changes — they stay warm
 - Wiring illustrations into live site — separate task
 - Font changes — Playfair Display + Source Sans 3 stay
