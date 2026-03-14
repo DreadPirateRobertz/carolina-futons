@@ -165,7 +165,7 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 
 **Acceptance:**
 - [ ] All 4 collection boxes show real CF products (zero template furniture visible)
-- [ ] Category links work: /category/futon-frames, /murphy-cabinet-beds, /platform-beds, /mattresses
+- [ ] Category links work: /category/futon-frames, /category/murphy-cabinet-beds, /category/platform-beds, /category/mattresses
 - [ ] Images not distorted, properly fill containers
 - [ ] Category label text readable
 
@@ -411,7 +411,7 @@ Since Phase 1 uses Option A (rename template elements to match our code IDs), mo
 
 | Phase | Owner | Method | Blocked On |
 |-------|-------|--------|------------|
-| 1.0 CSS Activation | Melania (editor) | Code Panel toggle | Nothing |
+| 1.0 CSS Activation | Melania (editor) | Code Panel toggle | Wix login gate |
 | 1.1 Header logo + renames | Melania (Playwright/API) | documentServices setNickname + image set | Nothing |
 | 1.2 Footer overhaul + renames | Melania (Playwright/API) | documentServices | Nothing |
 | 1.3 Hero image swap | Melania (Playwright/API) | documentServices | Best image ID'd |
