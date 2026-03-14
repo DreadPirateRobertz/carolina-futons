@@ -60,7 +60,7 @@ $w.onReady(async function () {
   injectCanonicalUrl();
   initScrollDepthTracking();
   deferInit(() => import('public/tikTokPixel').then(m => m.initTikTokPixel()));
-  await injectBusinessSchema();
+  injectBusinessSchema();
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
   setTimeout(() => {

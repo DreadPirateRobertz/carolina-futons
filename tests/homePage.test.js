@@ -63,6 +63,13 @@ vi.mock('backend/seoHelpers.web', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+// ── Helpers ─────────────────────────────────────────────────────────
+
+// Flush microtask queue so fire-and-forget deferred sections in
+// prioritizeSections() have time to settle (hq-r3ie moved featuredProducts
+// from critical to deferred).
+const flushDeferred = () => new Promise(r => setTimeout(r, 50));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page', () => {
@@ -79,17 +86,20 @@ describe('Home Page', () => {
   describe('featured products', () => {
     it('populates featured repeater with product data', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       expect(repeater.data).toEqual(mockFeatured);
     });
 
     it('registers onItemReady for featured product cards', async () => {
       await onReadyHandler();
+      await flushDeferred();
       expect(getEl('#featuredRepeater').onItemReady).toHaveBeenCalled();
     });
 
     it('onItemReady sets image, name, and price', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -112,6 +122,7 @@ describe('Home Page', () => {
 
     it('onItemReady shows sale badge for discounted products', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -134,6 +145,7 @@ describe('Home Page', () => {
 
     it('onItemReady registers click handler on image and name', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -155,6 +167,7 @@ describe('Home Page', () => {
 
     it('onItemReady sets SEO alt text on image', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
