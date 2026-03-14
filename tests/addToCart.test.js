@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { futonFrame } from './fixtures/products.js';
+import { futonFrame, callForPriceProduct } from './fixtures/products.js';
 
 vi.mock('public/cartService', async (importOriginal) => {
   const actual = await importOriginal();
@@ -27,6 +27,8 @@ vi.mock('public/engagementTracker', () => ({
 vi.mock('public/productPageUtils.js', () => ({
   formatCurrency: vi.fn((n) => `$${Number(n).toFixed(2)}`),
   HEART_FILLED_SVG: 'filled', HEART_OUTLINE_SVG: 'outline',
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 
 vi.mock('wix-window-frontend', () => ({ default: { onScroll: vi.fn() } }));
@@ -190,6 +192,30 @@ describe('AddToCart', () => {
     it('registers click handler on wishlist button', async () => {
       await initWishlistButton($w, state);
       expect($w('#wishlistBtn').onClick).toHaveBeenCalled();
+    });
+  });
+
+  describe('Call-for-Price products (CF-b3g9)', () => {
+    let cfpState;
+    beforeEach(() => {
+      cfpState = { product: callForPriceProduct, selectedQuantity: 1, bundleProduct: null };
+    });
+
+    it('hides sticky cart bar for call-for-price products', () => {
+      initStickyCartBar($w, cfpState);
+      // Should not register click handler on sticky add button (early return)
+      expect($w('#stickyAddBtn').onClick).not.toHaveBeenCalled();
+    });
+
+    it('shows call-for-pricing text in sticky price', () => {
+      initStickyCartBar($w, cfpState);
+      expect($w('#stickyPrice').text).toBe('Call for Pricing \u2014 (828) 327-8030');
+    });
+
+    it('does not hide sticky bar for normal-price products', () => {
+      initStickyCartBar($w, state);
+      // Should register click handler on sticky add button
+      expect($w('#stickyAddBtn').onClick).toHaveBeenCalled();
     });
   });
 });

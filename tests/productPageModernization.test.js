@@ -20,6 +20,8 @@ vi.mock('public/productPageUtils.js', () => ({
     d.setDate(d.getDate() + days);
     return d;
   }),
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 vi.mock('public/engagementTracker', () => ({
   trackSocialShare: vi.fn(), trackEvent: vi.fn(),

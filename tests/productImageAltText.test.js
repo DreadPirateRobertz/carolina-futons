@@ -111,6 +111,8 @@ vi.mock('public/productPageUtils.js', () => ({
   }),
   detectProductBrand: vi.fn(() => 'Carolina Futons'),
   detectProductCategory: vi.fn(() => 'Futon Frame'),
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 
 // ── UGCGallery mocks ────────────────────────────────────────────────

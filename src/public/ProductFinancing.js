@@ -3,6 +3,7 @@
 // Integrates with financingCalc.web.js backend.
 
 import { makeClickable, setupAccessibleDialog, announce } from 'public/a11yHelpers';
+import { isCallForPrice } from 'public/productPageUtils.js';
 
 /**
  * Initialize the financing section on a product page.
@@ -17,7 +18,7 @@ export async function initFinancingOptions($w, state) {
     if (!section) return;
 
     const price = state.product?.price;
-    if (!price || price <= 0) { section.collapse(); return; }
+    if (!price || price <= 0 || isCallForPrice(state.product)) { section.collapse(); return; }
 
     const { getFinancingWidget } = await import('backend/financingCalc.web');
     const result = await getFinancingWidget(price);

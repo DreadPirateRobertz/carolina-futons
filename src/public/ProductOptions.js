@@ -7,7 +7,7 @@
 import { getProductVariants } from 'public/cartService';
 import { getProductSwatches, getSwatchCount, getAllSwatchFamilies } from 'backend/swatchService.web';
 import { colors } from 'public/designTokens.js';
-import { formatCurrency } from 'public/productPageUtils.js';
+import { formatCurrency, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { updateStickyPrice } from 'public/AddToCart.js';
 
 // --- Variant Selector ---
@@ -64,10 +64,12 @@ export async function handleCustomVariantChange($w, state) {
 }
 
 function updateVariantDisplay($w, state, selected) {
-  // Price
+  // Price — skip update for call-for-price products (CF-b3g9)
   try {
-    if (selected.variant?.price) {
+    if (selected.variant?.price && !isCallForPrice(state?.product)) {
       $w('#productPrice').text = formatCurrency(selected.variant.price);
+    } else if (isCallForPrice(state?.product)) {
+      $w('#productPrice').text = CALL_FOR_PRICE_TEXT;
     }
     if (selected.variant?.comparePrice) {
       try { $w('#productComparePrice').text = formatCurrency(selected.variant.comparePrice); $w('#productComparePrice').show(); } catch (e) {}
