@@ -351,7 +351,8 @@ export const lookupReturn = webMethod(
         .find();
 
       if (orderResult.items.length === 0) {
-        return { success: false, error: 'Order not found. Please check your order number.' };
+        // Use same message for not-found and email-mismatch to prevent order enumeration
+        return { success: false, error: 'Order not found. Please check your order number and email.' };
       }
 
       const order = orderResult.items[0];
