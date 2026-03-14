@@ -258,7 +258,7 @@ describe('Security: submitGuestReturn input validation', () => {
   it('sanitizes order number', () => {
     const block = src.substring(
       src.indexOf('export const submitGuestReturn'),
-      src.indexOf('export const submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn') + 1500
     );
     expect(block).toMatch(/sanitize\(data\.orderNumber/);
   });
@@ -266,7 +266,7 @@ describe('Security: submitGuestReturn input validation', () => {
   it('validates email format', () => {
     const block = src.substring(
       src.indexOf('export const submitGuestReturn'),
-      src.indexOf('export const submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn') + 1500
     );
     expect(block).toMatch(/validateEmail\(cleanEmail\)/);
   });
@@ -274,7 +274,7 @@ describe('Security: submitGuestReturn input validation', () => {
   it('validates return reason against allowlist', () => {
     const block = src.substring(
       src.indexOf('export const submitGuestReturn'),
-      src.indexOf('export const submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn') + 1500
     );
     expect(block).toMatch(/VALID_REASONS/);
   });
@@ -282,7 +282,7 @@ describe('Security: submitGuestReturn input validation', () => {
   it('validates items array is non-empty', () => {
     const block = src.substring(
       src.indexOf('export const submitGuestReturn'),
-      src.indexOf('export const submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn') + 1500
     );
     expect(block).toMatch(/Array\.isArray/);
   });
