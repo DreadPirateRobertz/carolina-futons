@@ -177,14 +177,13 @@ These elements must be ADDED to the page (template does not have them):
 
 ### Step 3: Verify with remap script (dry run)
 
-After editor work, run connectivity check:
+After editor work, run a dry-run remap check:
 ```bash
-# Check which Phase 1 IDs are now connected
-node scripts/verify-connectivity.js --page=product --phase=1
+# Confirm no remaining code-side ID mismatches (dry run — no --apply flag)
+node scripts/remap-element-ids.js product-page-remap.json
 ```
 
-Or use `scripts/remap-element-ids.js product-page-remap.json` (dry run, no --apply)
-to confirm there are no remaining code-side ID mismatches.
+This scans all `$w('#id')` references in `src/` and `tests/` against the mapping file.
 
 ---
 
