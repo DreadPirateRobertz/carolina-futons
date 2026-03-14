@@ -638,15 +638,23 @@ h4.font_4,
    18. HIDE TEMPLATE SECTIONS — remove tera branding until editor fix
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* "AS SEEN IN" fake press logos section */
-[data-hook="promo-section"],
-[aria-label="AS SEEN IN"] {
+/* "AS SEEN IN" fake press logos — section ID from DOM */
+#comp-lyr8axwk {
   display: none !important;
 }
 
-/* Instagram feed section (broken, shows blank boxes) */
-[data-hook="instagram-feed"],
-[aria-label="Instagram"] {
+/* "FOLLOW US #TERAHOME" Instagram section */
+#comp-lybjbnr4 {
+  display: none !important;
+}
+
+/* "THE TERA WORLD" about section */
+#comp-lybh6dfj {
+  display: none !important;
+}
+
+/* Hero "tera" brand text — hide template name */
+#comp-ly72gz2c {
   display: none !important;
 }
 
