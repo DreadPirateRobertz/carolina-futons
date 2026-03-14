@@ -122,10 +122,10 @@ h4.font_4,
 
 .header {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='100%25' stop-color='%23E8F0F5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='120' fill='url(%23sky)'/%3E%3Cpath d='M0 120 L0 75 Q120 35 240 58 Q360 22 480 48 Q600 15 720 42 Q840 28 960 52 Q1080 18 1200 48 Q1320 32 1440 58 L1440 120 Z' fill='%23A8CCD8' opacity='0.4'/%3E%3Cpath d='M0 120 L0 82 Q180 45 360 68 Q480 32 600 58 Q720 28 840 52 Q960 38 1080 62 Q1260 32 1440 68 L1440 120 Z' fill='%235B8FA8' opacity='0.5'/%3E%3Cpath d='M0 120 L0 92 Q100 65 200 78 Q350 55 500 72 Q600 48 750 68 Q900 58 1050 75 Q1200 52 1440 78 L1440 120 Z' fill='%233D6B80' opacity='0.7'/%3E%3C/svg%3E") bottom/100% 60px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='100%25' stop-color='%23E8F0F5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='120' fill='url(%23sky)'/%3E%3Cpath d='M0 120 L0 75 Q120 35 240 58 Q360 22 480 48 Q600 15 720 42 Q840 28 960 52 Q1080 18 1200 48 Q1320 32 1440 58 L1440 120 Z' fill='%23A8CCD8' opacity='0.4'/%3E%3Cpath d='M0 120 L0 82 Q180 45 360 68 Q480 32 600 58 Q720 28 840 52 Q960 38 1080 62 Q1260 32 1440 68 L1440 120 Z' fill='%235B8FA8' opacity='0.5'/%3E%3Cpath d='M0 120 L0 92 Q100 65 200 78 Q350 55 500 72 Q600 48 750 68 Q900 58 1050 75 Q1200 52 1440 78 L1440 120 Z' fill='%233D6B80' opacity='0.7'/%3E%3C/svg%3E") bottom/100% 70px no-repeat,
     #FFFFFF !important;
   border-bottom: none !important;
-  padding-bottom: 0 !important;
+  padding-bottom: 70px !important;
 }
 
 /* Announcement bar text */
@@ -350,8 +350,9 @@ h4.font_4,
 
 .footer {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L0 0 Q180 30 360 15 Q540 35 720 18 Q900 32 1080 12 Q1260 28 1440 10 L1440 0 Z' fill='%23A8CCD8' opacity='0.12'/%3E%3Cpath d='M0 0 L0 0 Q200 25 400 10 Q600 28 800 14 Q1000 22 1200 8 Q1350 20 1440 6 L1440 0 Z' fill='%235B8FA8' opacity='0.15'/%3E%3Cpath d='M0 0 L0 0 Q150 18 300 8 Q500 22 700 10 Q850 16 1000 6 Q1200 15 1440 5 L1440 0 Z' fill='%23A8CCD8' opacity='0.2'/%3E%3C/svg%3E") top/100% 80px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80 L0 50 Q180 20 360 40 Q540 10 720 35 Q900 15 1080 40 Q1260 20 1440 45 L1440 80 Z' fill='%23A8CCD8' opacity='0.15'/%3E%3Cpath d='M0 80 L0 55 Q200 30 400 48 Q600 20 800 42 Q1000 28 1200 50 Q1350 32 1440 52 L1440 80 Z' fill='%235B8FA8' opacity='0.2'/%3E%3Cpath d='M0 80 L0 60 Q150 40 300 55 Q500 35 700 52 Q850 42 1000 55 Q1200 40 1440 58 L1440 80 Z' fill='%23A8CCD8' opacity='0.25'/%3E%3C/svg%3E") top/100% 80px no-repeat,
     #1E2A3A !important;
+  padding-top: 80px !important;
 }
 
 .footer p,
@@ -621,7 +622,24 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   18. RESPONSIVE — tablet and mobile
+   18. HIDE TEMPLATE SECTIONS — remove tera branding until editor fix
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* "AS SEEN IN" fake press logos section */
+[data-hook="promo-section"],
+[aria-label="AS SEEN IN"] {
+  display: none !important;
+}
+
+/* Instagram feed section (broken, shows blank boxes) */
+[data-hook="instagram-feed"],
+[aria-label="Instagram"] {
+  display: none !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   19. RESPONSIVE — tablet and mobile
    ═══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1024px) {
