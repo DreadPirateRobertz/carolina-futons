@@ -728,10 +728,17 @@ h4.font_4,
 }
 
 @media (max-width: 480px) {
-  /* Prevent horizontal scroll from wide inline SVGs and fixed-width elements */
+  /* Prevent horizontal scroll — defensive fallback for unconstrained elements */
   body,
   .page {
     overflow-x: hidden !important;
+  }
+
+  /* Constrain all images to viewport width */
+  img,
+  wow-image {
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   h1, h1.font_0,
@@ -825,8 +832,7 @@ h4.font_4,
   [data-hook="question-text"] {
     font-size: 15px !important;
     min-height: 44px !important; /* touch target for expand/collapse */
-    display: flex !important;
-    align-items: center !important;
+    line-height: 44px !important; /* vertical centering without overriding display */
   }
 
   /* Blog post titles — prevent overflow */
@@ -839,11 +845,14 @@ h4.font_4,
   /* Footer — compact spacing */
   .footer p,
   .footer span,
-  .footer a,
+  .footer a {
+    font-size: 13px !important;
+  }
+
   .footer h2,
   .footer h3,
   .footer h4 {
-    font-size: 13px !important;
+    font-size: 14px !important; /* 1px above body text to preserve hierarchy */
   }
 
   /* Newsletter email input — prevent iOS zoom */
