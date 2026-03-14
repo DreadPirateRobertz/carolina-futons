@@ -8,6 +8,7 @@ import { trackCartAdd } from 'public/engagementTracker';
 import { formatCurrency } from 'public/product/variantSelector.js';
 import { buildGridAlt } from 'public/product/productSchema.js';
 import { makeClickable } from 'public/a11yHelpers.js';
+import { isCallForPrice } from 'public/productPageUtils.js';
 
 /**
  * Load "You Might Also Like" cross-category recommendations.
@@ -17,7 +18,8 @@ export async function loadRelatedProducts($w, product) {
     if (!product) return;
 
     const category = product.collections?.[0] || '';
-    const related = await getRelatedProducts(product._id, category, 4);
+    const related = (await getRelatedProducts(product._id, category, 4))
+      .filter(p => !isCallForPrice(p));
 
     const repeater = $w('#relatedRepeater');
     if (!repeater || related.length === 0) {
@@ -59,11 +61,11 @@ export async function loadCollectionProducts($w, product) {
   try {
     if (!product || !product.collections) return;
 
-    const collectionProducts = await getSameCollection(
+    const collectionProducts = (await getSameCollection(
       product._id,
       product.collections,
       6
-    );
+    )).filter(p => !isCallForPrice(p));
 
     const repeater = $w('#collectionRepeater');
     if (!repeater || collectionProducts.length === 0) {
