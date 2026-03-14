@@ -513,12 +513,144 @@
     }
   },
 
+  "sideCart": {
+    "_priority": "P0 — conversion flow",
+    "panel": {
+      "P0": [
+        { "id": "sideCartPanel", "type": "Box (hidden)", "notes": "Side cart slide-out panel" },
+        { "id": "sideCartOverlay", "type": "Box", "notes": "Backdrop overlay" },
+        { "id": "sideCartClose", "type": "Button", "notes": "Close X button" },
+        { "id": "sideCartTitle", "type": "Text", "notes": "Your Cart heading" },
+        { "id": "sideCartRepeater", "type": "Repeater", "notes": "Cart items list" },
+        { "id": "sideCartSubtotal", "type": "Text", "notes": "Subtotal amount" },
+        { "id": "sideCartCheckout", "type": "Button", "notes": "Proceed to checkout" },
+        { "id": "sideCartEmpty", "type": "Box (hidden)", "notes": "Empty cart state" },
+        { "id": "sideCartItems", "type": "Box", "notes": "Items container" },
+        { "id": "sideCartFooter", "type": "Box", "notes": "Footer with subtotal/checkout" },
+        { "id": "viewFullCart", "type": "Link", "notes": "View full cart page link" }
+      ],
+      "P1": [
+        { "id": "sideCartSuggestion", "type": "Box", "notes": "Cross-sell suggestion" },
+        { "id": "sideShippingBar", "type": "Box", "notes": "Free shipping threshold bar" },
+        { "id": "sideShippingText", "type": "Text", "notes": "Shipping threshold text" },
+        { "id": "sideTierBar", "type": "Box", "notes": "Loyalty tier progress" },
+        { "id": "sideTierText", "type": "Text", "notes": "Loyalty tier text" }
+      ]
+    },
+    "item_template": {
+      "P0": [
+        { "id": "sideItemImage", "type": "Image", "notes": "Item thumbnail (repeater item)" },
+        { "id": "sideItemName", "type": "Text", "notes": "Item name" },
+        { "id": "sideItemPrice", "type": "Text", "notes": "Item price" },
+        { "id": "sideItemLineTotal", "type": "Text", "notes": "Line total" },
+        { "id": "sideItemQty", "type": "Text", "notes": "Quantity display" },
+        { "id": "sideItemVariant", "type": "Text", "notes": "Variant (size/color)" },
+        { "id": "sideItemRemove", "type": "Button", "notes": "Remove item" },
+        { "id": "sideQtyMinus", "type": "Button", "notes": "Decrease qty" },
+        { "id": "sideQtyPlus", "type": "Button", "notes": "Increase qty" }
+      ],
+      "P2": [
+        { "id": "sideSaveForLater", "type": "Button", "notes": "Save for later link" }
+      ]
+    }
+  },
+
+  "cartPage": {
+    "_priority": "P0 — conversion flow",
+    "core": {
+      "P0": [
+        { "id": "cartDataset", "type": "Dataset", "notes": "Cart data connector" },
+        { "id": "cartItemsRepeater", "type": "Repeater", "notes": "Cart items list" },
+        { "id": "cartSubtotal", "type": "Text", "notes": "Cart subtotal" },
+        { "id": "cartTotal", "type": "Text", "notes": "Cart total" },
+        { "id": "cartShipping", "type": "Text", "notes": "Shipping amount" },
+        { "id": "continueShoppingBtn", "type": "Button", "notes": "Continue shopping link" },
+        { "id": "emptyCartSection", "type": "Section (hidden)", "notes": "Empty cart state" },
+        { "id": "emptyCartTitle", "type": "Text", "notes": "Empty cart heading" },
+        { "id": "emptyCartMessage", "type": "Text", "notes": "Empty cart message" }
+      ],
+      "P1": [
+        { "id": "cartItemName", "type": "Text", "notes": "Item name (repeater)" },
+        { "id": "cartItemPrice", "type": "Text", "notes": "Item price (repeater)" },
+        { "id": "qtyInput", "type": "Input", "notes": "Quantity input (repeater)" },
+        { "id": "qtyMinus", "type": "Button", "notes": "Decrease qty (repeater)" },
+        { "id": "qtyPlus", "type": "Button", "notes": "Increase qty (repeater)" },
+        { "id": "removeItem", "type": "Button", "notes": "Remove item (repeater)" },
+        { "id": "saveForLaterBtn", "type": "Button", "notes": "Save for later" },
+        { "id": "cartDeliverySection", "type": "Section", "notes": "Delivery estimate section" },
+        { "id": "cartFinancingSection", "type": "Section", "notes": "Financing options" },
+        { "id": "cartFinancingTeaser", "type": "Text", "notes": "Financing teaser text" },
+        { "id": "cartAfterpayMessage", "type": "Text", "notes": "Afterpay message" },
+        { "id": "shippingProgressBar", "type": "Box", "notes": "Free shipping progress" },
+        { "id": "shippingProgressText", "type": "Text", "notes": "Progress text" },
+        { "id": "shippingProgressIcon", "type": "Image", "notes": "Progress icon" }
+      ],
+      "P2": [
+        { "id": "cartRecentSection", "type": "Section", "notes": "Recently viewed in cart" },
+        { "id": "cartRecentRepeater", "type": "Repeater", "notes": "Recent items" },
+        { "id": "protectionPlanSection", "type": "Section", "notes": "Protection plan upsell" },
+        { "id": "protectionPlanTitle", "type": "Text", "notes": "Protection heading" },
+        { "id": "protectionPlanSubtitle", "type": "Text", "notes": "Protection description" },
+        { "id": "protectionPlanRepeater", "type": "Repeater", "notes": "Plan options" },
+        { "id": "trustRepeater", "type": "Repeater", "notes": "Trust badges" },
+        { "id": "orderNotesToggle", "type": "Button", "notes": "Toggle order notes" },
+        { "id": "orderNotesField", "type": "TextBox", "notes": "Order notes input" }
+      ]
+    }
+  },
+
+  "checkout": {
+    "_priority": "P0 — conversion flow",
+    "core": {
+      "P0": [
+        { "id": "checkoutProgressNav", "type": "Box", "notes": "Progress steps nav" },
+        { "id": "checkoutProgressRepeater", "type": "Repeater", "notes": "Progress step items" },
+        { "id": "checkoutItemCount", "type": "Text", "notes": "Item count display" },
+        { "id": "checkoutFreeShipping", "type": "Text", "notes": "Free shipping message" },
+        { "id": "expressCheckoutBtn", "type": "Button", "notes": "Express checkout CTA" },
+        { "id": "expressCheckoutSection", "type": "Section", "notes": "Express checkout options" }
+      ],
+      "P1": [
+        { "id": "checkoutDeliveryEstimate", "type": "Text", "notes": "Delivery date estimate" },
+        { "id": "checkoutShippingMessage", "type": "Text", "notes": "Shipping info message" },
+        { "id": "checkoutFinancing", "type": "Text", "notes": "Financing info" },
+        { "id": "checkoutAfterpay", "type": "Text", "notes": "Afterpay message" },
+        { "id": "shippingOptionsRepeater", "type": "Repeater", "notes": "Shipping method options" },
+        { "id": "paymentMethodsRepeater", "type": "Repeater", "notes": "Payment method options" },
+        { "id": "validateAddressBtn", "type": "Button", "notes": "Validate address button" },
+        { "id": "orderSummarySidebar", "type": "Box", "notes": "Order summary sidebar" },
+        { "id": "orderSummarySubtotal", "type": "Text", "notes": "Subtotal" },
+        { "id": "orderSummaryShipping", "type": "Text", "notes": "Shipping cost" },
+        { "id": "orderSummaryTax", "type": "Text", "notes": "Tax amount" },
+        { "id": "orderSummaryTotal", "type": "Text", "notes": "Total amount" },
+        { "id": "orderSummaryItemsRepeater", "type": "Repeater", "notes": "Order items list" },
+        { "id": "orderSummarySavings", "type": "Text", "notes": "Savings amount" },
+        { "id": "orderSummaryStoreCredit", "type": "Text", "notes": "Store credit applied" },
+        { "id": "orderSummaryStoreCreditRow", "type": "Box", "notes": "Store credit row" }
+      ],
+      "P2": [
+        { "id": "financingMessage", "type": "Text", "notes": "Financing message" },
+        { "id": "financingThreshold", "type": "Text", "notes": "Financing threshold info" },
+        { "id": "addressFullName", "type": "Input", "notes": "Full name field" },
+        { "id": "addressLine1", "type": "Input", "notes": "Address line 1" },
+        { "id": "addressCity", "type": "Input", "notes": "City" },
+        { "id": "addressState", "type": "Dropdown", "notes": "State" },
+        { "id": "addressZip", "type": "Input", "notes": "ZIP code" },
+        { "id": "addressErrors", "type": "Text (hidden)", "notes": "Address validation errors" },
+        { "id": "addressSuccess", "type": "Text (hidden)", "notes": "Address validation success" },
+        { "id": "storeCreditApplyBtn", "type": "Button", "notes": "Apply store credit" },
+        { "id": "storeCreditAppliedSection", "type": "Box", "notes": "Applied credit display" },
+        { "id": "storeCreditAppliedAmount", "type": "Text", "notes": "Credit amount applied" }
+      ]
+    }
+  },
+
   "summary": {
-    "total_p0": 62,
-    "total_p1": 133,
-    "total_p2": 143,
-    "total_documented": 338,
-    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page"],
+    "total_p0": 107,
+    "total_p1": 170,
+    "total_p2": 179,
+    "total_documented": 456,
+    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout"],
     "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
   }
 }
