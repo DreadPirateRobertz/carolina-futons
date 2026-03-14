@@ -353,6 +353,23 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
+   6b. HOMEPAGE COLLECTIONS — "SHOP BY COLLECTIONS" card headings
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Wix responsive system inflates collection card headings to ~66px.
+   Force readable size with high specificity via [id$=] suffix match. */
+[id$="ly76uqq8"] .wixui-rich-text h3,
+[id$="ly76uqq8"] h3.font_3,
+[id$="ly76uqq8"] .wixui-rich-text__text {
+  font-size: 20px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  color: var(--cf-white) !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
    7. HOMEPAGE GALLERIES — "NEW IN" and "BEST SELLERS"
    ═══════════════════════════════════════════════════════════════════════ */
 
