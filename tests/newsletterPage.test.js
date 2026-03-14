@@ -160,6 +160,11 @@ describe('Newsletter Page — Form Submission (valid email)', () => {
     subscribeToNewsletter.mockResolvedValue({ success: true, discountCode: 'SAVE10' });
   });
 
+  it('hides previous error message before submitting', async () => {
+    await clickHandler();
+    expect(getEl('#nlErrorMessage').hide).toHaveBeenCalled();
+  });
+
   it('calls subscribeToNewsletter with email and source', async () => {
     await clickHandler();
     expect(subscribeToNewsletter).toHaveBeenCalledWith('test@example.com', { source: 'newsletter_page' });
@@ -170,11 +175,14 @@ describe('Newsletter Page — Form Submission (valid email)', () => {
     expect(getEl('#nlSubmitBtn').disable).toHaveBeenCalled();
   });
 
-  it('sets button label to Subscribing...', async () => {
-    // Check that label was set to "Subscribing..." at some point
+  it('disables and relabels button before API call', async () => {
+    let labelDuringCall;
+    subscribeToNewsletter.mockImplementation(() => {
+      labelDuringCall = getEl('#nlSubmitBtn').label;
+      return Promise.resolve({ success: true, discountCode: 'SAVE10' });
+    });
     await clickHandler();
-    // After success, button is hidden, but label was changed during process
-    expect(getEl('#nlSubmitBtn').label).toBeDefined();
+    expect(labelDuringCall).toBe('Subscribing...');
   });
 
   it('tracks newsletter signup via engagement tracker', async () => {
