@@ -14,6 +14,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
+import { getLogoDataUri } from 'public/carolinaFutonsLogo';
 import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
 import {
   applyActiveNavState,
@@ -358,6 +359,11 @@ function initSiteLogo() {
   try {
     const logo = $w('#siteLogo');
     if (!logo) return;
+
+    // Replace template logo with Carolina Futons brand logo
+    try { logo.src = getLogoDataUri(); } catch (e) {}
+    try { logo.alt = 'Carolina Futons'; } catch (e) {}
+    try { logo.accessibility.ariaLabel = 'Carolina Futons - Go to homepage'; } catch (e) {}
 
     makeClickable(logo, () => {
       wixLocationFrontend.to('/');
