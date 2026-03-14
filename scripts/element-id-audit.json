@@ -319,10 +319,206 @@
     }
   },
 
+  "productPage": {
+    "_priority": "P0 — highest revenue page",
+    "core": {
+      "P0": [
+        { "id": "productDataset", "type": "Dataset", "notes": "Wix product dataset connector" },
+        { "id": "productMainImage", "type": "Image", "notes": "Main product image — gallery, zoom, lightbox" },
+        { "id": "productGallery", "type": "Gallery", "notes": "Thumbnail gallery — onItemClicked swaps main image" },
+        { "id": "productPrice", "type": "Text", "notes": "Current product price" },
+        { "id": "productComparePrice", "type": "Text", "notes": "Strikethrough original price" },
+        { "id": "productDescription", "type": "Text", "notes": "Product description (from Page.js)" },
+        { "id": "productName", "type": "Text", "notes": "Product name H1 (from Page.js)" },
+        { "id": "addToCartButton", "type": "Button", "notes": "Add to cart — primary CTA" },
+        { "id": "quantityInput", "type": "Input", "notes": "Quantity selector input" },
+        { "id": "quantityMinus", "type": "Button", "notes": "Decrement quantity" },
+        { "id": "quantityPlus", "type": "Button", "notes": "Increment quantity" },
+        { "id": "sizeDropdown", "type": "Dropdown", "notes": "Size variant selector" },
+        { "id": "finishDropdown", "type": "Dropdown", "notes": "Finish/color variant selector" },
+        { "id": "stockStatus", "type": "Text", "notes": "In Stock / Special Order badge" }
+      ]
+    },
+    "cart_and_buy": {
+      "P0": [
+        { "id": "addToCartSuccess", "type": "Text (hidden)", "notes": "Success confirmation after add" },
+        { "id": "buyNowButton", "type": "Button", "notes": "Buy Now — direct to checkout" }
+      ],
+      "P1": [
+        { "id": "stickyCartBar", "type": "Box (hidden)", "notes": "Sticky add-to-cart bar on scroll" },
+        { "id": "stickyAddBtn", "type": "Button", "notes": "Sticky bar add button" },
+        { "id": "stickyProductName", "type": "Text", "notes": "Product name in sticky bar" },
+        { "id": "stickyPrice", "type": "Text", "notes": "Price in sticky bar" },
+        { "id": "stockUrgency", "type": "Text (hidden)", "notes": "Only X left in stock warning" },
+        { "id": "popularityBadge", "type": "Text (hidden)", "notes": "X sold this week badge" },
+        { "id": "productBadgeOverlay", "type": "Text", "notes": "Sale/New/Featured badge overlay" }
+      ]
+    },
+    "info_accordion": {
+      "P1": [
+        { "id": "infoHeaderDescription", "type": "Box", "notes": "Description accordion header — auto pattern infoHeader{Section}" },
+        { "id": "infoContentDescription", "type": "Box", "notes": "Description content — auto pattern infoContent{Section}" },
+        { "id": "infoArrowDescription", "type": "Text", "notes": "Expand/collapse arrow — auto pattern infoArrow{Section}" },
+        { "id": "infoHeaderDimensions", "type": "Box", "notes": "Dimensions accordion header" },
+        { "id": "infoContentDimensions", "type": "Box", "notes": "Dimensions content" },
+        { "id": "infoArrowDimensions", "type": "Text", "notes": "Dimensions arrow" },
+        { "id": "infoHeaderCare", "type": "Box", "notes": "Care accordion header" },
+        { "id": "infoContentCare", "type": "Box", "notes": "Care content" },
+        { "id": "infoArrowCare", "type": "Text", "notes": "Care arrow" },
+        { "id": "infoHeaderShipping", "type": "Box", "notes": "Shipping accordion header" },
+        { "id": "infoContentShipping", "type": "Text", "notes": "Shipping content — auto-filled with rates" },
+        { "id": "infoArrowShipping", "type": "Text", "notes": "Shipping arrow" }
+      ]
+    },
+    "video": {
+      "P1": [
+        { "id": "productVideoSection", "type": "Section (hidden)", "notes": "Video section — shown only if product has video" },
+        { "id": "productVideoTitle", "type": "Text", "notes": "See It In Action heading" },
+        { "id": "productVideo", "type": "VideoPlayer", "notes": "Product demo video player" },
+        { "id": "viewAllVideosLink", "type": "Link", "notes": "Link to /product-videos page" }
+      ]
+    },
+    "delivery_estimate": {
+      "P1": [
+        { "id": "deliveryEstimate", "type": "Text", "notes": "Estimated delivery date range" },
+        { "id": "whiteGloveNote", "type": "Text (hidden)", "notes": "White-glove delivery note for large items" }
+      ]
+    },
+    "back_in_stock": {
+      "P1": [
+        { "id": "backInStockSection", "type": "Section (hidden)", "notes": "Back-in-stock notification section" },
+        { "id": "backInStockEmail", "type": "Input", "notes": "Email input for notification" },
+        { "id": "backInStockBtn", "type": "Button", "notes": "Submit notification request" },
+        { "id": "backInStockSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "backInStockError", "type": "Text (hidden)", "notes": "Error message" }
+      ]
+    },
+    "social_and_wishlist": {
+      "P1": [
+        { "id": "shareFacebook", "type": "Button", "notes": "Share on Facebook" },
+        { "id": "sharePinterest", "type": "Button", "notes": "Share on Pinterest" },
+        { "id": "shareEmail", "type": "Button", "notes": "Share via email" },
+        { "id": "shareCopyLink", "type": "Button", "notes": "Copy product link" },
+        { "id": "wishlistBtn", "type": "Button", "notes": "Wishlist heart toggle" },
+        { "id": "wishlistIcon", "type": "Image", "notes": "Heart icon SVG" }
+      ]
+    },
+    "cross_sell": {
+      "P1": [
+        { "id": "relatedSection", "type": "Section", "notes": "You Might Also Like section" },
+        { "id": "relatedRepeater", "type": "Repeater", "notes": "Related products grid" },
+        { "id": "collectionSection", "type": "Section", "notes": "More From This Collection" },
+        { "id": "collectionRepeater", "type": "Repeater", "notes": "Collection products grid" },
+        { "id": "bundleSection", "type": "Section (hidden)", "notes": "Frequently Bought Together" },
+        { "id": "bundleImage", "type": "Image", "notes": "Bundle product image" },
+        { "id": "bundleName", "type": "Text", "notes": "Bundle product name" },
+        { "id": "bundlePrice", "type": "Text", "notes": "Bundle total price" },
+        { "id": "bundleSavings", "type": "Text", "notes": "Bundle savings amount" },
+        { "id": "addBundleBtn", "type": "Button", "notes": "Add Both to Cart" },
+        { "id": "alsoBoughtSection", "type": "Section", "notes": "Also Bought section (from Page.js)" },
+        { "id": "alsoBoughtRepeater", "type": "Repeater", "notes": "Also bought products" }
+      ]
+    },
+    "reviews": {
+      "P1": [
+        { "id": "reviewsSection", "type": "Section", "notes": "Reviews section container" },
+        { "id": "reviewsSectionTitle", "type": "Text", "notes": "Reviews heading" },
+        { "id": "reviewsAverage", "type": "Text", "notes": "Average rating display" },
+        { "id": "reviewsCount", "type": "Text", "notes": "Total review count" },
+        { "id": "reviewsRepeater", "type": "Repeater", "notes": "Review cards list" },
+        { "id": "reviewsEmptyState", "type": "Box (hidden)", "notes": "No reviews message" },
+        { "id": "reviewsSortDropdown", "type": "Dropdown", "notes": "Sort reviews dropdown" },
+        { "id": "reviewsPrevBtn", "type": "Button", "notes": "Previous page" },
+        { "id": "reviewsNextBtn", "type": "Button", "notes": "Next page" },
+        { "id": "reviewsPageInfo", "type": "Text", "notes": "Page X of Y" },
+        { "id": "reviewSchemaMarkup", "type": "HtmlComponent (hidden)", "notes": "Review schema JSON-LD" },
+        { "id": "starFilterAll", "type": "Button", "notes": "Show all stars filter" }
+      ],
+      "P2": [
+        { "id": "reviewForm", "type": "Box (hidden)", "notes": "Write review form" },
+        { "id": "reviewTitleInput", "type": "Input", "notes": "Review title" },
+        { "id": "reviewBodyInput", "type": "TextBox", "notes": "Review body" },
+        { "id": "reviewRatingInput", "type": "Custom", "notes": "Star rating input" },
+        { "id": "reviewSubmitBtn", "type": "Button", "notes": "Submit review" },
+        { "id": "reviewFormSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "reviewFormError", "type": "Text (hidden)", "notes": "Error message" },
+        { "id": "reviewPhotoUpload", "type": "Button", "notes": "Upload photo button" },
+        { "id": "reviewPhotoPreview", "type": "Image", "notes": "Photo preview" },
+        { "id": "reviewPhotoStatus", "type": "Text", "notes": "Upload status" },
+        { "id": "reviewPhotoCount", "type": "Text", "notes": "Photo count" }
+      ]
+    },
+    "swatch_request": {
+      "P2": [
+        { "id": "swatchSection", "type": "Section", "notes": "Swatch selector section" },
+        { "id": "swatchGrid", "type": "Repeater", "notes": "Fabric swatch grid" },
+        { "id": "swatchSearch", "type": "Input", "notes": "Search swatches" },
+        { "id": "swatchColorFilter", "type": "Dropdown", "notes": "Filter by color" },
+        { "id": "swatchCount", "type": "Text", "notes": "Swatch count" },
+        { "id": "swatchViewAll", "type": "Link", "notes": "View all swatches" },
+        { "id": "swatchDetail", "type": "Box (hidden)", "notes": "Swatch detail panel" },
+        { "id": "swatchDetailImage", "type": "Image", "notes": "Swatch detail image" },
+        { "id": "swatchDetailName", "type": "Text", "notes": "Swatch fabric name" },
+        { "id": "swatchDetailMaterial", "type": "Text", "notes": "Material info" },
+        { "id": "swatchDetailFamily", "type": "Text", "notes": "Color family" },
+        { "id": "swatchDetailCare", "type": "Text", "notes": "Care instructions" },
+        { "id": "swatchTintOverlay", "type": "Box", "notes": "Color tint overlay on product image" },
+        { "id": "swatchGalleryModal", "type": "Box (hidden)", "notes": "Full swatch gallery modal" },
+        { "id": "swatchGalleryGrid", "type": "Repeater", "notes": "Gallery grid in modal" },
+        { "id": "swatchGalleryClose", "type": "Button", "notes": "Close gallery modal" },
+        { "id": "swatchRequestLink", "type": "Link", "notes": "Request free swatch link" },
+        { "id": "swatchModal", "type": "Box (hidden)", "notes": "Swatch request modal" },
+        { "id": "swatchProductName", "type": "Text", "notes": "Product name in modal" },
+        { "id": "swatchOptions", "type": "Repeater", "notes": "Selectable swatch options" },
+        { "id": "swatchName", "type": "Input", "notes": "Name input" },
+        { "id": "swatchEmail", "type": "Input", "notes": "Email input" },
+        { "id": "swatchAddress", "type": "TextBox", "notes": "Shipping address" },
+        { "id": "swatchSubmit", "type": "Button", "notes": "Submit request" },
+        { "id": "swatchCTABtn", "type": "Button", "notes": "CTA button" },
+        { "id": "swatchRequestBtn", "type": "Button", "notes": "Request button" },
+        { "id": "swatchError", "type": "Text (hidden)", "notes": "Error message" },
+        { "id": "swatchSuccess", "type": "Text (hidden)", "notes": "Success message" }
+      ]
+    },
+    "financing": {
+      "P2": [
+        { "id": "financingSection", "type": "Section", "notes": "Financing options section" },
+        { "id": "financingTeaser", "type": "Text", "notes": "As low as $X/mo teaser" },
+        { "id": "financingLearnMore", "type": "Link", "notes": "Learn more link" },
+        { "id": "financingModal", "type": "Box (hidden)", "notes": "Financing details modal" },
+        { "id": "financingOverlay", "type": "Box", "notes": "Modal backdrop" },
+        { "id": "financingClose", "type": "Button", "notes": "Close modal" },
+        { "id": "financingRepeater", "type": "Repeater", "notes": "Payment plan options" },
+        { "id": "financingDetailRepeater", "type": "Repeater", "notes": "Plan detail breakdown" },
+        { "id": "afterpayMessage", "type": "Text", "notes": "Afterpay 4-payment message" }
+      ]
+    },
+    "assembly_guide": {
+      "P2": [
+        { "id": "assemblyGuideSection", "type": "Section (hidden)", "notes": "Assembly guide section" },
+        { "id": "assemblyGuideTitle", "type": "Text", "notes": "Assembly heading" },
+        { "id": "assemblyGuideTime", "type": "Text", "notes": "Estimated assembly time" },
+        { "id": "assemblyGuideBtn", "type": "Button", "notes": "View guide button" },
+        { "id": "assemblyGuideLink", "type": "Link", "notes": "Link to assembly page" },
+        { "id": "assemblyGuideVideoLink", "type": "Link", "notes": "Link to assembly video" }
+      ]
+    },
+    "seo": {
+      "P0": [
+        { "id": "breadcrumb1", "type": "Link", "notes": "Breadcrumb level 1 (Home)" },
+        { "id": "breadcrumb2", "type": "Link", "notes": "Breadcrumb level 2 (Category)" },
+        { "id": "breadcrumb3", "type": "Text", "notes": "Breadcrumb level 3 (Product)" },
+        { "id": "breadcrumbSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "BreadcrumbList schema" }
+      ]
+    }
+  },
+
   "summary": {
-    "total_p0": 42,
-    "total_p1": 73,
-    "total_p2": 89,
+    "total_p0": 62,
+    "total_p1": 133,
+    "total_p2": 143,
+    "total_documented": 338,
+    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page"],
     "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
   }
 }
