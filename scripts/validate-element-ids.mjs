@@ -6,13 +6,24 @@
  * Reports IDs used in code but missing from audit, and audit IDs not found in code.
  *
  * Usage:
- *   node scripts/validate-element-ids.js
+ *   node scripts/validate-element-ids.mjs
  */
-import { readFileSync, readdirSync } from 'fs';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 
 const SRC_DIR = join(import.meta.dirname, '..', 'carolina-futons-stage3-velo', 'src');
 const AUDIT_PATH = join(import.meta.dirname, 'element-id-audit.json');
+
+if (!existsSync(SRC_DIR)) {
+  console.error(`ERROR: Source directory not found: ${SRC_DIR}`);
+  console.error(`Run this script from the repository root.`);
+  process.exit(1);
+}
+
+if (!existsSync(AUDIT_PATH)) {
+  console.error(`ERROR: Audit file not found: ${AUDIT_PATH}`);
+  process.exit(1);
+}
 
 function collectFiles(dir, exts = ['.js']) {
   return readdirSync(dir, { recursive: true })
@@ -50,9 +61,13 @@ const files = collectFiles(SRC_DIR);
 const codeIds = new Set();
 
 for (const file of files) {
-  const content = readFileSync(file, 'utf8');
-  for (const id of extractSelectors(content)) {
-    codeIds.add(id);
+  try {
+    const content = readFileSync(file, 'utf8');
+    for (const id of extractSelectors(content)) {
+      codeIds.add(id);
+    }
+  } catch (err) {
+    console.warn(`  [WARN] Cannot read ${file}: ${err.message}`);
   }
 }
 
@@ -90,3 +105,7 @@ console.log(`\n${'─'.repeat(50)}`);
 const overlapping = auditIds.size - inAuditNotCode.length;
 const pct = codeIds.size > 0 ? ((overlapping / codeIds.size) * 100).toFixed(1) : '0.0';
 console.log(`Coverage: ${overlapping}/${codeIds.size} code IDs documented (${pct}%)`);
+
+if (inCodeNotAudit.length > 0) {
+  process.exit(1);
+}
