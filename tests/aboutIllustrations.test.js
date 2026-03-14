@@ -43,15 +43,9 @@ function countShapeElements(svg) {
   return count;
 }
 
-// Illustration SVGs intentionally retain the warm Blue Ridge Mountain palette
-// even after the UI chrome shifted to blue/white branding (CF-1v76).
-const WARM_ILLUSTRATION_PALETTE = new Set([
-  '#3A2518', '#E8D5B7', '#E8845C', '#F2E8D5', '#F2A882',
-  '#5C4033', '#D4BC96', '#FAF7F2', '#C9A0A0', '#C96B44',
-]);
+import { WARM_ILLUSTRATION_PALETTE } from './warmIllustrationPalette.js';
 
 const TOKEN_HEXES = buildTokenHexAllowlist();
-// Merge warm illustration colors into the allowlist
 for (const hex of WARM_ILLUSTRATION_PALETTE) TOKEN_HEXES.add(hex.toUpperCase());
 
 // ═══════════════════════════════════════════════════════════════════

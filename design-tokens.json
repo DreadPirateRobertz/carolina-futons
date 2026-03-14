@@ -33,7 +33,7 @@
     "semantic": {
       "success": { "value": "#4A7C59", "description": "Forest green — in stock, success" },
       "error": { "value": "#DC2626", "description": "Red — errors, low stock" },
-      "muted": { "value": "#6B7280", "description": "Slate — disabled, inactive (WCAG AA compliant)" },
+      "muted": { "value": "#646C79", "description": "Slate — disabled, inactive (WCAG AA compliant)" },
       "mutedBrown": { "value": "#64748B", "description": "Slate gray — pending states" }
     }
   },

@@ -84,7 +84,7 @@ export const colors = {
   /** Error feedback — validation errors, out-of-stock, destructive actions */
   error: '#DC2626',
   /** Muted slate — disabled controls, secondary metadata (WCAG AA on all surfaces) */
-  muted: '#6B7280',
+  muted: '#646C79',
   /** Slate gray — blends with blue-gray backgrounds */
   mutedBrown: '#64748B',
 };

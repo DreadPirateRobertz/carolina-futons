@@ -25,7 +25,7 @@ const BRAND_PALETTE = new Set([
   '#b8d4e3',  // skyGradientTop
   '#f0c87a',  // skyGradientBottom
   '#4a7c59',  // success
-  '#6b7280',  // muted
+  '#646c79',  // muted
   '#64748b',  // mutedBrown
 ]);
 

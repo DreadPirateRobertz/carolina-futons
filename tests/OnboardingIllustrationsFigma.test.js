@@ -19,12 +19,7 @@ const DARK_BG_SAFE_COLORS = [
   colors.skyGradientTop, colors.skyGradientBottom,
 ];
 
-// Illustration SVGs intentionally retain the warm Blue Ridge Mountain palette
-// even after the UI chrome shifted to blue/white branding (CF-1v76).
-const WARM_ILLUSTRATION_PALETTE = [
-  '#3A2518', '#E8D5B7', '#E8845C', '#F2E8D5', '#F2A882',
-  '#5C4033', '#D4BC96', '#FAF7F2', '#C9A0A0', '#C96B44',
-];
+import { WARM_ILLUSTRATION_PALETTE } from './warmIllustrationPalette.js';
 
 const ALL_BRAND_HEX = [
   ...Object.values(colors).filter(v => typeof v === 'string' && v.startsWith('#')),

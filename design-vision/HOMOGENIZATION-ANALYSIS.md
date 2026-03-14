@@ -280,7 +280,7 @@
 | **Primary CTA** | sunsetCoral | `#4A7D94` | All primary buttons, sale badges, active states |
 | **Secondary CTA** | mountainBlue | `#5B8FA8` | Links, secondary buttons, "New" badges |
 | **Borders** | sandDark | `#E2E8F0` | Dividers, input borders |
-| **Muted** | muted | `#6B7280` | Placeholder text, disabled states |
+| **Muted** | muted | `#646C79` | Placeholder text, disabled states |
 | **Accent** | mauve | `#C9A0A0` | Tertiary decorative elements only |
 | **BANNED** | green (#3ECF8E) | -- | Remove from all platforms. Not a brand color. |
 | **BANNED** | pink/lavender | -- | Remove from all page backgrounds. |

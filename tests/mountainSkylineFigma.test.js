@@ -8,6 +8,7 @@
  * $w injection, error handling, accessibility, no deprecated filters.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { WARM_ILLUSTRATION_PALETTE } from './warmIllustrationPalette.js';
 import {
   getMountainSkylineSvg,
   initMountainSkylineFigma,
@@ -162,12 +163,7 @@ describe('getMountainSkylineSvg — brand tokens', () => {
     const svg = getMountainSkylineSvg();
     const allHex = svg.match(/#[0-9a-fA-F]{6}/g) || [];
     const brandHex = new Set(Object.values(colors).filter(c => typeof c === 'string' && c.startsWith('#')).map(c => c.toUpperCase()));
-    // Illustration SVGs intentionally retain the warm Blue Ridge Mountain palette (CF-1v76)
-    const warmIllustrationPalette = [
-      '#3A2518', '#E8D5B7', '#E8845C', '#F2E8D5', '#F2A882',
-      '#5C4033', '#D4BC96', '#FAF7F2', '#C9A0A0', '#C96B44',
-    ];
-    for (const hex of warmIllustrationPalette) brandHex.add(hex.toUpperCase());
+    for (const hex of WARM_ILLUSTRATION_PALETTE) brandHex.add(hex.toUpperCase());
     const nonBrand = allHex.filter(h => !brandHex.has(h.toUpperCase()));
     expect(nonBrand).toEqual([]);
   });

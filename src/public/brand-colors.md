@@ -41,7 +41,7 @@ Single source of truth: `sharedTokens.js` (this directory).
 |-------|-----|-------|
 | success | #4A7C59 | Success states |
 | error | #DC2626 | Error states |
-| muted | #6B7280 | Disabled, placeholder text |
+| muted | #646C79 | Disabled, placeholder text |
 | mutedBrown | #64748B | Muted gray accents |
 
 ## Platform Notes

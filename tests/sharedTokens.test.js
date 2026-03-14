@@ -110,7 +110,7 @@ describe('shared colors', () => {
   it('has semantic colors', () => {
     expect(colors.success).toBe('#4A7C59');
     expect(colors.error).toBe('#DC2626');
-    expect(colors.muted).toBe('#6B7280');
+    expect(colors.muted).toBe('#646C79');
     expect(colors.mutedBrown).toBe('#64748B');
   });
 
