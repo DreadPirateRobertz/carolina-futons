@@ -14,6 +14,7 @@ import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js'
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
+import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 import wixData from 'wix-data';
 
@@ -294,9 +295,14 @@ function openFeaturedQuickView(product) {
     $w('#featuredQvImage').src = product.mainMedia || '';
     $w('#featuredQvImage').alt = buildProductAlt(product, 'featured');
     $w('#featuredQvName').text = product.name || 'Product';
-    $w('#featuredQvPrice').text = product.formattedDiscountedPrice || product.formattedPrice || '';
-    try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
-    try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
+    $w('#featuredQvPrice').text = isCallForPrice(product) ? CALL_FOR_PRICE_TEXT : (product.formattedDiscountedPrice || product.formattedPrice || '');
+    if (isCallForPrice(product)) {
+      try { $w('#featuredQvAddToCart').label = 'Call for Pricing'; } catch (e) {}
+      try { $w('#featuredQvAddToCart').disable(); } catch (e) {}
+    } else {
+      try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
+      try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
+    }
 
     try { $w('#featuredQuickViewModal').accessibility.ariaLabel = `Quick view: ${product.name}`; } catch (e) {}
 

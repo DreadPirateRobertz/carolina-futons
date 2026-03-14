@@ -32,7 +32,7 @@ export function formatCurrency(amount, currencyCode = 'USD') {
 /** Call-for-price products use $0 or $1.00 placeholder prices.
  *  Keep in sync with CALL_FOR_PRICE_THRESHOLD in backend/productRecommendations.web.js */
 const CALL_FOR_PRICE_THRESHOLD = 1;
-export const CALL_FOR_PRICE_TEXT = 'Call for Pricing \u2014 (828) 327-8030';
+export const CALL_FOR_PRICE_TEXT = 'Call for Pricing \u2014 (828) 252-9449';
 
 export function isCallForPrice(product) {
   const price = product?.price ?? product?.formattedPrice;

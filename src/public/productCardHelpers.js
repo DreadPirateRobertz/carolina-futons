@@ -2,6 +2,7 @@
 // cf-biba: Shared helpers for Home.js and Category Page.js repeater cards
 import { colors, borderRadius, shadows, transitions } from 'public/designTokens.js';
 import { getProductFallbackImage } from 'public/placeholderImages.js';
+import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 
 /**
  * Apply card container styles: white bg, 12px radius, card shadow, transition.
@@ -83,6 +84,16 @@ export function initCardHover($el) {
  * @param {Object} product - Product data with formattedPrice/formattedDiscountedPrice
  */
 export function formatCardPrice($priceEl, $origPriceEl, $saleBadgeEl, product) {
+  // Call-for-price products use $0 or $1.00 placeholder — show CTA instead
+  if (isCallForPrice(product)) {
+    if ($priceEl) {
+      try { $priceEl.text = CALL_FOR_PRICE_TEXT; } catch (e) {}
+    }
+    try { if ($origPriceEl) { $origPriceEl.hide(); } } catch (e) {}
+    try { if ($saleBadgeEl) { $saleBadgeEl.hide(); } } catch (e) {}
+    return;
+  }
+
   const price = product?.formattedPrice;
   const discounted = product?.formattedDiscountedPrice;
 

@@ -179,7 +179,7 @@ describe('productPageUtils', () => {
 
   describe('CALL_FOR_PRICE_TEXT', () => {
     it('contains phone number', () => {
-      expect(CALL_FOR_PRICE_TEXT).toContain('(828) 327-8030');
+      expect(CALL_FOR_PRICE_TEXT).toContain('(828) 252-9449');
     });
 
     it('contains call-for-pricing message', () => {

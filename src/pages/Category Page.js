@@ -18,7 +18,7 @@ import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
-import { buildGridAlt, detectProductBrand } from 'public/productPageUtils.js';
+import { buildGridAlt, detectProductBrand, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
@@ -826,10 +826,15 @@ function openQuickView(product) {
     currentQuickViewProduct = product;
     setCardImage($w('#qvImage'), product, '', getImageDimensions('productPageMain'));
     $w('#qvName').text = product.name || 'Product';
-    $w('#qvPrice').text = product.formattedPrice || '';
+    $w('#qvPrice').text = isCallForPrice(product) ? CALL_FOR_PRICE_TEXT : (product.formattedPrice || '');
     $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
-    $w('#qvAddToCart').label = 'Add to Cart';
-    $w('#qvAddToCart').enable();
+    if (isCallForPrice(product)) {
+      $w('#qvAddToCart').label = 'Call for Pricing';
+      $w('#qvAddToCart').disable();
+    } else {
+      $w('#qvAddToCart').label = 'Add to Cart';
+      $w('#qvAddToCart').enable();
+    }
 
     // Size selector — show if product has size option
     try {

@@ -12,6 +12,7 @@ import {
   getFilterValues,
 } from 'backend/searchService.web';
 import { announce, makeClickable } from 'public/a11yHelpers.js';
+import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { batchCheckWishlistStatus, initCardWishlistButton } from 'public/WishlistCardButton.js';
 import { buildProductBadgeOverlay } from 'public/galleryHelpers';
 import { getSwatchPreviewColors } from 'backend/swatchService.web';
@@ -132,7 +133,11 @@ async function renderResults(products, query) {
     try { $item('#searchImage').src = itemData.mainMedia; } catch (e) {}
     try { $item('#searchImage').alt = `${itemData.name} - Carolina Futons`; } catch (e) {}
     try { $item('#searchName').text = itemData.name; } catch (e) {}
-    try { $item('#searchPrice').text = itemData.formattedPrice; } catch (e) {}
+    try {
+      $item('#searchPrice').text = isCallForPrice(itemData)
+        ? CALL_FOR_PRICE_TEXT
+        : (itemData.formattedPrice || '');
+    } catch (e) {}
     try {
       const desc = stripHtml(itemData.description || '').substring(0, 120);
       $item('#searchDesc').text = desc ? desc + '...' : '';
@@ -149,9 +154,9 @@ async function renderResults(products, query) {
       }
     } catch (e) {}
 
-    // Show discounted price
+    // Show discounted price (skip for call-for-price products)
     try {
-      if (itemData.discountedPrice && itemData.discountedPrice < itemData.price) {
+      if (!isCallForPrice(itemData) && itemData.discountedPrice && itemData.discountedPrice < itemData.price) {
         $item('#searchOrigPrice').text = itemData.formattedPrice;
         $item('#searchOrigPrice').show();
         $item('#searchPrice').text = itemData.formattedDiscountedPrice;
