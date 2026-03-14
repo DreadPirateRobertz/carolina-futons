@@ -61,6 +61,11 @@ vi.mock('backend/utils/sanitize', () => ({
   },
 }));
 
+// Mock rate limiter — always allow in these tests
+vi.mock('backend/utils/rateLimit', () => ({
+  checkRateLimit: vi.fn(() => ({ allowed: true, remaining: 10, retryAfterMs: 0 })),
+}));
+
 // Mock UPS shipping
 vi.mock('backend/ups-shipping.web', () => ({
   createShipment: vi.fn(async () => ({

@@ -28,6 +28,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 import { safeParse } from 'backend/utils/safeParse';
 import { createShipment, trackShipment } from 'backend/ups-shipping.web';
 
@@ -345,6 +346,12 @@ export const lookupReturn = webMethod(
         return { success: false, error: 'A valid email address is required.' };
       }
 
+      // Rate limit by email — 10 lookups per 15 minutes
+      const rl = checkRateLimit(`lookup:${cleanEmail}`, { maxRequests: 10, windowMs: 15 * 60 * 1000 });
+      if (!rl.allowed) {
+        return { success: false, error: 'Too many requests. Please try again later.' };
+      }
+
       // Find the order and verify email
       const orderResult = await wixData.query('Stores/Orders')
         .eq('number', cleanOrderNumber)
@@ -407,6 +414,12 @@ export const submitGuestReturn = webMethod(
       }
       if (!cleanEmail || !validateEmail(cleanEmail)) {
         return { success: false, error: 'A valid email address is required.' };
+      }
+
+      // Rate limit by email — 5 submissions per 15 minutes
+      const rl = checkRateLimit(`submit:${cleanEmail}`, { maxRequests: 5, windowMs: 15 * 60 * 1000 });
+      if (!rl.allowed) {
+        return { success: false, error: 'Too many requests. Please try again later.' };
       }
 
       // Validate reason
