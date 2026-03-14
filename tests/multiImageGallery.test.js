@@ -76,6 +76,7 @@ describe('initGalleryCounter', () => {
 
   beforeEach(() => {
     $w = create$w();
+    vi.clearAllMocks();
   });
 
   it('shows initial counter text "1 / N"', () => {
@@ -84,11 +85,18 @@ describe('initGalleryCounter', () => {
     expect($w('#galleryCounter').text).toBe('1 / 5');
   });
 
-  it('returns update function to change counter', () => {
+  it('returns update function to change counter (0-based index)', () => {
     const state = makeState();
     const counter = initGalleryCounter($w, state);
-    counter.update(3);
+    counter.update(2); // 0-based index 2 → displays "3 / 5"
     expect($w('#galleryCounter').text).toBe('3 / 5');
+  });
+
+  it('update(0) shows first image', () => {
+    const state = makeState();
+    const counter = initGalleryCounter($w, state);
+    counter.update(0);
+    expect($w('#galleryCounter').text).toBe('1 / 5');
   });
 
   it('clamps index to valid range on update', () => {
@@ -140,6 +148,7 @@ describe('initActiveThumbnail', () => {
 
   beforeEach(() => {
     $w = create$w();
+    vi.clearAllMocks();
   });
 
   it('returns a setActive function', () => {
@@ -318,6 +327,7 @@ describe('initThumbnailScroll', () => {
 
   beforeEach(() => {
     $w = create$w();
+    vi.clearAllMocks();
   });
 
   it('wires prev/next buttons for thumbnail scrolling', () => {

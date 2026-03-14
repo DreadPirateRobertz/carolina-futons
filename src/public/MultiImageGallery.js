@@ -40,10 +40,11 @@ export function initGalleryCounter($w, state) {
     try { $w('#galleryCounter').text = `1 / ${total}`; } catch (e) {}
 
     return {
+      /** @param {number} index - 0-based image index */
       update(index) {
         try {
-          const clamped = Math.max(1, Math.min(index, total));
-          $w('#galleryCounter').text = `${clamped} / ${total}`;
+          const clamped = Math.max(0, Math.min(index, total - 1));
+          $w('#galleryCounter').text = `${clamped + 1} / ${total}`;
         } catch (e) {}
       },
     };
