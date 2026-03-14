@@ -211,7 +211,7 @@ describe('Category Page', () => {
   // ── Filter Controls ───────────────────────────────────────────────
 
   describe('filter controls', () => {
-    it('initializes category filter with 9 category options plus All Products', async () => {
+    it('initializes category filter with 8 categories plus All Products (9 total)', async () => {
       await onReadyHandler();
       const categoryFilter = getEl('#filterCategory');
       expect(categoryFilter.options).toHaveLength(9);
@@ -242,6 +242,18 @@ describe('Category Page', () => {
       expect(__getToCallLog()).toContain('/murphy-cabinet-beds');
     });
 
+    it('category filter does not navigate when selecting current category', async () => {
+      __setPath(['futon-frames']);
+      __resetToCallLog();
+      elements.clear();
+      await onReadyHandler();
+      const categoryFilter = getEl('#filterCategory');
+      const onChange = categoryFilter.onChange.mock.calls[0]?.[0];
+      categoryFilter.value = 'futon-frames';
+      if (onChange) onChange();
+      expect(__getToCallLog()).toHaveLength(0);
+    });
+
     it('category filter navigates to home when All Products selected', async () => {
       __resetToCallLog();
       await onReadyHandler();
@@ -260,8 +272,8 @@ describe('Category Page', () => {
       getEl('#filterCategory').value = 'mattresses';
       onClick();
 
-      // Should reset to current path, not empty
-      expect(getEl('#filterCategory').value).not.toBe('mattresses');
+      // Should reset to current path (from wixLocationFrontend.path)
+      expect(getEl('#filterCategory').value).toBe('');
     });
 
     it('initializes brand filter with 7 options', async () => {
