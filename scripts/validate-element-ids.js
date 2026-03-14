@@ -8,41 +8,22 @@
  * Usage:
  *   node scripts/validate-element-ids.js
  */
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 
 const SRC_DIR = join(import.meta.dirname, '..', 'carolina-futons-stage3-velo', 'src');
 const AUDIT_PATH = join(import.meta.dirname, 'element-id-audit.json');
 
 function collectFiles(dir, exts = ['.js']) {
-  const results = [];
-  try {
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      try {
-        const stat = statSync(full);
-        if (stat.isDirectory()) {
-          results.push(...collectFiles(full, exts));
-        } else if (exts.includes(extname(full))) {
-          results.push(full);
-        }
-      } catch (_) {}
-    }
-  } catch (_) {}
-  return results;
+  return readdirSync(dir, { recursive: true })
+    .filter(f => exts.includes(extname(f)))
+    .map(f => join(dir, f));
 }
 
 function extractSelectors(content) {
   const ids = new Set();
-  const patterns = [
-    /\$w\(['"`]#([a-zA-Z0-9_]+)['"`]\)/g,
-    /\$item\(['"`]#([a-zA-Z0-9_]+)['"`]\)/g,
-  ];
-  for (const pattern of patterns) {
-    let match;
-    while ((match = pattern.exec(content)) !== null) {
-      ids.add(match[1]);
-    }
+  for (const m of content.matchAll(/\$(?:w|item)\(['"`]#([a-zA-Z0-9_-]+)['"`]\)/g)) {
+    ids.add(m[1]);
   }
   return ids;
 }
@@ -106,5 +87,6 @@ if (inAuditNotCode.length > 0) {
 }
 
 console.log(`\n${'─'.repeat(50)}`);
-const documented = auditIds.size - inAuditNotCode.length;
-console.log(`Coverage: ${documented}/${codeIds.size} code IDs documented`);
+const overlapping = auditIds.size - inAuditNotCode.length;
+const pct = codeIds.size > 0 ? ((overlapping / codeIds.size) * 100).toFixed(1) : '0.0';
+console.log(`Coverage: ${overlapping}/${codeIds.size} code IDs documented (${pct}%)`);
