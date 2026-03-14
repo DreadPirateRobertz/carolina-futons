@@ -17,7 +17,7 @@ src/
 │   ├── Thank You Page.js, Member Page.js
 │   └── ... (FAQ, Blog, Referral, UGC Gallery, etc.)
 │
-├── public/          100+ shared frontend helpers & components
+├── public/          106 shared frontend helpers & components
 │   ├── sharedTokens.js      ← Brand design tokens (cross-platform)
 │   ├── designTokens.js      ← Web-specific tokens
 │   ├── mobileHelpers.js     ← Responsive utilities
@@ -39,7 +39,7 @@ src/
 ├── http-functions.js        ← HTTP endpoints (product feeds)
 └── shipping-rates-plugin.js ← Wix SPI shipping calculator
 
-tests/               290 test files, 11,079 tests (Vitest)
+tests/               309 test files, 12,084 tests (Vitest)
 content/             Product catalog, CMS content, blog data
 docs/                Design docs, plans, guides
 ```
@@ -95,7 +95,7 @@ npm install
 ### Run Tests
 
 ```bash
-npm test              # Run all 11,079 tests
+npm test              # Run all 12,084 tests
 npx vitest run        # Same thing
 npx vitest --watch    # Watch mode
 ```
@@ -105,7 +105,7 @@ npx vitest --watch    # Watch mode
 Tests use **Vitest** with comprehensive Wix platform mocks. All Wix APIs (`wix-data`, `wix-members-backend`, `wix-stores-frontend`, etc.) are mocked in `tests/__mocks__/`. Module aliases in `vitest.config.js` map Wix import paths to mocks.
 
 ```bash
-npm test                                    # Full suite (290 files, 11,079 tests)
+npm test                                    # Full suite (309 files, 12,084 tests)
 npx vitest run tests/referralService.test.js  # Single file
 npx vitest run --reporter=verbose             # Verbose output
 ```
