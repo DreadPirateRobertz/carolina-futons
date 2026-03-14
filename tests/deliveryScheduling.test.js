@@ -81,8 +81,10 @@ describe('getAvailableDeliverySlots', () => {
     expect(slots.length).toBeGreaterThan(0);
     const morningSlot = slots.find(s => s.timeWindow === 'morning');
     const afternoonSlot = slots.find(s => s.timeWindow === 'afternoon');
-    if (morningSlot) expect(morningSlot.timeLabel).toBe('9:00 AM - 12:00 PM');
-    if (afternoonSlot) expect(afternoonSlot.timeLabel).toBe('1:00 PM - 5:00 PM');
+    expect(morningSlot).toBeDefined();
+    expect(afternoonSlot).toBeDefined();
+    expect(morningSlot.timeLabel).toBe('9:00 AM - 12:00 PM');
+    expect(afternoonSlot.timeLabel).toBe('1:00 PM - 5:00 PM');
   });
 
   it('defaults to standard type when none provided', async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   getProductGuides,
@@ -334,6 +334,7 @@ describe('getUpsellRecommendations', () => {
 
 describe('trackGuideEngagement', () => {
   beforeEach(() => {
+    resetData();
     __setMember({ _id: 'member-1' });
   });
 
@@ -448,6 +449,7 @@ describe('trackGuideEngagement', () => {
 
 describe('logUpsellConversion', () => {
   beforeEach(() => {
+    resetData();
     __setMember({ _id: 'member-1' });
   });
 
