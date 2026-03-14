@@ -57,6 +57,9 @@ describe('WCAG 2.1 AA Keyboard Audit', () => {
       'Fullscreen Page.js': [
         'videoProductLink',
       ],
+      'Assembly Guides.js': [
+        'guideViewBtn',
+      ],
       'Admin Returns.js': [
         'refreshBtn', 'closeDetailBtn', 'approveBtn', 'denyBtn',
         'markShippedBtn', 'markReceivedBtn', 'generateLabelBtn',
@@ -99,7 +102,7 @@ describe('WCAG 2.1 AA Keyboard Audit', () => {
   describe('no double-registration (onClick + makeClickable on same element)', () => {
     // Previously found in Buying Guide.js: both .onClick(handler) and makeClickable(el, handler)
     // on the same element. This registers the click handler twice.
-    const DOUBLE_REG_PAGES = ['Buying Guide.js'];
+    const DOUBLE_REG_PAGES = AUDITED_PAGES;
 
     DOUBLE_REG_PAGES.forEach((page) => {
       it(`${page} has no onClick + makeClickable double-registrations`, () => {
@@ -133,6 +136,11 @@ describe('WCAG 2.1 AA Keyboard Audit', () => {
     it('masterPage.js logo uses makeClickable(logo, ...)', () => {
       const src = readPage('masterPage.js');
       expect(src).toMatch(/makeClickable\(logo,/);
+    });
+
+    it('Assembly Guides.js back button uses makeClickable(backBtn, ...)', () => {
+      const src = readPage('Assembly Guides.js');
+      expect(src).toMatch(/makeClickable\(backBtn,/);
     });
   });
 
