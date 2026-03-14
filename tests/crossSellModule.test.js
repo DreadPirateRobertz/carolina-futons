@@ -66,7 +66,7 @@ const { addToCart } = await import('public/cartService');
 const { makeClickable } = await import('public/a11yHelpers.js');
 
 const { loadRelatedProducts, loadCollectionProducts, initBundleSection } =
-  await import('../carolina-futons-stage3-velo/src/public/product/crossSell.js');
+  await import('../src/public/product/crossSell.js');
 
 // ── Tests ───────────────────────────────────────────────────────────
 

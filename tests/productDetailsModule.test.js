@@ -53,7 +53,7 @@ const {
   initStockUrgency,
   initDeliveryEstimate,
   initBackInStockNotification,
-} = await import('../carolina-futons-stage3-velo/src/public/product/productDetails.js');
+} = await import('../src/public/product/productDetails.js');
 
 // ── Tests ───────────────────────────────────────────────────────────
 

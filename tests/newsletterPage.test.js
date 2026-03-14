@@ -79,7 +79,7 @@ const { initPageSeo } = await import('public/pageSeo.js');
 // ── Load Page Module ────────────────────────────────────────────────
 
 beforeAll(async () => {
-  await import('../carolina-futons-stage3-velo/src/pages/Newsletter.js');
+  await import('../src/pages/Newsletter.js');
 });
 
 beforeEach(() => {

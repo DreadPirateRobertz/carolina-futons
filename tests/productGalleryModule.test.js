@@ -67,7 +67,7 @@ const { getProductFallbackImage, getPlaceholderProductImages } = await import('p
 const { generateAltText } = await import('backend/seoHelpers.web');
 
 const { initImageGallery, loadRecentlyViewed, initProductBadge } =
-  await import('../carolina-futons-stage3-velo/src/public/product/productGallery.js');
+  await import('../src/public/product/productGallery.js');
 
 // ── Tests ───────────────────────────────────────────────────────────
 

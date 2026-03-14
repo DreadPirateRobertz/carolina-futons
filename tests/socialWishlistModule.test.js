@@ -64,7 +64,7 @@ vi.mock('wix-data', () => ({
 const { trackSocialShare } = await import('public/engagementTracker');
 
 const { initSocialShare, initWishlistButton } =
-  await import('../carolina-futons-stage3-velo/src/public/product/socialWishlist.js');
+  await import('../src/public/product/socialWishlist.js');
 
 // ── Tests ───────────────────────────────────────────────────────────
 
