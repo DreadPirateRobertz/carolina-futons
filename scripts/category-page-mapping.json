@@ -27,7 +27,9 @@
     "gridOrigPrice": "Product card > Sale strikethrough price",
     "gridSaleBadge": "Product card > SALE badge",
     "gridBadge": "Product card > Badge (NEW / BEST SELLER)",
-    "gridSwatchPreview": "Product card > Color variant swatch dots"
+    "gridSwatchPreview": "Product card > Color variant swatch dots",
+    "categoryDataset": "Wix dataset connector for category products",
+    "flashSaleBanner": "Flash sale banner (collapsible, above grid)"
   },
 
   "gaps": {
@@ -64,7 +66,7 @@
     },
 
     "quickViewModal": {
-      "ids": ["quickViewModal", "qvImage", "qvName", "qvPrice", "qvDescription", "qvViewFull", "qvAddToCart", "qvClose"],
+      "ids": ["quickViewModal", "qvImage", "qvName", "qvPrice", "qvDescription", "qvViewFull", "qvAddToCart", "qvClose", "qvSizeSelect"],
       "type": "Lightbox/Box with children",
       "notes": "Template does NOT have quick view on category page (only on product page cross-sell). Full lightbox needed."
     },
@@ -113,8 +115,8 @@
   },
 
   "summary": {
-    "matchedElements": 17,
-    "gapElements": 56,
+    "matchedElements": 19,
+    "gapElements": 57,
     "templateExtras": ["Browse by sidebar nav (not in BUILD-SPEC — repurpose or adopt)"],
     "coveragePercent": 23,
     "coverageNotes": "Template covers core commerce grid (breadcrumbs, filters, sort, product cards with badges/swatches/sale pricing). Major gaps are advanced filters, mobile drawer, quick view, empty/no-match states, comparison bar, recently viewed, filter chips, and SEO schema."
