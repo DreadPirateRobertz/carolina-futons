@@ -262,13 +262,14 @@ describe('getMyAffiliateLinks', () => {
     __setMember({ _id: 'member-001' });
     __seed(ACCOUNTS, [{ _id: 'aff-001', memberId: 'member-001', status: 'active' }]);
     __seed(LINKS, [
-      { _id: 'link-1', affiliateId: 'aff-001', memberId: 'member-001', productId: 'p1', linkCode: 'CODE000001', clicks: 50, conversions: 5, revenue: 250, _createdDate: new Date() },
-      { _id: 'link-2', affiliateId: 'aff-001', memberId: 'member-001', productId: 'p2', linkCode: 'CODE000002', clicks: 10, conversions: 1, revenue: 80, _createdDate: new Date() },
+      { _id: 'link-1', affiliateId: 'aff-001', memberId: 'member-001', productId: 'p1', linkCode: 'CODE000001', clicks: 50, conversions: 5, revenue: 250, _createdDate: new Date('2026-03-14T12:00:00Z') },
+      { _id: 'link-2', affiliateId: 'aff-001', memberId: 'member-001', productId: 'p2', linkCode: 'CODE000002', clicks: 10, conversions: 1, revenue: 80, _createdDate: new Date('2026-03-14T11:00:00Z') },
     ]);
 
     const result = await getMyAffiliateLinks();
     expect(result.success).toBe(true);
     expect(result.links).toHaveLength(2);
+    // Sorted descending by _createdDate — link-1 (newer) comes first
     expect(result.links[0].clicks).toBe(50);
     expect(result.links[0].conversions).toBe(5);
   });
