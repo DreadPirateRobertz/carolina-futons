@@ -31,3 +31,6 @@ live-site-images.json
 # Local strategy docs
 docs/EMAIL-ALIAS-STRATEGY.md
 PRODUCT-PAGE-BUILD-SPEC.md
+
+# AI agent instruction files — not for public repo (overseer directive 2026-03-12)
+CLAUDE.md
