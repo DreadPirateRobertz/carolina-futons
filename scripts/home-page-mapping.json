@@ -63,14 +63,19 @@
     "categoryRepeater": { "templateNickname": null, "confidence": "MISMATCH", "note": "*** CRITICAL: Template has 4 individual Container cards (box26, box24, box22, box20), NOT a Repeater. Our code uses $w('#categoryRepeater').onItemReady() which requires a Repeater element. Options: (A) Add a Repeater element and remove individual cards, (B) Refactor code to address individual cards ***" },
     "categorySkeleton": { "templateNickname": null, "confidence": "MISSING", "note": "Skeleton loader — must be added" },
     "_templateCategoryCards": {
-      "box26": "Category card 1 container",
-      "box24": "Category card 2 container",
-      "box22": "Category card 3 container",
-      "box20": "Category card 4 container",
+      "box26": "Category card 1 container (Futon Frames)",
+      "box24": "Category card 2 container (Mattresses)",
+      "box22": "Category card 3 container (Murphy Cabinet Beds)",
+      "box20": "Category card 4 container (Platform Beds)",
       "text14": "Card 1 label",
       "text13": "Card 2 label",
       "text12": "Card 3 label",
-      "text11": "Card 4 label"
+      "text11": "Card 4 label",
+      "image26": "Card 1 image (guessed — may be imageX26 or different)",
+      "image24": "Card 2 image (guessed — may be imageX24 or different)",
+      "image22": "Card 3 image (guessed — may be imageX22 or different)",
+      "image20": "Card 4 image (guessed — may be imageX20 or different)",
+      "_note": "Image element IDs are guessed from Wix convention (imageN for boxN). Code also tries box.background.src as fallback. Verify in Wix Studio editor."
     }
   },
 

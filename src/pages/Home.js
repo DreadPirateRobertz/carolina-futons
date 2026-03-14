@@ -5,7 +5,7 @@ import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendat
 import { getWebSiteSchema } from 'backend/seoHelpers.web';
 import { initPageSeo } from 'public/pageSeo.js';
 import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';
-import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';
+import { getHomepageHeroImage, getCategoryCardImage, getCategoryCardAlt } from 'public/placeholderImages.js';
 import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';
@@ -438,15 +438,46 @@ async function initCategoryShowcase() {
     // Repeater may not exist
   }
 
-  // Also wire up individual card click handlers (backward compatible)
+  // Replace template stock images on the 4 static category card boxes
+  // Template has box26/24/22/20 with hardcoded template photos (blue couch, purple chair)
+  const templateCardMap = [
+    { boxId: '#box26', textId: '#text14', imgId: '#image26' },
+    { boxId: '#box24', textId: '#text13', imgId: '#image24' },
+    { boxId: '#box22', textId: '#text12', imgId: '#image22' },
+    { boxId: '#box20', textId: '#text11', imgId: '#image20' },
+  ];
+  categoriesWithCounts.slice(0, 4).forEach((cat, i) => {
+    const card = templateCardMap[i];
+    if (!card || !cat.collection) return;
+    // Set card image from real CF product photos
+    try {
+      const img = $w(card.imgId);
+      if (img) {
+        img.src = getCategoryCardImage(cat.collection);
+        img.alt = getCategoryCardAlt(cat.collection);
+      }
+    } catch (e) {}
+    // Also try setting background image on the container box
+    try {
+      const box = $w(card.boxId);
+      if (box && box.background) {
+        box.background.src = getCategoryCardImage(cat.collection);
+      }
+    } catch (e) {}
+    // Set card text
+    try {
+      const txt = $w(card.textId);
+      if (txt) txt.text = cat.name;
+    } catch (e) {}
+  });
+
+  // Wire click handlers on all category cards via elementId (backward compatible)
   categoriesWithCounts.forEach((cat) => {
     try {
       makeClickable($w(cat.elementId), () => {
         import('wix-location-frontend').then(({ to }) => to(cat.path));
       }, { ariaLabel: `Browse ${cat.name}` });
-    } catch (e) {
-      // Card element may not exist in editor
-    }
+    } catch (e) {}
   });
 }
 
