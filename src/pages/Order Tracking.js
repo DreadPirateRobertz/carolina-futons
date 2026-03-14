@@ -32,7 +32,7 @@ function initLookupForm() {
   try { $w('#emailInput').accessibility.ariaLabel = 'Email address used for this order'; } catch (e) {}
   try { $w('#trackOrderBtn').accessibility.ariaLabel = 'Track order'; } catch (e) {}
 
-  $w('#trackOrderBtn').onClick(() => handleLookup());
+  try { $w('#trackOrderBtn').onClick(() => handleLookup()); } catch (e) {}
 
   // Enter key submits the form
   try {
@@ -66,8 +66,10 @@ async function prefillFromQueryParams() {
 // ── Lookup Handler ─────────────────────────────────────────────────
 
 async function handleLookup() {
-  const orderNumber = ($w('#orderNumberInput').value || '').trim();
-  const email = ($w('#emailInput').value || '').trim();
+  let orderNumber = '';
+  let email = '';
+  try { orderNumber = ($w('#orderNumberInput').value || '').trim(); } catch (e) {}
+  try { email = ($w('#emailInput').value || '').trim(); } catch (e) {}
 
   // Client-side validation
   if (!orderNumber) {
@@ -478,8 +480,8 @@ function initResultsSection() {
       showResults(false);
       clearAutoRefresh();
       _currentOrder = null;
-      $w('#orderNumberInput').value = '';
-      $w('#emailInput').value = '';
+      try { $w('#orderNumberInput').value = ''; } catch (e) {}
+      try { $w('#emailInput').value = ''; } catch (e) {}
       try { $w('#orderNumberInput').focus(); } catch (e) {}
     });
   } catch (e) {}

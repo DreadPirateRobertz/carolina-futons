@@ -67,11 +67,12 @@ function initContactForm() {
     try { submitBtn.accessibility.ariaLabel = 'Send message to Carolina Futons'; } catch (e) {}
 
     submitBtn.onClick(async () => {
-      const name = sanitizeText($w('#contactName').value, 200);
-      const email = sanitizeText($w('#contactEmail').value, 254).toLowerCase().trim();
-      const phone = sanitizeText($w('#contactPhone').value, 30);
-      const subject = sanitizeText($w('#contactSubject').value, 200);
-      const message = sanitizeText($w('#contactMessage').value, 5000);
+      let name = '', email = '', phone = '', subject = '', message = '';
+      try { name = sanitizeText($w('#contactName').value, 200); } catch (e) {}
+      try { email = sanitizeText($w('#contactEmail').value, 254).toLowerCase().trim(); } catch (e) {}
+      try { phone = sanitizeText($w('#contactPhone').value, 30); } catch (e) {}
+      try { subject = sanitizeText($w('#contactSubject').value, 200); } catch (e) {}
+      try { message = sanitizeText($w('#contactMessage').value, 5000); } catch (e) {}
 
       // Clear previous errors
       hideAllErrors();
@@ -278,13 +279,14 @@ function initAppointmentBooking() {
     } catch (e) {}
 
     bookBtn.onClick(async () => {
-      const name = sanitizeText($w('#appointmentName').value, 200);
-      const email = sanitizeText($w('#appointmentEmail').value, 254).toLowerCase().trim();
-      const phone = sanitizeText($w('#appointmentPhone').value, 30);
-      const visitType = $w('#appointmentVisitType').value;
-      const date = $w('#appointmentDate').value;
-      const timeSlot = $w('#appointmentTimeSlot').value;
-      const interests = sanitizeText($w('#appointmentInterests').value, 1000);
+      let name = '', email = '', phone = '', visitType = '', date = '', timeSlot = '', interests = '';
+      try { name = sanitizeText($w('#appointmentName').value, 200); } catch (e) {}
+      try { email = sanitizeText($w('#appointmentEmail').value, 254).toLowerCase().trim(); } catch (e) {}
+      try { phone = sanitizeText($w('#appointmentPhone').value, 30); } catch (e) {}
+      try { visitType = $w('#appointmentVisitType').value; } catch (e) {}
+      try { date = $w('#appointmentDate').value; } catch (e) {}
+      try { timeSlot = $w('#appointmentTimeSlot').value; } catch (e) {}
+      try { interests = sanitizeText($w('#appointmentInterests').value, 1000); } catch (e) {}
 
       try { $w('#appointmentError').hide(); } catch (e) {}
 
