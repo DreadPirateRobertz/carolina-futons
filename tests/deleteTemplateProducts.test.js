@@ -53,8 +53,12 @@ function classifyProducts(products, cfNames) {
     const name = (product.name || '').trim();
     const nameLower = name.toLowerCase();
 
-    const isCF = cfNames.has(nameLower) ||
-      [...cfNames].some(cfName => nameLower.includes(cfName) && cfName.length > 3);
+    let isCF = cfNames.has(nameLower);
+    if (!isCF) {
+      for (const cfName of cfNames) {
+        if (cfName.length > 3 && nameLower.includes(cfName)) { isCF = true; break; }
+      }
+    }
 
     const isTemplateMatch = TEMPLATE_PRODUCT_PATTERNS.some(pattern =>
       nameLower === pattern || nameLower.startsWith(pattern + ' ')

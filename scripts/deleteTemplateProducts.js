@@ -147,10 +147,13 @@ function classifyProducts(products, cfNames) {
     const name = (product.name || '').trim();
     const nameLower = name.toLowerCase();
 
-    // Check if it's a known CF product
-    const isCF = cfNames.has(nameLower) ||
-      // Also check partial matches for multi-word CF names
-      [...cfNames].some(cfName => nameLower.includes(cfName) && cfName.length > 3);
+    // Check if it's a known CF product (exact match or partial for multi-word names)
+    let isCF = cfNames.has(nameLower);
+    if (!isCF) {
+      for (const cfName of cfNames) {
+        if (cfName.length > 3 && nameLower.includes(cfName)) { isCF = true; break; }
+      }
+    }
 
     // Check if it matches template patterns
     const isTemplateMatch = TEMPLATE_PRODUCT_PATTERNS.some(pattern =>
