@@ -17,13 +17,22 @@ let currentQuery = '';
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageHeading();
   initCategoryFilters();
   initFaqAccordion();
   initFaqSearch();
+  initContactCta();
   await injectFaqSeo();
   initPageSeo('faq');
   trackEvent('page_view', { page: 'faq' });
 });
+
+// ── Page Heading ────────────────────────────────────────────────────
+
+function initPageHeading() {
+  try { $w('#faqTitle').text = 'Frequently Asked Questions'; } catch (e) {}
+  try { $w('#faqSubtitle').text = 'Find answers about our futons, mattresses, Murphy beds, shipping, returns, and visiting our Hendersonville showroom.'; } catch (e) {}
+}
 
 // ── Category Filters ─────────────────────────────────────────────────
 
@@ -137,6 +146,33 @@ function initFaqSearch() {
         applyFilters();
       }, 300);
     });
+  } catch (e) {}
+}
+
+// ── Contact CTA ─────────────────────────────────────────────────────
+
+function initContactCta() {
+  try { $w('#faqContactTitle').text = 'Still Have Questions?'; } catch (e) {}
+  try { $w('#faqContactBody').text = 'Our team is happy to help. Call us at (828) 252-9449 or visit our Hendersonville showroom Wednesday through Saturday, 10 AM to 5 PM.'; } catch (e) {}
+  try {
+    const contactBtn = $w('#faqContactBtn');
+    if (contactBtn) {
+      contactBtn.label = 'Contact Us';
+      contactBtn.onClick(() => {
+        import('wix-location-frontend').then(({ to }) => to('/contact'));
+      });
+      try { contactBtn.accessibility.ariaLabel = 'Contact Carolina Futons'; } catch (e) {}
+    }
+  } catch (e) {}
+  try {
+    const phoneBtn = $w('#faqPhoneBtn');
+    if (phoneBtn) {
+      phoneBtn.label = '(828) 252-9449';
+      phoneBtn.onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => openUrl('tel:+18282529449'));
+      });
+      try { phoneBtn.accessibility.ariaLabel = 'Call Carolina Futons at (828) 252-9449'; } catch (e) {}
+    }
   } catch (e) {}
 }
 
