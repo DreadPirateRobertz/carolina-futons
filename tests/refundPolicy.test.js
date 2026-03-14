@@ -1,6 +1,7 @@
 /**
  * Tests for pages/Refund Policy.js
- * Covers: accordion sections, expand/collapse, ARIA attributes.
+ * Covers: accordion sections, expand/collapse, ARIA attributes,
+ * policy content validation (30-day window, warranty periods).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

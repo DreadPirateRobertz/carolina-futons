@@ -1,7 +1,7 @@
 /**
  * Tests for pages/Blog Post.js
- * Covers: slug extraction, reading time, author bio, share URLs,
- * related posts repeater, SEO schema injection, Pinterest meta.
+ * Covers: slug extraction edge cases, reading time, author bio, share URLs,
+ * related posts repeater, SEO schema injection, early-exit guards.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

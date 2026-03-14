@@ -1,7 +1,7 @@
 /**
  * Tests for pages/Terms & Conditions.js
  * Covers: terms section data, accordion expand/collapse, TOC navigation,
- * ARIA attributes, mobile collapse behavior.
+ * ARIA attributes, collapseOnMobile wiring.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
