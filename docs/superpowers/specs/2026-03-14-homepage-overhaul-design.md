@@ -4,7 +4,7 @@
 **Author:** melania (PM)
 **Status:** Draft
 **Site:** https://halworker85.wixstudio.com/my-site (My Site, metaSiteId `3af610bf-06fb-410d-a406-c1258fa84372`)
-**Parent Plan:** `docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md` (Option C — code remap + editor swaps)
+**Parent Plan:** `docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md`
 
 ---
 
@@ -16,7 +16,20 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 
 ## Approach
 
-**Hybrid execution:** Editor visual blitz (Melania, Playwright + documentServices API) for immediate results + parallel PR merges (crew) + element ID remap (code) for the Velo layer. Each page follows: CSS activate → editor element renames → visual image/content swaps → code remap → MCP deploy → publish & verify.
+**Option A first, Option C fallback.** We rename template elements in the editor to match our existing Velo code IDs (Option A) using documentServices `setNickname()`. This means our code works without modification for renamed elements. For any elements that cannot be renamed in the editor (structural mismatches, TPAWidgets, etc.), we fall back to Option C — remapping our code references to match the template IDs using `remap-element-ids.js`.
+
+**Hybrid execution:** Editor visual blitz (Melania, Playwright + documentServices API) for immediate results + parallel PR merges (crew) + targeted code remap where needed. Each page follows: CSS activate → editor element renames (Option A) → visual image/content swaps → code remap for gaps (Option C) → MCP deploy → publish & verify.
+
+## Risks & Gates
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| **Wix login blocker** — editor requires Google OAuth for halworker85@gmail.com | HIGH | Password reset link sent 2026-03-14. Check halworker85 Gmail first. Fallback: overseer does manual login. **Phase 1 gate: must resolve before any editor work.** |
+| **Footer 1-to-3 element mismatch** — template has one `text18` but code expects `#footerPhone`, `#footerAddress`, `#footerHours` | HIGH | Rename `text18` → `footerContactInfo` (new consolidated ID). Rewrite `FooterSection.js` to use single element with multi-line content. Or: split `text18` into 3 elements in editor. |
+| **Remap JSON format** — existing `masterpage-remap.json` has nested structure but script expects flat `{oldId: newId}` | MEDIUM | After editor renames, regenerate flat remap JSONs. Use only elements that still differ. |
+| **Section removal layout gaps** — hiding "As Seen In" could leave vertical gap | MEDIUM | Use `collapse()` API (not `hide()`). Verify no gap in preview before publish. |
+| **No rollback checkpoint** | MEDIUM | Before Phase 1: save editor revision. Document revision number. Wix Studio has revision history for undo. |
+| **Gallery→Repeater swaps deferred** | LOW | Phase 1 uses template Pro Gallery widgets as-is. Image swaps via documentServices work without widget replacement. Gallery→Repeater swaps (parent plan Task 2) deferred to Phase 3+ when Velo code needs full product card control. |
 
 ## Tooling Inventory
 
@@ -44,6 +57,12 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 ---
 
 ## Phase 1: Homepage Visual Blitz + Element Hookup (This Session)
+
+**Gate:** Wix Studio editor must be accessible (halworker85 login working). If blocked, check halworker85@gmail.com for password reset email first.
+
+**Rollback checkpoint:** Before any editor changes, save current editor state. Note the revision in Wix Studio's revision history. All Phase 1 editor changes can be undone via revision restore if needed.
+
+**Baseline:** Capture console error log before starting, so we can distinguish new errors from existing ones at verification (step 1.9).
 
 ### 1.0 — Activate global.css
 
@@ -89,17 +108,18 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 1. Rename footer elements per integration plan:
    - `text25` → `footerNewsletterTitle`
    - `text24` → `footerNewsletterSubtitle`
-   - `text18` → `footerAddress`
    - `button4` → `footerEmailSubmit`
-2. Remove duplicate "© 2025 by Carolina Futons. Built on Wix Studio" paragraph
-3. Set footer logo to match header logo treatment (single-line "Carolina Futons", 160x30)
-4. Verify social links — if text paragraphs, set them as clickable links to real CF social profiles:
+2. **Footer contact info structural fix:** Template has a single `text18` for all contact info, but `FooterSection.js` references `#footerPhone`, `#footerAddress`, `#footerHours` separately. Fix: add 2 new text elements in editor, rename `text18` → `footerAddress`, new elements → `footerPhone` and `footerHours`. Fallback: rename `text18` → `footerContactInfo` and create follow-up bead to consolidate `FooterSection.js`.
+3. **Footer email input note:** Template uses `form2` (TPAWidget), not a separate `#footerEmailInput`. The Velo code reference will silently fail (try/catch). Acceptable for Phase 1 — template widget handles subscriptions. Document as known gap.
+4. Remove duplicate "© 2025 by Carolina Futons. Built on Wix Studio" paragraph
+5. Set footer logo to match header logo treatment (single-line "Carolina Futons", 160x30)
+6. Verify social links — if text paragraphs, set them as clickable links to real CF social profiles:
    - Facebook → facebook.com/carolinafutons
    - Instagram → instagram.com/carolinafutons
    - TikTok → tiktok.com/@carolinafutons
    - Pinterest → pinterest.com/carolinafutons
-5. Verify newsletter "Stay Inspired" form submits without error
-6. Verify contact info accuracy: carolinafutons@gmail.com, (828) 327-8030, Hickory NC, Mon-Fri 9-5 EST
+7. Verify newsletter "Stay Inspired" form submits without error (via template `form2` widget)
+8. Verify contact info accuracy: carolinafutons@gmail.com, (828) 327-8030, Hickory NC, Mon-Fri 9-5 EST
 
 **Acceptance:**
 - [ ] Single copyright line: "© 2026 Carolina Futons. All rights reserved."
@@ -107,7 +127,9 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 - [ ] Footer logo styled (Playfair Display, matching header)
 - [ ] Footer columns legible and properly spaced
 - [ ] Newsletter form submits without error
+- [ ] Contact info renders correctly (3 elements or consolidated)
 - [ ] All footer element renames applied
+- [ ] Known gaps documented: `#footerEmailInput` not connected (template form handles it)
 
 ### 1.3 — Home Page: Hero Image Swap
 
@@ -151,11 +173,13 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 
 **What:** Fake press logos (Spazio, Corriere, Ocean, Hakvir, RVGAO) — CF has no press features.
 
-**How:** Via documentServices API — hide or collapse the "AS SEEN IN" section and its logo repeater. Use `components.properties.set` to hide, or `components.remove` if appropriate.
+**How:** Via documentServices API — use `collapse()` (NOT `hide()`) on the "AS SEEN IN" section container. `collapse()` removes the element from layout flow so no vertical gap remains. `hide()` would leave a blank space. Do NOT use `components.remove` — that's destructive and harder to undo.
+
+**Rollback:** If collapse causes downstream layout issues, restore by `expand()`.
 
 **Acceptance:**
 - [ ] Section not visible on published site
-- [ ] No blank gap or layout break where section was
+- [ ] No blank gap or layout break where section was (verify in preview before publish)
 
 ### 1.6 — Home Page: Instagram Section Dummy
 
@@ -189,16 +213,22 @@ We have 93 backend modules, 109 public modules, 12,000+ tests, element ID maps, 
 **What:** After editor element renames (1.1-1.7), run the remap script to update Velo code references to match.
 
 **How:**
-1. Create `scripts/masterpage-remap.json` mapping any remaining ID differences (many will be 1:1 after editor renames)
-2. Create `scripts/home-remap.json` for homepage elements
-3. Run: `node scripts/remap-element-ids.js scripts/masterpage-remap.json` (dry-run first)
-4. Run: `node scripts/remap-element-ids.js scripts/home-remap.json` (dry-run first)
-5. Apply: `--apply` flag on both
+Since Phase 1 uses Option A (rename template elements to match our code IDs), most Velo code references will already match — no remap needed for those. This step only handles elements that could NOT be renamed in the editor (TPAWidgets, structural mismatches, etc.).
+
+1. **Inventory gaps:** After editor renames (1.1-1.7), list any elements where our code ID ≠ template ID. These are the Option C fallback cases.
+2. **Regenerate flat remap JSONs:** The existing `scripts/masterpage-remap.json` has nested structure (`_meta`, `mapping`, `notes`). The `remap-element-ids.js` script expects flat `{oldId: newId}`. Create new flat files: `scripts/masterpage-remap-flat.json` and `scripts/home-remap-flat.json` containing ONLY the gap elements.
+3. Run dry-run: `node scripts/remap-element-ids.js scripts/masterpage-remap-flat.json`
+4. Run dry-run: `node scripts/remap-element-ids.js scripts/home-remap-flat.json`
+5. If changes look correct: `--apply` flag on both
 6. Run full test suite: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run`
 7. Deploy via `velo_sync` to stage3-velo repo
 
+**Note:** If all editor renames succeeded (all our code IDs now match template IDs), the flat remap JSONs will be empty `{}` and this step is a no-op. That's the ideal outcome.
+
 **Acceptance:**
-- [ ] Remap script runs without errors on both mapping files
+- [ ] Gap inventory complete — all unmatched element IDs documented
+- [ ] Flat remap JSONs created (may be empty if Option A covered everything)
+- [ ] Remap script runs without errors
 - [ ] All 12,000+ tests pass after remap
 - [ ] Code synced to stage3-velo repo
 - [ ] No orphaned `$w('#oldId')` references in masterPage.js or Home.js
