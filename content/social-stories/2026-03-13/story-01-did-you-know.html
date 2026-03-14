@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #E8D5B7;
+    font-family: 'Georgia', 'Playfair Display', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Mountain skyline decorative border */
+  .mountain-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 320px;
+    background: linear-gradient(180deg, #B8D4E3 0%, #F0C87A 60%, #E8D5B7 100%);
+  }
+  .mountain-top svg {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .mountain-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 260px;
+    background: linear-gradient(0deg, #3A2518 0%, #5B4030 40%, transparent 100%);
+  }
+  .mountain-bottom svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 180px;
+  }
+
+  /* Logo area */
+  .logo-area {
+    position: absolute;
+    top: 340px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .logo-text {
+    font-size: 36px;
+    color: #3A2518;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .logo-tagline {
+    font-size: 22px;
+    color: #5B8FA8;
+    letter-spacing: 3px;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Did you know badge */
+  .badge {
+    position: absolute;
+    top: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #E8845C;
+    color: white;
+    font-size: 30px;
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 16px 48px;
+    border-radius: 4px;
+  }
+
+  /* Main content card */
+  .content-card {
+    position: absolute;
+    top: 600px;
+    left: 80px; right: 80px;
+    background: rgba(255,255,255,0.88);
+    border-radius: 16px;
+    padding: 72px 64px;
+    box-shadow: 0 8px 48px rgba(58,37,24,0.18);
+    border-left: 8px solid #E8845C;
+  }
+
+  .fact-number {
+    font-size: 120px;
+    color: #E8D5B7;
+    font-weight: 900;
+    line-height: 1;
+    position: absolute;
+    top: -20px;
+    right: 40px;
+    font-family: 'Arial Black', sans-serif;
+    z-index: 0;
+  }
+
+  .fact-headline {
+    font-size: 52px;
+    color: #3A2518;
+    line-height: 1.2;
+    font-weight: 700;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .fact-body {
+    font-size: 34px;
+    color: #5C4033;
+    line-height: 1.6;
+    font-family: 'Arial', sans-serif;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+  }
+
+  .fact-highlight {
+    color: #E8845C;
+    font-weight: 700;
+  }
+
+  /* CTA */
+  .cta-area {
+    position: absolute;
+    bottom: 300px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .cta-text {
+    font-size: 32px;
+    color: #3A2518;
+    font-family: 'Arial', sans-serif;
+    margin-bottom: 20px;
+  }
+  .cta-hours {
+    font-size: 28px;
+    color: #5B8FA8;
+    font-family: 'Arial', sans-serif;
+    font-weight: 600;
+    letter-spacing: 2px;
+  }
+
+  /* Footer */
+  .footer-info {
+    position: absolute;
+    bottom: 80px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .footer-handle {
+    font-size: 30px;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .footer-location {
+    font-size: 24px;
+    color: rgba(255,255,255,0.8);
+    font-family: 'Arial', sans-serif;
+    margin-top: 8px;
+  }
+
+  /* Decorative dots */
+  .dot {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.15;
+  }
+</style>
+</head>
+<body>
+
+<!-- Mountain gradient top -->
+<div class="mountain-top">
+  <svg viewBox="0 0 1080 320" preserveAspectRatio="none">
+    <!-- Back mountains -->
+    <polygon points="0,320 120,180 260,240 380,140 520,220 650,100 780,180 920,120 1080,200 1080,320" fill="#B8C8D8" opacity="0.4"/>
+    <!-- Mid mountains -->
+    <polygon points="0,320 80,220 200,270 340,160 480,240 600,130 740,200 880,150 1000,210 1080,190 1080,320" fill="#8AAFC0" opacity="0.5"/>
+    <!-- Front ridge -->
+    <polygon points="0,320 60,260 180,290 300,200 440,280 560,180 700,260 820,190 960,250 1080,220 1080,320" fill="#5B8FA8" opacity="0.7"/>
+    <!-- Foreground trees -->
+    <polygon points="0,320 0,290 40,295 80,270 120,285 160,260 200,280 240,265 280,285 320,320" fill="#3A2518" opacity="0.6"/>
+    <polygon points="800,320 820,280 860,295 900,265 940,285 980,270 1020,290 1060,280 1080,285 1080,320" fill="#3A2518" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- Decorative circles -->
+<div class="dot" style="width:300px;height:300px;background:#E8845C;top:700px;right:-80px;"></div>
+<div class="dot" style="width:200px;height:200px;background:#5B8FA8;top:1100px;left:-60px;"></div>
+
+<!-- Logo -->
+<div class="logo-area">
+  <div class="logo-text">Carolina Futons</div>
+  <div class="logo-tagline">Est. 1991 · Hendersonville, NC</div>
+</div>
+
+<!-- Badge -->
+<div class="badge">✦ Did You Know? ✦</div>
+
+<!-- Main content -->
+<div class="content-card">
+  <div class="fact-number">01</div>
+  <div class="fact-headline">A quality futon frame can last <span style="color:#E8845C">20+ years</span></div>
+  <div class="fact-body">
+    Solid hardwood futon frames — like the ones we carry from KD Frames — are built to outlast cheap furniture store alternatives by <span class="fact-highlight">a decade or more.</span><br><br>
+    The secret? Kiln-dried wood, reinforced corner joints, and a bifold mechanism rated for thousands of opens.
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-area">
+  <div class="cta-text">Come feel the difference in person ↓</div>
+  <div class="cta-hours">Wed – Sat  ·  10am – 5pm</div>
+</div>
+
+<!-- Bottom mountain / footer -->
+<div class="mountain-bottom">
+  <svg viewBox="0 0 1080 180" preserveAspectRatio="none">
+    <polygon points="0,180 0,100 150,60 300,90 450,40 600,80 750,20 900,70 1080,30 1080,180" fill="#5B8FA8" opacity="0.4"/>
+    <polygon points="0,180 0,120 200,80 400,110 600,60 800,100 1080,55 1080,180" fill="#3A2518" opacity="0.6"/>
+  </svg>
+  <div class="footer-info">
+    <div class="footer-handle">@carolinafutons</div>
+    <div class="footer-location">824 Locust St · Hendersonville, NC</div>
+  </div>
+</div>
+
+</body>
+</html>
