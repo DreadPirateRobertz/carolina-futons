@@ -728,6 +728,12 @@ h4.font_4,
 }
 
 @media (max-width: 480px) {
+  /* Prevent horizontal scroll from wide inline SVGs and fixed-width elements */
+  body,
+  .page {
+    overflow-x: hidden !important;
+  }
+
   h1, h1.font_0,
   .rich-text h1 {
     font-size: 24px !important;
@@ -743,18 +749,142 @@ h4.font_4,
     font-size: 15px !important;
   }
 
+  /* Product grid — single column */
   [data-hook="product-list"] {
     grid-template-columns: 1fr !important;
     gap: 20px !important;
+    padding: 0 12px !important;
   }
 
   [data-hook="ProductMediaDataHook.Images"] img {
     max-height: 300px !important;
   }
 
+  /* Category page hero — scale down for narrow screens */
+  [data-hook="HeroDataHook.CategoryName"] {
+    font-size: 24px !important;
+  }
+
+  [data-hook="HeroDataHook.Description"] {
+    font-size: 14px !important;
+  }
+
+  /* Product page — tighter spacing on mobile */
+  [data-hook="product-title"],
+  [data-hook="product-name"] {
+    font-size: 22px !important;
+  }
+
+  [data-hook="product-price"],
+  [data-hook="formatted-primary-price"] {
+    font-size: 20px !important;
+  }
+
+  [data-hook="product-description"] {
+    font-size: 14px !important;
+  }
+
+  /* Buttons — minimum 44px touch target */
+  [data-hook="add-to-cart"],
+  [data-hook="cart-widget-button"],
+  [data-hook="CheckoutButtonDataHook"],
+  [data-hook="submit-button"],
+  [data-hook="form-root"] button[type="submit"] {
+    min-height: 44px !important;
+    padding: 12px 16px !important;
+  }
+
+  /* Cart page — stack items vertically */
+  [data-hook="cart-widget-item-name"],
+  [data-hook="CartItemDataHook.Name"] {
+    font-size: 14px !important;
+  }
+
+  [data-hook="cart-widget-item-price"],
+  [data-hook="CartItemDataHook.Price"] {
+    font-size: 14px !important;
+  }
+
+  [data-hook="cart-widget-subtotal"],
+  [data-hook="CartSubTotalDataHook"] {
+    font-size: 16px !important;
+  }
+
+  /* Contact form — full-width inputs */
+  [data-hook="form-root"] input,
+  [data-hook="form-root"] textarea,
+  [data-hook="form-root"] select {
+    width: 100% !important;
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    box-sizing: border-box !important;
+  }
+
+  /* FAQ page — tighter on mobile */
+  [data-hook="faq-title"],
+  .section h1 {
+    font-size: 28px !important;
+  }
+
+  [data-hook="faq-question-text"],
+  [data-hook="question-text"] {
+    font-size: 15px !important;
+    min-height: 44px !important; /* touch target for expand/collapse */
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Blog post titles — prevent overflow */
+  [data-hook="post-title"],
+  [data-hook="post-list-item-title"] {
+    font-size: 18px !important;
+    word-break: break-word !important;
+  }
+
+  /* Footer — compact spacing */
   .footer p,
   .footer span,
   .footer a {
     font-size: 13px !important;
+  }
+
+  .footer h2,
+  .footer h3,
+  .footer h4 {
+    font-size: 13px !important;
+  }
+
+  /* Newsletter email input — prevent iOS zoom */
+  .footer input[type="email"],
+  .footer [data-hook="text-field-root"] input {
+    font-size: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Gallery items — allow full-width on narrow screens */
+  [aria-label="Product Gallery"] li,
+  [aria-roledescription="gallery"] li {
+    max-width: 100% !important;
+  }
+
+  /* Header logo placeholder — don't push layout */
+  .header h2 {
+    min-width: 120px !important;
+    min-height: 58px !important;
+  }
+
+  /* Sidebar filters — collapse on mobile */
+  [data-hook="filters-title"] {
+    font-size: 14px !important;
+  }
+
+  /* Policy pages — readable text */
+  [data-hook="ricos-viewer"] h1,
+  [data-hook="ricos-viewer"] h2 {
+    font-size: 20px !important;
+  }
+
+  [data-hook="ricos-viewer"] h3 {
+    font-size: 16px !important;
   }
 }
