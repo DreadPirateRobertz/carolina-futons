@@ -122,10 +122,10 @@ h4.font_4,
 
 .header {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='100%25' stop-color='%23E8F0F5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='120' fill='url(%23sky)'/%3E%3Cpath d='M0 120 L0 75 Q120 35 240 58 Q360 22 480 48 Q600 15 720 42 Q840 28 960 52 Q1080 18 1200 48 Q1320 32 1440 58 L1440 120 Z' fill='%23A8CCD8' opacity='0.4'/%3E%3Cpath d='M0 120 L0 82 Q180 45 360 68 Q480 32 600 58 Q720 28 840 52 Q960 38 1080 62 Q1260 32 1440 68 L1440 120 Z' fill='%235B8FA8' opacity='0.5'/%3E%3Cpath d='M0 120 L0 92 Q100 65 200 78 Q350 55 500 72 Q600 48 750 68 Q900 58 1050 75 Q1200 52 1440 78 L1440 120 Z' fill='%233D6B80' opacity='0.7'/%3E%3C/svg%3E") bottom/100% 70px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%2390C5DD'/%3E%3Cstop offset='60%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='100%25' stop-color='%23F0C87A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='140' fill='url(%23sky)'/%3E%3Cpath d='M0 140 L0 65 Q80 25 180 50 Q280 10 400 40 Q500 5 620 35 Q720 15 840 45 Q940 8 1060 38 Q1160 18 1280 42 Q1380 25 1440 50 L1440 140 Z' fill='%23A8CCD8' opacity='0.6'/%3E%3Cpath d='M0 140 L0 78 Q120 40 280 65 Q400 28 540 55 Q660 22 800 50 Q920 32 1060 58 Q1200 28 1340 55 Q1400 42 1440 60 L1440 140 Z' fill='%235B8FA8' opacity='0.75'/%3E%3Cpath d='M0 140 L0 95 Q100 62 220 80 Q340 52 480 72 Q580 48 720 68 Q860 55 980 75 Q1100 50 1240 70 Q1360 58 1440 78 L1440 140 Z' fill='%233D6B80' opacity='0.9'/%3E%3Cpath d='M0 140 L0 108 Q60 98 140 105 Q220 95 320 102 Q400 92 500 100 Q580 94 680 101 Q760 93 860 100 Q940 95 1040 101 Q1120 94 1220 100 Q1300 96 1380 102 L1440 100 L1440 140 Z' fill='%231E3A5F' opacity='0.4'/%3E%3C/svg%3E") bottom/100% 90px no-repeat,
     #FFFFFF !important;
   border-bottom: none !important;
-  padding-bottom: 70px !important;
+  padding-bottom: 90px !important;
 }
 
 /* Announcement bar text */
@@ -350,9 +350,9 @@ h4.font_4,
 
 .footer {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 80' preserveAspectRatio='none'%3E%3Cpath d='M0 80 L0 50 Q180 20 360 40 Q540 10 720 35 Q900 15 1080 40 Q1260 20 1440 45 L1440 80 Z' fill='%23A8CCD8' opacity='0.15'/%3E%3Cpath d='M0 80 L0 55 Q200 30 400 48 Q600 20 800 42 Q1000 28 1200 50 Q1350 32 1440 52 L1440 80 Z' fill='%235B8FA8' opacity='0.2'/%3E%3Cpath d='M0 80 L0 60 Q150 40 300 55 Q500 35 700 52 Q850 42 1000 55 Q1200 40 1440 58 L1440 80 Z' fill='%23A8CCD8' opacity='0.25'/%3E%3C/svg%3E") top/100% 80px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100 L0 40 Q180 10 360 32 Q540 2 720 28 Q900 8 1080 35 Q1260 12 1440 38 L1440 100 Z' fill='%23A8CCD8' opacity='0.25'/%3E%3Cpath d='M0 100 L0 52 Q200 22 400 42 Q600 15 800 38 Q1000 20 1200 45 Q1350 25 1440 48 L1440 100 Z' fill='%235B8FA8' opacity='0.35'/%3E%3Cpath d='M0 100 L0 65 Q150 38 300 55 Q500 30 700 50 Q850 38 1000 55 Q1200 35 1440 55 L1440 100 Z' fill='%233D6B80' opacity='0.45'/%3E%3C/svg%3E") top/100% 100px no-repeat,
     #1E2A3A !important;
-  padding-top: 80px !important;
+  padding-top: 100px !important;
 }
 
 .footer p,
