@@ -1,79 +1,65 @@
-// Fullscreen Page.js - Product Videos / Gallery Fullscreen View
-// Full-screen product video and image gallery with engagement features
-import wixData from 'wix-data';
-import { trackEvent, trackGalleryInteraction } from 'public/engagementTracker';
-import { typography } from 'public/designTokens.js';
+// Fullscreen Page.js - Product Videos
+// Video gallery showcasing CF product demos and conversion videos
+import { trackEvent } from 'public/engagementTracker';
+import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
-import { initBackToTop, collapseOnMobile } from 'public/mobileHelpers';
+import { initPageSeo } from 'public/pageSeo.js';
+import {
+  getVideoData,
+  getVideoCategories,
+  filterVideosByCategory,
+} from 'public/videoPageHelpers.js';
+
+let currentCategory = null;
+let allVideos = [];
+let currentProductSlug = null;
 
 $w.onReady(function () {
-  initVideoGallery();
-  initProductVideoGrid();
+  initBackToTop($w);
+  initPageHeading();
+  initVideoGrid();
+  initCategoryFilters();
+  initPageSeo('product-videos');
   trackEvent('page_view', { page: 'product_videos' });
-  try { collapseOnMobile($w, ['#videoOverlay']); } catch (e) {}
-  try { initBackToTop($w); } catch (e) {}
 });
 
-// ── Product Video Gallery ───────────────────────────────────────────
-// Full-screen video player with product info overlay
+// ── Page Heading ────────────────────────────────────────────────────
 
-function initVideoGallery() {
-  try {
-    const videoPlayer = $w('#videoPlayer');
-    if (!videoPlayer) return;
-
-    try { videoPlayer.accessibility.ariaLabel = 'Product demonstration video player'; } catch (e) {}
-
-    // Auto-play on visibility
-    videoPlayer.onPlay(() => {
-      try { $w('#videoOverlay').hide('fade', { duration: 300 }); } catch (e) {}
-    });
-
-    videoPlayer.onPause(() => {
-      try { $w('#videoOverlay').show('fade', { duration: 300 }); } catch (e) {}
-    });
-
-    videoPlayer.onEnded(() => {
-      try {
-        $w('#videoOverlay').show('fade', { duration: 300 });
-        // Show "shop this product" CTA after video ends
-        $w('#videoShopCTA').show('fade', { duration: 400 });
-      } catch (e) {}
-    });
-  } catch (e) {}
+function initPageHeading() {
+  try { $w('#videoPageTitle').text = 'Product Videos'; } catch (e) {}
+  try { $w('#videoPageSubtitle').text = 'Watch our futon frames, Murphy beds, and conversion mechanisms in action.'; } catch (e) {}
 }
 
-// ── Product Video Grid ──────────────────────────────────────────────
-// Grid of product demo videos organized by category
+// ── Video Grid ──────────────────────────────────────────────────────
 
-function initProductVideoGrid() {
+function initVideoGrid() {
   try {
-    const videosRepeater = $w('#videosRepeater');
-    if (!videosRepeater) return;
+    const repeater = $w('#videosRepeater');
+    if (!repeater) return;
 
-    videosRepeater.onItemReady(($item, itemData) => {
-      // Video thumbnail
-      if (itemData.thumbnail) {
-        $item('#videoThumb').src = itemData.thumbnail;
-        $item('#videoThumb').alt = `${itemData.title} product demo video - Carolina Futons`;
-      }
+    allVideos = getVideoData();
 
+    try { repeater.accessibility.ariaLabel = 'Product demo videos'; } catch (e) {}
+
+    repeater.onItemReady(($item, itemData) => {
       $item('#videoTitle').text = itemData.title;
 
-      if (itemData.duration) {
-        try { $item('#videoDuration').text = itemData.duration; } catch (e) {}
-      }
+      try { $item('#videoDescription').text = itemData.description; } catch (e) {}
 
-      // Category badge (decorative — screen readers get info from title)
-      if (itemData.category) {
+      if (itemData.posterUrl) {
         try {
-          $item('#videoCategoryBadge').text = itemData.category;
-          $item('#videoCategoryBadge').show();
-          try { $item('#videoCategoryBadge').accessibility.ariaHidden = true; } catch (e) {}
+          $item('#videoThumb').src = itemData.posterUrl;
+          $item('#videoThumb').alt = `${itemData.title} product demo video`;
         } catch (e) {}
       }
 
-      // Click/keyboard to play (WCAG 2.1.1 Keyboard)
+      try {
+        $item('#videoCategoryBadge').text = itemData.category === 'futon' ? 'Futon Frame'
+          : itemData.category === 'conversion' ? 'Conversion Demo'
+          : 'Overview';
+      } catch (e) {}
+
+      // Play button
       makeClickable($item('#videoThumb'), () => {
         playVideo(itemData);
       }, { ariaLabel: `Play ${itemData.title} video`, role: 'button' });
@@ -82,73 +68,103 @@ function initProductVideoGrid() {
     // Register product link handler once (slug updated via playVideo)
     try {
       makeClickable($w('#videoProductLink'), () => {
-        if (currentVideoProductSlug) {
+        if (currentProductSlug) {
           import('wix-location-frontend').then(({ to }) => {
-            to(`/product-page/${currentVideoProductSlug}`);
+            to(`/product-page/${currentProductSlug}`);
           });
         }
       }, { ariaLabel: 'Shop this product' });
     } catch (e) {}
 
-    // Category filter for videos
-    initVideoFilters();
+    repeater.data = allVideos;
   } catch (e) {}
 }
 
-function initVideoFilters() {
-  try {
-    const filterBtns = {
-      '#videoFilterAll': { category: '', label: 'Show all videos' },
-      '#videoFilterFutons': { category: 'futon', label: 'Filter futon videos' },
-      '#videoFilterMurphy': { category: 'murphy', label: 'Filter Murphy bed videos' },
-      '#videoFilterPlatform': { category: 'platform', label: 'Filter platform bed videos' },
-    };
+// ── Category Filters ─────────────────────────────────────────────────
 
-    Object.entries(filterBtns).forEach(([btnId, { category, label }]) => {
+function initCategoryFilters() {
+  try {
+    const catRepeater = $w('#videoCategoryRepeater');
+    if (!catRepeater) return;
+
+    const categories = getVideoCategories();
+    const allOption = { _id: 'cat-all', id: '', label: 'All Videos' };
+    const catData = [allOption, ...categories.map(c => ({ ...c, _id: `cat-${c.id}` }))];
+
+    try { catRepeater.accessibility.ariaLabel = 'Video category filters'; } catch (e) {}
+    try { catRepeater.accessibility.role = 'tablist'; } catch (e) {}
+
+    catRepeater.onItemReady(($item, itemData) => {
+      $item('#categoryLabel').text = itemData.label;
+      try { $item('#categoryLabel').accessibility.role = 'tab'; } catch (e) {}
+      try { $item('#categoryLabel').accessibility.ariaLabel = `Filter: ${itemData.label}`; } catch (e) {}
+      try { $item('#categoryLabel').accessibility.tabIndex = 0; } catch (e) {}
+
+      const selectCategory = () => {
+        currentCategory = itemData.id != null && itemData.id !== '' ? itemData.id : null;
+        applyFilter();
+        trackEvent('video_filter', { category: itemData.label });
+        announce($w, `Showing ${itemData.label.toLowerCase()}`);
+      };
+
+      $item('#categoryLabel').onClick(selectCategory);
       try {
-        makeClickable($w(btnId), () => {
-          filterVideosByCategory(category);
-          // Highlight active filter and update pressed state
-          Object.keys(filterBtns).forEach(id => {
-            try { $w(id).style.fontWeight = id === btnId ? String(typography.h2.weight) : String(typography.body.weight); } catch (e) {}
-            try { $w(id).accessibility.ariaPressed = id === btnId; } catch (e) {}
-          });
-          announce($w, `Showing ${label.toLowerCase()}`);
-        }, { ariaLabel: label });
+        $item('#categoryLabel').onKeyPress((event) => {
+          if (event.key === 'Enter' || event.key === ' ') selectCategory();
+        });
       } catch (e) {}
     });
+    catRepeater.data = catData;
   } catch (e) {}
 }
 
-function filterVideosByCategory(category) {
+function applyFilter() {
   try {
-    const dataset = $w('#videosDataset');
-    if (!dataset) return;
+    const repeater = $w('#videosRepeater');
+    if (!repeater) return;
 
-    if (!category) {
-      dataset.setFilter(wixData.filter());
+    const filtered = filterVideosByCategory(allVideos, currentCategory);
+
+    if (filtered.length === 0) {
+      try {
+        $w('#videoNoResults').text = 'No videos in this category.';
+        $w('#videoNoResults').expand();
+      } catch (e) {}
+      announce($w, 'No videos found');
     } else {
-      dataset.setFilter(wixData.filter().contains('category', category));
+      try { $w('#videoNoResults').collapse(); } catch (e) {}
+      announce($w, `${filtered.length} video${filtered.length !== 1 ? 's' : ''} found`);
     }
+
+    repeater.data = filtered;
   } catch (e) {}
 }
 
-let currentVideoProductSlug = null;
+// ── Video Player ────────────────────────────────────────────────────
 
 function playVideo(videoData) {
   try {
     const player = $w('#videoPlayer');
-    if (player && videoData.videoUrl) {
-      player.src = videoData.videoUrl;
-      player.play();
-      trackGalleryInteraction('video_play');
-      trackEvent('video_play', { title: videoData.title, category: videoData.category });
+    if (!player || !videoData.videoUrl) return;
 
-      // Update product link slug (handler registered once in initProductVideoGrid)
-      if (videoData.productSlug) {
-        currentVideoProductSlug = videoData.productSlug;
+    player.src = videoData.videoUrl;
+    player.play();
+    trackEvent('video_play', { title: videoData.title, category: videoData.category });
+    announce($w, `Now playing: ${videoData.title}`);
+
+    try { $w('#nowPlayingTitle').text = videoData.title; } catch (e) {}
+    try { $w('#videoPlayerContainer').expand(); } catch (e) {}
+
+    // Update product link (handler registered once in initVideoGrid)
+    if (videoData.productSlug) {
+      currentProductSlug = videoData.productSlug;
+      try {
+        $w('#videoProductLink').label = `Shop the ${videoData.title}`;
         $w('#videoProductLink').show();
-      }
+      } catch (e) {}
+    } else {
+      currentProductSlug = null;
+      try { $w('#videoProductLink').hide(); } catch (e) {}
     }
   } catch (e) {}
 }
