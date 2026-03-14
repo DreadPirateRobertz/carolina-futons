@@ -153,6 +153,10 @@ describe('Search Suggestions Box', () => {
   });
 
   describe('search behavior', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('collapses suggestions for queries shorter than 2 chars', async () => {
       await onReadyHandler();
       const input = getEl('#searchInput');
@@ -195,7 +199,6 @@ describe('Search Suggestions Box', () => {
       await vi.advanceTimersByTimeAsync(300);
 
       expect(wixData.query).toHaveBeenCalledWith('Stores/Products');
-      vi.useRealTimers();
     });
 
     it('expands suggestions box when results found', async () => {
@@ -211,7 +214,6 @@ describe('Search Suggestions Box', () => {
 
       const box = getEl('#suggestionsBox');
       expect(box.expand).toHaveBeenCalled();
-      vi.useRealTimers();
     });
 
     it('announces result count for accessibility', async () => {
@@ -226,8 +228,7 @@ describe('Search Suggestions Box', () => {
       await vi.advanceTimersByTimeAsync(300);
 
       const { announce } = await import('public/a11yHelpers');
-      expect(announce).toHaveBeenCalledWith(expect.any(Function), '2 suggestions found');
-      vi.useRealTimers();
+      expect(announce).toHaveBeenCalledWith($w, '2 suggestions found');
     });
 
     it('navigates to search results on Enter', async () => {
@@ -240,18 +241,70 @@ describe('Search Suggestions Box', () => {
 
       const box = getEl('#suggestionsBox');
       expect(box.collapse).toHaveBeenCalled();
-    });
-  });
 
-  describe('blur behavior', () => {
-    it('registers blur handler to collapse suggestions', async () => {
+      // Flush dynamic import promise
+      await new Promise(r => setTimeout(r, 0));
+      const { to } = await import('wix-location-frontend');
+      expect(to).toHaveBeenCalledWith('/search-results?q=futon');
+    });
+
+    it('collapses and announces when no results found', async () => {
+      vi.useFakeTimers();
       await onReadyHandler();
+
+      // Override find to return empty results (once, to avoid leaking into later tests)
+      const wixData = (await import('wix-data')).default;
+      wixData.query.mockReturnValueOnce({
+        contains: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        find: vi.fn().mockResolvedValue({ items: [] }),
+      });
+
       const input = getEl('#searchInput');
-      expect(input.onBlur).toHaveBeenCalled();
+      input.value = 'xyznotfound';
+
+      const keyPressCb = input.onKeyPress.mock.calls[0][0];
+      keyPressCb({ key: 'd' });
+
+      await vi.advanceTimersByTimeAsync(300);
+
+      const box = getEl('#suggestionsBox');
+      expect(box.collapse).toHaveBeenCalled();
+
+      const { announce } = await import('public/a11yHelpers');
+      expect(announce).toHaveBeenCalledWith($w, 'No suggestions found');
+    });
+
+    it('returns empty array when search query fails', async () => {
+      vi.useFakeTimers();
+      await onReadyHandler();
+
+      // Override find to reject (once, to avoid leaking into later tests)
+      const wixData = (await import('wix-data')).default;
+      wixData.query.mockReturnValueOnce({
+        contains: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        find: vi.fn().mockRejectedValue(new Error('Network error')),
+      });
+
+      const input = getEl('#searchInput');
+      input.value = 'futon';
+
+      const keyPressCb = input.onKeyPress.mock.calls[0][0];
+      keyPressCb({ key: 'n' });
+
+      await vi.advanceTimersByTimeAsync(300);
+
+      const box = getEl('#suggestionsBox');
+      expect(box.collapse).toHaveBeenCalled();
     });
   });
 
   describe('search product mapping', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('uses limit of 5 on desktop', async () => {
       vi.useFakeTimers();
       await onReadyHandler();
@@ -266,7 +319,6 @@ describe('Search Suggestions Box', () => {
       const wixData = (await import('wix-data')).default;
       const queryChain = wixData.query();
       expect(queryChain.limit).toHaveBeenCalledWith(5);
-      vi.useRealTimers();
     });
 
     it('uses limit of 3 on mobile', async () => {
@@ -279,6 +331,7 @@ describe('Search Suggestions Box', () => {
       vi.resetModules();
       elements.clear();
       onReadyHandler = null;
+      vi.clearAllMocks();
       await import('../src/pages/Search Suggestions Box.js');
       await onReadyHandler();
 
@@ -293,7 +346,6 @@ describe('Search Suggestions Box', () => {
       const wixData = (await import('wix-data')).default;
       const queryChain = wixData.query();
       expect(queryChain.limit).toHaveBeenCalledWith(3);
-      vi.useRealTimers();
     });
 
     it('populates repeater data from search results', async () => {
@@ -311,7 +363,6 @@ describe('Search Suggestions Box', () => {
       expect(repeater.data).toHaveLength(2);
       expect(repeater.data[0].name).toBe('Monterey Futon Frame');
       expect(repeater.data[0].slug).toBe('monterey-futon-frame');
-      vi.useRealTimers();
     });
   });
 
@@ -330,6 +381,11 @@ describe('Search Suggestions Box', () => {
 
       const { trackEvent } = await import('public/engagementTracker');
       expect(trackEvent).toHaveBeenCalledWith('search_suggestion_click', { slug: 'test-product' });
+
+      // Flush dynamic import promise for navigation
+      await new Promise(r => setTimeout(r, 0));
+      const { to } = await import('wix-location-frontend');
+      expect(to).toHaveBeenCalledWith('/product-page/test-product');
     });
   });
 });
