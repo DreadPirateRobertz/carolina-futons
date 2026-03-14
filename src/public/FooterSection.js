@@ -22,7 +22,7 @@ import {
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { colors, transitions, spacing } from 'public/designTokens.js';
-import { getFooterLogoDataUri } from 'public/carolinaFutonsLogo';
+import { getFooterLogoImageUrl } from 'public/carolinaFutonsLogo';
 
 // Static SVG inner content from pipeline output (footer-mountain-divider.optimized.svg).
 // This is a literal string — no template interpolation, no programmatic generation.
@@ -358,8 +358,8 @@ export function initFooterLogo($w) {
     const logo = $w('#footerLogo');
     if (!logo) return;
 
-    // Replace template logo with Carolina Futons brand logo
-    try { logo.src = getFooterLogoDataUri(); } catch (e) {}
+    // Replace template logo with real CF_SQUARE-blue.jpg from production
+    try { logo.src = getFooterLogoImageUrl(); } catch (e) {}
     try { logo.alt = 'Carolina Futons'; } catch (e) {}
     try { logo.accessibility.ariaLabel = 'Carolina Futons - Go to homepage'; } catch (e) {}
 

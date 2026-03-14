@@ -8,6 +8,8 @@ import {
   getLogoDataUri,
   getFooterLogoSvg,
   getFooterLogoDataUri,
+  getLogoImageUrl,
+  getFooterLogoImageUrl,
 } from '../src/public/carolinaFutonsLogo';
 
 // ── getLogoSvg ──────────────────────────────────────────────────────
@@ -155,6 +157,55 @@ describe('getFooterLogoDataUri', () => {
   it('passes options through', () => {
     const uri = getFooterLogoDataUri({ color: '#000000' });
     expect(uri).toContain(encodeURIComponent('#000000'));
+  });
+});
+
+// ── getLogoImageUrl (real CF logo from Wix CDN) ─────────────────────
+
+describe('getLogoImageUrl', () => {
+  it('returns a wixstatic.com URL', () => {
+    const url = getLogoImageUrl();
+    expect(url).toContain('static.wixstatic.com');
+  });
+
+  it('contains CF_SQUARE-blue.jpg filename', () => {
+    const url = getLogoImageUrl();
+    expect(url).toContain('CF_SQUARE-blue.jpg');
+  });
+
+  it('uses default dimensions matching production (291x140)', () => {
+    const url = getLogoImageUrl();
+    expect(url).toContain('w_291');
+    expect(url).toContain('h_140');
+  });
+
+  it('accepts custom dimensions', () => {
+    const url = getLogoImageUrl({ width: 400, height: 200 });
+    expect(url).toContain('w_400');
+    expect(url).toContain('h_200');
+  });
+
+  it('contains the correct media ID', () => {
+    const url = getLogoImageUrl();
+    expect(url).toContain('e04e89_cab07c9f067748338ea32234e56dddf9');
+  });
+});
+
+describe('getFooterLogoImageUrl', () => {
+  it('returns a wixstatic.com URL', () => {
+    const url = getFooterLogoImageUrl();
+    expect(url).toContain('static.wixstatic.com');
+  });
+
+  it('uses smaller dimensions than header logo', () => {
+    const url = getFooterLogoImageUrl();
+    expect(url).toContain('w_160');
+    expect(url).toContain('h_77');
+  });
+
+  it('contains CF_SQUARE-blue.jpg filename', () => {
+    const url = getFooterLogoImageUrl();
+    expect(url).toContain('CF_SQUARE-blue.jpg');
   });
 });
 
