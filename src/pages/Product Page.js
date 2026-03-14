@@ -102,6 +102,14 @@ async function initProductPage() {
       { name: 'productMeta', init: () => injectProductSeoMeta(state.product), critical: true },
 
       // ── Deferred (below-fold, fire-and-forget) ──
+      // Multi-image gallery enhancements (counter, active thumb, config, scroll)
+      { name: 'multiImageGallery', init: async () => {
+        const m = await import('public/MultiImageGallery.js');
+        m.applyGalleryConfig($w, state);
+        m.initGalleryCounter($w, state);
+        m.initActiveThumbnail($w, state);
+        m.initThumbnailScroll($w, state);
+      }, critical: false },
       { name: 'productSchema', init: () => injectProductSchema($w, state), critical: false },
       { name: 'pinterestMeta', init: () => injectPinterestMeta(state), critical: false },
       { name: 'flashSaleBadge', init: () => initFlashSaleUrgency(), critical: false },
