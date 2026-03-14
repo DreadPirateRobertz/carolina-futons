@@ -208,7 +208,7 @@ async function initCheckoutSummary() {
     // Empty cart — redirect to cart page instead of showing blank checkout
     if (itemCount === 0) {
       const { to } = await import('wix-location-frontend');
-      to('/cart');
+      to('/cart-page');
       return;
     }
 
