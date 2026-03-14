@@ -22,15 +22,8 @@ coverage/
 # Gas Town (added by gt)
 .claude/
 __pycache__/
+.land-worktree/
 
-# Audit/research artifacts — not for repo
-.playwright-mcp/
-PHOTO-GALLERY-AUDIT.json
-live-site-images.json
-
-# Local strategy docs
-docs/EMAIL-ALIAS-STRATEGY.md
-PRODUCT-PAGE-BUILD-SPEC.md
-
-# AI agent instruction files — not for public repo (overseer directive 2026-03-12)
-CLAUDE.md
+# Dolt database files (added by bd init)
+.dolt/
+*.db

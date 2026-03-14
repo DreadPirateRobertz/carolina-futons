@@ -273,7 +273,9 @@ function updateEstimateForZip($w, state, rawZip) {
         }
       }
     } catch (e) {}
-  } catch (e) {}
+  } catch (e) {
+    console.error('[DeliveryEstimate] updateEstimateForZip error:', e?.message, e?.stack);
+  }
 }
 
 // --- SEO Schema Injection ---
