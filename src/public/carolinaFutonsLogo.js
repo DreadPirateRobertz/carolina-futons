@@ -1,15 +1,37 @@
 /**
- * carolinaFutonsLogo.js — Carolina Futons brand logo as inline SVG.
+ * carolinaFutonsLogo.js — Carolina Futons brand logo.
  *
- * Provides the text-based logo matching the hand-lettered style from design.jpeg.
- * Uses Playfair Display (brand heading font) with espresso color from sharedTokens.
- *
- * Usage: Import and inject into an HtmlComponent for SVG rendering, or use
- * getLogoDataUri() as an image src for Wix Image elements.
+ * Primary: Real CF_SQUARE-blue.jpg logo from Wix Media (production asset).
+ * Fallback: SVG text logo using Playfair Display font.
  *
  * @module carolinaFutonsLogo
  */
 import { colors } from 'public/sharedTokens.js';
+
+// Real CF logo from Wix Media Manager (production site header/footer)
+const CF_LOGO_MEDIA_ID = 'e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg';
+const CF_LOGO_BASE = `https://static.wixstatic.com/media/${CF_LOGO_MEDIA_ID}`;
+
+/**
+ * Get the real CF logo image URL from Wix CDN.
+ * @param {Object} [options]
+ * @param {number} [options.width] - Target width (default: 291, matches prod)
+ * @param {number} [options.height] - Target height (default: 140, matches prod)
+ * @returns {string} Wix CDN image URL
+ */
+export function getLogoImageUrl({ width, height } = {}) {
+  const w = width || 291;
+  const h = height || 140;
+  return `${CF_LOGO_BASE}/v1/fill/w_${w},h_${h},al_c,q_80/CF_SQUARE-blue.jpg`;
+}
+
+/**
+ * Get a smaller logo for footer use.
+ * @returns {string} Wix CDN image URL sized for footer
+ */
+export function getFooterLogoImageUrl() {
+  return getLogoImageUrl({ width: 160, height: 77 });
+}
 
 /**
  * Generate the Carolina Futons logo SVG string.
