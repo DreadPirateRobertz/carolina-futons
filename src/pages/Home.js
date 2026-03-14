@@ -571,6 +571,10 @@ const FALLBACK_TESTIMONIALS = [
  */
 async function initTestimonials() {
   try {
+    // Guard: testimonialRepeater maps to template's press logos repeater (repeater1)
+    // which is a content-type MISMATCH. Only proceed if our testimonialSection exists,
+    // meaning the editor has the proper testimonial elements added.
+    try { if (!$w('#testimonialSection')) return; } catch (e) { return; }
     const repeater = $w('#testimonialRepeater');
     if (!repeater) return;
 

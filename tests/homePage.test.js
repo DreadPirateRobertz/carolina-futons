@@ -368,6 +368,30 @@ describe('Home Page', () => {
     });
   });
 
+  // ── Testimonials Guard ─────────────────────────────────────────────
+
+  describe('testimonials guard', () => {
+    it('skips testimonials when testimonialSection is missing (CF-jbyh)', async () => {
+      // testimonialRepeater maps to template press logos repeater (MISMATCH)
+      // initTestimonials should bail when testimonialSection doesn't exist
+      const original = globalThis.$w;
+      const guardSelector = Object.assign(
+        (sel) => {
+          if (sel === '#testimonialSection') return null;
+          return getEl(sel);
+        },
+        { onReady: original.onReady }
+      );
+      globalThis.$w = guardSelector;
+
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      // testimonialRepeater should NOT have data set (guard prevented it)
+      expect(getEl('#testimonialRepeater').onItemReady).not.toHaveBeenCalled();
+
+      globalThis.$w = original;
+    });
+  });
+
   // ── Swatch Promo Section ──────────────────────────────────────────
 
   describe('swatch promo section', () => {

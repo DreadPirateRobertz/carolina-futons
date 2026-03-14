@@ -473,13 +473,39 @@ export function renderBreadcrumbs($w, crumbs) {
 
 /**
  * Auto-generate breadcrumbs from the current path using NAV_LINKS.
+ * For product pages, includes the category level when a collection slug
+ * is provided or falls back to "Shop".
  *
  * @param {string} currentPath - Current URL path
+ * @param {Object} [opts] - Options
+ * @param {string} [opts.category] - Category collection slug (e.g. 'futon-frames')
  * @returns {Array<{label: string, path: string}>}
  */
-export function breadcrumbsFromPath(currentPath) {
+export function breadcrumbsFromPath(currentPath, opts) {
   const crumbs = [{ label: 'Home', path: '/' }];
   if (!currentPath || currentPath === '/') return crumbs;
+
+  // Product pages: /product-page/<slug> — inject category level
+  const isProductPage = currentPath.startsWith('/product-page/');
+  if (isProductPage) {
+    const categorySlug = opts?.category;
+    const categoryNav = categorySlug
+      ? Object.values(NAV_LINKS).find(c => c.category === categorySlug)
+      : null;
+    if (categoryNav) {
+      crumbs.push({ label: categoryNav.label, path: categoryNav.path });
+    } else {
+      crumbs.push({ label: 'Shop', path: '/shop-main' });
+    }
+    // Add the product name from the slug
+    const segments = currentPath.split('/').filter(Boolean);
+    const productSlug = segments[segments.length - 1];
+    const prettyName = productSlug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+    crumbs.push({ label: prettyName, path: currentPath });
+    return crumbs;
+  }
 
   // Find matching nav link
   for (const config of Object.values(NAV_LINKS)) {

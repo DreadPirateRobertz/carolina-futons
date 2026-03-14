@@ -378,6 +378,30 @@ describe('breadcrumbsFromPath', () => {
   it('returns just Home for null path', () => {
     expect(breadcrumbsFromPath(null)).toHaveLength(1);
   });
+
+  it('product page includes Shop fallback when no category given', () => {
+    const crumbs = breadcrumbsFromPath('/product-page/asheville-futon-frame');
+    expect(crumbs).toHaveLength(3);
+    expect(crumbs[0].label).toBe('Home');
+    expect(crumbs[1].label).toBe('Shop');
+    expect(crumbs[1].path).toBe('/shop-main');
+    expect(crumbs[2].label).toBe('Asheville Futon Frame');
+  });
+
+  it('product page includes category level when category slug provided', () => {
+    const crumbs = breadcrumbsFromPath('/product-page/asheville-futon-frame', { category: 'futon-frames' });
+    expect(crumbs).toHaveLength(3);
+    expect(crumbs[0].label).toBe('Home');
+    expect(crumbs[1].label).toBe('Futon Frames');
+    expect(crumbs[1].path).toBe('/futon-frames');
+    expect(crumbs[2].label).toBe('Asheville Futon Frame');
+  });
+
+  it('product page uses Shop fallback for unknown category slug', () => {
+    const crumbs = breadcrumbsFromPath('/product-page/some-product', { category: 'unknown-cat' });
+    expect(crumbs).toHaveLength(3);
+    expect(crumbs[1].label).toBe('Shop');
+  });
 });
 
 // ── initAnnouncementBar ───────────────────────────────────────────────
