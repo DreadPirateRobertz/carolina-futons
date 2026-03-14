@@ -29,6 +29,17 @@ export function formatCurrency(amount, currencyCode = 'USD') {
   }
 }
 
+/** Wix requires price > 0, so call-for-price products use a $1.00 placeholder. */
+const CALL_FOR_PRICE_THRESHOLD = 1;
+export const CALL_FOR_PRICE_TEXT = 'Call for Pricing \u2014 (828) 327-8030';
+
+export function isCallForPrice(product) {
+  const price = product?.price ?? product?.formattedPrice;
+  if (typeof price === 'number') return price <= CALL_FOR_PRICE_THRESHOLD;
+  if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.]/g, '')) <= CALL_FOR_PRICE_THRESHOLD;
+  return false;
+}
+
 export function buildGridAlt(product) {
   const brand = detectProductBrand(product);
   const category = detectProductCategory(product);

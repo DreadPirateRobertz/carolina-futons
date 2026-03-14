@@ -63,6 +63,8 @@ vi.mock('public/productPageUtils.js', () => ({
   HEART_FILLED_SVG: 'filled.svg',
   HEART_OUTLINE_SVG: 'outline.svg',
   buildGridAlt: vi.fn(() => ''),
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 vi.mock('public/cartService', () => ({
   getProductVariants: vi.fn().mockResolvedValue([]),

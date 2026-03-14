@@ -12,7 +12,7 @@ import { getProductVariants, addToCart, onCartChanged, clampQuantity, MIN_QUANTI
 import { getBundleSuggestion } from 'backend/productRecommendations.web';
 import { trackCartAdd } from 'public/engagementTracker';
 import { fireAddToCart, fireAddToWishlist } from 'public/ga4Tracking';
-import { formatCurrency, HEART_FILLED_SVG, HEART_OUTLINE_SVG } from 'public/productPageUtils.js';
+import { formatCurrency, isCallForPrice, CALL_FOR_PRICE_TEXT, HEART_FILLED_SVG, HEART_OUTLINE_SVG } from 'public/productPageUtils.js';
 import wixWindowFrontend from 'wix-window-frontend';
 import { validateEmail } from 'public/validators.js';
 
@@ -118,8 +118,10 @@ export function initStickyCartBar($w, state) {
     bar.hide();
     if (state.product) {
       try { $w('#stickyProductName').text = state.product.name; } catch (e) {}
-      try { $w('#stickyPrice').text = state.product.formattedPrice; } catch (e) {}
+      try { $w('#stickyPrice').text = isCallForPrice(state.product) ? CALL_FOR_PRICE_TEXT : state.product.formattedPrice; } catch (e) {}
     }
+    // Hide sticky cart bar entirely for call-for-price products (CF-b3g9)
+    if (isCallForPrice(state.product)) return;
     try { $w('#stickyAddBtn').onClick(async () => {
       if (!state.product?._id) {
         $w('#stickyAddBtn').label = 'Loading...';

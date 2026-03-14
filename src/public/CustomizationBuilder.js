@@ -2,7 +2,7 @@
 // Fabric/color swatch selector, preview visualization, pricing, saved configs
 import { getCustomizationOptions, calculateCustomizationPrice, saveConfiguration, getSavedConfigurations } from 'backend/customizationService.web';
 import { colors } from 'public/designTokens.js';
-import { formatCurrency } from 'public/productPageUtils.js';
+import { formatCurrency, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { isMobile } from 'public/mobileHelpers.js';
 import { announce } from 'public/a11yHelpers.js';
 
@@ -41,13 +41,19 @@ export async function initCustomizationBuilder($w, state) {
     // Set up color family filter
     initFabricFilter($w, state, swatches);
 
-    // Show base price
-    try { $w('#custBasePrice').text = formatCurrency(state.product.price); } catch (e) {}
-    try { $w('#custTotalPrice').text = formatCurrency(state.product.price); } catch (e) {}
-    try { $w('#custSurchargeSection').collapse(); } catch (e) {}
-
-    // Pricing section
-    try { $w('#custPricingSection').expand(); } catch (e) {}
+    // Show base price (or call-for-pricing message)
+    if (isCallForPrice(state.product)) {
+      try { $w('#custBasePrice').text = CALL_FOR_PRICE_TEXT; } catch (e) {}
+      try { $w('#custTotalPrice').text = CALL_FOR_PRICE_TEXT; } catch (e) {}
+      try { $w('#custSurchargeSection').collapse(); } catch (e) {}
+      try { $w('#custPricingSection').collapse(); } catch (e) {}
+    } else {
+      try { $w('#custBasePrice').text = formatCurrency(state.product.price); } catch (e) {}
+      try { $w('#custTotalPrice').text = formatCurrency(state.product.price); } catch (e) {}
+      try { $w('#custSurchargeSection').collapse(); } catch (e) {}
+      // Pricing section
+      try { $w('#custPricingSection').expand(); } catch (e) {}
+    }
 
     // Save button
     try {

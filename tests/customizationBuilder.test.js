@@ -35,6 +35,8 @@ vi.mock('public/designTokens.js', () => ({
 
 vi.mock('public/productPageUtils.js', () => ({
   formatCurrency: vi.fn((n) => `$${Number(n).toFixed(2)}`),
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 
 vi.mock('public/mobileHelpers.js', () => ({

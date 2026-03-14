@@ -288,6 +288,29 @@ export const arizonaFrame = {
   brand: 'Arizona',
 };
 
+// Call-for-price product — uses $1.00 Wix placeholder (CF-b3g9)
+export const callForPriceProduct = {
+  _id: 'prod-cfp-001',
+  name: 'Asheville Futon Frame',
+  slug: 'asheville',
+  price: 1,
+  formattedPrice: '$1.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/asheville.jpg',
+  sku: 'CF-FRAME-ASHEVILLE',
+  ribbon: '',
+  collections: ['mattresses'],
+  description: 'Contact for availability and pricing.',
+  inStock: true,
+  _createdDate: new Date('2025-06-01'),
+  discount: 0,
+  dimensions: { width: 0, depth: 0, height: 0 },
+  material: '',
+  color: '',
+  featureTags: [],
+};
+
 // All products for seeding collections
 export const allProducts = [
   futonFrame,

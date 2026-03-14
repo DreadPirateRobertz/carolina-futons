@@ -39,6 +39,8 @@ vi.mock('public/productPageUtils.js', () => ({
   addBusinessDays: vi.fn((d, n) => { const r = new Date(d); r.setDate(r.getDate() + n); return r; }),
   formatCurrency: vi.fn((n) => `$${Number(n).toFixed(2)}`),
   HEART_FILLED_SVG: 'filled', HEART_OUTLINE_SVG: 'outline',
+  isCallForPrice: vi.fn((product) => (product?.price ?? Infinity) <= 1),
+  CALL_FOR_PRICE_TEXT: 'Call for Pricing \u2014 (828) 327-8030',
 }));
 
 // ── Test helpers ──────────────────────────────────────────────────────

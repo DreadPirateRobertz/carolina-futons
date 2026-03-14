@@ -8,6 +8,8 @@ import {
   addBusinessDays,
   HEART_FILLED_SVG,
   HEART_OUTLINE_SVG,
+  isCallForPrice,
+  CALL_FOR_PRICE_TEXT,
 } from '../src/public/productPageUtils.js';
 import { futonFrame, wallHuggerFrame, futonMattress, murphyBed, casegoodsItem, unfinishedFrame, otisMattress, arizonaFrame } from './fixtures/products.js';
 
@@ -141,6 +143,47 @@ describe('productPageUtils', () => {
 
     it('exports outline heart SVG data URI', () => {
       expect(HEART_OUTLINE_SVG).toMatch(/^data:image\/svg\+xml,/);
+    });
+  });
+
+  describe('isCallForPrice', () => {
+    it('returns true for $1.00 placeholder price', () => {
+      expect(isCallForPrice({ price: 1 })).toBe(true);
+    });
+
+    it('returns true for price below threshold', () => {
+      expect(isCallForPrice({ price: 0.5 })).toBe(true);
+      expect(isCallForPrice({ price: 0 })).toBe(true);
+    });
+
+    it('returns false for normal prices', () => {
+      expect(isCallForPrice({ price: 499 })).toBe(false);
+      expect(isCallForPrice({ price: 2 })).toBe(false);
+      expect(isCallForPrice(futonFrame)).toBe(false);
+    });
+
+    it('handles string formattedPrice when price is missing', () => {
+      expect(isCallForPrice({ formattedPrice: '$1.00' })).toBe(true);
+      expect(isCallForPrice({ formattedPrice: '$499.00' })).toBe(false);
+    });
+
+    it('returns false for null/undefined product', () => {
+      expect(isCallForPrice(null)).toBe(false);
+      expect(isCallForPrice(undefined)).toBe(false);
+    });
+
+    it('returns false when price is null but formattedPrice is normal', () => {
+      expect(isCallForPrice({ price: null, formattedPrice: '$299.00' })).toBe(false);
+    });
+  });
+
+  describe('CALL_FOR_PRICE_TEXT', () => {
+    it('contains phone number', () => {
+      expect(CALL_FOR_PRICE_TEXT).toContain('(828) 327-8030');
+    });
+
+    it('contains call-for-pricing message', () => {
+      expect(CALL_FOR_PRICE_TEXT).toContain('Call for Pricing');
     });
   });
 });

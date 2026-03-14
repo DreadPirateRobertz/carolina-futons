@@ -8,7 +8,7 @@ import { cacheProduct } from 'public/productCache';
 // engagementTracker and ga4Tracking are dynamically imported in deferred sections
 // to avoid blocking LCP (CF-7zl)
 import { collapseOnMobile, initBackToTop, isMobile } from 'public/mobileHelpers';
-import { buildGridAlt } from 'public/productPageUtils.js';
+import { buildGridAlt, isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getCachedProduct } from 'public/productCache';
 import wixLocationFrontend from 'wix-location-frontend';
 import { prioritizeSections } from 'public/performanceHelpers.js';
@@ -55,7 +55,7 @@ async function initProductPage() {
     const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
     if (cached && (!cached._cachedAt || (Date.now() - cached._cachedAt) < CACHE_MAX_AGE_MS)) {
       try { $w('#productName').text = cached.name; } catch (e) {}
-      try { $w('#productPrice').text = cached.formattedPrice; } catch (e) {}
+      try { $w('#productPrice').text = isCallForPrice(cached) ? CALL_FOR_PRICE_TEXT : cached.formattedPrice; } catch (e) {}
       try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) {}
     }
 
@@ -71,6 +71,17 @@ async function initProductPage() {
 
     trackProductView(state.product);
     cacheProduct(state.product);
+
+    // Call-for-price products use a $1.00 Wix placeholder — hide price, disable purchase
+    if (isCallForPrice(state.product)) {
+      try { $w('#productPrice').text = CALL_FOR_PRICE_TEXT; } catch (e) {}
+      try { $w('#productComparePrice').hide(); } catch (e) {}
+      try { $w('#addToCartButton').label = 'Call for Pricing'; $w('#addToCartButton').disable(); } catch (e) {}
+      try { $w('#quantityInput').hide(); } catch (e) {}
+      try { $w('#quantityMinus').hide(); } catch (e) {}
+      try { $w('#quantityPlus').hide(); } catch (e) {}
+      try { $w('#buyNowButton').hide(); } catch (e) {}
+    }
 
     // Mountain skyline SVG border — gradient variant for product hero
     try {
@@ -223,7 +234,7 @@ async function loadRelatedProducts() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#relatedImage'), itemData, '', getImageDimensions('productGridCard'));
       $item('#relatedName').text = itemData.name;
-      $item('#relatedPrice').text = itemData.formattedPrice;
+      $item('#relatedPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice;
       if (itemData.ribbon) {
         try { $item('#relatedBadge').text = itemData.ribbon; $item('#relatedBadge').show(); } catch (e) {}
       }
@@ -247,7 +258,7 @@ async function loadCollectionProducts() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#collectionImage'), itemData, '', getImageDimensions('productGridCard'));
       $item('#collectionName').text = itemData.name;
-      $item('#collectionPrice').text = itemData.formattedPrice;
+      $item('#collectionPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice;
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
       makeClickable($item('#collectionImage'), nav, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#collectionName'), nav, { ariaLabel: `View ${itemData.name} details` });
@@ -277,14 +288,15 @@ async function loadRecentlyViewed() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#recentName').text = itemData.name; } catch (e) {}
-      try { $item('#recentPrice').text = itemData.price; } catch (e) {}
+      try { $item('#recentPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.price; } catch (e) {}
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
       makeClickable($item('#recentImage'), nav, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#recentName'), nav, { ariaLabel: `View ${itemData.name} details` });
-      // Quick-add-to-cart button
+      // Quick-add-to-cart button (hide for call-for-price items)
       try {
         const addBtn = $item('#recentAddToCart');
         if (addBtn) {
+          if (isCallForPrice(itemData)) { addBtn.hide(); } else {
           try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
           addBtn.onClick(async () => {
             try {
@@ -299,6 +311,7 @@ async function loadRecentlyViewed() {
               addBtn.enable();
             }
           });
+          }
         }
       } catch (e) {}
     });
@@ -327,17 +340,18 @@ async function loadAlsoBought() {
     repeater.onItemReady(($item, itemData) => {
       setCardImage($item('#alsoBoughtImage'), itemData, '', getImageDimensions('productGridCard'));
       try { $item('#alsoBoughtName').text = itemData.name; } catch (e) {}
-      try { $item('#alsoBoughtPrice').text = itemData.formattedPrice; } catch (e) {}
+      try { $item('#alsoBoughtPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
       if (itemData.ribbon) {
         try { $item('#alsoBoughtBadge').text = itemData.ribbon; $item('#alsoBoughtBadge').show(); } catch (e) {}
       }
       const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
       makeClickable($item('#alsoBoughtImage'), nav, { ariaLabel: `View ${itemData.name}` });
       makeClickable($item('#alsoBoughtName'), nav, { ariaLabel: `View ${itemData.name} details` });
-      // Quick-add-to-cart button
+      // Quick-add-to-cart button (hide for call-for-price items)
       try {
         const addBtn = $item('#alsoBoughtAddToCart');
         if (addBtn) {
+          if (isCallForPrice(itemData)) { addBtn.hide(); } else {
           try { addBtn.accessibility.ariaLabel = `Add ${itemData.name} to cart`; } catch (e) {}
           addBtn.onClick(async () => {
             try {
@@ -352,6 +366,7 @@ async function loadAlsoBought() {
               addBtn.enable();
             }
           });
+          }
         }
       } catch (e) {}
     });
