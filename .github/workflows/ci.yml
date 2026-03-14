@@ -44,6 +44,15 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high || true
 
+      - name: Check for external repo import paths in tests
+        run: |
+          # CF-sdlo: Prevent imports from sibling repos (e.g. ../carolina-futons-stage3-velo/)
+          # Tests must use vitest aliases (backend/*, public/*) or relative ../src/ paths.
+          if grep -rn "from ['\"].*carolina-futons-stage3\|from ['\"].*carolina-futons-mobile" tests/ --include='*.js' --include='*.ts'; then
+            echo "::error::Found external repo import paths in tests. Use vitest aliases or ../src/ relative paths instead."
+            exit 1
+          fi
+
       - name: Run tests
         run: npm test
 
