@@ -41,16 +41,15 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 // ── Category Hero Images (1920x600) ─────────────────────────────────
-// Curated lifestyle room scenes — warm interiors matching Blue Ridge aesthetic
-// Replace with Wix Media uploads per MEDIA_MANIFEST.md when real assets are ready
+// Real CF product photos from Wix CDN, resized for wide hero banners
 const categoryHeroImages = {
-  'futon-frames': 'https://images.unsplash.com/photo-1757416654883-c73c67b3382b?w=1920&h=600&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1752407828784-67a92663c866?w=1920&h=600&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1752407828561-2450ced77979?w=1920&h=600&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1757344454333-cc666252e596?w=1920&h=600&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1549758225-1610a3b4c8f8?w=1920&h=600&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1759203111456-b63e81a03cec?w=1920&h=600&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1650424990277-12554d065923?w=1920&h=600&fit=crop&crop=center',
+  'futon-frames': 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'mattresses': 'https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'murphy-cabinet-beds': 'https://static.wixstatic.com/media/e04e89_3887b1acf16f4360979b0a66479934ac~mv2.png/v1/fit/w_1920,h_600,q_90/file.png',
+  'platform-beds': 'https://static.wixstatic.com/media/e04e89_1dd7f840025044478981e6e883863d55~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'casegoods-accessories': 'https://static.wixstatic.com/media/e04e89_b32fbaec605244aa9809db1db8f92a31~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'wall-huggers': 'https://static.wixstatic.com/media/e04e89_241b8a589d964e41a3094fbcd1597728~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'unfinished-wood': 'https://static.wixstatic.com/media/e04e89_9d703e0c25444946ab49296181d9ca2c~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
 };
 
 // ── Category Hero Alt Text ──────────────────────────────────────────
@@ -65,16 +64,16 @@ const categoryHeroAltText = {
 };
 
 // ── Category Card Images (600x400, 3:2 ratio for homepage) ──────────
-// Curated lifestyle room scenes — warm, styled rooms for category showcase grid
+// Real CF product photos from Wix CDN, resized for homepage category card grid
 const categoryCategoryCards = {
-  'futon-frames': 'https://images.unsplash.com/photo-1757416654883-c73c67b3382b?w=600&h=400&fit=crop&crop=center',
-  'mattresses': 'https://images.unsplash.com/photo-1752407828784-67a92663c866?w=600&h=400&fit=crop&crop=center',
-  'murphy-cabinet-beds': 'https://images.unsplash.com/photo-1752407828561-2450ced77979?w=600&h=400&fit=crop&crop=center',
-  'platform-beds': 'https://images.unsplash.com/photo-1757344454333-cc666252e596?w=600&h=400&fit=crop&crop=center',
-  'casegoods-accessories': 'https://images.unsplash.com/photo-1549758225-1610a3b4c8f8?w=600&h=400&fit=crop&crop=center',
-  'wall-huggers': 'https://images.unsplash.com/photo-1759203111456-b63e81a03cec?w=600&h=400&fit=crop&crop=center',
-  'unfinished-wood': 'https://images.unsplash.com/photo-1650424990277-12554d065923?w=600&h=400&fit=crop&crop=center',
-  'sales': 'https://images.unsplash.com/photo-1762544968153-b9b47435fefd?w=600&h=400&fit=crop&crop=center',
+  'futon-frames': 'https://static.wixstatic.com/media/e04e89_9234577e395e4eb180cb2c9bc936d65f~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'mattresses': 'https://static.wixstatic.com/media/e04e89_6f77fe2498b34c4295b48e0677300a19~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'murphy-cabinet-beds': 'https://static.wixstatic.com/media/e04e89_229fba0bcb404fda873a0552e7e39089~mv2.png/v1/fit/w_600,h_400,q_90/file.png',
+  'platform-beds': 'https://static.wixstatic.com/media/e04e89_8bb00365ccdc4f33b899c2832e00832d~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'casegoods-accessories': 'https://static.wixstatic.com/media/e04e89_5d98d248177a4954899d45797a23d81c~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'wall-huggers': 'https://static.wixstatic.com/media/e04e89_a1f34879775849259ca38821606c1733~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'unfinished-wood': 'https://static.wixstatic.com/media/e04e89_677c5e7ae28c42f79c25fd5182191e21~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
+  'sales': 'https://static.wixstatic.com/media/e04e89_8d3bd05dd2a94ac698cc7d301fb6b4b0~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg',
 };
 
 // ── Category Card Alt Text ──────────────────────────────────────────
@@ -144,14 +143,13 @@ const productImages = {
 };
 
 // ── Homepage Hero Image (1920x800, Blue Ridge cabin lifestyle) ────────
-// Full-bleed lifestyle hero — cozy living room with fireplace, warm cabin ambiance
-// Replace with Wix Media upload per MEDIA_MANIFEST.md when real asset is ready
-const HOMEPAGE_HERO = 'https://images.unsplash.com/photo-1757605327126-9baefea3348b?w=1920&h=800&fit=crop&crop=center';
+// Full-bleed hero using real CF product photo from Wix CDN
+const HOMEPAGE_HERO = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_1920,h_800,q_90/file.jpg';
 const HOMEPAGE_HERO_ALT = 'Cozy mountain cabin living room with warm fireplace — Carolina Futons, Hendersonville NC';
 
 // ── Fallback (generic product image from catalog) ────────────────────
 const FALLBACK_IMAGE = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
-const FALLBACK_HERO = 'https://images.unsplash.com/photo-1751013781739-4f10e714ef53?w=1920&h=600&fit=crop&crop=center';
+const FALLBACK_HERO = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg';
 const FALLBACK_HERO_ALT = 'Mountain cabin nestled in Blue Ridge nature';
 const FALLBACK_CARD_ALT = 'Carolina Futons — handcrafted comfort';
 
