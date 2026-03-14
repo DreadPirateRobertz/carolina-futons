@@ -130,10 +130,30 @@ describe('home-page-mapping.json', () => {
   });
 
   it('summary counts are consistent with mapping data', () => {
-    const { directMappable, typeMismatch } = mapping._summary;
-    expect(directMappable).toBeGreaterThan(0);
-    expect(typeMismatch).toBeGreaterThan(0);
-    expect(directMappable + typeMismatch).toBeLessThan(mapping._summary.totalCodeElements);
+    const { highConfidence, mediumConfidence, mismatch, missing, totalCodeElements } =
+      mapping._summary;
+    expect(highConfidence).toBeGreaterThan(0);
+    expect(mismatch).toBeGreaterThan(0);
+    expect(missing).toBeGreaterThan(0);
+    expect(highConfidence + mediumConfidence + mismatch + missing).toBe(totalCodeElements);
+  });
+
+  it('all confidence values are from allowed set', () => {
+    const allowed = new Set(['HIGH', 'MEDIUM', 'LOW', 'MISSING', 'MISMATCH']);
+    const sections = Object.keys(mapping).filter(
+      (k) => !k.startsWith('_') && typeof mapping[k] === 'object',
+    );
+    for (const section of sections) {
+      for (const [key, value] of Object.entries(mapping[section])) {
+        if (key.startsWith('_')) continue;
+        if (typeof value !== 'object' || value === null) continue;
+        if (!value.confidence) continue;
+        expect(
+          allowed.has(value.confidence),
+          `${section}.${key}: invalid confidence '${value.confidence}' (allowed: ${[...allowed].join(', ')})`,
+        ).toBe(true);
+      }
+    }
   });
 });
 
@@ -192,7 +212,7 @@ describe('home-page-remap-phase1.json', () => {
     }
   });
 
-  it('contains only HIGH confidence mappings from the full mapping', () => {
+  it('all remap entries exist in full mapping with HIGH confidence', () => {
     const fullMapping = loadMapping('home-page-mapping.json');
     const sections = Object.keys(fullMapping).filter(
       (k) => !k.startsWith('_') && typeof fullMapping[k] === 'object',
@@ -202,16 +222,22 @@ describe('home-page-remap-phase1.json', () => {
       if (templateNick === '_meta') continue;
 
       let found = false;
+      let foundConfidence = null;
       for (const section of sections) {
         const entry = fullMapping[section][ourId];
         if (entry && entry.templateNickname === templateNick) {
           found = true;
+          foundConfidence = entry.confidence;
           break;
         }
       }
       expect(found, `remap entry '${templateNick}' → '${ourId}' not found in full mapping`).toBe(
         true,
       );
+      expect(
+        foundConfidence,
+        `remap entry '${templateNick}' → '${ourId}' has confidence '${foundConfidence}', expected 'HIGH'`,
+      ).toBe('HIGH');
     }
   });
 });
