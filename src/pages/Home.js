@@ -149,16 +149,18 @@ async function loadFeaturedProducts() {
     ]);
 
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       // Card container structure: white bg, 12px radius, shadow, hover
       try { styleCardContainer($item('#featuredCard')); } catch (e) {}
       try { initCardHover($item('#featuredCard')); } catch (e) {}
 
       // Product image with placeholder fallback
+      const name = itemData.name || 'Product';
       setCardImage($item('#featuredImage'), itemData, '', getImageDimensions('productGridCard'));
-      $item('#featuredImage').alt = buildProductAlt(itemData, 'featured');
-      $item('#featuredName').text = itemData.name;
-      try { $item('#featuredImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-      try { $item('#featuredName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
+      try { $item('#featuredImage').alt = buildProductAlt(itemData, 'featured'); } catch (e) {}
+      try { $item('#featuredName').text = name; } catch (e) {}
+      try { $item('#featuredImage').accessibility.ariaLabel = `View ${name}`; } catch (e) {}
+      try { $item('#featuredName').accessibility.ariaLabel = `View ${name} details`; } catch (e) {}
 
       // Price with sale strikethrough
       try {
@@ -201,8 +203,8 @@ async function loadFeaturedProducts() {
       // Navigate to product page on click/keyboard
       const slug = safeSlug(itemData.slug);
       const navToProduct = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
-      makeClickable($item('#featuredImage'), navToProduct, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${itemData.name} details` });
+      makeClickable($item('#featuredImage'), navToProduct, { ariaLabel: `View ${name}` });
+      makeClickable($item('#featuredName'), navToProduct, { ariaLabel: `View ${name} details` });
     });
     repeater.data = featured;
     try { $w('#featuredSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
@@ -287,11 +289,12 @@ function initFeaturedQuickView() {
  */
 function openFeaturedQuickView(product) {
   try {
+    if (!product) return;
     currentFeaturedQvProduct = product;
-    $w('#featuredQvImage').src = product.mainMedia;
+    $w('#featuredQvImage').src = product.mainMedia || '';
     $w('#featuredQvImage').alt = buildProductAlt(product, 'featured');
-    $w('#featuredQvName').text = product.name;
-    $w('#featuredQvPrice').text = product.formattedDiscountedPrice || product.formattedPrice;
+    $w('#featuredQvName').text = product.name || 'Product';
+    $w('#featuredQvPrice').text = product.formattedDiscountedPrice || product.formattedPrice || '';
     try { $w('#featuredQvAddToCart').label = 'Add to Cart'; } catch (e) {}
     try { $w('#featuredQvAddToCart').enable(); } catch (e) {}
 
@@ -326,10 +329,12 @@ async function loadSaleHighlights() {
     }
 
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       // Card container structure: white bg, 12px radius, shadow, hover
       try { styleCardContainer($item('#saleCard')); } catch (e) {}
       try { initCardHover($item('#saleCard')); } catch (e) {}
 
+      const name = itemData.name || 'Product';
       // Lazy-load product image (below-fold section)
       try {
         const saleImg = $item('#saleImage');
@@ -337,10 +342,10 @@ async function loadSaleHighlights() {
         lazyLoadImage(saleImg, saleSrc, { alt: buildProductAlt(itemData, 'sale') });
       } catch (e) {
         setCardImage($item('#saleImage'), itemData, '', getImageDimensions('productGridCard'));
-        $item('#saleImage').alt = buildProductAlt(itemData, 'sale');
+        try { $item('#saleImage').alt = buildProductAlt(itemData, 'sale'); } catch (e2) {}
       }
-      $item('#saleName').text = itemData.name;
-      try { $item('#saleImage').accessibility.ariaLabel = `View ${itemData.name} on sale`; } catch (e) {}
+      try { $item('#saleName').text = name; } catch (e) {}
+      try { $item('#saleImage').accessibility.ariaLabel = `View ${name} on sale`; } catch (e) {}
 
       // Price with sale strikethrough
       try {
@@ -355,7 +360,7 @@ async function loadSaleHighlights() {
       const slug = safeSlug(itemData.slug);
       makeClickable($item('#saleImage'), () => {
         import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
-      }, { ariaLabel: `View ${itemData.name} on sale` });
+      }, { ariaLabel: `View ${name} on sale` });
     });
     repeater.data = saleItems;
     try { $w('#saleSkeleton').hide('fade', { duration: 300 }); } catch (e) {}
@@ -467,24 +472,26 @@ async function initRecentlyViewed() {
     } catch (e) {}
 
     buildRecentlyViewedSection($w, '#recentRepeater', ($item, itemData) => {
+      if (!itemData) return;
+      const name = itemData.name || 'Product';
       // Lazy-load recently viewed images (below-fold section)
       try {
-        lazyLoadImage($item('#recentImage'), itemData.mainMedia, {
-          alt: `${itemData.name} - Carolina Futons`,
+        lazyLoadImage($item('#recentImage'), itemData.mainMedia || '', {
+          alt: `${name} - Carolina Futons`,
         });
       } catch (e) {
-        $item('#recentImage').src = itemData.mainMedia;
-        $item('#recentImage').alt = `${itemData.name} - Carolina Futons`;
+        try { $item('#recentImage').src = itemData.mainMedia || ''; } catch (e2) {}
+        try { $item('#recentImage').alt = `${name} - Carolina Futons`; } catch (e2) {}
       }
-      $item('#recentName').text = itemData.name;
-      $item('#recentPrice').text = itemData.price;
-      try { $item('#recentImage').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-      try { $item('#recentName').accessibility.ariaLabel = `View ${itemData.name} details`; } catch (e) {}
+      try { $item('#recentName').text = name; } catch (e) {}
+      try { $item('#recentPrice').text = itemData.price || ''; } catch (e) {}
+      try { $item('#recentImage').accessibility.ariaLabel = `View ${name}`; } catch (e) {}
+      try { $item('#recentName').accessibility.ariaLabel = `View ${name} details`; } catch (e) {}
 
       const slug = safeSlug(itemData.slug);
       const navRecent = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
-      makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${itemData.name} details` });
+      makeClickable($item('#recentImage'), navRecent, { ariaLabel: `View ${name}` });
+      makeClickable($item('#recentName'), navRecent, { ariaLabel: `View ${name} details` });
 
       // Quick-add-to-cart button
       try {
@@ -991,9 +998,10 @@ function initRidgelineHeader() {
  * @returns {string} Formatted alt text
  */
 function buildProductAlt(product, context) {
+  if (!product) return 'Product - Carolina Futons';
   const brand = detectBrand(product);
   const category = detectCategory(product);
-  const parts = [product.name];
+  const parts = [product.name || 'Product'];
   if (brand) parts.push(brand);
   if (category) parts.push(category);
   if (context === 'sale') parts.push('on sale');

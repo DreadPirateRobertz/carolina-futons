@@ -196,7 +196,9 @@ async function initProductPage() {
     });
 
     // Social proof toast (non-blocking, delayed)
-    initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});
+    if (state.product?._id) {
+      initProductSocialProof($w, state.product._id, state.product.name).catch(() => {});
+    }
   } catch (err) {
     console.error('Error initializing product page:', err);
   }
@@ -232,15 +234,18 @@ async function loadRelatedProducts() {
       return;
     }
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       setCardImage($item('#relatedImage'), itemData, '', getImageDimensions('productGridCard'));
-      $item('#relatedName').text = itemData.name;
-      $item('#relatedPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice;
+      try { $item('#relatedName').text = itemData.name; } catch (e) {}
+      try { $item('#relatedPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
       if (itemData.ribbon) {
         try { $item('#relatedBadge').text = itemData.ribbon; $item('#relatedBadge').show(); } catch (e) {}
       }
-      const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-      makeClickable($item('#relatedImage'), nav, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#relatedName'), nav, { ariaLabel: `View ${itemData.name} details` });
+      const slug = itemData.slug || '';
+      const name = itemData.name || 'Product';
+      const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
+      makeClickable($item('#relatedImage'), nav, { ariaLabel: `View ${name}` });
+      makeClickable($item('#relatedName'), nav, { ariaLabel: `View ${name} details` });
     });
     repeater.data = related;
   } catch (err) { console.error('Error loading related products:', err); }
@@ -256,12 +261,15 @@ async function loadCollectionProducts() {
       return;
     }
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       setCardImage($item('#collectionImage'), itemData, '', getImageDimensions('productGridCard'));
-      $item('#collectionName').text = itemData.name;
-      $item('#collectionPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice;
-      const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${itemData.slug}`));
-      makeClickable($item('#collectionImage'), nav, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#collectionName'), nav, { ariaLabel: `View ${itemData.name} details` });
+      try { $item('#collectionName').text = itemData.name; } catch (e) {}
+      try { $item('#collectionPrice').text = isCallForPrice(itemData) ? CALL_FOR_PRICE_TEXT : itemData.formattedPrice; } catch (e) {}
+      const slug = itemData.slug || '';
+      const name = itemData.name || 'Product';
+      const nav = () => import('wix-location-frontend').then(({ to }) => to(`/product-page/${slug}`));
+      makeClickable($item('#collectionImage'), nav, { ariaLabel: `View ${name}` });
+      makeClickable($item('#collectionName'), nav, { ariaLabel: `View ${name} details` });
     });
     repeater.data = products;
   } catch (err) { console.error('Error loading collection products:', err); }

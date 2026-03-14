@@ -545,6 +545,7 @@ function initProductGrid() {
     }
 
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       // Card container structure: white bg, 12px radius, shadow, hover
       try { styleCardContainer($item('#gridCard')); } catch (e) {}
       try { initCardHover($item('#gridCard')); } catch (e) {}
@@ -592,14 +593,16 @@ function initProductGrid() {
       }
 
       // Click to product page
+      const slug = itemData.slug || '';
+      const name = itemData.name || 'Product';
       const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
+          to(`/product-page/${slug}`);
         });
       };
 
-      makeClickable($item('#gridImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}` });
-      makeClickable($item('#gridName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` });
+      makeClickable($item('#gridImage'), navigateToProduct, { ariaLabel: `View ${name}` });
+      makeClickable($item('#gridName'), navigateToProduct, { ariaLabel: `View ${name} details` });
 
       // Fabric swatch preview dots — deferred until card enters viewport
       try {
@@ -819,10 +822,11 @@ function initQuickViewHandlers() {
 
 function openQuickView(product) {
   try {
+    if (!product) return;
     currentQuickViewProduct = product;
     setCardImage($w('#qvImage'), product, '', getImageDimensions('productPageMain'));
-    $w('#qvName').text = product.name;
-    $w('#qvPrice').text = product.formattedPrice;
+    $w('#qvName').text = product.name || 'Product';
+    $w('#qvPrice').text = product.formattedPrice || '';
     $w('#qvDescription').text = sanitizeInput(product.description || '', 2000);
     $w('#qvAddToCart').label = 'Add to Cart';
     $w('#qvAddToCart').enable();
@@ -949,19 +953,22 @@ function initRecentlyViewed() {
     repeater.data = recentItems.slice(0, 6);
 
     repeater.onItemReady(($item, itemData) => {
+      if (!itemData) return;
       setCardImage($item('#recentImage'), itemData, '', getImageDimensions('productGridCard'));
 
-      try { $item('#recentName').text = itemData.name; } catch (e) {}
-      try { $item('#recentPrice').text = itemData.price; } catch (e) {}
+      const name = itemData.name || 'Product';
+      try { $item('#recentName').text = name; } catch (e) {}
+      try { $item('#recentPrice').text = itemData.price || ''; } catch (e) {}
 
+      const slug = itemData.slug || '';
       const navigateToProduct = () => {
         import('wix-location-frontend').then(({ to }) => {
-          to(`/product-page/${itemData.slug}`);
+          to(`/product-page/${slug}`);
         });
       };
 
-      try { makeClickable($item('#recentImage'), navigateToProduct, { ariaLabel: `View ${itemData.name}` }); } catch (e) {}
-      try { makeClickable($item('#recentName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` }); } catch (e) {}
+      try { makeClickable($item('#recentImage'), navigateToProduct, { ariaLabel: `View ${name}` }); } catch (e) {}
+      try { makeClickable($item('#recentName'), navigateToProduct, { ariaLabel: `View ${name} details` }); } catch (e) {}
     });
 
     try { $w('#recentlyViewedSection').show(); } catch (e2) {}
@@ -1557,9 +1564,10 @@ function initFilterDrawer() {
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function buildAltText(product) {
+  if (!product) return 'Product - Carolina Futons';
   const brand = detectBrand(product);
   const category = detectCategory(product);
-  const parts = [product.name];
+  const parts = [product.name || 'Product'];
   if (brand) parts.push(brand);
   if (category) parts.push(category);
   parts.push('Carolina Futons Hendersonville NC');
