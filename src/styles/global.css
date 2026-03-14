@@ -776,7 +776,7 @@ h4.font_4,
     font-size: 14px !important;
   }
 
-  /* Product page — tighter spacing on mobile */
+  /* Product page — scale down text for narrow screens */
   [data-hook="product-title"],
   [data-hook="product-name"] {
     font-size: 22px !important;
@@ -875,7 +875,7 @@ h4.font_4,
     min-height: 58px !important;
   }
 
-  /* Sidebar filters — collapse on mobile */
+  /* Sidebar filters — reduce heading size on mobile */
   [data-hook="filters-title"] {
     font-size: 14px !important;
   }
