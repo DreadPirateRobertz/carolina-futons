@@ -19,8 +19,9 @@ jobs:
       pull-requests: write
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
 
     steps:
       - uses: actions/checkout@v4
