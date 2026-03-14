@@ -1,0 +1,77 @@
+{
+  "_meta": {
+    "page": "Side Cart",
+    "pageId": "ego5s",
+    "templatePage": "Mini Cart / Side Cart lightbox (Furniture Store template #3563)",
+    "notes": "Maps BUILD-SPEC element IDs to template element descriptions. Template Wix IDs (comp-xxx) TBD — discovered by Melania in editor. Wix's native 'Mini Cart' lightbox is the likely base; verify if template uses this or a custom side panel. Gaps listed separately."
+  },
+
+  "mapping": {
+    "_comment": "{ ourBuildSpecId: templateElementDescription }",
+
+    "sideCartPanel": "Mini Cart panel / lightbox container (the slide-in drawer from the right)",
+    "sideCartOverlay": "Semi-transparent overlay behind the panel (click to close)",
+    "sideCartClose": "Close button (X icon, top-right of panel)",
+    "sideCartEmpty": "Empty cart message box ('Your cart is empty')",
+    "sideCartItems": "Items container box (scrollable area holding repeater)",
+    "sideCartRepeater": "Cart items repeater (one item per row)",
+
+    "sideItemImage": "Repeater child — product thumbnail image",
+    "sideItemName": "Repeater child — product name text",
+    "sideItemPrice": "Repeater child — unit price text",
+    "sideItemQty": "Repeater child — quantity display text",
+    "sideQtyMinus": "Repeater child — decrease quantity button",
+    "sideQtyPlus": "Repeater child — increase quantity button",
+    "sideItemRemove": "Repeater child — remove item button (X icon)",
+
+    "sideCartFooter": "Footer box (subtotal + CTAs)",
+    "sideCartSubtotal": "Subtotal amount text in footer",
+    "viewFullCart": "Secondary 'View Cart' button (→ Cart Page)",
+    "sideCartCheckout": "Primary 'Checkout' button (coral, → Checkout)"
+  },
+
+  "gaps": {
+    "_comment": "BUILD-SPEC elements NOT in template — need manual editor placement by Melania",
+
+    "variantDisplay": {
+      "ids": ["sideItemVariant"],
+      "type": "Text",
+      "notes": "Per-item variant label (e.g. 'Color: Espresso / Size: Full'). Hidden by default, shown when variant exists. Template may not have this — needs adding to repeater row."
+    },
+
+    "lineTotalPerItem": {
+      "ids": ["sideItemLineTotal"],
+      "type": "Text",
+      "notes": "Price × quantity subtotal per line item (e.g. '$598'). Template typically shows unit price only — line total is an addition inside the repeater."
+    },
+
+    "shippingProgressBar": {
+      "ids": ["sideShippingBar", "sideShippingText"],
+      "type": "ProgressBar + Text",
+      "notes": "Mini version of the free-shipping progress bar. Compact (no icon, abbreviated text). Goes in the footer above subtotal. Not in template."
+    },
+
+    "loyaltyTierProgress": {
+      "ids": ["sideTierBar", "sideTierText"],
+      "type": "ProgressBar + Text",
+      "notes": "Compact loyalty tier progress bar for side cart footer. Shows current tier and points to next upgrade. Not in template."
+    },
+
+    "suggestionBox": {
+      "ids": ["sideCartSuggestion", "sideSugLabel", "sideSugRepeater", "sideSugImage", "sideSugName", "sideSugPrice", "sideSugAdd"],
+      "type": "Box + Text + Repeater (1-2 items)",
+      "notes": "\"Complete Your Futon\" inline suggestion block within the side cart. 1-2 companion product cards with Add button. Collapsible, shown only when cart has items. Not in template."
+    }
+  },
+
+  "summary": {
+    "matchedElements": 20,
+    "gapElements": 12,
+    "templateExtras": [
+      "Native Wix Mini Cart may have a coupon code input — verify presence and suppress or repurpose",
+      "Template may include a 'Continue Shopping' link — check if #viewFullCart covers this or if it's a separate element"
+    ],
+    "coveragePercent": 63,
+    "coverageNotes": "Template's native Mini Cart lightbox covers the core panel structure, overlay, close button, items repeater (image/name/price/qty/remove), footer subtotal, and primary checkout CTA. Main gaps are: variant label, per-item line total, shipping progress bar, loyalty tier bar, and the suggestion box. Side Cart has better template coverage than Cart Page overall."
+  }
+}
