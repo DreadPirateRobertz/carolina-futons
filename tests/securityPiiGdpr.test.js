@@ -288,7 +288,7 @@ describe('Security: submitGuestReturn input validation', () => {
   });
 });
 
-// ── Cron endpoint secrets in query strings ───────────────────────────────
+// ── Cron endpoint secret auth (X-Cron-Secret header) ─────────────────────
 
 describe('Security: cron endpoint secret exposure', () => {
   const src = readFile(HTTP_FUNCTIONS);
