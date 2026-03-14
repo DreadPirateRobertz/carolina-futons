@@ -909,4 +909,26 @@ describe('_checkRateLimit', () => {
     expect(_checkRateLimit(undefined)).toBe(true);
     expect(_checkRateLimit('')).toBe(true);
   });
+
+  // ── Database Error Paths ──────────────────────────────────────────
+
+  describe('database error resilience', () => {
+    it('getReturnEligibleOrders returns empty orders on query failure', async () => {
+      mockQuery.find.mockRejectedValueOnce(new Error('DB connection lost'));
+      const result = await getReturnEligibleOrders();
+      expect(result.orders).toEqual([]);
+    });
+
+    it('getMyReturns returns empty returns on query failure', async () => {
+      mockQuery.find.mockRejectedValueOnce(new Error('DB timeout'));
+      const result = await getMyReturns();
+      expect(result.returns).toEqual([]);
+    });
+
+    it('getReturnReasons returns reasons without DB dependency', async () => {
+      const result = await getReturnReasons();
+      expect(result).toBeTruthy();
+      expect(result.reasons || result).toBeTruthy();
+    });
+  });
 });

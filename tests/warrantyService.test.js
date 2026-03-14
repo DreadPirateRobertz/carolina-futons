@@ -587,6 +587,21 @@ describe('submitClaim', () => {
     expect(result.error).toContain('expired');
   });
 
+  it('rejects claim on active-status warranty with past expiresAt', async () => {
+    __seed('WarrantyRegistrations', [
+      { _id: 'wr-past-date', memberId: 'member-1', planId: 'plan-basic', planName: 'Basic', productId: 'prod-1', productName: 'Frame', orderId: 'order-1', warrantyPrice: 0, status: 'active', purchasedAt: new Date('2020-01-01'), expiresAt: new Date('2021-01-01'), registeredAt: new Date() },
+    ]);
+
+    const result = await submitClaim({
+      warrantyId: 'wr-past-date',
+      issueType: 'structural',
+      description: 'Frame leg cracked after normal use.',
+      contactEmail: 'test@example.com',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('expired');
+  });
+
   it('prevents claims on other members warranties', async () => {
     __seed('WarrantyRegistrations', [
       { _id: 'wr-other', memberId: 'member-other', planId: 'plan-extended', planName: 'Extended', productId: 'prod-1', productName: 'Frame', orderId: 'order-1', warrantyPrice: 40, status: 'active', purchasedAt: new Date(), expiresAt: new Date(Date.now() + 365 * 86400000), registeredAt: new Date() },
