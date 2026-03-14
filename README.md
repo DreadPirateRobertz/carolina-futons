@@ -6,8 +6,14 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)
 
 ## Current Status
 
-**Template Migration (active)**: Migrating from blank skeleton (My Site 2) to Wix Furniture Store template (#3563, My Site 3). Using "Option C" remap workflow — code element IDs are remapped to match template element IDs via `scripts/remap-element-ids.js`.
+**v0.5.0 deployed** to stage3-velo. v0.4.1 released (security hardening). v0.4.0 released (color scheme shift). Running on My Site 3 (Wix Studio Furniture Store #3563 template).
 
+- 12,993 tests passing across 331 test files
+- 191 backend files, 41 pages, 232 public utilities
+- 71.9% element connectivity (595/827 IDs wired)
+- Category card photos now set in Wix Dashboard
+- Active branch: `test-coverage-pages-miquella`
+- Current PRs: #320 (page-level test coverage, 240 tests), #318 (rennala page tests), #319 (mobile audit, merged)
 - Stage3 velo repo: `DreadPirateRobertz/carolina-futons-stage3-velo`
 - ID mapping JSONs: `scripts/category-page-mapping.json`, `scripts/masterpage-home-id-mapping.json`
 - Template element audit: `docs/TEMPLATE-ELEMENT-AUDIT.md`
@@ -17,7 +23,7 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)
 This is a **Wix Velo** codebase — all frontend and backend code runs on the Wix platform. The `$w` selector model replaces traditional DOM manipulation, and backend modules use the `webMethod` pattern for secure client-server calls.
 
 ```
-src/                        253 source files
+src/                        464 source files
 ├── pages/                  Page modules (Wix Velo $w lifecycle)
 │   ├── Home.js, masterPage.js
 │   ├── Product Page.js, Category Page.js
@@ -25,7 +31,7 @@ src/                        253 source files
 │   ├── Thank You Page.js, Member Page.js
 │   └── ... (FAQ, Blog, Referral, UGC Gallery, etc.)
 │
-├── public/          106 shared frontend helpers & components
+├── public/          232 shared frontend helpers & components
 │   ├── sharedTokens.js      ← Brand design tokens (cross-platform)
 │   ├── designTokens.js      ← Web-specific tokens
 │   ├── mobileHelpers.js     ← Responsive utilities
@@ -46,7 +52,7 @@ src/                        253 source files
 ├── http-functions.js       HTTP endpoints (product feeds)
 └── shipping-rates-plugin.js  Wix SPI shipping calculator
 
-tests/               309 test files, 12,084 tests (Vitest)
+tests/               331 test files, 12,993 tests (Vitest)
 content/             Product catalog, CMS content, blog data
 scripts/             Build tools, ID remapping, secret provisioning
 docs/                Design docs, plans, guides
@@ -72,7 +78,7 @@ docs/
 ├── reports/                Audits (testing CI, token burn, product images)
 ├── archives/               Historical session reports
 ├── releases/               Release notes by version
-├── ARCHITECTURE.md         System overview (253 files, Wix Velo patterns)
+├── ARCHITECTURE.md         System overview (464 files, Wix Velo patterns)
 ├── API-REFERENCE.md        Backend module API documentation
 ├── *-BUILD-SPEC.md         Per-page element specifications
 ├── TEMPLATE-ELEMENT-AUDIT.md  Template vs code element comparison
