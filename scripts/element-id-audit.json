@@ -842,12 +842,124 @@
     }
   },
 
+  "memberPage": {
+    "_priority": "P1 — customer account dashboard",
+    "dashboard": {
+      "P0": [
+        { "id": "memberWelcome", "type": "Text", "notes": "Welcome back, {name}! heading" },
+        { "id": "memberOrderCount", "type": "Text", "notes": "Total order count card" },
+        { "id": "memberWishCount", "type": "Text", "notes": "Wishlist item count card" },
+        { "id": "memberPointsDisplay", "type": "Text", "notes": "Loyalty points display" },
+        { "id": "memberTierDisplay", "type": "Text", "notes": "Loyalty tier with icon" }
+      ],
+      "P2": [
+        { "id": "dashQuickOrders", "type": "Link", "notes": "Jump to orders quick link" },
+        { "id": "dashQuickWishlist", "type": "Link", "notes": "Jump to wishlist quick link" },
+        { "id": "dashQuickSettings", "type": "Link", "notes": "Jump to settings quick link" },
+        { "id": "memberErrorFallback", "type": "Box (hidden)", "notes": "Error fallback container" },
+        { "id": "memberErrorText", "type": "Text", "notes": "Error fallback message" }
+      ]
+    },
+    "loyalty": {
+      "P1": [
+        { "id": "tierProgressBar", "type": "ProgressBar", "notes": "Tier progress bar" },
+        { "id": "tierProgressText", "type": "Text", "notes": "Progress description text" },
+        { "id": "loyaltyMilestone", "type": "Text (hidden)", "notes": "Next milestone message" },
+        { "id": "tierComparisonRepeater", "type": "Repeater", "notes": "Tier comparison cards" },
+        { "id": "tierName", "type": "Text", "notes": "Tier name with icon (repeater item)" },
+        { "id": "tierMinPoints", "type": "Text", "notes": "Min points for tier (repeater item)" },
+        { "id": "tierBenefits", "type": "Text", "notes": "Benefits list (repeater item)" },
+        { "id": "tierCard", "type": "Box", "notes": "Tier card container (repeater item)" },
+        { "id": "tierCurrentBadge", "type": "Text (hidden)", "notes": "Your Tier badge (repeater item)" },
+        { "id": "rewardsRepeater", "type": "Repeater", "notes": "Available rewards list" },
+        { "id": "rewardsSection", "type": "Section (hidden)", "notes": "Rewards section container" },
+        { "id": "rewardsEmpty", "type": "Text (hidden)", "notes": "No rewards message" },
+        { "id": "rewardName", "type": "Text", "notes": "Reward name (repeater item)" },
+        { "id": "rewardDescription", "type": "Text", "notes": "Reward description (repeater item)" },
+        { "id": "rewardCost", "type": "Text", "notes": "Points cost (repeater item)" },
+        { "id": "redeemBtn", "type": "Button", "notes": "Redeem reward button (repeater item)" },
+        { "id": "rewardCouponCode", "type": "Text (hidden)", "notes": "Coupon code after redemption (repeater item)" }
+      ]
+    },
+    "order_history": {
+      "P0": [
+        { "id": "ordersRepeater", "type": "Repeater", "notes": "Order history list" },
+        { "id": "ordersLoader", "type": "Spinner/Box", "notes": "Orders loading indicator" },
+        { "id": "ordersError", "type": "Text (hidden)", "notes": "Orders error message" },
+        { "id": "ordersEmpty", "type": "Text (hidden)", "notes": "No orders message" }
+      ],
+      "P1": [
+        { "id": "orderNumber", "type": "Text", "notes": "Order number (repeater item)" },
+        { "id": "orderDate", "type": "Text", "notes": "Order date (repeater item)" },
+        { "id": "orderTotal", "type": "Text", "notes": "Order total (repeater item)" },
+        { "id": "orderItemCount", "type": "Text", "notes": "Item count (repeater item)" },
+        { "id": "orderStatusBadge", "type": "Text", "notes": "Status badge with color (repeater item)" },
+        { "id": "orderStatus", "type": "Text", "notes": "Status fallback text (repeater item)" },
+        { "id": "orderDeliveryEta", "type": "Text (hidden)", "notes": "Delivery ETA (repeater item)" },
+        { "id": "orderTrackBtn", "type": "Button", "notes": "Track order button (repeater item)" },
+        { "id": "orderReorderBtn", "type": "Button", "notes": "Reorder button (repeater item)" },
+        { "id": "orderStartReturnBtn", "type": "Button", "notes": "Start return button (repeater item)" },
+        { "id": "orderItemsGallery", "type": "Gallery", "notes": "Order items mini-gallery (repeater item)" },
+        { "id": "orderFilterDropdown", "type": "Dropdown", "notes": "Filter orders by status" },
+        { "id": "ordersLoadMoreBtn", "type": "Button", "notes": "Load more orders" },
+        { "id": "ordersRetryBtn", "type": "Button", "notes": "Retry loading orders" },
+        { "id": "startReturnBtn", "type": "Button", "notes": "Start return from order — proxied click target" }
+      ]
+    },
+    "wishlist": {
+      "P1": [
+        { "id": "wishlistRepeater", "type": "Repeater", "notes": "Wishlist items list" },
+        { "id": "wishlistEmpty", "type": "Text (hidden)", "notes": "No wishlist items message" },
+        { "id": "wishSortDropdown", "type": "Dropdown", "notes": "Sort wishlist dropdown" },
+        { "id": "wishImage", "type": "Image", "notes": "Product image (repeater item)" },
+        { "id": "wishName", "type": "Text", "notes": "Product name (repeater item)" },
+        { "id": "wishPrice", "type": "Text", "notes": "Product price (repeater item)" },
+        { "id": "wishStockStatus", "type": "Text", "notes": "Stock status (repeater item)" },
+        { "id": "wishSalePrice", "type": "Text (hidden)", "notes": "Was price (repeater item)" },
+        { "id": "wishAddToCartBtn", "type": "Button", "notes": "Move to cart (repeater item)" },
+        { "id": "wishViewBtn", "type": "Button", "notes": "View product (repeater item)" },
+        { "id": "wishAlertToggle", "type": "Toggle", "notes": "Alert toggle (repeater item)" },
+        { "id": "wishRemoveBtn", "type": "Button", "notes": "Remove from wishlist (repeater item)" },
+        { "id": "wishCard", "type": "Box", "notes": "Wishlist card container (repeater item)" },
+        { "id": "wishShareBtn", "type": "Button", "notes": "Copy wishlist link" },
+        { "id": "wishSharePinterest", "type": "Button", "notes": "Share wishlist on Pinterest" },
+        { "id": "wishShareEmail", "type": "Button", "notes": "Share wishlist via email" },
+        { "id": "wishShareFacebook", "type": "Button", "notes": "Share wishlist on Facebook" }
+      ],
+      "P2": [
+        { "id": "wishAlertHistoryRepeater", "type": "Repeater", "notes": "Alert history list" },
+        { "id": "wishAlertHistorySection", "type": "Section (hidden)", "notes": "Alert history container" },
+        { "id": "alertTypeLabel", "type": "Text", "notes": "Alert type (repeater item)" },
+        { "id": "alertProductName", "type": "Text", "notes": "Product name (repeater item)" },
+        { "id": "alertMessage", "type": "Text", "notes": "Alert message (repeater item)" },
+        { "id": "alertDate", "type": "Text", "notes": "Alert date (repeater item)" }
+      ]
+    },
+    "account_settings": {
+      "P1": [
+        { "id": "logoutBtn", "type": "Button", "notes": "Log out button" },
+        { "id": "addressBook", "type": "Box", "notes": "Address book container" },
+        { "id": "addressRepeater", "type": "Repeater", "notes": "Saved addresses list" },
+        { "id": "addressText", "type": "Text", "notes": "Address text (repeater item)" },
+        { "id": "addressEmptyState", "type": "Text (hidden)", "notes": "No addresses message" }
+      ]
+    },
+    "communication_prefs": {
+      "P2": [
+        { "id": "commPrefs", "type": "Box", "notes": "Communication preferences container" },
+        { "id": "prefNewsletter", "type": "Toggle", "notes": "Newsletter email toggle" },
+        { "id": "prefSaleAlerts", "type": "Toggle", "notes": "Sale alerts toggle" },
+        { "id": "prefBackInStock", "type": "Toggle", "notes": "Back-in-stock notifications toggle" }
+      ]
+    }
+  },
+
   "summary": {
-    "total_p0": 149,
-    "total_p1": 226,
-    "total_p2": 197,
-    "total_documented": 564,
-    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout", "Thank You Page", "Admin Returns"],
+    "total_p0": 158,
+    "total_p1": 270,
+    "total_p2": 211,
+    "total_documented": 636,
+    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout", "Thank You Page", "Admin Returns", "Member Page"],
     "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
   }
 }
