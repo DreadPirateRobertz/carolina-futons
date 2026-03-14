@@ -1,9 +1,9 @@
 # Carolina Futons — MASTER HOOKUP GUIDE
 
 > **The one file that tells you everything about connecting this codebase to a live Wix website.**
-> Last updated: 2026-03-07 by melania (Production Manager)
+> Last updated: 2026-03-14 by miquella (Temp Lead)
 > **Consolidated from**: FRONTEND-HOOKUP-GUIDE.md + 5 hookup audit files (homepage, product, browse, commerce, content)
-> **Codebase stats**: 39 pages | 109 public helpers | 100 backend modules | 11,067+ tests passing
+> **Codebase stats**: 41 pages | 232 public helpers | 191 backend modules | 12,993+ tests passing
 
 ---
 
@@ -52,7 +52,7 @@ Think of the Carolina Futons website like a restaurant:
 - **The walk-in fridge** = where the data lives (products, prices, customer info). This is the **CMS** (Content Management System).
 - **The recipes** = the instructions that tell the kitchen what to do. These are the **code modules**.
 
-**What we built:** 100 kitchen recipes (backend modules), 39 dining room layouts (pages), 109 shared tools (utilities), and a complete inventory list (88 products).
+**What we built:** 191 kitchen recipes (backend modules), 41 dining room layouts (pages), 232 shared tools (utilities), and a complete inventory list (88 products).
 
 **What you need to do:** Put the recipes in the kitchen, set up the fridge, and open the doors.
 
@@ -117,9 +117,9 @@ If you ever want to use a **custom domain** (carolinafutons.com instead of usern
 Print this out and check off as you go:
 
 ```
-[ ] 1. Deploy 100 backend .web.js/.js files to Wix Velo backend/
-[ ] 2. Deploy 39 page .js files to Wix page code editor
-[ ] 3. Deploy 109 public utility .js files to Wix public/
+[ ] 1. Deploy 191 backend .web.js/.js files to Wix Velo backend/
+[ ] 2. Deploy 41 page .js files to Wix page code editor
+[ ] 3. Deploy 232 public utility .js files to Wix public/
 [ ] 4. Create 16 priority CMS collections in Dashboard
 [ ] 5. Verify 8 secrets in Secrets Manager
 [ ] 6. Install 7 free plugins (GA4, Meta Pixel, etc.)
@@ -129,7 +129,7 @@ Print this out and check off as you go:
 [ ] 10. Connect domain, publish, verify 14-point checklist
 ```
 
-### What's Ready vs. In Progress (Mar 7 status)
+### What's Ready vs. In Progress (Mar 14 status)
 
 **SHIPPED (merged to main, ready to deploy) — 50+ PRs merged:**
 - Homepage hero overhaul (full-bleed lifestyle, gradient overlay, staggered animations)
@@ -157,12 +157,21 @@ Print this out and check off as you go:
 - Room Planner full interactive hookup (dimension inputs, presets, canvas, save/share)
 - Buying Guides page (category filtering + reading time)
 - Illustration pipeline: 6 Figma SVGs processed (mountain-skyline, timeline, contact-hero, contact-showroom, footer-divider, team-portrait)
+- v0.4.0: Color scheme shift (template beige/salmon → CF blue branding)
+- v0.4.1: Security hardening (cron secrets, rate limiting)
+- v0.5.0: CSS v5 unprefixed selectors fix (deployed to stage3-velo)
+- PR #312: Filter call-for-price products from recommendations
+- PR #315: bannerMessage bug fix + comment accuracy
+- PR #317: Test coverage for 4 untested public helpers (60 tests)
+- PRs #313, #314: Getting It Home + Sale pages
+- Category card photos set in Wix Dashboard (CF-pipx)
 
 **IN PROGRESS (crew working now):**
-- Product Page Open Graph tags (CF-203 — godfrey)
-- Member: loyalty tier dashboard (CF-v7cr — rennala)
-- Member: gift card flow (CF-ic6o — radahn)
-- Member: order history and tracking (CF-bpvo — miquella)
+- Page-level test coverage — 240 tests (PR #320 — miquella)
+- Mobile responsiveness audit (CF-f0wn — radahn, PR #319 merged)
+- Staging nav missing pages (CF-3c6y — rennala)
+- Delete hidden template sections (CF-ozp8 — melania, browser)
+- Blog 404 fix (CF-r2lm — melania, browser)
 
 **IN PROGRESS (polecats):**
 - Team portrait illustration rework (CF-3qt — atom)
@@ -177,6 +186,41 @@ Print this out and check off as you go:
 - A11y: alt text audit, CTA contrast audit
 - SEO: canonical URLs + Twitter Cards
 - CI: coverage thresholds, test reorg, coverage reporting
+
+### Frontend State (Mar 14 — melania's browser report)
+
+**Live & Working:**
+- Header/footer CSS v6 deployed (clean gradient header, solid dark footer, mountain SVGs removed)
+- Homepage hero, nav, footer, category cards, product galleries all rendering
+- Best Sellers section fixed (was hidden by wrong nth-of-type(5) selector — now published)
+- AS SEEN IN section correctly hidden (template logos, not CF branding)
+- Category card Store images set in Dashboard (CF-pipx complete)
+
+**Known Issues / Remaining Editor Work:**
+- Homepage collection card images are EDITOR-HARDCODED — they show template photos, not the Store category images. Need manual image swap in editor for 4 cards (this is separate from getCategoryCardImage() which runs at page load)
+- CSS CDN caching: changes need private/incognito browser to verify, takes minutes to propagate
+- CF-ozp8: delete hidden template sections from editor (pending)
+- CF-3c6y: staging nav missing pages — Shop dropdown, Sale, Product Videos, Getting it Home, About, Blog (pending)
+- CF-r2lm: blog 404 (pending)
+
+**Dashboard Account:** All dashboard work must be done under the **halworker** account.
+
+### Dashboard Readiness (Mar 14 audit)
+
+| Area | Status | Action Needed |
+|------|--------|---------------|
+| Products/Catalog | READY | 88 products, import tooling complete |
+| Categories | READY | 7 categories with SEO metadata, card photos set |
+| Shipping | READY | UPS live rates, local/white-glove/international |
+| Payments | READY | Cards, Apple/Google Pay, Afterpay, financing |
+| SEO | READY | JSON-LD, OG tags, sitemaps, robots.txt |
+| Email Templates | READY | 15 templates, 5 sequences, automation engine |
+| Scheduled Jobs | CODE READY | 6 cron endpoints — configure external scheduler (cron-job.org) |
+| Secrets | PARTIAL | 16 secrets need provisioning in Dashboard > Secrets Manager |
+| CMS Collections | PARTIAL | 16 collections need manual creation per CMS-SETUP-GUIDE.md |
+| Tracking/Plugins | READY | GA4, Meta Pixel, Pinterest, Google Merchant — enable in Dashboard |
+
+**Critical secrets for launch:** UPS_CLIENT_ID, UPS_CLIENT_SECRET, UPS_ACCOUNT_NUMBER, SITE_OWNER_CONTACT_ID, ALERT_CRON_KEY, WELCOME_DISCOUNT_CODE, RECOVERY_DISCOUNT_CODE
 
 ---
 
@@ -1421,7 +1465,7 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 11,067+ tests across 290 files — all passing, zero failures.
+**Current status:** 12,993+ tests across 326 files — all passing, zero failures.
 
 ---
 
@@ -1473,4 +1517,4 @@ npx vitest run
 
 *Generated by melania (Production Manager) — Carolina Futons cfutons rig*
 *Source files: refinery/rig/src/ (canonical codebase)*
-*Last verified: 2026-03-07 (test count 11,067+, 39 pages, 109 helpers, 100 backend modules)*
+*Last verified: 2026-03-14 (test count 12,993+, 41 pages, 232 helpers, 191 backend modules)*
