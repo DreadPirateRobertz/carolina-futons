@@ -327,7 +327,7 @@ describe('Security: cron endpoint secret exposure', () => {
     it(`${endpoint} reads secret from x-cron-secret header`, () => {
       const idx = src.indexOf(`get_${endpoint}`);
       const block = src.substring(idx, idx + 500);
-      expect(block).toContain("request.headers['x-cron-secret']");
+      expect(block).toContain("request.headers?.['x-cron-secret']");
     });
   });
 

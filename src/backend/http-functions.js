@@ -553,7 +553,7 @@ export async function get_checkWishlistAlerts(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -598,7 +598,7 @@ export async function get_triggerBrowseRecoveryCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -638,7 +638,7 @@ export async function get_triggerCartRecoveryCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -708,7 +708,7 @@ export async function get_processEmailQueueCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -749,7 +749,7 @@ export async function get_triggerReengagementCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -789,7 +789,7 @@ export async function get_processPostPurchaseCareCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.headers['x-cron-secret'];
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
