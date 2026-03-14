@@ -359,6 +359,15 @@ describe('Home Page', () => {
     });
   });
 
+  // ── Press Logos (As Seen In) ────────────────────────────────────────
+
+  describe('press logos section', () => {
+    it('collapses template press logos section (CF-xc7t)', async () => {
+      await onReadyHandler();
+      expect(getEl('#section4').collapse).toHaveBeenCalled();
+    });
+  });
+
   // ── Swatch Promo Section ──────────────────────────────────────────
 
   describe('swatch promo section', () => {

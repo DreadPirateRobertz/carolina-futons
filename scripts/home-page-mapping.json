@@ -119,6 +119,7 @@
 
   "home_press": {
     "_comment": "Press / As Seen In — section4",
+    "section4": { "templateNickname": "section4", "templateType": "Section", "confidence": "HIGH", "note": "Press / As Seen In section — collapsed to hide Tera template logos (CF-xc7t)" },
     "testimonialRepeater": { "templateNickname": "repeater1", "templateType": "Repeater", "confidence": "MISMATCH", "note": "Template's repeater1 is for PRESS LOGOS (As Seen In), but our code uses testimonialRepeater for customer testimonials. Content-type mismatch — press logos vs reviews. Need separate repeater for testimonials." },
     "testimonialSection": { "templateNickname": null, "confidence": "MISSING", "note": "Testimonial section — template has Press/As Seen In section instead. Need to add testimonial section or repurpose" },
     "testimonialSlideshow": { "templateNickname": null, "confidence": "MISSING", "note": "Testimonial slideshow — must be added" },
@@ -194,13 +195,13 @@
   },
 
   "_summary": {
-    "totalCodeElements": 97,
-    "highConfidence": 12,
+    "totalCodeElements": 98,
+    "highConfidence": 13,
     "mediumConfidence": 7,
     "mismatch": 6,
     "missing": 72,
     "notReferenced_templateOnly": 18,
-    "_countNote": "12 HIGH + 7 MEDIUM + 6 MISMATCH + 72 MISSING = 97 total. notReferenced_templateOnly counts template elements with no code counterpart (separate from code element mapping).",
+    "_countNote": "13 HIGH + 7 MEDIUM + 6 MISMATCH + 72 MISSING = 98 total. notReferenced_templateOnly counts template elements with no code counterpart (separate from code element mapping).",
     "criticalMismatches": [
       "featuredRepeater → gridGallery1: Pro Gallery, not Repeater. Code uses .onItemReady() which only works on Repeaters.",
       "saleRepeater → gridGallery2: Same Pro Gallery vs Repeater mismatch.",
