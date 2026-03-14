@@ -554,7 +554,7 @@ function initProductGrid() {
       const category = wixLocationFrontend.path?.[0] || '';
       const gridImage = $item('#gridImage');
       setCardImage(gridImage, itemData, category, getImageDimensions('productGridCard'));
-      try { if (gridImage) gridImage.alt = buildAltText(itemData); } catch (e) {}
+      try { if (gridImage) gridImage.alt = buildGridAlt(itemData); } catch (e) {}
 
       // Product info
       try { $item('#gridName').text = itemData.name; } catch (e) {}
@@ -1563,40 +1563,7 @@ function initFilterDrawer() {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-function buildAltText(product) {
-  if (!product) return 'Product - Carolina Futons';
-  const brand = detectBrand(product);
-  const category = detectCategory(product);
-  const parts = [product.name || 'Product'];
-  if (brand) parts.push(brand);
-  if (category) parts.push(category);
-  parts.push('Carolina Futons Hendersonville NC');
-  const alt = parts.join(' - ');
-  return alt.length > 125 ? alt.substring(0, 122) + '...' : alt;
-}
-
-function detectBrand(product) {
-  if (!product.collections) return '';
-  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
-
-  if (colls.some(c => c.includes('wall-hugger'))) return 'Strata Furniture';
-  if (colls.some(c => c.includes('unfinished'))) return 'KD Frames';
-  if (colls.some(c => c.includes('mattress'))) return 'Otis Bed';
-  return 'Night & Day Furniture';
-}
-
-function detectCategory(product) {
-  if (!product.collections) return '';
-  const colls = Array.isArray(product.collections) ? product.collections : [product.collections];
-
-  if (colls.some(c => c.includes('murphy'))) return 'Murphy Cabinet Bed';
-  if (colls.some(c => c.includes('platform'))) return 'Platform Bed';
-  if (colls.some(c => c.includes('mattress'))) return 'Futon Mattress';
-  if (colls.some(c => c.includes('wall-hugger'))) return 'Wall Hugger Futon Frame';
-  if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
-  if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
-  return '';
-}
+// buildAltText, detectBrand, detectCategory removed — use buildGridAlt from productPageUtils.js
 
 // ── Compare Bar Refresh ──────────────────────────────────────────
 // Updates the masterPage compare bar from this page context
