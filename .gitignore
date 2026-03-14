@@ -16,7 +16,6 @@ jsconfig.json
 *.env
 *.secret
 credentials*
-package-lock.json
 coverage/
 
 # Gas Town (added by gt)
