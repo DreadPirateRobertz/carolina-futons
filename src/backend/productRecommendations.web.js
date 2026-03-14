@@ -18,7 +18,7 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
 
 const RECENTLY_VIEWED_COLLECTION = 'RecentlyViewed';
-/** Wix requires price > 0, so call-for-price products use a $0/$1.00 placeholder.
+/** Call-for-price products use $0 or $1.00 placeholder prices. Exclude from recommendations.
  *  Keep in sync with CALL_FOR_PRICE_THRESHOLD in public/productPageUtils.js */
 const CALL_FOR_PRICE_THRESHOLD = 1;
 const MAX_RECENTLY_VIEWED = 20;

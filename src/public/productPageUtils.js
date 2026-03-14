@@ -29,7 +29,7 @@ export function formatCurrency(amount, currencyCode = 'USD') {
   }
 }
 
-/** Wix requires price > 0, so call-for-price products use a $0/$1.00 placeholder.
+/** Call-for-price products use $0 or $1.00 placeholder prices.
  *  Keep in sync with CALL_FOR_PRICE_THRESHOLD in backend/productRecommendations.web.js */
 const CALL_FOR_PRICE_THRESHOLD = 1;
 export const CALL_FOR_PRICE_TEXT = 'Call for Pricing \u2014 (828) 327-8030';
