@@ -257,6 +257,28 @@ describe('Home Page', () => {
       );
       expect(withClicks).toHaveLength(6);
     });
+
+    it('sets real CF product images on template category card boxes', async () => {
+      await onReadyHandler();
+      // Template boxes should get CF product images (not stock template photos)
+      const templateImgIds = ['#image26', '#image24', '#image22', '#image20'];
+      templateImgIds.forEach(id => {
+        const img = getEl(id);
+        // Images should be set to wixstatic.com URLs from placeholderImages
+        expect(img.src).toContain('static.wixstatic.com');
+        expect(img.src).toContain('w_600,h_400');
+      });
+    });
+
+    it('sets alt text on template category card images', async () => {
+      await onReadyHandler();
+      const templateImgIds = ['#image26', '#image24', '#image22', '#image20'];
+      templateImgIds.forEach(id => {
+        const img = getEl(id);
+        expect(img.alt).toBeTruthy();
+        expect(img.alt.length).toBeGreaterThan(5);
+      });
+    });
   });
 
   // ── Hero Animation ────────────────────────────────────────────────
