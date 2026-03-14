@@ -23,22 +23,21 @@ const ALL_CATEGORIES = [
   'unfinished-wood',
 ];
 
-const UNSPLASH_URL_PATTERN = /^https:\/\/images\.unsplash\.com\/photo-[\w-]+\?w=\d+&h=\d+&fit=crop&crop=center$/;
 const WIXSTATIC_URL_PATTERN = /^https:\/\/static\.wixstatic\.com\/media\/e04e89_[\w]+~mv2\.\w+\/v1\/fit\/w_\d+,h_\d+,q_\d+\/file\.\w+$/;
 
 // ── getCategoryHeroImage ─────────────────────────────────────────
 
 describe('getCategoryHeroImage', () => {
-  it('returns category-specific hero image', () => {
+  it('returns category-specific hero image from Wix CDN', () => {
     const url = getCategoryHeroImage('futon-frames');
-    expect(url).toContain('unsplash.com');
-    expect(url).toContain('w=1920');
+    expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_1920');
   });
 
-  it('returns fallback for unknown category', () => {
+  it('returns fallback for unknown category with correct 1920x600 dimensions', () => {
     const url = getCategoryHeroImage('nonexistent');
-    expect(url).toContain('unsplash.com');
-    expect(url).toContain('1920');
+    expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_1920,h_600');
   });
 
   it('returns different images for different categories', () => {
@@ -47,10 +46,10 @@ describe('getCategoryHeroImage', () => {
     expect(futon).not.toBe(murphy);
   });
 
-  it.each(ALL_CATEGORIES)('returns valid 1920x600 hero for %s', (cat) => {
+  it.each(ALL_CATEGORIES)('returns valid 1920x600 wixstatic hero for %s', (cat) => {
     const url = getCategoryHeroImage(cat);
-    expect(url).toMatch(UNSPLASH_URL_PATTERN);
-    expect(url).toContain('w=1920&h=600');
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
+    expect(url).toContain('w_1920,h_600');
   });
 
   it('all 7 categories have unique hero images', () => {
@@ -62,21 +61,22 @@ describe('getCategoryHeroImage', () => {
 // ── getCategoryCardImage ─────────────────────────────────────────
 
 describe('getCategoryCardImage', () => {
-  it('returns 600x400 category card image', () => {
+  it('returns 600x400 category card image from Wix CDN', () => {
     const url = getCategoryCardImage('mattresses');
-    expect(url).toContain('w=600');
-    expect(url).toContain('h=400');
+    expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_600,h_400');
   });
 
-  it('returns fallback for unknown category', () => {
+  it('returns fallback for unknown category with correct 600x400 dimensions', () => {
     const url = getCategoryCardImage('unknown');
     expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_600,h_400');
   });
 
-  it.each(ALL_CATEGORIES)('returns valid 600x400 card for %s', (cat) => {
+  it.each(ALL_CATEGORIES)('returns valid 600x400 wixstatic card for %s', (cat) => {
     const url = getCategoryCardImage(cat);
-    expect(url).toMatch(UNSPLASH_URL_PATTERN);
-    expect(url).toContain('w=600&h=400');
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
+    expect(url).toContain('w_600,h_400');
   });
 
   it('all 7 categories have unique card images', () => {
@@ -84,9 +84,10 @@ describe('getCategoryCardImage', () => {
     expect(new Set(urls).size).toBe(7);
   });
 
-  it('sales category has a card image', () => {
+  it('sales category has a valid wixstatic card image', () => {
     const url = getCategoryCardImage('sales');
-    expect(url).toContain('w=600&h=400');
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
+    expect(url).toContain('w_600,h_400');
   });
 });
 
@@ -234,14 +235,14 @@ describe('getGalleryThumbnail', () => {
 // ── getHomepageHeroImage ─────────────────────────────────────────
 
 describe('getHomepageHeroImage', () => {
-  it('returns a valid Unsplash URL', () => {
+  it('returns a valid Wix CDN URL', () => {
     const url = getHomepageHeroImage();
-    expect(url).toMatch(UNSPLASH_URL_PATTERN);
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
   });
 
   it('returns 1920x800 dimensions', () => {
     const url = getHomepageHeroImage();
-    expect(url).toContain('w=1920&h=800');
+    expect(url).toContain('w_1920,h_800');
   });
 });
 
