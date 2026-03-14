@@ -17,6 +17,7 @@ function createMockElement() {
     scrollTo: vi.fn(), postMessage: vi.fn(),
     onClick: vi.fn(), onChange: vi.fn(),
     onItemReady: vi.fn(), onItemClicked: vi.fn(),
+    onKeyPress: vi.fn(),
     onPlay: vi.fn(), onPause: vi.fn(), onEnded: vi.fn(),
     play: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),
@@ -36,24 +37,10 @@ globalThis.$w = Object.assign(
   { onReady: (fn) => { onReadyHandler = fn; } }
 );
 
-// ── Mock Backend Modules ────────────────────────────────────────────
-
-vi.mock('wix-data', () => ({
-  default: {
-    query: vi.fn(),
-    filter: vi.fn(() => ({
-      contains: vi.fn((field, value) => ({ _field: field, _value: value })),
-    })),
-  },
-}));
+// ── Mock Dependencies ───────────────────────────────────────────────
 
 vi.mock('public/engagementTracker', () => ({
   trackEvent: vi.fn(),
-  trackGalleryInteraction: vi.fn(),
-}));
-
-vi.mock('public/designTokens.js', () => ({
-  typography: { h2: { weight: 700 }, body: { weight: 400 } },
 }));
 
 vi.mock('public/a11yHelpers', () => ({
@@ -66,20 +53,42 @@ vi.mock('public/a11yHelpers', () => ({
 
 vi.mock('public/mobileHelpers', () => ({
   initBackToTop: vi.fn(),
-  collapseOnMobile: vi.fn(),
+}));
+
+vi.mock('public/pageSeo.js', () => ({
+  initPageSeo: vi.fn(),
+}));
+
+vi.mock('public/videoPageHelpers.js', () => ({
+  getVideoData: vi.fn(() => [
+    { _id: 'vid-intro', title: 'Intro', description: 'Welcome', category: 'overview', videoUrl: 'https://cdn/intro.mp4', posterUrl: 'https://cdn/intro.jpg', sortOrder: 0 },
+    { _id: 'vid-asheville', title: 'Asheville', description: 'Asheville demo', category: 'futon', videoUrl: 'https://cdn/asheville.mp4', posterUrl: 'https://cdn/asheville.jpg', productSlug: 'asheville-futon-frame', sortOrder: 1 },
+    { _id: 'vid-studio', title: 'Studio Conversion', description: 'Studio demo', category: 'conversion', videoUrl: 'https://cdn/studio.mp4', posterUrl: 'https://cdn/studio.jpg', sortOrder: 8 },
+  ]),
+  getVideoCategories: vi.fn(() => [
+    { id: 'overview', label: 'Overview' },
+    { id: 'futon', label: 'Futon Frames' },
+    { id: 'conversion', label: 'Conversion Demos' },
+  ]),
+  filterVideosByCategory: vi.fn((videos, cat) => {
+    if (!cat) return videos;
+    return videos.filter(v => v.category === cat);
+  }),
 }));
 
 vi.mock('wix-location-frontend', () => ({
   to: vi.fn(),
 }));
 
-const { trackEvent, trackGalleryInteraction } = await import('public/engagementTracker');
+const { trackEvent } = await import('public/engagementTracker');
 const { announce, makeClickable } = await import('public/a11yHelpers');
-const wixData = (await import('wix-data')).default;
+const { initBackToTop } = await import('public/mobileHelpers');
+const { initPageSeo } = await import('public/pageSeo.js');
+const { getVideoData } = await import('public/videoPageHelpers.js');
 
 // ── Import Page ─────────────────────────────────────────────────────
 
-describe('Fullscreen Page — handler behavior', () => {
+describe('Fullscreen Page — Product Videos', () => {
   beforeAll(async () => {
     await import('../src/pages/Fullscreen Page.js');
   });
@@ -89,195 +98,279 @@ describe('Fullscreen Page — handler behavior', () => {
     vi.clearAllMocks();
   });
 
-  // ── playVideo behavior ──────────────────────────────────────────
+  // ── Initialization ──────────────────────────────────────────────
+
+  describe('onReady initialization', () => {
+    it('calls initBackToTop', async () => {
+      await onReadyHandler();
+      expect(initBackToTop).toHaveBeenCalledWith($w);
+    });
+
+    it('sets page heading text', async () => {
+      await onReadyHandler();
+      expect(getEl('#videoPageTitle').text).toBe('Product Videos');
+    });
+
+    it('sets page subtitle', async () => {
+      await onReadyHandler();
+      expect(getEl('#videoPageSubtitle').text).toMatch(/futon frames.*Murphy beds/);
+    });
+
+    it('calls initPageSeo with product-videos', async () => {
+      await onReadyHandler();
+      expect(initPageSeo).toHaveBeenCalledWith('product-videos');
+    });
+
+    it('tracks page_view event', async () => {
+      await onReadyHandler();
+      expect(trackEvent).toHaveBeenCalledWith('page_view', { page: 'product_videos' });
+    });
+  });
+
+  // ── Video Grid ──────────────────────────────────────────────────
+
+  describe('video grid', () => {
+    it('sets repeater data from getVideoData', async () => {
+      await onReadyHandler();
+      const repeater = getEl('#videosRepeater');
+      expect(repeater.data).toHaveLength(3);
+      expect(repeater.data[0].title).toBe('Intro');
+    });
+
+    it('sets ARIA label on repeater', async () => {
+      await onReadyHandler();
+      expect(getEl('#videosRepeater').accessibility.ariaLabel).toBe('Product demo videos');
+    });
+
+    it('registers onItemReady handler', async () => {
+      await onReadyHandler();
+      expect(getEl('#videosRepeater').onItemReady).toHaveBeenCalled();
+    });
+
+    describe('onItemReady', () => {
+      async function setupItem(itemData) {
+        await onReadyHandler();
+        const repeater = getEl('#videosRepeater');
+        const cb = repeater.onItemReady.mock.calls[0][0];
+        const itemEls = new Map();
+        const $item = (sel) => {
+          if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+          return itemEls.get(sel);
+        };
+        cb($item, itemData);
+        return $item;
+      }
+
+      it('sets video title', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Asheville', posterUrl: 'p.jpg', category: 'futon' });
+        expect($item('#videoTitle').text).toBe('Asheville');
+      });
+
+      it('sets description text', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Asheville', description: 'A demo', category: 'futon' });
+        expect($item('#videoDescription').text).toBe('A demo');
+      });
+
+      it('sets poster image src and alt', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Sedona', posterUrl: 'https://cdn/poster.jpg', category: 'futon' });
+        expect($item('#videoThumb').src).toBe('https://cdn/poster.jpg');
+        expect($item('#videoThumb').alt).toBe('Sedona product demo video');
+      });
+
+      it('sets category badge for futon', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Test', category: 'futon' });
+        expect($item('#videoCategoryBadge').text).toBe('Futon Frame');
+      });
+
+      it('sets category badge for conversion', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Test', category: 'conversion' });
+        expect($item('#videoCategoryBadge').text).toBe('Conversion Demo');
+      });
+
+      it('sets category badge for overview', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Test', category: 'overview' });
+        expect($item('#videoCategoryBadge').text).toBe('Overview');
+      });
+
+      it('registers makeClickable on thumbnail with play handler', async () => {
+        const $item = await setupItem({ _id: 'v1', title: 'Alpine', posterUrl: 'p.jpg', category: 'futon' });
+        expect(makeClickable).toHaveBeenCalledWith(
+          $item('#videoThumb'),
+          expect.any(Function),
+          { ariaLabel: 'Play Alpine video', role: 'button' }
+        );
+      });
+    });
+  });
+
+  // ── Category Filters ────────────────────────────────────────────
+
+  describe('category filters', () => {
+    it('sets category repeater data with All option first', async () => {
+      await onReadyHandler();
+      const catRepeater = getEl('#videoCategoryRepeater');
+      expect(catRepeater.data[0].label).toBe('All Videos');
+      expect(catRepeater.data).toHaveLength(4);
+    });
+
+    it('sets ARIA role tablist on category repeater', async () => {
+      await onReadyHandler();
+      expect(getEl('#videoCategoryRepeater').accessibility.role).toBe('tablist');
+    });
+
+    it('registers onItemReady on category repeater', async () => {
+      await onReadyHandler();
+      expect(getEl('#videoCategoryRepeater').onItemReady).toHaveBeenCalled();
+    });
+
+    describe('category onItemReady', () => {
+      async function setupCatItem(catData) {
+        await onReadyHandler();
+        const catRepeater = getEl('#videoCategoryRepeater');
+        const cb = catRepeater.onItemReady.mock.calls[0][0];
+        const itemEls = new Map();
+        const $item = (sel) => {
+          if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+          return itemEls.get(sel);
+        };
+        cb($item, catData);
+        return $item;
+      }
+
+      it('sets category label text', async () => {
+        const $item = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        expect($item('#categoryLabel').text).toBe('Futon Frames');
+      });
+
+      it('sets ARIA role tab on label', async () => {
+        const $item = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        expect($item('#categoryLabel').accessibility.role).toBe('tab');
+      });
+
+      it('registers onClick handler', async () => {
+        const $item = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        expect($item('#categoryLabel').onClick).toHaveBeenCalled();
+      });
+
+      it('clicking category filters the video repeater', async () => {
+        const $item = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        const clickHandler = $item('#categoryLabel').onClick.mock.calls[0][0];
+        clickHandler();
+        // The videos repeater should be updated with filtered data
+        const repeater = getEl('#videosRepeater');
+        expect(repeater.data).toHaveLength(1); // Only Asheville from mock
+      });
+
+      it('clicking "All" shows all videos', async () => {
+        // First filter to futon
+        const $itemFuton = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        $itemFuton('#categoryLabel').onClick.mock.calls[0][0]();
+
+        // Then click All
+        const catRepeater = getEl('#videoCategoryRepeater');
+        const cb = catRepeater.onItemReady.mock.calls[0][0];
+        const allEls = new Map();
+        const $itemAll = (sel) => {
+          if (!allEls.has(sel)) allEls.set(sel, createMockElement());
+          return allEls.get(sel);
+        };
+        cb($itemAll, { _id: 'cat-all', id: '', label: 'All Videos' });
+        $itemAll('#categoryLabel').onClick.mock.calls[0][0]();
+
+        expect(getEl('#videosRepeater').data).toHaveLength(3);
+      });
+
+      it('announces filter change', async () => {
+        const $item = await setupCatItem({ _id: 'cat-conv', id: 'conversion', label: 'Conversion Demos' });
+        $item('#categoryLabel').onClick.mock.calls[0][0]();
+        expect(announce).toHaveBeenCalledWith($w, 'Showing conversion demos');
+      });
+
+      it('tracks video_filter event', async () => {
+        const $item = await setupCatItem({ _id: 'cat-futon', id: 'futon', label: 'Futon Frames' });
+        $item('#categoryLabel').onClick.mock.calls[0][0]();
+        expect(trackEvent).toHaveBeenCalledWith('video_filter', { category: 'Futon Frames' });
+      });
+    });
+  });
+
+  // ── Video Player ────────────────────────────────────────────────
 
   describe('playVideo — via thumbnail click', () => {
     async function clickVideoThumb(videoData) {
       await onReadyHandler();
       const repeater = getEl('#videosRepeater');
-      const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
-
-      const itemElements = new Map();
+      const cb = repeater.onItemReady.mock.calls[0][0];
+      const itemEls = new Map();
       const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
+        if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+        return itemEls.get(sel);
       };
-
-      onItemReadyCb($item, videoData);
-
-      // Invoke the click handler registered via makeClickable on #videoThumb
-      const thumbEl = $item('#videoThumb');
-      thumbEl._clickHandler();
+      cb($item, videoData);
+      $item('#videoThumb')._clickHandler();
     }
 
-    it('sets videoPlayer src to the video URL', async () => {
-      await clickVideoThumb({ title: 'Asheville Demo', thumbnail: 't.jpg', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
+    it('sets videoPlayer src', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
       expect(getEl('#videoPlayer').src).toBe('https://cdn/asheville.mp4');
     });
 
     it('calls player.play()', async () => {
-      await clickVideoThumb({ title: 'Asheville Demo', thumbnail: 't.jpg', videoUrl: 'https://cdn/asheville.mp4' });
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
       expect(getEl('#videoPlayer').play).toHaveBeenCalled();
     });
 
-    it('tracks video_play via trackGalleryInteraction', async () => {
-      await clickVideoThumb({ title: 'Asheville Demo', thumbnail: 't.jpg', videoUrl: 'https://cdn/asheville.mp4' });
-      expect(trackGalleryInteraction).toHaveBeenCalledWith('video_play');
+    it('tracks video_play event', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
+      expect(trackEvent).toHaveBeenCalledWith('video_play', { title: 'Asheville', category: 'futon' });
     });
 
-    it('tracks video_play event with title and category', async () => {
-      await clickVideoThumb({ title: 'Asheville Demo', thumbnail: 't.jpg', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
-      expect(trackEvent).toHaveBeenCalledWith('video_play', { title: 'Asheville Demo', category: 'futon' });
+    it('announces now playing', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
+      expect(announce).toHaveBeenCalledWith($w, 'Now playing: Asheville');
     });
 
-    it('shows videoProductLink when productSlug is present', async () => {
-      await clickVideoThumb({ title: 'Asheville', thumbnail: 't.jpg', videoUrl: 'v.mp4', productSlug: 'asheville-futon' });
+    it('sets nowPlayingTitle text', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
+      expect(getEl('#nowPlayingTitle').text).toBe('Asheville');
+    });
+
+    it('expands videoPlayerContainer', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'https://cdn/asheville.mp4', category: 'futon' });
+      expect(getEl('#videoPlayerContainer').expand).toHaveBeenCalled();
+    });
+
+    it('shows product link with label for videos with productSlug', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'v.mp4', category: 'futon', productSlug: 'asheville-futon-frame' });
+      expect(getEl('#videoProductLink').label).toBe('Shop the Asheville');
       expect(getEl('#videoProductLink').show).toHaveBeenCalled();
     });
 
-    it('does not show videoProductLink when productSlug is absent', async () => {
-      await clickVideoThumb({ title: 'Intro Video', thumbnail: 't.jpg', videoUrl: 'intro.mp4' });
-      expect(getEl('#videoProductLink').show).not.toHaveBeenCalled();
+    it('hides product link for videos without productSlug', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Intro', videoUrl: 'v.mp4', category: 'overview' });
+      expect(getEl('#videoProductLink').hide).toHaveBeenCalled();
     });
-  });
 
-  // ── videoProductLink navigation ─────────────────────────────────
+    it('registers makeClickable on product link for navigation', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'v.mp4', category: 'futon', productSlug: 'asheville-futon-frame' });
+      expect(makeClickable).toHaveBeenCalledWith(
+        getEl('#videoProductLink'),
+        expect.any(Function),
+        { ariaLabel: 'Shop the Asheville' }
+      );
+    });
 
-  describe('videoProductLink — navigation to product page', () => {
-    it('navigates to product page using stored slug on click', async () => {
+    it('product link navigates to product page', async () => {
       const wixLocation = await import('wix-location-frontend');
+      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'v.mp4', category: 'futon', productSlug: 'asheville-futon-frame' });
 
-      await onReadyHandler();
+      // Invoke the makeClickable handler for the product link
+      const linkCalls = makeClickable.mock.calls.filter(c => c[0] === getEl('#videoProductLink'));
+      const navHandler = linkCalls[linkCalls.length - 1][1];
+      navHandler();
 
-      // First play a video with a productSlug to set currentVideoProductSlug
-      const repeater = getEl('#videosRepeater');
-      const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, { title: 'Sedona', thumbnail: 't.jpg', videoUrl: 'v.mp4', productSlug: 'sedona-futon' });
-      $item('#videoThumb')._clickHandler();
-
-      // Now click the product link
-      const productLink = getEl('#videoProductLink');
-      productLink._clickHandler();
-
-      // Wait for dynamic import to resolve
       await new Promise(r => setTimeout(r, 10));
-
-      expect(wixLocation.to).toHaveBeenCalledWith('/product-page/sedona-futon');
-    });
-  });
-
-  // ── onPlay/onPause/onEnded handler behavior ─────────────────────
-
-  describe('video player event handler behavior', () => {
-    it('onPlay hides videoOverlay with fade animation', async () => {
-      await onReadyHandler();
-      const player = getEl('#videoPlayer');
-      const onPlayCb = player.onPlay.mock.calls[0][0];
-      onPlayCb();
-      expect(getEl('#videoOverlay').hide).toHaveBeenCalledWith('fade', { duration: 300 });
-    });
-
-    it('onPause shows videoOverlay with fade animation', async () => {
-      await onReadyHandler();
-      const player = getEl('#videoPlayer');
-      const onPauseCb = player.onPause.mock.calls[0][0];
-      onPauseCb();
-      expect(getEl('#videoOverlay').show).toHaveBeenCalledWith('fade', { duration: 300 });
-    });
-
-    it('onEnded shows both videoOverlay and videoShopCTA', async () => {
-      await onReadyHandler();
-      const player = getEl('#videoPlayer');
-      const onEndedCb = player.onEnded.mock.calls[0][0];
-      onEndedCb();
-      expect(getEl('#videoOverlay').show).toHaveBeenCalledWith('fade', { duration: 300 });
-      expect(getEl('#videoShopCTA').show).toHaveBeenCalledWith('fade', { duration: 400 });
-    });
-  });
-
-  // ── filterVideosByCategory ──────────────────────────────────────
-
-  describe('filterVideosByCategory — via filter button click', () => {
-    it('clicking "All" filter clears dataset filter', async () => {
-      await onReadyHandler();
-      const allBtn = getEl('#videoFilterAll');
-      allBtn._clickHandler();
-      expect(getEl('#videosDataset').setFilter).toHaveBeenCalled();
-      expect(wixData.filter).toHaveBeenCalled();
-    });
-
-    it('clicking "Futons" filter sets contains filter on category', async () => {
-      await onReadyHandler();
-      const futonBtn = getEl('#videoFilterFutons');
-      futonBtn._clickHandler();
-      expect(getEl('#videosDataset').setFilter).toHaveBeenCalled();
-    });
-
-    it('clicking filter announces the active filter to screen readers', async () => {
-      await onReadyHandler();
-      const murphyBtn = getEl('#videoFilterMurphy');
-      murphyBtn._clickHandler();
-      expect(announce).toHaveBeenCalledWith($w, 'Showing filter murphy bed videos');
-    });
-
-    it('clicking filter bolds the active button and unbolds others', async () => {
-      await onReadyHandler();
-      const futonBtn = getEl('#videoFilterFutons');
-      futonBtn._clickHandler();
-
-      expect(getEl('#videoFilterFutons').style.fontWeight).toBe('700');
-      expect(getEl('#videoFilterAll').style.fontWeight).toBe('400');
-      expect(getEl('#videoFilterMurphy').style.fontWeight).toBe('400');
-      expect(getEl('#videoFilterPlatform').style.fontWeight).toBe('400');
-    });
-
-    it('clicking filter sets ariaPressed on active button only', async () => {
-      await onReadyHandler();
-      const platformBtn = getEl('#videoFilterPlatform');
-      platformBtn._clickHandler();
-
-      expect(getEl('#videoFilterPlatform').accessibility.ariaPressed).toBe(true);
-      expect(getEl('#videoFilterAll').accessibility.ariaPressed).toBe(false);
-      expect(getEl('#videoFilterFutons').accessibility.ariaPressed).toBe(false);
-      expect(getEl('#videoFilterMurphy').accessibility.ariaPressed).toBe(false);
-    });
-  });
-
-  // ── onItemReady — edge cases ──────────────────────────────────────
-
-  describe('onItemReady — edge cases', () => {
-    async function setupItemReady(itemData) {
-      await onReadyHandler();
-      const repeater = getEl('#videosRepeater');
-      const onItemReadyCb = repeater.onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      onItemReadyCb($item, itemData);
-      return $item;
-    }
-
-    it('hides category badge when category is not provided', async () => {
-      const $item = await setupItemReady({ title: 'Intro', thumbnail: 't.jpg' });
-      // Badge show should NOT be called when no category
-      expect($item('#videoCategoryBadge').show).not.toHaveBeenCalled();
-    });
-
-    it('does not set duration when duration is not provided', async () => {
-      const $item = await setupItemReady({ title: 'Test', thumbnail: 't.jpg' });
-      expect($item('#videoDuration').text).toBe('');
-    });
-
-    it('sets alt text with brand suffix', async () => {
-      const $item = await setupItemReady({ title: 'Maricopa Demo', thumbnail: 't.jpg' });
-      expect($item('#videoThumb').alt).toBe('Maricopa Demo product demo video - Carolina Futons');
+      expect(wixLocation.to).toHaveBeenCalledWith('/product-page/asheville-futon-frame');
     });
   });
 });
