@@ -548,12 +548,12 @@ self.addEventListener('fetch', (event) => {
 // Wishlist Price Drop & Back-in-Stock Alert Checker
 // URL: GET https://www.carolinafutons.com/_functions/checkWishlistAlerts
 // Schedule daily via Wix Automations webhook or external cron service.
-// Pass ?key=<secret> for basic auth (set ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (set ALERT_CRON_KEY in Secrets Manager).
 export async function get_checkWishlistAlerts(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -593,12 +593,12 @@ export async function get_checkWishlistAlerts(request) {
 // ── Browse Recovery Cron ─────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/triggerBrowseRecoveryCron
 // Schedule every 30 minutes via Wix Automations or external cron.
-// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerBrowseRecoveryCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -633,12 +633,12 @@ export async function get_triggerBrowseRecoveryCron(request) {
 // ── Abandoned Cart Recovery Cron ────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/triggerCartRecoveryCron
 // Schedule every 30 minutes via Wix Automations or external cron.
-// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerCartRecoveryCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -703,12 +703,12 @@ export function get_robots() {
 // ── Email Queue Processor Cron ────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/processEmailQueueCron
 // Schedule every 15-30 minutes via Wix Automations or external cron.
-// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_processEmailQueueCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -744,12 +744,12 @@ export async function get_processEmailQueueCron(request) {
 // ── Re-engagement Cron ───────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/triggerReengagementCron
 // Schedule daily via Wix Automations or external cron.
-// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
 export async function get_triggerReengagementCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({
@@ -783,13 +783,13 @@ export async function get_triggerReengagementCron(request) {
 // ── Post-Purchase Care Cron ────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/processPostPurchaseCareCron
 // Schedule daily via Wix Automations or external cron.
-// Pass ?key=<secret> for auth (ALERT_CRON_KEY in Secrets Manager).
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
 // Processes pending post-purchase care sequences (assembly follow-ups, review solicitations).
 export async function get_processPostPurchaseCareCron(request) {
   try {
     const { getSecret } = await import('wix-secrets-backend');
     const cronKey = await getSecret('ALERT_CRON_KEY');
-    const requestKey = request.query?.key;
+    const requestKey = request.headers?.['x-cron-secret'];
 
     if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
       return forbidden({

@@ -288,7 +288,7 @@ describe('Security: submitGuestReturn input validation', () => {
   });
 });
 
-// ── Cron endpoint secrets in query strings ───────────────────────────────
+// ── Cron endpoint secret auth (X-Cron-Secret header) ─────────────────────
 
 describe('Security: cron endpoint secret exposure', () => {
   const src = readFile(HTTP_FUNCTIONS);
@@ -316,15 +316,19 @@ describe('Security: cron endpoint secret exposure', () => {
     });
   });
 
-  it('VULNERABILITY: cron secrets passed via query string (not header)', () => {
-    // Secrets in query strings are logged in access logs, cached by proxies,
-    // and visible in browser history. They should be in headers.
+  it('cron secrets use X-Cron-Secret header (not query string)', () => {
+    // Query strings are logged in access logs, cached by proxies,
+    // and visible in browser history. Headers are the secure approach.
     const cronSecretInQuery = src.match(/request\.query\?\.key/g);
-    if (cronSecretInQuery && cronSecretInQuery.length > 0) {
-      // Document the count of vulnerable endpoints
-      expect(cronSecretInQuery.length).toBeGreaterThan(0);
-      // This is a known vulnerability — the fix is in cf-sec-secrets bead
-    }
+    expect(cronSecretInQuery).toBeNull();
+  });
+
+  cronEndpoints.forEach((endpoint) => {
+    it(`${endpoint} reads secret from x-cron-secret header`, () => {
+      const idx = src.indexOf(`get_${endpoint}`);
+      const block = src.substring(idx, idx + 500);
+      expect(block).toContain("request.headers?.['x-cron-secret']");
+    });
   });
 
   it('facebookCustomAudience correctly uses header (not query)', () => {

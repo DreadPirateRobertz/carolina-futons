@@ -13,6 +13,7 @@ import {
   get_triggerCartRecoveryCron,
   get_processEmailQueueCron,
   get_triggerReengagementCron,
+  get_processPostPurchaseCareCron,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -287,7 +288,7 @@ describe('get_pinterestProductFeed', () => {
 
 // ── Cron Endpoint Auth Tests ────────────────────────────────────────
 
-const cronRequest = (key) => ({ query: { key } });
+const cronRequest = (key) => ({ headers: { 'x-cron-secret': key } });
 
 describe('get_checkWishlistAlerts', () => {
   beforeEach(() => {
@@ -310,7 +311,7 @@ describe('get_checkWishlistAlerts', () => {
   });
 
   it('returns 403 with missing key', async () => {
-    const result = await get_checkWishlistAlerts({ query: {} });
+    const result = await get_checkWishlistAlerts({ headers: {} });
     expect(result.status).toBe(403);
   });
 
@@ -348,8 +349,8 @@ describe('get_triggerBrowseRecoveryCron', () => {
     expect(result.status).toBe(403);
   });
 
-  it('returns 403 with no query params', async () => {
-    const result = await get_triggerBrowseRecoveryCron({ query: {} });
+  it('returns 403 with no auth header', async () => {
+    const result = await get_triggerBrowseRecoveryCron({ headers: {} });
     expect(result.status).toBe(403);
   });
 
@@ -382,7 +383,7 @@ describe('get_triggerCartRecoveryCron', () => {
   });
 
   it('returns 403 with missing key', async () => {
-    const result = await get_triggerCartRecoveryCron({ query: {} });
+    const result = await get_triggerCartRecoveryCron({ headers: {} });
     expect(result.status).toBe(403);
   });
 
@@ -576,12 +577,12 @@ describe('Cron endpoint timing-safe auth', () => {
   });
 
   it('rejects null/undefined key', async () => {
-    const result = await get_checkWishlistAlerts({ query: { key: null } });
+    const result = await get_checkWishlistAlerts({ headers: { 'x-cron-secret': null } });
     expect(result.status).toBe(403);
   });
 
-  it('rejects undefined query object', async () => {
-    const result = await get_checkWishlistAlerts({ query: undefined });
+  it('rejects missing x-cron-secret header', async () => {
+    const result = await get_checkWishlistAlerts({ headers: {} });
     expect(result.status).toBe(403);
   });
 
@@ -617,7 +618,7 @@ describe('get_processEmailQueueCron', () => {
   });
 
   it('returns 403 with missing key', async () => {
-    const result = await get_processEmailQueueCron({ query: {} });
+    const result = await get_processEmailQueueCron({ headers: {} });
     expect(result.status).toBe(403);
   });
 });
@@ -643,7 +644,35 @@ describe('get_triggerReengagementCron', () => {
   });
 
   it('returns 403 with missing key', async () => {
-    const result = await get_triggerReengagementCron({ query: {} });
+    const result = await get_triggerReengagementCron({ headers: {} });
+    expect(result.status).toBe(403);
+  });
+});
+
+describe('get_processPostPurchaseCareCron', () => {
+  beforeEach(() => {
+    __setSecrets({ ALERT_CRON_KEY: 'test-cron-key-123' });
+    __seed('EmailQueue', []);
+    __seed('AbandonedCarts', []);
+    __seed('Unsubscribes', []);
+  });
+
+  it('returns 200 with valid cron key', async () => {
+    const result = await get_processPostPurchaseCareCron(cronRequest('test-cron-key-123'));
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(typeof body.sent).toBe('number');
+    expect(typeof body.failed).toBe('number');
+  });
+
+  it('returns 403 with invalid cron key', async () => {
+    const result = await get_processPostPurchaseCareCron(cronRequest('wrong-key'));
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with missing header', async () => {
+    const result = await get_processPostPurchaseCareCron({ headers: {} });
     expect(result.status).toBe(403);
   });
 });
