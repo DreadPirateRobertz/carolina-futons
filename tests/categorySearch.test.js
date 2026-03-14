@@ -353,7 +353,7 @@ describe('getFilteredProductCount', () => {
 
   it('returns count filtered by category', async () => {
     const result = await getFilteredProductCount({ category: 'mattresses' });
-    expect(result.count).toBe(1);
+    expect(result.count).toBe(2); // futonMattress + callForPriceProduct
   });
 
   it('returns count filtered by price range', async () => {
@@ -409,14 +409,14 @@ describe('getFacetMetadata', () => {
 
   it('returns facets for a specific category', async () => {
     const facets = await getFacetMetadata('mattresses');
-    expect(facets.totalProducts).toBe(1);
+    expect(facets.totalProducts).toBe(2); // futonMattress + callForPriceProduct
     expect(facets.materials).toContain('fabric');
     expect(facets.colors).toContain('white');
   });
 
   it('returns correct price range', async () => {
     const facets = await getFacetMetadata('');
-    expect(facets.priceRange.min).toBe(199);
+    expect(facets.priceRange.min).toBe(0); // callForPriceCasegoods
     expect(facets.priceRange.max).toBe(1899);
   });
 
@@ -480,15 +480,15 @@ describe('getFacetMetadata', () => {
 
   it('returns dimension ranges', async () => {
     const facets = await getFacetMetadata('');
-    expect(facets.dimensionRange.width.min).toBeGreaterThan(0);
+    expect(facets.dimensionRange.width.min).toBeGreaterThanOrEqual(0);
     expect(facets.dimensionRange.width.max).toBeGreaterThan(facets.dimensionRange.width.min);
-    expect(facets.dimensionRange.depth.min).toBeGreaterThan(0);
-    expect(facets.dimensionRange.height.min).toBeGreaterThan(0);
+    expect(facets.dimensionRange.depth.min).toBeGreaterThanOrEqual(0);
+    expect(facets.dimensionRange.height.min).toBeGreaterThanOrEqual(0);
   });
 
   it('returns width range across all products', async () => {
     const facets = await getFacetMetadata('');
-    expect(facets.dimensionRange.width.min).toBe(20); // casegoodsItem
+    expect(facets.dimensionRange.width.min).toBe(0); // call-for-price products
     expect(facets.dimensionRange.width.max).toBe(64); // murphyBed
   });
 

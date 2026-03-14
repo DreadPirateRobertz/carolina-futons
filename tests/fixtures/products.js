@@ -311,7 +311,30 @@ export const callForPriceProduct = {
   featureTags: [],
 };
 
-// All products for seeding collections
+// Call-for-price casegoods item — $0 placeholder
+export const callForPriceCasegoods = {
+  _id: 'prod-cfp-002',
+  name: 'Custom Dresser',
+  slug: 'custom-dresser',
+  price: 0,
+  formattedPrice: '$0.00',
+  discountedPrice: null,
+  formattedDiscountedPrice: null,
+  mainMedia: 'https://example.com/custom-dresser.jpg',
+  sku: 'CF-CASE-CUSTOM',
+  ribbon: '',
+  collections: ['casegoods-accessories'],
+  description: 'Contact for availability and pricing.',
+  inStock: true,
+  _createdDate: new Date('2025-07-01'),
+  discount: 0,
+  dimensions: { width: 0, depth: 0, height: 0 },
+  material: '',
+  color: '',
+  featureTags: [],
+};
+
+// All products for seeding collections (includes call-for-price items)
 export const allProducts = [
   futonFrame,
   wallHuggerFrame,
@@ -325,6 +348,8 @@ export const allProducts = [
   unfinishedFrame,
   otisMattress,
   arizonaFrame,
+  callForPriceProduct,
+  callForPriceCasegoods,
 ];
 
 // Sample analytics records

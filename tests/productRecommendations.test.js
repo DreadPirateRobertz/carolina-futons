@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
-import { allProducts, futonFrame, futonMattress, murphyBed, platformBed, casegoodsItem, wallHuggerFrame, saleProduct } from './fixtures/products.js';
+import { allProducts, futonFrame, futonMattress, murphyBed, platformBed, casegoodsItem, wallHuggerFrame, saleProduct, callForPriceProduct, callForPriceCasegoods } from './fixtures/products.js';
 import {
   getRelatedProducts,
   getCompletionSuggestions,
@@ -13,6 +13,7 @@ import {
   trackRecentlyViewed,
   getRecentlyViewed,
   getSimilarProducts,
+  getCustomersAlsoBought,
 } from '../src/backend/productRecommendations.web.js';
 
 beforeEach(() => {
@@ -443,5 +444,94 @@ describe('getSimilarProducts', () => {
       expect(p).toHaveProperty('price');
       expect(p).toHaveProperty('collections');
     }
+  });
+});
+
+// ── Call-for-price filtering (CF-hma6) ─────────────────────────────
+
+describe('Call-for-price product filtering (CF-hma6)', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
+  it('getRelatedProducts excludes $1 call-for-price products', async () => {
+    // callForPriceProduct is in 'mattresses' with price $1
+    // Getting related for a frame should suggest mattresses but NOT the $1 one
+    const results = await getRelatedProducts('prod-frame-001', 'futon-frames', 10);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-001');
+  });
+
+  it('getRelatedProducts excludes $0 call-for-price products', async () => {
+    const results = await getRelatedProducts('prod-plat-001', 'platform-beds', 10);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getSameCollection excludes call-for-price products', async () => {
+    // callForPriceProduct is in 'mattresses', callForPriceCasegoods is in 'casegoods-accessories'
+    const mattResults = await getSameCollection('prod-matt-001', ['mattresses'], 10);
+    const mattIds = mattResults.map(r => r._id);
+    expect(mattIds).not.toContain('prod-cfp-001');
+
+    const caseResults = await getSameCollection('prod-case-001', ['casegoods-accessories'], 10);
+    const caseIds = caseResults.map(r => r._id);
+    expect(caseIds).not.toContain('prod-cfp-002');
+  });
+
+  it('getCompletionSuggestions excludes call-for-price products', async () => {
+    // Frame in cart → should suggest mattresses but not the $1 one
+    const suggestions = await getCompletionSuggestions(['prod-frame-001']);
+    for (const group of suggestions) {
+      const ids = group.products.map(p => p._id);
+      expect(ids).not.toContain('prod-cfp-001');
+      expect(ids).not.toContain('prod-cfp-002');
+    }
+  });
+
+  it('getBundleSuggestion excludes call-for-price products', async () => {
+    // Frame bundle should NOT pick the $1 mattress as cheapest
+    const bundle = await getBundleSuggestion('prod-frame-001');
+    expect(bundle).not.toBeNull();
+    expect(bundle.product._id).not.toBe('prod-cfp-001');
+    expect(bundle.product.price).toBeGreaterThan(1);
+  });
+
+  it('getFeaturedProducts excludes call-for-price products', async () => {
+    const results = await getFeaturedProducts(20);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getBestsellers excludes call-for-price products', async () => {
+    const results = await getBestsellers(20);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getSimilarProducts excludes call-for-price products', async () => {
+    const result = await getSimilarProducts('prod-frame-001', { priceRange: 1 });
+    const ids = result.products.map(p => p._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getSaleProducts excludes call-for-price products', async () => {
+    const results = await getSaleProducts(20);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getCustomersAlsoBought excludes call-for-price products (fallback path)', async () => {
+    // No orders → falls back to category-based related products
+    // callForPriceProduct is in 'mattresses', should be excluded
+    const result = await getCustomersAlsoBought('prod-matt-001', 10);
+    const ids = result.products.map(p => p._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
   });
 });

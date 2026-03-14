@@ -18,6 +18,9 @@ import { currentMember } from 'wix-members-backend';
 import { sanitize, validateSlug, validateId } from 'backend/utils/sanitize';
 
 const RECENTLY_VIEWED_COLLECTION = 'RecentlyViewed';
+/** Call-for-price products use $0 or $1.00 placeholder prices. Exclude from recommendations.
+ *  Keep in sync with CALL_FOR_PRICE_THRESHOLD in public/productPageUtils.js */
+const CALL_FOR_PRICE_THRESHOLD = 1;
 const MAX_RECENTLY_VIEWED = 20;
 
 /**
@@ -52,6 +55,7 @@ export const getRelatedProducts = webMethod(
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', relatedCategories)
         .ne('_id', cleanProductId)
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .limit(limit)
         .find();
 
@@ -111,6 +115,7 @@ export const getCompletionSuggestions = webMethod(
       if (hasFrame && !hasMattress) {
         const mattresses = await wixData.query('Stores/Products')
           .hasSome('collections', ['mattresses'])
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(3)
           .find();
         suggestions.push({
@@ -123,6 +128,7 @@ export const getCompletionSuggestions = webMethod(
       if (hasMattress && !hasFrame) {
         const frames = await wixData.query('Stores/Products')
           .hasSome('collections', ['futon-frames'])
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(3)
           .find();
         suggestions.push({
@@ -137,6 +143,7 @@ export const getCompletionSuggestions = webMethod(
       if (hasMurphy && !hasCasegoods) {
         const casegoods = await wixData.query('Stores/Products')
           .hasSome('collections', ['casegoods-accessories'])
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(3)
           .find();
         suggestions.push({
@@ -150,6 +157,7 @@ export const getCompletionSuggestions = webMethod(
       if (hasPlatform && !hasCasegoods) {
         const casegoods = await wixData.query('Stores/Products')
           .hasSome('collections', ['casegoods-accessories'])
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(3)
           .find();
         suggestions.push({
@@ -162,6 +170,7 @@ export const getCompletionSuggestions = webMethod(
       if (suggestions.length === 0) {
         const popular = await wixData.query('Stores/Products')
           .not(wixData.query('Stores/Products').hasSome('_id', cartProductIds))
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(4)
           .descending('_createdDate')
           .find();
@@ -199,6 +208,7 @@ export const getSameCollection = webMethod(
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', collections)
         .ne('_id', sanitize(productId, 50))
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .limit(limit)
         .find();
 
@@ -224,12 +234,14 @@ export const getFeaturedProducts = webMethod(
       // First try to get products marked with a "featured" ribbon
       let results = await wixData.query('Stores/Products')
         .eq('ribbon', 'Featured')
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .limit(limit)
         .find();
 
       // Fallback: get newest products
       if (results.items.length === 0) {
         results = await wixData.query('Stores/Products')
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .descending('_createdDate')
           .limit(limit)
           .find();
@@ -256,6 +268,7 @@ export const getSaleProducts = webMethod(
     try {
       const results = await wixData.query('Stores/Products')
         .gt('discountedPrice', 0)
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .limit(limit)
         .find();
 
@@ -325,6 +338,7 @@ export const getBundleSuggestion = webMethod(
       const results = await wixData.query('Stores/Products')
         .hasSome('collections', targetCollections)
         .ne('_id', cleanProductId)
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .ascending('price')
         .limit(1)
         .find();
@@ -374,6 +388,7 @@ export const getBestsellers = webMethod(
           const productIds = analytics.items.map(a => a.productId);
           const products = await wixData.query('Stores/Products')
             .hasSome('_id', productIds)
+            .gt('price', CALL_FOR_PRICE_THRESHOLD)
             .find();
 
           if (products.items.length > 0) {
@@ -387,6 +402,7 @@ export const getBestsellers = webMethod(
       // Fallback: products with "Bestseller" ribbon
       let results = await wixData.query('Stores/Products')
         .eq('ribbon', 'Bestseller')
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .limit(limit)
         .find();
 
@@ -396,6 +412,7 @@ export const getBestsellers = webMethod(
 
       // Final fallback: newest products
       results = await wixData.query('Stores/Products')
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .descending('_createdDate')
         .limit(limit)
         .find();
@@ -547,6 +564,7 @@ export const getSimilarProducts = webMethod(
 
       let query = wixData.query('Stores/Products')
         .ne('_id', pid)
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .ge('price', minPrice)
         .le('price', maxPrice);
 
@@ -611,6 +629,7 @@ export const getCustomersAlsoBought = webMethod(
         const related = await wixData.query('Stores/Products')
           .hasSome('collections', collections)
           .ne('_id', pid)
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
           .limit(safeLimit)
           .find();
 
@@ -638,6 +657,7 @@ export const getCustomersAlsoBought = webMethod(
       // Fetch full product details
       const products = await wixData.query('Stores/Products')
         .hasSome('_id', ranked)
+        .gt('price', CALL_FOR_PRICE_THRESHOLD)
         .find();
 
       // Maintain frequency order
