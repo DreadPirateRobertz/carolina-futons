@@ -16,17 +16,26 @@ import {
 
 $w.onReady(async function () {
   initBackToTop($w);
+  initPageHeading();
   initBrandStory();
   initTeamSection();
   initPhotoGallery();
   initTimeline();
   initShowroomInfo();
   initSocialProof();
+  initVisitCta();
   initFaqLink();
   await injectLocalSchema();
   initPageSeo('about');
   trackEvent('page_view', { page: 'about' });
 });
+
+// ── Page Heading ────────────────────────────────────────────────────
+
+function initPageHeading() {
+  try { $w('#aboutTitle').text = 'Our Story'; } catch (e) {}
+  try { $w('#aboutSubtitle').text = 'Family-owned since 1991. Hendersonville\'s home for handcrafted futons, Murphy beds, and quality furniture.'; } catch (e) {}
+}
 
 // ── Brand Story ─────────────────────────────────────────────────────
 // Rich storytelling sections with headings, body copy, and image alt text
@@ -161,6 +170,33 @@ function initSocialProof() {
       try { $item('#testimonialStars').text = '★'.repeat(itemData.rating) + '☆'.repeat(5 - itemData.rating); } catch (e) {}
     });
     repeater.data = snippets.map((s, i) => ({ ...s, _id: `testimonial-${i}` }));
+  } catch (e) {}
+}
+
+// ── Visit CTA ───────────────────────────────────────────────────────
+
+function initVisitCta() {
+  try { $w('#aboutVisitTitle').text = 'Visit Our Showroom'; } catch (e) {}
+  try { $w('#aboutVisitBody').text = 'Come see our furniture in person. Every piece on our floor is ready to sit on, sleep on, and experience firsthand. Browse over 700 fabric swatches and get free expert advice — no pressure, just honest guidance.'; } catch (e) {}
+  try {
+    const visitBtn = $w('#aboutVisitBtn');
+    if (visitBtn) {
+      visitBtn.label = 'Get Directions';
+      visitBtn.onClick(() => {
+        import('wix-window-frontend').then(({ openUrl }) => openUrl('https://maps.google.com/?q=824+Locust+St+Ste+200+Hendersonville+NC+28792'));
+      });
+      try { visitBtn.accessibility.ariaLabel = 'Get directions to Carolina Futons showroom'; } catch (e) {}
+    }
+  } catch (e) {}
+  try {
+    const bookBtn = $w('#aboutBookBtn');
+    if (bookBtn) {
+      bookBtn.label = 'Book a Visit';
+      bookBtn.onClick(() => {
+        import('wix-location-frontend').then(({ to }) => to('/contact'));
+      });
+      try { bookBtn.accessibility.ariaLabel = 'Book a showroom visit'; } catch (e) {}
+    }
   } catch (e) {}
 }
 
