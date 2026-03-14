@@ -1,5 +1,5 @@
 // Sale.js - Sale & Clearance Page
-// Promotional banners, sale product listings, discount formatting,
+// Sale product listings, price display,
 // and price-match policy with engagement tracking
 import { getSaleProducts } from 'backend/productRecommendations.web';
 import { getActivePromotion } from 'backend/promotions.web';

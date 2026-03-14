@@ -1,6 +1,6 @@
 /**
  * salePageHelpers.js — Content and formatting for the Sale page.
- * Handles sale item display, discount formatting, and promotional banners.
+ * Handles sale item display, discount formatting, and sorting.
  */
 
 const SALE_INTRO = 'Handcrafted furniture at great prices. Browse our current sale and clearance items — quality you can trust, savings you\'ll love.';
@@ -27,7 +27,7 @@ export function getPriceMatchNote() {
  * Format a discount amount as a savings string.
  * @param {number} originalPrice
  * @param {number} salePrice
- * @returns {string} e.g. "Save $200" or "Save 17%"
+ * @returns {string} e.g. "Save $200" or "20% off"
  */
 export function formatDiscount(originalPrice, salePrice) {
   if (!originalPrice || !salePrice || salePrice >= originalPrice) return '';
