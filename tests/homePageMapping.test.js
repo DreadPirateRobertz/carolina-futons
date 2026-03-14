@@ -70,7 +70,7 @@ describe('home-page-mapping.json', () => {
       for (const [key, value] of Object.entries(entries)) {
         if (key.startsWith('_')) continue;
         if (typeof value !== 'object' || value === null) continue;
-        if (!value.templateNickname && value.templateNickname !== null) continue;
+        if (value.templateNickname === undefined) continue;
         expect(value.confidence, `${section}.${key} missing confidence`).toBeDefined();
         expect(value.note, `${section}.${key} missing note`).toBeDefined();
       }
@@ -255,13 +255,9 @@ describe('masterPage.js + Home.js element coverage', () => {
       (k) => !k.startsWith('_') && typeof mapping[k] === 'object',
     );
     for (const section of sections) {
-      for (const [key, value] of Object.entries(mapping[section])) {
+      for (const key of Object.keys(mapping[section])) {
         if (key.startsWith('_')) continue;
-        if (typeof value === 'string') {
-          mappedIds.add(key);
-        } else {
-          mappedIds.add(key);
-        }
+        mappedIds.add(key);
       }
     }
 
