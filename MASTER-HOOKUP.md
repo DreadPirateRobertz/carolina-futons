@@ -1465,7 +1465,32 @@ If you need to verify the code works before deploying, run from the repo root:
 npx vitest run
 ```
 
-**Current status:** 12,993+ tests across 326 files — all passing, zero failures.
+**Current status:** 13,237+ tests across 345 files — all passing, zero failures.
+
+### Test Import Conventions (CF-sdlo)
+
+Tests must **never** import from sibling repos (e.g., `../carolina-futons-stage3-velo/`). CI will reject PRs with external repo paths.
+
+**Allowed import patterns:**
+
+| Pattern | Example | When to use |
+|---------|---------|-------------|
+| Vitest alias | `import from 'backend/batchAltText.web'` | Backend/public modules (preferred) |
+| Relative to repo | `import from '../src/backend/foo.web.js'` | When alias doesn't exist yet |
+| Mock path | `import from 'wix-data'` | Wix platform modules (auto-aliased) |
+
+**Forbidden patterns:**
+
+| Pattern | Why |
+|---------|-----|
+| `../carolina-futons-stage3-velo/...` | Breaks CI — path doesn't exist in checkout |
+| `../../some-other-repo/...` | Same — external repos aren't available |
+| Absolute paths (`/Users/...`) | Machine-specific, breaks everywhere |
+
+**Adding a new alias:** If your test can't resolve a Wix-style import, add the alias to `vitest.config.js` in the `resolve.alias` block. Follow the existing pattern:
+```js
+'backend/myModule.web': path.resolve(__dirname, 'src/backend/myModule.web.js'),
+```
 
 ---
 
