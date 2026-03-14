@@ -203,6 +203,51 @@ export function initFooterSocial($w) {
         });
       } catch (e) {}
     });
+
+    // Fallback: fix template social bar links (http → https, missing Pinterest).
+    // The Tera template social bar uses http:// and omits Pinterest.
+    fixTemplateSocialBar($w, links);
+  } catch (e) {}
+}
+
+/**
+ * Fix the template's built-in social bar: upgrade http→https and set correct URLs.
+ * Works with Wix's native SocialBar element which exposes a .links array property.
+ * @param {Function} $w - Wix selector function
+ * @param {Array} socialLinks - Canonical social link data from footerContent
+ */
+function fixTemplateSocialBar($w, socialLinks) {
+  try {
+    // Wix social bars are queried by type selector
+    const socialBars = $w('SocialBar');
+    if (!socialBars || socialBars.length === 0) return;
+
+    for (let i = 0; i < socialBars.length; i++) {
+      try {
+        const bar = socialBars[i];
+        // Wix SocialBar has a .links property (array of {url, icon, label})
+        if (!bar.links) continue;
+
+        const updatedLinks = bar.links.map(link => {
+          const url = (link.url || '').toLowerCase();
+          // Fix http → https
+          let fixedUrl = link.url;
+          if (url.startsWith('http://')) {
+            fixedUrl = 'https://' + link.url.substring(7);
+          }
+          // Match to our canonical URLs
+          for (const canonical of socialLinks) {
+            if (url.includes(canonical.platform)) {
+              fixedUrl = canonical.url;
+              break;
+            }
+          }
+          return { ...link, url: fixedUrl };
+        });
+
+        bar.links = updatedLinks;
+      } catch (_) {}
+    }
   } catch (e) {}
 }
 
@@ -248,9 +293,24 @@ export function initFooterPayment($w) {
  * @param {Function} $w - Wix selector function
  */
 export function initFooterCopyright($w) {
+  const year = new Date().getFullYear();
+  const copyrightText = `\u00A9 ${year} Carolina Futons. All rights reserved.`;
+
+  try { $w('#footerCopyright').text = copyrightText; } catch (e) {}
+
+  // Fallback: replace template tagline with copyright if the dedicated element
+  // doesn't exist yet. The Tera template ships with a tagline that creates
+  // duplicate bottom text once #footerCopyright is added.
   try {
-    const year = new Date().getFullYear();
-    $w('#footerCopyright').text = `\u00A9 ${year} Carolina Futons. All rights reserved.`;
+    const allTexts = $w('Text');
+    for (let i = 0; i < allTexts.length; i++) {
+      try {
+        const el = allTexts[i];
+        if (el.text && el.text.includes('Where Comfort Meets Design')) {
+          el.text = copyrightText;
+        }
+      } catch (_) {}
+    }
   } catch (e) {}
 }
 
