@@ -73,6 +73,7 @@ export const getActivePromotion = webMethod(
         endDate: promo.endDate,
         discountCode: promo.discountCode,
         discountPercent: promo.discountPercent,
+        bannerMessage: promo.bannerMessage,
         ctaUrl: promo.ctaUrl,
         ctaText: promo.ctaText,
         products,
