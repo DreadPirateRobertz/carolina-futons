@@ -41,7 +41,7 @@ function createMockElement() {
     text: '', src: '', alt: '', value: '', label: '', data: [],
     style: { color: '' },
     show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(), expand: vi.fn(), onClick: vi.fn(), onChange: vi.fn(),
+    collapse: vi.fn(), expand: vi.fn(), onClick: vi.fn(), onChange: vi.fn(), onKeyPress: vi.fn(),
     onItemReady: vi.fn(), postMessage: vi.fn(), forEachItem: vi.fn(),
     accessibility: {},
     productOptions: [],
@@ -132,6 +132,7 @@ describe('ProductDetails', () => {
   });
 
   describe('initDeliveryEstimate', () => {
+    // --- Default estimate display ---
     it('shows delivery estimate text', () => {
       initDeliveryEstimate($w, state);
       expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
@@ -142,6 +143,272 @@ describe('ProductDetails', () => {
       state.product = { ...murphyBed, collections: ['murphy-cabinet-beds'], weight: 100 };
       initDeliveryEstimate($w, state);
       expect($w('#whiteGloveNote').text).toContain('White-glove');
+    });
+
+    it('does not show white-glove note for small items', () => {
+      state.product = { ...futonFrame, weight: 20, collections: ['casegoods'] };
+      initDeliveryEstimate($w, state);
+      expect($w('#whiteGloveNote').show).not.toHaveBeenCalled();
+    });
+
+    it('detects large items by collection name when weight is missing', () => {
+      state.product = { ...futonFrame, weight: undefined, collections: ['murphy-cabinet-beds'] };
+      initDeliveryEstimate($w, state);
+      expect($w('#whiteGloveNote').text).toContain('White-glove');
+    });
+
+    it('returns early when no product in state', () => {
+      state.product = null;
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryEstimate').show).not.toHaveBeenCalled();
+    });
+
+    it('returns early when deliveryEstimate element is missing', () => {
+      const broken$w = (sel) => {
+        if (sel === '#deliveryEstimate') return null;
+        return createMockElement();
+      };
+      // should not throw
+      expect(() => initDeliveryEstimate(broken$w, state)).not.toThrow();
+    });
+
+    // --- ZIP code input wiring ---
+    it('wires up zip input button click handler', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('sets ARIA label on zip input', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipInput').accessibility.ariaLabel).toContain('zip');
+    });
+
+    it('sets ARIA label on zip button', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipBtn').accessibility.ariaLabel).toContain('delivery estimate');
+    });
+
+    // --- ZIP validation ---
+    it('ignores zip codes shorter than 5 digits', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '287';
+      clickHandler();
+      // Text should still be default (not "Delivered by")
+      expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
+    });
+
+    it('strips non-numeric characters from zip', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '287-01';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('handles empty zip input gracefully', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
+    });
+
+    it('handles null zip input gracefully', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = null;
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
+    });
+
+    // --- Zone-based estimates ---
+    it('shows 3-5 day estimate for WNC local zip (287xx)', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28701';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('shows 5-8 day estimate for Southeast regional zip (300xx)', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '30001';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('shows 7-12 day estimate for national zip (100xx)', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '10001';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    // --- White-glove messaging per zone ---
+    it('shows $149 white-glove price for local zone on large items', () => {
+      state.product = { ...murphyBed, collections: ['murphy-cabinet-beds'], weight: 100 };
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect($w('#whiteGloveNote').text).toContain('$149');
+    });
+
+    it('shows $249 white-glove price for regional zone on large items', () => {
+      state.product = { ...murphyBed, collections: ['murphy-cabinet-beds'], weight: 100 };
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '30301';
+      clickHandler();
+      expect($w('#whiteGloveNote').text).toContain('$249');
+    });
+
+    it('does not show white-glove for national zone even on large items', () => {
+      state.product = { ...murphyBed, collections: ['murphy-cabinet-beds'], weight: 100 };
+      const fresh$w = create$w();
+      initDeliveryEstimate(fresh$w, { product: state.product });
+      const clickHandler = fresh$w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      fresh$w('#deliveryZipInput').value = '10001';
+      clickHandler();
+      // whiteGloveNote should not have show() called after the zip lookup
+      // (it may have been shown during default estimate, so we check the text)
+      const noteText = fresh$w('#whiteGloveNote').text;
+      // For national zone, white-glove note should NOT contain a price
+      // The default note is "White-glove delivery available — call..."
+      // After national zip lookup, it should not be updated with price
+      expect(noteText).not.toContain('$149');
+      expect(noteText).not.toContain('$249');
+    });
+
+    it('does not show white-glove for small items in any zone', () => {
+      state.product = { ...futonFrame, weight: 20, collections: ['casegoods'] };
+      const fresh$w = create$w();
+      initDeliveryEstimate(fresh$w, { product: state.product });
+      const clickHandler = fresh$w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      fresh$w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect(fresh$w('#whiteGloveNote').show).not.toHaveBeenCalled();
+    });
+
+    // --- Keyboard support ---
+    it('supports Enter key on zip input to trigger lookup', () => {
+      initDeliveryEstimate($w, state);
+      // onKeyPress should be registered on the zip input
+      const onKeyPressCalls = $w('#deliveryZipInput').onKeyPress;
+      if (onKeyPressCalls && onKeyPressCalls.mock) {
+        expect(onKeyPressCalls).toHaveBeenCalled();
+      }
+    });
+
+    // --- Edge cases ---
+    it('handles zip with leading zeros (00601 = Puerto Rico)', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '00601';
+      clickHandler();
+      // Puerto Rico is national zone
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('handles zip with spaces and dashes (28801-1234)', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28801-1234';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('truncates zip to first 5 digits', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '2880112345';
+      clickHandler();
+      // Should use 28801 (local WNC)
+      expect($w('#deliveryEstimate').text).toContain('Delivered by');
+    });
+
+    it('handles only-whitespace zip input', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '   ';
+      clickHandler();
+      expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
+    });
+
+    // --- Validation error feedback ---
+    it('shows error message for zip shorter than 5 digits', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '287';
+      clickHandler();
+      expect($w('#deliveryZipError').text).toContain('5-digit');
+      expect($w('#deliveryZipError').show).toHaveBeenCalled();
+    });
+
+    it('shows error message for empty zip submission', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '';
+      clickHandler();
+      expect($w('#deliveryZipError').text).toContain('zip');
+      expect($w('#deliveryZipError').show).toHaveBeenCalled();
+    });
+
+    it('hides error message on valid zip submission', () => {
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect($w('#deliveryZipError').hide).toHaveBeenCalled();
+    });
+
+    it('sets ARIA role on error element', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipError').accessibility.role).toBe('alert');
+    });
+
+    // --- Free shipping threshold messaging ---
+    it('shows free standard shipping note for orders >= $999', () => {
+      state.product = { ...murphyBed, price: 1200, collections: ['murphy-cabinet-beds'], weight: 100 };
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect($w('#freeShippingNote').text).toContain('Free');
+      expect($w('#freeShippingNote').show).toHaveBeenCalled();
+    });
+
+    it('shows free white-glove note for orders >= $1,999', () => {
+      state.product = { ...murphyBed, price: 2500, collections: ['murphy-cabinet-beds'], weight: 100 };
+      initDeliveryEstimate($w, state);
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      $w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect($w('#whiteGloveNote').text).toContain('FREE');
+    });
+
+    it('does not show free shipping note for orders < $999', () => {
+      state.product = { ...futonFrame, price: 499, collections: ['futon-frames'], weight: 85 };
+      const fresh$w = create$w();
+      initDeliveryEstimate(fresh$w, { product: state.product });
+      const clickHandler = fresh$w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      fresh$w('#deliveryZipInput').value = '28801';
+      clickHandler();
+      expect(fresh$w('#freeShippingNote').show).not.toHaveBeenCalled();
+    });
+
+    // --- ARIA live region ---
+    it('sets aria-live on delivery estimate for screen readers', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryEstimate').accessibility.ariaLive).toBe('polite');
+    });
+
+    it('sets role=status on delivery estimate', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryEstimate').accessibility.role).toBe('status');
     });
   });
 

@@ -166,6 +166,12 @@ export function initDeliveryEstimate($w, state) {
   try {
     const el = $w('#deliveryEstimate');
     if (!el || !state.product) return;
+    try { el.accessibility.ariaLive = 'polite'; } catch (e) {}
+    try { el.accessibility.role = 'status'; } catch (e) {}
+    try {
+      const errEl = $w('#deliveryZipError');
+      if (errEl) { errEl.accessibility.role = 'alert'; }
+    } catch (e) {}
     showDefaultEstimate($w, state);
     initZipCodeInput($w, state);
   } catch (e) {}
@@ -210,13 +216,21 @@ function initZipCodeInput($w, state) {
 function updateEstimateForZip($w, state, rawZip) {
   try {
     const zip = (rawZip || '').trim().replace(/[^0-9]/g, '').slice(0, 5);
-    if (zip.length !== 5) return;
+    if (zip.length !== 5) {
+      try {
+        const errEl = $w('#deliveryZipError');
+        if (errEl) {
+          errEl.text = 'Please enter a valid 5-digit zip code';
+          errEl.show();
+        }
+      } catch (e) {}
+      return;
+    }
+    // Hide any previous error
+    try { $w('#deliveryZipError').hide(); } catch (e) {}
     const prefix = parseInt(zip.slice(0, 3), 10);
     const today = new Date();
     const opts = { month: 'short', day: 'numeric' };
-    // Local WNC (287–289): 3–5 business days
-    // Southeast (270–399): 5–8 business days
-    // National: 7–12 business days
     let minDays, maxDays, zone;
     if (prefix >= 287 && prefix <= 289) {
       minDays = 3; maxDays = 5; zone = 'local';
@@ -230,6 +244,17 @@ function updateEstimateForZip($w, state, rawZip) {
     const el = $w('#deliveryEstimate');
     el.text = `Delivered by ${early} \u2013 ${late}`;
     el.show();
+    // Free shipping threshold messaging
+    try {
+      const price = state.product.price || 0;
+      if (price >= 999) {
+        const freeNote = $w('#freeShippingNote');
+        if (freeNote) {
+          freeNote.text = 'Free standard shipping on this order!';
+          freeNote.show();
+        }
+      }
+    } catch (e) {}
     // Show white-glove for large items in local/regional zones
     try {
       const isLarge = state.product.weight > 50 ||
@@ -237,8 +262,13 @@ function updateEstimateForZip($w, state, rawZip) {
       if (isLarge && (zone === 'local' || zone === 'regional')) {
         const note = $w('#whiteGloveNote');
         if (note) {
-          const price = zone === 'local' ? '$149' : '$249';
-          note.text = `White-glove delivery available (${price}) \u2014 call (828) 252-9449 to schedule`;
+          const productPrice = state.product.price || 0;
+          if (productPrice >= 1999) {
+            note.text = `FREE white-glove delivery included \u2014 we\u2019ll schedule your Wed\u2013Sat delivery window`;
+          } else {
+            const wgPrice = zone === 'local' ? '$149' : '$249';
+            note.text = `White-glove delivery available (${wgPrice}) \u2014 call (828) 252-9449 to schedule`;
+          }
           note.show();
         }
       }
