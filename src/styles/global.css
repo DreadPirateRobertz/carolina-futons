@@ -121,14 +121,18 @@ h4.font_4,
    ═══════════════════════════════════════════════════════════════════════ */
 
 .header {
+  border-bottom: none !important;
+  padding-bottom: 180px !important;
+}
+
+/* Wix renders bg via colorUnderlay (pos:absolute, 100%x100%) — must target IT */
+.header [data-testid="colorUnderlay"] {
   background:
     /* CF logo overlaid at top-left */
     url("https://static.wixstatic.com/media/e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg/v1/fill/w_160,h_77,al_c,q_80/CF_SQUARE-blue.jpg") 24px 48px / 160px 77px no-repeat,
-    /* Mountain silhouette — high contrast, simple 3-layer, tall viewBox */
+    /* Blue Ridge mountain silhouette — 3 layers, high contrast */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Crect width='1440' height='200' fill='%23D4E8F0'/%3E%3Cpath d='M0 200 L0 60 Q120 15 280 50 Q440 0 620 40 Q780 8 960 45 Q1120 5 1300 42 Q1400 20 1440 55 L1440 200Z' fill='%237EAEC2'/%3E%3Cpath d='M0 200 L0 95 Q160 45 340 80 Q520 30 720 70 Q880 35 1080 72 Q1240 40 1440 75 L1440 200Z' fill='%234A7B91'/%3E%3Cpath d='M0 200 L0 130 Q140 85 300 115 Q480 78 680 108 Q840 82 1040 110 Q1220 85 1440 112 L1440 200Z' fill='%231E3A5F'/%3E%3C/svg%3E") bottom/100% 180px no-repeat,
     #D4E8F0 !important;
-  border-bottom: none !important;
-  padding-bottom: 180px !important;
 }
 
 /* Announcement bar text */
@@ -354,11 +358,14 @@ h4.font_4,
    ═══════════════════════════════════════════════════════════════════════ */
 
 .footer {
+  padding-top: 120px !important;
+}
+
+/* Footer colorUnderlay — mountain ridgeline on dark background */
+.footer [data-testid="colorUnderlay"] {
   background:
-    /* Mountain ridgeline at top — inverted, high contrast against dark bg */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 150' preserveAspectRatio='none'%3E%3Crect width='1440' height='150' fill='%231E2A3A'/%3E%3Cpath d='M0 0 L0 95 Q140 130 300 105 Q480 140 680 110 Q840 135 1040 108 Q1220 132 1440 105 L1440 0Z' fill='%23253848'/%3E%3Cpath d='M0 0 L0 60 Q160 100 340 72 Q520 105 720 78 Q880 102 1080 75 Q1240 98 1440 70 L1440 0Z' fill='%232D4558'/%3E%3Cpath d='M0 0 L0 30 Q120 65 280 40 Q440 68 640 42 Q800 62 1000 38 Q1200 60 1440 35 L1440 0Z' fill='%23375568'/%3E%3C/svg%3E") top/100% 120px no-repeat,
     #1E2A3A !important;
-  padding-top: 120px !important;
 }
 
 .footer p,
@@ -695,12 +702,16 @@ h4.font_4,
 
   /* Simplified header/footer on mobile */
   .header {
-    background: #FFFFFF !important;
     border-bottom: 2px solid #E2E8F0 !important;
     padding-bottom: 10px !important;
   }
+  .header [data-testid="colorUnderlay"] {
+    background: #FFFFFF !important;
+  }
   .footer {
     padding-top: 24px !important;
+  }
+  .footer [data-testid="colorUnderlay"] {
     background: #1E2A3A !important;
   }
 }
