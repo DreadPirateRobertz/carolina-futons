@@ -13,6 +13,7 @@ import {
   trackRecentlyViewed,
   getRecentlyViewed,
   getSimilarProducts,
+  getCustomersAlsoBought,
 } from '../src/backend/productRecommendations.web.js';
 
 beforeEach(() => {
@@ -514,6 +515,22 @@ describe('Call-for-price product filtering (CF-hma6)', () => {
 
   it('getSimilarProducts excludes call-for-price products', async () => {
     const result = await getSimilarProducts('prod-frame-001', { priceRange: 1 });
+    const ids = result.products.map(p => p._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getSaleProducts excludes call-for-price products', async () => {
+    const results = await getSaleProducts(20);
+    const ids = results.map(r => r._id);
+    expect(ids).not.toContain('prod-cfp-001');
+    expect(ids).not.toContain('prod-cfp-002');
+  });
+
+  it('getCustomersAlsoBought excludes call-for-price products (fallback path)', async () => {
+    // No orders → falls back to category-based related products
+    // callForPriceProduct is in 'mattresses', should be excluded
+    const result = await getCustomersAlsoBought('prod-matt-001', 10);
     const ids = result.products.map(p => p._id);
     expect(ids).not.toContain('prod-cfp-001');
     expect(ids).not.toContain('prod-cfp-002');
