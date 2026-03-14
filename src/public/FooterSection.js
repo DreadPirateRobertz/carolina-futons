@@ -367,6 +367,40 @@ export function initFooterLogo($w) {
 }
 
 /**
+ * Fallback: scan all text elements for wrong template contact info and replace
+ * with correct CF data. Works even when editor nicknames aren't assigned.
+ * CF-1zxp: Footer wrong city/hours
+ * @param {Function} $w - Wix selector function
+ */
+export function fixFooterContactFallback($w) {
+  try {
+    const info = getStoreInfo();
+    const hoursText = info.hours.map(h => `${h.days}: ${h.time}`).join('\n');
+
+    // Known wrong values from the tera template
+    const replacements = [
+      { wrong: '(828) 327-8030', correct: info.phone },
+      { wrong: 'Hickory, NC', correct: info.address },
+      { wrong: 'Monday-Friday 9:00am - 5:00pm EST', correct: hoursText },
+    ];
+
+    const allTexts = $w('Text');
+    for (let i = 0; i < allTexts.length; i++) {
+      try {
+        const el = allTexts[i];
+        const txt = el.text;
+        if (!txt) continue;
+        for (const r of replacements) {
+          if (txt.includes(r.wrong)) {
+            el.text = txt.replace(r.wrong, r.correct);
+          }
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+
+/**
  * Initialize entire footer — orchestrates all subsections.
  * @param {Function} $w - Wix selector function
  */
@@ -374,6 +408,7 @@ export function initFooter($w) {
   initMountainDivider($w);
   initFooterLogo($w);
   initFooterColumns($w);
+  fixFooterContactFallback($w);
   initFooterNewsletter($w);
   initFooterSocial($w);
   initFooterTrustBadges($w);
