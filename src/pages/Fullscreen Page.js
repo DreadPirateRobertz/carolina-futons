@@ -12,6 +12,7 @@ import {
 
 let currentCategory = null;
 let allVideos = [];
+let currentProductSlug = null;
 
 $w.onReady(function () {
   initBackToTop($w);
@@ -64,6 +65,17 @@ function initVideoGrid() {
       }, { ariaLabel: `Play ${itemData.title} video`, role: 'button' });
     });
 
+    // Register product link handler once (slug updated via playVideo)
+    try {
+      makeClickable($w('#videoProductLink'), () => {
+        if (currentProductSlug) {
+          import('wix-location-frontend').then(({ to }) => {
+            to(`/product-page/${currentProductSlug}`);
+          });
+        }
+      }, { ariaLabel: 'Shop this product' });
+    } catch (e) {}
+
     repeater.data = allVideos;
   } catch (e) {}
 }
@@ -89,7 +101,7 @@ function initCategoryFilters() {
       try { $item('#categoryLabel').accessibility.tabIndex = 0; } catch (e) {}
 
       const selectCategory = () => {
-        currentCategory = itemData.id || null;
+        currentCategory = itemData.id != null && itemData.id !== '' ? itemData.id : null;
         applyFilter();
         trackEvent('video_filter', { category: itemData.label });
         announce($w, `Showing ${itemData.label.toLowerCase()}`);
@@ -133,7 +145,7 @@ function applyFilter() {
 function playVideo(videoData) {
   try {
     const player = $w('#videoPlayer');
-    if (!player) return;
+    if (!player || !videoData.videoUrl) return;
 
     player.src = videoData.videoUrl;
     player.play();
@@ -143,18 +155,15 @@ function playVideo(videoData) {
     try { $w('#nowPlayingTitle').text = videoData.title; } catch (e) {}
     try { $w('#videoPlayerContainer').expand(); } catch (e) {}
 
-    // Show product link if video has a product slug
+    // Update product link (handler registered once in initVideoGrid)
     if (videoData.productSlug) {
+      currentProductSlug = videoData.productSlug;
       try {
         $w('#videoProductLink').label = `Shop the ${videoData.title}`;
         $w('#videoProductLink').show();
-        makeClickable($w('#videoProductLink'), () => {
-          import('wix-location-frontend').then(({ to }) => {
-            to(`/product-page/${videoData.productSlug}`);
-          });
-        }, { ariaLabel: `Shop the ${videoData.title}` });
       } catch (e) {}
     } else {
+      currentProductSlug = null;
       try { $w('#videoProductLink').hide(); } catch (e) {}
     }
   } catch (e) {}

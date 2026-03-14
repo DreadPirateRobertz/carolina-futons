@@ -351,22 +351,25 @@ describe('Fullscreen Page — Product Videos', () => {
       expect(getEl('#videoProductLink').hide).toHaveBeenCalled();
     });
 
-    it('registers makeClickable on product link for navigation', async () => {
-      await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'v.mp4', category: 'futon', productSlug: 'asheville-futon-frame' });
-      expect(makeClickable).toHaveBeenCalledWith(
-        getEl('#videoProductLink'),
-        expect.any(Function),
-        { ariaLabel: 'Shop the Asheville' }
-      );
+    it('does not play when videoUrl is missing', async () => {
+      await clickVideoThumb({ _id: 'v1', title: 'Bad', category: 'futon' });
+      expect(getEl('#videoPlayer').play).not.toHaveBeenCalled();
     });
 
-    it('product link navigates to product page', async () => {
+    it('registers makeClickable on product link once during init', async () => {
+      await onReadyHandler();
+      const linkCalls = makeClickable.mock.calls.filter(c => c[0] === getEl('#videoProductLink'));
+      expect(linkCalls).toHaveLength(1);
+      expect(linkCalls[0][2]).toEqual({ ariaLabel: 'Shop this product' });
+    });
+
+    it('product link navigates to product page using stored slug', async () => {
       const wixLocation = await import('wix-location-frontend');
       await clickVideoThumb({ _id: 'v1', title: 'Asheville', videoUrl: 'v.mp4', category: 'futon', productSlug: 'asheville-futon-frame' });
 
-      // Invoke the makeClickable handler for the product link
+      // Invoke the makeClickable handler registered during init
       const linkCalls = makeClickable.mock.calls.filter(c => c[0] === getEl('#videoProductLink'));
-      const navHandler = linkCalls[linkCalls.length - 1][1];
+      const navHandler = linkCalls[0][1];
       navHandler();
 
       await new Promise(r => setTimeout(r, 10));
