@@ -88,6 +88,8 @@ export default defineConfig({
       'backend/errorMonitoring.web': path.resolve(__dirname, 'src/backend/errorMonitoring.web.js'),
       'backend/liveChat.web': path.resolve(__dirname, 'src/backend/liveChat.web.js'),
       // Public modules
+      'public/carolinaFutonsLogo.js': path.resolve(__dirname, 'src/public/carolinaFutonsLogo.js'),
+      'public/carolinaFutonsLogo': path.resolve(__dirname, 'src/public/carolinaFutonsLogo.js'),
       'public/galleryHelpers.js': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
       'public/galleryHelpers': path.resolve(__dirname, 'src/public/galleryHelpers.js'),
       'public/designTokens.js': path.resolve(__dirname, 'src/public/designTokens.js'),
