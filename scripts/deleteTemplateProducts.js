@@ -3,9 +3,9 @@
  * deleteTemplateProducts.js — Remove Furniture Store template products from Wix Store.
  *
  * The Furniture Store template (#3563) ships with ~24 sample products (MODO, NYX,
- * RAVEN, etc.). This script queries all products, identifies template products
- * (those NOT in our Carolina Futons catalog), and deletes them via the Wix Stores
- * REST API.
+ * RAVEN, etc.). This script queries all products, classifies them into three
+ * buckets (CF products, template products, unknown), and deletes only confirmed
+ * template products. Unknown products are kept (conservative default).
  *
  * Usage:
  *   WIX_BACKEND_KEY=IST.xxx WIX_SITE_ID=xxx node scripts/deleteTemplateProducts.js [--dry-run]
@@ -29,7 +29,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 // ── Known CF product names (from our scraped catalog) ──────────────
 // Products with these names are OURS — do NOT delete them.
 
-function loadCFProductNames() {
+export function loadCFProductNames() {
   const names = new Set();
   const catalogFiles = [
     resolve(__dirname, '..', 'content', 'scraped-products-16-30.json'),
@@ -43,7 +43,9 @@ function loadCFProductNames() {
         if (product.name) names.add(product.name.trim().toLowerCase());
       }
     } catch (e) {
-      // File may not exist — that's ok, we'll be conservative
+      if (e.code !== 'ENOENT') {
+        console.error(`Warning: failed to read catalog file ${file}: ${e.message}`);
+      }
     }
   }
 
@@ -63,8 +65,10 @@ function loadCFProductNames() {
 
 // ── Known template product name patterns ───────────────────────────
 // These are products from the Furniture Store template #3563.
+// Note: Some short names (aria, sage, etc.) could collide with CF names.
+// CF match takes priority over template match, so collisions are safe.
 
-const TEMPLATE_PRODUCT_PATTERNS = [
+export const TEMPLATE_PRODUCT_PATTERNS = [
   'modo', 'nyx', 'raven', 'oslo', 'aria', 'luna', 'nova', 'zen',
   'cleo', 'milo', 'otto', 'vega', 'aura', 'echo', 'iris', 'onyx',
   'jade', 'opal', 'ruby', 'sage', 'teak', 'wren', 'yuma', 'zara',
@@ -72,11 +76,11 @@ const TEMPLATE_PRODUCT_PATTERNS = [
 
 /**
  * Query all products from Wix Stores.
- * @param {string} apiKey - Wix API key
+ * @param {string} token - Wix IST (Installation Security Token)
  * @param {string} siteId - Wix site ID
  * @returns {Promise<Array>} All products
  */
-async function queryAllProducts(apiKey, siteId) {
+async function queryAllProducts(token, siteId) {
   const products = [];
   let offset = 0;
   const limit = 100;
@@ -86,7 +90,7 @@ async function queryAllProducts(apiKey, siteId) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': apiKey,
+        'Authorization': token,
         'wix-site-id': siteId,
       },
       body: JSON.stringify({
@@ -115,14 +119,15 @@ async function queryAllProducts(apiKey, siteId) {
 /**
  * Delete a product by ID.
  * @param {string} productId
- * @param {string} apiKey
+ * @param {string} token - Wix IST
  * @param {string} siteId
+ * @throws {Error} If the API returns a non-OK response
  */
-async function deleteProduct(productId, apiKey, siteId) {
+async function deleteProduct(productId, token, siteId) {
   const res = await fetch(`${WIX_STORES_API}/products/${productId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': apiKey,
+      'Authorization': token,
       'wix-site-id': siteId,
     },
   });
@@ -134,14 +139,16 @@ async function deleteProduct(productId, apiKey, siteId) {
 }
 
 /**
- * Identify template products vs CF products.
+ * Classify products into three buckets: confirmed CF, confirmed template,
+ * and unknown (routed to keep/CF bucket for safety).
+ * CF match takes priority — if a product matches both CF and template, it's kept.
  * @param {Array} products - All products from Wix
  * @param {Set<string>} cfNames - Known CF product names (lowercase)
- * @returns {{ template: Array, cf: Array }}
+ * @returns {{ template: Array, keep: Array }}
  */
-function classifyProducts(products, cfNames) {
+export function classifyProducts(products, cfNames) {
   const template = [];
-  const cf = [];
+  const keep = [];
 
   for (const product of products) {
     const name = (product.name || '').trim();
@@ -161,26 +168,26 @@ function classifyProducts(products, cfNames) {
     );
 
     if (isCF) {
-      cf.push(product);
+      keep.push(product);
     } else if (isTemplateMatch) {
       template.push(product);
     } else {
-      // Unknown — err on the side of caution, classify as CF (don't delete)
+      // Unknown — err on the side of caution, keep it
       console.log(`  ⚠ Unknown product (keeping): "${name}" (${product.id})`);
-      cf.push(product);
+      keep.push(product);
     }
   }
 
-  return { template, cf };
+  return { template, keep };
 }
 
 // ── Main ────────────────────────────────────────────────────────────
 
 async function main() {
-  const apiKey = process.env.WIX_BACKEND_KEY;
+  const token = process.env.WIX_BACKEND_KEY;
   const siteId = process.env.WIX_SITE_ID;
 
-  if (!apiKey || !siteId) {
+  if (!token || !siteId) {
     console.error('Missing WIX_BACKEND_KEY or WIX_SITE_ID environment variables.');
     console.error('Usage: WIX_BACKEND_KEY=IST.xxx WIX_SITE_ID=xxx node scripts/deleteTemplateProducts.js [--dry-run]');
     process.exit(1);
@@ -194,15 +201,20 @@ async function main() {
 
   // Query all products
   console.log('Querying all products from Wix Stores...');
-  const allProducts = await queryAllProducts(apiKey, siteId);
+  const allProducts = await queryAllProducts(token, siteId);
   console.log(`Found ${allProducts.length} total products\n`);
 
+  if (allProducts.length === 0) {
+    console.error('⚠ No products returned. Check your WIX_BACKEND_KEY and WIX_SITE_ID.');
+    process.exit(1);
+  }
+
   // Classify
-  const { template, cf } = classifyProducts(allProducts, cfNames);
+  const { template, keep } = classifyProducts(allProducts, cfNames);
 
   console.log(`\nClassification:`);
-  console.log(`  ✅ CF products (keeping): ${cf.length}`);
-  console.log(`  🗑️  Template products (deleting): ${template.length}\n`);
+  console.log(`  ✅ Keeping: ${keep.length}`);
+  console.log(`  🗑️  Deleting: ${template.length}\n`);
 
   if (template.length === 0) {
     console.log('No template products found. Nothing to delete.');
@@ -227,7 +239,7 @@ async function main() {
 
   for (const p of template) {
     try {
-      await deleteProduct(p.id, apiKey, siteId);
+      await deleteProduct(p.id, token, siteId);
       deleted++;
       console.log(`  ✅ Deleted "${p.name}" (${p.id})`);
     } catch (err) {
@@ -237,9 +249,17 @@ async function main() {
   }
 
   console.log(`\nDone. Deleted: ${deleted}, Failed: ${failed}`);
+
+  if (failed > 0) {
+    process.exit(1);
+  }
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Only run when executed directly (not when imported by tests)
+const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isDirectRun) {
+  main().catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}
