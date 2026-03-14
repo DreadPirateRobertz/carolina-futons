@@ -3,6 +3,8 @@
   "extractedFrom": "Wix Studio Editor via documentServices API",
   "extractedAt": "2026-03-13",
   "totalComponents": 164,
+  "listedComponents": 117,
+  "componentCountNote": "164 total in editor; 117 listed here. Gap of 47 includes system/internal components (AppController, HiddenCollections, PagesContainer), nested sub-components within TPAWidgets, and auto-generated responsive layout containers.",
   "sections": {
     "section1": { "label": "Welcome/Hero", "parent": "c1dmp" },
     "section10": { "label": "Store Categories", "parent": "c1dmp" },
