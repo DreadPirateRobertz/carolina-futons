@@ -520,11 +520,12 @@ function initProductGrid() {
 
       // Product image with placeholder fallback + SEO alt text
       const category = wixLocationFrontend.path?.[0] || '';
-      setCardImage($item('#gridImage'), itemData, category, getImageDimensions('productGridCard'));
-      $item('#gridImage').alt = buildAltText(itemData);
+      const gridImage = $item('#gridImage');
+      setCardImage(gridImage, itemData, category, getImageDimensions('productGridCard'));
+      try { if (gridImage) gridImage.alt = buildAltText(itemData); } catch (e) {}
 
       // Product info
-      $item('#gridName').text = itemData.name;
+      try { $item('#gridName').text = itemData.name; } catch (e) {}
 
       // Price with sale strikethrough
       try {
@@ -877,7 +878,7 @@ function showEmptyState(currentPath) {
     // Show illustration placeholder
     try { $w('#emptyStateIllustration').show(); } catch (e) {}
 
-    $w('#emptyStateSection').show();
+    try { $w('#emptyStateSection').show(); } catch (e) {}
   } catch (e) {}
 }
 
@@ -932,7 +933,7 @@ function initRecentlyViewed() {
       try { makeClickable($item('#recentName'), navigateToProduct, { ariaLabel: `View ${itemData.name} details` }); } catch (e) {}
     });
 
-    $w('#recentlyViewedSection').show();
+    try { $w('#recentlyViewedSection').show(); } catch (e2) {}
   } catch (e) {
     try { $w('#recentlyViewedSection').hide(); } catch (e2) {}
   }
@@ -1304,7 +1305,7 @@ function renderFilterChips() {
       $w('#clearAllFiltersChip').show();
     } catch (e) {}
 
-    container.show();
+    try { container.show(); } catch (e) {}
     announce($w, `${chips.length} filter${chips.length !== 1 ? 's' : ''} active`);
   } catch (e) {}
 }
