@@ -133,6 +133,11 @@ async function initProductPage() {
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
       { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
+      // Assembly guide link (fetches by SKU, shows PDF/video)
+      { name: 'assemblyGuide', init: async () => {
+        const m = await import('public/ProductAssemblyGuide.js');
+        await m.initProductAssemblyGuide($w, state);
+      }, critical: false },
       // Size guide modal (lazy-loads ProductSizeGuide components on open)
       { name: 'sizeGuide', init: async () => {
         const m = await import('public/SizeGuideModal.js');
