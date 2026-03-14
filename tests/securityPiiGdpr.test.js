@@ -85,7 +85,7 @@ describe('Security: timingSafeEqual implementation', () => {
 // ── facebookCustomAudience endpoint auth ────────────────────────────────
 
 describe('Security: facebookCustomAudience authentication', () => {
-  const src = readFileSync(HTTP_FUNCTIONS, 'utf-8');
+  const src = readFile(HTTP_FUNCTIONS);
 
   it('requires x-fb-audience-secret header', () => {
     expect(src).toContain("request.headers['x-fb-audience-secret']");
@@ -226,15 +226,11 @@ describe('Security: lookupReturn prevents information disclosure', () => {
       errorMessages.push(match[1]);
     }
 
-    // Find the "not found" and "email mismatch" errors
-    const notFoundError = errorMessages.find(m => m.includes('not found') && !m.includes('email'));
-    const mismatchError = errorMessages.find(m => m.includes('not found') && m.includes('email'));
-
-    // Both error messages should be identical to prevent order enumeration
-    // After fix: both say "Order not found. Please check your order number and email."
-    if (notFoundError && mismatchError) {
-      expect(notFoundError).toBe(mismatchError);
-    }
+    // All "not found" error messages must be identical
+    const notFoundErrors = errorMessages.filter(m => m.includes('not found'));
+    expect(notFoundErrors.length).toBeGreaterThanOrEqual(2);
+    const unique = [...new Set(notFoundErrors)];
+    expect(unique).toHaveLength(1);
   });
 
   it('does not expose order details in error responses', () => {
@@ -448,7 +444,7 @@ describe('Security: returns admin operations are protected', () => {
   adminFunctions.forEach((fn) => {
     it(`${fn} uses Permissions.Admin`, () => {
       const idx = src.indexOf(fn);
-      if (idx === -1) return;
+      expect(idx).not.toBe(-1);
       const block = src.substring(idx, idx + 200);
       expect(block).toContain('Permissions.Admin');
     });
