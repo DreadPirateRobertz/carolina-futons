@@ -231,10 +231,21 @@ ds.components.code.setNickname(compRef, 'siteLogo');
 - [ ] **Step 6: Set footer logo**
   Find the footer logo element (`text41` per remap JSON) and set it to styled "Carolina Futons" text matching the header.
 
-- [ ] **Step 7: Verify footer renames**
+- [ ] **Step 7: Verify social links**
+  Check footer social link elements. If they're text paragraphs ("Facebook", "Instagram", etc.), set them as clickable links:
+  - Facebook → https://www.facebook.com/carolinafutons
+  - Instagram → https://www.instagram.com/carolinafutons
+  - TikTok → https://www.tiktok.com/@carolinafutons
+  - Pinterest → https://www.pinterest.com/carolinafutons
+  Verify by inspecting link data on each element.
+
+- [ ] **Step 8: Test newsletter form**
+  After publish (Task 8), navigate to live site footer. Enter a test email in the "Stay Inspired" form. Click Submit. Verify no error is thrown and the form widget responds (success message or redirect).
+
+- [ ] **Step 9: Verify footer renames**
   Same verification pattern as header — check all renamed elements exist.
 
-- [ ] **Step 8: Save editor**
+- [ ] **Step 10: Save editor**
 
 ---
 
@@ -271,24 +282,32 @@ The hero image is `imageX12` (nickname) inside `section1` (Welcome/Hero section)
   ```
 
 - [ ] **Step 2: Identify best hero image from CDN**
-  Browse the CF product images to find a lifestyle/room-setting shot. Check what's in the downloaded images:
-  ```bash
-  ls /tmp/cf-photo-migration/downloads/ | head -20
-  ```
-  Or use a known good CDN URL from the existing catalog. The current `placeholderImages.js` has a homepage hero URL — check PR #297 for the updated CDN URL.
+  The hero image MUST be a `wix:image://` URI or `static.wixstatic.com` URL already in the Wix media manager — NOT a local file path (`/tmp/` files cannot be set via documentServices).
+
+  **Option A (preferred):** Use an existing product image from the 88 imported CF products (already in Wix media manager). Pick the best lifestyle-quality shot — e.g. Asheville or Monterey futon in a room setting.
+  **Option B:** Upload a new image via Wix Dashboard → Media Manager → Upload, then use the resulting `wix:image://` URI.
+  **Option C:** Use `CallWixSiteAPI` MCP tool to upload programmatically.
 
 - [ ] **Step 3: Set hero image source**
+  First inspect the ImageX component's data structure:
   ```javascript
   (() => {
     const ds = document.querySelectorAll('iframe')[0].contentWindow.documentServices;
     const ref = ds.components.code.getByNickname('heroImage');
     const data = ds.components.data.get(ref);
-    // ImageX component — update its image URI
-    // The exact property depends on ImageX data structure
-    return JSON.stringify({ type: data?.type, keys: Object.keys(data || {}) });
+    return JSON.stringify({ type: data?.type, keys: Object.keys(data || {}), uri: data?.uri });
   })()
   ```
-  Based on the data structure, set the image URI to the CF lifestyle photo CDN URL.
+  Then set the image using the correct property (likely `uri` for ImageX):
+  ```javascript
+  (() => {
+    const ds = document.querySelectorAll('iframe')[0].contentWindow.documentServices;
+    const ref = ds.components.code.getByNickname('heroImage');
+    ds.components.data.update(ref, { uri: 'wix:image://v1/MEDIA_ID/filename.jpg/_.jpg' });
+    return 'updated hero image';
+  })()
+  ```
+  Replace `MEDIA_ID` with the actual Wix media ID from Step 2.
 
 - [ ] **Step 4: Verify hero renders**
   Take screenshot of editor preview. Text overlay ("Handcrafted Comfort, Mountain Inspired") should be legible over the new image.
@@ -349,18 +368,32 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
 **Owner:** Melania (Playwright)
 **Files:** None on disk — editor API
 
-- [ ] **Step 1: Collapse "As Seen In" section**
+- [ ] **Step 1: Hide "As Seen In" section**
+  Note: `collapse()` is a Velo runtime method, NOT available via documentServices at edit time. At editor time, use `isHidden` property or delete the section content.
+
+  **Approach A (preferred):** Hide via properties:
   ```javascript
   (() => {
     const ds = document.querySelectorAll('iframe')[0].contentWindow.documentServices;
     const ref = ds.components.code.getByNickname('section4'); // Press / As Seen In
-    // Collapse the section so it takes no space
-    ds.components.properties.update(ref, { isCollapsed: true });
-    // Alternative: ds.components.properties.update(ref, { isVisible: false });
-    return 'collapsed section4 (As Seen In)';
+    ds.components.properties.update(ref, { isHidden: true });
+    return 'hidden section4 (As Seen In)';
   })()
   ```
-  If `isCollapsed` is not a valid property, try hiding and checking if the template handles layout reflow.
+
+  **Approach B (if hidden leaves gap):** Set section height to 0 or remove all children:
+  ```javascript
+  (() => {
+    const ds = document.querySelectorAll('iframe')[0].contentWindow.documentServices;
+    const ref = ds.components.code.getByNickname('section4');
+    ds.components.layout.update(ref, { height: 0 });
+    return 'zeroed section4 height';
+  })()
+  ```
+
+  **Approach C (Velo runtime):** Add to masterPage.js: `$w('#section4').collapse()` in `$w.onReady()`. This removes the section from layout flow at runtime. Requires the section to be renamed first, or use the template nickname.
+
+  Check preview after applying — if vertical gap remains, try next approach.
 
 - [ ] **Step 2: Fix Instagram section**
   The Instagram section is `section5`. Keep the "FOLLOW US @CAROLINAFUTONS" heading. Hide the broken feed widget:
@@ -454,7 +487,7 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
   - `footerNewsletterTitle` ✓, `footerNewsletterSubtitle` ✓, `footerEmailSubmit` ✓, `footerAddress` ✓
   - `heroSection` ✓, `heroTitle` ✓, `heroSubtitle` ✓, `heroCTA` ✓, `heroImage` ✓
 
-  Remaining gaps (from `masterpage-remap.json` notes):
+  Remaining gaps (from `/Users/hal/gt/cfutons/crew/melania/scripts/masterpage-remap.json` notes):
   - `cartBadge` — template cart is TPAWidget with built-in badge. Code references `#cartBadge` separately. **Gap.**
   - `footerEmailInput` — template uses `form2` TPAWidget. **Known gap, acceptable.**
   - `footerPhone`, `footerHours` — depends on Task 4 Step 4 outcome. **May be gap.**
