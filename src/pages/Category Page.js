@@ -350,9 +350,39 @@ function applySort() {
 
 function initFilterControls() {
   // Accessibility: label filter controls
+  try { $w('#filterCategory').accessibility.ariaLabel = 'Browse by category'; } catch (e) {}
   try { $w('#filterBrand').accessibility.ariaLabel = 'Filter by brand'; } catch (e) {}
   try { $w('#filterPrice').accessibility.ariaLabel = 'Filter by price range'; } catch (e) {}
   try { $w('#filterSize').accessibility.ariaLabel = 'Filter by size'; } catch (e) {}
+
+  // Category navigation — all 9 CF product categories
+  try {
+    const categoryFilter = $w('#filterCategory');
+    if (categoryFilter) {
+      const currentPath = wixLocationFrontend.path?.[0] || '';
+      categoryFilter.options = [
+        { label: 'All Products', value: '' },
+        { label: 'Futon Frames', value: 'futon-frames' },
+        { label: 'Futon Mattresses', value: 'mattresses' },
+        { label: 'Murphy Cabinet Beds', value: 'murphy-cabinet-beds' },
+        { label: 'Platform Beds', value: 'platform-beds' },
+        { label: 'Casegoods & Accessories', value: 'casegoods-accessories' },
+        { label: 'Wall Hugger Frames', value: 'wall-huggers' },
+        { label: 'Unfinished Wood', value: 'unfinished-wood' },
+        { label: 'Sale & Clearance', value: 'sales' },
+      ];
+      categoryFilter.value = currentPath;
+      categoryFilter.onChange(() => {
+        const selected = categoryFilter.value;
+        if (selected && selected !== currentPath) {
+          wixLocationFrontend.to(`/${selected}`);
+        } else if (!selected) {
+          wixLocationFrontend.to('/');
+        }
+      });
+    }
+  } catch (e) {}
+
   // Brand filter — includes Wall Hugger and Unfinished Wood brands
   try {
     const brandFilter = $w('#filterBrand');
@@ -418,6 +448,7 @@ function initFilterControls() {
       currentFilters = {};
       if (_basicFilterTimer) { clearTimeout(_basicFilterTimer); _basicFilterTimer = null; }
       if (_debounceTimer) { clearTimeout(_debounceTimer); _debounceTimer = null; }
+      try { $w('#filterCategory').value = wixLocationFrontend.path?.[0] || ''; } catch (e) {}
       try { $w('#filterBrand').value = ''; } catch (e) {}
       try { $w('#filterPrice').value = ''; } catch (e) {}
       try { $w('#filterSize').value = ''; } catch (e) {}

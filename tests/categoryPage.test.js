@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
-import { __setPath } from './__mocks__/wix-location-frontend.js';
+import { __setPath, __getToCallLog, __resetToCallLog } from './__mocks__/wix-location-frontend.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
@@ -211,6 +211,59 @@ describe('Category Page', () => {
   // ── Filter Controls ───────────────────────────────────────────────
 
   describe('filter controls', () => {
+    it('initializes category filter with 9 category options plus All Products', async () => {
+      await onReadyHandler();
+      const categoryFilter = getEl('#filterCategory');
+      expect(categoryFilter.options).toHaveLength(9);
+      expect(categoryFilter.options[0]).toEqual({ label: 'All Products', value: '' });
+      expect(categoryFilter.options[1]).toEqual({ label: 'Futon Frames', value: 'futon-frames' });
+      expect(categoryFilter.options[2]).toEqual({ label: 'Futon Mattresses', value: 'mattresses' });
+      expect(categoryFilter.options[3]).toEqual({ label: 'Murphy Cabinet Beds', value: 'murphy-cabinet-beds' });
+      expect(categoryFilter.options[4]).toEqual({ label: 'Platform Beds', value: 'platform-beds' });
+      expect(categoryFilter.options[5]).toEqual({ label: 'Casegoods & Accessories', value: 'casegoods-accessories' });
+      expect(categoryFilter.options[6]).toEqual({ label: 'Wall Hugger Frames', value: 'wall-huggers' });
+      expect(categoryFilter.options[7]).toEqual({ label: 'Unfinished Wood', value: 'unfinished-wood' });
+      expect(categoryFilter.options[8]).toEqual({ label: 'Sale & Clearance', value: 'sales' });
+    });
+
+    it('category filter sets value to current path on init', async () => {
+      __setPath(['futon-frames']);
+      await onReadyHandler();
+      expect(getEl('#filterCategory').value).toBe('futon-frames');
+    });
+
+    it('category filter navigates to selected category on change', async () => {
+      __resetToCallLog();
+      await onReadyHandler();
+      const categoryFilter = getEl('#filterCategory');
+      const onChange = categoryFilter.onChange.mock.calls[0]?.[0];
+      categoryFilter.value = 'murphy-cabinet-beds';
+      if (onChange) onChange();
+      expect(__getToCallLog()).toContain('/murphy-cabinet-beds');
+    });
+
+    it('category filter navigates to home when All Products selected', async () => {
+      __resetToCallLog();
+      await onReadyHandler();
+      const categoryFilter = getEl('#filterCategory');
+      const onChange = categoryFilter.onChange.mock.calls[0]?.[0];
+      categoryFilter.value = '';
+      if (onChange) onChange();
+      expect(__getToCallLog()).toContain('/');
+    });
+
+    it('clear filters resets category filter to current path', async () => {
+      await onReadyHandler();
+      const clearBtn = getEl('#clearFilters');
+      const onClick = clearBtn.onClick.mock.calls[0][0];
+
+      getEl('#filterCategory').value = 'mattresses';
+      onClick();
+
+      // Should reset to current path, not empty
+      expect(getEl('#filterCategory').value).not.toBe('mattresses');
+    });
+
     it('initializes brand filter with 7 options', async () => {
       await onReadyHandler();
       const brandFilter = getEl('#filterBrand');
