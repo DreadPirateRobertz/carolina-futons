@@ -122,13 +122,13 @@ h4.font_4,
 
 .header {
   background:
-    /* CF logo overlaid at left — real product image from Wix CDN */
-    url("https://static.wixstatic.com/media/e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg/v1/fill/w_180,h_86,al_c,q_80/CF_SQUARE-blue.jpg") 24px 50px / 180px 86px no-repeat,
-    /* Mountain panorama — taller viewBox, no-opacity, solid fills */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='50%25' stop-color='%23D4E4ED'/%3E%3Cstop offset='85%25' stop-color='%23E8D5B5'/%3E%3Cstop offset='100%25' stop-color='%23F0C87A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='300' fill='url(%23sky)'/%3E%3Cpath d='M0 300 L0 100 Q100 40 240 80 Q380 15 520 65 Q660 5 800 55 Q940 20 1080 60 Q1200 10 1340 50 Q1400 35 1440 70 L1440 300 Z' fill='%23A8CCD8'/%3E%3Cpath d='M0 300 L0 135 Q150 60 320 100 Q480 40 660 90 Q820 35 1000 80 Q1150 45 1300 85 Q1400 55 1440 95 L1440 300 Z' fill='%235B8FA8'/%3E%3Cpath d='M0 300 L0 170 Q120 100 280 140 Q440 85 620 125 Q780 90 960 130 Q1120 88 1280 120 Q1380 100 1440 135 L1440 300 Z' fill='%233D6B80'/%3E%3Cpath d='M0 300 L0 210 Q80 175 200 195 Q320 170 460 190 Q580 168 720 188 Q860 172 1000 192 Q1140 170 1280 188 Q1380 178 1440 200 L1440 300 Z' fill='%231E3A5F'/%3E%3C/svg%3E") bottom/100% 200px no-repeat,
-    #E8F0F5 !important;
+    /* CF logo overlaid at top-left */
+    url("https://static.wixstatic.com/media/e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg/v1/fill/w_160,h_77,al_c,q_80/CF_SQUARE-blue.jpg") 24px 48px / 160px 77px no-repeat,
+    /* Mountain silhouette — high contrast, simple 3-layer, tall viewBox */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Crect width='1440' height='200' fill='%23D4E8F0'/%3E%3Cpath d='M0 200 L0 60 Q120 15 280 50 Q440 0 620 40 Q780 8 960 45 Q1120 5 1300 42 Q1400 20 1440 55 L1440 200Z' fill='%237EAEC2'/%3E%3Cpath d='M0 200 L0 95 Q160 45 340 80 Q520 30 720 70 Q880 35 1080 72 Q1240 40 1440 75 L1440 200Z' fill='%234A7B91'/%3E%3Cpath d='M0 200 L0 130 Q140 85 300 115 Q480 78 680 108 Q840 82 1040 110 Q1220 85 1440 112 L1440 200Z' fill='%231E3A5F'/%3E%3C/svg%3E") bottom/100% 180px no-repeat,
+    #D4E8F0 !important;
   border-bottom: none !important;
-  padding-bottom: 200px !important;
+  padding-bottom: 180px !important;
 }
 
 /* Announcement bar text */
@@ -355,10 +355,10 @@ h4.font_4,
 
 .footer {
   background:
-    /* Mountain ridgeline at top — inverted (mountains pointing UP) on dark bg */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Crect width='1440' height='200' fill='%231E2A3A'/%3E%3Cpath d='M0 0 L0 120 Q120 160 280 130 Q440 170 620 140 Q780 165 960 135 Q1120 168 1280 138 Q1380 155 1440 130 L1440 0 Z' fill='%23243545'/%3E%3Cpath d='M0 0 L0 80 Q150 130 320 95 Q480 140 660 105 Q820 135 1000 100 Q1150 130 1300 95 Q1400 115 1440 85 L1440 0 Z' fill='%232A4055'/%3E%3Cpath d='M0 0 L0 45 Q100 85 240 60 Q380 95 520 70 Q660 90 800 65 Q940 88 1080 62 Q1200 82 1340 58 Q1400 72 1440 50 L1440 0 Z' fill='%23355570'/%3E%3C/svg%3E") top/100% 150px no-repeat,
+    /* Mountain ridgeline at top — inverted, high contrast against dark bg */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 150' preserveAspectRatio='none'%3E%3Crect width='1440' height='150' fill='%231E2A3A'/%3E%3Cpath d='M0 0 L0 95 Q140 130 300 105 Q480 140 680 110 Q840 135 1040 108 Q1220 132 1440 105 L1440 0Z' fill='%23253848'/%3E%3Cpath d='M0 0 L0 60 Q160 100 340 72 Q520 105 720 78 Q880 102 1080 75 Q1240 98 1440 70 L1440 0Z' fill='%232D4558'/%3E%3Cpath d='M0 0 L0 30 Q120 65 280 40 Q440 68 640 42 Q800 62 1000 38 Q1200 60 1440 35 L1440 0Z' fill='%23375568'/%3E%3C/svg%3E") top/100% 120px no-repeat,
     #1E2A3A !important;
-  padding-top: 150px !important;
+  padding-top: 120px !important;
 }
 
 .footer p,
@@ -693,14 +693,14 @@ h4.font_4,
     font-size: 15px !important;
   }
 
-  /* Hide mountain illustrations on mobile for clean look */
+  /* Simplified header/footer on mobile */
   .header {
     background: #FFFFFF !important;
     border-bottom: 2px solid #E2E8F0 !important;
-    padding-bottom: 16px !important;
+    padding-bottom: 10px !important;
   }
   .footer {
-    padding-top: 32px !important;
+    padding-top: 24px !important;
     background: #1E2A3A !important;
   }
 }
