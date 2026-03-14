@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "description": "Phase 1 element renames — directly mappable IDs only. Use with documentServices API to rename template nicknames to our BUILD-SPEC IDs. Format: { templateNickname: ourBuildSpecId }",
+    "bead": "test-dld",
+    "direction": "template → code (rename template elements to match our code)"
+  },
+
+  "vectorImage10": "siteLogo",
+  "text42": "announcementText",
+  "shoppingCartIcon1": "cartIcon",
+  "section1": "heroSection",
+  "text16": "heroTitle",
+  "text17": "heroSubtitle",
+  "button3": "heroCTA",
+  "imageX12": "heroBg",
+  "text5": "featuredTitle",
+  "section8": "saleSection",
+  "text10": "swatchPromoTitle",
+  "text9": "swatchPromoSubtitle",
+  "button2": "swatchPromoCTA",
+  "text25": "newsletterTitle",
+  "text24": "newsletterSubtitle",
+  "box33": "newsletterSection"
+}
