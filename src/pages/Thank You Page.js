@@ -96,7 +96,7 @@ $w.onReady(async function () {
 
 async function initOrderSummary() {
   try {
-    $w('#thankYouTitle').text = 'Thank You for Your Order!';
+    try { $w('#thankYouTitle').text = 'Thank You for Your Order!'; } catch (e) {}
 
     // Wix passes order data via the page's Thank You context
     const wixWindow = await import('wix-window-frontend');
@@ -115,9 +115,9 @@ async function initOrderSummary() {
     } catch (e) {}
 
     // Order confirmation message
-    $w('#thankYouMessage').text =
+    try { $w('#thankYouMessage').text =
       'Your order has been confirmed and is being prepared with care. ' +
-      'We\'ll send you a shipping confirmation email with tracking info once your items are on their way.';
+      'We\'ll send you a shipping confirmation email with tracking info once your items are on their way.'; } catch (e) {}
 
     // Contact info for questions
     try {
@@ -224,7 +224,7 @@ function initSocialSharing(orderCtx) {
     const sharePrompt = productNames.length > 0
       ? `Love your new ${productNames[0]}? Share with friends!`
       : 'Love your new furniture? Share with friends!';
-    $w('#shareText').text = sharePrompt;
+    try { $w('#shareText').text = sharePrompt; } catch (e) {}
 
     const shareText = productNames.length > 0
       ? `Just ordered ${productNames.join(' and ')} from Carolina Futons in Hendersonville, NC!`
@@ -235,23 +235,23 @@ function initSocialSharing(orderCtx) {
     try { $w('#shareInstagram').accessibility.ariaLabel = 'Follow us on Instagram (opens in new window)'; } catch (e) {}
     try { $w('#shareTwitter').accessibility.ariaLabel = 'Share on Twitter (opens in new window)'; } catch (e) {}
 
-    $w('#shareFacebook').onClick(() => {
+    try { $w('#shareFacebook').onClick(() => {
       trackSocialShare('facebook', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const text = encodeURIComponent(shareText);
       import('wix-window-frontend').then(({ openUrl }) => {
         openUrl(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`);
       });
-    });
+    }); } catch (e) {}
 
-    $w('#sharePinterest').onClick(() => {
+    try { $w('#sharePinterest').onClick(() => {
       trackSocialShare('pinterest', 'purchase');
       const url = encodeURIComponent('https://www.carolinafutons.com');
       const desc = encodeURIComponent(shareText);
       import('wix-window-frontend').then(({ openUrl }) => {
         openUrl(`https://pinterest.com/pin/create/button/?url=${url}&description=${desc}`);
       });
-    });
+    }); } catch (e) {}
 
     // Instagram share prompt (no direct share API — link to profile)
     try {
@@ -281,10 +281,10 @@ function initSocialSharing(orderCtx) {
 
 function initNewsletterSignup() {
   try {
-    $w('#newsletterPrompt').text = 'Get updates on new products and exclusive deals';
+    try { $w('#newsletterPrompt').text = 'Get updates on new products and exclusive deals'; } catch (e) {}
     try { $w('#newsletterEmail').accessibility.ariaLabel = 'Enter your email for newsletter'; } catch (e) {}
     try { $w('#newsletterSignup').accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
-    $w('#newsletterSignup').onClick(async () => {
+    try { $w('#newsletterSignup').onClick(async () => {
       const email = $w('#newsletterEmail').value?.trim();
       if (!email || !validateEmail(email)) {
         try {
@@ -305,7 +305,7 @@ function initNewsletterSignup() {
       } catch (e) {
         console.error('Newsletter signup error:', e);
       }
-    });
+    }); } catch (e) {}
   } catch (e) {}
 }
 
@@ -394,10 +394,10 @@ async function loadPostPurchaseSuggestions() {
     } catch (e) {}
 
     repeater.onItemReady(($item, itemData) => {
-      $item('#ppImage').src = itemData.mainMedia;
-      $item('#ppImage').alt = `${itemData.name} - Carolina Futons`;
-      $item('#ppName').text = itemData.name;
-      $item('#ppPrice').text = itemData.formattedPrice;
+      try { $item('#ppImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#ppImage').alt = `${itemData.name} - Carolina Futons`; } catch (e) {}
+      try { $item('#ppName').text = itemData.name; } catch (e) {}
+      try { $item('#ppPrice').text = itemData.formattedPrice; } catch (e) {}
 
       makeClickable($item('#ppImage'), () => {
         import('wix-location-frontend').then(({ to }) => {

@@ -102,8 +102,10 @@ async function prefillFromQueryParams() {
 // ── Lookup Handler ──────────────────────────────────────────────────
 
 async function handleLookup() {
-  const orderNumber = ($w('#returnOrderNumberInput').value || '').trim();
-  const email = ($w('#returnEmailInput').value || '').trim();
+  let orderNumber = '';
+  let email = '';
+  try { orderNumber = ($w('#returnOrderNumberInput').value || '').trim(); } catch (e) {}
+  try { email = ($w('#returnEmailInput').value || '').trim(); } catch (e) {}
 
   if (!orderNumber) {
     showError('Please enter your order number.');
@@ -152,7 +154,8 @@ async function handleLookup() {
 // ── RMA Tracking Handler ────────────────────────────────────────────
 
 async function handleRmaTrack() {
-  const rmaNumber = ($w('#rmaInput').value || '').trim();
+  let rmaNumber = '';
+  try { rmaNumber = ($w('#rmaInput').value || '').trim(); } catch (e) {}
 
   if (!rmaNumber) {
     showError('Please enter your RMA number.');
@@ -345,12 +348,13 @@ function initReturnForm() {
 
 async function handleGuestReturnSubmit() {
   try {
-    const orderNumber = sanitizeText($w('#returnOrderNumberInput').value, 50);
-    const email = ($w('#returnEmailInput').value || '').trim();
-    const reason = $w('#returnReasonSelect')?.value || '';
+    let orderNumber = '', email = '', reason = '', details = '', returnType = 'return';
+    try { orderNumber = sanitizeText($w('#returnOrderNumberInput').value, 50); } catch (e) {}
+    try { email = ($w('#returnEmailInput').value || '').trim(); } catch (e) {}
+    try { reason = $w('#returnReasonSelect')?.value || ''; } catch (e) {}
     try { $w('#returnDetailsTextbox').accessibility.ariaLabel = 'Additional return details'; } catch (e) {}
-    const details = sanitizeText($w('#returnDetailsTextbox')?.value, 2000);
-    const returnType = $w('#returnTypeSelect')?.value || 'return';
+    try { details = sanitizeText($w('#returnDetailsTextbox')?.value, 2000); } catch (e) {}
+    try { returnType = $w('#returnTypeSelect')?.value || 'return'; } catch (e) {}
 
     if (!reason) {
       showFormError('Please select a return reason.');
@@ -509,8 +513,8 @@ function initResultsSections() {
       try { $w('#returnSuccessMessage').hide(); } catch (e) {}
       _currentOrder = null;
       _currentReturns = [];
-      $w('#returnOrderNumberInput').value = '';
-      $w('#returnEmailInput').value = '';
+      try { $w('#returnOrderNumberInput').value = ''; } catch (e) {}
+      try { $w('#returnEmailInput').value = ''; } catch (e) {}
       try { $w('#returnOrderNumberInput').focus(); } catch (e) {}
     });
   } catch (e) {}

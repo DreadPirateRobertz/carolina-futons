@@ -724,10 +724,10 @@ async function initWishlist() {
     } catch (e) {}
 
     wishlistRepeater.onItemReady(($item, itemData) => {
-      $item('#wishImage').src = itemData.mainMedia;
-      $item('#wishImage').alt = `${itemData.name} - saved item`;
-      $item('#wishName').text = itemData.name;
-      $item('#wishPrice').text = itemData.formattedPrice;
+      try { $item('#wishImage').src = itemData.mainMedia; } catch (e) {}
+      try { $item('#wishImage').alt = `${itemData.name} - saved item`; } catch (e) {}
+      try { $item('#wishName').text = itemData.name; } catch (e) {}
+      try { $item('#wishPrice').text = itemData.formattedPrice; } catch (e) {}
 
       // Stock status
       try {
@@ -792,11 +792,11 @@ async function initWishlist() {
 
       // View product
       try { $item('#wishViewBtn').accessibility.ariaLabel = `View ${itemData.name}`; } catch (e) {}
-      $item('#wishViewBtn').onClick(() => {
+      try { $item('#wishViewBtn').onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
           to(`/product-page/${itemData.slug}`);
         });
-      });
+      }); } catch (e) {}
 
       // Per-product alert toggle (mute/unmute price drop & back-in-stock alerts)
       try {
@@ -817,7 +817,7 @@ async function initWishlist() {
 
       // Remove from wishlist — uses backend service
       try { $item('#wishRemoveBtn').accessibility.ariaLabel = `Remove ${itemData.name} from wishlist`; } catch (e) {}
-      $item('#wishRemoveBtn').onClick(async () => {
+      try { $item('#wishRemoveBtn').onClick(async () => {
         try {
           const { removeFromWishlist } = await import('backend/accountDashboard.web');
           const result = await removeFromWishlist(itemData._id);
@@ -835,7 +835,7 @@ async function initWishlist() {
         } catch (e) {
           console.error('[MemberPage] Wishlist remove error:', e);
         }
-      });
+      }); } catch (e) {}
     });
 
     // Set initial data on the repeater

@@ -129,10 +129,10 @@ async function renderResults(products, query) {
   } catch (e) {}
 
   repeater.onItemReady(($item, itemData) => {
-    $item('#searchImage').src = itemData.mainMedia;
-    $item('#searchImage').alt = `${itemData.name} - Carolina Futons`;
-    $item('#searchName').text = itemData.name;
-    $item('#searchPrice').text = itemData.formattedPrice;
+    try { $item('#searchImage').src = itemData.mainMedia; } catch (e) {}
+    try { $item('#searchImage').alt = `${itemData.name} - Carolina Futons`; } catch (e) {}
+    try { $item('#searchName').text = itemData.name; } catch (e) {}
+    try { $item('#searchPrice').text = itemData.formattedPrice; } catch (e) {}
     try {
       const desc = stripHtml(itemData.description || '').substring(0, 120);
       $item('#searchDesc').text = desc ? desc + '...' : '';
@@ -392,13 +392,13 @@ function showSuggestions(suggestions) {
     }
 
     repeater.onItemReady(($item, itemData) => {
-      $item('#suggestionText').text = itemData.text;
+      try { $item('#suggestionText').text = itemData.text; } catch (e) {}
       try {
         const typeLabel = itemData.type === 'category' ? 'Category' : itemData.type === 'popular' ? 'Trending' : 'Product';
         $item('#suggestionType').text = typeLabel;
       } catch (e) {}
       try { $item('#suggestionText').accessibility.ariaLabel = `Search for ${itemData.text}`; } catch (e) {}
-      $item('#suggestionText').onClick(() => {
+      try { $item('#suggestionText').onClick(() => {
         hideSuggestions();
         if (itemData.type === 'category') {
           import('wix-location-frontend').then(({ to }) => {
@@ -408,7 +408,7 @@ function showSuggestions(suggestions) {
           try { $w('#searchInput').value = itemData.text; } catch (e) {}
           performSearch(itemData.text);
         }
-      });
+      }); } catch (e) {}
     });
 
     repeater.data = suggestions.map((s, i) => ({ _id: `sug-${i}`, ...s }));
