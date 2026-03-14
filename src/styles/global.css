@@ -1,0 +1,747 @@
+/*
+ * Carolina Futons — Global CSS Overrides
+ *
+ * Comprehensive styling for Wix Studio "tera" template (Furniture Store #3563).
+ * Transforms template defaults into professional blue/white brand.
+ *
+ * Production reference: carolinafutons.com
+ *   - Blue: #4682B4 (steel blue), #3D9BE9 (bright blue)
+ *   - Text: #2C2C2C (charcoal), #444444 (body), #666666 (secondary)
+ *   - Background: #FFFFFF (white), #F5F8FC (light blue-gray)
+ *
+ * Template problems fixed:
+ *   - Body text: 44px → 16px
+ *   - Nav links: 10px → 14px
+ *   - H1: 210spx → 42px, H2: 180spx → 28px
+ *   - Product grid: single column 905px → multi-column grid
+ *   - Colors: beige/salmon → blue/white
+ *   - Product images: 903x903 → properly contained
+ *
+ * Selectors verified against live DOM:
+ *   .wixui-* classes, .font_N classes, [data-hook="*"] attributes
+ */
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1. BODY TEXT — fix 44px paragraph text → 16px
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Primary body text classes */
+.font_7,
+.font_8,
+p.font_7,
+p.font_8,
+span.font_7,
+span.font_8 {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+/* Secondary / caption text */
+.font_9,
+p.font_9,
+span.font_9 {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* Rich text paragraphs */
+.wixui-rich-text p,
+.wixui-rich-text span,
+.wixui-rich-text__text p,
+.wixui-rich-text__text span {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+/* font_6 — used for medium text */
+.font_6,
+p.font_6,
+span.font_6 {
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. HEADINGS — tame oversized template headings
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* H1 — page titles (template default: 210spx) */
+h1,
+h1.font_0,
+.wixui-rich-text h1,
+.wixui-rich-text h1.font_0 {
+  font-size: 42px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* H2 — section headings (template default: 180spx) */
+h2,
+h2.font_2,
+h2.font_5,
+.wixui-rich-text h2,
+.wixui-rich-text h2.font_2,
+.wixui-rich-text h2.font_5 {
+  font-size: 28px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* H3 — subsection headings (template default: 70spx) */
+h3,
+h3.font_3,
+.wixui-rich-text h3,
+.wixui-rich-text h3.font_3 {
+  font-size: 18px !important;
+  line-height: 1.35 !important;
+}
+
+/* H4/H5/H6 — labels and minor headings */
+h4, h5, h6,
+h4.font_4,
+.wixui-rich-text h4,
+.wixui-rich-text h5,
+.wixui-rich-text h6 {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. NAVIGATION — fix 10px nav links
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Horizontal menu item labels */
+.wixui-horizontal-menu__item-label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+/* Vertical menu (mobile/sidebar) */
+.wixui-vertical-menu__item-label {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+/* Header container */
+.wixui-header {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #E8ECF0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. PRODUCT GRID — fix single-column 905px → multi-column layout
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Product list container — force grid layout */
+[data-hook="product-list"] {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 24px !important;
+  padding: 0 16px !important;
+}
+
+/* Individual product card */
+[data-hook="product-list-grid-item"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Product card container */
+[data-hook="product-item-container"],
+[data-hook="product-item-root"] {
+  width: 100% !important;
+}
+
+/* Product image — contain within card, stop 903px madness */
+[data-hook="ProductMediaDataHook.Images"] {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+}
+
+[data-hook="ProductMediaDataHook.Images"] img,
+[data-hook="ProductMediaDataHook.Images"] wow-image,
+[data-hook="ImageUiTpaWrapperDataHook.Wrapper_0"] {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 350px !important;
+  object-fit: contain !important;
+}
+
+/* Product name in grid */
+[data-hook="product-item-name"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin-top: 12px !important;
+}
+
+/* Product price */
+[data-hook="product-item-price-to-pay"],
+[data-hook="sr-product-item-price-to-pay"] {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #4682B4 !important;
+}
+
+/* Product details link area */
+[data-hook="product-item-product-details"] {
+  padding: 8px 0 !important;
+}
+
+/* Products count & sort bar */
+[data-hook="counter-sort-container"] {
+  font-size: 14px !important;
+  padding: 12px 0 !important;
+}
+
+[data-hook="items-count"] {
+  font-size: 14px !important;
+}
+
+/* Breadcrumbs in gallery */
+[data-hook="extended-gallery-breadcrumbs"] {
+  font-size: 13px !important;
+  padding: 12px 0 !important;
+}
+
+/* Category hero section */
+[data-hook="HeroDataHook.CategoryName"] {
+  font-size: 32px !important;
+}
+
+[data-hook="HeroDataHook.Description"] {
+  font-size: 15px !important;
+}
+
+/* Sidebar filters */
+[data-hook="filter-title"],
+[data-hook="filter-full-title"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+[data-hook="category-tree-section-title"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+[data-hook="filters-title"] {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+/* Sort dropdown */
+[data-hook="sort-floating-dropdown"] {
+  font-size: 14px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. PRODUCT PAGE — details, accordion, gallery
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Product page title (rendered as h5 by Wix) */
+[data-hook="product-title"],
+[data-hook="product-name"] {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+}
+
+/* Product price on detail page */
+[data-hook="product-price"],
+[data-hook="formatted-primary-price"] {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #4682B4 !important;
+}
+
+/* Product description */
+[data-hook="product-description"] {
+  font-size: 15px !important;
+  line-height: 1.65 !important;
+}
+
+/* Product options */
+[data-hook="product-options"] label,
+[data-hook="product-options"] span {
+  font-size: 14px !important;
+}
+
+/* Add to Cart button */
+[data-hook="add-to-cart"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  background-color: #4682B4 !important;
+  color: #FFFFFF !important;
+  border-radius: 4px !important;
+}
+
+/* Product info accordion */
+[data-hook="info-section-title"] {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+[data-hook="info-section-description"] {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. HOMEPAGE GALLERIES — "NEW IN" and "BEST SELLERS"
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Product gallery on homepage */
+[aria-label="Product Gallery"] li,
+[aria-roledescription="gallery"] li {
+  max-width: 280px !important;
+}
+
+/* Product name in homepage gallery */
+[aria-label="Product Gallery"] h3,
+[aria-roledescription="gallery"] h3 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+}
+
+/* Product price in homepage gallery */
+[aria-label="Product Gallery"] [class*="price"],
+[aria-roledescription="gallery"] span[data-hook*="price"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* Ribbon / "Call for Price" badge */
+[data-hook="product-item-ribbon"],
+[class*="ribbon"] {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. HEADER & ANNOUNCEMENT BAR
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Announcement bar — the top banner strip */
+.wixui-header .wixui-rich-text:first-child p,
+.wixui-header .wixui-rich-text:first-child span {
+  font-size: 13px !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* Site logo text */
+.wixui-header h2 {
+  font-size: 28px !important;
+}
+
+/* Cart icon button */
+[data-hook="cart-icon-button"] {
+  font-size: 14px !important;
+}
+
+/* Search button */
+.wixui-search-button__label {
+  font-size: 14px !important;
+}
+
+/* Login button */
+.wixui-login-social-bar {
+  font-size: 13px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. FOOTER — professional dark footer
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.wixui-footer {
+  background-color: #2C2C2C !important;
+}
+
+.wixui-footer p,
+.wixui-footer span,
+.wixui-footer a,
+.wixui-footer li {
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+  color: #C8D2DC !important;
+}
+
+.wixui-footer a:hover {
+  color: #FFFFFF !important;
+}
+
+.wixui-footer h2,
+.wixui-footer h3,
+.wixui-footer h4 {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #FFFFFF !important;
+}
+
+/* Footer logo text */
+.wixui-footer h2.font_2,
+.wixui-footer .font_0 {
+  font-size: 22px !important;
+  color: #FFFFFF !important;
+}
+
+/* Newsletter form in footer */
+.wixui-footer input[type="email"],
+.wixui-footer [data-hook="text-field-root"] input {
+  font-size: 14px !important;
+  background-color: #FFFFFF !important;
+  color: #2C2C2C !important;
+  border: 1px solid #B4BEC8 !important;
+  border-radius: 4px !important;
+}
+
+.wixui-footer .wixui-button,
+.wixui-footer [data-hook="submit-button"] {
+  background-color: #4682B4 !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 4px !important;
+}
+
+.wixui-footer .wixui-button:hover {
+  background-color: #326EA0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. BUTTONS — consistent CTA styling
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.wixui-button__label {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. BLOG PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Blog post titles */
+[data-hook="post-title"],
+[data-hook="post-list-item-title"] {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+}
+
+/* Blog post excerpt */
+[data-hook="post-description"],
+[data-hook="post-list-item-description"] {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+/* Blog post date/author */
+[data-hook="post-footer"],
+[data-hook="post-metadata"] {
+  font-size: 13px !important;
+}
+
+/* Blog read more link */
+[data-hook="read-more-link"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #4682B4 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. CART PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Cart item name */
+[data-hook="cart-widget-item-name"],
+[data-hook="CartItemDataHook.Name"] {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* Cart item price */
+[data-hook="cart-widget-item-price"],
+[data-hook="CartItemDataHook.Price"] {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+/* Cart totals */
+[data-hook="cart-widget-subtotal"],
+[data-hook="CartSubTotalDataHook"] {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* Checkout button */
+[data-hook="cart-widget-button"],
+[data-hook="CheckoutButtonDataHook"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  background-color: #4682B4 !important;
+  color: #FFFFFF !important;
+}
+
+/* Empty cart message */
+[data-hook="cart-widget-empty-message"] {
+  font-size: 16px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. FAQ PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* FAQ heading — template renders at 70px */
+[data-hook="faq-title"],
+.wixui-section h1 {
+  font-size: 36px !important;
+}
+
+/* FAQ question text */
+[data-hook="faq-question-text"],
+[data-hook="question-text"] {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* FAQ answer text */
+[data-hook="faq-answer-text"],
+[data-hook="answer-text"] {
+  font-size: 15px !important;
+  line-height: 1.65 !important;
+}
+
+/* FAQ tab labels */
+[data-hook="faq-tab-label"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. CONTACT PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Contact form labels */
+[data-hook="form-root"] label,
+[data-hook="form-root"] [data-hook*="field"] label {
+  font-size: 14px !important;
+}
+
+/* Contact form inputs */
+[data-hook="form-root"] input,
+[data-hook="form-root"] textarea,
+[data-hook="form-root"] select {
+  font-size: 15px !important;
+}
+
+/* Contact form submit */
+[data-hook="form-root"] button[type="submit"],
+[data-hook="submit-button"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  background-color: #4682B4 !important;
+  color: #FFFFFF !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   14. POLICY PAGES — Terms, Privacy, Refund, Shipping, Accessibility
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Policy page content uses ricos-viewer */
+[data-hook="ricos-viewer"] p,
+[data-hook="ricos-viewer"] span,
+[data-hook="ricos-viewer"] li {
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+}
+
+[data-hook="ricos-viewer"] h1,
+[data-hook="ricos-viewer"] h2 {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+[data-hook="ricos-viewer"] h3 {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+[data-hook="ricos-viewer"] h6 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   15. ABOUT PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* About page uses rich-text sections */
+.wixui-section .wixui-rich-text p {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   16. COLOR OVERRIDES — beige/salmon → clean white/blue
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Override the dominant beige background */
+.wixui-section {
+  background-color: #FFFFFF !important;
+}
+
+/* Alternate sections get very light gray */
+.wixui-section:nth-child(even) {
+  background-color: #F8F9FB !important;
+}
+
+/* The page background */
+.wixui-page {
+  background-color: #FFFFFF !important;
+}
+
+/* Links throughout */
+.wixui-rich-text a,
+.wixui-rich-text__text a {
+  color: #4682B4 !important;
+}
+
+.wixui-rich-text a:hover {
+  color: #326EA0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   17. MOBILE MENU
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.wixui-hamburger-menu-container {
+  background-color: #FFFFFF !important;
+}
+
+.wixui-mobile-menu a,
+.wixui-mobile-menu span {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   18. RESPONSIVE — tablet and mobile
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  /* Product grid: 2 columns on tablet */
+  [data-hook="product-list"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  h1, h1.font_0,
+  .wixui-rich-text h1 {
+    font-size: 30px !important;
+  }
+
+  h2, h2.font_2, h2.font_5,
+  .wixui-rich-text h2 {
+    font-size: 22px !important;
+  }
+
+  h3, h3.font_3,
+  .wixui-rich-text h3 {
+    font-size: 16px !important;
+  }
+
+  .wixui-horizontal-menu__item-label {
+    font-size: 12px !important;
+  }
+
+  /* Product grid: 2 columns on mobile landscape */
+  [data-hook="product-list"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  [data-hook="product-item-name"] {
+    font-size: 13px !important;
+  }
+
+  [data-hook="product-item-price-to-pay"] {
+    font-size: 13px !important;
+  }
+
+  .font_7, .font_8,
+  .wixui-rich-text p {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1, h1.font_0,
+  .wixui-rich-text h1 {
+    font-size: 24px !important;
+  }
+
+  h2, h2.font_2, h2.font_5,
+  .wixui-rich-text h2 {
+    font-size: 20px !important;
+  }
+
+  h3, h3.font_3,
+  .wixui-rich-text h3 {
+    font-size: 15px !important;
+  }
+
+  /* Product grid: 1 column on small mobile */
+  [data-hook="product-list"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  [data-hook="ProductMediaDataHook.Images"] img {
+    max-height: 300px !important;
+  }
+
+  .wixui-footer p,
+  .wixui-footer span,
+  .wixui-footer a {
+    font-size: 13px !important;
+  }
+}
