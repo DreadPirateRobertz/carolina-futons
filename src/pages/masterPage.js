@@ -14,7 +14,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
-import { initSkipNav, setupAccessibleDialog, announce } from 'public/a11yHelpers';
+import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
 import {
   applyActiveNavState,
   initMegaMenu,
@@ -319,13 +319,11 @@ function initCartIcon() {
     const cartIcon = $w('#cartIcon');
     if (!cartIcon) return;
 
-    try { cartIcon.accessibility.ariaLabel = 'Shopping cart'; } catch (e) {}
-
-    cartIcon.onClick(() => {
+    makeClickable(cartIcon, () => {
       try {
         $w('#sideCartPanel').show('slide', { direction: 'right', duration: 300 });
       } catch (e) {}
-    });
+    }, { ariaLabel: 'Shopping cart' });
   } catch (e) {}
 }
 
@@ -361,11 +359,9 @@ function initSiteLogo() {
     const logo = $w('#siteLogo');
     if (!logo) return;
 
-    try { logo.accessibility.ariaLabel = 'Carolina Futons - Go to homepage'; } catch (e) {}
-
-    logo.onClick(() => {
+    makeClickable(logo, () => {
       wixLocationFrontend.to('/');
-    });
+    }, { ariaLabel: 'Carolina Futons - Go to homepage' });
   } catch (e) {}
 }
 
@@ -572,11 +568,14 @@ function initPromoDismiss(promoId, dismissKey) {
   try { $w('#promoClose').accessibility.ariaLabel = 'Close promotion'; } catch (e) {}
   // Route dismiss/overlay through dialog.close() for WCAG 2.4.3 focus restoration
   try {
-    $w('#promoDismiss').onClick(() => {
+    const dismissHandler = () => {
       if (_promoDialog) _promoDialog.close();
       else dismissLightbox(dismissKey);
-    });
+    };
+    makeClickable($w('#promoDismiss'), dismissHandler, { ariaLabel: 'Dismiss promotion' });
   } catch (e) {}
+  // Intentionally bare onClick — overlay backdrops are not keyboard-focusable;
+  // keyboard users dismiss via Escape key or the close button above.
   try {
     $w('#promoOverlay').onClick(() => {
       if (_promoDialog) _promoDialog.close();
@@ -588,17 +587,19 @@ function initPromoDismiss(promoId, dismissKey) {
 function initPromoCopyCode(code) {
   try {
     if (!code) return;
-    try { $w('#promoCopyCode').accessibility.ariaLabel = 'Copy discount code'; } catch (e) {}
-    $w('#promoCopyCode').onClick(() => {
+    makeClickable($w('#promoCopyCode'), () => {
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         navigator.clipboard.writeText(code).then(() => {
           $w('#promoCopyCode').label = 'Copied!';
+          announce($w, 'Discount code copied to clipboard');
           setTimeout(() => {
             try { $w('#promoCopyCode').label = 'Copy Code'; } catch (e) {}
           }, 2000);
+        }).catch(() => {
+          announce($w, 'Could not copy code. Please copy manually.');
         });
       }
-    });
+    }, { ariaLabel: 'Copy discount code' });
   } catch (e) {}
 }
 
@@ -609,9 +610,8 @@ function initPromoEmailCapture() {
     if (!emailInput || !emailSubmit) return;
 
     try { emailInput.accessibility.ariaLabel = 'Enter your email for promotion'; } catch (e) {}
-    try { emailSubmit.accessibility.ariaLabel = 'Subscribe for promotion'; } catch (e) {}
 
-    emailSubmit.onClick(async () => {
+    makeClickable(emailSubmit, async () => {
       const email = emailInput.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
@@ -624,18 +624,18 @@ function initPromoEmailCapture() {
       } catch (e) {
         // Email capture is best-effort
       }
-    });
+    }, { ariaLabel: 'Subscribe for promotion' });
   } catch (e) {}
 }
 
 function initPromoCTA(ctaUrl) {
   try {
     if (!ctaUrl) return;
-    $w('#promoCTA').onClick(() => {
+    makeClickable($w('#promoCTA'), () => {
       import('wix-location-frontend').then(({ to }) => {
         to(ctaUrl);
       });
-    });
+    }, { ariaLabel: 'Shop promotion' });
   } catch (e) {}
 }
 
@@ -673,21 +673,19 @@ function initInstallBanner() {
         if (!banner) return;
 
         try { $w('#installBannerText').text = 'Add Carolina Futons to your home screen for quick access'; } catch (e) {}
-        try { $w('#installBannerBtn').accessibility.ariaLabel = 'Install Carolina Futons app'; } catch (e) {}
-
-        $w('#installBannerBtn').onClick(async () => {
+        makeClickable($w('#installBannerBtn'), async () => {
           const outcome = await showInstallPrompt();
           trackEvent('pwa_install_prompt', { outcome });
           banner.hide('fade', { duration: 200 });
-        });
+        }, { ariaLabel: 'Install Carolina Futons app' });
 
         try {
-          $w('#installBannerDismiss').onClick(() => {
+          makeClickable($w('#installBannerDismiss'), () => {
             banner.hide('fade', { duration: 200 });
             if (typeof sessionStorage !== 'undefined') {
               try { sessionStorage.setItem('cf_install_dismissed', '1'); } catch (e) {}
             }
-          });
+          }, { ariaLabel: 'Dismiss install banner' });
         } catch (e) {}
 
         banner.show('slide', { direction: 'bottom', duration: 300 });
@@ -831,9 +829,8 @@ function showExitPopup() {
     // Email capture form
     try {
       try { $w('#exitEmailInput').accessibility.ariaLabel = config.emailPlaceholder; } catch (e) {}
-      try { $w('#exitEmailSubmit').accessibility.ariaLabel = config.ctaText; } catch (e) {}
       try { $w('#exitEmailSubmit').label = config.ctaText; } catch (e) {}
-      $w('#exitEmailSubmit').onClick(async () => {
+      makeClickable($w('#exitEmailSubmit'), async () => {
         const email = $w('#exitEmailInput').value?.trim();
         if (!_exitIntent.validateCaptureEmail(email)) {
           try {
@@ -886,16 +883,15 @@ function showExitPopup() {
             $w('#exitEmailError').show('fade', { duration: 200 });
           } catch (e) {}
         }
-      });
+      }, { ariaLabel: config.ctaText });
     } catch (e) {}
 
     // "Request Swatches Instead" link → navigate to contact
     try {
-      try { $w('#exitSwatchLink').accessibility.ariaLabel = 'Request free fabric swatches'; } catch (e) {}
-      $w('#exitSwatchLink').onClick(() => {
+      makeClickable($w('#exitSwatchLink'), () => {
         dismissExitPopup();
         import('wix-location-frontend').then(({ to }) => to('/contact'));
-      });
+      }, { ariaLabel: 'Request free fabric swatches' });
     } catch (e) {}
   } catch (e) {}
 }

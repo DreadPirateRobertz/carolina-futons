@@ -117,39 +117,35 @@ function initPostShareButtons(post) {
     if (!urls.facebook) return;
 
     try {
-      $w('#postShareFacebook').onClick(() => {
+      makeClickable($w('#postShareFacebook'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(urls.facebook, '_blank');
         });
-      });
-      try { $w('#postShareFacebook').accessibility.ariaLabel = 'Share on Facebook (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share on Facebook (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#postSharePinterest').onClick(() => {
+      makeClickable($w('#postSharePinterest'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(urls.pinterest, '_blank');
         });
-      });
-      try { $w('#postSharePinterest').accessibility.ariaLabel = 'Share on Pinterest (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share on Pinterest (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#postShareTwitter').onClick(() => {
+      makeClickable($w('#postShareTwitter'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(urls.twitter, '_blank');
         });
-      });
-      try { $w('#postShareTwitter').accessibility.ariaLabel = 'Share on Twitter (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share on Twitter (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#postShareEmail').onClick(() => {
+      makeClickable($w('#postShareEmail'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(urls.email, '_self');
         });
-      });
-      try { $w('#postShareEmail').accessibility.ariaLabel = 'Share via email'; } catch (e) {}
+      }, { ariaLabel: 'Share via email' });
     } catch (e) {}
   } catch (err) {
     console.error('Share buttons error:', err);

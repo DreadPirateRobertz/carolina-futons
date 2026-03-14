@@ -4,7 +4,7 @@
 import { listAssemblyGuides, getAssemblyGuide, getCareTips } from 'backend/assemblyGuides.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import {
   getGuideCategories,
   groupGuidesByCategory,
@@ -155,13 +155,8 @@ function initGuideList() {
         trackEvent('assembly_guide_view', { sku: itemData.sku, title: itemData.title });
       };
 
-      try { $item('#guideTitle').onClick(openGuide); } catch (e) {}
-      try { $item('#guideViewBtn').onClick(openGuide); } catch (e) {}
-      try {
-        $item('#guideTitle').onKeyPress((event) => {
-          if (event.key === 'Enter' || event.key === ' ') openGuide();
-        });
-      } catch (e) {}
+      try { makeClickable($item('#guideTitle'), openGuide); } catch (e) {}
+      try { makeClickable($item('#guideViewBtn'), openGuide, { ariaLabel: `View assembly guide: ${itemData.title}` }); } catch (e) {}
     });
   } catch (e) {}
 }
@@ -181,11 +176,10 @@ function initGuideDetail() {
     // Back button returns to list
     const backBtn = $w('#guideBackBtn');
     if (backBtn) {
-      backBtn.onClick(() => {
+      makeClickable(backBtn, () => {
         hideDetail();
         trackEvent('assembly_guide_back', {});
-      });
-      try { backBtn.accessibility.ariaLabel = 'Back to guides list'; } catch (e) {}
+      }, { ariaLabel: 'Back to guides list' });
     }
   } catch (e) {}
 }

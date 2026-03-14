@@ -2,7 +2,7 @@
 // View all return requests, update statuses, generate labels, process refunds
 import { getAdminReturns, getReturnStats, updateReturnStatus, generateReturnLabel, processRefund, trackReturnShipment } from 'backend/returnsService.web';
 import { trackEvent } from 'public/engagementTracker';
-import { announce } from 'public/a11yHelpers';
+import { announce, makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
 import { getAdminStatusLabel, getNextStatuses, getStatusFilterOptions, formatAdminReturnRow, formatReturnStats, validateRefund, canGenerateLabel, needsAction, sortAdminReturns } from 'public/ReturnsAdmin.js';
 import { initBackToTop } from 'public/mobileHelpers';
@@ -117,8 +117,7 @@ function initFilterDropdown() {
   } catch (e) {}
 
   try {
-    try { $w('#refreshBtn').accessibility.ariaLabel = 'Refresh returns list'; } catch (e) {}
-    $w('#refreshBtn').onClick(() => loadDashboard());
+    makeClickable($w('#refreshBtn'), () => loadDashboard(), { ariaLabel: 'Refresh returns list' });
   } catch (e) {}
 }
 
@@ -176,8 +175,7 @@ function renderReturnsList() {
 
       // View details button
       try {
-        try { $item('#viewDetailsBtn').accessibility.ariaLabel = `View details for ${itemData.rmaNumber}`; } catch (e) {}
-        $item('#viewDetailsBtn').onClick(() => openDetail(itemData));
+        makeClickable($item('#viewDetailsBtn'), () => openDetail(itemData), { ariaLabel: `View details for ${itemData.rmaNumber}` });
       } catch (e) {}
     });
 
@@ -192,8 +190,7 @@ function initDetailPanel() {
   try { $w('#detailPanel').collapse(); } catch (e) {}
 
   try {
-    try { $w('#closeDetailBtn').accessibility.ariaLabel = 'Close detail panel'; } catch (e) {}
-    $w('#closeDetailBtn').onClick(() => closeDetail());
+    makeClickable($w('#closeDetailBtn'), () => closeDetail(), { ariaLabel: 'Close detail panel' });
   } catch (e) {}
 
   initTrackingButton();
@@ -289,8 +286,7 @@ function renderStatusActions(ret) {
     try {
       if (nextStatuses.includes('approved')) {
         $w('#approveBtn').show();
-        try { $w('#approveBtn').accessibility.ariaLabel = 'Approve this return'; } catch (e) {}
-        $w('#approveBtn').onClick(() => handleStatusUpdate(ret._id, 'approved'));
+        makeClickable($w('#approveBtn'), () => handleStatusUpdate(ret._id, 'approved'), { ariaLabel: 'Approve this return' });
       } else {
         $w('#approveBtn').hide();
       }
@@ -300,8 +296,7 @@ function renderStatusActions(ret) {
     try {
       if (nextStatuses.includes('denied')) {
         $w('#denyBtn').show();
-        try { $w('#denyBtn').accessibility.ariaLabel = 'Deny this return'; } catch (e) {}
-        $w('#denyBtn').onClick(() => handleStatusUpdate(ret._id, 'denied'));
+        makeClickable($w('#denyBtn'), () => handleStatusUpdate(ret._id, 'denied'), { ariaLabel: 'Deny this return' });
       } else {
         $w('#denyBtn').hide();
       }
@@ -311,8 +306,7 @@ function renderStatusActions(ret) {
     try {
       if (nextStatuses.includes('shipped')) {
         $w('#markShippedBtn').show();
-        try { $w('#markShippedBtn').accessibility.ariaLabel = 'Mark return as shipped'; } catch (e) {}
-        $w('#markShippedBtn').onClick(() => handleStatusUpdate(ret._id, 'shipped'));
+        makeClickable($w('#markShippedBtn'), () => handleStatusUpdate(ret._id, 'shipped'), { ariaLabel: 'Mark return as shipped' });
       } else {
         $w('#markShippedBtn').hide();
       }
@@ -322,8 +316,7 @@ function renderStatusActions(ret) {
     try {
       if (nextStatuses.includes('received')) {
         $w('#markReceivedBtn').show();
-        try { $w('#markReceivedBtn').accessibility.ariaLabel = 'Mark return as received'; } catch (e) {}
-        $w('#markReceivedBtn').onClick(() => handleStatusUpdate(ret._id, 'received'));
+        makeClickable($w('#markReceivedBtn'), () => handleStatusUpdate(ret._id, 'received'), { ariaLabel: 'Mark return as received' });
       } else {
         $w('#markReceivedBtn').hide();
       }
@@ -363,8 +356,7 @@ function renderLabelAction(ret) {
     const { canGenerate, reason } = canGenerateLabel(ret);
     if (canGenerate) {
       $w('#generateLabelBtn').show();
-      try { $w('#generateLabelBtn').accessibility.ariaLabel = 'Generate UPS return label'; } catch (e) {}
-      $w('#generateLabelBtn').onClick(() => handleGenerateLabel(ret._id));
+      makeClickable($w('#generateLabelBtn'), () => handleGenerateLabel(ret._id), { ariaLabel: 'Generate UPS return label' });
     } else {
       $w('#generateLabelBtn').hide();
     }
@@ -398,7 +390,7 @@ async function handleGenerateLabel(returnId) {
 
 function initTrackingButton() {
   try {
-    $w('#trackShipmentBtn').onClick(async () => {
+    makeClickable($w('#trackShipmentBtn'), async () => {
       if (!_selectedReturn || !_selectedReturn.rmaNumber) return;
       try {
         $w('#trackShipmentBtn').disable();
@@ -425,7 +417,7 @@ function initTrackingButton() {
         $w('#trackShipmentBtn').enable();
         $w('#trackShipmentBtn').label = 'Track Shipment';
       } catch (e) {}
-    });
+    }, { ariaLabel: 'Track return shipment' });
   } catch (e) {}
 }
 
@@ -435,15 +427,13 @@ function initRefundModal() {
   try { $w('#refundModal').collapse(); } catch (e) {}
 
   try {
-    try { $w('#cancelRefundBtn').accessibility.ariaLabel = 'Cancel refund'; } catch (e) {}
-    $w('#cancelRefundBtn').onClick(() => {
+    makeClickable($w('#cancelRefundBtn'), () => {
       try { $w('#refundModal').collapse(); } catch (e) {}
-    });
+    }, { ariaLabel: 'Cancel refund' });
   } catch (e) {}
 
   try {
-    try { $w('#confirmRefundBtn').accessibility.ariaLabel = 'Confirm and process refund'; } catch (e) {}
-    $w('#confirmRefundBtn').onClick(() => handleProcessRefund());
+    makeClickable($w('#confirmRefundBtn'), () => handleProcessRefund(), { ariaLabel: 'Confirm and process refund' });
   } catch (e) {}
 }
 
@@ -452,8 +442,7 @@ function renderRefundAction(ret) {
     const canRefund = ret.status !== 'refunded' && ret.status !== 'denied' && ret.status !== 'requested';
     if (canRefund) {
       $w('#processRefundBtn').show();
-      try { $w('#processRefundBtn').accessibility.ariaLabel = 'Process refund for this return'; } catch (e) {}
-      $w('#processRefundBtn').onClick(() => openRefundModal(ret));
+      makeClickable($w('#processRefundBtn'), () => openRefundModal(ret), { ariaLabel: 'Process refund for this return' });
     } else {
       $w('#processRefundBtn').hide();
     }
