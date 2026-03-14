@@ -493,10 +493,9 @@ describe('Call-for-price product filtering (CF-hma6)', () => {
   it('getBundleSuggestion excludes call-for-price products', async () => {
     // Frame bundle should NOT pick the $1 mattress as cheapest
     const bundle = await getBundleSuggestion('prod-frame-001');
-    if (bundle) {
-      expect(bundle.product._id).not.toBe('prod-cfp-001');
-      expect(bundle.product.price).toBeGreaterThan(1);
-    }
+    expect(bundle).not.toBeNull();
+    expect(bundle.product._id).not.toBe('prod-cfp-001');
+    expect(bundle.product.price).toBeGreaterThan(1);
   });
 
   it('getFeaturedProducts excludes call-for-price products', async () => {
