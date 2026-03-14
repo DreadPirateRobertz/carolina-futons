@@ -638,23 +638,26 @@ h4.font_4,
    18. HIDE TEMPLATE SECTIONS — remove tera branding until editor fix
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* "AS SEEN IN" fake press logos — section ID from DOM */
-#comp-lyr8axwk {
+/* Hide template sections — use [id=] attribute selector because Wix
+   auto-prefixes #id selectors with wixui- (breaking the match) */
+
+/* "AS SEEN IN" fake press logos */
+[id="comp-lyr8axwk"] {
   display: none !important;
 }
 
 /* "FOLLOW US #TERAHOME" Instagram section */
-#comp-lybjbnr4 {
+[id="comp-lybjbnr4"] {
   display: none !important;
 }
 
 /* "THE TERA WORLD" about section */
-#comp-lybh6dfj {
+[id="comp-lybh6dfj"] {
   display: none !important;
 }
 
-/* Hero "tera" brand text — hide template name */
-#comp-ly72gz2c {
+/* Hero "tera" brand text */
+[id="comp-ly72gz2c"] {
   display: none !important;
 }
 
