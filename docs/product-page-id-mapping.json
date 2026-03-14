@@ -1,0 +1,339 @@
+{
+  "_meta": {
+    "page": "Product Page",
+    "wixPageId": "ve2z7",
+    "pageFile": "Product Page.ve2z7.js",
+    "site": "My Site 3 (Furniture Store #3563)",
+    "metaSiteId": "3af610bf-06fb-410d-a406-c1258fa84372",
+    "bead": "test-7kc",
+    "updated": "2026-03-13",
+    "workflow": "Option C — Melania discovers templateId via browser Layers panel; rennala runs remap script if needed",
+    "buildSpecLines": "343-633",
+    "remap_command": "node scripts/remap-element-ids.js <generated-remap.json> [--apply]"
+  },
+
+  "phase1_must_have": [
+
+    {
+      "group": "Gallery",
+      "elements": [
+        {
+          "description": "Main product image (large, zoomable)",
+          "templateId": "TBD",
+          "specId": "productMainImage",
+          "type": "Image",
+          "codeFiles": ["src/public/ProductGallery.js", "src/public/ProductOptions.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Thumbnail gallery strip (3 thumbnails below main image)",
+          "templateId": "TBD",
+          "specId": "productGallery",
+          "type": "Gallery",
+          "codeFiles": ["src/public/ProductGallery.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID",
+          "notes": "Must be Gallery element type — not Image. Clicking thumbnail updates #productMainImage"
+        }
+      ]
+    },
+
+    {
+      "group": "Product Details",
+      "elements": [
+        {
+          "description": "Product name / title (H5 'MODO' in template)",
+          "templateId": "TBD",
+          "specId": "productName",
+          "type": "Text",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/ProductDetails.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Product price (H6 '$1,200.00' in template)",
+          "templateId": "TBD",
+          "specId": "productPrice",
+          "type": "Text",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/ProductOptions.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Compare/original price (strikethrough, hidden when no sale)",
+          "templateId": "TBD",
+          "specId": "productComparePrice",
+          "type": "Text",
+          "codeFiles": ["src/public/ProductOptions.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME_OR_ADD",
+          "defaultVisibility": "hidden"
+        },
+        {
+          "description": "Product description text (also dataset-bound; used in code for 'not found' fallback)",
+          "templateId": "TBD",
+          "specId": "productDescription",
+          "type": "RichText",
+          "codeFiles": ["src/pages/Product Page.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Stock status badge ('In Stock' / 'Special Order')",
+          "templateId": "TBD",
+          "specId": "stockStatus",
+          "type": "Text",
+          "codeFiles": ["src/public/ProductOptions.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Wix Stores dataset connection (hidden, functional)",
+          "templateId": "TBD",
+          "specId": "productDataset",
+          "type": "Dataset",
+          "codeFiles": ["src/pages/Product Page.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID",
+          "notes": "Must be connected to Stores/Products collection in dataset panel"
+        },
+        {
+          "description": "Hidden JSON-LD product schema (HtmlComponent)",
+          "templateId": "TBD",
+          "specId": "productSchemaHtml",
+          "type": "HtmlComponent",
+          "codeFiles": ["src/public/ProductDetails.js"],
+          "connectivity": "UNKNOWN",
+          "action": "ADD",
+          "defaultVisibility": "hidden",
+          "notes": "Add as hidden HtmlComponent at bottom of page"
+        }
+      ]
+    },
+
+    {
+      "group": "Variant Selection",
+      "elements": [
+        {
+          "description": "Size/mattress dropdown (Full/Queen/Twin) — template has color radio buttons",
+          "templateId": "TBD",
+          "specId": "sizeDropdown",
+          "type": "Dropdown",
+          "codeFiles": ["src/public/ProductOptions.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME",
+          "notes": "Template has radio buttons for color. If different element type, may need to add a Dropdown element instead."
+        },
+        {
+          "description": "Frame/finish dropdown (Natural Oak, Espresso, etc.)",
+          "templateId": "TBD",
+          "specId": "finishDropdown",
+          "type": "Dropdown",
+          "codeFiles": ["src/public/ProductOptions.js"],
+          "connectivity": "UNKNOWN",
+          "action": "ADD",
+          "notes": "Template may not have this — add new Dropdown in variant section"
+        }
+      ]
+    },
+
+    {
+      "group": "Quantity Selector",
+      "elements": [
+        {
+          "description": "Quantity number input (spinbutton, default '1')",
+          "templateId": "TBD",
+          "specId": "quantityInput",
+          "type": "NumberInput",
+          "codeFiles": ["src/public/AddToCart.js", "src/public/product/cartEnhancements.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME_OR_ADD",
+          "notes": "Template has native Wix quantity spinbutton. May be a native Stores component — check if it's a custom element or native widget."
+        },
+        {
+          "description": "Quantity decrease button ('Remove one' / minus)",
+          "templateId": "TBD",
+          "specId": "quantityMinus",
+          "type": "Button",
+          "codeFiles": ["src/public/AddToCart.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME_OR_ADD"
+        },
+        {
+          "description": "Quantity increase button ('Add one' / plus)",
+          "templateId": "TBD",
+          "specId": "quantityPlus",
+          "type": "Button",
+          "codeFiles": ["src/public/AddToCart.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME_OR_ADD"
+        }
+      ]
+    },
+
+    {
+      "group": "Add to Cart",
+      "elements": [
+        {
+          "description": "Primary add-to-cart button (coral CTA)",
+          "templateId": "TBD",
+          "specId": "addToCartButton",
+          "type": "Button",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/AddToCart.js"],
+          "connectivity": "FOUND",
+          "action": "VERIFY_ID"
+        },
+        {
+          "description": "Add-to-cart success toast notification (hidden default)",
+          "templateId": "TBD",
+          "specId": "addToCartSuccess",
+          "type": "Box",
+          "codeFiles": ["src/public/AddToCart.js"],
+          "connectivity": "UNKNOWN",
+          "action": "ADD",
+          "defaultVisibility": "hidden"
+        }
+      ]
+    },
+
+    {
+      "group": "Breadcrumbs",
+      "elements": [
+        {
+          "description": "Breadcrumb 1 — 'Home' link",
+          "templateId": "TBD",
+          "specId": "breadcrumb1",
+          "type": "Text",
+          "codeFiles": ["src/public/ProductDetails.js", "src/public/product/productSchema.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME",
+          "notes": "Template shows 'Home > MODO'. First text element."
+        },
+        {
+          "description": "Breadcrumb 2 — category name link",
+          "templateId": "TBD",
+          "specId": "breadcrumb2",
+          "type": "Text",
+          "codeFiles": ["src/public/ProductDetails.js", "src/public/product/productSchema.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME"
+        },
+        {
+          "description": "Breadcrumb 3 — product name (no link)",
+          "templateId": "TBD",
+          "specId": "breadcrumb3",
+          "type": "Text",
+          "codeFiles": ["src/public/ProductDetails.js", "src/public/product/productSchema.js"],
+          "connectivity": "UNKNOWN",
+          "action": "RENAME",
+          "notes": "Template shows product name 'MODO' at end of breadcrumb trail"
+        },
+        {
+          "description": "Breadcrumb JSON-LD schema (hidden HtmlComponent)",
+          "templateId": "TBD",
+          "specId": "breadcrumbSchemaHtml",
+          "type": "HtmlComponent",
+          "codeFiles": ["src/public/ProductDetails.js", "src/public/product/productSchema.js"],
+          "connectivity": "UNKNOWN",
+          "action": "ADD",
+          "defaultVisibility": "hidden"
+        }
+      ]
+    },
+
+    {
+      "group": "Cross-Sell (You Might Also Like)",
+      "elements": [
+        {
+          "description": "Cross-sell section container (collapsible)",
+          "templateId": "TBD",
+          "specId": "relatedSection",
+          "type": "Section",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "RENAME",
+          "notes": "Template has 'You Might Also Like' carousel section — rename its container section to relatedSection"
+        },
+        {
+          "description": "Cross-sell products repeater (4-col grid)",
+          "templateId": "TBD",
+          "specId": "relatedRepeater",
+          "type": "Repeater",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "RENAME",
+          "notes": "Template carousel (16 products with Quick View) is the natural match. Must be Repeater type (not Gallery) for .data assignment to work."
+        },
+        {
+          "description": "Related product image (inside repeater item)",
+          "templateId": "TBD",
+          "specId": "relatedImage",
+          "type": "Image",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "RENAME",
+          "notes": "Inside #relatedRepeater item. Used with $item('#relatedImage')"
+        },
+        {
+          "description": "Related product name (inside repeater item)",
+          "templateId": "TBD",
+          "specId": "relatedName",
+          "type": "Text",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "RENAME"
+        },
+        {
+          "description": "Related product price (inside repeater item)",
+          "templateId": "TBD",
+          "specId": "relatedPrice",
+          "type": "Text",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "RENAME"
+        },
+        {
+          "description": "Related product ribbon/badge (inside repeater item, hidden default)",
+          "templateId": "TBD",
+          "specId": "relatedBadge",
+          "type": "Text",
+          "codeFiles": ["src/pages/Product Page.js", "src/public/product/crossSell.js"],
+          "connectivity": "MISSING",
+          "action": "ADD",
+          "defaultVisibility": "hidden",
+          "notes": "Template may not have this — add Text element inside repeater item, hidden by default"
+        }
+      ]
+    }
+  ],
+
+  "phase1_summary": {
+    "totalElements": 25,
+    "connectivity": {
+      "FOUND": 8,
+      "MISSING": 5,
+      "UNKNOWN": 12
+    },
+    "actions": {
+      "VERIFY_ID": 7,
+      "RENAME": 9,
+      "RENAME_OR_ADD": 3,
+      "ADD": 6
+    },
+    "criticalMissing": [
+      "relatedRepeater",
+      "relatedSection",
+      "relatedImage",
+      "relatedName",
+      "relatedPrice"
+    ],
+    "notes": "VERIFY_ID = confirm ID matches in editor; RENAME = rename template element to spec ID; ADD = create new element"
+  },
+
+  "remap_if_template_uses_different_ids": {
+    "_instructions": "After Melania discovers actual templateIds via browser, populate this section and run: node scripts/remap-element-ids.js remap-apply.json --apply",
+    "_format": "{ 'currentCodeId': 'actualTemplateId' } — only needed if we decide to match template IDs instead of spec IDs",
+    "_current_status": "Code matches BUILD-SPEC. Prefer RENAME in editor over CODE remap."
+  }
+}

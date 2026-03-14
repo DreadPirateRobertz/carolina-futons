@@ -68,6 +68,10 @@ export function validateUrl(value, fieldName) {
 /**
  * Strip HTML tags and limit string length.
  * Same logic as backend/utils/sanitize but available to import scripts.
+ * Uses a greedy `<[^>]*>` regex — adequate for scrape output; not XSS-safe for user input.
+ * @param {*} str - Input value (non-strings return '')
+ * @param {number} [maxLen=1000] - Maximum output length (characters)
+ * @returns {string} Tag-stripped, trimmed, length-limited string
  */
 export function sanitize(str, maxLen = 1000) {
   if (typeof str !== 'string') return '';
@@ -75,7 +79,12 @@ export function sanitize(str, maxLen = 1000) {
 }
 
 /**
- * Sanitize but preserve HTML (for Rich Text fields like steps/tips).
+ * Preserve HTML but enforce a length limit (for Rich Text CMS fields).
+ * Unlike sanitize(), does NOT strip tags — use only for fields that accept HTML
+ * (e.g. description, steps, tips). Still trims leading/trailing whitespace.
+ * @param {*} str - Input value (non-strings return '')
+ * @param {number} [maxLen=10000] - Maximum output length (characters)
+ * @returns {string} Trimmed, length-limited string with HTML intact
  */
 export function sanitizeRichText(str, maxLen = 10000) {
   if (typeof str !== 'string') return '';
@@ -83,7 +92,11 @@ export function sanitizeRichText(str, maxLen = 10000) {
 }
 
 /**
- * Normalize a hex color to #RRGGBB format.
+ * Normalize a hex color string to uppercase #RRGGBB format.
+ * Accepts 3-digit shorthand (#RGB → #RRGGBB) and strips leading #.
+ * Returns '#000000' for any invalid or non-string input.
+ * @param {*} hex - Raw hex color value, e.g. '#e8845c', 'E8845C', '#e88'
+ * @returns {string} Normalized hex, e.g. '#E8845C'
  */
 export function normalizeHex(hex) {
   if (typeof hex !== 'string') return '#000000';
