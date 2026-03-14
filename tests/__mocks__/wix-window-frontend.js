@@ -13,4 +13,5 @@ const wixWindowFrontend = {
   locale: 'en',
 };
 
+export const openUrl = vi.fn();
 export default wixWindowFrontend;
