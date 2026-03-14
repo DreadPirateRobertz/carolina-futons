@@ -1,0 +1,4530 @@
+{
+  "_meta": {
+    "task": "CF-03jx",
+    "description": "Comprehensive audit of all $w('#...') element IDs used in Velo code. Melania uses this to assign nicknames in the editor Properties panel.",
+    "workflow": "1. Melania opens editor. 2. For each element below, find the comp-xxx element and rename to the nickname listed. 3. Once renamed, run remap-element-ids.js if any comp-xxx IDs were hardcoded.",
+    "priority_guide": "P0 = page breaks without it, P1 = feature broken, P2 = enhancement missing",
+    "generated": "2026-03-14",
+    "total_unique_ids": 807
+  },
+  "masterPage": {
+    "_priority": "P0 \u2014 all pages depend on masterPage elements",
+    "header": {
+      "P0": [
+        {
+          "id": "announcementBar",
+          "type": "Strip/Box",
+          "notes": "Announcement bar container \u2014 nav hides this on scroll"
+        },
+        {
+          "id": "announcementText",
+          "type": "Text",
+          "notes": "Announcement bar text \u2014 also used by a11yHelpers"
+        },
+        {
+          "id": "siteLogo",
+          "type": "Image",
+          "notes": "Carolina Futons logo \u2014 click navigates home"
+        },
+        {
+          "id": "cartIcon",
+          "type": "Button/Image",
+          "notes": "Shopping cart icon \u2014 opens side cart"
+        },
+        {
+          "id": "cartBadge",
+          "type": "Text",
+          "notes": "Cart item count badge overlay"
+        },
+        {
+          "id": "headerSearchInput",
+          "type": "Input",
+          "notes": "Search bar in header"
+        }
+      ],
+      "P1": [
+        {
+          "id": "navShop",
+          "type": "Link/Text",
+          "notes": "Shop nav link \u2014 navigationHelpers wires click"
+        },
+        {
+          "id": "mobileMenuButton",
+          "type": "Button",
+          "notes": "Hamburger menu toggle \u2014 mobile only"
+        },
+        {
+          "id": "mobileMenuOverlay",
+          "type": "Box",
+          "notes": "Full-screen mobile menu overlay"
+        },
+        {
+          "id": "mobileMenuClose",
+          "type": "Button",
+          "notes": "X close button in mobile menu"
+        },
+        {
+          "id": "desktopNavBar",
+          "type": "Box",
+          "notes": "Desktop nav container \u2014 navigationHelpers"
+        },
+        {
+          "id": "megaMenuPanel",
+          "type": "Box",
+          "notes": "Mega menu dropdown panel"
+        },
+        {
+          "id": "headerShippingBar",
+          "type": "Box",
+          "notes": "Free shipping threshold bar"
+        },
+        {
+          "id": "headerShippingText",
+          "type": "Text",
+          "notes": "Shipping bar text content"
+        }
+      ],
+      "P2": [
+        {
+          "id": "navHome",
+          "type": "Link",
+          "notes": "Home nav link \u2014 gap, needs adding"
+        },
+        {
+          "id": "navContact",
+          "type": "Link",
+          "notes": "Contact nav link"
+        },
+        {
+          "id": "navProductVideos",
+          "type": "Link",
+          "notes": "Product Videos nav link \u2014 gap"
+        },
+        {
+          "id": "navSale",
+          "type": "Link",
+          "notes": "Sale nav link (coral text) \u2014 gap"
+        },
+        {
+          "id": "navGettingItHome",
+          "type": "Link",
+          "notes": "Getting It Home nav link \u2014 gap"
+        },
+        {
+          "id": "navFAQ",
+          "type": "Link",
+          "notes": "FAQ nav link \u2014 gap"
+        },
+        {
+          "id": "navAbout",
+          "type": "Link",
+          "notes": "About nav link \u2014 gap"
+        },
+        {
+          "id": "navBlog",
+          "type": "Link",
+          "notes": "Blog nav link \u2014 gap"
+        },
+        {
+          "id": "announcementDismiss",
+          "type": "Button",
+          "notes": "Dismiss X on announcement bar"
+        }
+      ]
+    },
+    "footer": {
+      "P0": [
+        {
+          "id": "siteFooter",
+          "type": "Section",
+          "notes": "Footer container section"
+        },
+        {
+          "id": "footerLogo",
+          "type": "Image/Text",
+          "notes": "Footer brand logo/name"
+        },
+        {
+          "id": "footerEmailInput",
+          "type": "Input",
+          "notes": "Newsletter email input"
+        },
+        {
+          "id": "footerEmailSubmit",
+          "type": "Button",
+          "notes": "Newsletter submit button"
+        },
+        {
+          "id": "footerCopyright",
+          "type": "Text",
+          "notes": "Copyright line"
+        }
+      ],
+      "P1": [
+        {
+          "id": "footerPhone",
+          "type": "Text",
+          "notes": "Phone number"
+        },
+        {
+          "id": "footerAddress",
+          "type": "Text",
+          "notes": "Store address"
+        },
+        {
+          "id": "footerHours",
+          "type": "Text",
+          "notes": "Business hours"
+        },
+        {
+          "id": "socialFacebook",
+          "type": "Link/Button",
+          "notes": "Facebook social link"
+        },
+        {
+          "id": "socialInstagram",
+          "type": "Link/Button",
+          "notes": "Instagram social link"
+        },
+        {
+          "id": "socialPinterest",
+          "type": "Link/Button",
+          "notes": "Pinterest social link"
+        },
+        {
+          "id": "footerEmailError",
+          "type": "Text (hidden)",
+          "notes": "Validation error \u2014 gap, needs adding"
+        },
+        {
+          "id": "footerEmailSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message \u2014 gap, needs adding"
+        }
+      ],
+      "P2": [
+        {
+          "id": "footerMountainDivider",
+          "type": "Image/SVG",
+          "notes": "Mountain ridgeline divider \u2014 gap"
+        },
+        {
+          "id": "footerStoreName",
+          "type": "Text",
+          "notes": "Store name in contact section"
+        },
+        {
+          "id": "footerStoreAddress",
+          "type": "Text",
+          "notes": "Full address in footer contact"
+        },
+        {
+          "id": "footerStorePhone",
+          "type": "Text",
+          "notes": "Phone in footer contact"
+        },
+        {
+          "id": "footerStoreHours",
+          "type": "Text",
+          "notes": "Hours in footer contact"
+        },
+        {
+          "id": "footerShopRepeater",
+          "type": "Repeater",
+          "notes": "Shop links column"
+        },
+        {
+          "id": "footerServiceRepeater",
+          "type": "Repeater",
+          "notes": "Service links column"
+        },
+        {
+          "id": "footerAboutRepeater",
+          "type": "Repeater",
+          "notes": "About links column"
+        },
+        {
+          "id": "footerBadgeRepeater",
+          "type": "Repeater",
+          "notes": "Trust badges"
+        },
+        {
+          "id": "footerPaymentRepeater",
+          "type": "Repeater",
+          "notes": "Payment method icons"
+        },
+        {
+          "id": "footerSocialRepeater",
+          "type": "Repeater",
+          "notes": "Social link icons"
+        }
+      ]
+    },
+    "accessibility": {
+      "P0": [
+        {
+          "id": "a11yLiveRegion",
+          "type": "Text (hidden)",
+          "notes": "ARIA live region for screen reader announcements"
+        },
+        {
+          "id": "businessSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "LocalBusiness JSON-LD"
+        },
+        {
+          "id": "websiteSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "WebSite schema for sitelinks search"
+        },
+        {
+          "id": "breadcrumbSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "BreadcrumbList JSON-LD"
+        }
+      ]
+    },
+    "exit_intent": {
+      "P1": [
+        {
+          "id": "exitIntentPopup",
+          "type": "Box (hidden)",
+          "notes": "Exit-intent popup container"
+        },
+        {
+          "id": "exitOverlay",
+          "type": "Box (hidden)",
+          "notes": "Semi-transparent backdrop"
+        },
+        {
+          "id": "exitTitle",
+          "type": "Text",
+          "notes": "Popup heading"
+        },
+        {
+          "id": "exitSubtitle",
+          "type": "Text",
+          "notes": "Offer text"
+        },
+        {
+          "id": "exitEmailInput",
+          "type": "Input",
+          "notes": "Email capture"
+        },
+        {
+          "id": "exitEmailSubmit",
+          "type": "Button",
+          "notes": "Submit button"
+        },
+        {
+          "id": "exitEmailError",
+          "type": "Text (hidden)",
+          "notes": "Validation error"
+        },
+        {
+          "id": "exitSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "exitSwatchLink",
+          "type": "Link",
+          "notes": "Free swatch CTA link"
+        },
+        {
+          "id": "exitDragHandle",
+          "type": "Box",
+          "notes": "Mobile drag handle"
+        }
+      ]
+    },
+    "side_cart": {
+      "P0": [
+        {
+          "id": "sideCartPanel",
+          "type": "Box (hidden)",
+          "notes": "Side cart slide-out panel"
+        },
+        {
+          "id": "justAddedHighlight",
+          "type": "Box",
+          "notes": "Just-added item highlight"
+        }
+      ]
+    },
+    "promo_modal": {
+      "P2": [
+        {
+          "id": "promoLightbox",
+          "type": "Box (hidden)",
+          "notes": "Promotional lightbox"
+        },
+        {
+          "id": "promoOverlay",
+          "type": "Box",
+          "notes": "Lightbox backdrop"
+        },
+        {
+          "id": "promoTitle",
+          "type": "Text",
+          "notes": "Promo heading"
+        },
+        {
+          "id": "promoSubtitle",
+          "type": "Text",
+          "notes": "Promo description"
+        },
+        {
+          "id": "promoCode",
+          "type": "Text",
+          "notes": "Discount code display"
+        },
+        {
+          "id": "promoCopyCode",
+          "type": "Button",
+          "notes": "Copy code button"
+        },
+        {
+          "id": "promoCTA",
+          "type": "Button",
+          "notes": "Shop now CTA"
+        },
+        {
+          "id": "promoClose",
+          "type": "Button",
+          "notes": "Close X button"
+        },
+        {
+          "id": "promoDismiss",
+          "type": "Button",
+          "notes": "Dismiss link"
+        },
+        {
+          "id": "promoCountdown",
+          "type": "Text",
+          "notes": "Sale countdown timer"
+        },
+        {
+          "id": "promoHeroImage",
+          "type": "Image",
+          "notes": "Hero image in promo"
+        },
+        {
+          "id": "promoRepeater",
+          "type": "Repeater",
+          "notes": "Multiple promo items"
+        },
+        {
+          "id": "promoEmailInput",
+          "type": "Input",
+          "notes": "Email capture in promo"
+        },
+        {
+          "id": "promoEmailSubmit",
+          "type": "Button",
+          "notes": "Email submit in promo"
+        }
+      ]
+    },
+    "newsletter_modal": {
+      "P1": [
+        {
+          "id": "newsletterModal",
+          "type": "Box (hidden)",
+          "notes": "Newsletter popup modal"
+        },
+        {
+          "id": "newsletterModalOverlay",
+          "type": "Box",
+          "notes": "Modal backdrop"
+        },
+        {
+          "id": "newsletterModalEmail",
+          "type": "Input",
+          "notes": "Email input in modal"
+        },
+        {
+          "id": "newsletterModalSubmit",
+          "type": "Button",
+          "notes": "Submit in modal"
+        },
+        {
+          "id": "newsletterModalSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "newsletterModalError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        },
+        {
+          "id": "newsletterModalTrigger",
+          "type": "Button",
+          "notes": "Trigger button (scrolled)"
+        }
+      ]
+    },
+    "pwa": {
+      "P2": [
+        {
+          "id": "installBanner",
+          "type": "Box (hidden)",
+          "notes": "PWA install banner"
+        },
+        {
+          "id": "installBannerText",
+          "type": "Text",
+          "notes": "Install prompt text"
+        },
+        {
+          "id": "installBannerBtn",
+          "type": "Button",
+          "notes": "Install button"
+        },
+        {
+          "id": "installBannerDismiss",
+          "type": "Button",
+          "notes": "Dismiss install"
+        }
+      ]
+    }
+  },
+  "homePage": {
+    "_priority": "P0 \u2014 homepage is primary landing page",
+    "hero": {
+      "P0": [
+        {
+          "id": "heroSection",
+          "type": "Section",
+          "notes": "Hero section container"
+        },
+        {
+          "id": "heroTitle",
+          "type": "Text (H1)",
+          "notes": "Main hero heading"
+        },
+        {
+          "id": "heroSubtitle",
+          "type": "Text",
+          "notes": "Hero subheading"
+        },
+        {
+          "id": "heroCTA",
+          "type": "Button",
+          "notes": "Shop Now CTA"
+        },
+        {
+          "id": "heroBg",
+          "type": "Image",
+          "notes": "Hero background image"
+        },
+        {
+          "id": "heroOverlay",
+          "type": "Box",
+          "notes": "Gradient overlay on hero"
+        }
+      ]
+    },
+    "featured_products": {
+      "P0": [
+        {
+          "id": "featuredRepeater",
+          "type": "Repeater",
+          "notes": "Featured products grid"
+        },
+        {
+          "id": "featuredTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        },
+        {
+          "id": "featuredSubtitle",
+          "type": "Text",
+          "notes": "Section subheading"
+        },
+        {
+          "id": "featuredSkeleton",
+          "type": "Box",
+          "notes": "Loading skeleton placeholder"
+        }
+      ],
+      "P1": [
+        {
+          "id": "featuredQuickViewModal",
+          "type": "Box (hidden)",
+          "notes": "Quick view modal for featured"
+        },
+        {
+          "id": "featuredQvImage",
+          "type": "Image",
+          "notes": "QV product image"
+        },
+        {
+          "id": "featuredQvName",
+          "type": "Text",
+          "notes": "QV product name"
+        },
+        {
+          "id": "featuredQvPrice",
+          "type": "Text",
+          "notes": "QV product price"
+        },
+        {
+          "id": "featuredQvAddToCart",
+          "type": "Button",
+          "notes": "QV add to cart"
+        },
+        {
+          "id": "featuredQvViewFull",
+          "type": "Link",
+          "notes": "QV view full product"
+        },
+        {
+          "id": "featuredQvClose",
+          "type": "Button",
+          "notes": "QV close button"
+        }
+      ]
+    },
+    "categories": {
+      "P0": [
+        {
+          "id": "categoryRepeater",
+          "type": "Repeater",
+          "notes": "Category cards grid"
+        },
+        {
+          "id": "categorySkeleton",
+          "type": "Box",
+          "notes": "Loading skeleton"
+        }
+      ]
+    },
+    "testimonials": {
+      "P1": [
+        {
+          "id": "testimonialSection",
+          "type": "Section",
+          "notes": "Testimonials container"
+        },
+        {
+          "id": "testimonialRepeater",
+          "type": "Repeater",
+          "notes": "Testimonial cards"
+        },
+        {
+          "id": "testimonialSlideshow",
+          "type": "Slideshow",
+          "notes": "Auto-advancing slideshow"
+        },
+        {
+          "id": "testimonialPauseBtn",
+          "type": "Button",
+          "notes": "Pause/play toggle"
+        },
+        {
+          "id": "testimonialSchemaScript",
+          "type": "HtmlComponent",
+          "notes": "Review schema JSON-LD"
+        }
+      ]
+    },
+    "newsletter": {
+      "P1": [
+        {
+          "id": "newsletterSection",
+          "type": "Section",
+          "notes": "Newsletter signup section"
+        },
+        {
+          "id": "newsletterTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        },
+        {
+          "id": "newsletterSubtitle",
+          "type": "Text",
+          "notes": "Section subheading"
+        },
+        {
+          "id": "newsletterEmail",
+          "type": "Input",
+          "notes": "Email input"
+        },
+        {
+          "id": "newsletterSubmit",
+          "type": "Button",
+          "notes": "Submit button"
+        },
+        {
+          "id": "newsletterSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "newsletterError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        }
+      ]
+    },
+    "other_sections": {
+      "P1": [
+        {
+          "id": "saleSection",
+          "type": "Section",
+          "notes": "Sale items section"
+        },
+        {
+          "id": "saleRepeater",
+          "type": "Repeater",
+          "notes": "Sale products grid"
+        },
+        {
+          "id": "saleSkeleton",
+          "type": "Box",
+          "notes": "Loading skeleton"
+        },
+        {
+          "id": "trustBar",
+          "type": "Box",
+          "notes": "Trust badges bar"
+        },
+        {
+          "id": "ridgelineHeader",
+          "type": "Image/SVG",
+          "notes": "Mountain ridgeline divider"
+        },
+        {
+          "id": "recentSection",
+          "type": "Section",
+          "notes": "Recently viewed section"
+        }
+      ],
+      "P2": [
+        {
+          "id": "quizCTASection",
+          "type": "Section",
+          "notes": "Style quiz CTA section"
+        },
+        {
+          "id": "quizCTATitle",
+          "type": "Text",
+          "notes": "Quiz heading"
+        },
+        {
+          "id": "quizCTASubtitle",
+          "type": "Text",
+          "notes": "Quiz description"
+        },
+        {
+          "id": "quizCTAButton",
+          "type": "Button",
+          "notes": "Take quiz button"
+        },
+        {
+          "id": "swatchPromoSection",
+          "type": "Section",
+          "notes": "Free swatch promo"
+        },
+        {
+          "id": "swatchPromoTitle",
+          "type": "Text",
+          "notes": "Swatch heading"
+        },
+        {
+          "id": "swatchPromoSubtitle",
+          "type": "Text",
+          "notes": "Swatch description"
+        },
+        {
+          "id": "swatchPromoCTA",
+          "type": "Button",
+          "notes": "Request swatch button"
+        },
+        {
+          "id": "videoShowcaseSection",
+          "type": "Section",
+          "notes": "Video showcase"
+        },
+        {
+          "id": "videoShowcaseTitle",
+          "type": "Text",
+          "notes": "Video heading"
+        },
+        {
+          "id": "videoShowcaseSubtitle",
+          "type": "Text",
+          "notes": "Video description"
+        },
+        {
+          "id": "viewAllVideosCTA",
+          "type": "Button",
+          "notes": "View all videos link"
+        }
+      ]
+    }
+  },
+  "categoryPage": {
+    "_priority": "P0 \u2014 primary shopping page",
+    "breadcrumbs_and_hero": {
+      "P0": [
+        {
+          "id": "breadcrumbHome",
+          "type": "Link/Text",
+          "notes": "Home breadcrumb link"
+        },
+        {
+          "id": "breadcrumbCurrent",
+          "type": "Text",
+          "notes": "Current category name"
+        },
+        {
+          "id": "categoryHeroTitle",
+          "type": "Text (H1)",
+          "notes": "Category page title"
+        },
+        {
+          "id": "categoryHeroSubtitle",
+          "type": "Text",
+          "notes": "Category description"
+        },
+        {
+          "id": "categoryHeroSection",
+          "type": "Section",
+          "notes": "Hero section \u2014 gap"
+        }
+      ]
+    },
+    "filters_and_sort": {
+      "P0": [
+        {
+          "id": "sortDropdown",
+          "type": "Dropdown",
+          "notes": "Sort by dropdown"
+        },
+        {
+          "id": "resultCount",
+          "type": "Text",
+          "notes": "Product count display"
+        },
+        {
+          "id": "filterPrice",
+          "type": "Slider/Dropdown",
+          "notes": "Price filter"
+        },
+        {
+          "id": "filterColor",
+          "type": "CheckboxGroup",
+          "notes": "Color filter"
+        }
+      ],
+      "P1": [
+        {
+          "id": "filterBrand",
+          "type": "Dropdown",
+          "notes": "Brand filter \u2014 gap"
+        },
+        {
+          "id": "filterSize",
+          "type": "Dropdown",
+          "notes": "Size filter \u2014 gap"
+        },
+        {
+          "id": "filterCategory",
+          "type": "Dropdown",
+          "notes": "Category filter"
+        },
+        {
+          "id": "clearFilters",
+          "type": "Button",
+          "notes": "Clear filters button \u2014 gap"
+        },
+        {
+          "id": "filterToggleBtn",
+          "type": "Button",
+          "notes": "Mobile filter toggle \u2014 gap"
+        },
+        {
+          "id": "filterDrawer",
+          "type": "Box",
+          "notes": "Mobile filter drawer \u2014 gap"
+        },
+        {
+          "id": "filterDrawerOverlay",
+          "type": "Box",
+          "notes": "Filter drawer backdrop \u2014 gap"
+        },
+        {
+          "id": "filterDrawerApply",
+          "type": "Button",
+          "notes": "Apply filters in drawer \u2014 gap"
+        },
+        {
+          "id": "mobileSortBar",
+          "type": "Box",
+          "notes": "Mobile sort bar \u2014 gap"
+        },
+        {
+          "id": "flashSaleBanner",
+          "type": "Box",
+          "notes": "Flash sale banner"
+        }
+      ],
+      "P2": [
+        {
+          "id": "filterMaterial",
+          "type": "CheckboxGroup",
+          "notes": "Material filter \u2014 gap"
+        },
+        {
+          "id": "filterFeatures",
+          "type": "CheckboxGroup",
+          "notes": "Features filter \u2014 gap"
+        },
+        {
+          "id": "filterComfortLevel",
+          "type": "Dropdown",
+          "notes": "Comfort level \u2014 gap"
+        },
+        {
+          "id": "filterPriceRange",
+          "type": "Slider",
+          "notes": "Price range slider \u2014 gap"
+        },
+        {
+          "id": "filterWidthMin",
+          "type": "Input",
+          "notes": "Width min \u2014 gap"
+        },
+        {
+          "id": "filterWidthMax",
+          "type": "Input",
+          "notes": "Width max \u2014 gap"
+        },
+        {
+          "id": "filterDepthMin",
+          "type": "Input",
+          "notes": "Depth min \u2014 gap"
+        },
+        {
+          "id": "filterDepthMax",
+          "type": "Input",
+          "notes": "Depth max \u2014 gap"
+        },
+        {
+          "id": "filterResultCount",
+          "type": "Text",
+          "notes": "Filtered result count \u2014 gap"
+        },
+        {
+          "id": "clearAllFilters",
+          "type": "Button",
+          "notes": "Clear all filters \u2014 gap"
+        },
+        {
+          "id": "filterLoadingIndicator",
+          "type": "Spinner",
+          "notes": "Filter loading \u2014 gap"
+        },
+        {
+          "id": "activeFilterChips",
+          "type": "Box",
+          "notes": "Active filter chips container"
+        },
+        {
+          "id": "filterChipRepeater",
+          "type": "Repeater",
+          "notes": "Filter chip tags"
+        },
+        {
+          "id": "filterChipsText",
+          "type": "Text",
+          "notes": "Active filters label"
+        },
+        {
+          "id": "clearAllFiltersChip",
+          "type": "Button",
+          "notes": "Clear all chip"
+        }
+      ]
+    },
+    "product_grid": {
+      "P0": [
+        {
+          "id": "productGridRepeater",
+          "type": "Repeater",
+          "notes": "Product grid \u2014 rename from Gallery if swapped"
+        },
+        {
+          "id": "categoryDataset",
+          "type": "Dataset",
+          "notes": "Wix dataset connector"
+        }
+      ]
+    },
+    "quick_view": {
+      "P1": [
+        {
+          "id": "quickViewModal",
+          "type": "Box (hidden)",
+          "notes": "Quick view modal \u2014 gap"
+        },
+        {
+          "id": "qvImage",
+          "type": "Image",
+          "notes": "QV product image"
+        },
+        {
+          "id": "qvName",
+          "type": "Text",
+          "notes": "QV product name"
+        },
+        {
+          "id": "qvPrice",
+          "type": "Text",
+          "notes": "QV price"
+        },
+        {
+          "id": "qvDescription",
+          "type": "Text",
+          "notes": "QV description"
+        },
+        {
+          "id": "qvViewFull",
+          "type": "Link",
+          "notes": "View full product link"
+        },
+        {
+          "id": "qvAddToCart",
+          "type": "Button",
+          "notes": "QV add to cart"
+        },
+        {
+          "id": "qvClose",
+          "type": "Button",
+          "notes": "QV close button"
+        },
+        {
+          "id": "qvSizeSelect",
+          "type": "Dropdown",
+          "notes": "QV size selector"
+        }
+      ]
+    },
+    "empty_states": {
+      "P1": [
+        {
+          "id": "emptyStateSection",
+          "type": "Section (hidden)",
+          "notes": "Empty state container \u2014 gap"
+        },
+        {
+          "id": "emptyStateTitle",
+          "type": "Text",
+          "notes": "Empty state heading"
+        },
+        {
+          "id": "emptyStateMessage",
+          "type": "Text",
+          "notes": "Empty state body"
+        },
+        {
+          "id": "emptyStateIllustration",
+          "type": "Image",
+          "notes": "Empty state illustration"
+        },
+        {
+          "id": "noMatchesSection",
+          "type": "Section (hidden)",
+          "notes": "No filter matches \u2014 gap"
+        },
+        {
+          "id": "noMatchesTitle",
+          "type": "Text",
+          "notes": "No matches heading"
+        },
+        {
+          "id": "noMatchesMessage",
+          "type": "Text",
+          "notes": "No matches body"
+        },
+        {
+          "id": "noMatchesSuggestion",
+          "type": "Text",
+          "notes": "Suggestion text"
+        }
+      ]
+    },
+    "seo": {
+      "P0": [
+        {
+          "id": "categorySchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Category ItemList schema"
+        },
+        {
+          "id": "categoryBreadcrumbSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Category breadcrumb schema"
+        },
+        {
+          "id": "categoryOgHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "OpenGraph meta tags"
+        }
+      ]
+    },
+    "compare_and_recent": {
+      "P2": [
+        {
+          "id": "compareBar",
+          "type": "Box (hidden)",
+          "notes": "Comparison sticky bar"
+        },
+        {
+          "id": "compareRepeater",
+          "type": "Repeater",
+          "notes": "Compare items"
+        },
+        {
+          "id": "compareViewBtn",
+          "type": "Button",
+          "notes": "View comparison button"
+        },
+        {
+          "id": "recentlyViewedSection",
+          "type": "Section",
+          "notes": "Recently viewed"
+        },
+        {
+          "id": "recentlyViewedRepeater",
+          "type": "Repeater",
+          "notes": "Recent product cards"
+        },
+        {
+          "id": "recentlyViewedTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        }
+      ]
+    }
+  },
+  "productPage": {
+    "_priority": "P0 \u2014 highest revenue page",
+    "core": {
+      "P0": [
+        {
+          "id": "productDataset",
+          "type": "Dataset",
+          "notes": "Wix product dataset connector"
+        },
+        {
+          "id": "productMainImage",
+          "type": "Image",
+          "notes": "Main product image \u2014 gallery, zoom, lightbox"
+        },
+        {
+          "id": "productGallery",
+          "type": "Gallery",
+          "notes": "Thumbnail gallery \u2014 onItemClicked swaps main image"
+        },
+        {
+          "id": "productPrice",
+          "type": "Text",
+          "notes": "Current product price"
+        },
+        {
+          "id": "productComparePrice",
+          "type": "Text",
+          "notes": "Strikethrough original price"
+        },
+        {
+          "id": "productDescription",
+          "type": "Text",
+          "notes": "Product description (from Page.js)"
+        },
+        {
+          "id": "productName",
+          "type": "Text",
+          "notes": "Product name H1 (from Page.js)"
+        },
+        {
+          "id": "addToCartButton",
+          "type": "Button",
+          "notes": "Add to cart \u2014 primary CTA"
+        },
+        {
+          "id": "quantityInput",
+          "type": "Input",
+          "notes": "Quantity selector input"
+        },
+        {
+          "id": "quantityMinus",
+          "type": "Button",
+          "notes": "Decrement quantity"
+        },
+        {
+          "id": "quantityPlus",
+          "type": "Button",
+          "notes": "Increment quantity"
+        },
+        {
+          "id": "sizeDropdown",
+          "type": "Dropdown",
+          "notes": "Size variant selector"
+        },
+        {
+          "id": "finishDropdown",
+          "type": "Dropdown",
+          "notes": "Finish/color variant selector"
+        },
+        {
+          "id": "stockStatus",
+          "type": "Text",
+          "notes": "In Stock / Special Order badge"
+        }
+      ]
+    },
+    "cart_and_buy": {
+      "P0": [
+        {
+          "id": "addToCartSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success confirmation after add"
+        },
+        {
+          "id": "buyNowButton",
+          "type": "Button",
+          "notes": "Buy Now \u2014 direct to checkout"
+        }
+      ],
+      "P1": [
+        {
+          "id": "stickyCartBar",
+          "type": "Box (hidden)",
+          "notes": "Sticky add-to-cart bar on scroll"
+        },
+        {
+          "id": "stickyAddBtn",
+          "type": "Button",
+          "notes": "Sticky bar add button"
+        },
+        {
+          "id": "stickyProductName",
+          "type": "Text",
+          "notes": "Product name in sticky bar"
+        },
+        {
+          "id": "stickyPrice",
+          "type": "Text",
+          "notes": "Price in sticky bar"
+        },
+        {
+          "id": "stockUrgency",
+          "type": "Text (hidden)",
+          "notes": "Only X left in stock warning"
+        },
+        {
+          "id": "popularityBadge",
+          "type": "Text (hidden)",
+          "notes": "X sold this week badge"
+        },
+        {
+          "id": "productBadgeOverlay",
+          "type": "Text",
+          "notes": "Sale/New/Featured badge overlay"
+        }
+      ]
+    },
+    "info_accordion": {
+      "P1": [
+        {
+          "id": "infoHeaderDescription",
+          "type": "Box",
+          "notes": "Description accordion header \u2014 auto pattern infoHeader{Section}"
+        },
+        {
+          "id": "infoContentDescription",
+          "type": "Box",
+          "notes": "Description content \u2014 auto pattern infoContent{Section}"
+        },
+        {
+          "id": "infoArrowDescription",
+          "type": "Text",
+          "notes": "Expand/collapse arrow \u2014 auto pattern infoArrow{Section}"
+        },
+        {
+          "id": "infoHeaderDimensions",
+          "type": "Box",
+          "notes": "Dimensions accordion header"
+        },
+        {
+          "id": "infoContentDimensions",
+          "type": "Box",
+          "notes": "Dimensions content"
+        },
+        {
+          "id": "infoArrowDimensions",
+          "type": "Text",
+          "notes": "Dimensions arrow"
+        },
+        {
+          "id": "infoHeaderCare",
+          "type": "Box",
+          "notes": "Care accordion header"
+        },
+        {
+          "id": "infoContentCare",
+          "type": "Box",
+          "notes": "Care content"
+        },
+        {
+          "id": "infoArrowCare",
+          "type": "Text",
+          "notes": "Care arrow"
+        },
+        {
+          "id": "infoHeaderShipping",
+          "type": "Box",
+          "notes": "Shipping accordion header"
+        },
+        {
+          "id": "infoContentShipping",
+          "type": "Text",
+          "notes": "Shipping content \u2014 auto-filled with rates"
+        },
+        {
+          "id": "infoArrowShipping",
+          "type": "Text",
+          "notes": "Shipping arrow"
+        }
+      ]
+    },
+    "video": {
+      "P1": [
+        {
+          "id": "productVideoSection",
+          "type": "Section (hidden)",
+          "notes": "Video section \u2014 shown only if product has video"
+        },
+        {
+          "id": "productVideoTitle",
+          "type": "Text",
+          "notes": "See It In Action heading"
+        },
+        {
+          "id": "productVideo",
+          "type": "VideoPlayer",
+          "notes": "Product demo video player"
+        },
+        {
+          "id": "viewAllVideosLink",
+          "type": "Link",
+          "notes": "Link to /product-videos page"
+        }
+      ]
+    },
+    "delivery_estimate": {
+      "P1": [
+        {
+          "id": "deliveryEstimate",
+          "type": "Text",
+          "notes": "Estimated delivery date range"
+        },
+        {
+          "id": "whiteGloveNote",
+          "type": "Text (hidden)",
+          "notes": "White-glove delivery note for large items"
+        }
+      ]
+    },
+    "back_in_stock": {
+      "P1": [
+        {
+          "id": "backInStockSection",
+          "type": "Section (hidden)",
+          "notes": "Back-in-stock notification section"
+        },
+        {
+          "id": "backInStockEmail",
+          "type": "Input",
+          "notes": "Email input for notification"
+        },
+        {
+          "id": "backInStockBtn",
+          "type": "Button",
+          "notes": "Submit notification request"
+        },
+        {
+          "id": "backInStockSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "backInStockError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        }
+      ]
+    },
+    "social_and_wishlist": {
+      "P1": [
+        {
+          "id": "shareFacebook",
+          "type": "Button",
+          "notes": "Share on Facebook"
+        },
+        {
+          "id": "sharePinterest",
+          "type": "Button",
+          "notes": "Share on Pinterest"
+        },
+        {
+          "id": "shareEmail",
+          "type": "Button",
+          "notes": "Share via email"
+        },
+        {
+          "id": "shareCopyLink",
+          "type": "Button",
+          "notes": "Copy product link"
+        },
+        {
+          "id": "wishlistBtn",
+          "type": "Button",
+          "notes": "Wishlist heart toggle"
+        },
+        {
+          "id": "wishlistIcon",
+          "type": "Image",
+          "notes": "Heart icon SVG"
+        }
+      ]
+    },
+    "cross_sell": {
+      "P1": [
+        {
+          "id": "relatedSection",
+          "type": "Section",
+          "notes": "You Might Also Like section"
+        },
+        {
+          "id": "relatedRepeater",
+          "type": "Repeater",
+          "notes": "Related products grid"
+        },
+        {
+          "id": "collectionSection",
+          "type": "Section",
+          "notes": "More From This Collection"
+        },
+        {
+          "id": "collectionRepeater",
+          "type": "Repeater",
+          "notes": "Collection products grid"
+        },
+        {
+          "id": "bundleSection",
+          "type": "Section (hidden)",
+          "notes": "Frequently Bought Together"
+        },
+        {
+          "id": "bundleImage",
+          "type": "Image",
+          "notes": "Bundle product image"
+        },
+        {
+          "id": "bundleName",
+          "type": "Text",
+          "notes": "Bundle product name"
+        },
+        {
+          "id": "bundlePrice",
+          "type": "Text",
+          "notes": "Bundle total price"
+        },
+        {
+          "id": "bundleSavings",
+          "type": "Text",
+          "notes": "Bundle savings amount"
+        },
+        {
+          "id": "addBundleBtn",
+          "type": "Button",
+          "notes": "Add Both to Cart"
+        },
+        {
+          "id": "alsoBoughtSection",
+          "type": "Section",
+          "notes": "Also Bought section (from Page.js)"
+        },
+        {
+          "id": "alsoBoughtRepeater",
+          "type": "Repeater",
+          "notes": "Also bought products"
+        }
+      ]
+    },
+    "reviews": {
+      "P1": [
+        {
+          "id": "reviewsSection",
+          "type": "Section",
+          "notes": "Reviews section container"
+        },
+        {
+          "id": "reviewsSectionTitle",
+          "type": "Text",
+          "notes": "Reviews heading"
+        },
+        {
+          "id": "reviewsAverage",
+          "type": "Text",
+          "notes": "Average rating display"
+        },
+        {
+          "id": "reviewsCount",
+          "type": "Text",
+          "notes": "Total review count"
+        },
+        {
+          "id": "reviewsRepeater",
+          "type": "Repeater",
+          "notes": "Review cards list"
+        },
+        {
+          "id": "reviewsEmptyState",
+          "type": "Box (hidden)",
+          "notes": "No reviews message"
+        },
+        {
+          "id": "reviewsSortDropdown",
+          "type": "Dropdown",
+          "notes": "Sort reviews dropdown"
+        },
+        {
+          "id": "reviewsPrevBtn",
+          "type": "Button",
+          "notes": "Previous page"
+        },
+        {
+          "id": "reviewsNextBtn",
+          "type": "Button",
+          "notes": "Next page"
+        },
+        {
+          "id": "reviewsPageInfo",
+          "type": "Text",
+          "notes": "Page X of Y"
+        },
+        {
+          "id": "reviewSchemaMarkup",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Review schema JSON-LD"
+        },
+        {
+          "id": "starFilterAll",
+          "type": "Button",
+          "notes": "Show all stars filter"
+        }
+      ],
+      "P2": [
+        {
+          "id": "reviewForm",
+          "type": "Box (hidden)",
+          "notes": "Write review form"
+        },
+        {
+          "id": "reviewTitleInput",
+          "type": "Input",
+          "notes": "Review title"
+        },
+        {
+          "id": "reviewBodyInput",
+          "type": "TextBox",
+          "notes": "Review body"
+        },
+        {
+          "id": "reviewRatingInput",
+          "type": "Custom",
+          "notes": "Star rating input"
+        },
+        {
+          "id": "reviewSubmitBtn",
+          "type": "Button",
+          "notes": "Submit review"
+        },
+        {
+          "id": "reviewFormSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "reviewFormError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        },
+        {
+          "id": "reviewPhotoUpload",
+          "type": "Button",
+          "notes": "Upload photo button"
+        },
+        {
+          "id": "reviewPhotoPreview",
+          "type": "Image",
+          "notes": "Photo preview"
+        },
+        {
+          "id": "reviewPhotoStatus",
+          "type": "Text",
+          "notes": "Upload status"
+        },
+        {
+          "id": "reviewPhotoCount",
+          "type": "Text",
+          "notes": "Photo count"
+        }
+      ]
+    },
+    "swatch_request": {
+      "P2": [
+        {
+          "id": "swatchSection",
+          "type": "Section",
+          "notes": "Swatch selector section"
+        },
+        {
+          "id": "swatchGrid",
+          "type": "Repeater",
+          "notes": "Fabric swatch grid"
+        },
+        {
+          "id": "swatchSearch",
+          "type": "Input",
+          "notes": "Search swatches"
+        },
+        {
+          "id": "swatchColorFilter",
+          "type": "Dropdown",
+          "notes": "Filter by color"
+        },
+        {
+          "id": "swatchCount",
+          "type": "Text",
+          "notes": "Swatch count"
+        },
+        {
+          "id": "swatchViewAll",
+          "type": "Link",
+          "notes": "View all swatches"
+        },
+        {
+          "id": "swatchDetail",
+          "type": "Box (hidden)",
+          "notes": "Swatch detail panel"
+        },
+        {
+          "id": "swatchDetailImage",
+          "type": "Image",
+          "notes": "Swatch detail image"
+        },
+        {
+          "id": "swatchDetailName",
+          "type": "Text",
+          "notes": "Swatch fabric name"
+        },
+        {
+          "id": "swatchDetailMaterial",
+          "type": "Text",
+          "notes": "Material info"
+        },
+        {
+          "id": "swatchDetailFamily",
+          "type": "Text",
+          "notes": "Color family"
+        },
+        {
+          "id": "swatchDetailCare",
+          "type": "Text",
+          "notes": "Care instructions"
+        },
+        {
+          "id": "swatchTintOverlay",
+          "type": "Box",
+          "notes": "Color tint overlay on product image"
+        },
+        {
+          "id": "swatchGalleryModal",
+          "type": "Box (hidden)",
+          "notes": "Full swatch gallery modal"
+        },
+        {
+          "id": "swatchGalleryGrid",
+          "type": "Repeater",
+          "notes": "Gallery grid in modal"
+        },
+        {
+          "id": "swatchGalleryClose",
+          "type": "Button",
+          "notes": "Close gallery modal"
+        },
+        {
+          "id": "swatchRequestLink",
+          "type": "Link",
+          "notes": "Request free swatch link"
+        },
+        {
+          "id": "swatchModal",
+          "type": "Box (hidden)",
+          "notes": "Swatch request modal"
+        },
+        {
+          "id": "swatchProductName",
+          "type": "Text",
+          "notes": "Product name in modal"
+        },
+        {
+          "id": "swatchOptions",
+          "type": "Repeater",
+          "notes": "Selectable swatch options"
+        },
+        {
+          "id": "swatchName",
+          "type": "Input",
+          "notes": "Name input"
+        },
+        {
+          "id": "swatchEmail",
+          "type": "Input",
+          "notes": "Email input"
+        },
+        {
+          "id": "swatchAddress",
+          "type": "TextBox",
+          "notes": "Shipping address"
+        },
+        {
+          "id": "swatchSubmit",
+          "type": "Button",
+          "notes": "Submit request"
+        },
+        {
+          "id": "swatchCTABtn",
+          "type": "Button",
+          "notes": "CTA button"
+        },
+        {
+          "id": "swatchRequestBtn",
+          "type": "Button",
+          "notes": "Request button"
+        },
+        {
+          "id": "swatchError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        },
+        {
+          "id": "swatchSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        }
+      ]
+    },
+    "financing": {
+      "P2": [
+        {
+          "id": "financingSection",
+          "type": "Section",
+          "notes": "Financing options section"
+        },
+        {
+          "id": "financingTeaser",
+          "type": "Text",
+          "notes": "As low as $X/mo teaser"
+        },
+        {
+          "id": "financingLearnMore",
+          "type": "Link",
+          "notes": "Learn more link"
+        },
+        {
+          "id": "financingModal",
+          "type": "Box (hidden)",
+          "notes": "Financing details modal"
+        },
+        {
+          "id": "financingOverlay",
+          "type": "Box",
+          "notes": "Modal backdrop"
+        },
+        {
+          "id": "financingClose",
+          "type": "Button",
+          "notes": "Close modal"
+        },
+        {
+          "id": "financingRepeater",
+          "type": "Repeater",
+          "notes": "Payment plan options"
+        },
+        {
+          "id": "financingDetailRepeater",
+          "type": "Repeater",
+          "notes": "Plan detail breakdown"
+        },
+        {
+          "id": "afterpayMessage",
+          "type": "Text",
+          "notes": "Afterpay 4-payment message"
+        }
+      ]
+    },
+    "assembly_guide": {
+      "P2": [
+        {
+          "id": "assemblyGuideSection",
+          "type": "Section (hidden)",
+          "notes": "Assembly guide section"
+        },
+        {
+          "id": "assemblyGuideTitle",
+          "type": "Text",
+          "notes": "Assembly heading"
+        },
+        {
+          "id": "assemblyGuideTime",
+          "type": "Text",
+          "notes": "Estimated assembly time"
+        },
+        {
+          "id": "assemblyGuideBtn",
+          "type": "Button",
+          "notes": "View guide button"
+        },
+        {
+          "id": "assemblyGuideLink",
+          "type": "Link",
+          "notes": "Link to assembly page"
+        },
+        {
+          "id": "assemblyGuideVideoLink",
+          "type": "Link",
+          "notes": "Link to assembly video"
+        }
+      ]
+    },
+    "seo": {
+      "P0": [
+        {
+          "id": "breadcrumb1",
+          "type": "Link",
+          "notes": "Breadcrumb level 1 (Home)"
+        },
+        {
+          "id": "breadcrumb2",
+          "type": "Link",
+          "notes": "Breadcrumb level 2 (Category)"
+        },
+        {
+          "id": "breadcrumb3",
+          "type": "Text",
+          "notes": "Breadcrumb level 3 (Product)"
+        },
+        {
+          "id": "breadcrumbSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "BreadcrumbList schema"
+        }
+      ]
+    }
+  },
+  "sideCart": {
+    "_priority": "P0 \u2014 conversion flow",
+    "panel": {
+      "P0": [
+        {
+          "id": "sideCartPanel",
+          "type": "Box (hidden)",
+          "notes": "Side cart slide-out panel"
+        },
+        {
+          "id": "sideCartOverlay",
+          "type": "Box",
+          "notes": "Backdrop overlay"
+        },
+        {
+          "id": "sideCartClose",
+          "type": "Button",
+          "notes": "Close X button"
+        },
+        {
+          "id": "sideCartTitle",
+          "type": "Text",
+          "notes": "Your Cart heading"
+        },
+        {
+          "id": "sideCartRepeater",
+          "type": "Repeater",
+          "notes": "Cart items list"
+        },
+        {
+          "id": "sideCartSubtotal",
+          "type": "Text",
+          "notes": "Subtotal amount"
+        },
+        {
+          "id": "sideCartCheckout",
+          "type": "Button",
+          "notes": "Proceed to checkout"
+        },
+        {
+          "id": "sideCartEmpty",
+          "type": "Box (hidden)",
+          "notes": "Empty cart state"
+        },
+        {
+          "id": "sideCartItems",
+          "type": "Box",
+          "notes": "Items container"
+        },
+        {
+          "id": "sideCartFooter",
+          "type": "Box",
+          "notes": "Footer with subtotal/checkout"
+        },
+        {
+          "id": "viewFullCart",
+          "type": "Link",
+          "notes": "View full cart page link"
+        }
+      ],
+      "P1": [
+        {
+          "id": "sideCartSuggestion",
+          "type": "Box",
+          "notes": "Cross-sell suggestion"
+        },
+        {
+          "id": "sideShippingBar",
+          "type": "Box",
+          "notes": "Free shipping threshold bar"
+        },
+        {
+          "id": "sideShippingText",
+          "type": "Text",
+          "notes": "Shipping threshold text"
+        },
+        {
+          "id": "sideTierBar",
+          "type": "Box",
+          "notes": "Loyalty tier progress"
+        },
+        {
+          "id": "sideTierText",
+          "type": "Text",
+          "notes": "Loyalty tier text"
+        }
+      ]
+    },
+    "item_template": {
+      "P0": [
+        {
+          "id": "sideItemImage",
+          "type": "Image",
+          "notes": "Item thumbnail (repeater item)"
+        },
+        {
+          "id": "sideItemName",
+          "type": "Text",
+          "notes": "Item name"
+        },
+        {
+          "id": "sideItemPrice",
+          "type": "Text",
+          "notes": "Item price"
+        },
+        {
+          "id": "sideItemLineTotal",
+          "type": "Text",
+          "notes": "Line total"
+        },
+        {
+          "id": "sideItemQty",
+          "type": "Text",
+          "notes": "Quantity display"
+        },
+        {
+          "id": "sideItemVariant",
+          "type": "Text",
+          "notes": "Variant (size/color)"
+        },
+        {
+          "id": "sideItemRemove",
+          "type": "Button",
+          "notes": "Remove item"
+        },
+        {
+          "id": "sideQtyMinus",
+          "type": "Button",
+          "notes": "Decrease qty"
+        },
+        {
+          "id": "sideQtyPlus",
+          "type": "Button",
+          "notes": "Increase qty"
+        }
+      ],
+      "P2": [
+        {
+          "id": "sideSaveForLater",
+          "type": "Button",
+          "notes": "Save for later link"
+        }
+      ]
+    }
+  },
+  "cartPage": {
+    "_priority": "P0 \u2014 conversion flow",
+    "core": {
+      "P0": [
+        {
+          "id": "cartDataset",
+          "type": "Dataset",
+          "notes": "Cart data connector"
+        },
+        {
+          "id": "cartItemsRepeater",
+          "type": "Repeater",
+          "notes": "Cart items list"
+        },
+        {
+          "id": "cartSubtotal",
+          "type": "Text",
+          "notes": "Cart subtotal"
+        },
+        {
+          "id": "cartTotal",
+          "type": "Text",
+          "notes": "Cart total"
+        },
+        {
+          "id": "cartShipping",
+          "type": "Text",
+          "notes": "Shipping amount"
+        },
+        {
+          "id": "continueShoppingBtn",
+          "type": "Button",
+          "notes": "Continue shopping link"
+        },
+        {
+          "id": "emptyCartSection",
+          "type": "Section (hidden)",
+          "notes": "Empty cart state"
+        },
+        {
+          "id": "emptyCartTitle",
+          "type": "Text",
+          "notes": "Empty cart heading"
+        },
+        {
+          "id": "emptyCartMessage",
+          "type": "Text",
+          "notes": "Empty cart message"
+        }
+      ],
+      "P1": [
+        {
+          "id": "cartItemName",
+          "type": "Text",
+          "notes": "Item name (repeater)"
+        },
+        {
+          "id": "cartItemPrice",
+          "type": "Text",
+          "notes": "Item price (repeater)"
+        },
+        {
+          "id": "qtyInput",
+          "type": "Input",
+          "notes": "Quantity input (repeater)"
+        },
+        {
+          "id": "qtyMinus",
+          "type": "Button",
+          "notes": "Decrease qty (repeater)"
+        },
+        {
+          "id": "qtyPlus",
+          "type": "Button",
+          "notes": "Increase qty (repeater)"
+        },
+        {
+          "id": "removeItem",
+          "type": "Button",
+          "notes": "Remove item (repeater)"
+        },
+        {
+          "id": "saveForLaterBtn",
+          "type": "Button",
+          "notes": "Save for later"
+        },
+        {
+          "id": "cartDeliverySection",
+          "type": "Section",
+          "notes": "Delivery estimate section"
+        },
+        {
+          "id": "cartFinancingSection",
+          "type": "Section",
+          "notes": "Financing options"
+        },
+        {
+          "id": "cartFinancingTeaser",
+          "type": "Text",
+          "notes": "Financing teaser text"
+        },
+        {
+          "id": "cartAfterpayMessage",
+          "type": "Text",
+          "notes": "Afterpay message"
+        },
+        {
+          "id": "shippingProgressBar",
+          "type": "Box",
+          "notes": "Free shipping progress"
+        },
+        {
+          "id": "shippingProgressText",
+          "type": "Text",
+          "notes": "Progress text"
+        },
+        {
+          "id": "shippingProgressIcon",
+          "type": "Image",
+          "notes": "Progress icon"
+        }
+      ],
+      "P2": [
+        {
+          "id": "cartRecentSection",
+          "type": "Section",
+          "notes": "Recently viewed in cart"
+        },
+        {
+          "id": "cartRecentRepeater",
+          "type": "Repeater",
+          "notes": "Recent items"
+        },
+        {
+          "id": "protectionPlanSection",
+          "type": "Section",
+          "notes": "Protection plan upsell"
+        },
+        {
+          "id": "protectionPlanTitle",
+          "type": "Text",
+          "notes": "Protection heading"
+        },
+        {
+          "id": "protectionPlanSubtitle",
+          "type": "Text",
+          "notes": "Protection description"
+        },
+        {
+          "id": "protectionPlanRepeater",
+          "type": "Repeater",
+          "notes": "Plan options"
+        },
+        {
+          "id": "trustRepeater",
+          "type": "Repeater",
+          "notes": "Trust badges"
+        },
+        {
+          "id": "orderNotesToggle",
+          "type": "Button",
+          "notes": "Toggle order notes"
+        },
+        {
+          "id": "orderNotesField",
+          "type": "TextBox",
+          "notes": "Order notes input"
+        }
+      ]
+    }
+  },
+  "checkout": {
+    "_priority": "P0 \u2014 conversion flow",
+    "core": {
+      "P0": [
+        {
+          "id": "checkoutProgressNav",
+          "type": "Box",
+          "notes": "Progress steps nav"
+        },
+        {
+          "id": "checkoutProgressRepeater",
+          "type": "Repeater",
+          "notes": "Progress step items"
+        },
+        {
+          "id": "checkoutItemCount",
+          "type": "Text",
+          "notes": "Item count display"
+        },
+        {
+          "id": "checkoutFreeShipping",
+          "type": "Text",
+          "notes": "Free shipping message"
+        },
+        {
+          "id": "expressCheckoutBtn",
+          "type": "Button",
+          "notes": "Express checkout CTA"
+        },
+        {
+          "id": "expressCheckoutSection",
+          "type": "Section",
+          "notes": "Express checkout options"
+        }
+      ],
+      "P1": [
+        {
+          "id": "checkoutDeliveryEstimate",
+          "type": "Text",
+          "notes": "Delivery date estimate"
+        },
+        {
+          "id": "checkoutShippingMessage",
+          "type": "Text",
+          "notes": "Shipping info message"
+        },
+        {
+          "id": "checkoutFinancing",
+          "type": "Text",
+          "notes": "Financing info"
+        },
+        {
+          "id": "checkoutAfterpay",
+          "type": "Text",
+          "notes": "Afterpay message"
+        },
+        {
+          "id": "shippingOptionsRepeater",
+          "type": "Repeater",
+          "notes": "Shipping method options"
+        },
+        {
+          "id": "paymentMethodsRepeater",
+          "type": "Repeater",
+          "notes": "Payment method options"
+        },
+        {
+          "id": "validateAddressBtn",
+          "type": "Button",
+          "notes": "Validate address button"
+        },
+        {
+          "id": "orderSummarySidebar",
+          "type": "Box",
+          "notes": "Order summary sidebar"
+        },
+        {
+          "id": "orderSummarySubtotal",
+          "type": "Text",
+          "notes": "Subtotal"
+        },
+        {
+          "id": "orderSummaryShipping",
+          "type": "Text",
+          "notes": "Shipping cost"
+        },
+        {
+          "id": "orderSummaryTax",
+          "type": "Text",
+          "notes": "Tax amount"
+        },
+        {
+          "id": "orderSummaryTotal",
+          "type": "Text",
+          "notes": "Total amount"
+        },
+        {
+          "id": "orderSummaryItemsRepeater",
+          "type": "Repeater",
+          "notes": "Order items list"
+        },
+        {
+          "id": "orderSummarySavings",
+          "type": "Text",
+          "notes": "Savings amount"
+        },
+        {
+          "id": "orderSummaryStoreCredit",
+          "type": "Text",
+          "notes": "Store credit applied"
+        },
+        {
+          "id": "orderSummaryStoreCreditRow",
+          "type": "Box",
+          "notes": "Store credit row"
+        }
+      ],
+      "P2": [
+        {
+          "id": "financingMessage",
+          "type": "Text",
+          "notes": "Financing message"
+        },
+        {
+          "id": "financingThreshold",
+          "type": "Text",
+          "notes": "Financing threshold info"
+        },
+        {
+          "id": "addressFullName",
+          "type": "Input",
+          "notes": "Full name field"
+        },
+        {
+          "id": "addressLine1",
+          "type": "Input",
+          "notes": "Address line 1"
+        },
+        {
+          "id": "addressCity",
+          "type": "Input",
+          "notes": "City"
+        },
+        {
+          "id": "addressState",
+          "type": "Dropdown",
+          "notes": "State"
+        },
+        {
+          "id": "addressZip",
+          "type": "Input",
+          "notes": "ZIP code"
+        },
+        {
+          "id": "addressErrors",
+          "type": "Text (hidden)",
+          "notes": "Address validation errors"
+        },
+        {
+          "id": "addressSuccess",
+          "type": "Text (hidden)",
+          "notes": "Address validation success"
+        },
+        {
+          "id": "storeCreditApplyBtn",
+          "type": "Button",
+          "notes": "Apply store credit"
+        },
+        {
+          "id": "storeCreditAppliedSection",
+          "type": "Box",
+          "notes": "Applied credit display"
+        },
+        {
+          "id": "storeCreditAppliedAmount",
+          "type": "Text",
+          "notes": "Credit amount applied"
+        }
+      ]
+    }
+  },
+  "thankYouPage": {
+    "_priority": "P1 \u2014 post-purchase engagement and tracking",
+    "order_summary": {
+      "P0": [
+        {
+          "id": "thankYouTitle",
+          "type": "Text (H1)",
+          "notes": "Thank You heading"
+        },
+        {
+          "id": "orderNumber",
+          "type": "Text",
+          "notes": "Order number display"
+        },
+        {
+          "id": "thankYouMessage",
+          "type": "Text",
+          "notes": "Order confirmation message"
+        },
+        {
+          "id": "orderContactInfo",
+          "type": "Text",
+          "notes": "Contact info for order questions"
+        }
+      ]
+    },
+    "brenda_message": {
+      "P2": [
+        {
+          "id": "brendaMessageSection",
+          "type": "Section",
+          "notes": "Personal note from owner section"
+        },
+        {
+          "id": "brendaTitle",
+          "type": "Text",
+          "notes": "A Note from Brenda heading"
+        },
+        {
+          "id": "brendaMessage",
+          "type": "Text",
+          "notes": "Owner's personal thank-you message"
+        }
+      ]
+    },
+    "delivery_timeline": {
+      "P1": [
+        {
+          "id": "deliveryTimeline",
+          "type": "Box",
+          "notes": "Delivery timeline container"
+        },
+        {
+          "id": "deliveryEstimateText",
+          "type": "Text",
+          "notes": "Estimated delivery date range"
+        },
+        {
+          "id": "step1",
+          "type": "Text",
+          "notes": "Order confirmed step"
+        },
+        {
+          "id": "step2",
+          "type": "Text",
+          "notes": "Preparing items step"
+        },
+        {
+          "id": "step3",
+          "type": "Text",
+          "notes": "Shipped step"
+        },
+        {
+          "id": "step4",
+          "type": "Text",
+          "notes": "Delivered step"
+        }
+      ]
+    },
+    "social_sharing": {
+      "P2": [
+        {
+          "id": "shareText",
+          "type": "Text",
+          "notes": "Share prompt text \u2014 dynamic based on purchased products"
+        },
+        {
+          "id": "shareFacebook",
+          "type": "Button",
+          "notes": "Share on Facebook"
+        },
+        {
+          "id": "sharePinterest",
+          "type": "Button",
+          "notes": "Share on Pinterest"
+        },
+        {
+          "id": "shareInstagram",
+          "type": "Button",
+          "notes": "Follow on Instagram"
+        },
+        {
+          "id": "shareTwitter",
+          "type": "Button",
+          "notes": "Share on Twitter/X"
+        }
+      ]
+    },
+    "newsletter_signup": {
+      "P1": [
+        {
+          "id": "newsletterPrompt",
+          "type": "Text",
+          "notes": "Newsletter prompt text"
+        },
+        {
+          "id": "newsletterEmail",
+          "type": "Input",
+          "notes": "Email input for newsletter"
+        },
+        {
+          "id": "newsletterSignup",
+          "type": "Button",
+          "notes": "Subscribe button"
+        },
+        {
+          "id": "newsletterSuccess",
+          "type": "Text (hidden)",
+          "notes": "Subscription success message"
+        },
+        {
+          "id": "newsletterError",
+          "type": "Text (hidden)",
+          "notes": "Validation error"
+        }
+      ]
+    },
+    "referral_section": {
+      "P1": [
+        {
+          "id": "referralSection",
+          "type": "Section",
+          "notes": "Share the Love referral container"
+        },
+        {
+          "id": "referralTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        },
+        {
+          "id": "referralMessage",
+          "type": "Text",
+          "notes": "Referral code/message"
+        },
+        {
+          "id": "referralCopyBtn",
+          "type": "Button",
+          "notes": "Copy referral link"
+        },
+        {
+          "id": "referralEmailBtn",
+          "type": "Button",
+          "notes": "Share referral via email"
+        }
+      ]
+    },
+    "post_purchase_suggestions": {
+      "P2": [
+        {
+          "id": "postPurchaseHeading",
+          "type": "Text",
+          "notes": "You Might Also Love heading"
+        },
+        {
+          "id": "postPurchaseRepeater",
+          "type": "Repeater",
+          "notes": "Suggested products grid"
+        },
+        {
+          "id": "ppImage",
+          "type": "Image",
+          "notes": "Product image (repeater item)"
+        },
+        {
+          "id": "ppName",
+          "type": "Text",
+          "notes": "Product name (repeater item)"
+        },
+        {
+          "id": "ppPrice",
+          "type": "Text",
+          "notes": "Product price (repeater item)"
+        }
+      ]
+    },
+    "care_sequence": {
+      "P2": [
+        {
+          "id": "careSequenceInfo",
+          "type": "Box (hidden)",
+          "notes": "Care sequence info container"
+        },
+        {
+          "id": "careSequenceText",
+          "type": "Text",
+          "notes": "Care sequence description"
+        }
+      ]
+    },
+    "assembly_guide": {
+      "P2": [
+        {
+          "id": "assemblyGuideSection",
+          "type": "Section",
+          "notes": "Assembly guide section"
+        },
+        {
+          "id": "assemblyGuideTitle",
+          "type": "Text",
+          "notes": "Assembly & Care heading"
+        },
+        {
+          "id": "assemblyGuideText",
+          "type": "Text",
+          "notes": "Assembly guide description"
+        },
+        {
+          "id": "assemblyGuideBtn",
+          "type": "Button",
+          "notes": "View guides button"
+        }
+      ]
+    },
+    "testimonial_prompt": {
+      "P1": [
+        {
+          "id": "testimonialSection",
+          "type": "Section",
+          "notes": "Share Your Experience section"
+        },
+        {
+          "id": "testimonialTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        },
+        {
+          "id": "testimonialPrompt",
+          "type": "Text",
+          "notes": "Prompt text"
+        },
+        {
+          "id": "testimonialNameInput",
+          "type": "Input",
+          "notes": "Name input"
+        },
+        {
+          "id": "testimonialStoryInput",
+          "type": "TextBox",
+          "notes": "Testimonial body"
+        },
+        {
+          "id": "testimonialSubmitBtn",
+          "type": "Button",
+          "notes": "Submit testimonial"
+        },
+        {
+          "id": "testimonialSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "testimonialError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        }
+      ]
+    },
+    "review_request": {
+      "P1": [
+        {
+          "id": "reviewSection",
+          "type": "Section",
+          "notes": "Rate Your Experience section"
+        },
+        {
+          "id": "reviewTitle",
+          "type": "Text",
+          "notes": "Section heading"
+        },
+        {
+          "id": "reviewPrompt",
+          "type": "Text",
+          "notes": "Prompt text"
+        },
+        {
+          "id": "reviewStar1",
+          "type": "Button",
+          "notes": "1 star button"
+        },
+        {
+          "id": "reviewStar2",
+          "type": "Button",
+          "notes": "2 stars button"
+        },
+        {
+          "id": "reviewStar3",
+          "type": "Button",
+          "notes": "3 stars button"
+        },
+        {
+          "id": "reviewStar4",
+          "type": "Button",
+          "notes": "4 stars button"
+        },
+        {
+          "id": "reviewStar5",
+          "type": "Button",
+          "notes": "5 stars button"
+        },
+        {
+          "id": "reviewRating",
+          "type": "Text",
+          "notes": "X of 5 stars display"
+        },
+        {
+          "id": "reviewBodyInput",
+          "type": "TextBox",
+          "notes": "Optional review text"
+        },
+        {
+          "id": "reviewSubmitBtn",
+          "type": "Button",
+          "notes": "Submit rating"
+        },
+        {
+          "id": "reviewSuccess",
+          "type": "Text (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "reviewError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        }
+      ]
+    }
+  },
+  "adminReturns": {
+    "_priority": "P1 \u2014 admin dashboard for returns management",
+    "stats_cards": {
+      "P0": [
+        {
+          "id": "statTotal",
+          "type": "Text",
+          "notes": "Total returns count"
+        },
+        {
+          "id": "statTotalLabel",
+          "type": "Text",
+          "notes": "Total Returns label"
+        },
+        {
+          "id": "statActionRequired",
+          "type": "Text",
+          "notes": "Action required count \u2014 coral when > 0"
+        },
+        {
+          "id": "statActionLabel",
+          "type": "Text",
+          "notes": "Action Required label"
+        },
+        {
+          "id": "statInProgress",
+          "type": "Text",
+          "notes": "In progress count"
+        },
+        {
+          "id": "statProgressLabel",
+          "type": "Text",
+          "notes": "In Progress label"
+        },
+        {
+          "id": "statCompleted",
+          "type": "Text",
+          "notes": "Completed count \u2014 green"
+        },
+        {
+          "id": "statCompletedLabel",
+          "type": "Text",
+          "notes": "Completed label"
+        }
+      ]
+    },
+    "filter_and_list": {
+      "P0": [
+        {
+          "id": "statusFilterDropdown",
+          "type": "Dropdown",
+          "notes": "Filter returns by status"
+        },
+        {
+          "id": "refreshBtn",
+          "type": "Button",
+          "notes": "Refresh returns list"
+        },
+        {
+          "id": "returnsRepeater",
+          "type": "Repeater",
+          "notes": "Returns list repeater"
+        },
+        {
+          "id": "emptyState",
+          "type": "Text",
+          "notes": "No returns message"
+        },
+        {
+          "id": "dashboardLoader",
+          "type": "Spinner/Box",
+          "notes": "Loading indicator"
+        },
+        {
+          "id": "dashboardError",
+          "type": "Text",
+          "notes": "Error message"
+        }
+      ],
+      "P1": [
+        {
+          "id": "rmaNumber",
+          "type": "Text",
+          "notes": "RMA number (repeater item)"
+        },
+        {
+          "id": "orderNumber",
+          "type": "Text",
+          "notes": "Order number (repeater item)"
+        },
+        {
+          "id": "customerName",
+          "type": "Text",
+          "notes": "Customer name (repeater item)"
+        },
+        {
+          "id": "returnType",
+          "type": "Text",
+          "notes": "Return/Exchange type (repeater item)"
+        },
+        {
+          "id": "returnDate",
+          "type": "Text",
+          "notes": "Return date (repeater item)"
+        },
+        {
+          "id": "returnReason",
+          "type": "Text",
+          "notes": "Return reason (repeater item)"
+        },
+        {
+          "id": "statusBadge",
+          "type": "Text",
+          "notes": "Status badge with color (repeater item)"
+        },
+        {
+          "id": "actionDot",
+          "type": "Box",
+          "notes": "Coral dot for action-required items (repeater item)"
+        },
+        {
+          "id": "itemCount",
+          "type": "Text",
+          "notes": "Item count (repeater item)"
+        },
+        {
+          "id": "viewDetailsBtn",
+          "type": "Button",
+          "notes": "View details button (repeater item)"
+        }
+      ]
+    },
+    "detail_panel": {
+      "P0": [
+        {
+          "id": "detailPanel",
+          "type": "Box (hidden)",
+          "notes": "Detail panel container"
+        },
+        {
+          "id": "closeDetailBtn",
+          "type": "Button",
+          "notes": "Close detail panel"
+        },
+        {
+          "id": "detailRma",
+          "type": "Text",
+          "notes": "RMA number in detail"
+        },
+        {
+          "id": "detailStatus",
+          "type": "Text",
+          "notes": "Status with color"
+        }
+      ],
+      "P1": [
+        {
+          "id": "detailCustomer",
+          "type": "Text",
+          "notes": "Customer name"
+        },
+        {
+          "id": "detailEmail",
+          "type": "Text",
+          "notes": "Customer email"
+        },
+        {
+          "id": "detailOrder",
+          "type": "Text",
+          "notes": "Order number"
+        },
+        {
+          "id": "detailDate",
+          "type": "Text",
+          "notes": "Return date"
+        },
+        {
+          "id": "detailType",
+          "type": "Text",
+          "notes": "Return type"
+        },
+        {
+          "id": "detailReason",
+          "type": "Text",
+          "notes": "Return reason"
+        },
+        {
+          "id": "detailDescription",
+          "type": "Text",
+          "notes": "Return details/description"
+        },
+        {
+          "id": "detailNotes",
+          "type": "TextBox",
+          "notes": "Admin notes input"
+        },
+        {
+          "id": "detailRefundAmount",
+          "type": "Text",
+          "notes": "Refund amount display"
+        }
+      ]
+    },
+    "status_actions": {
+      "P0": [
+        {
+          "id": "statusActionsSection",
+          "type": "Box",
+          "notes": "Status action buttons container"
+        },
+        {
+          "id": "approveBtn",
+          "type": "Button",
+          "notes": "Approve return"
+        },
+        {
+          "id": "denyBtn",
+          "type": "Button",
+          "notes": "Deny return"
+        },
+        {
+          "id": "markShippedBtn",
+          "type": "Button",
+          "notes": "Mark as shipped"
+        },
+        {
+          "id": "markReceivedBtn",
+          "type": "Button",
+          "notes": "Mark as received"
+        }
+      ]
+    },
+    "label_and_tracking": {
+      "P1": [
+        {
+          "id": "generateLabelBtn",
+          "type": "Button",
+          "notes": "Generate UPS return label"
+        },
+        {
+          "id": "trackingSection",
+          "type": "Box (hidden)",
+          "notes": "Tracking info container"
+        },
+        {
+          "id": "detailTracking",
+          "type": "Text",
+          "notes": "Tracking number"
+        },
+        {
+          "id": "trackShipmentBtn",
+          "type": "Button",
+          "notes": "Track return shipment"
+        },
+        {
+          "id": "trackingStatus",
+          "type": "Text",
+          "notes": "Shipment status"
+        },
+        {
+          "id": "trackingEta",
+          "type": "Text",
+          "notes": "Estimated delivery"
+        }
+      ]
+    },
+    "refund_modal": {
+      "P0": [
+        {
+          "id": "refundModal",
+          "type": "Box (hidden)",
+          "notes": "Refund modal container"
+        },
+        {
+          "id": "refundRmaLabel",
+          "type": "Text",
+          "notes": "Refund for RMA heading"
+        },
+        {
+          "id": "refundCustomerLabel",
+          "type": "Text",
+          "notes": "Customer name in modal"
+        },
+        {
+          "id": "refundAmountInput",
+          "type": "Input",
+          "notes": "Refund amount input"
+        },
+        {
+          "id": "refundNotesInput",
+          "type": "TextBox",
+          "notes": "Refund notes"
+        },
+        {
+          "id": "refundError",
+          "type": "Text (hidden)",
+          "notes": "Refund error message"
+        },
+        {
+          "id": "processRefundBtn",
+          "type": "Button",
+          "notes": "Open refund modal"
+        },
+        {
+          "id": "confirmRefundBtn",
+          "type": "Button",
+          "notes": "Confirm and process refund"
+        },
+        {
+          "id": "cancelRefundBtn",
+          "type": "Button",
+          "notes": "Cancel refund"
+        }
+      ]
+    }
+  },
+  "memberPage": {
+    "_priority": "P1 \u2014 customer account dashboard",
+    "dashboard": {
+      "P0": [
+        {
+          "id": "memberWelcome",
+          "type": "Text",
+          "notes": "Welcome back, {name}! heading"
+        },
+        {
+          "id": "memberOrderCount",
+          "type": "Text",
+          "notes": "Total order count card"
+        },
+        {
+          "id": "memberWishCount",
+          "type": "Text",
+          "notes": "Wishlist item count card"
+        },
+        {
+          "id": "memberPointsDisplay",
+          "type": "Text",
+          "notes": "Loyalty points display"
+        },
+        {
+          "id": "memberTierDisplay",
+          "type": "Text",
+          "notes": "Loyalty tier with icon"
+        }
+      ],
+      "P2": [
+        {
+          "id": "dashQuickOrders",
+          "type": "Link",
+          "notes": "Jump to orders quick link"
+        },
+        {
+          "id": "dashQuickWishlist",
+          "type": "Link",
+          "notes": "Jump to wishlist quick link"
+        },
+        {
+          "id": "dashQuickSettings",
+          "type": "Link",
+          "notes": "Jump to settings quick link"
+        },
+        {
+          "id": "memberErrorFallback",
+          "type": "Box (hidden)",
+          "notes": "Error fallback container"
+        },
+        {
+          "id": "memberErrorText",
+          "type": "Text",
+          "notes": "Error fallback message"
+        }
+      ]
+    },
+    "loyalty": {
+      "P1": [
+        {
+          "id": "tierProgressBar",
+          "type": "ProgressBar",
+          "notes": "Tier progress bar"
+        },
+        {
+          "id": "tierProgressText",
+          "type": "Text",
+          "notes": "Progress description text"
+        },
+        {
+          "id": "loyaltyMilestone",
+          "type": "Text (hidden)",
+          "notes": "Next milestone message"
+        },
+        {
+          "id": "tierComparisonRepeater",
+          "type": "Repeater",
+          "notes": "Tier comparison cards"
+        },
+        {
+          "id": "tierName",
+          "type": "Text",
+          "notes": "Tier name with icon (repeater item)"
+        },
+        {
+          "id": "tierMinPoints",
+          "type": "Text",
+          "notes": "Min points for tier (repeater item)"
+        },
+        {
+          "id": "tierBenefits",
+          "type": "Text",
+          "notes": "Benefits list (repeater item)"
+        },
+        {
+          "id": "tierCard",
+          "type": "Box",
+          "notes": "Tier card container (repeater item)"
+        },
+        {
+          "id": "tierCurrentBadge",
+          "type": "Text (hidden)",
+          "notes": "Your Tier badge (repeater item)"
+        },
+        {
+          "id": "rewardsRepeater",
+          "type": "Repeater",
+          "notes": "Available rewards list"
+        },
+        {
+          "id": "rewardsSection",
+          "type": "Section (hidden)",
+          "notes": "Rewards section container"
+        },
+        {
+          "id": "rewardsEmpty",
+          "type": "Text (hidden)",
+          "notes": "No rewards message"
+        },
+        {
+          "id": "rewardName",
+          "type": "Text",
+          "notes": "Reward name (repeater item)"
+        },
+        {
+          "id": "rewardDescription",
+          "type": "Text",
+          "notes": "Reward description (repeater item)"
+        },
+        {
+          "id": "rewardCost",
+          "type": "Text",
+          "notes": "Points cost (repeater item)"
+        },
+        {
+          "id": "redeemBtn",
+          "type": "Button",
+          "notes": "Redeem reward button (repeater item)"
+        },
+        {
+          "id": "rewardCouponCode",
+          "type": "Text (hidden)",
+          "notes": "Coupon code after redemption (repeater item)"
+        }
+      ]
+    },
+    "order_history": {
+      "P0": [
+        {
+          "id": "ordersRepeater",
+          "type": "Repeater",
+          "notes": "Order history list"
+        },
+        {
+          "id": "ordersLoader",
+          "type": "Spinner/Box",
+          "notes": "Orders loading indicator"
+        },
+        {
+          "id": "ordersError",
+          "type": "Text (hidden)",
+          "notes": "Orders error message"
+        },
+        {
+          "id": "ordersEmpty",
+          "type": "Text (hidden)",
+          "notes": "No orders message"
+        }
+      ],
+      "P1": [
+        {
+          "id": "orderNumber",
+          "type": "Text",
+          "notes": "Order number (repeater item)"
+        },
+        {
+          "id": "orderDate",
+          "type": "Text",
+          "notes": "Order date (repeater item)"
+        },
+        {
+          "id": "orderTotal",
+          "type": "Text",
+          "notes": "Order total (repeater item)"
+        },
+        {
+          "id": "orderItemCount",
+          "type": "Text",
+          "notes": "Item count (repeater item)"
+        },
+        {
+          "id": "orderStatusBadge",
+          "type": "Text",
+          "notes": "Status badge with color (repeater item)"
+        },
+        {
+          "id": "orderStatus",
+          "type": "Text",
+          "notes": "Status fallback text (repeater item)"
+        },
+        {
+          "id": "orderDeliveryEta",
+          "type": "Text (hidden)",
+          "notes": "Delivery ETA (repeater item)"
+        },
+        {
+          "id": "orderTrackBtn",
+          "type": "Button",
+          "notes": "Track order button (repeater item)"
+        },
+        {
+          "id": "orderReorderBtn",
+          "type": "Button",
+          "notes": "Reorder button (repeater item)"
+        },
+        {
+          "id": "orderStartReturnBtn",
+          "type": "Button",
+          "notes": "Start return button (repeater item)"
+        },
+        {
+          "id": "orderItemsGallery",
+          "type": "Gallery",
+          "notes": "Order items mini-gallery (repeater item)"
+        },
+        {
+          "id": "orderFilterDropdown",
+          "type": "Dropdown",
+          "notes": "Filter orders by status"
+        },
+        {
+          "id": "ordersLoadMoreBtn",
+          "type": "Button",
+          "notes": "Load more orders"
+        },
+        {
+          "id": "ordersRetryBtn",
+          "type": "Button",
+          "notes": "Retry loading orders"
+        },
+        {
+          "id": "startReturnBtn",
+          "type": "Button",
+          "notes": "Start return from order \u2014 proxied click target"
+        }
+      ]
+    },
+    "wishlist": {
+      "P1": [
+        {
+          "id": "wishlistRepeater",
+          "type": "Repeater",
+          "notes": "Wishlist items list"
+        },
+        {
+          "id": "wishlistEmpty",
+          "type": "Text (hidden)",
+          "notes": "No wishlist items message"
+        },
+        {
+          "id": "wishSortDropdown",
+          "type": "Dropdown",
+          "notes": "Sort wishlist dropdown"
+        },
+        {
+          "id": "wishImage",
+          "type": "Image",
+          "notes": "Product image (repeater item)"
+        },
+        {
+          "id": "wishName",
+          "type": "Text",
+          "notes": "Product name (repeater item)"
+        },
+        {
+          "id": "wishPrice",
+          "type": "Text",
+          "notes": "Product price (repeater item)"
+        },
+        {
+          "id": "wishStockStatus",
+          "type": "Text",
+          "notes": "Stock status (repeater item)"
+        },
+        {
+          "id": "wishSalePrice",
+          "type": "Text (hidden)",
+          "notes": "Was price (repeater item)"
+        },
+        {
+          "id": "wishAddToCartBtn",
+          "type": "Button",
+          "notes": "Move to cart (repeater item)"
+        },
+        {
+          "id": "wishViewBtn",
+          "type": "Button",
+          "notes": "View product (repeater item)"
+        },
+        {
+          "id": "wishAlertToggle",
+          "type": "Toggle",
+          "notes": "Alert toggle (repeater item)"
+        },
+        {
+          "id": "wishRemoveBtn",
+          "type": "Button",
+          "notes": "Remove from wishlist (repeater item)"
+        },
+        {
+          "id": "wishCard",
+          "type": "Box",
+          "notes": "Wishlist card container (repeater item)"
+        },
+        {
+          "id": "wishShareBtn",
+          "type": "Button",
+          "notes": "Copy wishlist link"
+        },
+        {
+          "id": "wishSharePinterest",
+          "type": "Button",
+          "notes": "Share wishlist on Pinterest"
+        },
+        {
+          "id": "wishShareEmail",
+          "type": "Button",
+          "notes": "Share wishlist via email"
+        },
+        {
+          "id": "wishShareFacebook",
+          "type": "Button",
+          "notes": "Share wishlist on Facebook"
+        }
+      ],
+      "P2": [
+        {
+          "id": "wishAlertHistoryRepeater",
+          "type": "Repeater",
+          "notes": "Alert history list"
+        },
+        {
+          "id": "wishAlertHistorySection",
+          "type": "Section (hidden)",
+          "notes": "Alert history container"
+        },
+        {
+          "id": "alertTypeLabel",
+          "type": "Text",
+          "notes": "Alert type (repeater item)"
+        },
+        {
+          "id": "alertProductName",
+          "type": "Text",
+          "notes": "Product name (repeater item)"
+        },
+        {
+          "id": "alertMessage",
+          "type": "Text",
+          "notes": "Alert message (repeater item)"
+        },
+        {
+          "id": "alertDate",
+          "type": "Text",
+          "notes": "Alert date (repeater item)"
+        }
+      ]
+    },
+    "account_settings": {
+      "P1": [
+        {
+          "id": "logoutBtn",
+          "type": "Button",
+          "notes": "Log out button"
+        },
+        {
+          "id": "addressBook",
+          "type": "Box",
+          "notes": "Address book container"
+        },
+        {
+          "id": "addressRepeater",
+          "type": "Repeater",
+          "notes": "Saved addresses list"
+        },
+        {
+          "id": "addressText",
+          "type": "Text",
+          "notes": "Address text (repeater item)"
+        },
+        {
+          "id": "addressEmptyState",
+          "type": "Text (hidden)",
+          "notes": "No addresses message"
+        }
+      ]
+    },
+    "communication_prefs": {
+      "P2": [
+        {
+          "id": "commPrefs",
+          "type": "Box",
+          "notes": "Communication preferences container"
+        },
+        {
+          "id": "prefNewsletter",
+          "type": "Toggle",
+          "notes": "Newsletter email toggle"
+        },
+        {
+          "id": "prefSaleAlerts",
+          "type": "Toggle",
+          "notes": "Sale alerts toggle"
+        },
+        {
+          "id": "prefBackInStock",
+          "type": "Toggle",
+          "notes": "Back-in-stock notifications toggle"
+        }
+      ]
+    }
+  },
+  "returnsPage": {
+    "_priority": "P1 \u2014 guest-accessible self-service returns",
+    "lookup_form": {
+      "P0": [
+        {
+          "id": "returnsTitle",
+          "type": "Text (H1)",
+          "notes": "Returns & Exchanges heading"
+        },
+        {
+          "id": "returnsSubtitle",
+          "type": "Text",
+          "notes": "Page subtitle"
+        },
+        {
+          "id": "returnOrderNumberInput",
+          "type": "Input",
+          "notes": "Order number input"
+        },
+        {
+          "id": "returnEmailInput",
+          "type": "Input",
+          "notes": "Email input"
+        },
+        {
+          "id": "lookupReturnBtn",
+          "type": "Button",
+          "notes": "Look up order button"
+        },
+        {
+          "id": "returnError",
+          "type": "Text (hidden)",
+          "notes": "Lookup error message"
+        },
+        {
+          "id": "returnLoader",
+          "type": "Spinner/Box",
+          "notes": "Loading indicator"
+        }
+      ]
+    },
+    "rma_tracker": {
+      "P1": [
+        {
+          "id": "rmaInput",
+          "type": "Input",
+          "notes": "RMA number input"
+        },
+        {
+          "id": "trackRmaBtn",
+          "type": "Button",
+          "notes": "Track RMA button"
+        },
+        {
+          "id": "rmaResultsSection",
+          "type": "Section (hidden)",
+          "notes": "RMA results container"
+        },
+        {
+          "id": "rmaStatusNumber",
+          "type": "Text",
+          "notes": "RMA number display"
+        },
+        {
+          "id": "rmaStatusLabel",
+          "type": "Text",
+          "notes": "Status label with color"
+        },
+        {
+          "id": "rmaTimeline",
+          "type": "Text",
+          "notes": "Status timeline text"
+        },
+        {
+          "id": "rmaTrackingSection",
+          "type": "Box (hidden)",
+          "notes": "Tracking info container"
+        },
+        {
+          "id": "rmaTrackingNumber",
+          "type": "Text",
+          "notes": "Tracking number"
+        },
+        {
+          "id": "rmaTrackingStatus",
+          "type": "Text",
+          "notes": "Tracking status"
+        },
+        {
+          "id": "rmaNoTracking",
+          "type": "Text (hidden)",
+          "notes": "No tracking available message"
+        },
+        {
+          "id": "rmaActivityRepeater",
+          "type": "Repeater",
+          "notes": "Tracking activity log"
+        },
+        {
+          "id": "rmaActivityStatus",
+          "type": "Text",
+          "notes": "Activity status (repeater item)"
+        },
+        {
+          "id": "rmaActivityLocation",
+          "type": "Text",
+          "notes": "Activity location (repeater item)"
+        },
+        {
+          "id": "rmaActivityDate",
+          "type": "Text",
+          "notes": "Activity date (repeater item)"
+        }
+      ]
+    },
+    "order_details": {
+      "P1": [
+        {
+          "id": "returnResultsSection",
+          "type": "Section (hidden)",
+          "notes": "Order results container"
+        },
+        {
+          "id": "returnOrderNumber",
+          "type": "Text",
+          "notes": "Order number display"
+        },
+        {
+          "id": "returnOrderDate",
+          "type": "Text",
+          "notes": "Order date"
+        },
+        {
+          "id": "returnOrderTotal",
+          "type": "Text",
+          "notes": "Order total"
+        },
+        {
+          "id": "returnWindowStatus",
+          "type": "Text",
+          "notes": "Return window eligibility"
+        }
+      ]
+    },
+    "existing_returns": {
+      "P1": [
+        {
+          "id": "existingReturnsSection",
+          "type": "Section (hidden)",
+          "notes": "Existing returns container"
+        },
+        {
+          "id": "existingReturnsRepeater",
+          "type": "Repeater",
+          "notes": "Existing returns list"
+        },
+        {
+          "id": "existingRma",
+          "type": "Text",
+          "notes": "RMA number (repeater item)"
+        },
+        {
+          "id": "existingReturnDate",
+          "type": "Text",
+          "notes": "Return date (repeater item)"
+        },
+        {
+          "id": "existingReturnType",
+          "type": "Text",
+          "notes": "Return/Exchange type (repeater item)"
+        },
+        {
+          "id": "existingReturnReason",
+          "type": "Text",
+          "notes": "Return reason (repeater item)"
+        },
+        {
+          "id": "existingReturnStatus",
+          "type": "Text",
+          "notes": "Status with color (repeater item)"
+        },
+        {
+          "id": "existingReturnTimeline",
+          "type": "Text",
+          "notes": "Progress timeline (repeater item)"
+        },
+        {
+          "id": "existingTrackingNumber",
+          "type": "Text (hidden)",
+          "notes": "Tracking number (repeater item)"
+        }
+      ]
+    },
+    "return_form": {
+      "P0": [
+        {
+          "id": "returnFormSection",
+          "type": "Section (hidden)",
+          "notes": "Return form container"
+        },
+        {
+          "id": "returnReasonSelect",
+          "type": "Dropdown",
+          "notes": "Return reason dropdown"
+        },
+        {
+          "id": "returnTypeSelect",
+          "type": "Dropdown",
+          "notes": "Return or Exchange dropdown"
+        },
+        {
+          "id": "returnItemsSelector",
+          "type": "Repeater",
+          "notes": "Returnable items checklist"
+        },
+        {
+          "id": "submitGuestReturnBtn",
+          "type": "Button",
+          "notes": "Submit return request"
+        },
+        {
+          "id": "cancelReturnFormBtn",
+          "type": "Button",
+          "notes": "Cancel return"
+        },
+        {
+          "id": "returnFormError",
+          "type": "Text (hidden)",
+          "notes": "Form error message"
+        },
+        {
+          "id": "returnSuccessMessage",
+          "type": "Text (hidden)",
+          "notes": "Success with RMA number"
+        },
+        {
+          "id": "returnDetailsTextbox",
+          "type": "TextBox",
+          "notes": "Additional return details"
+        }
+      ],
+      "P1": [
+        {
+          "id": "selectItemName",
+          "type": "Text",
+          "notes": "Item name (repeater item)"
+        },
+        {
+          "id": "selectItemQty",
+          "type": "Text",
+          "notes": "Item quantity (repeater item)"
+        },
+        {
+          "id": "selectItemPrice",
+          "type": "Text",
+          "notes": "Item price (repeater item)"
+        },
+        {
+          "id": "selectItemImage",
+          "type": "Image",
+          "notes": "Item image (repeater item)"
+        },
+        {
+          "id": "selectItemCheckbox",
+          "type": "Checkbox",
+          "notes": "Select for return (repeater item)"
+        },
+        {
+          "id": "selectItemBlockReason",
+          "type": "Text (hidden)",
+          "notes": "Non-returnable reason (repeater item)"
+        }
+      ]
+    },
+    "navigation": {
+      "P2": [
+        {
+          "id": "newReturnSearchBtn",
+          "type": "Button",
+          "notes": "Start new return lookup"
+        }
+      ]
+    }
+  },
+  "orderTracking": {
+    "_priority": "P1 \u2014 order tracking with real-time UPS updates",
+    "lookup_form": {
+      "P0": [
+        {
+          "id": "trackingTitle",
+          "type": "Text (H1)",
+          "notes": "Track Your Order heading"
+        },
+        {
+          "id": "trackingSubtitle",
+          "type": "Text",
+          "notes": "Page subtitle"
+        },
+        {
+          "id": "orderNumberInput",
+          "type": "Input",
+          "notes": "Order number input"
+        },
+        {
+          "id": "emailInput",
+          "type": "Input",
+          "notes": "Email input"
+        },
+        {
+          "id": "trackOrderBtn",
+          "type": "Button",
+          "notes": "Track order button"
+        },
+        {
+          "id": "trackingError",
+          "type": "Text (hidden)",
+          "notes": "Error message"
+        },
+        {
+          "id": "trackingLoader",
+          "type": "Spinner/Box",
+          "notes": "Loading indicator"
+        }
+      ]
+    },
+    "results": {
+      "P0": [
+        {
+          "id": "trackingResultsSection",
+          "type": "Section (hidden)",
+          "notes": "Results container"
+        },
+        {
+          "id": "resultOrderNumber",
+          "type": "Text",
+          "notes": "Order number display"
+        },
+        {
+          "id": "resultOrderDate",
+          "type": "Text",
+          "notes": "Order date"
+        },
+        {
+          "id": "resultStatus",
+          "type": "Text",
+          "notes": "Order status with color"
+        },
+        {
+          "id": "resultStatusDescription",
+          "type": "Text",
+          "notes": "Status description"
+        }
+      ]
+    },
+    "timeline": {
+      "P0": [
+        {
+          "id": "trackingTimeline",
+          "type": "Box",
+          "notes": "Timeline container with ARIA role=list"
+        }
+      ],
+      "P1": [
+        {
+          "id": "timelineStep0",
+          "type": "Box",
+          "notes": "Timeline step 0 container"
+        },
+        {
+          "id": "timelineDot0",
+          "type": "Box",
+          "notes": "Timeline dot 0"
+        },
+        {
+          "id": "timelineLabel0",
+          "type": "Text",
+          "notes": "Timeline label 0"
+        }
+      ]
+    },
+    "shipping_details": {
+      "P1": [
+        {
+          "id": "shippingDetailsSection",
+          "type": "Section",
+          "notes": "Shipping details container"
+        },
+        {
+          "id": "carrierName",
+          "type": "Text",
+          "notes": "Carrier name (UPS)"
+        },
+        {
+          "id": "serviceName",
+          "type": "Text",
+          "notes": "Service type"
+        },
+        {
+          "id": "trackingNumberText",
+          "type": "Text",
+          "notes": "Tracking number"
+        },
+        {
+          "id": "estimatedDelivery",
+          "type": "Text",
+          "notes": "Estimated delivery date"
+        },
+        {
+          "id": "shippingDestination",
+          "type": "Text",
+          "notes": "Destination city/state"
+        },
+        {
+          "id": "upsTrackingBtn",
+          "type": "Button",
+          "notes": "View on UPS website"
+        },
+        {
+          "id": "noTrackingMessage",
+          "type": "Text (hidden)",
+          "notes": "No tracking yet message"
+        }
+      ]
+    },
+    "line_items": {
+      "P1": [
+        {
+          "id": "lineItemsSection",
+          "type": "Section (hidden)",
+          "notes": "Line items container"
+        },
+        {
+          "id": "trackingItemsRepeater",
+          "type": "Repeater",
+          "notes": "Order items list"
+        },
+        {
+          "id": "itemImage",
+          "type": "Image",
+          "notes": "Item image (repeater item)"
+        },
+        {
+          "id": "itemName",
+          "type": "Text",
+          "notes": "Item name (repeater item)"
+        },
+        {
+          "id": "itemQty",
+          "type": "Text",
+          "notes": "Item quantity (repeater item)"
+        },
+        {
+          "id": "itemPrice",
+          "type": "Text",
+          "notes": "Item price (repeater item)"
+        },
+        {
+          "id": "itemSku",
+          "type": "Text",
+          "notes": "Item SKU (repeater item)"
+        }
+      ]
+    },
+    "totals": {
+      "P1": [
+        {
+          "id": "totalSubtotal",
+          "type": "Text",
+          "notes": "Order subtotal"
+        },
+        {
+          "id": "totalShipping",
+          "type": "Text",
+          "notes": "Shipping cost or Free"
+        },
+        {
+          "id": "totalAmount",
+          "type": "Text",
+          "notes": "Order total (bold)"
+        }
+      ]
+    },
+    "activity_log": {
+      "P1": [
+        {
+          "id": "activitySection",
+          "type": "Section (hidden)",
+          "notes": "Activity log container"
+        },
+        {
+          "id": "activityRepeater",
+          "type": "Repeater",
+          "notes": "Activity entries list"
+        },
+        {
+          "id": "activityStatus",
+          "type": "Text",
+          "notes": "Activity status (repeater item)"
+        },
+        {
+          "id": "activityLocation",
+          "type": "Text",
+          "notes": "Activity location (repeater item)"
+        },
+        {
+          "id": "activityDateTime",
+          "type": "Text",
+          "notes": "Activity date/time (repeater item)"
+        }
+      ]
+    },
+    "notifications": {
+      "P2": [
+        {
+          "id": "notificationSection",
+          "type": "Section (hidden)",
+          "notes": "Notification toggle container"
+        },
+        {
+          "id": "notificationToggle",
+          "type": "Toggle",
+          "notes": "Email notifications toggle"
+        },
+        {
+          "id": "notificationLabel",
+          "type": "Text",
+          "notes": "Notification status text"
+        }
+      ]
+    },
+    "navigation": {
+      "P2": [
+        {
+          "id": "newSearchBtn",
+          "type": "Button",
+          "notes": "Track different order"
+        },
+        {
+          "id": "refreshTrackingBtn",
+          "type": "Button",
+          "notes": "Refresh tracking status"
+        }
+      ]
+    }
+  },
+  "contactPage": {
+    "_priority": "P1 \u2014 contact form, business info, appointment booking",
+    "contact_form": {
+      "P0": [
+        {
+          "id": "contactName",
+          "type": "Input",
+          "notes": "Name input (required)"
+        },
+        {
+          "id": "contactEmail",
+          "type": "Input",
+          "notes": "Email input (required)"
+        },
+        {
+          "id": "contactMessage",
+          "type": "TextBox",
+          "notes": "Message body (required)"
+        },
+        {
+          "id": "contactSubmit",
+          "type": "Button",
+          "notes": "Send message button"
+        },
+        {
+          "id": "contactForm",
+          "type": "Box",
+          "notes": "Form container \u2014 hidden on success"
+        },
+        {
+          "id": "contactSuccess",
+          "type": "Box (hidden)",
+          "notes": "Success message"
+        },
+        {
+          "id": "contactError",
+          "type": "Text (hidden)",
+          "notes": "General error"
+        }
+      ],
+      "P1": [
+        {
+          "id": "contactPhone",
+          "type": "Input",
+          "notes": "Phone input (optional)"
+        },
+        {
+          "id": "contactSubject",
+          "type": "Input",
+          "notes": "Subject input (optional)"
+        },
+        {
+          "id": "contactNameError",
+          "type": "Text (hidden)",
+          "notes": "Name validation error"
+        },
+        {
+          "id": "contactEmailError",
+          "type": "Text (hidden)",
+          "notes": "Email validation error"
+        },
+        {
+          "id": "contactMessageError",
+          "type": "Text (hidden)",
+          "notes": "Message validation error"
+        },
+        {
+          "id": "contactPhoneError",
+          "type": "Text (hidden)",
+          "notes": "Phone validation error"
+        }
+      ]
+    },
+    "business_info": {
+      "P0": [
+        {
+          "id": "infoAddress",
+          "type": "Text",
+          "notes": "Store address"
+        },
+        {
+          "id": "infoPhone",
+          "type": "Text",
+          "notes": "Phone number"
+        },
+        {
+          "id": "infoPhoneLink",
+          "type": "Link",
+          "notes": "Click-to-call phone link"
+        },
+        {
+          "id": "directionsBtn",
+          "type": "Button",
+          "notes": "Get directions button"
+        }
+      ],
+      "P2": [
+        {
+          "id": "contactFeatures",
+          "type": "Repeater",
+          "notes": "Showroom features list"
+        },
+        {
+          "id": "featureItem",
+          "type": "Text",
+          "notes": "Feature text (repeater item)"
+        }
+      ]
+    },
+    "business_hours": {
+      "P1": [
+        {
+          "id": "todayStatus",
+          "type": "Text",
+          "notes": "Open/Closed today status"
+        },
+        {
+          "id": "hoursRepeater",
+          "type": "Repeater",
+          "notes": "Weekly hours schedule"
+        },
+        {
+          "id": "hourDay",
+          "type": "Text",
+          "notes": "Day name (repeater item)"
+        },
+        {
+          "id": "hourTime",
+          "type": "Text",
+          "notes": "Hours (repeater item)"
+        }
+      ]
+    },
+    "appointment_booking": {
+      "P1": [
+        {
+          "id": "appointmentBookBtn",
+          "type": "Button",
+          "notes": "Book visit button"
+        },
+        {
+          "id": "appointmentName",
+          "type": "Input",
+          "notes": "Name (required)"
+        },
+        {
+          "id": "appointmentEmail",
+          "type": "Input",
+          "notes": "Email (required)"
+        },
+        {
+          "id": "appointmentPhone",
+          "type": "Input",
+          "notes": "Phone (optional)"
+        },
+        {
+          "id": "appointmentVisitType",
+          "type": "Dropdown",
+          "notes": "Visit type selector"
+        },
+        {
+          "id": "appointmentDate",
+          "type": "Dropdown",
+          "notes": "Preferred date"
+        },
+        {
+          "id": "appointmentTimeSlot",
+          "type": "Dropdown",
+          "notes": "Preferred time slot"
+        },
+        {
+          "id": "appointmentInterests",
+          "type": "TextBox",
+          "notes": "Product interests (optional)"
+        },
+        {
+          "id": "appointmentError",
+          "type": "Text (hidden)",
+          "notes": "Booking error"
+        },
+        {
+          "id": "appointmentForm",
+          "type": "Box",
+          "notes": "Form container"
+        },
+        {
+          "id": "appointmentSuccess",
+          "type": "Box (hidden)",
+          "notes": "Confirmation display"
+        },
+        {
+          "id": "appointmentConfirmation",
+          "type": "Text",
+          "notes": "Confirmation details text"
+        }
+      ]
+    },
+    "social_proof": {
+      "P2": [
+        {
+          "id": "contactTestimonials",
+          "type": "Repeater",
+          "notes": "Testimonial snippets"
+        },
+        {
+          "id": "testimonialQuote",
+          "type": "Text",
+          "notes": "Quote text (repeater item)"
+        },
+        {
+          "id": "testimonialAuthor",
+          "type": "Text",
+          "notes": "Author name (repeater item)"
+        },
+        {
+          "id": "testimonialStars",
+          "type": "Text",
+          "notes": "Star rating display (repeater item)"
+        }
+      ]
+    },
+    "faq_and_seo": {
+      "P2": [
+        {
+          "id": "contactFaqLink",
+          "type": "Link",
+          "notes": "Link to FAQ page"
+        },
+        {
+          "id": "contactSchemaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "LocalBusiness JSON-LD"
+        },
+        {
+          "id": "contactMetaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Meta tags injection"
+        }
+      ]
+    }
+  },
+  "buyingGuidePage": {
+    "_priority": "P1 \u2014 individual buying guide detail page",
+    "header": {
+      "P0": [
+        {
+          "id": "guideTitle",
+          "type": "Text (H1)",
+          "notes": "Guide title"
+        },
+        {
+          "id": "guideContent",
+          "type": "Box",
+          "notes": "Main content container \u2014 hidden on not-found"
+        },
+        {
+          "id": "notFoundBox",
+          "type": "Box (hidden)",
+          "notes": "Guide not found state"
+        }
+      ],
+      "P1": [
+        {
+          "id": "guideCategoryLabel",
+          "type": "Text",
+          "notes": "Category label"
+        },
+        {
+          "id": "guideDate",
+          "type": "Text",
+          "notes": "Updated date"
+        },
+        {
+          "id": "guideReadTime",
+          "type": "Text",
+          "notes": "Reading time estimate"
+        },
+        {
+          "id": "guideHeroImage",
+          "type": "Image",
+          "notes": "Guide hero image"
+        },
+        {
+          "id": "comingSoonBox",
+          "type": "Box (hidden)",
+          "notes": "Coming soon state"
+        },
+        {
+          "id": "comingSoonTitle",
+          "type": "Text",
+          "notes": "Coming soon title"
+        },
+        {
+          "id": "comingSoonMessage",
+          "type": "Text",
+          "notes": "Coming soon message"
+        }
+      ]
+    },
+    "breadcrumbs": {
+      "P1": [
+        {
+          "id": "breadcrumbRepeater",
+          "type": "Repeater",
+          "notes": "Breadcrumb trail"
+        },
+        {
+          "id": "breadcrumbLabel",
+          "type": "Text",
+          "notes": "Breadcrumb text (repeater item)"
+        },
+        {
+          "id": "breadcrumbSeparator",
+          "type": "Text",
+          "notes": "Separator character (repeater item)"
+        }
+      ]
+    },
+    "table_of_contents": {
+      "P2": [
+        {
+          "id": "tocRepeater",
+          "type": "Repeater",
+          "notes": "TOC items list"
+        },
+        {
+          "id": "tocLabel",
+          "type": "Text",
+          "notes": "TOC section label (repeater item)"
+        },
+        {
+          "id": "tocContainer",
+          "type": "Box",
+          "notes": "TOC container \u2014 collapsed on mobile"
+        },
+        {
+          "id": "tocToggle",
+          "type": "Button",
+          "notes": "Toggle TOC on mobile"
+        }
+      ]
+    },
+    "guide_sections": {
+      "P0": [
+        {
+          "id": "sectionRepeater",
+          "type": "Repeater",
+          "notes": "Guide content sections"
+        },
+        {
+          "id": "sectionHeading",
+          "type": "Text",
+          "notes": "Section heading (repeater item)"
+        },
+        {
+          "id": "sectionBody",
+          "type": "Text",
+          "notes": "Section body (repeater item)"
+        }
+      ]
+    },
+    "comparison_table": {
+      "P1": [
+        {
+          "id": "comparisonBox",
+          "type": "Box (hidden)",
+          "notes": "Comparison table container"
+        },
+        {
+          "id": "comparisonTitle",
+          "type": "Text",
+          "notes": "Table title"
+        },
+        {
+          "id": "comparisonHeaderRepeater",
+          "type": "Repeater",
+          "notes": "Table headers"
+        },
+        {
+          "id": "headerLabel",
+          "type": "Text",
+          "notes": "Header text (repeater item)"
+        },
+        {
+          "id": "comparisonRowRepeater",
+          "type": "Repeater",
+          "notes": "Table rows"
+        },
+        {
+          "id": "featureLabel",
+          "type": "Text",
+          "notes": "Feature name (repeater item)"
+        },
+        {
+          "id": "valueCellRepeater",
+          "type": "Repeater",
+          "notes": "Value cells per row (nested repeater)"
+        },
+        {
+          "id": "cellValue",
+          "type": "Text",
+          "notes": "Cell value (nested repeater item)"
+        }
+      ]
+    },
+    "faq": {
+      "P1": [
+        {
+          "id": "faqBox",
+          "type": "Box (hidden)",
+          "notes": "FAQ section container"
+        },
+        {
+          "id": "guideFaqRepeater",
+          "type": "Repeater",
+          "notes": "FAQ accordion items"
+        },
+        {
+          "id": "faqQuestion",
+          "type": "Text",
+          "notes": "Question text (repeater item)"
+        },
+        {
+          "id": "faqAnswer",
+          "type": "Text (hidden)",
+          "notes": "Answer text \u2014 accordion toggle (repeater item)"
+        }
+      ]
+    },
+    "share_buttons": {
+      "P2": [
+        {
+          "id": "shareFacebook",
+          "type": "Button",
+          "notes": "Share on Facebook"
+        },
+        {
+          "id": "shareTwitter",
+          "type": "Button",
+          "notes": "Share on Twitter"
+        },
+        {
+          "id": "sharePinterest",
+          "type": "Button",
+          "notes": "Share on Pinterest"
+        },
+        {
+          "id": "shareEmail",
+          "type": "Button",
+          "notes": "Share via email"
+        }
+      ]
+    },
+    "related_products": {
+      "P1": [
+        {
+          "id": "relatedProductsBox",
+          "type": "Box (hidden)",
+          "notes": "Related products sidebar"
+        },
+        {
+          "id": "relatedProductRepeater",
+          "type": "Repeater",
+          "notes": "Product cards"
+        },
+        {
+          "id": "productName",
+          "type": "Text",
+          "notes": "Product name (repeater item)"
+        },
+        {
+          "id": "productPrice",
+          "type": "Text",
+          "notes": "Product price (repeater item)"
+        },
+        {
+          "id": "productImage",
+          "type": "Image",
+          "notes": "Product image (repeater item)"
+        },
+        {
+          "id": "productRibbon",
+          "type": "Text (hidden)",
+          "notes": "Sale/New ribbon (repeater item)"
+        },
+        {
+          "id": "productCardBox",
+          "type": "Box",
+          "notes": "Clickable card container (repeater item)"
+        }
+      ]
+    },
+    "related_guides": {
+      "P2": [
+        {
+          "id": "relatedGuidesBox",
+          "type": "Box (hidden)",
+          "notes": "Related guides section"
+        },
+        {
+          "id": "relatedGuideRepeater",
+          "type": "Repeater",
+          "notes": "Related guide cards"
+        },
+        {
+          "id": "relatedGuideTitle",
+          "type": "Text",
+          "notes": "Guide title (repeater item)"
+        },
+        {
+          "id": "relatedGuideDescription",
+          "type": "Text",
+          "notes": "Guide description (repeater item)"
+        },
+        {
+          "id": "relatedGuideBox",
+          "type": "Box",
+          "notes": "Clickable card container (repeater item)"
+        }
+      ]
+    },
+    "seo": {
+      "P2": [
+        {
+          "id": "guideSeoSchema",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Article + FAQ JSON-LD"
+        },
+        {
+          "id": "guideMetaHtml",
+          "type": "HtmlComponent (hidden)",
+          "notes": "Meta tags injection"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_p0": 189,
+    "total_p1": 407,
+    "total_p2": 211,
+    "total_documented": 807,
+    "pages_covered": [
+      "masterPage",
+      "homePage",
+      "categoryPage",
+      "productPage",
+      "sideCart",
+      "cartPage",
+      "checkout",
+      "thankYouPage",
+      "adminReturns",
+      "memberPage",
+      "returnsPage",
+      "orderTracking",
+      "contactPage",
+      "buyingGuidePage"
+    ],
+    "notes": "P0 elements must be renamed FIRST \u2014 code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
+  }
+}
