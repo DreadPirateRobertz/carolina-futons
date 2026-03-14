@@ -171,11 +171,11 @@ Full showroom appointment booking form with date/time slot selection.
 | Background | `#FAF7F2` (Off White) | Page background |
 | Card background | `#FFFFFF` | Form containers, testimonial cards, hours card |
 | Text color | `#3A2518` (Espresso) | All text |
-| Error color | `#D32F2F` | Validation error text |
-| Success color | `#388E3C` | Success confirmation text |
+| Error color | `colors.error` (`#C0392B`) | Validation error text |
+| Success color | `colors.success` (`#4A7C59`) | Success confirmation text |
 | Border radius | 8px | Cards, buttons, inputs |
 | Input border | `#E8D5B7` (Sand) | Form input borders |
 | Shadows | `rgba(58,37,24,0.08)` | Cards, form containers |
 | Star color | `#E8845C` (Coral) | Testimonial star ratings |
-| Open status | `#388E3C` (Green) | "Open Now" badge |
-| Closed status | `#D32F2F` (Red) | "Closed" badge |
+| Open status | `colors.success` (`#4A7C59`) | "Open Now" badge |
+| Closed status | `colors.error` (`#C0392B`) | "Closed" badge |
