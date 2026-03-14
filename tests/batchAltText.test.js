@@ -1,16 +1,9 @@
 /**
  * Tests for backend/batchAltText.web.js
  * Covers: brand detection, category detection, alt text generation,
- * batch update with dry-run/force, product preview, pagination.
+ * batch update with dry-run/force, product preview, error handling.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ── Mock wix-web-module ─────────────────────────────────────────────
-
-vi.mock('wix-web-module', () => ({
-  Permissions: { Anyone: 'anyone', Admin: 'admin' },
-  webMethod: (_perm, fn) => fn,
-}));
 
 // ── Mock wix-stores-backend ─────────────────────────────────────────
 
@@ -31,6 +24,7 @@ vi.mock('wix-stores-backend', () => ({
   },
 }));
 
+import { products as storeMock } from 'wix-stores-backend';
 import {
   runBatchAltTextUpdate,
   previewProductAltText,
@@ -57,6 +51,7 @@ describe('batchAltText — runBatchAltTextUpdate', () => {
   beforeEach(() => {
     mockProducts.length = 0;
     mockUpdateCalls.length = 0;
+    vi.clearAllMocks();
   });
 
   it('updates products with missing alt text', async () => {
@@ -104,13 +99,51 @@ describe('batchAltText — runBatchAltTextUpdate', () => {
   });
 
   it('handles errors per product gracefully', async () => {
-    const { products: store } = await import('wix-stores-backend');
-    store.updateProductFields.mockRejectedValueOnce(new Error('API limit'));
+    storeMock.updateProductFields.mockRejectedValueOnce(new Error('API limit'));
     mockProducts.push(makeProduct());
 
     const result = await runBatchAltTextUpdate();
     expect(result.errors.length).toBe(1);
     expect(result.errors[0]).toContain('API limit');
+  });
+
+  it('reports query failure in errors array', async () => {
+    storeMock.queryProducts.mockReturnValueOnce({
+      skip: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      find: vi.fn().mockRejectedValueOnce(new Error('Network timeout')),
+    });
+
+    const result = await runBatchAltTextUpdate();
+    expect(result.errors.length).toBe(1);
+    expect(result.errors[0]).toContain('Query failed');
+    expect(result.errors[0]).toContain('Network timeout');
+  });
+
+  it('paginates when first batch returns limit items', async () => {
+    const page1 = Array.from({ length: 100 }, (_, i) => makeProduct({
+      _id: `prod-${i}`,
+      name: `Product ${i}`,
+    }));
+    const page2 = [makeProduct({ _id: 'prod-100', name: 'Product 100' })];
+
+    let callCount = 0;
+    // Use two chained mockReturnValueOnce to simulate 2 pages
+    storeMock.queryProducts
+      .mockReturnValueOnce({
+        skip: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        find: vi.fn(async () => ({ items: page1 })),
+      })
+      .mockReturnValueOnce({
+        skip: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        find: vi.fn(async () => ({ items: page2 })),
+      });
+
+    const result = await runBatchAltTextUpdate({ dryRun: true });
+    expect(result.updated).toBe(101);
+    expect(storeMock.queryProducts).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -118,6 +151,7 @@ describe('batchAltText — alt text generation', () => {
   beforeEach(() => {
     mockProducts.length = 0;
     mockUpdateCalls.length = 0;
+    vi.clearAllMocks();
   });
 
   it('includes brand for Night & Day products (default)', async () => {
@@ -225,6 +259,7 @@ describe('batchAltText — alt text generation', () => {
 describe('batchAltText — previewProductAltText', () => {
   beforeEach(() => {
     mockProducts.length = 0;
+    vi.clearAllMocks();
   });
 
   it('returns alt text preview for a product', async () => {
