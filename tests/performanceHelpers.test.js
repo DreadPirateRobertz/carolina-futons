@@ -178,6 +178,42 @@ describe('prioritizeSections', () => {
     expect(deferredFn).toHaveBeenCalledOnce();
   });
 
+  it('handles critical section that throws synchronously', async () => {
+    const syncThrow = vi.fn(() => { throw new TypeError('Cannot read properties of undefined'); });
+    const okFn = vi.fn().mockResolvedValue('ok');
+
+    const sections = [
+      { name: 'hero', init: okFn, critical: true },
+      { name: 'syncBoom', init: syncThrow, critical: true },
+    ];
+
+    const result = await prioritizeSections(sections);
+    // Both sections should have results — sync throw should be caught as rejected
+    expect(result.critical).toHaveLength(2);
+    expect(result.critical[0].status).toBe('fulfilled');
+    expect(result.critical[1].status).toBe('rejected');
+    expect(result.critical[1].reason).toBeInstanceOf(TypeError);
+  });
+
+  it('handles deferred section that throws synchronously', async () => {
+    const criticalFn = vi.fn().mockResolvedValue('ok');
+    const syncThrow = vi.fn(() => { throw new TypeError('element not found'); });
+    const onError = vi.fn();
+
+    const sections = [
+      { name: 'hero', init: criticalFn, critical: true },
+      { name: 'syncBoom', init: syncThrow, critical: false },
+    ];
+
+    const result = await prioritizeSections(sections, { onError });
+    expect(result.critical).toHaveLength(1);
+    expect(result.critical[0].status).toBe('fulfilled');
+
+    // Let fire-and-forget settle
+    await new Promise(r => setTimeout(r, 50));
+    expect(onError).toHaveBeenCalledOnce();
+  });
+
   it('returns empty arrays for empty input', async () => {
     const result = await prioritizeSections([]);
     expect(result.critical).toHaveLength(0);

@@ -61,9 +61,16 @@ export async function prioritizeSections(sections, opts = {}) {
   const critical = sections.filter(s => s.critical);
   const deferred = sections.filter(s => !s.critical);
 
+  // Wrap init calls to catch synchronous throws — $w() calls on missing
+  // template elements throw TypeError synchronously, which would escape
+  // Promise.allSettled if not converted to rejected promises first.
+  const safeInit = (s) => {
+    try { return Promise.resolve(s.init()); } catch (e) { return Promise.reject(e); }
+  };
+
   // Run critical sections first — these affect LCP
   const criticalResults = await Promise.allSettled(
-    critical.map(s => s.init())
+    critical.map(safeInit)
   );
 
   // Log critical failures
@@ -76,7 +83,7 @@ export async function prioritizeSections(sections, opts = {}) {
   // Fire-and-forget deferred sections — do NOT await.
   // This lets onReady return after critical content paints.
   if (deferred.length > 0) {
-    Promise.allSettled(deferred.map(s => s.init()))
+    Promise.allSettled(deferred.map(safeInit))
       .then(results => {
         results.forEach((result, i) => {
           if (result.status === 'rejected') {
