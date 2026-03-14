@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "description": "Phase 1 element renames — HIGH confidence mappings only. Use with documentServices API to rename template nicknames to our BUILD-SPEC IDs. Format: { templateNickname: ourBuildSpecId }",
+    "bead": "test-dld",
+    "direction": "template → code (rename template elements to match our code)",
+    "confidenceLevel": "HIGH only — MEDIUM confidence entries deferred to phase 2"
+  },
+
+  "vectorImage10": "siteLogo",
+  "text42": "announcementText",
+  "shoppingCartIcon1": "cartIcon",
+  "section1": "heroSection",
+  "text16": "heroTitle",
+  "text17": "heroSubtitle",
+  "button3": "heroCTA",
+  "imageX12": "heroBg",
+  "text5": "featuredTitle",
+  "section8": "saleSection",
+  "text25": "newsletterTitle",
+  "text24": "newsletterSubtitle"
+}

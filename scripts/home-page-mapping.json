@@ -1,0 +1,214 @@
+{
+  "_meta": {
+    "page": "masterPage + Home Page",
+    "pageId": "c1dmp",
+    "templateSource": "home-page-template-ids.json (extracted via documentServices API 2026-03-13)",
+    "bead": "test-dld",
+    "notes": "Maps our BUILD-SPEC element IDs to template nicknames. Melania renames template elements to match our code via documentServices API. Items marked MISMATCH require architectural decisions before mapping."
+  },
+
+  "masterPage_header": {
+    "_comment": "Header elements — masterPage section3",
+    "siteLogo": { "templateNickname": "vectorImage10", "templateType": "VectorImage", "confidence": "HIGH", "note": "Logo image in header" },
+    "announcementText": { "templateNickname": "text42", "templateType": "WRichText", "confidence": "HIGH", "note": "Free Shipping announcement bar text" },
+    "cartIcon": { "templateNickname": "shoppingCartIcon1", "templateType": "TPAWidget", "confidence": "HIGH", "note": "Shopping cart icon widget" },
+    "cartBadge": { "templateNickname": null, "confidence": "MISSING", "note": "No separate cart badge element in template — badge is part of shoppingCartIcon1 TPAWidget" },
+    "headerSearchInput": { "templateNickname": "searchButton2", "templateType": "SearchButton", "confidence": "MEDIUM", "note": "Template has SearchButton widget, not a bare input. Our code does $w('#headerSearchInput').role = 'search' — may need API adjustment" },
+    "productTitle": { "templateNickname": null, "confidence": "MISSING", "note": "Product title text — referenced in masterPage for side cart display. Must be on Product Page, not masterPage template" },
+    "sideCartPanel": { "templateNickname": null, "confidence": "MISSING", "note": "No side cart panel in template — must be added as new element" },
+    "justAddedHighlight": { "templateNickname": null, "confidence": "MISSING", "note": "Part of side cart — not in template" },
+    "a11yLiveRegion": { "templateNickname": null, "confidence": "MISSING", "note": "Accessibility live region — must be added as hidden text element" }
+  },
+
+  "masterPage_mobile_menu": {
+    "_comment": "Mobile hamburger menu elements",
+    "_templateElements": {
+      "hamburgerOpenButton1": "HamburgerMenuRoot — mobile menu trigger",
+      "hamburgerOverlay1": "HamburgerOverlay — backdrop",
+      "hamburgerMenuContainer1": "HamburgerMenuContainer — drawer",
+      "hamburgerCloseButton1": "HamburgerCloseButton — close X",
+      "expandableMenu2": "ExpandableMenu — mobile nav links",
+      "button6": "StylableButton — mobile Shop button",
+      "accountNavBar2": "LoginSocialBar — mobile login",
+      "box43": "Container for mobile nav content"
+    },
+    "_note": "Our code uses initMobileDrawer() from navigationHelpers.js which creates a custom drawer. Template has built-in Wix hamburger menu. Decision needed: use template's built-in mobile menu OR add custom elements."
+  },
+
+  "masterPage_footer": {
+    "_comment": "Footer elements — masterPage section2",
+    "newsletterTitle": { "templateNickname": "text25", "templateType": "WRichText", "confidence": "HIGH", "note": "Stay Inspired heading" },
+    "newsletterSubtitle": { "templateNickname": "text24", "templateType": "WRichText", "confidence": "HIGH", "note": "Newsletter description subtext" },
+    "newsletterEmail": { "templateNickname": null, "confidence": "MISMATCH", "note": "Template has form2 (TPAWidget newsletter form) — our code expects separate input + submit. Need to decide: use Wix form widget or add bare elements" },
+    "newsletterSubmit": { "templateNickname": null, "confidence": "MISMATCH", "note": "See newsletterEmail — part of form2 TPAWidget" },
+    "newsletterSection": { "templateNickname": "box33", "templateType": "Container", "confidence": "MEDIUM", "note": "Newsletter form container" },
+    "newsletterError": { "templateNickname": null, "confidence": "MISSING", "note": "Validation error text — must be added" },
+    "newsletterSuccess": { "templateNickname": null, "confidence": "MISSING", "note": "Success message — must be added" },
+    "businessSchemaHtml": { "templateNickname": null, "confidence": "MISSING", "note": "Hidden HtmlComponent for JSON-LD schema — must be added" },
+    "websiteSchemaHtml": { "templateNickname": null, "confidence": "MISSING", "note": "Hidden HtmlComponent for website schema — must be added" }
+  },
+
+  "home_hero": {
+    "_comment": "Hero section — section1 (Welcome/Hero)",
+    "heroSection": { "templateNickname": "section1", "templateType": "Section", "confidence": "HIGH", "note": "Welcome/Hero section container" },
+    "heroTitle": { "templateNickname": "text16", "templateType": "WRichText", "confidence": "HIGH", "note": "Hero heading text" },
+    "heroSubtitle": { "templateNickname": "text17", "templateType": "WRichText", "confidence": "HIGH", "note": "'tera' subtitle text" },
+    "heroCTA": { "templateNickname": "button3", "templateType": "StylableButton", "confidence": "HIGH", "note": "Shop CTA button" },
+    "heroBg": { "templateNickname": "imageX12", "templateType": "ImageX", "confidence": "HIGH", "note": "Hero background image" },
+    "heroOverlay": { "templateNickname": "box28", "templateType": "Container", "confidence": "MEDIUM", "note": "Hero text overlay container — box28 is 'Hero text container' (child of box29 outer wrapper). Chosen over box29 because overlay refers to the text content layer, not the full-width wrapper." }
+  },
+
+  "home_categories": {
+    "_comment": "Store Categories — section10",
+    "categoryRepeater": { "templateNickname": null, "confidence": "MISMATCH", "note": "*** CRITICAL: Template has 4 individual Container cards (box26, box24, box22, box20), NOT a Repeater. Our code uses $w('#categoryRepeater').onItemReady() which requires a Repeater element. Options: (A) Add a Repeater element and remove individual cards, (B) Refactor code to address individual cards ***" },
+    "categorySkeleton": { "templateNickname": null, "confidence": "MISSING", "note": "Skeleton loader — must be added" },
+    "_templateCategoryCards": {
+      "box26": "Category card 1 container",
+      "box24": "Category card 2 container",
+      "box22": "Category card 3 container",
+      "box20": "Category card 4 container",
+      "text14": "Card 1 label",
+      "text13": "Card 2 label",
+      "text12": "Card 3 label",
+      "text11": "Card 4 label"
+    }
+  },
+
+  "home_featured_products": {
+    "_comment": "Best Sellers — section6 (Products Gallery / Best Sellers)",
+    "featuredTitle": { "templateNickname": "text5", "templateType": "WRichText", "confidence": "HIGH", "note": "BEST SELLERS heading" },
+    "featuredSubtitle": { "templateNickname": null, "confidence": "MISSING", "note": "No subtitle in template section — must be added" },
+    "featuredRepeater": { "templateNickname": "gridGallery1", "confidence": "MISMATCH", "note": "*** CRITICAL: Template has TPAWidget (Wix Pro Gallery), NOT a Repeater. Pro Gallery does not support .onItemReady(). Options: (A) Replace Pro Gallery with Repeater in editor, (B) Refactor code to use Pro Gallery API, (C) Add a Repeater element alongside/replacing gallery ***" },
+    "featuredSkeleton": { "templateNickname": null, "confidence": "MISSING", "note": "Skeleton loader — must be added" },
+    "featuredQuickViewModal": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view modal — must be added as overlay/lightbox" },
+    "featuredQvImage": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view product image — part of modal" },
+    "featuredQvName": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view product name — part of modal" },
+    "featuredQvPrice": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view product price — part of modal" },
+    "featuredQvAddToCart": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view add to cart button — part of modal" },
+    "featuredQvViewFull": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view 'view full details' link — part of modal" },
+    "featuredQvClose": { "templateNickname": null, "confidence": "MISSING", "note": "Quick view close button — part of modal" }
+  },
+
+  "home_sale_products": {
+    "_comment": "New In — section8 (Products - New In)",
+    "saleSection": { "templateNickname": "section8", "templateType": "Section", "confidence": "HIGH", "note": "New In section container" },
+    "saleRepeater": { "templateNickname": "gridGallery2", "confidence": "MISMATCH", "note": "*** CRITICAL: Same as featuredRepeater — TPAWidget Pro Gallery, NOT Repeater ***" },
+    "saleSkeleton": { "templateNickname": null, "confidence": "MISSING", "note": "Skeleton loader — must be added" }
+  },
+
+  "home_promotional": {
+    "_comment": "Promotional — section9",
+    "swatchPromoSection": { "templateNickname": "section9", "templateType": "Section", "confidence": "MEDIUM", "note": "Promotional section — template shows generic promo, our code has swatch promo" },
+    "swatchPromoTitle": { "templateNickname": "text10", "templateType": "WRichText", "confidence": "MEDIUM", "note": "Promo heading" },
+    "swatchPromoSubtitle": { "templateNickname": "text9", "templateType": "WRichText", "confidence": "MEDIUM", "note": "Promo subheading" },
+    "swatchPromoCTA": { "templateNickname": "button2", "templateType": "StylableButton", "confidence": "MEDIUM", "note": "Discover More CTA" }
+  },
+
+  "home_about": {
+    "_comment": "About — section7",
+    "_note": "Template about section has text + images + Learn More CTA. Our code doesn't reference these IDs directly in Home.js — the About section is handled by About page. These map for completeness.",
+    "_templateElements": {
+      "section7": "About section container",
+      "text6": "About text paragraph",
+      "text7": "About detail text",
+      "button1": "Learn More CTA",
+      "imageX1": "About image 1",
+      "imageX2": "About image 2"
+    }
+  },
+
+  "home_press": {
+    "_comment": "Press / As Seen In — section4",
+    "testimonialRepeater": { "templateNickname": "repeater1", "templateType": "Repeater", "confidence": "MISMATCH", "note": "Template's repeater1 is for PRESS LOGOS (As Seen In), but our code uses testimonialRepeater for customer testimonials. Content-type mismatch — press logos vs reviews. Need separate repeater for testimonials." },
+    "testimonialSection": { "templateNickname": null, "confidence": "MISSING", "note": "Testimonial section — template has Press/As Seen In section instead. Need to add testimonial section or repurpose" },
+    "testimonialSlideshow": { "templateNickname": null, "confidence": "MISSING", "note": "Testimonial slideshow — must be added" },
+    "testimonialPauseBtn": { "templateNickname": null, "confidence": "MISSING", "note": "Slideshow pause button — must be added" },
+    "testimonialSchemaScript": { "templateNickname": null, "confidence": "MISSING", "note": "Hidden script for testimonial schema — must be added" }
+  },
+
+  "home_instagram": {
+    "_comment": "Instagram — section5",
+    "_note": "Template has gallery1 (TPAWidget Instagram gallery). Our code doesn't reference Instagram section elements in Home.js — this is handled by external widget.",
+    "_templateElements": {
+      "section5": "Instagram section",
+      "text4": "FOLLOW US heading",
+      "gallery1": "Instagram gallery TPAWidget"
+    }
+  },
+
+  "home_misc": {
+    "_comment": "Elements in our code with no template section",
+    "ridgelineHeader": { "templateNickname": null, "confidence": "MISSING", "note": "Mountain ridgeline SVG header decoration — must be added as HtmlComponent" },
+    "trustBar": { "templateNickname": null, "confidence": "MISSING", "note": "Trust signals bar (Free Shipping, Warranty, etc.) — must be added" },
+    "videoShowcaseSection": { "templateNickname": null, "confidence": "MISSING", "note": "Video showcase section — must be added" },
+    "videoShowcaseTitle": { "templateNickname": null, "confidence": "MISSING", "note": "Video showcase heading" },
+    "videoShowcaseSubtitle": { "templateNickname": null, "confidence": "MISSING", "note": "Video showcase subheading" },
+    "viewAllVideosCTA": { "templateNickname": null, "confidence": "MISSING", "note": "View all videos CTA" },
+    "quizCTASection": { "templateNickname": null, "confidence": "MISSING", "note": "Style quiz CTA section — must be added" },
+    "quizCTATitle": { "templateNickname": null, "confidence": "MISSING", "note": "Quiz CTA heading" },
+    "quizCTASubtitle": { "templateNickname": null, "confidence": "MISSING", "note": "Quiz CTA subheading" },
+    "quizCTAButton": { "templateNickname": null, "confidence": "MISSING", "note": "Quiz CTA button" },
+    "recentSection": { "templateNickname": null, "confidence": "MISSING", "note": "Recently viewed products section — must be added" }
+  },
+
+  "masterPage_promo_exit": {
+    "_comment": "Promo lightbox + exit-intent popup — masterPage overlays, no template equivalent",
+    "_note": "These are overlay/modal elements that don't exist in the template. All must be added as new elements: lightbox containers, overlay backgrounds, text elements, buttons, form inputs.",
+    "promoLightbox": { "templateNickname": null, "confidence": "MISSING", "note": "Add as lightbox/overlay container" },
+    "promoOverlay": { "templateNickname": null, "confidence": "MISSING", "note": "Backdrop overlay" },
+    "promoTitle": { "templateNickname": null, "confidence": "MISSING", "note": "Promo heading text" },
+    "promoSubtitle": { "templateNickname": null, "confidence": "MISSING", "note": "Promo subheading" },
+    "promoHeroImage": { "templateNickname": null, "confidence": "MISSING", "note": "Promo hero image" },
+    "promoCode": { "templateNickname": null, "confidence": "MISSING", "note": "Discount code text" },
+    "promoCopyCode": { "templateNickname": null, "confidence": "MISSING", "note": "Copy code button" },
+    "promoCTA": { "templateNickname": null, "confidence": "MISSING", "note": "Promo CTA button" },
+    "promoCountdown": { "templateNickname": null, "confidence": "MISSING", "note": "Countdown timer" },
+    "promoRepeater": { "templateNickname": null, "confidence": "MISSING", "note": "Promo items repeater" },
+    "promoClose": { "templateNickname": null, "confidence": "MISSING", "note": "Close button" },
+    "promoDismiss": { "templateNickname": null, "confidence": "MISSING", "note": "Dismiss button" },
+    "promoEmailInput": { "templateNickname": null, "confidence": "MISSING", "note": "Email capture input" },
+    "promoEmailSubmit": { "templateNickname": null, "confidence": "MISSING", "note": "Email submit button" },
+    "exitIntentPopup": { "templateNickname": null, "confidence": "MISSING", "note": "Exit intent popup container" },
+    "exitOverlay": { "templateNickname": null, "confidence": "MISSING", "note": "Exit backdrop" },
+    "exitTitle": { "templateNickname": null, "confidence": "MISSING", "note": "Exit heading" },
+    "exitSubtitle": { "templateNickname": null, "confidence": "MISSING", "note": "Exit subheading" },
+    "exitDragHandle": { "templateNickname": null, "confidence": "MISSING", "note": "Mobile drag handle" },
+    "exitEmailInput": { "templateNickname": null, "confidence": "MISSING", "note": "Exit email input" },
+    "exitEmailSubmit": { "templateNickname": null, "confidence": "MISSING", "note": "Exit email submit" },
+    "exitEmailError": { "templateNickname": null, "confidence": "MISSING", "note": "Exit validation error" },
+    "exitSuccess": { "templateNickname": null, "confidence": "MISSING", "note": "Exit success message" },
+    "exitSwatchLink": { "templateNickname": null, "confidence": "MISSING", "note": "Swatch request link" },
+    "installBanner": { "templateNickname": null, "confidence": "MISSING", "note": "PWA install banner" },
+    "installBannerText": { "templateNickname": null, "confidence": "MISSING", "note": "Install banner text" },
+    "installBannerBtn": { "templateNickname": null, "confidence": "MISSING", "note": "Install button" },
+    "installBannerDismiss": { "templateNickname": null, "confidence": "MISSING", "note": "Dismiss install banner" },
+    "headerShippingBar": { "templateNickname": null, "confidence": "MISSING", "note": "Shipping threshold bar" },
+    "headerShippingText": { "templateNickname": null, "confidence": "MISSING", "note": "Shipping bar text" },
+    "newsletterModalTrigger": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal trigger" },
+    "newsletterModal": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal" },
+    "newsletterModalOverlay": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal backdrop" },
+    "newsletterModalEmail": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal email input" },
+    "newsletterModalSubmit": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal submit" },
+    "newsletterModalError": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal error" },
+    "newsletterModalSuccess": { "templateNickname": null, "confidence": "MISSING", "note": "Newsletter modal success" }
+  },
+
+  "_summary": {
+    "totalCodeElements": 97,
+    "highConfidence": 12,
+    "mediumConfidence": 7,
+    "mismatch": 6,
+    "missing": 72,
+    "notReferenced_templateOnly": 18,
+    "_countNote": "12 HIGH + 7 MEDIUM + 6 MISMATCH + 72 MISSING = 97 total. notReferenced_templateOnly counts template elements with no code counterpart (separate from code element mapping).",
+    "criticalMismatches": [
+      "featuredRepeater → gridGallery1: Pro Gallery, not Repeater. Code uses .onItemReady() which only works on Repeaters.",
+      "saleRepeater → gridGallery2: Same Pro Gallery vs Repeater mismatch.",
+      "categoryRepeater → 4 individual cards: No repeater at all — template has static containers.",
+      "testimonialRepeater → repeater1: Content-type mismatch — template repeater is for press logos, our code expects customer testimonials.",
+      "newsletterEmail/Submit → form2: Template uses TPAWidget form, code expects bare input+button.",
+      "headerSearchInput → searchButton2: Template has SearchButton widget, code expects text input."
+    ],
+    "recommendation": "Phase the hookup: (1) Rename 12 HIGH-confidence elements via documentServices API immediately. (2) Decide on Repeater vs Pro Gallery strategy for product grids — this is the biggest architectural question. (3) Add the 72 missing elements in batches, starting with must-haves (schema, a11y, skeleton loaders) and deferring nice-to-haves (promo lightbox, exit intent, video showcase)."
+  }
+}
