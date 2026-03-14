@@ -34,9 +34,10 @@ describe('getCategoryHeroImage', () => {
     expect(url).toContain('w_1920');
   });
 
-  it('returns fallback for unknown category', () => {
+  it('returns fallback for unknown category with correct 1920x600 dimensions', () => {
     const url = getCategoryHeroImage('nonexistent');
     expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_1920,h_600');
   });
 
   it('returns different images for different categories', () => {
@@ -66,9 +67,10 @@ describe('getCategoryCardImage', () => {
     expect(url).toContain('w_600,h_400');
   });
 
-  it('returns fallback for unknown category', () => {
+  it('returns fallback for unknown category with correct 600x400 dimensions', () => {
     const url = getCategoryCardImage('unknown');
     expect(url).toContain('static.wixstatic.com');
+    expect(url).toContain('w_600,h_400');
   });
 
   it.each(ALL_CATEGORIES)('returns valid 600x400 wixstatic card for %s', (cat) => {
@@ -82,8 +84,9 @@ describe('getCategoryCardImage', () => {
     expect(new Set(urls).size).toBe(7);
   });
 
-  it('sales category has a card image', () => {
+  it('sales category has a valid wixstatic card image', () => {
     const url = getCategoryCardImage('sales');
+    expect(url).toMatch(WIXSTATIC_URL_PATTERN);
     expect(url).toContain('w_600,h_400');
   });
 });

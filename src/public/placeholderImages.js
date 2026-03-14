@@ -8,7 +8,7 @@
 // ── Category Hero Images (1920x600) ─────────────────────────────────
 // Real CF product photos from Wix CDN, resized for wide hero banners
 const categoryHeroImages = {
-  'futon-frames': 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
+  'futon-frames': 'https://static.wixstatic.com/media/e04e89_9234577e395e4eb180cb2c9bc936d65f~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
   'mattresses': 'https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
   'murphy-cabinet-beds': 'https://static.wixstatic.com/media/e04e89_3887b1acf16f4360979b0a66479934ac~mv2.png/v1/fit/w_1920,h_600,q_90/file.png',
   'platform-beds': 'https://static.wixstatic.com/media/e04e89_1dd7f840025044478981e6e883863d55~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg',
@@ -115,6 +115,7 @@ const HOMEPAGE_HERO_ALT = 'Cozy mountain cabin living room with warm fireplace �
 // ── Fallback (generic product image from catalog) ────────────────────
 const FALLBACK_IMAGE = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_800,h_800,q_90/file.jpg';
 const FALLBACK_HERO = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_1920,h_600,q_90/file.jpg';
+const FALLBACK_CARD = 'https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_600,h_400,q_90/file.jpg';
 const FALLBACK_HERO_ALT = 'Mountain cabin nestled in Blue Ridge nature';
 const FALLBACK_CARD_ALT = 'Carolina Futons — handcrafted comfort';
 
@@ -158,7 +159,7 @@ export function getCategoryHeroAlt(categorySlug) {
  * @returns {string} Image URL sized 600x400 (3:2)
  */
 export function getCategoryCardImage(categorySlug) {
-  return categoryCategoryCards[categorySlug] || FALLBACK_IMAGE;
+  return categoryCategoryCards[categorySlug] || FALLBACK_CARD;
 }
 
 /**
