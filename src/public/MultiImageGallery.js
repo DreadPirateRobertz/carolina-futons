@@ -4,11 +4,8 @@
  * tracking with screen reader announcements, category-aware gallery config
  * application, and thumbnail strip scrolling for galleries with many images.
  *
- * Layers on top of ProductGallery.js — call these initializers after
- * initImageGallery for the enhanced multi-image experience.
- *
- * @param {Function} $w - Wix Velo selector function
- * @param {Object} state - Product page state with state.product
+ * Complements ProductGallery.js with additional gallery enhancements.
+ * Loaded as a deferred module on the Product Page.
  */
 import { getGalleryConfig } from 'public/galleryConfig.js';
 import { announce } from 'public/a11yHelpers.js';
@@ -19,9 +16,10 @@ import { announce } from 'public/a11yHelpers.js';
  * Initialize an image counter overlay showing "1 / N" on the main product image.
  * Hides the counter for single-image products. Sets ARIA live region for
  * screen reader announcements on navigation.
+ * Returns a no-op controller when the product is missing or has 1 or fewer images.
  * @param {Function} $w - Wix selector function
  * @param {Object} state - Product page state
- * @returns {{ update: Function }} Controller with update(index) method
+ * @returns {{ update: Function }} Controller with update(index) method (0-based index)
  */
 export function initGalleryCounter($w, state) {
   const noop = { update() {} };
@@ -49,6 +47,7 @@ export function initGalleryCounter($w, state) {
       },
     };
   } catch (e) {
+    console.error('[MultiImageGallery] initGalleryCounter failed:', e);
     return noop;
   }
 }
@@ -58,6 +57,8 @@ export function initGalleryCounter($w, state) {
 /**
  * Track and announce the currently active gallery image. Updates a
  * thumbnail indicator element and announces changes via screen reader.
+ * Returns a no-op tracker (getActive always returns 0, setActive is ignored)
+ * when product is null or has no media items.
  * @param {Function} $w - Wix selector function
  * @param {Object} state - Product page state
  * @returns {{ setActive: Function, getActive: Function }} Tracker controller
@@ -88,11 +89,14 @@ export function initActiveThumbnail($w, state) {
             ? `Image ${display} of ${total}: ${title}`
             : `Image ${display} of ${total}`;
           announce($w, message);
-        } catch (e) {}
+        } catch (e) {
+          console.error('[MultiImageGallery] setActive failed at index', index, e);
+        }
       },
       getActive: () => activeIndex,
     };
   } catch (e) {
+    console.error('[MultiImageGallery] initActiveThumbnail failed:', e);
     return noop;
   }
 }
@@ -101,11 +105,12 @@ export function initActiveThumbnail($w, state) {
 
 /**
  * Apply per-category gallery configuration. Reads config from galleryConfig.js
- * based on the product's first collection and applies visibility settings
- * (zoom, lightbox, thumbnail strip) to page elements.
+ * based on the product's first collection, applies visibility settings
+ * (zoom, lightbox, thumbnail strip) to page elements, and returns the
+ * resolved config for further use by the caller.
  * @param {Function} $w - Wix selector function
  * @param {Object} state - Product page state
- * @returns {Object} The resolved gallery config
+ * @returns {Object} Gallery config with thumbnailCount, enableZoom, enableLightbox, zoomLevel, autoPlayGallery, showThumbnailStrip, thumbnailPosition, mainImageFit
  */
 export function applyGalleryConfig($w, state) {
   const defaultConfig = {
@@ -132,6 +137,7 @@ export function applyGalleryConfig($w, state) {
 
     return config;
   } catch (e) {
+    console.error('[MultiImageGallery] applyGalleryConfig failed:', e);
     return defaultConfig;
   }
 }
@@ -163,7 +169,7 @@ export function initThumbnailScroll($w, state) {
     if (items.length <= maxVisible) {
       try { $w('#thumbScrollPrev').hide(); } catch (e) {}
       try { $w('#thumbScrollNext').hide(); } catch (e) {}
-      return { scrollTo() {} };
+      return noop;
     }
 
     try {
@@ -193,6 +199,7 @@ export function initThumbnailScroll($w, state) {
       },
     };
   } catch (e) {
+    console.error('[MultiImageGallery] initThumbnailScroll failed:', e);
     return noop;
   }
 }
