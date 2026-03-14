@@ -804,7 +804,7 @@ describe('getFlashSales', () => {
     consoleSpy.mockRestore();
   });
 
-  it('sanitizes categorySlug input', async () => {
+  it('sanitizes categorySlug input (dirty chars stripped)', async () => {
     __seed('Promotions', [
       {
         _id: 'flash-sanitize',
@@ -817,9 +817,10 @@ describe('getFlashSales', () => {
       },
     ]);
 
-    // validateSlug strips non-alphanumeric-dash chars
-    const result = await getFlashSales('futon-frames');
-    expect(result).toHaveLength(1);
+    // validateSlug strips non-alphanumeric-dash chars — <script> becomes 'script'
+    const result = await getFlashSales('<script>futon-frames</script>');
+    // validateSlug will produce 'scriptfuton-framesscript' which won't match 'futon-frames'
+    expect(result).toHaveLength(0);
   });
 
   it('handles multiple flash sales sorted by endDate ascending', async () => {
@@ -846,11 +847,9 @@ describe('getFlashSales', () => {
     ]);
 
     const result = await getFlashSales();
-    // ascending('endDate') — soonest ending first
     expect(result).toHaveLength(2);
-    // Both should be returned; order depends on mock behavior
-    const titles = result.map(r => r.title);
-    expect(titles).toContain('Ends Soon');
-    expect(titles).toContain('Ends Later');
+    // Mock supports ascending sort — verify soonest-ending first
+    expect(result[0].title).toBe('Ends Soon');
+    expect(result[1].title).toBe('Ends Later');
   });
 });

@@ -130,6 +130,7 @@ describe('estimateDelivery', () => {
   it('returns error for empty ZIP', async () => {
     const result = await estimateDelivery('', smallProduct);
     expect(result.success).toBe(false);
+    expect(result.error).toContain('5-digit');
   });
 
   it('uses live UPS rates when available', async () => {
@@ -190,6 +191,15 @@ describe('estimateDelivery', () => {
 
     const result = await estimateDelivery('10001', largeProduct);
     expect(result.whiteGlove).toBeNull();
+  });
+
+  it('detects large item by collection name (not just weight)', async () => {
+    getUPSRates.mockRejectedValue(new Error('offline'));
+    const collectionProduct = { price: 799, weight: 30, collections: ['murphy'] };
+
+    const result = await estimateDelivery('28792', collectionProduct);
+    expect(result.whiteGlove).not.toBeNull();
+    expect(result.whiteGlove.price).toBe(149);
   });
 
   it('returns correct zone in result', async () => {
