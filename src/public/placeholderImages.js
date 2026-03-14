@@ -1,44 +1,9 @@
 /** @module placeholderImages - Product image fallback and placeholder system.
  *
- * Provides curated lifestyle photography (Unsplash) for category hero banners
- * and homepage cards, plus real wixstatic.com product photos as fallbacks when
- * a product has no mainMedia. Also offers image resizing helpers for Wix CDN
- * and Unsplash URL transform params.
- *
- * All hero/card images are temporary — replace with Wix Media uploads per
- * MEDIA_MANIFEST.md when brand photography is available.
+ * All images use real CF product photos from the Wix CDN (wixstatic.com).
+ * Category hero banners, homepage cards, and product fallbacks all source
+ * from the live catalog. Image resizing helpers handle Wix CDN URL transforms.
  */
-// Category hero/card images use curated Unsplash lifestyle photography matching Blue Ridge aesthetic
-// Product fallback images use real wixstatic.com URLs from the live catalog
-//
-// ═══════════════════════════════════════════════════════════════════════
-// PHOTOGRAPHY BRIEF — Replace with brand photography when available
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Homepage Hero (1920x800):
-//   Scene: Cozy mountain cabin living room at golden hour. Futon/sofa as focal
-//   point with warm wood floors, stone fireplace, mountain views through windows.
-//   Mood: Warm, inviting, aspirational — "come home to comfort."
-//
-// Category Heroes (1920x600):
-//   futon-frames:        Styled living room with hardwood futon frame, plush cushions,
-//                        warm throw blankets. Natural light from large windows.
-//   mattresses:          Cozy bedroom with layered bedding, natural fiber mattress.
-//                        Warm wood headboard, soft morning light.
-//   murphy-cabinet-beds: Compact guest room or studio showing cabinet bed closed/open.
-//                        Space-efficient mountain retreat aesthetic.
-//   platform-beds:       Modern-rustic bedroom with low platform bed, natural wood.
-//                        Clean lines meeting cabin warmth.
-//   casegoods-accessories: Vignette of styled shelving, side tables, and home accents.
-//                        Warm wood finishes, curated decor items.
-//   wall-huggers:        Intimate living space with wall-hugger recliner/futon near
-//                        wood stove. Cozy reading nook feel.
-//   unfinished-wood:     Workshop or showroom featuring raw wood furniture pieces.
-//                        Beautiful grain visible, natural finish, artisan craft.
-//
-// All images: warm tones, natural light, wood accents, Blue Ridge mountain feel.
-// Avoid: cold/sterile lighting, stark modern spaces, generic stock feel.
-// ═══════════════════════════════════════════════════════════════════════
 
 // ── Category Hero Images (1920x600) ─────────────────────────────────
 // Real CF product photos from Wix CDN, resized for wide hero banners
