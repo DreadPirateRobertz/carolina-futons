@@ -5,7 +5,7 @@
     "workflow": "1. Melania opens editor. 2. For each element below, find the comp-xxx element and rename to the nickname listed. 3. Once renamed, run remap-element-ids.js if any comp-xxx IDs were hardcoded.",
     "priority_guide": "P0 = page breaks without it, P1 = feature broken, P2 = enhancement missing",
     "generated": "2026-03-14",
-    "total_unique_ids": 318
+    "total_unique_ids": 815
   },
 
   "masterPage": {
@@ -954,12 +954,349 @@
     }
   },
 
+  "returnsPage": {
+    "_priority": "P1 — guest-accessible self-service returns",
+    "lookup_form": {
+      "P0": [
+        { "id": "returnsTitle", "type": "Text (H1)", "notes": "Returns & Exchanges heading" },
+        { "id": "returnsSubtitle", "type": "Text", "notes": "Page subtitle" },
+        { "id": "returnOrderNumberInput", "type": "Input", "notes": "Order number input" },
+        { "id": "returnEmailInput", "type": "Input", "notes": "Email input" },
+        { "id": "lookupReturnBtn", "type": "Button", "notes": "Look up order button" },
+        { "id": "returnError", "type": "Text (hidden)", "notes": "Lookup error message" },
+        { "id": "returnLoader", "type": "Spinner/Box", "notes": "Loading indicator" }
+      ]
+    },
+    "rma_tracker": {
+      "P1": [
+        { "id": "rmaInput", "type": "Input", "notes": "RMA number input" },
+        { "id": "trackRmaBtn", "type": "Button", "notes": "Track RMA button" },
+        { "id": "rmaResultsSection", "type": "Section (hidden)", "notes": "RMA results container" },
+        { "id": "rmaStatusNumber", "type": "Text", "notes": "RMA number display" },
+        { "id": "rmaStatusLabel", "type": "Text", "notes": "Status label with color" },
+        { "id": "rmaTimeline", "type": "Text", "notes": "Status timeline text" },
+        { "id": "rmaTrackingSection", "type": "Box (hidden)", "notes": "Tracking info container" },
+        { "id": "rmaTrackingNumber", "type": "Text", "notes": "Tracking number" },
+        { "id": "rmaTrackingStatus", "type": "Text", "notes": "Tracking status" },
+        { "id": "rmaNoTracking", "type": "Text (hidden)", "notes": "No tracking available message" },
+        { "id": "rmaActivityRepeater", "type": "Repeater", "notes": "Tracking activity log" },
+        { "id": "rmaActivityStatus", "type": "Text", "notes": "Activity status (repeater item)" },
+        { "id": "rmaActivityLocation", "type": "Text", "notes": "Activity location (repeater item)" },
+        { "id": "rmaActivityDate", "type": "Text", "notes": "Activity date (repeater item)" }
+      ]
+    },
+    "order_details": {
+      "P1": [
+        { "id": "returnResultsSection", "type": "Section (hidden)", "notes": "Order results container" },
+        { "id": "returnOrderNumber", "type": "Text", "notes": "Order number display" },
+        { "id": "returnOrderDate", "type": "Text", "notes": "Order date" },
+        { "id": "returnOrderTotal", "type": "Text", "notes": "Order total" },
+        { "id": "returnWindowStatus", "type": "Text", "notes": "Return window eligibility" }
+      ]
+    },
+    "existing_returns": {
+      "P1": [
+        { "id": "existingReturnsSection", "type": "Section (hidden)", "notes": "Existing returns container" },
+        { "id": "existingReturnsRepeater", "type": "Repeater", "notes": "Existing returns list" },
+        { "id": "existingRma", "type": "Text", "notes": "RMA number (repeater item)" },
+        { "id": "existingReturnDate", "type": "Text", "notes": "Return date (repeater item)" },
+        { "id": "existingReturnType", "type": "Text", "notes": "Return/Exchange type (repeater item)" },
+        { "id": "existingReturnReason", "type": "Text", "notes": "Return reason (repeater item)" },
+        { "id": "existingReturnStatus", "type": "Text", "notes": "Status with color (repeater item)" },
+        { "id": "existingReturnTimeline", "type": "Text", "notes": "Progress timeline (repeater item)" },
+        { "id": "existingTrackingNumber", "type": "Text (hidden)", "notes": "Tracking number (repeater item)" }
+      ]
+    },
+    "return_form": {
+      "P0": [
+        { "id": "returnFormSection", "type": "Section (hidden)", "notes": "Return form container" },
+        { "id": "returnReasonSelect", "type": "Dropdown", "notes": "Return reason dropdown" },
+        { "id": "returnTypeSelect", "type": "Dropdown", "notes": "Return or Exchange dropdown" },
+        { "id": "returnItemsSelector", "type": "Repeater", "notes": "Returnable items checklist" },
+        { "id": "submitGuestReturnBtn", "type": "Button", "notes": "Submit return request" },
+        { "id": "cancelReturnFormBtn", "type": "Button", "notes": "Cancel return" },
+        { "id": "returnFormError", "type": "Text (hidden)", "notes": "Form error message" },
+        { "id": "returnSuccessMessage", "type": "Text (hidden)", "notes": "Success with RMA number" },
+        { "id": "returnDetailsTextbox", "type": "TextBox", "notes": "Additional return details" }
+      ],
+      "P1": [
+        { "id": "selectItemName", "type": "Text", "notes": "Item name (repeater item)" },
+        { "id": "selectItemQty", "type": "Text", "notes": "Item quantity (repeater item)" },
+        { "id": "selectItemPrice", "type": "Text", "notes": "Item price (repeater item)" },
+        { "id": "selectItemImage", "type": "Image", "notes": "Item image (repeater item)" },
+        { "id": "selectItemCheckbox", "type": "Checkbox", "notes": "Select for return (repeater item)" },
+        { "id": "selectItemBlockReason", "type": "Text (hidden)", "notes": "Non-returnable reason (repeater item)" }
+      ]
+    },
+    "navigation": {
+      "P2": [
+        { "id": "newReturnSearchBtn", "type": "Button", "notes": "Start new return lookup" }
+      ]
+    }
+  },
+
+  "orderTracking": {
+    "_priority": "P1 — order tracking with real-time UPS updates",
+    "lookup_form": {
+      "P0": [
+        { "id": "trackingTitle", "type": "Text (H1)", "notes": "Track Your Order heading" },
+        { "id": "trackingSubtitle", "type": "Text", "notes": "Page subtitle" },
+        { "id": "orderNumberInput", "type": "Input", "notes": "Order number input" },
+        { "id": "emailInput", "type": "Input", "notes": "Email input" },
+        { "id": "trackOrderBtn", "type": "Button", "notes": "Track order button" },
+        { "id": "trackingError", "type": "Text (hidden)", "notes": "Error message" },
+        { "id": "trackingLoader", "type": "Spinner/Box", "notes": "Loading indicator" }
+      ]
+    },
+    "results": {
+      "P0": [
+        { "id": "trackingResultsSection", "type": "Section (hidden)", "notes": "Results container" },
+        { "id": "resultOrderNumber", "type": "Text", "notes": "Order number display" },
+        { "id": "resultOrderDate", "type": "Text", "notes": "Order date" },
+        { "id": "resultStatus", "type": "Text", "notes": "Order status with color" },
+        { "id": "resultStatusDescription", "type": "Text", "notes": "Status description" }
+      ]
+    },
+    "timeline": {
+      "P0": [
+        { "id": "trackingTimeline", "type": "Box", "notes": "Timeline container with ARIA role=list" }
+      ],
+      "P1": [
+        { "id": "timelineStep0", "type": "Box", "notes": "Timeline step 0 container" },
+        { "id": "timelineDot0", "type": "Box", "notes": "Timeline dot 0" },
+        { "id": "timelineLabel0", "type": "Text", "notes": "Timeline label 0" }
+      ]
+    },
+    "shipping_details": {
+      "P1": [
+        { "id": "shippingDetailsSection", "type": "Section", "notes": "Shipping details container" },
+        { "id": "carrierName", "type": "Text", "notes": "Carrier name (UPS)" },
+        { "id": "serviceName", "type": "Text", "notes": "Service type" },
+        { "id": "trackingNumberText", "type": "Text", "notes": "Tracking number" },
+        { "id": "estimatedDelivery", "type": "Text", "notes": "Estimated delivery date" },
+        { "id": "shippingDestination", "type": "Text", "notes": "Destination city/state" },
+        { "id": "upsTrackingBtn", "type": "Button", "notes": "View on UPS website" },
+        { "id": "noTrackingMessage", "type": "Text (hidden)", "notes": "No tracking yet message" }
+      ]
+    },
+    "line_items": {
+      "P1": [
+        { "id": "lineItemsSection", "type": "Section (hidden)", "notes": "Line items container" },
+        { "id": "trackingItemsRepeater", "type": "Repeater", "notes": "Order items list" },
+        { "id": "itemImage", "type": "Image", "notes": "Item image (repeater item)" },
+        { "id": "itemName", "type": "Text", "notes": "Item name (repeater item)" },
+        { "id": "itemQty", "type": "Text", "notes": "Item quantity (repeater item)" },
+        { "id": "itemPrice", "type": "Text", "notes": "Item price (repeater item)" },
+        { "id": "itemSku", "type": "Text", "notes": "Item SKU (repeater item)" }
+      ]
+    },
+    "totals": {
+      "P1": [
+        { "id": "totalSubtotal", "type": "Text", "notes": "Order subtotal" },
+        { "id": "totalShipping", "type": "Text", "notes": "Shipping cost or Free" },
+        { "id": "totalAmount", "type": "Text", "notes": "Order total (bold)" }
+      ]
+    },
+    "activity_log": {
+      "P1": [
+        { "id": "activitySection", "type": "Section (hidden)", "notes": "Activity log container" },
+        { "id": "activityRepeater", "type": "Repeater", "notes": "Activity entries list" },
+        { "id": "activityStatus", "type": "Text", "notes": "Activity status (repeater item)" },
+        { "id": "activityLocation", "type": "Text", "notes": "Activity location (repeater item)" },
+        { "id": "activityDateTime", "type": "Text", "notes": "Activity date/time (repeater item)" }
+      ]
+    },
+    "notifications": {
+      "P2": [
+        { "id": "notificationSection", "type": "Section (hidden)", "notes": "Notification toggle container" },
+        { "id": "notificationToggle", "type": "Toggle", "notes": "Email notifications toggle" },
+        { "id": "notificationLabel", "type": "Text", "notes": "Notification status text" }
+      ]
+    },
+    "navigation": {
+      "P2": [
+        { "id": "newSearchBtn", "type": "Button", "notes": "Track different order" },
+        { "id": "refreshTrackingBtn", "type": "Button", "notes": "Refresh tracking status" }
+      ]
+    }
+  },
+
+  "contactPage": {
+    "_priority": "P1 — contact form, business info, appointment booking",
+    "contact_form": {
+      "P0": [
+        { "id": "contactName", "type": "Input", "notes": "Name input (required)" },
+        { "id": "contactEmail", "type": "Input", "notes": "Email input (required)" },
+        { "id": "contactMessage", "type": "TextBox", "notes": "Message body (required)" },
+        { "id": "contactSubmit", "type": "Button", "notes": "Send message button" },
+        { "id": "contactForm", "type": "Box", "notes": "Form container — hidden on success" },
+        { "id": "contactSuccess", "type": "Box (hidden)", "notes": "Success message" },
+        { "id": "contactError", "type": "Text (hidden)", "notes": "General error" }
+      ],
+      "P1": [
+        { "id": "contactPhone", "type": "Input", "notes": "Phone input (optional)" },
+        { "id": "contactSubject", "type": "Input", "notes": "Subject input (optional)" },
+        { "id": "contactNameError", "type": "Text (hidden)", "notes": "Name validation error" },
+        { "id": "contactEmailError", "type": "Text (hidden)", "notes": "Email validation error" },
+        { "id": "contactMessageError", "type": "Text (hidden)", "notes": "Message validation error" },
+        { "id": "contactPhoneError", "type": "Text (hidden)", "notes": "Phone validation error" }
+      ]
+    },
+    "business_info": {
+      "P0": [
+        { "id": "infoAddress", "type": "Text", "notes": "Store address" },
+        { "id": "infoPhone", "type": "Text", "notes": "Phone number" },
+        { "id": "infoPhoneLink", "type": "Link", "notes": "Click-to-call phone link" },
+        { "id": "directionsBtn", "type": "Button", "notes": "Get directions button" }
+      ],
+      "P2": [
+        { "id": "contactFeatures", "type": "Repeater", "notes": "Showroom features list" },
+        { "id": "featureItem", "type": "Text", "notes": "Feature text (repeater item)" }
+      ]
+    },
+    "business_hours": {
+      "P1": [
+        { "id": "todayStatus", "type": "Text", "notes": "Open/Closed today status" },
+        { "id": "hoursRepeater", "type": "Repeater", "notes": "Weekly hours schedule" },
+        { "id": "hourDay", "type": "Text", "notes": "Day name (repeater item)" },
+        { "id": "hourTime", "type": "Text", "notes": "Hours (repeater item)" }
+      ]
+    },
+    "appointment_booking": {
+      "P1": [
+        { "id": "appointmentBookBtn", "type": "Button", "notes": "Book visit button" },
+        { "id": "appointmentName", "type": "Input", "notes": "Name (required)" },
+        { "id": "appointmentEmail", "type": "Input", "notes": "Email (required)" },
+        { "id": "appointmentPhone", "type": "Input", "notes": "Phone (optional)" },
+        { "id": "appointmentVisitType", "type": "Dropdown", "notes": "Visit type selector" },
+        { "id": "appointmentDate", "type": "Dropdown", "notes": "Preferred date" },
+        { "id": "appointmentTimeSlot", "type": "Dropdown", "notes": "Preferred time slot" },
+        { "id": "appointmentInterests", "type": "TextBox", "notes": "Product interests (optional)" },
+        { "id": "appointmentError", "type": "Text (hidden)", "notes": "Booking error" },
+        { "id": "appointmentForm", "type": "Box", "notes": "Form container" },
+        { "id": "appointmentSuccess", "type": "Box (hidden)", "notes": "Confirmation display" },
+        { "id": "appointmentConfirmation", "type": "Text", "notes": "Confirmation details text" }
+      ]
+    },
+    "social_proof": {
+      "P2": [
+        { "id": "contactTestimonials", "type": "Repeater", "notes": "Testimonial snippets" },
+        { "id": "testimonialQuote", "type": "Text", "notes": "Quote text (repeater item)" },
+        { "id": "testimonialAuthor", "type": "Text", "notes": "Author name (repeater item)" },
+        { "id": "testimonialStars", "type": "Text", "notes": "Star rating display (repeater item)" }
+      ]
+    },
+    "faq_and_seo": {
+      "P2": [
+        { "id": "contactFaqLink", "type": "Link", "notes": "Link to FAQ page" },
+        { "id": "contactSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "LocalBusiness JSON-LD" },
+        { "id": "contactMetaHtml", "type": "HtmlComponent (hidden)", "notes": "Meta tags injection" }
+      ]
+    }
+  },
+
+  "buyingGuidePage": {
+    "_priority": "P1 — individual buying guide detail page",
+    "header": {
+      "P0": [
+        { "id": "guideTitle", "type": "Text (H1)", "notes": "Guide title" },
+        { "id": "guideContent", "type": "Box", "notes": "Main content container — hidden on not-found" },
+        { "id": "notFoundBox", "type": "Box (hidden)", "notes": "Guide not found state" }
+      ],
+      "P1": [
+        { "id": "guideCategoryLabel", "type": "Text", "notes": "Category label" },
+        { "id": "guideDate", "type": "Text", "notes": "Updated date" },
+        { "id": "guideReadTime", "type": "Text", "notes": "Reading time estimate" },
+        { "id": "guideHeroImage", "type": "Image", "notes": "Guide hero image" },
+        { "id": "comingSoonBox", "type": "Box (hidden)", "notes": "Coming soon state" },
+        { "id": "comingSoonTitle", "type": "Text", "notes": "Coming soon title" },
+        { "id": "comingSoonMessage", "type": "Text", "notes": "Coming soon message" }
+      ]
+    },
+    "breadcrumbs": {
+      "P1": [
+        { "id": "breadcrumbRepeater", "type": "Repeater", "notes": "Breadcrumb trail" },
+        { "id": "breadcrumbLabel", "type": "Text", "notes": "Breadcrumb text (repeater item)" },
+        { "id": "breadcrumbSeparator", "type": "Text", "notes": "Separator character (repeater item)" }
+      ]
+    },
+    "table_of_contents": {
+      "P2": [
+        { "id": "tocRepeater", "type": "Repeater", "notes": "TOC items list" },
+        { "id": "tocLabel", "type": "Text", "notes": "TOC section label (repeater item)" },
+        { "id": "tocContainer", "type": "Box", "notes": "TOC container — collapsed on mobile" },
+        { "id": "tocToggle", "type": "Button", "notes": "Toggle TOC on mobile" }
+      ]
+    },
+    "guide_sections": {
+      "P0": [
+        { "id": "sectionRepeater", "type": "Repeater", "notes": "Guide content sections" },
+        { "id": "sectionHeading", "type": "Text", "notes": "Section heading (repeater item)" },
+        { "id": "sectionBody", "type": "Text", "notes": "Section body (repeater item)" }
+      ]
+    },
+    "comparison_table": {
+      "P1": [
+        { "id": "comparisonBox", "type": "Box (hidden)", "notes": "Comparison table container" },
+        { "id": "comparisonTitle", "type": "Text", "notes": "Table title" },
+        { "id": "comparisonHeaderRepeater", "type": "Repeater", "notes": "Table headers" },
+        { "id": "headerLabel", "type": "Text", "notes": "Header text (repeater item)" },
+        { "id": "comparisonRowRepeater", "type": "Repeater", "notes": "Table rows" },
+        { "id": "featureLabel", "type": "Text", "notes": "Feature name (repeater item)" },
+        { "id": "valueCellRepeater", "type": "Repeater", "notes": "Value cells per row (nested repeater)" },
+        { "id": "cellValue", "type": "Text", "notes": "Cell value (nested repeater item)" }
+      ]
+    },
+    "faq": {
+      "P1": [
+        { "id": "faqBox", "type": "Box (hidden)", "notes": "FAQ section container" },
+        { "id": "guideFaqRepeater", "type": "Repeater", "notes": "FAQ accordion items" },
+        { "id": "faqQuestion", "type": "Text", "notes": "Question text (repeater item)" },
+        { "id": "faqAnswer", "type": "Text (hidden)", "notes": "Answer text — accordion toggle (repeater item)" }
+      ]
+    },
+    "share_buttons": {
+      "P2": [
+        { "id": "shareFacebook", "type": "Button", "notes": "Share on Facebook" },
+        { "id": "shareTwitter", "type": "Button", "notes": "Share on Twitter" },
+        { "id": "sharePinterest", "type": "Button", "notes": "Share on Pinterest" },
+        { "id": "shareEmail", "type": "Button", "notes": "Share via email" }
+      ]
+    },
+    "related_products": {
+      "P1": [
+        { "id": "relatedProductsBox", "type": "Box (hidden)", "notes": "Related products sidebar" },
+        { "id": "relatedProductRepeater", "type": "Repeater", "notes": "Product cards" },
+        { "id": "productName", "type": "Text", "notes": "Product name (repeater item)" },
+        { "id": "productPrice", "type": "Text", "notes": "Product price (repeater item)" },
+        { "id": "productImage", "type": "Image", "notes": "Product image (repeater item)" },
+        { "id": "productRibbon", "type": "Text (hidden)", "notes": "Sale/New ribbon (repeater item)" },
+        { "id": "productCardBox", "type": "Box", "notes": "Clickable card container (repeater item)" }
+      ]
+    },
+    "related_guides": {
+      "P2": [
+        { "id": "relatedGuidesBox", "type": "Box (hidden)", "notes": "Related guides section" },
+        { "id": "relatedGuideRepeater", "type": "Repeater", "notes": "Related guide cards" },
+        { "id": "relatedGuideTitle", "type": "Text", "notes": "Guide title (repeater item)" },
+        { "id": "relatedGuideDescription", "type": "Text", "notes": "Guide description (repeater item)" },
+        { "id": "relatedGuideBox", "type": "Box", "notes": "Clickable card container (repeater item)" }
+      ]
+    },
+    "seo": {
+      "P2": [
+        { "id": "guideSeoSchema", "type": "HtmlComponent (hidden)", "notes": "Article + FAQ JSON-LD" },
+        { "id": "guideMetaHtml", "type": "HtmlComponent (hidden)", "notes": "Meta tags injection" }
+      ]
+    }
+  },
+
   "summary": {
-    "total_p0": 158,
-    "total_p1": 270,
-    "total_p2": 211,
-    "total_documented": 636,
-    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout", "Thank You Page", "Admin Returns", "Member Page"],
+    "total_p0": 200,
+    "total_p1": 388,
+    "total_p2": 247,
+    "total_documented": 815,
+    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout", "Thank You Page", "Admin Returns", "Member Page", "Returns", "Order Tracking", "Contact", "Buying Guide"],
     "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
   }
 }
