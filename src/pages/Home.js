@@ -836,8 +836,7 @@ async function injectHomeSchemas() {
     const schema = await getWebSiteSchema();
     if (schema) {
       try {
-        const el = $w('#websiteSchemaHtml');
-        if (el) el.postMessage(schema);
+        $w('#websiteSchemaHtml').postMessage(schema);
       } catch (e) {}
     }
   } catch (e) {
