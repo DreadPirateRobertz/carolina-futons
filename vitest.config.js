@@ -269,10 +269,6 @@ export default defineConfig({
       'public/tikTokPixel': path.resolve(__dirname, 'src/public/tikTokPixel.js'),
       'public/MultiImageGallery.js': path.resolve(__dirname, 'src/public/MultiImageGallery.js'),
       'public/MultiImageGallery': path.resolve(__dirname, 'src/public/MultiImageGallery.js'),
-      'public/ProductPagePolish.js': path.resolve(__dirname, 'src/public/ProductPagePolish.js'),
-      'public/ProductPagePolish': path.resolve(__dirname, 'src/public/ProductPagePolish.js'),
-      'public/MountainSkyline.js': path.resolve(__dirname, 'src/public/MountainSkyline.js'),
-      'public/MountainSkyline': path.resolve(__dirname, 'src/public/MountainSkyline.js'),
     },
   },
 });
