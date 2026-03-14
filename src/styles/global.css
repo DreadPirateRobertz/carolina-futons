@@ -760,7 +760,7 @@ h4.font_4,
     max-height: 300px !important;
   }
 
-  /* Category page hero — scale down for narrow screens */
+  /* Category page hero — scale down (may render as div, not h1) */
   [data-hook="HeroDataHook.CategoryName"] {
     font-size: 24px !important;
   }
@@ -794,12 +794,9 @@ h4.font_4,
     padding: 12px 16px !important;
   }
 
-  /* Cart page — stack items vertically */
+  /* Cart page — compact text for narrow screens */
   [data-hook="cart-widget-item-name"],
-  [data-hook="CartItemDataHook.Name"] {
-    font-size: 14px !important;
-  }
-
+  [data-hook="CartItemDataHook.Name"],
   [data-hook="cart-widget-item-price"],
   [data-hook="CartItemDataHook.Price"] {
     font-size: 14px !important;
@@ -819,9 +816,8 @@ h4.font_4,
     box-sizing: border-box !important;
   }
 
-  /* FAQ page — tighter on mobile */
-  [data-hook="faq-title"],
-  .section h1 {
+  /* FAQ page — tighter on mobile (28px vs global 24px for visual hierarchy) */
+  [data-hook="faq-title"] {
     font-size: 28px !important;
   }
 
@@ -843,10 +839,7 @@ h4.font_4,
   /* Footer — compact spacing */
   .footer p,
   .footer span,
-  .footer a {
-    font-size: 13px !important;
-  }
-
+  .footer a,
   .footer h2,
   .footer h3,
   .footer h4 {
@@ -878,9 +871,8 @@ h4.font_4,
     font-size: 14px !important;
   }
 
-  /* Policy pages — readable text */
-  [data-hook="ricos-viewer"] h1,
-  [data-hook="ricos-viewer"] h2 {
+  /* Policy pages — readable text (h1 intentionally smaller than global 24px) */
+  [data-hook="ricos-viewer"] h1 {
     font-size: 20px !important;
   }
 
