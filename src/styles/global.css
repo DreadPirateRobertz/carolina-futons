@@ -1,0 +1,490 @@
+/*
+ * Carolina Futons — Global CSS Overrides
+ *
+ * Fixes the Furniture Store #3563 "tera" template to match
+ * the production carolinafutons.com site: blue/white color scheme,
+ * professional font sizing, clean spacing.
+ *
+ * Template problems this file fixes:
+ *   1. Font sizing — H1: 210spx, body: ~45px, nav: 10px (all insane)
+ *   2. Color palette — beige/salmon/espresso → blue/white professional
+ *   3. Section spacing — cramped, inconsistent padding
+ *   4. Footer — wrong contact info display styling
+ *   5. Nav — tiny links, no hover states
+ *   6. Product cards — price/text sizing
+ *
+ * Wix theme uses --color_N CSS variables (RGB triplets).
+ * We override these at :root to shift the entire palette.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1. THEME COLOR OVERRIDES — shift beige/salmon → blue/white
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* color_11: primary background — beige 232,213,183 → clean white */
+  --color_11: 255, 255, 255 !important;
+
+  /* color_12: secondary bg — espresso 58,37,24 → CF steel blue */
+  --color_12: 70, 130, 180 !important;
+
+  /* color_14: accent text — coral 232,132,92 → dark blue */
+  --color_14: 50, 100, 150 !important;
+
+  /* color_15: title/heading text — sandLight 242,232,213 → dark charcoal */
+  --color_15: 44, 44, 44 !important;
+
+  /* color_17: salmon accent 201,160,160 → light steel blue */
+  --color_17: 220, 235, 245 !important;
+
+  /* color_18: action/link — mountainBlueLight 168,204,216 → CF bright blue */
+  --color_18: 61, 155, 233 !important;
+
+  /* color_36: fill-base-1 — beige → white */
+  --color_36: 255, 255, 255 !important;
+
+  /* color_37: fill-base-2 — sandLight → very light blue-gray */
+  --color_37: 245, 248, 252 !important;
+
+  /* color_38: fill-shade-1 — espresso → dark charcoal */
+  --color_38: 44, 44, 44 !important;
+
+  /* color_39: fill-shade-2 — mountainBlue → medium gray */
+  --color_39: 120, 130, 140 !important;
+
+  /* color_40: fill-shade-3 — coral → steel blue */
+  --color_40: 70, 130, 180 !important;
+
+  /* color_41-44: accent fills — light blue → steel blue */
+  --color_41: 70, 130, 180 !important;
+  --color_42: 61, 155, 233 !important;
+  --color_43: 70, 130, 180 !important;
+  --color_44: 70, 130, 180 !important;
+
+  /* color_45: title color — sandLight → dark charcoal */
+  --color_45: 44, 44, 44 !important;
+
+  /* color_46: subtitle — coral → medium gray */
+  --color_46: 100, 100, 100 !important;
+
+  /* color_47: line/divider — sandLight → light gray */
+  --color_47: 220, 220, 220 !important;
+
+  /* Button fills: primary */
+  --color_48: 70, 130, 180 !important;   /* fill */
+  --color_49: 70, 130, 180 !important;   /* border */
+  --color_50: 255, 255, 255 !important;  /* text */
+  --color_51: 50, 110, 160 !important;   /* hover fill */
+  --color_52: 50, 110, 160 !important;   /* hover border */
+  --color_53: 255, 255, 255 !important;  /* hover text */
+
+  /* Button fills: secondary */
+  --color_57: 255, 255, 255 !important;  /* fill */
+  --color_58: 70, 130, 180 !important;   /* border */
+  --color_59: 70, 130, 180 !important;   /* text */
+  --color_60: 245, 248, 252 !important;  /* hover fill */
+  --color_61: 50, 110, 160 !important;   /* hover border */
+  --color_62: 50, 110, 160 !important;   /* hover text */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2. TYPOGRAPHY — fix all the broken font sizes
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Body / Paragraph text (template default ~45px → 16px) ── */
+
+p, span, li, a, label, input, textarea, select, button {
+  font-size: 16px;
+}
+
+/* Wix paragraph elements */
+[data-testid="richTextElement"] p,
+[data-testid="richTextElement"] span,
+.wixui-rich-text p,
+.wixui-rich-text span,
+.rich-text p,
+.rich-text span,
+.font_8,
+p.font_8,
+span.font_8 {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: rgb(68, 68, 68) !important;
+}
+
+/* font_7 is also used for body text in some Wix templates */
+.font_7,
+p.font_7,
+span.font_7 {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+/* font_9 = smaller text / captions */
+.font_9,
+p.font_9,
+span.font_9 {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+/* ── Headings ── */
+
+/* H1 — hero headings */
+h1, h1.font_0,
+.wixui-rich-text h1.font_0,
+.wixui-rich-text h1,
+.rich-text h1 {
+  font-size: 48px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* H2 — section headings */
+h2, h2.font_2, h2.font_5,
+.wixui-rich-text h2.font_2,
+.wixui-rich-text h2.font_5,
+.wixui-rich-text h2,
+.rich-text h2 {
+  font-size: 32px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.02em !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* H3 — card titles, subsections */
+h3, h3.font_3,
+.wixui-rich-text h3.font_3,
+.wixui-rich-text h3,
+.rich-text h3 {
+  font-size: 18px !important;
+  line-height: 1.35 !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* H4 — labels */
+h4, h4.font_4,
+.wixui-rich-text h4,
+.rich-text h4 {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3. NAVIGATION — fix tiny 10px nav links
+   ═══════════════════════════════════════════════════════════════════════ */
+
+nav[aria-label="Site"] a,
+nav[aria-label="Site"] span,
+nav a, nav span {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: uppercase !important;
+  color: rgb(44, 44, 44) !important;
+  transition: color 0.2s ease !important;
+}
+
+nav[aria-label="Site"] a:hover,
+nav a:hover {
+  color: rgb(70, 130, 180) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4. ANNOUNCEMENT BAR — professional top banner
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[role="banner"] {
+  background-color: rgb(70, 130, 180) !important;
+}
+
+[role="banner"] p,
+[role="banner"] span {
+  font-size: 13px !important;
+  color: rgb(255, 255, 255) !important;
+  letter-spacing: 0.03em !important;
+  font-weight: 500 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5. HERO SECTION — clean overlay text
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Hero subtitle/description text */
+[role="main"] > div:first-child p {
+  font-size: 18px !important;
+  line-height: 1.5 !important;
+}
+
+/* Hero CTA button */
+[role="main"] > div:first-child a[role="link"],
+[role="main"] > div:first-child a span {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6. PRODUCT CARDS & GALLERY — clean sizing
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Product name in gallery cards */
+[aria-label="Product Gallery"] h3,
+[aria-roledescription="gallery"] h3 {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* Product price */
+[aria-label="Product Gallery"] [aria-label*="Price"],
+[aria-roledescription="gallery"] [aria-label*="Price"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: rgb(70, 130, 180) !important;
+}
+
+/* "Call for Price" ribbon text */
+[aria-label="Product Gallery"] [class*="ribbon"],
+[data-hook="product-item-ribbon"] {
+  font-size: 12px !important;
+  background-color: rgb(70, 130, 180) !important;
+  color: rgb(255, 255, 255) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7. SECTION SPACING — consistent breathing room
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Section headings — "SHOP BY COLLECTIONS", "NEW IN", "BEST SELLERS" */
+[role="main"] h2 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 24px !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. FOOTER — professional layout and correct info styling
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[role="contentinfo"] {
+  background-color: rgb(44, 44, 44) !important;
+}
+
+/* Footer text — links, labels, info */
+[role="contentinfo"] p,
+[role="contentinfo"] span,
+[role="contentinfo"] a {
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+  color: rgb(200, 210, 220) !important;
+}
+
+[role="contentinfo"] a:hover {
+  color: rgb(255, 255, 255) !important;
+}
+
+/* Footer section headings */
+[role="contentinfo"] h2,
+[role="contentinfo"] h3,
+[role="contentinfo"] h4 {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: rgb(255, 255, 255) !important;
+  margin-bottom: 12px !important;
+}
+
+/* Footer logo text */
+[role="contentinfo"] [aria-label*="homepage"] p,
+.footer-logo-text {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: rgb(255, 255, 255) !important;
+  line-height: 1.2 !important;
+}
+
+/* Footer "Carolina Futons" brand name at bottom */
+[role="contentinfo"] > :last-child p {
+  font-size: 14px !important;
+  color: rgb(160, 170, 180) !important;
+}
+
+/* Newsletter section in footer */
+[role="contentinfo"] form input[type="email"],
+[role="contentinfo"] form input,
+[role="contentinfo"] [role="textbox"] {
+  font-size: 14px !important;
+  background-color: rgb(255, 255, 255) !important;
+  color: rgb(44, 44, 44) !important;
+  border: 1px solid rgb(180, 190, 200) !important;
+  border-radius: 4px !important;
+  padding: 10px 14px !important;
+}
+
+[role="contentinfo"] form button,
+[role="contentinfo"] button[type="submit"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  background-color: rgb(70, 130, 180) !important;
+  color: rgb(255, 255, 255) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 10px 24px !important;
+  cursor: pointer !important;
+}
+
+[role="contentinfo"] form button:hover {
+  background-color: rgb(50, 110, 160) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9. ABOUT SECTION — readable text on dark bg
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* "THE CAROLINA FUTONS STORY" section has dark overlay */
+[role="main"] > div:nth-child(4) p,
+[role="main"] > div:nth-child(4) span {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+[role="main"] > div:nth-child(4) h2 {
+  font-size: 32px !important;
+}
+
+/* "Learn More" buttons */
+a[href*="about"] span,
+a[href*="about"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10. COLLECTION CARDS — "SHOP BY COLLECTIONS" grid
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Category card headings */
+[role="main"] > div:nth-child(2) h3 {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: rgb(44, 44, 44) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11. INSTAGRAM / SOCIAL SECTION
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* "FOLLOW US @CAROLINAFUTONS" */
+[role="main"] > :last-child h2 a,
+[role="main"] > :last-child h2 {
+  font-size: 24px !important;
+  letter-spacing: 0.06em !important;
+  color: rgb(70, 130, 180) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   12. GLOBAL POLISH — links, buttons, transitions
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* All links get blue color */
+a {
+  color: rgb(70, 130, 180);
+  transition: color 0.2s ease;
+}
+a:hover {
+  color: rgb(50, 110, 160);
+}
+
+/* Smooth transitions on interactive elements */
+button, a, input, [role="button"] {
+  transition: all 0.2s ease;
+}
+
+/* Fix any remaining beige backgrounds with inline styles */
+[style*="background-color: rgb(232, 213, 183)"],
+[style*="background-color: rgb(242, 232, 213)"],
+[style*="background-color:#E8D5B7"],
+[style*="background-color:#F2E8D5"] {
+  background-color: rgb(255, 255, 255) !important;
+}
+
+/* Fix salmon/pink backgrounds */
+[style*="background-color: rgb(201, 160, 160)"],
+[style*="background-color:#C9A0A0"] {
+  background-color: rgb(220, 235, 245) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   13. RESPONSIVE — tablet & mobile
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  h1, h1.font_0,
+  .wixui-rich-text h1,
+  .rich-text h1 {
+    font-size: 32px !important;
+    line-height: 1.2 !important;
+  }
+  h2, h2.font_2, h2.font_5,
+  .wixui-rich-text h2,
+  .rich-text h2 {
+    font-size: 24px !important;
+  }
+  h3, h3.font_3,
+  .wixui-rich-text h3,
+  .rich-text h3 {
+    font-size: 16px !important;
+  }
+  [role="main"] h2 {
+    font-size: 22px !important;
+  }
+  nav[aria-label="Site"] a,
+  nav a {
+    font-size: 12px !important;
+  }
+  [role="main"] > div:first-child p {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1, h1.font_0,
+  .wixui-rich-text h1,
+  .rich-text h1 {
+    font-size: 26px !important;
+  }
+  h2, h2.font_2, h2.font_5,
+  .wixui-rich-text h2,
+  .rich-text h2 {
+    font-size: 20px !important;
+  }
+  h3, h3.font_3,
+  .wixui-rich-text h3,
+  .rich-text h3 {
+    font-size: 15px !important;
+  }
+  [role="main"] h2 {
+    font-size: 18px !important;
+  }
+  p, span, .font_8, .font_7 {
+    font-size: 15px !important;
+  }
+  nav[aria-label="Site"] a,
+  nav a {
+    font-size: 11px !important;
+  }
+}
