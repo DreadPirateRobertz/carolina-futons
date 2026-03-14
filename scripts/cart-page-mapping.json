@@ -1,0 +1,74 @@
+{
+  "_meta": {
+    "page": "Cart Page",
+    "pageId": "mqi5m",
+    "templatePage": "Cart (Furniture Store template #3563)",
+    "notes": "Maps BUILD-SPEC element IDs to template element descriptions. Template Wix IDs (comp-xxx) TBD — discovered by Melania in editor. Gaps listed separately for manual placement."
+  },
+
+  "mapping": {
+    "_comment": "{ ourBuildSpecId: templateElementDescription }",
+
+    "cartDataset": "Wix Stores cart dataset (native Wix cart widget)",
+    "cartItemsRepeater": "Cart items repeater (native Wix cart line items list)",
+    "qtyMinus": "Quantity decrease button (native cart widget quantity control, minus side)",
+    "qtyInput": "Quantity input field (native cart widget quantity input)",
+    "qtyPlus": "Quantity increase button (native cart widget quantity control, plus side)",
+    "removeItem": "Remove item button / trash icon (per-item in cart repeater)",
+
+    "cartSubtotal": "Subtotal text (cart summary section — subtotal row)",
+    "cartShipping": "Shipping estimate text (cart summary section — shipping row)",
+    "cartTotal": "Order total text (cart summary section — total row, bold)"
+  },
+
+  "gaps": {
+    "_comment": "BUILD-SPEC elements NOT in template — need manual editor placement by Melania",
+
+    "emptyCartState": {
+      "ids": ["emptyCartSection", "emptyCartTitle", "emptyCartMessage", "continueShoppingBtn"],
+      "type": "Section + Texts + Button",
+      "notes": "Template may show native empty cart text; we need a full styled section with custom message and CTA button pointing to /shop-main. Confirm if template has a dedicated empty-cart section or just hides the items list."
+    },
+
+    "shippingProgressBar": {
+      "ids": ["shippingProgressBar", "shippingProgressText", "shippingProgressIcon"],
+      "type": "ProgressBar + Text + Image",
+      "notes": "Gamified free-shipping progress bar (e.g. '$X away from free shipping'). Not in template — needs new section above cart items. Icon (checkmark) hidden by default, shown on threshold reach."
+    },
+
+    "loyaltyTierProgress": {
+      "ids": ["tierProgressBar", "tierProgressText"],
+      "type": "ProgressBar + Text",
+      "notes": "Loyalty tier progress bar (Bronze → Silver → Gold). Not in template. Small section below shipping bar or in cart summary sidebar."
+    },
+
+    "crossSellSuggestions": {
+      "ids": ["suggestionsSection", "suggestionsHeading", "suggestionsRepeater", "sugImage", "sugName", "sugPrice", "sugAddBtn"],
+      "type": "Section + Text + Repeater (3-col)",
+      "notes": "\"Complete Your Futon\" cross-sell block. Not in template. Collapsible section below cart items, 3-col repeater with Quick Add button per card."
+    },
+
+    "recentlyViewed": {
+      "ids": ["cartRecentSection", "cartRecentRepeater", "cartRecentImage", "cartRecentName", "cartRecentPrice"],
+      "type": "Section + Repeater (3-col)",
+      "notes": "Recently viewed products strip. Not in template. Collapsible, hidden if empty (no sessionStorage items)."
+    },
+
+    "financingOptions": {
+      "ids": ["cartFinancingSection", "financingThreshold", "cartFinancingTeaser", "cartAfterpayMessage"],
+      "type": "Box + Texts",
+      "notes": "Financing upsell block — shows lowest monthly payment teaser and Afterpay eligibility. Collapsible, hidden by default. Unlocked when cart total meets financing threshold (≥$500). Not in template."
+    }
+  },
+
+  "summary": {
+    "matchedElements": 9,
+    "gapElements": 19,
+    "templateExtras": [
+      "Native Wix cart checkout button (no BUILD-SPEC ID assigned — keep as-is or assign #cartCheckoutBtn)",
+      "Native Wix coupon/promo code input (not in BUILD-SPEC — keep or suppress)"
+    ],
+    "coveragePercent": 32,
+    "coverageNotes": "Template covers core cart mechanics (items repeater with qty controls, remove, and summary totals). All value-add features (shipping progress, loyalty tier, cross-sell, recently viewed, financing) require new sections. Empty cart state may need replacement depending on template's native behavior."
+  }
+}
