@@ -118,10 +118,10 @@ export function getStatusColor(status) {
   const map = {
     pending: colors.mountainBlue || '#5B8FA8',
     approved: colors.success || '#4A7C59',
-    denied: colors.error || colors.sunsetCoral || '#E8845C',
+    denied: colors.error || colors.sunsetCoral || '#DC2626',
     credited: colors.success || '#4A7C59',
   };
-  return map[status] || colors.espresso || '#3A2518';
+  return map[status] || colors.espresso || '#1E3A5F';
 }
 
 // ── Price Formatting ─────────────────────────────────────────────────

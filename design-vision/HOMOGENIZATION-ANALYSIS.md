@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary
 
-- **CTA button color divergence is the most visible brand inconsistency.** The live website uses `#3ECF8E` (green) for primary CTAs despite the spec defining `#E8845C` (Sunset Coral). The mobile app correctly uses coral. This must be unified to coral across both platforms immediately -- green has no place in the Blue Ridge brand palette.
+- **CTA button color divergence is the most visible brand inconsistency.** The live website uses `#3ECF8E` (green) for primary CTAs despite the spec defining `#4A7D94` (Sunset Coral). The mobile app correctly uses coral. This must be unified to coral across both platforms immediately -- green has no place in the Blue Ridge brand palette.
 
-- **Background treatments are fundamentally misaligned.** The web uses pink/lavender gradients on product pages while the mobile app uses the spec-correct warm sand/off-white (`#E8D5B7` / `#FAF7F2`). The lavender tones undermine the Blue Ridge Mountain aesthetic and must be replaced with sand-family colors.
+- **Background treatments are fundamentally misaligned.** The web uses pink/lavender gradients on product pages while the mobile app uses the spec-correct blue/white (`#F0F4F8` / `#FFFFFF`). The lavender tones undermine the Blue Ridge Mountain aesthetic and must be replaced with blue/white colors.
 
 - **Product card architecture is absent on web.** The mobile app has a fully realized `ProductCard` component with badge system, wishlist hearts, star ratings, and structured info layout. The web uses bare image+text repeater items with no card container, no badges, no ratings, and no wishlist indicators. This is the largest feature-parity gap.
 
@@ -27,18 +27,18 @@
 
 | Token | Web Spec (sharedTokens.js) | Web Live | Mobile (tokens.ts) | Target | Status |
 |-------|---------------------------|----------|-----------------------|--------|--------|
-| sandBase | `#E8D5B7` | Pink/lavender on product pages | `#E8D5B7` | `#E8D5B7` | WEB DIVERGENT |
-| sandLight | `#F2E8D5` | Unknown | `#F2E8D5` | `#F2E8D5` | Aligned |
-| sandDark | `#D4BC96` | Unknown | `#D4BC96` | `#D4BC96` | Aligned |
-| espresso | `#3A2518` | `#3A2518` | `#3A2518` | `#3A2518` | Aligned |
-| espressoLight | `#5C4033` | `#5C4033` | `#5C4033` | `#5C4033` | Aligned |
+| sandBase | `#F0F4F8` | Pink/lavender on product pages | `#F0F4F8` | `#F0F4F8` | WEB DIVERGENT |
+| sandLight | `#F8FAFC` | Unknown | `#F8FAFC` | `#F8FAFC` | Aligned |
+| sandDark | `#E2E8F0` | Unknown | `#E2E8F0` | `#E2E8F0` | Aligned |
+| espresso | `#1E3A5F` | `#1E3A5F` | `#1E3A5F` | `#1E3A5F` | Aligned |
+| espressoLight | `#3D5A80` | `#3D5A80` | `#3D5A80` | `#3D5A80` | Aligned |
 | mountainBlue | `#5B8FA8` | `#5B8FA8` | `#5B8FA8` | `#5B8FA8` | Aligned |
-| sunsetCoral | `#E8845C` | `#3ECF8E` (GREEN on CTAs) | `#E8845C` | `#E8845C` | **WEB CRITICAL** |
-| offWhite | `#FAF7F2` | Not used | `#FAF7F2` | `#FAF7F2` | Web missing |
+| sunsetCoral | `#4A7D94` | `#3ECF8E` (GREEN on CTAs) | `#4A7D94` | `#4A7D94` | **WEB CRITICAL** |
+| offWhite | `#FFFFFF` | Not used | `#FFFFFF` | `#FFFFFF` | Web missing |
 | mauve | `#C9A0A0` | `#C9A0A0` | `#C9A0A0` | `#C9A0A0` | Aligned |
 | success | `#4A7C59` | N/A | `#4A7C59` | `#4A7C59` | Aligned |
-| error | `#E8845C` | N/A | `#E8845C` | `#E8845C` | Aligned |
-| overlay | `rgba(58,37,24,0.6)` | `rgba(58,37,24,0.6)` | `rgba(58,37,24,0.6)` | Same | Aligned |
+| error | `#DC2626` | N/A | `#DC2626` | `#DC2626` | Aligned |
+| overlay | `rgba(30,58,95,0.6)` | `rgba(30,58,95,0.6)` | `rgba(30,58,95,0.6)` | Same | Aligned |
 
 ### 2.2 Typography
 
@@ -76,11 +76,11 @@
 
 | Token | Web (CSS string) | Mobile (RN style) | Status |
 |-------|-----------------|---------------------|--------|
-| card | 0 2px 12px rgba(58,37,24,0.08) | color:#3A2518, y:2, radius:12, opacity:0.08 | Aligned (same values, different format) |
-| cardHover | 0 8px 24px rgba(58,37,24,0.12) | color:#3A2518, y:8, radius:24, opacity:0.12 | Aligned |
-| nav | 0 2px 8px rgba(58,37,24,0.06) | color:#3A2518, y:2, radius:8, opacity:0.06 | Aligned |
-| modal | 0 16px 48px rgba(58,37,24,0.2) | color:#3A2518, y:16, radius:48, opacity:0.2 | Aligned |
-| button | 0 2px 8px rgba(232,132,92,0.3) | color:#E8845C, y:2, radius:8, opacity:0.3 | Aligned |
+| card | 0 2px 12px rgba(30,58,95,0.08) | color:#1E3A5F, y:2, radius:12, opacity:0.08 | Aligned (same values, different format) |
+| cardHover | 0 8px 24px rgba(30,58,95,0.12) | color:#1E3A5F, y:8, radius:24, opacity:0.12 | Aligned |
+| nav | 0 2px 8px rgba(30,58,95,0.06) | color:#1E3A5F, y:2, radius:8, opacity:0.06 | Aligned |
+| modal | 0 16px 48px rgba(30,58,95,0.2) | color:#1E3A5F, y:16, radius:48, opacity:0.2 | Aligned |
+| button | 0 2px 8px rgba(91,143,168,0.3) | color:#4A7D94, y:2, radius:8, opacity:0.3 | Aligned |
 
 ### 2.5 Border Radius
 
@@ -181,8 +181,8 @@
 ### RANK 1: CTA Button Color -- Green vs. Coral
 **Impact:** Brand identity fragmentation. Users see a different brand on web vs. mobile.
 **Web current:** `#3ECF8E` (green) on live site CTAs
-**Mobile current:** `#E8845C` (Sunset Coral) -- correct per brand spec
-**Target:** `#E8845C` everywhere
+**Mobile current:** `#4A7D94` (Sunset Coral) -- correct per brand spec
+**Target:** `#4A7D94` everywhere
 **Fix:** This is a Wix Studio editor-level fix. Every button element that uses green must be changed to Color 4 (Sunset Coral) in the Wix Studio theme settings. The Velo code in `designTokens.js` already specifies coral correctly -- the editor is overriding it.
 **Effort:** Low (editor theme change), zero code changes needed
 **Files affected:** Wix Studio theme editor (no file changes)
@@ -199,8 +199,8 @@
 ### RANK 3: Background Color Treatment
 **Impact:** Brand cohesion. Pink/lavender backgrounds feel unrelated to Blue Ridge aesthetic.
 **Web current:** Pink/lavender gradients on product pages
-**Mobile current:** `sandBase` (#E8D5B7) backgrounds throughout
-**Target:** All page backgrounds use `sandBase` (#E8D5B7) or `offWhite` (#FAF7F2). No pink/lavender.
+**Mobile current:** `sandBase` (#F0F4F8) backgrounds throughout
+**Target:** All page backgrounds use `sandBase` (#F0F4F8) or `offWhite` (#FFFFFF). No pink/lavender.
 **Fix:** Wix Studio editor: change page background colors to Color 1 (Sand). Consider `offWhite` for content areas that need separation from the sand base.
 **Effort:** Low (editor-only)
 **Files affected:** Wix Studio page settings
@@ -253,7 +253,7 @@
 **Web current:** No dark mode support
 **Mobile current:** Full dark mode with inverted sand/espresso palette:
   - `sandBase`: `#1A1410`
-  - `espresso`: `#F2E8D5`
+  - `espresso`: `#F8FAFC`
   - `white`: `#1A1410`
 **Target:** Consider dark mode for web as a future enhancement. Not a launch blocker.
 **Effort:** High for web (Wix Studio limitations)
@@ -272,15 +272,15 @@
 
 | Role | Token | Value | Usage |
 |------|-------|-------|-------|
-| **Primary Background** | sandBase | `#E8D5B7` | All page backgrounds |
-| **Card/Section Background** | sandLight | `#F2E8D5` | Cards, header, tab bar |
-| **Content Background** | offWhite | `#FAF7F2` | Product card interiors, modals |
-| **Primary Text** | espresso | `#3A2518` | Headlines, body text, prices |
-| **Secondary Text** | espressoLight | `#5C4033` | Descriptions, metadata |
-| **Primary CTA** | sunsetCoral | `#E8845C` | All primary buttons, sale badges, active states |
+| **Primary Background** | sandBase | `#F0F4F8` | All page backgrounds |
+| **Card/Section Background** | sandLight | `#F8FAFC` | Cards, header, tab bar |
+| **Content Background** | offWhite | `#FFFFFF` | Product card interiors, modals |
+| **Primary Text** | espresso | `#1E3A5F` | Headlines, body text, prices |
+| **Secondary Text** | espressoLight | `#3D5A80` | Descriptions, metadata |
+| **Primary CTA** | sunsetCoral | `#4A7D94` | All primary buttons, sale badges, active states |
 | **Secondary CTA** | mountainBlue | `#5B8FA8` | Links, secondary buttons, "New" badges |
-| **Borders** | sandDark | `#D4BC96` | Dividers, input borders |
-| **Muted** | muted | `#999999` | Placeholder text, disabled states |
+| **Borders** | sandDark | `#E2E8F0` | Dividers, input borders |
+| **Muted** | muted | `#6B7280` | Placeholder text, disabled states |
 | **Accent** | mauve | `#C9A0A0` | Tertiary decorative elements only |
 | **BANNED** | green (#3ECF8E) | -- | Remove from all platforms. Not a brand color. |
 | **BANNED** | pink/lavender | -- | Remove from all page backgrounds. |
@@ -303,8 +303,8 @@
 **Product Card (Universal)**
 - White (`#FFFFFF`) background (or `offWhite` for cards on white sections)
 - 12px border radius
-- Espresso-tinted shadow: `0 2px 12px rgba(58,37,24,0.08)`
-- Hover shadow (web): `0 8px 24px rgba(58,37,24,0.12)`
+- Espresso-tinted shadow: `0 2px 12px rgba(30,58,95,0.08)`
+- Hover shadow (web): `0 8px 24px rgba(30,58,95,0.12)`
 - Image: 4:3 aspect ratio, `sandLight` placeholder background
 - Badge: top-left, 4px radius, white text, color by type (Sale=coral, New=blue, Bestseller=blue)
 - Wishlist heart: top-right overlay, coral when active
@@ -312,11 +312,11 @@
 - Price: espresso, bold. Original price: muted, strikethrough.
 
 **Primary Button**
-- Background: `#E8845C` (Sunset Coral)
+- Background: `#4A7D94` (Sunset Coral)
 - Text: `#FFFFFF`, Source Sans 3 600, 15px
 - Border radius: 8px
-- Shadow: `0 2px 8px rgba(232,132,92,0.3)`
-- Hover (web): darken to `#C96B44`
+- Shadow: `0 2px 8px rgba(91,143,168,0.3)`
+- Hover (web): darken to `#3D6B80`
 - Disabled: 50% opacity
 
 **Secondary Button**
@@ -326,8 +326,8 @@
 
 **Ghost Button**
 - Background: transparent
-- Border: 1px `#5C4033`
-- Text: `#3A2518`
+- Border: 1px `#3D5A80`
+- Text: `#1E3A5F`
 
 **Navigation (Mobile Viewport)**
 - Bottom tab bar: `sandLight` background, coral active tint, espressoLight inactive
@@ -437,7 +437,7 @@ Ordered by impact-to-effort ratio:
 8. **Ensure dark mode color contrast meets WCAG AA**
    - File: `/Users/hal/gt/cfutons_mobile/refinery/rig/src/theme/ThemeProvider.tsx`
    - Current dark colors may need contrast ratio validation
-   - Test: `#D4BC96` (espressoLight in dark mode) on `#231C15` (sandLight in dark mode) -- verify 4.5:1 minimum
+   - Test: `#E2E8F0` (espressoLight in dark mode) on `#231C15` (sandLight in dark mode) -- verify 4.5:1 minimum
 
 ---
 
@@ -445,15 +445,15 @@ Ordered by impact-to-effort ratio:
 
 ### Immediate (No Code -- Editor Only)
 
-1. **Fix ALL CTA buttons to Sunset Coral (#E8845C)**
+1. **Fix ALL CTA buttons to Sunset Coral (#4A7D94)**
    - In Wix Studio theme: set Color 4 as the primary button color
    - Every green `#3ECF8E` button must become coral
    - Check: hero CTA, add to cart, newsletter submit, swatch request, quiz CTA
 
-2. **Fix ALL page backgrounds to Sand (#E8D5B7) or Off-White (#FAF7F2)**
+2. **Fix ALL page backgrounds to Sand (#F0F4F8) or Off-White (#FFFFFF)**
    - Remove ALL pink/lavender gradients from product pages
-   - Page backgrounds: `sandBase` (#E8D5B7)
-   - Card/section backgrounds: `sandLight` (#F2E8D5) or `offWhite` (#FAF7F2)
+   - Page backgrounds: `sandBase` (#F0F4F8)
+   - Card/section backgrounds: `sandLight` (#F8FAFC) or `offWhite` (#FFFFFF)
 
 ### Sprint 3 (Code + Editor)
 

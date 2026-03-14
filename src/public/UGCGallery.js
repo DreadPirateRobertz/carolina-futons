@@ -186,13 +186,13 @@ export function initFilterTabs($w, onFilterChange) {
       try {
         const el = $w(tab.id);
         if (tab.id === selectedId) {
-          el.style.backgroundColor = colors.sunsetCoral || '#E8845C';
-          el.style.color = colors.espresso || '#3A2518';
-          el.style.borderColor = colors.sunsetCoral || '#E8845C';
+          el.style.backgroundColor = colors.sunsetCoral || '#4A7D94';
+          el.style.color = colors.espresso || '#1E3A5F';
+          el.style.borderColor = colors.sunsetCoral || '#4A7D94';
         } else {
-          el.style.backgroundColor = colors.sandLight || '#F2E8D5';
-          el.style.color = colors.espresso || '#3A2518';
-          el.style.borderColor = colors.sandBase || '#E8D5B7';
+          el.style.backgroundColor = colors.sandLight || '#F8FAFC';
+          el.style.color = colors.espresso || '#1E3A5F';
+          el.style.borderColor = colors.sandBase || '#F0F4F8';
         }
       } catch (e) {
         // Tab element may not exist on this page

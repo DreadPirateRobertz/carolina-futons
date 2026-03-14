@@ -154,12 +154,12 @@ describe('Empty States & Loading Skeletons', () => {
 
     it('sets title color to Espresso', () => {
       renderEmptyState(getEl, 'cart');
-      expect(getEl('#EmptyTitle').style.color).toBe('#3A2518');
+      expect(getEl('#EmptyTitle').style.color).toBe('#1E3A5F');
     });
 
     it('sets message color to Espresso Light', () => {
       renderEmptyState(getEl, 'cart');
-      expect(getEl('#EmptyMessage').style.color).toBe('#5C4033');
+      expect(getEl('#EmptyMessage').style.color).toBe('#3D5A80');
     });
 
     it('sets illustration alt text', () => {

@@ -144,22 +144,30 @@ describe('getMountainSkylineSvg — brand tokens', () => {
     expect(getMountainSkylineSvg()).toContain(colors.mountainBlue);
   });
 
-  it('uses espresso for near ridges', () => {
-    expect(getMountainSkylineSvg()).toContain(colors.espresso);
+  it('uses warm espresso (#3A2518) for near ridges', () => {
+    // Illustrations keep the warm palette — #3A2518 is the original espresso brown
+    expect(getMountainSkylineSvg()).toContain('#3A2518');
   });
 
   it('uses skyGradientTop in sky gradient', () => {
     expect(getMountainSkylineSvg()).toContain(colors.skyGradientTop);
   });
 
-  it('uses sunsetCoral for wildflower accents', () => {
-    expect(getMountainSkylineSvg()).toContain(colors.sunsetCoral);
+  it('uses warm sunsetCoral (#E8845C) for wildflower accents', () => {
+    // Illustrations keep the warm palette — #E8845C is the original sunset coral
+    expect(getMountainSkylineSvg()).toContain('#E8845C');
   });
 
-  it('contains zero hardcoded hex values outside brand palette', () => {
+  it('contains zero hardcoded hex values outside brand + warm illustration palette', () => {
     const svg = getMountainSkylineSvg();
     const allHex = svg.match(/#[0-9a-fA-F]{6}/g) || [];
     const brandHex = new Set(Object.values(colors).filter(c => typeof c === 'string' && c.startsWith('#')).map(c => c.toUpperCase()));
+    // Illustration SVGs intentionally retain the warm Blue Ridge Mountain palette (CF-1v76)
+    const warmIllustrationPalette = [
+      '#3A2518', '#E8D5B7', '#E8845C', '#F2E8D5', '#F2A882',
+      '#5C4033', '#D4BC96', '#FAF7F2', '#C9A0A0', '#C96B44',
+    ];
+    for (const hex of warmIllustrationPalette) brandHex.add(hex.toUpperCase());
     const nonBrand = allHex.filter(h => !brandHex.has(h.toUpperCase()));
     expect(nonBrand).toEqual([]);
   });

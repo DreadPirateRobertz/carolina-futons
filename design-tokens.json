@@ -9,32 +9,32 @@
   },
   "colors": {
     "primary": {
-      "sandBase": { "value": "#E8D5B7", "description": "Warm cream/sand — page backgrounds" },
-      "espresso": { "value": "#3A2518", "description": "Deep brown — primary text, headings" },
-      "mountainBlue": { "value": "#5B8FA8", "description": "Smoky blue-teal — links, accents, CTA secondary" },
-      "sunsetCoral": { "value": "#E8845C", "description": "Warm coral — primary CTA, sale badges" },
+      "sandBase": { "value": "#F0F4F8", "description": "Light blue-gray — page backgrounds" },
+      "espresso": { "value": "#1E3A5F", "description": "Dark navy — primary text, headings" },
+      "mountainBlue": { "value": "#5B8FA8", "description": "CF brand blue — links, accents" },
+      "sunsetCoral": { "value": "#4A7D94", "description": "CF brand blue (darkened) — primary CTA, sale badges" },
       "mauve": { "value": "#C9A0A0", "description": "Soft mauve/pink — tertiary accent" },
       "white": { "value": "#FFFFFF", "description": "Pure white" }
     },
     "variants": {
-      "sandLight": { "value": "#F2E8D5", "description": "Lighter sand — card backgrounds" },
-      "sandDark": { "value": "#D4BC96", "description": "Darker sand — borders, dividers" },
-      "espressoLight": { "value": "#5C4033", "description": "Lighter brown — secondary text" },
+      "sandLight": { "value": "#F8FAFC", "description": "Near-white — card backgrounds" },
+      "sandDark": { "value": "#E2E8F0", "description": "Cool border gray — borders, dividers" },
+      "espressoLight": { "value": "#3D5A80", "description": "Medium navy — secondary text" },
       "mountainBlueDark": { "value": "#3D6B80", "description": "Darker blue — hover states" },
       "mountainBlueLight": { "value": "#A8CCD8", "description": "Soft sky blue — subtle backgrounds" },
-      "sunsetCoralDark": { "value": "#C96B44", "description": "Darker coral — CTA hover" },
-      "sunsetCoralLight": { "value": "#F2A882", "description": "Light coral — subtle accents" }
+      "sunsetCoralDark": { "value": "#3D6B80", "description": "Dark blue — CTA hover" },
+      "sunsetCoralLight": { "value": "#A8CCD8", "description": "Light blue — badges, highlights" }
     },
     "decorative": {
       "skyGradientTop": { "value": "#B8D4E3", "description": "Sky gradient top" },
       "skyGradientBottom": { "value": "#F0C87A", "description": "Sky gradient bottom (sunset glow)" },
-      "overlay": { "value": "rgba(58, 37, 24, 0.6)", "description": "Espresso modal overlay" }
+      "overlay": { "value": "rgba(30, 58, 95, 0.6)", "description": "Navy modal overlay" }
     },
     "semantic": {
       "success": { "value": "#4A7C59", "description": "Forest green — in stock, success" },
-      "error": { "value": "#C0392B", "description": "Red — errors, low stock" },
-      "muted": { "value": "#767676", "description": "Grey — disabled, inactive (WCAG AA compliant)" },
-      "mutedBrown": { "value": "#816D51", "description": "Warm brown — pending states" }
+      "error": { "value": "#DC2626", "description": "Red — errors, low stock" },
+      "muted": { "value": "#6B7280", "description": "Slate — disabled, inactive (WCAG AA compliant)" },
+      "mutedBrown": { "value": "#64748B", "description": "Slate gray — pending states" }
     }
   },
   "fontFamilies": {
@@ -61,11 +61,11 @@
     "pill": 9999
   },
   "shadows": {
-    "card": { "x": 0, "y": 2, "blur": 12, "color": "rgba(58, 37, 24, 0.08)" },
-    "cardHover": { "x": 0, "y": 8, "blur": 24, "color": "rgba(58, 37, 24, 0.12)" },
-    "nav": { "x": 0, "y": 2, "blur": 8, "color": "rgba(58, 37, 24, 0.06)" },
-    "modal": { "x": 0, "y": 16, "blur": 48, "color": "rgba(58, 37, 24, 0.2)" },
-    "button": { "x": 0, "y": 2, "blur": 8, "color": "rgba(232, 132, 92, 0.3)" }
+    "card": { "x": 0, "y": 2, "blur": 12, "color": "rgba(30, 58, 95, 0.08)" },
+    "cardHover": { "x": 0, "y": 8, "blur": 24, "color": "rgba(30, 58, 95, 0.12)" },
+    "nav": { "x": 0, "y": 2, "blur": 8, "color": "rgba(30, 58, 95, 0.06)" },
+    "modal": { "x": 0, "y": 16, "blur": 48, "color": "rgba(30, 58, 95, 0.2)" },
+    "button": { "x": 0, "y": 2, "blur": 8, "color": "rgba(91, 143, 168, 0.3)" }
   },
   "transitions": {
     "$unit": "ms",

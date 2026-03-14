@@ -33,7 +33,7 @@ const VALID_COLOR_KEYS = [
 
 // Brand hex values that must only appear in sharedTokens.js definitions
 const BRAND_HEX = [
-  '#E8D5B7', '#F2E8D5', '#3A2518', '#5B8FA8', '#E8845C', '#FAF7F2',
+  '#F0F4F8', '#F8FAFC', '#1E3A5F', '#5B8FA8', '#4A7D94',
 ];
 
 // ── designTokens import compliance ──────────────────────────────────
@@ -152,9 +152,9 @@ describe('source-level token compliance', () => {
     });
   }
 
-  it('navigationHelpers.js has no hardcoded rgba(58 in style assignments', () => {
+  it('navigationHelpers.js has no hardcoded rgba in style assignments', () => {
     const source = readSrc('public/navigationHelpers.js');
-    const hardcodedShadow = /\.style\.boxShadow\s*=\s*'[^']*rgba\(58/;
+    const hardcodedShadow = /\.style\.boxShadow\s*=\s*'[^']*rgba\(\d/;
     expect(
       hardcodedShadow.test(source),
       'navigationHelpers.js has hardcoded rgba in boxShadow — use shadows token'
@@ -213,10 +213,10 @@ describe('PWA manifest token compliance', () => {
 describe('navigationHelpers sticky nav token compliance', () => {
   it('shadows.nav token produces expected CSS string', () => {
     const css = shadowToCSS(shadows.nav);
-    expect(css).toBe('0px 2px 8px rgba(58, 37, 24, 0.06)');
+    expect(css).toBe('0px 2px 8px rgba(30, 58, 95, 0.06)');
   });
 
-  it('shadows.nav matches the espresso-tinted brand shadow', () => {
-    expect(shadows.nav.color).toContain('58, 37, 24');
+  it('shadows.nav matches the navy-tinted brand shadow', () => {
+    expect(shadows.nav.color).toContain('30, 58, 95');
   });
 });

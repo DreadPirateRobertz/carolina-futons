@@ -150,11 +150,12 @@ describe('initMountainDivider', () => {
     expect(divider.html).toContain('<path');
   });
 
-  it('divider uses token colors for fill', () => {
+  it('divider uses warm illustration colors for fill', () => {
     initMountainDivider($w);
     const divider = $w('#footerMountainDivider');
-    // Should reference espresso color for mountain fill
-    expect(divider.html).toContain(colors.espresso);
+    // Mountain divider is an illustration element — retains warm palette colors
+    // independent of the UI chrome blue branding
+    expect(divider.html).toContain('#3A2518');
   });
 
   it('divider SVG has accessible attributes', () => {

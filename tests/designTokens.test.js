@@ -18,10 +18,10 @@ import {
 
 describe('colors', () => {
   it('has all primary palette colors', () => {
-    expect(colors.sandBase).toBe('#E8D5B7');
-    expect(colors.espresso).toBe('#3A2518');
+    expect(colors.sandBase).toBe('#F0F4F8');
+    expect(colors.espresso).toBe('#1E3A5F');
     expect(colors.mountainBlue).toBe('#5B8FA8');
-    expect(colors.sunsetCoral).toBe('#E8845C');
+    expect(colors.sunsetCoral).toBe('#4A7D94');
   });
 
   it('all color values are valid hex or rgba', () => {

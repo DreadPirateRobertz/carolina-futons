@@ -1,17 +1,17 @@
 # Carolina Futons — Brand Colors
 
-Canonical hex values for the Blue Ridge Mountain palette.
+Canonical hex values for the CF blue/white brand palette.
 Single source of truth: `sharedTokens.js` (this directory).
 
 ## Primary Palette
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| sandBase | #E8D5B7 | Background, cards |
-| sandLight | #F2E8D5 | Hover states, light surfaces |
-| sandDark | #D4BC96 | Borders, dividers |
-| espresso | #3A2518 | Primary text, headers |
-| espressoLight | #5C4033 | Secondary text |
+| sandBase | #F0F4F8 | Background, cards |
+| sandLight | #F8FAFC | Hover states, light surfaces |
+| sandDark | #E2E8F0 | Borders, dividers |
+| espresso | #1E3A5F | Primary text, headers |
+| espressoLight | #3D5A80 | Secondary text |
 
 ## Accent Colors
 
@@ -20,9 +20,9 @@ Single source of truth: `sharedTokens.js` (this directory).
 | mountainBlue | #5B8FA8 | Links, secondary actions |
 | mountainBlueDark | #3D6B80 | Hover/active state |
 | mountainBlueLight | #A8CCD8 | Info backgrounds |
-| sunsetCoral | #E8845C | CTAs, primary buttons, alerts |
-| sunsetCoralDark | #C96B44 | Hover/pressed state |
-| sunsetCoralLight | #F2A882 | Subtle highlights |
+| sunsetCoral | #4A7D94 | CTAs, primary buttons |
+| sunsetCoralDark | #3D6B80 | Hover/pressed state |
+| sunsetCoralLight | #A8CCD8 | Subtle highlights |
 | mauve | #C9A0A0 | Fabric swatches, soft accents |
 
 ## Decorative
@@ -31,18 +31,18 @@ Single source of truth: `sharedTokens.js` (this directory).
 |-------|-----|-------|
 | skyGradientTop | #B8D4E3 | Hero gradient start |
 | skyGradientBottom | #F0C87A | Hero gradient end |
-| offWhite | #FAF7F2 | Page background |
+| offWhite | #FFFFFF | Page background |
 | white | #FFFFFF | Card background |
-| overlay | rgba(58, 37, 24, 0.6) | Modal overlays |
+| overlay | rgba(30, 58, 95, 0.6) | Modal overlays |
 
 ## Semantic / Status
 
 | Token | Hex | Usage |
 |-------|-----|-------|
 | success | #4A7C59 | Success states |
-| error | #E8845C | Error states (same as sunsetCoral) |
-| muted | #999999 | Disabled, placeholder text |
-| mutedBrown | #8B7355 | Muted brown accents |
+| error | #DC2626 | Error states |
+| muted | #6B7280 | Disabled, placeholder text |
+| mutedBrown | #64748B | Muted gray accents |
 
 ## Platform Notes
 

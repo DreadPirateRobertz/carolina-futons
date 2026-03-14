@@ -90,11 +90,11 @@ describe('shippingConfig', () => {
 // ── Colors ─────────────────────────────────────────────────────────
 
 describe('shared colors', () => {
-  it('has all four primary brand colors matching mobile spec (cm-330)', () => {
-    expect(colors.sandBase).toBe('#E8D5B7');
-    expect(colors.espresso).toBe('#3A2518');
+  it('has all four primary brand colors matching CF blue branding', () => {
+    expect(colors.sandBase).toBe('#F0F4F8');
+    expect(colors.espresso).toBe('#1E3A5F');
     expect(colors.mountainBlue).toBe('#5B8FA8');
-    expect(colors.sunsetCoral).toBe('#E8845C');
+    expect(colors.sunsetCoral).toBe('#4A7D94');
   });
 
   it('has variant colors for each primary', () => {
@@ -109,9 +109,9 @@ describe('shared colors', () => {
 
   it('has semantic colors', () => {
     expect(colors.success).toBe('#4A7C59');
-    expect(colors.error).toBe('#C0392B');
-    expect(colors.muted).toBe('#767676');
-    expect(colors.mutedBrown).toBe('#816D51');
+    expect(colors.error).toBe('#DC2626');
+    expect(colors.muted).toBe('#6B7280');
+    expect(colors.mutedBrown).toBe('#64748B');
   });
 
   it('all values are valid hex or rgba', () => {
@@ -178,8 +178,8 @@ describe('shared shadows', () => {
   });
 
   it('shadowToCSS produces valid CSS', () => {
-    expect(shadowToCSS(shadows.card)).toBe('0px 2px 12px rgba(58, 37, 24, 0.08)');
-    expect(shadowToCSS(shadows.modal)).toBe('0px 16px 48px rgba(58, 37, 24, 0.2)');
+    expect(shadowToCSS(shadows.card)).toBe('0px 2px 12px rgba(30, 58, 95, 0.08)');
+    expect(shadowToCSS(shadows.modal)).toBe('0px 16px 48px rgba(30, 58, 95, 0.2)');
   });
 });
 

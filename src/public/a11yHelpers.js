@@ -368,7 +368,7 @@ export function auditDesignTokenContrast() {
     { pair: 'white on espresso', fg: colors.white, bg: colors.espresso, size: 'normal' },
     { pair: 'white on mountainBlue', fg: colors.white, bg: colors.mountainBlue, size: 'large' },
     { pair: 'white on mountainBlueDark', fg: colors.white, bg: colors.mountainBlueDark, size: 'normal' },
-    { pair: 'espresso on sunsetCoral', fg: colors.espresso, bg: colors.sunsetCoral, size: 'large' },
+    { pair: 'white on sunsetCoral', fg: colors.white, bg: colors.sunsetCoral, size: 'normal' },
     { pair: 'white on sunsetCoralDark', fg: colors.white, bg: colors.sunsetCoralDark, size: 'large' },
     { pair: 'espresso on mountainBlueLight', fg: colors.espresso, bg: colors.mountainBlueLight, size: 'normal' },
     { pair: 'muted on white', fg: colors.muted, bg: colors.white, size: 'normal' },
