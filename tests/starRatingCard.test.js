@@ -270,7 +270,7 @@ describe('renderCardStarRating', () => {
 
     renderCardStarRating($item, 'prod-1', ratingsMap);
 
-    expect($item('#gridReviewStars').style.color).toBe('#E8845C');
+    expect($item('#gridReviewStars').style.color).toBe('#4A7D94');
   });
 
   it('shows "No reviews yet" when product not in ratings map', () => {

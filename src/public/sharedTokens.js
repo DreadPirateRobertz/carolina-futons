@@ -9,8 +9,8 @@
  *  - Web: imported by `designTokens.js` which adds web-specific config (CSS strings, SEO, grid)
  *  - Mobile: consumed via `design-tokens.json` (generated from this file by the build pipeline)
  *
- * Aesthetic reference: Blue Ridge Mountain Illustrative style — warm, rustic,
- * hand-illustrated cabin feel. See `design.jpeg` for the visual north star.
+ * Aesthetic: Clean blue/white CF branding for UI chrome. Illustrations retain
+ * the warm Blue Ridge Mountain palette independently.
  *
  * IMPORTANT: Never hardcode color hex values in consuming code. Always import
  * from this module (or from designTokens.js for web) to keep the brand
@@ -30,64 +30,63 @@ export const brand = {
 };
 
 /**
- * Brand color palette derived from the Blue Ridge Mountain aesthetic.
+ * Brand color palette — clean blue/white CF branding.
  *
  * Organized into three groups:
  *  - **Primary** — the core brand colors used for backgrounds, text, accents, and CTAs
- *  - **Decorative** — gradient endpoints and overlays for mountain skyline illustrations
+ *  - **Decorative** — gradient endpoints and overlays (warm tones for illustrations)
  *  - **Semantic** — status feedback colors (success, error) and muted/disabled tones
  *
  * Each primary color has light/dark variants for hover states and contrast needs.
- * CTA buttons MUST use `sunsetCoral` — never green or blue.
  *
  * @type {Object<string, string>}
  */
 export const colors = {
   // ── Primary palette ────────────────────────────────────────────
-  /** Warm sand — primary background, evokes natural wood tones */
-  sandBase: '#E8D5B7',
-  /** Lighter sand — secondary backgrounds, card fills, alternating rows */
-  sandLight: '#F2E8D5',
-  /** Darker sand — hover state for sand backgrounds, subtle borders */
-  sandDark: '#D4BC96',
-  /** Deep espresso brown — primary text color, headings, high-contrast elements */
-  espresso: '#3A2518',
-  /** Lighter espresso — secondary text, placeholder text, subtle UI elements */
-  espressoLight: '#5C4033',
-  /** Mountain blue — links, secondary buttons, informational accents */
+  /** Light blue-gray — primary background surface */
+  sandBase: '#F0F4F8',
+  /** Near-white — secondary backgrounds, card fills, alternating rows */
+  sandLight: '#F8FAFC',
+  /** Cool border gray — hover state for backgrounds, subtle borders */
+  sandDark: '#E2E8F0',
+  /** Dark navy — primary text color, headings, high-contrast elements */
+  espresso: '#1E3A5F',
+  /** Medium navy — secondary text, placeholder text, subtle UI elements */
+  espressoLight: '#3D5A80',
+  /** CF brand blue — links, secondary buttons, informational accents */
   mountainBlue: '#5B8FA8',
-  /** Darker mountain blue — hover state for blue interactive elements */
+  /** Darker brand blue — hover state for blue interactive elements */
   mountainBlueDark: '#3D6B80',
-  /** Light mountain blue — tinted backgrounds, tag fills, info banners */
+  /** Light brand blue — tinted backgrounds, tag fills, info banners */
   mountainBlueLight: '#A8CCD8',
-  /** Sunset coral — ALL call-to-action buttons and primary interactive elements */
-  sunsetCoral: '#E8845C',
-  /** Darker coral — hover/active state for CTA buttons */
-  sunsetCoralDark: '#C96B44',
-  /** Light coral — sale badges, subtle accent backgrounds */
-  sunsetCoralLight: '#F2A882',
-  /** Off-white — page background, provides warmth vs pure white */
-  offWhite: '#FAF7F2',
+  /** CF brand blue (darkened) — CTA buttons, primary interactive elements. WCAG AA 4.51:1 with white text */
+  sunsetCoral: '#4A7D94',
+  /** Dark blue — hover/active state for CTA buttons */
+  sunsetCoralDark: '#3D6B80',
+  /** Light blue — sale badges, subtle accent backgrounds */
+  sunsetCoralLight: '#A8CCD8',
+  /** Pure white — page background */
+  offWhite: '#FFFFFF',
   /** Pure white — card backgrounds, modal surfaces */
   white: '#FFFFFF',
 
-  // ── Decorative ─────────────────────────────────────────────────
+  // ── Decorative (warm palette for illustrations) ────────────────
   /** Top of mountain skyline gradient — cool morning sky blue */
   skyGradientTop: '#B8D4E3',
   /** Bottom of mountain skyline gradient — warm golden horizon */
   skyGradientBottom: '#F0C87A',
-  /** Semi-transparent espresso overlay for hero images and modals */
-  overlay: 'rgba(58, 37, 24, 0.6)',
+  /** Semi-transparent navy overlay for hero images and modals */
+  overlay: 'rgba(30, 58, 95, 0.6)',
 
   // ── Semantic / status ──────────────────────────────────────────
   /** Success feedback — order confirmations, in-stock indicators */
   success: '#4A7C59',
   /** Error feedback — validation errors, out-of-stock, destructive actions */
-  error: '#C0392B',
-  /** Muted gray — disabled controls, secondary metadata (meets WCAG AA on white) */
-  muted: '#767676',
-  /** Muted brown — blends better than gray on warm sand backgrounds */
-  mutedBrown: '#816D51',
+  error: '#DC2626',
+  /** Muted slate — disabled controls, secondary metadata (WCAG AA on all surfaces) */
+  muted: '#646C79',
+  /** Slate gray — blends with blue-gray backgrounds */
+  mutedBrown: '#64748B',
 };
 
 /**
@@ -144,11 +143,11 @@ export const borderRadius = {
 };
 
 /**
- * Box shadow definitions using warm espresso-tinted tones (NOT neutral gray).
+ * Box shadow definitions using navy-tinted tones for depth.
  *
- * Shadows use the espresso base color (rgb 58,37,24) at varying opacities
- * to stay consistent with the warm aesthetic. The `button` shadow uses the
- * coral CTA color for a subtle glow effect on primary actions.
+ * Shadows use the navy base color (rgb 30,58,95) at varying opacities
+ * for a clean, professional look. The `button` shadow uses the
+ * brand blue for a subtle glow effect on primary actions.
  *
  * Stored as structured objects so both web (via `shadowToCSS()`) and mobile
  * can consume them in their native shadow formats.
@@ -157,15 +156,15 @@ export const borderRadius = {
  */
 export const shadows = {
   /** Default card resting state — subtle lift off the background */
-  card: { x: 0, y: 2, blur: 12, color: 'rgba(58, 37, 24, 0.08)' },
+  card: { x: 0, y: 2, blur: 12, color: 'rgba(30, 58, 95, 0.08)' },
   /** Card hover/focus — elevated to signal interactivity */
-  cardHover: { x: 0, y: 8, blur: 24, color: 'rgba(58, 37, 24, 0.12)' },
+  cardHover: { x: 0, y: 8, blur: 24, color: 'rgba(30, 58, 95, 0.12)' },
   /** Navigation bar — minimal shadow to separate from page content */
-  nav: { x: 0, y: 2, blur: 8, color: 'rgba(58, 37, 24, 0.06)' },
+  nav: { x: 0, y: 2, blur: 8, color: 'rgba(30, 58, 95, 0.06)' },
   /** Modal/dialog overlay — strong depth to focus attention */
-  modal: { x: 0, y: 16, blur: 48, color: 'rgba(58, 37, 24, 0.2)' },
-  /** CTA button — coral-tinted glow to draw the eye to primary actions */
-  button: { x: 0, y: 2, blur: 8, color: 'rgba(232, 132, 92, 0.3)' },
+  modal: { x: 0, y: 16, blur: 48, color: 'rgba(30, 58, 95, 0.2)' },
+  /** CTA button — blue-tinted glow to draw the eye to primary actions */
+  button: { x: 0, y: 2, blur: 8, color: 'rgba(91, 143, 168, 0.3)' },
 };
 
 /**

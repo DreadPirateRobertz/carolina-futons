@@ -1276,8 +1276,8 @@ describe('initVisualSizeComparison', () => {
     initVisualSizeComparison($w, state);
 
     const svgHtml = $w('#sizeComparisonVisual').html;
-    // Should use espresso (#3A2518) for outlines and sand (#E8D5B7) for fills
-    expect(svgHtml).toContain('#3A2518');
+    // Should use espresso (#1E3A5F) for outlines and sand (#F0F4F8) for fills
+    expect(svgHtml).toContain('#1E3A5F');
   });
 
   it('renders comparison title', () => {

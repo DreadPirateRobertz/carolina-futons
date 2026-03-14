@@ -7,23 +7,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --sand-base: #E8D5B7;
-    --sand-light: #F2E8D5;
-    --sand-dark: #D4BC96;
-    --espresso: #3A2518;
-    --espresso-light: #5C4033;
+    --sand-base: #F0F4F8;
+    --sand-light: #F8FAFC;
+    --sand-dark: #E2E8F0;
+    --espresso: #1E3A5F;
+    --espresso-light: #3D5A80;
     --mountain-blue: #5B8FA8;
     --mountain-blue-dark: #3D6B80;
     --mountain-blue-light: #A8CCD8;
-    --sunset-coral: #E8845C;
-    --sunset-coral-dark: #C96B44;
-    --sunset-coral-light: #F2A882;
-    --off-white: #FAF7F2;
+    --sunset-coral: #4A7D94;
+    --sunset-coral-dark: #3D6B80;
+    --sunset-coral-light: #A8CCD8;
+    --off-white: #FFFFFF;
     --white: #FFFFFF;
     --success: #4A7C59;
-    --muted: #999999;
-    --muted-brown: #8B7355;
-    --overlay: rgba(58, 37, 24, 0.6);
+    --muted: #646C79;
+    --muted-brown: #64748B;
+    --overlay: rgba(30, 58, 95, 0.6);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,7 +52,7 @@
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, rgba(91,143,168,0.15) 0%, transparent 50%, rgba(232,132,92,0.1) 100%);
+    background: linear-gradient(135deg, rgba(91,143,168,0.15) 0%, transparent 50%, rgba(91,143,168,0.1) 100%);
     pointer-events: none;
   }
   .cover h1 {
@@ -141,7 +141,7 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 12px rgba(30,58,95,0.08);
   }
   .compare-card img {
     width: 100%;
@@ -177,7 +177,7 @@
   .token-swatch {
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 8px rgba(30,58,95,0.08);
   }
   .token-swatch .color-block {
     height: 80px;
@@ -214,7 +214,7 @@
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 48px;
-    box-shadow: 0 8px 24px rgba(58,37,24,0.12);
+    box-shadow: 0 8px 24px rgba(30,58,95,0.12);
   }
   .mockup-browser-bar {
     background: var(--sand-light);
@@ -284,7 +284,7 @@
     letter-spacing: 0.04em;
     border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(232,132,92,0.3);
+    box-shadow: 0 2px 8px rgba(91,143,168,0.3);
     text-transform: uppercase;
   }
 
@@ -372,11 +372,11 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 12px rgba(30,58,95,0.08);
     transition: box-shadow 300ms cubic-bezier(0.4,0,0.2,1), transform 300ms ease;
   }
   .product-card:hover {
-    box-shadow: 0 8px 24px rgba(58,37,24,0.12);
+    box-shadow: 0 8px 24px rgba(30,58,95,0.12);
     transform: translateY(-4px);
   }
   .card-img {
@@ -566,7 +566,7 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 12px rgba(30,58,95,0.08);
   }
   .divergence-table th {
     background: var(--espresso);
@@ -630,12 +630,12 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 12px rgba(30,58,95,0.08);
     border-left: 4px solid var(--mountain-blue);
     transition: box-shadow 300ms ease, transform 300ms ease;
   }
   .sprint-card:hover {
-    box-shadow: 0 8px 24px rgba(58,37,24,0.12);
+    box-shadow: 0 8px 24px rgba(30,58,95,0.12);
     transform: translateY(-2px);
   }
   .sprint-card-header {
@@ -708,7 +708,7 @@
   .color-ref-swatch {
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 8px rgba(30,58,95,0.08);
     background: var(--white);
   }
   .color-ref-swatch .swatch-block {
@@ -803,7 +803,7 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(58,37,24,0.08);
+    box-shadow: 0 2px 12px rgba(30,58,95,0.08);
   }
   .spec-card-header {
     padding: 20px 24px;
@@ -847,7 +847,7 @@
     border-radius: 3px;
     margin-right: 6px;
     vertical-align: middle;
-    border: 1px solid rgba(58,37,24,0.15);
+    border: 1px solid rgba(30,58,95,0.15);
   }
 
   /* --- PAGE RENDERING WIREFRAMES --- */
@@ -861,7 +861,7 @@
     background: var(--white);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(58,37,24,0.1);
+    box-shadow: 0 4px 20px rgba(30,58,95,0.1);
   }
   .page-rendering .page-title-bar {
     padding: 16px 24px;
@@ -1083,23 +1083,23 @@
 <!-- ===== SECTION 1: BRAND PALETTE ===== -->
 <section>
   <h2>Brand Palette</h2>
-  <p class="section-intro">Blue Ridge Mountain aesthetic. Warm, earthy, and premium. Every color has a specific role — no random hues, no pink, no lavender.</p>
+  <p class="section-intro">Blue Ridge Mountain aesthetic. Clean, modern, and premium. Every color has a specific role — no random hues, no pink, no lavender.</p>
 
   <div class="token-grid">
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--sand-base);"><span>#E8D5B7</span></div>
+      <div class="color-block" style="background: var(--sand-base);"><span>#F0F4F8</span></div>
       <div class="info"><div class="name">Sand Base</div><div class="usage">Page backgrounds</div></div>
     </div>
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--sand-light);"><span>#F2E8D5</span></div>
+      <div class="color-block" style="background: var(--sand-light);"><span>#F8FAFC</span></div>
       <div class="info"><div class="name">Sand Light</div><div class="usage">Card backgrounds</div></div>
     </div>
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--off-white);"><span>#FAF7F2</span></div>
+      <div class="color-block" style="background: var(--off-white);"><span>#FFFFFF</span></div>
       <div class="info"><div class="name">Off White</div><div class="usage">Premium sections</div></div>
     </div>
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--espresso);"><span style="background: rgba(255,255,255,0.9);">#3A2518</span></div>
+      <div class="color-block" style="background: var(--espresso);"><span style="background: rgba(255,255,255,0.9);">#1E3A5F</span></div>
       <div class="info"><div class="name">Espresso</div><div class="usage">Primary text, dark bg</div></div>
     </div>
     <div class="token-swatch">
@@ -1107,7 +1107,7 @@
       <div class="info"><div class="name">Mountain Blue</div><div class="usage">Links, secondary CTA</div></div>
     </div>
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--sunset-coral);"><span>#E8845C</span></div>
+      <div class="color-block" style="background: var(--sunset-coral);"><span>#4A7D94</span></div>
       <div class="info"><div class="name">Sunset Coral</div><div class="usage">Primary CTA, sale</div></div>
     </div>
     <div class="token-swatch">
@@ -1115,7 +1115,7 @@
       <div class="info"><div class="name">Success Green</div><div class="usage">In-stock, Add to Cart</div></div>
     </div>
     <div class="token-swatch">
-      <div class="color-block" style="background: var(--sand-dark);"><span>#D4BC96</span></div>
+      <div class="color-block" style="background: var(--sand-dark);"><span>#E2E8F0</span></div>
       <div class="info"><div class="name">Sand Dark</div><div class="usage">Borders, dividers</div></div>
     </div>
   </div>
@@ -1212,7 +1212,7 @@
             <div class="card-name">The Asheville Full</div>
             <div class="card-price" style="color: var(--sunset-coral);">$379 <span class="original">$529</span></div>
             <div class="card-swatches">
-              <div class="swatch-dot" style="background: #5C4033;"></div>
+              <div class="swatch-dot" style="background: #3D5A80;"></div>
               <div class="swatch-dot" style="background: #C19A6B;"></div>
               <div class="swatch-dot" style="background: #333;"></div>
               <div class="swatch-dot" style="background: #F5F5DC;"></div>
@@ -1231,7 +1231,7 @@
             <div class="card-price">$1,899</div>
             <div class="card-swatches">
               <div class="swatch-dot" style="background: #F5F5DC;"></div>
-              <div class="swatch-dot" style="background: #5C4033;"></div>
+              <div class="swatch-dot" style="background: #3D5A80;"></div>
               <span class="card-meta">2 finishes</span>
             </div>
             <button class="quick-view-btn">Quick View</button>
@@ -1532,7 +1532,7 @@
   </div>
 
   <h3 style="margin-top: 48px;">Social Strategy — Our Competitive Advantage</h3>
-  <div style="background: var(--white); border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+  <div style="background: var(--white); border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
     <p><strong>The futon category is OURS to own on social.</strong> Futonland and The Futon Shop have minimal social presence. Premium brands (Joybird 599K, Albany Park 150K) prove furniture sells on Instagram + Pinterest — but no one is doing it for futons with aspirational branding.</p>
     <ul style="margin-top: 16px; line-height: 2;">
       <li><strong>Pinterest:</strong> Expand to 10+ boards with keyword-optimized titles. Rich Pins already built.</li>
@@ -1710,19 +1710,19 @@
 <section>
   <h2>Quick Numbers</h2>
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 32px;">
-    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <div style="font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--mountain-blue);">100</div>
       <div style="font-size: 14px; color: var(--muted-brown); margin-top: 8px;">Backend Modules</div>
     </div>
-    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <div style="font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--sunset-coral);">39</div>
       <div style="font-size: 14px; color: var(--muted-brown); margin-top: 8px;">Page Files</div>
     </div>
-    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <div style="font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--success);">11,067+</div>
       <div style="font-size: 14px; color: var(--muted-brown); margin-top: 8px;">Tests Passing</div>
     </div>
-    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; text-align: center; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <div style="font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 700; color: var(--espresso);">88</div>
       <div style="font-size: 14px; color: var(--muted-brown); margin-top: 8px;">Products in Catalog</div>
     </div>
@@ -1759,12 +1759,12 @@
             <span style="font-size: 12px; color: var(--muted-brown);">Live site uses green on all primary CTAs despite spec defining coral</span>
           </td>
           <td>
-            <span class="platform-tag platform-correct">#E8845C Coral</span><br>
-            <span style="font-size: 12px; color: var(--muted-brown);">Correctly implements Sunset Coral per brand spec</span>
+            <span class="platform-tag platform-correct">#4A7D94 CF Blue</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Correctly implements CTA blue per brand spec</span>
           </td>
           <td>
-            <span style="display:inline-block;width:14px;height:14px;background:#E8845C;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
-            <strong>#E8845C</strong> everywhere. Green has no place in the Blue Ridge palette.
+            <span style="display:inline-block;width:14px;height:14px;background:#4A7D94;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
+            <strong>#4A7D94</strong> everywhere. Green has no place in the Blue Ridge palette.
           </td>
         </tr>
         <tr>
@@ -1775,11 +1775,11 @@
             <span style="font-size: 12px; color: var(--muted-brown);">Product pages use pink/lavender gradients that break the mountain aesthetic</span>
           </td>
           <td>
-            <span class="platform-tag platform-correct">Sand #E8D5B7</span><br>
-            <span style="font-size: 12px; color: var(--muted-brown);">Warm sand backgrounds throughout, per spec</span>
+            <span class="platform-tag platform-correct">Sand #F0F4F8</span><br>
+            <span style="font-size: 12px; color: var(--muted-brown);">Clean blue/white backgrounds throughout, per spec</span>
           </td>
           <td>
-            <span style="display:inline-block;width:14px;height:14px;background:#E8D5B7;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
+            <span style="display:inline-block;width:14px;height:14px;background:#F0F4F8;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>
             <strong>sandBase</strong> or <strong>offWhite</strong> only. No pink, no lavender.
           </td>
         </tr>
@@ -1909,7 +1909,7 @@
       <div class="sprint-card-body">
         <div class="sprint-card-title">Product Card Structure + Badges</div>
         <div class="sprint-card-desc">
-          Build proper card containers in product repeaters. White background, 12px radius, espresso-tinted shadow. Add badge system (Sale=coral, New=blue, Bestseller=blue) top-left overlay. Match mobile ProductCard architecture.
+          Build proper card containers in product repeaters. White background, 12px radius, CF blue-tinted shadow. Add badge system (Sale=coral, New=blue, Bestseller=blue) top-left overlay. Match mobile ProductCard architecture.
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div class="sprint-card-assignee">
@@ -2003,42 +2003,42 @@
     <h4 style="color: var(--espresso); margin-bottom: 16px;">Approved Palette</h4>
     <div class="color-ref-grid">
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #E8D5B7;"><span>#E8D5B7</span></div>
+        <div class="swatch-block" style="background: #F0F4F8;"><span>#F0F4F8</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Sand Base</div>
           <div class="swatch-role">Primary page backgrounds</div>
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #F2E8D5;"><span>#F2E8D5</span></div>
+        <div class="swatch-block" style="background: #F8FAFC;"><span>#F8FAFC</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Sand Light</div>
           <div class="swatch-role">Cards, header, tab bar, inputs</div>
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #D4BC96;"><span>#D4BC96</span></div>
+        <div class="swatch-block" style="background: #E2E8F0;"><span>#E2E8F0</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Sand Dark</div>
           <div class="swatch-role">Borders, dividers, input outlines</div>
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #FAF7F2;"><span>#FAF7F2</span></div>
+        <div class="swatch-block" style="background: #FFFFFF;"><span>#FFFFFF</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Off White</div>
           <div class="swatch-role">Card interiors, modals, content bg</div>
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #3A2518;"><span style="background: rgba(255,255,255,0.9);">#3A2518</span></div>
+        <div class="swatch-block" style="background: #1E3A5F;"><span style="background: rgba(255,255,255,0.9);">#1E3A5F</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Espresso</div>
           <div class="swatch-role">Primary text, dark backgrounds</div>
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #5C4033;"><span style="background: rgba(255,255,255,0.9);">#5C4033</span></div>
+        <div class="swatch-block" style="background: #3D5A80;"><span style="background: rgba(255,255,255,0.9);">#3D5A80</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Espresso Light</div>
           <div class="swatch-role">Secondary text, descriptions</div>
@@ -2052,7 +2052,7 @@
         </div>
       </div>
       <div class="color-ref-swatch">
-        <div class="swatch-block" style="background: #E8845C;"><span>#E8845C</span></div>
+        <div class="swatch-block" style="background: #4A7D94;"><span>#4A7D94</span></div>
         <div class="swatch-info">
           <div class="swatch-name">Sunset Coral</div>
           <div class="swatch-role">Primary CTA, Sale badge, active states</div>
@@ -2094,7 +2094,7 @@
       Two font families only. Playfair Display for headings (elegance), Source Sans 3 for body (readability). Mobile native sizes are proportionally scaled (~75-90% of desktop).
     </p>
 
-    <div class="type-scale" style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div class="type-scale" style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <div class="type-scale-row">
         <div class="type-scale-label">Hero Title</div>
         <div class="type-scale-sample" style="font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700; line-height: 1.1;">Mountain Inspired</div>
@@ -2161,11 +2161,11 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Shadow (rest)</span>
-            <span class="spec-val">0 2px 12px rgba(58,37,24,0.08)</span>
+            <span class="spec-val">0 2px 12px rgba(30,58,95,0.08)</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Shadow (hover)</span>
-            <span class="spec-val">0 8px 24px rgba(58,37,24,0.12)</span>
+            <span class="spec-val">0 8px 24px rgba(30,58,95,0.12)</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Image Ratio</span>
@@ -2177,7 +2177,7 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Badge: Sale</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Sunset Coral</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>Sunset Coral</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Badge: New</span>
@@ -2193,7 +2193,7 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Star Rating</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral stars + muted count</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>CF Blue stars + muted count</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Price</span>
@@ -2210,11 +2210,11 @@
         <div class="spec-card-body">
           <div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--sand-light);">
             <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-brown); margin-bottom: 8px;">Primary Button</div>
-            <div style="display: inline-block; background: #E8845C; color: white; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; box-shadow: 0 2px 8px rgba(232,132,92,0.3);">Shop Collection</div>
+            <div style="display: inline-block; background: #4A7D94; color: white; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; box-shadow: 0 2px 8px rgba(91,143,168,0.3);">Shop Collection</div>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Background</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>#E8845C Coral</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>#4A7D94 CF Blue</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Text</span>
@@ -2226,11 +2226,11 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Shadow</span>
-            <span class="spec-val">0 2px 8px rgba(232,132,92,0.3)</span>
+            <span class="spec-val">0 2px 8px rgba(91,143,168,0.3)</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Hover (web)</span>
-            <span class="spec-val"><span class="color-pip" style="background: #C96B44;"></span>#C96B44 (darken)</span>
+            <span class="spec-val"><span class="color-pip" style="background: #3D6B80;"></span>#3D6B80 (darken)</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Disabled</span>
@@ -2246,7 +2246,7 @@
           </div>
           <div style="margin-top: 16px; padding-top: 12px; border-top: 2px solid var(--sand-light);">
             <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-brown); margin-bottom: 8px;">Ghost Button</div>
-            <div style="display: inline-block; background: transparent; color: #3A2518; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #5C4033;">Learn More</div>
+            <div style="display: inline-block; background: transparent; color: #1E3A5F; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #3D5A80;">Learn More</div>
           </div>
         </div>
       </div>
@@ -2258,14 +2258,14 @@
         </div>
         <div class="spec-card-body">
           <div style="margin-bottom: 16px;">
-            <div style="background: #F2E8D5; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
+            <div style="background: #F8FAFC; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
               <span style="color: var(--muted);">&#128269;</span>
               <span style="color: var(--muted); font-size: 14px;">Search futons, sofas, fabrics...</span>
             </div>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Input Background</span>
-            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F8FAFC;"></span>sandLight</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Border Radius</span>
@@ -2273,11 +2273,11 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Placeholder</span>
-            <span class="spec-val"><span class="color-pip" style="background: #999;"></span>Muted text</span>
+            <span class="spec-val"><span class="color-pip" style="background: #646C79;"></span>Muted text</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Dropdown BG</span>
-            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F8FAFC;"></span>sandLight</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Dropdown Border</span>
@@ -2289,7 +2289,7 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Suggestion Highlight</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral on match text</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>CF Blue on match text</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Keyboard Nav</span>
@@ -2310,15 +2310,15 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Drawer BG</span>
-            <span class="spec-val"><span class="color-pip" style="background: #F2E8D5;"></span>sandLight</span>
+            <span class="spec-val"><span class="color-pip" style="background: #F8FAFC;"></span>sandLight</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Text Color</span>
-            <span class="spec-val"><span class="color-pip" style="background: #3A2518;"></span>Espresso</span>
+            <span class="spec-val"><span class="color-pip" style="background: #1E3A5F;"></span>Espresso</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Active Link</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Sunset Coral</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>Sunset Coral</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Animation</span>
@@ -2326,11 +2326,11 @@
           </div>
           <div class="spec-row">
             <span class="spec-prop">Overlay</span>
-            <span class="spec-val">rgba(58,37,24,0.6)</span>
+            <span class="spec-val">rgba(30,58,95,0.6)</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Cart Badge</span>
-            <span class="spec-val"><span class="color-pip" style="background: #E8845C;"></span>Coral bg, white count text</span>
+            <span class="spec-val"><span class="color-pip" style="background: #4A7D94;"></span>CF Blue bg, white count text</span>
           </div>
           <div class="spec-row">
             <span class="spec-prop">Close</span>
@@ -2343,7 +2343,7 @@
 
     <!-- Token Architecture Diagram -->
     <h3 style="margin-top: 48px;">Cross-Platform Token Architecture</h3>
-    <div style="background: var(--white); border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(58,37,24,0.08); margin-bottom: 32px;">
+    <div style="background: var(--white); border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(30,58,95,0.08); margin-bottom: 32px;">
       <div style="font-family: 'Source Sans 3', monospace; font-size: 14px; line-height: 2.2; color: var(--espresso);">
         <div style="text-align: center; margin-bottom: 16px;">
           <span style="background: var(--sunset-coral); color: white; padding: 6px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; letter-spacing: 0.02em;">sharedTokens.js</span>
@@ -2374,12 +2374,12 @@
       </div>
     </div>
 
-    <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">PR Review Checklist (Design)</h4>
       <p style="font-size: 14px; color: var(--espresso-light); line-height: 1.8; margin: 0;">
         Every PR touching UI is reviewed against this section:<br>
         <span style="color: var(--sunset-coral); font-weight: 600;">1.</span> No banned colors (#3ECF8E green, pink/lavender, hot pink).<br>
-        <span style="color: var(--sunset-coral); font-weight: 600;">2.</span> CTAs use Sunset Coral (#E8845C), not green.<br>
+        <span style="color: var(--sunset-coral); font-weight: 600;">2.</span> CTAs use CF Blue (#4A7D94), not green.<br>
         <span style="color: var(--sunset-coral); font-weight: 600;">3.</span> Backgrounds are sandBase, sandLight, or offWhite.<br>
         <span style="color: var(--sunset-coral); font-weight: 600;">4.</span> Product cards follow the universal card spec above.<br>
         <span style="color: var(--sunset-coral); font-weight: 600;">5.</span> Typography uses only Playfair Display (headings) and Source Sans 3 (body).<br>
@@ -3075,7 +3075,7 @@
                 <div style="margin-bottom: 12px;">
                   <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--espresso); margin-bottom: 4px;">Finish: Espresso</div>
                   <div style="display: flex; gap: 6px;">
-                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #3A2518; border: 2px solid var(--sunset-coral);"></div>
+                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #1E3A5F; border: 2px solid var(--sunset-coral);"></div>
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: #8B4513; border: 2px solid transparent;"></div>
                     <div style="width: 28px; height: 28px; border-radius: 50%; background: #D4A76A; border: 2px solid transparent;"></div>
                     <span style="font-size: 10px; color: var(--mountain-blue); align-self: center; margin-left: 4px;">Get Free Swatches</span>
@@ -3223,7 +3223,7 @@
                   <div>The Asheville Full</div>
                   <div style="font-weight: 600; color: var(--sunset-coral);">$379 <span style="text-decoration: line-through; color: var(--muted); font-weight: 400;">$529</span></div>
                   <div style="display: flex; gap: 3px; margin-top: 2px;">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #5C4033; border: 1px solid var(--sand-dark);"></div>
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #3D5A80; border: 1px solid var(--sand-dark);"></div>
                     <div style="width: 12px; height: 12px; border-radius: 50%; background: #C19A6B; border: 1px solid var(--sand-dark);"></div>
                     <div style="width: 12px; height: 12px; border-radius: 50%; background: #333; border: 1px solid var(--sand-dark);"></div>
                   </div>
@@ -4388,7 +4388,7 @@
   </div>
 
   <!-- Summary Stats -->
-  <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1); margin-top: 32px;">
+  <div style="background: var(--white); border-radius: 12px; padding: 24px 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1); margin-top: 32px;">
     <h3 style="margin-bottom: 16px;">Page Inventory Summary</h3>
     <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; text-align: center;">
       <div>
@@ -4432,7 +4432,7 @@
     </p>
 
     <!-- Quality Bar -->
-    <div style="background: var(--white); border-radius: 12px; padding: 20px 28px; margin-bottom: 32px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 20px 28px; margin-bottom: 32px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">10-Point Figma-First Quality Bar (2026-03-06)</h4>
       <p style="font-size: 13px; color: var(--espresso-light); line-height: 1.8; margin: 0;">
         <span style="color: var(--sunset-coral); font-weight: 600;">1.</span> Designed in Figma Draw (not coded in JS) &bull;
@@ -4454,7 +4454,7 @@
     </h3>
 
     <!-- 1. Mountain Skyline Header -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 0; border-bottom: 1px solid var(--sand-dark);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 200" width="100%" height="200" style="display: block;"><defs><linearGradient id="sky-grad-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8D4E3" stop-opacity="1"/><stop offset="15%" stop-color="#A8CCD8" stop-opacity="0.95"/><stop offset="30%" stop-color="#B8D4E3" stop-opacity="0.8"/><stop offset="50%" stop-color="#F0C87A" stop-opacity="0.65"/><stop offset="70%" stop-color="#F2E8D5" stop-opacity="0.75"/><stop offset="85%" stop-color="#F2A882" stop-opacity="0.45"/><stop offset="100%" stop-color="#F2E8D5" stop-opacity="0.55"/></linearGradient><filter id="haze-dv"><feGaussianBlur stdDeviation="2.5"/></filter><filter id="soft-edge-dv"><feGaussianBlur stdDeviation="1.2"/></filter><linearGradient id="haze-grad-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8D4E3" stop-opacity="0"/><stop offset="40%" stop-color="#B8D4E3" stop-opacity="0.06"/><stop offset="100%" stop-color="#A8CCD8" stop-opacity="0.12"/></linearGradient></defs><rect width="1440" height="200" fill="url(#sky-grad-dv)"/><path d="M0,200 L0,102 C32,98 58,78 95,71 C132,64 158,74 195,68 C232,62 262,48 310,42 C358,36 382,52 425,46 C468,40 498,28 548,32 C598,36 622,52 668,48 C714,44 742,30 792,34 C842,38 868,55 915,50 C962,45 988,58 1038,52 C1088,46 1118,38 1165,42 C1212,46 1238,60 1288,55 C1338,50 1368,40 1408,44 C1428,46 1436,52 1440,58 L1440,200 Z" fill="#5B8FA8" opacity="0.10" filter="url(#soft-edge-dv)"/><path d="M0,200 L0,115 C38,110 62,88 108,82 C154,76 178,92 225,86 C272,80 298,60 348,55 C398,50 425,68 472,62 C519,56 548,40 598,44 C648,48 675,65 722,60 C769,55 798,38 848,42 C898,46 925,62 972,58 C1019,54 1048,42 1098,46 C1148,50 1175,64 1222,60 C1269,56 1298,44 1348,48 C1398,52 1422,66 1440,70 L1440,200 Z" fill="#5B8FA8" opacity="0.16"/><path d="M0,200 L0,128 C35,123 55,100 98,92 C141,84 162,102 208,94 C254,86 278,62 328,56 C378,50 402,70 448,65 C494,60 522,42 572,38 C622,34 648,58 698,54 C748,50 775,35 825,40 C875,45 902,64 948,58 C994,52 1022,42 1068,46 C1114,50 1142,68 1188,62 C1234,56 1262,44 1308,48 C1354,52 1382,68 1440,74 L1440,200 Z" fill="#3A2518" opacity="0.22"/><path d="M0,200 L0,138 C42,133 65,112 112,106 C159,100 185,118 232,112 C279,106 308,86 358,82 C408,78 435,96 482,90 C529,84 558,68 608,64 C658,60 685,78 732,74 C779,70 808,55 858,58 C908,61 935,78 982,72 C1029,66 1058,82 1108,78 C1158,74 1185,62 1232,66 C1279,70 1308,84 1358,80 C1408,76 1428,88 1440,92 L1440,200 Z" fill="#3A2518" opacity="0.32"/><rect x="0" y="65" width="1440" height="45" fill="url(#haze-grad-dv)" filter="url(#haze-dv)"/><path d="M0,200 L0,146 C38,140 60,118 108,112 C156,106 182,126 230,120 C278,114 305,92 355,88 C405,84 432,104 480,98 C528,92 558,72 608,68 C658,64 685,85 732,80 C779,75 808,62 858,66 C908,70 935,88 982,82 C1029,76 1058,92 1108,88 C1158,84 1188,72 1238,76 C1288,80 1318,96 1368,90 C1418,84 1432,98 1440,104 L1440,200 Z" fill="#3A2518" opacity="0.45"/><path d="M0,200 L0,154 C35,150 58,136 105,131 C152,126 178,140 228,136 C278,132 305,118 355,114 C405,110 432,126 482,122 C532,118 562,106 612,102 C662,98 688,114 738,110 C788,106 818,96 868,100 C918,104 948,118 998,114 C1048,110 1078,122 1128,118 C1178,114 1208,102 1258,106 C1308,110 1338,126 1388,122 C1418,120 1432,130 1440,134 L1440,200 Z" fill="#5C4033" opacity="0.60"/><path d="M0,200 L0,162 C32,158 55,144 100,140 C145,136 172,150 222,146 C272,142 302,128 352,125 C402,122 432,136 482,132 C532,128 562,116 612,112 C662,108 692,126 742,122 C792,118 822,108 872,112 C922,116 952,130 1002,126 C1052,122 1082,134 1132,130 C1182,126 1212,116 1262,120 C1312,124 1342,138 1392,134 C1422,132 1434,142 1440,146 L1440,200 Z" fill="#3A2518" opacity="0.78"/><g opacity="0.35"><path d="M308,32 C314,26 320,24 326,28 C332,24 338,26 344,32" fill="none" stroke="#3A2518" stroke-width="1.3" stroke-linecap="round"/><path d="M565,22 C570,17 575,15 580,19 C585,15 590,17 595,22" fill="none" stroke="#3A2518" stroke-width="1.1" stroke-linecap="round"/><path d="M842,38 C846,34 850,32 854,35 C858,32 862,34 866,38" fill="none" stroke="#3A2518" stroke-width="0.9" stroke-linecap="round"/><path d="M1088,28 C1092,24 1096,22 1100,25 C1104,22 1108,24 1112,28" fill="none" stroke="#3A2518" stroke-width="1.0" stroke-linecap="round"/></g><g opacity="0.55"><rect x="188" y="140" width="4" height="32" fill="#3A2518" opacity="0.7" rx="1"/><path d="M172,146 C180,128 188,118 190,110 C192,118 200,128 208,146" fill="#5C4033" opacity="0.45"/><path d="M176,139 C182,126 187,117 190,109 C193,117 198,126 204,139" fill="#5C4033" opacity="0.55"/><path d="M180,132 C185,122 188,115 190,108 C192,115 195,122 200,132" fill="#5C4033" opacity="0.65"/><rect x="1212" y="144" width="3" height="28" fill="#3A2518" opacity="0.65" rx="1"/><path d="M1198,148 C1204,136 1210,128 1214,122 C1218,128 1224,136 1230,148" fill="#5C4033" opacity="0.42"/><path d="M1201,142 C1206,132 1211,126 1214,120 C1217,126 1222,132 1227,142" fill="#5C4033" opacity="0.52"/></g><g opacity="0.48"><line x1="132" y1="180" x2="132" y2="170" stroke="#5C4033" stroke-width="1" opacity="0.5"/><circle cx="132" cy="168" r="2.8" fill="#E8845C" opacity="0.6"/><line x1="668" y1="178" x2="668" y2="168" stroke="#5C4033" stroke-width="1" opacity="0.5"/><circle cx="668" cy="166" r="3" fill="#E8845C" opacity="0.55"/><line x1="1292" y1="176" x2="1292" y2="167" stroke="#5C4033" stroke-width="0.9" opacity="0.45"/><circle cx="1292" cy="165" r="2.5" fill="#E8845C" opacity="0.52"/></g></svg>
       </div>
@@ -4465,7 +4465,7 @@
     </div>
 
     <!-- 2. Footer Mountain Divider -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 0; border-bottom: 1px solid var(--sand-dark);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true" style="display: block; width: 100%; height: 80px;"><defs><filter id="haze-footer-dv"><feGaussianBlur stdDeviation="2"/></filter><linearGradient id="footer-sky-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F2E8D5" stop-opacity="0"/><stop offset="30%" stop-color="#E8D5B7" stop-opacity="0.15"/><stop offset="60%" stop-color="#B8D4E3" stop-opacity="0.08"/><stop offset="100%" stop-color="#3A2518" stop-opacity="0.05"/></linearGradient></defs><rect width="1440" height="80" fill="url(#footer-sky-dv)"/><path d="M0,80 L0,52 C45,48 72,38 120,34 C168,30 195,40 245,36 C295,32 325,22 378,18 C431,14 462,28 512,24 C562,20 592,12 645,15 C698,18 728,30 778,26 C828,22 858,14 908,18 C958,22 988,32 1038,28 C1088,24 1118,16 1168,20 C1218,24 1248,34 1298,30 C1348,26 1378,18 1418,22 C1432,24 1438,30 1440,34 L1440,80 Z" fill="#5B8FA8" opacity="0.12"/><rect x="0" y="20" width="1440" height="18" fill="#B8D4E3" opacity="0.06" filter="url(#haze-footer-dv)"/><path d="M0,80 L0,56 C38,52 62,42 108,38 C154,34 182,46 232,42 C282,38 312,26 365,24 C418,22 448,34 498,30 C548,26 578,18 632,20 C686,22 715,34 765,30 C815,26 845,18 898,22 C951,26 982,36 1032,32 C1082,28 1112,20 1162,24 C1212,28 1242,38 1292,34 C1342,30 1372,22 1412,26 C1430,28 1438,34 1440,38 L1440,80 Z" fill="#5C4033" opacity="0.25"/><path d="M0,80 L0,60 C42,56 68,48 118,44 C168,40 198,50 248,48 C298,46 328,36 382,34 C436,32 465,42 515,40 C565,38 598,28 652,30 C706,32 735,42 785,40 C835,38 868,30 918,32 C968,34 998,44 1048,42 C1098,40 1128,32 1178,34 C1228,36 1258,44 1308,42 C1358,40 1388,34 1422,36 C1434,37 1438,42 1440,44 L1440,80 Z" fill="#3A2518" opacity="0.42"/><rect x="0" y="40" width="1440" height="12" fill="#B8D4E3" opacity="0.04" filter="url(#haze-footer-dv)"/><path d="M0,80 L0,62 C35,59 55,52 105,50 C155,48 185,55 238,53 C291,51 322,44 375,42 C428,40 458,48 508,46 C558,44 592,38 645,40 C698,42 728,50 778,48 C828,46 862,40 912,42 C962,44 992,52 1042,50 C1092,48 1122,42 1172,44 C1222,46 1252,52 1302,50 C1352,48 1382,44 1418,46 C1432,47 1438,52 1440,54 L1440,80 Z" fill="#3A2518" opacity="0.65"/><path d="M0,80 L0,68 C40,66 65,60 115,58 C165,56 195,62 248,61 C301,60 332,54 385,53 C438,52 468,58 518,57 C568,56 602,52 652,53 C702,54 732,59 782,58 C832,57 862,53 912,54 C962,55 992,60 1042,59 C1092,58 1122,54 1172,55 C1222,56 1252,60 1302,59 C1352,58 1382,55 1420,56 C1434,57 1438,60 1440,62 L1440,80 Z" fill="#3A2518" opacity="0.85"/><g opacity="0.3"><path d="M280,18 C284,14 288,12 292,15 C296,12 300,14 304,18" fill="none" stroke="#3A2518" stroke-width="1" stroke-linecap="round"/><path d="M820,14 C824,10 828,9 832,12 C836,9 840,10 844,14" fill="none" stroke="#3A2518" stroke-width="0.9" stroke-linecap="round"/><path d="M1120,20 C1123,17 1126,16 1129,18 C1132,16 1135,17 1138,20" fill="none" stroke="#3A2518" stroke-width="0.7" stroke-linecap="round"/></g><g opacity="0.5"><rect x="420" y="38" width="3" height="14" fill="#3A2518" opacity="0.6" rx="1"/><path d="M412,42 C416,34 419,30 422,26 C425,30 428,34 432,42" fill="#5C4033" opacity="0.4"/><path d="M414,39 C417,33 420,29 422,25 C424,29 427,33 430,39" fill="#5C4033" opacity="0.5"/><rect x="980" y="40" width="2.5" height="12" fill="#3A2518" opacity="0.5" rx="1"/><path d="M973,43 C976,37 979,33 981,30 C983,33 986,37 989,43" fill="#5C4033" opacity="0.35"/></g><g opacity="0.4"><line x1="160" y1="62" x2="160" y2="56" stroke="#5C4033" stroke-width="0.8" opacity="0.5"/><circle cx="160" cy="55" r="1.8" fill="#E8845C" opacity="0.55"/><line x1="650" y1="60" x2="650" y2="54" stroke="#5C4033" stroke-width="0.8" opacity="0.5"/><circle cx="650" cy="53" r="1.8" fill="#E8845C" opacity="0.5"/><line x1="1100" y1="61" x2="1100" y2="56" stroke="#5C4033" stroke-width="0.7" opacity="0.45"/><circle cx="1100" cy="55" r="1.5" fill="#F2A882" opacity="0.5"/></g></svg>
       </div>
@@ -4476,7 +4476,7 @@
     </div>
 
     <!-- 3. Contact Hero — full width sunrise scene -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 0; border-bottom: 1px solid var(--sand-dark);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 220" width="100%" height="220" style="display: block;"><defs><filter id="haze-hero-dv"><feGaussianBlur stdDeviation="3"/></filter><filter id="glow-hero-dv"><feGaussianBlur stdDeviation="8"/></filter><linearGradient id="hero-sky-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F2A882" stop-opacity="0.6"/><stop offset="12%" stop-color="#E8845C" stop-opacity="0.5"/><stop offset="25%" stop-color="#F0C87A" stop-opacity="0.65"/><stop offset="40%" stop-color="#F2E8D5" stop-opacity="0.75"/><stop offset="55%" stop-color="#E8D5B7" stop-opacity="0.5"/><stop offset="70%" stop-color="#B8D4E3" stop-opacity="0.55"/><stop offset="85%" stop-color="#A8CCD8" stop-opacity="0.4"/><stop offset="100%" stop-color="#FAF7F2"/></linearGradient><radialGradient id="hero-sun-glow-dv" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#E8845C" stop-opacity="0.6"/><stop offset="30%" stop-color="#F2A882" stop-opacity="0.4"/><stop offset="60%" stop-color="#F0C87A" stop-opacity="0.2"/><stop offset="100%" stop-color="#F0C87A" stop-opacity="0"/></radialGradient></defs><g><rect width="1440" height="220" fill="url(#hero-sky-dv)"/><circle cx="1180" cy="35" r="55" fill="url(#hero-sun-glow-dv)"/><circle cx="1180" cy="35" r="28" fill="#F2A882" opacity="0.6" filter="url(#glow-hero-dv)"/><circle cx="1180" cy="35" r="18" fill="#E8845C" opacity="0.5"/><circle cx="1180" cy="35" r="10" fill="#FFFFFF" opacity="0.3"/><ellipse cx="220" cy="40" rx="55" ry="15" fill="#FAF7F2" opacity="0.4"/><ellipse cx="750" cy="45" rx="48" ry="13" fill="#FAF7F2" opacity="0.35"/><line x1="340" y1="28" x2="347" y2="20" stroke="#3A2518" stroke-width="1.3" opacity="0.3"/><line x1="347" y1="20" x2="354" y2="28" stroke="#3A2518" stroke-width="1.3" opacity="0.3"/><line x1="520" y1="22" x2="526" y2="15" stroke="#3A2518" stroke-width="1.1" opacity="0.25"/><line x1="526" y1="15" x2="532" y2="22" stroke="#3A2518" stroke-width="1.1" opacity="0.25"/><line x1="680" y1="30" x2="685" y2="24" stroke="#3A2518" stroke-width="1" opacity="0.22"/><line x1="685" y1="24" x2="690" y2="30" stroke="#3A2518" stroke-width="1" opacity="0.22"/><line x1="900" y1="26" x2="905" y2="20" stroke="#3A2518" stroke-width="0.9" opacity="0.2"/><line x1="905" y1="20" x2="910" y2="26" stroke="#3A2518" stroke-width="0.9" opacity="0.2"/><g opacity="0.85"><path d="M0 220 L0 92 C35 88 55 72 95 65 C135 58 165 70 210 62 C255 54 285 38 340 32 C395 26 430 42 488 36 C546 30 580 18 645 22 C710 26 745 42 812 36 C879 30 912 20 978 25 C1044 30 1078 45 1145 40 C1212 35 1248 24 1312 28 C1365 31 1400 45 1440 52 L1440 220Z" fill="#3D6B80" opacity="0.15"/><path d="M0 220 L0 105 C40 100 62 85 108 78 C154 71 182 88 232 82 C282 76 312 58 368 52 C424 46 458 64 518 58 C578 52 615 35 685 38 C755 41 790 58 858 52 C926 46 960 34 1028 38 C1096 42 1132 58 1198 52 C1264 46 1298 36 1360 40 C1408 43 1430 55 1440 62 L1440 220Z" fill="#3D6B80" opacity="0.22"/><path d="M0 220 L0 118 C38 112 58 98 105 92 C152 86 178 102 228 96 C278 90 310 72 365 68 C420 64 452 80 512 75 C572 70 608 52 678 55 C748 58 782 75 852 70 C922 65 958 50 1025 54 C1092 58 1128 72 1195 68 C1262 64 1298 52 1358 55 C1405 57 1428 68 1440 74 L1440 220Z" fill="#5B8FA8" opacity="0.3"/><path d="M0 220 L0 132 C42 126 65 112 115 106 C165 100 195 116 248 110 C301 104 332 88 388 84 C444 80 478 96 538 92 C598 88 635 70 705 72 C775 74 810 90 878 86 C946 82 980 68 1048 72 C1116 76 1152 90 1218 86 C1284 82 1318 72 1378 74 C1415 76 1432 86 1440 90 L1440 220Z" fill="#5C4033" opacity="0.38"/><path d="M0 220 L0 148 C45 142 68 128 122 122 C176 116 208 132 265 128 C322 124 355 108 412 104 C469 100 505 116 565 112 C625 108 662 92 732 94 C802 96 838 112 905 108 C972 104 1008 90 1072 94 C1136 98 1172 112 1238 108 C1304 104 1338 92 1395 96 C1425 98 1438 108 1440 112 L1440 220Z" fill="#3A2518" opacity="0.45"/><path d="M0 220 L0 160 C48 155 72 142 128 138 C184 134 215 148 272 144 C329 140 362 126 420 122 C478 118 512 134 572 130 C632 126 668 112 738 114 C808 116 842 130 910 126 C978 122 1012 110 1078 112 C1144 114 1178 128 1245 124 C1312 120 1348 110 1402 114 C1428 116 1438 124 1440 128 L1440 220Z" fill="#3A2518" opacity="0.58"/></g><path d="M0 220 L0 174 C50 168 78 155 135 152 C192 149 222 162 280 158 C338 154 368 142 428 138 C488 134 522 148 582 145 C642 142 678 130 740 128 C802 126 835 140 898 137 C961 134 995 122 1058 124 C1121 126 1158 140 1222 136 C1286 132 1322 122 1380 126 C1418 128 1435 138 1440 142 L1440 220Z" fill="#3A2518" opacity="0.72"/><rect x="180" y="160" width="5" height="32" fill="#3A2518" opacity="0.65" rx="1"/><path d="M162 168 C170 152 176 144 182 136 C188 144 194 152 202 168" fill="#5C4033" opacity="0.45"/><path d="M166 162 C172 148 178 142 183 136 C188 142 194 148 200 162" fill="#4A7C59" opacity="0.5"/><rect x="700" y="162" width="4" height="28" fill="#3A2518" opacity="0.55" rx="1"/><path d="M685 168 C692 154 696 148 702 142 C708 148 712 154 718 168" fill="#5C4033" opacity="0.4"/><line x1="350" y1="185" x2="350" y2="174" stroke="#4A7C59" stroke-width="1.2" opacity="0.6"/><circle cx="350" cy="172" r="3" fill="#E8845C" opacity="0.65"/><line x1="850" y1="182" x2="850" y2="172" stroke="#4A7C59" stroke-width="1.1" opacity="0.55"/><circle cx="850" cy="170" r="3" fill="#E8845C" opacity="0.6"/></g></svg>
       </div>
@@ -4487,7 +4487,7 @@
     </div>
 
     <!-- 4. Contact Showroom — cabin with map pin -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 20px; border-bottom: 1px solid var(--sand-dark); display: flex; justify-content: center;">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="500" height="350" style="display: block;"><defs><filter id="haze-show-dv"><feGaussianBlur stdDeviation="2.5"/></filter><filter id="smoke-show-dv"><feGaussianBlur stdDeviation="3"/></filter><linearGradient id="show-sky-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8D4E3" stop-opacity="0.95"/><stop offset="15%" stop-color="#A8CCD8" stop-opacity="0.8"/><stop offset="35%" stop-color="#F0C87A" stop-opacity="0.55"/><stop offset="50%" stop-color="#F2E8D5" stop-opacity="0.65"/><stop offset="70%" stop-color="#F2A882" stop-opacity="0.4"/><stop offset="85%" stop-color="#E8D5B7" stop-opacity="0.5"/><stop offset="100%" stop-color="#FAF7F2"/></linearGradient><radialGradient id="show-pin-glow-dv" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#E8845C" stop-opacity="0.7"/><stop offset="35%" stop-color="#F2A882" stop-opacity="0.4"/><stop offset="100%" stop-color="#E8845C" stop-opacity="0"/></radialGradient><radialGradient id="show-cabin-glow-dv" cx="50%" cy="65%" r="55%"><stop offset="0%" stop-color="#F0C87A" stop-opacity="0.3"/><stop offset="50%" stop-color="#F2E8D5" stop-opacity="0.15"/><stop offset="100%" stop-color="#F2E8D5" stop-opacity="0"/></radialGradient></defs><g><rect width="400" height="280" fill="url(#show-sky-dv)"/><ellipse cx="65" cy="48" rx="44" ry="13" fill="#FAF7F2" opacity="0.4"/><ellipse cx="320" cy="42" rx="38" ry="11" fill="#FAF7F2" opacity="0.35"/><line x1="115" y1="34" x2="121" y2="27" stroke="#3A2518" stroke-width="1.2" opacity="0.3"/><line x1="121" y1="27" x2="127" y2="34" stroke="#3A2518" stroke-width="1.2" opacity="0.3"/><line x1="270" y1="26" x2="275" y2="20" stroke="#3A2518" stroke-width="1" opacity="0.25"/><line x1="275" y1="20" x2="280" y2="26" stroke="#3A2518" stroke-width="1" opacity="0.25"/><g opacity="0.85"><path d="M0 140 C18 132 35 118 55 112 C75 106 92 115 115 108 C138 101 155 88 180 82 C205 76 225 90 250 84 C275 78 295 68 320 65 C345 62 368 72 390 76 L400 78 L400 160 L0 160Z" fill="#3D6B80" opacity="0.2"/><path d="M0 155 C20 148 42 135 68 130 C94 125 115 138 142 132 C169 126 190 112 218 108 C246 104 268 118 295 112 C322 106 345 95 372 92 L400 90 L400 175 L0 175Z" fill="#5B8FA8" opacity="0.3"/><path d="M0 170 C25 164 48 152 78 148 C108 144 130 156 160 150 C190 144 212 132 242 128 C272 124 295 136 325 130 C355 124 378 115 400 112 L400 192 L0 192Z" fill="#5B8FA8" opacity="0.4"/><path d="M0 185 C22 180 45 170 72 166 C99 162 118 172 148 168 C178 164 200 154 228 150 C256 146 278 156 308 152 C338 148 362 140 400 138 L400 208 L0 208Z" fill="#5C4033" opacity="0.45"/><path d="M0 198 C28 193 52 185 82 182 C112 179 135 188 162 184 C189 180 210 172 238 168 C266 164 288 173 318 170 C348 167 375 160 400 158 L400 220 L0 220Z" fill="#3A2518" opacity="0.5"/><path d="M45 200 L50 178 C53 170 56 165 58 170 L62 178 L66 200Z" fill="#4A7C59" opacity="0.55"/><path d="M335 198 L339 180 C341 174 344 170 346 174 L349 180 L352 198Z" fill="#4A7C59" opacity="0.5"/></g><path d="M0 215 C30 208 55 200 85 196 C115 192 140 202 170 198 C200 194 225 186 255 184 C285 182 310 192 340 188 C365 185 385 180 400 178 L400 280 L0 280Z" fill="#D4BC96" opacity="0.6"/><path d="M0 230 C35 224 65 218 95 215 C125 212 152 220 182 217 C212 214 238 208 268 206 C298 204 325 212 355 210 C380 208 395 204 400 202 L400 280 L0 280Z" fill="#E8D5B7" opacity="0.7"/><ellipse cx="200" cy="210" rx="65" ry="30" fill="url(#show-cabin-glow-dv)"/><rect x="155" y="185" width="90" height="55" fill="#5C4033" opacity="0.75" rx="2"/><rect x="248" y="210" width="22" height="30" fill="#5C4033" opacity="0.6" rx="1"/><polygon points="148,188 200,158 252,188" fill="#3A2518" opacity="0.8"/><rect x="166" y="210" width="20" height="28" fill="#F2E8D5" opacity="0.65" rx="1"/><rect x="170" y="214" width="5" height="10" fill="#B8D4E3" opacity="0.3"/><rect x="178" y="214" width="5" height="10" fill="#B8D4E3" opacity="0.3"/><rect x="195" y="198" width="24" height="16" fill="#B8D4E3" opacity="0.45" rx="1"/><rect x="222" y="198" width="18" height="16" fill="#B8D4E3" opacity="0.4" rx="1"/><rect x="197" y="163" width="7" height="24" fill="#3A2518" opacity="0.6" rx="1"/><ellipse cx="203" cy="152" rx="8" ry="5" fill="#FAF7F2" opacity="0.15" filter="url(#smoke-show-dv)"/><ellipse cx="207" cy="145" rx="10" ry="6" fill="#FFFFFF" opacity="0.1" filter="url(#smoke-show-dv)"/><ellipse cx="212" cy="138" rx="12" ry="7" fill="#FAF7F2" opacity="0.08" filter="url(#smoke-show-dv)"/><circle cx="200" cy="140" r="18" fill="url(#show-pin-glow-dv)"/><path d="M200 153 L190 138 C188 132 190 126 200 124 C210 126 212 132 210 138 Z" fill="#E8845C" opacity="0.9"/><circle cx="200" cy="134" r="5" fill="#FFFFFF" opacity="0.8"/><line x1="75" y1="252" x2="75" y2="240" stroke="#4A7C59" stroke-width="1.2" opacity="0.6"/><circle cx="75" cy="238" r="3" fill="#E8845C" opacity="0.65"/><line x1="290" y1="248" x2="290" y2="237" stroke="#4A7C59" stroke-width="1.1" opacity="0.55"/><circle cx="290" cy="235" r="3" fill="#F2A882" opacity="0.6"/></g></svg>
       </div>
@@ -4498,7 +4498,7 @@
     </div>
 
     <!-- 5. Blue Ridge Timeline — full width -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 0; border-bottom: 1px solid var(--sand-dark);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="100%" height="350" style="display: block;"><defs><linearGradient id="tl-sky-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8D4E3"/><stop offset="14%" stop-color="#A8CCD8"/><stop offset="28%" stop-color="#B8D4E3" stop-opacity="0.75"/><stop offset="42%" stop-color="#F2E8D5"/><stop offset="56%" stop-color="#F2A882"/><stop offset="70%" stop-color="#F0C87A"/><stop offset="84%" stop-color="#E8D5B7"/><stop offset="100%" stop-color="#FAF7F2"/></linearGradient><linearGradient id="tl-haze-blue-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8CCD8" stop-opacity="0.06"/><stop offset="50%" stop-color="#5B8FA8" stop-opacity="0.2"/><stop offset="100%" stop-color="#A8CCD8" stop-opacity="0.4"/></linearGradient><linearGradient id="tl-ground-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8D5B7"/><stop offset="50%" stop-color="#D4BC96"/><stop offset="85%" stop-color="#5C4033"/><stop offset="100%" stop-color="#3A2518" stop-opacity="0.5"/></linearGradient><radialGradient id="tl-milestone-glow-dv" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#E8845C" stop-opacity="0.55"/><stop offset="45%" stop-color="#F2A882" stop-opacity="0.25"/><stop offset="100%" stop-color="#E8845C" stop-opacity="0"/></radialGradient><radialGradient id="tl-sun-warmth-dv" cx="80%" cy="25%" r="40%"><stop offset="0%" stop-color="#F0C87A" stop-opacity="0.5"/><stop offset="50%" stop-color="#F2A882" stop-opacity="0.2"/><stop offset="100%" stop-color="#F2E8D5" stop-opacity="0"/></radialGradient></defs><g><rect x="0" y="0" width="1200" height="400" fill="url(#tl-sky-dv)"/><rect x="0" y="0" width="1200" height="400" fill="url(#tl-sun-warmth-dv)"/><ellipse cx="140" cy="35" rx="55" ry="20" fill="#FAF7F2" opacity="0.5"/><ellipse cx="480" cy="25" rx="62" ry="22" fill="#FAF7F2" opacity="0.44"/><ellipse cx="880" cy="38" rx="58" ry="19" fill="#FAF7F2" opacity="0.42"/><line x1="290" y1="20" x2="298" y2="12" stroke="#3A2518" stroke-width="1.2" opacity="0.24"/><line x1="298" y1="12" x2="306" y2="20" stroke="#3A2518" stroke-width="1.2" opacity="0.24"/><line x1="680" y1="16" x2="687" y2="10" stroke="#3A2518" stroke-width="1.1" opacity="0.22"/><line x1="687" y1="10" x2="694" y2="16" stroke="#3A2518" stroke-width="1.1" opacity="0.22"/><path d="M0 155 Q30 140 65 145 Q100 130 140 138 Q180 122 225 132 Q270 118 320 128 Q365 115 415 125 Q460 112 510 122 Q560 108 610 120 Q660 106 710 118 Q760 104 810 115 Q860 102 910 112 Q960 100 1010 110 Q1060 98 1110 108 Q1160 100 1200 105 L1200 210 L0 210Z" fill="#A8CCD8" opacity="0.2"/><rect x="0" y="152" width="1200" height="42" fill="url(#tl-haze-blue-dv)" opacity="0.5"/><path d="M0 192 Q42 172 92 182 Q142 162 198 175 Q255 155 318 168 Q378 150 442 165 Q505 148 570 162 Q635 145 700 160 Q765 142 832 158 Q898 140 962 155 Q1028 138 1092 152 Q1150 142 1200 148 L1200 245 L0 245Z" fill="#5B8FA8" opacity="0.32"/><path d="M0 212 Q48 192 105 202 Q162 182 228 195 Q295 175 365 190 Q435 172 508 188 Q580 168 655 185 Q728 165 802 180 Q878 162 952 178 Q1025 160 1098 175 Q1155 165 1200 170 L1200 260 L0 260Z" fill="#5B8FA8" opacity="0.38"/><path d="M0 232 Q55 215 120 222 Q188 202 262 215 Q335 198 412 210 Q488 195 568 208 Q648 192 728 205 Q808 188 888 202 Q968 185 1048 198 Q1128 185 1200 192 L1200 275 L0 275Z" fill="#3D6B80" opacity="0.45"/><path d="M0 248 Q62 235 132 240 Q205 225 285 235 Q365 220 448 232 Q532 218 618 228 Q702 215 788 225 Q872 212 955 222 Q1038 210 1120 218 Q1165 212 1200 215 L1200 280 L0 280Z" fill="#3D6B80" opacity="0.5"/><path d="M38 262 L44 240 L46 234 L48 230 L50 226 L53 230 L56 236 L58 242 L64 262Z" fill="#4A7C59" opacity="0.5"/><path d="M320 255 L325 235 L327 229 L329 225 L332 229 L335 236 L340 255Z" fill="#4A7C59" opacity="0.42"/><path d="M715 250 L720 230 L722 224 L724 220 L727 224 L730 232 L735 250Z" fill="#4A7C59" opacity="0.45"/><path d="M1080 258 L1085 238 L1087 232 L1089 228 L1092 232 L1095 240 L1100 258Z" fill="#4A7C59" opacity="0.38"/><path d="M0 272 Q80 260 180 265 Q300 252 440 260 Q580 248 720 258 Q860 245 1000 255 Q1110 248 1200 252 L1200 400 L0 400Z" fill="url(#tl-ground-dv)"/><path d="M40 300 Q100 290 170 296 Q260 284 350 292 Q450 278 550 288 Q650 275 750 285 Q850 272 950 282 Q1040 270 1140 278" fill="none" stroke="#3A2518" stroke-width="3.5" stroke-dasharray="12,8" opacity="0.45"/><g transform="translate(120, 290)"><circle cx="0" cy="0" r="24" fill="url(#tl-milestone-glow-dv)"/><circle cx="0" cy="0" r="12" fill="#E8845C" opacity="0.9"/><circle cx="0" cy="0" r="5" fill="#FAF7F2" opacity="0.88"/><rect x="-24" y="26" width="48" height="20" rx="5" fill="#3A2518" opacity="0.78"/></g><g transform="translate(420, 280)"><circle cx="0" cy="0" r="24" fill="url(#tl-milestone-glow-dv)"/><circle cx="0" cy="0" r="12" fill="#5B8FA8" opacity="0.9"/><circle cx="0" cy="0" r="5" fill="#FAF7F2" opacity="0.88"/><rect x="-24" y="26" width="48" height="20" rx="5" fill="#3A2518" opacity="0.78"/></g><g transform="translate(720, 275)"><circle cx="0" cy="0" r="24" fill="url(#tl-milestone-glow-dv)"/><circle cx="0" cy="0" r="12" fill="#E8845C" opacity="0.9"/><circle cx="0" cy="0" r="5" fill="#FAF7F2" opacity="0.88"/><rect x="-24" y="26" width="48" height="20" rx="5" fill="#3A2518" opacity="0.78"/></g><g transform="translate(1020, 272)"><circle cx="0" cy="0" r="24" fill="url(#tl-milestone-glow-dv)"/><circle cx="0" cy="0" r="12" fill="#4A7C59" opacity="0.9"/><circle cx="0" cy="0" r="5" fill="#FAF7F2" opacity="0.88"/><rect x="-24" y="26" width="48" height="20" rx="5" fill="#3A2518" opacity="0.78"/></g><circle cx="35" cy="358" r="3.5" fill="#E8845C" opacity="0.55"/><circle cx="78" cy="352" r="3" fill="#E8845C" opacity="0.5"/><circle cx="125" cy="348" r="3" fill="#E8845C" opacity="0.45"/></g></svg>
       </div>
@@ -4509,7 +4509,7 @@
     </div>
 
     <!-- 6. Team Portrait — golden hour silhouettes -->
-    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.1);">
+    <div style="background: var(--white); border-radius: 16px; overflow: hidden; margin-bottom: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.1);">
       <div style="background: var(--sand-light); padding: 0; border-bottom: 1px solid var(--sand-dark);">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="100%" height="400" style="display: block;"><defs><linearGradient id="team-sky-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#B8D4E3"/><stop offset="12%" stop-color="#A8CCD8"/><stop offset="28%" stop-color="#B8D4E3" stop-opacity="0.8"/><stop offset="42%" stop-color="#F2E8D5"/><stop offset="56%" stop-color="#F2A882"/><stop offset="70%" stop-color="#F0C87A"/><stop offset="82%" stop-color="#F2A882" stop-opacity="0.6"/><stop offset="92%" stop-color="#E8D5B7"/><stop offset="100%" stop-color="#FAF7F2"/></linearGradient><radialGradient id="team-sun-glow-dv" cx="55%" cy="28%" r="45%"><stop offset="0%" stop-color="#F0C87A" stop-opacity="0.8"/><stop offset="18%" stop-color="#F2A882" stop-opacity="0.55"/><stop offset="40%" stop-color="#F2E8D5" stop-opacity="0.25"/><stop offset="70%" stop-color="#A8CCD8" stop-opacity="0.08"/><stop offset="100%" stop-color="#F2E8D5" stop-opacity="0"/></radialGradient><linearGradient id="team-ground-dv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8D5B7"/><stop offset="40%" stop-color="#D4BC96"/><stop offset="75%" stop-color="#5C4033"/><stop offset="100%" stop-color="#3A2518" stop-opacity="0.6"/></linearGradient></defs><g><rect x="0" y="0" width="900" height="500" fill="url(#team-sky-dv)"/><rect x="0" y="0" width="900" height="500" fill="url(#team-sun-glow-dv)"/><ellipse cx="680" cy="55" rx="62" ry="22" fill="#FAF7F2" opacity="0.5"/><ellipse cx="160" cy="80" rx="70" ry="22" fill="#FAF7F2" opacity="0.45"/><ellipse cx="440" cy="42" rx="55" ry="18" fill="#FAF7F2" opacity="0.35"/><line x1="250" y1="38" x2="259" y2="30" stroke="#3A2518" stroke-width="1.4" opacity="0.28"/><line x1="259" y1="30" x2="268" y2="38" stroke="#3A2518" stroke-width="1.4" opacity="0.28"/><line x1="570" y1="28" x2="577" y2="22" stroke="#3A2518" stroke-width="1.1" opacity="0.22"/><line x1="577" y1="22" x2="584" y2="28" stroke="#3A2518" stroke-width="1.1" opacity="0.22"/><path d="M0 228 Q18 220 38 222 Q58 212 82 218 Q108 205 138 212 Q168 200 202 208 Q238 195 278 205 Q318 192 358 202 Q398 190 442 200 Q482 188 525 198 Q568 185 612 195 Q658 182 702 192 Q748 180 792 190 Q838 178 878 188 Q892 182 900 185 L900 290 L0 290Z" fill="#A8CCD8" opacity="0.22"/><path d="M0 248 Q25 235 55 240 Q85 225 120 234 Q155 218 195 228 Q235 212 280 224 Q325 208 370 220 Q418 205 465 218 Q512 202 560 215 Q608 200 655 212 Q702 198 750 210 Q798 195 842 208 Q872 198 900 205 L900 308 L0 308Z" fill="#A8CCD8" opacity="0.28"/><path d="M0 268 Q30 250 68 258 Q108 238 152 250 Q198 232 248 245 Q298 228 348 242 Q398 225 452 238 Q505 222 558 235 Q612 218 668 232 Q722 215 778 228 Q832 212 878 225 Q895 218 900 222 L900 320 L0 320Z" fill="#5B8FA8" opacity="0.3"/><path d="M0 288 Q35 268 78 278 Q122 258 172 270 Q222 252 278 265 Q332 248 390 260 Q448 242 508 258 Q568 240 628 255 Q688 238 748 252 Q808 235 862 248 Q888 240 900 245 L900 338 L0 338Z" fill="#5B8FA8" opacity="0.38"/><path d="M0 305 Q40 288 88 296 Q138 275 195 288 Q252 270 315 282 Q378 265 445 278 Q512 260 580 275 Q648 258 718 272 Q788 255 852 268 Q880 260 900 265 L900 355 L0 355Z" fill="#5B8FA8" opacity="0.42"/><path d="M0 322 Q45 305 100 312 Q158 292 225 305 Q292 285 365 298 Q438 280 515 295 Q592 278 668 292 Q745 275 818 288 Q862 278 900 285 L900 370 L0 370Z" fill="#3D6B80" opacity="0.48"/><path d="M62 348 L68 328 L70 322 L72 318 L74 314 L77 318 L80 324 L82 330 L88 348Z" fill="#4A7C59" opacity="0.5"/><path d="M145 342 L150 324 L152 318 L154 314 L156 310 L159 315 L162 322 L164 328 L170 342Z" fill="#4A7C59" opacity="0.42"/><path d="M780 340 L785 322 L787 316 L789 312 L792 316 L795 322 L800 340Z" fill="#4A7C59" opacity="0.48"/><path d="M852 344 L856 328 L858 324 L860 320 L863 324 L866 330 L870 344Z" fill="#4A7C59" opacity="0.36"/><path d="M0 368 Q60 355 140 360 Q230 348 340 355 Q460 342 570 352 Q690 340 800 350 Q860 344 900 348 L900 500 L0 500Z" fill="url(#team-ground-dv)"/><g transform="translate(230, 322)"><ellipse cx="0" cy="-62" rx="14" ry="16" fill="#3A2518" opacity="0.85"/><path d="M-18 -45 Q-22 -15 -16 25 Q-12 32 0 34 Q12 32 16 25 Q22 -15 18 -45Z" fill="#5C4033" opacity="0.8"/><line x1="-15" y1="-25" x2="-28" y2="8" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="15" y1="-25" x2="28" y2="8" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="-8" y1="34" x2="-12" y2="72" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="34" x2="12" y2="72" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/></g><g transform="translate(340, 315)"><ellipse cx="0" cy="-66" rx="15" ry="17" fill="#3A2518" opacity="0.85"/><path d="M-19 -48 Q-23 -16 -17 28 Q-13 36 0 38 Q13 36 17 28 Q23 -16 19 -48Z" fill="#3D6B80" opacity="0.78"/><line x1="-16" y1="-26" x2="-30" y2="10" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="16" y1="-26" x2="22" y2="-8" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="-9" y1="38" x2="-13" y2="78" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/><line x1="9" y1="38" x2="13" y2="78" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/></g><g transform="translate(450, 318)"><ellipse cx="0" cy="-64" rx="14" ry="16" fill="#3A2518" opacity="0.85"/><path d="M-18 -47 Q-21 -14 -15 26 Q-11 34 0 36 Q11 34 15 26 Q21 -14 18 -47Z" fill="#E8845C" opacity="0.78"/><line x1="-14" y1="-24" x2="-27" y2="8" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="14" y1="-24" x2="27" y2="8" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="-8" y1="36" x2="-11" y2="74" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="36" x2="11" y2="74" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/></g><g transform="translate(555, 316)"><ellipse cx="0" cy="-65" rx="14" ry="16" fill="#3A2518" opacity="0.85"/><path d="M-18 -48 Q-21 -14 -15 27 Q-11 35 0 37 Q11 35 15 27 Q21 -14 18 -48Z" fill="#D4BC96" opacity="0.8"/><line x1="-14" y1="-25" x2="-26" y2="6" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="14" y1="-25" x2="26" y2="6" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="-8" y1="37" x2="-12" y2="76" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="37" x2="12" y2="76" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/></g><g transform="translate(660, 322)"><ellipse cx="0" cy="-62" rx="14" ry="16" fill="#3A2518" opacity="0.85"/><path d="M-18 -45 Q-21 -14 -15 25 Q-11 33 0 35 Q11 33 15 25 Q21 -14 18 -45Z" fill="#816D51" opacity="0.78"/><line x1="-14" y1="-23" x2="-27" y2="7" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="14" y1="-23" x2="24" y2="-2" stroke="#3A2518" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/><line x1="-8" y1="35" x2="-11" y2="72" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/><line x1="8" y1="35" x2="11" y2="72" stroke="#3A2518" stroke-width="4" stroke-linecap="round" opacity="0.7"/></g><circle cx="98" cy="452" r="4" fill="#E8845C" opacity="0.6"/><circle cx="142" cy="444" r="3.5" fill="#E8845C" opacity="0.55"/><circle cx="185" cy="438" r="3.5" fill="#E8845C" opacity="0.5"/><circle cx="695" cy="446" r="2.5" fill="#E8845C" opacity="0.48"/><circle cx="748" cy="438" r="2.8" fill="#E8845C" opacity="0.4"/></g></svg>
       </div>
@@ -4521,17 +4521,17 @@
 
     <!-- Pipeline Status Summary -->
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px;">
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <div style="font-size: 28px; font-weight: 700; color: var(--success);">6</div>
         <div style="font-size: 13px; color: var(--muted-brown);">SVGs in Pipeline</div>
         <div style="font-size: 11px; color: var(--espresso-light); margin-top: 4px;">.svg &rarr; .optimized &rarr; .tokenized &rarr; .wix.html</div>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--success); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <div style="font-size: 28px; font-weight: 700; color: var(--success);">4</div>
         <div style="font-size: 13px; color: var(--muted-brown);">Fully Deployed</div>
         <div style="font-size: 11px; color: var(--espresso-light); margin-top: 4px;">Skyline, Footer, Contact Hero, Timeline</div>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; text-align: center; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <div style="font-size: 28px; font-weight: 700; color: var(--sunset-coral);">2</div>
         <div style="font-size: 13px; color: var(--muted-brown);">Rework In Progress</div>
         <div style="font-size: 11px; color: var(--espresso-light); margin-top: 4px;">Showroom (CF-6ds), Team Portrait (CF-3qt)</div>
@@ -4543,22 +4543,22 @@
       Queued Illustrations &mdash; Awaiting Figma Design
     </h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px;">
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Comfort Illustrations <span style="font-size: 11px; color: var(--sunset-coral);">cf-pdv</span></h4>
         <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">3 scenes (plush, medium, firm) for Product Page comfort story cards. Upgrading from programmatic to Figma Draw pipeline.</p>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Cart + Onboarding <span style="font-size: 11px; color: var(--sunset-coral);">cf-aij</span></h4>
         <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">Cart scene + 3 mobile onboarding scenes. Dark editorial theme. Upgrading to Figma Draw pipeline.</p>
       </div>
-      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(58,37,24,0.06);">
+      <div style="background: var(--white); border-radius: 10px; padding: 20px; border-left: 4px solid var(--sunset-coral); box-shadow: 0 2px 8px rgba(30,58,95,0.06);">
         <h4 style="font-size: 15px; color: var(--espresso); margin-bottom: 6px;">Empty States <span style="font-size: 11px; color: var(--sunset-coral);">cf-t3c</span></h4>
         <p style="font-size: 13px; color: var(--muted-brown); margin: 0;">8 scenes (cart, search, wishlist, etc.). All brand tokens preserved. Upgrading from programmatic to Figma Draw.</p>
       </div>
     </div>
 
     <!-- Cross-Platform Note -->
-    <div style="background: var(--white); border-radius: 12px; padding: 20px 28px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 12px rgba(58,37,24,0.08);">
+    <div style="background: var(--white); border-radius: 12px; padding: 20px 28px; border-left: 4px solid var(--mountain-blue); box-shadow: 0 2px 12px rgba(30,58,95,0.08);">
       <h4 style="color: var(--espresso); margin-bottom: 8px; font-size: 14px;">Cross-Platform SVG Portability</h4>
       <p style="font-size: 13px; color: var(--espresso-light); line-height: 1.8; margin: 0;">
         Mountain SVG path coordinates translate 1:1 between web and React Native (via react-native-svg).
@@ -4746,7 +4746,7 @@
 
             <!-- Cart Summary Sidebar -->
             <div>
-              <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 20px rgba(58,37,24,0.08); border: 1px solid var(--sand-dark); position: sticky; top: 24px;">
+              <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 20px rgba(30,58,95,0.08); border: 1px solid var(--sand-dark); position: sticky; top: 24px;">
                 <h3 style="font-family: 'Playfair Display', serif; font-size: 22px; color: var(--espresso); margin-bottom: 24px;">Summary</h3>
 
                 <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--espresso); margin-bottom: 12px;">
@@ -4910,7 +4910,7 @@
 
             <!-- Right: Order Summary -->
             <div>
-              <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 4px 20px rgba(58,37,24,0.06); border: 1px solid var(--sand-dark);">
+              <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 4px 20px rgba(30,58,95,0.06); border: 1px solid var(--sand-dark);">
                 <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--espresso); margin-bottom: 20px;">Order Summary</h3>
                 <div style="font-size: 13px; color: var(--muted-brown); margin-bottom: 16px;">3 items in your order</div>
 
@@ -5013,13 +5013,13 @@
 
         <div style="padding: 40px 48px;">
           <!-- Confirmation -->
-          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(58,37,24,0.06); margin-bottom: 24px; border-left: 4px solid var(--success);">
+          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(30,58,95,0.06); margin-bottom: 24px; border-left: 4px solid var(--success);">
             <div style="font-size: 14px; color: var(--success); font-weight: 600; margin-bottom: 8px;">Order Confirmed</div>
             <p style="font-size: 14px; color: var(--espresso-light); line-height: 1.7; margin: 0;">A confirmation email has been sent to sarah@example.com. Your white glove delivery is scheduled for <strong style="color: var(--espresso);">March 10&ndash;15, 2026</strong>.</p>
           </div>
 
           <!-- Delivery Timeline -->
-          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(58,37,24,0.06); margin-bottom: 24px;">
+          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(30,58,95,0.06); margin-bottom: 24px;">
             <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--espresso); margin-bottom: 20px;">Delivery Timeline</h3>
             <div style="display: flex; align-items: flex-start; gap: 0;">
               <div style="text-align: center; flex: 1;">
@@ -5050,14 +5050,14 @@
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
             <!-- Personal Touch -->
-            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(58,37,24,0.06);">
+            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 12px rgba(30,58,95,0.06);">
               <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--espresso); margin-bottom: 12px;">A Note From Brenda</h3>
               <p style="font-size: 14px; color: var(--espresso-light); line-height: 1.7; margin: 0; font-style: italic;">"Thank you for choosing Carolina Futons! We've been a family business since 1991, and every piece we sell is one we'd be proud to have in our own home. If you ever need anything, don't hesitate to reach out. &mdash; Brenda"</p>
             </div>
 
             <!-- Social Share + Referral -->
             <div>
-              <div style="background: white; border-radius: 14px; padding: 20px 28px; box-shadow: 0 2px 12px rgba(58,37,24,0.06); margin-bottom: 16px;">
+              <div style="background: white; border-radius: 14px; padding: 20px 28px; box-shadow: 0 2px 12px rgba(30,58,95,0.06); margin-bottom: 16px;">
                 <h4 style="font-size: 14px; color: var(--espresso); margin-bottom: 12px;">Share Your Purchase</h4>
                 <div style="display: flex; gap: 10px;">
                   <button style="flex: 1; padding: 10px; border: 1px solid var(--sand-dark); border-radius: 8px; background: white; font-size: 12px; color: var(--espresso); cursor: pointer;">Facebook</button>
@@ -5132,26 +5132,26 @@
         <div style="padding: 32px 48px;">
           <!-- Dashboard Stats -->
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;">
-            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(58,37,24,0.05); border: 1px solid var(--sand-dark);">
+            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(30,58,95,0.05); border: 1px solid var(--sand-dark);">
               <div style="font-size: 28px; font-weight: 700; color: var(--espresso);">7</div>
               <div style="font-size: 12px; color: var(--muted-brown); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px;">Orders</div>
             </div>
-            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(58,37,24,0.05); border: 1px solid var(--sand-dark);">
+            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(30,58,95,0.05); border: 1px solid var(--sand-dark);">
               <div style="font-size: 28px; font-weight: 700; color: var(--sunset-coral);">3</div>
               <div style="font-size: 12px; color: var(--muted-brown); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px;">Saved Items</div>
             </div>
-            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(58,37,24,0.05); border: 1px solid var(--sand-dark);">
+            <div style="background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(30,58,95,0.05); border: 1px solid var(--sand-dark);">
               <div style="font-size: 28px; font-weight: 700; color: var(--mountain-blue);">4,280</div>
               <div style="font-size: 12px; color: var(--muted-brown); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px;">Points</div>
             </div>
-            <div style="background: linear-gradient(135deg, #C0A66C 0%, #D4BC96 100%); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(58,37,24,0.1);">
+            <div style="background: linear-gradient(135deg, #C0A66C 0%, #D4BC96 100%); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(30,58,95,0.1);">
               <div style="font-size: 22px; font-weight: 700; color: var(--espresso);">Silver</div>
               <div style="font-size: 12px; color: var(--espresso-light); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px;">Loyalty Tier</div>
             </div>
           </div>
 
           <!-- Recent Orders -->
-          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(58,37,24,0.04); margin-bottom: 24px;">
+          <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(30,58,95,0.04); margin-bottom: 24px;">
             <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--espresso); margin-bottom: 20px;">Recent Orders</h3>
 
             <div style="display: flex; gap: 16px; padding: 16px; border: 1px solid var(--sand-dark); border-radius: 10px; margin-bottom: 12px; align-items: center;">
@@ -5184,7 +5184,7 @@
 
           <!-- Wishlist + Settings side by side -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(58,37,24,0.04);">
+            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(30,58,95,0.04);">
               <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--espresso); margin-bottom: 16px;">Saved Items</h3>
               <div style="display: flex; gap: 12px; padding: 12px; border: 1px solid var(--sand-dark); border-radius: 8px; margin-bottom: 10px; align-items: center;">
                 <div style="width: 56px; height: 56px; background: var(--sand-light); border-radius: 6px;"></div>
@@ -5198,7 +5198,7 @@
               </div>
             </div>
 
-            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(58,37,24,0.04);">
+            <div style="background: white; border-radius: 14px; padding: 28px; box-shadow: 0 2px 8px rgba(30,58,95,0.04);">
               <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: var(--espresso); margin-bottom: 16px;">Preferences</h3>
               <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--sand-light);">
                 <span style="font-size: 14px; color: var(--espresso);">Newsletter</span>

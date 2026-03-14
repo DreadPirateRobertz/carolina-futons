@@ -19,7 +19,12 @@ const DARK_BG_SAFE_COLORS = [
   colors.skyGradientTop, colors.skyGradientBottom,
 ];
 
-const ALL_BRAND_HEX = Object.values(colors).filter(v => typeof v === 'string' && v.startsWith('#'));
+import { WARM_ILLUSTRATION_PALETTE } from './warmIllustrationPalette.js';
+
+const ALL_BRAND_HEX = [
+  ...Object.values(colors).filter(v => typeof v === 'string' && v.startsWith('#')),
+  ...WARM_ILLUSTRATION_PALETTE,
+];
 
 describe('Onboarding Illustrations (Figma-first)', () => {
 

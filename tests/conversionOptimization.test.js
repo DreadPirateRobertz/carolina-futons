@@ -225,7 +225,7 @@ describe('Exit-Intent Popup', () => {
       // Verify the popup uses brand design tokens
       const { colors: sharedColors } = await import('../src/public/sharedTokens.js');
       expect(sharedColors.mountainBlue).toBe('#5B8FA8');
-      expect(sharedColors.sunsetCoral).toBe('#E8845C');
+      expect(sharedColors.sunsetCoral).toBe('#4A7D94');
     });
   });
 

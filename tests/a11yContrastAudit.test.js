@@ -3,8 +3,8 @@
  * @description Tests for WCAG AA color contrast compliance across the codebase.
  *
  * Audits two categories:
- * 1. CTA buttons — coral background must have accessible text color (espresso, not white)
- * 2. Error text — must use colors.error (#C0392B), not colors.sunsetCoral (#E8845C)
+ * 1. CTA buttons — blue CTA background now has accessible white text (WCAG AA 4.56:1)
+ * 2. Error text — must use colors.error (#DC2626), not colors.sunsetCoral (#4A7D94)
  *
  * WCAG AA requirements:
  * - Normal text (< 18px or < 14px bold): 4.5:1 contrast ratio
@@ -40,13 +40,13 @@ function contrastRatio(hex1, hex2) {
 // ── Token-level contrast tests ───────────────────────────────────────
 
 describe('A11y: Design token contrast ratios', () => {
-  it('espresso on sunsetCoral passes WCAG AA normal text (4.5:1)', () => {
-    const ratio = contrastRatio(colors.espresso, colors.sunsetCoral);
+  it('white on sunsetCoral passes WCAG AA normal text (4.5:1)', () => {
+    const ratio = contrastRatio(colors.white, colors.sunsetCoral);
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('white on sunsetCoral FAILS WCAG AA (documents the problem)', () => {
-    const ratio = contrastRatio(colors.white, colors.sunsetCoral);
+  it('espresso on sunsetCoral does NOT pass WCAG AA (low contrast blue-on-blue)', () => {
+    const ratio = contrastRatio(colors.espresso, colors.sunsetCoral);
     expect(ratio).toBeLessThan(3.0);
   });
 
@@ -65,9 +65,9 @@ describe('A11y: Design token contrast ratios', () => {
     expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('sunsetCoral on white FAILS WCAG AA normal text (documents the problem)', () => {
+  it('sunsetCoral on white passes WCAG AA normal text (4.5:1)', () => {
     const ratio = contrastRatio(colors.sunsetCoral, colors.white);
-    expect(ratio).toBeLessThan(4.5);
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
   });
 });
 

@@ -399,7 +399,7 @@ async function handleSwatchSubmit($w, state) {
 
 /**
  * Always-visible branded button that opens the swatch request modal.
- * Uses Coral (#E8845C) background per brand palette for high visibility.
+ * Uses CF Blue (#4A7D94) background per brand palette for high visibility.
  * Adapts label text based on whether the product has fabric options.
  * @param {Function} $w - Wix Velo selector function for querying page elements
  * @param {Object} state - Shared product page state

@@ -38,7 +38,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
-// Brand tokens: Sand #E8D5B7, Espresso #3A2518, Mountain Blue #5B8FA8
+// Brand tokens: Surface #F0F4F8, Navy #1E3A5F, CF Blue #5B8FA8
 
 const SEQUENCES = {
   welcome: {

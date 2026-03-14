@@ -236,7 +236,7 @@ describe('Navigation Helpers', () => {
     it('resets non-active links to default styling', () => {
       applyActiveNavState(getEl, '/about');
       expect(getEl('#navHome').style.fontWeight).toBe('400');
-      expect(getEl('#navHome').style.color).toBe('#3A2518');
+      expect(getEl('#navHome').style.color).toBe('#1E3A5F');
     });
 
     it('does nothing for unknown path', () => {
@@ -515,24 +515,24 @@ describe('Navigation Helpers', () => {
     describe('design token colors', () => {
       it('sets sandLight background on overlay', () => {
         initMobileDrawer(getEl);
-        expect(getEl('#mobileMenuOverlay').style.backgroundColor).toBe('#F2E8D5');
+        expect(getEl('#mobileMenuOverlay').style.backgroundColor).toBe('#F8FAFC');
       });
 
       it('sets espresso text color on nav links', () => {
         initMobileDrawer(getEl);
-        expect(getEl('#mobileNavHome').style.color).toBe('#3A2518');
-        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#3A2518');
+        expect(getEl('#mobileNavHome').style.color).toBe('#1E3A5F');
+        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#1E3A5F');
       });
 
       it('sets coral color on active nav link for current path', () => {
         initMobileDrawer(getEl, '/futon-frames');
-        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#E8845C');
+        expect(getEl('#mobileNavFutonFrames').style.color).toBe('#4A7D94');
       });
 
       it('keeps espresso on non-active links when path provided', () => {
         initMobileDrawer(getEl, '/futon-frames');
-        expect(getEl('#mobileNavHome').style.color).toBe('#3A2518');
-        expect(getEl('#mobileNavMattresses').style.color).toBe('#3A2518');
+        expect(getEl('#mobileNavHome').style.color).toBe('#1E3A5F');
+        expect(getEl('#mobileNavMattresses').style.color).toBe('#1E3A5F');
       });
     });
 

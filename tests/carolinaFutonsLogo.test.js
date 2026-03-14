@@ -30,7 +30,7 @@ describe('getLogoSvg', () => {
 
   it('uses espresso color by default', () => {
     const svg = getLogoSvg();
-    expect(svg).toContain('#3A2518');
+    expect(svg).toContain('#1E3A5F');
   });
 
   it('includes Playfair Display font', () => {
@@ -52,7 +52,7 @@ describe('getLogoSvg', () => {
   it('accepts custom color', () => {
     const svg = getLogoSvg({ color: '#FF0000' });
     expect(svg).toContain('#FF0000');
-    expect(svg).not.toContain('#3A2518');
+    expect(svg).not.toContain('#1E3A5F');
   });
 
   it('accepts custom dimensions', () => {
@@ -64,7 +64,7 @@ describe('getLogoSvg', () => {
   it('handles empty options object', () => {
     const svg = getLogoSvg({});
     expect(svg).toContain('Carolina');
-    expect(svg).toContain('#3A2518');
+    expect(svg).toContain('#1E3A5F');
   });
 
   it('handles undefined options', () => {
@@ -115,7 +115,7 @@ describe('getFooterLogoSvg', () => {
 
   it('uses espresso color by default', () => {
     const svg = getFooterLogoSvg();
-    expect(svg).toContain('#3A2518');
+    expect(svg).toContain('#1E3A5F');
   });
 
   it('uses smaller default dimensions (160x30)', () => {
@@ -215,8 +215,8 @@ describe('logo consistency', () => {
   it('header and footer logos use same espresso default', () => {
     const header = getLogoSvg();
     const footer = getFooterLogoSvg();
-    expect(header).toContain('#3A2518');
-    expect(footer).toContain('#3A2518');
+    expect(header).toContain('#1E3A5F');
+    expect(footer).toContain('#1E3A5F');
   });
 
   it('header logo is larger than footer logo', () => {

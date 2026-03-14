@@ -10,24 +10,23 @@ import { buildProductBadgeOverlay } from '../src/public/galleryHelpers.js';
 
 // Allowed brand palette colors (hex values, lowercase)
 const BRAND_PALETTE = new Set([
-  '#e8d5b7',  // sandBase
-  '#f2e8d5',  // sandLight
-  '#d4bc96',  // sandDark
-  '#faf7f2',  // offWhite
-  '#3a2518',  // espresso
-  '#5c4033',  // espressoLight
+  '#f0f4f8',  // sandBase
+  '#f8fafc',  // sandLight
+  '#e2e8f0',  // sandDark
+  '#ffffff',  // offWhite / white
+  '#1e3a5f',  // espresso
+  '#3d5a80',  // espressoLight
   '#5b8fa8',  // mountainBlue
   '#3d6b80',  // mountainBlueDark
   '#a8ccd8',  // mountainBlueLight
-  '#e8845c',  // sunsetCoral
-  '#c96b44',  // sunsetCoralDark
-  '#f2a882',  // sunsetCoralLight
-  '#ffffff',  // white
+  '#4a7d94',  // sunsetCoral
+  '#3d6b80',  // sunsetCoralDark (same as mountainBlueDark)
+  '#a8ccd8',  // sunsetCoralLight (same as mountainBlueLight)
   '#b8d4e3',  // skyGradientTop
   '#f0c87a',  // skyGradientBottom
   '#4a7c59',  // success
-  '#999999',  // muted
-  '#8b7355',  // mutedBrown
+  '#646c79',  // muted
+  '#64748b',  // mutedBrown
 ]);
 
 // Off-brand colors that must never appear
@@ -70,7 +69,7 @@ describe('Brand palette compliance (CF-a1ps)', () => {
   });
 
   it('sharedTokens includes offWhite color', () => {
-    expect(colors.offWhite).toBe('#FAF7F2');
+    expect(colors.offWhite).toBe('#FFFFFF');
   });
 
   it('sharedTokens does NOT include any banned pink/lavender colors', () => {

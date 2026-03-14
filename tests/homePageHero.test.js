@@ -399,7 +399,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
     it('hero overlay uses brand espresso overlay color', async () => {
       await onReadyHandler();
       const overlay = getEl('#heroOverlay');
-      expect(overlay.style.backgroundColor).toBe('rgba(58, 37, 24, 0.6)');
+      expect(overlay.style.backgroundColor).toBe('rgba(30, 58, 95, 0.6)');
     });
 
     it('sets hero section ARIA landmark role', async () => {

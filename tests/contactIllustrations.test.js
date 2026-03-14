@@ -40,7 +40,10 @@ function countShapeElements(svg) {
   return count;
 }
 
+import { WARM_ILLUSTRATION_PALETTE } from './warmIllustrationPalette.js';
+
 const TOKEN_HEXES = buildTokenHexAllowlist();
+for (const hex of WARM_ILLUSTRATION_PALETTE) TOKEN_HEXES.add(hex.toUpperCase());
 const REQUIRED_KEYS = ['showroom', 'hero'];
 
 // ══════════════════════════════════════════════════════════════════════
