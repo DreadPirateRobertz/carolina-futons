@@ -13,6 +13,7 @@ import { getCategoryFromCollections, addBusinessDays } from 'public/productPageU
 import { trackSocialShare } from 'public/engagementTracker';
 import { makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
+import { estimateDelivery } from 'public/DeliveryEstimator.js';
 import { validateEmail } from 'public/validators.js';
 
 // --- Breadcrumbs ---
@@ -199,6 +200,8 @@ function initZipCodeInput($w, state) {
     try { zipInput.accessibility.ariaLabel = 'Enter your zip code for delivery estimate'; } catch (e) {}
     try { zipBtn.accessibility.ariaLabel = 'Get delivery estimate'; } catch (e) {}
     zipBtn.onClick(() => updateEstimateForZip($w, state, zipInput.value));
+    // Also bind the new deliveryZipSubmit button ID if it exists in the template
+    try { $w('#deliveryZipSubmit').onClick(() => updateEstimateForZip($w, state, zipInput.value)); } catch (e) {}
     try {
       zipInput.onKeyPress((event) => {
         if (event.key === 'Enter') updateEstimateForZip($w, state, zipInput.value);
@@ -207,7 +210,47 @@ function initZipCodeInput($w, state) {
   } catch (e) {}
 }
 
-function updateEstimateForZip($w, state, rawZip) {
+async function updateEstimateForZip($w, state, rawZip) {
+  try {
+    const zip = (rawZip || '').trim().replace(/[^0-9]/g, '').slice(0, 5);
+    if (zip.length !== 5) {
+      try { $w('#deliveryEstimateError').text = 'Please enter a valid 5-digit zip code'; $w('#deliveryEstimateError').show(); } catch (e) {}
+      return;
+    }
+    try { $w('#deliveryEstimateError').hide(); } catch (e) {}
+
+    // Call the DeliveryEstimator module for live UPS rates with fallback
+    const result = await estimateDelivery(zip, state.product);
+    if (!result.success) {
+      try { $w('#deliveryEstimateError').text = result.error || 'Unable to estimate delivery'; $w('#deliveryEstimateError').show(); } catch (e) {}
+      return;
+    }
+
+    // Update delivery estimate display
+    try {
+      const el = $w('#deliveryEstimate');
+      el.text = result.deliveryText;
+      el.show();
+    } catch (e) {}
+    try {
+      const resultEl = $w('#deliveryEstimateResult');
+      if (resultEl) { resultEl.text = result.shippingText; resultEl.show(); }
+    } catch (e) {}
+
+    // White-glove note
+    try {
+      if (result.whiteGloveText) {
+        const note = $w('#whiteGloveNote');
+        if (note) { note.text = result.whiteGloveText; note.show(); }
+      } else {
+        try { $w('#whiteGloveNote').hide(); } catch (e) {}
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
+// Legacy static estimator (kept for backward compatibility, used when DeliveryEstimator import fails)
+function updateEstimateForZipStatic($w, state, rawZip) {
   try {
     const zip = (rawZip || '').trim().replace(/[^0-9]/g, '').slice(0, 5);
     if (zip.length !== 5) return;

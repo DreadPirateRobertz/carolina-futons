@@ -168,6 +168,8 @@ export default defineConfig({
       'backend/productVideos.web': path.resolve(__dirname, 'src/backend/productVideos.web.js'),
       'public/timeConstants.js': path.resolve(__dirname, 'src/public/timeConstants.js'),
       'public/timeConstants': path.resolve(__dirname, 'src/public/timeConstants.js'),
+      'public/DeliveryEstimator.js': path.resolve(__dirname, 'src/public/DeliveryEstimator.js'),
+      'public/DeliveryEstimator': path.resolve(__dirname, 'src/public/DeliveryEstimator.js'),
       'public/a11yHelpers.js': path.resolve(__dirname, 'src/public/a11yHelpers.js'),
       'public/a11yHelpers': path.resolve(__dirname, 'src/public/a11yHelpers.js'),
       'public/navigationHelpers.js': path.resolve(__dirname, 'src/public/navigationHelpers.js'),
