@@ -504,7 +504,7 @@ async function initRecentlyViewed() {
       } catch (e) {}
     });
 
-    $w('#recentSection').expand();
+    try { $w('#recentSection').expand(); } catch (e) {}
   } catch (e) {
     console.error('[Home] Error loading recently viewed:', e);
     try { $w('#recentSection').collapse(); } catch (e2) {}
@@ -835,7 +835,10 @@ async function injectHomeSchemas() {
   try {
     const schema = await getWebSiteSchema();
     if (schema) {
-      $w('#websiteSchemaHtml').postMessage(schema);
+      try {
+        const el = $w('#websiteSchemaHtml');
+        if (el) el.postMessage(schema);
+      } catch (e) {}
     }
   } catch (e) {
     console.error('[Home] Schema injection failed:', e);
