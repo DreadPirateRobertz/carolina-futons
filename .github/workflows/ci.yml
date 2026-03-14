@@ -15,15 +15,14 @@ permissions:
 
 jobs:
   # ── Unit Tests ───────────────────────────────────────────────────────────────
-  # Runs Vitest across Node 20 + 22 matrix. On Node 20: also collects coverage,
-  # posts a summary comment to the PR, and uploads to Codecov.
+  # Runs Vitest across Node 20 + 22 matrix. On Node 20: also collects coverage
+  # and uploads to Codecov. Codecov bot posts PR comments automatically.
   # Coverage thresholds: lines 70%, branches 60%, functions 70%.
   # Secret required: CODECOV_TOKEN (optional — fail_ci_if_error: false)
   test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -58,84 +57,6 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Post coverage comment on PR
-        # Reads coverage/coverage-summary.json, builds a markdown table,
-        # then finds-and-updates any existing coverage comment (idempotent)
-        # or creates a new one. Skips silently if no summary file exists.
-        if: github.event_name == 'pull_request' && matrix.node-version == 20
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-
-            let summary;
-            try {
-              summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
-            } catch (e) {
-              console.log('No coverage summary found, skipping comment.');
-              return;
-            }
-
-            // Minimum acceptable coverage per metric (aligned with vitest config)
-            const thresholds = { lines: 70, branches: 60, functions: 70 };
-            const { total } = summary;
-            const metrics = [
-              { name: 'Lines', pct: total.lines.pct, threshold: thresholds.lines },
-              { name: 'Branches', pct: total.branches.pct, threshold: thresholds.branches },
-              { name: 'Functions', pct: total.functions.pct, threshold: thresholds.functions },
-              { name: 'Statements', pct: total.statements.pct, threshold: null },
-            ];
-
-            const failures = metrics.filter(m => m.threshold != null && m.pct < m.threshold);
-            const icon = failures.length > 0 ? ':x:' : ':white_check_mark:';
-
-            let body = `## ${icon} Coverage Report\n\n`;
-            body += '| Metric | Coverage | Threshold | Status |\n';
-            body += '|--------|----------|-----------|--------|\n';
-
-            for (const m of metrics) {
-              if (m.threshold != null) {
-                const pass = m.pct >= m.threshold;
-                const status = pass ? ':white_check_mark:' : ':x: Below threshold';
-                body += `| ${m.name} | ${m.pct}% | ${m.threshold}% | ${status} |\n`;
-              } else {
-                body += `| ${m.name} | ${m.pct}% | — | — |\n`;
-              }
-            }
-
-            if (failures.length > 0) {
-              body += `\n> **${failures.length} metric(s) below threshold.** Please improve coverage before merging.\n`;
-            }
-
-            // Find and update existing comment or create new one
-            const marker = '## :white_check_mark: Coverage Report';
-            const markerFail = '## :x: Coverage Report';
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const existing = comments.find(c =>
-              c.body.startsWith(marker) || c.body.startsWith(markerFail)
-            );
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body,
-              });
-            }
-
   # ── Lint ─────────────────────────────────────────────────────────────────────
   # ESLint on Node 20. Runs in parallel with test job. Fails fast on lint errors.
   lint:
@@ -157,8 +78,9 @@ jobs:
         run: npm run lint
 
   # ── Nightly Integration ──────────────────────────────────────────────────────
-  # Full test suite with verbose + JUnit output. On failure: auto-opens a GitHub
-  # issue tagged [bug, ci-nightly] with the first 30 failed test lines + run URL.
+  # Full test suite with verbose + JUnit output + coverage in a single run.
+  # On failure: auto-opens a GitHub issue tagged [bug, ci-nightly] with the
+  # first 30 failed test lines + run URL.
   # Uploads test-results/ artifact (retained 30 days). Coverage sent to Codecov
   # with flag=nightly. Requires: CODECOV_TOKEN secret, issues: write permission.
   nightly-integration:
