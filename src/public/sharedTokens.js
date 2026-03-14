@@ -59,7 +59,7 @@ export const colors = {
   mountainBlueDark: '#3D6B80',
   /** Light brand blue — tinted backgrounds, tag fills, info banners */
   mountainBlueLight: '#A8CCD8',
-  /** CF brand blue (darkened) — CTA buttons, primary interactive elements. WCAG AA 4.56:1 with white text */
+  /** CF brand blue (darkened) — CTA buttons, primary interactive elements. WCAG AA 4.51:1 with white text */
   sunsetCoral: '#4A7D94',
   /** Dark blue — hover/active state for CTA buttons */
   sunsetCoralDark: '#3D6B80',
