@@ -344,3 +344,70 @@ describe('Blog Post page — SEO schema', () => {
     });
   });
 });
+
+describe('Blog Post page — edge cases', () => {
+  beforeEach(async () => {
+    elements.clear();
+    onReadyHandler = null;
+  });
+
+  it('exits early when URL has no slug (empty path)', async () => {
+    const wixLocation = await import('wix-location-frontend');
+    wixLocation.default.path = [];
+
+    onReadyHandler = null;
+    elements.clear();
+    vi.resetModules();
+    await import('../src/pages/Blog Post.js');
+    if (onReadyHandler) await onReadyHandler();
+    await new Promise((r) => setTimeout(r, 50));
+
+    // No reading time or author bio should be set
+    expect(getEl('#postReadTime').text).toBe('');
+    expect(getEl('#authorName').text).toBe('');
+
+    // Restore
+    wixLocation.default.path = ['blog', 'futon-buying-guide'];
+  });
+
+  it('exits early when getBlogPost returns null (non-pillar post)', async () => {
+    const blogContent = await import('backend/blogContent');
+    blogContent.getBlogPost.mockReturnValueOnce(null);
+
+    onReadyHandler = null;
+    elements.clear();
+    vi.resetModules();
+    await import('../src/pages/Blog Post.js');
+    if (onReadyHandler) await onReadyHandler();
+    await new Promise((r) => setTimeout(r, 50));
+
+    // Page view event still fires, but no custom enhancements
+    const { trackEvent } = await import('public/engagementTracker');
+    expect(trackEvent).toHaveBeenCalledWith('page_view', { page: 'blog_post' });
+    expect(getEl('#postReadTime').text).toBe('');
+  });
+
+  it('collapses related posts section when no related posts exist', async () => {
+    const blogHelpers = await import('public/blogHelpers');
+    blogHelpers.getRelatedPosts.mockReturnValueOnce([]);
+
+    onReadyHandler = null;
+    elements.clear();
+    vi.resetModules();
+    await import('../src/pages/Blog Post.js');
+    if (onReadyHandler) await onReadyHandler();
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(getEl('#relatedPostsSection').collapse).toHaveBeenCalled();
+  });
+
+  it('sets up Twitter share button with aria label', async () => {
+    await loadPage();
+    const { makeClickable } = await import('public/a11yHelpers');
+    expect(makeClickable).toHaveBeenCalledWith(
+      getEl('#postShareTwitter'),
+      expect.any(Function),
+      { ariaLabel: 'Share on Twitter (opens in new window)' }
+    );
+  });
+});
