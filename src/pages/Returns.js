@@ -348,12 +348,13 @@ function initReturnForm() {
 
 async function handleGuestReturnSubmit() {
   try {
-    const orderNumber = sanitizeText($w('#returnOrderNumberInput').value, 50);
-    const email = ($w('#returnEmailInput').value || '').trim();
-    const reason = $w('#returnReasonSelect')?.value || '';
+    let orderNumber = '', email = '', reason = '', details = '', returnType = 'return';
+    try { orderNumber = sanitizeText($w('#returnOrderNumberInput').value, 50); } catch (e) {}
+    try { email = ($w('#returnEmailInput').value || '').trim(); } catch (e) {}
+    try { reason = $w('#returnReasonSelect')?.value || ''; } catch (e) {}
     try { $w('#returnDetailsTextbox').accessibility.ariaLabel = 'Additional return details'; } catch (e) {}
-    const details = sanitizeText($w('#returnDetailsTextbox')?.value, 2000);
-    const returnType = $w('#returnTypeSelect')?.value || 'return';
+    try { details = sanitizeText($w('#returnDetailsTextbox')?.value, 2000); } catch (e) {}
+    try { returnType = $w('#returnTypeSelect')?.value || 'return'; } catch (e) {}
 
     if (!reason) {
       showFormError('Please select a return reason.');
