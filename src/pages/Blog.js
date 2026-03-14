@@ -248,39 +248,35 @@ function initSocialShareButtons() {
     );
 
     try {
-      $w('#shareFacebook').onClick(() => {
+      makeClickable($w('#shareFacebook'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`, '_blank');
         });
-      });
-      try { $w('#shareFacebook').accessibility.ariaLabel = 'Share this article on Facebook (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share this article on Facebook (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#sharePinterest').onClick(() => {
+      makeClickable($w('#sharePinterest'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://pinterest.com/pin/create/button/?url=${currentUrl}&description=${pageTitle}`, '_blank');
         });
-      });
-      try { $w('#sharePinterest').accessibility.ariaLabel = 'Share this article on Pinterest (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share this article on Pinterest (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#shareTwitter').onClick(() => {
+      makeClickable($w('#shareTwitter'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`https://twitter.com/intent/tweet?url=${currentUrl}&text=${pageTitle}`, '_blank');
         });
-      });
-      try { $w('#shareTwitter').accessibility.ariaLabel = 'Share this article on Twitter (opens in new window)'; } catch (e) {}
+      }, { ariaLabel: 'Share this article on Twitter (opens in new window)' });
     } catch (e) {}
 
     try {
-      $w('#shareEmail').onClick(() => {
+      makeClickable($w('#shareEmail'), () => {
         import('wix-window-frontend').then(({ openUrl }) => {
           openUrl(`mailto:?subject=${pageTitle}&body=Check out this article: ${currentUrl}`, '_self');
         });
-      });
-      try { $w('#shareEmail').accessibility.ariaLabel = 'Share this article via email'; } catch (e) {}
+      }, { ariaLabel: 'Share this article via email' });
     } catch (e) {}
   } catch (err) {
     console.error('Social share init error:', err);

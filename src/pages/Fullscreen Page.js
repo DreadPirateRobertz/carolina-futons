@@ -81,14 +81,13 @@ function initProductVideoGrid() {
 
     // Register product link handler once (slug updated via playVideo)
     try {
-      try { $w('#videoProductLink').accessibility.ariaLabel = 'Shop this product'; } catch (e) {}
-      $w('#videoProductLink').onClick(() => {
+      makeClickable($w('#videoProductLink'), () => {
         if (currentVideoProductSlug) {
           import('wix-location-frontend').then(({ to }) => {
             to(`/product-page/${currentVideoProductSlug}`);
           });
         }
-      });
+      }, { ariaLabel: 'Shop this product' });
     } catch (e) {}
 
     // Category filter for videos
@@ -107,8 +106,7 @@ function initVideoFilters() {
 
     Object.entries(filterBtns).forEach(([btnId, { category, label }]) => {
       try {
-        try { $w(btnId).accessibility.ariaLabel = label; } catch (e) {}
-        $w(btnId).onClick(() => {
+        makeClickable($w(btnId), () => {
           filterVideosByCategory(category);
           // Highlight active filter and update pressed state
           Object.keys(filterBtns).forEach(id => {
@@ -116,7 +114,7 @@ function initVideoFilters() {
             try { $w(id).accessibility.ariaPressed = id === btnId; } catch (e) {}
           });
           announce($w, `Showing ${label.toLowerCase()}`);
-        });
+        }, { ariaLabel: label });
       } catch (e) {}
     });
   } catch (e) {}

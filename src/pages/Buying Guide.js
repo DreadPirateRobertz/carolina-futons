@@ -120,9 +120,9 @@ function initBreadcrumbs(slug, label) {
 
       if (index < crumbs.length - 1) {
         try {
-          $item('#breadcrumbLabel').onClick(() => {
+          makeClickable($item('#breadcrumbLabel'), () => {
             wixLocationFrontend.to(itemData.url);
-          });
+          }, { role: 'link', ariaLabel: `Navigate to ${itemData.label}` });
         } catch (e) {}
       }
     });
@@ -161,8 +161,7 @@ function initTableOfContents(sections) {
           try { $w(`#section-${itemData.id}`).scrollTo(); } catch (e) {}
           trackEvent('guide_toc_click', { section: itemData.id });
         };
-        $item('#tocLabel').onClick(scrollToSection);
-        makeClickable($item('#tocLabel'), scrollToSection, `Jump to ${itemData.label}`);
+        makeClickable($item('#tocLabel'), scrollToSection, { ariaLabel: `Jump to ${itemData.label}` });
       } catch (e) {}
     });
 
@@ -170,7 +169,7 @@ function initTableOfContents(sections) {
     if (isMobile()) {
       try { $w('#tocContainer').collapse(); } catch (e) {}
       try {
-        $w('#tocToggle').onClick(() => {
+        makeClickable($w('#tocToggle'), () => {
           try {
             const container = $w('#tocContainer');
             if (container.collapsed) {
@@ -181,7 +180,7 @@ function initTableOfContents(sections) {
               announce($w, 'Table of contents collapsed');
             }
           } catch (e) {}
-        });
+        }, { ariaLabel: 'Toggle table of contents' });
       } catch (e) {}
     }
   } catch (e) {}
@@ -292,8 +291,7 @@ function initFaqSection(faqs) {
             }
           } catch (e) {}
         };
-        $item('#faqQuestion').onClick(toggleFaq);
-        makeClickable($item('#faqQuestion'), toggleFaq, `Toggle answer for: ${itemData.question}`);
+        makeClickable($item('#faqQuestion'), toggleFaq, { ariaLabel: `Toggle answer for: ${itemData.question}` });
       } catch (e) {}
     });
 
@@ -309,28 +307,28 @@ function initShareButtons(slug, title) {
     if (!links.facebook) return;
 
     try {
-      $w('#shareFacebook').onClick(() => {
+      makeClickable($w('#shareFacebook'), () => {
         trackEvent('guide_share', { platform: 'facebook', slug });
         wixLocationFrontend.to(links.facebook);
-      });
+      }, { ariaLabel: 'Share on Facebook' });
     } catch (e) {}
     try {
-      $w('#shareTwitter').onClick(() => {
+      makeClickable($w('#shareTwitter'), () => {
         trackEvent('guide_share', { platform: 'twitter', slug });
         wixLocationFrontend.to(links.twitter);
-      });
+      }, { ariaLabel: 'Share on Twitter' });
     } catch (e) {}
     try {
-      $w('#sharePinterest').onClick(() => {
+      makeClickable($w('#sharePinterest'), () => {
         trackEvent('guide_share', { platform: 'pinterest', slug });
         wixLocationFrontend.to(links.pinterest);
-      });
+      }, { ariaLabel: 'Share on Pinterest' });
     } catch (e) {}
     try {
-      $w('#shareEmail').onClick(() => {
+      makeClickable($w('#shareEmail'), () => {
         trackEvent('guide_share', { platform: 'email', slug });
         wixLocationFrontend.to(links.email);
-      });
+      }, { ariaLabel: 'Share via email' });
     } catch (e) {}
   } catch (e) {}
 }
@@ -371,8 +369,7 @@ function initRelatedProducts(products) {
           trackEvent('guide_product_click', { slug: itemData.slug });
           wixLocationFrontend.to(`/product-page/${itemData.slug}`);
         };
-        $item('#productCardBox').onClick(goToProduct);
-        makeClickable($item('#productCardBox'), goToProduct, `View ${itemData.name}`);
+        makeClickable($item('#productCardBox'), goToProduct, { ariaLabel: `View ${itemData.name}` });
       } catch (e) {}
     });
 
@@ -410,8 +407,7 @@ function initRelatedGuides(pillar) {
           trackEvent('guide_related_click', { slug: itemData.slug });
           wixLocationFrontend.to(itemData.url);
         };
-        $item('#relatedGuideBox').onClick(goToGuide);
-        makeClickable($item('#relatedGuideBox'), goToGuide, `Read ${itemData.title} guide`);
+        makeClickable($item('#relatedGuideBox'), goToGuide, { ariaLabel: `Read ${itemData.title} guide` });
       } catch (e) {}
     });
 
