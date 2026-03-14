@@ -35,6 +35,38 @@ const COLLECTION = 'Returns';
 const RETURN_WINDOW_DAYS = 30;
 const MAX_DETAILS_LEN = 2000;
 
+// ── Rate Limiting ────────────────────────────────────────────────────
+// Sliding window: max 5 attempts per email per 60 seconds.
+// Prevents order enumeration via brute-force lookupReturn/submitGuestReturn.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 5;
+const _rateLimitMap = new Map();
+
+function _checkRateLimit(identifier) {
+  const now = Date.now();
+  const key = identifier || 'unknown';
+  let entry = _rateLimitMap.get(key);
+  if (!entry) {
+    entry = { timestamps: [] };
+    _rateLimitMap.set(key, entry);
+  }
+  // Evict expired timestamps
+  entry.timestamps = entry.timestamps.filter(t => now - t < RATE_LIMIT_WINDOW_MS);
+  if (entry.timestamps.length >= RATE_LIMIT_MAX) {
+    return false; // rate limited
+  }
+  entry.timestamps.push(now);
+  // Periodic cleanup: remove stale IPs every ~100 calls
+  if (_rateLimitMap.size > 1000) {
+    for (const [k, v] of _rateLimitMap) {
+      if (v.timestamps.length === 0 || now - v.timestamps[v.timestamps.length - 1] > RATE_LIMIT_WINDOW_MS) {
+        _rateLimitMap.delete(k);
+      }
+    }
+  }
+  return true; // allowed
+}
+
 const VALID_REASONS = [
   'wrong_size',
   'wrong_color',
@@ -345,6 +377,11 @@ export const lookupReturn = webMethod(
         return { success: false, error: 'A valid email address is required.' };
       }
 
+      // Rate limit by email to prevent order enumeration
+      if (!_checkRateLimit(cleanEmail)) {
+        return { success: false, error: 'Too many attempts. Please try again in a minute.' };
+      }
+
       // Find the order and verify email
       const orderResult = await wixData.query('Stores/Orders')
         .eq('number', cleanOrderNumber)
@@ -407,6 +444,11 @@ export const submitGuestReturn = webMethod(
       }
       if (!cleanEmail || !validateEmail(cleanEmail)) {
         return { success: false, error: 'A valid email address is required.' };
+      }
+
+      // Rate limit by email to prevent abuse
+      if (!_checkRateLimit(cleanEmail)) {
+        return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }
 
       // Validate reason
@@ -897,3 +939,6 @@ function formatAdminReturn(record) {
       : '',
   };
 }
+
+// Test-only exports
+export { _rateLimitMap, _checkRateLimit, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS };

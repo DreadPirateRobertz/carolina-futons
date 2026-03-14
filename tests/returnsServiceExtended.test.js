@@ -90,6 +90,9 @@ import {
   getAdminReturns,
   getReturnStats,
   processRefund,
+  _rateLimitMap,
+  _checkRateLimit,
+  RATE_LIMIT_MAX,
 } from '../src/backend/returnsService.web.js';
 
 // ── Test Data ─────────────────────────────────────────────────────────
@@ -161,6 +164,7 @@ const returnWithTracking = {
 describe('returnsService — extended', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    _rateLimitMap.clear();
     mockItems.length = 0;
     mockTotalCount = 0;
     mockCountResult = 0;
@@ -770,5 +774,91 @@ describe('returnsService — extended', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('order not found');
     });
+  });
+});
+
+// ── Rate Limiting ──────────────────────────────────────────────────────
+
+describe('Rate limiting (hq-khcp)', () => {
+  beforeEach(() => {
+    _rateLimitMap.clear();
+  });
+
+  it('_checkRateLimit allows up to RATE_LIMIT_MAX calls', () => {
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      expect(_checkRateLimit('test@example.com')).toBe(true);
+    }
+    expect(_checkRateLimit('test@example.com')).toBe(false);
+  });
+
+  it('_checkRateLimit tracks different identifiers independently', () => {
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      _checkRateLimit('a@example.com');
+    }
+    expect(_checkRateLimit('a@example.com')).toBe(false);
+    expect(_checkRateLimit('b@example.com')).toBe(true);
+  });
+
+  it('lookupReturn returns rate limit error after too many attempts', async () => {
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      find: vi.fn(async () => ({ items: [recentOrder], totalCount: 1 })),
+    }));
+
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      await lookupReturn('10042', 'jane@example.com');
+    }
+
+    const result = await lookupReturn('10042', 'jane@example.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Too many attempts');
+  });
+
+  it('submitGuestReturn returns rate limit error after too many attempts', async () => {
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockImplementation(() => ({
+      eq: vi.fn().mockReturnThis(),
+      descending: vi.fn().mockReturnThis(),
+      find: vi.fn(async () => ({ items: [recentOrder], totalCount: 1 })),
+    }));
+    wixData.insert.mockResolvedValue({});
+
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      await submitGuestReturn({
+        orderNumber: '10042',
+        email: 'jane@example.com',
+        items: [{ lineItemId: 'li-1', quantity: 1 }],
+        reason: 'changed_mind',
+      });
+    }
+
+    const result = await submitGuestReturn({
+      orderNumber: '10042',
+      email: 'jane@example.com',
+      items: [{ lineItemId: 'li-1', quantity: 1 }],
+      reason: 'changed_mind',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Too many attempts');
+  });
+
+  it('rate limit does not block different emails', async () => {
+    // Exhaust rate limit for one email
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      _checkRateLimit('jane@example.com');
+    }
+    expect(_checkRateLimit('jane@example.com')).toBe(false);
+    // Different email should not be blocked
+    expect(_checkRateLimit('other@example.com')).toBe(true);
+  });
+
+  it('rate limit check happens after input validation', async () => {
+    // Invalid input should fail validation before rate limiting
+    const result = await lookupReturn('', 'jane@example.com');
+    expect(result.error).toBe('Order number is required.');
+    // Rate limit was NOT consumed for invalid input
+    expect(_rateLimitMap.has('jane@example.com')).toBe(false);
   });
 });

@@ -193,7 +193,7 @@ describe('Security: lookupReturn prevents information disclosure', () => {
   const src = readFile(RETURNS_SERVICE);
 
   it('uses Permissions.Anyone (publicly accessible)', () => {
-    const lookupIndex = src.indexOf('lookupReturn');
+    const lookupIndex = src.indexOf('export const lookupReturn');
     const block = src.substring(lookupIndex, lookupIndex + 200);
     expect(block).toContain('Permissions.Anyone');
   });
@@ -204,8 +204,8 @@ describe('Security: lookupReturn prevents information disclosure', () => {
 
   it('validates email format', () => {
     const lookupBlock = src.substring(
-      src.indexOf('lookupReturn'),
-      src.indexOf('submitGuestReturn')
+      src.indexOf('export const lookupReturn'),
+      src.indexOf('export const submitGuestReturn')
     );
     expect(lookupBlock).toMatch(/validateEmail\(cleanEmail\)/);
   });
@@ -215,8 +215,8 @@ describe('Security: lookupReturn prevents information disclosure', () => {
     // allows an attacker to enumerate which order numbers exist.
     // Both should return an identical generic message.
     const lookupBlock = src.substring(
-      src.indexOf('lookupReturn'),
-      src.indexOf('submitGuestReturn')
+      src.indexOf('export const lookupReturn'),
+      src.indexOf('export const submitGuestReturn')
     );
 
     const errorMessages = [];
@@ -235,8 +235,8 @@ describe('Security: lookupReturn prevents information disclosure', () => {
 
   it('does not expose order details in error responses', () => {
     const lookupBlock = src.substring(
-      src.indexOf('lookupReturn'),
-      src.indexOf('submitGuestReturn')
+      src.indexOf('export const lookupReturn'),
+      src.indexOf('export const submitGuestReturn')
     );
     expect(lookupBlock).not.toMatch(/error:.*buyerEmail/);
     expect(lookupBlock).not.toMatch(/error:.*order\._id/);
@@ -250,41 +250,57 @@ describe('Security: submitGuestReturn input validation', () => {
   const src = readFile(RETURNS_SERVICE);
 
   it('uses Permissions.Anyone', () => {
-    const idx = src.indexOf('submitGuestReturn');
+    const idx = src.indexOf('export const submitGuestReturn');
     const block = src.substring(idx, idx + 200);
     expect(block).toContain('Permissions.Anyone');
   });
 
   it('sanitizes order number', () => {
     const block = src.substring(
-      src.indexOf('submitGuestReturn'),
-      src.indexOf('submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn'),
+      src.indexOf('export const submitGuestReturn') + 1000
     );
     expect(block).toMatch(/sanitize\(data\.orderNumber/);
   });
 
   it('validates email format', () => {
     const block = src.substring(
-      src.indexOf('submitGuestReturn'),
-      src.indexOf('submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn'),
+      src.indexOf('export const submitGuestReturn') + 1000
     );
     expect(block).toMatch(/validateEmail\(cleanEmail\)/);
   });
 
   it('validates return reason against allowlist', () => {
     const block = src.substring(
-      src.indexOf('submitGuestReturn'),
-      src.indexOf('submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn'),
+      src.indexOf('export const submitGuestReturn') + 1000
     );
     expect(block).toMatch(/VALID_REASONS/);
   });
 
   it('validates items array is non-empty', () => {
     const block = src.substring(
-      src.indexOf('submitGuestReturn'),
-      src.indexOf('submitGuestReturn') + 1000
+      src.indexOf('export const submitGuestReturn'),
+      src.indexOf('export const submitGuestReturn') + 1000
     );
     expect(block).toMatch(/Array\.isArray/);
+  });
+
+  it('lookupReturn has rate limiting', () => {
+    const block = src.substring(
+      src.indexOf('export const lookupReturn'),
+      src.indexOf('export const lookupReturn') + 1500
+    );
+    expect(block).toContain('_checkRateLimit');
+  });
+
+  it('submitGuestReturn has rate limiting', () => {
+    const block = src.substring(
+      src.indexOf('export const submitGuestReturn'),
+      src.indexOf('export const submitGuestReturn') + 1500
+    );
+    expect(block).toContain('_checkRateLimit');
   });
 });
 
