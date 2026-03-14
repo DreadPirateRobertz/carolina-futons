@@ -574,6 +574,8 @@ function initPromoDismiss(promoId, dismissKey) {
     };
     makeClickable($w('#promoDismiss'), dismissHandler, { ariaLabel: 'Dismiss promotion' });
   } catch (e) {}
+  // Intentionally bare onClick — overlay backdrops are not keyboard-focusable;
+  // keyboard users dismiss via Escape key or the close button above.
   try {
     $w('#promoOverlay').onClick(() => {
       if (_promoDialog) _promoDialog.close();
@@ -593,6 +595,8 @@ function initPromoCopyCode(code) {
           setTimeout(() => {
             try { $w('#promoCopyCode').label = 'Copy Code'; } catch (e) {}
           }, 2000);
+        }).catch(() => {
+          announce($w, 'Could not copy code. Please copy manually.');
         });
       }
     }, { ariaLabel: 'Copy discount code' });

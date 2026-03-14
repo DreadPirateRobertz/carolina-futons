@@ -57,6 +57,9 @@ describe('WCAG 2.1 AA Keyboard Audit', () => {
       'Fullscreen Page.js': [
         'videoProductLink',
       ],
+      'Buying Guide.js': [
+        'shareFacebook', 'shareTwitter', 'sharePinterest', 'shareEmail',
+      ],
       'Assembly Guides.js': [
         'guideViewBtn',
       ],
