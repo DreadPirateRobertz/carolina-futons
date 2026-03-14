@@ -187,6 +187,41 @@ Print this out and check off as you go:
 - SEO: canonical URLs + Twitter Cards
 - CI: coverage thresholds, test reorg, coverage reporting
 
+### Frontend State (Mar 14 — melania's browser report)
+
+**Live & Working:**
+- Header/footer CSS v6 deployed (clean gradient header, solid dark footer, mountain SVGs removed)
+- Homepage hero, nav, footer, category cards, product galleries all rendering
+- Best Sellers section fixed (was hidden by wrong nth-of-type(5) selector — now published)
+- AS SEEN IN section correctly hidden (template logos, not CF branding)
+- Category card Store images set in Dashboard (CF-pipx complete)
+
+**Known Issues / Remaining Editor Work:**
+- Homepage collection card images are EDITOR-HARDCODED — they show template photos, not the Store category images. Need manual image swap in editor for 4 cards (this is separate from getCategoryCardImage() which runs at page load)
+- CSS CDN caching: changes need private/incognito browser to verify, takes minutes to propagate
+- CF-ozp8: delete hidden template sections from editor (pending)
+- CF-3c6y: staging nav missing pages — Shop dropdown, Sale, Product Videos, Getting it Home, About, Blog (pending)
+- CF-r2lm: blog 404 (pending)
+
+**Dashboard Account:** All dashboard work must be done under the **halworker** account.
+
+### Dashboard Readiness (Mar 14 audit)
+
+| Area | Status | Action Needed |
+|------|--------|---------------|
+| Products/Catalog | READY | 88 products, import tooling complete |
+| Categories | READY | 7 categories with SEO metadata, card photos set |
+| Shipping | READY | UPS live rates, local/white-glove/international |
+| Payments | READY | Cards, Apple/Google Pay, Afterpay, financing |
+| SEO | READY | JSON-LD, OG tags, sitemaps, robots.txt |
+| Email Templates | READY | 15 templates, 5 sequences, automation engine |
+| Scheduled Jobs | CODE READY | 6 cron endpoints — configure external scheduler (cron-job.org) |
+| Secrets | PARTIAL | 16 secrets need provisioning in Dashboard > Secrets Manager |
+| CMS Collections | PARTIAL | 16 collections need manual creation per CMS-SETUP-GUIDE.md |
+| Tracking/Plugins | READY | GA4, Meta Pixel, Pinterest, Google Merchant — enable in Dashboard |
+
+**Critical secrets for launch:** UPS_CLIENT_ID, UPS_CLIENT_SECRET, UPS_ACCOUNT_NUMBER, SITE_OWNER_CONTACT_ID, ALERT_CRON_KEY, WELCOME_DISCOUNT_CODE, RECOVERY_DISCOUNT_CODE
+
 ---
 
 ## Step 1: Deploy Backend Code
