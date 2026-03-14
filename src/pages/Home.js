@@ -50,6 +50,10 @@ const CATEGORIES = [
 $w.onReady(async function () {
   resetRatingsCache();
 
+  // Hide template press logos section ("As Seen In" — section4/repeater1)
+  // These are Tera template logos, not Carolina Futons branding (CF-xc7t)
+  try { $w('#section4').collapse(); } catch (e) {}
+
   // Critical sections: above-fold content that affects LCP
   // Deferred sections: below-fold content loaded during idle time
   const sections = [
