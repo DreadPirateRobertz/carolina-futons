@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   # ── Unit Tests ───────────────────────────────────────────────────────────────
-  # Runs Vitest across Node 18 + 20 matrix. On Node 20: also collects coverage,
+  # Runs Vitest across Node 20 + 22 matrix. On Node 20: also collects coverage,
   # posts a summary comment to the PR, and uploads to Codecov.
   # Coverage thresholds: lines 70%, branches 60%, functions 70%.
   # Secret required: CODECOV_TOKEN (optional — fail_ci_if_error: false)
@@ -37,6 +37,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -46,7 +47,7 @@ jobs:
 
       - name: Run tests with coverage
         if: matrix.node-version == 20
-        run: npx vitest run --coverage || true  # || true: coverage failures don't block CI
+        run: npx vitest run --coverage
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 20
@@ -147,6 +148,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -160,12 +162,12 @@ jobs:
   # Uploads test-results/ artifact (retained 30 days). Coverage sent to Codecov
   # with flag=nightly. Requires: CODECOV_TOKEN secret, issues: write permission.
   nightly-integration:
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       issues: write
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -173,23 +175,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         run: npm install --ignore-scripts
 
-      - name: Run full integration test suite
+      - name: Run full integration test suite with coverage
         id: integration
         run: |
           mkdir -p test-results
-          npx vitest run --reporter=verbose --reporter=junit \
+          npx vitest run --coverage --reporter=verbose --reporter=junit \
             --outputFile.junit=test-results/junit.xml 2>&1 | tee test-results/full-output.txt
         continue-on-error: true
-
-      - name: Generate coverage report
-        if: always()
-        run: |
-          npx vitest run --coverage --reporter=json \
-            --outputFile=test-results/coverage.json || true
 
       - name: Upload nightly coverage to Codecov
         if: always()

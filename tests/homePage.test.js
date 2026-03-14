@@ -302,6 +302,27 @@ describe('Home Page', () => {
     });
   });
 
+  // ── Recently Viewed Section ──────────────────────────────────────
+
+  describe('recently viewed section', () => {
+    it('does not throw when recentSection expand fails', async () => {
+      // Simulate $w throwing for missing element (Wix behavior)
+      const original = globalThis.$w;
+      const throwingSelector = Object.assign(
+        (sel) => {
+          if (sel === '#recentSection') throw new Error('Element not found');
+          return getEl(sel);
+        },
+        { onReady: original.onReady }
+      );
+      globalThis.$w = throwingSelector;
+
+      await expect(onReadyHandler()).resolves.not.toThrow();
+
+      globalThis.$w = original;
+    });
+  });
+
   // ── Schema Injection ──────────────────────────────────────────────
 
   describe('schema injection', () => {
@@ -310,6 +331,31 @@ describe('Home Page', () => {
       expect(getEl('#websiteSchemaHtml').postMessage).toHaveBeenCalledWith(
         '{"@type":"WebSite"}'
       );
+    });
+
+    it('does not throw when websiteSchemaHtml element is missing', async () => {
+      // Simulate $w throwing for missing element (Wix behavior)
+      const original = globalThis.$w;
+      const throwingSelector = Object.assign(
+        (sel) => {
+          if (sel === '#websiteSchemaHtml') throw new Error('Element not found');
+          return getEl(sel);
+        },
+        { onReady: original.onReady }
+      );
+      globalThis.$w = throwingSelector;
+
+      await expect(onReadyHandler()).resolves.not.toThrow();
+
+      globalThis.$w = original;
+    });
+
+    it('does not throw when getWebSiteSchema returns null', async () => {
+      const { getWebSiteSchema } = await import('backend/seoHelpers.web');
+      getWebSiteSchema.mockResolvedValueOnce(null);
+
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      // postMessage should not be called with null schema
     });
   });
 
