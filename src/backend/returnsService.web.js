@@ -56,7 +56,7 @@ function _checkRateLimit(identifier) {
     return false; // rate limited
   }
   entry.timestamps.push(now);
-  // Periodic cleanup: remove stale IPs every ~100 calls
+  // Periodic cleanup: remove stale entries when map exceeds 1000 keys
   if (_rateLimitMap.size > 1000) {
     for (const [k, v] of _rateLimitMap) {
       if (v.timestamps.length === 0 || now - v.timestamps[v.timestamps.length - 1] > RATE_LIMIT_WINDOW_MS) {
@@ -446,7 +446,7 @@ export const submitGuestReturn = webMethod(
         return { success: false, error: 'A valid email address is required.' };
       }
 
-      // Rate limit by email to prevent abuse
+      // Rate limit by email to prevent order enumeration
       if (!_checkRateLimit(cleanEmail)) {
         return { success: false, error: 'Too many attempts. Please try again in a minute.' };
       }

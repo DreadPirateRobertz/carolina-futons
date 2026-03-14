@@ -93,6 +93,7 @@ import {
   _rateLimitMap,
   _checkRateLimit,
   RATE_LIMIT_MAX,
+  RATE_LIMIT_WINDOW_MS,
 } from '../src/backend/returnsService.web.js';
 
 // ── Test Data ─────────────────────────────────────────────────────────
@@ -797,6 +798,22 @@ describe('Rate limiting (hq-khcp)', () => {
     }
     expect(_checkRateLimit('a@example.com')).toBe(false);
     expect(_checkRateLimit('b@example.com')).toBe(true);
+  });
+
+  it('_checkRateLimit unblocks after window expires', () => {
+    // Fill up the rate limit
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) {
+      _checkRateLimit('expire@example.com');
+    }
+    expect(_checkRateLimit('expire@example.com')).toBe(false);
+
+    // Manually age all timestamps beyond the window
+    const entry = _rateLimitMap.get('expire@example.com');
+    const expired = Date.now() - RATE_LIMIT_WINDOW_MS - 1;
+    entry.timestamps = entry.timestamps.map(() => expired);
+
+    // Should be allowed again after expiry
+    expect(_checkRateLimit('expire@example.com')).toBe(true);
   });
 
   it('lookupReturn returns rate limit error after too many attempts', async () => {
