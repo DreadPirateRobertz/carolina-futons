@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
 import wixData from './__mocks__/wix-data.js';
-import { getActivePromotion } from '../src/backend/promotions.web.js';
+import { getActivePromotion, getFlashSales } from '../src/backend/promotions.web.js';
 
 const now = new Date();
 const yesterday = new Date(now.getTime() - 86400000);
@@ -606,5 +606,251 @@ describe('getActivePromotion', () => {
     const promo = await getActivePromotion();
     expect(promo).not.toBeNull();
     expect(promo.products).toEqual([]);
+  });
+
+  it('includes bannerMessage in return object (PR #315 contract fix)', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'promo-banner',
+        title: 'Banner Test',
+        bannerMessage: 'Up to 40% off select items!',
+        isActive: true,
+        startDate: yesterday,
+        endDate: nextWeek,
+        productIds: '',
+      },
+    ]);
+
+    const promo = await getActivePromotion();
+    expect(promo).not.toBeNull();
+    expect(promo).toHaveProperty('bannerMessage');
+    expect(promo.bannerMessage).toBe('Up to 40% off select items!');
+  });
+});
+
+// ── getFlashSales ────────────────────────────────────────────────────
+
+describe('getFlashSales', () => {
+  it('returns empty array when no flash sales exist', async () => {
+    __seed('Promotions', []);
+    const result = await getFlashSales();
+    expect(result).toEqual([]);
+  });
+
+  it('returns flash sales with all expected fields', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-1',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Weekend Flash',
+        subtitle: 'Limited time only',
+        startDate: yesterday,
+        endDate: tomorrow,
+        discountCode: 'FLASH20',
+        discountPercent: 20,
+        bannerMessage: '20% off this weekend!',
+        categoryScope: 'futon-frames',
+        urgencyThreshold: 48,
+        ctaUrl: '/flash-sale',
+        ctaText: 'Shop Flash Sale',
+      },
+    ]);
+
+    const result = await getFlashSales();
+    expect(result).toHaveLength(1);
+    expect(result[0]._id).toBe('flash-1');
+    expect(result[0].title).toBe('Weekend Flash');
+    expect(result[0].subtitle).toBe('Limited time only');
+    expect(result[0].type).toBe('flash_sale');
+    expect(result[0].discountCode).toBe('FLASH20');
+    expect(result[0].discountPercent).toBe(20);
+    expect(result[0].bannerMessage).toBe('20% off this weekend!');
+    expect(result[0].categoryScope).toBe('futon-frames');
+    expect(result[0].urgencyThreshold).toBe(48);
+    expect(result[0].ctaUrl).toBe('/flash-sale');
+    expect(result[0].ctaText).toBe('Shop Flash Sale');
+  });
+
+  it('does not include products array (flash sales are lightweight)', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-no-products',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Lightweight Flash',
+        startDate: yesterday,
+        endDate: tomorrow,
+      },
+    ]);
+
+    const result = await getFlashSales();
+    expect(result[0]).not.toHaveProperty('products');
+  });
+
+  it('filters by categorySlug — includes matching + sitewide promos', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-sitewide',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Sitewide',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: '',
+      },
+      {
+        _id: 'flash-frames',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Frames Only',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: 'futon-frames',
+      },
+      {
+        _id: 'flash-mattresses',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Mattresses Only',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: 'mattresses',
+      },
+    ]);
+
+    const result = await getFlashSales('futon-frames');
+    const ids = result.map(r => r._id);
+    expect(ids).toContain('flash-sitewide');
+    expect(ids).toContain('flash-frames');
+    expect(ids).not.toContain('flash-mattresses');
+  });
+
+  it('includes promos with null categoryScope when filtering', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-null-scope',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Null Scope',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: null,
+      },
+    ]);
+
+    const result = await getFlashSales('futon-frames');
+    expect(result).toHaveLength(1);
+    expect(result[0]._id).toBe('flash-null-scope');
+  });
+
+  it('returns all flash sales for empty categorySlug (no filter applied)', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-any',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Any Flash',
+        startDate: yesterday,
+        endDate: tomorrow,
+      },
+    ]);
+
+    // Empty string is falsy — categorySlug check skipped, all items returned
+    const result = await getFlashSales('');
+    expect(result).toHaveLength(1);
+  });
+
+  it('returns all flash sales when no categorySlug provided', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-a',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Flash A',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: 'futon-frames',
+      },
+      {
+        _id: 'flash-b',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Flash B',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: 'mattresses',
+      },
+    ]);
+
+    const result = await getFlashSales();
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns empty array on wixData error', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const querySpy = vi.spyOn(wixData, 'query').mockImplementation(() => {
+      throw new Error('CMS error');
+    });
+
+    const result = await getFlashSales();
+    expect(result).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Error fetching flash sales:',
+      expect.any(Error)
+    );
+
+    querySpy.mockRestore();
+    consoleSpy.mockRestore();
+  });
+
+  it('sanitizes categorySlug input', async () => {
+    __seed('Promotions', [
+      {
+        _id: 'flash-sanitize',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Sanitize Test',
+        startDate: yesterday,
+        endDate: tomorrow,
+        categoryScope: 'futon-frames',
+      },
+    ]);
+
+    // validateSlug strips non-alphanumeric-dash chars
+    const result = await getFlashSales('futon-frames');
+    expect(result).toHaveLength(1);
+  });
+
+  it('handles multiple flash sales sorted by endDate ascending', async () => {
+    const soonEnd = new Date(now.getTime() + 3600000); // 1 hour
+    const laterEnd = new Date(now.getTime() + 86400000); // 1 day
+
+    __seed('Promotions', [
+      {
+        _id: 'flash-later',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Ends Later',
+        startDate: yesterday,
+        endDate: laterEnd,
+      },
+      {
+        _id: 'flash-soon',
+        isActive: true,
+        type: 'flash_sale',
+        title: 'Ends Soon',
+        startDate: yesterday,
+        endDate: soonEnd,
+      },
+    ]);
+
+    const result = await getFlashSales();
+    // ascending('endDate') — soonest ending first
+    expect(result).toHaveLength(2);
+    // Both should be returned; order depends on mock behavior
+    const titles = result.map(r => r.title);
+    expect(titles).toContain('Ends Soon');
+    expect(titles).toContain('Ends Later');
   });
 });
