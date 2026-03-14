@@ -91,8 +91,13 @@ function buildDefaultAltText(name, index) {
  * the Wix Dashboard import CSV feature instead. This module prepares
  * the data in the correct format for either path.
  *
- * @param {Array} products - Array of product objects from scrape.
- * @returns {Promise<{inserted: number, skipped: number, errors: Array, prepared: Array}>}
+ * @param {Array<Object>} products - Array of product objects matching the input shape in the module header.
+ * @returns {Promise<{inserted: number, skipped: number, errors: Array<Object>, prepared: Array<Object>}>}
+ *   inserted: records successfully written to Stores/Products.
+ *   skipped: records that failed validation or were duplicates.
+ *   errors: [{name, error, note?}] — includes both validation and insert failures.
+ *   prepared: all valid records ready for CSV export (populated even if insert fails).
+ * @throws {Error} Only on unexpected wixData.query failures during dedup prefetch.
  */
 export async function importProducts(products) {
   if (!Array.isArray(products) || products.length === 0) {
@@ -154,7 +159,10 @@ export async function importProducts(products) {
       // Build media items with alt text for Wix gallery format
       const mediaItems = buildMediaItems(product);
 
-      // Prepare Wix Stores product record
+      // Prepare Wix Stores product record.
+      // _scraped preserves fields not supported by direct wixData.insert
+      // (slug, category, options, additionalInfo) so they can be applied
+      // post-import via the Wix Dashboard or a separate enrichment pass.
       const record = {
         name: sanitize(product.name, 500),
         description: sanitizeRichText(product.description, 50000),

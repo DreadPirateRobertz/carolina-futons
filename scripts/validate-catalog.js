@@ -1,6 +1,23 @@
 #!/usr/bin/env node
+/**
+ * validate-catalog.js — Integrity check for catalog-MASTER.json
+ *
+ * Prints a validation report to stdout covering:
+ * - Missing or zero prices
+ * - Unknown/invalid categories (against VALID_CATEGORIES)
+ * - Missing required fields (SKU, slug, name, images)
+ * - Category and price distribution stats
+ *
+ * Usage: node scripts/validate-catalog.js
+ * No arguments. Reads from content/catalog-MASTER.json.
+ */
 const catalog = require('../content/catalog-MASTER.json');
 
+/**
+ * Canonical category slugs accepted by catalogImport.web.js and Wix Stores.
+ * Any product with a category not in this list will be flagged as invalid.
+ * Must stay in sync with VALID_CATEGORIES in src/backend/catalogImport.web.js.
+ */
 const VALID_CATEGORIES = [
   'futon-frames', 'mattresses', 'murphy-cabinet-beds', 'platform-beds',
   'casegoods-accessories', 'front-loading-nesting', 'wall-huggers',

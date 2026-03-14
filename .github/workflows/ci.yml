@@ -1,18 +1,24 @@
 name: CI
 
+# Triggers: push/PR to main, plus nightly integration run
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 6 * * *'  # Nightly at 6am UTC
+    - cron: '0 6 * * *'  # Nightly at 6am UTC (full integration suite)
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  # ── Unit Tests ───────────────────────────────────────────────────────────────
+  # Runs Vitest across Node 18 + 20 matrix. On Node 20: also collects coverage,
+  # posts a summary comment to the PR, and uploads to Codecov.
+  # Coverage thresholds: lines 70%, branches 60%, functions 70%.
+  # Secret required: CODECOV_TOKEN (optional — fail_ci_if_error: false)
   test:
     runs-on: ubuntu-latest
     permissions:
@@ -40,7 +46,7 @@ jobs:
 
       - name: Run tests with coverage
         if: matrix.node-version == 20
-        run: npx vitest run --coverage || true
+        run: npx vitest run --coverage || true  # || true: coverage failures don't block CI
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 20
@@ -52,6 +58,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Post coverage comment on PR
+        # Reads coverage/coverage-summary.json, builds a markdown table,
+        # then finds-and-updates any existing coverage comment (idempotent)
+        # or creates a new one. Skips silently if no summary file exists.
         if: github.event_name == 'pull_request' && matrix.node-version == 20
         uses: actions/github-script@v7
         with:
@@ -66,6 +75,7 @@ jobs:
               return;
             }
 
+            // Minimum acceptable coverage per metric (aligned with vitest config)
             const thresholds = { lines: 70, branches: 60, functions: 70 };
             const { total } = summary;
             const metrics = [
@@ -125,6 +135,8 @@ jobs:
               });
             }
 
+  # ── Lint ─────────────────────────────────────────────────────────────────────
+  # ESLint on Node 20. Runs in parallel with test job. Fails fast on lint errors.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -142,6 +154,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
+  # ── Nightly Integration ──────────────────────────────────────────────────────
+  # Full test suite with verbose + JUnit output. On failure: auto-opens a GitHub
+  # issue tagged [bug, ci-nightly] with the first 30 failed test lines + run URL.
+  # Uploads test-results/ artifact (retained 30 days). Coverage sent to Codecov
+  # with flag=nightly. Requires: CODECOV_TOKEN secret, issues: write permission.
   nightly-integration:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest

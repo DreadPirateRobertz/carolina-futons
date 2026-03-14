@@ -43,7 +43,14 @@ const CATEGORY_OVERRIDES = {
   'raleigh': 'front-loading-nesting',
 };
 
-// Category classification rules
+/**
+ * Classify a product into a VALID_CATEGORIES slug based on name, description, and URL.
+ * Checks CATEGORY_OVERRIDES by URL slug first, then falls back to keyword matching.
+ * @param {string} name - Product name
+ * @param {string} description - Product description (HTML or plain text)
+ * @param {string} url - Product page URL (slug extracted for override lookup)
+ * @returns {string} Category slug, e.g. 'futon-frames'. Falls back to 'uncategorized'.
+ */
 function classifyCategory(name, description, url) {
   const n = (name || '').toLowerCase();
   const d = (description || '').toLowerCase();
@@ -76,7 +83,14 @@ function classifyCategory(name, description, url) {
   return 'uncategorized';
 }
 
-// Extract finishes/swatches from description
+/**
+ * Extract known finish/swatch names from a product description.
+ * Uses a hardcoded list of known finish names (case-insensitive substring match).
+ * Returns deduplicated results via Set. Regex patterns in finishPatterns are
+ * retained for future use but not currently applied.
+ * @param {string} description - Product description text
+ * @returns {string[]} Array of matched finish names, e.g. ['Cherry', 'Espresso']
+ */
 function extractSwatches(description) {
   const swatches = new Set();
   const finishPatterns = [
@@ -99,7 +113,13 @@ function extractSwatches(description) {
   return [...swatches];
 }
 
-// Extract sizes from description
+/**
+ * Extract mattress/bed sizes mentioned in a product description.
+ * Uses a regex alternation for standard size names; deduplicates via Set.
+ * Title-cases results (e.g. 'twin' → 'Twin', 'cal king' → 'Cal king').
+ * @param {string} description - Product description text
+ * @returns {string[]} Array of size strings, e.g. ['Twin', 'Full', 'Queen']
+ */
 function extractSizes(description) {
   const sizes = [];
   const sizePatterns = /(?:available in[^.]*?)?(twin|full|queen|king|cal king|california king|twin xl)/gi;
@@ -115,7 +135,14 @@ function extractSizes(description) {
   return sizes;
 }
 
-// Determine manufacturer from product data
+/**
+ * Infer the manufacturer from product name and description keywords.
+ * Heuristics are specific to Carolina Futons' vendor roster (KD Frames,
+ * Strata Furniture, Otis Bed, Rocky Top, Night & Day Furniture, etc.).
+ * @param {string} name - Product name
+ * @param {string} description - Product description text
+ * @returns {string|null} Manufacturer name, or null if unrecognized
+ */
 function inferManufacturer(name, description) {
   const d = (description || '').toLowerCase();
   const n = (name || '').toLowerCase();
@@ -139,7 +166,13 @@ function inferManufacturer(name, description) {
   return null;
 }
 
-// Decode HTML entities
+/**
+ * Decode common HTML entities in scraped text.
+ * Handles double-encoded ampersands (&amp;amp; → &) before single-encoded
+ * ones to avoid partial substitution. Also collapses whitespace.
+ * @param {string} text - Raw text possibly containing HTML entities
+ * @returns {string} Decoded, whitespace-normalized text, or original value if falsy
+ */
 function decodeEntities(text) {
   if (!text) return text;
   return text
@@ -153,7 +186,14 @@ function decodeEntities(text) {
     .trim();
 }
 
-// Parse the raw output file
+/**
+ * Parse the raw scrape output file into an array of {slug, jsonLd} pairs.
+ * Input format: lines alternating between ===slug=== delimiters and JSON-LD
+ * objects. Only Product @type entries are retained. Parse failures per-product
+ * are logged to stderr and skipped (non-fatal).
+ * @param {string} filePath - Absolute path to the scrape output .txt file
+ * @returns {Array<{slug: string, jsonLd: Object}>} Parsed product entries
+ */
 function parseJsonLdOutput(filePath) {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const products = [];
@@ -181,7 +221,15 @@ function parseJsonLdOutput(filePath) {
   return products;
 }
 
-// Convert JSON-LD product to CMS schema format
+/**
+ * Convert a JSON-LD Product object to the CMS catalog schema used by catalogImport.web.js.
+ * Applies classifyCategory, extractSwatches, extractSizes, inferManufacturer, decodeEntities.
+ * Price 0 is treated as null (contact-for-price). Variants are generated from the
+ * cross-product of sizes × swatches; if only one dimension exists, uses that alone.
+ * @param {string} slug - URL slug (from ===slug=== delimiter in scrape output)
+ * @param {Object} jsonLd - Parsed JSON-LD Product object from carolinafutons.com
+ * @returns {Object} CMS-ready product record matching catalog-MASTER.json schema
+ */
 function toCmsFormat(slug, jsonLd) {
   const name = decodeEntities(jsonLd.name);
   const description = decodeEntities(jsonLd.description);
@@ -246,7 +294,11 @@ function toCmsFormat(slug, jsonLd) {
   };
 }
 
-// Main
+/**
+ * Entry point. Parses INPUT_FILE, compiles catalog, prints stats, and writes
+ * output JSON to both OUTPUT_FILE (mayor/rig/content/) and a local content/ copy.
+ * @returns {Object} Final catalog output object with _meta + products array
+ */
 function main() {
   console.log('Parsing JSON-LD output...');
   const parsed = parseJsonLdOutput(INPUT_FILE);
