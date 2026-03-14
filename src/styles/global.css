@@ -134,7 +134,7 @@ h4.font_4,
 }
 
 .horizontal-menu__item-label:hover {
-  color: var(--cf-blue) !important;
+  color: var(--cf-blue-dark) !important;
 }
 
 .vertical-menu__item-label {
@@ -244,7 +244,7 @@ h4.font_4,
 [data-hook="sr-product-item-price-to-pay"] {
   font-size: 15px !important;
   font-weight: 700 !important;
-  color: var(--cf-blue) !important;
+  color: var(--cf-blue-dark) !important;
 }
 
 [data-hook="product-item-product-details"] {
@@ -314,7 +314,7 @@ h4.font_4,
 [data-hook="formatted-primary-price"] {
   font-size: 24px !important;
   font-weight: 700 !important;
-  color: var(--cf-blue) !important;
+  color: var(--cf-blue-dark) !important;
 }
 
 [data-hook="product-description"] {
@@ -486,6 +486,16 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
+   9b. FOCUS INDICATORS — WCAG 2.1 AA keyboard accessibility
+   ═══════════════════════════════════════════════════════════════════════ */
+
+*:focus-visible {
+  outline: 3px solid var(--cf-blue-dark) !important;
+  outline-offset: 2px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
    10. BLOG PAGE
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -510,7 +520,7 @@ h4.font_4,
 [data-hook="read-more-link"] {
   font-size: 14px !important;
   font-weight: 600 !important;
-  color: var(--cf-blue) !important;
+  color: var(--cf-blue-dark) !important;
 }
 
 
@@ -660,7 +670,7 @@ h4.font_4,
 /* Links */
 .rich-text a,
 .rich-text__text a {
-  color: var(--cf-blue) !important;
+  color: var(--cf-blue-dark) !important;
 }
 
 .rich-text a:hover {
