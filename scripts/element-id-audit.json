@@ -645,12 +645,209 @@
     }
   },
 
+  "thankYouPage": {
+    "_priority": "P1 — post-purchase engagement and tracking",
+    "order_summary": {
+      "P0": [
+        { "id": "thankYouTitle", "type": "Text (H1)", "notes": "Thank You heading" },
+        { "id": "orderNumber", "type": "Text", "notes": "Order number display" },
+        { "id": "thankYouMessage", "type": "Text", "notes": "Order confirmation message" },
+        { "id": "orderContactInfo", "type": "Text", "notes": "Contact info for order questions" }
+      ]
+    },
+    "brenda_message": {
+      "P2": [
+        { "id": "brendaMessageSection", "type": "Section", "notes": "Personal note from owner section" },
+        { "id": "brendaTitle", "type": "Text", "notes": "A Note from Brenda heading" },
+        { "id": "brendaMessage", "type": "Text", "notes": "Owner's personal thank-you message" }
+      ]
+    },
+    "delivery_timeline": {
+      "P1": [
+        { "id": "deliveryTimeline", "type": "Box", "notes": "Delivery timeline container" },
+        { "id": "deliveryEstimateText", "type": "Text", "notes": "Estimated delivery date range" },
+        { "id": "step1", "type": "Text", "notes": "Order confirmed step" },
+        { "id": "step2", "type": "Text", "notes": "Preparing items step" },
+        { "id": "step3", "type": "Text", "notes": "Shipped step" },
+        { "id": "step4", "type": "Text", "notes": "Delivered step" }
+      ]
+    },
+    "social_sharing": {
+      "P2": [
+        { "id": "shareText", "type": "Text", "notes": "Share prompt text — dynamic based on purchased products" },
+        { "id": "shareFacebook", "type": "Button", "notes": "Share on Facebook" },
+        { "id": "sharePinterest", "type": "Button", "notes": "Share on Pinterest" },
+        { "id": "shareInstagram", "type": "Button", "notes": "Follow on Instagram" },
+        { "id": "shareTwitter", "type": "Button", "notes": "Share on Twitter/X" }
+      ]
+    },
+    "newsletter_signup": {
+      "P1": [
+        { "id": "newsletterPrompt", "type": "Text", "notes": "Newsletter prompt text" },
+        { "id": "newsletterEmail", "type": "Input", "notes": "Email input for newsletter" },
+        { "id": "newsletterSignup", "type": "Button", "notes": "Subscribe button" },
+        { "id": "newsletterSuccess", "type": "Text (hidden)", "notes": "Subscription success message" },
+        { "id": "newsletterError", "type": "Text (hidden)", "notes": "Validation error" }
+      ]
+    },
+    "referral_section": {
+      "P1": [
+        { "id": "referralSection", "type": "Section", "notes": "Share the Love referral container" },
+        { "id": "referralTitle", "type": "Text", "notes": "Section heading" },
+        { "id": "referralMessage", "type": "Text", "notes": "Referral code/message" },
+        { "id": "referralCopyBtn", "type": "Button", "notes": "Copy referral link" },
+        { "id": "referralEmailBtn", "type": "Button", "notes": "Share referral via email" }
+      ]
+    },
+    "post_purchase_suggestions": {
+      "P2": [
+        { "id": "postPurchaseHeading", "type": "Text", "notes": "You Might Also Love heading" },
+        { "id": "postPurchaseRepeater", "type": "Repeater", "notes": "Suggested products grid" },
+        { "id": "ppImage", "type": "Image", "notes": "Product image (repeater item)" },
+        { "id": "ppName", "type": "Text", "notes": "Product name (repeater item)" },
+        { "id": "ppPrice", "type": "Text", "notes": "Product price (repeater item)" }
+      ]
+    },
+    "care_sequence": {
+      "P2": [
+        { "id": "careSequenceInfo", "type": "Box (hidden)", "notes": "Care sequence info container" },
+        { "id": "careSequenceText", "type": "Text", "notes": "Care sequence description" }
+      ]
+    },
+    "assembly_guide": {
+      "P2": [
+        { "id": "assemblyGuideSection", "type": "Section", "notes": "Assembly guide section" },
+        { "id": "assemblyGuideTitle", "type": "Text", "notes": "Assembly & Care heading" },
+        { "id": "assemblyGuideText", "type": "Text", "notes": "Assembly guide description" },
+        { "id": "assemblyGuideBtn", "type": "Button", "notes": "View guides button" }
+      ]
+    },
+    "testimonial_prompt": {
+      "P1": [
+        { "id": "testimonialSection", "type": "Section", "notes": "Share Your Experience section" },
+        { "id": "testimonialTitle", "type": "Text", "notes": "Section heading" },
+        { "id": "testimonialPrompt", "type": "Text", "notes": "Prompt text" },
+        { "id": "testimonialNameInput", "type": "Input", "notes": "Name input" },
+        { "id": "testimonialStoryInput", "type": "TextBox", "notes": "Testimonial body" },
+        { "id": "testimonialSubmitBtn", "type": "Button", "notes": "Submit testimonial" },
+        { "id": "testimonialSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "testimonialError", "type": "Text (hidden)", "notes": "Error message" }
+      ]
+    },
+    "review_request": {
+      "P1": [
+        { "id": "reviewSection", "type": "Section", "notes": "Rate Your Experience section" },
+        { "id": "reviewTitle", "type": "Text", "notes": "Section heading" },
+        { "id": "reviewPrompt", "type": "Text", "notes": "Prompt text" },
+        { "id": "reviewStar1", "type": "Button", "notes": "1 star button" },
+        { "id": "reviewStar2", "type": "Button", "notes": "2 stars button" },
+        { "id": "reviewStar3", "type": "Button", "notes": "3 stars button" },
+        { "id": "reviewStar4", "type": "Button", "notes": "4 stars button" },
+        { "id": "reviewStar5", "type": "Button", "notes": "5 stars button" },
+        { "id": "reviewRating", "type": "Text", "notes": "X of 5 stars display" },
+        { "id": "reviewBodyInput", "type": "TextBox", "notes": "Optional review text" },
+        { "id": "reviewSubmitBtn", "type": "Button", "notes": "Submit rating" },
+        { "id": "reviewSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "reviewError", "type": "Text (hidden)", "notes": "Error message" }
+      ]
+    }
+  },
+
+  "adminReturns": {
+    "_priority": "P1 — admin dashboard for returns management",
+    "stats_cards": {
+      "P0": [
+        { "id": "statTotal", "type": "Text", "notes": "Total returns count" },
+        { "id": "statTotalLabel", "type": "Text", "notes": "Total Returns label" },
+        { "id": "statActionRequired", "type": "Text", "notes": "Action required count — coral when > 0" },
+        { "id": "statActionLabel", "type": "Text", "notes": "Action Required label" },
+        { "id": "statInProgress", "type": "Text", "notes": "In progress count" },
+        { "id": "statProgressLabel", "type": "Text", "notes": "In Progress label" },
+        { "id": "statCompleted", "type": "Text", "notes": "Completed count — green" },
+        { "id": "statCompletedLabel", "type": "Text", "notes": "Completed label" }
+      ]
+    },
+    "filter_and_list": {
+      "P0": [
+        { "id": "statusFilterDropdown", "type": "Dropdown", "notes": "Filter returns by status" },
+        { "id": "refreshBtn", "type": "Button", "notes": "Refresh returns list" },
+        { "id": "returnsRepeater", "type": "Repeater", "notes": "Returns list repeater" },
+        { "id": "emptyState", "type": "Text", "notes": "No returns message" },
+        { "id": "dashboardLoader", "type": "Spinner/Box", "notes": "Loading indicator" },
+        { "id": "dashboardError", "type": "Text", "notes": "Error message" }
+      ],
+      "P1": [
+        { "id": "rmaNumber", "type": "Text", "notes": "RMA number (repeater item)" },
+        { "id": "orderNumber", "type": "Text", "notes": "Order number (repeater item)" },
+        { "id": "customerName", "type": "Text", "notes": "Customer name (repeater item)" },
+        { "id": "returnType", "type": "Text", "notes": "Return/Exchange type (repeater item)" },
+        { "id": "returnDate", "type": "Text", "notes": "Return date (repeater item)" },
+        { "id": "returnReason", "type": "Text", "notes": "Return reason (repeater item)" },
+        { "id": "statusBadge", "type": "Text", "notes": "Status badge with color (repeater item)" },
+        { "id": "actionDot", "type": "Box", "notes": "Coral dot for action-required items (repeater item)" },
+        { "id": "itemCount", "type": "Text", "notes": "Item count (repeater item)" },
+        { "id": "viewDetailsBtn", "type": "Button", "notes": "View details button (repeater item)" }
+      ]
+    },
+    "detail_panel": {
+      "P0": [
+        { "id": "detailPanel", "type": "Box (hidden)", "notes": "Detail panel container" },
+        { "id": "closeDetailBtn", "type": "Button", "notes": "Close detail panel" },
+        { "id": "detailRma", "type": "Text", "notes": "RMA number in detail" },
+        { "id": "detailStatus", "type": "Text", "notes": "Status with color" }
+      ],
+      "P1": [
+        { "id": "detailCustomer", "type": "Text", "notes": "Customer name" },
+        { "id": "detailEmail", "type": "Text", "notes": "Customer email" },
+        { "id": "detailOrder", "type": "Text", "notes": "Order number" },
+        { "id": "detailDate", "type": "Text", "notes": "Return date" },
+        { "id": "detailType", "type": "Text", "notes": "Return type" },
+        { "id": "detailReason", "type": "Text", "notes": "Return reason" },
+        { "id": "detailDescription", "type": "Text", "notes": "Return details/description" },
+        { "id": "detailNotes", "type": "TextBox", "notes": "Admin notes input" },
+        { "id": "detailRefundAmount", "type": "Text", "notes": "Refund amount display" }
+      ]
+    },
+    "status_actions": {
+      "P0": [
+        { "id": "statusActionsSection", "type": "Box", "notes": "Status action buttons container" },
+        { "id": "approveBtn", "type": "Button", "notes": "Approve return" },
+        { "id": "denyBtn", "type": "Button", "notes": "Deny return" },
+        { "id": "markShippedBtn", "type": "Button", "notes": "Mark as shipped" },
+        { "id": "markReceivedBtn", "type": "Button", "notes": "Mark as received" }
+      ]
+    },
+    "label_and_tracking": {
+      "P1": [
+        { "id": "generateLabelBtn", "type": "Button", "notes": "Generate UPS return label" },
+        { "id": "trackingSection", "type": "Box (hidden)", "notes": "Tracking info container" },
+        { "id": "detailTracking", "type": "Text", "notes": "Tracking number" },
+        { "id": "trackShipmentBtn", "type": "Button", "notes": "Track return shipment" },
+        { "id": "trackingStatus", "type": "Text", "notes": "Shipment status" },
+        { "id": "trackingEta", "type": "Text", "notes": "Estimated delivery" }
+      ]
+    },
+    "refund_modal": {
+      "P0": [
+        { "id": "refundModal", "type": "Box (hidden)", "notes": "Refund modal container" },
+        { "id": "refundRmaLabel", "type": "Text", "notes": "Refund for RMA heading" },
+        { "id": "refundCustomerLabel", "type": "Text", "notes": "Customer name in modal" },
+        { "id": "refundAmountInput", "type": "Input", "notes": "Refund amount input" },
+        { "id": "refundNotesInput", "type": "TextBox", "notes": "Refund notes" },
+        { "id": "refundError", "type": "Text (hidden)", "notes": "Refund error message" },
+        { "id": "processRefundBtn", "type": "Button", "notes": "Open refund modal" },
+        { "id": "confirmRefundBtn", "type": "Button", "notes": "Confirm and process refund" },
+        { "id": "cancelRefundBtn", "type": "Button", "notes": "Cancel refund" }
+      ]
+    }
+  },
+
   "summary": {
-    "total_p0": 107,
-    "total_p1": 170,
-    "total_p2": 179,
-    "total_documented": 456,
-    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout"],
+    "total_p0": 149,
+    "total_p1": 226,
+    "total_p2": 197,
+    "total_documented": 564,
+    "pages_covered": ["masterPage", "Home", "Category Page", "Product Page", "Side Cart", "Cart Page", "Checkout", "Thank You Page", "Admin Returns"],
     "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
   }
 }
