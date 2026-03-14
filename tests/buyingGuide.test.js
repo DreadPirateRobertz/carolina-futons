@@ -86,7 +86,7 @@ vi.mock('public/a11yHelpers', () => ({
   makeClickable: vi.fn((el, handler, opts) => {
     el.onClick(handler);
     if (opts?.ariaLabel) {
-      try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+      el.accessibility.ariaLabel = opts.ariaLabel;
     }
   }),
 }));

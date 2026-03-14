@@ -3,7 +3,7 @@
  * Covers: page init, checkout progress, trust signals, order notes,
  * checkout summary, payment options, shipping options, address validation,
  * delivery estimate, order summary sidebar, express checkout,
- * protection plans, store credit, gift card, focus indicators.
+ * protection plans, gift card, focus indicators.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -210,19 +210,27 @@ beforeEach(() => {
   vi.resetModules();
 });
 
+function applyMock(mockFn, value, fallback) {
+  if (value instanceof Error) {
+    mockFn.mockRejectedValue(value);
+  } else {
+    mockFn.mockResolvedValue(value ?? fallback);
+  }
+}
+
 async function loadPage(overrides = {}) {
   const { getCurrentCart } = await import('public/cartService');
-  getCurrentCart.mockResolvedValue(overrides.cart ?? mockCart);
+  applyMock(getCurrentCart, overrides.cart, mockCart);
 
   const { getCheckoutPaymentSummary } = await import('backend/paymentOptions.web');
-  getCheckoutPaymentSummary.mockResolvedValue(overrides.payment ?? mockPaymentSummary);
+  applyMock(getCheckoutPaymentSummary, overrides.payment, mockPaymentSummary);
 
   const { getShippingOptions, calculateOrderSummary } = await import('backend/checkoutOptimization.web');
-  getShippingOptions.mockResolvedValue(overrides.shipping ?? mockShippingOptions);
-  calculateOrderSummary.mockResolvedValue(overrides.orderSummary ?? mockOrderSummary);
+  applyMock(getShippingOptions, overrides.shipping, mockShippingOptions);
+  applyMock(calculateOrderSummary, overrides.orderSummary, mockOrderSummary);
 
   const { getProtectionPlans } = await import('backend/protectionPlan.web');
-  getProtectionPlans.mockResolvedValue(overrides.protectionPlans ?? { success: false, plans: [] });
+  applyMock(getProtectionPlans, overrides.protectionPlans, { success: false, plans: [] });
 
   await import('../src/pages/Checkout.js');
   if (onReadyHandler) await onReadyHandler();
@@ -555,6 +563,35 @@ describe('gift card', () => {
     await loadPage();
     const { initCheckoutGiftCard } = await import('public/giftCardHelpers.js');
     expect(initCheckoutGiftCard).toHaveBeenCalled();
+  });
+});
+
+// ── Error / Rejection Paths ─────────────────────────────────────────
+
+describe('network error handling', () => {
+  it('handles cart fetch rejection gracefully', async () => {
+    await loadPage({ cart: new Error('network error') });
+    // Page should still render without crashing
+    const { trackCheckoutStart } = await import('public/engagementTracker');
+    expect(trackCheckoutStart).toHaveBeenCalled();
+  });
+
+  it('handles payment summary rejection gracefully', async () => {
+    await loadPage({ payment: new Error('timeout') });
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('checkout');
+  });
+
+  it('handles shipping options rejection gracefully', async () => {
+    await loadPage({ shipping: new Error('service down') });
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('checkout');
+  });
+
+  it('handles order summary rejection gracefully', async () => {
+    await loadPage({ orderSummary: new Error('500') });
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('checkout');
   });
 });
 

@@ -2,7 +2,7 @@
  * Tests for pages/Cart Page.js
  * Covers: page init, empty cart, shipping progress, tier progress,
  * quantity controls, cart listeners, financing, recently viewed,
- * cross-sell suggestions, cart totals refresh.
+ * cross-sell suggestions, ARIA live regions, cart mutation errors.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -100,7 +100,7 @@ vi.mock('public/a11yHelpers', () => ({
   announce: vi.fn(),
   makeClickable: vi.fn((el, handler, opts) => {
     el.onClick(handler);
-    if (opts?.ariaLabel) try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+    if (opts?.ariaLabel) el.accessibility.ariaLabel = opts.ariaLabel;
   }),
 }));
 
@@ -485,5 +485,48 @@ describe('ARIA live regions', () => {
     await loadPage();
     expect(getEl('#cartSubtotal').accessibility.ariaLive).toBe('polite');
     expect(getEl('#cartTotal').accessibility.ariaLive).toBe('polite');
+  });
+});
+
+// ── Cart Mutation Error Paths ───────────────────────────────────────
+
+describe('cart mutation errors', () => {
+  it('handles updateCartItemQuantity rejection without crashing', async () => {
+    await loadPage();
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockRejectedValue(new Error('network error'));
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    $item('#qtyInput').value = '1';
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+    expect(updateCartItemQuantity).toHaveBeenCalled();
+  });
+
+  it('handles removeCartItem rejection without crashing', async () => {
+    await loadPage();
+    const { removeCartItem } = await import('public/cartService');
+    removeCartItem.mockRejectedValue(new Error('network error'));
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const removeHandler = $item('#removeItem').onClick.mock.calls[0][0];
+    await removeHandler();
+    expect(removeCartItem).toHaveBeenCalled();
   });
 });

@@ -66,7 +66,7 @@ vi.mock('public/a11yHelpers', () => ({
   makeClickable: vi.fn((el, handler, opts) => {
     el.onClick(handler);
     if (opts?.ariaLabel) {
-      try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+      el.accessibility.ariaLabel = opts.ariaLabel;
     }
   }),
 }));
@@ -377,10 +377,6 @@ describe('detail panel', () => {
 
     const repeater = getEl('#returnsRepeater');
     const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
-    const $item = (sel) => {
-      const m = new Map();
-      return (s) => { if (!m.has(s)) m.set(s, createMockElement()); return m.get(s); };
-    };
 
     // Trigger view details for return with details
     const { makeClickable } = await import('public/a11yHelpers');
@@ -572,35 +568,32 @@ describe('loading and error helpers', () => {
   });
 
   it('showError displays error with red color and announces', async () => {
-    await loadPage({ returns: { success: false }, stats: { success: false } });
+    // Load with successful returns so repeater is populated, then trigger a failed update
+    await loadPage();
 
-    // When returns fails, loadDashboard should show error — but the code only
-    // logs to console on rejection, so we test the error through a failed status update
     const { updateReturnStatus } = await import('backend/returnsService.web');
     updateReturnStatus.mockResolvedValue({ success: false, error: 'Server error' });
 
-    // Open detail and trigger status update
     const repeater = getEl('#returnsRepeater');
-    if (repeater.onItemReady.mock.calls.length > 0) {
-      const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
-      const itemElements = new Map();
-      const $item = (sel) => {
-        if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-        return itemElements.get(sel);
-      };
-      itemReadyFn($item, mockReturns[0]);
+    expect(repeater.onItemReady.mock.calls.length).toBeGreaterThan(0);
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemElements = new Map();
+    const $item = (sel) => {
+      if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
+      return itemElements.get(sel);
+    };
+    itemReadyFn($item, mockReturns[0]);
 
-      const { makeClickable } = await import('public/a11yHelpers');
-      const detailCall = makeClickable.mock.calls.find(c => c[2]?.ariaLabel?.includes('RMA-001'));
-      if (detailCall) {
-        detailCall[1]();
-        const approveCall = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Approve this return');
-        if (approveCall) await approveCall[1]();
+    const { makeClickable } = await import('public/a11yHelpers');
+    const detailCall = makeClickable.mock.calls.find(c => c[2]?.ariaLabel?.includes('RMA-001'));
+    expect(detailCall).toBeTruthy();
+    detailCall[1]();
+    const approveCall = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Approve this return');
+    expect(approveCall).toBeTruthy();
+    await approveCall[1]();
 
-        expect(getEl('#dashboardError').text).toBe('Server error');
-        expect(getEl('#dashboardError').style.color).toBe('#DC2626');
-      }
-    }
+    expect(getEl('#dashboardError').text).toBe('Server error');
+    expect(getEl('#dashboardError').style.color).toBe('#DC2626');
   });
 });
 
