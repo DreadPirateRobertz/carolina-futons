@@ -69,7 +69,7 @@ Repeater of collapsible question/answer pairs.
 2. **Search Input** — Section 2 (above-fold)
 3. **FAQ Accordion** — Section 3 (main content)
 4. **No Results** — Section 4 (conditional empty state)
-5. **Live Region** — Section 5 (if not on masterPage)
+5. ~~Live Region~~ — **SKIP: lives on masterPage** (see Section 5)
 
 ---
 
