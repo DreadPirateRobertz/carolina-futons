@@ -23,7 +23,7 @@ const EXCLUDED_PATHS = ['cart', 'checkout', 'thank-you'];
 export function shouldShowExitIntent(currentPath) {
   // Already shown this session?
   try {
-    if (globalThis.sessionStorage.getItem(EXIT_INTENT_STORAGE_KEY)) return false;
+    if (sessionStorage.getItem(EXIT_INTENT_STORAGE_KEY)) return false;
   } catch (_) { /* sessionStorage unavailable — allow showing */ }
 
   // Excluded pages (cart, checkout, thank-you)
@@ -38,7 +38,7 @@ export function shouldShowExitIntent(currentPath) {
  */
 export function markExitIntentShown() {
   try {
-    globalThis.sessionStorage.setItem(EXIT_INTENT_STORAGE_KEY, '1');
+    sessionStorage.setItem(EXIT_INTENT_STORAGE_KEY, '1');
   } catch (_) { /* sessionStorage unavailable — best effort */ }
 }
 

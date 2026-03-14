@@ -18,7 +18,7 @@ import { fireViewItemList } from 'public/ga4Tracking';
 import { colors } from 'public/designTokens.js';
 import { getRecentlyViewed as getCachedRecentlyViewed } from 'public/productCache';
 import { enableSwipe } from 'public/touchHelpers';
-import { buildGridAlt } from 'public/productPageUtils.js';
+import { buildGridAlt, detectProductBrand } from 'public/productPageUtils.js';
 import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
@@ -133,7 +133,7 @@ $w.onReady(async function () {
 
   // Re-render product grid when viewport changes (e.g. device rotation)
   onViewportChange(() => {
-    try { loadCategoryProducts(currentPath); } catch (e) {}
+    try { initProductGrid(); } catch (e) {}
   });
 
   // Social proof toast (non-blocking, delayed)
@@ -577,7 +577,7 @@ function initProductGrid() {
 
       // Brand label
       try {
-        const brand = detectBrand(itemData);
+        const brand = detectProductBrand(itemData);
         if (brand) {
           $item('#gridBrand').text = brand;
           $item('#gridBrand').show();
