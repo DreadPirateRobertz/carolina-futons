@@ -1,0 +1,328 @@
+{
+  "_meta": {
+    "task": "CF-03jx",
+    "description": "Comprehensive audit of all $w('#...') element IDs used in Velo code. Melania uses this to assign nicknames in the editor Properties panel.",
+    "workflow": "1. Melania opens editor. 2. For each element below, find the comp-xxx element and rename to the nickname listed. 3. Once renamed, run remap-element-ids.js if any comp-xxx IDs were hardcoded.",
+    "priority_guide": "P0 = page breaks without it, P1 = feature broken, P2 = enhancement missing",
+    "generated": "2026-03-14",
+    "total_unique_ids": 318
+  },
+
+  "masterPage": {
+    "_priority": "P0 — all pages depend on masterPage elements",
+    "header": {
+      "P0": [
+        { "id": "announcementBar", "type": "Strip/Box", "notes": "Announcement bar container — nav hides this on scroll" },
+        { "id": "announcementText", "type": "Text", "notes": "Announcement bar text — also used by a11yHelpers" },
+        { "id": "siteLogo", "type": "Image", "notes": "Carolina Futons logo — click navigates home" },
+        { "id": "cartIcon", "type": "Button/Image", "notes": "Shopping cart icon — opens side cart" },
+        { "id": "cartBadge", "type": "Text", "notes": "Cart item count badge overlay" },
+        { "id": "headerSearchInput", "type": "Input", "notes": "Search bar in header" }
+      ],
+      "P1": [
+        { "id": "navShop", "type": "Link/Text", "notes": "Shop nav link — navigationHelpers wires click" },
+        { "id": "mobileMenuButton", "type": "Button", "notes": "Hamburger menu toggle — mobile only" },
+        { "id": "mobileMenuOverlay", "type": "Box", "notes": "Full-screen mobile menu overlay" },
+        { "id": "mobileMenuClose", "type": "Button", "notes": "X close button in mobile menu" },
+        { "id": "desktopNavBar", "type": "Box", "notes": "Desktop nav container — navigationHelpers" },
+        { "id": "megaMenuPanel", "type": "Box", "notes": "Mega menu dropdown panel" },
+        { "id": "headerShippingBar", "type": "Box", "notes": "Free shipping threshold bar" },
+        { "id": "headerShippingText", "type": "Text", "notes": "Shipping bar text content" }
+      ],
+      "P2": [
+        { "id": "navHome", "type": "Link", "notes": "Home nav link — gap, needs adding" },
+        { "id": "navContact", "type": "Link", "notes": "Contact nav link" },
+        { "id": "navProductVideos", "type": "Link", "notes": "Product Videos nav link — gap" },
+        { "id": "navSale", "type": "Link", "notes": "Sale nav link (coral text) — gap" },
+        { "id": "navGettingItHome", "type": "Link", "notes": "Getting It Home nav link — gap" },
+        { "id": "navFAQ", "type": "Link", "notes": "FAQ nav link — gap" },
+        { "id": "navAbout", "type": "Link", "notes": "About nav link — gap" },
+        { "id": "navBlog", "type": "Link", "notes": "Blog nav link — gap" },
+        { "id": "announcementDismiss", "type": "Button", "notes": "Dismiss X on announcement bar" }
+      ]
+    },
+    "footer": {
+      "P0": [
+        { "id": "siteFooter", "type": "Section", "notes": "Footer container section" },
+        { "id": "footerLogo", "type": "Image/Text", "notes": "Footer brand logo/name" },
+        { "id": "footerEmailInput", "type": "Input", "notes": "Newsletter email input" },
+        { "id": "footerEmailSubmit", "type": "Button", "notes": "Newsletter submit button" },
+        { "id": "footerCopyright", "type": "Text", "notes": "Copyright line" }
+      ],
+      "P1": [
+        { "id": "footerPhone", "type": "Text", "notes": "Phone number" },
+        { "id": "footerAddress", "type": "Text", "notes": "Store address" },
+        { "id": "footerHours", "type": "Text", "notes": "Business hours" },
+        { "id": "socialFacebook", "type": "Link/Button", "notes": "Facebook social link" },
+        { "id": "socialInstagram", "type": "Link/Button", "notes": "Instagram social link" },
+        { "id": "socialPinterest", "type": "Link/Button", "notes": "Pinterest social link" },
+        { "id": "footerEmailError", "type": "Text (hidden)", "notes": "Validation error — gap, needs adding" },
+        { "id": "footerEmailSuccess", "type": "Text (hidden)", "notes": "Success message — gap, needs adding" }
+      ],
+      "P2": [
+        { "id": "footerMountainDivider", "type": "Image/SVG", "notes": "Mountain ridgeline divider — gap" },
+        { "id": "footerStoreName", "type": "Text", "notes": "Store name in contact section" },
+        { "id": "footerStoreAddress", "type": "Text", "notes": "Full address in footer contact" },
+        { "id": "footerStorePhone", "type": "Text", "notes": "Phone in footer contact" },
+        { "id": "footerStoreHours", "type": "Text", "notes": "Hours in footer contact" },
+        { "id": "footerShopRepeater", "type": "Repeater", "notes": "Shop links column" },
+        { "id": "footerServiceRepeater", "type": "Repeater", "notes": "Service links column" },
+        { "id": "footerAboutRepeater", "type": "Repeater", "notes": "About links column" },
+        { "id": "footerBadgeRepeater", "type": "Repeater", "notes": "Trust badges" },
+        { "id": "footerPaymentRepeater", "type": "Repeater", "notes": "Payment method icons" },
+        { "id": "footerSocialRepeater", "type": "Repeater", "notes": "Social link icons" }
+      ]
+    },
+    "accessibility": {
+      "P0": [
+        { "id": "a11yLiveRegion", "type": "Text (hidden)", "notes": "ARIA live region for screen reader announcements" },
+        { "id": "businessSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "LocalBusiness JSON-LD" },
+        { "id": "websiteSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "WebSite schema for sitelinks search" },
+        { "id": "breadcrumbSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "BreadcrumbList JSON-LD" }
+      ]
+    },
+    "exit_intent": {
+      "P1": [
+        { "id": "exitIntentPopup", "type": "Box (hidden)", "notes": "Exit-intent popup container" },
+        { "id": "exitOverlay", "type": "Box (hidden)", "notes": "Semi-transparent backdrop" },
+        { "id": "exitTitle", "type": "Text", "notes": "Popup heading" },
+        { "id": "exitSubtitle", "type": "Text", "notes": "Offer text" },
+        { "id": "exitEmailInput", "type": "Input", "notes": "Email capture" },
+        { "id": "exitEmailSubmit", "type": "Button", "notes": "Submit button" },
+        { "id": "exitEmailError", "type": "Text (hidden)", "notes": "Validation error" },
+        { "id": "exitSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "exitSwatchLink", "type": "Link", "notes": "Free swatch CTA link" },
+        { "id": "exitDragHandle", "type": "Box", "notes": "Mobile drag handle" }
+      ]
+    },
+    "side_cart": {
+      "P0": [
+        { "id": "sideCartPanel", "type": "Box (hidden)", "notes": "Side cart slide-out panel" },
+        { "id": "justAddedHighlight", "type": "Box", "notes": "Just-added item highlight" }
+      ]
+    },
+    "promo_modal": {
+      "P2": [
+        { "id": "promoLightbox", "type": "Box (hidden)", "notes": "Promotional lightbox" },
+        { "id": "promoOverlay", "type": "Box", "notes": "Lightbox backdrop" },
+        { "id": "promoTitle", "type": "Text", "notes": "Promo heading" },
+        { "id": "promoSubtitle", "type": "Text", "notes": "Promo description" },
+        { "id": "promoCode", "type": "Text", "notes": "Discount code display" },
+        { "id": "promoCopyCode", "type": "Button", "notes": "Copy code button" },
+        { "id": "promoCTA", "type": "Button", "notes": "Shop now CTA" },
+        { "id": "promoClose", "type": "Button", "notes": "Close X button" },
+        { "id": "promoDismiss", "type": "Button", "notes": "Dismiss link" },
+        { "id": "promoCountdown", "type": "Text", "notes": "Sale countdown timer" },
+        { "id": "promoHeroImage", "type": "Image", "notes": "Hero image in promo" },
+        { "id": "promoRepeater", "type": "Repeater", "notes": "Multiple promo items" },
+        { "id": "promoEmailInput", "type": "Input", "notes": "Email capture in promo" },
+        { "id": "promoEmailSubmit", "type": "Button", "notes": "Email submit in promo" }
+      ]
+    },
+    "newsletter_modal": {
+      "P1": [
+        { "id": "newsletterModal", "type": "Box (hidden)", "notes": "Newsletter popup modal" },
+        { "id": "newsletterModalOverlay", "type": "Box", "notes": "Modal backdrop" },
+        { "id": "newsletterModalEmail", "type": "Input", "notes": "Email input in modal" },
+        { "id": "newsletterModalSubmit", "type": "Button", "notes": "Submit in modal" },
+        { "id": "newsletterModalSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "newsletterModalError", "type": "Text (hidden)", "notes": "Error message" },
+        { "id": "newsletterModalTrigger", "type": "Button", "notes": "Trigger button (scrolled)" }
+      ]
+    },
+    "pwa": {
+      "P2": [
+        { "id": "installBanner", "type": "Box (hidden)", "notes": "PWA install banner" },
+        { "id": "installBannerText", "type": "Text", "notes": "Install prompt text" },
+        { "id": "installBannerBtn", "type": "Button", "notes": "Install button" },
+        { "id": "installBannerDismiss", "type": "Button", "notes": "Dismiss install" }
+      ]
+    }
+  },
+
+  "homePage": {
+    "_priority": "P0 — homepage is primary landing page",
+    "hero": {
+      "P0": [
+        { "id": "heroSection", "type": "Section", "notes": "Hero section container" },
+        { "id": "heroTitle", "type": "Text (H1)", "notes": "Main hero heading" },
+        { "id": "heroSubtitle", "type": "Text", "notes": "Hero subheading" },
+        { "id": "heroCTA", "type": "Button", "notes": "Shop Now CTA" },
+        { "id": "heroBg", "type": "Image", "notes": "Hero background image" },
+        { "id": "heroOverlay", "type": "Box", "notes": "Gradient overlay on hero" }
+      ]
+    },
+    "featured_products": {
+      "P0": [
+        { "id": "featuredRepeater", "type": "Repeater", "notes": "Featured products grid" },
+        { "id": "featuredTitle", "type": "Text", "notes": "Section heading" },
+        { "id": "featuredSubtitle", "type": "Text", "notes": "Section subheading" },
+        { "id": "featuredSkeleton", "type": "Box", "notes": "Loading skeleton placeholder" }
+      ],
+      "P1": [
+        { "id": "featuredQuickViewModal", "type": "Box (hidden)", "notes": "Quick view modal for featured" },
+        { "id": "featuredQvImage", "type": "Image", "notes": "QV product image" },
+        { "id": "featuredQvName", "type": "Text", "notes": "QV product name" },
+        { "id": "featuredQvPrice", "type": "Text", "notes": "QV product price" },
+        { "id": "featuredQvAddToCart", "type": "Button", "notes": "QV add to cart" },
+        { "id": "featuredQvViewFull", "type": "Link", "notes": "QV view full product" },
+        { "id": "featuredQvClose", "type": "Button", "notes": "QV close button" }
+      ]
+    },
+    "categories": {
+      "P0": [
+        { "id": "categoryRepeater", "type": "Repeater", "notes": "Category cards grid" },
+        { "id": "categorySkeleton", "type": "Box", "notes": "Loading skeleton" }
+      ]
+    },
+    "testimonials": {
+      "P1": [
+        { "id": "testimonialSection", "type": "Section", "notes": "Testimonials container" },
+        { "id": "testimonialRepeater", "type": "Repeater", "notes": "Testimonial cards" },
+        { "id": "testimonialSlideshow", "type": "Slideshow", "notes": "Auto-advancing slideshow" },
+        { "id": "testimonialPauseBtn", "type": "Button", "notes": "Pause/play toggle" },
+        { "id": "testimonialSchemaScript", "type": "HtmlComponent", "notes": "Review schema JSON-LD" }
+      ]
+    },
+    "newsletter": {
+      "P1": [
+        { "id": "newsletterSection", "type": "Section", "notes": "Newsletter signup section" },
+        { "id": "newsletterTitle", "type": "Text", "notes": "Section heading" },
+        { "id": "newsletterSubtitle", "type": "Text", "notes": "Section subheading" },
+        { "id": "newsletterEmail", "type": "Input", "notes": "Email input" },
+        { "id": "newsletterSubmit", "type": "Button", "notes": "Submit button" },
+        { "id": "newsletterSuccess", "type": "Text (hidden)", "notes": "Success message" },
+        { "id": "newsletterError", "type": "Text (hidden)", "notes": "Error message" }
+      ]
+    },
+    "other_sections": {
+      "P1": [
+        { "id": "saleSection", "type": "Section", "notes": "Sale items section" },
+        { "id": "saleRepeater", "type": "Repeater", "notes": "Sale products grid" },
+        { "id": "saleSkeleton", "type": "Box", "notes": "Loading skeleton" },
+        { "id": "trustBar", "type": "Box", "notes": "Trust badges bar" },
+        { "id": "ridgelineHeader", "type": "Image/SVG", "notes": "Mountain ridgeline divider" },
+        { "id": "recentSection", "type": "Section", "notes": "Recently viewed section" }
+      ],
+      "P2": [
+        { "id": "quizCTASection", "type": "Section", "notes": "Style quiz CTA section" },
+        { "id": "quizCTATitle", "type": "Text", "notes": "Quiz heading" },
+        { "id": "quizCTASubtitle", "type": "Text", "notes": "Quiz description" },
+        { "id": "quizCTAButton", "type": "Button", "notes": "Take quiz button" },
+        { "id": "swatchPromoSection", "type": "Section", "notes": "Free swatch promo" },
+        { "id": "swatchPromoTitle", "type": "Text", "notes": "Swatch heading" },
+        { "id": "swatchPromoSubtitle", "type": "Text", "notes": "Swatch description" },
+        { "id": "swatchPromoCTA", "type": "Button", "notes": "Request swatch button" },
+        { "id": "videoShowcaseSection", "type": "Section", "notes": "Video showcase" },
+        { "id": "videoShowcaseTitle", "type": "Text", "notes": "Video heading" },
+        { "id": "videoShowcaseSubtitle", "type": "Text", "notes": "Video description" },
+        { "id": "viewAllVideosCTA", "type": "Button", "notes": "View all videos link" }
+      ]
+    }
+  },
+
+  "categoryPage": {
+    "_priority": "P0 — primary shopping page",
+    "breadcrumbs_and_hero": {
+      "P0": [
+        { "id": "breadcrumbHome", "type": "Link/Text", "notes": "Home breadcrumb link" },
+        { "id": "breadcrumbCurrent", "type": "Text", "notes": "Current category name" },
+        { "id": "categoryHeroTitle", "type": "Text (H1)", "notes": "Category page title" },
+        { "id": "categoryHeroSubtitle", "type": "Text", "notes": "Category description" },
+        { "id": "categoryHeroSection", "type": "Section", "notes": "Hero section — gap" }
+      ]
+    },
+    "filters_and_sort": {
+      "P0": [
+        { "id": "sortDropdown", "type": "Dropdown", "notes": "Sort by dropdown" },
+        { "id": "resultCount", "type": "Text", "notes": "Product count display" },
+        { "id": "filterPrice", "type": "Slider/Dropdown", "notes": "Price filter" },
+        { "id": "filterColor", "type": "CheckboxGroup", "notes": "Color filter" }
+      ],
+      "P1": [
+        { "id": "filterBrand", "type": "Dropdown", "notes": "Brand filter — gap" },
+        { "id": "filterSize", "type": "Dropdown", "notes": "Size filter — gap" },
+        { "id": "filterCategory", "type": "Dropdown", "notes": "Category filter" },
+        { "id": "clearFilters", "type": "Button", "notes": "Clear filters button — gap" },
+        { "id": "filterToggleBtn", "type": "Button", "notes": "Mobile filter toggle — gap" },
+        { "id": "filterDrawer", "type": "Box", "notes": "Mobile filter drawer — gap" },
+        { "id": "filterDrawerOverlay", "type": "Box", "notes": "Filter drawer backdrop — gap" },
+        { "id": "filterDrawerApply", "type": "Button", "notes": "Apply filters in drawer — gap" },
+        { "id": "mobileSortBar", "type": "Box", "notes": "Mobile sort bar — gap" },
+        { "id": "flashSaleBanner", "type": "Box", "notes": "Flash sale banner" }
+      ],
+      "P2": [
+        { "id": "filterMaterial", "type": "CheckboxGroup", "notes": "Material filter — gap" },
+        { "id": "filterFeatures", "type": "CheckboxGroup", "notes": "Features filter — gap" },
+        { "id": "filterComfortLevel", "type": "Dropdown", "notes": "Comfort level — gap" },
+        { "id": "filterPriceRange", "type": "Slider", "notes": "Price range slider — gap" },
+        { "id": "filterWidthMin", "type": "Input", "notes": "Width min — gap" },
+        { "id": "filterWidthMax", "type": "Input", "notes": "Width max — gap" },
+        { "id": "filterDepthMin", "type": "Input", "notes": "Depth min — gap" },
+        { "id": "filterDepthMax", "type": "Input", "notes": "Depth max — gap" },
+        { "id": "filterResultCount", "type": "Text", "notes": "Filtered result count — gap" },
+        { "id": "clearAllFilters", "type": "Button", "notes": "Clear all filters — gap" },
+        { "id": "filterLoadingIndicator", "type": "Spinner", "notes": "Filter loading — gap" },
+        { "id": "activeFilterChips", "type": "Box", "notes": "Active filter chips container" },
+        { "id": "filterChipRepeater", "type": "Repeater", "notes": "Filter chip tags" },
+        { "id": "filterChipsText", "type": "Text", "notes": "Active filters label" },
+        { "id": "clearAllFiltersChip", "type": "Button", "notes": "Clear all chip" }
+      ]
+    },
+    "product_grid": {
+      "P0": [
+        { "id": "productGridRepeater", "type": "Repeater", "notes": "Product grid — rename from Gallery if swapped" },
+        { "id": "categoryDataset", "type": "Dataset", "notes": "Wix dataset connector" }
+      ]
+    },
+    "quick_view": {
+      "P1": [
+        { "id": "quickViewModal", "type": "Box (hidden)", "notes": "Quick view modal — gap" },
+        { "id": "qvImage", "type": "Image", "notes": "QV product image" },
+        { "id": "qvName", "type": "Text", "notes": "QV product name" },
+        { "id": "qvPrice", "type": "Text", "notes": "QV price" },
+        { "id": "qvDescription", "type": "Text", "notes": "QV description" },
+        { "id": "qvViewFull", "type": "Link", "notes": "View full product link" },
+        { "id": "qvAddToCart", "type": "Button", "notes": "QV add to cart" },
+        { "id": "qvClose", "type": "Button", "notes": "QV close button" },
+        { "id": "qvSizeSelect", "type": "Dropdown", "notes": "QV size selector" }
+      ]
+    },
+    "empty_states": {
+      "P1": [
+        { "id": "emptyStateSection", "type": "Section (hidden)", "notes": "Empty state container — gap" },
+        { "id": "emptyStateTitle", "type": "Text", "notes": "Empty state heading" },
+        { "id": "emptyStateMessage", "type": "Text", "notes": "Empty state body" },
+        { "id": "emptyStateIllustration", "type": "Image", "notes": "Empty state illustration" },
+        { "id": "noMatchesSection", "type": "Section (hidden)", "notes": "No filter matches — gap" },
+        { "id": "noMatchesTitle", "type": "Text", "notes": "No matches heading" },
+        { "id": "noMatchesMessage", "type": "Text", "notes": "No matches body" },
+        { "id": "noMatchesSuggestion", "type": "Text", "notes": "Suggestion text" }
+      ]
+    },
+    "seo": {
+      "P0": [
+        { "id": "categorySchemaHtml", "type": "HtmlComponent (hidden)", "notes": "Category ItemList schema" },
+        { "id": "categoryBreadcrumbSchemaHtml", "type": "HtmlComponent (hidden)", "notes": "Category breadcrumb schema" },
+        { "id": "categoryOgHtml", "type": "HtmlComponent (hidden)", "notes": "OpenGraph meta tags" }
+      ]
+    },
+    "compare_and_recent": {
+      "P2": [
+        { "id": "compareBar", "type": "Box (hidden)", "notes": "Comparison sticky bar" },
+        { "id": "compareRepeater", "type": "Repeater", "notes": "Compare items" },
+        { "id": "compareViewBtn", "type": "Button", "notes": "View comparison button" },
+        { "id": "recentlyViewedSection", "type": "Section", "notes": "Recently viewed" },
+        { "id": "recentlyViewedRepeater", "type": "Repeater", "notes": "Recent product cards" },
+        { "id": "recentlyViewedTitle", "type": "Text", "notes": "Section heading" }
+      ]
+    }
+  },
+
+  "summary": {
+    "total_p0": 42,
+    "total_p1": 73,
+    "total_p2": 89,
+    "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
+  }
+}

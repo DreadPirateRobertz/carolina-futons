@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+/**
+ * Element ID Validation — CF-03jx
+ *
+ * Cross-checks element-id-audit.json against actual $w('#...') usage in src/.
+ * Reports IDs used in code but missing from audit, and audit IDs not found in code.
+ *
+ * Usage:
+ *   node scripts/validate-element-ids.js
+ */
+import { readFileSync, readdirSync, statSync } from 'fs';
+import { join, extname } from 'path';
+
+const SRC_DIR = join(import.meta.dirname, '..', 'carolina-futons-stage3-velo', 'src');
+const AUDIT_PATH = join(import.meta.dirname, 'element-id-audit.json');
+
+function collectFiles(dir, exts = ['.js']) {
+  const results = [];
+  try {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      try {
+        const stat = statSync(full);
+        if (stat.isDirectory()) {
+          results.push(...collectFiles(full, exts));
+        } else if (exts.includes(extname(full))) {
+          results.push(full);
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+  return results;
+}
+
+function extractSelectors(content) {
+  const ids = new Set();
+  const patterns = [
+    /\$w\(['"`]#([a-zA-Z0-9_]+)['"`]\)/g,
+    /\$item\(['"`]#([a-zA-Z0-9_]+)['"`]\)/g,
+  ];
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(content)) !== null) {
+      ids.add(match[1]);
+    }
+  }
+  return ids;
+}
+
+function extractAuditIds(audit) {
+  const ids = new Set();
+  function walk(obj) {
+    if (Array.isArray(obj)) {
+      for (const item of obj) {
+        if (item && item.id) ids.add(item.id);
+      }
+    } else if (obj && typeof obj === 'object') {
+      for (const [key, value] of Object.entries(obj)) {
+        if (key.startsWith('_')) continue;
+        walk(value);
+      }
+    }
+  }
+  walk(audit);
+  return ids;
+}
+
+const files = collectFiles(SRC_DIR);
+const codeIds = new Set();
+
+for (const file of files) {
+  const content = readFileSync(file, 'utf8');
+  for (const id of extractSelectors(content)) {
+    codeIds.add(id);
+  }
+}
+
+const audit = JSON.parse(readFileSync(AUDIT_PATH, 'utf8'));
+const auditIds = extractAuditIds(audit);
+
+const inCodeNotAudit = [...codeIds].filter(id => !auditIds.has(id)).sort();
+const inAuditNotCode = [...auditIds].filter(id => !codeIds.has(id)).sort();
+
+console.log(`\nElement ID Validation Report`);
+console.log(`${'─'.repeat(50)}`);
+console.log(`Code IDs found:  ${codeIds.size}`);
+console.log(`Audit IDs found: ${auditIds.size}`);
+console.log(`${'─'.repeat(50)}`);
+
+if (inCodeNotAudit.length > 0) {
+  console.log(`\nIn CODE but NOT in audit (${inCodeNotAudit.length}):`);
+  for (const id of inCodeNotAudit) {
+    console.log(`   - ${id}`);
+  }
+} else {
+  console.log(`\nAll code IDs are documented in audit`);
+}
+
+if (inAuditNotCode.length > 0) {
+  console.log(`\nIn AUDIT but NOT in code (${inAuditNotCode.length}):`);
+  for (const id of inAuditNotCode) {
+    console.log(`   - ${id}`);
+  }
+} else {
+  console.log(`\nAll audit IDs are referenced in code`);
+}
+
+console.log(`\n${'─'.repeat(50)}`);
+const documented = auditIds.size - inAuditNotCode.length;
+console.log(`Coverage: ${documented}/${codeIds.size} code IDs documented`);
