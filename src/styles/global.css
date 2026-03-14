@@ -117,15 +117,18 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   4. HEADER — Blue Ridge mountain illustration + clean white
+   4. HEADER — Sky gradient + Blue Ridge mountains + CF logo
    ═══════════════════════════════════════════════════════════════════════ */
 
 .header {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 140' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%2390C5DD'/%3E%3Cstop offset='60%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='100%25' stop-color='%23F0C87A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='140' fill='url(%23sky)'/%3E%3Cpath d='M0 140 L0 65 Q80 25 180 50 Q280 10 400 40 Q500 5 620 35 Q720 15 840 45 Q940 8 1060 38 Q1160 18 1280 42 Q1380 25 1440 50 L1440 140 Z' fill='%23A8CCD8' opacity='0.6'/%3E%3Cpath d='M0 140 L0 78 Q120 40 280 65 Q400 28 540 55 Q660 22 800 50 Q920 32 1060 58 Q1200 28 1340 55 Q1400 42 1440 60 L1440 140 Z' fill='%235B8FA8' opacity='0.75'/%3E%3Cpath d='M0 140 L0 95 Q100 62 220 80 Q340 52 480 72 Q580 48 720 68 Q860 55 980 75 Q1100 50 1240 70 Q1360 58 1440 78 L1440 140 Z' fill='%233D6B80' opacity='0.9'/%3E%3Cpath d='M0 140 L0 108 Q60 98 140 105 Q220 95 320 102 Q400 92 500 100 Q580 94 680 101 Q760 93 860 100 Q940 95 1040 101 Q1120 94 1220 100 Q1300 96 1380 102 L1440 100 L1440 140 Z' fill='%231E3A5F' opacity='0.4'/%3E%3C/svg%3E") bottom/100% 90px no-repeat,
-    #FFFFFF !important;
+    /* CF logo overlaid at left — real product image from Wix CDN */
+    url("https://static.wixstatic.com/media/e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg/v1/fill/w_180,h_86,al_c,q_80/CF_SQUARE-blue.jpg") 24px 50px / 180px 86px no-repeat,
+    /* Mountain panorama — taller viewBox, no-opacity, solid fills */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 300' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23B8D4E3'/%3E%3Cstop offset='50%25' stop-color='%23D4E4ED'/%3E%3Cstop offset='85%25' stop-color='%23E8D5B5'/%3E%3Cstop offset='100%25' stop-color='%23F0C87A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1440' height='300' fill='url(%23sky)'/%3E%3Cpath d='M0 300 L0 100 Q100 40 240 80 Q380 15 520 65 Q660 5 800 55 Q940 20 1080 60 Q1200 10 1340 50 Q1400 35 1440 70 L1440 300 Z' fill='%23A8CCD8'/%3E%3Cpath d='M0 300 L0 135 Q150 60 320 100 Q480 40 660 90 Q820 35 1000 80 Q1150 45 1300 85 Q1400 55 1440 95 L1440 300 Z' fill='%235B8FA8'/%3E%3Cpath d='M0 300 L0 170 Q120 100 280 140 Q440 85 620 125 Q780 90 960 130 Q1120 88 1280 120 Q1380 100 1440 135 L1440 300 Z' fill='%233D6B80'/%3E%3Cpath d='M0 300 L0 210 Q80 175 200 195 Q320 170 460 190 Q580 168 720 188 Q860 172 1000 192 Q1140 170 1280 188 Q1380 178 1440 200 L1440 300 Z' fill='%231E3A5F'/%3E%3C/svg%3E") bottom/100% 200px no-repeat,
+    #E8F0F5 !important;
   border-bottom: none !important;
-  padding-bottom: 90px !important;
+  padding-bottom: 200px !important;
 }
 
 /* Announcement bar text */
@@ -136,10 +139,12 @@ h4.font_4,
   color: #1E3A5F !important;
 }
 
-/* Site logo text */
+/* Hide template "tera" logo text, replace with space for CF logo image */
 .header h2 {
-  font-size: 28px !important;
-  color: #1E3A5F !important;
+  font-size: 0px !important;
+  color: transparent !important;
+  min-width: 180px !important;
+  min-height: 86px !important;
 }
 
 /* Cart icon */
@@ -350,9 +355,10 @@ h4.font_4,
 
 .footer {
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 100' preserveAspectRatio='none'%3E%3Cpath d='M0 100 L0 40 Q180 10 360 32 Q540 2 720 28 Q900 8 1080 35 Q1260 12 1440 38 L1440 100 Z' fill='%23A8CCD8' opacity='0.25'/%3E%3Cpath d='M0 100 L0 52 Q200 22 400 42 Q600 15 800 38 Q1000 20 1200 45 Q1350 25 1440 48 L1440 100 Z' fill='%235B8FA8' opacity='0.35'/%3E%3Cpath d='M0 100 L0 65 Q150 38 300 55 Q500 30 700 50 Q850 38 1000 55 Q1200 35 1440 55 L1440 100 Z' fill='%233D6B80' opacity='0.45'/%3E%3C/svg%3E") top/100% 100px no-repeat,
+    /* Mountain ridgeline at top — inverted (mountains pointing UP) on dark bg */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Crect width='1440' height='200' fill='%231E2A3A'/%3E%3Cpath d='M0 0 L0 120 Q120 160 280 130 Q440 170 620 140 Q780 165 960 135 Q1120 168 1280 138 Q1380 155 1440 130 L1440 0 Z' fill='%23243545'/%3E%3Cpath d='M0 0 L0 80 Q150 130 320 95 Q480 140 660 105 Q820 135 1000 100 Q1150 130 1300 95 Q1400 115 1440 85 L1440 0 Z' fill='%232A4055'/%3E%3Cpath d='M0 0 L0 45 Q100 85 240 60 Q380 95 520 70 Q660 90 800 65 Q940 88 1080 62 Q1200 82 1340 58 Q1400 72 1440 50 L1440 0 Z' fill='%23355570'/%3E%3C/svg%3E") top/100% 150px no-repeat,
     #1E2A3A !important;
-  padding-top: 100px !important;
+  padding-top: 150px !important;
 }
 
 .footer p,
@@ -691,6 +697,11 @@ h4.font_4,
   .header {
     background: #FFFFFF !important;
     border-bottom: 2px solid #E2E8F0 !important;
+    padding-bottom: 16px !important;
+  }
+  .footer {
+    padding-top: 32px !important;
+    background: #1E2A3A !important;
   }
 }
 
