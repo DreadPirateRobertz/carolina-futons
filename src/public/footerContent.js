@@ -62,7 +62,7 @@ export function getStoreInfo() {
   return {
     name: 'Carolina Futons',
     address: '824 Locust St, Hendersonville, NC 28792',
-    phone: '(828) 692-8550',
+    phone: '(828) 252-9449',
     hours: [
       { days: 'Wednesday – Friday', time: '10:00 AM – 5:00 PM' },
       { days: 'Saturday', time: '10:00 AM – 4:00 PM' },
