@@ -1,0 +1,305 @@
+{
+  "_meta": {
+    "pages": ["masterPage", "Home (c1dmp)"],
+    "templatePage": "Furniture Store template #3563 — My Site 3",
+    "notes": "Maps BUILD-SPEC element IDs to template element descriptions. Template IDs (comp-xxx or renamed) TBD — Melania extracts from editor. Gaps are elements missing from template that need manual placement.",
+    "workflow": "Option C: Rename template elements in editor to match our BUILD-SPEC IDs. For gaps, add new elements to editor. Run remap script only if template uses IDs that differ from BUILD-SPEC."
+  },
+
+  "masterPage": {
+    "header": {
+      "_comment": "Template has 12 header elements. Rename each to our BUILD-SPEC ID in Properties panel.",
+      "mapping": {
+        "announcementBar": "Template: Announcement strip — 'Free Shipping on all intl. orders over $200' (neon green bg → restyle to sand/coral)",
+        "announcementText": "Template: Announcement strip inner text element",
+        "siteLogo": "Template: Logo image ('tera' brand → swap to Carolina Futons logo)",
+        "navShop": "Template: Nav link 'Shop' → /category/all-products",
+        "navContact": "Template: Nav link 'Contact' → /contact",
+        "headerSearchInput": "Template: Search button/input (opens search)",
+        "cartIcon": "Template: Cart bag icon (shopping bag with count)",
+        "cartBadge": "Template: Cart item count badge on cart icon"
+      },
+      "gaps": {
+        "_comment": "Elements NOT in template — add in editor within template header layout",
+        "navHome": { "type": "Text/Link", "notes": "Add nav link 'Home' → /" },
+        "navProductVideos": { "type": "Text/Link", "notes": "Add nav link 'Product Videos' → /product-videos" },
+        "navSale": { "type": "Text/Link", "notes": "Add nav link 'Sale' (coral text) → /sales" },
+        "navGettingItHome": { "type": "Text/Link", "notes": "Add nav link 'Getting It Home' → /getting-it-home" },
+        "navFAQ": { "type": "Text/Link", "notes": "Add nav link 'FAQ' → /faq" },
+        "navAbout": { "type": "Text/Link", "notes": "Add nav link 'About' → /about" },
+        "navBlog": { "type": "Text/Link", "notes": "Add nav link 'Blog' → /blog" },
+        "mobileMenuButton": { "type": "Button", "notes": "Hamburger icon — mobile only, check if template has responsive nav already" },
+        "mobileMenuOverlay": { "type": "Box", "notes": "Full-screen overlay for mobile menu, hidden default" },
+        "mobileMenuClose": { "type": "Button", "notes": "X close button for mobile menu overlay" },
+        "businessSchemaHtml": { "type": "HtmlComponent (hidden)", "notes": "LocalBusiness JSON-LD injection, hidden" }
+      },
+      "templateExtras": [
+        "Nav: Sofas (category nav) — repurpose or leave as-is, not a named element in our code",
+        "Nav: Lounge Chairs (category nav) — same",
+        "Nav: Tables (category nav) — same",
+        "Nav: Chairs (category nav) — same",
+        "Log In button — Wix native member login, no rename needed",
+        "Wishlist icon (heart) — Wix native, no rename needed for Phase 1"
+      ]
+    },
+
+    "footer": {
+      "_comment": "Template has ~11 footer elements. Close match to BUILD-SPEC.",
+      "mapping": {
+        "footerLogo": "Template: Brand name text/image ('tera' → swap to Carolina Futons)",
+        "footerEmailInput": "Template: Newsletter email input (inside 'Stay Inspired' form)",
+        "footerEmailSubmit": "Template: Newsletter submit button",
+        "footerPhone": "Template: Contact info — phone element",
+        "footerAddress": "Template: Contact info — address element",
+        "footerHours": "Template: Contact info — hours element (combine if single text block)",
+        "socialFacebook": "Template: Facebook social link/icon",
+        "socialInstagram": "Template: Instagram social link/icon",
+        "socialPinterest": "Template: Pinterest social link/icon"
+      },
+      "gaps": {
+        "footerEmailError": { "type": "Text (hidden)", "notes": "Add validation error message below email input" },
+        "footerEmailSuccess": { "type": "Text (hidden)", "notes": "Add success message 'You're subscribed!' hidden default" }
+      },
+      "templateExtras": [
+        "TikTok social link — template has TikTok, not in our BUILD-SPEC, leave as-is",
+        "Nav links column (Sofas, Lounge Chairs...) — repurpose as our Quick Links column, no individual ID needed",
+        "Legal links column — repurpose, no individual ID needed",
+        "Copyright text — no ID needed, static content",
+        "Newsletter checkbox — template has opt-in checkbox, our code doesn't use it, hide or remove"
+      ]
+    },
+
+    "popups_and_overlays": {
+      "_comment": "These are all GAPS — not in template. Add as hidden elements within masterPage.",
+      "gaps": {
+        "exitIntentPopup": { "type": "Box (hidden)", "notes": "Exit-intent popup container, centered modal" },
+        "exitOverlay": { "type": "Box (hidden)", "notes": "Semi-transparent backdrop behind popup" },
+        "exitTitle": { "type": "Text (H2)", "notes": "'Before You Go...' — inside popup" },
+        "exitSubtitle": { "type": "Text", "notes": "Offer text inside popup" },
+        "exitEmailInput": { "type": "Input", "notes": "Email capture inside popup" },
+        "exitEmailSubmit": { "type": "Button", "notes": "Submit button inside popup" },
+        "exitSuccess": { "type": "Text (hidden)", "notes": "Success message after submit" },
+        "exitEmailError": { "type": "Text (hidden)", "notes": "Error message for invalid email" },
+        "exitSwatchLink": { "type": "Button/Text", "notes": "'Browse 700+ fabric swatches' link" },
+        "exitClose": { "type": "Button", "notes": "X close button — code uses exitClose, verify ID in masterPage.js" },
+        "promoOverlay": { "type": "Box (hidden)", "notes": "Promo lightbox semi-transparent overlay" },
+        "promoLightbox": { "type": "Box (hidden)", "notes": "Promo modal container" },
+        "promoHeroImage": { "type": "Image", "notes": "Campaign artwork inside promo modal" },
+        "promoTitle": { "type": "Text (H2)", "notes": "Promo modal title" },
+        "promoSubtitle": { "type": "Text", "notes": "Promo offer details" },
+        "promoCountdown": { "type": "Text (hidden)", "notes": "Countdown timer dd:hh:mm:ss" },
+        "promoRepeater": { "type": "Repeater (hidden)", "notes": "3-4 featured sale items" },
+        "promoCode": { "type": "Text", "notes": "Discount code text" },
+        "promoCopyCode": { "type": "Button", "notes": "Copy code to clipboard" },
+        "promoEmailInput": { "type": "Input", "notes": "Early access email capture" },
+        "promoEmailSubmit": { "type": "Button", "notes": "Subscribe CTA" },
+        "promoCTA": { "type": "Button", "notes": "Primary action button, coral bg" },
+        "promoClose": { "type": "Button", "notes": "X close icon" },
+        "promoDismiss": { "type": "Text/Button", "notes": "'Maybe later' text link" },
+        "installBanner": { "type": "Box (hidden)", "notes": "PWA install banner, bottom strip, mobile only" },
+        "installBannerText": { "type": "Text", "notes": "'Add to home screen'" },
+        "installBannerBtn": { "type": "Button", "notes": "'Install'" },
+        "installBannerDismiss": { "type": "Button", "notes": "X dismiss" },
+        "newsletterModal": { "type": "Box (hidden)", "notes": "Newsletter modal overlay" },
+        "newsletterModalEmail": { "type": "Input", "notes": "Email input in modal" },
+        "newsletterModalSubmit": { "type": "Button", "notes": "Subscribe button in modal" },
+        "newsletterModalSuccess": { "type": "Text (hidden)", "notes": "Success message" },
+        "newsletterModalError": { "type": "Text (hidden)", "notes": "Error message" },
+        "newsletterModalOverlay": { "type": "Box", "notes": "Modal backdrop" },
+        "newsletterModalTrigger": { "type": "Button (hidden)", "notes": "Programmatic trigger for modal" },
+        "sideCartPanel": { "type": "Box (hidden)", "notes": "Slide-out side cart panel, anchored right" },
+        "justAddedHighlight": { "type": "Box (hidden)", "notes": "'Just Added' highlight flash on cart item" },
+        "a11yLiveRegion": { "type": "Text (hidden)", "notes": "ARIA live region for screen reader announcements, aria-live='polite'" },
+        "headerShippingBar": { "type": "Box (hidden)", "notes": "Secondary shipping info bar below main header" },
+        "headerShippingText": { "type": "Text", "notes": "Shipping bar text content" },
+        "websiteSchemaHtml": { "type": "HtmlComponent (hidden)", "notes": "WebSite JSON-LD structured data" }
+      }
+    }
+  },
+
+  "home": {
+    "_comment": "Template Home has 8 sections (~40 elements). BUILD-SPEC needs 109. Good foundation; we add our sections.",
+
+    "hero": {
+      "mapping": {
+        "heroSection": "Template: Hero container/section (full-width, furniture image bg)",
+        "heroTitle": "Template: Hero H1 'UNIQUE DESIGNS FOR DISTINCTIVE SPACES'",
+        "heroSubtitle": "Template: Hero subtitle/tagline text below H1",
+        "heroCTA": "Template: 'Shop' CTA button in hero",
+        "heroBg": "Template: Hero background image element"
+      },
+      "gaps": {
+        "heroOverlay": { "type": "Box", "notes": "Semi-transparent overlay for text readability over hero image, rgba(58,37,24,0.6)" }
+      }
+    },
+
+    "categories": {
+      "_comment": "Template has 4 static collection cards (Sofas, Lounge Chairs, Chairs, Tables). Our code uses a Repeater with 8 categories. Phase 1 option: use template's 4 static cards OR add a Repeater.",
+      "strategy": "ADD categoryRepeater as a new Repeater element below/replacing the template's static cards. The static cards serve as visual reference for layout.",
+      "mapping": {},
+      "gaps": {
+        "categoryRepeater": { "type": "Repeater", "notes": "8 CF category items — Futon Frames, Mattresses, Murphy Beds, Platform Beds, Casegoods, Sale, Wall Huggers, Unfinished Wood" },
+        "categoryCard": { "type": "Box (inside repeater)", "notes": "Clickable card wrapper" },
+        "categoryCardImage": { "type": "Image (inside repeater)", "notes": "Category hero image" },
+        "categoryCardTitle": { "type": "Text (inside repeater)", "notes": "Category name" },
+        "categoryCardTagline": { "type": "Text (inside repeater)", "notes": "Category subtitle/description" },
+        "categoryCardCount": { "type": "Text (inside repeater)", "notes": "'X products'" },
+        "categorySkeleton": { "type": "Box (hidden)", "notes": "Loading skeleton shown while categories load" }
+      },
+      "templateExtras": [
+        "Static 'Shop by Collections' cards (Sofas, Lounge Chairs, Chairs, Tables) — can HIDE or REMOVE once categoryRepeater is in place"
+      ]
+    },
+
+    "featured_products": {
+      "_comment": "Template has 'New In' section (3 products) and 'Best Sellers' (4 products). Map 'New In' → featuredRepeater, 'Best Sellers' → saleRepeater.",
+      "mapping": {
+        "featuredTitle": "Template: 'New In' section H2 heading",
+        "featuredSubtitle": "Template: Subtitle text below 'New In' heading",
+        "featuredRepeater": "Template: 'New In' product grid repeater (3 products → extend to 4)",
+        "featuredImage": "Template: Product card image (inside featuredRepeater)",
+        "featuredName": "Template: Product card name/title (inside featuredRepeater)",
+        "featuredPrice": "Template: Product card price (inside featuredRepeater)",
+        "featuredSaleBadge": "Template: 'SALE' badge on card (inside featuredRepeater, hidden default)",
+        "featuredRibbon": "Template: 'NEW'/'BEST SELLER' ribbon badge (inside featuredRepeater)"
+      },
+      "gaps": {
+        "featuredOriginalPrice": { "type": "Text (hidden, inside repeater)", "notes": "Strikethrough original price for sale items" },
+        "featuredColorText": { "type": "Text (inside repeater)", "notes": "'X finishes available'" },
+        "featuredSwatchContainer": { "type": "Box (inside repeater)", "notes": "Color swatch preview dots" },
+        "featuredQuickViewBtn": { "type": "Button (inside repeater)", "notes": "Opens quick view modal on hover" },
+        "featuredSkeleton": { "type": "Box (hidden)", "notes": "Loading skeleton for featured grid" },
+        "featuredQuickViewModal": { "type": "Box (hidden)", "notes": "Quick view overlay modal" },
+        "featuredQvImage": { "type": "Image (inside modal)", "notes": "Product preview image in modal" },
+        "featuredQvName": { "type": "Text (inside modal)", "notes": "Product name" },
+        "featuredQvPrice": { "type": "Text (inside modal)", "notes": "Current price" },
+        "featuredQvViewFull": { "type": "Button (inside modal)", "notes": "→ Product page link" },
+        "featuredQvAddToCart": { "type": "Button (inside modal)", "notes": "Quick add to cart" },
+        "featuredQvClose": { "type": "Button (inside modal)", "notes": "X close" }
+      }
+    },
+
+    "sale_section": {
+      "mapping": {
+        "saleSection": "Template: 'Best Sellers' section container",
+        "saleRepeater": "Template: 'Best Sellers' product repeater (4 products)",
+        "saleImage": "Template: Sale product card image (inside saleRepeater)",
+        "saleName": "Template: Sale product card name (inside saleRepeater)",
+        "salePrice": "Template: Sale product card current price (inside saleRepeater)"
+      },
+      "gaps": {
+        "saleOrigPrice": { "type": "Text (hidden, inside repeater)", "notes": "Strikethrough original price" },
+        "saleSkeleton": { "type": "Box (hidden)", "notes": "Loading skeleton" }
+      }
+    },
+
+    "testimonials": {
+      "_comment": "Template does NOT appear to have a testimonials section. Needs to be added.",
+      "mapping": {},
+      "gaps": {
+        "testimonialSection": { "type": "Section", "notes": "Customer testimonials — add below Best Sellers section" },
+        "testimonialSlideshow": { "type": "Slideshow or Box", "notes": "Rotating testimonial container" },
+        "testimonialRepeater": { "type": "Repeater", "notes": "Customer quotes" },
+        "testimonialQuote": { "type": "Text (inside repeater)", "notes": "Quote text" },
+        "testimonialName": { "type": "Text (inside repeater)", "notes": "Customer name" },
+        "testimonialPhoto": { "type": "Image (hidden, inside repeater)", "notes": "Customer avatar" },
+        "testimonialRating": { "type": "Text (inside repeater)", "notes": "★★★★★ stars display" },
+        "testimonialPauseBtn": { "type": "Button", "notes": "Pause/play slideshow" },
+        "testimonialSchemaScript": { "type": "HtmlComponent (hidden)", "notes": "Review JSON-LD" }
+      }
+    },
+
+    "newsletter_section": {
+      "_comment": "Template has newsletter in FOOTER. We also have a dedicated home page newsletter section in code.",
+      "gaps": {
+        "newsletterSection": { "type": "Section", "notes": "Add dedicated newsletter signup section on Home page (separate from footer)" },
+        "newsletterTitle": { "type": "Text (H2)", "notes": "'Stay in the Loop'" },
+        "newsletterSubtitle": { "type": "Text", "notes": "Supporting text" },
+        "newsletterEmail": { "type": "Input", "notes": "Email field" },
+        "newsletterSubmit": { "type": "Button", "notes": "'Subscribe'" },
+        "newsletterSuccess": { "type": "Text (hidden)", "notes": "'You're subscribed!'" },
+        "newsletterError": { "type": "Text (hidden)", "notes": "Validation error" }
+      }
+    },
+
+    "custom_sections_gaps": {
+      "_comment": "Sections NOT in template — add in Phase 1 where critical, Phase 2+ for extras.",
+      "phase1_add": {
+        "trustBar": { "type": "Strip/Section", "notes": "5 trust signals. Template has 'As Seen In' press section — repurpose or add new trustBar strip." },
+        "trustItem1": { "type": "Box (inside trustBar)", "notes": "'Largest Selection in the Carolinas'" },
+        "trustText1": { "type": "Text (inside trustItem1)", "notes": "Trust signal 1 label" },
+        "trustIcon1": { "type": "Image/Text (inside trustItem1)", "notes": "Icon for signal 1" },
+        "trustItem2": { "type": "Box (inside trustBar)", "notes": "'Family Owned Since 1991'" },
+        "trustText2": { "type": "Text", "notes": "" },
+        "trustIcon2": { "type": "Image/Text", "notes": "" },
+        "trustItem3": { "type": "Box", "notes": "'700+ Fabric Swatches'" },
+        "trustText3": { "type": "Text", "notes": "" },
+        "trustIcon3": { "type": "Image/Text", "notes": "" },
+        "trustItem4": { "type": "Box", "notes": "'Free Shipping Over $999'" },
+        "trustText4": { "type": "Text", "notes": "" },
+        "trustIcon4": { "type": "Image/Text", "notes": "" },
+        "trustItem5": { "type": "Box", "notes": "'White-Glove Delivery'" },
+        "trustText5": { "type": "Text", "notes": "" },
+        "trustIcon5": { "type": "Image/Text", "notes": "" }
+      },
+      "phase2_defer": {
+        "swatchPromoSection": { "type": "Section", "notes": "CTA for free fabric swatches" },
+        "swatchPromoTitle": { "type": "Text (H2)", "notes": "" },
+        "swatchPromoSubtitle": { "type": "Text", "notes": "" },
+        "swatchPromoCTA": { "type": "Button", "notes": "" },
+        "quizCTASection": { "type": "Section", "notes": "Style quiz CTA" },
+        "quizCTATitle": { "type": "Text (H2)", "notes": "" },
+        "quizCTASubtitle": { "type": "Text", "notes": "" },
+        "quizCTAButton": { "type": "Button", "notes": "" },
+        "videoShowcaseSection": { "type": "Section", "notes": "Video thumbnails showcase" },
+        "videoShowcaseTitle": { "type": "Text (H2)", "notes": "" },
+        "videoShowcaseSubtitle": { "type": "Text", "notes": "" },
+        "viewAllVideosCTA": { "type": "Button", "notes": "" },
+        "recentSection": { "type": "Section", "notes": "Recently viewed products, hidden if empty" },
+        "recentImage": { "type": "Image (inside repeater)", "notes": "" },
+        "recentName": { "type": "Text (inside repeater)", "notes": "" },
+        "recentPrice": { "type": "Text (inside repeater)", "notes": "" },
+        "recentAddToCart": { "type": "Button (inside repeater)", "notes": "" },
+        "ridgelineHeader": { "type": "HtmlComponent", "notes": "Mountain skyline SVG border — Phase 2 illustration work" },
+        "scrollToFeatured": { "type": "Button/Anchor (hidden)", "notes": "" },
+        "scrollToCategories": { "type": "Button/Anchor (hidden)", "notes": "" },
+        "scrollToSale": { "type": "Button/Anchor (hidden)", "notes": "" },
+        "scrollToReviews": { "type": "Button/Anchor (hidden)", "notes": "" }
+      }
+    },
+
+    "schema": {
+      "gaps": {
+        "websiteSchemaHtml": { "type": "HtmlComponent (hidden)", "notes": "WebSite JSON-LD — add as hidden HtmlComponent on Home page" }
+      }
+    }
+  },
+
+  "summary": {
+    "masterPage": {
+      "templateElements": 23,
+      "mappedToOurIds": 9,
+      "gapElements": 37,
+      "phase1Priority": ["announcementBar", "announcementText", "siteLogo", "navShop", "navContact", "headerSearchInput", "cartIcon", "cartBadge", "footerLogo", "footerEmailInput", "footerEmailSubmit", "footerPhone", "footerAddress", "footerHours", "socialFacebook", "socialInstagram", "socialPinterest", "sideCartPanel", "a11yLiveRegion"]
+    },
+    "home": {
+      "templateSections": 8,
+      "mappedElements": 16,
+      "gapElements": 65,
+      "phase1Priority": ["heroSection", "heroTitle", "heroSubtitle", "heroCTA", "heroBg", "categoryRepeater", "featuredRepeater", "saleRepeater", "testimonialSection", "trustBar", "newsletterSection"],
+      "phase2Defer": ["quizCTASection", "swatchPromoSection", "videoShowcaseSection", "recentSection", "ridgelineHeader", "scrollToFeatured", "scrollToCategories", "scrollToSale", "scrollToReviews"]
+    },
+    "editorWorkOrder": [
+      "1. RENAME: masterPage header — announcementBar, announcementText, siteLogo, navShop, navContact, headerSearchInput, cartIcon, cartBadge",
+      "2. RENAME: masterPage footer — footerLogo, footerEmailInput, footerEmailSubmit, footerPhone, footerAddress, footerHours, socialFacebook, socialInstagram, socialPinterest",
+      "3. ADD: masterPage — navHome, navSale, navContact (extra nav items), mobileMenuButton/Overlay/Close, sideCartPanel (Phase 1 critical)",
+      "4. RENAME: Home hero — heroSection, heroTitle, heroSubtitle, heroCTA, heroBg",
+      "5. ADD: Home — categoryRepeater (with 5 children), trustBar (with children)",
+      "6. RENAME: Home featured — featuredTitle, featuredSubtitle, featuredRepeater + inner card elements",
+      "7. RENAME: Home sale — saleSection, saleRepeater + inner elements",
+      "8. ADD: Home — testimonialSection, newsletterSection (Phase 1)",
+      "9. ADD: masterPage — a11yLiveRegion (hidden), websiteSchemaHtml (hidden), businessSchemaHtml (hidden)",
+      "10. DEFER to Phase 2: all popup/overlay elements, quiz CTA, swatch promo, video showcase, recently viewed"
+    ]
+  }
+}
