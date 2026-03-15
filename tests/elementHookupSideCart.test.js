@@ -1,9 +1,10 @@
 /**
  * Tests for Side Cart element hookup — CF-03jx
  * Covers: #cartBadge, #sideCartPanel, #sideCartTitle, #sideCartSubtotal,
- * #sideTierText, #sideCartClose, #sideCartCheckout, #viewFullCart,
- * #sideQtyMinus, #sideQtyPlus, #sideItemImage, #sideItemName, #sideItemPrice,
- * #sideItemQty, #sideItemLineTotal, #sideItemRemove, #sideSaveForLater,
+ * #sideTierText, #sideCartClose, #sideCartOverlay, #sideCartCheckout,
+ * #viewFullCart, #sideCartRepeater, #sideQtyMinus, #sideQtyPlus,
+ * #sideItemImage, #sideItemName, #sideItemPrice, #sideItemQty,
+ * #sideItemLineTotal, #sideItemVariant, #sideItemRemove, #sideSaveForLater,
  * #sideCartEmpty, #sideCartItems, #sideCartFooter, #sideShippingBar,
  * #sideShippingText, #sideTierBar
  */
@@ -491,5 +492,96 @@ describe('Side Cart — empty/populated state element hookup', () => {
     });
 
     expect(getEl('#sideCartSubtotal').text).toBe('$549.99');
+  });
+});
+
+// ── Shipping / Tier Progress After Refresh ──────────────────────────
+
+describe('Side Cart — #sideShippingBar / #sideShippingText after refresh', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets shipping progress bar and text on cart refresh', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    const bar = getEl('#sideShippingBar');
+    expect(bar.value).toBe(50); // from mock
+    expect(bar.style.backgroundColor).toBeDefined();
+
+    const text = getEl('#sideShippingText');
+    expect(text.text).toContain('$100.00');
+    expect(text.text).toContain('free shipping');
+  });
+
+  it('sets ARIA live on shipping text', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    expect(getEl('#sideShippingText').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#sideShippingText').accessibility.role).toBe('status');
+  });
+});
+
+describe('Side Cart — #sideTierBar / #sideTierText after refresh', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets tier progress bar and text on cart refresh', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    const bar = getEl('#sideTierBar');
+    expect(bar.value).toBe(60); // from mock
+    const text = getEl('#sideTierText');
+    expect(text.text).toContain('$50.00');
+  });
+});
+
+// ── Variant Display Tests ───────────────────────────────────────────
+
+describe('Side Cart — #sideItemVariant display logic', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows variant details when present', async () => {
+    await loadPage();
+    const itemData = {
+      _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
+      variantDetails: 'Size: Queen · Finish: Honey Oak',
+    };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Honey Oak');
+    expect($item('#sideItemVariant').show).toHaveBeenCalled();
+  });
+
+  it('shows variant name as fallback when variantDetails is absent', async () => {
+    await loadPage();
+    const itemData = {
+      _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
+      variantName: 'Queen / Honey Oak',
+    };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemVariant').text).toBe('Queen / Honey Oak');
+    expect($item('#sideItemVariant').show).toHaveBeenCalled();
   });
 });

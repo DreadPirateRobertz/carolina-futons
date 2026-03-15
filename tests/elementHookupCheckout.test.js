@@ -10,8 +10,13 @@
  * #checkoutProgressNav, #checkoutProgressRepeater, #progressStepLabel,
  * #progressStepNumber, #progressStepDot, #progressStepContainer,
  * #orderNotesToggle, #orderNotesField, #checkoutFreeShipping,
- * #checkoutItemCount, #orderSummarySidebar, #orderSummarySubtotal,
- * #orderSummaryShipping, #orderSummaryTax, #orderSummaryTotal,
+ * #checkoutItemCount, #checkoutDeliveryEstimate,
+ * #orderSummarySidebar, #orderSummarySubtotal, #orderSummaryShipping,
+ * #orderSummaryTax, #orderSummaryTotal, #orderSummarySavings,
+ * #orderSummaryItemsRepeater, #summaryItemName, #summaryItemQty,
+ * #summaryItemPrice, #trustRepeater,
+ * #addressFullNameError, #addressLine1Error, #addressCityError,
+ * #addressStateError, #addressZipError,
  * #expressCheckoutSection, #expressCheckoutBtn
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -799,5 +804,176 @@ describe('Checkout — #expressCheckoutSection / #expressCheckoutBtn', () => {
   it('shows express checkout section', async () => {
     await loadPage();
     expect(getEl('#expressCheckoutSection').show).toHaveBeenCalled();
+  });
+});
+
+// ── Delivery Estimate ───────────────────────────────────────────────
+
+describe('Checkout — #checkoutDeliveryEstimate element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets delivery estimate text with date range', async () => {
+    await loadPage();
+    const el = getEl('#checkoutDeliveryEstimate');
+    expect(el.text).toContain('Estimated delivery');
+    expect(el.text).toContain('–');
+  });
+
+  it('sets ARIA attributes on delivery estimate', async () => {
+    await loadPage();
+    const el = getEl('#checkoutDeliveryEstimate');
+    expect(el.accessibility.role).toBe('status');
+    expect(el.accessibility.ariaLabel).toContain('Estimated delivery');
+  });
+
+  it('shows delivery estimate element', async () => {
+    await loadPage();
+    expect(getEl('#checkoutDeliveryEstimate').show).toHaveBeenCalled();
+  });
+});
+
+// ── Order Summary Repeater Children ─────────────────────────────────
+
+describe('Checkout — #orderSummaryItemsRepeater children', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('populates order summary items repeater', async () => {
+    await loadPage();
+    const repeater = getEl('#orderSummaryItemsRepeater');
+    expect(repeater.data.length).toBeGreaterThan(0);
+    expect(repeater.onItemReady).toHaveBeenCalled();
+  });
+
+  it('sets item name, qty, and price on repeater items', async () => {
+    await loadPage();
+    const $item = simulateRepeaterItem('#orderSummaryItemsRepeater', {
+      _id: '0', name: 'Kodiak Frame', quantity: 2, lineTotal: '1099.98',
+    });
+    expect($item).not.toBeNull();
+
+    expect($item('#summaryItemName').text).toBe('Kodiak Frame');
+    expect($item('#summaryItemQty').text).toBe('×2');
+    expect($item('#summaryItemPrice').text).toBe('$1099.98');
+  });
+});
+
+// ── Address Field Error Elements ────────────────────────────────────
+
+describe('Checkout — address field-level error element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('hides all field error elements initially', async () => {
+    await loadPage();
+    expect(getEl('#addressFullNameError').hide).toHaveBeenCalled();
+    expect(getEl('#addressLine1Error').hide).toHaveBeenCalled();
+    expect(getEl('#addressCityError').hide).toHaveBeenCalled();
+    expect(getEl('#addressStateError').hide).toHaveBeenCalled();
+    expect(getEl('#addressZipError').hide).toHaveBeenCalled();
+  });
+
+  it('sets alert role and assertive live on error elements', async () => {
+    await loadPage();
+    const errorIds = ['#addressFullNameError', '#addressLine1Error', '#addressCityError', '#addressStateError', '#addressZipError'];
+    for (const id of errorIds) {
+      expect(getEl(id).accessibility.role).toBe('alert');
+      expect(getEl(id).accessibility.ariaLive).toBe('assertive');
+    }
+  });
+
+  it('registers onInput handlers for real-time validation', async () => {
+    await loadPage();
+    expect(getEl('#addressFullName').onInput).toHaveBeenCalled();
+    expect(getEl('#addressLine1').onInput).toHaveBeenCalled();
+    expect(getEl('#addressCity').onInput).toHaveBeenCalled();
+    expect(getEl('#addressState').onInput).toHaveBeenCalled();
+    expect(getEl('#addressZip').onInput).toHaveBeenCalled();
+  });
+
+  it('registers onBlur handlers for blur validation', async () => {
+    await loadPage();
+    expect(getEl('#addressFullName').onBlur).toHaveBeenCalled();
+    expect(getEl('#addressLine1').onBlur).toHaveBeenCalled();
+  });
+
+  it('styles validate button with coral CTA', async () => {
+    await loadPage();
+    const btn = getEl('#validateAddressBtn');
+    expect(btn.style.backgroundColor).toBe('#E8845C');
+    expect(btn.style.color).toBe('#fff');
+  });
+});
+
+// ── Iteration 5: Checkout Edge Cases ────────────────────────────────
+
+describe('Checkout — iteration 5 edge cases', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('calls applyAutocompleteHints on init', async () => {
+    await loadPage();
+    const { applyAutocompleteHints } = await import('public/checkoutValidation.js');
+    expect(applyAutocompleteHints).toHaveBeenCalledWith(expect.anything());
+  });
+
+  it('enables express checkout button after valid address', async () => {
+    await loadPage();
+
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+
+    getEl('#addressFullName').value = 'Jane Doe';
+    getEl('#addressLine1').value = '456 Oak Ave';
+    getEl('#addressCity').value = 'Asheville';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28801';
+
+    const clickHandler = getEl('#validateAddressBtn').onClick.mock.calls[0]?.[0];
+    expect(clickHandler).toBeDefined();
+    await clickHandler();
+
+    expect(getEl('#expressCheckoutBtn').enable).toHaveBeenCalled();
+  });
+
+  it('disables express checkout button after invalid address', async () => {
+    await loadPage();
+
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: false, errors: ['Bad ZIP'] });
+
+    getEl('#addressFullName').value = 'Jane';
+    getEl('#addressLine1').value = '456 Oak';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'XX';
+    getEl('#addressZip').value = '00000';
+
+    const clickHandler = getEl('#validateAddressBtn').onClick.mock.calls[0]?.[0];
+    expect(clickHandler).toBeDefined();
+    await clickHandler();
+
+    expect(getEl('#expressCheckoutBtn').disable).toHaveBeenCalled();
+  });
+
+  it('populates trust repeater with 4 trust messages', async () => {
+    await loadPage();
+    const repeater = getEl('#trustRepeater');
+    expect(repeater.data).toHaveLength(4);
+    expect(repeater.data[0].text).toBe('Secure SSL Checkout');
+    expect(repeater.data[3].text).toContain('(828) 252-9449');
+  });
+
+  it('hides order summary savings when no savings', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySavings').hide).toHaveBeenCalled();
   });
 });

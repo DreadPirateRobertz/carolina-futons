@@ -3,9 +3,11 @@
  * Covers: #cartFinancingSection, #financingThreshold, #cartFinancingTeaser,
  * #cartAfterpayMessage, #emptyCartSection, #emptyCartTitle, #emptyCartMessage,
  * #continueShoppingBtn, #shippingProgressBar, #shippingProgressText,
- * #tierProgressBar, #tierProgressText, #cartSubtotal, #cartTotal,
- * #cartItemsRepeater, #cartItemName, #cartItemPrice, #qtyMinus, #qtyPlus,
- * #qtyInput, #removeItem, #saveForLaterBtn
+ * #shippingProgressIcon, #tierProgressBar, #tierProgressText,
+ * #cartSubtotal, #cartTotal, #cartItemsRepeater, #cartItemName,
+ * #cartItemPrice, #qtyMinus, #qtyPlus, #qtyInput, #removeItem,
+ * #saveForLaterBtn, #cartRecentSection, #cartRecentRepeater,
+ * #suggestionsSection, #cartDeliverySection
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -501,5 +503,128 @@ describe('Cart Page — #cartItemsRepeater child element hookup', () => {
     expect($item).not.toBeNull();
 
     expect($item('#saveForLaterBtn').accessibility.ariaLabel).toBe('Save Kodiak Frame for later');
+  });
+});
+
+// ── Shipping Progress Bar Tests ─────────────────────────────────────
+
+describe('Cart Page — #shippingProgressBar / #shippingProgressText hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets shipping progress bar value from getShippingProgress', async () => {
+    await loadPage();
+
+    const bar = getEl('#shippingProgressBar');
+    expect(bar.value).toBe(60);
+  });
+
+  it('sets shipping text with remaining amount', async () => {
+    await loadPage();
+
+    const text = getEl('#shippingProgressText');
+    expect(text.text).toContain('$50.00');
+    expect(text.text).toContain('free shipping');
+  });
+
+  it('sets ARIA attributes on shipping progress bar', async () => {
+    await loadPage();
+
+    const bar = getEl('#shippingProgressBar');
+    expect(bar.accessibility.ariaLabel).toContain('Free shipping progress');
+    expect(bar.accessibility.ariaValueNow).toBe(60);
+    expect(bar.accessibility.ariaValueMin).toBe(0);
+    expect(bar.accessibility.ariaValueMax).toBe(100);
+  });
+
+  it('sets ARIA live region on shipping progress text', async () => {
+    await loadPage();
+
+    const text = getEl('#shippingProgressText');
+    expect(text.accessibility.ariaLive).toBe('polite');
+    expect(text.accessibility.role).toBe('status');
+  });
+
+  it('styles progress bar with brand colors', async () => {
+    await loadPage();
+
+    const bar = getEl('#shippingProgressBar');
+    expect(bar.style.backgroundColor).toBe('#ddd');
+    expect(bar.style.color).toBe('#5B8FA8');
+  });
+});
+
+// ── Recently Viewed Repeater Tests ──────────────────────────────────
+
+describe('Cart Page — #cartRecentRepeater child elements', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('collapses recent section when no recently viewed products', async () => {
+    await loadPage();
+    expect(getEl('#cartRecentSection').collapse).toHaveBeenCalled();
+  });
+
+  it('expands recent section and populates repeater when products exist', async () => {
+    // Mock must be set up inside loadPage override to survive vi.resetModules()
+    vi.doMock('public/galleryHelpers', () => ({
+      getRecentlyViewed: vi.fn(() => [
+        { _id: 'rv1', name: 'Vienna Frame', mainMedia: 'vienna.jpg', price: '$399', slug: 'vienna-frame' },
+      ]),
+    }));
+
+    await loadPage();
+
+    expect(getEl('#cartRecentSection').expand).toHaveBeenCalled();
+    const repeater = getEl('#cartRecentRepeater');
+    expect(repeater.data.length).toBeGreaterThan(0);
+    expect(repeater.onItemReady).toHaveBeenCalled();
+  });
+});
+
+// ── Empty Cart Title ARIA Role ──────────────────────────────────────
+
+describe('Cart Page — iteration 5 edge cases', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets heading role on empty cart title', async () => {
+    await loadPage({ cart: { lineItems: [], totals: { subtotal: 0, total: 0 } } });
+    expect(getEl('#emptyCartTitle').accessibility.role).toBe('heading');
+  });
+
+  it('calls initPageSeo with cart identifier', async () => {
+    await loadPage();
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('cart');
+  });
+
+  it('collapses delivery section for empty cart', async () => {
+    await loadPage({ cart: { lineItems: [], totals: { subtotal: 0, total: 0 } } });
+    expect(getEl('#cartDeliverySection').collapse).toHaveBeenCalled();
+  });
+
+  it('fires GA4 view_cart event for non-empty cart', async () => {
+    await loadPage();
+    const { fireViewCart } = await import('public/ga4Tracking');
+    expect(fireViewCart).toHaveBeenCalled();
+  });
+
+  it('calls collapseOnMobile for non-essential sections', async () => {
+    await loadPage();
+    const { collapseOnMobile } = await import('public/mobileHelpers');
+    expect(collapseOnMobile).toHaveBeenCalledWith(expect.anything(), expect.arrayContaining(['#cartRecentSection', '#cartFinancingSection']));
+  });
+
+  it('calls initCouponCodeInput with cart context', async () => {
+    await loadPage();
+    const { initCouponCodeInput } = await import('public/CouponCodeInput.js');
+    expect(initCouponCodeInput).toHaveBeenCalled();
   });
 });

@@ -9,7 +9,8 @@
  * #referralSection, #referralTitle, #referralMessage, #referralCopyBtn, #referralEmailBtn,
  * #assemblyGuideSection, #assemblyGuideTitle, #assemblyGuideText, #assemblyGuideBtn,
  * #reviewSection, #reviewTitle, #reviewPrompt, #reviewStar1–#reviewStar5,
- * #reviewRating, #reviewSubmitBtn, #reviewError, #reviewSuccess
+ * #reviewRating, #reviewSubmitBtn, #reviewError, #reviewSuccess,
+ * #postPurchaseHeading, #postPurchaseRepeater
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -640,5 +641,50 @@ describe('Thank You Page — review request element hookup', () => {
   it('expands review section', async () => {
     await loadPage();
     expect(getEl('#reviewSection').expand).toHaveBeenCalled();
+  });
+});
+
+// ── Delivery Estimate Text ──────────────────────────────────────────
+
+describe('Thank You Page — #deliveryEstimateText element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets delivery estimate text with date range', async () => {
+    await loadPage();
+    const text = getEl('#deliveryEstimateText').text;
+    expect(text).toContain('Estimated delivery');
+    expect(text).toContain('–');
+  });
+});
+
+// ── Post-Purchase Repeater ──────────────────────────────────────────
+
+describe('Thank You Page — #postPurchaseRepeater element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets heading text for post-purchase suggestions', async () => {
+    const { getFeaturedProducts } = await import('backend/productRecommendations.web');
+    getFeaturedProducts.mockResolvedValue([
+      { _id: 'p1', name: 'Vienna Frame', mainMedia: 'v.jpg', formattedPrice: '$399', slug: 'vienna' },
+    ]);
+
+    await loadPage();
+    expect(getEl('#postPurchaseHeading').text).toBe('You Might Also Love');
+  });
+
+  it('registers onItemReady on post-purchase repeater', async () => {
+    const { getFeaturedProducts } = await import('backend/productRecommendations.web');
+    getFeaturedProducts.mockResolvedValue([
+      { _id: 'p1', name: 'Vienna Frame', mainMedia: 'v.jpg', formattedPrice: '$399', slug: 'vienna' },
+    ]);
+
+    await loadPage();
+    expect(getEl('#postPurchaseRepeater').onItemReady).toHaveBeenCalled();
   });
 });
