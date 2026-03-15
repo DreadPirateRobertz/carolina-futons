@@ -537,4 +537,346 @@ describe('refreshSideCart', () => {
 
     expect(getEl('#sideCartSuggestion').collapse).toHaveBeenCalled();
   });
+
+  it('calls initCrossSellWidget when suggestions exist', async () => {
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    const { buildRoomBundles, initCrossSellWidget } = await import('public/crossSellWidget.js');
+    const mockSuggestions = [{ _id: 's1', name: 'Cover', slug: 'cover', price: 99 }];
+    const mockBundles = [{ name: 'Room Bundle', items: mockSuggestions, totalPrice: 99 }];
+    getCompletionSuggestions.mockResolvedValue(mockSuggestions);
+    buildRoomBundles.mockReturnValue(mockBundles);
+
+    await triggerRefresh({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 499, quantity: 1, options: [], productId: 'p1' }],
+      totals: { subtotal: 499 },
+    });
+
+    expect(buildRoomBundles).toHaveBeenCalledWith(mockSuggestions, 499);
+    expect(initCrossSellWidget).toHaveBeenCalledWith($w, expect.objectContaining({
+      bundles: mockBundles,
+    }));
+  });
+
+  it('limits suggestions to 2 on mobile', async () => {
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    const { buildRoomBundles, initCrossSellWidget } = await import('public/crossSellWidget.js');
+    const { isMobile } = await import('public/mobileHelpers');
+    isMobile.mockReturnValue(true);
+
+    const manySuggestions = Array.from({ length: 5 }, (_, i) => ({
+      _id: `s${i}`, name: `Item ${i}`, slug: `item-${i}`, price: 50,
+    }));
+    getCompletionSuggestions.mockResolvedValue(manySuggestions);
+    buildRoomBundles.mockReturnValue([{ name: 'Bundle', items: [] }]);
+
+    await triggerRefresh({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 499, quantity: 1, options: [], productId: 'p1' }],
+      totals: { subtotal: 499 },
+    });
+
+    // buildRoomBundles should receive only 2 suggestions on mobile
+    expect(buildRoomBundles).toHaveBeenCalledWith(manySuggestions.slice(0, 2), 499);
+  });
+
+  it('collapses suggestion section when bundles are empty', async () => {
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    const { buildRoomBundles } = await import('public/crossSellWidget.js');
+    getCompletionSuggestions.mockResolvedValue([{ _id: 's1', name: 'Cover' }]);
+    buildRoomBundles.mockReturnValue([]);
+
+    await triggerRefresh({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 499, quantity: 1, options: [], productId: 'p1' }],
+      totals: { subtotal: 499 },
+    });
+
+    expect(getEl('#sideCartSuggestion').collapse).toHaveBeenCalled();
+  });
+
+  it('updates tier progress bar and text', async () => {
+    const { getTierProgress } = await import('public/cartService');
+    getTierProgress.mockReturnValue({
+      tier: { label: (r) => `$${r} to 10% off` },
+      remaining: 75,
+      progressPct: 40,
+    });
+
+    await triggerRefresh({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 499, quantity: 1, options: [] }],
+      totals: { subtotal: 499 },
+    });
+
+    expect(getEl('#sideTierBar').value).toBe(40);
+    expect(getEl('#sideTierText').text).toBe('$75.00 to 10% off');
+  });
+
+  it('formats variant details from options array', async () => {
+    await triggerRefresh({
+      lineItems: [{
+        _id: 'i1',
+        name: 'Frame',
+        price: 499,
+        quantity: 1,
+        options: [{ option: 'Size', value: 'Queen' }, { option: 'Finish', value: 'Walnut' }],
+      }],
+      totals: { subtotal: 499 },
+    });
+
+    const data = getEl('#sideCartRepeater').data;
+    expect(data[0].variantDetails).toBe('Size: Queen · Finish: Walnut');
+    expect(data[0].variantName).toBe('Queen, Walnut');
+  });
+
+  it('handles line items with no options', async () => {
+    await triggerRefresh({
+      lineItems: [{
+        _id: 'i1',
+        name: 'Frame',
+        price: 499,
+        quantity: 1,
+        options: undefined,
+      }],
+      totals: { subtotal: 499 },
+    });
+
+    const data = getEl('#sideCartRepeater').data;
+    expect(data[0].variantDetails).toBe('');
+    expect(data[0].variantName).toBe('');
+  });
+
+  it('uses mediaItem.src for image when available', async () => {
+    await triggerRefresh({
+      lineItems: [{
+        _id: 'i1',
+        name: 'Frame',
+        price: 499,
+        quantity: 1,
+        options: [],
+        mediaItem: { src: 'https://img.com/frame-hires.jpg' },
+      }],
+      totals: { subtotal: 499 },
+    });
+
+    const data = getEl('#sideCartRepeater').data;
+    expect(data[0].image).toBe('https://img.com/frame-hires.jpg');
+  });
+
+  it('falls back to empty string for image when no mediaItem', async () => {
+    await triggerRefresh({
+      lineItems: [{
+        _id: 'i1',
+        name: 'Frame',
+        price: 499,
+        quantity: 1,
+        options: [],
+      }],
+      totals: { subtotal: 499 },
+    });
+
+    const data = getEl('#sideCartRepeater').data;
+    expect(data[0].image).toBe('');
+  });
+});
+
+// ── Escape Key & Swipe ──────────────────────────────────────────────
+
+describe('keyboard and touch interactions', () => {
+  let mockDocument;
+
+  beforeEach(() => {
+    mockDocument = { addEventListener: vi.fn() };
+    globalThis.document = mockDocument;
+  });
+
+  afterEach(() => {
+    delete globalThis.document;
+  });
+
+  it('registers escape key listener on document', async () => {
+    await loadPage();
+    expect(mockDocument.addEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
+  });
+
+  it('escape key closes visible panel', async () => {
+    await loadPage();
+
+    const keydownHandler = mockDocument.addEventListener.mock.calls.find(c => c[0] === 'keydown')[1];
+    getEl('#sideCartPanel').hidden = false;
+    keydownHandler({ key: 'Escape' });
+
+    expect(getEl('#sideCartPanel').hide).toHaveBeenCalled();
+  });
+
+  it('escape key does nothing when panel is hidden', async () => {
+    await loadPage();
+
+    const keydownHandler = mockDocument.addEventListener.mock.calls.find(c => c[0] === 'keydown')[1];
+    getEl('#sideCartPanel').hidden = true;
+    getEl('#sideCartPanel').hide.mockClear();
+    keydownHandler({ key: 'Escape' });
+
+    expect(getEl('#sideCartPanel').hide).not.toHaveBeenCalled();
+  });
+
+  it('calls enableSwipe on panel htmlElement', async () => {
+    const mockHtmlEl = { style: {} };
+    getEl('#sideCartPanel').htmlElement = mockHtmlEl;
+    await loadPage();
+
+    const { enableSwipe } = await import('public/touchHelpers');
+    expect(enableSwipe).toHaveBeenCalledWith(
+      mockHtmlEl,
+      expect.any(Function),
+      { threshold: 50, maxTime: 400 },
+    );
+  });
+});
+
+// ── Navigation ──────────────────────────────────────────────────────
+
+describe('navigation buttons', () => {
+  it('checkout button navigates to /checkout', async () => {
+    await loadPage();
+    const checkoutFn = getEl('#sideCartCheckout').onClick.mock.calls[0][0];
+    checkoutFn();
+
+    await new Promise(r => setTimeout(r, 50));
+    const { to } = await import('wix-location-frontend');
+    expect(to).toHaveBeenCalledWith('/checkout');
+  });
+
+  it('view full cart button navigates to /cart-page', async () => {
+    await loadPage();
+    const viewCartFn = getEl('#viewFullCart').onClick.mock.calls[0][0];
+    viewCartFn();
+
+    await new Promise(r => setTimeout(r, 50));
+    const { to } = await import('wix-location-frontend');
+    expect(to).toHaveBeenCalledWith('/cart-page');
+  });
+});
+
+// ── Repeater Edge Cases ─────────────────────────────────────────────
+
+describe('repeater edge cases', () => {
+  const mockItem = {
+    _id: 'item-1',
+    name: 'Clover Murphy Bed',
+    price: 2598,
+    quantity: 2,
+    image: 'https://example.com/clover.jpg',
+    lineTotal: 5196,
+    variantDetails: '',
+    variantName: '',
+  };
+
+  async function getItemReadyFn() {
+    await loadPage();
+    return getEl('#sideCartRepeater').onItemReady.mock.calls[0][0];
+  }
+
+  function createItemScope() {
+    const itemElements = new Map();
+    return (sel) => {
+      if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
+      return itemElements.get(sel);
+    };
+  }
+
+  it('sets alt text on item image', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideItemImage').alt).toBe('Clover Murphy Bed');
+  });
+
+  it('applies brand colors to item name and price', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideItemName').style.color).toBe('#333');
+    expect($item('#sideItemPrice').style.color).toBe('#1E3A5F');
+  });
+
+  it('applies mountain blue color to spinner buttons', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideQtyMinus').style.color).toBe('#5B8FA8');
+    expect($item('#sideQtyPlus').style.color).toBe('#5B8FA8');
+  });
+
+  it('minus button sets ARIA label with product name', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideQtyMinus').accessibility.ariaLabel).toBe('Decrease quantity of Clover Murphy Bed');
+    expect($item('#sideQtyPlus').accessibility.ariaLabel).toBe('Increase quantity of Clover Murphy Bed');
+  });
+
+  it('save for later re-enables button on error', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, { ...mockItem, variantDetails: 'Size: Queen' });
+
+    const { saveForLater } = await import('public/SaveForLater.js');
+    saveForLater.mockRejectedValue(new Error('Network error'));
+
+    const saveFn = $item('#sideSaveForLater').onClick.mock.calls[0][0];
+    await saveFn();
+
+    expect($item('#sideSaveForLater').enable).toHaveBeenCalled();
+  });
+
+  it('save for later passes correct product data', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    const itemWithMedia = {
+      ...mockItem,
+      productId: 'prod-123',
+      mediaItem: { src: 'https://img.com/hires.jpg' },
+    };
+    itemReadyFn($item, itemWithMedia);
+
+    const { saveForLater } = await import('public/SaveForLater.js');
+    saveForLater.mockResolvedValue({ success: true });
+
+    const saveFn = $item('#sideSaveForLater').onClick.mock.calls[0][0];
+    await saveFn();
+
+    expect(saveForLater).toHaveBeenCalledWith({
+      _id: 'item-1',
+      productId: 'prod-123',
+      name: 'Clover Murphy Bed',
+      price: 2598,
+      image: 'https://img.com/hires.jpg',
+    });
+  });
+
+  it('does not show variant when both variantDetails and variantName are empty', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, { ...mockItem, variantDetails: '', variantName: '' });
+
+    expect($item('#sideItemVariant').show).not.toHaveBeenCalled();
+  });
+
+  it('applies coral accent to remove button', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideItemRemove').style.color).toBe('#DC2626');
+  });
+
+  it('sets save for later ARIA label', async () => {
+    const itemReadyFn = await getItemReadyFn();
+    const $item = createItemScope();
+    itemReadyFn($item, mockItem);
+
+    expect($item('#sideSaveForLater').accessibility.ariaLabel).toBe('Save Clover Murphy Bed for later');
+  });
 });
