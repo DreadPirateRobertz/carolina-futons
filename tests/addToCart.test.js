@@ -96,6 +96,17 @@ describe('AddToCart', () => {
       minusCb();
       expect(state.selectedQuantity).toBe(1);
     });
+
+    it('registers onInput handler on quantity input', () => {
+      initQuantitySelector($w, state);
+      expect($w('#quantityInput').onInput).toHaveBeenCalled();
+    });
+
+    it('sets aria labels on plus and minus buttons', () => {
+      initQuantitySelector($w, state);
+      expect($w('#quantityMinus').accessibility.ariaLabel).toBe('Decrease quantity');
+      expect($w('#quantityPlus').accessibility.ariaLabel).toBe('Increase quantity');
+    });
   });
 
   describe('initAddToCartEnhancements', () => {
@@ -139,6 +150,11 @@ describe('AddToCart', () => {
       initStickyCartBar($w, state);
       expect(wixWindow.onScroll).toHaveBeenCalled();
     });
+
+    it('registers click handler on sticky add button', () => {
+      initStickyCartBar($w, state);
+      expect($w('#stickyAddBtn').onClick).toHaveBeenCalled();
+    });
   });
 
   describe('initBundleSection', () => {
@@ -159,6 +175,43 @@ describe('AddToCart', () => {
       await initBundleSection($w, state);
       expect($w('#addBundleBtn').onClick).toHaveBeenCalled();
     });
+
+    it('sets bundle image and alt text', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundleImage').src).toBe('https://example.com/b.jpg');
+      expect($w('#bundleImage').alt).toContain('bundle suggestion');
+    });
+
+    it('displays bundle price and savings', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundlePrice').text).toBe('$799.00');
+      expect($w('#bundleSavings').text).toContain('Save');
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initBundleSection($w, state);
+      expect($w('#bundleSection').expand).not.toHaveBeenCalled();
+    });
+
+    it('collapses when bundle product is null', async () => {
+      const { getBundleSuggestion } = await import('backend/productRecommendations.web');
+      getBundleSuggestion.mockResolvedValueOnce({ product: null });
+      await initBundleSection($w, state);
+      expect($w('#bundleSection').collapse).toHaveBeenCalled();
+    });
+
+    it('registers image and name click handlers for navigation', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundleImage').onClick).toHaveBeenCalled();
+      expect($w('#bundleName').onClick).toHaveBeenCalled();
+    });
+
+    it('stores bundle product in state', async () => {
+      await initBundleSection($w, state);
+      expect(state.bundleProduct).toBeTruthy();
+      expect(state.bundleProduct.name).toBe('Bundle Mattress');
+    });
   });
 
   describe('initStockUrgency', () => {
@@ -174,6 +227,43 @@ describe('AddToCart', () => {
       await initStockUrgency($w, state);
       expect($w('#stockUrgency').hide).toHaveBeenCalled();
     });
+
+    it('hides urgency when stock is 0', async () => {
+      state.product.quantityInStock = 0;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').hide).toHaveBeenCalled();
+    });
+
+    it('hides urgency when stock is null', async () => {
+      state.product.quantityInStock = null;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').hide).toHaveBeenCalled();
+    });
+
+    it('shows "Only 1 left" for single unit', async () => {
+      state.product.quantityInStock = 1;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').text).toBe('Only 1 left in stock');
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').show).not.toHaveBeenCalled();
+    });
+
+    it('shows urgency at boundary (stock = 4)', async () => {
+      state.product.quantityInStock = 4;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').text).toContain('Only 4 left');
+      expect($w('#stockUrgency').show).toHaveBeenCalled();
+    });
+
+    it('hides urgency at boundary (stock = 5)', async () => {
+      state.product.quantityInStock = 5;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').hide).toHaveBeenCalled();
+    });
   });
 
   describe('initBackInStockNotification', () => {
@@ -185,6 +275,17 @@ describe('AddToCart', () => {
     it('registers submit handler', async () => {
       await initBackInStockNotification($w, state);
       expect($w('#backInStockBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('hides success message initially', async () => {
+      await initBackInStockNotification($w, state);
+      expect($w('#backInStockSuccess').hide).toHaveBeenCalled();
+    });
+
+    it('registers onChange on size/finish dropdowns', async () => {
+      await initBackInStockNotification($w, state);
+      expect($w('#sizeDropdown').onChange).toHaveBeenCalled();
+      expect($w('#finishDropdown').onChange).toHaveBeenCalled();
     });
   });
 
