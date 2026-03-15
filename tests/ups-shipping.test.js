@@ -474,7 +474,7 @@ describe('createShipment', () => {
       // no packages field
     });
     expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toBe('Unable to create shipment. Please try again or contact support.');
   });
 });
 

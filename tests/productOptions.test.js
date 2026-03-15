@@ -206,8 +206,8 @@ describe('ProductOptions', () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockRejectedValueOnce(new Error('Network fail'));
       $w('#sizeDropdown').value = 'Full';
-      // Should not throw
-      await expect(handleCustomVariantChange($w, state)).resolves.not.toThrow();
+      await handleCustomVariantChange($w, state);
+      // Should complete without throwing — error caught internally
     });
 
     it('queries with only size when finish is empty', async () => {
