@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed } from './__mocks__/wix-data.js';
+import { __seed, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
@@ -793,25 +793,22 @@ describe('Feed URL encoding', () => {
 // ── get_googleShoppingFeed ──────────────────────────────────────────
 
 describe('get_googleShoppingFeed', () => {
-  it('returns XML content type on success', async () => {
+  it('returns 200 with XML content type', async () => {
     const result = await get_googleShoppingFeed({});
-    if (result.status === 200) {
-      expect(result.headers['Content-Type']).toBe('application/xml; charset=utf-8');
-    }
+    expect(result.status).toBe(200);
+    expect(result.headers['Content-Type']).toBe('application/xml; charset=utf-8');
   });
 
-  it('returns 200 with body when generateFeed succeeds', async () => {
+  it('returns body when generateFeed succeeds', async () => {
     const result = await get_googleShoppingFeed({});
-    // generateFeed uses real implementation with seeded products
     expect(result.status).toBe(200);
     expect(result.body).toBeTruthy();
   });
 
   it('sets public cache header with 1 hour max-age', async () => {
     const result = await get_googleShoppingFeed({});
-    if (result.status === 200) {
-      expect(result.headers['Cache-Control']).toBe('public, max-age=3600');
-    }
+    expect(result.status).toBe(200);
+    expect(result.headers['Cache-Control']).toBe('public, max-age=3600');
   });
 });
 
@@ -955,6 +952,11 @@ describe('get_robots', () => {
     const result = get_robots();
     expect(result.body).toContain('Disallow: /search-results');
   });
+
+  it('disallows thank-you page', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Disallow: /thank-you');
+  });
 });
 
 // ── get_facebookCustomAudience ──────────────────────────────────────
@@ -995,9 +997,8 @@ describe('get_facebookCustomAudience', () => {
     const result = await get_facebookCustomAudience({
       headers: { 'x-fb-audience-secret': 'test-audience-secret' },
     });
-    if (result.status === 200) {
-      expect(result.headers['Cache-Control']).toBe('no-store');
-    }
+    expect(result.status).toBe(200);
+    expect(result.headers['Cache-Control']).toBe('no-store');
   });
 
   it('includes schema array in response', async () => {
@@ -1005,10 +1006,9 @@ describe('get_facebookCustomAudience', () => {
     const result = await get_facebookCustomAudience({
       headers: { 'x-fb-audience-secret': 'test-audience-secret' },
     });
-    if (result.status === 200) {
-      const body = JSON.parse(result.body);
-      expect(body.schema).toEqual(['EMAIL', 'FN', 'LN', 'PHONE', 'CT', 'ST', 'ZIP', 'COUNTRY', 'VALUE']);
-    }
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.schema).toEqual(['EMAIL', 'FN', 'LN', 'PHONE', 'CT', 'ST', 'ZIP', 'COUNTRY', 'VALUE']);
   });
 });
 
@@ -1087,6 +1087,8 @@ describe('post_klaviyoWebhook', () => {
     __seed('NewsletterSubscribers', [
       { _id: 'sub-1', email: 'test@example.com', status: 'subscribed' },
     ]);
+    const updates = [];
+    __onUpdate((collection, item) => updates.push({ collection, item }));
     const result = await post_klaviyoWebhook(
       makeRequest(
         { 'x-klaviyo-webhook-secret': 'klav-secret' },
@@ -1097,6 +1099,23 @@ describe('post_klaviyoWebhook', () => {
     const body = JSON.parse(result.body);
     expect(body.status).toBe('ok');
     expect(body.received).toBe('unsubscribed');
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates[0].item.status).toBe('unsubscribed');
+  });
+
+  it('returns 200 without DB update for non-existent subscriber', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    __seed('NewsletterSubscribers', []);
+    const updates = [];
+    __onUpdate((collection, item) => updates.push({ collection, item }));
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed', email: 'nobody@example.com' },
+      ),
+    );
+    expect(result.status).toBe(200);
+    expect(updates).toHaveLength(0);
   });
 
   it('returns 200 for unknown event type (acknowledged)', async () => {
