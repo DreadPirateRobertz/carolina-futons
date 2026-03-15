@@ -100,6 +100,124 @@ describe('ProductOptions', () => {
       await handleCustomVariantChange($w, state);
       expect(updateStickyPrice).toHaveBeenCalled();
     });
+
+    it('does nothing when both dropdowns are empty', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockClear();
+      $w('#sizeDropdown').value = '';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect(getProductVariants).not.toHaveBeenCalled();
+    });
+
+    it('shows stock status "In Stock" for in-stock variant', async () => {
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#stockStatus').text).toBe('In Stock');
+    });
+
+    it('shows stock status "Special Order" for out-of-stock variant', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: false, imageSrc: '', mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#stockStatus').text).toBe('Special Order');
+    });
+
+    it('shows compare price when variant has one', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 499, comparePrice: 699 }, inStock: true, imageSrc: '', mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productComparePrice').text).toBe('$699.00');
+      expect($w('#productComparePrice').show).toHaveBeenCalled();
+    });
+
+    it('hides compare price when variant has none', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 499 }, inStock: true, imageSrc: '', mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productComparePrice').hide).toHaveBeenCalled();
+    });
+
+    it('updates main product image when variant has imageSrc', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true,
+        imageSrc: 'https://example.com/variant-full.jpg',
+        mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productMainImage').src).toBe('https://example.com/variant-full.jpg');
+    });
+
+    it('sets alt text with product name and variant label', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true,
+        imageSrc: 'https://example.com/v.jpg', label: 'Full Natural',
+        mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productMainImage').alt).toContain('Full Natural');
+    });
+
+    it('updates gallery items from mediaItems', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true, imageSrc: '',
+        mediaItems: [
+          { src: 'https://example.com/a.jpg', alt: 'Front' },
+          { src: 'https://example.com/b.jpg', alt: 'Side' },
+        ],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productGallery').items).toHaveLength(2);
+      expect($w('#productGallery').items[0].src).toBe('https://example.com/a.jpg');
+    });
+
+    it('shows call-for-price text for call-for-price products', async () => {
+      state.product.price = 0; // triggers isCallForPrice
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productPrice').text).toContain('Call for Pricing');
+    });
+
+    it('handles getProductVariants returning empty array', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([]);
+      $w('#sizeDropdown').value = 'Full';
+      const priceBefore = $w('#productPrice').text;
+      await handleCustomVariantChange($w, state);
+      expect($w('#productPrice').text).toBe(priceBefore);
+    });
+
+    it('handles getProductVariants throwing an error', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockRejectedValueOnce(new Error('Network fail'));
+      $w('#sizeDropdown').value = 'Full';
+      await handleCustomVariantChange($w, state);
+      // Should complete without throwing — error caught internally
+    });
+
+    it('queries with only size when finish is empty', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockClear();
+      $w('#sizeDropdown').value = 'Queen';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect(getProductVariants).toHaveBeenCalledWith('prod-1', { Size: 'Queen' });
+    });
   });
 
   describe('initSwatchSelector', () => {
@@ -131,6 +249,27 @@ describe('ProductOptions', () => {
       await initSwatchSelector($w, state);
       expect($w('#swatchSection').collapse).toHaveBeenCalled();
     });
+
+    it('collapses swatch section when product is null', async () => {
+      state.product = null;
+      await initSwatchSelector($w, state);
+      expect($w('#swatchSection').collapse).toHaveBeenCalled();
+    });
+
+    it('registers View All click handler', async () => {
+      await initSwatchSelector($w, state);
+      expect($w('#swatchViewAll').onClick).toHaveBeenCalled();
+    });
+
+    it('registers swatch request link handler', async () => {
+      await initSwatchSelector($w, state);
+      expect($w('#swatchRequestLink').onClick).toHaveBeenCalled();
+    });
+
+    it('sets up onItemReady on swatch grid', async () => {
+      await initSwatchSelector($w, state);
+      expect($w('#swatchGrid').onItemReady).toHaveBeenCalled();
+    });
   });
 
   describe('selectSwatch', () => {
@@ -143,6 +282,36 @@ describe('ProductOptions', () => {
       $w('#finishDropdown').options = [{ label: 'Natural', value: 'natural' }];
       await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
       expect($w('#swatchTintOverlay').style.backgroundColor).toBe('#2244AA');
+    });
+
+    it('triggers variant change when swatch name matches finish dropdown option', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockClear();
+      $w('#finishDropdown').options = [{ label: 'Ocean Blue', value: 'ocean-blue' }];
+      $w('#sizeDropdown').value = 'Full';
+      await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
+      expect($w('#finishDropdown').value).toBe('ocean-blue');
+      expect(getProductVariants).toHaveBeenCalled();
+    });
+
+    it('case-insensitive match on finish dropdown', async () => {
+      $w('#finishDropdown').options = [{ label: 'ocean blue', value: 'ocean-blue' }];
+      $w('#sizeDropdown').value = 'Full';
+      await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
+      expect($w('#finishDropdown').value).toBe('ocean-blue');
+    });
+
+    it('does not apply tint when colorHex is undefined', async () => {
+      $w('#finishDropdown').options = [];
+      await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Unknown', colorHex: undefined });
+      expect($w('#swatchTintOverlay').style.backgroundColor).toBe('');
+    });
+
+    it('refreshes swatch grid to update selection styling', async () => {
+      $w('#swatchGrid').data = [{ _id: 'sw-1' }, { _id: 'sw-2' }];
+      await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
+      // Grid data should be refreshed (new array reference for re-render)
+      expect($w('#swatchGrid').data).toHaveLength(2);
     });
   });
 });
