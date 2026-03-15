@@ -234,7 +234,7 @@
     if (!state.dragging || state.selectedIndex < 0) return;
     e.preventDefault();
     var pos = getEventPos(e);
-    var room = canvasToRoom(pos.x - state.dragOffsetX + PADDING * 0, pos.y - state.dragOffsetY + PADDING * 0);
+    var room = canvasToRoom(pos.x - state.dragOffsetX, pos.y - state.dragOffsetY);
     // Snap position to room coords (allow sub-inch precision removed — use integer inches)
     state.products[state.selectedIndex].x = Math.round(Math.max(0, room.x));
     state.products[state.selectedIndex].y = Math.round(Math.max(0, room.y));
@@ -282,6 +282,21 @@
     notifyParent();
   });
 
+  function normalizeProduct(p) {
+    return {
+      id: p.id || 'p-' + Date.now(),
+      productType: p.productType || '',
+      label: p.label || '',
+      x: Number(p.x) || 0,
+      y: Number(p.y) || 0,
+      width: Number(p.width) || 40,
+      depth: Number(p.depth) || 30,
+      depthBed: Number(p.depthBed) || Number(p.depth) || 30,
+      rotation: Number(p.rotation) || 0,
+      isBedMode: Boolean(p.isBedMode),
+    };
+  }
+
   // ── PostMessage Protocol ─────────────────────────────────────────
 
   function notifyParent() {
@@ -311,18 +326,7 @@
       case 'addProduct':
         var prod = event.data.product;
         if (!prod) break;
-        state.products.push({
-          id: prod.id || 'p-' + Date.now(),
-          productType: prod.productType || '',
-          label: prod.label || '',
-          x: Number(prod.x) || 0,
-          y: Number(prod.y) || 0,
-          width: Number(prod.width) || 40,
-          depth: Number(prod.depth) || 30,
-          depthBed: Number(prod.depthBed) || Number(prod.depth) || 30,
-          rotation: 0,
-          isBedMode: false,
-        });
+        state.products.push(normalizeProduct(prod));
         state.selectedIndex = state.products.length - 1;
         controlsBar.style.display = 'flex';
         updateControlButtons();
@@ -349,18 +353,7 @@
         break;
 
       case 'setProducts':
-        state.products = (event.data.products || []).map(function(p) {
-          return {
-            id: p.id || 'p-' + Date.now(),
-            productType: p.productType || '',
-            label: p.label || '',
-            x: Number(p.x) || 0, y: Number(p.y) || 0,
-            width: Number(p.width) || 40, depth: Number(p.depth) || 30,
-            depthBed: Number(p.depthBed) || Number(p.depth) || 30,
-            rotation: Number(p.rotation) || 0,
-            isBedMode: Boolean(p.isBedMode),
-          };
-        });
+        state.products = (event.data.products || []).map(normalizeProduct);
         state.selectedIndex = -1;
         controlsBar.style.display = 'none';
         draw();

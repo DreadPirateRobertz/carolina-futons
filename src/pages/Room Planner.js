@@ -146,8 +146,7 @@ function initProductPalette() {
     try { repeater.accessibility.ariaLabel = 'Furniture pieces to place in your room'; } catch (e) {}
     repeater.onItemReady(($item, itemData) => {
       try { $item('#paletteCategoryName').text = itemData.category; } catch (e) {}
-      // Each palette category item — nested items would need a sub-repeater
-      // For now, clicking the category adds its first product to the canvas
+      // Clicking a category adds all its products to the canvas
       try {
         $item('#paletteCategoryName').onClick(() => {
           if (!itemData.items || itemData.items.length === 0) return;

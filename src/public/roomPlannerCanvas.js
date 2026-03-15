@@ -75,9 +75,8 @@ export function checkFit(product, roomWidth, roomLength) {
  * @returns {Object|null}
  */
 export function hitTestProduct(canvasX, canvasY, products, scale) {
-  let hit = null;
-  for (const product of products) {
-    const bounds = getProductBounds(product);
+  for (let i = products.length - 1; i >= 0; i--) {
+    const bounds = getProductBounds(products[i]);
     const topLeft = roomToCanvas(bounds.x, bounds.y, scale);
     const w = bounds.w * scale;
     const h = bounds.h * scale;
@@ -85,10 +84,10 @@ export function hitTestProduct(canvasX, canvasY, products, scale) {
       canvasX >= topLeft.x && canvasX <= topLeft.x + w &&
       canvasY >= topLeft.y && canvasY <= topLeft.y + h
     ) {
-      hit = product;
+      return products[i];
     }
   }
-  return hit;
+  return null;
 }
 
 /**
