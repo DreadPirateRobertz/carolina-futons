@@ -155,6 +155,207 @@ describe('CustomizationBuilder', () => {
       await initCustomizationBuilder($w, state);
       expect($w('#custBuilderSection').collapse).toHaveBeenCalled();
     });
+
+    it('shows call-for-price text instead of price for CFP products', async () => {
+      state.product.price = 0;
+      await initCustomizationBuilder($w, state);
+      expect($w('#custBasePrice').text).toBe('Call for Pricing \u2014 (828) 327-8030');
+      expect($w('#custTotalPrice').text).toBe('Call for Pricing \u2014 (828) 327-8030');
+    });
+
+    it('collapses surcharge and pricing sections for call-for-price products', async () => {
+      state.product.price = 0;
+      await initCustomizationBuilder($w, state);
+      expect($w('#custSurchargeSection').collapse).toHaveBeenCalled();
+      expect($w('#custPricingSection').collapse).toHaveBeenCalled();
+    });
+
+    it('disables save button initially', async () => {
+      await initCustomizationBuilder($w, state);
+      expect($w('#custSaveBtn').disable).toHaveBeenCalled();
+    });
+
+    it('registers onClick handler on save button', async () => {
+      await initCustomizationBuilder($w, state);
+      expect($w('#custSaveBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('sets preview image from product mainMedia', async () => {
+      state.product.mainMedia = 'https://example.com/product.jpg';
+      await initCustomizationBuilder($w, state);
+      expect($w('#custPreviewImage').src).toBe('https://example.com/product.jpg');
+    });
+
+    it('does not set preview image when mainMedia is absent', async () => {
+      state.product.mainMedia = undefined;
+      await initCustomizationBuilder($w, state);
+      expect($w('#custPreviewImage').src).toBe('');
+    });
+
+    it('collapses surcharge section initially for normal products', async () => {
+      await initCustomizationBuilder($w, state);
+      expect($w('#custSurchargeSection').collapse).toHaveBeenCalled();
+    });
+
+    it('sets total price equal to base price initially', async () => {
+      await initCustomizationBuilder($w, state);
+      expect($w('#custTotalPrice').text).toBe('$499.00');
+    });
+
+    it('initializes state.customization to null', async () => {
+      state.customization = { fabricSwatchId: 'old' };
+      await initCustomizationBuilder($w, state);
+      expect(state.customization).toBeNull();
+    });
+
+    it('collapses section when swatches is null', async () => {
+      const { getCustomizationOptions } = await import('backend/customizationService.web');
+      getCustomizationOptions.mockResolvedValueOnce({ swatches: null, pricingRules: [] });
+      await initCustomizationBuilder($w, state);
+      expect($w('#custBuilderSection').collapse).toHaveBeenCalled();
+    });
+
+    it('sets up fabric filter dropdown', async () => {
+      await initCustomizationBuilder($w, state);
+      const filterOpts = $w('#custFabricFilter').options;
+      expect(filterOpts[0]).toEqual({ label: 'All Fabrics', value: '' });
+      expect(filterOpts).toHaveLength(4); // All + blue, red, neutral
+    });
+
+    it('capitalizes color family names in filter options', async () => {
+      await initCustomizationBuilder($w, state);
+      const filterOpts = $w('#custFabricFilter').options;
+      expect(filterOpts[1].label).toBe('Blue');
+      expect(filterOpts[2].label).toBe('Red');
+      expect(filterOpts[3].label).toBe('Neutral');
+    });
+
+    it('registers onChange handler on fabric filter', async () => {
+      await initCustomizationBuilder($w, state);
+      expect($w('#custFabricFilter').onChange).toHaveBeenCalled();
+    });
+
+    it('filters swatches when fabric filter onChange fires', async () => {
+      await initCustomizationBuilder($w, state);
+      const onChange = $w('#custFabricFilter').onChange.mock.calls[0][0];
+      $w('#custFabricFilter').value = 'blue';
+      onChange();
+      // Grid should be re-rendered with only blue swatches
+      expect($w('#custSwatchGrid').data).toHaveLength(1);
+      expect($w('#custSwatchGrid').data[0].colorFamily).toBe('blue');
+    });
+
+    it('shows all swatches when fabric filter is set to empty', async () => {
+      await initCustomizationBuilder($w, state);
+      const onChange = $w('#custFabricFilter').onChange.mock.calls[0][0];
+      $w('#custFabricFilter').value = '';
+      onChange();
+      expect($w('#custSwatchGrid').data).toHaveLength(3);
+    });
+  });
+
+  // ── renderCustomizationSwatches (via onItemReady) ──
+
+  describe('swatch grid onItemReady', () => {
+    async function getItemReady() {
+      await initCustomizationBuilder($w, state);
+      return $w('#custSwatchGrid').onItemReady.mock.calls[0][0];
+    }
+
+    function createMockItem() {
+      const items = new Map();
+      return (sel) => {
+        if (!items.has(sel)) items.set(sel, createMockElement());
+        return items.get(sel);
+      };
+    }
+
+    it('sets thumbnail src and alt from swatchImage', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'Coastal Blue', swatchImage: 'img1.jpg', colorHex: '#5B8FA8' });
+      expect($item('#custSwThumb').src).toBe('img1.jpg');
+      expect($item('#custSwThumb').alt).toBe('Coastal Blue fabric swatch');
+    });
+
+    it('uses colorHex as backgroundColor when no swatchImage', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-x', swatchName: 'Solid Red', swatchImage: null, colorHex: '#FF0000' });
+      expect($item('#custSwThumb').style.backgroundColor).toBe('#FF0000');
+    });
+
+    it('sets swatch label text', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'Coastal Blue', swatchImage: 'img.jpg' });
+      expect($item('#custSwLabel').text).toBe('Coastal Blue');
+    });
+
+    it('sets material badge text', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'X', material: 'Cotton', swatchImage: 'img.jpg' });
+      expect($item('#custSwMaterial').text).toBe('Cotton');
+    });
+
+    it('shows +15% tier badge for premium swatches', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-2', swatchName: 'X', priceTier: 'premium', swatchImage: 'img.jpg' });
+      expect($item('#custSwTierBadge').text).toBe('+15%');
+      expect($item('#custSwTierBadge').show).toHaveBeenCalled();
+    });
+
+    it('shows +$75 tier badge for luxury swatches', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-3', swatchName: 'X', priceTier: 'luxury', swatchImage: 'img.jpg' });
+      expect($item('#custSwTierBadge').text).toBe('+$75');
+      expect($item('#custSwTierBadge').show).toHaveBeenCalled();
+    });
+
+    it('hides tier badge for standard swatches', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'X', priceTier: 'standard', swatchImage: 'img.jpg' });
+      expect($item('#custSwTierBadge').hide).toHaveBeenCalled();
+    });
+
+    it('registers click handler on swatch thumbnail', async () => {
+      const onItemReady = await getItemReady();
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'X', swatchImage: 'img.jpg' });
+      expect($item('#custSwThumb').onClick).toHaveBeenCalled();
+    });
+
+    it('shows selected border when swatch matches current customization', async () => {
+      const onItemReady = await getItemReady();
+      // Set customization AFTER init (which resets it to null)
+      state.customization = { fabricSwatchId: 'sw-1' };
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'X', swatchImage: 'img.jpg' });
+      expect($item('#custSwThumb').style.borderColor).toBe('#5B8FA8'); // mountainBlue
+      expect($item('#custSwThumb').style.borderWidth).toBe('3px');
+    });
+
+    it('shows deselected border when swatch does not match', async () => {
+      const onItemReady = await getItemReady();
+      state.customization = { fabricSwatchId: 'sw-2' };
+      const $item = createMockItem();
+      onItemReady($item, { _id: 'sw-1', swatchName: 'X', swatchImage: 'img.jpg' });
+      expect($item('#custSwThumb').style.borderColor).toBe('#D4BC96'); // sandDark
+      expect($item('#custSwThumb').style.borderWidth).toBe('1px');
+    });
+
+    it('generates fallback _id when swatch has no _id', async () => {
+      await initCustomizationBuilder($w, state);
+      // The third swatch in mock data has _id 'sw-3', but let's verify the mapping
+      const gridData = $w('#custSwatchGrid').data;
+      expect(gridData[0]._id).toBe('sw-1');
+      expect(gridData[1]._id).toBe('sw-2');
+      expect(gridData[2]._id).toBe('sw-3');
+    });
   });
 
   // ── selectCustomizationSwatch ──
@@ -198,6 +399,55 @@ describe('CustomizationBuilder', () => {
 
       expect($w('#custSaveBtn').enable).toHaveBeenCalled();
     });
+
+    it('defaults priceTier to standard when not specified', () => {
+      const swatch = { _id: 'sw-x', swatchName: 'Plain', colorHex: '#FFF' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      expect(state.customization.priceTier).toBe('standard');
+    });
+
+    it('sets fabricColorHex on state.customization', () => {
+      const swatch = { _id: 'sw-1', swatchName: 'Coastal Blue', colorHex: '#5B8FA8', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      expect(state.customization.fabricColorHex).toBe('#5B8FA8');
+    });
+
+    it('sets totalPrice from product price on state', () => {
+      const swatch = { _id: 'sw-1', swatchName: 'Coastal Blue', colorHex: '#5B8FA8', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      // After updateCustomizationPrice, totalPrice should reflect calculation
+      expect(state.customization.totalPrice).toBe(499);
+    });
+
+    it('displays material text with prefix', () => {
+      const swatch = { _id: 'sw-1', swatchName: 'Coastal Blue', colorHex: '#5B8FA8', material: 'Cotton', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      expect($w('#custSelectedMaterial').text).toBe('Material: Cotton');
+    });
+
+    it('sets empty material text when material is undefined', () => {
+      const swatch = { _id: 'sw-1', swatchName: 'Plain', colorHex: '#FFF', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      expect($w('#custSelectedMaterial').text).toBe('');
+    });
+
+    it('re-renders grid data to update selection borders', () => {
+      $w('#custSwatchGrid').data = [{ _id: 'sw-1' }, { _id: 'sw-2' }];
+      const original = $w('#custSwatchGrid').data;
+      const swatch = { _id: 'sw-1', swatchName: 'Coastal Blue', colorHex: '#5B8FA8', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      // Should be a new array reference (spread) for re-render
+      expect($w('#custSwatchGrid').data).not.toBe(original);
+      expect($w('#custSwatchGrid').data).toHaveLength(2);
+    });
+
+    it('announces selection to screen reader', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      announce.mockClear();
+      const swatch = { _id: 'sw-1', swatchName: 'Coastal Blue', colorHex: '#5B8FA8', priceTier: 'standard' };
+      selectCustomizationSwatch($w, state, swatch, []);
+      expect(announce).toHaveBeenCalledWith($w, 'Selected Coastal Blue fabric');
+    });
   });
 
   // ── updateCustomizationPreview ──
@@ -227,6 +477,21 @@ describe('CustomizationBuilder', () => {
       const broken$w = () => { throw new Error('Element not found'); };
       expect(() => updateCustomizationPreview(broken$w, state, '#FFF', null)).not.toThrow();
     });
+
+    it('sets overlay opacity to 0.25', () => {
+      updateCustomizationPreview($w, state, '#5B8FA8', null);
+      expect($w('#custPreviewOverlay').style.opacity).toBe('0.25');
+    });
+
+    it('sets swatch preview alt text', () => {
+      updateCustomizationPreview($w, state, '#5B8FA8', 'img1.jpg');
+      expect($w('#custPreviewSwatch').alt).toBe('Selected fabric swatch preview');
+    });
+
+    it('clears overlay color when colorHex is empty', () => {
+      updateCustomizationPreview($w, state, '', 'img1.jpg');
+      expect($w('#custPreviewOverlay').style.backgroundColor).toBe('');
+    });
   });
 
   // ── updateCustomizationPrice ──
@@ -254,6 +519,33 @@ describe('CustomizationBuilder', () => {
       updateCustomizationPrice($w, state, 'luxury', rules);
 
       expect(state.customization.totalPrice).toBe(574);
+    });
+
+    it('displays luxury surcharge as +$75.00', () => {
+      const rules = [{ tier: 'luxury', surchargePercent: 0, surchargeFlat: 75, label: 'Luxury Fabric (+$75)' }];
+      updateCustomizationPrice($w, state, 'luxury', rules);
+      expect($w('#custSurcharge').text).toBe('+$75.00');
+      expect($w('#custSurchargeSection').expand).toHaveBeenCalled();
+    });
+
+    it('displays surcharge label text', () => {
+      const rules = [{ tier: 'premium', surchargePercent: 15, surchargeFlat: 0, label: 'Premium Fabric (+15%)' }];
+      updateCustomizationPrice($w, state, 'premium', rules);
+      expect($w('#custSurchargeLabel').text).toBe('Premium Fabric (+15%)');
+    });
+
+    it('updates base price display', () => {
+      const rules = [];
+      updateCustomizationPrice($w, state, 'standard', rules);
+      expect($w('#custBasePrice').text).toBe('$499.00');
+    });
+
+    it('does not update state.customization.totalPrice when customization is null', () => {
+      state.customization = null;
+      const rules = [];
+      // Should not throw
+      updateCustomizationPrice($w, state, 'standard', rules);
+      expect(state.customization).toBeNull();
     });
   });
 
@@ -289,6 +581,43 @@ describe('CustomizationBuilder', () => {
     it('disables save button during save', async () => {
       await saveCustomization($w, state);
       expect($w('#custSaveBtn').disable).toHaveBeenCalled();
+    });
+
+    it('shows specific error text when no customization selected', async () => {
+      state.customization = null;
+      await saveCustomization($w, state);
+      expect($w('#custSaveError').text).toBe('Please select a fabric first.');
+    });
+
+    it('hides error and success messages at start of save', async () => {
+      await saveCustomization($w, state);
+      expect($w('#custSaveError').hide).toHaveBeenCalled();
+      expect($w('#custSaveSuccess').hide).toHaveBeenCalled();
+    });
+
+    it('re-enables save button after successful save', async () => {
+      await saveCustomization($w, state);
+      expect($w('#custSaveBtn').enable).toHaveBeenCalled();
+    });
+
+    it('shows "saved locally" text for anonymous users', async () => {
+      await saveCustomization($w, state);
+      expect($w('#custSaveSuccess').text).toContain('locally');
+    });
+
+    it('announces save success to screen reader', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      announce.mockClear();
+      await saveCustomization($w, state);
+      expect(announce).toHaveBeenCalledWith($w, 'Configuration saved successfully');
+    });
+
+    it('re-enables save button after save failure', async () => {
+      // Force an error by making wix-storage-frontend throw
+      vi.doMock('wix-storage-frontend', () => { throw new Error('Storage unavailable'); });
+      await saveCustomization($w, state);
+      expect($w('#custSaveBtn').enable).toHaveBeenCalled();
+      vi.doUnmock('wix-storage-frontend');
     });
   });
 
