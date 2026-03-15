@@ -496,8 +496,8 @@ describe('initBackToTop', () => {
     };
     const $w = (id) => id === '#backToTop' ? btn : createMock$w()(id);
     initBackToTop($w);
-    // Flush microtask queue for dynamic import().then() chain
-    for (let i = 0; i < 10; i++) await new Promise(r => setTimeout(r, 0));
+    // Flush microtask queue — dynamic import().then() needs multiple ticks
+    await new Promise(r => setTimeout(r, 50));
     // Verify onScroll was registered (behavioral contract)
     expect(_scrollCallbacks.length).toBeGreaterThan(countBefore);
   });
@@ -600,7 +600,7 @@ describe('initStickyNav', () => {
   it('registers an onScroll handler', async () => {
     const $w = createMock$w();
     initStickyNav($w);
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 50));
     expect(_scrollCallbacks.length).toBeGreaterThan(scrollBefore);
   });
 
@@ -608,7 +608,7 @@ describe('initStickyNav', () => {
     const header = { style: {} };
     const $w = (id) => id === '#headerStrip' ? header : createMock$w()(id);
     initStickyNav($w);
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 50));
     const cb = _scrollCallbacks[_scrollCallbacks.length - 1];
     cb({ scrollY: 100 });
     expect(header.style.boxShadow).toBe('0 2px 4px rgba(0,0,0,0.1)');
@@ -618,7 +618,7 @@ describe('initStickyNav', () => {
     const header = { style: { boxShadow: '0 2px 4px rgba(0,0,0,0.1)' } };
     const $w = (id) => id === '#headerStrip' ? header : createMock$w()(id);
     initStickyNav($w);
-    await new Promise(r => setTimeout(r, 0));
+    await new Promise(r => setTimeout(r, 50));
     const cb = _scrollCallbacks[_scrollCallbacks.length - 1];
     cb({ scrollY: 10 });
     expect(header.style.boxShadow).toBe('none');
