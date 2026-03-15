@@ -181,7 +181,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 2, image: 'frame.jpg', lineTotal: 1000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#sideQtyMinus').style.color).toBe('#5B8FA8');
     expect($item('#sideQtyPlus').style.color).toBe('#5B8FA8');
@@ -191,7 +191,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Vienna Futon Frame', price: 500, quantity: 2, image: 'frame.jpg', lineTotal: 1000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#sideQtyMinus').accessibility.ariaLabel).toBe('Decrease quantity of Vienna Futon Frame');
     expect($item('#sideQtyPlus').accessibility.ariaLabel).toBe('Increase quantity of Vienna Futon Frame');
@@ -201,7 +201,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 2, image: 'frame.jpg', lineTotal: 1000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#sideQtyMinus').onClick).toHaveBeenCalled();
     expect($item('#sideQtyPlus').onClick).toHaveBeenCalled();
@@ -211,7 +211,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 3, image: 'frame.jpg', lineTotal: 1500 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const minusHandler = $item('#sideQtyMinus').onClick.mock.calls[0][0];
     const { updateCartItemQuantity, getCurrentCart } = await import('public/cartService');
@@ -226,7 +226,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 1, image: 'frame.jpg', lineTotal: 500 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const minusHandler = $item('#sideQtyMinus').onClick.mock.calls[0][0];
     const { updateCartItemQuantity } = await import('public/cartService');
@@ -240,7 +240,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 2, image: 'frame.jpg', lineTotal: 1000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const plusHandler = $item('#sideQtyPlus').onClick.mock.calls[0][0];
     const { updateCartItemQuantity, getCurrentCart } = await import('public/cartService');
@@ -255,7 +255,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Frame', price: 500, quantity: 10, image: 'frame.jpg', lineTotal: 5000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const plusHandler = $item('#sideQtyPlus').onClick.mock.calls[0][0];
     const { updateCartItemQuantity } = await import('public/cartService');
@@ -269,7 +269,7 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
     await loadPage();
     const itemData = { _id: 'item-1', name: 'Kodiak Frame', price: 500, quantity: 2, image: 'frame.jpg', lineTotal: 1000 };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const plusHandler = $item('#sideQtyPlus').onClick.mock.calls[0][0];
     const { getCurrentCart } = await import('public/cartService');

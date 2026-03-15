@@ -246,7 +246,7 @@ describe('Checkout — #paymentMethodsRepeater children', () => {
     const $item = simulateRepeaterItem('#paymentMethodsRepeater', {
       _id: 'credit-card', id: 'credit-card', name: 'Credit Card', brands: ['Visa', 'Mastercard'],
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#paymentMethodName').text).toBe('Credit Card');
   });
@@ -256,7 +256,7 @@ describe('Checkout — #paymentMethodsRepeater children', () => {
     const $item = simulateRepeaterItem('#paymentMethodsRepeater', {
       _id: 'apple-pay', id: 'apple-pay', name: 'Apple Pay',
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#paymentMethodIcon').alt).toBe('Apple Pay');
     expect($item('#paymentMethodIcon').accessibility.ariaHidden).toBe(true);
@@ -267,7 +267,7 @@ describe('Checkout — #paymentMethodsRepeater children', () => {
     const $item = simulateRepeaterItem('#paymentMethodsRepeater', {
       _id: 'credit-card', id: 'credit-card', name: 'Credit Card', brands: ['Visa', 'Mastercard', 'Amex'],
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#paymentBrands').text).toBe('Visa · Mastercard · Amex');
     expect($item('#paymentBrands').show).toHaveBeenCalled();
@@ -278,7 +278,7 @@ describe('Checkout — #paymentMethodsRepeater children', () => {
     const $item = simulateRepeaterItem('#paymentMethodsRepeater', {
       _id: 'apple-pay', id: 'apple-pay', name: 'Apple Pay',
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#paymentBrands').show).not.toHaveBeenCalled();
   });
@@ -297,7 +297,7 @@ describe('Checkout — #trustIcon in trust repeater', () => {
     const $item = simulateRepeaterItem('#trustRepeater', {
       _id: '0', icon: 'lock', text: 'Secure SSL Checkout',
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#trustIcon').accessibility.ariaHidden).toBe(true);
     expect($item('#trustIcon').alt).toBe('');
@@ -308,7 +308,7 @@ describe('Checkout — #trustIcon in trust repeater', () => {
     const $item = simulateRepeaterItem('#trustRepeater', {
       _id: '1', icon: 'shield', text: '30-Day Money-Back Guarantee',
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#trustText').text).toBe('30-Day Money-Back Guarantee');
   });
@@ -425,7 +425,7 @@ describe('Checkout — shipping options repeater children', () => {
       description: 'In-home setup and old furniture removal',
       estimatedDays: { min: 7, max: 14 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionDesc').text).toBe('In-home setup and old furniture removal');
   });
@@ -436,7 +436,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'standard', id: 'standard', label: 'Standard',
       price: 0, description: 'Curbside', estimatedDays: { min: 5, max: 10 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionDays').text).toBe('5–10 business days');
   });
@@ -447,7 +447,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'standard', id: 'standard', label: 'Standard Curbside',
       price: 0, description: 'Free curbside', estimatedDays: { min: 5, max: 10 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionPrice').text).toBe('FREE');
   });
@@ -458,7 +458,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'white-glove', id: 'white-glove', label: 'White Glove',
       price: 149.99, description: 'Setup', estimatedDays: { min: 7, max: 14 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionPrice').text).toBe('$149.99');
   });
@@ -469,7 +469,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'white-glove', id: 'white-glove', label: 'White Glove',
       price: 149.99, description: 'In-home setup', estimatedDays: { min: 7, max: 14 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionRadio').accessibility.ariaLabel).toBe('White Glove - In-home setup');
   });
@@ -480,7 +480,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'white-glove', id: 'white-glove', label: 'White Glove',
       price: 149.99, description: 'Setup', estimatedDays: { min: 7, max: 14 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionRadio').onClick).toHaveBeenCalled();
   });
@@ -491,7 +491,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'standard', id: 'standard', label: 'Standard',
       price: 0, description: 'Free', estimatedDays: { min: 5, max: 10 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     const { applyFocusRing } = await import('public/a11yHelpers.js');
     expect(applyFocusRing).toHaveBeenCalled();
@@ -503,7 +503,7 @@ describe('Checkout — shipping options repeater children', () => {
       _id: 'standard', id: 'standard', label: 'Standard Curbside',
       price: 0, description: 'Free delivery', estimatedDays: { min: 5, max: 10 },
     });
-    if (!$item) return;
+    expect($item).not.toBeNull();
 
     expect($item('#shippingOptionLabel').text).toBe('Standard Curbside');
   });

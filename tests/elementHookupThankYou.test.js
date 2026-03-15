@@ -233,7 +233,7 @@ describe('Thank You Page — testimonial elements', () => {
     getEl('#testimonialStoryInput').value = 'Short';
 
     const clickHandler = getEl('#testimonialSubmitBtn').onClick.mock.calls[0]?.[0];
-    if (!clickHandler) return;
+    expect(clickHandler).toBeDefined();
 
     await clickHandler();
 
@@ -253,7 +253,7 @@ describe('Thank You Page — testimonial elements', () => {
     getEl('#testimonialStoryInput').value = 'Absolutely love my new futon frame! Great quality and fast delivery.';
 
     const clickHandler = getEl('#testimonialSubmitBtn').onClick.mock.calls[0]?.[0];
-    if (!clickHandler) return;
+    expect(clickHandler).toBeDefined();
 
     await clickHandler();
 
@@ -278,7 +278,7 @@ describe('Thank You Page — testimonial elements', () => {
     getEl('#testimonialStoryInput').value = 'This is a great product with wonderful quality!';
 
     const clickHandler = getEl('#testimonialSubmitBtn').onClick.mock.calls[0]?.[0];
-    if (!clickHandler) return;
+    expect(clickHandler).toBeDefined();
 
     await clickHandler();
 
@@ -297,7 +297,7 @@ describe('Thank You Page — testimonial elements', () => {
     getEl('#testimonialStoryInput').value = 'Amazing furniture, great service, would recommend to everyone!';
 
     const clickHandler = getEl('#testimonialSubmitBtn').onClick.mock.calls[0]?.[0];
-    if (!clickHandler) return;
+    expect(clickHandler).toBeDefined();
 
     await clickHandler();
 
@@ -320,7 +320,7 @@ describe('Thank You Page — testimonial elements', () => {
     getEl('#testimonialStoryInput').value = 'Beautiful futon, exactly what I was looking for. Fast delivery too!';
 
     const clickHandler = getEl('#testimonialSubmitBtn').onClick.mock.calls[0]?.[0];
-    if (!clickHandler) return;
+    expect(clickHandler).toBeDefined();
 
     await clickHandler();
 
