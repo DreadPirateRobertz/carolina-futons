@@ -462,6 +462,20 @@ describe('createShipment', () => {
     expect(result.totalCharge).toBe(105);
     expect(capturedBody.ShipmentRequest.Shipment.Package).toHaveLength(2);
   });
+
+  it('returns error when packages is undefined', async () => {
+    const result = await createShipment({
+      orderId: '10044',
+      recipientName: 'Test User',
+      addressLine1: '1 Main St',
+      city: 'Asheville',
+      state: 'NC',
+      postalCode: '28801',
+      // no packages field
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
 });
 
 // ── trackShipment ──────────────────────────────────────────────────
@@ -785,5 +799,13 @@ describe('getPackageDimensions', () => {
     expect(dims.width).toBe(18);
     expect(dims.height).toBe(12);
     expect(dims.weight).toBe(15);
+  });
+
+  it('returns default dimensions for undefined category', () => {
+    expect(getPackageDimensions(undefined).weight).toBe(50);
+  });
+
+  it('returns default dimensions for null category', () => {
+    expect(getPackageDimensions(null).weight).toBe(50);
   });
 });
