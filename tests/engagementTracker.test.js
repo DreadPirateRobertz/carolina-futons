@@ -295,6 +295,24 @@ describe('getEngagementScore', () => {
     expect(score).toBe(20);
   });
 
+  it('adds 5 points for time on site > 2 minutes', () => {
+    sessionStorage.setItem('cf_session_events', JSON.stringify([
+      { type: 'page_view', timestamp: Date.now() - 150000 }, // 2.5 min ago
+    ]));
+    const score = getEngagementScore();
+    // Base 10 + >2min 5 = 15
+    expect(score).toBe(15);
+  });
+
+  it('adds 10 points for time on site > 5 minutes', () => {
+    sessionStorage.setItem('cf_session_events', JSON.stringify([
+      { type: 'page_view', timestamp: Date.now() - 360000 }, // 6 min ago
+    ]));
+    const score = getEngagementScore();
+    // Base 10 + >2min 5 + >5min 5 = 20
+    expect(score).toBe(20);
+  });
+
   it('caps score at 100', () => {
     // Seed every possible event type to exceed 100
     sessionStorage.setItem('cf_session_events', JSON.stringify([

@@ -96,7 +96,7 @@ describe('CustomizationBuilder', () => {
   let $w, state;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
     $w = create$w();
     state = {
       product: { ...futonFrame, _id: 'prod-1', price: 499 },
@@ -619,10 +619,63 @@ describe('CustomizationBuilder', () => {
       expect($w('#custSaveBtn').enable).toHaveBeenCalled();
       vi.doUnmock('wix-storage-frontend');
     });
+
+    it('calls saveConfiguration with correct payload for logged-in member', async () => {
+      const wixMembers = await import('wix-members-frontend');
+      const spy = vi.spyOn(wixMembers.currentMember, 'getMember').mockResolvedValue({ _id: 'member-42' });
+      const { saveConfiguration } = await import('backend/customizationService.web');
+      saveConfiguration.mockClear();
+
+      await saveCustomization($w, state);
+
+      expect(saveConfiguration).toHaveBeenCalledWith(expect.objectContaining({
+        productId: 'prod-1',
+        memberId: 'member-42',
+        configName: 'My Configuration',
+        fabricSwatchId: 'sw-2',
+        fabricName: 'Crimson Velvet',
+        totalPrice: 573.85,
+      }));
+      spy.mockRestore();
+    });
+
+    it('shows "Configuration saved!" for logged-in member', async () => {
+      const wixMembers = await import('wix-members-frontend');
+      const spy = vi.spyOn(wixMembers.currentMember, 'getMember').mockResolvedValue({ _id: 'member-42' });
+
+      await saveCustomization($w, state);
+      expect($w('#custSaveSuccess').text).toBe('Configuration saved!');
+      spy.mockRestore();
+    });
+
+    it('shows error when backend saveConfiguration returns error', async () => {
+      const wixMembers = await import('wix-members-frontend');
+      const spy = vi.spyOn(wixMembers.currentMember, 'getMember').mockResolvedValue({ _id: 'member-42' });
+      const { saveConfiguration } = await import('backend/customizationService.web');
+      saveConfiguration.mockResolvedValueOnce({ error: 'Duplicate config' });
+
+      await saveCustomization($w, state);
+      expect($w('#custSaveError').text).toBe('Could not save configuration. Please try again.');
+      spy.mockRestore();
+    });
+
+    it('uses configName from input field when provided', async () => {
+      const wixMembers = await import('wix-members-frontend');
+      const spy = vi.spyOn(wixMembers.currentMember, 'getMember').mockResolvedValue({ _id: 'member-42' });
+      const { saveConfiguration } = await import('backend/customizationService.web');
+      saveConfiguration.mockClear();
+      $w('#custConfigName').value = 'Living Room Setup';
+
+      await saveCustomization($w, state);
+
+      expect(saveConfiguration).toHaveBeenCalledWith(expect.objectContaining({
+        configName: 'Living Room Setup',
+      }));
+      spy.mockRestore();
+    });
   });
 
   // ── loadSavedCustomizations ──
-  // Note: with anonymous user (getMember → null), loads from local storage
 
   describe('loadSavedCustomizations', () => {
     it('collapses saved section when no local configs found', async () => {
@@ -636,6 +689,79 @@ describe('CustomizationBuilder', () => {
 
       await loadSavedCustomizations($w, state);
       expect($w('#custSavedSection').collapse).toHaveBeenCalled();
+    });
+
+    it('calls getSavedConfigurations for logged-in member', async () => {
+      const { currentMember } = await import('wix-members-frontend');
+      vi.spyOn(currentMember, 'getMember').mockResolvedValueOnce({ _id: 'member-99' });
+      const { getSavedConfigurations } = await import('backend/customizationService.web');
+      getSavedConfigurations.mockClear();
+      getSavedConfigurations.mockResolvedValueOnce([]);
+
+      await loadSavedCustomizations($w, state);
+      expect(getSavedConfigurations).toHaveBeenCalledWith('prod-1', 'member-99');
+    });
+
+    it('expands saved section and renders list when local configs exist', async () => {
+      // Seed local storage with saved configs (anonymous user path)
+      const configs = [
+        { _id: 'cfg-1', productId: 'prod-1', configName: 'My Futon', fabricName: 'Coastal Blue', fabricColorHex: '#5B8FA8', totalPrice: 499 },
+      ];
+      sessionStorage.setItem('cf_saved_configs', JSON.stringify(configs));
+
+      await loadSavedCustomizations($w, state);
+      expect($w('#custSavedSection').expand).toHaveBeenCalled();
+      expect($w('#custSavedList').data).toHaveLength(1);
+      expect($w('#custSavedList').onItemReady).toHaveBeenCalled();
+    });
+
+    it('renders saved config item with name, fabric, color dot, and price', async () => {
+      const configs = [
+        { _id: 'cfg-1', productId: 'prod-1', configName: 'My Futon', fabricName: 'Coastal Blue', fabricColorHex: '#5B8FA8', totalPrice: 499 },
+      ];
+      sessionStorage.setItem('cf_saved_configs', JSON.stringify(configs));
+
+      await loadSavedCustomizations($w, state);
+      const onItemReady = $w('#custSavedList').onItemReady.mock.calls[0][0];
+      const itemEls = new Map();
+      const $itemMock = (sel) => {
+        if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+        return itemEls.get(sel);
+      };
+      onItemReady($itemMock, configs[0]);
+      expect($itemMock('#savedConfigName').text).toBe('My Futon');
+      expect($itemMock('#savedFabricName').text).toBe('Coastal Blue');
+      expect($itemMock('#savedColorDot').style.backgroundColor).toBe('#5B8FA8');
+      expect($itemMock('#savedPrice').text).toBe('$499.00');
+    });
+
+    it('registers load button click handler on saved config items', async () => {
+      const configs = [
+        { _id: 'cfg-1', productId: 'prod-1', configName: 'My Futon', fabricName: 'Coastal Blue', fabricColorHex: '#5B8FA8', totalPrice: 499 },
+      ];
+      sessionStorage.setItem('cf_saved_configs', JSON.stringify(configs));
+
+      await loadSavedCustomizations($w, state);
+      const onItemReady = $w('#custSavedList').onItemReady.mock.calls[0][0];
+      const itemEls = new Map();
+      const $itemMock = (sel) => {
+        if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+        return itemEls.get(sel);
+      };
+      onItemReady($itemMock, configs[0]);
+      expect($itemMock('#savedLoadBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('filters local configs by product ID', async () => {
+      const configs = [
+        { _id: 'cfg-1', productId: 'prod-1', configName: 'Match', fabricName: 'Blue', totalPrice: 499 },
+        { _id: 'cfg-2', productId: 'prod-other', configName: 'No Match', fabricName: 'Red', totalPrice: 599 },
+      ];
+      sessionStorage.setItem('cf_saved_configs', JSON.stringify(configs));
+
+      await loadSavedCustomizations($w, state);
+      expect($w('#custSavedList').data).toHaveLength(1);
+      expect($w('#custSavedList').data[0].configName).toBe('Match');
     });
   });
 
