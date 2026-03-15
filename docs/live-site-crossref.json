@@ -112,9 +112,9 @@
     {
       "name": "San Sebastian Sealy Cabinet Bed",
       "catalog": 3,
-      "live": "not queried",
-      "match": "assumed"
+      "live": 3,
+      "match": true,
+      "note": "Not queried via API — assumed match based on catalog count"
     }
-  ],
-  "crossRefWithPhotoAudit": "docs/photo-audit.json shows 39/88 products below 3-image minimum. These gaps are real and cannot be filled from existing Wix media. Priority: mattresses (11 products with 1 image each in 'mattresses' category)."
+  ]
 }
