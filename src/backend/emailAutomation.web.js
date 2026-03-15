@@ -172,7 +172,13 @@ export const triggerWelcomeSequence = webMethod(
       if (existing.items.length > 0) return { success: false, queued: 0 };
 
       let discountCode = '';
-      try { discountCode = await getSecret('WELCOME_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve WELCOME_DISCOUNT_CODE:', e.message); }
+      let discountAvailable = false;
+      try {
+        discountCode = await getSecret('WELCOME_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
+      } catch (e) {
+        console.warn('[emailAutomation] Welcome discount unavailable, emails will omit discount:', e.message);
+      }
 
       const abVariant = selectABVariant();
       const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
@@ -184,6 +190,7 @@ export const triggerWelcomeSequence = webMethod(
         const variables = {
           firstName: cleanName,
           discountCode,
+          discountAvailable,
           email: cleanEmail,
         };
 
@@ -309,7 +316,13 @@ export const triggerAbandonedCartRecovery = webMethod(
 
       let cartsProcessed = 0;
       let discountCode = '';
-      try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve RECOVERY_DISCOUNT_CODE for cart recovery:', e.message); }
+      let discountAvailable = false;
+      try {
+        discountCode = await getSecret('RECOVERY_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
+      } catch (e) {
+        console.warn('[emailAutomation] Cart recovery discount unavailable, emails will omit discount:', e.message);
+      }
 
       for (const cart of result.items) {
         if (!cart.buyerEmail || !validateEmail(cart.buyerEmail)) continue;
@@ -330,7 +343,7 @@ export const triggerAbandonedCartRecovery = webMethod(
           parsedItems = typeof cart.lineItems === 'string'
             ? JSON.parse(cart.lineItems)
             : (cart.lineItems || []);
-        } catch (e) { parsedItems = []; }
+        } catch (e) { console.warn('[emailAutomation] Malformed lineItems for cart', cart.checkoutId, ':', e.message); parsedItems = []; }
         const itemSummary = parsedItems
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
@@ -347,6 +360,7 @@ export const triggerAbandonedCartRecovery = webMethod(
               cartTotal: String(cart.cartTotal || 0),
               itemSummary,
               discountCode: step.step === 3 ? discountCode : '',
+              discountAvailable: step.step === 3 ? discountAvailable : false,
               checkoutId: cart.checkoutId,
               email: cart.buyerEmail,
             },
@@ -396,6 +410,14 @@ export const triggerReengagement = webMethod(
         .find();
 
       let contacted = 0;
+      let discountCode = '';
+      let discountAvailable = false;
+      try {
+        discountCode = await getSecret('RECOVERY_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
+      } catch (e) {
+        console.warn('[emailAutomation] Reengagement discount unavailable, emails will omit discount:', e.message);
+      }
 
       for (const item of result.items) {
         if (!item.recipientEmail) continue;
@@ -409,9 +431,6 @@ export const triggerReengagement = webMethod(
 
         if (alreadySent.items.length > 0) continue;
 
-        let discountCode = '';
-        try { discountCode = await getSecret('RECOVERY_DISCOUNT_CODE'); } catch (e) { console.error('[emailAutomation] Failed to retrieve RECOVERY_DISCOUNT_CODE for reengagement:', e.message); }
-
         await queueEmail({
           templateId: SEQUENCES.reengagement.steps[0].templateId,
           recipientEmail: item.recipientEmail,
@@ -419,6 +438,7 @@ export const triggerReengagement = webMethod(
           variables: {
             firstName: item.variables?.firstName || '',
             discountCode,
+            discountAvailable,
             email: item.recipientEmail,
           },
           sequenceType: 'reengagement',
