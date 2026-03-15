@@ -64,14 +64,13 @@ export function styleFilterPanel($w) {
 /**
  * Style an active filter chip with brand colors.
  * @param {Object} el - Chip element
- * @param {boolean} [isRemovable=true] - Whether chip has remove button
  */
-export function styleFilterChip(el, isRemovable = true) {
+export function styleFilterChip(el) {
   if (!el) return;
   try {
     el.style.backgroundColor = colors.mountainBlueLight;
     el.style.color = colors.espresso;
-    el.style.borderRadius = borderRadius.pill + 'px';
+    el.style.borderRadius = borderRadius.pill;
     el.style.transition = transitions.fast;
   } catch (e) {}
 }

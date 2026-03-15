@@ -33,7 +33,7 @@ vi.mock('public/designTokens.js', () => ({
   borderRadius: {
     button: '8px',
     lg: '16px',
-    pill: 24,
+    pill: '9999px',
   },
 }));
 
@@ -192,6 +192,7 @@ describe('CategoryPagePolish — styleFilterChip', () => {
 
     expect(chip.style.backgroundColor).toBe('#D6E8F0');
     expect(chip.style.color).toBe('#3E2723');
+    expect(chip.style.borderRadius).toBe('9999px');
     expect(chip.style.transition).toBe('150ms ease');
   });
 
