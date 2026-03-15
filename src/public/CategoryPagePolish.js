@@ -29,7 +29,7 @@ export function styleHeroSection($w, gradient) {
  */
 export function styleHeroText($w) {
   try { $w('#categoryHeroTitle').style.color = colors.espresso; } catch (e) {}
-  try { $w('#categoryHeroSubtitle').style.color = colors.espressoDark; } catch (e) {}
+  try { $w('#categoryHeroSubtitle').style.color = colors.espressoLight; } catch (e) {}
 }
 
 /**
@@ -120,9 +120,9 @@ export function styleQuickViewModal($w) {
  */
 export function styleEmptyState($w) {
   try { $w('#emptyStateTitle').style.color = colors.espresso; } catch (e) {}
-  try { $w('#emptyStateMessage').style.color = colors.espressoDark; } catch (e) {}
+  try { $w('#emptyStateMessage').style.color = colors.espressoLight; } catch (e) {}
   try { $w('#noMatchesTitle').style.color = colors.espresso; } catch (e) {}
-  try { $w('#noMatchesMessage').style.color = colors.espressoDark; } catch (e) {}
+  try { $w('#noMatchesMessage').style.color = colors.espressoLight; } catch (e) {}
 }
 
 /**
@@ -130,8 +130,8 @@ export function styleEmptyState($w) {
  * @param {Function} $w - Wix selector function
  */
 export function styleResultCount($w) {
-  try { $w('#resultCount').style.color = colors.espressoDark; } catch (e) {}
-  try { $w('#filterResultCount').style.color = colors.espressoDark; } catch (e) {}
+  try { $w('#resultCount').style.color = colors.espressoLight; } catch (e) {}
+  try { $w('#filterResultCount').style.color = colors.espressoLight; } catch (e) {}
 }
 
 /**

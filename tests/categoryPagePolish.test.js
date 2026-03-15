@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('public/designTokens.js', () => ({
   colors: {
     espresso: '#3E2723',
-    espressoDark: '#2C1A15',
+    espressoLight: '#3D5A80',
     sandBase: '#F5F0EB',
     sandDark: '#D4C4B0',
     sandLight: '#FAF7F2',
@@ -142,7 +142,7 @@ describe('CategoryPagePolish — styleHeroText', () => {
     styleHeroText($w);
 
     expect(title.style.color).toBe('#3E2723');
-    expect(subtitle.style.color).toBe('#2C1A15');
+    expect(subtitle.style.color).toBe('#3D5A80');
   });
 });
 
@@ -261,7 +261,7 @@ describe('CategoryPagePolish — styleEmptyState', () => {
     styleEmptyState($w);
 
     expect(title.style.color).toBe('#3E2723');
-    expect(message.style.color).toBe('#2C1A15');
+    expect(message.style.color).toBe('#3D5A80');
   });
 
   it('applies espresso colors to no-matches text', () => {
@@ -275,7 +275,7 @@ describe('CategoryPagePolish — styleEmptyState', () => {
     styleEmptyState($w);
 
     expect(title.style.color).toBe('#3E2723');
-    expect(message.style.color).toBe('#2C1A15');
+    expect(message.style.color).toBe('#3D5A80');
   });
 });
 
@@ -290,8 +290,8 @@ describe('CategoryPagePolish — styleResultCount', () => {
 
     styleResultCount($w);
 
-    expect(count.style.color).toBe('#2C1A15');
-    expect(filterCount.style.color).toBe('#2C1A15');
+    expect(count.style.color).toBe('#3D5A80');
+    expect(filterCount.style.color).toBe('#3D5A80');
   });
 });
 
