@@ -1,5 +1,5 @@
 /*
- * Carolina Futons — Global CSS v6
+ * Carolina Futons — Global CSS v7
  *
  * CRITICAL: Wix Studio auto-prefixes "wixui-" to all class names.
  * Use ".section" NOT ".wixui-section" — Wix renders it as ".wixui-section".
@@ -260,9 +260,17 @@ h4.font_4,
   font-size: 14px !important;
 }
 
-[data-hook="extended-gallery-breadcrumbs"] {
+[data-hook="extended-gallery-breadcrumbs"],
+[data-hook="extended-gallery-breadcrumbs-component"] {
   font-size: 13px !important;
   padding: 12px 0 !important;
+}
+
+[data-hook="extended-gallery-breadcrumbs-component"] a,
+[data-hook="breadcrumbButton"] {
+  font-size: 13px !important;
+  font-family: var(--wst-font-family, 'open-sans-v2', sans-serif) !important;
+  color: var(--cf-navy) !important;
 }
 
 [data-hook="HeroDataHook.CategoryName"] {
@@ -279,6 +287,7 @@ h4.font_4,
 [data-hook="filter-full-title"] {
   font-size: 14px !important;
   font-weight: 600 !important;
+  color: var(--cf-navy) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.03em !important;
 }
@@ -482,6 +491,26 @@ h4.font_4,
   font-weight: 600 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
+}
+
+/* Load More button — was invisible (transparent bg + light text) */
+[data-hook="load-more-button"] {
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border: 2px solid var(--cf-blue) !important;
+  border-radius: 4px !important;
+  padding: 10px 32px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+[data-hook="load-more-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+  border-color: var(--cf-blue-dark) !important;
 }
 
 
@@ -903,7 +932,9 @@ h4.font_4,
 
   /* Breadcrumb links — 44px touch target */
   [data-hook="extended-gallery-breadcrumbs"] a,
-  [data-hook="extended-gallery-breadcrumbs"] {
+  [data-hook="extended-gallery-breadcrumbs"],
+  [data-hook="extended-gallery-breadcrumbs-component"] a,
+  [data-hook="extended-gallery-breadcrumbs-component"] {
     min-height: 44px !important;
     display: inline-flex !important;
     align-items: center !important;
