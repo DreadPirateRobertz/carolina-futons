@@ -13,6 +13,7 @@ import {
   formatBusinessHours,
   getSocialProofSnippets,
 } from 'public/aboutContactHelpers.js';
+import { initAboutIllustrations } from 'public/AboutIllustrations.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -26,6 +27,7 @@ $w.onReady(async function () {
   initVisitCta();
   initFaqLink();
   await injectLocalSchema();
+  initAboutIllustrations($w);
   initPageSeo('about');
   trackEvent('page_view', { page: 'about' });
 });
