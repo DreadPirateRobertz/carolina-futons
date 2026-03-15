@@ -39,52 +39,8 @@ globalThis.$w = Object.assign(
 
 // ── Mock Backend Modules ────────────────────────────────────────────
 
-const mockGetQuizOptions = vi.fn().mockResolvedValue({
-  roomTypes: [
-    { label: 'Living Room', value: 'living-room', description: 'Main living area', _id: 'opt-0' },
-    { label: 'Guest Room', value: 'guest-room', description: 'For visitors', _id: 'opt-1' },
-  ],
-  primaryUses: [
-    { label: 'Sitting', value: 'sitting', description: 'Mostly as a sofa', _id: 'opt-0' },
-    { label: 'Sleeping', value: 'sleeping', description: 'Mostly as a bed', _id: 'opt-1' },
-  ],
-  stylePreferences: [
-    { label: 'Modern', value: 'modern', description: 'Clean lines', _id: 'opt-0' },
-  ],
-  sizeOptions: [
-    { label: 'Full', value: 'full', description: 'Standard size', _id: 'opt-0' },
-  ],
-  budgetRanges: [
-    { label: 'Under $500', value: 'under-500', description: 'Budget-friendly', _id: 'opt-0' },
-  ],
-});
-
-const mockGetQuizRecommendations = vi.fn().mockResolvedValue([
-  {
-    product: {
-      _id: 'prod-001',
-      name: 'Asheville Futon',
-      slug: 'asheville-futon-frame',
-      price: 499,
-      formattedPrice: '$499.00',
-      mainMedia: 'https://example.com/asheville.jpg',
-    },
-    score: 85,
-    reason: 'Great match for living room sitting',
-  },
-  {
-    product: {
-      _id: 'prod-002',
-      name: 'Sedona Futon',
-      slug: 'sedona-futon-frame',
-      price: 599,
-      formattedPrice: '$599.00',
-      mainMedia: 'https://example.com/sedona.jpg',
-    },
-    score: 72,
-    reason: 'Good style match',
-  },
-]);
+const mockGetQuizOptions = vi.fn();
+const mockGetQuizRecommendations = vi.fn();
 
 vi.mock('backend/styleQuiz.web', () => ({
   getQuizRecommendations: mockGetQuizRecommendations,
@@ -169,13 +125,12 @@ beforeEach(() => {
 describe('Style Quiz Page', () => {
   describe('onReady initialization', () => {
     it('registers an onReady handler', () => {
-      expect(onReadyHandler).toBeDefined();
       expect(typeof onReadyHandler).toBe('function');
     });
 
     it('calls initBackToTop on ready', async () => {
       await onReadyHandler();
-      expect(initBackToTop).toHaveBeenCalled();
+      expect(initBackToTop).toHaveBeenCalledWith($w);
     });
 
     it('calls initPageSeo with styleQuiz type', async () => {
@@ -239,7 +194,7 @@ describe('Style Quiz Page', () => {
     it('announces step for screen readers', async () => {
       await onReadyHandler();
       expect(announce).toHaveBeenCalledWith(
-        expect.any(Function),
+        $w,
         expect.stringContaining('Step 1 of 5')
       );
     });
@@ -254,7 +209,7 @@ describe('Style Quiz Page', () => {
     it('populates repeater data from quiz options', async () => {
       await onReadyHandler();
       const data = getEl('#quizOptionsRepeater').data;
-      expect(data.length).toBe(2); // living room + guest room
+      expect(data.length).toBe(2);
       expect(data[0]).toHaveProperty('label', 'Living Room');
       expect(data[0]).toHaveProperty('value', 'living-room');
     });
@@ -299,7 +254,7 @@ describe('Style Quiz Page', () => {
       // Find the Next button click handler — makeClickable wires it
       const { makeClickable } = await import('public/a11yHelpers');
       const nextCall = makeClickable.mock.calls.find(c => {
-        try { return c[2]?.ariaLabel === 'Next step'; } catch { return false; }
+        return c[2]?.ariaLabel === 'Next step';
       });
       expect(nextCall).toBeDefined();
       // Execute the click handler
@@ -312,11 +267,11 @@ describe('Style Quiz Page', () => {
       await onReadyHandler();
       const { makeClickable } = await import('public/a11yHelpers');
       const nextCall = makeClickable.mock.calls.find(c => {
-        try { return c[2]?.ariaLabel === 'Next step'; } catch { return false; }
+        return c[2]?.ariaLabel === 'Next step';
       });
       nextCall[1]();
       expect(announce).toHaveBeenCalledWith(
-        expect.any(Function),
+        $w,
         'Please select an option before continuing'
       );
     });
@@ -327,7 +282,7 @@ describe('Style Quiz Page', () => {
       await onReadyHandler();
       const { makeClickable } = await import('public/a11yHelpers');
       const backCall = makeClickable.mock.calls.find(c => {
-        try { return c[2]?.ariaLabel === 'Previous step'; } catch { return false; }
+        return c[2]?.ariaLabel === 'Previous step';
       });
       expect(backCall).toBeDefined();
     });
@@ -338,30 +293,21 @@ describe('Style Quiz Page', () => {
       await onReadyHandler();
       const { makeClickable } = await import('public/a11yHelpers');
       const restartCall = makeClickable.mock.calls.find(c => {
-        try { return c[2]?.ariaLabel === 'Restart quiz'; } catch { return false; }
+        return c[2]?.ariaLabel === 'Restart quiz';
       });
       expect(restartCall).toBeDefined();
     });
   });
 
   describe('quiz submission and results', () => {
-    it('calls getQuizRecommendations on final step submit', async () => {
-      // We can't easily drive through all 5 steps in a unit test because
-      // state is module-scoped. Instead, verify the backend mock is importable
-      // and the onReady wiring is correct.
-      await onReadyHandler();
-      expect(mockGetQuizRecommendations).not.toHaveBeenCalled();
-      // The submit only fires when goNext() is called on step 4 with all answers
-    });
-  });
-
-  describe('results rendering', () => {
-    it('sets up results repeater with onItemReady', async () => {
-      await onReadyHandler();
-      // Results repeater is only set up after submitQuiz — we can't trigger it
-      // directly without driving the full flow. Verify the import wiring.
-      expect(mockGetQuizRecommendations).toBeDefined();
-    });
+    // TODO: requires full 5-step flow driver (vi.resetModules + step-by-step option
+    // selection + goNext) to test submitQuiz, renderResults, and renderNoResults.
+    // Module-scoped state makes this non-trivial — separate PR.
+    it.todo('calls getQuizRecommendations after completing all 5 steps');
+    it.todo('shows loading state during recommendation fetch');
+    it.todo('renders results repeater with match score badges');
+    it.todo('renders no-results fallback when recommendations are empty');
+    it.todo('handles getQuizRecommendations failure gracefully');
   });
 
   describe('error handling', () => {
