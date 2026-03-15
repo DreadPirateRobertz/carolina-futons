@@ -6,9 +6,9 @@
     "totalLiveProducts": 88,
     "totalCatalogProducts": 88,
     "finding": "Live Wix site product images are IDENTICAL to catalog-MASTER.json. No additional photos exist on the live site beyond what the catalog already contains.",
-    "mattressFinding": "All 8 mattress products match exactly. Mattresses remain photo-deficient (avg 1.1 imgs). Mesa 1000/3000/5000 and Pulsar have only 1 image each. New photos must be sourced externally.",
+    "mattressFinding": "All 8 products named 'Mattress' match exactly (listed in mattressComparison). The 'mattresses' catalog category also contains 6 additional futon frames with 1 image each — these are category mismatches, not actual mattresses. All remain photo-deficient. New photos must be sourced externally.",
     "murphyFinding": "All 9 Murphy cabinet beds match exactly (3-14 images each). Murphy beds are well-photographed.",
-    "recommendation": "Photo gaps identified in photo-audit.json (39 products below 3-image minimum, 67 images needed) cannot be filled from the Wix media manager. Need manufacturer photos or new photography."
+    "recommendation": "Photo gaps identified in content/photo-audit.json (39 products below 3-image minimum, 67 images needed) cannot be filled from the Wix media manager. Need manufacturer photos or new photography."
   },
   "mattressComparison": [
     {
