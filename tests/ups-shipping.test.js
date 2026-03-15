@@ -195,6 +195,119 @@ describe('getUPSRates', () => {
     expect(rates[0].title).toBe('UPS Ground');
     expect(rates[0].estimatedDelivery).toBeTruthy();
   });
+
+  it('caps packages array at 20', async () => {
+    const manyPackages = Array.from({ length: 25 }, (_, i) => ({
+      length: 48, width: 30, height: 12, weight: 50, description: `Pkg ${i}`,
+    }));
+    const rates = await getUPSRates(
+      { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
+      manyPackages,
+      500,
+    );
+    // Should still succeed (capped internally)
+    expect(rates.length).toBeGreaterThan(0);
+  });
+
+  it('handles non-array packages gracefully', async () => {
+    const rates = await getUPSRates(
+      { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
+      null,
+      500,
+    );
+    expect(rates.length).toBeGreaterThan(0);
+  });
+
+  it('uses default dimensions when package dimensions missing', async () => {
+    const rates = await getUPSRates(
+      { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
+      [{}], // No dimensions
+      500,
+    );
+    expect(rates.length).toBeGreaterThan(0);
+  });
+
+  it('returns fallback rates for West Coast postal codes', async () => {
+    __setHandler(() => { throw new Error('Network error'); });
+    const rates = await getUPSRates(
+      { postalCode: '90210' },
+      [{ weight: 50 }],
+      500,
+    );
+    expect(rates[0].cost).toBe(79.99);
+  });
+
+  it('returns fallback rates for Northeast postal codes', async () => {
+    __setHandler(() => { throw new Error('Network error'); });
+    const rates = await getUPSRates(
+      { postalCode: '10001' },
+      [{ weight: 50 }],
+      500,
+    );
+    expect(rates[0].cost).toBe(59.99);
+  });
+
+  it('returns fallback rates for Southeast postal codes', async () => {
+    __setHandler(() => { throw new Error('Network error'); });
+    const rates = await getUPSRates(
+      { postalCode: '30301' },
+      [{ weight: 50 }],
+      500,
+    );
+    expect(rates[0].cost).toBe(39.99);
+  });
+
+  it('fallback includes ground and 2nd day options', async () => {
+    __setHandler(() => { throw new Error('Network error'); });
+    const rates = await getUPSRates(
+      { postalCode: '28801' },
+      [{ weight: 50 }],
+      500,
+    );
+    expect(rates).toHaveLength(2);
+    expect(rates[0].code).toBe('ups-ground-est');
+    expect(rates[1].code).toBe('ups-2day-est');
+    expect(rates[1].cost).toBe(rates[0].cost + 40);
+  });
+
+  it('maps unknown service codes to generic name', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/rating/')) {
+        return {
+          ok: true,
+          async json() {
+            return {
+              RateResponse: {
+                RatedShipment: [{
+                  Service: { Code: '99' },
+                  TotalCharges: { MonetaryValue: '199.99', CurrencyCode: 'USD' },
+                }],
+              },
+            };
+          },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+    const rates = await getUPSRates(
+      { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
+      [{ weight: 50 }],
+      500,
+    );
+    expect(rates[0].title).toBe('UPS Service 99');
+    expect(rates[0].estimatedDelivery).toBe('Contact for estimate');
+  });
+
+  it('handles null destinationAddress in fallback path', async () => {
+    __setHandler(() => { throw new Error('Network error'); });
+    const rates = await getUPSRates(null, [{ weight: 50 }], 500);
+    expect(rates.length).toBeGreaterThan(0);
+    expect(rates[0].isEstimate).toBe(true);
+  });
 });
 
 // ── createShipment ─────────────────────────────────────────────────
@@ -248,6 +361,90 @@ describe('createShipment', () => {
       packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
     });
 
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('creates return label when returnLabel is true', async () => {
+    const result = await createShipment({
+      orderId: '10043',
+      recipientName: 'Jane Smith',
+      recipientPhone: '8285551234',
+      addressLine1: '123 Main St',
+      city: 'Asheville',
+      state: 'NC',
+      postalCode: '28801',
+      country: 'US',
+      serviceCode: '03',
+      returnLabel: true,
+      packages: [{ length: 80, width: 40, height: 12, weight: 85, description: 'Return Futon Frame' }],
+    });
+    expect(result.success).toBe(true);
+    expect(result.trackingNumber).toBeTruthy();
+  });
+
+  it('defaults to Ground service when serviceCode not provided', async () => {
+    const result = await createShipment({
+      orderId: '10044',
+      recipientName: 'Bob',
+      addressLine1: '456 Oak Ave',
+      city: 'Denver',
+      state: 'CO',
+      postalCode: '80201',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('handles missing optional addressLine2', async () => {
+    const result = await createShipment({
+      orderId: '10045',
+      recipientName: 'Alice',
+      addressLine1: '789 Pine St',
+      city: 'Portland',
+      state: 'OR',
+      postalCode: '97201',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('includes billing weight in response', async () => {
+    const result = await createShipment({
+      orderId: '10046',
+      recipientName: 'Jane',
+      addressLine1: '123 Main St',
+      city: 'Asheville',
+      state: 'NC',
+      postalCode: '28801',
+      packages: [{ length: 80, width: 40, height: 12, weight: 85 }],
+    });
+    expect(result.billingWeight).toBe('85');
+  });
+
+  it('handles invalid response structure', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/shipments/')) {
+        return {
+          ok: true,
+          async json() { return { ShipmentResponse: {} }; },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+    const result = await createShipment({
+      orderId: '10047',
+      recipientName: 'Test',
+      addressLine1: '1 St',
+      city: 'X',
+      state: 'NC',
+      postalCode: '28801',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
   });
@@ -317,6 +514,81 @@ describe('trackShipment', () => {
     const result = await trackShipment(null);
     expect(result.success).toBe(false);
     expect(result.error).toBe('Invalid tracking number format');
+  });
+
+  it('rejects tracking number that is too long', async () => {
+    const result = await trackShipment('A'.repeat(36));
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid tracking number format');
+  });
+
+  it('strips special characters from tracking number', async () => {
+    // 1Z-999-AA1-0123-4567-84 should be cleaned to 1Z999AA10123456784
+    const result = await trackShipment('1Z-999-AA1-0123-4567-84');
+    expect(result.success).toBe(true);
+    expect(result.status).toBe('In Transit');
+  });
+
+  it('returns error when no tracking info found', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/track/')) {
+        return {
+          ok: true,
+          async json() { return { trackResponse: { shipment: [] } }; },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+    const result = await trackShipment('1Z999AA10123456784');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('No tracking information found');
+  });
+
+  it('includes weight in tracking response', async () => {
+    const result = await trackShipment('1Z999AA10123456784');
+    expect(result.weight).toBe('85');
+  });
+
+  it('formats activity location from city, state, country', async () => {
+    const result = await trackShipment('1Z999AA10123456784');
+    expect(result.activities[0].location).toBe('Hendersonville, NC, US');
+  });
+
+  it('handles activity with partial location data', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/track/')) {
+        return {
+          ok: true,
+          async json() {
+            return {
+              trackResponse: {
+                shipment: [{
+                  package: [{
+                    currentStatus: { description: 'Delivered', code: 'DL' },
+                    deliveryDate: [],
+                    weight: { weight: '85' },
+                    activity: [
+                      { status: { description: 'Delivered' }, location: { address: { city: 'Asheville' } }, date: '20250620', time: '140000' },
+                    ],
+                  }],
+                }],
+              },
+            };
+          },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+    const result = await trackShipment('1Z999AA10123456784');
+    expect(result.activities[0].location).toBe('Asheville');
   });
 });
 
@@ -421,6 +693,31 @@ describe('validateAddress', () => {
     expect(result.error).toBe('validation unavailable');
   });
 
+  it('returns invalid with no candidates for NoCandidatesIndicator', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'tok', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/addressvalidation/')) {
+        return {
+          ok: true,
+          async json() { return { XAVResponse: { NoCandidatesIndicator: '' } }; },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+    const result = await validateAddress({
+      addressLine1: '99999 Fake St',
+      city: 'Nowhere',
+      state: 'XX',
+      postalCode: '00000',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.ambiguous).toBe(false);
+    expect(result.candidates).toHaveLength(0);
+  });
+
   it('returns invalid with unavailable flag on unrecognized response format', async () => {
     __setHandler((url) => {
       if (url.includes('/oauth/token')) {
@@ -471,5 +768,29 @@ describe('getPackageDimensions', () => {
     const dims = getPackageDimensions('something-else');
     expect(dims.length).toBe(48);
     expect(dims.weight).toBe(50);
+  });
+
+  it('returns futon-mattress dimensions', () => {
+    const dims = getPackageDimensions('futon-mattress');
+    expect(dims.length).toBe(78);
+    expect(dims.weight).toBe(55);
+  });
+
+  it('returns platform-bed dimensions', () => {
+    const dims = getPackageDimensions('platform-bed');
+    expect(dims.length).toBe(80);
+    expect(dims.weight).toBe(70);
+  });
+
+  it('returns casegoods dimensions', () => {
+    const dims = getPackageDimensions('casegoods');
+    expect(dims.length).toBe(36);
+    expect(dims.weight).toBe(45);
+  });
+
+  it('returns accessory dimensions', () => {
+    const dims = getPackageDimensions('accessory');
+    expect(dims.length).toBe(24);
+    expect(dims.weight).toBe(15);
   });
 });
