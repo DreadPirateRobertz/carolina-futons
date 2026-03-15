@@ -56,18 +56,28 @@ describe('trackEvent', () => {
     expect(() => trackEvent('test_event')).not.toThrow();
   });
 
-  it('rejects null eventType', () => {
+  it('rejects null eventType — nothing queued', async () => {
+    const { trackProductView } = await import('backend/analyticsHelpers.web');
+    trackProductView.mockClear();
     trackEvent(null, { foo: 'bar' });
-    // Nothing should be queued — flush should be a no-op
+    await flushEvents();
+    expect(trackProductView).not.toHaveBeenCalled();
   });
 
-  it('rejects non-string eventType', () => {
+  it('rejects non-string eventType — nothing queued', async () => {
+    const { trackAddToCart } = await import('backend/analyticsHelpers.web');
+    trackAddToCart.mockClear();
     trackEvent(123, { foo: 'bar' });
-    // Should silently return without queueing
+    await flushEvents();
+    expect(trackAddToCart).not.toHaveBeenCalled();
   });
 
-  it('rejects empty string eventType', () => {
+  it('rejects empty string eventType — nothing queued', async () => {
+    const { trackProductView } = await import('backend/analyticsHelpers.web');
+    trackProductView.mockClear();
     trackEvent('', { foo: 'bar' });
+    await flushEvents();
+    expect(trackProductView).not.toHaveBeenCalled();
   });
 
   it('sanitizes special characters from event type', async () => {
@@ -79,15 +89,20 @@ describe('trackEvent', () => {
     expect(trackProductView).not.toHaveBeenCalled();
   });
 
-  it('strips all non-alphanumeric/underscore/hyphen characters', async () => {
+  it('passes through valid alphanumeric/underscore/hyphen characters', async () => {
     trackEvent('valid_event-type', {});
     await flushEvents();
-    // Should not throw — valid characters pass through
+    // Should store locally since type doesn't match backend routes
+    const stored = JSON.parse(sessionStorage.getItem('cf_session_events') || '[]');
+    expect(stored.some(e => e.type === 'valid_event-type')).toBe(true);
   });
 
-  it('rejects eventType that becomes empty after sanitization', () => {
+  it('rejects eventType that becomes empty after sanitization — nothing queued', async () => {
+    const { trackProductView } = await import('backend/analyticsHelpers.web');
+    trackProductView.mockClear();
     trackEvent('!!!', { foo: 'bar' });
-    // All chars stripped → empty → should return without queueing
+    await flushEvents();
+    expect(trackProductView).not.toHaveBeenCalled();
   });
 });
 

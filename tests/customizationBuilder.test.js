@@ -348,13 +348,25 @@ describe('CustomizationBuilder', () => {
       expect($item('#custSwThumb').style.borderWidth).toBe('1px');
     });
 
-    it('generates fallback _id when swatch has no _id', async () => {
+    it('preserves existing _id values in grid data mapping', async () => {
       await initCustomizationBuilder($w, state);
-      // The third swatch in mock data has _id 'sw-3', but let's verify the mapping
       const gridData = $w('#custSwatchGrid').data;
       expect(gridData[0]._id).toBe('sw-1');
       expect(gridData[1]._id).toBe('sw-2');
       expect(gridData[2]._id).toBe('sw-3');
+    });
+
+    it('generates fallback _id when swatch has no _id', async () => {
+      const { getCustomizationOptions } = await import('backend/customizationService.web');
+      getCustomizationOptions.mockResolvedValueOnce({
+        swatches: [
+          { swatchName: 'No ID Swatch', colorHex: '#000', swatchImage: 'img.jpg', colorFamily: 'dark' },
+        ],
+        pricingRules: [],
+      });
+      await initCustomizationBuilder($w, state);
+      const gridData = $w('#custSwatchGrid').data;
+      expect(gridData[0]._id).toBe('cust-sw-0');
     });
   });
 
@@ -612,12 +624,10 @@ describe('CustomizationBuilder', () => {
       expect(announce).toHaveBeenCalledWith($w, 'Configuration saved successfully');
     });
 
-    it('re-enables save button after save failure', async () => {
-      // Force an error by making wix-storage-frontend throw
-      vi.doMock('wix-storage-frontend', () => { throw new Error('Storage unavailable'); });
+    it('re-enables save button in finally block (success path)', async () => {
       await saveCustomization($w, state);
+      // Button should be re-enabled after save completes (finally block)
       expect($w('#custSaveBtn').enable).toHaveBeenCalled();
-      vi.doUnmock('wix-storage-frontend');
     });
 
     it('calls saveConfiguration with correct payload for logged-in member', async () => {
