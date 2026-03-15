@@ -36,7 +36,7 @@ vi.mock('public/engagementTracker', () => ({
   trackProductPageView: vi.fn(), trackCartAdd: vi.fn(), trackGalleryInteraction: vi.fn(), trackSwatchView: vi.fn(), trackSocialShare: vi.fn(),
 }));
 
-import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest } from '../src/public/ProductDetails.js';
+import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from '../src/public/ProductDetails.js';
 
 function createMockElement() {
   return {
@@ -44,7 +44,7 @@ function createMockElement() {
     style: { color: '' },
     show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
     collapse: vi.fn(), expand: vi.fn(), onClick: vi.fn(), onChange: vi.fn(),
-    onItemReady: vi.fn(), postMessage: vi.fn(), forEachItem: vi.fn(),
+    onItemReady: vi.fn(), onKeyPress: vi.fn(), postMessage: vi.fn(), forEachItem: vi.fn(), focus: vi.fn(),
     accessibility: {},
     productOptions: [],
     disable: vi.fn(), enable: vi.fn(),
@@ -89,6 +89,18 @@ describe('ProductDetails', () => {
       await initBreadcrumbs($w, state);
       expect($w('#breadcrumbSchemaHtml').postMessage).toHaveBeenCalledWith('{"@type":"BreadcrumbList"}');
     });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initBreadcrumbs($w, state);
+      expect($w('#breadcrumb1').text).toBe('');
+    });
+
+    it('defaults to Shop category when collections is undefined', async () => {
+      state.product = { ...futonFrame, collections: undefined };
+      await initBreadcrumbs($w, state);
+      expect($w('#breadcrumb2').text).toBe('Shop');
+    });
   });
 
   describe('initProductInfoAccordion', () => {
@@ -116,6 +128,46 @@ describe('ProductDetails', () => {
       initProductInfoAccordion($w);
       expect($w('#infoContentShipping').text).toContain('Free standard shipping');
     });
+
+    it('sets minus sign on expanded Description arrow', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoArrowDescription').text).toBe('\u2212');
+    });
+
+    it('sets plus sign on collapsed section arrows', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoArrowDimensions').text).toBe('+');
+      expect($w('#infoArrowCare').text).toBe('+');
+    });
+
+    it('sets aria-expanded true on Description header', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDescription').accessibility.ariaExpanded).toBe(true);
+    });
+
+    it('sets aria-expanded false on collapsed headers', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(false);
+    });
+
+    it('toggles section on header click', () => {
+      initProductInfoAccordion($w);
+      // Get the click handler registered on Dimensions header
+      const clickHandler = $w('#infoHeaderDimensions').onClick.mock.calls[0][0];
+      // First click expands
+      clickHandler();
+      expect($w('#infoContentDimensions').expand).toHaveBeenCalled();
+      expect($w('#infoArrowDimensions').text).toBe('\u2212');
+      // Second click collapses
+      clickHandler();
+      expect($w('#infoContentDimensions').collapse).toHaveBeenCalledTimes(2); // initial + toggle
+      expect($w('#infoArrowDimensions').text).toBe('+');
+    });
+
+    it('registers keyboard handler on section headers', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDescription').onKeyPress).toHaveBeenCalled();
+    });
   });
 
   describe('initSocialShare', () => {
@@ -130,6 +182,15 @@ describe('ProductDetails', () => {
     it('sets aria labels on share buttons', () => {
       initSocialShare($w, state);
       expect($w('#shareFacebook').accessibility.ariaLabel).toBe('Share on Facebook');
+      expect($w('#sharePinterest').accessibility.ariaLabel).toBe('Share on Pinterest');
+      expect($w('#shareEmail').accessibility.ariaLabel).toBe('Share via email');
+      expect($w('#shareCopyLink').accessibility.ariaLabel).toBe('Copy product link');
+    });
+
+    it('does nothing when product is null', () => {
+      state.product = null;
+      initSocialShare($w, state);
+      expect($w('#shareFacebook').onClick).not.toHaveBeenCalled();
     });
   });
 
@@ -145,6 +206,28 @@ describe('ProductDetails', () => {
       initDeliveryEstimate($w, state);
       expect($w('#whiteGloveNote').text).toContain('White-glove');
     });
+
+    it('does not show white-glove for lightweight accessories', () => {
+      state.product = { ...futonFrame, collections: ['accessories'], weight: 5 };
+      initDeliveryEstimate($w, state);
+      expect($w('#whiteGloveNote').show).not.toHaveBeenCalled();
+    });
+
+    it('registers zip code button click handler', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('registers zip code Enter key handler', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipInput').onKeyPress).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryEstimate').show).not.toHaveBeenCalled();
+    });
   });
 
   describe('injectProductSchema', () => {
@@ -156,6 +239,17 @@ describe('ProductDetails', () => {
     it('posts OG tags when available', async () => {
       await injectProductSchema($w, state);
       expect($w('#productOgHtml').postMessage).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await injectProductSchema($w, state);
+      expect($w('#productSchemaHtml').postMessage).not.toHaveBeenCalled();
+    });
+
+    it('does not post FAQ schema when it returns null', async () => {
+      await injectProductSchema($w, state);
+      expect($w('#productFaqSchemaHtml').postMessage).not.toHaveBeenCalled();
     });
   });
 
@@ -170,6 +264,76 @@ describe('ProductDetails', () => {
       state.product.productOptions = [{ name: 'Finish', choices: [{ value: 'Natural' }] }];
       initSwatchRequest($w, state);
       expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('matches Color option name', () => {
+      state.product.productOptions = [{ name: 'Color', choices: [{ value: 'Red' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('matches Cover option name', () => {
+      state.product.productOptions = [{ name: 'Cover', choices: [{ value: 'Suede' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('registers onClick handler on swatch request button', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [{ value: 'Natural' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('registers onClick handler on swatchSubmit button', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [{ value: 'Natural' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchSubmit').onClick).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).not.toHaveBeenCalled();
+      expect($w('#swatchRequestBtn').hide).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('initSwatchCTA', () => {
+    it('shows button with "Get Free Swatches" for fabric-option products', () => {
+      state.product.productOptions = [{ name: 'Fabric', choices: [{ value: 'Linen' }] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').label).toBe('Get Free Swatches');
+      expect($w('#swatchCTABtn').show).toHaveBeenCalled();
+    });
+
+    it('shows button with "Request Free Swatches" for non-fabric products', () => {
+      state.product.productOptions = [{ name: 'Size', choices: [{ value: 'Full' }] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').label).toBe('Request Free Swatches');
+    });
+
+    it('sets brand styling on CTA button', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').style.backgroundColor).toBeTruthy();
+    });
+
+    it('sets accessibility label on CTA button', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').accessibility.ariaLabel).toContain('free fabric swatches');
+    });
+
+    it('registers onClick handler', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').onClick).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').show).not.toHaveBeenCalled();
     });
   });
 });

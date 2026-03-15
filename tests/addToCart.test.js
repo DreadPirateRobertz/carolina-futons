@@ -96,6 +96,26 @@ describe('AddToCart', () => {
       minusCb();
       expect(state.selectedQuantity).toBe(1);
     });
+
+    it('minus button decrements from 2 to 1', () => {
+      initQuantitySelector($w, state);
+      state.selectedQuantity = 2;
+      const minusCb = $w('#quantityMinus').onClick.mock.calls[0][0];
+      minusCb();
+      expect(state.selectedQuantity).toBe(1);
+      expect($w('#quantityInput').value).toBe('1');
+    });
+
+    it('registers onInput handler for manual entry', () => {
+      initQuantitySelector($w, state);
+      expect($w('#quantityInput').onInput).toHaveBeenCalled();
+    });
+
+    it('sets minus/plus aria labels', () => {
+      initQuantitySelector($w, state);
+      expect($w('#quantityMinus').accessibility.ariaLabel).toBe('Decrease quantity');
+      expect($w('#quantityPlus').accessibility.ariaLabel).toBe('Increase quantity');
+    });
   });
 
   describe('initAddToCartEnhancements', () => {
@@ -108,6 +128,50 @@ describe('AddToCart', () => {
       const { onCartChanged } = await import('public/cartService');
       initAddToCartEnhancements($w, state);
       expect(onCartChanged).toHaveBeenCalled();
+    });
+
+    it('calls addToCart with product ID and quantity on click', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockClear();
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(addToCart).toHaveBeenCalledWith('prod-1', 1);
+    });
+
+    it('disables button and shows "Adding..." during cart add', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockImplementationOnce(() => new Promise(r => setTimeout(r, 10)));
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      const promise = clickCb();
+      expect($w('#addToCartButton').disable).toHaveBeenCalled();
+      await promise;
+    });
+
+    it('shows "Added!" on successful cart add', async () => {
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addToCartButton').label).toBe('Added!');
+    });
+
+    it('shows error label when addToCart fails', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockRejectedValueOnce(new Error('Cart error'));
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addToCartButton').label).toContain('Error');
+    });
+
+    it('fires tracking events on successful add', async () => {
+      const { trackCartAdd } = await import('public/engagementTracker');
+      trackCartAdd.mockClear();
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(trackCartAdd).toHaveBeenCalled();
     });
   });
 
@@ -159,6 +223,39 @@ describe('AddToCart', () => {
       await initBundleSection($w, state);
       expect($w('#addBundleBtn').onClick).toHaveBeenCalled();
     });
+
+    it('sets bundle image and alt text', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundleImage').src).toBe('https://example.com/b.jpg');
+      expect($w('#bundleImage').alt).toContain('Bundle Mattress');
+    });
+
+    it('displays savings text', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundleSavings').text).toContain('$50.00');
+    });
+
+    it('displays bundle price', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundlePrice').text).toBe('$799.00');
+    });
+
+    it('stores bundle product on state', async () => {
+      await initBundleSection($w, state);
+      expect(state.bundleProduct._id).toBe('bundle-1');
+    });
+
+    it('registers click handlers on bundle image and name for navigation', async () => {
+      await initBundleSection($w, state);
+      expect($w('#bundleImage').onClick).toHaveBeenCalled();
+      expect($w('#bundleName').onClick).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initBundleSection($w, state);
+      expect($w('#bundleSection').expand).not.toHaveBeenCalled();
+    });
   });
 
   describe('initStockUrgency', () => {
@@ -174,6 +271,25 @@ describe('AddToCart', () => {
       await initStockUrgency($w, state);
       expect($w('#stockUrgency').hide).toHaveBeenCalled();
     });
+
+    it('adds pulse animation for critical stock (≤2)', async () => {
+      state.product.quantityInStock = 2;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').text).toContain('Only 2 left');
+      expect($w('#stockUrgency').style.animation).toContain('pulse');
+    });
+
+    it('hides urgency when stock is 0 (out of stock)', async () => {
+      state.product.quantityInStock = 0;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').hide).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').show).not.toHaveBeenCalled();
+    });
   });
 
   describe('initBackInStockNotification', () => {
@@ -186,12 +302,33 @@ describe('AddToCart', () => {
       await initBackInStockNotification($w, state);
       expect($w('#backInStockBtn').onClick).toHaveBeenCalled();
     });
+
+    it('hides success message initially', async () => {
+      await initBackInStockNotification($w, state);
+      expect($w('#backInStockSuccess').hide).toHaveBeenCalled();
+    });
+
+    it('registers size dropdown change listener', async () => {
+      await initBackInStockNotification($w, state);
+      expect($w('#sizeDropdown').onChange).toHaveBeenCalled();
+    });
+
+    it('registers finish dropdown change listener', async () => {
+      await initBackInStockNotification($w, state);
+      expect($w('#finishDropdown').onChange).toHaveBeenCalled();
+    });
   });
 
   describe('initWishlistButton', () => {
     it('registers click handler on wishlist button', async () => {
       await initWishlistButton($w, state);
       expect($w('#wishlistBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initWishlistButton($w, state);
+      expect($w('#wishlistBtn').onClick).not.toHaveBeenCalled();
     });
   });
 
