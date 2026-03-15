@@ -116,6 +116,15 @@ describe('AddToCart', () => {
       expect($w('#quantityMinus').accessibility.ariaLabel).toBe('Decrease quantity');
       expect($w('#quantityPlus').accessibility.ariaLabel).toBe('Increase quantity');
     });
+
+    it('onInput handler clamps value and updates state', () => {
+      initQuantitySelector($w, state);
+      const inputCb = $w('#quantityInput').onInput.mock.calls[0][0];
+      $w('#quantityInput').value = '5';
+      inputCb();
+      expect(state.selectedQuantity).toBe(5);
+      expect($w('#quantityInput').value).toBe('5');
+    });
   });
 
   describe('initAddToCartEnhancements', () => {

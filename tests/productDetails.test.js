@@ -152,16 +152,17 @@ describe('ProductDetails', () => {
 
     it('toggles section on header click', () => {
       initProductInfoAccordion($w);
-      // Get the click handler registered on Dimensions header
       const clickHandler = $w('#infoHeaderDimensions').onClick.mock.calls[0][0];
       // First click expands
       clickHandler();
       expect($w('#infoContentDimensions').expand).toHaveBeenCalled();
       expect($w('#infoArrowDimensions').text).toBe('\u2212');
+      expect($w('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(true);
       // Second click collapses
       clickHandler();
       expect($w('#infoContentDimensions').collapse).toHaveBeenCalledTimes(2); // initial + toggle
       expect($w('#infoArrowDimensions').text).toBe('+');
+      expect($w('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(false);
     });
 
     it('registers keyboard handler on section headers', () => {
