@@ -1,6 +1,6 @@
 // CategoryPagePolish.js — Design token application for Category Page UX
-// Centralizes Blue Ridge aesthetic styling: warm hero gradients, coral CTAs,
-// Mountain Blue accents, espresso filter UI, branded empty states.
+// Centralizes Blue Ridge aesthetic styling: category hero gradients,
+// Mountain Blue accents, navy UI text, branded empty states.
 import { colors, shadows, transitions, spacing, borderRadius } from 'public/designTokens.js';
 
 /**
