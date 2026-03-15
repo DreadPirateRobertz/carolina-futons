@@ -185,9 +185,12 @@ function initCanvas() {
     canvas.onMessage((event) => {
       try {
         if (event.data && event.data.type === 'canvasUpdate') {
-          const unfitting = (event.data.products || []).filter(p => !p.fits);
+          const products = event.data.products || [];
+          const unfitting = products.filter(p => !p.fits);
           if (unfitting.length > 0) {
             try { $w('#plannerStatusText').text = `${unfitting.length} piece(s) outside room bounds`; } catch (e) {}
+          } else if (products.length > 0) {
+            try { $w('#plannerStatusText').text = `${products.length} piece(s) placed — all fit!`; } catch (e) {}
           }
         }
       } catch (e) {}

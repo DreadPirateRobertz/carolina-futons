@@ -30,6 +30,7 @@ export function roomToCanvas(roomX, roomY, scale) {
  * @returns {{ x: number, y: number }}
  */
 export function canvasToRoom(canvasX, canvasY, scale) {
+  if (scale <= 0) return { x: 0, y: 0 };
   return {
     x: Math.max(0, (canvasX - CANVAS_PADDING) / scale),
     y: Math.max(0, (canvasY - CANVAS_PADDING) / scale),
@@ -42,7 +43,7 @@ export function canvasToRoom(canvasX, canvasY, scale) {
  * @returns {{ x: number, y: number, w: number, h: number }}
  */
 export function getProductBounds(product) {
-  const depth = product.isBedMode ? product.depthBed : product.depth;
+  const depth = product.isBedMode ? (product.depthBed || product.depth) : product.depth;
   const isSwapped = product.rotation === 90 || product.rotation === 270;
   return {
     x: product.x,

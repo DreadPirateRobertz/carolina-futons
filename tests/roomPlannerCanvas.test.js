@@ -54,6 +54,12 @@ describe('canvasToRoom', () => {
     expect(result.x).toBe(0);
     expect(result.y).toBe(0);
   });
+
+  it('returns zero for scale of zero (no division by zero)', () => {
+    const result = canvasToRoom(100, 100, 0);
+    expect(result.x).toBe(0);
+    expect(result.y).toBe(0);
+  });
 });
 
 // ── getProductBounds ──────────────────────────────────────────────────
@@ -106,6 +112,12 @@ describe('getProductBounds', () => {
     expect(bounds.w).toBe(54);
     expect(bounds.h).toBe(82);
   });
+
+  it('falls back to depth when depthBed is undefined in bed mode', () => {
+    const noDepthBed = { x: 0, y: 0, width: 40, depth: 30, rotation: 0, isBedMode: true };
+    const bounds = getProductBounds(noDepthBed);
+    expect(bounds.h).toBe(30);
+  });
 });
 
 // ── checkFit ──────────────────────────────────────────────────────────
@@ -141,8 +153,13 @@ describe('checkFit', () => {
     expect(checkFit(product, 200, 200)).toBe(false);
   });
 
-  it('returns false when product has negative position', () => {
+  it('returns false when product has negative x position', () => {
     const product = { x: -5, y: 10, width: 82, depth: 38, depthBed: 54, rotation: 0, isBedMode: false };
+    expect(checkFit(product, 200, 200)).toBe(false);
+  });
+
+  it('returns false when product has negative y position', () => {
+    const product = { x: 10, y: -5, width: 82, depth: 38, depthBed: 54, rotation: 0, isBedMode: false };
     expect(checkFit(product, 200, 200)).toBe(false);
   });
 

@@ -206,7 +206,9 @@
 
   function getEventPos(e) {
     var rect = canvas.getBoundingClientRect();
-    var touch = e.touches ? e.touches[0] : e;
+    var touch = (e.touches && e.touches.length > 0) ? e.touches[0]
+      : (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0]
+      : e;
     return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
   }
 
@@ -282,9 +284,10 @@
     notifyParent();
   });
 
+  var _idCounter = 0;
   function normalizeProduct(p) {
     return {
-      id: p.id || 'p-' + Date.now(),
+      id: p.id || 'p-' + Date.now() + '-' + (++_idCounter),
       productType: p.productType || '',
       label: p.label || '',
       x: Number(p.x) || 0,
@@ -357,6 +360,7 @@
         state.selectedIndex = -1;
         controlsBar.style.display = 'none';
         draw();
+        notifyParent();
         break;
     }
   });
