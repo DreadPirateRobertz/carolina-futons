@@ -76,6 +76,15 @@ describe('buildGridAlt', () => {
     expect(alt).not.toMatch(/\.\.\.$/);
   });
 
+  it('handles exactly 125 character alt text without truncation', () => {
+    // Build a name that results in exactly 125 chars after joining with " - Carolina Futons"
+    const suffix = ' - Carolina Futons'; // 18 chars
+    const name = 'A'.repeat(125 - suffix.length);
+    const alt = buildGridAlt({ name });
+    expect(alt.length).toBe(125);
+    expect(alt).not.toMatch(/\.\.\.$/);
+  });
+
   it('joins parts with dash separator', () => {
     const alt = buildGridAlt({ name: 'Test Product' });
     expect(alt).toMatch(/Test Product - Carolina Futons/);
@@ -139,6 +148,11 @@ describe('detectProductCategory', () => {
 
   it('prioritizes wall-hugger over generic futon', () => {
     expect(detectProductCategory({ collections: ['wall-hugger-frames', 'futon-frames'] })).toBe('Wall Hugger Futon Frame');
+  });
+
+  it('handles null entries in collections array', () => {
+    // .includes() on null throws — verify this throws or is handled
+    expect(() => detectProductCategory({ collections: [null, 'futon-frames'] })).toThrow();
   });
 });
 
