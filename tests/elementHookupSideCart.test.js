@@ -549,3 +549,38 @@ describe('Side Cart — #sideTierBar / #sideTierText after refresh', () => {
     expect(text.text).toContain('$50.00');
   });
 });
+
+// ── Variant Display Tests ───────────────────────────────────────────
+
+describe('Side Cart — #sideItemVariant display logic', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows variant details when present', async () => {
+    await loadPage();
+    const itemData = {
+      _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
+      variantDetails: 'Size: Queen · Finish: Honey Oak',
+    };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Honey Oak');
+    expect($item('#sideItemVariant').show).toHaveBeenCalled();
+  });
+
+  it('shows variant name as fallback when variantDetails is absent', async () => {
+    await loadPage();
+    const itemData = {
+      _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
+      variantName: 'Queen / Honey Oak',
+    };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemVariant').text).toBe('Queen / Honey Oak');
+    expect($item('#sideItemVariant').show).toHaveBeenCalled();
+  });
+});

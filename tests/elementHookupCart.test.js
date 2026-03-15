@@ -581,3 +581,46 @@ describe('Cart Page — #cartRecentRepeater child elements', () => {
     expect(repeater.onItemReady).toHaveBeenCalled();
   });
 });
+
+// ── Empty Cart Title ARIA Role ──────────────────────────────────────
+
+describe('Cart Page — iteration 5 edge cases', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets heading role on empty cart title', async () => {
+    await loadPage({ cart: { lineItems: [], totals: { subtotal: 0, total: 0 } } });
+    expect(getEl('#emptyCartTitle').accessibility.role).toBe('heading');
+  });
+
+  it('calls initPageSeo with cart identifier', async () => {
+    await loadPage();
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('cart');
+  });
+
+  it('collapses delivery section for empty cart', async () => {
+    await loadPage({ cart: { lineItems: [], totals: { subtotal: 0, total: 0 } } });
+    expect(getEl('#cartDeliverySection').collapse).toHaveBeenCalled();
+  });
+
+  it('fires GA4 view_cart event for non-empty cart', async () => {
+    await loadPage();
+    const { fireViewCart } = await import('public/ga4Tracking');
+    expect(fireViewCart).toHaveBeenCalled();
+  });
+
+  it('calls collapseOnMobile for non-essential sections', async () => {
+    await loadPage();
+    const { collapseOnMobile } = await import('public/mobileHelpers');
+    expect(collapseOnMobile).toHaveBeenCalledWith(expect.anything(), expect.arrayContaining(['#cartRecentSection', '#cartFinancingSection']));
+  });
+
+  it('calls initCouponCodeInput with cart context', async () => {
+    await loadPage();
+    const { initCouponCodeInput } = await import('public/CouponCodeInput.js');
+    expect(initCouponCodeInput).toHaveBeenCalled();
+  });
+});
