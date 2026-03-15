@@ -60,7 +60,7 @@ $w.onReady(async function () {
   injectCanonicalUrl();
   initScrollDepthTracking();
   deferInit(() => import('public/tikTokPixel').then(m => m.initTikTokPixel()));
-  injectBusinessSchema();
+  injectBusinessSchema().catch(e => console.warn('[masterPage] Schema injection failed:', e.message));
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
   setTimeout(() => {
@@ -397,7 +397,7 @@ async function injectBusinessSchema() {
       $w('#businessSchemaHtml').postMessage(schema);
     }
   } catch (e) {
-    // Schema injection is non-critical
+    console.warn('[masterPage] BusinessSchema injection failed:', e.message);
   }
 
   // WebSite schema with SearchAction for sitelinks searchbox eligibility
@@ -407,7 +407,7 @@ async function injectBusinessSchema() {
       $w('#websiteSchemaHtml').postMessage(websiteSchema);
     }
   } catch (e) {
-    // WebSite schema is non-critical
+    console.warn('[masterPage] WebSiteSchema injection failed:', e.message);
   }
 }
 
