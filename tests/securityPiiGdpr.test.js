@@ -19,6 +19,7 @@ const FB_CATALOG = join(BACKEND_DIR, 'facebookCatalog.web.js');
 const RETURNS_SERVICE = join(BACKEND_DIR, 'returnsService.web.js');
 const SANITIZE = join(BACKEND_DIR, 'utils', 'sanitize.js');
 const EMAIL_AUTOMATION = join(BACKEND_DIR, 'emailAutomation.web.js');
+const HTTP_HELPERS = join(BACKEND_DIR, 'utils', 'httpHelpers.js');
 
 function readFile(path) {
   return readFileSync(path, 'utf-8');
@@ -75,11 +76,17 @@ describe('Security: timingSafeEqual implementation', () => {
   });
 
   it('source code uses XOR-based constant-time comparison', () => {
-    const src = readFile(HTTP_FUNCTIONS);
+    const src = readFile(HTTP_HELPERS);
     // Must use XOR (^) for constant-time comparison
     expect(src).toMatch(/charCodeAt\(i\)\s*\^\s*\w+\.charCodeAt\(i\)/);
     // Must use OR (|) to accumulate differences
     expect(src).toMatch(/result\s*\|=\s*/);
+  });
+
+  it('http-functions imports timingSafeEqual from httpHelpers', () => {
+    const src = readFile(HTTP_FUNCTIONS);
+    expect(src).toContain("import { timingSafeEqual");
+    expect(src).toContain("from 'backend/utils/httpHelpers'");
   });
 });
 
