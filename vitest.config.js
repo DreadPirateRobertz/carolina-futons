@@ -269,6 +269,8 @@ export default defineConfig({
       'public/tikTokPixel': path.resolve(__dirname, 'src/public/tikTokPixel.js'),
       'public/MultiImageGallery.js': path.resolve(__dirname, 'src/public/MultiImageGallery.js'),
       'public/MultiImageGallery': path.resolve(__dirname, 'src/public/MultiImageGallery.js'),
+      'public/CategoryPagePolish.js': path.resolve(__dirname, 'src/public/CategoryPagePolish.js'),
+      'public/CategoryPagePolish': path.resolve(__dirname, 'src/public/CategoryPagePolish.js'),
     },
   },
 });
