@@ -197,9 +197,9 @@ describe('ProductOptions', () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockResolvedValueOnce([]);
       $w('#sizeDropdown').value = 'Full';
-      // Should not throw
+      const priceBefore = $w('#productPrice').text;
       await handleCustomVariantChange($w, state);
-      // Price should not have been updated (still default)
+      expect($w('#productPrice').text).toBe(priceBefore);
     });
 
     it('handles getProductVariants throwing an error', async () => {

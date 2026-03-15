@@ -136,7 +136,7 @@ describe('getUPSRates', () => {
     expect(rates[1].cost).toBe(89.99);
   });
 
-  it('does NOT return free shipping at $1200 (free shipping disabled)', async () => {
+  it('does NOT return free shipping at $1200 (below free shipping threshold)', async () => {
     const rates = await getUPSRates(
       { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
       [{ length: 80, width: 40, height: 12, weight: 85 }],
@@ -248,7 +248,7 @@ describe('getUPSRates', () => {
     const rates = await getUPSRates(
       { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
       [{ weight: 50 }],
-      999999, // exact threshold
+      999999, // shippingConfig.freeThreshold (currently $999,999)
     );
     expect(rates).toHaveLength(1);
     expect(rates[0].code).toBe('free-ground');
@@ -259,7 +259,7 @@ describe('getUPSRates', () => {
     const rates = await getUPSRates(
       { postalCode: '28801', city: 'Asheville', state: 'NC', country: 'US' },
       [{ weight: 50 }],
-      1000000, // above threshold
+      1000000, // above shippingConfig.freeThreshold
     );
     expect(rates).toHaveLength(1);
     expect(rates[0].code).toBe('free-ground');
