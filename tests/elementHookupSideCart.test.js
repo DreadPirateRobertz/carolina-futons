@@ -493,3 +493,59 @@ describe('Side Cart — empty/populated state element hookup', () => {
     expect(getEl('#sideCartSubtotal').text).toBe('$549.99');
   });
 });
+
+// ── Shipping / Tier Progress After Refresh ──────────────────────────
+
+describe('Side Cart — #sideShippingBar / #sideShippingText after refresh', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets shipping progress bar and text on cart refresh', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    const bar = getEl('#sideShippingBar');
+    expect(bar.value).toBe(50); // from mock
+    expect(bar.style.backgroundColor).toBeDefined();
+
+    const text = getEl('#sideShippingText');
+    expect(text.text).toContain('$100.00');
+    expect(text.text).toContain('free shipping');
+  });
+
+  it('sets ARIA live on shipping text', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    expect(getEl('#sideShippingText').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#sideShippingText').accessibility.role).toBe('status');
+  });
+});
+
+describe('Side Cart — #sideTierBar / #sideTierText after refresh', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets tier progress bar and text on cart refresh', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    const bar = getEl('#sideTierBar');
+    expect(bar.value).toBe(60); // from mock
+    const text = getEl('#sideTierText');
+    expect(text.text).toContain('$50.00');
+  });
+});

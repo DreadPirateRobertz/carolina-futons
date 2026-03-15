@@ -801,3 +801,59 @@ describe('Checkout — #expressCheckoutSection / #expressCheckoutBtn', () => {
     expect(getEl('#expressCheckoutSection').show).toHaveBeenCalled();
   });
 });
+
+// ── Delivery Estimate ───────────────────────────────────────────────
+
+describe('Checkout — #checkoutDeliveryEstimate element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets delivery estimate text with date range', async () => {
+    await loadPage();
+    const el = getEl('#checkoutDeliveryEstimate');
+    expect(el.text).toContain('Estimated delivery');
+    expect(el.text).toContain('–');
+  });
+
+  it('sets ARIA attributes on delivery estimate', async () => {
+    await loadPage();
+    const el = getEl('#checkoutDeliveryEstimate');
+    expect(el.accessibility.role).toBe('status');
+    expect(el.accessibility.ariaLabel).toContain('Estimated delivery');
+  });
+
+  it('shows delivery estimate element', async () => {
+    await loadPage();
+    expect(getEl('#checkoutDeliveryEstimate').show).toHaveBeenCalled();
+  });
+});
+
+// ── Order Summary Repeater Children ─────────────────────────────────
+
+describe('Checkout — #orderSummaryItemsRepeater children', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('populates order summary items repeater', async () => {
+    await loadPage();
+    const repeater = getEl('#orderSummaryItemsRepeater');
+    expect(repeater.data.length).toBeGreaterThan(0);
+    expect(repeater.onItemReady).toHaveBeenCalled();
+  });
+
+  it('sets item name, qty, and price on repeater items', async () => {
+    await loadPage();
+    const $item = simulateRepeaterItem('#orderSummaryItemsRepeater', {
+      _id: '0', name: 'Kodiak Frame', quantity: 2, lineTotal: '1099.98',
+    });
+    expect($item).not.toBeNull();
+
+    expect($item('#summaryItemName').text).toBe('Kodiak Frame');
+    expect($item('#summaryItemQty').text).toBe('×2');
+    expect($item('#summaryItemPrice').text).toBe('$1099.98');
+  });
+});
