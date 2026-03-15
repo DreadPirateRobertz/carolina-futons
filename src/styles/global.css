@@ -266,10 +266,11 @@ h4.font_4,
   padding: 12px 0 !important;
 }
 
+/* breadcrumbButton is camelCase (Wix ProGallery breadcrumb component, confirmed staging 2026-03-14) */
 [data-hook="extended-gallery-breadcrumbs-component"] a,
 [data-hook="breadcrumbButton"] {
   font-size: 13px !important;
-  font-family: var(--wst-font-family, 'open-sans-v2', sans-serif) !important;
+  font-family: var(--wst-font-family, 'open-sans-v2', sans-serif) !important; /* --wst-font-family injected by Wix Studio runtime */
   color: var(--cf-navy) !important;
 }
 
@@ -287,7 +288,7 @@ h4.font_4,
 [data-hook="filter-full-title"] {
   font-size: 14px !important;
   font-weight: 600 !important;
-  color: var(--cf-navy) !important;
+  color: var(--cf-navy) !important; /* override Wix theme beige inheritance */
   text-transform: uppercase !important;
   letter-spacing: 0.03em !important;
 }
@@ -508,7 +509,8 @@ h4.font_4,
   transition: background-color 0.2s ease, border-color 0.2s ease !important;
 }
 
-[data-hook="load-more-button"]:hover {
+[data-hook="load-more-button"]:hover,
+[data-hook="load-more-button"]:focus-visible {
   background-color: var(--cf-blue-dark) !important;
   border-color: var(--cf-blue-dark) !important;
 }
@@ -928,6 +930,12 @@ h4.font_4,
     min-height: 44px !important;
     display: inline-flex !important;
     align-items: center !important;
+  }
+
+  /* Load More button — 44px touch target */
+  [data-hook="load-more-button"] {
+    min-height: 44px !important;
+    padding: 12px 24px !important;
   }
 
   /* Breadcrumb links — 44px touch target */
