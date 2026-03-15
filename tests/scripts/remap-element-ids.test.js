@@ -67,6 +67,26 @@ describe('parseMapping', () => {
     setupTmpDir({ 'empty-key.json': JSON.stringify({ '': 'newId' }) });
     expect(() => parseMapping(join(TMP_DIR, 'empty-key.json'))).toThrow();
   });
+
+  it('strips underscore-prefixed metadata keys', () => {
+    setupTmpDir({
+      'meta.json': JSON.stringify({
+        _meta: { description: 'Phase 1 renames', bead: 'test-dld' },
+        oldBtn: 'newBtn',
+        _notes: 'Some other metadata',
+        oldInput: 'newInput',
+      }),
+    });
+    const mapping = parseMapping(join(TMP_DIR, 'meta.json'));
+    expect(mapping).toEqual({ oldBtn: 'newBtn', oldInput: 'newInput' });
+    expect(mapping._meta).toBeUndefined();
+    expect(mapping._notes).toBeUndefined();
+  });
+
+  it('throws when only underscore-prefixed keys remain after stripping', () => {
+    setupTmpDir({ 'only-meta.json': JSON.stringify({ _meta: { x: 1 }, _notes: 'y' }) });
+    expect(() => parseMapping(join(TMP_DIR, 'only-meta.json'))).toThrow(/empty/i);
+  });
 });
 
 // ── replaceIds (pure string transform) ───────────────────────────────

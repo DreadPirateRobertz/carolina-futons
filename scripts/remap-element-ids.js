@@ -39,21 +39,24 @@ export function parseMapping(filePath) {
     throw new Error('Mapping must be a JSON object { "oldId": "newId", ... }');
   }
 
-  const entries = Object.entries(parsed);
-  if (entries.length === 0) {
-    throw new Error('Mapping is empty — nothing to remap');
-  }
-
-  for (const [key, value] of entries) {
+  // Strip metadata keys (e.g. _meta) — only string→string pairs are mappings
+  const mapping = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    if (key.startsWith('_')) continue;
     if (!key) {
       throw new Error('Mapping keys must be non-empty strings');
     }
     if (typeof value !== 'string' || !value) {
       throw new Error(`Mapping value for "${key}" must be a non-empty string, got: ${typeof value}`);
     }
+    mapping[key] = value;
   }
 
-  return parsed;
+  if (Object.keys(mapping).length === 0) {
+    throw new Error('Mapping is empty — nothing to remap (after stripping _ keys)');
+  }
+
+  return mapping;
 }
 
 /**
