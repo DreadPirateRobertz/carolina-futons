@@ -1,9 +1,15 @@
 /**
  * Tests for Thank You Page element hookup — CF-03jx
- * Covers: #deliveryTimeline, #deliveryEstimateText, #step1, #step2, #step3,
- * #step4, #testimonialSection, #testimonialTitle, #testimonialPrompt,
- * #testimonialNameInput, #testimonialStoryInput, #testimonialSubmitBtn,
- * #testimonialError, #testimonialSuccess
+ * Covers: #deliveryTimeline, #deliveryEstimateText, #step1–#step4,
+ * #testimonialSection/Title/Prompt/NameInput/StoryInput/SubmitBtn/Error/Success,
+ * #thankYouTitle, #thankYouMessage, #orderContactInfo,
+ * #brendaMessageSection, #brendaTitle, #brendaMessage,
+ * #shareText, #shareFacebook, #sharePinterest, #shareInstagram, #shareTwitter,
+ * #newsletterPrompt, #newsletterEmail, #newsletterSignup, #newsletterError, #newsletterSuccess,
+ * #referralSection, #referralTitle, #referralMessage, #referralCopyBtn, #referralEmailBtn,
+ * #assemblyGuideSection, #assemblyGuideTitle, #assemblyGuideText, #assemblyGuideBtn,
+ * #reviewSection, #reviewTitle, #reviewPrompt, #reviewStar1–#reviewStar5,
+ * #reviewRating, #reviewSubmitBtn, #reviewError, #reviewSuccess
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -113,6 +119,26 @@ vi.mock('public/giftCardHelpers.js', () => ({
 
 vi.mock('public/pageSeo.js', () => ({
   initPageSeo: vi.fn(),
+}));
+
+vi.mock('backend/testimonialService.web', () => ({
+  submitTestimonial: vi.fn(() => Promise.resolve({ success: true })),
+}));
+
+vi.mock('backend/contactSubmissions.web', () => ({
+  submitContactForm: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('backend/dataService.web', () => ({
+  scheduleReviewRequest: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('wix-members-frontend', () => ({
+  currentMember: { getMember: vi.fn(() => Promise.resolve(null)) },
+}));
+
+vi.mock('wix-location-frontend', () => ({
+  to: vi.fn(),
 }));
 
 vi.mock('wix-window-frontend', () => ({
@@ -327,5 +353,292 @@ describe('Thank You Page — testimonial elements', () => {
 
     const { announce } = await import('public/a11yHelpers');
     expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('testimonial'));
+  });
+});
+
+// ── Order Summary Section ───────────────────────────────────────────
+
+describe('Thank You Page — order summary element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets thank you title text', async () => {
+    await loadPage();
+    expect(getEl('#thankYouTitle').text).toBe('Thank You for Your Order!');
+  });
+
+  it('sets thank you message with shipping info', async () => {
+    await loadPage();
+    expect(getEl('#thankYouMessage').text).toContain('confirmed');
+    expect(getEl('#thankYouMessage').text).toContain('shipping confirmation');
+  });
+
+  it('sets contact info with phone number', async () => {
+    await loadPage();
+    expect(getEl('#orderContactInfo').text).toContain('(828) 252-9449');
+  });
+});
+
+// ── Brenda's Message Section ────────────────────────────────────────
+
+describe('Thank You Page — Brenda message element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets Brenda title and message text', async () => {
+    await loadPage();
+    expect(getEl('#brendaTitle').text).toBe('A Note from Brenda');
+    expect(getEl('#brendaMessage').text).toContain('Carolina Futons');
+    expect(getEl('#brendaMessage').text).toContain('Brenda Deal');
+  });
+
+  it('expands Brenda message section', async () => {
+    await loadPage();
+    expect(getEl('#brendaMessageSection').expand).toHaveBeenCalled();
+  });
+});
+
+// ── Social Sharing Section ──────────────────────────────────────────
+
+describe('Thank You Page — social sharing element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets share text prompt', async () => {
+    await loadPage();
+    expect(getEl('#shareText').text).toContain('Share with friends');
+  });
+
+  it('sets ARIA labels on all social share buttons', async () => {
+    await loadPage();
+    expect(getEl('#shareFacebook').accessibility.ariaLabel).toContain('Facebook');
+    expect(getEl('#sharePinterest').accessibility.ariaLabel).toContain('Pinterest');
+    expect(getEl('#shareInstagram').accessibility.ariaLabel).toContain('Instagram');
+    expect(getEl('#shareTwitter').accessibility.ariaLabel).toContain('Twitter');
+  });
+
+  it('registers click handlers on all share buttons', async () => {
+    await loadPage();
+    expect(getEl('#shareFacebook').onClick).toHaveBeenCalled();
+    expect(getEl('#sharePinterest').onClick).toHaveBeenCalled();
+    expect(getEl('#shareInstagram').onClick).toHaveBeenCalled();
+    expect(getEl('#shareTwitter').onClick).toHaveBeenCalled();
+  });
+});
+
+// ── Newsletter Section ──────────────────────────────────────────────
+
+describe('Thank You Page — newsletter element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets newsletter prompt text', async () => {
+    await loadPage();
+    expect(getEl('#newsletterPrompt').text).toContain('updates');
+  });
+
+  it('sets ARIA labels on newsletter email and signup button', async () => {
+    await loadPage();
+    expect(getEl('#newsletterEmail').accessibility.ariaLabel).toContain('email');
+    expect(getEl('#newsletterSignup').accessibility.ariaLabel).toContain('Subscribe');
+  });
+
+  it('registers click handler on newsletter signup button', async () => {
+    await loadPage();
+    expect(getEl('#newsletterSignup').onClick).toHaveBeenCalled();
+  });
+
+  it('shows error for invalid email', async () => {
+    await loadPage();
+
+    getEl('#newsletterEmail').value = 'not-an-email';
+
+    const clickHandler = getEl('#newsletterSignup').onClick.mock.calls[0]?.[0];
+    expect(clickHandler).toBeDefined();
+
+    await clickHandler();
+
+    expect(getEl('#newsletterError').text).toContain('valid email');
+    expect(getEl('#newsletterError').show).toHaveBeenCalled();
+  });
+
+  it('shows success and disables button on successful signup', async () => {
+    await loadPage();
+
+    getEl('#newsletterEmail').value = 'test@example.com';
+
+    const clickHandler = getEl('#newsletterSignup').onClick.mock.calls[0]?.[0];
+    expect(clickHandler).toBeDefined();
+
+    await clickHandler();
+
+    expect(getEl('#newsletterSuccess').text).toContain('subscribed');
+    expect(getEl('#newsletterSuccess').show).toHaveBeenCalled();
+    expect(getEl('#newsletterSignup').disable).toHaveBeenCalled();
+  });
+});
+
+// ── Referral Section ────────────────────────────────────────────────
+
+describe('Thank You Page — referral element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets referral title text', async () => {
+    await loadPage();
+    expect(getEl('#referralTitle').text).toBe('Share the Love');
+  });
+
+  it('sets referral message text', async () => {
+    await loadPage();
+    expect(getEl('#referralMessage').text).toContain('Carolina Futons');
+  });
+
+  it('sets ARIA labels on referral buttons', async () => {
+    await loadPage();
+    expect(getEl('#referralCopyBtn').accessibility.ariaLabel).toContain('Copy');
+    expect(getEl('#referralEmailBtn').accessibility.ariaLabel).toContain('email');
+  });
+
+  it('registers click handlers on referral buttons', async () => {
+    await loadPage();
+    expect(getEl('#referralCopyBtn').onClick).toHaveBeenCalled();
+    expect(getEl('#referralEmailBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('expands referral section', async () => {
+    await loadPage();
+    expect(getEl('#referralSection').expand).toHaveBeenCalled();
+  });
+});
+
+// ── Assembly Guide Section ──────────────────────────────────────────
+
+describe('Thank You Page — assembly guide element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets assembly guide title and text', async () => {
+    await loadPage();
+    expect(getEl('#assemblyGuideTitle').text).toBe('Assembly & Care Guides');
+    expect(getEl('#assemblyGuideText').text).toContain('assembly guides');
+  });
+
+  it('sets ARIA label on assembly guide button', async () => {
+    await loadPage();
+    expect(getEl('#assemblyGuideBtn').accessibility.ariaLabel).toContain('assembly');
+  });
+
+  it('registers click handler on assembly guide button', async () => {
+    await loadPage();
+    expect(getEl('#assemblyGuideBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('expands assembly guide section', async () => {
+    await loadPage();
+    expect(getEl('#assemblyGuideSection').expand).toHaveBeenCalled();
+  });
+});
+
+// ── Review Request Section ──────────────────────────────────────────
+
+describe('Thank You Page — review request element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets review title and prompt text', async () => {
+    await loadPage();
+    expect(getEl('#reviewTitle').text).toBe('Rate Your Experience');
+    expect(getEl('#reviewPrompt').text).toContain('rating');
+  });
+
+  it('sets ARIA labels on star buttons', async () => {
+    await loadPage();
+    expect(getEl('#reviewStar1').accessibility.ariaLabel).toBe('1 star');
+    expect(getEl('#reviewStar2').accessibility.ariaLabel).toBe('2 stars');
+    expect(getEl('#reviewStar3').accessibility.ariaLabel).toBe('3 stars');
+    expect(getEl('#reviewStar4').accessibility.ariaLabel).toBe('4 stars');
+    expect(getEl('#reviewStar5').accessibility.ariaLabel).toBe('5 stars');
+  });
+
+  it('registers click handlers on all 5 star buttons', async () => {
+    await loadPage();
+    for (let i = 1; i <= 5; i++) {
+      expect(getEl(`#reviewStar${i}`).onClick).toHaveBeenCalled();
+    }
+  });
+
+  it('updates rating text and star colors when star is clicked', async () => {
+    await loadPage();
+
+    const star3Handler = getEl('#reviewStar3').onClick.mock.calls[0]?.[0];
+    expect(star3Handler).toBeDefined();
+    star3Handler();
+
+    expect(getEl('#reviewRating').text).toBe('3 of 5 stars');
+    // Stars 1-3 should be coral, 4-5 muted brown
+    expect(getEl('#reviewStar1').style.color).toBe('#E8845C');
+    expect(getEl('#reviewStar3').style.color).toBe('#E8845C');
+    expect(getEl('#reviewStar4').style.color).toBe('#8B7355');
+    expect(getEl('#reviewStar5').style.color).toBe('#8B7355');
+  });
+
+  it('sets ARIA label on submit button', async () => {
+    await loadPage();
+    expect(getEl('#reviewSubmitBtn').accessibility.ariaLabel).toContain('Submit');
+  });
+
+  it('registers click handler on submit button', async () => {
+    await loadPage();
+    expect(getEl('#reviewSubmitBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('shows error when submitting without rating', async () => {
+    await loadPage();
+
+    const submitHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0]?.[0];
+    expect(submitHandler).toBeDefined();
+
+    await submitHandler();
+
+    expect(getEl('#reviewError').text).toContain('select a rating');
+    expect(getEl('#reviewError').show).toHaveBeenCalled();
+  });
+
+  it('shows success on successful review submission', async () => {
+    await loadPage();
+
+    // Select a rating first
+    const star4Handler = getEl('#reviewStar4').onClick.mock.calls[0]?.[0];
+    expect(star4Handler).toBeDefined();
+    star4Handler();
+
+    const submitHandler = getEl('#reviewSubmitBtn').onClick.mock.calls[0]?.[0];
+    expect(submitHandler).toBeDefined();
+
+    await submitHandler();
+
+    expect(getEl('#reviewSuccess').text).toContain('Thank you');
+    expect(getEl('#reviewSuccess').show).toHaveBeenCalled();
+    expect(getEl('#reviewSubmitBtn').hide).toHaveBeenCalled();
+  });
+
+  it('expands review section', async () => {
+    await loadPage();
+    expect(getEl('#reviewSection').expand).toHaveBeenCalled();
   });
 });

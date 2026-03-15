@@ -6,7 +6,13 @@
  * #checkoutShippingMessage, #shippingOptionsRepeater, #shippingOptionLabel,
  * #shippingOptionPrice, #shippingOptionDesc, #shippingOptionDays,
  * #shippingOptionRadio, #validateAddressBtn, #addressFullName, #addressLine1,
- * #addressCity, #addressState, #addressZip, #addressErrors, #addressSuccess
+ * #addressCity, #addressState, #addressZip, #addressErrors, #addressSuccess,
+ * #checkoutProgressNav, #checkoutProgressRepeater, #progressStepLabel,
+ * #progressStepNumber, #progressStepDot, #progressStepContainer,
+ * #orderNotesToggle, #orderNotesField, #checkoutFreeShipping,
+ * #checkoutItemCount, #orderSummarySidebar, #orderSummarySubtotal,
+ * #orderSummaryShipping, #orderSummaryTax, #orderSummaryTotal,
+ * #expressCheckoutSection, #expressCheckoutBtn
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -582,5 +588,216 @@ describe('Checkout — address validation elements', () => {
     expect(getEl('#addressErrors').text).toContain('Invalid ZIP code');
     expect(getEl('#addressErrors').show).toHaveBeenCalled();
     expect(getEl('#addressSuccess').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Checkout Progress Nav ───────────────────────────────────────────
+
+describe('Checkout — #checkoutProgressNav element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets navigation role and ARIA label on progress nav', async () => {
+    await loadPage();
+    const nav = getEl('#checkoutProgressNav');
+    expect(nav.accessibility.role).toBe('navigation');
+    expect(nav.accessibility.ariaLabel).toBe('Checkout progress');
+  });
+
+  it('populates progress repeater with 4 steps', async () => {
+    await loadPage();
+    const repeater = getEl('#checkoutProgressRepeater');
+    expect(repeater.data).toHaveLength(4);
+    expect(repeater.data[0].label).toBe('Information');
+  });
+
+  it('sets step label and number on repeater items', async () => {
+    await loadPage();
+    const $item = simulateRepeaterItem('#checkoutProgressRepeater', {
+      _id: 'info', id: 'info', label: 'Information', number: 1,
+    });
+    expect($item).not.toBeNull();
+
+    expect($item('#progressStepLabel').text).toBe('Information');
+    expect($item('#progressStepNumber').text).toBe('1');
+  });
+
+  it('styles active step with mountain blue', async () => {
+    await loadPage();
+    const $item = simulateRepeaterItem('#checkoutProgressRepeater', {
+      _id: 'info', id: 'info', label: 'Information', number: 1,
+    });
+    expect($item).not.toBeNull();
+
+    expect($item('#progressStepDot').style.backgroundColor).toBe('#5B8FA8');
+    expect($item('#progressStepLabel').style.color).toBe('#5B8FA8');
+  });
+
+  it('sets ARIA attributes on step container', async () => {
+    await loadPage();
+    const $item = simulateRepeaterItem('#checkoutProgressRepeater', {
+      _id: 'info', id: 'info', label: 'Information', number: 1,
+    });
+    expect($item).not.toBeNull();
+
+    expect($item('#progressStepContainer').accessibility.ariaLabel).toContain('Information');
+    expect($item('#progressStepContainer').accessibility.ariaCurrent).toBe('step');
+  });
+});
+
+// ── Order Notes ─────────────────────────────────────────────────────
+
+describe('Checkout — #orderNotesToggle / #orderNotesField element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('collapses notes field initially', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesField').collapse).toHaveBeenCalled();
+  });
+
+  it('sets ARIA labels on toggle and field', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesToggle').accessibility.ariaLabel).toBe('Toggle order notes');
+    expect(getEl('#orderNotesToggle').accessibility.ariaExpanded).toBe(false);
+    expect(getEl('#orderNotesField').accessibility.ariaLabel).toBe('Special delivery instructions');
+  });
+
+  it('registers click handler on notes toggle', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesToggle').onClick).toHaveBeenCalled();
+  });
+
+  it('expands notes field on toggle click', async () => {
+    await loadPage();
+    // Set collapsed state that the handler checks
+    getEl('#orderNotesField').collapsed = true;
+
+    const toggleHandler = getEl('#orderNotesToggle').onClick.mock.calls[0]?.[0];
+    expect(toggleHandler).toBeDefined();
+
+    toggleHandler();
+
+    expect(getEl('#orderNotesField').expand).toHaveBeenCalled();
+    expect(getEl('#orderNotesToggle').text).toBe('Hide order notes');
+    expect(getEl('#orderNotesToggle').accessibility.ariaExpanded).toBe(true);
+  });
+});
+
+// ── Free Shipping / Item Count ──────────────────────────────────────
+
+describe('Checkout — #checkoutFreeShipping / #checkoutItemCount', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows remaining for free shipping when below threshold', async () => {
+    await loadPage();
+    const el = getEl('#checkoutFreeShipping');
+    expect(el.text).toContain('$450.00');
+    expect(el.show).toHaveBeenCalled();
+  });
+
+  it('shows qualifying message when above threshold', async () => {
+    await loadPage({
+      cart: {
+        lineItems: [{ _id: 'i1', name: 'Expensive Frame', price: 1200, quantity: 1 }],
+        totals: { subtotal: 1200, total: 1200 },
+      },
+    });
+    const el = getEl('#checkoutFreeShipping');
+    expect(el.text).toContain('FREE shipping');
+    expect(el.show).toHaveBeenCalled();
+  });
+
+  it('sets item count text', async () => {
+    await loadPage();
+    expect(getEl('#checkoutItemCount').text).toBe('1 item in your order');
+  });
+
+  it('pluralizes item count for multiple items', async () => {
+    await loadPage({
+      cart: {
+        lineItems: [
+          { _id: 'i1', name: 'Frame', price: 500, quantity: 2 },
+          { _id: 'i2', name: 'Mattress', price: 300, quantity: 1 },
+        ],
+        totals: { subtotal: 1300, total: 1300 },
+      },
+    });
+    expect(getEl('#checkoutItemCount').text).toBe('3 items in your order');
+  });
+});
+
+// ── Order Summary Sidebar ───────────────────────────────────────────
+
+describe('Checkout — #orderSummarySidebar element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows order summary sidebar', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySidebar').show).toHaveBeenCalled();
+  });
+
+  it('sets subtotal, shipping, tax, and total text', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySubtotal').text).toBe('$549.99');
+    expect(getEl('#orderSummaryShipping').text).toBe('FREE');
+    expect(getEl('#orderSummaryTax').text).toBe('$38.50');
+    expect(getEl('#orderSummaryTotal').text).toBe('$588.49');
+  });
+
+  it('styles total with bold font weight', async () => {
+    await loadPage();
+    expect(getEl('#orderSummaryTotal').style.fontWeight).toBe('bold');
+  });
+
+  it('sets ARIA label on sidebar with total', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySidebar').accessibility.ariaLabel).toContain('$588.49');
+  });
+});
+
+// ── Express Checkout ────────────────────────────────────────────────
+
+describe('Checkout — #expressCheckoutSection / #expressCheckoutBtn', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('styles express checkout button with coral CTA', async () => {
+    await loadPage();
+    const btn = getEl('#expressCheckoutBtn');
+    expect(btn.style.backgroundColor).toBe('#E8845C');
+    expect(btn.style.color).toBe('#fff');
+  });
+
+  it('disables express checkout button by default', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutBtn').disable).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on express checkout button', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutBtn').accessibility.ariaLabel).toContain('Express checkout');
+  });
+
+  it('registers click handler on express checkout button', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('shows express checkout section', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutSection').show).toHaveBeenCalled();
   });
 });

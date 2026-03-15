@@ -1,7 +1,11 @@
 /**
  * Tests for Side Cart element hookup — CF-03jx
- * Covers: #cartBadge visibility states, #sideQtyMinus/#sideQtyPlus
- * styling + ARIA labels + click handlers within repeater items.
+ * Covers: #cartBadge, #sideCartPanel, #sideCartTitle, #sideCartSubtotal,
+ * #sideTierText, #sideCartClose, #sideCartCheckout, #viewFullCart,
+ * #sideQtyMinus, #sideQtyPlus, #sideItemImage, #sideItemName, #sideItemPrice,
+ * #sideItemQty, #sideItemLineTotal, #sideItemRemove, #sideSaveForLater,
+ * #sideCartEmpty, #sideCartItems, #sideCartFooter, #sideShippingBar,
+ * #sideShippingText, #sideTierBar
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -279,5 +283,213 @@ describe('Side Cart — #sideQtyMinus/#sideQtyPlus element hookup', () => {
 
     const { announce } = await import('public/a11yHelpers.js');
     expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('Kodiak Frame'));
+  });
+});
+
+// ── Side Cart Panel & ARIA Tests ────────────────────────────────────
+
+describe('Side Cart — #sideCartPanel ARIA + styling hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets ARIA dialog role and modal on side cart panel', async () => {
+    await loadPage();
+    const panel = getEl('#sideCartPanel');
+    expect(panel.accessibility.role).toBe('dialog');
+    expect(panel.accessibility.ariaModal).toBe(true);
+    expect(panel.accessibility.ariaLabel).toBe('Shopping cart');
+  });
+
+  it('styles panel with brand background color', async () => {
+    await loadPage();
+    expect(getEl('#sideCartPanel').style.backgroundColor).toBe('#FDF6EC');
+  });
+
+  it('styles header title with espresso color', async () => {
+    await loadPage();
+    expect(getEl('#sideCartTitle').style.color).toBe('#3A2518');
+  });
+
+  it('sets ARIA live regions on subtotal and tier text', async () => {
+    await loadPage();
+    expect(getEl('#sideCartSubtotal').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#sideCartSubtotal').accessibility.role).toBe('status');
+    expect(getEl('#sideTierText').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#sideTierText').accessibility.role).toBe('status');
+  });
+});
+
+describe('Side Cart — close/checkout/viewFullCart element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('registers click handler on close button', async () => {
+    await loadPage();
+    expect(getEl('#sideCartClose').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on close button', async () => {
+    await loadPage();
+    expect(getEl('#sideCartClose').accessibility.ariaLabel).toBe('Close cart');
+  });
+
+  it('registers click handler on overlay', async () => {
+    await loadPage();
+    expect(getEl('#sideCartOverlay').onClick).toHaveBeenCalled();
+  });
+
+  it('styles checkout button with coral CTA', async () => {
+    await loadPage();
+    const btn = getEl('#sideCartCheckout');
+    expect(btn.style.backgroundColor).toBe('#E8845C');
+    expect(btn.style.color).toBe('#fff');
+  });
+
+  it('registers click handler on checkout button', async () => {
+    await loadPage();
+    expect(getEl('#sideCartCheckout').onClick).toHaveBeenCalled();
+  });
+
+  it('styles view full cart link with mountain blue', async () => {
+    await loadPage();
+    expect(getEl('#viewFullCart').style.color).toBe('#5B8FA8');
+  });
+
+  it('registers click handler on view full cart', async () => {
+    await loadPage();
+    expect(getEl('#viewFullCart').onClick).toHaveBeenCalled();
+  });
+});
+
+// ── Repeater Item Detail Tests ──────────────────────────────────────
+
+describe('Side Cart — repeater item details hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('sets image src and alt on repeater items', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Kodiak Frame', price: 500, quantity: 1, image: 'kodiak.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemImage').src).toBe('kodiak.jpg');
+    expect($item('#sideItemImage').alt).toBe('Kodiak Frame');
+  });
+
+  it('sets name and price with brand styling', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Kodiak Frame', price: 549.99, quantity: 1, image: 'k.jpg', lineTotal: 549.99 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemName').text).toBe('Kodiak Frame');
+    expect($item('#sideItemName').style.color).toBe('#3A2518');
+    expect($item('#sideItemPrice').text).toBe('$549.99');
+    expect($item('#sideItemPrice').style.color).toBe('#5B8FA8');
+  });
+
+  it('sets quantity text and ARIA attributes', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Vienna Frame', price: 400, quantity: 3, image: 'v.jpg', lineTotal: 1200 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemQty').text).toBe('3');
+    expect($item('#sideItemQty').accessibility.ariaLabel).toBe('Quantity of Vienna Frame');
+    expect($item('#sideItemQty').accessibility.role).toBe('status');
+    expect($item('#sideItemQty').accessibility.ariaLive).toBe('polite');
+  });
+
+  it('sets line total text', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Frame', price: 250, quantity: 2, image: 'f.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemLineTotal').text).toBe('$500.00');
+  });
+
+  it('styles remove button with coral accent and sets ARIA label', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Kodiak Frame', price: 500, quantity: 1, image: 'k.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemRemove').style.color).toBe('#E8845C');
+    expect($item('#sideItemRemove').accessibility.ariaLabel).toBe('Remove Kodiak Frame from cart');
+  });
+
+  it('registers click handler on remove button', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideItemRemove').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on save for later button', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Kodiak Frame', price: 500, quantity: 1, image: 'k.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideSaveForLater').accessibility.ariaLabel).toBe('Save Kodiak Frame for later');
+  });
+
+  it('registers click handler on save for later button', async () => {
+    await loadPage();
+    const itemData = { _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500 };
+    const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
+    expect($item).not.toBeNull();
+
+    expect($item('#sideSaveForLater').onClick).toHaveBeenCalled();
+  });
+});
+
+// ── Empty/Populated State Tests ─────────────────────────────────────
+
+describe('Side Cart — empty/populated state element hookup', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows empty state and hides items/footer when cart is empty', async () => {
+    await loadPage();
+    await refreshSideCart({ lineItems: [], totals: { subtotal: 0 } });
+
+    expect(getEl('#sideCartEmpty').show).toHaveBeenCalled();
+    expect(getEl('#sideCartItems').hide).toHaveBeenCalled();
+    expect(getEl('#sideCartFooter').hide).toHaveBeenCalled();
+  });
+
+  it('hides empty state and shows items/footer when cart has items', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
+      totals: { subtotal: 500 },
+    });
+
+    expect(getEl('#sideCartEmpty').hide).toHaveBeenCalled();
+    expect(getEl('#sideCartItems').show).toHaveBeenCalled();
+    expect(getEl('#sideCartFooter').show).toHaveBeenCalled();
+  });
+
+  it('updates subtotal text on refresh', async () => {
+    await loadPage();
+    await refreshSideCart({
+      lineItems: [{ _id: 'i1', name: 'Frame', price: 549.99, quantity: 1 }],
+      totals: { subtotal: 549.99 },
+    });
+
+    expect(getEl('#sideCartSubtotal').text).toBe('$549.99');
   });
 });
