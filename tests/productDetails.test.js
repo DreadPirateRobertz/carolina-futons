@@ -44,7 +44,9 @@ vi.mock('public/a11yHelpers', () => ({
 }));
 
 vi.mock('public/designTokens.js', () => ({
-  colors: { success: '#22c55e', sunsetCoral: '#E8845C', mountainBlue: '#5B8FA8', sandDark: '#c9b99a', espresso: '#3A2518' },
+  colors: { success: '#22c55e', sunsetCoral: '#E8845C', mountainBlue: '#5B8FA8', sandDark: '#c9b99a', espresso: '#3A2518', sandLight: '#F2E8D5', offWhite: '#FAF7F2' },
+  spacing: { md: 16 },
+  shadows: { nav: '0 2px 4px rgba(0,0,0,0.1)' },
 }));
 
 vi.mock('public/DeliveryEstimator.js', () => ({
@@ -61,6 +63,7 @@ vi.mock('public/validators.js', () => ({
 }));
 
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from '../src/public/ProductDetails.js';
+import { estimateDelivery } from 'public/DeliveryEstimator.js';
 
 function createMockElement() {
   return {
@@ -395,6 +398,167 @@ describe('ProductDetails', () => {
       state.product.productOptions = [];
       initSwatchCTA($w, state);
       expect($w('#swatchCTABtn').accessibility.ariaLabel).toContain('fabric swatches');
+    });
+
+    it('applies sunsetCoral background color', () => {
+      state.product.productOptions = [];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').style.backgroundColor).toBe('#E8845C');
+    });
+
+    it('does nothing when state has no product key', () => {
+      initSwatchCTA($w, {});
+      expect($w('#swatchCTABtn').show).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── initBreadcrumbs — extended ─────────────────────────────
+
+  describe('initBreadcrumbs (extended)', () => {
+    it('handles murphy bed category breadcrumb', async () => {
+      state.product = { ...futonFrame, collections: ['murphy-cabinet-beds'], name: 'Murphy Bed' };
+      await initBreadcrumbs($w, state);
+      expect($w('#breadcrumb2').text).toBe('Murphy Cabinet Beds');
+    });
+  });
+
+  // ── initProductInfoAccordion — extended ────────────────────
+
+  describe('initProductInfoAccordion (extended)', () => {
+    it('keyboard Space key toggles section', () => {
+      initProductInfoAccordion($w);
+      const keyHandler = $w('#infoHeaderDimensions').onKeyPress.mock.calls[0][0];
+      keyHandler({ key: ' ' });
+      expect($w('#infoContentDimensions').expand).toHaveBeenCalled();
+    });
+
+    it('ignores non-Enter/Space key presses', () => {
+      initProductInfoAccordion($w);
+      const expandBefore = $w('#infoContentDimensions').expand.mock.calls.length;
+      const keyHandler = $w('#infoHeaderDimensions').onKeyPress.mock.calls[0][0];
+      keyHandler({ key: 'Tab' });
+      expect($w('#infoContentDimensions').expand.mock.calls.length).toBe(expandBefore);
+    });
+
+    it('shipping text mentions white-glove delivery pricing', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoContentShipping').text).toContain('$149 local');
+      expect($w('#infoContentShipping').text).toContain('$249 regional');
+    });
+
+    it('shipping text includes phone number', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoContentShipping').text).toContain('(828) 252-9449');
+    });
+
+    it('toggles ariaExpanded on click', () => {
+      initProductInfoAccordion($w);
+      const handler = $w('#infoHeaderDescription').onClick.mock.calls[0][0];
+      handler(); // collapse Description
+      expect($w('#infoHeaderDescription').accessibility.ariaExpanded).toBe(false);
+    });
+  });
+
+  // ── initDeliveryEstimate — extended ────────────────────────
+
+  describe('initDeliveryEstimate (extended)', () => {
+    it('shows white-glove for platform bed collections', () => {
+      state.product = { ...futonFrame, collections: ['platform-beds'], weight: 80 };
+      initDeliveryEstimate($w, state);
+      expect($w('#whiteGloveNote').text).toContain('White-glove');
+      expect($w('#whiteGloveNote').show).toHaveBeenCalled();
+    });
+
+    it('zip button calls estimateDelivery for valid zip', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+    });
+
+    it('shows error for invalid short zip code', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '123';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateError').text).toContain('valid 5-digit');
+    });
+
+    it('shows error for empty zip code', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateError').text).toContain('valid 5-digit');
+    });
+
+    it('strips non-numeric characters from zip input', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28-801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+    });
+
+    it('updates delivery estimate text from result', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimate').text).toBe('Delivered by Mar 25 – Mar 30');
+    });
+
+    it('shows error when estimateDelivery fails', async () => {
+      estimateDelivery.mockResolvedValueOnce({ success: false, error: 'Service unavailable' });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '90210';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateError').text).toContain('Service unavailable');
+    });
+
+    it('shows white-glove text from estimateDelivery result', async () => {
+      estimateDelivery.mockResolvedValueOnce({
+        success: true,
+        deliveryText: 'Delivered by Mar 22 – Mar 27',
+        shippingText: 'Free shipping',
+        whiteGloveText: 'White-glove delivery: $149',
+      });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#whiteGloveNote').text).toBe('White-glove delivery: $149');
+    });
+
+    it('Enter key on zip input triggers estimate', async () => {
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const keyHandler = $w('#deliveryZipInput').onKeyPress.mock.calls[0][0];
+      await keyHandler({ key: 'Enter' });
+      expect(estimateDelivery).toHaveBeenCalled();
+    });
+
+    it('sets aria label on zip button', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipBtn').accessibility.ariaLabel).toContain('delivery estimate');
+    });
+  });
+
+  // ── initSwatchRequest — extended ───────────────────────────
+
+  describe('initSwatchRequest (extended)', () => {
+    it('detects Cover as swatch-eligible option name', () => {
+      state.product.productOptions = [{ name: 'Cover Style', choices: [{ value: 'Linen' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('hides button when productOptions is undefined', () => {
+      state.product.productOptions = undefined;
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').hide).toHaveBeenCalled();
     });
   });
 });
