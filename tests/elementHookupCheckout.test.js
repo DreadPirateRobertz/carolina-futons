@@ -1,9 +1,12 @@
 /**
  * Tests for Checkout page element hookup — CF-03jx
- * Covers zero-coverage elements: #paymentMethodName, #paymentMethodIcon,
- * #paymentBrands, #trustIcon, #afterpayMessage, #afterpayInstallment,
- * #checkoutShippingMessage, #shippingOptionDesc, #shippingOptionRadio
- * Plus additional coverage for minimally-tested elements.
+ * Covers: #paymentMethodsRepeater, #paymentMethodName, #paymentMethodIcon,
+ * #paymentBrands, #trustIcon, #trustText, #checkoutAfterpay, #afterpayMessage,
+ * #afterpayInstallment, #checkoutFinancing, #financingMessage,
+ * #checkoutShippingMessage, #shippingOptionsRepeater, #shippingOptionLabel,
+ * #shippingOptionPrice, #shippingOptionDesc, #shippingOptionDays,
+ * #shippingOptionRadio, #validateAddressBtn, #addressFullName, #addressLine1,
+ * #addressCity, #addressState, #addressZip, #addressErrors, #addressSuccess
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

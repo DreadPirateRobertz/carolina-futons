@@ -1,7 +1,7 @@
 /**
  * Tests for Cart Page element hookup — CF-03jx
- * Covers missing element IDs: #financingThreshold
- * and edge cases for #cartFinancingTeaser, #cartAfterpayMessage, #cartFinancingSection
+ * Covers: #cartFinancingSection, #financingThreshold, #cartFinancingTeaser,
+ * #cartAfterpayMessage — show/hide states, threshold messaging, edge cases
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

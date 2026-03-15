@@ -1,8 +1,9 @@
 /**
  * Tests for Thank You Page element hookup — CF-03jx
- * Covers: #testimonialSection, #testimonialTitle, #testimonialPrompt,
+ * Covers: #deliveryTimeline, #deliveryEstimateText, #step1, #step2, #step3,
+ * #step4, #testimonialSection, #testimonialTitle, #testimonialPrompt,
  * #testimonialNameInput, #testimonialStoryInput, #testimonialSubmitBtn,
- * #testimonialError, #testimonialSuccess, #step1-#step4 delivery timeline.
+ * #testimonialError, #testimonialSuccess
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
