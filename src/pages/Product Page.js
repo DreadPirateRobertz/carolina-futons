@@ -54,9 +54,9 @@ async function initProductPage() {
     const cached = slug ? getCachedProduct(slug) : null;
     const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
     if (cached && (!cached._cachedAt || (Date.now() - cached._cachedAt) < CACHE_MAX_AGE_MS)) {
-      try { $w('#productName').text = cached.name; } catch (e) {}
-      try { $w('#productPrice').text = isCallForPrice(cached) ? CALL_FOR_PRICE_TEXT : cached.formattedPrice; } catch (e) {}
-      try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) {}
+      try { $w('#productName').text = cached.name; } catch (e) { console.warn('[ProductPage] Cached name display failed:', e.message); }
+      try { $w('#productPrice').text = isCallForPrice(cached) ? CALL_FOR_PRICE_TEXT : cached.formattedPrice; } catch (e) { console.warn('[ProductPage] Cached price display failed:', e.message); }
+      try { if (cached.mainMedia) $w('#productMainImage').src = cached.mainMedia; } catch (e) { console.warn('[ProductPage] Cached image display failed:', e.message); }
     }
 
     await $w('#productDataset').onReady();
