@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
-import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
+import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import {
   triggerWelcomeSequence,
@@ -88,6 +88,18 @@ describe('triggerWelcomeSequence', () => {
 
     expect(insertedItems.length).toBe(3);
     expect(insertedItems[0].variables.discountCode).toBe('WELCOME10');
+    expect(insertedItems[0].variables.discountAvailable).toBe(true);
+  });
+
+  it('sets discountAvailable false when secret missing', async () => {
+    __resetSecrets();
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    await triggerWelcomeSequence('contact-1', 'alice@test.com', 'Alice');
+
+    expect(insertedItems[0].variables.discountCode).toBe('');
+    expect(insertedItems[0].variables.discountAvailable).toBe(false);
   });
 
   it('sets A/B variant on step 1', async () => {
@@ -380,7 +392,36 @@ describe('triggerAbandonedCartRecovery', () => {
     const step1 = insertedItems.find(i => i.sequenceStep === 1);
     const step3 = insertedItems.find(i => i.sequenceStep === 3);
     expect(step1.variables.discountCode).toBe('');
+    expect(step1.variables.discountAvailable).toBe(false);
     expect(step3.variables.discountCode).toBe('COMEBACK15');
+    expect(step3.variables.discountAvailable).toBe(true);
+  });
+
+  it('sets discountAvailable false on all cart steps when secret missing', async () => {
+    __resetSecrets();
+    __seed('AbandonedCarts', [{
+      _id: 'ac-1',
+      checkoutId: 'ck-1',
+      buyerEmail: 'shopper@test.com',
+      buyerName: 'Shopper',
+      cartTotal: 599,
+      lineItems: [],
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    let insertedItems = [];
+    __onInsert((collection, item) => {
+      if (collection === 'EmailQueue') insertedItems.push(item);
+    });
+
+    await triggerAbandonedCartRecovery();
+
+    const step3 = insertedItems.find(i => i.sequenceStep === 3);
+    expect(step3).toBeTruthy();
+    expect(step3.variables.discountCode).toBe('');
+    expect(step3.variables.discountAvailable).toBe(false);
   });
 
   it('marks cart as recovery email sent', async () => {
@@ -521,6 +562,32 @@ describe('triggerReengagement', () => {
     const reengagement = insertedItems.find(i => i.sequenceType === 'reengagement');
     expect(reengagement).toBeTruthy();
     expect(reengagement.variables.discountCode).toBe('COMEBACK15');
+    expect(reengagement.variables.discountAvailable).toBe(true);
+  });
+
+  it('sets discountAvailable false when reengagement secret missing', async () => {
+    __resetSecrets();
+    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
+    __seed('EmailQueue', [{
+      _id: 'eq-pp-1',
+      recipientEmail: 'dormant@test.com',
+      recipientContactId: 'contact-d1',
+      sequenceType: 'post_purchase',
+      sequenceStep: 1,
+      status: 'sent',
+      sentAt: ninetyOneDaysAgo,
+      variables: { firstName: 'Dormant' },
+    }]);
+
+    let insertedItems = [];
+    __onInsert((collection, item) => { insertedItems.push(item); });
+
+    await triggerReengagement();
+
+    const reengagement = insertedItems.find(i => i.sequenceType === 'reengagement');
+    expect(reengagement).toBeTruthy();
+    expect(reengagement.variables.discountCode).toBe('');
+    expect(reengagement.variables.discountAvailable).toBe(false);
   });
 
   it('skips contacts with recent reengagement', async () => {
