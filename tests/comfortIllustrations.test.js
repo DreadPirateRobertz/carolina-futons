@@ -126,21 +126,27 @@ describe('SVG structure', () => {
   }
 });
 
-// ── Quality bar — watercolor filters ─────────────────────────────────
+// ── Quality bar — no deprecated filters (Figma-first migration) ─────
 
-describe('Quality bar — filters', () => {
+describe('Quality bar — no deprecated filters', () => {
   for (const slug of slugs) {
     describe(`${slug}`, () => {
-      it('contains feTurbulence filter for watercolor texture', () => {
-        expect(svgBySlug[slug]).toMatch(/<feTurbulence/);
+      it('does NOT contain feTurbulence (deprecated per overseer directive)', () => {
+        expect(svgBySlug[slug]).not.toMatch(/<feTurbulence/);
       });
 
-      it('contains feDisplacementMap', () => {
-        expect(svgBySlug[slug]).toMatch(/<feDisplacementMap/);
+      it('does NOT contain feDisplacementMap (deprecated per overseer directive)', () => {
+        expect(svgBySlug[slug]).not.toMatch(/<feDisplacementMap/);
       });
 
-      it('contains paper grain noise filter (type="fractalNoise")', () => {
-        expect(svgBySlug[slug]).toMatch(/type="fractalNoise"/);
+      it('does NOT contain fractalNoise (deprecated per overseer directive)', () => {
+        expect(svgBySlug[slug]).not.toMatch(/type="fractalNoise"/);
+      });
+
+      it('achieves watercolor feel through layered opacity paths', () => {
+        // At least 4 mountain ridge paths with varying opacity
+        const opacityPaths = svgBySlug[slug].match(/opacity="0\.\d+"/g) || [];
+        expect(opacityPaths.length).toBeGreaterThanOrEqual(10);
       });
     });
   }
