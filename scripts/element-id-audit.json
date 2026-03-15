@@ -5,31 +5,32 @@
     "workflow": "1. Melania opens editor. 2. For each element below, find the comp-xxx element and rename to the nickname listed. 3. Once renamed, run remap-element-ids.js if any comp-xxx IDs were hardcoded.",
     "priority_guide": "P0 = page breaks without it, P1 = feature broken, P2 = enhancement missing",
     "generated": "2026-03-14",
-    "total_unique_ids": 807
+    "total_unique_ids": 796,
+    "total_entries": 817
   },
   "masterPage": {
-    "_priority": "P0 \u2014 all pages depend on masterPage elements",
+    "_priority": "P0 — all pages depend on masterPage elements",
     "header": {
       "P0": [
         {
           "id": "announcementBar",
           "type": "Strip/Box",
-          "notes": "Announcement bar container \u2014 nav hides this on scroll"
+          "notes": "Announcement bar container — nav hides this on scroll"
         },
         {
           "id": "announcementText",
           "type": "Text",
-          "notes": "Announcement bar text \u2014 also used by a11yHelpers"
+          "notes": "Announcement bar text — also used by a11yHelpers"
         },
         {
           "id": "siteLogo",
           "type": "Image",
-          "notes": "Carolina Futons logo \u2014 click navigates home"
+          "notes": "Carolina Futons logo — click navigates home"
         },
         {
           "id": "cartIcon",
           "type": "Button/Image",
-          "notes": "Shopping cart icon \u2014 opens side cart"
+          "notes": "Shopping cart icon — opens side cart"
         },
         {
           "id": "cartBadge",
@@ -46,12 +47,12 @@
         {
           "id": "navShop",
           "type": "Link/Text",
-          "notes": "Shop nav link \u2014 navigationHelpers wires click"
+          "notes": "Shop nav link — navigationHelpers wires click"
         },
         {
           "id": "mobileMenuButton",
           "type": "Button",
-          "notes": "Hamburger menu toggle \u2014 mobile only"
+          "notes": "Hamburger menu toggle — mobile only"
         },
         {
           "id": "mobileMenuOverlay",
@@ -66,7 +67,7 @@
         {
           "id": "desktopNavBar",
           "type": "Box",
-          "notes": "Desktop nav container \u2014 navigationHelpers"
+          "notes": "Desktop nav container — navigationHelpers"
         },
         {
           "id": "megaMenuPanel",
@@ -88,7 +89,7 @@
         {
           "id": "navHome",
           "type": "Link",
-          "notes": "Home nav link \u2014 gap, needs adding"
+          "notes": "Home nav link — gap, needs adding"
         },
         {
           "id": "navContact",
@@ -98,32 +99,32 @@
         {
           "id": "navProductVideos",
           "type": "Link",
-          "notes": "Product Videos nav link \u2014 gap"
+          "notes": "Product Videos nav link — gap"
         },
         {
           "id": "navSale",
           "type": "Link",
-          "notes": "Sale nav link (coral text) \u2014 gap"
+          "notes": "Sale nav link (coral text) — gap"
         },
         {
           "id": "navGettingItHome",
           "type": "Link",
-          "notes": "Getting It Home nav link \u2014 gap"
+          "notes": "Getting It Home nav link — gap"
         },
         {
           "id": "navFAQ",
           "type": "Link",
-          "notes": "FAQ nav link \u2014 gap"
+          "notes": "FAQ nav link — gap"
         },
         {
           "id": "navAbout",
           "type": "Link",
-          "notes": "About nav link \u2014 gap"
+          "notes": "About nav link — gap"
         },
         {
           "id": "navBlog",
           "type": "Link",
-          "notes": "Blog nav link \u2014 gap"
+          "notes": "Blog nav link — gap"
         },
         {
           "id": "announcementDismiss",
@@ -194,19 +195,19 @@
         {
           "id": "footerEmailError",
           "type": "Text (hidden)",
-          "notes": "Validation error \u2014 gap, needs adding"
+          "notes": "Validation error — gap, needs adding"
         },
         {
           "id": "footerEmailSuccess",
           "type": "Text (hidden)",
-          "notes": "Success message \u2014 gap, needs adding"
+          "notes": "Success message — gap, needs adding"
         }
       ],
       "P2": [
         {
           "id": "footerMountainDivider",
           "type": "Image/SVG",
-          "notes": "Mountain ridgeline divider \u2014 gap"
+          "notes": "Mountain ridgeline divider — gap"
         },
         {
           "id": "footerStoreName",
@@ -491,7 +492,7 @@
     }
   },
   "homePage": {
-    "_priority": "P0 \u2014 homepage is primary landing page",
+    "_priority": "P0 — homepage is primary landing page",
     "hero": {
       "P0": [
         {
@@ -767,7 +768,7 @@
     }
   },
   "categoryPage": {
-    "_priority": "P0 \u2014 primary shopping page",
+    "_priority": "P0 — primary shopping page",
     "breadcrumbs_and_hero": {
       "P0": [
         {
@@ -793,7 +794,7 @@
         {
           "id": "categoryHeroSection",
           "type": "Section",
-          "notes": "Hero section \u2014 gap"
+          "notes": "Hero section — gap"
         }
       ]
     },
@@ -824,12 +825,12 @@
         {
           "id": "filterBrand",
           "type": "Dropdown",
-          "notes": "Brand filter \u2014 gap"
+          "notes": "Brand filter — gap"
         },
         {
           "id": "filterSize",
           "type": "Dropdown",
-          "notes": "Size filter \u2014 gap"
+          "notes": "Size filter — gap"
         },
         {
           "id": "filterCategory",
@@ -839,32 +840,32 @@
         {
           "id": "clearFilters",
           "type": "Button",
-          "notes": "Clear filters button \u2014 gap"
+          "notes": "Clear filters button — gap"
         },
         {
           "id": "filterToggleBtn",
           "type": "Button",
-          "notes": "Mobile filter toggle \u2014 gap"
+          "notes": "Mobile filter toggle — gap"
         },
         {
           "id": "filterDrawer",
           "type": "Box",
-          "notes": "Mobile filter drawer \u2014 gap"
+          "notes": "Mobile filter drawer — gap"
         },
         {
           "id": "filterDrawerOverlay",
           "type": "Box",
-          "notes": "Filter drawer backdrop \u2014 gap"
+          "notes": "Filter drawer backdrop — gap"
         },
         {
           "id": "filterDrawerApply",
           "type": "Button",
-          "notes": "Apply filters in drawer \u2014 gap"
+          "notes": "Apply filters in drawer — gap"
         },
         {
           "id": "mobileSortBar",
           "type": "Box",
-          "notes": "Mobile sort bar \u2014 gap"
+          "notes": "Mobile sort bar — gap"
         },
         {
           "id": "flashSaleBanner",
@@ -876,57 +877,57 @@
         {
           "id": "filterMaterial",
           "type": "CheckboxGroup",
-          "notes": "Material filter \u2014 gap"
+          "notes": "Material filter — gap"
         },
         {
           "id": "filterFeatures",
           "type": "CheckboxGroup",
-          "notes": "Features filter \u2014 gap"
+          "notes": "Features filter — gap"
         },
         {
           "id": "filterComfortLevel",
           "type": "Dropdown",
-          "notes": "Comfort level \u2014 gap"
+          "notes": "Comfort level — gap"
         },
         {
           "id": "filterPriceRange",
           "type": "Slider",
-          "notes": "Price range slider \u2014 gap"
+          "notes": "Price range slider — gap"
         },
         {
           "id": "filterWidthMin",
           "type": "Input",
-          "notes": "Width min \u2014 gap"
+          "notes": "Width min — gap"
         },
         {
           "id": "filterWidthMax",
           "type": "Input",
-          "notes": "Width max \u2014 gap"
+          "notes": "Width max — gap"
         },
         {
           "id": "filterDepthMin",
           "type": "Input",
-          "notes": "Depth min \u2014 gap"
+          "notes": "Depth min — gap"
         },
         {
           "id": "filterDepthMax",
           "type": "Input",
-          "notes": "Depth max \u2014 gap"
+          "notes": "Depth max — gap"
         },
         {
           "id": "filterResultCount",
           "type": "Text",
-          "notes": "Filtered result count \u2014 gap"
+          "notes": "Filtered result count — gap"
         },
         {
           "id": "clearAllFilters",
           "type": "Button",
-          "notes": "Clear all filters \u2014 gap"
+          "notes": "Clear all filters — gap"
         },
         {
           "id": "filterLoadingIndicator",
           "type": "Spinner",
-          "notes": "Filter loading \u2014 gap"
+          "notes": "Filter loading — gap"
         },
         {
           "id": "activeFilterChips",
@@ -955,7 +956,7 @@
         {
           "id": "productGridRepeater",
           "type": "Repeater",
-          "notes": "Product grid \u2014 rename from Gallery if swapped"
+          "notes": "Product grid — rename from Gallery if swapped"
         },
         {
           "id": "categoryDataset",
@@ -969,7 +970,7 @@
         {
           "id": "quickViewModal",
           "type": "Box (hidden)",
-          "notes": "Quick view modal \u2014 gap"
+          "notes": "Quick view modal — gap"
         },
         {
           "id": "qvImage",
@@ -1018,7 +1019,7 @@
         {
           "id": "emptyStateSection",
           "type": "Section (hidden)",
-          "notes": "Empty state container \u2014 gap"
+          "notes": "Empty state container — gap"
         },
         {
           "id": "emptyStateTitle",
@@ -1038,7 +1039,7 @@
         {
           "id": "noMatchesSection",
           "type": "Section (hidden)",
-          "notes": "No filter matches \u2014 gap"
+          "notes": "No filter matches — gap"
         },
         {
           "id": "noMatchesTitle",
@@ -1112,7 +1113,7 @@
     }
   },
   "productPage": {
-    "_priority": "P0 \u2014 highest revenue page",
+    "_priority": "P0 — highest revenue page",
     "core": {
       "P0": [
         {
@@ -1123,12 +1124,12 @@
         {
           "id": "productMainImage",
           "type": "Image",
-          "notes": "Main product image \u2014 gallery, zoom, lightbox"
+          "notes": "Main product image — gallery, zoom, lightbox"
         },
         {
           "id": "productGallery",
           "type": "Gallery",
-          "notes": "Thumbnail gallery \u2014 onItemClicked swaps main image"
+          "notes": "Thumbnail gallery — onItemClicked swaps main image"
         },
         {
           "id": "productPrice",
@@ -1153,7 +1154,7 @@
         {
           "id": "addToCartButton",
           "type": "Button",
-          "notes": "Add to cart \u2014 primary CTA"
+          "notes": "Add to cart — primary CTA"
         },
         {
           "id": "quantityInput",
@@ -1197,7 +1198,7 @@
         {
           "id": "buyNowButton",
           "type": "Button",
-          "notes": "Buy Now \u2014 direct to checkout"
+          "notes": "Buy Now — direct to checkout"
         }
       ],
       "P1": [
@@ -1243,17 +1244,17 @@
         {
           "id": "infoHeaderDescription",
           "type": "Box",
-          "notes": "Description accordion header \u2014 auto pattern infoHeader{Section}"
+          "notes": "Description accordion header — auto pattern infoHeader{Section}"
         },
         {
           "id": "infoContentDescription",
           "type": "Box",
-          "notes": "Description content \u2014 auto pattern infoContent{Section}"
+          "notes": "Description content — auto pattern infoContent{Section}"
         },
         {
           "id": "infoArrowDescription",
           "type": "Text",
-          "notes": "Expand/collapse arrow \u2014 auto pattern infoArrow{Section}"
+          "notes": "Expand/collapse arrow — auto pattern infoArrow{Section}"
         },
         {
           "id": "infoHeaderDimensions",
@@ -1293,7 +1294,7 @@
         {
           "id": "infoContentShipping",
           "type": "Text",
-          "notes": "Shipping content \u2014 auto-filled with rates"
+          "notes": "Shipping content — auto-filled with rates"
         },
         {
           "id": "infoArrowShipping",
@@ -1307,7 +1308,7 @@
         {
           "id": "productVideoSection",
           "type": "Section (hidden)",
-          "notes": "Video section \u2014 shown only if product has video"
+          "notes": "Video section — shown only if product has video"
         },
         {
           "id": "productVideoTitle",
@@ -1841,7 +1842,7 @@
     }
   },
   "sideCart": {
-    "_priority": "P0 \u2014 conversion flow",
+    "_priority": "P0 — conversion flow",
     "panel": {
       "P0": [
         {
@@ -1986,7 +1987,7 @@
     }
   },
   "cartPage": {
-    "_priority": "P0 \u2014 conversion flow",
+    "_priority": "P0 — conversion flow",
     "core": {
       "P0": [
         {
@@ -2157,7 +2158,7 @@
     }
   },
   "checkout": {
-    "_priority": "P0 \u2014 conversion flow",
+    "_priority": "P0 — conversion flow",
     "core": {
       "P0": [
         {
@@ -2271,6 +2272,51 @@
           "id": "orderSummaryStoreCreditRow",
           "type": "Box",
           "notes": "Store credit row"
+        },
+        {
+          "id": "paymentMethodName",
+          "type": "Text",
+          "notes": "Repeater child: payment method display name"
+        },
+        {
+          "id": "paymentMethodIcon",
+          "type": "Image",
+          "notes": "Repeater child: payment method icon"
+        },
+        {
+          "id": "paymentBrands",
+          "type": "Text",
+          "notes": "Repeater child: card brand list (Visa, MC, etc.)"
+        },
+        {
+          "id": "afterpayInstallment",
+          "type": "Text",
+          "notes": "Afterpay installment amount text"
+        },
+        {
+          "id": "shippingOptionLabel",
+          "type": "Text",
+          "notes": "Repeater child: shipping method name"
+        },
+        {
+          "id": "shippingOptionPrice",
+          "type": "Text",
+          "notes": "Repeater child: shipping price display"
+        },
+        {
+          "id": "shippingOptionDesc",
+          "type": "Text",
+          "notes": "Repeater child: shipping description"
+        },
+        {
+          "id": "shippingOptionDays",
+          "type": "Text",
+          "notes": "Repeater child: estimated delivery days"
+        },
+        {
+          "id": "shippingOptionRadio",
+          "type": "RadioButton",
+          "notes": "Repeater child: shipping method selector"
         }
       ],
       "P2": [
@@ -2333,12 +2379,17 @@
           "id": "storeCreditAppliedAmount",
           "type": "Text",
           "notes": "Credit amount applied"
+        },
+        {
+          "id": "trustIcon",
+          "type": "Image",
+          "notes": "Repeater child: trust signal icon"
         }
       ]
     }
   },
   "thankYouPage": {
-    "_priority": "P1 \u2014 post-purchase engagement and tracking",
+    "_priority": "P1 — post-purchase engagement and tracking",
     "order_summary": {
       "P0": [
         {
@@ -2421,7 +2472,7 @@
         {
           "id": "shareText",
           "type": "Text",
-          "notes": "Share prompt text \u2014 dynamic based on purchased products"
+          "notes": "Share prompt text — dynamic based on purchased products"
         },
         {
           "id": "shareFacebook",
@@ -2685,7 +2736,7 @@
     }
   },
   "adminReturns": {
-    "_priority": "P1 \u2014 admin dashboard for returns management",
+    "_priority": "P1 — admin dashboard for returns management",
     "stats_cards": {
       "P0": [
         {
@@ -2701,7 +2752,7 @@
         {
           "id": "statActionRequired",
           "type": "Text",
-          "notes": "Action required count \u2014 coral when > 0"
+          "notes": "Action required count — coral when > 0"
         },
         {
           "id": "statActionLabel",
@@ -2721,7 +2772,7 @@
         {
           "id": "statCompleted",
           "type": "Text",
-          "notes": "Completed count \u2014 green"
+          "notes": "Completed count — green"
         },
         {
           "id": "statCompletedLabel",
@@ -3001,7 +3052,7 @@
     }
   },
   "memberPage": {
-    "_priority": "P1 \u2014 customer account dashboard",
+    "_priority": "P1 — customer account dashboard",
     "dashboard": {
       "P0": [
         {
@@ -3244,7 +3295,7 @@
         {
           "id": "startReturnBtn",
           "type": "Button",
-          "notes": "Start return from order \u2014 proxied click target"
+          "notes": "Start return from order — proxied click target"
         }
       ]
     },
@@ -3424,7 +3475,7 @@
     }
   },
   "returnsPage": {
-    "_priority": "P1 \u2014 guest-accessible self-service returns",
+    "_priority": "P1 — guest-accessible self-service returns",
     "lookup_form": {
       "P0": [
         {
@@ -3708,7 +3759,7 @@
     }
   },
   "orderTracking": {
-    "_priority": "P1 \u2014 order tracking with real-time UPS updates",
+    "_priority": "P1 — order tracking with real-time UPS updates",
     "lookup_form": {
       "P0": [
         {
@@ -3969,7 +4020,7 @@
     }
   },
   "contactPage": {
-    "_priority": "P1 \u2014 contact form, business info, appointment booking",
+    "_priority": "P1 — contact form, business info, appointment booking",
     "contact_form": {
       "P0": [
         {
@@ -3995,7 +4046,7 @@
         {
           "id": "contactForm",
           "type": "Box",
-          "notes": "Form container \u2014 hidden on success"
+          "notes": "Form container — hidden on success"
         },
         {
           "id": "contactSuccess",
@@ -4210,7 +4261,7 @@
     }
   },
   "buyingGuidePage": {
-    "_priority": "P1 \u2014 individual buying guide detail page",
+    "_priority": "P1 — individual buying guide detail page",
     "header": {
       "P0": [
         {
@@ -4221,7 +4272,7 @@
         {
           "id": "guideContent",
           "type": "Box",
-          "notes": "Main content container \u2014 hidden on not-found"
+          "notes": "Main content container — hidden on not-found"
         },
         {
           "id": "notFoundBox",
@@ -4301,7 +4352,7 @@
         {
           "id": "tocContainer",
           "type": "Box",
-          "notes": "TOC container \u2014 collapsed on mobile"
+          "notes": "TOC container — collapsed on mobile"
         },
         {
           "id": "tocToggle",
@@ -4393,7 +4444,7 @@
         {
           "id": "faqAnswer",
           "type": "Text (hidden)",
-          "notes": "Answer text \u2014 accordion toggle (repeater item)"
+          "notes": "Answer text — accordion toggle (repeater item)"
         }
       ]
     },
@@ -4525,6 +4576,13 @@
       "contactPage",
       "buyingGuidePage"
     ],
-    "notes": "P0 elements must be renamed FIRST \u2014 code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks)."
+    "notes": "P0 elements must be renamed FIRST — code will break without them. P1 elements disable features. P2 elements are enhancements that gracefully degrade (empty catch blocks).",
+    "total_entries": 817,
+    "total_unique_ids": 796,
+    "priority_breakdown": {
+      "P0": 189,
+      "P1": 416,
+      "P2": 212
+    }
   }
 }
