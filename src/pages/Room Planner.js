@@ -146,6 +146,30 @@ function initProductPalette() {
     try { repeater.accessibility.ariaLabel = 'Furniture pieces to place in your room'; } catch (e) {}
     repeater.onItemReady(($item, itemData) => {
       try { $item('#paletteCategoryName').text = itemData.category; } catch (e) {}
+      // Each palette category item — nested items would need a sub-repeater
+      // For now, clicking the category adds its first product to the canvas
+      try {
+        $item('#paletteCategoryName').onClick(() => {
+          if (!itemData.items || itemData.items.length === 0) return;
+          for (const item of itemData.items) {
+            try {
+              $w('#plannerCanvas').postMessage({
+                type: 'addProduct',
+                product: {
+                  id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                  productType: item.productType,
+                  label: item.label,
+                  x: 10,
+                  y: 10,
+                  width: item.width,
+                  depth: item.depth,
+                  depthBed: item.depthBed || item.depth,
+                },
+              });
+            } catch (e) {}
+          }
+        });
+      } catch (e) {}
     });
     repeater.data = palette.map((g, i) => ({ ...g, _id: `palette-${i}` }));
   } catch (e) {}
@@ -157,7 +181,18 @@ function initCanvas() {
   try {
     const canvas = $w('#plannerCanvas');
     if (!canvas) return;
-    // Canvas HtmlComponent receives room dimensions and product placements via postMessage
+
+    // Listen for product position updates from the canvas embed
+    canvas.onMessage((event) => {
+      try {
+        if (event.data && event.data.type === 'canvasUpdate') {
+          const unfitting = (event.data.products || []).filter(p => !p.fits);
+          if (unfitting.length > 0) {
+            try { $w('#plannerStatusText').text = `${unfitting.length} piece(s) outside room bounds`; } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    });
   } catch (e) {}
 }
 
