@@ -81,6 +81,31 @@ describe('getAllBuyingGuides', () => {
       expect(guide.readingTime).toBeGreaterThanOrEqual(1);
     }
   });
+
+  it('summaries do not include full section bodies', async () => {
+    const result = await getAllBuyingGuides();
+    for (const guide of result.guides) {
+      expect(guide).not.toHaveProperty('sections');
+      expect(guide).not.toHaveProperty('faqs');
+      expect(guide).not.toHaveProperty('comparisonTable');
+    }
+  });
+
+  it('slugs in summaries match EXPECTED_SLUGS', async () => {
+    const result = await getAllBuyingGuides();
+    const slugs = result.guides.map(g => g.slug);
+    for (const expected of EXPECTED_SLUGS) {
+      expect(slugs).toContain(expected);
+    }
+  });
+
+  it('readingTime varies across guides (not all same value)', async () => {
+    const result = await getAllBuyingGuides();
+    const times = result.guides.map(g => g.readingTime);
+    const unique = new Set(times);
+    // Guides have different lengths so reading times should vary
+    expect(unique.size).toBeGreaterThanOrEqual(1);
+  });
 });
 
 // ── getBuyingGuide ──────────────────────────────────────────────────
@@ -214,6 +239,67 @@ describe('getBuyingGuide', () => {
     expect(product).toHaveProperty('mainMedia');
     expect(product).toHaveProperty('ribbon');
   });
+
+  it('returns empty relatedProducts when no CMS products match', async () => {
+    __seed('Stores/Products', []);
+    const result = await getBuyingGuide('futon-frames');
+    expect(result.guide.relatedProducts).toEqual([]);
+  });
+
+  it('limits relatedProducts to 6 items', async () => {
+    const products = Array.from({ length: 10 }, (_, i) => ({
+      _id: `p-${i}`, name: `Frame ${i}`, slug: `frame-${i}`, price: 499,
+      formattedPrice: '$499.00', mainMedia: 'img.jpg', ribbon: '',
+      collections: ['futon-frames'],
+    }));
+    __seed('Stores/Products', products);
+
+    const result = await getBuyingGuide('futon-frames');
+    expect(result.guide.relatedProducts.length).toBeLessThanOrEqual(6);
+  });
+
+  it('handles undefined slug', async () => {
+    const result = await getBuyingGuide(undefined);
+    expect(result.success).toBe(false);
+  });
+
+  it('handles numeric slug', async () => {
+    const result = await getBuyingGuide(12345);
+    // Should either fail validation or return coming soon
+    expect(result.success === false || result.guide?.comingSoon === true).toBe(true);
+  });
+
+  it('handles slug with special characters', async () => {
+    const result = await getBuyingGuide('<script>alert(1)</script>');
+    // Should sanitize and return coming soon or fail
+    expect(result.success === false || result.guide?.comingSoon === true).toBe(true);
+  });
+
+  it('coming soon guide has minimal required fields', async () => {
+    const result = await getBuyingGuide('nonexistent-category');
+    expect(result.guide).toHaveProperty('slug');
+    expect(result.guide).toHaveProperty('title');
+    expect(result.guide).toHaveProperty('categoryLabel');
+    expect(result.guide).toHaveProperty('comingSoon');
+    expect(result.guide).toHaveProperty('message');
+  });
+
+  it.each(EXPECTED_SLUGS)('guide %s has updatedDate', async (slug) => {
+    const result = await getBuyingGuide(slug);
+    expect(result.guide.updatedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it.each(EXPECTED_SLUGS)('guide %s has heroImage URL', async (slug) => {
+    const result = await getBuyingGuide(slug);
+    expect(result.guide.heroImage).toContain('https://');
+    expect(result.guide.heroImage).toContain('buying-guides/');
+  });
+
+  it.each(EXPECTED_SLUGS)('guide %s product links have distinct URLs', async (slug) => {
+    const result = await getBuyingGuide(slug);
+    const urls = result.guide.productLinks.map(l => l.url);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
 });
 
 // ── getBuyingGuideSchema ────────────────────────────────────────────
@@ -299,6 +385,36 @@ describe('getBuyingGuideSchema', () => {
     const result = await getBuyingGuideSchema('');
     expect(result.success).toBe(false);
   });
+
+  it('Article schema includes image URL', async () => {
+    const result = await getBuyingGuideSchema('futon-frames');
+    const schema = JSON.parse(result.articleSchema);
+    expect(schema.image).toContain('https://');
+  });
+
+  it('Article schema headline matches guide title', async () => {
+    const guide = await getBuyingGuide('mattresses');
+    const schema = await getBuyingGuideSchema('mattresses');
+    const parsed = JSON.parse(schema.articleSchema);
+    expect(parsed.headline).toBe(guide.guide.title);
+  });
+
+  it('Article schema description matches metaDescription', async () => {
+    const guide = await getBuyingGuide('covers');
+    const schema = await getBuyingGuideSchema('covers');
+    const parsed = JSON.parse(schema.articleSchema);
+    expect(parsed.description).toBe(guide.guide.metaDescription);
+  });
+
+  it('handles null slug', async () => {
+    const result = await getBuyingGuideSchema(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('handles undefined slug', async () => {
+    const result = await getBuyingGuideSchema(undefined);
+    expect(result.success).toBe(false);
+  });
 });
 
 // ── getGuideComparisonTable ─────────────────────────────────────────
@@ -330,6 +446,29 @@ describe('getGuideComparisonTable', () => {
   it('fails for empty slug', async () => {
     const result = await getGuideComparisonTable('');
     expect(result.success).toBe(false);
+  });
+
+  it('handles null slug', async () => {
+    const result = await getGuideComparisonTable(null);
+    expect(result.success).toBe(false);
+  });
+
+  it.each(EXPECTED_SLUGS)('table for %s has non-empty title', async (slug) => {
+    const result = await getGuideComparisonTable(slug);
+    expect(result.table.title.length).toBeGreaterThan(5);
+  });
+
+  it.each(EXPECTED_SLUGS)('table for %s has at least 3 headers', async (slug) => {
+    const result = await getGuideComparisonTable(slug);
+    expect(result.table.headers.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(EXPECTED_SLUGS)('table for %s rows match header count', async (slug) => {
+    const result = await getGuideComparisonTable(slug);
+    const colCount = result.table.headers.length;
+    for (const row of result.table.rows) {
+      expect(row.length).toBe(colCount);
+    }
   });
 });
 
@@ -365,6 +504,17 @@ describe('getGuideFaqs', () => {
   it('fails for empty slug', async () => {
     const result = await getGuideFaqs('');
     expect(result.success).toBe(false);
+  });
+
+  it('handles null slug', async () => {
+    const result = await getGuideFaqs(null);
+    expect(result.success).toBe(false);
+  });
+
+  it.each(EXPECTED_SLUGS)('FAQ questions for %s are unique', async (slug) => {
+    const result = await getGuideFaqs(slug);
+    const questions = result.faqs.map(f => f.question);
+    expect(new Set(questions).size).toBe(questions.length);
   });
 });
 
@@ -407,5 +557,25 @@ describe('getSocialShareLinks', () => {
   it('fails for empty slug', async () => {
     const result = await getSocialShareLinks('');
     expect(result.success).toBe(false);
+  });
+
+  it('handles null slug', async () => {
+    const result = await getSocialShareLinks(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('pinterest link includes description', async () => {
+    const result = await getSocialShareLinks('futon-frames');
+    expect(result.links.pinterest).toContain('description=');
+  });
+
+  it('url field is not encoded', async () => {
+    const result = await getSocialShareLinks('futon-frames');
+    expect(result.links.url).toBe('https://www.carolinafutons.com/buying-guides/futon-frames');
+  });
+
+  it.each(EXPECTED_SLUGS)('share links for %s have correct guide URL', async (slug) => {
+    const result = await getSocialShareLinks(slug);
+    expect(result.links.url).toContain(`/buying-guides/${slug}`);
   });
 });

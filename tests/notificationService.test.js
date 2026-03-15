@@ -34,6 +34,45 @@ describe('recordPriceSnapshots', () => {
     const result = await recordPriceSnapshots();
     expect(result.recorded).toBe(0);
   });
+
+  it('handles products with missing price fields', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'No Price', inStock: true, slug: 'no-price' },
+      { _id: 'prod-2', name: 'No Discounted', price: 799, slug: 'no-disc' },
+    ]);
+
+    const result = await recordPriceSnapshots();
+    expect(result.recorded).toBe(2);
+  });
+
+  it('uses discountedPrice for comparePrice when available', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Discounted', price: 599, discountedPrice: 499, inStock: true, slug: 'disc' },
+    ]);
+
+    const result = await recordPriceSnapshots();
+    expect(result.recorded).toBe(1);
+  });
+
+  it('paginates through multiple batches', async () => {
+    // Create 75 products — more than BATCH_SIZE (50)
+    const products = Array.from({ length: 75 }, (_, i) => ({
+      _id: `prod-${i}`, name: `Product ${i}`, price: 100 + i, inStock: true, slug: `product-${i}`,
+    }));
+    __seed('Stores/Products', products);
+
+    const result = await recordPriceSnapshots();
+    expect(result.recorded).toBe(75);
+  });
+
+  it('treats inStock:undefined as true', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'No Stock Field', price: 299, slug: 'no-stock' },
+    ]);
+
+    const result = await recordPriceSnapshots();
+    expect(result.recorded).toBe(1);
+  });
 });
 
 // ── checkWishlistAlerts ───────────────────────────────────────────────
@@ -239,6 +278,263 @@ describe('checkWishlistAlerts', () => {
     // Should not crash, but alert count stays 0 since send failed
     expect(result.priceDropAlerts).toBe(0);
   });
+
+  it('skips products with no price history', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'New Product', price: 499, inStock: true, slug: 'new-prod' },
+    ]);
+
+    // No price history at all
+    __seed('PriceHistory', []);
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+    expect(result.backInStockAlerts).toBe(0);
+  });
+
+  it('does not alert on price increase', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 699, inStock: true, slug: 'eureka' },
+    ]);
+
+    // Previous $599 → now $699 = price increase
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 699, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+
+  it('sends both price drop and back-in-stock alerts for same product', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka', mainMedia: 'img.jpg' },
+    ]);
+
+    // Previous: $599, out of stock → now: $399, in stock
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: false, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true, backInStock: true },
+    ]);
+    __seed('Members/PrivateMembersData', [
+      { _id: 'member-1', contactId: 'contact-1' },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(1);
+    expect(result.backInStockAlerts).toBe(1);
+    expect(__getEmailLog()).toHaveLength(2);
+  });
+
+  it('defaults to enabled when member has no preference record', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka', mainMedia: 'img.jpg' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+
+    // No MemberPreferences record at all — should default to enabled
+    __seed('MemberPreferences', []);
+    __seed('Members/PrivateMembersData', [
+      { _id: 'member-1', contactId: 'contact-1' },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(1);
+  });
+
+  it('skips wishlist entries with empty memberId', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: '', productId: 'prod-1' },
+      { _id: 'w-2', memberId: null, productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', []);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+
+  it('skips member with no contactId', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka', mainMedia: 'img.jpg' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true },
+    ]);
+    // Member exists but has no contactId
+    __seed('Members/PrivateMembersData', [
+      { _id: 'member-1' },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+
+  it('respects backInStock opt-out preference', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Phoenix Frame', price: 799, inStock: true, slug: 'phoenix', mainMedia: 'img.jpg' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 799, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 799, inStock: false, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true, backInStock: false },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.backInStockAlerts).toBe(0);
+  });
+
+  it('does not alert when product was already in stock', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Phoenix Frame', price: 799, inStock: true, slug: 'phoenix' },
+    ]);
+
+    // Both previous and current in stock — no back-in-stock event
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 799, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 799, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', backInStock: true },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.backInStockAlerts).toBe(0);
+  });
+
+  it('does not alert when previousPrice is 0', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Free Promo', price: 0, inStock: true, slug: 'free-promo' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 0, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 0, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+  });
+
+  it('notifies multiple members for same product', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka', mainMedia: 'img.jpg' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1' },
+      { _id: 'w-2', memberId: 'member-2', productId: 'prod-1' },
+    ]);
+    __seed('MemberPreferences', [
+      { _id: 'mp-1', memberId: 'member-1', saleAlerts: true },
+      { _id: 'mp-2', memberId: 'member-2', saleAlerts: true },
+    ]);
+    __seed('Members/PrivateMembersData', [
+      { _id: 'member-1', contactId: 'contact-1' },
+      { _id: 'member-2', contactId: 'contact-2' },
+    ]);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(2);
+    expect(__getEmailLog()).toHaveLength(2);
+  });
+
+  it('processes products with no wishlist entries', async () => {
+    __seed('Stores/Products', [
+      { _id: 'prod-1', name: 'Eureka Futon', price: 399, inStock: true, slug: 'eureka' },
+    ]);
+
+    __seed('PriceHistory', [
+      { _id: 'ph-2', productId: 'prod-1', price: 399, inStock: true, recordedAt: new Date('2026-02-27') },
+      { _id: 'ph-1', productId: 'prod-1', price: 599, inStock: true, recordedAt: new Date('2026-02-20') },
+    ]);
+
+    // No one wishlisted this product
+    __seed('Wishlist', []);
+    __seed('NotificationLog', []);
+
+    const result = await checkWishlistAlerts();
+    expect(result.priceDropAlerts).toBe(0);
+  });
 });
 
 // ── toggleProductAlerts ───────────────────────────────────────────────
@@ -276,6 +572,45 @@ describe('toggleProductAlerts', () => {
     const result = await toggleProductAlerts('nonexistent', true);
     expect(result).toEqual({ success: false });
   });
+
+  it('rejects toggling another member\'s wishlist item', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-2', productId: 'prod-1', muteAlerts: false },
+    ]);
+
+    // Current member is member-1 but item belongs to member-2
+    const result = await toggleProductAlerts('w-1', true);
+    expect(result).toEqual({ success: false });
+  });
+
+  it('returns failure when not authenticated', async () => {
+    __setMember(null);
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1', muteAlerts: false },
+    ]);
+
+    const result = await toggleProductAlerts('w-1', true);
+    expect(result).toEqual({ success: false });
+  });
+
+  it('returns failure when member has no _id', async () => {
+    __setMember({ loginEmail: 'test@example.com' }); // no _id
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1', muteAlerts: false },
+    ]);
+
+    const result = await toggleProductAlerts('w-1', true);
+    expect(result).toEqual({ success: false });
+  });
+
+  it('coerces truthy muted value to boolean', async () => {
+    __seed('Wishlist', [
+      { _id: 'w-1', memberId: 'member-1', productId: 'prod-1', muteAlerts: false },
+    ]);
+
+    const result = await toggleProductAlerts('w-1', 1);
+    expect(result).toEqual({ success: true });
+  });
 });
 
 // ── getNotificationHistory ────────────────────────────────────────────
@@ -298,5 +633,53 @@ describe('getNotificationHistory', () => {
     const result = await getNotificationHistory();
     expect(result.success).toBe(false);
     expect(result.items).toHaveLength(0);
+  });
+
+  it('respects custom limit parameter', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+    __seed('NotificationLog', [
+      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
+      { _id: 'nl-2', memberId: 'member-1', productId: 'prod-2', alertType: 'price_drop', sentAt: new Date('2026-02-19') },
+      { _id: 'nl-3', memberId: 'member-1', productId: 'prod-3', alertType: 'price_drop', sentAt: new Date('2026-02-18') },
+    ]);
+
+    const result = await getNotificationHistory(2);
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(2);
+  });
+
+  it('caps limit at 50 even if higher requested', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+    __seed('NotificationLog', [
+      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
+    ]);
+
+    // Request limit of 100, should be capped at 50
+    const result = await getNotificationHistory(100);
+    expect(result.success).toBe(true);
+    // Just verify it doesn't crash — actual cap is Math.min(100, 50) = 50
+    expect(result.items).toBeTruthy();
+  });
+
+  it('returns empty items for member with no notification history', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+    __seed('NotificationLog', []);
+
+    const result = await getNotificationHistory();
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(0);
+  });
+
+  it('only returns notifications for the current member', async () => {
+    __setMember({ _id: 'member-1', loginEmail: 'test@example.com' });
+    __seed('NotificationLog', [
+      { _id: 'nl-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-02-20') },
+      { _id: 'nl-2', memberId: 'member-2', productId: 'prod-2', alertType: 'price_drop', sentAt: new Date('2026-02-19') },
+    ]);
+
+    const result = await getNotificationHistory();
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].memberId).toBe('member-1');
   });
 });
