@@ -18,6 +18,7 @@ const HTTP_FUNCTIONS = join(BACKEND_DIR, 'http-functions.js');
 const FB_CATALOG = join(BACKEND_DIR, 'facebookCatalog.web.js');
 const RETURNS_SERVICE = join(BACKEND_DIR, 'returnsService.web.js');
 const SANITIZE = join(BACKEND_DIR, 'utils', 'sanitize.js');
+const EMAIL_AUTOMATION = join(BACKEND_DIR, 'emailAutomation.web.js');
 
 function readFile(path) {
   return readFileSync(path, 'utf-8');
@@ -414,6 +415,44 @@ describe('Security: error responses do not leak internals', () => {
       expect(errCall).not.toContain('cronKey');
       expect(errCall).not.toContain('audienceSecret');
     });
+  });
+});
+
+// ── emailAutomation: secret key names must not appear in log messages ─────
+
+describe('Security: emailAutomation secret key names not in logs', () => {
+  const src = readFile(EMAIL_AUTOMATION);
+
+  it('extracts secret key names from getSecret calls', () => {
+    const secretCalls = src.match(/getSecret\(['"]([^'"]+)['"]\)/g) || [];
+    expect(secretCalls.length).toBeGreaterThan(0);
+  });
+
+  it('console.warn/error messages do not contain literal secret key names', () => {
+    const secretNames = (src.match(/getSecret\(['"]([^'"]+)['"]\)/g) || [])
+      .map(m => m.match(/getSecret\(['"]([^'"]+)['"]\)/)[1]);
+
+    const logCalls = (src.match(/console\.(warn|error)\([^)]+\)/g) || []);
+
+    for (const logCall of logCalls) {
+      for (const secretName of secretNames) {
+        expect(logCall).not.toContain(secretName);
+      }
+    }
+  });
+
+  it('discount secret fetch provides discountAvailable flag', () => {
+    // Every getSecret for discount should set discountAvailable
+    const secretBlocks = src.split(/getSecret\(/);
+    // Skip the first split (before any getSecret call)
+    for (let i = 1; i < secretBlocks.length; i++) {
+      const block = secretBlocks[i];
+      if (block.includes('DISCOUNT_CODE')) {
+        // Within ~10 lines after the getSecret, discountAvailable should be set
+        const nearby = block.substring(0, 300);
+        expect(nearby).toContain('discountAvailable');
+      }
+    }
   });
 });
 
