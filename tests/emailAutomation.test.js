@@ -540,16 +540,27 @@ describe('triggerReengagement', () => {
 
   it('sets discountAvailable false when reengagement secret missing', async () => {
     __resetSecrets();
+    const ninetyOneDaysAgo = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
+    __seed('EmailQueue', [{
+      _id: 'eq-pp-1',
+      recipientEmail: 'dormant@test.com',
+      recipientContactId: 'contact-d1',
+      sequenceType: 'post_purchase',
+      sequenceStep: 1,
+      status: 'sent',
+      sentAt: ninetyOneDaysAgo,
+      variables: { firstName: 'Dormant' },
+    }]);
+
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
 
     await triggerReengagement();
 
     const reengagement = insertedItems.find(i => i.sequenceType === 'reengagement');
-    if (reengagement) {
-      expect(reengagement.variables.discountCode).toBe('');
-      expect(reengagement.variables.discountAvailable).toBe(false);
-    }
+    expect(reengagement).toBeTruthy();
+    expect(reengagement.variables.discountCode).toBe('');
+    expect(reengagement.variables.discountAvailable).toBe(false);
   });
 
   it('skips contacts with recent reengagement', async () => {
