@@ -769,15 +769,17 @@ describe('Member Page — Error Fallback element hookup', () => {
     // Override getMember to return a value, but break Promise.allSettled
     // so the outer catch fires showErrorFallback.
     const origAllSettled = Promise.allSettled;
-    Promise.allSettled = () => { throw new Error('Catastrophic failure'); };
+    try {
+      Promise.allSettled = () => { throw new Error('Catastrophic failure'); };
 
-    elements.clear();
-    onReadyHandler = null;
-    vi.resetModules();
-    await import('../src/pages/Member Page.js');
-    if (onReadyHandler) await onReadyHandler();
-
-    Promise.allSettled = origAllSettled;
+      elements.clear();
+      onReadyHandler = null;
+      vi.resetModules();
+      await import('../src/pages/Member Page.js');
+      if (onReadyHandler) await onReadyHandler();
+    } finally {
+      Promise.allSettled = origAllSettled;
+    }
 
     const errorBox = getEl('#memberErrorFallback');
     expect(errorBox.show).toHaveBeenCalled();
@@ -785,15 +787,17 @@ describe('Member Page — Error Fallback element hookup', () => {
 
   it('sets error text on #memberErrorText when fallback shown', async () => {
     const origAllSettled = Promise.allSettled;
-    Promise.allSettled = () => { throw new Error('Catastrophic failure'); };
+    try {
+      Promise.allSettled = () => { throw new Error('Catastrophic failure'); };
 
-    elements.clear();
-    onReadyHandler = null;
-    vi.resetModules();
-    await import('../src/pages/Member Page.js');
-    if (onReadyHandler) await onReadyHandler();
-
-    Promise.allSettled = origAllSettled;
+      elements.clear();
+      onReadyHandler = null;
+      vi.resetModules();
+      await import('../src/pages/Member Page.js');
+      if (onReadyHandler) await onReadyHandler();
+    } finally {
+      Promise.allSettled = origAllSettled;
+    }
 
     expect(getEl('#memberErrorText').text).toContain('trouble loading your account');
   });

@@ -95,8 +95,8 @@ vi.mock('public/engagementTracker', () => ({
 vi.mock('public/a11yHelpers', () => ({
   announce: vi.fn(),
   makeClickable: vi.fn((el, handler, opts) => {
-    if (opts?.ariaLabel) {
-      try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+    if (opts?.ariaLabel && el.accessibility) {
+      el.accessibility.ariaLabel = opts.ariaLabel;
     }
     el.onClick(handler);
   }),
@@ -266,9 +266,9 @@ describe('Admin Returns — Returns Repeater element hookup', () => {
     vi.clearAllMocks();
   });
 
-  it('initially collapses #returnsRepeater', async () => {
+  it('expands #returnsRepeater after rendering returns data', async () => {
     await loadPage();
-    // initReturnsList collapses, then renderReturnsList expands
+    // initReturnsList collapses, then renderReturnsList expands with data
     expect(getEl('#returnsRepeater').expand).toHaveBeenCalled();
   });
 
