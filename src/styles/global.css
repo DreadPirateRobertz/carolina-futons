@@ -393,7 +393,7 @@ h4.font_4,
 
 [data-hook="product-item-ribbon"],
 [class*="ribbon"] {
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
 }
 
@@ -861,6 +861,61 @@ h4.font_4,
     padding: 12px 16px !important;
   }
 
+  /* Nav links — 44px touch target */
+  .horizontal-menu__item-label {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Footer links — 44px touch target */
+  .footer a {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Filter options — 44px touch target */
+  [data-hook="filter-title"],
+  [data-hook="filter-full-title"] {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Sort dropdown — 44px touch target */
+  [data-hook="sort-floating-dropdown"] {
+    min-height: 44px !important;
+  }
+
+  /* Cart icon — 44px touch target */
+  [data-hook="cart-icon-button"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Search button — 44px touch target */
+  .search-button__label {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Breadcrumb links — 44px touch target */
+  [data-hook="extended-gallery-breadcrumbs"] a,
+  [data-hook="extended-gallery-breadcrumbs"] {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  /* Mobile menu links — 44px touch target */
+  .mobile-menu a {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
   /* Cart page — compact text for narrow screens */
   [data-hook="cart-widget-item-name"],
   [data-hook="CartItemDataHook.Name"],
@@ -947,5 +1002,22 @@ h4.font_4,
 
   [data-hook="ricos-viewer"] h3 {
     font-size: 16px !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   20. REDUCED MOTION — respect user preference (WCAG 2.3.3)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }
