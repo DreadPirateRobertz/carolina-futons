@@ -84,6 +84,7 @@ export default defineConfig({
       'backend/utils/mediaHelpers': path.resolve(__dirname, 'src/backend/utils/mediaHelpers.js'),
       'backend/utils/errorHandler': path.resolve(__dirname, 'src/backend/utils/errorHandler.js'),
       'backend/utils/safeParse': path.resolve(__dirname, 'src/backend/utils/safeParse.js'),
+      'backend/referralService.web': path.resolve(__dirname, 'src/backend/referralService.web.js'),
       'backend/assemblyGuides.web': path.resolve(__dirname, 'src/backend/assemblyGuides.web.js'),
       'backend/errorMonitoring.web': path.resolve(__dirname, 'src/backend/errorMonitoring.web.js'),
       'backend/liveChat.web': path.resolve(__dirname, 'src/backend/liveChat.web.js'),
