@@ -397,6 +397,33 @@ describe('triggerAbandonedCartRecovery', () => {
     expect(step3.variables.discountAvailable).toBe(true);
   });
 
+  it('sets discountAvailable false on all cart steps when secret missing', async () => {
+    __resetSecrets();
+    __seed('AbandonedCarts', [{
+      _id: 'ac-1',
+      checkoutId: 'ck-1',
+      buyerEmail: 'shopper@test.com',
+      buyerName: 'Shopper',
+      cartTotal: 599,
+      lineItems: [],
+      abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      status: 'abandoned',
+      recoveryEmailSent: false,
+    }]);
+
+    let insertedItems = [];
+    __onInsert((collection, item) => {
+      if (collection === 'EmailQueue') insertedItems.push(item);
+    });
+
+    await triggerAbandonedCartRecovery();
+
+    const step3 = insertedItems.find(i => i.sequenceStep === 3);
+    expect(step3).toBeTruthy();
+    expect(step3.variables.discountCode).toBe('');
+    expect(step3.variables.discountAvailable).toBe(false);
+  });
+
   it('marks cart as recovery email sent', async () => {
     __seed('AbandonedCarts', [{
       _id: 'ac-1',
