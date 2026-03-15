@@ -59,6 +59,11 @@ const mockCollection = [
   { ...wallHuggerFrame, _id: 'col-1' },
 ];
 
+vi.mock('public/productCache', () => ({
+  getCachedProduct: vi.fn(() => null),
+  cacheProduct: vi.fn(),
+}));
+
 vi.mock('public/InventoryDisplay.js', () => ({
   initInventoryDisplay: vi.fn().mockResolvedValue(undefined),
 }));
@@ -303,7 +308,16 @@ describe('Product Page', () => {
 
   describe('cached product display warnings', () => {
     it('logs console.warn when cached element access fails', async () => {
-      // Set up a product in the cache mock so cached path is triggered
+      const { getCachedProduct } = await import('public/productCache');
+      const { __setPath } = await import('wix-location-frontend');
+
+      // Configure cache to return a product so the cached path triggers
+      getCachedProduct.mockReturnValueOnce({
+        name: 'Test Futon', formattedPrice: '$299', mainMedia: 'img.jpg',
+        _cachedAt: Date.now(),
+      });
+      __setPath(['product-page', 'test-slug']);
+
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Make productName element throw when text is set
@@ -316,11 +330,14 @@ describe('Product Page', () => {
 
       await onReadyHandler();
 
-      // The warn may or may not fire depending on cache state,
-      // but the handler should NOT throw
-      expect(() => {}).not.toThrow();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[ProductPage] Cached name display failed:'),
+        expect.any(String),
+      );
 
       warnSpy.mockRestore();
+      __setPath([]);
+      getCachedProduct.mockReturnValue(null);
     });
   });
 
