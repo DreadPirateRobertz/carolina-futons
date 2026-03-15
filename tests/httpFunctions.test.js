@@ -14,6 +14,12 @@ import {
   get_processEmailQueueCron,
   get_triggerReengagementCron,
   get_processPostPurchaseCareCron,
+  get_googleShoppingFeed,
+  get_manifest,
+  get_serviceWorker,
+  get_robots,
+  get_facebookCustomAudience,
+  post_klaviyoWebhook,
 } from '../src/backend/http-functions.js';
 
 const sampleProducts = [
@@ -781,5 +787,350 @@ describe('Feed URL encoding', () => {
     const result = await get_pinterestProductFeed();
     expect(result.body).not.toContain('product with spaces');
     expect(result.body).toContain(encodeURIComponent('product with spaces & special<chars>'));
+  });
+});
+
+// ── get_googleShoppingFeed ──────────────────────────────────────────
+
+describe('get_googleShoppingFeed', () => {
+  it('returns XML content type on success', async () => {
+    const result = await get_googleShoppingFeed({});
+    if (result.status === 200) {
+      expect(result.headers['Content-Type']).toBe('application/xml; charset=utf-8');
+    }
+  });
+
+  it('returns 200 with body when generateFeed succeeds', async () => {
+    const result = await get_googleShoppingFeed({});
+    // generateFeed uses real implementation with seeded products
+    expect(result.status).toBe(200);
+    expect(result.body).toBeTruthy();
+  });
+
+  it('sets public cache header with 1 hour max-age', async () => {
+    const result = await get_googleShoppingFeed({});
+    if (result.status === 200) {
+      expect(result.headers['Cache-Control']).toBe('public, max-age=3600');
+    }
+  });
+});
+
+// ── get_manifest ────────────────────────────────────────────────────
+
+describe('get_manifest', () => {
+  it('returns 200 with JSON content type', () => {
+    const result = get_manifest();
+    expect(result.status).toBe(200);
+    expect(result.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('returns valid JSON with required PWA fields', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.name).toBe('Carolina Futons');
+    expect(manifest.short_name).toBe('CF Futons');
+    expect(manifest.start_url).toBe('/');
+    expect(manifest.display).toBe('standalone');
+  });
+
+  it('includes icon entries', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.icons).toHaveLength(2);
+    expect(manifest.icons[0].sizes).toBe('192x192');
+    expect(manifest.icons[1].sizes).toBe('512x512');
+  });
+
+  it('uses design token colors for theme', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.background_color).toBeTruthy();
+    expect(manifest.theme_color).toBeTruthy();
+  });
+
+  it('sets 24-hour cache', () => {
+    const result = get_manifest();
+    expect(result.headers['Cache-Control']).toBe('public, max-age=86400');
+  });
+
+  it('includes categories', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.categories).toContain('shopping');
+  });
+});
+
+// ── get_serviceWorker ───────────────────────────────────────────────
+
+describe('get_serviceWorker', () => {
+  it('returns 200 with JavaScript content type', () => {
+    const result = get_serviceWorker();
+    expect(result.status).toBe(200);
+    expect(result.headers['Content-Type']).toBe('application/javascript');
+  });
+
+  it('sets Service-Worker-Allowed header to root', () => {
+    const result = get_serviceWorker();
+    expect(result.headers['Service-Worker-Allowed']).toBe('/');
+  });
+
+  it('sets no-cache to ensure fresh SW updates', () => {
+    const result = get_serviceWorker();
+    expect(result.headers['Cache-Control']).toBe('no-cache');
+  });
+
+  it('includes install event listener', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain("addEventListener('install'");
+  });
+
+  it('includes activate event listener', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain("addEventListener('activate'");
+  });
+
+  it('includes fetch event listener', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain("addEventListener('fetch'");
+  });
+
+  it('includes precache URLs for main pages', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain('/shop-main');
+    expect(result.body).toContain('/futon-frames');
+    expect(result.body).toContain('/mattresses');
+  });
+
+  it('includes cache name constant', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain('cf-v1');
+  });
+});
+
+// ── get_robots ──────────────────────────────────────────────────────
+
+describe('get_robots', () => {
+  it('returns 200 with text/plain content type', () => {
+    const result = get_robots();
+    expect(result.status).toBe(200);
+    expect(result.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+  });
+
+  it('allows crawling of root', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Allow: /');
+  });
+
+  it('disallows cart and checkout', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Disallow: /cart');
+    expect(result.body).toContain('Disallow: /checkout');
+  });
+
+  it('disallows login and account pages', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Disallow: /login');
+    expect(result.body).toContain('Disallow: /account');
+  });
+
+  it('allows sitemap endpoints but disallows other _functions', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Allow: /_functions/productSitemap');
+    expect(result.body).toContain('Allow: /_functions/blogSitemap');
+    expect(result.body).toContain('Disallow: /_functions/');
+  });
+
+  it('includes sitemap URLs', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Sitemap: https://www.carolinafutons.com/_functions/productSitemap');
+    expect(result.body).toContain('Sitemap: https://www.carolinafutons.com/_functions/blogSitemap');
+  });
+
+  it('sets 24-hour cache', () => {
+    const result = get_robots();
+    expect(result.headers['Cache-Control']).toBe('public, max-age=86400');
+  });
+
+  it('disallows search results page', () => {
+    const result = get_robots();
+    expect(result.body).toContain('Disallow: /search-results');
+  });
+});
+
+// ── get_facebookCustomAudience ──────────────────────────────────────
+
+describe('get_facebookCustomAudience', () => {
+  it('returns 403 with no auth header', async () => {
+    __setSecrets({ FB_AUDIENCE_SECRET: 'test-audience-secret' });
+    const result = await get_facebookCustomAudience({ headers: {} });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with wrong secret', async () => {
+    __setSecrets({ FB_AUDIENCE_SECRET: 'test-audience-secret' });
+    const result = await get_facebookCustomAudience({
+      headers: { 'x-fb-audience-secret': 'wrong-secret' },
+    });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 when secret is not configured', async () => {
+    __setSecrets({});
+    const result = await get_facebookCustomAudience({
+      headers: { 'x-fb-audience-secret': 'any-key' },
+    });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns JSON content type on auth success', async () => {
+    __setSecrets({ FB_AUDIENCE_SECRET: 'test-audience-secret' });
+    const result = await get_facebookCustomAudience({
+      headers: { 'x-fb-audience-secret': 'test-audience-secret' },
+    });
+    expect(result.headers['Content-Type']).toBe('application/json');
+  });
+
+  it('returns no-store cache on success', async () => {
+    __setSecrets({ FB_AUDIENCE_SECRET: 'test-audience-secret' });
+    const result = await get_facebookCustomAudience({
+      headers: { 'x-fb-audience-secret': 'test-audience-secret' },
+    });
+    if (result.status === 200) {
+      expect(result.headers['Cache-Control']).toBe('no-store');
+    }
+  });
+
+  it('includes schema array in response', async () => {
+    __setSecrets({ FB_AUDIENCE_SECRET: 'test-audience-secret' });
+    const result = await get_facebookCustomAudience({
+      headers: { 'x-fb-audience-secret': 'test-audience-secret' },
+    });
+    if (result.status === 200) {
+      const body = JSON.parse(result.body);
+      expect(body.schema).toEqual(['EMAIL', 'FN', 'LN', 'PHONE', 'CT', 'ST', 'ZIP', 'COUNTRY', 'VALUE']);
+    }
+  });
+});
+
+// ── post_klaviyoWebhook ─────────────────────────────────────────────
+
+describe('post_klaviyoWebhook', () => {
+  const makeRequest = (headers, bodyObj) => ({
+    headers,
+    body: {
+      async text() { return JSON.stringify(bodyObj); },
+    },
+  });
+
+  it('returns 403 with no auth header', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook({ headers: {} });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 403 with wrong secret', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook({
+      headers: { 'x-klaviyo-webhook-secret': 'wrong' },
+    });
+    expect(result.status).toBe(403);
+  });
+
+  it('returns 400 for invalid JSON body', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook({
+      headers: { 'x-klaviyo-webhook-secret': 'klav-secret' },
+      body: { async text() { return 'not json'; } },
+    });
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toBe('Invalid JSON body');
+  });
+
+  it('returns 400 for missing type field', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { email: 'test@example.com' },
+      ),
+    );
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toBe('Missing required field: type');
+  });
+
+  it('returns 400 for missing email field', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed' },
+      ),
+    );
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toBe('Missing required field: email');
+  });
+
+  it('returns 400 for invalid email format', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed', email: 'not-an-email' },
+      ),
+    );
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toBe('Invalid email format');
+  });
+
+  it('returns 200 for valid unsubscribe event', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'test@example.com', status: 'subscribed' },
+    ]);
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed', email: 'test@example.com' },
+      ),
+    );
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.status).toBe('ok');
+    expect(body.received).toBe('unsubscribed');
+  });
+
+  it('returns 200 for unknown event type (acknowledged)', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'bounced', email: 'test@example.com' },
+      ),
+    );
+    expect(result.status).toBe(200);
+    const body = JSON.parse(result.body);
+    expect(body.received).toBe('bounced');
+  });
+
+  it('sets no-store cache header', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'test', email: 'test@example.com' },
+      ),
+    );
+    expect(result.headers['Cache-Control']).toBe('no-store');
+  });
+
+  it('returns JSON content type', async () => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'test', email: 'test@example.com' },
+      ),
+    );
+    expect(result.headers['Content-Type']).toBe('application/json');
   });
 });
