@@ -9,7 +9,8 @@
  * #referralSection, #referralTitle, #referralMessage, #referralCopyBtn, #referralEmailBtn,
  * #assemblyGuideSection, #assemblyGuideTitle, #assemblyGuideText, #assemblyGuideBtn,
  * #reviewSection, #reviewTitle, #reviewPrompt, #reviewStar1–#reviewStar5,
- * #reviewRating, #reviewSubmitBtn, #reviewError, #reviewSuccess
+ * #reviewRating, #reviewSubmitBtn, #reviewError, #reviewSuccess,
+ * #postPurchaseHeading, #postPurchaseRepeater
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 

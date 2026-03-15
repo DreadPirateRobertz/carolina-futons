@@ -3,9 +3,11 @@
  * Covers: #cartFinancingSection, #financingThreshold, #cartFinancingTeaser,
  * #cartAfterpayMessage, #emptyCartSection, #emptyCartTitle, #emptyCartMessage,
  * #continueShoppingBtn, #shippingProgressBar, #shippingProgressText,
- * #tierProgressBar, #tierProgressText, #cartSubtotal, #cartTotal,
- * #cartItemsRepeater, #cartItemName, #cartItemPrice, #qtyMinus, #qtyPlus,
- * #qtyInput, #removeItem, #saveForLaterBtn
+ * #shippingProgressIcon, #tierProgressBar, #tierProgressText,
+ * #cartSubtotal, #cartTotal, #cartItemsRepeater, #cartItemName,
+ * #cartItemPrice, #qtyMinus, #qtyPlus, #qtyInput, #removeItem,
+ * #saveForLaterBtn, #cartRecentSection, #cartRecentRepeater,
+ * #suggestionsSection, #cartDeliverySection
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -568,10 +570,12 @@ describe('Cart Page — #cartRecentRepeater child elements', () => {
   });
 
   it('expands recent section and populates repeater when products exist', async () => {
-    const { getRecentlyViewed } = await import('public/galleryHelpers');
-    getRecentlyViewed.mockReturnValue([
-      { _id: 'rv1', name: 'Vienna Frame', mainMedia: 'vienna.jpg', price: '$399', slug: 'vienna-frame' },
-    ]);
+    // Mock must be set up inside loadPage override to survive vi.resetModules()
+    vi.doMock('public/galleryHelpers', () => ({
+      getRecentlyViewed: vi.fn(() => [
+        { _id: 'rv1', name: 'Vienna Frame', mainMedia: 'vienna.jpg', price: '$399', slug: 'vienna-frame' },
+      ]),
+    }));
 
     await loadPage();
 

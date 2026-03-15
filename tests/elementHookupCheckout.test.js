@@ -10,8 +10,13 @@
  * #checkoutProgressNav, #checkoutProgressRepeater, #progressStepLabel,
  * #progressStepNumber, #progressStepDot, #progressStepContainer,
  * #orderNotesToggle, #orderNotesField, #checkoutFreeShipping,
- * #checkoutItemCount, #orderSummarySidebar, #orderSummarySubtotal,
- * #orderSummaryShipping, #orderSummaryTax, #orderSummaryTotal,
+ * #checkoutItemCount, #checkoutDeliveryEstimate,
+ * #orderSummarySidebar, #orderSummarySubtotal, #orderSummaryShipping,
+ * #orderSummaryTax, #orderSummaryTotal, #orderSummarySavings,
+ * #orderSummaryItemsRepeater, #summaryItemName, #summaryItemQty,
+ * #summaryItemPrice, #trustRepeater,
+ * #addressFullNameError, #addressLine1Error, #addressCityError,
+ * #addressStateError, #addressZipError,
  * #expressCheckoutSection, #expressCheckoutBtn
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';

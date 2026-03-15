@@ -1,9 +1,10 @@
 /**
  * Tests for Side Cart element hookup — CF-03jx
  * Covers: #cartBadge, #sideCartPanel, #sideCartTitle, #sideCartSubtotal,
- * #sideTierText, #sideCartClose, #sideCartCheckout, #viewFullCart,
- * #sideQtyMinus, #sideQtyPlus, #sideItemImage, #sideItemName, #sideItemPrice,
- * #sideItemQty, #sideItemLineTotal, #sideItemRemove, #sideSaveForLater,
+ * #sideTierText, #sideCartClose, #sideCartOverlay, #sideCartCheckout,
+ * #viewFullCart, #sideCartRepeater, #sideQtyMinus, #sideQtyPlus,
+ * #sideItemImage, #sideItemName, #sideItemPrice, #sideItemQty,
+ * #sideItemLineTotal, #sideItemVariant, #sideItemRemove, #sideSaveForLater,
  * #sideCartEmpty, #sideCartItems, #sideCartFooter, #sideShippingBar,
  * #sideShippingText, #sideTierBar
  */
