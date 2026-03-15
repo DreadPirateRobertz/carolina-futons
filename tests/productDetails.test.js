@@ -36,18 +36,44 @@ vi.mock('public/engagementTracker', () => ({
   trackProductPageView: vi.fn(), trackCartAdd: vi.fn(), trackGalleryInteraction: vi.fn(), trackSwatchView: vi.fn(), trackSocialShare: vi.fn(),
 }));
 
-import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest } from '../src/public/ProductDetails.js';
+vi.mock('public/a11yHelpers', () => ({
+  makeClickable: vi.fn((el, handler, opts) => {
+    if (el && handler) el.onClick(handler);
+    if (el && opts?.ariaLabel) try { el.accessibility.ariaLabel = opts.ariaLabel; } catch (e) {}
+  }),
+}));
+
+vi.mock('public/designTokens.js', () => ({
+  colors: { success: '#22c55e', sunsetCoral: '#E8845C', mountainBlue: '#5B8FA8', sandDark: '#c9b99a', espresso: '#3A2518' },
+}));
+
+vi.mock('public/DeliveryEstimator.js', () => ({
+  estimateDelivery: vi.fn().mockResolvedValue({
+    success: true,
+    deliveryText: 'Delivered by Mar 25 – Mar 30',
+    shippingText: 'UPS Ground — $49.99',
+    whiteGloveText: null,
+  }),
+}));
+
+vi.mock('public/validators.js', () => ({
+  validateEmail: vi.fn((email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+}));
+
+import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from '../src/public/ProductDetails.js';
 
 function createMockElement() {
   return {
     text: '', src: '', alt: '', value: '', label: '', data: [],
-    style: { color: '' },
+    style: { color: '', backgroundColor: '' },
     show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
     collapse: vi.fn(), expand: vi.fn(), onClick: vi.fn(), onChange: vi.fn(),
     onItemReady: vi.fn(), postMessage: vi.fn(), forEachItem: vi.fn(),
+    onKeyPress: vi.fn(), onInput: vi.fn(),
     accessibility: {},
     productOptions: [],
     disable: vi.fn(), enable: vi.fn(),
+    focus: vi.fn(),
   };
 }
 
@@ -89,6 +115,24 @@ describe('ProductDetails', () => {
       await initBreadcrumbs($w, state);
       expect($w('#breadcrumbSchemaHtml').postMessage).toHaveBeenCalledWith('{"@type":"BreadcrumbList"}');
     });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await initBreadcrumbs($w, state);
+      expect($w('#breadcrumb1').text).toBe('');
+    });
+
+    it('uses Murphy category for murphy collections', async () => {
+      state.product = { ...state.product, collections: ['murphy-cabinet-beds'] };
+      await initBreadcrumbs($w, state);
+      expect($w('#breadcrumb2').text).toBe('Murphy Cabinet Beds');
+    });
+
+    it('does not throw when schema is null', async () => {
+      const { getBreadcrumbSchema } = await import('backend/seoHelpers.web');
+      getBreadcrumbSchema.mockResolvedValueOnce(null);
+      await expect(initBreadcrumbs($w, state)).resolves.toBeUndefined();
+    });
   });
 
   describe('initProductInfoAccordion', () => {
@@ -116,6 +160,56 @@ describe('ProductDetails', () => {
       initProductInfoAccordion($w);
       expect($w('#infoContentShipping').text).toContain('Free standard shipping');
     });
+
+    it('sets Description arrow to minus sign', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoArrowDescription').text).toBe('\u2212');
+    });
+
+    it('sets non-Description arrows to plus sign', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoArrowDimensions').text).toBe('+');
+      expect($w('#infoArrowCare').text).toBe('+');
+      expect($w('#infoArrowShipping').text).toBe('+');
+    });
+
+    it('toggles section on header click', () => {
+      initProductInfoAccordion($w);
+      // Dimensions starts collapsed — clicking should expand
+      const clickCb = $w('#infoHeaderDimensions').onClick.mock.calls[0][0];
+      clickCb();
+      expect($w('#infoContentDimensions').expand).toHaveBeenCalled();
+      expect($w('#infoArrowDimensions').text).toBe('\u2212');
+    });
+
+    it('collapses section on second click', () => {
+      initProductInfoAccordion($w);
+      const clickCb = $w('#infoHeaderDimensions').onClick.mock.calls[0][0];
+      clickCb(); // expand
+      clickCb(); // collapse
+      expect($w('#infoContentDimensions').collapse).toHaveBeenCalledTimes(2); // once in init + once on toggle
+      expect($w('#infoArrowDimensions').text).toBe('+');
+    });
+
+    it('registers keyboard handler for Enter/Space', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDescription').onKeyPress).toHaveBeenCalled();
+    });
+
+    it('sets ariaExpanded true for expanded Description', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDescription').accessibility.ariaExpanded).toBe(true);
+    });
+
+    it('sets ariaExpanded false for collapsed sections', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(false);
+    });
+
+    it('sets ariaLabel on section headers', () => {
+      initProductInfoAccordion($w);
+      expect($w('#infoHeaderDescription').accessibility.ariaLabel).toBe('Description section');
+    });
   });
 
   describe('initSocialShare', () => {
@@ -130,6 +224,15 @@ describe('ProductDetails', () => {
     it('sets aria labels on share buttons', () => {
       initSocialShare($w, state);
       expect($w('#shareFacebook').accessibility.ariaLabel).toBe('Share on Facebook');
+      expect($w('#sharePinterest').accessibility.ariaLabel).toBe('Share on Pinterest');
+      expect($w('#shareEmail').accessibility.ariaLabel).toBe('Share via email');
+      expect($w('#shareCopyLink').accessibility.ariaLabel).toBe('Copy product link');
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initSocialShare($w, state);
+      expect($w('#shareFacebook').onClick).not.toHaveBeenCalled();
     });
   });
 
@@ -145,6 +248,33 @@ describe('ProductDetails', () => {
       initDeliveryEstimate($w, state);
       expect($w('#whiteGloveNote').text).toContain('White-glove');
     });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryEstimate').show).not.toHaveBeenCalled();
+    });
+
+    it('does not show white-glove note for light products', () => {
+      state.product = { ...futonFrame, collections: ['casegoods-accessories'], weight: 10 };
+      initDeliveryEstimate($w, state);
+      expect($w('#whiteGloveNote').show).not.toHaveBeenCalled();
+    });
+
+    it('registers zip input button click handler', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('sets aria label on zip input', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipInput').accessibility.ariaLabel).toContain('zip code');
+    });
+
+    it('registers Enter key handler on zip input', () => {
+      initDeliveryEstimate($w, state);
+      expect($w('#deliveryZipInput').onKeyPress).toHaveBeenCalled();
+    });
   });
 
   describe('injectProductSchema', () => {
@@ -156,6 +286,31 @@ describe('ProductDetails', () => {
     it('posts OG tags when available', async () => {
       await injectProductSchema($w, state);
       expect($w('#productOgHtml').postMessage).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', async () => {
+      state.product = null;
+      await injectProductSchema($w, state);
+      expect($w('#productSchemaHtml').postMessage).not.toHaveBeenCalled();
+    });
+
+    it('does not post FAQ schema when null', async () => {
+      await injectProductSchema($w, state);
+      // Default mock returns null for FAQ — should not throw
+      expect($w('#productFaqSchemaHtml').postMessage).not.toHaveBeenCalled();
+    });
+
+    it('posts FAQ schema when available', async () => {
+      const { getProductFaqSchema } = await import('backend/seoHelpers.web');
+      getProductFaqSchema.mockResolvedValueOnce('{"@type":"FAQPage"}');
+      await injectProductSchema($w, state);
+      expect($w('#productFaqSchemaHtml').postMessage).toHaveBeenCalledWith('{"@type":"FAQPage"}');
+    });
+
+    it('does not throw when schema is null', async () => {
+      const { getProductSchema } = await import('backend/seoHelpers.web');
+      getProductSchema.mockResolvedValueOnce(null);
+      await expect(injectProductSchema($w, state)).resolves.toBeUndefined();
     });
   });
 
@@ -170,6 +325,76 @@ describe('ProductDetails', () => {
       state.product.productOptions = [{ name: 'Finish', choices: [{ value: 'Natural' }] }];
       initSwatchRequest($w, state);
       expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).not.toHaveBeenCalled();
+      expect($w('#swatchRequestBtn').hide).not.toHaveBeenCalled();
+    });
+
+    it('registers click handler to open swatch modal', () => {
+      state.product.productOptions = [{ name: 'Fabric', choices: [{ value: 'Canvas' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').onClick).toHaveBeenCalled();
+    });
+
+    it('registers submit handler on swatchSubmit button', () => {
+      state.product.productOptions = [{ name: 'Cover', choices: [{ value: 'Denim' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchSubmit').onClick).toHaveBeenCalled();
+    });
+
+    it('hides swatch modal initially', () => {
+      state.product.productOptions = [{ name: 'Color', choices: [{ value: 'Red' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchModal').hide).toHaveBeenCalled();
+    });
+
+    it('matches fabric option case-insensitively', () => {
+      state.product.productOptions = [{ name: 'FINISH', choices: [{ value: 'Oak' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').show).toHaveBeenCalled();
+    });
+
+    it('hides button when product only has size options', () => {
+      state.product.productOptions = [{ name: 'Size', choices: [{ value: 'Full' }, { value: 'Queen' }] }];
+      initSwatchRequest($w, state);
+      expect($w('#swatchRequestBtn').hide).toHaveBeenCalled();
+    });
+  });
+
+  describe('initSwatchCTA', () => {
+    it('shows CTA button with "Get Free Swatches" for fabric products', () => {
+      state.product.productOptions = [{ name: 'Fabric', choices: [{ value: 'Canvas' }] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').label).toBe('Get Free Swatches');
+      expect($w('#swatchCTABtn').show).toHaveBeenCalled();
+    });
+
+    it('shows "Request Free Swatches" for non-fabric products', () => {
+      state.product.productOptions = [{ name: 'Size', choices: [] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').label).toBe('Request Free Swatches');
+    });
+
+    it('returns early when product is null', () => {
+      state.product = null;
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').show).not.toHaveBeenCalled();
+    });
+
+    it('registers click handler on CTA button', () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [{ value: 'Oak' }] }];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').onClick).toHaveBeenCalled();
+    });
+
+    it('sets accessibility ariaLabel', () => {
+      state.product.productOptions = [];
+      initSwatchCTA($w, state);
+      expect($w('#swatchCTABtn').accessibility.ariaLabel).toContain('fabric swatches');
     });
   });
 });
