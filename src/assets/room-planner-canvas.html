@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 100%; height: 100vh; overflow: hidden; background: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  canvas { display: block; cursor: default; touch-action: none; }
+  .controls { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px; }
+  .controls button {
+    padding: 4px 10px; font-size: 11px; border: 1px solid #E2E8F0;
+    background: #FFFFFF; color: #1E3A5F; border-radius: 4px; cursor: pointer;
+  }
+  .controls button:hover { background: #F0F4F8; }
+  .controls button.active { background: #5B8FA8; color: #FFFFFF; border-color: #5B8FA8; }
+  #status { position: absolute; top: 8px; left: 8px; font-size: 11px; color: #3D5A80; }
+</style>
+</head>
+<body>
+<div id="status">Set room dimensions to begin</div>
+<canvas id="canvas" role="img" aria-label="Room planner canvas"></canvas>
+<div class="controls" style="display:none" id="controlsBar">
+  <button id="rotateBtn" title="Rotate selected piece 90°">Rotate</button>
+  <button id="bedModeBtn" title="Toggle bed mode">Bed Mode</button>
+</div>
+<script>
+(function() {
+  var PADDING = 20;
+  var ROOM_FILL = '#FFFFFF';
+  var ROOM_STROKE = '#1E3A5F';
+  var GRID_COLOR = '#E2E8F0';
+  var PRODUCT_FILL = '#A8CCD8';
+  var PRODUCT_STROKE = '#3D5A80';
+  var PRODUCT_SELECTED_STROKE = '#1E3A5F';
+  var PRODUCT_NOFIT_FILL = '#F0C87A';
+  var PRODUCT_NOFIT_STROKE = '#C0392B';
+  var LABEL_COLOR = '#1E3A5F';
+  var LABEL_FONT = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+  var DIM_FONT = '9px -apple-system, BlinkMacSystemFont, sans-serif';
+
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var statusEl = document.getElementById('status');
+  var controlsBar = document.getElementById('controlsBar');
+  var rotateBtn = document.getElementById('rotateBtn');
+  var bedModeBtn = document.getElementById('bedModeBtn');
+
+  var state = {
+    roomWidth: 0,
+    roomLength: 0,
+    scale: 1,
+    products: [],
+    selectedIndex: -1,
+    dragging: false,
+    dragOffsetX: 0,
+    dragOffsetY: 0,
+  };
+
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth || 600;
+    canvas.height = canvas.parentElement.clientHeight || 400;
+    recalcScale();
+    draw();
+  }
+
+  function recalcScale() {
+    if (state.roomWidth <= 0 || state.roomLength <= 0) {
+      state.scale = 1;
+      return;
+    }
+    var availW = canvas.width - 2 * PADDING;
+    var availH = canvas.height - 2 * PADDING;
+    state.scale = Math.min(availW / state.roomWidth, availH / state.roomLength);
+  }
+
+  function roomToCanvas(rx, ry) {
+    return { x: PADDING + rx * state.scale, y: PADDING + ry * state.scale };
+  }
+
+  function canvasToRoom(cx, cy) {
+    return {
+      x: Math.max(0, (cx - PADDING) / state.scale),
+      y: Math.max(0, (cy - PADDING) / state.scale),
+    };
+  }
+
+  function getProductBounds(p) {
+    var depth = p.isBedMode ? (p.depthBed || p.depth) : p.depth;
+    var swapped = p.rotation === 90 || p.rotation === 270;
+    return { x: p.x, y: p.y, w: swapped ? depth : p.width, h: swapped ? p.width : depth };
+  }
+
+  function checkFit(p) {
+    var b = getProductBounds(p);
+    if (b.x < 0 || b.y < 0) return false;
+    return (b.x + b.w <= state.roomWidth) && (b.y + b.h <= state.roomLength);
+  }
+
+  function hitTest(cx, cy) {
+    for (var i = state.products.length - 1; i >= 0; i--) {
+      var b = getProductBounds(state.products[i]);
+      var tl = roomToCanvas(b.x, b.y);
+      var w = b.w * state.scale;
+      var h = b.h * state.scale;
+      if (cx >= tl.x && cx <= tl.x + w && cy >= tl.y && cy <= tl.y + h) return i;
+    }
+    return -1;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (state.roomWidth <= 0 || state.roomLength <= 0) return;
+
+    var rw = state.roomWidth * state.scale;
+    var rh = state.roomLength * state.scale;
+
+    // Room background
+    ctx.fillStyle = ROOM_FILL;
+    ctx.fillRect(PADDING, PADDING, rw, rh);
+
+    // Grid lines (every 12 inches = 1 foot)
+    ctx.strokeStyle = GRID_COLOR;
+    ctx.lineWidth = 0.5;
+    var gridInch = 12;
+    for (var gx = gridInch; gx < state.roomWidth; gx += gridInch) {
+      var px = PADDING + gx * state.scale;
+      ctx.beginPath(); ctx.moveTo(px, PADDING); ctx.lineTo(px, PADDING + rh); ctx.stroke();
+    }
+    for (var gy = gridInch; gy < state.roomLength; gy += gridInch) {
+      var py = PADDING + gy * state.scale;
+      ctx.beginPath(); ctx.moveTo(PADDING, py); ctx.lineTo(PADDING + rw, py); ctx.stroke();
+    }
+
+    // Room border
+    ctx.strokeStyle = ROOM_STROKE;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(PADDING, PADDING, rw, rh);
+
+    // Room dimensions label
+    ctx.font = DIM_FONT;
+    ctx.fillStyle = LABEL_COLOR;
+    ctx.textAlign = 'center';
+    var dimLabel = fmtFtIn(state.roomWidth) + ' × ' + fmtFtIn(state.roomLength);
+    ctx.fillText(dimLabel, PADDING + rw / 2, PADDING + rh + 14);
+
+    // Products
+    for (var i = 0; i < state.products.length; i++) {
+      var p = state.products[i];
+      var b = getProductBounds(p);
+      var tl = roomToCanvas(b.x, b.y);
+      var pw = b.w * state.scale;
+      var ph = b.h * state.scale;
+      var fits = checkFit(p);
+      var selected = i === state.selectedIndex;
+
+      // Fill
+      ctx.fillStyle = fits ? PRODUCT_FILL : PRODUCT_NOFIT_FILL;
+      ctx.globalAlpha = selected ? 0.9 : 0.7;
+      ctx.fillRect(tl.x, tl.y, pw, ph);
+      ctx.globalAlpha = 1;
+
+      // Border
+      ctx.strokeStyle = !fits ? PRODUCT_NOFIT_STROKE : (selected ? PRODUCT_SELECTED_STROKE : PRODUCT_STROKE);
+      ctx.lineWidth = selected ? 2.5 : 1.5;
+      if (!fits) { ctx.setLineDash([4, 3]); }
+      ctx.strokeRect(tl.x, tl.y, pw, ph);
+      ctx.setLineDash([]);
+
+      // Label
+      if (pw > 30 && ph > 20) {
+        ctx.font = LABEL_FONT;
+        ctx.fillStyle = LABEL_COLOR;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var label = p.label || p.productType || '';
+        if (label.length > 12) label = label.substring(0, 11) + '…';
+        ctx.fillText(label, tl.x + pw / 2, tl.y + ph / 2 - 6);
+
+        ctx.font = DIM_FONT;
+        var dimText = b.w + '" × ' + b.h + '"';
+        ctx.fillText(dimText, tl.x + pw / 2, tl.y + ph / 2 + 8);
+
+        if (p.isBedMode) {
+          ctx.fillStyle = '#5B8FA8';
+          ctx.fillText('BED', tl.x + pw / 2, tl.y + ph / 2 + 20);
+        }
+      }
+    }
+
+    // Status
+    var count = state.products.length;
+    var unfitting = state.products.filter(function(p) { return !checkFit(p); }).length;
+    var msg = count + ' piece' + (count !== 1 ? 's' : '') + ' placed';
+    if (unfitting > 0) msg += ' · ' + unfitting + ' outside room';
+    statusEl.textContent = msg;
+  }
+
+  function fmtFtIn(inches) {
+    var ft = Math.floor(inches / 12);
+    var rem = inches % 12;
+    return rem > 0 ? ft + "'" + rem + '"' : ft + "'0\"";
+  }
+
+  // ── Interaction ──────────────────────────────────────────────────
+
+  function getEventPos(e) {
+    var rect = canvas.getBoundingClientRect();
+    var touch = (e.touches && e.touches.length > 0) ? e.touches[0]
+      : (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0]
+      : e;
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }
+
+  function onPointerDown(e) {
+    var pos = getEventPos(e);
+    var idx = hitTest(pos.x, pos.y);
+    state.selectedIndex = idx;
+
+    if (idx >= 0) {
+      state.dragging = true;
+      var b = getProductBounds(state.products[idx]);
+      var tl = roomToCanvas(b.x, b.y);
+      state.dragOffsetX = pos.x - tl.x;
+      state.dragOffsetY = pos.y - tl.y;
+      canvas.style.cursor = 'grabbing';
+      controlsBar.style.display = 'flex';
+      updateControlButtons();
+    } else {
+      controlsBar.style.display = 'none';
+    }
+    draw();
+  }
+
+  function onPointerMove(e) {
+    if (!state.dragging || state.selectedIndex < 0) return;
+    e.preventDefault();
+    var pos = getEventPos(e);
+    var room = canvasToRoom(pos.x - state.dragOffsetX, pos.y - state.dragOffsetY);
+    // Snap position to room coords (allow sub-inch precision removed — use integer inches)
+    state.products[state.selectedIndex].x = Math.round(Math.max(0, room.x));
+    state.products[state.selectedIndex].y = Math.round(Math.max(0, room.y));
+    draw();
+  }
+
+  function onPointerUp() {
+    state.dragging = false;
+    canvas.style.cursor = state.selectedIndex >= 0 ? 'grab' : 'default';
+    // Notify parent of updated positions
+    notifyParent();
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  canvas.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('mouseleave', onPointerUp);
+  canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+  canvas.addEventListener('touchend', onPointerUp);
+
+  // ── Controls ─────────────────────────────────────────────────────
+
+  function updateControlButtons() {
+    if (state.selectedIndex < 0) return;
+    var p = state.products[state.selectedIndex];
+    bedModeBtn.classList.toggle('active', !!p.isBedMode);
+    bedModeBtn.style.display = (p.depthBed && p.depthBed !== p.depth) ? '' : 'none';
+  }
+
+  rotateBtn.addEventListener('click', function() {
+    if (state.selectedIndex < 0) return;
+    var p = state.products[state.selectedIndex];
+    p.rotation = ((p.rotation || 0) + 90) % 360;
+    draw();
+    notifyParent();
+  });
+
+  bedModeBtn.addEventListener('click', function() {
+    if (state.selectedIndex < 0) return;
+    var p = state.products[state.selectedIndex];
+    p.isBedMode = !p.isBedMode;
+    updateControlButtons();
+    draw();
+    notifyParent();
+  });
+
+  var _idCounter = 0;
+  function normalizeProduct(p) {
+    return {
+      id: p.id || 'p-' + Date.now() + '-' + (++_idCounter),
+      productType: p.productType || '',
+      label: p.label || '',
+      x: Number(p.x) || 0,
+      y: Number(p.y) || 0,
+      width: Number(p.width) || 40,
+      depth: Number(p.depth) || 30,
+      depthBed: Number(p.depthBed) || Number(p.depth) || 30,
+      rotation: Number(p.rotation) || 0,
+      isBedMode: Boolean(p.isBedMode),
+    };
+  }
+
+  // ── PostMessage Protocol ─────────────────────────────────────────
+
+  function notifyParent() {
+    window.parent.postMessage({
+      type: 'canvasUpdate',
+      products: state.products.map(function(p) {
+        return {
+          id: p.id, productType: p.productType,
+          x: p.x, y: p.y, rotation: p.rotation,
+          isBedMode: p.isBedMode, fits: checkFit(p),
+        };
+      }),
+    }, '*');
+  }
+
+  window.addEventListener('message', function(event) {
+    if (!event.data || !event.data.type) return;
+
+    switch (event.data.type) {
+      case 'updateRoom':
+        state.roomWidth = Math.max(0, Number(event.data.roomWidth) || 0);
+        state.roomLength = Math.max(0, Number(event.data.roomLength) || 0);
+        recalcScale();
+        draw();
+        break;
+
+      case 'addProduct':
+        var prod = event.data.product;
+        if (!prod) break;
+        state.products.push(normalizeProduct(prod));
+        state.selectedIndex = state.products.length - 1;
+        controlsBar.style.display = 'flex';
+        updateControlButtons();
+        draw();
+        notifyParent();
+        break;
+
+      case 'removeSelected':
+        if (state.selectedIndex >= 0) {
+          state.products.splice(state.selectedIndex, 1);
+          state.selectedIndex = -1;
+          controlsBar.style.display = 'none';
+          draw();
+          notifyParent();
+        }
+        break;
+
+      case 'clearProducts':
+        state.products = [];
+        state.selectedIndex = -1;
+        controlsBar.style.display = 'none';
+        draw();
+        notifyParent();
+        break;
+
+      case 'setProducts':
+        state.products = (event.data.products || []).map(normalizeProduct);
+        state.selectedIndex = -1;
+        controlsBar.style.display = 'none';
+        draw();
+        notifyParent();
+        break;
+    }
+  });
+
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
+</body>
+</html>
