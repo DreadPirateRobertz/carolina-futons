@@ -59,7 +59,7 @@ $w.onReady(async function () {
   // Deferred sections: below-fold content loaded during idle time
   const sections = [
     { name: 'heroAnimation', init: initHeroAnimation, critical: true },
-    { name: 'featuredProducts', init: loadFeaturedProducts, critical: true },
+    { name: 'featuredProducts', init: loadFeaturedProducts, critical: false },
     { name: 'categoryShowcase', init: initCategoryShowcase, critical: true },
     { name: 'trustBar', init: initTrustBar, critical: true },
     { name: 'saleHighlights', init: loadSaleHighlights, critical: false },

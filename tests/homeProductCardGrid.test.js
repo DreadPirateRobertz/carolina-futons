@@ -192,6 +192,13 @@ vi.mock('public/cartService', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+// ── Helpers ─────────────────────────────────────────────────────────
+
+// Flush microtask queue so fire-and-forget deferred sections in
+// prioritizeSections() have time to settle (hq-r3ie moved featuredProducts
+// from critical to deferred).
+const flushDeferred = () => new Promise(r => setTimeout(r, 50));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — Product Card Grid', () => {
@@ -241,17 +248,20 @@ describe('Home Page — Product Card Grid', () => {
   describe('featured product card rendering', () => {
     it('sets section heading and subtitle', async () => {
       await onReadyHandler();
+      await flushDeferred();
       expect(getEl('#featuredTitle').text).toBe('Our Favorite Finds');
       expect(getEl('#featuredSubtitle').text).toContain('Handpicked');
     });
 
     it('populates featured repeater with product data', async () => {
       await onReadyHandler();
+      await flushDeferred();
       expect(getEl('#featuredRepeater').data).toEqual(mockFeatured);
     });
 
     it('onItemReady sets image, name, and price on card', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       expect(cb).toBeTruthy();
 
@@ -265,6 +275,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('onItemReady sets SEO alt text on product image', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -279,6 +290,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('sale badge and pricing', () => {
     it('shows discounted price and original strikethrough for sale items', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -291,6 +303,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('does NOT show sale badge for non-discounted products', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -307,6 +320,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('ribbon badges', () => {
     it('shows ribbon badge text for products with ribbon', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -317,6 +331,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('hides ribbon for products without ribbon', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -330,6 +345,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('color swatches', () => {
     it('displays color indicator text for products with color options', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -340,6 +356,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('shows color swatch container for products with options', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -349,6 +366,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('hides color swatch container for products without color options', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -358,6 +376,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('handles missing productOptions gracefully', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item } = createItemScope();
 
@@ -370,6 +389,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('Quick View button', () => {
     it('wires Quick View button click handler on each card', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -379,6 +399,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('Quick View button has accessible label', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -391,6 +412,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('Quick View modal', () => {
     it('registers Quick View modal handlers during page init', async () => {
       await onReadyHandler();
+      await flushDeferred();
 
       // Close button wired by setupAccessibleDialog (onClick + onKeyPress)
       expect(getEl('#featuredQvClose').onClick).toHaveBeenCalled();
@@ -402,6 +424,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('opening Quick View populates modal with product data', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -419,6 +442,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('opening Quick View shows the modal with fade', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -434,6 +458,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('closing Quick View hides the modal', async () => {
       await onReadyHandler();
+      await flushDeferred();
 
       // Close button wired by setupAccessibleDialog — trigger its onClick
       const closeHandler = getEl('#featuredQvClose').onClick.mock.calls[0][0];
@@ -447,6 +472,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('Quick View modal has ARIA dialog attributes', async () => {
       await onReadyHandler();
+      await flushDeferred();
 
       // ARIA attrs set by setupAccessibleDialog during init
       const modal = getEl('#featuredQuickViewModal');
@@ -460,6 +486,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('card click navigation', () => {
     it('registers click handlers on image and name for navigation', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -470,6 +497,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('image click handler navigates to safe-slugified product URL', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -484,6 +512,7 @@ describe('Home Page — Product Card Grid', () => {
   describe('accessibility', () => {
     it('sets aria labels on product image', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 
@@ -494,6 +523,7 @@ describe('Home Page — Product Card Grid', () => {
 
     it('sets aria labels on product name', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const cb = getItemReadyCb('#featuredRepeater');
       const { $item, itemElements } = createItemScope();
 

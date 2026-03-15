@@ -152,6 +152,13 @@ vi.mock('wix-data', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+// ── Helpers ─────────────────────────────────────────────────────────
+
+// Flush microtask queue so fire-and-forget deferred sections in
+// prioritizeSections() have time to settle (hq-r3ie moved featuredProducts
+// from critical to deferred).
+const flushDeferred = () => new Promise(r => setTimeout(r, 0));
+
 // ── Import Page ─────────────────────────────────────────────────────
 
 describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
@@ -843,6 +850,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
   describe('featured products badge support', () => {
     it('shows ribbon badge when product has ribbon text', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -866,6 +874,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
 
     it('hides ribbon badge when product has no ribbon', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -888,6 +897,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
 
     it('shows "New" ribbon for new arrival products', async () => {
       await onReadyHandler();
+      await flushDeferred();
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
@@ -936,6 +946,7 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
 
     it('hides featured skeleton after products load', async () => {
       await onReadyHandler();
+      await flushDeferred();
       expect(getEl('#featuredSkeleton').hide).toHaveBeenCalled();
     });
 
