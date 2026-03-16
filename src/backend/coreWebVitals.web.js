@@ -129,7 +129,7 @@ export const getPerformanceSummary = webMethod(
   Permissions.Admin,
   async (options = {}) => {
     try {
-      const days = Math.min(Math.max(1, options.days || 7), 90);
+      const days = Math.min(Math.max(1, options.days ?? 7), 90);
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
       let query = wixData.query(METRICS_COLLECTION)
@@ -465,14 +465,157 @@ export const checkPerformanceBudget = webMethod(
   }
 );
 
+// ─── getBaseline ────────────────────────────────────────────────────
+
+/**
+ * Capture a baseline snapshot of current Core Web Vitals performance.
+ * Includes overall, per-device, and per-page breakdowns with ratings.
+ *
+ * @param {Object} [options]
+ * @param {number} [options.days=7] - Analysis period
+ * @returns {Promise<Object>} Baseline snapshot
+ */
+export const getBaseline = webMethod(
+  Permissions.Admin,
+  async (options = {}) => {
+    try {
+      const days = Math.min(Math.max(1, options.days ?? 7), 90);
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const result = await wixData.query(METRICS_COLLECTION)
+        .ge('timestamp', since)
+        .limit(1000)
+        .find();
+
+      const items = result.items;
+
+      const computeMetrics = (subset) => {
+        const metrics = {};
+        for (const metric of VALID_METRICS) {
+          const values = subset
+            .map(item => item[metric])
+            .filter(v => typeof v === 'number' && v > 0)
+            .sort((a, b) => a - b);
+
+          if (values.length === 0) {
+            metrics[metric] = { p75: 0, median: 0, count: 0, rating: 'no-data' };
+            continue;
+          }
+
+          const p75 = percentile(values, 75);
+          const median = percentile(values, 50);
+          const thresholds = DEFAULT_THRESHOLDS[metric];
+          metrics[metric] = { p75, median, count: values.length, rating: rateMetric(p75, thresholds) };
+        }
+        return metrics;
+      };
+
+      const overall = computeMetrics(items);
+
+      // Per-device breakdown
+      const byDevice = {};
+      for (const dt of VALID_DEVICE_TYPES) {
+        const deviceItems = items.filter(i => i.deviceType === dt);
+        if (deviceItems.length > 0) {
+          byDevice[dt] = computeMetrics(deviceItems);
+        }
+      }
+
+      // Per-page breakdown
+      const pageMap = {};
+      for (const item of items) {
+        const page = item.page || 'unknown';
+        if (!pageMap[page]) pageMap[page] = [];
+        pageMap[page].push(item);
+      }
+      const byPage = {};
+      for (const [page, pageItems] of Object.entries(pageMap)) {
+        byPage[page] = computeMetrics(pageItems);
+      }
+
+      // Overall rating: worst of LCP, INP, CLS
+      const coreRatings = ['lcp', 'inp', 'cls'].map(m => overall[m]?.rating || 'no-data');
+      const overallRating = getWorstRating(coreRatings);
+
+      return {
+        success: true,
+        baseline: {
+          capturedAt: new Date().toISOString(),
+          period: `${days} days`,
+          sampleCount: items.length,
+          overall,
+          overallRating,
+          byDevice,
+          byPage,
+        },
+      };
+    } catch (err) {
+      console.error('[coreWebVitals] getBaseline error:', err);
+      return { success: false, error: 'Failed to capture baseline' };
+    }
+  }
+);
+
+// ─── measureVitals ──────────────────────────────────────────────────
+
+/**
+ * Backend webMethod for reporting vital measurements (callable from frontend via RPC).
+ * Delegates to reportMetrics for storage, adds per-metric ratings.
+ *
+ * @param {Object} data
+ * @param {string} data.sessionId
+ * @param {string} data.page
+ * @param {string} [data.deviceType]
+ * @param {string} [data.connectionType]
+ * @param {Object} data.vitals - { lcp?, fid?, inp?, cls?, ttfb?, fcp? }
+ * @returns {Promise<Object>}
+ */
+export const measureVitals = webMethod(
+  Permissions.Anyone,
+  async (data) => {
+    try {
+      if (!data?.vitals || typeof data.vitals !== 'object') {
+        return { success: false, error: 'vitals object is required' };
+      }
+
+      // Delegate storage to reportMetrics
+      const reportResult = await reportMetrics({
+        sessionId: data.sessionId,
+        page: data.page,
+        deviceType: data.deviceType,
+        connectionType: data.connectionType,
+        ...data.vitals,
+      });
+
+      if (!reportResult.success) {
+        return reportResult;
+      }
+
+      // Add per-metric ratings on top of reportMetrics result
+      const ratings = {};
+      for (const metric of VALID_METRICS) {
+        const value = clampMetric(data.vitals[metric], 0, 60000);
+        if (typeof data.vitals[metric] === 'number' && value > 0) {
+          ratings[metric] = rateMetric(value, DEFAULT_THRESHOLDS[metric]);
+        }
+      }
+
+      return { success: true, ratings, violations: reportResult.violations };
+    } catch (err) {
+      console.error('[coreWebVitals] measureVitals error:', err);
+      return { success: false, error: 'Failed to measure vitals' };
+    }
+  }
+);
+
 // ─── Internal Helpers ──────────────────────────────────────────────
 
 /**
  * Clamp a numeric metric value to a valid range.
- * Returns 0 for non-numeric inputs.
+ * Returns 0 for non-numeric or non-finite inputs (NaN, Infinity, -Infinity).
  */
 function clampMetric(value, min, max) {
-  if (typeof value !== 'number' || isNaN(value)) return 0;
+  if (typeof value !== 'number' || !isFinite(value)) return 0;
   return Math.min(max, Math.max(min, value));
 }
 

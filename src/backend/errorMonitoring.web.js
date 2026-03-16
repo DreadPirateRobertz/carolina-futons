@@ -40,6 +40,7 @@ import { sanitize } from 'backend/utils/sanitize';
 
 const ERROR_LOGS_COLLECTION = 'ErrorLogs';
 const ERROR_GROUPS_COLLECTION = 'ErrorGroups';
+const ALERT_RULES_COLLECTION = 'AlertRules';
 const ALERT_THRESHOLD_MULTIPLIER = 10;
 const BASELINE_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 const SPIKE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
@@ -434,6 +435,194 @@ export const getErrorFrequency = webMethod(
     }
   }
 );
+
+// ── configureAlert ──────────────────────────────────────────────────
+
+export const configureAlert = webMethod(
+  Permissions.SiteMember,
+  async (alertConfig = {}) => {
+    try {
+      await requireAdmin();
+
+      const {
+        name,
+        contextPattern,
+        messagePattern,
+        severityFilter,
+        thresholdCount,
+        windowMinutes,
+        enabled,
+      } = alertConfig;
+
+      const cleanName = sanitize(name, 200);
+      if (!cleanName) return { success: false, error: 'Alert name is required' };
+
+      if (typeof thresholdCount !== 'number' || !isFinite(thresholdCount)) {
+        return { success: false, error: 'thresholdCount is required and must be a number' };
+      }
+
+      if (typeof windowMinutes !== 'number' || !isFinite(windowMinutes)) {
+        return { success: false, error: 'windowMinutes is required and must be a number' };
+      }
+
+      const rule = {
+        name: cleanName,
+        contextPattern: sanitize(contextPattern, 200) || '',
+        messagePattern: sanitize(messagePattern, 200) || '',
+        severityFilter: ['error', 'warning', 'critical'].includes(severityFilter)
+          ? severityFilter : '',
+        thresholdCount: Math.max(1, Math.round(thresholdCount)),
+        windowMinutes: Math.min(1440, Math.max(1, Math.round(windowMinutes))),
+        enabled: enabled !== false,
+      };
+
+      const inserted = await wixData.insert(ALERT_RULES_COLLECTION, rule);
+
+      return { success: true, rule: { ...rule, _id: inserted._id } };
+    } catch (err) {
+      console.error('configureAlert error:', err);
+      return { success: false, error: 'Unable to configure alert' };
+    }
+  }
+);
+
+// ── getAlertRules ──────────────────────────────────────────────────
+
+export const getAlertRules = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      await requireAdmin();
+
+      const result = await wixData.query(ALERT_RULES_COLLECTION)
+        .limit(100)
+        .find();
+
+      return {
+        success: true,
+        rules: result.items.map(r => ({
+          _id: r._id,
+          name: r.name,
+          contextPattern: r.contextPattern,
+          messagePattern: r.messagePattern,
+          severityFilter: r.severityFilter,
+          thresholdCount: r.thresholdCount,
+          windowMinutes: r.windowMinutes,
+          enabled: r.enabled,
+        })),
+      };
+    } catch (err) {
+      console.error('getAlertRules error:', err);
+      return { success: false, error: 'Unable to load alert rules' };
+    }
+  }
+);
+
+// ── checkAlertConditions ───────────────────────────────────────────
+
+export const checkAlertConditions = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      await requireAdmin();
+
+      const rulesResult = await wixData.query(ALERT_RULES_COLLECTION)
+        .eq('enabled', true)
+        .find();
+
+      const alerts = [];
+
+      for (const rule of rulesResult.items) {
+        try {
+          const windowCutoff = new Date(Date.now() - rule.windowMinutes * 60 * 1000);
+
+          // Build query matching this rule's filters
+          let query = wixData.query(ERROR_LOGS_COLLECTION)
+            .ge('_createdDate', windowCutoff);
+
+          if (rule.contextPattern) {
+            query = query.contains('context', rule.contextPattern);
+          }
+          if (rule.severityFilter) {
+            query = query.eq('severity', rule.severityFilter);
+          }
+
+          let count;
+          if (rule.messagePattern) {
+            const result = await query.limit(1000).find();
+            const lowerPattern = rule.messagePattern.toLowerCase();
+            count = result.items.filter(i =>
+              (i.message || '').toLowerCase().includes(lowerPattern)
+            ).length;
+          } else {
+            count = await query.count();
+          }
+
+          alerts.push({
+            rule: rule.name,
+            ruleId: rule._id,
+            triggered: count >= rule.thresholdCount,
+            currentCount: count,
+            threshold: rule.thresholdCount,
+            window: `${rule.windowMinutes} minutes`,
+          });
+        } catch (ruleErr) {
+          console.error(`checkAlertConditions: rule "${rule.name}" (${rule._id}) failed:`, ruleErr);
+          alerts.push({
+            rule: rule.name,
+            ruleId: rule._id,
+            triggered: true,
+            evaluationFailed: true,
+            error: 'Rule evaluation failed',
+            currentCount: 0,
+            threshold: rule.thresholdCount,
+            window: `${rule.windowMinutes} minutes`,
+          });
+        }
+      }
+
+      return { success: true, alerts };
+    } catch (err) {
+      console.error('checkAlertConditions error:', err);
+      return { success: false, error: 'ALERT SYSTEM FAILURE: Unable to evaluate alert conditions' };
+    }
+  }
+);
+
+// ── createErrorBoundaryLogger ──────────────────────────────────────
+
+const CRITICAL_CONTEXTS = ['checkout', 'payment'];
+
+export function createErrorBoundaryLogger(context) {
+  const safeContext = typeof context === 'string' ? context : String(context || 'unknown');
+  return async (error, metadata = {}) => {
+    try {
+      const lowerContext = safeContext.toLowerCase();
+      const isCritical = CRITICAL_CONTEXTS.some(c => lowerContext.includes(c));
+
+      let message = 'Unknown error';
+      let stack = '';
+
+      if (error instanceof Error) {
+        message = error.message || 'Unknown error';
+        stack = error.stack || '';
+      } else if (typeof error === 'string') {
+        message = error;
+      }
+
+      return logError({
+        message,
+        stack,
+        context: safeContext,
+        severity: isCritical ? 'critical' : 'error',
+        metadata,
+      });
+    } catch (loggingErr) {
+      console.error(`[errorBoundaryLogger] Failed to log for context="${safeContext}":`, loggingErr);
+      return { success: false, error: 'Error boundary logging failed' };
+    }
+  };
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
