@@ -71,6 +71,12 @@ export const notifySubscribersOfNewPost = webMethod(
       let queued = 0;
       let skipped = 0;
 
+      // Pre-fetch all unsubscribes to avoid N+1 queries in the subscriber loop
+      const allUnsubs = await wixData.query('Unsubscribes')
+        .hasSome('sequenceType', ['all', SEQUENCE_TYPE])
+        .find();
+      const unsubEmails = new Set(allUnsubs.items.map(u => u.email));
+
       for (const sub of subscribers) {
         const email = (sub.email || '').toLowerCase().trim();
         if (!email || !validateEmail(email)) {
@@ -78,16 +84,7 @@ export const notifySubscribersOfNewPost = webMethod(
           continue;
         }
 
-        // Check unsubscribe
-        const unsubs = await wixData.query('Unsubscribes')
-          .eq('email', email)
-          .find();
-
-        const isUnsub = unsubs.items.some(
-          u => u.sequenceType === 'all' || u.sequenceType === SEQUENCE_TYPE
-        );
-
-        if (isUnsub) {
+        if (unsubEmails.has(email)) {
           skipped++;
           continue;
         }
@@ -108,10 +105,8 @@ export const notifySubscribersOfNewPost = webMethod(
           sequenceStep: 1,
           status: 'pending',
           scheduledFor: new Date(),
-          sentAt: null,
           attempt: 0,
           lastError: '',
-          abVariant: null,
           createdAt: new Date(),
         });
         queued++;
