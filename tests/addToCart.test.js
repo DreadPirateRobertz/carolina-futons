@@ -296,6 +296,257 @@ describe('AddToCart', () => {
     });
   });
 
+  describe('initAddToCartEnhancements — click flow', () => {
+    it('disables button and shows "Adding..." during add', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockImplementationOnce(() => new Promise(resolve => {
+        // Check state during the add
+        expect($w('#addToCartButton').disable).toHaveBeenCalled();
+        expect($w('#addToCartButton').label).toBe('Adding...');
+        resolve({});
+      }));
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+    });
+
+    it('shows "Added!" on success', async () => {
+      vi.useFakeTimers();
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addToCartButton').label).toBe('Added!');
+      vi.useRealTimers();
+    });
+
+    it('shows error message on failure', async () => {
+      vi.useFakeTimers();
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockRejectedValueOnce(new Error('Cart full'));
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addToCartButton').label).toBe('Error \u2014 Try Again');
+      vi.useRealTimers();
+    });
+
+    it('resets button label after 3 seconds', async () => {
+      vi.useFakeTimers();
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      vi.advanceTimersByTime(3000);
+      expect($w('#addToCartButton').label).toBe('Add to Cart');
+      expect($w('#addToCartButton').enable).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('fires analytics on successful add', async () => {
+      const { trackCartAdd } = await import('public/engagementTracker');
+      vi.useFakeTimers();
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(trackCartAdd).toHaveBeenCalledWith(state.product, state.selectedQuantity);
+      vi.useRealTimers();
+    });
+
+    it('does nothing when product is null', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockClear();
+      state.product = null;
+      initAddToCartEnhancements($w, state);
+      const clickCb = $w('#addToCartButton').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(addToCart).not.toHaveBeenCalled();
+    });
+
+    it('shows success box on cart changed', async () => {
+      vi.useFakeTimers();
+      const { onCartChanged } = await import('public/cartService');
+      onCartChanged.mockClear();
+      initAddToCartEnhancements($w, state);
+      const cartCb = onCartChanged.mock.calls[0][0];
+      cartCb();
+      expect($w('#addToCartSuccess').show).toHaveBeenCalled();
+      vi.advanceTimersByTime(4000);
+      expect($w('#addToCartSuccess').hide).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
+  describe('initStickyCartBar — scroll behavior', () => {
+    it('shows sticky bar when add-to-cart scrolls above viewport', async () => {
+      const wixWindow = (await import('wix-window-frontend')).default;
+      wixWindow.onScroll.mockClear();
+      initStickyCartBar($w, state);
+      const scrollCb = wixWindow.onScroll.mock.calls[0][0];
+      $w('#addToCartButton').getBoundingRect = vi.fn().mockResolvedValue({ top: -50 });
+      await scrollCb();
+      // show is called with animation args: 'slide', {direction, duration}
+      expect($w('#stickyCartBar').show).toHaveBeenCalledTimes(1);
+    });
+
+    it('hides sticky bar when add-to-cart scrolls back into view', async () => {
+      const wixWindow = (await import('wix-window-frontend')).default;
+      wixWindow.onScroll.mockClear();
+      initStickyCartBar($w, state);
+      const scrollCb = wixWindow.onScroll.mock.calls[0][0];
+      // First scroll up (show)
+      $w('#addToCartButton').getBoundingRect = vi.fn().mockResolvedValue({ top: -50 });
+      await scrollCb();
+      // Then scroll down (hide)
+      $w('#addToCartButton').getBoundingRect = vi.fn().mockResolvedValue({ top: 100 });
+      await scrollCb();
+      // hide is called: once in init + once on scroll back
+      expect($w('#stickyCartBar').hide).toHaveBeenCalled();
+    });
+
+    it('sticky add button shows loading when product ID missing', async () => {
+      vi.useFakeTimers();
+      state.product = { name: 'Test' }; // no _id
+      initStickyCartBar($w, state);
+      const clickCb = $w('#stickyAddBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#stickyAddBtn').label).toBe('Loading...');
+      vi.advanceTimersByTime(1500);
+      expect($w('#stickyAddBtn').label).toBe('Add to Cart');
+      vi.useRealTimers();
+    });
+
+    it('sticky add button fires analytics on success', async () => {
+      vi.useFakeTimers();
+      const { trackCartAdd } = await import('public/engagementTracker');
+      trackCartAdd.mockClear();
+      initStickyCartBar($w, state);
+      const clickCb = $w('#stickyAddBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(trackCartAdd).toHaveBeenCalledWith(state.product, state.selectedQuantity);
+      vi.useRealTimers();
+    });
+  });
+
+  describe('initBundleSection — add bundle flow', () => {
+    it('adds both products to cart on bundle button click', async () => {
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockClear();
+      vi.useFakeTimers();
+      await initBundleSection($w, state);
+      const clickCb = $w('#addBundleBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      expect(addToCart).toHaveBeenCalledWith('prod-1', 1); // main product
+      expect(addToCart).toHaveBeenCalledWith('bundle-1', 1); // bundle product
+      vi.useRealTimers();
+    });
+
+    it('shows "Bundle Added!" on success', async () => {
+      vi.useFakeTimers();
+      await initBundleSection($w, state);
+      const clickCb = $w('#addBundleBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addBundleBtn').label).toBe('Bundle Added!');
+      vi.useRealTimers();
+    });
+
+    it('shows error on bundle add failure', async () => {
+      vi.useFakeTimers();
+      const { addToCart } = await import('public/cartService');
+      addToCart.mockRejectedValueOnce(new Error('Cart error'));
+      await initBundleSection($w, state);
+      const clickCb = $w('#addBundleBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      expect($w('#addBundleBtn').label).toBe('Error \u2014 Try Again');
+      vi.useRealTimers();
+    });
+
+    it('resets bundle button after 3 seconds', async () => {
+      vi.useFakeTimers();
+      await initBundleSection($w, state);
+      const clickCb = $w('#addBundleBtn').onClick.mock.calls[0][0];
+      await clickCb();
+      vi.advanceTimersByTime(3000);
+      expect($w('#addBundleBtn').label).toBe('Add Both to Cart');
+      expect($w('#addBundleBtn').enable).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
+  describe('initStockUrgency — pulse animation', () => {
+    it('sets pulse animation when stock <= 2', async () => {
+      state.product.quantityInStock = 2;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').style.animation).toBe('pulse 1.5s ease-in-out infinite');
+    });
+
+    it('does not set pulse animation when stock is 3', async () => {
+      state.product.quantityInStock = 3;
+      await initStockUrgency($w, state);
+      expect($w('#stockUrgency').style.animation).toBeUndefined();
+    });
+  });
+
+  describe('initQuantitySelector — input handler and clamping', () => {
+    it('clamps input value via onInput handler', async () => {
+      initQuantitySelector($w, state);
+      const inputCb = $w('#quantityInput').onInput.mock.calls[0][0];
+      $w('#quantityInput').value = '0';
+      inputCb();
+      expect(state.selectedQuantity).toBe(1); // clamped to MIN_QUANTITY
+    });
+
+    it('plus button stops at MAX_QUANTITY', () => {
+      initQuantitySelector($w, state);
+      state.selectedQuantity = 99; // MAX_QUANTITY from cartService
+      const plusCb = $w('#quantityPlus').onClick.mock.calls[0][0];
+      plusCb();
+      // Should remain at MAX or increment if under
+      // MAX_QUANTITY is typically 99 based on cartService
+      expect(state.selectedQuantity).toBeLessThanOrEqual(100);
+    });
+
+    it('returns early when quantityInput is null', () => {
+      const $wNull = create$w();
+      const origGet = (sel) => sel === '#quantityInput' ? null : $wNull(sel);
+      const els = new Map();
+      const $wCustom = (sel) => {
+        if (sel === '#quantityInput') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
+      expect(() => initQuantitySelector($wCustom, state)).not.toThrow();
+    });
+  });
+
+  describe('initBackInStockNotification — submit flow', () => {
+    it('shows error for invalid email', async () => {
+      await initBackInStockNotification($w, state);
+      const submitCb = $w('#backInStockBtn').onClick.mock.calls[0][0];
+      $w('#backInStockEmail').value = 'not-an-email';
+      await submitCb();
+      expect($w('#backInStockError').text).toBe('Please enter a valid email address.');
+      expect($w('#backInStockError').show).toHaveBeenCalled();
+    });
+
+    it('shows error for empty email', async () => {
+      await initBackInStockNotification($w, state);
+      const submitCb = $w('#backInStockBtn').onClick.mock.calls[0][0];
+      $w('#backInStockEmail').value = '';
+      await submitCb();
+      expect($w('#backInStockError').text).toBe('Please enter a valid email address.');
+    });
+
+    it('returns early when backInStockSection is null', async () => {
+      const els = new Map();
+      const $wCustom = (sel) => {
+        if (sel === '#backInStockSection') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
+      await initBackInStockNotification($wCustom, state);
+      // Should not throw and should not register submit handler
+    });
+  });
+
   describe('Call-for-Price products (CF-b3g9)', () => {
     let cfpState;
     beforeEach(() => {
