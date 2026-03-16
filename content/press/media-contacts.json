@@ -1,0 +1,114 @@
+{
+  "title": "Carolina Futons — Media Contact List",
+  "generated": "2026-03-16",
+  "beadId": "CF-7xpc",
+  "notes": "Contact details to be filled in via direct research on each outlet's website. Placeholder structure for ongoing outreach tracking.",
+
+  "contacts": [
+    {
+      "outlet": "Hendersonville Times-News",
+      "type": "local-press",
+      "department": "Business / Lifestyle",
+      "contactMethod": "Email editor or submit via website",
+      "website": "blueridgenow.com",
+      "status": "not-contacted",
+      "priority": "high",
+      "notes": "Check website for current business editor. Submit press releases via newsroom email."
+    },
+    {
+      "outlet": "Mountain Xpress",
+      "type": "local-press",
+      "department": "Community / Living / Green",
+      "contactMethod": "Email or online submission",
+      "website": "mountainx.com",
+      "status": "not-contacted",
+      "priority": "high",
+      "notes": "Alt-weekly. Check for community calendar submission and business feature pitch process."
+    },
+    {
+      "outlet": "Asheville Citizen-Times",
+      "type": "local-press",
+      "department": "Business / Life",
+      "contactMethod": "Email business desk",
+      "website": "citizen-times.com",
+      "status": "not-contacted",
+      "priority": "high",
+      "notes": "Gannett paper. Holiday gift guides and seasonal features accept local merchant submissions. Check for reporter covering retail/small business."
+    },
+    {
+      "outlet": "Hendersonville Lightning",
+      "type": "local-press",
+      "department": "Community",
+      "contactMethod": "Email",
+      "website": "hendersonvillelightning.com",
+      "status": "not-contacted",
+      "priority": "medium",
+      "notes": "Hyper-local. Good for event announcements."
+    },
+    {
+      "outlet": "WNC Business Journal",
+      "type": "local-press",
+      "department": "Business",
+      "contactMethod": "Email editor",
+      "status": "not-contacted",
+      "priority": "medium",
+      "notes": "B2B audience. Business milestone announcements."
+    },
+    {
+      "outlet": "Furniture Today",
+      "type": "trade",
+      "department": "Product / Retail",
+      "contactMethod": "Press release submission portal",
+      "website": "furnituretoday.com",
+      "status": "not-contacted",
+      "priority": "medium",
+      "notes": "Trade pub. Submit new product announcements and retailer profiles."
+    },
+    {
+      "outlet": "Apartment Therapy",
+      "type": "consumer-digital",
+      "department": "Product submissions",
+      "contactMethod": "Product submission form",
+      "website": "apartmenttherapy.com",
+      "status": "not-contacted",
+      "priority": "high",
+      "notes": "Submit for buyer guides and product roundups. Best timing: seasonal refresh articles."
+    },
+    {
+      "outlet": "The Spruce",
+      "type": "consumer-digital",
+      "department": "Product reviews",
+      "contactMethod": "Product submission / PR contact",
+      "website": "thespruce.com",
+      "status": "not-contacted",
+      "priority": "high",
+      "notes": "High-traffic buyer guide site. Submit when futon guides are being updated."
+    },
+    {
+      "outlet": "Wirecutter (NYT)",
+      "type": "consumer-digital",
+      "department": "Product testing",
+      "contactMethod": "PR submission",
+      "website": "nytimes.com/wirecutter",
+      "status": "not-contacted",
+      "priority": "medium",
+      "notes": "Very competitive. Submit products when they announce futon guide updates."
+    },
+    {
+      "outlet": "Sleepopolis",
+      "type": "consumer-digital",
+      "department": "Product reviews",
+      "contactMethod": "PR / product submission",
+      "website": "sleepopolis.com",
+      "status": "not-contacted",
+      "priority": "medium",
+      "notes": "Sleep product focus. Good for futon mattress reviews."
+    }
+  ],
+
+  "outreachTracker": {
+    "description": "Track outreach status per contact",
+    "statuses": ["not-contacted", "pitched", "follow-up-sent", "interested", "published", "declined"],
+    "nextAction": "Fill in specific contact emails and names by visiting each outlet's website"
+  }
+}
