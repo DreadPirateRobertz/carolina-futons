@@ -340,7 +340,7 @@ describe('getTrackingTimeline status code mapping completeness', () => {
     });
 
     // trackShipment normalizes this — UPS mock returns success with null code
-    // The source at line 287 does `(tracking.statusCode || '').toUpperCase()`
+    // The source does `(tracking.statusCode || '').toUpperCase()`
     // so null → '' → uppercased '' → defaults to IN_TRANSIT
     const result = await getTrackingTimeline('1Z999AA10123456784');
     expect(result.success).toBe(true);

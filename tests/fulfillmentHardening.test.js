@@ -490,6 +490,60 @@ describe('getFulfillmentHistory hardening', () => {
   });
 });
 
+// ── mapTrackingStatus: OD mapping (bug fix) ─────────────────────────
+
+describe('mapTrackingStatus OUT_FOR_DELIVERY mapping', () => {
+  function setupODTrackingMock() {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 't', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/track/')) {
+        return {
+          ok: true,
+          async json() {
+            return {
+              trackResponse: {
+                shipment: [{
+                  package: [{
+                    currentStatus: { description: 'Out for Delivery', code: 'OD' },
+                    deliveryDate: [{ date: '20250625' }],
+                    activity: [{
+                      status: { description: 'Out for Delivery', code: 'OD' },
+                      location: { address: { city: 'Asheville', stateProvince: 'NC', countryCode: 'US' } },
+                      date: '20250625',
+                      time: '080000',
+                    }],
+                  }],
+                }],
+              },
+            };
+          },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+  }
+
+  it('maps OD status code to OUT_FOR_DELIVERY', async () => {
+    setupODTrackingMock();
+    __seed('Fulfillments', [{
+      _id: 'ful-001',
+      trackingNumber: '1Z999AA10123456784',
+      status: 'IN_TRANSIT',
+    }]);
+
+    let updated;
+    __onUpdate((col, item) => {
+      if (col === 'Fulfillments') updated = item;
+    });
+
+    await getTrackingUpdate('1Z999AA10123456784');
+    expect(updated.status).toBe('OUT_FOR_DELIVERY');
+  });
+});
+
 // ── requireAdmin hardening ──────────────────────────────────────────
 
 describe('requireAdmin role checking', () => {
