@@ -369,6 +369,19 @@ const COLLECTION_MANIFEST = [
     ],
     permissions: ADMIN_ONLY,
   },
+  {
+    id: 'PremiumMemberships',
+    displayName: 'Premium Memberships',
+    fields: [
+      field('memberId', 'Member ID', 'TEXT'),
+      field('planType', 'Plan Type', 'TEXT'),
+      field('status', 'Status', 'TEXT'),
+      field('startDate', 'Start Date', 'DATETIME'),
+      field('endDate', 'End Date', 'DATETIME'),
+      field('cancelledAt', 'Cancelled At', 'DATETIME'),
+    ],
+    permissions: ADMIN_ONLY,
+  },
 ];
 
 /**

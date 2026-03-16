@@ -42,8 +42,8 @@ function getFieldKeys(id) {
 // ─── Manifest Structure ───────────────────────────────────────────────────────
 
 describe('COLLECTION_MANIFEST', () => {
-  it('should contain exactly 22 collections', () => {
-    expect(COLLECTION_MANIFEST).toHaveLength(22);
+  it('should contain exactly 23 collections', () => {
+    expect(COLLECTION_MANIFEST).toHaveLength(23);
   });
 
   it('should have unique collection IDs', () => {
@@ -457,15 +457,15 @@ describe('provisionCollections', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
-  it('should create all 22 missing collections', async () => {
+  it('should create all 23 missing collections', async () => {
     const mockFetch = vi.fn()
       .mockResolvedValueOnce(mockListResponse([]))
       .mockResolvedValue(mockCreateSuccess());
     vi.stubGlobal('fetch', mockFetch);
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(22);
-    expect(mockFetch).toHaveBeenCalledTimes(23); // 1 list + 22 creates
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(23);
+    expect(mockFetch).toHaveBeenCalledTimes(24); // 1 list + 23 creates
   });
 
   it('should respect dryRun flag', async () => {
@@ -486,7 +486,7 @@ describe('provisionCollections', () => {
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
     expect(results.filter((r) => r.status === 'ERROR')).toHaveLength(1);
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(21);
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(22);
   });
 
   it('should handle mixed existing and missing collections', async () => {
@@ -498,8 +498,8 @@ describe('provisionCollections', () => {
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
     expect(results.filter((r) => r.status === 'EXISTS')).toHaveLength(10);
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(12);
-    expect(results).toHaveLength(22);
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(13);
+    expect(results).toHaveLength(23);
   });
 
   it('should throw when apiKey or siteId is missing', async () => {
