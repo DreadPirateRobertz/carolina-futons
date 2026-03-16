@@ -1096,11 +1096,11 @@ h4.font_4,
   font-size: 15px !important;
   font-weight: 600 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: 0.04em !important;
   background-color: var(--cf-blue) !important;
   color: var(--cf-white) !important;
   border-radius: 4px !important;
-  min-height: 48px !important;
+  min-height: 48px !important; /* WCAG 2.5.8 touch target — primary purchase CTA */
 }
 
 [data-hook="place-order-button"]:hover,
@@ -1108,7 +1108,7 @@ h4.font_4,
   background-color: var(--cf-blue-dark) !important;
 }
 
-/* Express checkout */
+/* Express checkout (Apple Pay / Google Pay / PayPal — rendered by Wix Payments) */
 [data-hook="express-checkout-button"] {
   border-radius: 4px !important;
   min-height: 44px !important;
@@ -1118,10 +1118,6 @@ h4.font_4,
 /* ═══════════════════════════════════════════════════════════════════════
    22. SIDE CART (mini cart flyout)
    ═══════════════════════════════════════════════════════════════════════ */
-
-[data-hook="side-cart-content"] {
-  font-size: 14px !important;
-}
 
 [data-hook="side-cart-item-name"] {
   font-size: 14px !important;
@@ -1276,7 +1272,7 @@ h4.font_4,
 [data-hook="quiz-progress-fill"] {
   background-color: var(--cf-blue) !important;
   border-radius: 9999px !important;
-  transition: width 0.3s ease !important;
+  transition: width 0.3s ease !important; /* disabled by §32 reduced-motion rule */
 }
 
 [data-hook="quiz-next-button"],
@@ -1335,7 +1331,7 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   29. SEARCH RESULTS — filters, skeleton loading
+   29. SEARCH RESULTS — search input, result counts, suggestions
    ═══════════════════════════════════════════════════════════════════════ */
 
 [data-hook="search-input"] {
@@ -1387,93 +1383,62 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   31. RESPONSIVE — new page sections (tablet + mobile)
+   31. RESPONSIVE — new page sections (768px + 480px)
    ═══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  /* Checkout — stack order summary below form */
+  /* Checkout headings — scale down for tablet */
   [data-hook="checkout-root"] h2,
   [data-hook="checkout-root"] h3 {
     font-size: 16px !important;
   }
 
   [data-hook="thank-you-page-title"],
-  [data-hook="order-confirmation-title"] {
-    font-size: 22px !important;
-  }
-
-  [data-hook="member-page-title"] {
-    font-size: 22px !important;
-  }
-
-  [data-hook="quiz-title"] {
+  [data-hook="order-confirmation-title"],
+  [data-hook="member-page-title"],
+  [data-hook="quiz-title"],
+  [data-hook="ugc-gallery-title"] {
     font-size: 22px !important;
   }
 
   [data-hook="sale-banner-title"] {
     font-size: 24px !important;
   }
-
-  [data-hook="ugc-gallery-title"] {
-    font-size: 22px !important;
-  }
 }
 
 @media (max-width: 480px) {
-  /* Checkout — full-width inputs, prevent iOS zoom */
+  /* Full-width inputs — prevent iOS zoom (font-size: 16px) */
   [data-hook="checkout-root"] input,
-  [data-hook="checkout-root"] select {
-    width: 100% !important;
-    font-size: 16px !important;
-    box-sizing: border-box !important;
-  }
-
-  [data-hook="place-order-button"],
-  [data-hook="checkout-button"] {
-    width: 100% !important;
-    min-height: 48px !important;
-  }
-
-  /* Side cart — full screen on mobile */
-  [data-hook="side-cart-checkout-button"] {
-    width: 100% !important;
-    min-height: 48px !important;
-  }
-
-  /* Thank You — scale down */
-  [data-hook="thank-you-page-title"],
-  [data-hook="order-confirmation-title"] {
-    font-size: 20px !important;
-  }
-
-  /* Returns/Tracking — full-width inputs */
+  [data-hook="checkout-root"] select,
   [data-hook="returns-root"] input,
-  [data-hook="order-tracking-root"] input {
+  [data-hook="order-tracking-root"] input,
+  [data-hook="search-input"] {
     width: 100% !important;
-    font-size: 16px !important;
+    font-size: 16px !important; /* prevents iOS zoom on focus */
     box-sizing: border-box !important;
   }
 
-  /* Quiz — touch-friendly options */
+  /* Full-width CTA buttons — 48px touch target */
+  [data-hook="place-order-button"],
+  [data-hook="checkout-button"],
+  [data-hook="side-cart-checkout-button"],
   [data-hook="quiz-next-button"],
   [data-hook="quiz-submit-button"] {
     width: 100% !important;
     min-height: 48px !important;
   }
 
-  /* Gift card denominations — touch targets */
+  [data-hook="thank-you-page-title"],
+  [data-hook="order-confirmation-title"] {
+    font-size: 20px !important;
+  }
+
+  /* Gift card denominations — 44px touch targets */
   [data-hook="gift-card-denomination"] {
     min-height: 44px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-  }
-
-  /* Search — full-width input */
-  [data-hook="search-input"] {
-    width: 100% !important;
-    font-size: 16px !important;
-    box-sizing: border-box !important;
   }
 }
 
