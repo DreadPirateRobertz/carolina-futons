@@ -67,9 +67,9 @@ export const getProductDimensions = webMethod(
           height: convert(dims.shippingHeight),
           weight: dims.shippingWeight || null,
         } : null,
-        weight: dims.weight || null,
+        weight: dims.weight ?? null,
         seatHeight: convert(dims.seatHeight),
-        mattressSize: dims.mattressSize || null,
+        mattressSize: dims.mattressSize ?? null,
       };
     } catch (err) {
       console.error('Error fetching product dimensions:', err);
@@ -230,14 +230,14 @@ export const getDimensionsByCategory = webMethod(
           name: product.name,
           slug: product.slug,
           hasDimensions: !!dims,
-          closedWidth: dims?.closedWidth || null,
-          closedDepth: dims?.closedDepth || null,
-          closedHeight: dims?.closedHeight || null,
-          openWidth: dims?.openWidth || null,
-          openDepth: dims?.openDepth || null,
-          openHeight: dims?.openHeight || null,
-          weight: dims?.weight || null,
-          mattressSize: dims?.mattressSize || null,
+          closedWidth: dims?.closedWidth ?? null,
+          closedDepth: dims?.closedDepth ?? null,
+          closedHeight: dims?.closedHeight ?? null,
+          openWidth: dims?.openWidth ?? null,
+          openDepth: dims?.openDepth ?? null,
+          openHeight: dims?.openHeight ?? null,
+          weight: dims?.weight ?? null,
+          mattressSize: dims?.mattressSize ?? null,
         };
       });
     } catch (err) {
@@ -326,8 +326,8 @@ export const getComparisonTable = webMethod(
           depth: convert(dims.openDepth),
           height: convert(dims.openHeight),
         } : null,
-        weight: dims?.weight || null,
-        mattressSize: dims?.mattressSize || null,
+        weight: dims?.weight ?? null,
+        mattressSize: dims?.mattressSize ?? null,
       });
 
       // Current product first
