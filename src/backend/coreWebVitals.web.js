@@ -465,6 +465,168 @@ export const checkPerformanceBudget = webMethod(
   }
 );
 
+// ─── getBaseline ────────────────────────────────────────────────────
+
+/**
+ * Capture a baseline snapshot of current Core Web Vitals performance.
+ * Includes overall, per-device, and per-page breakdowns with ratings.
+ *
+ * @param {Object} [options]
+ * @param {number} [options.days=7] - Analysis period
+ * @returns {Promise<Object>} Baseline snapshot
+ */
+export const getBaseline = webMethod(
+  Permissions.Admin,
+  async (options = {}) => {
+    try {
+      const days = Math.min(Math.max(1, options.days || 7), 90);
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const result = await wixData.query(METRICS_COLLECTION)
+        .ge('timestamp', since)
+        .limit(1000)
+        .find();
+
+      const items = result.items;
+
+      const computeMetrics = (subset) => {
+        const metrics = {};
+        for (const metric of VALID_METRICS) {
+          const values = subset
+            .map(item => item[metric])
+            .filter(v => typeof v === 'number' && v > 0)
+            .sort((a, b) => a - b);
+
+          if (values.length === 0) {
+            metrics[metric] = { p75: 0, median: 0, count: 0, rating: 'no-data' };
+            continue;
+          }
+
+          const p75 = percentile(values, 75);
+          const median = percentile(values, 50);
+          const thresholds = DEFAULT_THRESHOLDS[metric];
+          metrics[metric] = { p75, median, count: values.length, rating: rateMetric(p75, thresholds) };
+        }
+        return metrics;
+      };
+
+      const overall = computeMetrics(items);
+
+      // Per-device breakdown
+      const byDevice = {};
+      for (const dt of VALID_DEVICE_TYPES) {
+        const deviceItems = items.filter(i => i.deviceType === dt);
+        if (deviceItems.length > 0) {
+          byDevice[dt] = computeMetrics(deviceItems);
+        }
+      }
+
+      // Per-page breakdown
+      const pageMap = {};
+      for (const item of items) {
+        const page = item.page || 'unknown';
+        if (!pageMap[page]) pageMap[page] = [];
+        pageMap[page].push(item);
+      }
+      const byPage = {};
+      for (const [page, pageItems] of Object.entries(pageMap)) {
+        byPage[page] = computeMetrics(pageItems);
+      }
+
+      // Overall rating: worst of LCP, INP, CLS
+      const coreRatings = ['lcp', 'inp', 'cls'].map(m => overall[m]?.rating || 'no-data');
+      const overallRating = getWorstRating(coreRatings);
+
+      return {
+        success: true,
+        baseline: {
+          capturedAt: new Date().toISOString(),
+          period: `${days} days`,
+          sampleCount: items.length,
+          overall,
+          overallRating,
+          byDevice,
+          byPage,
+        },
+      };
+    } catch (err) {
+      console.error('[coreWebVitals] getBaseline error:', err);
+      return { success: false, error: 'Failed to capture baseline' };
+    }
+  }
+);
+
+// ─── measureVitals ──────────────────────────────────────────────────
+
+/**
+ * Convenience function for frontend to report individual vital measurements.
+ * Validates, stores, and returns per-metric ratings + violations.
+ *
+ * @param {Object} data
+ * @param {string} data.sessionId
+ * @param {string} data.page
+ * @param {string} [data.deviceType]
+ * @param {string} [data.connectionType]
+ * @param {Object} data.vitals - { lcp?, fid?, inp?, cls?, ttfb?, fcp? }
+ * @returns {Promise<Object>}
+ */
+export const measureVitals = webMethod(
+  Permissions.Anyone,
+  async (data) => {
+    try {
+      if (!data?.sessionId || !data?.page) {
+        return { success: false, error: 'sessionId and page are required' };
+      }
+      if (!data?.vitals || typeof data.vitals !== 'object') {
+        return { success: false, error: 'vitals object is required' };
+      }
+
+      const sessionId = sanitize(data.sessionId, 100);
+      const page = sanitize(data.page, 500);
+      if (!sessionId || !page) {
+        return { success: false, error: 'Invalid sessionId or page' };
+      }
+
+      const deviceType = VALID_DEVICE_TYPES.includes(data.deviceType)
+        ? data.deviceType : 'desktop';
+
+      const vitals = data.vitals;
+      const record = {
+        sessionId,
+        page,
+        deviceType,
+        lcp: clampMetric(vitals.lcp, 0, 60000),
+        fid: clampMetric(vitals.fid, 0, 10000),
+        inp: clampMetric(vitals.inp, 0, 10000),
+        cls: clampMetric(vitals.cls, 0, 10),
+        ttfb: clampMetric(vitals.ttfb, 0, 30000),
+        fcp: clampMetric(vitals.fcp, 0, 30000),
+        connectionType: sanitize(data.connectionType || 'unknown', 20),
+        timestamp: new Date(),
+      };
+
+      await wixData.insert(METRICS_COLLECTION, record);
+
+      // Rate each provided vital
+      const ratings = {};
+      for (const metric of VALID_METRICS) {
+        const value = record[metric];
+        if (typeof value === 'number' && value > 0) {
+          ratings[metric] = rateMetric(value, DEFAULT_THRESHOLDS[metric]);
+        }
+      }
+
+      // Check violations
+      const violations = checkBudgetViolations(record);
+
+      return { success: true, ratings, violations };
+    } catch (err) {
+      console.error('[coreWebVitals] measureVitals error:', err);
+      return { success: false, error: 'Failed to measure vitals' };
+    }
+  }
+);
+
 // ─── Internal Helpers ──────────────────────────────────────────────
 
 /**
@@ -472,7 +634,7 @@ export const checkPerformanceBudget = webMethod(
  * Returns 0 for non-numeric inputs.
  */
 function clampMetric(value, min, max) {
-  if (typeof value !== 'number' || isNaN(value)) return 0;
+  if (typeof value !== 'number' || !isFinite(value)) return 0;
   return Math.min(max, Math.max(min, value));
 }
 

@@ -110,13 +110,11 @@ describe('clampMetric — deep edge cases', () => {
     expect(clampMetric(500, 0, 1000)).toBe(500);
   });
 
-  it('returns 0 for Infinity (isNaN check passes but clamp catches)', () => {
-    // typeof Infinity === 'number', isNaN(Infinity) === false
-    // So Infinity passes the guard, gets clamped to max
-    expect(clampMetric(Infinity, 0, 60000)).toBe(60000);
+  it('returns 0 for Infinity (isFinite guard rejects it)', () => {
+    expect(clampMetric(Infinity, 0, 60000)).toBe(0);
   });
 
-  it('returns min for -Infinity', () => {
+  it('returns 0 for -Infinity', () => {
     expect(clampMetric(-Infinity, 0, 60000)).toBe(0);
   });
 });
