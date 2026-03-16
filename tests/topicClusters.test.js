@@ -66,6 +66,59 @@ describe('getTopicCluster', () => {
       expect(result.cluster).not.toBeNull();
     }
   });
+
+  it('every cluster has unique pillar titles', async () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    const titles = [];
+    for (const slug of slugs) {
+      const result = await getTopicCluster(slug);
+      titles.push(result.cluster.pillarTitle);
+    }
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it('every cluster has at least 2 spoke pages', async () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const result = await getTopicCluster(slug);
+      expect(result.cluster.spokePages.length).toBeGreaterThanOrEqual(2);
+      expect(result.cluster.spokeCount).toBe(result.cluster.spokePages.length);
+    }
+  });
+
+  it('spoke pages have slug, title, url, and type', async () => {
+    const result = await getTopicCluster('futon-frames');
+    for (const spoke of result.cluster.spokePages) {
+      expect(spoke.slug).toBeTruthy();
+      expect(spoke.title).toBeTruthy();
+      expect(spoke.url).toMatch(/^https:\/\//);
+      expect(spoke.type).toBeTruthy();
+    }
+  });
+
+  it('spoke types are valid values', async () => {
+    const validTypes = ['comparison', 'guide', 'howto', 'reference'];
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const result = await getTopicCluster(slug);
+      for (const spoke of result.cluster.spokePages) {
+        expect(validTypes).toContain(spoke.type);
+      }
+    }
+  });
+
+  it('sanitizes HTML in slug input', async () => {
+    const result = await getTopicCluster('<script>alert(1)</script>');
+    expect(result.cluster).toBeNull();
+  });
+
+  it('keywords are non-empty strings', async () => {
+    const result = await getTopicCluster('futon-frames');
+    for (const kw of result.cluster.keywords) {
+      expect(typeof kw).toBe('string');
+      expect(kw.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 // ── generateInternalLinks ────────────────────────────────────────────
@@ -134,6 +187,45 @@ describe('generateInternalLinks', () => {
     expect(link).toHaveProperty('anchorText');
     expect(link).toHaveProperty('context');
     expect(link).toHaveProperty('relationship');
+  });
+
+  it('link URLs are absolute', async () => {
+    const result = await generateInternalLinks('futon-frames');
+    for (const link of result.links) {
+      expect(link.targetUrl).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('link contexts are valid', async () => {
+    const validContexts = ['inline', 'sidebar', 'footer', 'related'];
+    const result = await generateInternalLinks('futon-frames', 20);
+    for (const link of result.links) {
+      expect(validContexts).toContain(link.context);
+    }
+  });
+
+  it('link relationships are valid', async () => {
+    const validRelationships = ['pillar-to-spoke', 'spoke-to-pillar', 'spoke-to-spoke', 'cross-cluster'];
+    const result = await generateInternalLinks('futon-frames', 20);
+    for (const link of result.links) {
+      expect(validRelationships).toContain(link.relationship);
+    }
+  });
+
+  it('maxLinks=1 returns exactly 1 link', async () => {
+    const result = await generateInternalLinks('futon-frames', 1);
+    expect(result.links.length).toBe(1);
+  });
+
+  it('spoke page links back to its parent pillar first', async () => {
+    const result = await generateInternalLinks('mattress-fill-types');
+    expect(result.links[0].relationship).toBe('spoke-to-pillar');
+    expect(result.links[0].targetSlug).toBe('mattresses');
+  });
+
+  it('rejects null slug', async () => {
+    const result = await generateInternalLinks(null);
+    expect(result.success).toBe(false);
   });
 });
 
@@ -238,6 +330,74 @@ describe('getSchemaMarkup', () => {
     expect(result.success).toBe(true);
     expect(result.schemas.article).toBeDefined();
     expect(result.schemas.breadcrumb).toBeDefined();
+  });
+
+  it('all schemas are valid JSON strings', async () => {
+    const result = await getSchemaMarkup('futon-frames', {
+      faqs: [{ question: 'Q?', answer: 'A.' }],
+      steps: [{ name: 'Step 1', text: 'Do this.' }],
+    });
+    for (const [key, value] of Object.entries(result.schemas)) {
+      expect(() => JSON.parse(value)).not.toThrow();
+    }
+  });
+
+  it('all schemas have @context schema.org', async () => {
+    const result = await getSchemaMarkup('futon-frames');
+    for (const value of Object.values(result.schemas)) {
+      const schema = JSON.parse(value);
+      expect(schema['@context']).toBe('https://schema.org');
+    }
+  });
+
+  it('accepts description override in pageData', async () => {
+    const result = await getSchemaMarkup('futon-frames', { description: 'Custom description text.' });
+    const article = JSON.parse(result.schemas.article);
+    expect(article.description).toBe('Custom description text.');
+  });
+
+  it('HowTo steps have sequential positions', async () => {
+    const result = await getSchemaMarkup('futon-frames', {
+      steps: [
+        { name: 'Step A', text: 'First.' },
+        { name: 'Step B', text: 'Second.' },
+        { name: 'Step C', text: 'Third.' },
+      ],
+    });
+    const howTo = JSON.parse(result.schemas.howTo);
+    for (let i = 0; i < howTo.step.length; i++) {
+      expect(howTo.step[i].position).toBe(i + 1);
+    }
+  });
+
+  it('HowTo step includes image when provided', async () => {
+    const result = await getSchemaMarkup('futon-frames', {
+      steps: [{ name: 'Step 1', text: 'Do this.', image: 'https://example.com/step1.jpg' }],
+    });
+    const howTo = JSON.parse(result.schemas.howTo);
+    expect(howTo.step[0].image).toBe('https://example.com/step1.jpg');
+  });
+
+  it('limits HowTo steps to 20', async () => {
+    const steps = Array.from({ length: 25 }, (_, i) => ({ name: `Step ${i}`, text: `Text ${i}.` }));
+    const result = await getSchemaMarkup('futon-frames', { steps });
+    const howTo = JSON.parse(result.schemas.howTo);
+    expect(howTo.step.length).toBe(20);
+  });
+
+  it('rejects null slug', async () => {
+    const result = await getSchemaMarkup(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('generates all 8 pillar pages without errors', async () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const result = await getSchemaMarkup(slug);
+      expect(result.success).toBe(true);
+      expect(result.schemas.article).toBeDefined();
+      expect(result.schemas.breadcrumb).toBeDefined();
+    }
   });
 });
 
@@ -378,6 +538,65 @@ describe('getSEOScore', () => {
     const low = await getSEOScore({ slug: 'futon-frames', internalLinkCount: 3 });
     expect(['D', 'F']).toContain(low.grade);
   });
+
+  it('score never exceeds maxScore', async () => {
+    const result = await getSEOScore(fullPageData);
+    expect(result.score).toBeLessThanOrEqual(result.maxScore);
+  });
+
+  it('percentage is 0-100 range', async () => {
+    const result = await getSEOScore(fullPageData);
+    expect(result.percentage).toBeGreaterThanOrEqual(0);
+    expect(result.percentage).toBeLessThanOrEqual(100);
+  });
+
+  it('checks array always has entries', async () => {
+    const result = await getSEOScore({ slug: 'futon-frames' });
+    expect(result.checks.length).toBeGreaterThan(0);
+  });
+
+  it('each check has name, passed, and points', async () => {
+    const result = await getSEOScore(fullPageData);
+    for (const check of result.checks) {
+      expect(check).toHaveProperty('name');
+      expect(check).toHaveProperty('passed');
+      expect(check).toHaveProperty('points');
+      expect(typeof check.points).toBe('number');
+    }
+  });
+
+  it('failed checks have tips', async () => {
+    const result = await getSEOScore({ slug: 'random-page' });
+    const failedChecks = result.checks.filter(c => !c.passed);
+    for (const check of failedChecks) {
+      expect(check.tip).toBeTruthy();
+    }
+  });
+
+  it('grade B for score 60-79', async () => {
+    // Aim for ~65 pts: title(15)+desc(15)+cluster(10)+links(10)+schema(15)=65
+    const result = await getSEOScore({
+      slug: 'futon-frames',
+      title: 'Great Futon Frame Guide for Your Home',
+      description: 'The ultimate guide to choosing futon frames for your home. Compare wood, metal, and wall hugger frames with expert buying recommendations today.',
+      image: 'https://example.com/hero.jpg',
+      internalLinkCount: 5,
+    });
+    expect(result.grade).toBe('B');
+  });
+
+  it('handles non-numeric internalLinkCount gracefully', async () => {
+    const result = await getSEOScore({ ...fullPageData, internalLinkCount: 'many' });
+    expect(result.success).toBe(true);
+    const linkCheck = result.checks.find(c => c.name.includes('Internal links'));
+    expect(linkCheck.passed).toBe(false);
+  });
+
+  it('handles FAQs with fewer than 3 items', async () => {
+    const result = await getSEOScore({ ...fullPageData, faqs: [{ question: 'Q?', answer: 'A.' }] });
+    const faqCheck = result.checks.find(c => c.name.includes('FAQ'));
+    expect(faqCheck.passed).toBe(false);
+  });
 });
 
 // ── getSitemapData ───────────────────────────────────────────────────
@@ -444,6 +663,59 @@ describe('getSitemapData', () => {
       expect(entry.lastmod).toBeDefined();
       expect(entry.changefreq).toBeDefined();
       expect(entry.priority).toBeDefined();
+    }
+  });
+
+  it('entry URLs are unique', async () => {
+    const result = await getSitemapData();
+    const urls = result.entries.map(e => e.url);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it('all URLs are absolute with https', async () => {
+    const result = await getSitemapData();
+    for (const entry of result.entries) {
+      expect(entry.url).toMatch(/^https:\/\/www\.carolinafutons\.com\//);
+    }
+  });
+
+  it('entry types are valid', async () => {
+    const validTypes = ['hub', 'pillar', 'spoke'];
+    const result = await getSitemapData();
+    for (const entry of result.entries) {
+      expect(validTypes).toContain(entry.type);
+    }
+  });
+
+  it('spoke contentTypes are valid', async () => {
+    const validContentTypes = ['comparison', 'guide', 'howto', 'reference'];
+    const result = await getSitemapData();
+    const spokes = result.entries.filter(e => e.type === 'spoke');
+    for (const spoke of spokes) {
+      expect(validContentTypes).toContain(spoke.contentType);
+    }
+  });
+
+  it('totalPages equals sum of hub + pillar + spoke', async () => {
+    const result = await getSitemapData();
+    expect(result.stats.totalPages).toBe(
+      result.stats.hubPages + result.stats.pillarPages + result.stats.spokePages
+    );
+  });
+
+  it('priorities are in decreasing order: hub > pillar > spoke', async () => {
+    const result = await getSitemapData();
+    const hub = result.entries.find(e => e.type === 'hub');
+    const pillar = result.entries.find(e => e.type === 'pillar');
+    const spoke = result.entries.find(e => e.type === 'spoke');
+    expect(hub.priority).toBeGreaterThan(pillar.priority);
+    expect(pillar.priority).toBeGreaterThan(spoke.priority);
+  });
+
+  it('lastmod dates are valid YYYY-MM-DD', async () => {
+    const result = await getSitemapData();
+    for (const entry of result.entries) {
+      expect(entry.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
   });
 });
