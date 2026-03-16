@@ -63,9 +63,11 @@ globalThis.$w = Object.assign(
 
 vi.mock('backend/seoHelpers.web', () => ({
   getBusinessSchema: vi.fn().mockResolvedValue('{"@type":"LocalBusiness"}'),
+  getWebSiteSchema: vi.fn().mockResolvedValue('{"@type":"WebSite"}'),
 }));
 vi.mock('backend/promotions.web', () => ({
   getActivePromotion: vi.fn().mockResolvedValue(null),
+  getFlashSales: vi.fn().mockResolvedValue([]),
 }));
 vi.mock('backend/contactSubmissions.web', () => ({
   submitContactForm: vi.fn().mockResolvedValue({}),
@@ -85,7 +87,12 @@ vi.mock('public/cartService', () => ({
   getShippingProgress: vi.fn(() => ({ remaining: 999, progressPct: 0, qualifies: false })),
 }));
 
-import { getCurrentCart, onCartChanged } from 'public/cartService';
+import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
+import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
+import { getActivePromotion } from 'backend/promotions.web';
+import { reportMetrics } from 'backend/coreWebVitals.web';
+import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
+import { submitContactForm } from 'backend/contactSubmissions.web';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -113,6 +120,21 @@ vi.mock('public/pwaHelpers', () => ({
 }));
 vi.mock('public/LiveChat.js', () => ({
   initLiveChat: vi.fn(),
+}));
+vi.mock('public/flashSaleHelpers', () => ({
+  buildAnnouncementMessage: vi.fn(() => null),
+}));
+vi.mock('public/exitIntentCapture', () => ({
+  shouldShowExitIntent: vi.fn(() => false),
+  markExitIntentShown: vi.fn(),
+  markExitIntentDismissed: vi.fn(),
+  getExitIntentConfig: vi.fn(() => ({ title: 'Wait!', subtitle: 'test', emailPlaceholder: 'Email', ctaText: 'Subscribe', successMessage: 'Thanks!', swipeDismissThreshold: 100 })),
+  getMobileExitIntentConfig: vi.fn(() => ({ title: 'Wait!', subtitle: 'test', emailPlaceholder: 'Email', ctaText: 'Subscribe', successMessage: 'Thanks!', swipeDismissThreshold: 100 })),
+  validateCaptureEmail: vi.fn(() => true),
+  detectScrollExit: vi.fn(() => false),
+}));
+vi.mock('backend/newsletterService.web', () => ({
+  subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true }),
 }));
 vi.mock('wix-crm-frontend', () => ({
   createContact: vi.fn().mockResolvedValue({}),
@@ -954,6 +976,8 @@ describe('masterPage.js', () => {
 
     it('sets announcement text to first message', async () => {
       await onReadyHandler();
+      // initAnnouncementBar is async (fetches flash sales) — wait for it
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#announcementText').text).toBeTruthy();
     });
   });
@@ -1052,16 +1076,19 @@ describe('masterPage.js', () => {
 
     it('sets initial announcement message text', async () => {
       await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#announcementText').text).toBeTruthy();
     });
 
     it('sets aria-live=polite on announcement text', async () => {
       await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
     });
 
     it('wires dismiss button with click handler', async () => {
       await onReadyHandler();
+      await new Promise(r => setTimeout(r, 50));
       expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
     });
   });
@@ -1141,6 +1168,324 @@ describe('masterPage.js', () => {
       const clickHandler = getEl('#siteLogo').onClick.mock.calls[0][0];
       clickHandler();
       expect(mockWixLocationTo).toHaveBeenCalledWith('/');
+    });
+  });
+
+  // ── Side Cart Auto-Open ────────────────────────────────────────────
+
+  describe('side cart auto-open', () => {
+    it('registers onCartChanged callback', async () => {
+      await onReadyHandler();
+      expect(onCartChanged).toHaveBeenCalled();
+    });
+
+    it('opens side cart when cart item count increases', async () => {
+      // Clear accumulated mock calls from prior tests to isolate this test
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+
+      // All initial calls (badge, shipping, initSideCartAutoOpen) see 1 item
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }],
+      });
+      elements.clear();
+      await onReadyHandler();
+
+      // Wait for all initial async calls to resolve (badge, shipping, initial count)
+      await new Promise(r => setTimeout(r, 100));
+
+      // Get only THIS test's onCartChanged callbacks (mock was cleared above)
+      const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
+
+      // Now cart has 2 items (count increased from 1 to 2)
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }, { _id: '2', quantity: 1 }],
+      });
+
+      // Call all onCartChanged callbacks (simulates cart change event)
+      for (const cb of allCallbacks) {
+        await cb();
+      }
+
+      expect(getEl('#sideCartPanel').show).toHaveBeenCalledWith(
+        'slide',
+        expect.objectContaining({ direction: 'right' })
+      );
+    });
+
+    it('does not open side cart when item count decreases', async () => {
+      // Clear accumulated mock calls to isolate this test
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+
+      // Initial calls see 3 items total
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 2 }, { _id: '2', quantity: 1 }],
+      });
+      elements.clear();
+      await onReadyHandler();
+      await new Promise(r => setTimeout(r, 100));
+
+      // Get only THIS test's callbacks
+      const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
+
+      // Cart now has fewer items (3 → 1)
+      getCurrentCart.mockResolvedValue({
+        lineItems: [{ _id: '1', quantity: 1 }],
+      });
+
+      // Clear show mock to only track calls during the callback
+      getEl('#sideCartPanel').show.mockClear();
+
+      for (const cb of allCallbacks) {
+        await cb();
+      }
+
+      expect(getEl('#sideCartPanel').show).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Header Shipping Progress ───────────────────────────────────────
+
+  describe('header shipping progress', () => {
+    it('calls getShippingProgress and updates bar', async () => {
+      getCurrentCart.mockResolvedValueOnce({
+        lineItems: [],
+        totals: { subtotal: 500 },
+      });
+      getShippingProgress.mockReturnValueOnce({ remaining: 499, progressPct: 50, qualifies: false });
+      elements.clear();
+      await onReadyHandler();
+
+      await vi.waitFor(() => {
+        expect(getEl('#headerShippingText').text).toContain('away from free shipping');
+      });
+    });
+
+    it('shows FREE shipping when threshold met', async () => {
+      getCurrentCart.mockResolvedValueOnce({
+        lineItems: [],
+        totals: { subtotal: 1200 },
+      });
+      getShippingProgress.mockReturnValueOnce({ remaining: 0, progressPct: 100, qualifies: true });
+      elements.clear();
+      await onReadyHandler();
+
+      await vi.waitFor(() => {
+        expect(getEl('#headerShippingText').text).toBe('FREE shipping!');
+      });
+    });
+
+    it('registers onCartChanged for shipping updates', async () => {
+      await onReadyHandler();
+      // onCartChanged should be called at least twice: once for badge, once for shipping
+      expect(onCartChanged.mock.calls.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  // ── Canonical URL Injection ────────────────────────────────────────
+
+  describe('canonical URL injection', () => {
+    it('calls wix-seo-frontend head.setLinks', async () => {
+      const { head } = await import('wix-seo-frontend');
+      head.setLinks.mockClear();
+      elements.clear();
+      await onReadyHandler();
+
+      await vi.waitFor(() => {
+        expect(head.setLinks).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ rel: 'canonical' })
+          ])
+        );
+      });
+    });
+  });
+
+  // ── Business Schema Injection ──────────────────────────────────────
+
+  describe('business schema injection', () => {
+    it('calls getBusinessSchema and posts to element', async () => {
+      getBusinessSchema.mockClear();
+      getBusinessSchema.mockResolvedValueOnce('{"@type":"LocalBusiness"}');
+      elements.clear();
+      await onReadyHandler();
+
+      await vi.waitFor(() => {
+        expect(getEl('#businessSchemaHtml').postMessage).toHaveBeenCalledWith('{"@type":"LocalBusiness"}');
+      });
+    });
+
+    it('does not throw when getBusinessSchema returns null', async () => {
+      getBusinessSchema.mockClear();
+      getBusinessSchema.mockResolvedValueOnce(null);
+      elements.clear();
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    });
+
+    it('posts WebSite schema to websiteSchemaHtml element', async () => {
+      getWebSiteSchema.mockClear();
+      getWebSiteSchema.mockResolvedValueOnce('{"@type":"WebSite"}');
+      elements.clear();
+      await onReadyHandler();
+
+      await vi.waitFor(() => {
+        expect(getEl('#websiteSchemaHtml').postMessage).toHaveBeenCalledWith('{"@type":"WebSite"}');
+      });
+    });
+  });
+
+  // ── Newsletter Modal ───────────────────────────────────────────────
+
+  describe('newsletter modal', () => {
+    it('wires onClick on newsletter trigger', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalTrigger').onClick).toHaveBeenCalled();
+    });
+
+    it('wires onClick on newsletter submit button', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalSubmit').onClick).toHaveBeenCalled();
+    });
+
+    it('sets ariaLabel on newsletter email input', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalEmail').accessibility.ariaLabel).toBe('Enter your email for 10% off');
+    });
+
+    it('shows error for invalid email submission', async () => {
+      await onReadyHandler();
+      const submitHandler = getEl('#newsletterModalSubmit').onClick.mock.calls[0][0];
+      getEl('#newsletterModalEmail').value = 'bad-email';
+      await submitHandler();
+      expect(getEl('#newsletterModalError').text).toBe('Please enter a valid email');
+      expect(getEl('#newsletterModalError').show).toHaveBeenCalled();
+    });
+
+    it('disables button and calls submitContactForm on valid email', async () => {
+      submitContactForm.mockResolvedValueOnce({});
+      await onReadyHandler();
+      const submitHandler = getEl('#newsletterModalSubmit').onClick.mock.calls[0][0];
+      getEl('#newsletterModalEmail').value = 'test@example.com';
+      await submitHandler();
+      expect(getEl('#newsletterModalSubmit').disable).toHaveBeenCalled();
+      expect(submitContactForm).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'test@example.com', source: 'newsletter_modal' })
+      );
+    });
+
+    it('shows success message with WELCOME10 code after subscribe', async () => {
+      submitContactForm.mockResolvedValueOnce({});
+      await onReadyHandler();
+      const submitHandler = getEl('#newsletterModalSubmit').onClick.mock.calls[0][0];
+      getEl('#newsletterModalEmail').value = 'test@example.com';
+      await submitHandler();
+      expect(getEl('#newsletterModalSuccess').text).toContain('WELCOME10');
+      expect(getEl('#newsletterModalSuccess').show).toHaveBeenCalled();
+    });
+
+    it('re-enables submit button on submitContactForm failure', async () => {
+      submitContactForm.mockRejectedValueOnce(new Error('fail'));
+      await onReadyHandler();
+      const submitHandler = getEl('#newsletterModalSubmit').onClick.mock.calls[0][0];
+      getEl('#newsletterModalEmail').value = 'test@example.com';
+      await submitHandler();
+      expect(getEl('#newsletterModalSubmit').enable).toHaveBeenCalled();
+    });
+
+    it('wires overlay click to close modal', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalOverlay').onClick).toHaveBeenCalled();
+    });
+  });
+
+  // ── PWA Install Banner ─────────────────────────────────────────────
+
+  describe('PWA install banner', () => {
+    it('does not show banner if already installed', async () => {
+      isInstalledPWA.mockReturnValueOnce(true);
+      elements.clear();
+      await onReadyHandler();
+      expect(getEl('#installBanner').show).not.toHaveBeenCalled();
+    });
+
+    it('does not show banner on first page view', async () => {
+      isInstalledPWA.mockReturnValue(false);
+      // sessionStorage not available in vitest — banner checks views < 2
+      elements.clear();
+      await onReadyHandler();
+      // Even with timeout, banner shouldn't show on first view
+      expect(getEl('#installBanner').show).not.toHaveBeenCalled();
+      isInstalledPWA.mockReturnValue(false);
+    });
+  });
+
+  // ── Core Web Vitals ────────────────────────────────────────────────
+
+  describe('core web vitals', () => {
+    it('calls reportMetrics after 5s timeout', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+
+      // Provide minimal performance API
+      globalThis.performance = {
+        timing: { responseStart: 200, navigationStart: 100 },
+        getEntriesByType: vi.fn().mockReturnValue([]),
+      };
+
+      vi.advanceTimersByTime(5000);
+      await vi.waitFor(() => {
+        expect(reportMetrics).toHaveBeenCalled();
+      });
+
+      delete globalThis.performance;
+      vi.useRealTimers();
+    });
+  });
+
+  // ── Search Navigation ──────────────────────────────────────────────
+
+  describe('search enter key navigation', () => {
+    it('navigates to search results on Enter with query', async () => {
+      await onReadyHandler();
+      const keyHandler = getEl('#headerSearchInput').onKeyPress.mock.calls[0][0];
+      getEl('#headerSearchInput').value = 'futon frame';
+      keyHandler({ key: 'Enter' });
+      expect(mockWixLocationTo).toHaveBeenCalledWith('/search-results?q=futon%20frame');
+    });
+
+    it('does not navigate on Enter with empty query', async () => {
+      await onReadyHandler();
+      mockWixLocationTo.mockClear();
+      const keyHandler = getEl('#headerSearchInput').onKeyPress.mock.calls[0][0];
+      getEl('#headerSearchInput').value = '   ';
+      keyHandler({ key: 'Enter' });
+      expect(mockWixLocationTo).not.toHaveBeenCalled();
+    });
+
+    it('does not navigate on non-Enter keys', async () => {
+      await onReadyHandler();
+      mockWixLocationTo.mockClear();
+      const keyHandler = getEl('#headerSearchInput').onKeyPress.mock.calls[0][0];
+      getEl('#headerSearchInput').value = 'test';
+      keyHandler({ key: 'a' });
+      expect(mockWixLocationTo).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Logo ───────────────────────────────────────────────────────────
+
+  describe('site logo display', () => {
+    it('sets logo src from getLogoImageUrl', async () => {
+      await onReadyHandler();
+      expect(getEl('#siteLogo').src).toBeTruthy();
+    });
+
+    it('sets logo alt text', async () => {
+      await onReadyHandler();
+      expect(getEl('#siteLogo').alt).toBe('Carolina Futons');
     });
   });
 });
