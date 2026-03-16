@@ -10,6 +10,7 @@ import { processContentSchedule } from 'backend/contentScheduler.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
+import { generateBlogRssFeed } from 'backend/blogRssFeed.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
@@ -98,15 +99,15 @@ export async function get_productSitemap() {
       { loc: '/unfinished-wood', priority: '0.8', changefreq: 'weekly' },
       { loc: '/casegoods-accessories', priority: '0.7', changefreq: 'weekly' },
       { loc: '/sales', priority: '0.7', changefreq: 'daily' },
-      { loc: '/blog', priority: '0.6', changefreq: 'weekly' },
-      { loc: '/blog/best-futons-for-everyday-sleeping', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/futon-frame-buying-guide', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/how-to-choose-futon-mattress', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/murphy-bed-vs-futon', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/futon-care-guide', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/futon-vs-sofa-bed', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/small-space-furniture-guide', priority: '0.6', changefreq: 'monthly' },
-      { loc: '/blog/platform-bed-guide', priority: '0.6', changefreq: 'monthly' },
+      { loc: '/blog', priority: '0.7', changefreq: 'weekly' },
+      { loc: '/blog/best-futons-for-everyday-sleeping', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/futon-frame-buying-guide', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/how-to-choose-futon-mattress', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/murphy-bed-vs-futon', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/futon-care-guide', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/futon-vs-sofa-bed', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/small-space-furniture-guide', priority: '0.7', changefreq: 'monthly' },
+      { loc: '/blog/platform-bed-guide', priority: '0.7', changefreq: 'monthly' },
       { loc: '/product-videos', priority: '0.6', changefreq: 'weekly' },
       { loc: '/getting-it-home', priority: '0.5', changefreq: 'monthly' },
       { loc: '/contact', priority: '0.5', changefreq: 'monthly' },
@@ -183,7 +184,7 @@ export async function get_blogSitemap() {
         xml += `    <lastmod>${escapeXml(post.publishDate)}</lastmod>\n`;
       }
       xml += '    <changefreq>monthly</changefreq>\n';
-      xml += '    <priority>0.6</priority>\n';
+      xml += '    <priority>0.7</priority>\n';
       xml += '  </url>\n';
     }
 
@@ -200,6 +201,36 @@ export async function get_blogSitemap() {
     console.error('HTTP function error (blogSitemap):', err);
     return serverError({
       body: 'Error generating blog sitemap',
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// Blog RSS 2.0 Feed
+// URL: GET https://www.carolinafutons.com/_functions/blogRssFeed
+// Add <link rel="alternate" type="application/rss+xml" href="/_functions/blogRssFeed"> in site header
+export async function get_blogRssFeed() {
+  try {
+    const result = await generateBlogRssFeed();
+
+    if (!result.success) {
+      return serverError({
+        body: 'Error generating RSS feed',
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+
+    return ok({
+      body: result.xml,
+      headers: {
+        'Content-Type': 'application/rss+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (blogRssFeed):', err);
+    return serverError({
+      body: 'Error generating RSS feed',
       headers: { 'Content-Type': 'text/plain' },
     });
   }
@@ -620,6 +651,7 @@ export function get_robots() {
     'Disallow: /search-results',
     'Allow: /_functions/productSitemap',
     'Allow: /_functions/blogSitemap',
+    'Allow: /_functions/blogRssFeed',
     'Disallow: /_functions/',
     '',
     'Sitemap: https://www.carolinafutons.com/_functions/productSitemap',
