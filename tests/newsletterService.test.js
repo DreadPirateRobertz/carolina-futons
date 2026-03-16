@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __reset as resetCrm, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __reset as resetMarketing, coupons } from './__mocks__/wix-marketing-backend.js';
-import { subscribeToNewsletter, syncToESP } from '../src/backend/newsletterService.web.js';
+import { subscribeToNewsletter, syncToESP, unsubscribeFromESP, getESPStatus } from '../src/backend/newsletterService.web.js';
 import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler, __reset as resetFetch } from './__mocks__/wix-fetch.js';
 
@@ -268,9 +268,279 @@ describe('syncToESP', () => {
     expect(result.reason).toBe('invalid_email');
   });
 
+  it('rejects null email', async () => {
+    const result = await syncToESP(null, 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
+  it('rejects undefined email', async () => {
+    const result = await syncToESP(undefined, 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
+  it('rejects numeric email', async () => {
+    const result = await syncToESP(12345, 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
   it('sanitizes source parameter', async () => {
     const result = await syncToESP('test@example.com', '<script>xss</script>');
     // Should not throw even with malicious source
     expect(result.synced).toBe(false);
+  });
+
+  it('syncs successfully when ESP is configured', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_abc', ESP_LIST_ID: 'LIST_123' });
+    __setHandler((url, options) => ({
+      ok: true,
+      status: 200,
+      async json() { return { data: { id: 'profile_1' } }; },
+    }));
+
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(true);
+  });
+
+  it('sends profile creation to Klaviyo profiles endpoint', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    const calls = [];
+    __setHandler((url, options) => {
+      calls.push({ url, method: options.method, body: JSON.parse(options.body) });
+      return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
+    });
+
+    await syncToESP('test@example.com', 'homepage');
+    expect(calls[0].url).toContain('/profiles/');
+    expect(calls[0].method).toBe('POST');
+    expect(calls[0].body.data.attributes.email).toBe('test@example.com');
+    expect(calls[0].body.data.attributes.properties.source).toBe('homepage');
+  });
+
+  it('subscribes to list when listId is configured', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key', ESP_LIST_ID: 'LIST_abc' });
+    const calls = [];
+    __setHandler((url, options) => {
+      calls.push({ url, method: options.method });
+      return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
+    });
+
+    await syncToESP('test@example.com', 'popup');
+    // Should make 2 calls: profile creation + list subscription
+    expect(calls.length).toBe(2);
+    expect(calls[1].url).toContain('/lists/LIST_abc/relationships/profiles/');
+  });
+
+  it('skips list subscription when no listId', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    const calls = [];
+    __setHandler((url) => {
+      calls.push(url);
+      return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
+    });
+
+    await syncToESP('test@example.com', 'popup');
+    // Only profile creation, no list subscription
+    expect(calls.length).toBe(1);
+  });
+
+  it('returns rate_limited when Klaviyo returns 429 on profile', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({
+      ok: false,
+      status: 429,
+      async json() { return {}; },
+    }));
+
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('esp_rate_limited');
+  });
+
+  it('returns api_error for non-429 failure', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({
+      ok: false,
+      status: 500,
+      async json() { return {}; },
+    }));
+
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('esp_api_error');
+  });
+
+  it('returns rate_limited when list subscription returns 429', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key', ESP_LIST_ID: 'LIST_abc' });
+    let callCount = 0;
+    __setHandler(() => {
+      callCount++;
+      if (callCount === 1) {
+        return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
+      }
+      return { ok: false, status: 429, async json() { return {}; } };
+    });
+
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('esp_rate_limited');
+  });
+
+  it('normalizes email to lowercase', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    const calls = [];
+    __setHandler((url, options) => {
+      calls.push(JSON.parse(options.body));
+      return { ok: true, status: 200, async json() { return { data: { id: 'p1' } }; } };
+    });
+
+    await syncToESP('USER@EXAMPLE.COM', 'footer');
+    expect(calls[0].data.attributes.email).toBe('user@example.com');
+  });
+
+  it('handles empty source gracefully', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({
+      ok: true, status: 200,
+      async json() { return { data: { id: 'p1' } }; },
+    }));
+
+    const result = await syncToESP('user@example.com', '');
+    expect(result.synced).toBe(true);
+  });
+
+  it('returns sync_failed on network error', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => { throw new Error('Network timeout'); });
+
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('sync_failed');
+  });
+});
+
+// ── unsubscribeFromESP ──────────────────────────────────────────────
+
+describe('unsubscribeFromESP', () => {
+  it('rejects invalid email', async () => {
+    const result = await unsubscribeFromESP('notanemail');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
+  it('rejects null email', async () => {
+    const result = await unsubscribeFromESP(null);
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
+  it('rejects empty string', async () => {
+    const result = await unsubscribeFromESP('');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('invalid_email');
+  });
+
+  it('returns no_esp_configured when secrets missing', async () => {
+    const result = await unsubscribeFromESP('user@example.com');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('no_esp_configured');
+  });
+
+  it('sends suppression request to Klaviyo', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    const calls = [];
+    __setHandler((url, options) => {
+      calls.push({ url, method: options.method, body: JSON.parse(options.body) });
+      return { ok: true, status: 200, async json() { return {}; } };
+    });
+
+    const result = await unsubscribeFromESP('user@example.com');
+    expect(result.unsubscribed).toBe(true);
+    expect(calls[0].url).toContain('/suppression/');
+    expect(calls[0].method).toBe('POST');
+  });
+
+  it('updates CMS record status to unsubscribed', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({ ok: true, status: 200, async json() { return {}; } }));
+
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub1', email: 'user@example.com', status: 'active', subscribedAt: new Date() },
+    ]);
+
+    let updated = null;
+    const wixData = (await import('wix-data')).default;
+    const originalUpdate = wixData.update;
+    wixData.update = async (collection, item) => {
+      updated = { collection, item };
+      return item;
+    };
+
+    await unsubscribeFromESP('user@example.com');
+    expect(updated).not.toBeNull();
+    expect(updated.collection).toBe('NewsletterSubscribers');
+    expect(updated.item.status).toBe('unsubscribed');
+    expect(updated.item.unsubscribedAt).toBeInstanceOf(Date);
+
+    wixData.update = originalUpdate;
+  });
+
+  it('succeeds even when no CMS record exists', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({ ok: true, status: 200, async json() { return {}; } }));
+
+    const result = await unsubscribeFromESP('nonexistent@example.com');
+    expect(result.unsubscribed).toBe(true);
+  });
+
+  it('returns esp_api_error on suppression failure', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => ({ ok: false, status: 500, async json() { return {}; } }));
+
+    const result = await unsubscribeFromESP('user@example.com');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('esp_api_error');
+  });
+
+  it('normalizes email to lowercase', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    const calls = [];
+    __setHandler((url, options) => {
+      calls.push(JSON.parse(options.body));
+      return { ok: true, status: 200, async json() { return {}; } };
+    });
+
+    await unsubscribeFromESP('USER@EXAMPLE.COM');
+    const email = calls[0].data.attributes.profiles.data[0].attributes.email;
+    expect(email).toBe('user@example.com');
+  });
+
+  it('returns unsubscribe_failed on exception', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+    __setHandler(() => { throw new Error('Network error'); });
+
+    const result = await unsubscribeFromESP('user@example.com');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('unsubscribe_failed');
+  });
+});
+
+// ── getESPStatus ────────────────────────────────────────────────────
+
+describe('getESPStatus', () => {
+  it('returns not configured when no secrets', async () => {
+    const result = await getESPStatus();
+    expect(result.configured).toBe(false);
+    expect(result.provider).toBeUndefined();
+  });
+
+  it('returns configured with provider when ESP key exists', async () => {
+    __setSecrets({ ESP_API_KEY: 'pk_test_key' });
+
+    const result = await getESPStatus();
+    expect(result.configured).toBe(true);
+    expect(result.provider).toBe('klaviyo');
   });
 });
