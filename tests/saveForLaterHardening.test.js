@@ -186,15 +186,16 @@ describe('saveForLater deduplication', () => {
     expect(mockRemoveCartItem).toHaveBeenCalledWith('cart-item-1');
   });
 
-  it('returns cart_removal_failed when dedup path cart removal fails', async () => {
+  it('succeeds on dedup path even when cart removal fails (best-effort)', async () => {
     mockWixData.query.mockReturnValue(createQueryBuilder([
       { _id: 'wish-existing', productId: 'prod-1', memberId: 'member-1' },
     ]));
     mockRemoveCartItem.mockRejectedValueOnce(new Error('fail'));
 
     const result = await saveForLater(validCartItem);
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('cart_removal_failed');
+    // Item is already in wishlist — cart removal is best-effort, same as new-add path
+    expect(result.success).toBe(true);
+    expect(result.wishlistItemId).toBe('wish-existing');
   });
 });
 

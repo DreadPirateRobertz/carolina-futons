@@ -133,8 +133,8 @@ describe('checkPriceDrops NaN hardening', () => {
 
     const result = await checkPriceDrops();
     expect(result.success).toBe(true);
-    // Number(null) === 0, which passes the NaN guard but high=0 prevents alerts (high <= 0 check)
-    expect(result.productsChecked).toBe(1);
+    // null price is now explicitly filtered by `item.price == null` guard
+    expect(result.productsChecked).toBe(0);
     expect(result.alertsSent).toBe(0);
   });
 

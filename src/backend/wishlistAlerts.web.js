@@ -135,7 +135,7 @@ export const checkPriceDrops = webMethod(
       const productPrices = {};
       for (const item of historyResult.items) {
         const numPrice = Number(item.price);
-        if (!item.productId || isNaN(numPrice) || numPrice < 0) {
+        if (!item.productId || item.price == null || isNaN(numPrice) || numPrice < 0) {
           console.warn('[wishlistAlerts] Skipping invalid price history entry:', item.productId, item.price);
           continue;
         }
@@ -532,8 +532,9 @@ async function isAlertDisabled(memberId, productId, alertField) {
 
     if (result.items.length === 0) return false; // Default: enabled
     return result.items[0][alertField] === false;
-  } catch {
-    return false;
+  } catch (err) {
+    console.error('[wishlistAlerts] Failed to check alert prefs, suppressing alert:', memberId, productId, err);
+    return true; // Fail CLOSED: don't send alerts if we can't verify consent
   }
 }
 

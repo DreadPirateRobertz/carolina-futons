@@ -37,11 +37,11 @@ export async function saveForLater(cartItem) {
       .find();
 
     if (existing.items.length > 0) {
-      // Already wishlisted — still remove from cart
+      // Already wishlisted — still remove from cart (best-effort)
       try {
         await removeCartItem(cartItem._id);
       } catch (err) {
-        return { success: false, reason: 'cart_removal_failed' };
+        console.error('[SaveForLater] cart removal failed (dedup path):', err);
       }
       trackEvent('save_for_later', { productId: cartItem.productId, source: 'cart' });
       fireCustomEvent('save_for_later', { productId: cartItem.productId });
