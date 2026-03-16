@@ -71,47 +71,48 @@ describe('generateCode collision handling', () => {
 
   it('retries on collision and succeeds within 5 attempts', async () => {
     let callCount = 0;
-    // Override queryV2 to collide first 3 times, then succeed
     const { coupons } = await import('wix-marketing-backend');
     const origQueryV2 = coupons.queryV2;
-    coupons.queryV2 = () => ({
-      eq: () => ({
-        limit: () => ({
-          find: async () => {
-            callCount++;
-            if (callCount <= 3) return { items: [{ code: 'COLLISION' }] };
-            return { items: [] };
-          },
+    try {
+      coupons.queryV2 = () => ({
+        eq: () => ({
+          limit: () => ({
+            find: async () => {
+              callCount++;
+              if (callCount <= 3) return { items: [{ code: 'COLLISION' }] };
+              return { items: [] };
+            },
+          }),
         }),
-      }),
-    });
+      });
 
-    const r = await mod.createWelcomeCoupon('a@b.com');
-    expect(r.success).toBe(true);
-    expect(r.code).toMatch(/^WELCOME-[A-Z2-9]{6}$/);
-    expect(callCount).toBe(4);
-
-    coupons.queryV2 = origQueryV2;
+      const r = await mod.createWelcomeCoupon('a@b.com');
+      expect(r.success).toBe(true);
+      expect(r.code).toMatch(/^WELCOME-[A-Z2-9]{6}$/);
+      expect(callCount).toBe(4);
+    } finally {
+      coupons.queryV2 = origQueryV2;
+    }
   });
 
   it('falls back to 8-char code after 5 collisions', async () => {
-    // Every queryV2 call returns a collision
     const { coupons } = await import('wix-marketing-backend');
     const origQueryV2 = coupons.queryV2;
-    coupons.queryV2 = () => ({
-      eq: () => ({
-        limit: () => ({
-          find: async () => ({ items: [{ code: 'EXISTS' }] }),
+    try {
+      coupons.queryV2 = () => ({
+        eq: () => ({
+          limit: () => ({
+            find: async () => ({ items: [{ code: 'EXISTS' }] }),
+          }),
         }),
-      }),
-    });
+      });
 
-    const r = await mod.createWelcomeCoupon('a@b.com');
-    expect(r.success).toBe(true);
-    // 8-char fallback code
-    expect(r.code).toMatch(/^WELCOME-[A-Z2-9]{8}$/);
-
-    coupons.queryV2 = origQueryV2;
+      const r = await mod.createWelcomeCoupon('a@b.com');
+      expect(r.success).toBe(true);
+      expect(r.code).toMatch(/^WELCOME-[A-Z2-9]{8}$/);
+    } finally {
+      coupons.queryV2 = origQueryV2;
+    }
   });
 
   it('returns code when queryV2 throws (line 199)', async () => {
@@ -125,22 +126,23 @@ describe('generateCode collision handling', () => {
   it('8-char fallback uses only valid alphabet chars', async () => {
     const { coupons } = await import('wix-marketing-backend');
     const origQueryV2 = coupons.queryV2;
-    coupons.queryV2 = () => ({
-      eq: () => ({
-        limit: () => ({
-          find: async () => ({ items: [{ code: 'EXISTS' }] }),
+    try {
+      coupons.queryV2 = () => ({
+        eq: () => ({
+          limit: () => ({
+            find: async () => ({ items: [{ code: 'EXISTS' }] }),
+          }),
         }),
-      }),
-    });
+      });
 
-    const r = await mod.createBirthdayCoupon('a@b.com', 'Test');
-    expect(r.success).toBe(true);
-    const suffix = r.code.split('-')[1];
-    expect(suffix).toHaveLength(8);
-    // No I, O, 0, 1 in the alphabet
-    expect(suffix).not.toMatch(/[IO01]/);
-
-    coupons.queryV2 = origQueryV2;
+      const r = await mod.createBirthdayCoupon('a@b.com', 'Test');
+      expect(r.success).toBe(true);
+      const suffix = r.code.split('-')[1];
+      expect(suffix).toHaveLength(8);
+      expect(suffix).not.toMatch(/[IO01]/);
+    } finally {
+      coupons.queryV2 = origQueryV2;
+    }
   });
 });
 

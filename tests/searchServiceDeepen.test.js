@@ -301,20 +301,15 @@ describe('getAutocompleteSuggestions', () => {
 
 describe('searchProducts error path', () => {
   it('returns empty result shape when wixData.query throws', async () => {
-    // Clear the store completely to force error by making __seed non-existent
-    __reset();
-    // Seed with a getter that throws to simulate DB error
-    // Actually: let's mock by not seeding — the mock returns empty, not error.
-    // Instead we test the catch by providing invalid params that could cause issues.
-    // The real way: we need wixData.query to throw. Let's use vi.spyOn.
     const wixData = (await import('./__mocks__/wix-data.js')).default;
     const originalQuery = wixData.query;
-    wixData.query = () => { throw new Error('DB connection lost'); };
-
-    const result = await searchProducts({ category: 'futon-frames' });
-    expect(result).toEqual({ products: [], total: 0, facets: {} });
-
-    wixData.query = originalQuery;
+    try {
+      wixData.query = () => { throw new Error('DB connection lost'); };
+      const result = await searchProducts({ category: 'futon-frames' });
+      expect(result).toEqual({ products: [], total: 0, facets: {} });
+    } finally {
+      wixData.query = originalQuery;
+    }
   });
 });
 
@@ -324,18 +319,19 @@ describe('getFilterValues error path', () => {
   it('returns full empty facets shape when wixData.query throws', async () => {
     const wixData = (await import('./__mocks__/wix-data.js')).default;
     const originalQuery = wixData.query;
-    wixData.query = () => { throw new Error('DB unavailable'); };
-
-    const result = await getFilterValues('futon-frames');
-    expect(result).toEqual({
-      priceRanges: [],
-      materials: [],
-      colors: [],
-      features: [],
-      dimensions: { width: { min: 0, max: 0 }, depth: { min: 0, max: 0 } },
-    });
-
-    wixData.query = originalQuery;
+    try {
+      wixData.query = () => { throw new Error('DB unavailable'); };
+      const result = await getFilterValues('futon-frames');
+      expect(result).toEqual({
+        priceRanges: [],
+        materials: [],
+        colors: [],
+        features: [],
+        dimensions: { width: { min: 0, max: 0 }, depth: { min: 0, max: 0 } },
+      });
+    } finally {
+      wixData.query = originalQuery;
+    }
   });
 });
 
@@ -352,18 +348,17 @@ describe('autocomplete cache', () => {
   it('cache expires after 2-minute TTL', async () => {
     await getAutocompleteSuggestions('fu', 8);
 
-    // Fast-forward time past the 2-minute TTL
     const realNow = Date.now;
-    let timeOffset = 0;
-    Date.now = () => realNow.call(Date) + timeOffset;
+    try {
+      let timeOffset = 0;
+      Date.now = () => realNow.call(Date) + timeOffset;
+      timeOffset = 2 * 60 * 1000 + 1; // 2 min + 1ms
 
-    timeOffset = 2 * 60 * 1000 + 1; // 2 min + 1ms
-
-    // This call should not use the expired cache — will re-query
-    const result = await getAutocompleteSuggestions('fu', 8);
-    expect(result.suggestions).toBeDefined();
-
-    Date.now = realNow;
+      const result = await getAutocompleteSuggestions('fu', 8);
+      expect(result.suggestions).toBeDefined();
+    } finally {
+      Date.now = realNow;
+    }
   });
 
   it('different prefixes get separate cache entries', async () => {
@@ -489,16 +484,16 @@ describe('fullTextSearch search cache', () => {
     await fullTextSearch({ query: 'Futon', sortBy: 'price-asc' });
 
     const realNow = Date.now;
-    let timeOffset = 0;
-    Date.now = () => realNow.call(Date) + timeOffset;
+    try {
+      let timeOffset = 0;
+      Date.now = () => realNow.call(Date) + timeOffset;
+      timeOffset = 3 * 60 * 1000 + 1; // 3 min + 1ms past TTL
 
-    timeOffset = 3 * 60 * 1000 + 1; // 3 min + 1ms past TTL
-
-    // Expired cache — re-fetches
-    const result = await fullTextSearch({ query: 'Futon', sortBy: 'price-asc' });
-    expect(result.products.length).toBeGreaterThan(0);
-
-    Date.now = realNow;
+      const result = await fullTextSearch({ query: 'Futon', sortBy: 'price-asc' });
+      expect(result.products.length).toBeGreaterThan(0);
+    } finally {
+      Date.now = realNow;
+    }
   });
 
   it('different sortBy creates different cache keys', async () => {
@@ -580,11 +575,12 @@ describe('fullTextSearch edge cases', () => {
   it('fullTextSearch error path returns empty shape', async () => {
     const wixData = (await import('./__mocks__/wix-data.js')).default;
     const originalQuery = wixData.query;
-    wixData.query = () => { throw new Error('Search unavailable'); };
-
-    const result = await fullTextSearch({ query: 'futon' });
-    expect(result).toEqual({ products: [], total: 0, query: '', facets: {} });
-
-    wixData.query = originalQuery;
+    try {
+      wixData.query = () => { throw new Error('Search unavailable'); };
+      const result = await fullTextSearch({ query: 'futon' });
+      expect(result).toEqual({ products: [], total: 0, query: '', facets: {} });
+    } finally {
+      wixData.query = originalQuery;
+    }
   });
 });
