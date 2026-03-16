@@ -461,9 +461,12 @@ export const getBackInStockDashboard = webMethod(
 export const markSignupsNotified = webMethod(
   Permissions.Admin,
   async (productId) => {
-    try {
-      if (!productId) return { success: false, count: 0 };
+    if (!productId) {
+      console.error('[inventoryService] markSignupsNotified called without productId');
+      return { success: false, count: 0 };
+    }
 
+    try {
       const cleanId = sanitize(productId, 50);
       const result = await wixData.query('BackInStockSignups')
         .eq('productId', cleanId)
@@ -471,19 +474,25 @@ export const markSignupsNotified = webMethod(
         .find();
 
       let count = 0;
+      let failed = 0;
       for (const item of result.items) {
-        await wixData.update('BackInStockSignups', {
-          ...item,
-          notified: true,
-          notifiedAt: new Date(),
-        });
-        count += 1;
+        try {
+          await wixData.update('BackInStockSignups', {
+            ...item,
+            notified: true,
+            notifiedAt: new Date(),
+          });
+          count += 1;
+        } catch (itemErr) {
+          failed += 1;
+          console.error(`[inventoryService] Failed to mark signup ${item._id} notified:`, itemErr);
+        }
       }
 
-      return { success: true, count };
+      return { success: failed === 0, count, failed };
     } catch (err) {
       console.error('[inventoryService] Error marking signups notified:', err);
-      return { success: false, count: 0 };
+      return { success: false, count: 0, failed: 0 };
     }
   }
 );

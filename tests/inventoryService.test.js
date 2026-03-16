@@ -493,4 +493,25 @@ describe('markSignupsNotified', () => {
     const result = await markSignupsNotified(null);
     expect(result.success).toBe(false);
   });
+
+  it('reports partial success when some updates fail', async () => {
+    let updateCount = 0;
+    __onUpdate((collection, item) => {
+      if (collection === 'BackInStockSignups') {
+        updateCount += 1;
+        if (updateCount === 2) throw new Error('DB write failed');
+      }
+    });
+
+    __seed('BackInStockSignups', [
+      { _id: 's-1', productId: 'prod-1', email: 'a@test.com', notified: false },
+      { _id: 's-2', productId: 'prod-1', email: 'b@test.com', notified: false },
+      { _id: 's-3', productId: 'prod-1', email: 'c@test.com', notified: false },
+    ]);
+
+    const result = await markSignupsNotified('prod-1');
+    expect(result.success).toBe(false);
+    expect(result.count).toBe(2); // 1st and 3rd succeeded
+    expect(result.failed).toBe(1);
+  });
 });
