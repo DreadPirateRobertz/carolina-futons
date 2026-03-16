@@ -1,0 +1,253 @@
+{
+  "title": "Carolina Futons — Press & Media Research",
+  "generated": "2026-03-16",
+  "beadId": "CF-7xpc",
+
+  "localPress": {
+    "description": "Hendersonville/Asheville area press outlets for PR outreach",
+    "outlets": [
+      {
+        "name": "Hendersonville Times-News",
+        "type": "daily newspaper",
+        "coverage": "Henderson County news, business, lifestyle",
+        "website": "blueridgenow.com",
+        "pitchAngles": [
+          "Local business spotlight — family furniture store in downtown Hendersonville",
+          "Made-in-USA futon frames and sustainable furniture",
+          "Small business resilience / e-commerce expansion story"
+        ],
+        "sections": ["Business", "Lifestyle", "Community"],
+        "notes": "Primary local daily. Business section runs local merchant profiles regularly."
+      },
+      {
+        "name": "Mountain Xpress",
+        "type": "alt-weekly",
+        "coverage": "Asheville area arts, culture, progressive news",
+        "website": "mountainx.com",
+        "pitchAngles": [
+          "Sustainable/eco-friendly furniture angle — organic cotton covers, solid wood frames",
+          "Local maker/artisan economy story",
+          "Small-space living solutions for Asheville apartment dwellers"
+        ],
+        "sections": ["Community", "Living", "Green"],
+        "notes": "Alt-weekly with strong eco/sustainability readership. Good fit for organic cotton and hardwood frame angle."
+      },
+      {
+        "name": "Asheville Citizen-Times",
+        "type": "daily newspaper (Gannett/USA Today Network)",
+        "coverage": "Buncombe County and WNC regional news",
+        "website": "citizen-times.com",
+        "pitchAngles": [
+          "WNC small business growth story",
+          "Furniture industry in Western NC — heritage and innovation",
+          "Holiday gift guide / seasonal home furnishing features"
+        ],
+        "sections": ["Business", "Life", "WNC"],
+        "notes": "Largest regional daily. Holiday gift guides and seasonal features accept local merchant submissions."
+      },
+      {
+        "name": "Hendersonville Lightning",
+        "type": "community newspaper",
+        "coverage": "Hendersonville community news and events",
+        "website": "hendersonvillelightning.com",
+        "pitchAngles": [
+          "New product launch announcements",
+          "Community involvement / sponsorship announcements",
+          "Store events and promotions"
+        ],
+        "notes": "Hyper-local community paper. Good for event announcements and community involvement."
+      },
+      {
+        "name": "Blue Ridge Now / Hendersonville Magazine",
+        "type": "lifestyle magazine",
+        "coverage": "Blue Ridge lifestyle, dining, shopping, tourism",
+        "pitchAngles": [
+          "Home decor / interior design feature with futons as versatile furniture",
+          "Local shopping guide inclusion",
+          "Mountain living / cabin furnishing feature"
+        ],
+        "notes": "Lifestyle/tourism publication. Seasonal home features and shopping guides."
+      },
+      {
+        "name": "WNC Business Journal",
+        "type": "business journal",
+        "coverage": "Western NC business news, commercial real estate, startups",
+        "pitchAngles": [
+          "E-commerce growth story — brick-and-mortar to online",
+          "Small business technology adoption",
+          "Furniture retail industry trends in WNC"
+        ],
+        "notes": "B2B audience. Good for business milestone announcements and e-commerce expansion stories."
+      }
+    ]
+  },
+
+  "industryPublications": {
+    "description": "Furniture industry trade publications and blogs that accept features/reviews",
+    "publications": [
+      {
+        "name": "Furniture Today",
+        "type": "trade publication",
+        "website": "furnituretoday.com",
+        "relevance": "Leading furniture industry trade pub. Covers retail, manufacturing, design trends.",
+        "pitchAngles": [
+          "Futon market growth and modern design evolution",
+          "Small retailer e-commerce success story",
+          "Product launch announcements for new frame/cover designs"
+        ],
+        "submissionType": "press releases, product submissions, retailer profiles"
+      },
+      {
+        "name": "Home Furnishings Business (HFB)",
+        "type": "trade magazine",
+        "website": "hfbusiness.com",
+        "relevance": "Retail-focused furniture trade publication.",
+        "pitchAngles": [
+          "Independent retailer spotlight",
+          "Customer experience and showroom innovation"
+        ],
+        "submissionType": "retailer profiles, product features"
+      },
+      {
+        "name": "Casual Living",
+        "type": "trade publication",
+        "website": "casualliving.com",
+        "relevance": "Covers casual/lifestyle furniture including futons and convertible pieces.",
+        "pitchAngles": [
+          "Futons as versatile casual furniture for multi-use spaces",
+          "Outdoor-to-indoor convertible furniture trends"
+        ],
+        "submissionType": "product submissions, trend articles"
+      },
+      {
+        "name": "Apartment Therapy",
+        "type": "consumer blog/media",
+        "website": "apartmenttherapy.com",
+        "relevance": "Major consumer home decor site. Small-space furniture is core content.",
+        "pitchAngles": [
+          "Best futons for small apartments — product roundup submission",
+          "Guest room solutions — futon as sofa-bed alternative",
+          "Dorm room furnishing guides"
+        ],
+        "submissionType": "product submissions for roundups, sponsored content"
+      },
+      {
+        "name": "The Spruce",
+        "type": "consumer home content",
+        "website": "thespruce.com",
+        "relevance": "High-traffic home and garden site. Runs buyer guides and product reviews.",
+        "pitchAngles": [
+          "Best futon frames / covers buyer guide inclusion",
+          "How to style a futon — room makeover feature"
+        ],
+        "submissionType": "product samples for review, buyer guide submissions"
+      },
+      {
+        "name": "Wirecutter (NYT)",
+        "type": "product review",
+        "website": "nytimes.com/wirecutter",
+        "relevance": "Authoritative buyer guide. Has existing futon mattress/frame guides.",
+        "pitchAngles": [
+          "Submit products for futon frame and futon mattress buyer guides",
+          "Provide expert commentary on futon selection criteria"
+        ],
+        "submissionType": "product samples, expert source availability",
+        "notes": "Highly competitive. Best approach is submitting products when they update their futon guides."
+      },
+      {
+        "name": "Sleepopolis",
+        "type": "sleep product reviews",
+        "website": "sleepopolis.com",
+        "relevance": "Reviews mattresses including futon mattresses.",
+        "pitchAngles": [
+          "Futon mattress review — comfort and sleep quality angle"
+        ],
+        "submissionType": "product samples for review"
+      }
+    ]
+  },
+
+  "blogAndInfluencer": {
+    "description": "Home decor blogs and influencers open to furniture features",
+    "targets": [
+      {
+        "name": "Small Space Living blogs",
+        "examples": ["Making it Lovely", "Manhattan Nest", "Yellow Brick Home"],
+        "angle": "Futons as the ultimate small-space solution",
+        "approach": "Product gifting + room makeover collaboration"
+      },
+      {
+        "name": "College/Dorm decor influencers",
+        "platforms": ["Instagram", "TikTok", "YouTube"],
+        "angle": "Dorm room and first apartment furnishing",
+        "approach": "Back-to-school season partnerships, discount codes",
+        "timing": "June-August for fall dorm season"
+      },
+      {
+        "name": "WNC lifestyle bloggers",
+        "angle": "Local business support, mountain living aesthetic",
+        "approach": "Local blogger events, showroom visits, affiliate partnerships"
+      }
+    ]
+  },
+
+  "localEvents": {
+    "description": "Regional events where Carolina Futons could participate or exhibit",
+    "events": [
+      {
+        "name": "WNC Home & Garden Show",
+        "location": "WNC Agricultural Center, Fletcher NC",
+        "timing": "February/March annually",
+        "type": "Home show / trade show",
+        "opportunity": "Booth exhibitor — showcase futon frames, live demonstrations of convertible function",
+        "notes": "Major regional home show. Direct consumer audience actively shopping for furniture."
+      },
+      {
+        "name": "Hendersonville Art on Main",
+        "location": "Main Street, Hendersonville",
+        "timing": "Monthly, April-November",
+        "type": "Street fair / art walk",
+        "opportunity": "Sidewalk display outside store, special event pricing, cross-promote with gallery walk traffic"
+      },
+      {
+        "name": "NC Apple Festival",
+        "location": "Downtown Hendersonville",
+        "timing": "Labor Day weekend (September)",
+        "type": "Community festival",
+        "opportunity": "Sponsor or booth — 200K+ annual visitors, massive foot traffic on Main Street",
+        "notes": "Largest annual event in Hendersonville. Primarily tourism/food but local business visibility is high."
+      },
+      {
+        "name": "Asheville Home Designers' Showhouse",
+        "location": "Asheville area",
+        "timing": "Varies annually",
+        "type": "Interior design showcase",
+        "opportunity": "Furnish a room in the showhouse with futon/convertible furniture",
+        "notes": "Great for brand positioning with interior designers and upscale consumers."
+      },
+      {
+        "name": "High Point Market",
+        "location": "High Point, NC",
+        "timing": "April and October",
+        "type": "Furniture industry trade show",
+        "opportunity": "Attend for sourcing, industry networking, trend research. Consider small showroom.",
+        "notes": "World's largest furniture trade show, 2 hours from Hendersonville. Industry-only event."
+      },
+      {
+        "name": "Back-to-School / Move-In Season",
+        "location": "UNC Asheville, Brevard College, Blue Ridge Community College campuses",
+        "timing": "August",
+        "type": "Campus marketing",
+        "opportunity": "Flyers, campus bulletin boards, student discount promotions, dorm delivery service",
+        "notes": "Peak futon sales season. Partner with campus housing offices for recommended vendor lists."
+      },
+      {
+        "name": "Hendersonville Farmers Market",
+        "location": "Historic Train Depot, Hendersonville",
+        "timing": "Tuesdays, May-October",
+        "type": "Farmers market",
+        "opportunity": "Cross-promote with market flyers, sponsor market bags with CF branding"
+      }
+    ]
+  }
+}
