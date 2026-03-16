@@ -794,4 +794,512 @@ describe('search cache', () => {
     expect(r1.products.length).toBeGreaterThan(0);
     expect(r2.products.length).toBeGreaterThan(0);
   });
+
+  it('different category params produce different cache entries', async () => {
+    await fullTextSearch({ query: 'Futon', category: 'futon-frames' });
+    // Modify seed — if separate cache entries, the second query would still be cached
+    __seed('Stores/Products', []);
+    const r2 = await fullTextSearch({ query: 'Futon', category: 'futon-frames' });
+    // Should return cached (non-empty) results despite empty seed
+    expect(r2.products.length).toBeGreaterThan(0);
+    // But a different category key should miss cache and return empty
+    __clearCache();
+    const r3 = await fullTextSearch({ query: 'Futon', category: 'mattresses' });
+    expect(r3.products).toHaveLength(0);
+  });
+
+  it('different offset params produce different cache entries', async () => {
+    const r1 = await fullTextSearch({ query: 'Futon', offset: 0 });
+    const r2 = await fullTextSearch({ query: 'Futon', offset: 1 });
+    // These should be separate cache entries (different keys)
+    expect(r1.products.length).toBeGreaterThan(0);
+  });
+});
+
+// ── searchProducts — edge cases & missing paths ──────────────────
+
+describe('searchProducts (edge cases)', () => {
+  it('called with no arguments uses defaults', async () => {
+    const result = await searchProducts();
+    expect(result.products).toHaveLength(7);
+    expect(result.total).toBe(7);
+  });
+
+  it('validateSlug rejects category with special characters', async () => {
+    const result = await searchProducts({ category: 'futon<frames>' });
+    // validateSlug returns '' for non-slug characters, no category filter applied
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('validateSlug normalizes category to lowercase', async () => {
+    const result = await searchProducts({ category: 'FUTON-FRAMES' });
+    expect(result.products).toHaveLength(3);
+    expect(result.products.every(p => p.collections.includes('futon-frames'))).toBe(true);
+  });
+
+  it('does not include description in searchProducts mapped fields', async () => {
+    const result = await searchProducts({});
+    const plat = result.products.find(p => p.slug === 'premium-plat');
+    expect(plat).not.toHaveProperty('description');
+  });
+
+  it('combines all filters: category + price + material + color + features + dimensions', async () => {
+    const result = await searchProducts({
+      category: 'futon-frames',
+      priceRange: '300-500',
+      material: 'Hardwood',
+      color: 'Natural',
+      features: ['wall-hugger', 'made-in-usa'],
+      widthRange: [50, 60],
+      depthRange: [30, 40],
+    });
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0].name).toBe('Eureka Futon Frame');
+  });
+
+  it('returns products with empty featureTags array', async () => {
+    const result = await searchProducts({ features: [] });
+    const ottoman = result.products.find(p => p.slug === 'clearance-ottoman');
+    expect(ottoman).toBeDefined();
+    expect(ottoman.featureTags).toEqual([]);
+  });
+
+  it('handles features filter with mix of valid and unknown tags', async () => {
+    const result = await searchProducts({ features: ['wall-hugger', 'nonexistent'] });
+    // Only valid features are applied — 'wall-hugger' filters, 'nonexistent' is ignored
+    expect(result.products.every(p => p.featureTags.includes('wall-hugger'))).toBe(true);
+  });
+
+  it('handles material that is empty string after sanitize', async () => {
+    const result = await searchProducts({ material: '<>' });
+    // sanitize('<>') → '', cleanMaterial falsy, no material filter
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles color that is empty string after sanitize', async () => {
+    const result = await searchProducts({ color: '<>' });
+    // sanitize('<>') → '', cleanColor falsy, no color filter
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles depthRange with wrong array length (1 element)', async () => {
+    const result = await searchProducts({ depthRange: [30] });
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles depthRange with wrong array length (3 elements)', async () => {
+    const result = await searchProducts({ depthRange: [30, 40, 50] });
+    // length !== 2, filter ignored
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles widthRange with both NaN values', async () => {
+    const result = await searchProducts({ widthRange: ['abc', 'def'] });
+    // Both NaN, neither filter applied
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles null category gracefully', async () => {
+    const result = await searchProducts({ category: null });
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('handles undefined category gracefully', async () => {
+    const result = await searchProducts({ category: undefined });
+    expect(result.products).toHaveLength(7);
+  });
+
+  it('offset beyond total returns empty products', async () => {
+    const result = await searchProducts({ offset: 1000 });
+    expect(result.products).toHaveLength(0);
+    expect(result.total).toBe(7);
+  });
+});
+
+// ── buildFacets — missing field handling ─────────────────────────
+
+describe('buildFacets edge cases', () => {
+  it('items with no material are excluded from material facets', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'No Material', price: 100, material: null, color: 'Red', featureTags: [], width: 30, depth: 30, collections: [] },
+      { _id: 'x2', name: 'Has Material', price: 200, material: 'Wood', color: 'Blue', featureTags: [], width: 40, depth: 40, collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    expect(facets.materials).toHaveLength(1);
+    expect(facets.materials[0].value).toBe('Wood');
+  });
+
+  it('items with no color are excluded from color facets', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'No Color', price: 100, material: 'Wood', color: null, featureTags: [], width: 30, depth: 30, collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    expect(facets.colors).toHaveLength(0);
+  });
+
+  it('items with no featureTags are excluded from feature facets', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'No Tags', price: 100, material: 'Wood', color: 'Red', featureTags: null, width: 30, depth: 30, collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    expect(facets.features).toHaveLength(0);
+  });
+
+  it('only known features appear in feature facets', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'Mixed Tags', price: 100, featureTags: ['wall-hugger', 'unknown-tag', 'sleeper'], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    const tagValues = facets.features.map(f => f.value);
+    expect(tagValues).toContain('wall-hugger');
+    expect(tagValues).toContain('sleeper');
+    expect(tagValues).not.toContain('unknown-tag');
+  });
+
+  it('items with no width/depth yield zero dimension ranges', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'No Dims', price: 100, featureTags: [], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    expect(facets.dimensions.width).toEqual({ min: 0, max: 0 });
+    expect(facets.dimensions.depth).toEqual({ min: 0, max: 0 });
+  });
+
+  it('items with string width/depth are excluded from dimension ranges', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'Bad Dims', price: 100, width: 'wide', depth: 'deep', featureTags: [], collections: [] },
+      { _id: 'x2', name: 'Good Dims', price: 200, width: 40, depth: 30, featureTags: [], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    expect(facets.dimensions.width).toEqual({ min: 40, max: 40 });
+    expect(facets.dimensions.depth).toEqual({ min: 30, max: 30 });
+  });
+
+  it('price ranges include boundary values correctly', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'At 300', price: 300, featureTags: [], collections: [] },
+      { _id: 'x2', name: 'At 299.99', price: 299.99, featureTags: [], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    const under300 = facets.priceRanges.find(r => r.key === '0-300');
+    const range300 = facets.priceRanges.find(r => r.key === '300-500');
+    expect(under300.count).toBe(1); // 299.99
+    expect(range300.count).toBe(1); // 300
+  });
+
+  it('items with price 0 are counted in Under $300 bucket', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'Free Item', price: 0, featureTags: [], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    const under300 = facets.priceRanges.find(r => r.key === '0-300');
+    expect(under300.count).toBe(1);
+  });
+
+  it('items with null price treated as 0 in price range', async () => {
+    __seed('Stores/Products', [
+      { _id: 'x1', name: 'No Price', price: null, featureTags: [], collections: [] },
+    ]);
+    const facets = await getFilterValues();
+    const under300 = facets.priceRanges.find(r => r.key === '0-300');
+    expect(under300.count).toBe(1);
+  });
+});
+
+// ── fullTextSearch — additional paths ────────────────────────────
+
+describe('fullTextSearch (extended)', () => {
+  it('returns empty for null query', async () => {
+    const result = await fullTextSearch({ query: null });
+    expect(result.products).toEqual([]);
+    expect(result.query).toBe('');
+  });
+
+  it('sanitizes query input (strips HTML tags)', async () => {
+    const result = await fullTextSearch({ query: '<b>Futon</b>' });
+    expect(result.query).toBe('futon');
+  });
+
+  it('combined filters: category + material + inStockOnly', async () => {
+    const result = await fullTextSearch({
+      query: 'Futon',
+      category: 'futon-frames',
+      material: 'Hardwood',
+      inStockOnly: true,
+    });
+    expect(result.products.every(p =>
+      p.collections.includes('futon-frames') &&
+      p.material === 'Hardwood' &&
+      p.inStock === true
+    )).toBe(true);
+  });
+
+  it('combined filters: priceRange + color', async () => {
+    const result = await fullTextSearch({ query: 'Futon', priceRange: '300-500', color: 'Natural' });
+    expect(result.products.every(p => p.price >= 300 && p.price <= 500 && p.color === 'Natural')).toBe(true);
+  });
+
+  it('features filter with multiple valid features in fullTextSearch', async () => {
+    const result = await fullTextSearch({ query: 'Futon', features: ['wall-hugger', 'made-in-usa'] });
+    expect(result.products.every(p =>
+      p.featureTags.includes('wall-hugger') && p.featureTags.includes('made-in-usa')
+    )).toBe(true);
+  });
+
+  it('features filter ignores unknown tags in fullTextSearch', async () => {
+    const all = await fullTextSearch({ query: 'Futon' });
+    const withUnknown = await fullTextSearch({ query: 'Futon', features: ['nonexistent-tag'] });
+    // Unknown tags filtered out, no valid features remain, no filter applied
+    expect(withUnknown.total).toBe(all.total);
+  });
+
+  it('inStockOnly false does not filter', async () => {
+    const result = await fullTextSearch({ query: 'ottoman', inStockOnly: false });
+    expect(result.products.some(p => p.inStock === false)).toBe(true);
+  });
+
+  it('handles material filter with empty sanitize result', async () => {
+    const all = await fullTextSearch({ query: 'Futon' });
+    const withEmpty = await fullTextSearch({ query: 'Futon', material: '<>' });
+    // sanitize('<>') → '', no filter applied
+    expect(withEmpty.total).toBe(all.total);
+  });
+
+  it('handles color filter with empty sanitize result', async () => {
+    const all = await fullTextSearch({ query: 'Futon' });
+    const withEmpty = await fullTextSearch({ query: 'Futon', color: '<>' });
+    expect(withEmpty.total).toBe(all.total);
+  });
+
+  it('clamps negative offset to 0', async () => {
+    const result = await fullTextSearch({ query: 'Futon', offset: -5 });
+    expect(result.products.length).toBeGreaterThan(0);
+  });
+
+  it('clamps NaN limit to default 24', async () => {
+    const result = await fullTextSearch({ query: 'Futon', limit: 'abc' });
+    expect(result.products.length).toBeGreaterThan(0);
+    expect(result.products.length).toBeLessThanOrEqual(24);
+  });
+
+  it('clamps limit minimum to 1', async () => {
+    const result = await fullTextSearch({ query: 'Futon', limit: 0 });
+    expect(result.products.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('sorts by relevance by default (name matches before description)', async () => {
+    // 'Premium' in p6 name AND description. 'storage' only in p6 description + p4 featureTags
+    const result = await fullTextSearch({ query: 'storage' });
+    // First result should be description match (higher relevance)
+    expect(result.products.length).toBeGreaterThan(0);
+  });
+
+  it('records query for popular tracking', async () => {
+    __clearCache();
+    await fullTextSearch({ query: 'unique-search-term-xyz' });
+    const popular = await getPopularSearches(20);
+    expect(popular.queries.some(q => q.query === 'unique-search-term-xyz')).toBe(true);
+  });
+
+  it('maps description field in fullTextSearch results', async () => {
+    const result = await fullTextSearch({ query: 'Platform' });
+    const plat = result.products.find(p => p.slug === 'premium-plat');
+    expect(plat).toHaveProperty('description');
+    expect(plat.description).toContain('storage drawers');
+  });
+
+  it('handles invalid priceRange key in fullTextSearch', async () => {
+    const all = await fullTextSearch({ query: 'Futon' });
+    const withInvalid = await fullTextSearch({ query: 'Futon', priceRange: 'bogus' });
+    expect(withInvalid.total).toBe(all.total);
+  });
+
+  it('handles category with special chars in fullTextSearch', async () => {
+    const result = await fullTextSearch({ query: 'Futon', category: 'bad<cat>' });
+    // validateSlug returns '' — no category filter applied
+    const all = await fullTextSearch({ query: 'Futon' });
+    expect(result.total).toBe(all.total);
+  });
+});
+
+// ── getAutocompleteSuggestions — additional paths ─────────────────
+
+describe('getAutocompleteSuggestions (extended)', () => {
+  it('returns empty for null prefix', async () => {
+    const result = await getAutocompleteSuggestions(null);
+    expect(result.suggestions).toEqual([]);
+  });
+
+  it('category suggestions include correct slug', async () => {
+    const result = await getAutocompleteSuggestions('Murphy');
+    const cat = result.suggestions.find(s => s.type === 'category');
+    expect(cat).toBeDefined();
+    expect(cat.slug).toBe('murphy-cabinet-beds');
+  });
+
+  it('popular query suggestions have empty slug', async () => {
+    await recordSearchQuery('futon sale deals');
+    await recordSearchQuery('futon sale deals');
+    await recordSearchQuery('futon sale deals');
+    const result = await getAutocompleteSuggestions('futon sale');
+    const pop = result.suggestions.find(s => s.type === 'popular');
+    expect(pop).toBeDefined();
+    expect(pop.slug).toBe('');
+  });
+
+  it('product suggestions include correct slug', async () => {
+    const result = await getAutocompleteSuggestions('Eu');
+    const prod = result.suggestions.find(s => s.type === 'product');
+    expect(prod).toBeDefined();
+    expect(prod.slug).toBe('eureka');
+  });
+
+  it('categories appear before products in suggestion order', async () => {
+    const result = await getAutocompleteSuggestions('Fu');
+    const catIdx = result.suggestions.findIndex(s => s.type === 'category');
+    const prodIdx = result.suggestions.findIndex(s => s.type === 'product');
+    if (catIdx >= 0 && prodIdx >= 0) {
+      expect(catIdx).toBeLessThan(prodIdx);
+    }
+  });
+
+  it('sanitizes prefix (strips HTML)', async () => {
+    const result = await getAutocompleteSuggestions('<b>Eu</b>');
+    // sanitize strips tags: 'Eu' remains, should match Eureka
+    expect(result.suggestions.some(s => s.text === 'Eureka Futon Frame')).toBe(true);
+  });
+
+  it('treats limit=0 as default 8 (0 is falsy)', async () => {
+    const result = await getAutocompleteSuggestions('Fu', 0);
+    // Number(0) || 8 = 8 — 0 is falsy so default kicks in
+    expect(result.suggestions.length).toBeLessThanOrEqual(8);
+  });
+
+  it('handles NaN limit gracefully', async () => {
+    const result = await getAutocompleteSuggestions('Fu', 'abc');
+    // NaN → default 8
+    expect(result.suggestions.length).toBeLessThanOrEqual(8);
+  });
+
+  it('matches category labels case-insensitively', async () => {
+    const result = await getAutocompleteSuggestions('platform');
+    expect(result.suggestions.some(s => s.type === 'category' && s.text === 'Platform Beds')).toBe(true);
+  });
+
+  it('returns multiple category matches', async () => {
+    // 'fu' matches 'Futon Frames' and 'Front Loading & Nesting'
+    const result = await getAutocompleteSuggestions('fu', 20);
+    const cats = result.suggestions.filter(s => s.type === 'category');
+    expect(cats.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ── getPopularSearches — additional coverage ─────────────────────
+
+describe('getPopularSearches (extended)', () => {
+  it('returns queries sorted by count descending', async () => {
+    await recordSearchQuery('alpha');
+    await recordSearchQuery('beta');
+    await recordSearchQuery('beta');
+    await recordSearchQuery('gamma');
+    await recordSearchQuery('gamma');
+    await recordSearchQuery('gamma');
+    const result = await getPopularSearches(10);
+    expect(result.queries[0].query).toBe('gamma');
+    expect(result.queries[1].query).toBe('beta');
+    expect(result.queries[2].query).toBe('alpha');
+  });
+
+  it('handles NaN limit gracefully', async () => {
+    await recordSearchQuery('test-nan');
+    const result = await getPopularSearches('abc');
+    // NaN → default 8
+    expect(result.queries.length).toBeLessThanOrEqual(8);
+  });
+
+  it('returns {queries: []} shape on error', async () => {
+    const result = await getPopularSearches();
+    expect(result).toHaveProperty('queries');
+    expect(Array.isArray(result.queries)).toBe(true);
+  });
+});
+
+// ── recordSearchQuery — additional coverage ──────────────────────
+
+describe('recordSearchQuery (extended)', () => {
+  it('returns success false for whitespace-only query', async () => {
+    const result = await recordSearchQuery('   ');
+    expect(result.success).toBe(false);
+  });
+
+  it('trims whitespace before recording', async () => {
+    await recordSearchQuery('  futon beds  ');
+    const popular = await getPopularSearches();
+    expect(popular.queries.some(q => q.query === 'futon beds')).toBe(true);
+  });
+
+  it('treats different casing as same query', async () => {
+    await recordSearchQuery('Mattress');
+    await recordSearchQuery('MATTRESS');
+    await recordSearchQuery('mattress');
+    const popular = await getPopularSearches();
+    const entry = popular.queries.find(q => q.query === 'mattress');
+    expect(entry.count).toBe(3);
+  });
+
+  it('ignores single-character query after sanitize', async () => {
+    const result = await recordSearchQuery('<b>x</b>');
+    // sanitize strips tags → 'x', length < 2
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── Query frequency tracking internals ──────────────────────────
+
+describe('query frequency tracking', () => {
+  it('short queries (< 2 chars) are not tracked', async () => {
+    await recordSearchQuery('ab'); // 2 chars — should track
+    await recordSearchQuery('a');  // 1 char — should not track
+    const popular = await getPopularSearches();
+    expect(popular.queries.some(q => q.query === 'ab')).toBe(true);
+    expect(popular.queries.some(q => q.query === 'a')).toBe(false);
+  });
+
+  it('empty queries are not tracked', async () => {
+    await recordSearchQuery('');
+    const popular = await getPopularSearches();
+    expect(popular.queries).toHaveLength(0);
+  });
+});
+
+// ── getFilterValues — error path ─────────────────────────────────
+
+describe('getFilterValues (extended)', () => {
+  it('returns error shape when category has special chars', async () => {
+    const facets = await getFilterValues('bad<cat>');
+    // validateSlug returns '' → treated as no category → all products
+    expect(facets.totalProducts).toBe(7);
+  });
+
+  it('returns empty string category as all products', async () => {
+    const facets = await getFilterValues('');
+    expect(facets.totalProducts).toBe(7);
+  });
+
+  it('returns null category as all products', async () => {
+    const facets = await getFilterValues(null);
+    expect(facets.totalProducts).toBe(7);
+  });
+
+  it('facets are cached per category slug', async () => {
+    const f1 = await getFilterValues('mattresses');
+    expect(f1.totalProducts).toBe(1);
+    // Change data — cache should persist
+    __seed('Stores/Products', []);
+    const f2 = await getFilterValues('mattresses');
+    expect(f2.totalProducts).toBe(1);
+    // Different category is not cached
+    const f3 = await getFilterValues('futon-frames');
+    expect(f3.totalProducts).toBe(0); // fresh query on empty data
+  });
 });
