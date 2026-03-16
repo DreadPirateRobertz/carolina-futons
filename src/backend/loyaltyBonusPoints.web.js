@@ -9,6 +9,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { accounts } from 'wix-loyalty.v2';
 import { validateId } from 'backend/utils/sanitize';
+import crypto from 'crypto';
 
 /** Point values for each bonus activity. */
 export const BONUS_POINTS = {
@@ -27,12 +28,16 @@ const ACTIVITY_MAP = {
   birthday: { points: BONUS_POINTS.BIRTHDAY, description: 'Bonus: birthday reward' },
 };
 
+/** Tier multipliers for display only — purchase-based multipliers are
+ *  configured in the Wix Dashboard earning rules, not applied here. */
 const TIER_MULTIPLIERS = {
   Bronze: 1,
   Silver: 1,
   Gold: 1.5,
   Platinum: 2,
 };
+
+const APP_ID = 'cf-loyalty-bonus';
 
 /**
  * Get the earning configuration for display in the loyalty dashboard.
@@ -82,14 +87,20 @@ export const awardBonusPoints = webMethod(
 
       const activity = ACTIVITY_MAP[activityType];
       if (!activity) {
-        return { success: false, message: `Unknown activity type: ${activityType}` };
+        const safe = String(activityType).slice(0, 50);
+        return { success: false, message: `Unknown activity type: ${safe}` };
       }
 
-      const pointsToAward = options.points || activity.points;
+      const pointsToAward = options.points ?? activity.points;
+      if (typeof pointsToAward !== 'number' || pointsToAward <= 0) {
+        return { success: false, message: 'Points must be a positive number' };
+      }
 
       await accounts.earnPoints(cleanId, {
         points: pointsToAward,
         description: activity.description,
+        appId: APP_ID,
+        idempotencyKey: crypto.randomUUID(),
       });
 
       return {
@@ -98,7 +109,7 @@ export const awardBonusPoints = webMethod(
         reason: activityType,
       };
     } catch (err) {
-      console.error('Error awarding bonus points:', err);
+      console.error(`[loyaltyBonusPoints] FAILED — account: ${accountId}, activity: ${activityType}, error:`, err);
       return { success: false, message: 'Failed to award bonus points' };
     }
   }
