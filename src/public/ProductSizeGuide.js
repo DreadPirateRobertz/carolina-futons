@@ -366,7 +366,7 @@ export function initDimensionDiagram($w, state) {
     const renderDiagram = (position) => {
       const pos = position === 'open' ? (dims.open || {}) : (dims.closed || {});
       const unit = dims.unit === 'cm' ? 'cm' : '"';
-      const fmt = (v) => v != null ? `${v}${unit}` : '—';
+      const fmt = (v) => v != null ? `${Number(v)}${unit}` : '\u2014';
       const w = fmt(pos.width);
       const d = fmt(pos.depth);
       const h = fmt(pos.height);
