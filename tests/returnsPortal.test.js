@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   checkReturnWindow,
   isItemReturnable,
@@ -7,8 +7,22 @@ import {
   getStatusColor,
   validateReturnForm,
   getReturnableItems,
+  initReturnsSection,
 } from '../src/public/ReturnsPortal.js';
 import { colors } from '../src/public/designTokens.js';
+
+vi.mock('backend/returnsService.web', () => ({
+  getReturnReasons: vi.fn(),
+  getReturnEligibleOrders: vi.fn(),
+  submitReturnRequest: vi.fn(),
+  getMyReturns: vi.fn(),
+}));
+
+vi.mock('public/engagementTracker', () => ({
+  trackEvent: vi.fn(),
+}));
+
+import { getReturnReasons, getReturnEligibleOrders, submitReturnRequest, getMyReturns } from 'backend/returnsService.web';
 
 // ── checkReturnWindow ──────────────────────────────────────────
 
@@ -362,5 +376,276 @@ describe('getReturnableItems', () => {
     expect(items[0].name).toBe('Futon');
     expect(items[0].price).toBe(499);
     expect(items[0]._id).toBe('abc');
+  });
+});
+
+// ── getStatusColor — additional ────────────────────────────────────
+
+describe('getStatusColor — additional', () => {
+  it('returns sunsetCoral for received', () => {
+    expect(getStatusColor('received')).toBe(colors.sunsetCoral);
+  });
+});
+
+// ── getStatusTimeline — additional ─────────────────────────────────
+
+describe('getStatusTimeline — additional', () => {
+  it('marks approved as active with requested completed', () => {
+    const timeline = getStatusTimeline('approved');
+    expect(timeline[0].state).toBe('completed');
+    expect(timeline[1].state).toBe('active');
+    expect(timeline[2].state).toBe('pending');
+  });
+
+  it('marks received as active with prior three completed', () => {
+    const timeline = getStatusTimeline('received');
+    expect(timeline[0].state).toBe('completed');
+    expect(timeline[1].state).toBe('completed');
+    expect(timeline[2].state).toBe('completed');
+    expect(timeline[3].state).toBe('active');
+    expect(timeline[4].state).toBe('pending');
+  });
+
+  it('denied timeline has cross icon', () => {
+    const timeline = getStatusTimeline('denied');
+    expect(timeline[0].icon).toBe('\u2717');
+  });
+});
+
+// ── initReturnsSection ─────────────────────────────────────────────
+
+describe('initReturnsSection', () => {
+  function mock$w() {
+    const store = {};
+    const $w = (selector) => {
+      if (!store[selector]) {
+        store[selector] = {
+          id: selector, text: '', value: '', style: {},
+          onClick: vi.fn(), onChange: vi.fn(),
+          show: vi.fn(), hide: vi.fn(),
+          expand: vi.fn(), collapse: vi.fn(),
+          scrollTo: vi.fn(),
+          enable: vi.fn(), disable: vi.fn(),
+          label: '', options: [], data: null,
+          onItemReady: vi.fn(),
+          accessibility: {},
+          src: '', alt: '',
+        };
+      }
+      return store[selector];
+    };
+    $w._store = store;
+    return $w;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('loads return reasons and sets up button handlers', async () => {
+    getReturnReasons.mockResolvedValue({
+      reasons: [{ label: 'Wrong Size', value: 'wrong_size' }, { label: 'Damaged', value: 'damaged' }],
+    });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    // Reason dropdown should be populated
+    expect($w._store['#returnReasonDropdown'].options).toEqual([
+      { label: 'Wrong Size', value: 'wrong_size' },
+      { label: 'Damaged', value: 'damaged' },
+    ]);
+
+    // Start return button should have onClick
+    expect($w._store['#startReturnBtn'].onClick).toHaveBeenCalled();
+
+    // Submit and cancel buttons registered
+    expect($w._store['#submitReturnBtn'].onClick).toHaveBeenCalled();
+    expect($w._store['#cancelReturnBtn'].onClick).toHaveBeenCalled();
+  });
+
+  it('sets accessibility labels on buttons', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    expect($w._store['#startReturnBtn'].accessibility.ariaLabel).toBe('Start a return');
+    expect($w._store['#submitReturnBtn'].accessibility.ariaLabel).toBe('Submit return request');
+    expect($w._store['#cancelReturnBtn'].accessibility.ariaLabel).toBe('Cancel return');
+  });
+
+  it('hides returns list section when no returns exist', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    expect($w._store['#returnsListSection'].hide).toHaveBeenCalled();
+  });
+
+  it('renders existing returns in the returns list', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({
+      returns: [
+        { _id: 'r1', rmaNumber: 'RMA-001', orderNumber: '1001', date: '2026-03-01', reason: 'Wrong Size', status: 'requested' },
+      ],
+    });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    expect($w._store['#returnsListRepeater'].data).toHaveLength(1);
+    expect($w._store['#returnsListRepeater'].onItemReady).toHaveBeenCalled();
+    expect($w._store['#returnsListSection'].show).toHaveBeenCalled();
+  });
+
+  it('onItemReady renders return data in repeater items', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({
+      returns: [
+        { _id: 'r1', rmaNumber: 'RMA-001', orderNumber: '1001', date: '2026-03-01', reason: 'Wrong Size', status: 'approved' },
+      ],
+    });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const onItemReadyFn = $w._store['#returnsListRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    const itemData = { rmaNumber: 'RMA-001', orderNumber: '1001', date: '2026-03-01', reason: 'Wrong Size', status: 'approved' };
+    onItemReadyFn($item, itemData);
+
+    expect($item._store['#returnRma'].text).toBe('RMA-001');
+    expect($item._store['#returnOrderNum'].text).toBe('Order #1001');
+    expect($item._store['#returnDate'].text).toBe('2026-03-01');
+    expect($item._store['#returnReason'].text).toBe('Wrong Size');
+    expect($item._store['#returnStatusBadge'].text).toBe('Return Label Sent');
+    expect($item._store['#returnTimeline'].text).toContain('\u2713'); // completed marker
+  });
+
+  it('cancel button hides return flow section', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const cancelHandler = $w._store['#cancelReturnBtn'].onClick.mock.calls[0][0];
+    cancelHandler();
+
+    expect($w._store['#returnFlowSection'].hide).toHaveBeenCalled();
+  });
+
+  it('does not throw when getReturnReasons fails', async () => {
+    getReturnReasons.mockRejectedValue(new Error('backend error'));
+    const $w = mock$w();
+    await expect(initReturnsSection($w)).resolves.not.toThrow();
+  });
+
+  it('start return button triggers showReturnFlow and populates orders', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    getReturnEligibleOrders.mockResolvedValue({
+      orders: [
+        { _id: 'o1', number: '1001', date: '2026-03-10', total: 499, lineItems: [{ _id: 'li1', name: 'Futon', quantity: 1, price: 499 }] },
+      ],
+    });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    // Order dropdown should be populated
+    expect($w._store['#returnOrderDropdown'].options).toHaveLength(1);
+    expect($w._store['#returnOrderDropdown'].options[0].label).toContain('1001');
+    expect($w._store['#returnFlowSection'].show).toHaveBeenCalled();
+  });
+
+  it('shows no-orders message when no eligible orders', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    getReturnEligibleOrders.mockResolvedValue({ orders: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    expect($w._store['#returnNoOrders'].text).toContain('No orders eligible');
+    expect($w._store['#returnNoOrders'].show).toHaveBeenCalled();
+  });
+
+  it('order dropdown onChange populates return items', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    const orders = [
+      { _id: 'o1', number: '1001', date: new Date(Date.now() - 5 * 86400000).toISOString(), total: 499, lineItems: [{ _id: 'li1', name: 'Futon', quantity: 1, price: 499 }] },
+    ];
+    getReturnEligibleOrders.mockResolvedValue({ orders });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    // Simulate selecting the order
+    $w._store['#returnOrderDropdown'].value = 'o1';
+    const changeHandler = $w._store['#returnOrderDropdown'].onChange.mock.calls[0][0];
+    changeHandler();
+
+    expect($w._store['#returnItemsRepeater'].data).toHaveLength(1);
+    expect($w._store['#returnItemsRepeater'].onItemReady).toHaveBeenCalled();
+  });
+
+  it('populateReturnItems renders item details and handles non-returnable items', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    const orders = [
+      {
+        _id: 'o1', number: '1001', date: new Date(Date.now() - 5 * 86400000).toISOString(), total: 998,
+        lineItems: [
+          { _id: 'li1', name: 'Futon Frame', quantity: 1, price: 499, image: 'futon.jpg' },
+          { _id: 'li2', name: 'Clearance Item', quantity: 1, price: 199, ribbon: 'Clearance' },
+        ],
+      },
+    ];
+    getReturnEligibleOrders.mockResolvedValue({ orders });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    $w._store['#returnOrderDropdown'].value = 'o1';
+    const changeHandler = $w._store['#returnOrderDropdown'].onChange.mock.calls[0][0];
+    changeHandler();
+
+    // Simulate onItemReady for returnable item
+    const onItemReadyFn = $w._store['#returnItemsRepeater'].onItemReady.mock.calls[0][0];
+    const $returnableItem = mock$w();
+    onItemReadyFn($returnableItem, { _id: 'li1', name: 'Futon Frame', quantity: 1, price: 499, image: 'futon.jpg', returnable: true, returnBlockReason: '' });
+
+    expect($returnableItem._store['#returnItemName'].text).toBe('Futon Frame');
+    expect($returnableItem._store['#returnItemQty'].text).toBe('Qty: 1');
+    expect($returnableItem._store['#returnItemPrice'].text).toBe('$499.00');
+    expect($returnableItem._store['#returnItemImage'].src).toBe('futon.jpg');
+    expect($returnableItem._store['#returnItemCheckbox'].enable).toHaveBeenCalled();
+
+    // Simulate onItemReady for non-returnable item
+    const $nonReturnableItem = mock$w();
+    onItemReadyFn($nonReturnableItem, { _id: 'li2', name: 'Clearance Item', quantity: 1, price: 199, returnable: false, returnBlockReason: 'Final sale - no returns' });
+
+    expect($nonReturnableItem._store['#returnItemCheckbox'].disable).toHaveBeenCalled();
+    expect($nonReturnableItem._store['#returnItemBlockReason'].text).toBe('Final sale - no returns');
+    expect($nonReturnableItem._store['#returnItemBlockReason'].show).toHaveBeenCalled();
   });
 });

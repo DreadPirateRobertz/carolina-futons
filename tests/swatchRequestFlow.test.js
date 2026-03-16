@@ -1,11 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   MAX_SWATCHES,
   toggleSwatchSelection,
   getSelectedSwatches,
   clearSelectedSwatches,
   validateRequestForm,
+  submitRequest,
 } from '../src/public/SwatchRequestFlow.js';
+
+vi.mock('backend/emailService.web', () => ({
+  submitSwatchRequest: vi.fn(),
+}));
+
+import { submitSwatchRequest } from 'backend/emailService.web';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -383,5 +390,126 @@ describe('validateRequestForm', () => {
       const addrErrors = errors.filter(e => e.field === 'address');
       expect(addrErrors).toHaveLength(0);
     });
+  });
+});
+
+// ── submitRequest ───────────────────────────────────────────────────
+
+describe('submitRequest', () => {
+  beforeEach(() => {
+    clearSelectedSwatches();
+    vi.clearAllMocks();
+  });
+
+  it('returns error when no swatches selected', async () => {
+    const result = await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('select at least one swatch');
+  });
+
+  it('returns validation errors for invalid form', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+    const result = await submitRequest({ name: '', email: '', address: '' });
+    expect(result.success).toBe(false);
+    expect(result.errors).toHaveLength(3);
+  });
+
+  it('calls submitSwatchRequest with trimmed data on valid submission', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim Blue' });
+    toggleSwatchSelection({ _id: 'sw-2', swatchName: 'Natural Canvas' });
+    submitSwatchRequest.mockResolvedValue({ success: true });
+
+    const result = await submitRequest({
+      name: '  Jane Doe  ',
+      email: '  jane@test.com  ',
+      address: '  123 Main St  ',
+      productId: 'prod-1',
+      productName: 'Eureka Frame',
+    });
+
+    expect(result.success).toBe(true);
+    expect(submitSwatchRequest).toHaveBeenCalledWith({
+      name: 'Jane Doe',
+      email: 'jane@test.com',
+      address: '123 Main St',
+      productId: 'prod-1',
+      productName: 'Eureka Frame',
+      swatchNames: ['Denim Blue', 'Natural Canvas'],
+    });
+  });
+
+  it('clears selected swatches after successful submission', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+    submitSwatchRequest.mockResolvedValue({ success: true });
+
+    await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+
+    expect(getSelectedSwatches()).toHaveLength(0);
+  });
+
+  it('does not clear swatches on failed backend response', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+    submitSwatchRequest.mockResolvedValue({ success: false, message: 'Server error' });
+
+    const result = await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+
+    expect(result.success).toBe(false);
+    expect(getSelectedSwatches()).toHaveLength(1);
+  });
+
+  it('returns fallback message on backend exception', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+    submitSwatchRequest.mockRejectedValue(new Error('network'));
+
+    const result = await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('calling us');
+    expect(result.message).toContain('828');
+  });
+
+  it('passes through backend result object on success', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+    submitSwatchRequest.mockResolvedValue({ success: true, rmaId: 'RMA-001' });
+
+    const result = await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+
+    expect(result).toEqual({ success: true, rmaId: 'RMA-001' });
+  });
+
+  it('validates form before calling backend', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Denim' });
+
+    const result = await submitRequest({
+      name: 'Jane', email: 'bad-email', address: '123 Main',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.errors).toBeDefined();
+    expect(submitSwatchRequest).not.toHaveBeenCalled();
+  });
+
+  it('sends only swatchName values in swatchNames array', async () => {
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'A' });
+    toggleSwatchSelection({ _id: 'sw-2', swatchName: 'B' });
+    toggleSwatchSelection({ _id: 'sw-3', swatchName: 'C' });
+    submitSwatchRequest.mockResolvedValue({ success: true });
+
+    await submitRequest({
+      name: 'Jane', email: 'jane@test.com', address: '123 Main',
+    });
+
+    const call = submitSwatchRequest.mock.calls[0][0];
+    expect(call.swatchNames).toEqual(['A', 'B', 'C']);
   });
 });

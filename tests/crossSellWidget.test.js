@@ -3,6 +3,8 @@ import {
   buildRoomBundles,
   calculateBundleSavings,
   getRoomContext,
+  getCrossWidgetStyles,
+  initCrossSellWidget,
   BUNDLE_DISCOUNT_RATE,
 } from '../src/public/crossSellWidget.js';
 
@@ -224,5 +226,329 @@ describe('buildRoomBundles', () => {
     const bundles = buildRoomBundles(bedroomSuggestions, 1899);
     expect(bundles[0].roomContext).toBe('bedroom');
     expect(bundles[0].heading).toBe('Complete the Room');
+  });
+
+  it('returns empty array for non-array input', () => {
+    expect(buildRoomBundles('not-array', 0)).toEqual([]);
+    expect(buildRoomBundles(123, 0)).toEqual([]);
+  });
+
+  it('handles products without collections', () => {
+    const suggestions = [{
+      heading: 'Add',
+      products: [{ _id: 'p1', name: 'Thing', price: 100, formattedPrice: '$100.00', mainMedia: '' }],
+    }];
+    const bundles = buildRoomBundles(suggestions, 200);
+    expect(bundles[0].roomContext).toBe('living-room');
+  });
+
+  it('handles products with empty price (defaults to 0)', () => {
+    const suggestions = [{
+      heading: 'Free stuff',
+      products: [{ _id: 'p1', name: 'Free', formattedPrice: '$0.00', mainMedia: '', collections: [] }],
+    }];
+    const bundles = buildRoomBundles(suggestions, 500);
+    expect(bundles[0].originalTotal).toBe(500);
+  });
+});
+
+// ── getCrossWidgetStyles ────────────────────────────────────────────
+
+describe('getCrossWidgetStyles', () => {
+  it('returns all expected style properties', () => {
+    const styles = getCrossWidgetStyles();
+    expect(styles).toHaveProperty('sectionBackground');
+    expect(styles).toHaveProperty('headingColor');
+    expect(styles).toHaveProperty('subheadingColor');
+    expect(styles).toHaveProperty('savingsBadgeBackground');
+    expect(styles).toHaveProperty('savingsBadgeText');
+    expect(styles).toHaveProperty('cardBackground');
+    expect(styles).toHaveProperty('nameColor');
+    expect(styles).toHaveProperty('priceColor');
+    expect(styles).toHaveProperty('addBtnBackground');
+    expect(styles).toHaveProperty('addBtnText');
+    expect(styles).toHaveProperty('addedColor');
+    expect(styles).toHaveProperty('bundlePriceColor');
+    expect(styles).toHaveProperty('originalPriceColor');
+  });
+
+  it('returns string values for all properties', () => {
+    const styles = getCrossWidgetStyles();
+    for (const value of Object.values(styles)) {
+      expect(typeof value).toBe('string');
+    }
+  });
+});
+
+// ── initCrossSellWidget ─────────────────────────────────────────────
+
+describe('initCrossSellWidget', () => {
+  const elements = {
+    section: '#csSection',
+    heading: '#csHeading',
+    subheading: '#csSubheading',
+    savingsBadge: '#csSavings',
+    repeater: '#csRepeater',
+    bundlePrice: '#csBundlePrice',
+    originalPrice: '#csOriginalPrice',
+  };
+
+  const cardElements = {
+    image: '#csImage',
+    name: '#csName',
+    price: '#csPrice',
+    addBtn: '#csAddBtn',
+  };
+
+  function mock$w() {
+    const store = {};
+    const $w = (selector) => {
+      if (!store[selector]) {
+        store[selector] = {
+          id: selector, text: '', style: {},
+          expand: vi.fn(), collapse: vi.fn(), show: vi.fn(), hide: vi.fn(),
+          onClick: vi.fn(), onItemReady: vi.fn(),
+          data: null, src: '', alt: '',
+          accessibility: {},
+          disable: vi.fn(), enable: vi.fn(), label: '',
+        };
+      }
+      return store[selector];
+    };
+    $w._store = store;
+    return $w;
+  }
+
+  it('collapses section when no bundles provided', () => {
+    const $w = mock$w();
+    initCrossSellWidget($w, { bundles: [], addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when bundles is null', () => {
+    const $w = mock$w();
+    initCrossSellWidget($w, { bundles: null, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('expands section and sets heading/subheading from first bundle', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'Complete the Room',
+      subheading: 'Add a Mattress',
+      formattedSavings: '$42.40',
+      formattedBundlePrice: '$805.60',
+      originalTotal: 848,
+      savings: 42.4,
+      products: [{ _id: 'p1', name: 'Mattress', formattedPrice: '$349.00', mainMedia: 'img.jpg' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csSection'].expand).toHaveBeenCalled();
+    expect($w._store['#csHeading'].text).toBe('Complete the Room');
+    expect($w._store['#csSubheading'].text).toBe('Add a Mattress');
+  });
+
+  it('sets savings badge text and shows it', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$10.00', formattedBundlePrice: '$190.00',
+      originalTotal: 200, savings: 10,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$100', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csSavings'].text).toBe('Save $10.00');
+    expect($w._store['#csSavings'].show).toHaveBeenCalled();
+  });
+
+  it('sets bundle price and original price', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$10.00', formattedBundlePrice: '$190.00',
+      originalTotal: 200, savings: 10,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$100', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csBundlePrice'].text).toBe('$190.00');
+  });
+
+  it('registers onItemReady handler on the repeater', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: 'img.jpg' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csRepeater'].onItemReady).toHaveBeenCalled();
+  });
+
+  it('sets repeater data to bundle products', () => {
+    const $w = mock$w();
+    const products = [
+      { _id: 'p1', name: 'A', formattedPrice: '$100', mainMedia: 'a.jpg' },
+      { _id: 'p2', name: 'B', formattedPrice: '$200', mainMedia: 'b.jpg' },
+    ];
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$15.00', formattedBundlePrice: '$285.00',
+      originalTotal: 300, savings: 15,
+      products,
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+    expect($w._store['#csRepeater'].data).toHaveLength(2);
+  });
+
+  it('onItemReady sets product image, name, and price', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'Mattress', formattedPrice: '$349.00', mainMedia: 'mat.jpg' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+
+    // Simulate onItemReady callback
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    const product = { _id: 'p1', name: 'Mattress', formattedPrice: '$349.00', mainMedia: 'mat.jpg' };
+    onItemReadyFn($item, product);
+
+    expect($item._store['#csImage'].src).toBe('mat.jpg');
+    expect($item._store['#csImage'].alt).toContain('Mattress');
+    expect($item._store['#csName'].text).toBe('Mattress');
+    expect($item._store['#csPrice'].text).toBe('$349.00');
+  });
+
+  it('onItemReady registers add-to-cart button click handler', () => {
+    const $w = mock$w();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements });
+
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' });
+    expect($item._store['#csAddBtn'].onClick).toHaveBeenCalled();
+  });
+
+  it('add-to-cart click calls addToCart and shows Added! on success', async () => {
+    const $w = mock$w();
+    const addToCart = vi.fn().mockResolvedValue(undefined);
+    const announce = vi.fn();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'Widget', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart, announce, elements, cardElements });
+
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'p1', name: 'Widget', formattedPrice: '$50', mainMedia: '' });
+
+    const clickHandler = $item._store['#csAddBtn'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(addToCart).toHaveBeenCalledWith('p1');
+    expect($item._store['#csAddBtn'].label).toBe('Added!');
+    expect(announce).toHaveBeenCalledWith($w, 'Widget added to cart');
+  });
+
+  it('add-to-cart click shows Error on failure', async () => {
+    const $w = mock$w();
+    const addToCart = vi.fn().mockRejectedValue(new Error('cart fail'));
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart, announce: vi.fn(), elements, cardElements });
+
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' });
+
+    const clickHandler = $item._store['#csAddBtn'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect($item._store['#csAddBtn'].label).toBe('Error');
+    expect($item._store['#csAddBtn'].enable).toHaveBeenCalled();
+  });
+
+  it('calls onProductClick when image clicked', () => {
+    const $w = mock$w();
+    const onProductClick = vi.fn();
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements, onProductClick });
+
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    const product = { _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' };
+    onItemReadyFn($item, product);
+
+    // Image click handler
+    const imgClickHandler = $item._store['#csImage'].onClick.mock.calls[0][0];
+    imgClickHandler();
+    expect(onProductClick).toHaveBeenCalledWith(product);
+
+    // Name click handler
+    const nameClickHandler = $item._store['#csName'].onClick.mock.calls[0][0];
+    nameClickHandler();
+    expect(onProductClick).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls onAdded callback after successful add', async () => {
+    const $w = mock$w();
+    const onAdded = vi.fn();
+    const addToCart = vi.fn().mockResolvedValue(undefined);
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    initCrossSellWidget($w, { bundles, addToCart, announce: vi.fn(), elements, cardElements, onAdded });
+
+    const onItemReadyFn = $w._store['#csRepeater'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    const product = { _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' };
+    onItemReadyFn($item, product);
+
+    const clickHandler = $item._store['#csAddBtn'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(onAdded).toHaveBeenCalledWith(product);
+  });
+
+  it('returns early when repeater element is null', () => {
+    const $w = (selector) => {
+      if (selector === '#csRepeater') return null;
+      return {
+        id: selector, text: '', style: {},
+        expand: vi.fn(), collapse: vi.fn(), show: vi.fn(),
+      };
+    };
+    const bundles = [{
+      heading: 'H', subheading: 'S',
+      formattedSavings: '$5.00', formattedBundlePrice: '$95.00',
+      originalTotal: 100, savings: 5,
+      products: [{ _id: 'p1', name: 'P', formattedPrice: '$50', mainMedia: '' }],
+    }];
+    expect(() => initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements })).not.toThrow();
   });
 });
