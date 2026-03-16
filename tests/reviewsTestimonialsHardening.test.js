@@ -877,7 +877,146 @@ describe('isFlaggedContent', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// 15. BATCH REVIEW SUMMARIES (productReviews)
+// 15. MODERATION WITH MISSING/CORRUPT STATUS FIELDS
+// ═══════════════════════════════════════════════════════════════════
+
+describe('moderation with missing status field', () => {
+  it('photo review with undefined status falls back to pending and can be approved', async () => {
+    seedPhotoReviews([{
+      _id: 'pr-nostatus', productId: 'prod-1', memberId: 'member-x',
+      reviewText: 'Great futon!', rating: 5, photoUrl: 'https://img/1.jpg',
+      status: undefined, submittedAt: new Date(),
+    }]);
+    const result = await moderatePhotoReview('pr-nostatus', 'approve');
+    expect(result.success).toBe(true);
+    expect(result.previousStatus).toBe('pending');
+    expect(result.newStatus).toBe('approved');
+  });
+
+  it('photo review with null status falls back to pending', async () => {
+    seedPhotoReviews([{
+      _id: 'pr-null', productId: 'prod-1', memberId: 'member-x',
+      reviewText: 'Nice!', rating: 4, photoUrl: 'https://img/2.jpg',
+      status: null, submittedAt: new Date(),
+    }]);
+    const result = await moderatePhotoReview('pr-null', 'reject');
+    expect(result.success).toBe(true);
+    expect(result.previousStatus).toBe('pending');
+  });
+
+  it('text review with undefined status falls back to pending and can be approved', async () => {
+    seedReviews([{
+      _id: 'rev-nostatus', productId: 'prod-1', memberId: 'member-x',
+      authorName: 'Test', rating: 4, title: 'OK', body: 'Decent product.',
+      status: undefined, _createdDate: new Date(),
+    }]);
+    const result = await moderateReview('rev-nostatus', 'approve');
+    expect(result.success).toBe(true);
+    expect(result.previousStatus).toBe('pending');
+    expect(result.newStatus).toBe('approved');
+  });
+
+  it('text review with null status falls back to pending', async () => {
+    seedReviews([{
+      _id: 'rev-null', productId: 'prod-1', memberId: 'member-x',
+      authorName: 'Test', rating: 3, title: 'Meh', body: 'Average quality.',
+      status: null, _createdDate: new Date(),
+    }]);
+    const result = await moderateReview('rev-null', 'reject');
+    expect(result.success).toBe(true);
+    expect(result.previousStatus).toBe('pending');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 16. FEATURED TESTIMONIAL ROTATION DETERMINISM & UNIQUENESS
+// ═══════════════════════════════════════════════════════════════════
+
+describe('getFeaturedTestimonials rotation properties', () => {
+  const pool = Array.from({ length: 12 }, (_, i) => ({
+    _id: `t-${i}`,
+    status: 'featured',
+    approvedAt: new Date(`2026-03-${String(i + 1).padStart(2, '0')}`),
+    name: `Person ${i}`,
+    story: `Testimonial ${i}`,
+    rating: 5,
+  }));
+
+  it('returns unique items (no duplicates) when pool > limit', async () => {
+    seedTestimonials(pool);
+    const result = await getFeaturedTestimonials(6);
+    const ids = result.items.map(t => t._id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('is deterministic — same call returns same results', async () => {
+    seedTestimonials(pool);
+    const result1 = await getFeaturedTestimonials(6);
+    // Re-seed to reset any internal state
+    seedTestimonials(pool);
+    const result2 = await getFeaturedTestimonials(6);
+    const ids1 = result1.items.map(t => t._id);
+    const ids2 = result2.items.map(t => t._id);
+    expect(ids1).toEqual(ids2);
+  });
+
+  it('clamps limit to minimum of 1', async () => {
+    seedTestimonials(pool);
+    const result = await getFeaturedTestimonials(0);
+    expect(result.success).toBe(true);
+    expect(result.items).toHaveLength(1);
+  });
+
+  it('clamps limit to maximum of 20', async () => {
+    // Need a large enough pool
+    const largePool = Array.from({ length: 50 }, (_, i) => ({
+      _id: `t-${i}`, status: 'featured', name: `P${i}`, story: `S${i}`, rating: 5,
+      approvedAt: new Date(Date.now() - i * 86400000),
+    }));
+    seedTestimonials(largePool);
+    const result = await getFeaturedTestimonials(100);
+    expect(result.items.length).toBeLessThanOrEqual(20);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 17. PHOTO MODERATION DATABASE STATE VERIFICATION
+// ═══════════════════════════════════════════════════════════════════
+
+describe('photo moderation persists state correctly', () => {
+  const review = {
+    _id: 'pr-persist', productId: 'prod-1', memberId: 'member-x',
+    reviewText: 'Great futon!', rating: 5, photoUrl: 'https://img/1.jpg',
+    status: 'pending', submittedAt: new Date(), moderatedAt: null, moderatedBy: '',
+  };
+
+  it('persists approved status and moderator info to database', async () => {
+    seedPhotoReviews([{ ...review }]);
+    await moderatePhotoReview('pr-persist', 'approve');
+    const updated = await wixData.get('PhotoReviews', 'pr-persist');
+    expect(updated.status).toBe('approved');
+    expect(updated.moderatedAt).toBeInstanceOf(Date);
+    expect(updated.moderatedBy).toBe(ADMIN_MEMBER._id);
+  });
+
+  it('persists featured status to database', async () => {
+    seedPhotoReviews([{ ...review }]);
+    await moderatePhotoReview('pr-persist', 'feature');
+    const updated = await wixData.get('PhotoReviews', 'pr-persist');
+    expect(updated.status).toBe('featured');
+    expect(updated.moderatedBy).toBe(ADMIN_MEMBER._id);
+  });
+
+  it('persists rejected status to database', async () => {
+    seedPhotoReviews([{ ...review }]);
+    await moderatePhotoReview('pr-persist', 'reject');
+    const updated = await wixData.get('PhotoReviews', 'pr-persist');
+    expect(updated.status).toBe('rejected');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 18. BATCH REVIEW SUMMARIES (productReviews)
 // ═══════════════════════════════════════════════════════════════════
 
 describe('getBatchReviewSummaries', () => {
