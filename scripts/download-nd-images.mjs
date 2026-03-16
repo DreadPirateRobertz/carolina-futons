@@ -3,7 +3,8 @@
  * Download hi-res product images from Night & Day Furniture dealer Image Bank.
  * Maps image bank folders to catalog-MASTER.json slugs and downloads all images.
  *
- * Usage: node scripts/download-nd-images.mjs [--dry-run]
+ * Usage: ND_USER=nightimage ND_PASS=bankpass2 node scripts/download-nd-images.mjs [--dry-run]
+ *   Or source secrets.env first: source scripts/secrets.env && node scripts/download-nd-images.mjs
  */
 
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'fs';
@@ -13,7 +14,13 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 
-const AUTH = Buffer.from('nightimage:bankpass2').toString('base64');
+const { ND_USER, ND_PASS } = process.env;
+if (!ND_USER || !ND_PASS) {
+  console.error('FATAL: Set ND_USER and ND_PASS environment variables.');
+  console.error('  Example: ND_USER=nightimage ND_PASS=bankpass2 node scripts/download-nd-images.mjs');
+  process.exit(1);
+}
+const AUTH = Buffer.from(`${ND_USER}:${ND_PASS}`).toString('base64');
 const BASE = 'https://imagebank.nightanddayfurniture.com/dealer';
 const DRY_RUN = process.argv.includes('--dry-run');
 
