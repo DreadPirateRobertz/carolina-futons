@@ -380,6 +380,27 @@ const PAGES = [
         ["swatchPromoSubtitle","Text","Subheading"],
         ["swatchPromoCTA","Button","Order swatches"]
       ]},
+      { name: "Blog Teasers", impl: `<h4>📰 Implementation — Blog Teasers</h4>
+<p><strong>Layout: HtmlComponent that displays a grid of 3 recent blog posts</strong></p>
+<ul>
+  <li><strong>#blogTeaserSection</strong>: HtmlComponent element. Code injects a grid of 3 recent blog posts via <code>HomeBlogTeasers.js</code> using <code>postMessage()</code>.</li>
+  <li>Content is rendered as HTML inside the iframe — no direct child elements needed.</li>
+  <li>Data sourced from <code>blogService.web.js</code> backend module.</li>
+</ul>`, elements: [
+        ["blogTeaserSection","HtmlComponent","Blog post cards — 3 recent posts"]
+      ]},
+      { name: "Social Feeds", impl: `<h4>📱 Implementation — Social Feeds</h4>
+<p><strong>Layout: Three HtmlComponent embeds for social media feeds</strong></p>
+<ul>
+  <li><strong>#instagramFeedContainer</strong>: HtmlComponent. Code injects Instagram embed iframe via <code>SocialFeedEmbed.js</code>.</li>
+  <li><strong>#tiktokFeedContainer</strong>: HtmlComponent. Code injects TikTok follow card via <code>SocialFeedEmbed.js</code>.</li>
+  <li><strong>#pinterestBoardContainer</strong>: HtmlComponent. Code injects Pinterest follow card via <code>SocialFeedEmbed.js</code>.</li>
+  <li>All three use the <code>postMessage()</code> pattern to inject HTML into the iframe.</li>
+</ul>`, elements: [
+        ["instagramFeedContainer","HtmlComponent","Instagram embed iframe"],
+        ["tiktokFeedContainer","HtmlComponent","TikTok follow card"],
+        ["pinterestBoardContainer","HtmlComponent","Pinterest follow card"]
+      ]},
       { name: "Newsletter", impl: `<h4>📧 Implementation — Newsletter</h4>
 <p><strong>Layout: Heading + subtitle + inline email form + hidden success/error messages</strong></p>
 <ul>
@@ -764,7 +785,7 @@ Same elements but popup slides up from bottom:
     ]
   },
   {
-    name: "Product Page", file: "Product Page.ve2z7.js", priority: "P0", est: "30 min",
+    name: "Product Page", file: "Product Page.ve2z7.js", priority: "P0", est: "90 min",
     sections: [
       { name: "Product Info", impl: `<h4>🛋️ Implementation — Product Info</h4>
 <p><strong>Layout: Product hero with image gallery (left) + product details (right)</strong></p>
@@ -879,6 +900,212 @@ Right column:
         ["alsoBoughtPrice","Text","Price"],
         ["alsoBoughtBadge","Text","Badge"],
         ["alsoBoughtAddToCart","Button","Add to cart"]
+      ]},
+      { name: "Product Options / Variant Swatches", impl: `<h4>🎨 Implementation — Product Options / Variant Swatches (NEW v0.9.0+)</h4>
+<p><strong>Source: <code>src/public/ProductOptions.js</code></strong></p>
+<p><strong>Layout: Variant selector dropdowns + visual swatch dots + stock status + gallery</strong></p>
+<ul>
+  <li><strong>#sizeDropdown</strong>: Dropdown for size variant selection. Options populated from product variants data.</li>
+  <li><strong>#finishDropdown</strong>: Dropdown for finish/color variant. Updates product image + price on change.</li>
+  <li><strong>#productGallery</strong>: Gallery element showing all product images. Updates when variant changes.</li>
+  <li><strong>#stockStatus</strong>: Text badge — "In Stock" (green), "Low Stock" (coral), or "Out of Stock" (red). Updates on variant selection.</li>
+  <li><strong>#finishSwatches</strong>: Box container for visual color swatch dots. Each dot is a clickable circle with background color from variant data.</li>
+  <li><strong>#swatchSection</strong>: Collapsible Section wrapping the swatch display area.</li>
+  <li><strong>#swatchCount</strong>: Text — "Showing X of Y available fabrics".</li>
+  <li><strong>#swatchViewAll</strong>: Button — opens full swatch gallery overlay.</li>
+  <li><strong>#swatchRequestLink</strong>: Button — links to free swatch request page.</li>
+  <li><strong>Shared elements</strong>: <code>#productPrice</code>, <code>#productComparePrice</code>, <code>#productMainImage</code> are updated on variant change (defined in Product Info section).</li>
+</ul>`, elements: [
+        ["sizeDropdown","Dropdown","Size variant selector"],
+        ["finishDropdown","Dropdown","Finish/color variant selector"],
+        ["productGallery","Gallery","Product image gallery"],
+        ["stockStatus","Text","In Stock / Low Stock / Out of Stock"],
+        ["finishSwatches","Box","Visual swatch dot container"],
+        ["swatchSection","Section","Collapsible swatch section"],
+        ["swatchCount","Text","Showing X of Y available fabrics"],
+        ["swatchViewAll","Button","Opens full swatch gallery"],
+        ["swatchRequestLink","Button","Request free swatch link"]
+      ]},
+      { name: "Financing (PDP)", impl: `<h4>💳 Implementation — Financing (NEW v0.9.0+)</h4>
+<p><strong>Source: <code>src/public/ProductFinancing.js</code></strong></p>
+<p><strong>Layout: Financing teaser + Afterpay message + modal with plan details</strong></p>
+<ul>
+  <li><strong>#financingSection</strong>: Collapsible Section for financing area. Expands if product price qualifies.</li>
+  <li><strong>#financingTeaser</strong>: Text — "As low as $X/mo" calculated from product price.</li>
+  <li><strong>#afterpayMessage</strong>: Text — Afterpay 4-payment breakdown message.</li>
+  <li><strong>#financingLearnMore</strong>: Button — opens financing detail modal overlay.</li>
+  <li><strong>#financingOverlay</strong> + <strong>#financingModal</strong>: <span class="impl-warn">Both initially hidden</span>. Expanded together on "Learn more" click. Uses <code>setupAccessibleDialog()</code> for focus trap + Escape-to-close.</li>
+  <li><strong>#financingClose</strong>: Close Button inside modal.</li>
+  <li><strong>#financingRepeater</strong>: Repeater showing available payment plans (6/12/24 month).</li>
+  <li><strong>#financingTermPills</strong>: Repeater for term length pill selector buttons.</li>
+  <li><strong>#financingDetailRepeater</strong>: Repeater for detailed breakdown view in modal.</li>
+</ul>`, elements: [
+        ["financingSection","Section","Collapsible financing area"],
+        ["financingTeaser","Text","As low as $X/mo teaser"],
+        ["afterpayMessage","Text","Afterpay 4-payment breakdown"],
+        ["financingLearnMore","Button","Opens financing detail overlay"],
+        ["financingOverlay","Box","Modal overlay background"],
+        ["financingModal","Box","Modal content container"],
+        ["financingClose","Button","Close modal X button"],
+        ["financingRepeater","Repeater","Monthly payment options"],
+        ["financingTermPills","Repeater","Term length pill selector"],
+        ["financingDetailRepeater","Repeater","Detailed breakdown in modal"]
+      ]},
+      { name: "Reviews & Ratings", repeater: "reviewsRepeater", impl: `<h4>⭐ Implementation — Reviews & Ratings (NEW v0.9.0+)</h4>
+<p><strong>Source: <code>src/public/ProductReviews.js</code></strong></p>
+<p><strong>Layout: Rating summary + histogram + sortable review list + submission form</strong></p>
+<div class="layer-diagram">STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#reviewsSection — Collapsible reviews area
+  Rating Summary:
+    #reviewsAverage — "4.5" average text
+    #reviewsCount — Total review count
+    #ratingBar1–5 + #ratingCount1–5 — Star distribution
+    #histogramBar1–5 + #histogramPercent1–5 — Visual bars
+  Star Filters:
+    #starFilterAll, #starFilter1–5 — Filter by rating
+  Controls:
+    #reviewsSortDropdown — Sort dropdown
+  #reviewsRepeater — Review cards (paginated)
+    #reviewsNextBtn / #reviewsPrevBtn — Pagination
+    #reviewsPageInfo — "Page X of Y"
+  #reviewsEmptyState — "No reviews yet"
+  #reviewSchemaMarkup — JSON-LD structured data
+  Submission Form:
+    #reviewForm → #reviewSubmitBtn, #reviewRatingInput,
+    #reviewTitleInput, #reviewBodyInput, #reviewPhotoUpload,
+    #reviewPhotoStatus, #reviewPhotoCount, #reviewPhotoPreview</div>
+<ul>
+  <li><strong>#reviewsSection</strong>: Collapsible Section for the entire reviews area.</li>
+  <li><strong>Rating summary</strong>: Average rating text + total count + star distribution bars showing percentage per star level.</li>
+  <li><strong>Star filters</strong>: 6 buttons (All + 1-5 stars) to filter displayed reviews by rating.</li>
+  <li><strong>#reviewsSortDropdown</strong>: Sort reviews by Most Recent, Highest Rated, Lowest Rated, Most Helpful.</li>
+  <li><strong>#reviewsRepeater</strong>: Paginated list of individual review cards.</li>
+  <li><strong>#reviewsEmptyState</strong>: Box shown when no reviews exist yet.</li>
+  <li><strong>#reviewSchemaMarkup</strong>: HtmlComponent for JSON-LD review structured data.</li>
+  <li><strong>Submission form</strong>: Star rating input + title + body + photo upload (up to 3 photos). Form collapses on success.</li>
+  <li><strong>#reviewPhotoPreview</strong>: Repeater showing thumbnail previews of uploaded photos.</li>
+</ul>`, elements: [
+        ["reviewsSection","Section","Collapsible reviews area"],
+        ["reviewsAverage","Text","Average rating (e.g. 4.5)"],
+        ["reviewsCount","Text","Total review count"],
+        ["ratingBar1","Box","1-star distribution bar"],
+        ["ratingBar2","Box","2-star distribution bar"],
+        ["ratingBar3","Box","3-star distribution bar"],
+        ["ratingBar4","Box","4-star distribution bar"],
+        ["ratingBar5","Box","5-star distribution bar"],
+        ["ratingCount1","Text","1-star count"],
+        ["ratingCount2","Text","2-star count"],
+        ["ratingCount3","Text","3-star count"],
+        ["ratingCount4","Text","4-star count"],
+        ["ratingCount5","Text","5-star count"],
+        ["histogramBar1","Box","1-star histogram bar"],
+        ["histogramBar2","Box","2-star histogram bar"],
+        ["histogramBar3","Box","3-star histogram bar"],
+        ["histogramBar4","Box","4-star histogram bar"],
+        ["histogramBar5","Box","5-star histogram bar"],
+        ["histogramPercent1","Text","1-star percentage"],
+        ["histogramPercent2","Text","2-star percentage"],
+        ["histogramPercent3","Text","3-star percentage"],
+        ["histogramPercent4","Text","4-star percentage"],
+        ["histogramPercent5","Text","5-star percentage"],
+        ["reviewsSortDropdown","Dropdown","Sort reviews"],
+        ["reviewsEmptyState","Box","No reviews yet message"],
+        ["reviewSchemaMarkup","HtmlComponent","JSON-LD structured data"],
+        ["reviewsRepeater","Repeater","Individual review cards"],
+        ["reviewsNextBtn","Button","Pagination next"],
+        ["reviewsPrevBtn","Button","Pagination prev"],
+        ["reviewsPageInfo","Text","Page X of Y"],
+        ["starFilterAll","Button","Show all reviews"],
+        ["starFilter1","Button","Filter 1-star"],
+        ["starFilter2","Button","Filter 2-star"],
+        ["starFilter3","Button","Filter 3-star"],
+        ["starFilter4","Button","Filter 4-star"],
+        ["starFilter5","Button","Filter 5-star"],
+        ["reviewSubmitBtn","Button","Open/submit review form"],
+        ["reviewRatingInput","Input","Star rating selector"],
+        ["reviewTitleInput","Input","Review title"],
+        ["reviewBodyInput","TextBox","Review body text"],
+        ["reviewForm","Box","Form container"],
+        ["reviewFormError","Text","Error message"],
+        ["reviewFormSuccess","Text","Success message"],
+        ["reviewPhotoUpload","Button","Upload review photo"],
+        ["reviewPhotoStatus","Text","Upload status label"],
+        ["reviewPhotoCount","Text","X/3 photos counter"],
+        ["reviewPhotoPreview","Repeater","Photo thumbnail previews"]
+      ]},
+      { name: "Size Guide & Room Fit", repeater: "sizeCompareRepeater", impl: `<h4>📐 Implementation — Size Guide & Room Fit (NEW v0.9.0+)</h4>
+<p><strong>Source: <code>src/public/ProductSizeGuide.js</code></strong></p>
+<p><strong>Layout: Dimension data grid + unit toggle + SVG diagrams + room fit checker + size comparison</strong></p>
+<div class="layer-diagram">STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#dimensionSection — Collapsible dimensions area
+  #dimensionTitle — "Dimensions" heading
+  #dimensionPlaceholder — Fallback text
+  #dimensionGrid — Data grid:
+    #unitToggle (Imperial ↔ Metric)
+    #productWeight, #mattressSize
+    #closedDimsLabel + #closedDims
+    #openDimsLabel + #openDims
+    #seatHeight
+  Diagrams:
+    #dimensionDiagramHtml — SVG diagram
+    #diagramPositionToggle — Closed ↔ Open view
+    #dimensionOverlayBtn + #dimensionOverlaySvg
+  Room Fit Checker:
+    #roomFitTitle, inputs, #checkFitBtn
+    #fitResultSection + #fitResultText + #roomFitCallout
+  Shipping: #shippingDimsRow, labels, dims, weight
+  Size Compare: #sizeCompareRepeater</div>
+<ul>
+  <li><strong>#dimensionSection</strong>: Collapsible Section for the dimensions area.</li>
+  <li><strong>#dimensionGrid</strong>: Box containing the measurement data layout.</li>
+  <li><strong>#unitToggle</strong>: Toggle switch — Imperial (inches/lbs) ↔ Metric (cm/kg). All dimension values update on toggle.</li>
+  <li><strong>Dimension fields</strong>: <code>#productWeight</code>, <code>#mattressSize</code>, <code>#closedDims</code>/<code>#openDims</code> (W×D×H), <code>#seatHeight</code> — all set by code from product data.</li>
+  <li><strong>#dimensionDiagramHtml</strong>: HtmlComponent displaying an SVG dimension diagram with measurement callouts.</li>
+  <li><strong>#diagramPositionToggle</strong>: Toggle — switches diagram between closed (sofa) and open (bed) positions.</li>
+  <li><strong>#dimensionOverlayBtn</strong>: Button to toggle dimension overlay on the product image.</li>
+  <li><strong>#dimensionOverlaySvg</strong>: HtmlComponent for SVG overlay rendered on top of the product image.</li>
+  <li><strong>Room Fit Checker</strong>: Input fields for doorway width/height, hallway width, room width/depth. <code>#checkFitBtn</code> calculates whether the product fits through doorways and in the room.</li>
+  <li><strong>#fitResultSection</strong>: Box showing fit result. <code>#fitResultText</code> shows summary. <code>#roomFitCallout</code> for highlighted warnings.</li>
+  <li><strong>Shipping dimensions</strong>: <code>#shippingDimsRow</code> (Box), <code>#shippingDimsLabel</code> (Text), <code>#shippingDims</code> (Text), <code>#shippingWeight</code> (Text) — packaging dimensions for shipping.</li>
+  <li><strong>Size Comparison</strong>: <code>#sizeCompareSection</code> (Section), <code>#sizeCompareTitle</code> (Text), <code>#sizeCompareRepeater</code> (Repeater) — compares dimensions across similar products.</li>
+</ul>`, elements: [
+        ["dimensionSection","Section","Collapsible dimensions area"],
+        ["dimensionTitle","Text","Dimensions heading"],
+        ["dimensionPlaceholder","Text","Coming soon / error fallback"],
+        ["dimensionGrid","Box","Dimension data grid"],
+        ["unitToggle","Toggle","Imperial / Metric switch"],
+        ["productWeight","Text","Weight: X lbs"],
+        ["mattressSize","Text","Mattress Size: Full/Queen"],
+        ["closedDimsLabel","Text","Closed (Sofa Position)"],
+        ["closedDims","Text","W x D x H closed"],
+        ["openDimsLabel","Text","Open (Bed Position)"],
+        ["openDims","Text","W x D x H open"],
+        ["seatHeight","Text","Seat height measurement"],
+        ["dimensionDiagramHtml","HtmlComponent","SVG dimension diagram"],
+        ["diagramPositionToggle","Toggle","Closed / Open diagram view"],
+        ["dimensionOverlayBtn","Button","Toggle dimension overlay"],
+        ["dimensionOverlaySvg","HtmlComponent","SVG overlay on product image"],
+        ["roomFitTitle","Text","Will It Fit? heading"],
+        ["doorwayWidth","Input","Doorway width (inches)"],
+        ["doorwayHeight","Input","Doorway height (inches)"],
+        ["hallwayWidth","Input","Hallway width (inches)"],
+        ["roomWidth","Input","Room width (inches)"],
+        ["roomDepth","Input","Room depth (inches)"],
+        ["checkFitBtn","Button","Check Fit action"],
+        ["fitResultText","Text","Fit result summary"],
+        ["fitResultSection","Box","Result container"],
+        ["roomFitCallout","Box","Highlighted callout"],
+        ["shippingDimsRow","Box","Shipping dimensions row"],
+        ["shippingDimsLabel","Text","Shipping dims label"],
+        ["shippingDims","Text","Shipping dimensions"],
+        ["shippingWeight","Text","Shipping weight"],
+        ["sizeCompareSection","Section","Size comparison section"],
+        ["sizeCompareTitle","Text","Comparison heading"],
+        ["sizeCompareRepeater","Repeater","Size comparison items"],
+        ["sizeComparisonTitle","Text","Comparison title"],
+        ["sizeComparisonVisual","HtmlComponent","Size comparison visual"]
       ]}
     ]
   },
