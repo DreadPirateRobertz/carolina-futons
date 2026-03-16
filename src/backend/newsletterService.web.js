@@ -321,12 +321,15 @@ export const captureExitIntentEmail = webMethod(
         return { success: false, message: 'Invalid email format' };
       }
 
-      // Check if already subscribed — skip EmailQueue if so
-      const existing = await wixData.query('NewsletterSubscribers')
-        .eq('email', cleaned)
+      // Dedup against EmailQueue (not NewsletterSubscribers, since subscribeToNewsletter
+      // inserts there first in the submitExitCapture flow)
+      const alreadyQueued = await wixData.query('EmailQueue')
+        .eq('recipientEmail', cleaned)
+        .eq('sequenceType', 'welcome')
+        .eq('sequenceStep', 1)
         .find();
 
-      if (existing.items.length > 0) {
+      if (alreadyQueued.items.length > 0) {
         return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
       }
 
@@ -349,7 +352,7 @@ export const captureExitIntentEmail = webMethod(
           sentAt: null,
           attempt: 0,
           lastError: '',
-          createdAt: new Date(),
+          createdAt: now,
         });
       }
 
