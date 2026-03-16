@@ -59,6 +59,9 @@ import {
   buildConfirmationData,
   getDeliveryTypeLabel,
   getDeliveryTypeDescription,
+  validateAddressForShipping,
+  isOversizedItem,
+  getFreightMessage,
   DELIVERY_TYPES,
 } from '../src/public/schedulerHelpers.js';
 
@@ -259,5 +262,213 @@ describe('DELIVERY_TYPES', () => {
       expect(type.label).toBeTruthy();
       expect(type.description).toBeTruthy();
     }
+  });
+});
+
+// ── validateAddressForShipping ──────────────────────────────────────
+
+describe('validateAddressForShipping', () => {
+  beforeEach(async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    validateAddress.mockReset();
+    validateAddress.mockResolvedValue({ valid: true, candidates: [] });
+  });
+
+  it('returns valid for a correct address', async () => {
+    const result = await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('calls UPS validateAddress with address fields', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      city: 'Hendersonville',
+      state: 'NC',
+      postalCode: '28792',
+      country: 'US',
+    });
+    expect(validateAddress).toHaveBeenCalledWith({
+      addressLine1: '824 Locust St',
+      city: 'Hendersonville',
+      state: 'NC',
+      postalCode: '28792',
+      country: 'US',
+    });
+  });
+
+  it('defaults country to US when not provided', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(validateAddress).toHaveBeenCalledWith(
+      expect.objectContaining({ country: 'US' })
+    );
+  });
+
+  it('rejects null input', async () => {
+    const result = await validateAddressForShipping(null);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('address is required');
+  });
+
+  it('rejects non-object input', async () => {
+    const result = await validateAddressForShipping('123 Main St');
+    expect(result.valid).toBe(false);
+  });
+
+  it('rejects missing addressLine1', async () => {
+    const result = await validateAddressForShipping({ postalCode: '28792' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Street address');
+  });
+
+  it('rejects empty addressLine1', async () => {
+    const result = await validateAddressForShipping({ addressLine1: '  ', postalCode: '28792' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Street address');
+  });
+
+  it('rejects missing postalCode', async () => {
+    const result = await validateAddressForShipping({ addressLine1: '824 Locust St' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Zip');
+  });
+
+  it('rejects empty postalCode', async () => {
+    const result = await validateAddressForShipping({ addressLine1: '824 Locust St', postalCode: '  ' });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('Zip');
+  });
+
+  it('returns candidates when address is ambiguous', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    validateAddress.mockResolvedValueOnce({
+      valid: false,
+      ambiguous: true,
+      candidates: [
+        { addressLine1: '824 Locust St Ste 200', postalCode: '28792' },
+        { addressLine1: '824 Locust St Ste 100', postalCode: '28792' },
+      ],
+    });
+    const result = await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.candidates).toHaveLength(2);
+  });
+
+  it('returns generic error when UPS says invalid (no candidates)', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    validateAddress.mockResolvedValueOnce({ valid: false });
+    const result = await validateAddressForShipping({
+      addressLine1: '999 Nonexistent Rd',
+      postalCode: '00000',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('could not be verified');
+  });
+
+  it('fails open when UPS service is unavailable', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    validateAddress.mockResolvedValueOnce({ unavailable: true });
+    const result = await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(result.valid).toBe(true);
+    expect(result.serviceUnavailable).toBe(true);
+  });
+
+  it('fails open on network error (exception)', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    validateAddress.mockRejectedValueOnce(new Error('Network timeout'));
+    const result = await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(result.valid).toBe(true);
+    expect(result.serviceUnavailable).toBe(true);
+  });
+
+  it('defaults city and state to empty string when not provided', async () => {
+    const { validateAddress } = await import('backend/ups-shipping.web');
+    await validateAddressForShipping({
+      addressLine1: '824 Locust St',
+      postalCode: '28792',
+    });
+    expect(validateAddress).toHaveBeenCalledWith(
+      expect.objectContaining({ city: '', state: '' })
+    );
+  });
+});
+
+// ── isOversizedItem ──────────────────────────────────────────────────
+
+describe('isOversizedItem', () => {
+  it('returns false for null/undefined', () => {
+    expect(isOversizedItem(null)).toBe(false);
+    expect(isOversizedItem(undefined)).toBe(false);
+  });
+
+  it('returns false for normal weight item', () => {
+    expect(isOversizedItem({ name: 'Futon Frame', weight: 80 })).toBe(false);
+  });
+
+  it('returns true for item at weight threshold (150 lbs)', () => {
+    expect(isOversizedItem({ name: 'Futon Frame', weight: 150 })).toBe(true);
+  });
+
+  it('returns true for item over weight threshold', () => {
+    expect(isOversizedItem({ name: 'Sofa Bed', weight: 200 })).toBe(true);
+  });
+
+  it('returns true for Murphy bed by name (keyword match)', () => {
+    expect(isOversizedItem({ name: 'Murphy Wall Bed - Queen', weight: 50 })).toBe(true);
+  });
+
+  it('returns true for cabinet bed by name (keyword match)', () => {
+    expect(isOversizedItem({ name: 'Cabinet Bed - Full', weight: 50 })).toBe(true);
+  });
+
+  it('keyword match is case-insensitive', () => {
+    expect(isOversizedItem({ name: 'MURPHY BED QUEEN', weight: 10 })).toBe(true);
+    expect(isOversizedItem({ name: 'Cabinet BED', weight: 10 })).toBe(true);
+  });
+
+  it('returns false when weight is zero or missing', () => {
+    expect(isOversizedItem({ name: 'Futon Cover' })).toBe(false);
+    expect(isOversizedItem({ name: 'Futon Cover', weight: 0 })).toBe(false);
+  });
+
+  it('handles non-numeric weight gracefully', () => {
+    expect(isOversizedItem({ name: 'Futon Cover', weight: 'heavy' })).toBe(false);
+  });
+});
+
+// ── getFreightMessage ─────────────────────────────────────────────────
+
+describe('getFreightMessage', () => {
+  it('returns freight message when hasOversized is true', () => {
+    const msg = getFreightMessage(true);
+    expect(msg).toContain('oversized');
+    expect(msg).toContain('freight');
+    expect(msg).toContain('White Glove');
+  });
+
+  it('returns empty string when hasOversized is false', () => {
+    expect(getFreightMessage(false)).toBe('');
+  });
+
+  it('returns empty string for falsy values', () => {
+    expect(getFreightMessage(null)).toBe('');
+    expect(getFreightMessage(undefined)).toBe('');
+    expect(getFreightMessage(0)).toBe('');
   });
 });
