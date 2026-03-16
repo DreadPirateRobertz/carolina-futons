@@ -110,6 +110,16 @@ describe('formatSlotDate', () => {
     expect(formatSlotDate(null)).toBe('');
     expect(formatSlotDate(undefined)).toBe('');
   });
+
+  it('returns empty string when toLocaleDateString throws', () => {
+    const orig = Date.prototype.toLocaleDateString;
+    Date.prototype.toLocaleDateString = () => { throw new Error('locale fail'); };
+    try {
+      expect(formatSlotDate('2026-03-04')).toBe('');
+    } finally {
+      Date.prototype.toLocaleDateString = orig;
+    }
+  });
 });
 
 // ── validateSchedulingForm ────────────────────────────────────────────
@@ -268,45 +278,29 @@ describe('DELIVERY_TYPES', () => {
 // ── validateAddressForShipping ──────────────────────────────────────
 
 describe('validateAddressForShipping', () => {
+  const validAddress = { addressLine1: '824 Locust St', postalCode: '28792' };
+  let validateAddressMock;
+
   beforeEach(async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    validateAddress.mockReset();
-    validateAddress.mockResolvedValue({ valid: true, candidates: [] });
+    ({ validateAddress: validateAddressMock } = await import('backend/ups-shipping.web'));
+    validateAddressMock.mockReset();
+    validateAddressMock.mockResolvedValue({ valid: true, candidates: [] });
   });
 
   it('returns valid for a correct address', async () => {
-    const result = await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
+    const result = await validateAddressForShipping(validAddress);
     expect(result.valid).toBe(true);
   });
 
   it('calls UPS validateAddress with address fields', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      city: 'Hendersonville',
-      state: 'NC',
-      postalCode: '28792',
-      country: 'US',
-    });
-    expect(validateAddress).toHaveBeenCalledWith({
-      addressLine1: '824 Locust St',
-      city: 'Hendersonville',
-      state: 'NC',
-      postalCode: '28792',
-      country: 'US',
-    });
+    const fullAddress = { ...validAddress, city: 'Hendersonville', state: 'NC', country: 'US' };
+    await validateAddressForShipping(fullAddress);
+    expect(validateAddressMock).toHaveBeenCalledWith(fullAddress);
   });
 
   it('defaults country to US when not provided', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
-    expect(validateAddress).toHaveBeenCalledWith(
+    await validateAddressForShipping(validAddress);
+    expect(validateAddressMock).toHaveBeenCalledWith(
       expect.objectContaining({ country: 'US' })
     );
   });
@@ -320,6 +314,12 @@ describe('validateAddressForShipping', () => {
   it('rejects non-object input', async () => {
     const result = await validateAddressForShipping('123 Main St');
     expect(result.valid).toBe(false);
+  });
+
+  it('rejects undefined input', async () => {
+    const result = await validateAddressForShipping(undefined);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain('address is required');
   });
 
   it('rejects missing addressLine1', async () => {
@@ -347,8 +347,7 @@ describe('validateAddressForShipping', () => {
   });
 
   it('returns candidates when address is ambiguous', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    validateAddress.mockResolvedValueOnce({
+    validateAddressMock.mockResolvedValueOnce({
       valid: false,
       ambiguous: true,
       candidates: [
@@ -356,17 +355,13 @@ describe('validateAddressForShipping', () => {
         { addressLine1: '824 Locust St Ste 100', postalCode: '28792' },
       ],
     });
-    const result = await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
+    const result = await validateAddressForShipping(validAddress);
     expect(result.valid).toBe(false);
     expect(result.candidates).toHaveLength(2);
   });
 
   it('returns generic error when UPS says invalid (no candidates)', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    validateAddress.mockResolvedValueOnce({ valid: false });
+    validateAddressMock.mockResolvedValueOnce({ valid: false });
     const result = await validateAddressForShipping({
       addressLine1: '999 Nonexistent Rd',
       postalCode: '00000',
@@ -376,34 +371,22 @@ describe('validateAddressForShipping', () => {
   });
 
   it('fails open when UPS service is unavailable', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    validateAddress.mockResolvedValueOnce({ unavailable: true });
-    const result = await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
+    validateAddressMock.mockResolvedValueOnce({ unavailable: true });
+    const result = await validateAddressForShipping(validAddress);
     expect(result.valid).toBe(true);
     expect(result.serviceUnavailable).toBe(true);
   });
 
   it('fails open on network error (exception)', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    validateAddress.mockRejectedValueOnce(new Error('Network timeout'));
-    const result = await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
+    validateAddressMock.mockRejectedValueOnce(new Error('Network timeout'));
+    const result = await validateAddressForShipping(validAddress);
     expect(result.valid).toBe(true);
     expect(result.serviceUnavailable).toBe(true);
   });
 
   it('defaults city and state to empty string when not provided', async () => {
-    const { validateAddress } = await import('backend/ups-shipping.web');
-    await validateAddressForShipping({
-      addressLine1: '824 Locust St',
-      postalCode: '28792',
-    });
-    expect(validateAddress).toHaveBeenCalledWith(
+    await validateAddressForShipping(validAddress);
+    expect(validateAddressMock).toHaveBeenCalledWith(
       expect.objectContaining({ city: '', state: '' })
     );
   });
@@ -419,6 +402,10 @@ describe('isOversizedItem', () => {
 
   it('returns false for normal weight item', () => {
     expect(isOversizedItem({ name: 'Futon Frame', weight: 80 })).toBe(false);
+  });
+
+  it('returns false for item just below weight threshold (149 lbs)', () => {
+    expect(isOversizedItem({ name: 'Futon Frame', weight: 149 })).toBe(false);
   });
 
   it('returns true for item at weight threshold (150 lbs)', () => {
@@ -449,6 +436,15 @@ describe('isOversizedItem', () => {
 
   it('handles non-numeric weight gracefully', () => {
     expect(isOversizedItem({ name: 'Futon Cover', weight: 'heavy' })).toBe(false);
+  });
+
+  it('returns false for item with no name field', () => {
+    expect(isOversizedItem({ weight: 200 })).toBe(true);
+    expect(isOversizedItem({ weight: 80 })).toBe(false);
+  });
+
+  it('does not match partial keyword (cabinet alone)', () => {
+    expect(isOversizedItem({ name: 'Cabinet Storage Unit', weight: 50 })).toBe(false);
   });
 });
 
