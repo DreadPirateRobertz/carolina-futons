@@ -75,6 +75,11 @@ $w.onReady(async function () {
         productName = $w('#productTitle')?.text || '';
       } catch (e) {}
       initLiveChat($w, { page, pageUrl, productName });
+
+      // Proactive chat triggers — complement live chat with context-aware prompts
+      import('public/proactiveChatTriggers.js').then(({ initProactiveTriggers }) => {
+        initProactiveTriggers($w, { page, pageUrl });
+      }).catch(err => console.error('[masterPage] ProactiveChatTriggers init failed:', err.message));
     }).catch(err => console.error('[masterPage] LiveChat init failed:', err.message));
   }, 2000);
 

@@ -573,6 +573,13 @@ function showNoResults(query) {
     announce($w, `No results found for "${query}". Try a different search.`);
   } catch (e) {}
 
+  // Render branded empty state illustration via emptyStates module
+  try {
+    import('public/emptyStates.js').then(({ renderEmptyState }) => {
+      renderEmptyState($w, 'searchNoResults', { query });
+    }).catch(() => {});
+  } catch (e) {}
+
   try { $w('#noResultsText').text = 'Try one of these popular searches:'; } catch (e) {}
   loadPopularChips();
 }

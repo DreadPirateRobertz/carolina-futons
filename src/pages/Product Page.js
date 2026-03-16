@@ -168,6 +168,8 @@ async function initProductPage() {
         m.initDimensionDiagram($w, state);
         m.initRoomFitCallout($w, state);
       }, critical: false },
+      // Full swatch request form flow (name, email, address, swatch selection)
+      { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {

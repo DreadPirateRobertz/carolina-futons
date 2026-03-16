@@ -114,6 +114,8 @@ $w.onReady(async function () {
     { name: 'categorySchema', init: () => injectCategorySchema(), critical: false },
     { name: 'categorySwipe', init: () => initCategorySwipe(currentPath), critical: false },
     { name: 'backToTop', init: () => initBackToTop($w), critical: false },
+    // Category page design token polish (hero, filters, sort, empty state styling)
+    { name: 'categoryPagePolish', init: async () => { const m = await import('public/CategoryPagePolish.js'); m.applyCategoryPageTokens($w); }, critical: false },
   ];
 
   const { critical: criticalResults } = await prioritizeSections(sections, {

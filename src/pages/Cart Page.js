@@ -47,6 +47,12 @@ async function initCartPage() {
     // Empty cart state
     if (!cart || !cart.lineItems || cart.lineItems.length === 0) {
       showEmptyCart();
+      // Empty cart illustration (Figma skyline variant)
+      try {
+        import('public/CartIllustrationsFigma.js').then(({ initEmptyCartIllustration }) => {
+          initEmptyCartIllustration($w);
+        }).catch(() => {});
+      } catch (e) {}
       trackEvent('page_view', { page: 'cart', empty: true });
       initBackToTop($w);
       return;
@@ -82,6 +88,13 @@ async function initCartPage() {
     });
     initCartListeners();
     initBackToTop($w);
+
+    // Cart illustrations — skyline SVG border + checkout progress bar
+    try {
+      import('public/CartIllustrationsFigma.js').then(({ initCartSkyline, initEmptyCartIllustration }) => {
+        initCartSkyline($w, {});
+      }).catch(() => {});
+    } catch (e) {}
   } catch (err) {
     console.error('Error initializing cart page:', err);
   }
