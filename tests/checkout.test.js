@@ -604,3 +604,231 @@ describe('cleanup', () => {
     expect(wixWindow.onBeforeUnload).toHaveBeenCalled();
   });
 });
+
+// ── Checkout Progress ARIA ──────────────────────────────────────────
+
+describe('checkout progress ARIA', () => {
+  it('sets navigation role on progress nav', async () => {
+    await loadPage();
+    expect(getEl('#checkoutProgressNav').accessibility.role).toBe('navigation');
+  });
+
+  it('sets ariaLabel on progress nav', async () => {
+    await loadPage();
+    expect(getEl('#checkoutProgressNav').accessibility.ariaLabel).toBe('Checkout progress');
+  });
+
+  it('sets active step styling for first step', async () => {
+    await loadPage();
+    const repeater = getEl('#checkoutProgressRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    // Step 1 at index 0, activeIndex 0 → state 'active'
+    itemReadyFn($item, { id: 'info', number: 1, label: 'Information' });
+    // Active step should have mountainBlue color
+    expect($item('#progressStepDot').style.backgroundColor).toBeTruthy();
+  });
+});
+
+// ── Trust Signals ARIA ──────────────────────────────────────────────
+
+describe('trust signals ARIA', () => {
+  it('sets ariaHidden on trust icons', async () => {
+    await loadPage();
+    const repeater = getEl('#trustRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { text: 'Secure SSL Checkout', icon: 'lock' });
+    expect($item('#trustIcon').accessibility.ariaHidden).toBe(true);
+  });
+});
+
+// ── Order Notes ARIA ────────────────────────────────────────────────
+
+describe('order notes ARIA', () => {
+  it('sets ariaLabel on notes toggle', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesToggle').accessibility.ariaLabel).toBe('Toggle order notes');
+  });
+
+  it('sets ariaExpanded false initially', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesToggle').accessibility.ariaExpanded).toBe(false);
+  });
+
+  it('sets ariaLabel on notes field', async () => {
+    await loadPage();
+    expect(getEl('#orderNotesField').accessibility.ariaLabel).toBe('Special delivery instructions');
+  });
+
+  it('updates ariaExpanded on toggle', async () => {
+    await loadPage();
+    const handler = getEl('#orderNotesToggle').onClick.mock.calls[0][0];
+    handler(); // expand
+    expect(getEl('#orderNotesToggle').accessibility.ariaExpanded).toBe(true);
+    handler(); // collapse
+    expect(getEl('#orderNotesToggle').accessibility.ariaExpanded).toBe(false);
+  });
+});
+
+// ── Payment Options Details ─────────────────────────────────────────
+
+describe('payment options details', () => {
+  it('renders card brands for credit card method', async () => {
+    await loadPage();
+    const repeater = getEl('#paymentMethodsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { id: 'credit-card', name: 'Credit Card', brands: ['Visa', 'Mastercard'] });
+    expect($item('#paymentBrands').text).toBe('Visa · Mastercard');
+    expect($item('#paymentBrands').show).toHaveBeenCalled();
+  });
+
+  it('sets afterpay message text', async () => {
+    await loadPage();
+    expect(getEl('#afterpayMessage').text).toBe('Pay in 4');
+  });
+
+  it('sets shipping message', async () => {
+    await loadPage();
+    expect(getEl('#checkoutShippingMessage').text).toBe('Free shipping on orders $999+');
+  });
+});
+
+// ── Shipping Options ARIA ───────────────────────────────────────────
+
+describe('shipping options ARIA', () => {
+  it('sets ariaLabel on shipping radio', async () => {
+    await loadPage();
+    const repeater = getEl('#shippingOptionsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockShippingOptions.options[0]);
+    expect($item('#shippingOptionRadio').accessibility.ariaLabel).toContain('Standard');
+  });
+
+  it('renders express shipping price', async () => {
+    await loadPage();
+    const repeater = getEl('#shippingOptionsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockShippingOptions.options[1]);
+    expect($item('#shippingOptionPrice').text).toBe('$49.99');
+    expect($item('#shippingOptionDays').text).toBe('2–3 business days');
+  });
+});
+
+// ── Address Validation Inline ───────────────────────────────────────
+
+describe('address validation inline', () => {
+  it('sets ariaRequired on address fields', async () => {
+    await loadPage();
+    expect(getEl('#addressFullName').accessibility.ariaRequired).toBe(true);
+    expect(getEl('#addressLine1').accessibility.ariaRequired).toBe(true);
+    expect(getEl('#addressCity').accessibility.ariaRequired).toBe(true);
+  });
+
+  it('wires onInput for real-time validation', async () => {
+    await loadPage();
+    expect(getEl('#addressFullName').onInput).toHaveBeenCalled();
+    expect(getEl('#addressZip').onInput).toHaveBeenCalled();
+  });
+
+  it('wires onBlur for lazy validation', async () => {
+    await loadPage();
+    expect(getEl('#addressFullName').onBlur).toHaveBeenCalled();
+    expect(getEl('#addressState').onBlur).toHaveBeenCalled();
+  });
+
+  it('hides inline error elements initially', async () => {
+    await loadPage();
+    expect(getEl('#addressFullNameError').hide).toHaveBeenCalled();
+    expect(getEl('#addressLine1Error').hide).toHaveBeenCalled();
+  });
+
+  it('sets role=alert on error elements', async () => {
+    await loadPage();
+    expect(getEl('#addressFullNameError').accessibility.role).toBe('alert');
+  });
+});
+
+// ── Delivery Estimate ARIA ──────────────────────────────────────────
+
+describe('delivery estimate ARIA', () => {
+  it('sets role=status on delivery estimate', async () => {
+    await loadPage();
+    expect(getEl('#checkoutDeliveryEstimate').accessibility.role).toBe('status');
+  });
+
+  it('sets ariaLabel matching text', async () => {
+    await loadPage();
+    const el = getEl('#checkoutDeliveryEstimate');
+    expect(el.accessibility.ariaLabel).toContain('Estimated delivery');
+    expect(el.accessibility.ariaLabel).toBe(el.text);
+  });
+});
+
+// ── Order Summary Sidebar Details ───────────────────────────────────
+
+describe('order summary sidebar details', () => {
+  it('sets bold fontWeight on total', async () => {
+    await loadPage();
+    expect(getEl('#orderSummaryTotal').style.fontWeight).toBe('bold');
+  });
+
+  it('sets ariaLabel on sidebar with item count and total', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySidebar').accessibility.ariaLabel).toContain('3 items');
+    expect(getEl('#orderSummarySidebar').accessibility.ariaLabel).toContain('$855.97');
+  });
+
+  it('hides savings when zero', async () => {
+    await loadPage();
+    expect(getEl('#orderSummarySavings').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Express Checkout Details ────────────────────────────────────────
+
+describe('express checkout details', () => {
+  it('sets ariaLabel on express checkout button', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutBtn').accessibility.ariaLabel).toContain('Express checkout');
+  });
+
+  it('styles button with Coral CTA colors', async () => {
+    await loadPage();
+    expect(getEl('#expressCheckoutBtn').style.backgroundColor).toBe('#E07A5F');
+    expect(getEl('#expressCheckoutBtn').style.color).toBe('#FFFFFF');
+  });
+});
+
+// ── Store Credit ────────────────────────────────────────────────────
+
+describe('store credit', () => {
+  it('calls initCheckoutStoreCredit', async () => {
+    await loadPage();
+    const { initCheckoutStoreCredit } = await import('public/storeCreditHelpers.js');
+    expect(initCheckoutStoreCredit).toHaveBeenCalled();
+  });
+});
