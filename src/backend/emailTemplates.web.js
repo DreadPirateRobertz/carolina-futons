@@ -369,5 +369,176 @@ export const queuePromotionalEmail = webMethod(
   }
 );
 
+// ── Category Display Labels ─────────────────────────────────────────
+// Maps catalog-MASTER.json category slugs to human-readable labels.
+
+const CATEGORY_LABELS = {
+  'futon-frames': 'Futon Frames',
+  'murphy-cabinet-beds': 'Murphy Cabinet Beds',
+  'platform-beds': 'Platform Beds',
+  'mattresses': 'Mattresses',
+  'casegoods-accessories': 'Casegoods & Accessories',
+  'covers': 'Futon Covers',
+  'outdoor-furniture': 'Outdoor Furniture',
+  'pillows-702': 'Pillows',
+  'log-frames': 'Log Futon Frames',
+  'wall-hugger-frames': 'Wall Hugger Frames',
+  'front-loading-nesting': 'Front-Loading & Nesting Frames',
+};
+
+// ── Product Block Helpers ───────────────────────────────────────────
+
+/**
+ * Build an HTML block for a single product card in an email template.
+ * Uses inline styles for email client compatibility.
+ *
+ * @param {Object} product - Product object from catalog-MASTER.json
+ * @param {string} product.name - Product name
+ * @param {number|null} product.price - Price in dollars
+ * @param {string} product.url - Full product URL
+ * @param {string[]} product.images - Array of image URLs
+ * @returns {string} HTML string for the product card
+ */
+export function buildProductBlock(product) {
+  if (!product || !product.name) return '';
+
+  const name = sanitize(product.name, 200);
+  const price = product.price != null ? `$${Number(product.price).toFixed(2)}` : '';
+  const url = product.url || `${SITE_URL}/product-page/${product.slug || ''}`;
+  const image = (product.images && product.images[0]) || '';
+
+  const imageHtml = image
+    ? `<img src="${sanitize(image, 500)}" alt="${name}" width="200" style="display:block;border-radius:4px;max-width:100%;" />`
+    : '';
+
+  return `<table cellpadding="0" cellspacing="0" border="0" width="200" style="display:inline-block;vertical-align:top;margin:8px;text-align:center;">
+  <tr><td>${imageHtml}</td></tr>
+  <tr><td style="padding:8px 4px 2px;font-family:Arial,sans-serif;font-size:14px;color:#333;">${name}</td></tr>
+  ${price ? `<tr><td style="padding:2px 4px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#1a1a1a;">${price}</td></tr>` : ''}
+  <tr><td style="padding:6px 4px;"><a href="${sanitize(url, 500)}" style="display:inline-block;padding:8px 16px;background-color:#8B4513;color:#fff;text-decoration:none;border-radius:4px;font-family:Arial,sans-serif;font-size:13px;">Shop Now</a></td></tr>
+</table>`;
+}
+
+/**
+ * Generate a "New Arrivals" email section from catalog products.
+ * Selects the most recently added products (by array order — newest last in catalog).
+ *
+ * @function getNewArrivalsSection
+ * @param {Array<Object>} products - Products array from catalog-MASTER.json
+ * @param {number} [limit=4] - Max products to feature
+ * @returns {Promise<string>} HTML section string
+ * @permission Anyone
+ */
+export const getNewArrivalsSection = webMethod(
+  Permissions.Anyone,
+  async (products, limit = 4) => {
+    if (!Array.isArray(products) || products.length === 0) return '';
+
+    const cap = Math.min(Math.max(1, limit), 8);
+    // Newest products are at the end of the catalog array
+    const arrivals = products
+      .filter(p => p.name && p.price != null)
+      .slice(-cap)
+      .reverse();
+
+    if (arrivals.length === 0) return '';
+
+    const blocks = arrivals.map(p => buildProductBlock(p)).join('\n');
+
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">New Arrivals</td></tr>
+  <tr><td style="text-align:center;">${blocks}</td></tr>
+  <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">View all products →</a></td></tr>
+</table>`;
+  }
+);
+
+/**
+ * Generate a "Category Spotlight" email section featuring products from a specific category.
+ *
+ * @function getCategorySpotlightSection
+ * @param {Array<Object>} products - Products array from catalog-MASTER.json
+ * @param {string} categorySlug - Category slug (e.g., 'futon-frames', 'murphy-cabinet-beds')
+ * @param {number} [limit=4] - Max products to feature
+ * @returns {Promise<string>} HTML section string
+ * @permission Anyone
+ */
+export const getCategorySpotlightSection = webMethod(
+  Permissions.Anyone,
+  async (products, categorySlug, limit = 4) => {
+    if (!Array.isArray(products) || !categorySlug) return '';
+
+    const cleanSlug = sanitize(categorySlug, 100);
+    const label = CATEGORY_LABELS[cleanSlug] || cleanSlug;
+    const cap = Math.min(Math.max(1, limit), 8);
+
+    const categoryProducts = products
+      .filter(p => p.category === cleanSlug && p.name && p.price != null)
+      .slice(0, cap);
+
+    if (categoryProducts.length === 0) return '';
+
+    const blocks = categoryProducts.map(p => buildProductBlock(p)).join('\n');
+
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">Spotlight: ${sanitize(label, 100)}</td></tr>
+  <tr><td style="text-align:center;">${blocks}</td></tr>
+  <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">Browse all ${sanitize(label, 100)} →</a></td></tr>
+</table>`;
+  }
+);
+
+/**
+ * Generate a product recommendations block for email templates.
+ * Picks a diverse set of products across categories.
+ *
+ * @function getProductRecommendationBlock
+ * @param {Array<Object>} products - Products array from catalog-MASTER.json
+ * @param {number} [limit=4] - Max products to feature
+ * @returns {Promise<string>} HTML section string
+ * @permission Anyone
+ */
+export const getProductRecommendationBlock = webMethod(
+  Permissions.Anyone,
+  async (products, limit = 4) => {
+    if (!Array.isArray(products) || products.length === 0) return '';
+
+    const cap = Math.min(Math.max(1, limit), 8);
+    const eligible = products.filter(p => p.name && p.price != null && p.images && p.images.length > 0);
+    if (eligible.length === 0) return '';
+
+    // Pick one product per category for diversity, round-robin
+    const byCategory = {};
+    for (const p of eligible) {
+      if (!byCategory[p.category]) byCategory[p.category] = [];
+      byCategory[p.category].push(p);
+    }
+
+    const picks = [];
+    const cats = Object.keys(byCategory);
+    let catIdx = 0;
+    while (picks.length < cap && picks.length < eligible.length) {
+      const cat = cats[catIdx % cats.length];
+      const catProducts = byCategory[cat];
+      const pickIdx = Math.floor(picks.length / cats.length);
+      if (pickIdx < catProducts.length) {
+        picks.push(catProducts[pickIdx]);
+      }
+      catIdx++;
+      // Safety: break if we've cycled through all categories without adding
+      if (catIdx > cats.length * cap) break;
+    }
+
+    const blocks = picks.map(p => buildProductBlock(p)).join('\n');
+
+    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">Recommended for You</td></tr>
+  <tr><td style="text-align:center;">${blocks}</td></tr>
+  <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">Explore our full collection →</a></td></tr>
+</table>`;
+  }
+);
+
 // Export for testing
 export const _TEMPLATE_REGISTRY = TEMPLATE_REGISTRY;
+export const _CATEGORY_LABELS = CATEGORY_LABELS;
