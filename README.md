@@ -1,5 +1,7 @@
 # Carolina Futons
 
+[![codecov](https://codecov.io/gh/DreadPirateRobertz/carolina-futons/graph/badge.svg)](https://codecov.io/gh/DreadPirateRobertz/carolina-futons)
+
 E-commerce website for Carolina Futons, built on the Wix Velo platform. Handcrafted mountain furniture with a Blue Ridge aesthetic — futons, sofas, mattresses, and accessories.
 
 Live site: [carolinafutons.com](https://www.carolinafutons.com)
@@ -8,7 +10,7 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)
 
 **v0.5.0 deployed** to stage3-velo. v0.4.1 released (security hardening). v0.4.0 released (color scheme shift). Running on My Site 3 (Wix Studio Furniture Store #3563 template).
 
-- 12,993 tests passing across 331 test files
+- 16,658 tests passing across 409 test files
 - 191 backend files, 41 pages, 232 public utilities
 - 71.9% element connectivity (595/827 IDs wired)
 - Category card photos now set in Wix Dashboard
