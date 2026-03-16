@@ -44,6 +44,7 @@ function createMockElement() {
     getCurrentItem: vi.fn(() => futonFrame),
     onCurrentIndexChanged: vi.fn(),
     forEachItem: vi.fn(),
+    focus: vi.fn(),
     accessibility: {},
   };
 }
@@ -656,6 +657,246 @@ describe('ProductOptions', () => {
       });
       await initFinishSwatches($w, state);
       expect($w('#finishDropdown').value).toBe('Espresso');
+    });
+  });
+
+  describe('initVariantSelector — dataset callback', () => {
+    it('updates state.product when dataset index changes', () => {
+      initVariantSelector($w, state);
+      const callback = $w('#productDataset').onCurrentIndexChanged.mock.calls[0][0];
+      const updatedProduct = { _id: 'prod-2', name: 'Updated Futon' };
+      $w('#productDataset').getCurrentItem = vi.fn(() => updatedProduct);
+      callback();
+      expect(state.product).toBe(updatedProduct);
+    });
+
+    it('does not overwrite state.product when getCurrentItem returns null', () => {
+      initVariantSelector($w, state);
+      const callback = $w('#productDataset').onCurrentIndexChanged.mock.calls[0][0];
+      const original = state.product;
+      $w('#productDataset').getCurrentItem = vi.fn(() => null);
+      callback();
+      expect(state.product).toBe(original);
+    });
+  });
+
+  describe('renderSwatchGrid — onItemReady behavior', () => {
+    let gridItemReadyCallback;
+
+    beforeEach(async () => {
+      await initSwatchSelector($w, state);
+      gridItemReadyCallback = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+    });
+
+    it('sets swatch thumbnail image and alt text', () => {
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', swatchImage: 'https://example.com/sw.jpg' });
+      expect($item('#swatchThumb').src).toBe('https://example.com/sw.jpg');
+      expect($item('#swatchThumb').alt).toBe('Ocean Blue');
+    });
+
+    it('falls back to colorHex background when no swatchImage', () => {
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-2', swatchName: 'Forest', colorHex: '#228B22' });
+      expect($item('#swatchThumb').style.backgroundColor).toBe('#228B22');
+    });
+
+    it('sets swatch label text', () => {
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue' });
+      expect($item('#swatchLabel').text).toBe('Ocean Blue');
+    });
+
+    it('registers click handler on swatch thumb', () => {
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
+      expect($item('#swatchThumb').onClick).toHaveBeenCalled();
+    });
+
+    it('click selects the swatch and updates state', async () => {
+      const $item = create$w();
+      $w('#finishDropdown').options = [];
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
+      const clickHandler = $item('#swatchThumb').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(state.selectedSwatchId).toBe('sw-1');
+    });
+
+    it('highlights selected swatch with mountainBlue border', () => {
+      state.selectedSwatchId = 'sw-1';
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue' });
+      expect($item('#swatchThumb').style.borderColor).toBe('#1e3a5f');
+      expect($item('#swatchThumb').style.borderWidth).toBe('3px');
+    });
+
+    it('non-selected swatch has sandDark border', () => {
+      state.selectedSwatchId = 'sw-other';
+      const $item = create$w();
+      gridItemReadyCallback($item, { _id: 'sw-1', swatchName: 'Ocean Blue' });
+      expect($item('#swatchThumb').style.borderColor).toBe('#c9b99a');
+      expect($item('#swatchThumb').style.borderWidth).toBe('1px');
+    });
+  });
+
+  describe('initSwatchColorFilter — onChange filtering', () => {
+    it('re-fetches swatches with selected color family on filter change', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      await initSwatchSelector($w, state);
+      getProductSwatches.mockClear();
+      const filterEl = $w('#swatchColorFilter');
+      const onChangeHandler = filterEl.onChange.mock.calls[0][0];
+      filterEl.value = 'blue';
+      getProductSwatches.mockResolvedValueOnce([
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'https://example.com/sw1.jpg' },
+      ]);
+      await onChangeHandler();
+      expect(getProductSwatches).toHaveBeenCalledWith('prod-1', 'blue');
+    });
+
+    it('passes null when "All" is selected', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      await initSwatchSelector($w, state);
+      getProductSwatches.mockClear();
+      const filterEl = $w('#swatchColorFilter');
+      const onChangeHandler = filterEl.onChange.mock.calls[0][0];
+      filterEl.value = '';
+      getProductSwatches.mockResolvedValueOnce([]);
+      await onChangeHandler();
+      expect(getProductSwatches).toHaveBeenCalledWith('prod-1', null);
+    });
+  });
+
+  describe('openSwatchGallery — modal flow', () => {
+    beforeEach(async () => {
+      // Provide document for Escape key tests
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+    });
+
+    afterEach(() => {
+      delete globalThis.document;
+    });
+
+    async function openGallery() {
+      // Default mocks return 2 swatches, count=15, families=['blue','green','neutral']
+      // initSwatchSelector calls getProductSwatches once, openSwatchGallery calls it again
+      await initSwatchSelector($w, state);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+    }
+
+    it('shows swatch gallery modal', async () => {
+      await openGallery();
+      expect($w('#swatchGalleryModal').show).toHaveBeenCalled();
+    });
+
+    it('sets ARIA dialog attributes on modal', async () => {
+      await openGallery();
+      expect($w('#swatchGalleryModal').accessibility.role).toBe('dialog');
+      expect($w('#swatchGalleryModal').accessibility.ariaModal).toBe(true);
+      expect($w('#swatchGalleryModal').accessibility.ariaLabel).toBe('Swatch gallery');
+    });
+
+    it('focuses search input after opening', async () => {
+      await openGallery();
+      expect($w('#swatchSearch').focus).toHaveBeenCalled();
+    });
+
+    it('populates gallery grid with all swatches', async () => {
+      await openGallery();
+      expect($w('#swatchGalleryGrid').data).toHaveLength(2);
+    });
+
+    it('registers Escape key handler', async () => {
+      await openGallery();
+      expect(globalThis.document.addEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
+    });
+
+    it('registers close button handler', async () => {
+      await openGallery();
+      expect($w('#swatchGalleryClose').onClick).toHaveBeenCalled();
+    });
+
+    it('close handler hides modal and restores focus', async () => {
+      await openGallery();
+      const closeHandler = $w('#swatchGalleryClose').onClick.mock.calls[0][0];
+      closeHandler();
+      expect($w('#swatchGalleryModal').hide).toHaveBeenCalled();
+      expect($w('#swatchViewAll').focus).toHaveBeenCalled();
+    });
+
+    it('close handler removes Escape listener', async () => {
+      await openGallery();
+      const closeHandler = $w('#swatchGalleryClose').onClick.mock.calls[0][0];
+      closeHandler();
+      expect(globalThis.document.removeEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
+    });
+
+    it('registers search input handler', async () => {
+      await openGallery();
+      expect($w('#swatchSearch').onInput).toHaveBeenCalled();
+    });
+  });
+
+  describe('renderSwatchGalleryGrid — onItemReady behavior', () => {
+    async function setupGalleryGrid() {
+      await initSwatchSelector($w, state);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      return $w('#swatchGalleryGrid').onItemReady.mock.calls[0][0];
+    }
+
+    it('sets gallery item thumbnail and name', async () => {
+      const callback = await setupGalleryGrid();
+      const $item = create$w();
+      callback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', swatchImage: 'https://example.com/sw1.jpg', material: 'Linen' });
+      expect($item('#sgThumb').src).toBe('https://example.com/sw1.jpg');
+      expect($item('#sgThumb').alt).toBe('Ocean Blue');
+      expect($item('#sgName').text).toBe('Ocean Blue');
+      expect($item('#sgMaterial').text).toBe('Linen');
+    });
+
+    it('falls back to colorHex background when no image', async () => {
+      const callback = await setupGalleryGrid();
+      const $item = create$w();
+      callback($item, { _id: 'sw-2', swatchName: 'Forest', colorHex: '#228B22' });
+      expect($item('#sgThumb').style.backgroundColor).toBe('#228B22');
+    });
+
+    it('registers click handler for selection + detail view', async () => {
+      const callback = await setupGalleryGrid();
+      const $item = create$w();
+      callback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'https://example.com/sw1.jpg', material: 'Linen', colorFamily: 'blue', careInstructions: 'Dry clean' });
+      expect($item('#sgThumb').onClick).toHaveBeenCalled();
+    });
+
+    it('click selects swatch and shows detail panel', async () => {
+      const callback = await setupGalleryGrid();
+      const $item = create$w();
+      const swatchData = { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'https://example.com/sw1.jpg', material: 'Linen', colorFamily: 'blue', careInstructions: 'Dry clean' };
+      $w('#finishDropdown').options = [];
+      callback($item, swatchData);
+      const clickHandler = $item('#sgThumb').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect(state.selectedSwatchId).toBe('sw-1');
+      expect($w('#swatchDetailName').text).toBe('Ocean Blue');
+      expect($w('#swatchDetailMaterial').text).toBe('Material: Linen');
+      expect($w('#swatchDetailCare').text).toBe('Care: Dry clean');
+      expect($w('#swatchDetailFamily').text).toBe('Color Family: Blue');
+      expect($w('#swatchDetailImage').src).toBe('https://example.com/sw1.jpg');
+      expect($w('#swatchDetail').expand).toHaveBeenCalled();
+    });
+
+    it('highlights selected swatch in gallery grid', async () => {
+      const callback = await setupGalleryGrid();
+      state.selectedSwatchId = 'sw-1';
+      const $item = create$w();
+      callback($item, { _id: 'sw-1', swatchName: 'Ocean Blue' });
+      expect($item('#sgThumb').style.borderColor).toBe('#1e3a5f');
+      expect($item('#sgThumb').style.borderWidth).toBe('3px');
     });
   });
 });
