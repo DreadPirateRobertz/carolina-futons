@@ -87,6 +87,10 @@ const SEQUENCES = {
 // Maximum retry attempts for failed emails
 const MAX_RETRY_ATTEMPTS = 3;
 
+// Send window: only deliver emails between these hours (America/New_York).
+// Emails scheduled outside this window are deferred to the next window open.
+const SEND_WINDOW = { startHour: 8, endHour: 20, timezone: 'America/New_York' };
+
 // ── Event Handlers (auto-register in backend/) ───────────────────────
 
 /**
@@ -190,7 +194,7 @@ export const triggerWelcomeSequence = webMethod(
         console.warn('[emailAutomation] Welcome discount unavailable, emails will omit discount:', e.message);
       }
 
-      const abVariant = selectABVariant();
+      const abVariant = selectABVariant(cleanEmail);
       const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
       const now = new Date();
       let queued = 0;
@@ -334,18 +338,35 @@ export const triggerAbandonedCartRecovery = webMethod(
         console.warn('[emailAutomation] Cart recovery discount unavailable, emails will omit discount:', e.message);
       }
 
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
       for (const cart of result.items) {
-        if (!cart.buyerEmail || !validateEmail(cart.buyerEmail)) continue;
-        if (await isUnsubscribed(cart.buyerEmail, 'cart_recovery')) continue;
+        const cartEmail = (cart.buyerEmail || '').toLowerCase().trim();
+        if (!cartEmail || !validateEmail(cartEmail)) continue;
+        if (await isUnsubscribed(cartEmail, 'cart_recovery')) continue;
 
         // Check if recovery already queued for this cart (flat field, not nested)
         const alreadyQueued = await wixData.query('EmailQueue')
-          .eq('recipientEmail', cart.buyerEmail)
+          .eq('recipientEmail', cartEmail)
           .eq('sequenceType', 'cart_recovery')
           .eq('checkoutId', cart.checkoutId)
           .find();
 
         if (alreadyQueued.items.length > 0) continue;
+
+        // Cross-cart dedup: skip if any active cart recovery was queued for this email in last 24h
+        // Only count pending/sent — cancelled/failed should not block new recovery
+        const recentRecovery = await wixData.query('EmailQueue')
+          .eq('recipientEmail', cartEmail)
+          .eq('sequenceType', 'cart_recovery')
+          .eq('sequenceStep', 1)
+          .ge('createdAt', oneDayAgo)
+          .find();
+
+        const hasActiveRecovery = recentRecovery.items.some(
+          item => item.status === 'pending' || item.status === 'sent'
+        );
+        if (hasActiveRecovery) continue;
 
         const abandonedAt = new Date(cart.abandonedAt);
         let parsedItems = [];
@@ -363,7 +384,7 @@ export const triggerAbandonedCartRecovery = webMethod(
 
           await queueEmail({
             templateId: step.templateId,
-            recipientEmail: cart.buyerEmail,
+            recipientEmail: cartEmail,
             recipientContactId: '',
             variables: {
               buyerName: cart.buyerName || '',
@@ -372,7 +393,7 @@ export const triggerAbandonedCartRecovery = webMethod(
               discountCode: step.step === 3 ? discountCode : '',
               discountAvailable: step.step === 3 ? discountAvailable : false,
               checkoutId: cart.checkoutId,
-              email: cart.buyerEmail,
+              email: cartEmail,
             },
             sequenceType: 'cart_recovery',
             sequenceStep: step.step,
@@ -472,7 +493,7 @@ export const triggerReengagement = webMethod(
  * passed. Should be called by a scheduled job every 15-30 minutes.
  *
  * @function processEmailQueue
- * @returns {Promise<{sent: number, failed: number, cancelled: number}>}
+ * @returns {Promise<{sent: number, failed: number, cancelled: number, deferred: number}>}
  * @permission Admin
  */
 export const processEmailQueue = webMethod(
@@ -489,8 +510,29 @@ export const processEmailQueue = webMethod(
       let sent = 0;
       let failed = 0;
       let cancelled = 0;
+      let deferred = 0;
+
+      // Send-time optimization: defer non-transactional emails outside business hours
+      const windowCheck = checkSendWindow(now);
+      const deferOutsideWindow = !windowCheck.inWindow;
 
       for (const item of pending.items) {
+        // Cart recovery step 1 and restock are time-sensitive — send regardless of window
+        const isTimeSensitive = (
+          (item.sequenceType === 'cart_recovery' && item.sequenceStep === 1) ||
+          item.sequenceType === 'restock'
+        );
+
+        if (deferOutsideWindow && !isTimeSensitive) {
+          // Reschedule to next send window open
+          await wixData.update('EmailQueue', {
+            ...item,
+            scheduledFor: windowCheck.nextWindowOpen,
+          });
+          deferred++;
+          continue;
+        }
+
         // Check if recipient unsubscribed since queuing
         if (await isUnsubscribed(item.recipientEmail, item.sequenceType)) {
           await wixData.update('EmailQueue', {
@@ -533,7 +575,7 @@ export const processEmailQueue = webMethod(
         } catch (err) {
           const attempt = (item.attempt || 0) + 1;
           const newStatus = attempt >= MAX_RETRY_ATTEMPTS ? 'failed' : 'pending';
-          // Exponential backoff: retry in 15min, then 1hr, then give up
+          // Stepped backoff: retry in 15min, then 1hr, then give up
           const backoffMs = attempt === 1 ? 15 * 60 * 1000 : 60 * 60 * 1000;
           const retryAt = new Date(Date.now() + backoffMs);
 
@@ -548,10 +590,10 @@ export const processEmailQueue = webMethod(
         }
       }
 
-      return { sent, failed, cancelled };
+      return { sent, failed, cancelled, deferred };
     } catch (err) {
       console.error('Error processing email queue:', err);
-      return { sent: 0, failed: 0, cancelled: 0 };
+      return { sent: 0, failed: 0, cancelled: 0, deferred: 0 };
     }
   }
 );
@@ -795,10 +837,20 @@ async function isUnsubscribed(email, sequenceType) {
 }
 
 /**
- * Select A/B test variant (50/50 random split).
+ * Select A/B test variant deterministically based on email hash.
+ * Same email always gets the same variant, ensuring consistent UX
+ * and valid A/B test results (no cross-contamination).
+ *
+ * @param {string} email - Subscriber email (used as hash input)
+ * @returns {'A'|'B'} Variant assignment
  */
-function selectABVariant() {
-  return Math.random() < 0.5 ? 'A' : 'B';
+function selectABVariant(email = '') {
+  if (!email) return Math.random() < 0.5 ? 'A' : 'B';
+  let hash = 0;
+  for (let i = 0; i < email.length; i++) {
+    hash = ((hash << 5) - hash + email.charCodeAt(i)) | 0;
+  }
+  return (Math.abs(hash) % 2 === 0) ? 'A' : 'B';
 }
 
 /**
@@ -806,6 +858,10 @@ function selectABVariant() {
  */
 async function cancelSequenceForOrder(email, orderNumber) {
   if (!email) return;
+  if (!orderNumber) {
+    console.warn('[emailAutomation] cancelSequenceForOrder called without orderNumber — skipping to avoid bulk cancellation');
+    return;
+  }
 
   const cleanEmail = email.toLowerCase();
 
@@ -816,11 +872,11 @@ async function cancelSequenceForOrder(email, orderNumber) {
     .find();
 
   for (const item of pending.items) {
-    if (item.variables?.orderNumber === orderNumber || !orderNumber) {
+    if (item.variables?.orderNumber === orderNumber) {
       await wixData.update('EmailQueue', {
         ...item,
         status: 'cancelled',
-        lastError: 'Order cancelled',
+        lastError: `Order ${orderNumber} cancelled`,
       });
     }
   }
@@ -945,6 +1001,33 @@ export const triggerReviewThanks = webMethod(
   }
 );
 
+/**
+ * Check if current time is within the send window (business hours EST).
+ * Returns { inWindow: boolean, nextWindowOpen?: Date }.
+ */
+function checkSendWindow(now = new Date()) {
+  const estHour = parseInt(
+    now.toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: SEND_WINDOW.timezone }),
+    10
+  );
+  if (estHour >= SEND_WINDOW.startHour && estHour < SEND_WINDOW.endHour) {
+    return { inWindow: true };
+  }
+  // Calculate next window open
+  const tomorrow8am = new Date(now);
+  if (estHour >= SEND_WINDOW.endHour) {
+    tomorrow8am.setDate(tomorrow8am.getDate() + 1);
+  }
+  // Set to startHour EST — approximate by setting UTC hours
+  // (exact TZ conversion is complex without Intl, but this is close enough
+  // for scheduling purposes; the next processEmailQueue run will re-check)
+  const estOffset = 5; // EST is UTC-5 (EDT is UTC-4; close enough for scheduling)
+  tomorrow8am.setUTCHours(SEND_WINDOW.startHour + estOffset, 0, 0, 0);
+  return { inWindow: false, nextWindowOpen: tomorrow8am };
+}
+
 // Export sequence definitions for testing
 export const _SEQUENCES = SEQUENCES;
 export const _MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
+export const _SEND_WINDOW = SEND_WINDOW;
+export { selectABVariant as _selectABVariant, checkSendWindow as _checkSendWindow };
