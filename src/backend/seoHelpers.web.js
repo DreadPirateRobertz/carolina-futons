@@ -1158,3 +1158,138 @@ export const getPageMetaDescription = webMethod(
     }
   }
 );
+
+// ── Sitemap ──────────────────────────────────────────────────────────
+
+/** Category URL paths used by the sitemap and breadcrumb navigation. */
+const CATEGORY_PATHS = [
+  { slug: 'futon-frames', path: '/futon-frames', label: 'Futon Frames' },
+  { slug: 'mattresses', path: '/mattresses', label: 'Mattresses' },
+  { slug: 'murphy-cabinet-beds', path: '/murphy-cabinet-beds', label: 'Murphy Cabinet Beds' },
+  { slug: 'platform-beds', path: '/platform-beds', label: 'Platform Beds' },
+  { slug: 'covers', path: '/covers', label: 'Futon Covers' },
+  { slug: 'casegoods-accessories', path: '/casegoods-accessories', label: 'Casegoods & Accessories' },
+  { slug: 'outdoor-furniture', path: '/outdoor-furniture', label: 'Outdoor Furniture' },
+  { slug: 'wall-huggers', path: '/wall-huggers', label: 'Wall Hugger Frames' },
+  { slug: 'unfinished-wood', path: '/unfinished-wood', label: 'Unfinished Wood' },
+  { slug: 'pillows', path: '/pillows', label: 'Pillows' },
+  { slug: 'log-frames', path: '/log-frames', label: 'Log Futon Frames' },
+];
+
+/** Static pages included in the sitemap. */
+const STATIC_PAGES = [
+  { path: '/', priority: '1.0', changefreq: 'weekly' },
+  { path: '/shop-main', priority: '0.9', changefreq: 'weekly' },
+  { path: '/about', priority: '0.5', changefreq: 'monthly' },
+  { path: '/faq', priority: '0.5', changefreq: 'monthly' },
+  { path: '/blog', priority: '0.7', changefreq: 'weekly' },
+  { path: '/sale', priority: '0.8', changefreq: 'weekly' },
+  { path: '/referral', priority: '0.4', changefreq: 'monthly' },
+  { path: '/financing', priority: '0.4', changefreq: 'monthly' },
+];
+
+/**
+ * Generate structured sitemap data for all pages.
+ * Returns URLs for static pages, category pages, and product pages.
+ * Product pages require a products array from the caller (CMS query).
+ *
+ * @param {Array<{slug: string, _updatedDate?: string|Date}>} [products=[]] - Product items
+ * @returns {{ staticPages: Array, categoryPages: Array, productPages: Array }}
+ */
+export const getSitemapData = webMethod(
+  Permissions.Anyone,
+  (products = []) => {
+    const baseUrl = BUSINESS_INFO.url;
+
+    const staticPages = STATIC_PAGES.map(p => ({
+      url: `${baseUrl}${p.path}`,
+      priority: p.priority,
+      changefreq: p.changefreq,
+    }));
+
+    const categoryPages = CATEGORY_PATHS.map(c => ({
+      url: `${baseUrl}${c.path}`,
+      label: c.label,
+      slug: c.slug,
+      priority: '0.8',
+      changefreq: 'weekly',
+    }));
+
+    const safeProducts = Array.isArray(products) ? products : [];
+    const productPages = safeProducts
+      .filter(p => p && typeof p.slug === 'string' && p.slug.length > 0)
+      .map(p => {
+        let lastmod = null;
+        if (p._updatedDate) {
+          const d = p._updatedDate instanceof Date ? p._updatedDate : new Date(p._updatedDate);
+          if (!isNaN(d.getTime())) lastmod = d.toISOString().split('T')[0];
+        }
+        return {
+          url: `${baseUrl}/product-page/${p.slug}`,
+          slug: p.slug,
+          lastmod,
+          priority: '0.7',
+          changefreq: 'weekly',
+        };
+      });
+
+    return { staticPages, categoryPages, productPages };
+  }
+);
+
+/**
+ * Generate XML sitemap string from sitemap data.
+ * @param {{ staticPages: Array, categoryPages: Array, productPages: Array }} sitemapData
+ * @returns {string} Valid XML sitemap
+ */
+export const buildSitemapXml = webMethod(
+  Permissions.Anyone,
+  (sitemapData) => {
+    if (!sitemapData) return '';
+    const lines = ['<?xml version="1.0" encoding="UTF-8"?>'];
+    lines.push('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+
+    const allPages = [
+      ...(sitemapData.staticPages || []),
+      ...(sitemapData.categoryPages || []),
+      ...(sitemapData.productPages || []),
+    ];
+
+    for (const page of allPages) {
+      lines.push('  <url>');
+      lines.push(`    <loc>${sanitizeForJsonLd(page.url)}</loc>`);
+      if (page.lastmod) lines.push(`    <lastmod>${page.lastmod}</lastmod>`);
+      if (page.changefreq) lines.push(`    <changefreq>${page.changefreq}</changefreq>`);
+      if (page.priority) lines.push(`    <priority>${page.priority}</priority>`);
+      lines.push('  </url>');
+    }
+
+    lines.push('</urlset>');
+    return lines.join('\n');
+  }
+);
+
+// ── robots.txt ───────────────────────────────────────────────────────
+
+/**
+ * Generate robots.txt content.
+ * Allows all crawlers for public pages, blocks admin/member/API paths.
+ * @returns {string} robots.txt content
+ */
+export const getRobotsTxtContent = webMethod(
+  Permissions.Anyone,
+  () => {
+    return [
+      'User-agent: *',
+      'Allow: /',
+      '',
+      'Disallow: /admin',
+      'Disallow: /members-only',
+      'Disallow: /api',
+      'Disallow: /_functions/',
+      'Disallow: /account/',
+      '',
+      `Sitemap: ${BUSINESS_INFO.url}/sitemap.xml`,
+    ].join('\n');
+  }
+);
