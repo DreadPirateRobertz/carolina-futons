@@ -397,6 +397,108 @@ export const getLowStockAlerts = webMethod(
   }
 );
 
+// ── Back In Stock Dashboard ──────────────────────────────────────────
+
+/**
+ * Get back-in-stock system status for admin dashboard.
+ * Reports pending signups, recent notifications, and queue health.
+ *
+ * @function getBackInStockDashboard
+ * @returns {Promise<Object>} { pendingSignups, notifiedCount, recentSignups }
+ * @permission Admin
+ */
+export const getBackInStockDashboard = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const pending = await wixData.query('BackInStockSignups')
+        .eq('notified', false)
+        .limit(1000)
+        .find();
+
+      const notified = await wixData.query('BackInStockSignups')
+        .eq('notified', true)
+        .limit(1000)
+        .find();
+
+      // Group pending signups by product
+      const productMap = {};
+      for (const item of pending.items) {
+        const pid = item.productId;
+        if (!productMap[pid]) {
+          productMap[pid] = {
+            productId: pid,
+            productName: item.productName || '',
+            count: 0,
+            oldestSignup: item.signedUpAt,
+          };
+        }
+        productMap[pid].count += 1;
+        if (item.signedUpAt < productMap[pid].oldestSignup) {
+          productMap[pid].oldestSignup = item.signedUpAt;
+        }
+      }
+
+      return {
+        pendingSignups: pending.items.length,
+        notifiedCount: notified.items.length,
+        productBreakdown: Object.values(productMap),
+      };
+    } catch (err) {
+      console.error('[inventoryService] Error getting back-in-stock dashboard:', err);
+      return { pendingSignups: 0, notifiedCount: 0, productBreakdown: [] };
+    }
+  }
+);
+
+/**
+ * Mark back-in-stock signups as notified after sending notifications.
+ * Called by the notification flow after emails are sent.
+ *
+ * @function markSignupsNotified
+ * @param {string} productId - Product ID to mark notified
+ * @returns {Promise<{success: boolean, count: number}>}
+ * @permission Admin
+ */
+export const markSignupsNotified = webMethod(
+  Permissions.Admin,
+  async (productId) => {
+    if (!productId) {
+      console.error('[inventoryService] markSignupsNotified called without productId');
+      return { success: false, count: 0 };
+    }
+
+    try {
+      const cleanId = sanitize(productId, 50);
+      const result = await wixData.query('BackInStockSignups')
+        .eq('productId', cleanId)
+        .eq('notified', false)
+        .find();
+
+      let count = 0;
+      let failed = 0;
+      for (const item of result.items) {
+        try {
+          await wixData.update('BackInStockSignups', {
+            ...item,
+            notified: true,
+            notifiedAt: new Date(),
+          });
+          count += 1;
+        } catch (itemErr) {
+          failed += 1;
+          console.error(`[inventoryService] Failed to mark signup ${item._id} notified:`, itemErr);
+        }
+      }
+
+      return { success: failed === 0, count, failed };
+    } catch (err) {
+      console.error('[inventoryService] Error marking signups notified:', err);
+      return { success: false, count: 0, failed: 0 };
+    }
+  }
+);
+
 // ── Internal Helpers ────────────────────────────────────────────────
 
 function getVariantStatus(quantity, threshold) {
