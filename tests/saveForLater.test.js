@@ -154,26 +154,26 @@ describe('saveForLater', () => {
 
   // ── Error handling ──────────────────────────────────────────────
 
-  it('returns error if cart removal fails', async () => {
+  it('succeeds even if cart removal fails (wishlist-first strategy)', async () => {
     mockRemoveCartItem.mockRejectedValue(new Error('Cart API down'));
     const result = await saveForLater(cartItem);
-    expect(result.success).toBe(false);
-    expect(result.reason).toBe('cart_removal_failed');
-    // Should NOT add to wishlist if cart removal failed
-    expect(mockInsert).not.toHaveBeenCalled();
+    // Wishlist insert succeeds; cart removal is best-effort
+    expect(result.success).toBe(true);
+    expect(result.wishlistItemId).toBeDefined();
+    expect(mockInsert).toHaveBeenCalled();
   });
 
-  it('returns partial success if wishlist insert fails after cart removal', async () => {
+  it('returns error if wishlist insert fails (cart not touched)', async () => {
     mockInsert.mockRejectedValue(new Error('DB error'));
     const result = await saveForLater(cartItem);
-    // Cart was removed but wishlist failed — report the issue
+    // Wishlist insert failed — cart item preserved, no removal attempted
     expect(result.success).toBe(false);
     expect(result.reason).toBe('wishlist_add_failed');
-    expect(mockRemoveCartItem).toHaveBeenCalled();
+    expect(mockRemoveCartItem).not.toHaveBeenCalled();
   });
 
   it('does not leak internal error details', async () => {
-    mockRemoveCartItem.mockRejectedValue(new Error('Sensitive: DB connection string xyz'));
+    mockInsert.mockRejectedValue(new Error('Sensitive: DB connection string xyz'));
     const result = await saveForLater(cartItem);
     expect(JSON.stringify(result)).not.toContain('Sensitive');
     expect(JSON.stringify(result)).not.toContain('xyz');
