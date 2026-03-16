@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1080px; height: 1920px;
+    background: #3A2518;
+    font-family: 'Georgia', 'Playfair Display', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .top-glow {
+    position: absolute;
+    top: -200px; left: 50%;
+    transform: translateX(-50%);
+    width: 900px; height: 700px;
+    background: radial-gradient(ellipse, rgba(240,200,122,0.35) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .sky-strip {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 280px;
+    background: linear-gradient(180deg, #B8D4E3 0%, #F0C87A 70%, #3A2518 100%);
+  }
+  .sky-strip svg {
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 100%;
+  }
+
+  .logo-area {
+    position: absolute;
+    top: 310px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .logo-text {
+    font-size: 38px;
+    color: #E8D5B7;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .section-label {
+    position: absolute;
+    top: 420px;
+    left: 80px; right: 80px;
+    text-align: center;
+  }
+  .label-pill {
+    display: inline-block;
+    background: transparent;
+    border: 3px solid #4A7D94;
+    color: #4A7D94;
+    font-size: 26px;
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    padding: 12px 40px;
+    border-radius: 40px;
+  }
+
+  .tip-card {
+    position: absolute;
+    top: 560px;
+    left: 60px; right: 60px;
+    background: rgba(232,213,183,0.12);
+    border: 2px solid rgba(232,213,183,0.3);
+    border-radius: 20px;
+    padding: 60px 60px 50px;
+  }
+
+  .quote-mark {
+    font-size: 140px;
+    color: #4A7D94;
+    line-height: 0.8;
+    opacity: 0.6;
+    font-family: Georgia, serif;
+    margin-bottom: -20px;
+  }
+
+  .tip-headline {
+    font-size: 54px;
+    color: #E8D5B7;
+    line-height: 1.25;
+    margin-bottom: 36px;
+    font-weight: 700;
+  }
+
+  .tip-body {
+    font-size: 33px;
+    color: rgba(232,213,183,0.85);
+    line-height: 1.65;
+    font-family: 'Arial', sans-serif;
+  }
+
+  .attribution {
+    margin-top: 40px;
+    font-size: 28px;
+    color: #5B8FA8;
+    font-style: italic;
+  }
+
+  .separator {
+    position: absolute;
+    top: 1380px;
+    left: 80px; right: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #4A7D94, transparent);
+  }
+
+  .bottom-cta {
+    position: absolute;
+    top: 1430px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .cta-main {
+    font-size: 40px;
+    color: #E8D5B7;
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-family: 'Arial', sans-serif;
+  }
+  .cta-sub {
+    font-size: 28px;
+    color: #5B8FA8;
+    margin-top: 16px;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 70px;
+    left: 0; right: 0;
+    text-align: center;
+  }
+  .footer-handle {
+    font-size: 30px;
+    color: rgba(232,213,183,0.7);
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .star {
+    position: absolute;
+    color: rgba(240,200,122,0.4);
+    font-size: 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-glow"></div>
+
+<div class="sky-strip">
+  <svg viewBox="0 0 1080 100" preserveAspectRatio="none" height="100">
+    <polygon points="0,100 0,50 120,20 260,55 400,15 540,45 680,10 820,40 960,5 1080,35 1080,100" fill="#3A2518"/>
+  </svg>
+</div>
+
+<div class="star" style="top:420px;left:100px;">&#10022;</div>
+<div class="star" style="top:450px;right:120px;font-size:18px;">&#10022;</div>
+<div class="star" style="top:1460px;left:140px;font-size:16px;">&#10022;</div>
+<div class="star" style="top:1440px;right:160px;">&#10022;</div>
+
+<div class="logo-area">
+  <div class="logo-text">Carolina Futons</div>
+</div>
+
+<div class="section-label">
+  <div class="label-pill" id="sectionLabel">Brenda's Care Tips</div>
+</div>
+
+<div class="tip-card">
+  <div class="quote-mark">&ldquo;</div>
+  <div class="tip-headline" id="tipHeadline">Flip your futon mattress every 3 months.</div>
+  <div class="tip-body" id="tipBody">
+    Just like a regular mattress, futon mattresses compress unevenly with use. A simple quarterly flip extends the life of your mattress by years.
+  </div>
+  <div class="attribution" id="tipAttribution">&mdash; Brenda, Carolina Futons since 1991</div>
+</div>
+
+<div class="separator"></div>
+
+<div class="bottom-cta">
+  <div class="cta-main">Questions about your futon?</div>
+  <div class="cta-sub">Come see us &middot; Wed&ndash;Sat 10&ndash;5</div>
+</div>
+
+<div class="footer">
+  <div class="footer-handle">@carolinafutons &middot; Hendersonville, NC</div>
+</div>
+
+<script>
+  window.__injectStoryData = function(data) {
+    if (data.title) document.getElementById('tipHeadline').textContent = data.title;
+    if (data.tip) document.getElementById('tipBody').textContent = data.tip;
+    if (data.sectionLabel) document.getElementById('sectionLabel').textContent = data.sectionLabel;
+    if (data.attribution) document.getElementById('tipAttribution').textContent = data.attribution;
+  };
+</script>
+</body>
+</html>
