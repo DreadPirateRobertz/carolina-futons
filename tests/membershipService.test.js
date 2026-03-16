@@ -141,7 +141,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns active status for member with active CF+ order', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ACTIVE', planName: 'CF+ Monthly',
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ACTIVE', planName: 'CF+ Monthly',
           startDate: '2026-01-01', endDate: '2026-12-31' },
       ]);
 
@@ -153,7 +153,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns inactive when no active orders', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ENDED', planName: 'CF+ Monthly' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ENDED', planName: 'CF+ Monthly' },
       ]);
 
       const status = await getMembershipStatus();
@@ -180,13 +180,48 @@ describe('membershipService — CF-k6a0', () => {
     });
   });
 
+  // ── getActiveOrder filtering ─────────────────────────────────
+
+  describe('plan slug filtering', () => {
+    it('ignores active orders on non-CF+ plans', async () => {
+      setMockMember({ _id: 'member-1' });
+      setMockOrders([
+        { _id: 'order-1', planId: 'plan-x', planSlug: 'other-plan', status: 'ACTIVE', planName: 'Other Plan' },
+      ]);
+
+      const status = await getMembershipStatus();
+      expect(status.active).toBe(false);
+    });
+
+    it('finds CF+ order among mixed plan orders', async () => {
+      setMockMember({ _id: 'member-1' });
+      setMockOrders([
+        { _id: 'order-1', planId: 'plan-x', planSlug: 'other-plan', status: 'ACTIVE', planName: 'Other' },
+        { _id: 'order-2', planId: 'plan-a', planSlug: 'cf-plus-annual', status: 'ACTIVE', planName: 'CF+ Annual' },
+      ]);
+
+      const status = await getMembershipStatus();
+      expect(status.active).toBe(true);
+      expect(status.planName).toBe('CF+ Annual');
+    });
+
+    it('passes buyerMemberId to listOrders', async () => {
+      setMockMember({ _id: 'member-42' });
+      setMockOrders([]);
+
+      const { orders } = await import('wix-pricing-plans.v2');
+      await getMembershipStatus();
+      expect(orders.listOrders).toHaveBeenCalledWith({ buyerMemberId: 'member-42' });
+    });
+  });
+
   // ── isCFPlusMember ────────────────────────────────────────────
 
   describe('isCFPlusMember', () => {
     it('returns true for active member', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ACTIVE', planName: 'CF+ Monthly' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ACTIVE', planName: 'CF+ Monthly' },
       ]);
 
       expect(await isCFPlusMember()).toBe(true);
@@ -199,7 +234,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns false for expired member', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ENDED', planName: 'CF+ Monthly' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ENDED', planName: 'CF+ Monthly' },
       ]);
 
       expect(await isCFPlusMember()).toBe(false);
@@ -212,7 +247,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns CF+ benefits for active members', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ACTIVE', planName: 'CF+ Monthly' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ACTIVE', planName: 'CF+ Monthly' },
       ]);
 
       const benefits = await getMemberBenefits();
@@ -234,7 +269,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns no benefits for expired members', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ENDED' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-monthly', status: 'ENDED' },
       ]);
 
       const benefits = await getMemberBenefits();
@@ -249,7 +284,7 @@ describe('membershipService — CF-k6a0', () => {
     it('returns CF+ badge for active members', async () => {
       setMockMember({ _id: 'member-1' });
       setMockOrders([
-        { _id: 'order-1', planId: 'plan-m', status: 'ACTIVE', planName: 'CF+ Annual' },
+        { _id: 'order-1', planId: 'plan-m', planSlug: 'cf-plus-annual', status: 'ACTIVE', planName: 'CF+ Annual' },
       ]);
 
       const badge = await getMemberBadge();

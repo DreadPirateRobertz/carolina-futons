@@ -52,9 +52,11 @@ async function getActiveOrder() {
   if (!member) return null;
 
   try {
-    const result = await orders.listOrders();
+    const result = await orders.listOrders({ buyerMemberId: member._id });
     const orderList = result.orders || [];
-    return orderList.find(o => o.status === 'ACTIVE') || null;
+    return orderList.find(o =>
+      o.status === 'ACTIVE' && CF_PLUS_SLUG_SET.has(o.planSlug)
+    ) || null;
   } catch (err) {
     console.error('[membershipService] Error fetching orders:', err);
     return null;
