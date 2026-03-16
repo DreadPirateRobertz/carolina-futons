@@ -17,6 +17,10 @@ const GOOGLE_CATEGORY_MAP = {
   'murphy-cabinet-beds': 'Furniture > Beds & Accessories > Beds > Murphy Beds',
   'platform-beds': 'Furniture > Beds & Accessories > Beds > Platform Beds',
   'casegoods-accessories': 'Furniture > Bedroom Furniture',
+  'covers': 'Furniture > Beds & Accessories > Bed & Mattress Accessories > Futon Pads & Covers',
+  'outdoor-furniture': 'Furniture > Outdoor Furniture',
+  'pillows': 'Furniture > Beds & Accessories > Bedding > Bed Pillows',
+  'log-frames': 'Furniture > Beds & Accessories > Beds > Futons',
 };
 
 // Google product category IDs (numeric taxonomy)
@@ -29,6 +33,10 @@ const GOOGLE_CATEGORY_ID_MAP = {
   'murphy-cabinet-beds': '451',
   'platform-beds': '451',
   'casegoods-accessories': '436',
+  'covers': '2720',
+  'outdoor-furniture': '2780',
+  'pillows': '4450',
+  'log-frames': '2720',
 };
 
 // Brand detection matching seoHelpers logic
@@ -82,8 +90,12 @@ function getProductType(collections) {
   if (collArr.some(c => c.includes('mattress'))) return 'Futon Mattresses';
   if (collArr.some(c => c.includes('wall-hugger'))) return 'Futon Frames > Wall Hugger';
   if (collArr.some(c => c.includes('unfinished'))) return 'Futon Frames > Unfinished Wood';
-  if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frames';
   if (collArr.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
+  if (collArr.some(c => c.includes('cover'))) return 'Futon Covers';
+  if (collArr.some(c => c.includes('outdoor'))) return 'Outdoor Furniture';
+  if (collArr.some(c => c.includes('pillow'))) return 'Pillows & Bolsters';
+  if (collArr.some(c => c.includes('log'))) return 'Futon Frames > Log Futon';
+  if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frames';
   return 'Furniture';
 }
 
@@ -146,7 +158,7 @@ function formatProductItem(product) {
       <g:product_type>${productType}</g:product_type>`;
 
   // Add sale price if discounted
-  if (product.discountedPrice && product.discountedPrice < product.price) {
+  if (product.discountedPrice != null && product.discountedPrice < product.price) {
     item += `\n      <g:sale_price>${formatPrice(product.discountedPrice)}</g:sale_price>`;
   }
 
@@ -254,7 +266,7 @@ export const getFeedData = webMethod(
         link: `${SITE_URL}/product-page/${product.slug}`,
         imageLink: getImageUrl(product.mainMedia),
         price: product.price,
-        salePrice: product.discountedPrice || null,
+        salePrice: product.discountedPrice != null ? product.discountedPrice : null,
         availability: product.inStock !== false ? 'in_stock' : 'out_of_stock',
         brand: getBrand(product),
         condition: 'new',
