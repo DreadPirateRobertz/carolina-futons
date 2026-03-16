@@ -32,7 +32,7 @@ vi.mock('public/productPageUtils.js', () => ({
 vi.mock('public/AddToCart.js', () => ({ updateStickyPrice: vi.fn() }));
 vi.mock('wix-location-frontend', () => ({ to: vi.fn() }));
 
-import { initVariantSelector, handleCustomVariantChange, initSwatchSelector, selectSwatch, initFinishSwatches } from '../src/public/ProductOptions.js';
+import { initVariantSelector, handleCustomVariantChange, initSwatchSelector, selectSwatch, initFinishSwatches, renderSwatchGrid } from '../src/public/ProductOptions.js';
 
 function createMockElement() {
   return {
@@ -1552,6 +1552,65 @@ describe('ProductOptions', () => {
         return $w(sel);
       };
       await expect(selectSwatch(broken$w, { selectedSwatchId: null }, { _id: 'x', swatchName: 'Test', colorHex: '#ff0000' })).resolves.toBeUndefined();
+    });
+  });
+
+  describe('swatch price adders', () => {
+    it('shows price adder text on swatch items with priceAdder > 0', () => {
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'img.jpg', priceAdder: 50 },
+      ];
+      renderSwatchGrid($w, state, swatches);
+      const readyCb = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, swatches[0]);
+      expect($item('#swatchPriceAdder').text).toBe('+$50');
+      expect($item('#swatchPriceAdder').show).toHaveBeenCalled();
+    });
+
+    it('hides price adder when priceAdder is 0', () => {
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Test', colorHex: '#000', swatchImage: 'img.jpg', priceAdder: 0 },
+      ];
+      renderSwatchGrid($w, state, swatches);
+      const readyCb = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, swatches[0]);
+      expect($item('#swatchPriceAdder').hide).toHaveBeenCalled();
+    });
+
+    it('hides price adder when priceAdder is missing', () => {
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Test', colorHex: '#000', swatchImage: 'img.jpg' },
+      ];
+      renderSwatchGrid($w, state, swatches);
+      const readyCb = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, swatches[0]);
+      expect($item('#swatchPriceAdder').hide).toHaveBeenCalled();
+    });
+
+    it('formats price adder with dollar sign', () => {
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Premium Linen', colorHex: '#FFF', swatchImage: 'img.jpg', priceAdder: 125 },
+      ];
+      renderSwatchGrid($w, state, swatches);
+      const readyCb = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, swatches[0]);
+      expect($item('#swatchPriceAdder').text).toBe('+$125');
+    });
+
+    it('sets accessibility label including price adder', () => {
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'img.jpg', priceAdder: 50 },
+      ];
+      renderSwatchGrid($w, state, swatches);
+      const readyCb = $w('#swatchGrid').onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, swatches[0]);
+      expect($item('#swatchThumb').accessibility.ariaLabel).toContain('Ocean Blue');
+      expect($item('#swatchThumb').accessibility.ariaLabel).toContain('+$50');
     });
   });
 });

@@ -38,6 +38,7 @@ function createMockElement() {
     text: '',
     value: '',
     label: '',
+    style: { color: '', backgroundColor: '', width: '', opacity: 0 },
     collapse: vi.fn(() => Promise.resolve()),
     expand: vi.fn(() => Promise.resolve()),
     show: vi.fn(() => Promise.resolve()),
@@ -1002,5 +1003,48 @@ describe('ProductReviews', () => {
     );
     // Prev button should be disabled (we're on page 0)
     expect($w2('#reviewsPrevBtn').disable).toHaveBeenCalled();
+  });
+
+  describe('review histogram', () => {
+    it('sets histogram bar widths relative to max count', async () => {
+      // breakdown: { 5: 6, 4: 3, 3: 2, 2: 1, 1: 0 } → max is 6
+      const $w = create$w();
+      const state = { product: { ...futonFrame } };
+      await initProductReviews($w, state);
+      expect($w('#histogramBar5').style.width).toBe('100%');   // 6/6 = 100%
+      expect($w('#histogramBar4').style.width).toBe('50%');    // 3/6 = 50%
+      expect($w('#histogramBar3').style.width).toBe('33%');    // 2/6 ≈ 33%
+      expect($w('#histogramBar2').style.width).toBe('17%');    // 1/6 ≈ 17%
+      expect($w('#histogramBar1').style.width).toBe('0%');     // 0/6 = 0%
+    });
+
+    it('sets histogram percentage text', async () => {
+      const $w = create$w();
+      const state = { product: { ...futonFrame } };
+      await initProductReviews($w, state);
+      expect($w('#histogramPercent5').text).toBe('50%');  // 6/12 = 50%
+      expect($w('#histogramPercent4').text).toBe('25%');  // 3/12 = 25%
+    });
+
+    it('sets all histogram bars to 0% when no reviews', async () => {
+      const { getAggregateRating } = await import('backend/reviewsService.web');
+      getAggregateRating.mockResolvedValueOnce({ average: 0, total: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } });
+      const { getProductReviews } = await import('backend/reviewsService.web');
+      getProductReviews.mockResolvedValueOnce({ reviews: [], total: 0, page: 0, pageSize: 10 });
+
+      const $w = create$w();
+      const state = { product: { ...futonFrame } };
+      await initProductReviews($w, state);
+      expect($w('#histogramBar5').style.width).toBe('0%');
+      expect($w('#histogramBar1').style.width).toBe('0%');
+    });
+
+    it('uses brand color for filled histogram bars', async () => {
+      const $w = create$w();
+      const state = { product: { ...futonFrame } };
+      await initProductReviews($w, state);
+      // Bar 5 has count > 0, should have brand color
+      expect($w('#histogramBar5').style.backgroundColor).toBeTruthy();
+    });
   });
 });

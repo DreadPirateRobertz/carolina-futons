@@ -30,6 +30,7 @@ export async function initFinancingOptions($w, state) {
     renderTeaser($w, result.lowestMonthly);
     renderAfterpayMessage($w, result.afterpay);
     renderPlans($w, result.widgetData.sections);
+    renderTermPills($w, result.terms || []);
     initFinancingModal($w, result.widgetData.sections);
   } catch (e) {
     try { $w('#financingSection').collapse(); } catch (e2) {}
@@ -123,6 +124,27 @@ function renderPlans($w, sections) {
     });
 
     repeater.data = sections.map((s, i) => ({ ...s, _id: `plan-${i}` }));
+  } catch (e) {}
+}
+
+// ── Term Pills ────────────────────────────────────────────────────────
+
+export function renderTermPills($w, terms) {
+  try {
+    const repeater = $w('#financingTermPills');
+    if (!repeater) return;
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#termMonths').text = `${itemData.months}mo`; } catch (e) {}
+      try { $item('#termPayment').text = `$${itemData.monthly}/mo`; } catch (e) {}
+      try {
+        if (itemData.isZeroInterest) { $item('#termZeroBadge').show(); }
+        else { $item('#termZeroBadge').hide(); }
+      } catch (e) {}
+      try { $item('#termPill').accessibility = { ariaLabel: `${itemData.months} months at $${itemData.monthly} per month` }; } catch (e) {}
+    });
+
+    repeater.data = terms.map((t, i) => ({ ...t, _id: `term-${i}` }));
   } catch (e) {}
 }
 

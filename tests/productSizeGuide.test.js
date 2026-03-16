@@ -33,6 +33,8 @@ import {
   initDoorwayPresets,
   initShippingDimensions,
   initVisualSizeComparison,
+  initDimensionDiagram,
+  initRoomFitCallout,
 } from '../src/public/ProductSizeGuide.js';
 
 import { announce } from 'public/a11yHelpers.js';
@@ -1326,5 +1328,106 @@ describe('initVisualSizeComparison', () => {
 
     // Should not throw
     expect(() => initVisualSizeComparison($w, state)).not.toThrow();
+  });
+});
+
+describe('initDimensionDiagram', () => {
+  const dims = {
+    unit: 'in',
+    closed: { width: 85, depth: 38, height: 35 },
+    open: { width: 85, depth: 75, height: 18 },
+  };
+
+  it('renders SVG diagram into #dimensionDiagramHtml', () => {
+    const $w = createMock$w();
+    $w('#dimensionDiagramHtml').html = '';
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initDimensionDiagram($w, state);
+    expect($w('#dimensionDiagramHtml').html).toContain('<svg');
+  });
+
+  it('includes aria-label on SVG for accessibility', () => {
+    const $w = createMock$w();
+    $w('#dimensionDiagramHtml').html = '';
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initDimensionDiagram($w, state);
+    expect($w('#dimensionDiagramHtml').html).toContain('aria-label');
+  });
+
+  it('shows open position dimensions when toggled', () => {
+    const $w = createMock$w();
+    $w('#dimensionDiagramHtml').html = '';
+    $w('#diagramPositionToggle').value = 'open';
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initDimensionDiagram($w, state);
+    // Toggle callback
+    const toggleCb = $w('#diagramPositionToggle').onChange.mock.calls[0][0];
+    toggleCb();
+    expect($w('#dimensionDiagramHtml').html).toContain('75');
+  });
+
+  it('does nothing when no dimensions available', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' } };
+    expect(() => initDimensionDiagram($w, state)).not.toThrow();
+  });
+
+  it('does nothing when no product', () => {
+    const $w = createMock$w();
+    const state = {};
+    expect(() => initDimensionDiagram($w, state)).not.toThrow();
+  });
+
+  it('uses cm units when dimensions are in cm', () => {
+    const $w = createMock$w();
+    $w('#dimensionDiagramHtml').html = '';
+    const cmDims = { unit: 'cm', closed: { width: 216, depth: 97, height: 89 }, open: { width: 216, depth: 191, height: 46 } };
+    const state = { product: { _id: 'prod-001' }, dimensions: cmDims };
+    initDimensionDiagram($w, state);
+    expect($w('#dimensionDiagramHtml').html).toContain('cm');
+  });
+});
+
+describe('initRoomFitCallout', () => {
+  const dims = {
+    unit: 'in',
+    closed: { width: 85, depth: 38, height: 35 },
+    open: { width: 85, depth: 75, height: 18 },
+  };
+
+  it('renders room fit text into #roomFitCallout', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initRoomFitCallout($w, state);
+    expect($w('#roomFitCallout').text).toContain('room');
+  });
+
+  it('shows the callout element', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initRoomFitCallout($w, state);
+    expect($w('#roomFitCallout').show).toHaveBeenCalled();
+  });
+
+  it('references open position depth for room sizing', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initRoomFitCallout($w, state);
+    // Open width 85"+48" clearance = 133" → ceil(133/12) = 12ft
+    expect($w('#roomFitCallout').text).toContain('12');
+  });
+
+  it('hides callout when no dimensions available', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' } };
+    initRoomFitCallout($w, state);
+    expect($w('#roomFitCallout').show).not.toHaveBeenCalled();
+  });
+
+  it('sets aria-label on callout for accessibility', () => {
+    const $w = createMock$w();
+    const state = { product: { _id: 'prod-001' }, dimensions: dims };
+    initRoomFitCallout($w, state);
+    expect($w('#roomFitCallout').accessibility.ariaLabel).toBeTruthy();
   });
 });

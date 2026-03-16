@@ -271,7 +271,7 @@ function initSwatchColorFilter($w, state, families) {
   } catch (e) {}
 }
 
-function renderSwatchGrid($w, state, swatches) {
+export function renderSwatchGrid($w, state, swatches) {
   try {
     const grid = $w('#swatchGrid');
     if (!grid) return;
@@ -283,6 +283,21 @@ function renderSwatchGrid($w, state, swatches) {
       } catch (e) {}
       try { $item('#swatchLabel').text = itemData.swatchName || ''; } catch (e) {}
       try { $item('#swatchThumb').onClick(() => selectSwatch($w, state, itemData)); } catch (e) {}
+      try {
+        const adder = $item('#swatchPriceAdder');
+        if (adder) {
+          if (itemData.priceAdder > 0) {
+            adder.text = `+$${itemData.priceAdder}`;
+            adder.show();
+          } else {
+            adder.hide();
+          }
+        }
+      } catch (e) {}
+      try {
+        const label = itemData.swatchName || 'Fabric swatch';
+        $item('#swatchThumb').accessibility = { ariaLabel: itemData.priceAdder > 0 ? `${label} (+$${itemData.priceAdder})` : label };
+      } catch (e) {}
       try {
         const isSel = state.selectedSwatchId === itemData._id;
         $item('#swatchThumb').style.borderColor = isSel ? colors.mountainBlue : colors.sandDark;

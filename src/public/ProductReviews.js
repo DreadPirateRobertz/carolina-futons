@@ -103,6 +103,29 @@ function renderAggregate($w, aggregate) {
       if (countEl) countEl.text = String(aggregate.breakdown[star] || 0);
     } catch (e) {}
   }
+
+  // Histogram bars (width relative to max count, not total)
+  const maxCount = Math.max(...Object.values(aggregate.breakdown), 0);
+  for (let star = 5; star >= 1; star--) {
+    try {
+      const histBar = $w(`#histogramBar${star}`);
+      if (histBar) {
+        const count = aggregate.breakdown[star] || 0;
+        const widthPct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+        histBar.style.width = `${widthPct}%`;
+        if (count > 0) histBar.style.backgroundColor = '#E8845C';
+      }
+    } catch (e) {}
+
+    try {
+      const histPct = $w(`#histogramPercent${star}`);
+      if (histPct) {
+        const count = aggregate.breakdown[star] || 0;
+        const pct = aggregate.total > 0 ? Math.round((count / aggregate.total) * 100) : 0;
+        histPct.text = `${pct}%`;
+      }
+    } catch (e) {}
+  }
 }
 
 function renderStars($w, selector, rating) {
