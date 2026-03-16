@@ -31,7 +31,7 @@ vi.mock('public/productPageUtils.js', () => ({
 
 vi.mock('public/AddToCart.js', () => ({ updateStickyPrice: vi.fn() }));
 
-import { initVariantSelector, handleCustomVariantChange, initSwatchSelector, selectSwatch } from '../src/public/ProductOptions.js';
+import { initVariantSelector, handleCustomVariantChange, initSwatchSelector, selectSwatch, initFinishSwatches } from '../src/public/ProductOptions.js';
 
 function createMockElement() {
   return {
@@ -312,6 +312,289 @@ describe('ProductOptions', () => {
       await selectSwatch($w, state, { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA' });
       // Grid data should be refreshed (new array reference for re-render)
       expect($w('#swatchGrid').data).toHaveLength(2);
+    });
+  });
+
+  describe('initFinishSwatches', () => {
+    beforeEach(() => {
+      state.product.productOptions = [
+        { name: 'Size', choices: [
+          { value: 'Twin', description: 'Twin' },
+          { value: 'Full', description: 'Full' },
+          { value: 'Queen', description: 'Queen' },
+        ]},
+        { name: 'Finish', choices: [
+          { value: 'Natural Oak', description: 'Natural Oak' },
+          { value: 'Espresso', description: 'Espresso' },
+          { value: 'Walnut', description: 'Walnut' },
+          { value: 'Cherry', description: 'Cherry' },
+        ]},
+      ];
+    });
+
+    it('hides the finishDropdown for visual users', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishDropdown').hide).toHaveBeenCalled();
+    });
+
+    it('sets role="radiogroup" on finishSwatches container', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').accessibility.role).toBe('radiogroup');
+    });
+
+    it('sets aria-label on finishSwatches container', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').accessibility.ariaLabel).toBe('Finish');
+    });
+
+    it('populates finishSwatches repeater with finish options', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data).toHaveLength(4);
+      expect($w('#finishSwatches').data[0].value).toBe('Natural Oak');
+      expect($w('#finishSwatches').data[3].value).toBe('Cherry');
+    });
+
+    it('assigns unique _id to each swatch item', async () => {
+      await initFinishSwatches($w, state);
+      const ids = $w('#finishSwatches').data.map(d => d._id);
+      expect(new Set(ids).size).toBe(4);
+    });
+
+    it('registers onItemReady on finishSwatches repeater', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').onItemReady).toHaveBeenCalled();
+    });
+
+    it('does nothing when product has no Finish option', async () => {
+      state.product.productOptions = [
+        { name: 'Size', choices: [{ value: 'Full', description: 'Full' }] },
+      ];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').onItemReady).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when product has no productOptions', async () => {
+      delete state.product.productOptions;
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').onItemReady).not.toHaveBeenCalled();
+    });
+
+    it('checks variant stock for each finish option', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockClear();
+      await initFinishSwatches($w, state);
+      // 4 stock checks (one per finish) + 1 default selection = 5 calls
+      expect(getProductVariants).toHaveBeenCalledTimes(5);
+    });
+
+    it('marks out-of-stock finishes in swatch data', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Espresso') {
+          return Promise.resolve([{ variant: { price: 599 }, inStock: false }]);
+        }
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const espresso = $w('#finishSwatches').data.find(d => d.value === 'Espresso');
+      expect(espresso.outOfStock).toBe(true);
+    });
+
+    it('selects first in-stock finish by default', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishDropdown').value).toBe('Natural Oak');
+    });
+
+    it('expands finishSwatches container', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').expand).toHaveBeenCalled();
+    });
+
+    it('triggers variant change after selecting default finish', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockClear();
+      await initFinishSwatches($w, state);
+      // Should have called getProductVariants during stock check AND default selection
+      expect(getProductVariants).toHaveBeenCalled();
+    });
+
+    describe('onItemReady behavior', () => {
+      let itemReadyCallback;
+
+      beforeEach(async () => {
+        await initFinishSwatches($w, state);
+        itemReadyCallback = $w('#finishSwatches').onItemReady.mock.calls[0][0];
+      });
+
+      it('sets swatch label text', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchLabel').text).toBe('Natural Oak');
+      });
+
+      it('dims out-of-stock swatches', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        expect($item('#finishSwatchCircle').style.opacity).toBe(0.3);
+      });
+
+      it('registers click handler on swatch circle', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchCircle').onClick).toHaveBeenCalled();
+      });
+
+      it('click on in-stock swatch updates hidden dropdown value', async () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        const clickHandler = $item('#finishSwatchCircle').onClick.mock.calls[0][0];
+        await clickHandler();
+        expect($w('#finishDropdown').value).toBe('Walnut');
+      });
+
+      it('click on out-of-stock swatch does not update dropdown', async () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        const clickHandler = $item('#finishSwatchCircle').onClick.mock.calls[0][0];
+        await clickHandler();
+        expect($w('#finishDropdown').value).toBe('Natural Oak');
+      });
+
+      it('click on in-stock swatch triggers variant change', async () => {
+        const { getProductVariants } = await import('public/cartService');
+        getProductVariants.mockClear();
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        const clickHandler = $item('#finishSwatchCircle').onClick.mock.calls[0][0];
+        await clickHandler();
+        expect(getProductVariants).toHaveBeenCalled();
+      });
+    });
+
+    describe('accessibility — individual swatch items', () => {
+      let itemReadyCallback;
+
+      beforeEach(async () => {
+        await initFinishSwatches($w, state);
+        itemReadyCallback = $w('#finishSwatches').onItemReady.mock.calls[0][0];
+      });
+
+      it('sets aria-label on each swatch circle with finish name', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaLabel).toBe('Natural Oak finish');
+      });
+
+      it('sets aria-checked="true" on selected swatch', () => {
+        $w('#finishDropdown').value = 'Walnut';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaChecked).toBe('true');
+      });
+
+      it('sets aria-checked="false" on non-selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaChecked).toBe('false');
+      });
+
+      it('sets aria-disabled on OOS swatch', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        expect($item('#finishSwatchCircle').accessibility.ariaDisabled).toBe('true');
+      });
+
+      it('sets tooltip text on OOS swatch', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        expect($item('#finishSwatchCircle').accessibility.ariaLabel).toContain('Special Order');
+      });
+
+      it('applies focus ring border on selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchCircle').style.borderColor).toBe('#1e3a5f'); // mountainBlue
+        expect($item('#finishSwatchCircle').style.borderWidth).toBe('3px');
+      });
+
+      it('applies default border on non-selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').style.borderColor).toBe('#c9b99a'); // sandDark
+        expect($item('#finishSwatchCircle').style.borderWidth).toBe('1px');
+      });
+    });
+
+    it('survives single stock check failure without breaking init', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      let callCount = 0;
+      getProductVariants.mockImplementation(() => {
+        callCount++;
+        if (callCount === 2) return Promise.reject(new Error('Network error'));
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      // Should still render all 4 swatches despite one failure
+      expect($w('#finishSwatches').data).toHaveLength(4);
+      expect($w('#finishSwatches').expand).toHaveBeenCalled();
+    });
+
+    it('defaults to OOS when stock check fails (safe direction)', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Walnut') return Promise.reject(new Error('timeout'));
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const walnut = $w('#finishSwatches').data.find(d => d.value === 'Walnut');
+      expect(walnut.outOfStock).toBe(true);
+    });
+
+    it('defaults to OOS when stock check returns empty array', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Cherry') return Promise.resolve([]);
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const cherry = $w('#finishSwatches').data.find(d => d.value === 'Cherry');
+      expect(cherry.outOfStock).toBe(true);
+    });
+
+    it('handles all finishes out of stock — no default selection', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValue([{ variant: { price: 599 }, inStock: false }]);
+      await initFinishSwatches($w, state);
+      // All OOS — dropdown should not be set to any finish
+      expect($w('#finishSwatches').data.every(d => d.outOfStock)).toBe(true);
+      // Container should still render
+      expect($w('#finishSwatches').expand).toHaveBeenCalled();
+    });
+
+    it('uses description fallback to value when description missing', async () => {
+      state.product.productOptions = [
+        { name: 'Finish', choices: [
+          { value: 'Natural Oak' },
+        ]},
+      ];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].description).toBe('Natural Oak');
+    });
+
+    it('skips first OOS finish and selects next in-stock as default', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Natural Oak') {
+          return Promise.resolve([{ variant: { price: 599 }, inStock: false }]);
+        }
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      expect($w('#finishDropdown').value).toBe('Espresso');
     });
   });
 });

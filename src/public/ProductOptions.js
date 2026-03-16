@@ -105,6 +105,104 @@ function updateVariantDisplay($w, state, selected) {
   } catch (e) {}
 }
 
+// --- Finish Swatches (Visual variant selector) ---
+
+/**
+ * Render finish options as visual color swatches instead of a dropdown.
+ * Keeps the hidden dropdown for screen reader accessibility.
+ * Grays out out-of-stock finishes. Selects first in-stock finish by default.
+ * @param {Function} $w - Wix Velo selector function
+ * @param {Object} state - Shared product page state
+ * @returns {Promise<void>}
+ */
+export async function initFinishSwatches($w, state) {
+  try {
+    const finishOption = (state.product?.productOptions || [])
+      .find(opt => opt.name === 'Finish');
+    if (!finishOption) return;
+
+    const container = $w('#finishSwatches');
+    const dropdown = $w('#finishDropdown');
+
+    // Hide dropdown visually, keep for a11y
+    try { dropdown.hide(); } catch (e) {}
+
+    // ARIA attributes on swatch container
+    try {
+      container.accessibility.role = 'radiogroup';
+      container.accessibility.ariaLabel = 'Finish';
+    } catch (e) {}
+
+    // Check stock for each finish — default OOS on failure (safe direction)
+    const swatchData = await Promise.all(
+      finishOption.choices.map(async (choice, i) => {
+        let outOfStock = true;
+        try {
+          const variants = await getProductVariants(state.product._id, { Finish: choice.value });
+          if (variants?.length > 0) {
+            outOfStock = !variants[0].inStock;
+          }
+        } catch (e) {
+          console.error(`Stock check failed for finish "${choice.value}":`, e);
+        }
+        return {
+          _id: `finish-${i}`,
+          value: choice.value,
+          description: choice.description || choice.value,
+          outOfStock,
+        };
+      })
+    );
+
+    container.data = swatchData;
+    container.onItemReady(($item, itemData) => {
+      try {
+        $item('#finishSwatchLabel').text = itemData.description;
+      } catch (e) {}
+      // OOS visual treatment
+      try {
+        if (itemData.outOfStock) {
+          $item('#finishSwatchCircle').style.opacity = 0.3;
+        }
+      } catch (e) {}
+      // ARIA attributes
+      try {
+        const isSelected = dropdown.value === itemData.value;
+        const circle = $item('#finishSwatchCircle');
+        circle.accessibility.ariaChecked = isSelected ? 'true' : 'false';
+        if (itemData.outOfStock) {
+          circle.accessibility.ariaLabel = `${itemData.description} finish — Special Order`;
+          circle.accessibility.ariaDisabled = 'true';
+        } else {
+          circle.accessibility.ariaLabel = `${itemData.description} finish`;
+        }
+        // Selection styling — focus ring
+        circle.style.borderColor = isSelected ? colors.mountainBlue : colors.sandDark;
+        circle.style.borderWidth = isSelected ? '3px' : '1px';
+      } catch (e) {}
+      // Click handler
+      try {
+        $item('#finishSwatchCircle').onClick(() => {
+          if (itemData.outOfStock) return;
+          dropdown.value = itemData.value;
+          handleCustomVariantChange($w, state);
+        });
+      } catch (e) {}
+    });
+
+    // Select first in-stock finish by default
+    const firstInStock = swatchData.find(d => !d.outOfStock);
+    if (firstInStock) {
+      dropdown.value = firstInStock.value;
+      await handleCustomVariantChange($w, state);
+    }
+
+    container.expand();
+  } catch (e) {
+    console.error('Error initializing finish swatches:', e);
+  }
+}
+
 // --- Swatch Selector (Inline Grid) ---
 
 /**
