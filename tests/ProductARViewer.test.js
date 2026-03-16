@@ -162,5 +162,46 @@ describe('ProductARViewer', () => {
       await initProductARViewer($w, state);
       expect($w('#viewInRoomBtn').hide).toHaveBeenCalled();
     });
+
+    it('collapses container when checkWebARSupport returns false', async () => {
+      const { checkWebARSupport } = await import('public/arSupport');
+      checkWebARSupport.mockReturnValueOnce(false);
+
+      await initProductARViewer($w, state);
+      expect($w('#arViewerContainer').collapse).toHaveBeenCalled();
+    });
+
+    it('hides button when getModel3DForProduct returns null', async () => {
+      state.product = { _id: 'prod-no-3d', name: 'No 3D', inStock: true };
+      const { isProductAREnabled } = await import('public/arSupport');
+      isProductAREnabled.mockReturnValueOnce(true);
+
+      await initProductARViewer($w, state);
+      expect($w('#viewInRoomBtn').hide).toHaveBeenCalled();
+      expect($w('#arViewerContainer').collapse).toHaveBeenCalled();
+    });
+
+    it('truncates long product name to 200 characters in postMessage', async () => {
+      state.product.name = 'A'.repeat(300);
+      await initProductARViewer($w, state);
+      const clickHandler = $w('#viewInRoomBtn').onClick.mock.calls[0][0];
+      clickHandler();
+      const payload = $w('#productARViewer').postMessage.mock.calls[0][0];
+      expect(payload.title.length).toBeLessThanOrEqual(200);
+    });
+
+    it('includes model dimensions in postMessage payload', async () => {
+      await initProductARViewer($w, state);
+      const clickHandler = $w('#viewInRoomBtn').onClick.mock.calls[0][0];
+      clickHandler();
+      const payload = $w('#productARViewer').postMessage.mock.calls[0][0];
+      expect(payload.dimensions).toEqual({ width: 1.37, depth: 0.86, height: 0.84 });
+    });
+
+    it('collapses container when product is null', async () => {
+      state.product = null;
+      await initProductARViewer($w, state);
+      expect($w('#arViewerContainer').collapse).toHaveBeenCalled();
+    });
   });
 });

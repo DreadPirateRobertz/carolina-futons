@@ -153,4 +153,60 @@ describe('listAssemblyGuides', () => {
     const guides = await listAssemblyGuides();
     expect(guides).toEqual([]);
   });
+
+  it('includes estimatedTime for each guide', async () => {
+    const guides = await listAssemblyGuides();
+    guides.forEach(g => {
+      expect(g.estimatedTime).toBeDefined();
+    });
+  });
+
+  it('returns guides with category field', async () => {
+    const guides = await listAssemblyGuides();
+    guides.forEach(g => {
+      expect(g.category).toBeDefined();
+    });
+  });
+});
+
+// ── getCareTips edge cases ──────────────────────────────────────────
+
+describe('getCareTips edge cases', () => {
+  it('returns default tips for empty string category', async () => {
+    const tips = await getCareTips('');
+    expect(tips.length).toBeGreaterThanOrEqual(2);
+    expect(tips.some(t => t.title.toLowerCase().includes('general'))).toBe(true);
+  });
+
+  it('returns each default tip with title and tip fields', async () => {
+    const tips = await getCareTips(null);
+    tips.forEach(t => {
+      expect(t.title).toBeTruthy();
+      expect(t.tip).toBeTruthy();
+    });
+  });
+});
+
+// ── getAssemblyGuide edge cases ─────────────────────────────────────
+
+describe('getAssemblyGuide edge cases', () => {
+  beforeEach(() => {
+    __seed('AssemblyGuides', [
+      {
+        _id: 'ag-min', sku: 'MIN-SKU', title: 'Minimal Guide',
+        // No optional fields at all
+      },
+    ]);
+  });
+
+  it('returns null fields for missing optional URLs', async () => {
+    const guide = await getAssemblyGuide('MIN-SKU');
+    expect(guide).not.toBeNull();
+    expect(guide.pdfUrl).toBeNull();
+    expect(guide.videoUrl).toBeNull();
+    expect(guide.estimatedTime).toBe('');
+    expect(guide.steps).toBe('');
+    expect(guide.tips).toBe('');
+    expect(guide.category).toBe('');
+  });
 });

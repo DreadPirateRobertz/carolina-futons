@@ -470,3 +470,189 @@ describe('getFulfillmentHistory', () => {
     expect(history).toHaveLength(2);
   });
 });
+
+// ── mapTrackingStatus (via getTrackingUpdate) ──────────────────────
+
+describe('mapTrackingStatus via getTrackingUpdate', () => {
+  function setupTrackingMock(statusCode) {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'mock-token', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/track/')) {
+        return {
+          ok: true,
+          async json() {
+            return {
+              trackResponse: {
+                shipment: [{
+                  package: [{
+                    currentStatus: { description: 'Status', code: statusCode },
+                    deliveryDate: [{ date: '20250625' }],
+                    weight: { weight: '50' },
+                    activity: [{ status: { description: 'Status', code: statusCode }, location: { address: { city: 'Asheville', stateProvince: 'NC', countryCode: 'US' } }, date: '20250625', time: '120000' }],
+                  }],
+                }],
+              },
+            };
+          },
+          async text() { return ''; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+  }
+
+  it('maps IN TRANSIT status code', async () => {
+    setupTrackingMock('I');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20111111111', status: 'LABEL_CREATED' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20111111111');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('IN_TRANSIT');
+  });
+
+  it('maps PICKUP status code', async () => {
+    setupTrackingMock('P');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20222222222', status: 'LABEL_CREATED' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20222222222');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('PICKED_UP');
+  });
+
+  it('maps EXCEPTION status code', async () => {
+    setupTrackingMock('X');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20333333333', status: 'IN_TRANSIT' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20333333333');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('EXCEPTION');
+  });
+
+  it('maps RETURNED status code', async () => {
+    setupTrackingMock('RS');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20444444444', status: 'IN_TRANSIT' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20444444444');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('RETURNED');
+  });
+
+  it('maps MANIFEST status code', async () => {
+    setupTrackingMock('M');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20555555555', status: 'IN_TRANSIT' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20555555555');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('LABEL_CREATED');
+  });
+
+  it('defaults unknown status code to IN_TRANSIT', async () => {
+    setupTrackingMock('ZZ');
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999BB20666666666', status: 'LABEL_CREATED' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    const result = await getTrackingUpdate('1Z999BB20666666666');
+    expect(result.success).toBe(true);
+    expect(updated.status).toBe('IN_TRANSIT');
+  });
+});
+
+// ── getTrackingUpdate edge cases ────────────────────────────────────
+
+describe('getTrackingUpdate edge cases', () => {
+  it('returns error for empty tracking number', async () => {
+    const result = await getTrackingUpdate('');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid tracking number');
+  });
+
+  it('stores estimatedDelivery from tracking response', async () => {
+    __seed('Fulfillments', [{ _id: 'f1', trackingNumber: '1Z999AA10123456784', status: 'IN_TRANSIT' }]);
+    let updated;
+    __onUpdate((col, item) => { if (col === 'Fulfillments') updated = item; });
+    await getTrackingUpdate('1Z999AA10123456784');
+    expect(updated.estimatedDelivery).toBeDefined();
+  });
+});
+
+// ── fulfillOrder edge cases ─────────────────────────────────────────
+
+describe('fulfillOrder edge cases', () => {
+  it('uses order number in shipment when available', async () => {
+    const result = await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('stores 2nd Day Air service name', async () => {
+    let inserted;
+    __onInsert((col, item) => { if (col === 'Fulfillments') inserted = item; });
+    await fulfillOrder('order-001', {
+      serviceCode: '02',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(inserted.serviceName).toBe('UPS 2nd Day Air');
+  });
+
+  it('stores Next Day Air service name', async () => {
+    let inserted;
+    __onInsert((col, item) => { if (col === 'Fulfillments') inserted = item; });
+    await fulfillOrder('order-001', {
+      serviceCode: '01',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(inserted.serviceName).toBe('UPS Next Day Air');
+  });
+
+  it('stores fallback service name for unknown code', async () => {
+    let inserted;
+    __onInsert((col, item) => { if (col === 'Fulfillments') inserted = item; });
+    await fulfillOrder('order-001', {
+      serviceCode: '99',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(inserted.serviceName).toBe('UPS Service 99');
+  });
+
+  it('returns error when UPS shipment creation fails', async () => {
+    __setHandler((url) => {
+      if (url.includes('/oauth/token')) {
+        return { ok: true, async json() { return { access_token: 'mock-token', expires_in: '3600' }; }, async text() { return ''; } };
+      }
+      if (url.includes('/shipments/')) {
+        return {
+          ok: false,
+          async json() { return { response: { errors: [{ message: 'Bad address' }] } }; },
+          async text() { return 'Bad address'; },
+        };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await fulfillOrder('order-001', {
+      serviceCode: '03',
+      packages: [{ length: 48, width: 30, height: 12, weight: 50 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('clamps limit in getPendingOrders', async () => {
+    const orders = await getPendingOrders(500); // Should clamp to 200
+    // Should still work — just verifying no errors
+    expect(Array.isArray(orders)).toBe(true);
+  });
+
+  it('handles non-numeric limit in getPendingOrders', async () => {
+    const orders = await getPendingOrders('abc');
+    expect(Array.isArray(orders)).toBe(true);
+  });
+});

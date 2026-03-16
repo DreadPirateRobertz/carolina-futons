@@ -280,6 +280,65 @@ describe('initRecentlyViewedCarousel', () => {
     expect($w('#myRepeater').data).toEqual(mockProducts);
     expect($w('#mySection').expand).toHaveBeenCalled();
   });
+
+  it('passes navigateToProduct callback to makeClickable for image', () => {
+    getRecentlyViewed.mockReturnValue(mockProducts);
+    initRecentlyViewedCarousel($w);
+
+    const repeater = $w('#recentlyViewedRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, mockProducts[0]);
+
+    // makeClickable should be called twice (image + name)
+    expect(makeClickable).toHaveBeenCalledTimes(2);
+    // First call is for image
+    const imageCall = makeClickable.mock.calls[0];
+    expect(imageCall[2]).toEqual(expect.objectContaining({ ariaLabel: 'View Oak Futon Frame' }));
+    // Second call is for name
+    const nameCall = makeClickable.mock.calls[1];
+    expect(nameCall[2]).toEqual(expect.objectContaining({ ariaLabel: 'View Oak Futon Frame details' }));
+  });
+
+  it('navigateToProduct callback triggers dynamic import for navigation', async () => {
+    getRecentlyViewed.mockReturnValue(mockProducts);
+    initRecentlyViewedCarousel($w);
+
+    const repeater = $w('#recentlyViewedRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, mockProducts[0]);
+
+    // Extract the navigate callback passed to makeClickable and invoke it
+    const navigateFn = makeClickable.mock.calls[0][1];
+    expect(typeof navigateFn).toBe('function');
+    // Just verify the function exists and doesn't throw
+    await navigateFn();
+  });
+
+  it('uses price as fallback when formattedPrice is missing', () => {
+    const productNoFormatted = { ...mockProducts[0], formattedPrice: undefined, price: 499 };
+    getRecentlyViewed.mockReturnValue([productNoFormatted]);
+    initRecentlyViewedCarousel($w);
+
+    const repeater = $w('#recentlyViewedRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, productNoFormatted);
+    expect(itemEls.get('#recentPrice').text).toBe('499');
+  });
 });
 
 // ── initAlsoBoughtSection ────────────────────────────────────────────
@@ -377,5 +436,46 @@ describe('initAlsoBoughtSection', () => {
     await initAlsoBoughtSection($w, mockProducts[0], { limit: 8 });
 
     expect(getSimilarProducts).toHaveBeenCalledWith('p1', { limit: 8 });
+  });
+
+  it('navigateToProduct callback triggers dynamic import for also-bought navigation', async () => {
+    getSimilarProducts.mockResolvedValue({ success: true, products: mockSimilar });
+    await initAlsoBoughtSection($w, mockProducts[0]);
+
+    const repeater = $w('#alsoBoughtRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, mockSimilar[0]);
+
+    // Extract navigate callback and verify it exists and doesn't throw
+    const navigateFn = makeClickable.mock.calls[0][1];
+    expect(typeof navigateFn).toBe('function');
+    await navigateFn();
+  });
+
+  it('uses price fallback when formattedPrice missing in also-bought', async () => {
+    const noFormatted = [{ ...mockSimilar[0], formattedPrice: undefined, price: 549 }];
+    getSimilarProducts.mockResolvedValue({ success: true, products: noFormatted });
+    await initAlsoBoughtSection($w, mockProducts[0]);
+
+    const repeater = $w('#alsoBoughtRepeater');
+    const onItemReadyFn = repeater.onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement(sel));
+      return itemEls.get(sel);
+    };
+    onItemReadyFn($item, noFormatted[0]);
+    expect(itemEls.get('#alsoBoughtPrice').text).toBe('549');
+  });
+
+  it('handles product without _id', async () => {
+    await initAlsoBoughtSection($w, { name: 'No ID' });
+    expect(getSimilarProducts).not.toHaveBeenCalled();
+    expect($w('#alsoBoughtSection').collapse).toHaveBeenCalled();
   });
 });

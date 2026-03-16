@@ -215,5 +215,49 @@ describe('Product360Viewer', () => {
 
       expect($w('#viewer360Embed').postMessage).not.toHaveBeenCalled();
     });
+
+    it('returns destroy function even when product is null', async () => {
+      state.product = null;
+      const result = await initProduct360Viewer($w, state);
+      expect(typeof result.destroy).toBe('function');
+      result.destroy(); // should not throw
+    });
+
+    it('returns destroy function when no images', async () => {
+      mockGet360Images.mockReturnValue(null);
+      const result = await initProduct360Viewer($w, state);
+      expect(typeof result.destroy).toBe('function');
+    });
+  });
+
+  // ── Announce on click ─────────────────────────────────────────────
+
+  describe('a11y announce', () => {
+    it('announces 360 view loaded on button click', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      mockGet360Images.mockReturnValue(MOCK_360_IMAGES);
+      await initProduct360Viewer($w, state);
+      const clickHandler = $w('#view360Btn').onClick.mock.calls[0][0];
+      clickHandler();
+      expect(announce).toHaveBeenCalledWith($w, expect.stringContaining('360 degree view'));
+    });
+  });
+
+  // ── Fallback slug ─────────────────────────────────────────────────
+
+  describe('slug fallback', () => {
+    it('uses product _id when slug is not available', async () => {
+      state.product = { _id: 'prod-fallback', name: 'Fallback' };
+      mockGet360Images.mockReturnValue(MOCK_360_IMAGES);
+      await initProduct360Viewer($w, state);
+      expect(mockGet360Images).toHaveBeenCalledWith('prod-fallback');
+    });
+
+    it('uses product name as fallback for productName', async () => {
+      state.product = { _id: 'prod-x', slug: 'prod-x' };
+      mockGet360Images.mockReturnValue(MOCK_360_IMAGES);
+      await initProduct360Viewer($w, state);
+      expect($w('#view360Btn').accessibility.ariaLabel).toBe('View Product in 360 degrees');
+    });
   });
 });

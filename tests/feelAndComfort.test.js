@@ -157,4 +157,110 @@ describe('initFeelAndComfort', () => {
     await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
     expect(els['#feelSwatchCTA']._handlers.click).toBeDefined();
   });
+
+  it('CTA click expands swatchRequestSection', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    const ctaHandler = els['#feelSwatchCTA']._handlers.click;
+    ctaHandler();
+    expect(els['#swatchRequestSection']._expanded).toBe(true);
+  });
+
+  it('onItemReady sets swatch image and alt', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    const grid = els['#feelSwatchPreview'];
+    expect(grid._itemReadyFn).toBeDefined();
+    // Invoke the callback with a mock $item and swatch data
+    const itemEls = {};
+    const $item = make$w(itemEls);
+    grid._itemReadyFn($item, { swatchImage: 'wix:image://denim.jpg', swatchName: 'Denim Blue', colorHex: '#4A6FA5' });
+    expect(itemEls['#feelSwatchThumb'].src).toBe('wix:image://denim.jpg');
+    expect(itemEls['#feelSwatchThumb'].alt).toBe('Denim Blue fabric swatch');
+  });
+
+  it('onItemReady sets label text', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    const grid = els['#feelSwatchPreview'];
+    const itemEls = {};
+    const $item = make$w(itemEls);
+    grid._itemReadyFn($item, { swatchImage: 'img.jpg', swatchName: 'Red', colorHex: '#DC143C' });
+    expect(itemEls['#feelSwatchLabel'].text).toBe('Red');
+  });
+
+  it('onItemReady uses colorHex fallback when no swatchImage', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    const grid = els['#feelSwatchPreview'];
+    const itemEls = {};
+    const $item = make$w(itemEls);
+    grid._itemReadyFn($item, { swatchName: 'Custom', colorHex: '#FF5733' });
+    expect(itemEls['#feelSwatchThumb'].style.backgroundColor).toBe('#FF5733');
+    // src should NOT be set
+    expect(itemEls['#feelSwatchThumb'].src).toBe('');
+  });
+
+  it('onItemReady handles empty swatchName', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    const grid = els['#feelSwatchPreview'];
+    const itemEls = {};
+    const $item = make$w(itemEls);
+    grid._itemReadyFn($item, { swatchImage: 'img.jpg' });
+    expect(itemEls['#feelSwatchLabel'].text).toBe('');
+  });
+
+  it('sets swatch CTA styling with design tokens', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    // Uses actual designTokens values (sunsetCoral + espresso)
+    expect(els['#feelSwatchCTA'].style.backgroundColor).toBeTruthy();
+    expect(els['#feelSwatchCTA'].style.color).toBeTruthy();
+  });
+
+  it('sets ARIA label on swatch CTA', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    expect(els['#feelSwatchCTA'].accessibility.ariaLabel).toContain('swatch');
+  });
+
+  it('collapses swatch preview when no swatches', async () => {
+    __seed('FabricSwatches', []);
+    const els = {};
+    const $w = make$w(els);
+    // Add collapse to the make$w factory output for this element
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    expect(els['#feelSwatchCTA']._visible).toBe(false);
+  });
+
+  it('renders comfort card description and tagline', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    expect(els['#comfortTagline'].text).toBe('Sink right in');
+    expect(els['#comfortDescription'].text).toBe('Cloud-soft');
+  });
+
+  it('renders comfort card illustration', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    expect(els['#comfortIllustration'].src).toBe('wix:image://plush.svg');
+    expect(els['#comfortIllustration'].alt).toBe('Plush illustration');
+  });
+
+  it('expands comfort sub-section when comfort data exists', async () => {
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    expect(els['#comfortSection']._expanded).toBe(true);
+  });
 });

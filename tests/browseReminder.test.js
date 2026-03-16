@@ -292,5 +292,193 @@ describe('BrowseReminder', () => {
       await submitCb();
       expect(captureRemindMeRequest).toHaveBeenCalledWith('bs_test_123', 'test@example.com');
     });
+
+    it('sets submit button ARIA label', () => {
+      showRemindMePopup($w, browseState);
+      expect($w('#remindMeSubmit').accessibility.ariaLabel).toContain('reminded');
+    });
+
+    it('sets close button ARIA label', () => {
+      showRemindMePopup($w, browseState);
+      expect($w('#remindMeClose').accessibility.ariaLabel).toContain('Close');
+    });
+
+    it('sets popup ariaLabel', () => {
+      showRemindMePopup($w, browseState);
+      expect($w('#remindMePopup').accessibility.ariaLabel).toContain('reminder');
+    });
+
+    it('focuses email input on open', () => {
+      showRemindMePopup($w, browseState);
+      expect($w('#remindMeEmailInput').focus).toHaveBeenCalled();
+    });
+
+    it('sets submit label to Saving... during capture', async () => {
+      let resolveCapture;
+      captureRemindMeRequest.mockImplementationOnce(() => new Promise(r => { resolveCapture = r; }));
+      showRemindMePopup($w, browseState);
+      $w('#remindMeEmailInput').value = 'test@example.com';
+      validateEmail.mockReturnValueOnce(true);
+      const submitCb = $w('#remindMeSubmit').onClick.mock.calls[0][0];
+      const p = submitCb();
+      // While pending, label should be Saving...
+      expect($w('#remindMeSubmit').label).toBe('Saving...');
+      resolveCapture({ success: true });
+      await p;
+    });
+
+    it('sets submit label to Saved! on success', async () => {
+      showRemindMePopup($w, browseState);
+      $w('#remindMeEmailInput').value = 'test@example.com';
+      validateEmail.mockReturnValueOnce(true);
+      const submitCb = $w('#remindMeSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+      expect($w('#remindMeSubmit').label).toBe('Saved!');
+    });
+
+    it('calls announce on validation error', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      showRemindMePopup($w, browseState);
+      $w('#remindMeEmailInput').value = '';
+      const submitCb = $w('#remindMeSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+      expect(announce).toHaveBeenCalledWith($w, expect.stringContaining('valid email'));
+    });
+
+    it('calls announce on API error', async () => {
+      const { announce } = await import('public/a11yHelpers.js');
+      captureRemindMeRequest.mockRejectedValueOnce(new Error('fail'));
+      showRemindMePopup($w, browseState);
+      $w('#remindMeEmailInput').value = 'test@example.com';
+      validateEmail.mockReturnValueOnce(true);
+      const submitCb = $w('#remindMeSubmit').onClick.mock.calls[0][0];
+      await submitCb();
+      expect(announce).toHaveBeenCalledWith($w, expect.stringContaining('went wrong'));
+    });
+
+    it('removes keydown listener on close', () => {
+      const listeners = {};
+      vi.stubGlobal('document', {
+        addEventListener: vi.fn((evt, cb) => { listeners[evt] = cb; }),
+        removeEventListener: vi.fn(),
+      });
+      showRemindMePopup($w, browseState);
+      const closeCb = $w('#remindMeClose').onClick.mock.calls[0][0];
+      closeCb();
+      expect(document.removeEventListener).toHaveBeenCalledWith('keydown', expect.any(Function));
+    });
+  });
+
+  // ── sendBrowseSession via visibility/unload ──────────────────
+
+  describe('sendBrowseSession (via event handlers)', () => {
+    it('sends session data when visibilitychange fires with hidden', () => {
+      let visHandler;
+      vi.stubGlobal('document', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'visibilitychange') visHandler = cb; }),
+        visibilityState: 'hidden',
+      });
+      vi.stubGlobal('window', { addEventListener: vi.fn() });
+      initBrowseTracking($w, state, browseState);
+      expect(visHandler).toBeDefined();
+      visHandler();
+      expect(trackBrowseSession).toHaveBeenCalledWith(expect.objectContaining({
+        sessionId: browseState.sessionId,
+        productsViewed: expect.any(Array),
+      }));
+    });
+
+    it('does not send when visibilityState is visible', () => {
+      let visHandler;
+      vi.stubGlobal('document', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'visibilitychange') visHandler = cb; }),
+        visibilityState: 'visible',
+      });
+      vi.stubGlobal('window', { addEventListener: vi.fn() });
+      initBrowseTracking($w, state, browseState);
+      visHandler();
+      expect(trackBrowseSession).not.toHaveBeenCalled();
+    });
+
+    it('sends session data on beforeunload', () => {
+      let unloadHandler;
+      vi.stubGlobal('document', { addEventListener: vi.fn() });
+      vi.stubGlobal('window', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'beforeunload') unloadHandler = cb; }),
+      });
+      initBrowseTracking($w, state, browseState);
+      expect(unloadHandler).toBeDefined();
+      unloadHandler();
+      expect(trackBrowseSession).toHaveBeenCalledWith(expect.objectContaining({
+        sessionId: browseState.sessionId,
+      }));
+    });
+
+    it('sends session data only once (sendOnce dedup)', () => {
+      let visHandler, unloadHandler;
+      vi.stubGlobal('document', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'visibilitychange') visHandler = cb; }),
+        visibilityState: 'hidden',
+      });
+      vi.stubGlobal('window', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'beforeunload') unloadHandler = cb; }),
+      });
+      initBrowseTracking($w, state, browseState);
+      visHandler(); // first send
+      unloadHandler(); // should be deduped
+      expect(trackBrowseSession).toHaveBeenCalledTimes(1);
+    });
+
+    it('includes view duration in session payload', () => {
+      let unloadHandler;
+      vi.stubGlobal('document', { addEventListener: vi.fn() });
+      vi.stubGlobal('window', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'beforeunload') unloadHandler = cb; }),
+      });
+      initBrowseTracking($w, state, browseState);
+      vi.advanceTimersByTime(5000); // 5 seconds browsing
+      unloadHandler();
+      const payload = trackBrowseSession.mock.calls[0][0];
+      expect(payload.totalDuration).toBeGreaterThanOrEqual(5000);
+      expect(payload.productsViewed[0].viewDuration).toBeGreaterThanOrEqual(5000);
+    });
+
+    it('includes entry/exit page path', () => {
+      let unloadHandler;
+      vi.stubGlobal('document', { addEventListener: vi.fn() });
+      vi.stubGlobal('window', {
+        addEventListener: vi.fn((evt, cb) => { if (evt === 'beforeunload') unloadHandler = cb; }),
+      });
+      initBrowseTracking($w, state, browseState);
+      unloadHandler();
+      const payload = trackBrowseSession.mock.calls[0][0];
+      expect(payload.entryPage).toBe('/product-page/eureka-futon');
+      expect(payload.exitPage).toBe('/product-page/eureka-futon');
+    });
+  });
+
+  // ── edge cases ───────────────────────────────────────────────
+
+  describe('initBrowseTracking edge cases', () => {
+    it('generates fallback session ID when sessionStorage unavailable', () => {
+      vi.unstubAllGlobals();
+      // sessionStorage not defined at all
+      initBrowseTracking($w, state, browseState);
+      expect(browseState.sessionId).toMatch(/^bs_/);
+    });
+
+    it('handles sessionStorage.getItem throwing', () => {
+      sessionStorage.getItem.mockImplementation(() => { throw new Error('denied'); });
+      initBrowseTracking($w, state, browseState);
+      // Should still have a session ID via fallback
+      expect(browseState.sessionId).toMatch(/^bs_/);
+    });
+
+    it('records product name and price defaults', () => {
+      state.product = { _id: 'p2' }; // no name, no price
+      initBrowseTracking($w, state, browseState);
+      expect(browseState.productsViewed[0].productName).toBe('');
+      expect(browseState.productsViewed[0].price).toBe(0);
+    });
   });
 });

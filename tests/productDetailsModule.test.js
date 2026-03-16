@@ -288,4 +288,198 @@ describe('initBackInStockNotification', () => {
     await initBackInStockNotification(localW, { _id: 'p1', name: 'Test' });
     // Should not throw
   });
+
+  it('submits back-in-stock request for valid email', async () => {
+    const product = { _id: 'p1', name: 'Comfy Futon' };
+    await initBackInStockNotification($w, product);
+    const clickHandler = getEl('#backInStockBtn').onClick.mock.calls[0][0];
+    getEl('#backInStockEmail').value = 'test@example.com';
+    await clickHandler();
+    const { submitContactForm } = await import('backend/contactSubmissions.web');
+    expect(submitContactForm).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'test@example.com',
+      source: 'back_in_stock',
+      productId: 'p1',
+      productName: 'Comfy Futon',
+    }));
+  });
+
+  it('shows success message after valid submission', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    const clickHandler = getEl('#backInStockBtn').onClick.mock.calls[0][0];
+    getEl('#backInStockEmail').value = 'test@example.com';
+    await clickHandler();
+    expect(getEl('#backInStockSuccess').text).toContain('back in stock');
+    expect(getEl('#backInStockSuccess').show).toHaveBeenCalled();
+  });
+
+  it('hides button and input after submission', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    const clickHandler = getEl('#backInStockBtn').onClick.mock.calls[0][0];
+    getEl('#backInStockEmail').value = 'test@example.com';
+    await clickHandler();
+    expect(getEl('#backInStockBtn').hide).toHaveBeenCalled();
+    expect(getEl('#backInStockEmail').hide).toHaveBeenCalled();
+  });
+
+  it('trims whitespace from email', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    const clickHandler = getEl('#backInStockBtn').onClick.mock.calls[0][0];
+    getEl('#backInStockEmail').value = '  test@example.com  ';
+    await clickHandler();
+    const { submitContactForm } = await import('backend/contactSubmissions.web');
+    expect(submitContactForm).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'test@example.com',
+    }));
+  });
+
+  it('ignores empty email on submit', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    const clickHandler = getEl('#backInStockBtn').onClick.mock.calls[0][0];
+    getEl('#backInStockEmail').value = '';
+    await clickHandler();
+    const { submitContactForm } = await import('backend/contactSubmissions.web');
+    expect(submitContactForm).not.toHaveBeenCalled();
+  });
+
+  it('onChange triggers updateBackInStockVisibility for size dropdown', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    expect(getEl('#sizeDropdown').onChange).toHaveBeenCalled();
+    // Simulate dropdown change with out-of-stock variant
+    getProductVariants.mockResolvedValueOnce([{ inStock: false }]);
+    getEl('#sizeDropdown').value = 'Full';
+    const onChangeHandler = getEl('#sizeDropdown').onChange.mock.calls[0][0];
+    await onChangeHandler();
+    expect(getEl('#backInStockSection').expand).toHaveBeenCalled();
+  });
+
+  it('collapses back-in-stock when variant is in stock', async () => {
+    const product = { _id: 'p1', name: 'Test' };
+    await initBackInStockNotification($w, product);
+    getProductVariants.mockResolvedValueOnce([{ inStock: true }]);
+    getEl('#sizeDropdown').value = 'Twin';
+    const onChangeHandler = getEl('#sizeDropdown').onChange.mock.calls[0][0];
+    await onChangeHandler();
+    // collapse called at init + on change
+    expect(getEl('#backInStockSection').collapse).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('initStockUrgency — popularity badge', () => {
+  beforeEach(() => {
+    elements.clear();
+    vi.clearAllMocks();
+  });
+
+  it('shows popularity badge when weekSales > 0', async () => {
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({
+        items: [{ weekSales: 12 }],
+      })),
+    });
+    const product = { _id: 'p1', quantityInStock: 10 };
+    await initStockUrgency($w, product);
+    expect(getEl('#popularityBadge').text).toContain('12 sold this week');
+    expect(getEl('#popularityBadge').show).toHaveBeenCalled();
+  });
+
+  it('hides popularity badge when no sales data', async () => {
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({ items: [] })),
+    });
+    const product = { _id: 'p1', quantityInStock: 10 };
+    await initStockUrgency($w, product);
+    expect(getEl('#popularityBadge').hide).toHaveBeenCalled();
+  });
+
+  it('hides popularity badge when weekSales is 0', async () => {
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({
+        items: [{ weekSales: 0 }],
+      })),
+    });
+    const product = { _id: 'p1', quantityInStock: 10 };
+    await initStockUrgency($w, product);
+    expect(getEl('#popularityBadge').hide).toHaveBeenCalled();
+  });
+});
+
+describe('initDeliveryEstimate — collection matching', () => {
+  beforeEach(() => { elements.clear(); });
+
+  it('shows white-glove for murphy collections', () => {
+    const product = { _id: 'p1', weight: 10, collections: ['murphy-cabinet-beds'] };
+    initDeliveryEstimate($w, product);
+    expect(getEl('#whiteGloveNote').text).toContain('White-glove');
+  });
+
+  it('shows white-glove for platform-beds', () => {
+    const product = { _id: 'p1', weight: 10, collections: ['platform-beds'] };
+    initDeliveryEstimate($w, product);
+    expect(getEl('#whiteGloveNote').text).toContain('White-glove');
+  });
+
+  it('does not show white-glove for small items not in furniture collections', () => {
+    const product = { _id: 'p1', weight: 5, collections: ['accessories'] };
+    initDeliveryEstimate($w, product);
+    expect(getEl('#whiteGloveNote').show).not.toHaveBeenCalled();
+  });
+
+  it('includes date range in estimate', () => {
+    const product = { _id: 'p1' };
+    initDeliveryEstimate($w, product);
+    const text = getEl('#deliveryEstimate').text;
+    // Should match pattern "Estimated delivery: <date> – <date>"
+    expect(text).toMatch(/Estimated delivery: .+ – .+/);
+  });
+});
+
+describe('initProductInfoAccordion — double toggle', () => {
+  beforeEach(() => { elements.clear(); });
+
+  it('double-click re-opens a collapsed section', () => {
+    initProductInfoAccordion($w);
+    const handler = getEl('#infoHeaderDescription').onClick.mock.calls[0][0];
+    handler(); // collapse
+    handler(); // re-expand
+    expect(getEl('#infoArrowDescription').text).toBe('\u2212');
+    expect(getEl('#infoHeaderDescription').accessibility.ariaExpanded).toBe(true);
+  });
+
+  it('updates ariaExpanded on toggle', () => {
+    initProductInfoAccordion($w);
+    const handler = getEl('#infoHeaderDimensions').onClick.mock.calls[0][0];
+    handler(); // expand
+    expect(getEl('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(true);
+    handler(); // collapse
+    expect(getEl('#infoHeaderDimensions').accessibility.ariaExpanded).toBe(false);
+  });
+});
+
+describe('initProductVideo — type fallback', () => {
+  beforeEach(() => { elements.clear(); });
+
+  it('finds video by type property', () => {
+    const product = { mediaItems: [{ type: 'video', src: 'alt-video.mp4' }] };
+    initProductVideo($w, product);
+    expect(getEl('#productVideoSection').expand).toHaveBeenCalled();
+    expect(getEl('#productVideo').src).toBe('alt-video.mp4');
+  });
+
+  it('collapses section when product has empty mediaItems', () => {
+    const product = { mediaItems: [] };
+    initProductVideo($w, product);
+    expect(getEl('#productVideoSection').collapse).toHaveBeenCalled();
+  });
 });
