@@ -2,7 +2,14 @@
  * Tests for product360Data.js — 360-degree image spin set data module
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { get360Images, has360View, register360SpinSet } from '../src/public/product360Data.js';
+import {
+  get360Images,
+  has360View,
+  register360SpinSet,
+  buildSpinSet,
+  SPIN_CDN_BASE,
+  DEFAULT_FRAME_COUNT,
+} from '../src/public/product360Data.js';
 
 describe('get360Images', () => {
   it('returns empty array for unknown slug', () => {
@@ -74,6 +81,58 @@ describe('has360View — additional edge cases', () => {
   it('returns false when registered spin set is empty array', () => {
     register360SpinSet('empty-spin', []);
     expect(has360View({ slug: 'empty-spin' })).toBe(false);
+  });
+});
+
+describe('buildSpinSet', () => {
+  it('generates correct number of frames', () => {
+    const set = buildSpinSet('test-slug', 'Test Product');
+    expect(set).toHaveLength(DEFAULT_FRAME_COUNT);
+    expect(set).toHaveLength(36);
+  });
+
+  it('generates CDN URLs with zero-padded frame numbers', () => {
+    const set = buildSpinSet('monterey', 'Monterey');
+    expect(set[0].src).toBe(`${SPIN_CDN_BASE}/monterey/monterey-00.jpg`);
+    expect(set[9].src).toBe(`${SPIN_CDN_BASE}/monterey/monterey-09.jpg`);
+    expect(set[10].src).toBe(`${SPIN_CDN_BASE}/monterey/monterey-10.jpg`);
+    expect(set[35].src).toBe(`${SPIN_CDN_BASE}/monterey/monterey-35.jpg`);
+  });
+
+  it('generates descriptive alt text with angle', () => {
+    const set = buildSpinSet('test', 'Test Product');
+    expect(set[0].alt).toBe('Test Product — 360° view, angle 0°');
+    expect(set[18].alt).toBe('Test Product — 360° view, angle 180°');
+  });
+
+  it('respects custom frame count', () => {
+    const set = buildSpinSet('test', 'Test', 8);
+    expect(set).toHaveLength(8);
+    expect(set[1].alt).toContain('angle 45°');
+  });
+});
+
+describe('pre-configured spin sets', () => {
+  it('has spin sets for Murphy cabinet beds', () => {
+    expect(get360Images('murphy-queen-vertical')).toHaveLength(36);
+    expect(get360Images('murphy-full-horizontal')).toHaveLength(36);
+    expect(get360Images('murphy-queen-bookcase')).toHaveLength(36);
+    expect(get360Images('murphy-twin-cabinet')).toHaveLength(36);
+    expect(get360Images('murphy-queen-desk')).toHaveLength(36);
+    expect(get360Images('murphy-full-storage')).toHaveLength(36);
+  });
+
+  it('has spin sets for top futon frames', () => {
+    expect(get360Images('asheville')).toHaveLength(36);
+    expect(get360Images('blue-ridge')).toHaveLength(36);
+    expect(get360Images('pisgah')).toHaveLength(36);
+    expect(get360Images('biltmore')).toHaveLength(36);
+    expect(get360Images('monterey')).toHaveLength(36);
+  });
+
+  it('has360View returns true for configured products', () => {
+    expect(has360View({ slug: 'monterey' })).toBe(true);
+    expect(has360View({ slug: 'murphy-queen-vertical' })).toBe(true);
   });
 });
 
