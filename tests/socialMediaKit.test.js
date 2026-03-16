@@ -70,6 +70,37 @@ describe('getShareUrls', () => {
     expect(urls.email).toContain('subject=');
     expect(urls.email).toContain('body=');
   });
+
+  it('generates mailto without description body prefix', async () => {
+    const urls = await getShareUrls({
+      url: 'https://example.com',
+      title: 'Test',
+    });
+    // When no description, body should just be the URL
+    expect(urls.email).toContain('body=');
+    expect(urls.email).not.toContain('%0A%0Ahttps');
+  });
+
+  it('returns empty for null URL', async () => {
+    const urls = await getShareUrls({ url: null, title: 'Test' });
+    expect(urls).toEqual({});
+  });
+
+  it('linkedin URL contains the page URL', async () => {
+    const urls = await getShareUrls({
+      url: 'https://carolinafutons.com/test',
+      title: 'Test',
+    });
+    expect(urls.linkedin).toContain(encodeURIComponent('https://carolinafutons.com/test'));
+  });
+
+  it('facebook URL uses sharer endpoint', async () => {
+    const urls = await getShareUrls({
+      url: 'https://example.com',
+      title: 'Test',
+    });
+    expect(urls.facebook).toContain('facebook.com/sharer/sharer.php');
+  });
 });
 
 // ── getProductShareUrls ─────────────────────────────────────────────
@@ -107,6 +138,29 @@ describe('getProductShareUrls', () => {
   it('includes LinkedIn share URL', async () => {
     const urls = await getProductShareUrls(futonFrame);
     expect(urls.linkedin).toContain('linkedin.com');
+  });
+
+  it('uses formattedPrice when available', async () => {
+    const product = { ...futonFrame, formattedPrice: '$499.00' };
+    const urls = await getProductShareUrls(product);
+    expect(urls.twitter).toContain(encodeURIComponent('$499.00'));
+  });
+
+  it('falls back to price when formattedPrice missing', async () => {
+    const product = { ...futonFrame, formattedPrice: undefined, price: 499 };
+    const urls = await getProductShareUrls(product);
+    expect(urls.twitter).toContain(encodeURIComponent('$499.00'));
+  });
+
+  it('uses default image when mainMedia missing', async () => {
+    const product = { ...futonFrame, mainMedia: undefined };
+    const urls = await getProductShareUrls(product);
+    expect(urls.pinterest).toContain(encodeURIComponent('og-default.jpg'));
+  });
+
+  it('email includes Carolina Futons in subject', async () => {
+    const urls = await getProductShareUrls(futonFrame);
+    expect(urls.email).toContain(encodeURIComponent('Carolina Futons'));
   });
 });
 
@@ -181,6 +235,36 @@ describe('validateSocialMeta', () => {
     expect(result.platforms.twitter.maxScore).toBe(4);
     expect(result.platforms.pinterest.maxScore).toBe(6);
   });
+
+  it('returns maxScore of 15', async () => {
+    const result = await validateSocialMeta({});
+    expect(result.maxScore).toBe(15);
+  });
+
+  it('warns about long og:description', async () => {
+    const meta = { ...completeMeta, 'og:description': 'X'.repeat(201) };
+    const result = await validateSocialMeta(meta);
+    expect(result.issues.some(i => i.includes('og:description exceeds 200'))).toBe(true);
+  });
+
+  it('accepts valid twitter:card values', async () => {
+    for (const card of ['summary', 'summary_large_image', 'app', 'player']) {
+      const meta = { ...completeMeta, 'twitter:card': card };
+      const result = await validateSocialMeta(meta);
+      expect(result.issues.some(i => i.includes('twitter:card has invalid value'))).toBe(false);
+    }
+  });
+
+  it('returns 0 score for empty object', async () => {
+    const result = await validateSocialMeta({});
+    expect(result.score).toBe(0);
+    expect(result.issues.length).toBeGreaterThan(0);
+  });
+
+  it('returns 0 for non-object input', async () => {
+    const result = await validateSocialMeta('string');
+    expect(result.score).toBe(0);
+  });
 });
 
 // ── checkProductSocialReadiness ─────────────────────────────────────
@@ -224,6 +308,36 @@ describe('checkProductSocialReadiness', () => {
   it('returns issues array', async () => {
     const result = await checkProductSocialReadiness(futonFrame);
     expect(Array.isArray(result.issues)).toBe(true);
+  });
+
+  it('includes og:site_name in meta', async () => {
+    const result = await checkProductSocialReadiness(futonFrame);
+    expect(result.meta['og:site_name']).toBe('Carolina Futons');
+  });
+
+  it('strips HTML from description', async () => {
+    const product = { ...futonFrame, description: '<p>Bold <b>text</b></p>' };
+    const result = await checkProductSocialReadiness(product);
+    expect(result.meta['og:description']).not.toContain('<p>');
+    expect(result.meta['og:description']).not.toContain('<b>');
+  });
+
+  it('uses default description when product description empty', async () => {
+    const product = { ...futonFrame, description: '' };
+    const result = await checkProductSocialReadiness(product);
+    expect(result.meta['og:description']).toContain('Shop');
+    expect(result.meta['og:description']).toContain('Carolina Futons');
+  });
+
+  it('uses default image when mainMedia missing', async () => {
+    const product = { ...futonFrame, mainMedia: undefined };
+    const result = await checkProductSocialReadiness(product);
+    expect(result.meta['og:image']).toContain('og-default.jpg');
+  });
+
+  it('returns maxScore of 15', async () => {
+    const result = await checkProductSocialReadiness(futonFrame);
+    expect(result.maxScore).toBe(15);
   });
 });
 
@@ -288,5 +402,25 @@ describe('getFeedStatus', () => {
     expect(status.facebookCatalog.configured).toBe(true);
     expect(status.pinterestCatalog.configured).toBe(true);
     expect(status.sitemap.configured).toBe(true);
+  });
+
+  it('includes format info for each feed', async () => {
+    const status = await getFeedStatus();
+    expect(status.googleShopping.format).toContain('XML');
+    expect(status.facebookCatalog.format).toContain('TSV');
+    expect(status.pinterestCatalog.format).toContain('TSV');
+    expect(status.sitemap.format).toContain('XML');
+  });
+
+  it('endpoints use carolinafutons.com base URL', async () => {
+    const status = await getFeedStatus();
+    for (const feed of Object.values(status)) {
+      expect(feed.endpoint).toContain('carolinafutons.com');
+    }
+  });
+
+  it('sitemap endpoint contains productSitemap', async () => {
+    const status = await getFeedStatus();
+    expect(status.sitemap.endpoint).toContain('productSitemap');
   });
 });

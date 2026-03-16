@@ -74,6 +74,29 @@ describe('getConversionFunnel', () => {
     const funnel = await getConversionFunnel(7);
     expect(funnel.period).toBe('7 days');
   });
+
+  it('defaults to 30 days period', async () => {
+    const funnel = await getConversionFunnel();
+    expect(funnel.period).toBe('30 days');
+  });
+
+  it('stages have correct icons', async () => {
+    const funnel = await getConversionFunnel();
+    expect(funnel.stages[0].icon).toBe('eye');
+    expect(funnel.stages[1].icon).toBe('cart');
+    expect(funnel.stages[2].icon).toBe('check');
+  });
+
+  it('handles records with missing viewCount gracefully', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'p1', addToCartCount: 5, purchaseCount: 2 },
+    ]);
+    const funnel = await getConversionFunnel();
+    expect(funnel.stages[0].count).toBe(0);
+    expect(funnel.stages[1].count).toBe(5);
+    expect(funnel.stages[2].count).toBe(2);
+    expect(funnel.conversionRates.viewToCart).toBe(0);
+  });
 });
 
 // ── getTopConverters ────────────────────────────────────────────────
@@ -122,6 +145,29 @@ describe('getTopConverters', () => {
     const converters = await getTopConverters(10, 1);
     expect(converters[0].conversionRate).toBe(20);
   });
+
+  it('includes purchaseCount and category in output', async () => {
+    const converters = await getTopConverters(10, 1);
+    expect(converters[0]).toHaveProperty('purchaseCount');
+    expect(converters[0]).toHaveProperty('category');
+  });
+
+  it('defaults productName to empty string when missing', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'p1', viewCount: 50, addToCartCount: 10, purchaseCount: 3 },
+    ]);
+    const converters = await getTopConverters(10, 1);
+    expect(converters[0].productName).toBe('');
+  });
+
+  it('uses default limit of 10 and minViews of 10', async () => {
+    const converters = await getTopConverters();
+    // Should only return products with viewCount >= 10
+    for (const c of converters) {
+      expect(c.viewCount).toBeGreaterThanOrEqual(10);
+    }
+    expect(converters.length).toBeLessThanOrEqual(10);
+  });
 });
 
 // ── getCategoryPerformance ──────────────────────────────────────────
@@ -158,6 +204,30 @@ describe('getCategoryPerformance', () => {
     __seed('ProductAnalytics', []);
     const cats = await getCategoryPerformance();
     expect(cats).toEqual([]);
+  });
+
+  it('defaults missing category to uncategorized', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'p1', viewCount: 50, addToCartCount: 5, purchaseCount: 1 },
+    ]);
+    const cats = await getCategoryPerformance();
+    expect(cats[0].category).toBe('uncategorized');
+  });
+
+  it('calculates conversionRate as addToCart/views percentage', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'p1', viewCount: 200, addToCartCount: 40, purchaseCount: 10, category: 'test' },
+    ]);
+    const cats = await getCategoryPerformance();
+    expect(cats[0].conversionRate).toBe(20);
+  });
+
+  it('returns 0 conversionRate when views is 0', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'p1', viewCount: 0, addToCartCount: 0, purchaseCount: 0, category: 'test' },
+    ]);
+    const cats = await getCategoryPerformance();
+    expect(cats[0].conversionRate).toBe(0);
   });
 });
 
@@ -203,6 +273,47 @@ describe('getEmailFunnelMetrics', () => {
   it('includes period string', async () => {
     const result = await getEmailFunnelMetrics(7);
     expect(result.period).toBe('7 days');
+  });
+
+  it('defaults to 30 days period', async () => {
+    const result = await getEmailFunnelMetrics();
+    expect(result.period).toBe('30 days');
+  });
+
+  it('groups unknown sequence type', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', status: 'sent', createdAt: new Date() },
+    ]);
+    const result = await getEmailFunnelMetrics();
+    expect(result.metrics.unknown).toBeDefined();
+    expect(result.metrics.unknown.sent).toBe(1);
+  });
+
+  it('queued count matches items per sequence', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-2', sequenceType: 'welcome', status: 'pending', createdAt: new Date() },
+      { _id: 'eq-3', sequenceType: 'welcome', status: 'failed', createdAt: new Date() },
+    ]);
+    const result = await getEmailFunnelMetrics();
+    expect(result.metrics.welcome.queued).toBe(3);
+  });
+
+  it('handles 100% delivery rate', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', sequenceType: 'promo', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-2', sequenceType: 'promo', status: 'sent', createdAt: new Date() },
+    ]);
+    const result = await getEmailFunnelMetrics();
+    expect(result.metrics.promo.deliveryRate).toBe(100);
+  });
+
+  it('handles 0% delivery rate', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', sequenceType: 'promo', status: 'failed', createdAt: new Date() },
+    ]);
+    const result = await getEmailFunnelMetrics();
+    expect(result.metrics.promo.deliveryRate).toBe(0);
   });
 });
 
@@ -251,6 +362,40 @@ describe('getRevenueAttribution', () => {
   it('respects limit', async () => {
     const result = await getRevenueAttribution(1);
     expect(result.topProducts.length).toBeLessThanOrEqual(1);
+  });
+
+  it('falls back to product.name when analytics productName missing', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'prod-frame-001', viewCount: 100, addToCartCount: 20, purchaseCount: 5 },
+    ]);
+    const result = await getRevenueAttribution(10);
+    const prod = result.topProducts.find(p => p.productId === 'prod-frame-001');
+    expect(prod).toBeDefined();
+    expect(prod.productName.length).toBeGreaterThan(0);
+  });
+
+  it('returns 0 price when product not found in Stores/Products', async () => {
+    __seed('ProductAnalytics', [
+      { _id: 'a1', productId: 'nonexistent-id', productName: 'Ghost', viewCount: 50, addToCartCount: 10, purchaseCount: 5, category: 'test' },
+    ]);
+    __seed('Stores/Products', []);
+    const result = await getRevenueAttribution(10);
+    const ghost = result.topProducts.find(p => p.productId === 'nonexistent-id');
+    expect(ghost).toBeDefined();
+    expect(ghost.price).toBe(0);
+    expect(ghost.attributedRevenue).toBe(0);
+  });
+
+  it('defaults limit to 10', async () => {
+    const result = await getRevenueAttribution();
+    expect(result.topProducts.length).toBeLessThanOrEqual(10);
+  });
+
+  it('includes category in output', async () => {
+    const result = await getRevenueAttribution(10);
+    for (const p of result.topProducts) {
+      expect(p).toHaveProperty('category');
+    }
   });
 });
 
@@ -303,5 +448,25 @@ describe('getDashboardSummary', () => {
   it('respects days parameter', async () => {
     const summary = await getDashboardSummary(7);
     expect(summary.period).toBe('7 days');
+  });
+
+  it('includes emailsSent from email queue', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-2', sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-3', sequenceType: 'promo', status: 'failed', createdAt: new Date() },
+    ]);
+    const summary = await getDashboardSummary();
+    expect(summary.emailsSent).toBe(2);
+  });
+
+  it('totalAddToCart matches funnel data', async () => {
+    const summary = await getDashboardSummary();
+    expect(summary.totalAddToCart).toBe(63);
+  });
+
+  it('totalPurchases matches funnel data', async () => {
+    const summary = await getDashboardSummary();
+    expect(summary.totalPurchases).toBe(25);
   });
 });
