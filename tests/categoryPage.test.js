@@ -1,48 +1,25 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { futonFrame, wallHuggerFrame, futonMattress } from './fixtures/products.js';
 import { __setPath, __getToCallLog, __resetToCallLog } from './__mocks__/wix-location-frontend.js';
+import { createMockElement } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
 
-function createMockElement() {
-  return {
-    text: '',
-    src: '',
-    alt: '',
-    value: '',
-    label: '',
-    options: [],
-    data: [],
-    style: { color: '' },
-    accessibility: {},
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(),
-    expand: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    scrollTo: vi.fn(),
-    postMessage: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onItemReady: vi.fn(),
-    onItemClicked: vi.fn(),
-    onReady: vi.fn((cb) => { if (cb) cb(); return Promise.resolve(); }),
-    onCurrentIndexChanged: vi.fn(),
-    getCurrentItem: vi.fn(() => futonFrame),
-    getTotalCount: vi.fn(() => 5),
-    getItems: vi.fn((offset, limit) => ({
-      items: [{ slug: 'eureka', name: 'Eureka', mainMedia: 'img.jpg' }],
-    })),
-    setSort: vi.fn(),
-    setFilter: vi.fn(),
-  };
-}
+const categoryPageOverrides = {
+  onReady: vi.fn((cb) => { if (cb) cb(); return Promise.resolve(); }),
+  getCurrentItem: vi.fn(() => futonFrame),
+  getTotalCount: vi.fn(() => 5),
+  getItems: vi.fn((offset, limit) => ({
+    items: [{ slug: 'eureka', name: 'Eureka', mainMedia: 'img.jpg' }],
+  })),
+  setSort: vi.fn(),
+  setFilter: vi.fn(),
+};
 
 function getEl(sel) {
-  if (!elements.has(sel)) elements.set(sel, createMockElement());
+  if (!elements.has(sel)) elements.set(sel, createMockElement(categoryPageOverrides));
   return elements.get(sel);
 }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { futonFrame } from './fixtures/products.js';
+import { createMockElement, create$w } from './helpers/wixMocks.js';
 
 vi.mock('public/cartService', () => ({
   getProductVariants: vi.fn().mockResolvedValue([{
@@ -32,27 +33,6 @@ vi.mock('public/productPageUtils.js', () => ({
 vi.mock('public/AddToCart.js', () => ({ updateStickyPrice: vi.fn() }));
 
 import { initVariantSelector, handleCustomVariantChange, initSwatchSelector, selectSwatch, initFinishSwatches } from '../src/public/ProductOptions.js';
-
-function createMockElement() {
-  return {
-    text: '', src: '', alt: '', value: '', label: '', items: [], data: [],
-    style: { color: '', backgroundColor: '', borderColor: '', borderWidth: '', opacity: 0 },
-    options: [],
-    show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(), expand: vi.fn(), onClick: vi.fn(), onChange: vi.fn(),
-    onItemReady: vi.fn(), onItemClicked: vi.fn(), onInput: vi.fn(),
-    getCurrentItem: vi.fn(() => futonFrame),
-    onCurrentIndexChanged: vi.fn(),
-    forEachItem: vi.fn(),
-    focus: vi.fn(),
-    accessibility: {},
-  };
-}
-
-function create$w() {
-  const els = new Map();
-  return (sel) => { if (!els.has(sel)) els.set(sel, createMockElement()); return els.get(sel); };
-}
 
 describe('ProductOptions', () => {
   let $w, state;
