@@ -835,7 +835,7 @@ async function cancelSequenceForOrder(email, orderNumber) {
  * @function triggerRestockNotifications
  * @param {string} productId - The restocked product's ID
  * @param {Array<{email: string, contactId?: string, productName?: string}>} subscribers
- * @returns {Promise<{success: boolean, notified: number}>}
+ * @returns {Promise<{success: boolean, notified: number, failed: number, error?: string}>}
  * @permission Admin
  */
 export const triggerRestockNotifications = webMethod(
@@ -847,40 +847,46 @@ export const triggerRestockNotifications = webMethod(
       }
 
       let notified = 0;
+      let failed = 0;
       for (const sub of subscribers) {
-        const email = (sub.email || '').toLowerCase();
-        if (!email || !validateEmail(email)) continue;
-        if (await isUnsubscribed(email, 'restock')) continue;
+        try {
+          const email = (sub.email || '').toLowerCase();
+          if (!email || !validateEmail(email)) continue;
+          if (await isUnsubscribed(email, 'restock')) continue;
 
-        await queueEmail({
-          templateId: SEQUENCES.restock.steps[0].templateId,
-          recipientEmail: email,
-          recipientContactId: sub.contactId || '',
-          variables: {
-            productName: sanitize(sub.productName || '', 200),
-            productId,
-            email,
-          },
-          sequenceType: 'restock',
-          sequenceStep: 1,
-          scheduledFor: new Date(),
-        });
-
-        // Mark subscriber as notified
-        if (sub._id) {
-          await wixData.update('BackInStockSignups', {
-            ...sub,
-            notified: true,
-            notifiedAt: new Date(),
+          await queueEmail({
+            templateId: SEQUENCES.restock.steps[0].templateId,
+            recipientEmail: email,
+            recipientContactId: sub.contactId || '',
+            variables: {
+              productName: sanitize(sub.productName || '', 200),
+              productId,
+              email,
+            },
+            sequenceType: 'restock',
+            sequenceStep: 1,
+            scheduledFor: new Date(),
           });
+
+          // Mark subscriber as notified
+          if (sub._id) {
+            await wixData.update('BackInStockSignups', {
+              ...sub,
+              notified: true,
+              notifiedAt: new Date(),
+            });
+          }
+          notified++;
+        } catch (subErr) {
+          failed++;
+          console.warn(`[emailAutomation] Failed to notify subscriber ${sub.email || 'unknown'} for product ${productId}:`, subErr.message);
         }
-        notified++;
       }
 
-      return { success: true, notified };
+      return { success: true, notified, failed };
     } catch (err) {
       console.error('[emailAutomation] Error triggering restock notifications:', err);
-      return { success: false, notified: 0 };
+      return { success: false, notified: 0, failed: 0, error: err.message };
     }
   }
 );
@@ -912,7 +918,7 @@ export const triggerReviewThanks = webMethod(
         discountCode = await getSecret('REVIEW_DISCOUNT_CODE');
         discountAvailable = !!discountCode;
       } catch (e) {
-        // Discount not configured yet — send email without it
+        console.warn('[emailAutomation] Could not retrieve REVIEW_DISCOUNT_CODE secret — sending review email without discount:', e.message);
       }
 
       await queueEmail({
