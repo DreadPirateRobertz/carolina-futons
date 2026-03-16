@@ -54,10 +54,8 @@ describe('recordPriceSnapshot — edge cases', () => {
   });
 
   it('rejects Infinity price', async () => {
-    // Number(Infinity) is not NaN and is >= 0, so it passes validation
-    // This documents current behavior — Infinity is accepted
     const result = await recordPriceSnapshot('prod-1', Infinity);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it('accepts zero price', async () => {

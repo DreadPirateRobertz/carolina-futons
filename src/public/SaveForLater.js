@@ -29,14 +29,7 @@ export async function saveForLater(cartItem) {
       return { success: false, reason: 'not_authenticated' };
     }
 
-    // Remove from cart first — if this fails, don't touch wishlist
-    try {
-      await removeCartItem(cartItem._id);
-    } catch (err) {
-      return { success: false, reason: 'cart_removal_failed' };
-    }
-
-    // Check if already wishlisted (dedup)
+    // Check if already wishlisted (dedup) BEFORE removing from cart
     const wixData = (await import('wix-data')).default;
     const existing = await wixData.query('Wishlist')
       .eq('memberId', member._id)
@@ -44,19 +37,38 @@ export async function saveForLater(cartItem) {
       .find();
 
     if (existing.items.length > 0) {
+      // Already wishlisted — still remove from cart (best-effort)
+      try {
+        await removeCartItem(cartItem._id);
+      } catch (err) {
+        console.error('[SaveForLater] cart removal failed (dedup path):', err);
+      }
       trackEvent('save_for_later', { productId: cartItem.productId, source: 'cart' });
       fireCustomEvent('save_for_later', { productId: cartItem.productId });
       return { success: true, wishlistItemId: existing.items[0]._id };
     }
 
-    // Add to wishlist
+    // Add to wishlist FIRST — if this fails, cart item is preserved
+    const numPrice = Number(cartItem.price);
     const inserted = await wixData.insert('Wishlist', {
       memberId: member._id,
       productId: cartItem.productId,
+      name: cartItem.name,
       productName: cartItem.name,
+      price: isNaN(numPrice) ? null : numPrice,
       productImage: cartItem.image,
+      inStock: true,
       addedDate: new Date(),
     });
+
+    // Remove from cart after wishlist insert succeeds
+    try {
+      await removeCartItem(cartItem._id);
+    } catch (err) {
+      console.error('[SaveForLater] cart removal failed after wishlist add:', err);
+      // Item is in both cart and wishlist — user can remove from cart manually.
+      // This is better than losing the item entirely.
+    }
 
     trackEvent('save_for_later', { productId: cartItem.productId, source: 'cart' });
     fireCustomEvent('save_for_later', { productId: cartItem.productId });

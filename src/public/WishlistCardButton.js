@@ -39,6 +39,7 @@ export async function batchCheckWishlistStatus(productIds) {
 
     return new Set(result.items.map(item => item.productId));
   } catch (e) {
+    console.error('[WishlistCardButton] batchCheckWishlistStatus failed:', e);
     return new Set();
   }
 }
@@ -77,13 +78,13 @@ export function initCardWishlistButton($item, product, isWishlisted) {
 
         const wixData = (await import('wix-data')).default;
 
-        if (wishlisted) {
-          // Remove from wishlist
-          const existing = await wixData.query('Wishlist')
-            .eq('memberId', member._id)
-            .eq('productId', product._id)
-            .find();
+        // Single query serves both remove (find item to delete) and add (dedup check)
+        const existing = await wixData.query('Wishlist')
+          .eq('memberId', member._id)
+          .eq('productId', product._id)
+          .find();
 
+        if (wishlisted) {
           if (existing.items.length > 0) {
             await wixData.remove('Wishlist', existing.items[0]._id);
           }
@@ -91,26 +92,29 @@ export function initCardWishlistButton($item, product, isWishlisted) {
           setHeartState($item, false, product.name);
           trackEvent('wishlist_remove', { productId: product._id, source: 'product_card' });
         } else {
-          // Add to wishlist
-          await wixData.insert('Wishlist', {
-            memberId: member._id,
-            productId: product._id,
-            productName: product.name,
-            productImage: product.mainMedia,
-            addedDate: new Date(),
-          });
+          if (existing.items.length === 0) {
+            await wixData.insert('Wishlist', {
+              memberId: member._id,
+              productId: product._id,
+              productName: product.name,
+              productImage: product.mainMedia,
+              addedDate: new Date(),
+            });
+          }
           wishlisted = true;
           setHeartState($item, true, product.name);
           trackEvent('wishlist_add', { productId: product._id, source: 'product_card' });
         }
       } catch (e) {
-        // On error, revert visual state
+        console.error('[WishlistCardButton] toggle failed for product:', product._id, e);
         setHeartState($item, wishlisted, product.name);
       } finally {
         busy = false;
       }
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[WishlistCardButton] initCardWishlistButton failed for product:', product?._id, e);
+  }
 }
 
 /**
@@ -122,10 +126,14 @@ export function initCardWishlistButton($item, product, isWishlisted) {
 function setHeartState($item, active, productName) {
   try {
     $item('#gridWishlistIcon').src = active ? HEART_FILLED_SVG : HEART_OUTLINE_SVG;
-  } catch (e) {}
+  } catch (e) {
+    console.error('[WishlistCardButton] Failed to set heart icon:', e);
+  }
   try {
     $item('#gridWishlistBtn').accessibility.ariaLabel = active
       ? `Remove ${productName} from wishlist`
       : `Add ${productName} to wishlist`;
-  } catch (e) {}
+  } catch (e) {
+    console.error('[WishlistCardButton] Failed to set ARIA label:', e);
+  }
 }
