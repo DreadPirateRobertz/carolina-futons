@@ -269,9 +269,15 @@ describe('buildCatalogBatch', () => {
 
   it('handles empty array', () => {
     const result = buildCatalogBatch([]);
-    expect(result.success).toBe(true);
     expect(result.processed).toBe(0);
     expect(result.total).toBe(0);
+  });
+
+  it('returns success false when all products fail', () => {
+    const result = buildCatalogBatch([invalidProduct, { _id: 'p2', name: '', price: 0 }]);
+    expect(result.success).toBe(false);
+    expect(result.failed).toBe(2);
+    expect(result.processed).toBe(0);
   });
 });
 

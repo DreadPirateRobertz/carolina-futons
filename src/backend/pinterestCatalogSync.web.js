@@ -407,7 +407,8 @@ export const normalizePinterestImageUrl = webMethod(
       return { url, valid: false, issues: ['Image URL must be absolute HTTPS'] };
     }
 
-    return { url, valid: issues.length === 0 || issues.every(i => !i.includes('must be')), issues };
+    // HTTP→HTTPS conversion is a soft warning, not a validity failure
+    return { url, valid: true, issues };
   }
 );
 
@@ -465,6 +466,7 @@ export const syncCatalogBatch = webMethod(
         });
         processed++;
       } catch (err) {
+        console.error('[pinterestCatalogSync] syncCatalogBatch product error:', err);
         failed++;
         errors.push({
           productId: product?._id || 'unknown',
@@ -475,7 +477,7 @@ export const syncCatalogBatch = webMethod(
     }
 
     return {
-      success: true,
+      success: products.length === 0 || failed < products.length,
       processed,
       failed,
       total: products.length,

@@ -340,12 +340,6 @@ export function getEnhancedCatalogFields(product) {
 // ── Feed Validation ─────────────────────────────────────────────────
 
 /**
- * Required fields per Meta Commerce catalog spec.
- */
-const FB_REQUIRED_FIELDS = ['id', 'title', 'description', 'availability', 'condition',
-  'price', 'link', 'image_link', 'brand'];
-
-/**
  * Meta API rate limits — requests per hour per access token.
  * These are informational for callers to implement backoff.
  */
@@ -498,6 +492,7 @@ export function buildCatalogBatch(products) {
       });
       processed++;
     } catch (err) {
+      console.error('[facebookCatalog] buildCatalogBatch product error:', err);
       failed++;
       errors.push({
         productId: product?._id || 'unknown',
@@ -508,7 +503,7 @@ export function buildCatalogBatch(products) {
   }
 
   return {
-    success: true,
+    success: products.length === 0 || failed < products.length,
     processed,
     failed,
     total: products.length,
