@@ -224,3 +224,203 @@ export function getOptimalPostHour(engagementData) {
 
   return bestHour;
 }
+
+// ── Platform Specifications ─────────────────────────────────────────
+
+export const PLATFORM_SPECS = {
+  instagram: {
+    name: 'Instagram Stories',
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9:16',
+    maxCaptionLength: 2200,
+    safeZone: { top: 250, bottom: 400 },
+    ctaPlacement: 'bottom-center',
+    textOverlay: { maxLines: 4, fontSize: 48, lineHeight: 1.3 },
+    supportsSwipeUp: true,
+    supportsPollSticker: true,
+  },
+  facebook: {
+    name: 'Facebook Stories',
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9:16',
+    maxCaptionLength: 500,
+    safeZone: { top: 180, bottom: 300 },
+    ctaPlacement: 'bottom-center',
+    textOverlay: { maxLines: 3, fontSize: 44, lineHeight: 1.4 },
+    supportsSwipeUp: false,
+    supportsPollSticker: false,
+  },
+};
+
+/**
+ * Format story content for a specific platform.
+ * Adjusts caption length, text overlay settings, and CTA placement.
+ * @param {Object} templateData - Output from buildTemplateData
+ * @param {'instagram'|'facebook'} platform
+ * @returns {Object|null} Platform-formatted story data or null if invalid
+ */
+export function formatForPlatform(templateData, platform) {
+  if (!templateData || !platform) return null;
+
+  const spec = PLATFORM_SPECS[platform];
+  if (!spec) return null;
+
+  const caption = templateData.caption || '';
+  const trimmedCaption = caption.slice(0, spec.maxCaptionLength);
+
+  return {
+    ...templateData,
+    platform,
+    width: spec.width,
+    height: spec.height,
+    aspectRatio: spec.aspectRatio,
+    caption: trimmedCaption,
+    safeZone: spec.safeZone,
+    ctaPlacement: spec.ctaPlacement,
+    textOverlay: spec.textOverlay,
+  };
+}
+
+// ── Template Builders (Catalog-Driven) ──────────────────────────────
+
+/**
+ * Build a product spotlight story from a catalog-MASTER.json product.
+ * @param {Object} product - Product from catalog-MASTER.json
+ * @param {'instagram'|'facebook'} [platform='instagram']
+ * @returns {Object|null} Formatted story data or null if invalid
+ */
+export function buildProductSpotlight(product, platform = 'instagram') {
+  if (!product || !product.name) return null;
+
+  const price = product.price != null ? `$${Number(product.price).toFixed(2)}` : '';
+  const caption = [
+    product.name,
+    price ? `Starting at ${price}` : '',
+    product.description ? product.description.slice(0, 120) : '',
+    '🛒 Tap to shop → carolinafutons.com',
+  ].filter(Boolean).join('\n');
+
+  const template = buildTemplateData(STORY_TYPES.NEW_ARRIVAL, {
+    productName: product.name,
+    price,
+    description: product.description || '',
+    imageUrl: (product.images && product.images[0]) || '',
+  });
+
+  if (!template) return null;
+  template.caption = caption;
+  template.templateVariant = 'product_spotlight';
+  return formatForPlatform(template, platform);
+}
+
+/**
+ * Build a new arrival announcement story from a catalog product.
+ * @param {Object} product - Product from catalog-MASTER.json
+ * @param {'instagram'|'facebook'} [platform='instagram']
+ * @returns {Object|null} Formatted story data or null if invalid
+ */
+export function buildNewArrivalStory(product, platform = 'instagram') {
+  if (!product || !product.name) return null;
+
+  const price = product.price != null ? `$${Number(product.price).toFixed(2)}` : '';
+  const caption = [
+    '✨ JUST IN ✨',
+    product.name,
+    price,
+    product.description ? product.description.slice(0, 100) : '',
+    'Shop now at carolinafutons.com',
+  ].filter(Boolean).join('\n');
+
+  const template = buildTemplateData(STORY_TYPES.NEW_ARRIVAL, {
+    productName: product.name,
+    price,
+    description: product.description || '',
+    imageUrl: (product.images && product.images[0]) || '',
+  });
+
+  if (!template) return null;
+  template.caption = caption;
+  template.templateVariant = 'new_arrival';
+  return formatForPlatform(template, platform);
+}
+
+/**
+ * Build a seasonal promotion story.
+ * @param {Object} params
+ * @param {string} params.seasonName - e.g., "Spring", "Summer Sale"
+ * @param {string} params.promoText - Promotion details
+ * @param {string} [params.promoCode] - Discount code
+ * @param {Array<Object>} [params.featuredProducts] - Products from catalog-MASTER.json
+ * @param {'instagram'|'facebook'} [platform='instagram']
+ * @returns {Object|null} Formatted story data or null if invalid
+ */
+export function buildSeasonalPromo(params, platform = 'instagram') {
+  if (!params || !params.seasonName) return null;
+
+  const productLines = (params.featuredProducts || [])
+    .filter(p => p && p.name)
+    .slice(0, 3)
+    .map(p => {
+      const price = p.price != null ? ` — $${Number(p.price).toFixed(2)}` : '';
+      return `${p.name}${price}`;
+    });
+
+  const caption = [
+    `🌟 ${params.seasonName} 🌟`,
+    params.promoText || '',
+    ...productLines,
+    params.promoCode ? `Use code ${params.promoCode}` : '',
+    'carolinafutons.com',
+  ].filter(Boolean).join('\n');
+
+  const template = buildTemplateData(STORY_TYPES.DID_YOU_KNOW, {
+    headline: params.seasonName,
+    fact: params.promoText || '',
+  });
+
+  if (!template) return null;
+  template.caption = caption;
+  template.templateVariant = 'seasonal_promo';
+  template.promoCode = params.promoCode || '';
+  template.featuredProducts = productLines;
+  return formatForPlatform(template, platform);
+}
+
+/**
+ * Build a customer testimonial story.
+ * @param {Object} params
+ * @param {string} params.customerName - Customer first name
+ * @param {string} params.quote - Customer review quote
+ * @param {number} [params.rating=5] - Star rating (1-5)
+ * @param {Object} [params.product] - Product from catalog-MASTER.json
+ * @param {'instagram'|'facebook'} [platform='instagram']
+ * @returns {Object|null} Formatted story data or null if invalid
+ */
+export function buildTestimonialStory(params, platform = 'instagram') {
+  if (!params || !params.customerName || !params.quote) return null;
+
+  const stars = '★'.repeat(Math.min(5, Math.max(1, params.rating || 5)));
+  const productLine = params.product?.name ? `About: ${params.product.name}` : '';
+
+  const caption = [
+    `${stars} Customer Love`,
+    `"${params.quote.slice(0, 200)}"`,
+    `— ${params.customerName}`,
+    productLine,
+    '#CarolinaFutons #HappyCustomer',
+  ].filter(Boolean).join('\n');
+
+  const template = buildTemplateData(STORY_TYPES.CUSTOMER_SPOTLIGHT, {
+    customerName: params.customerName,
+    quote: params.quote,
+    productName: params.product?.name || '',
+    rating: params.rating || 5,
+  });
+
+  if (!template) return null;
+  template.caption = caption;
+  template.templateVariant = 'testimonial';
+  return formatForPlatform(template, platform);
+}
