@@ -300,6 +300,17 @@ describe('getScheduleStats', () => {
     expect(result.stats.cancelled).toBe(1);
   });
 
+  it('filters by days parameter', async () => {
+    __seed('ContentSchedule', [
+      { _id: 'cs-recent', status: 'sent', contentType: 'newsletter', scheduledAt: new Date() },
+      { _id: 'cs-old', status: 'sent', contentType: 'social_story', scheduledAt: new Date(Date.now() - 60 * 86400000) },
+    ]);
+    const result = await getScheduleStats(7);
+    expect(result.success).toBe(true);
+    // Only the recent item should be counted
+    expect(result.stats.sent).toBe(1);
+  });
+
   it('returns zero counts for empty queue', async () => {
     const result = await getScheduleStats();
     expect(result.success).toBe(true);

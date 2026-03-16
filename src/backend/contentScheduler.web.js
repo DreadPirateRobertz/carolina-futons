@@ -80,7 +80,7 @@ async function executeAction(item) {
         pageId: '',
       });
       if (!storyPayload) return { success: false, error: 'Failed to build story payload' };
-      const result = await postStory({ imageUrl: payload.imageUrl, caption: templateData.caption || '' });
+      const result = await postStory(storyPayload);
       return result;
     }
     case 'catalog_sync': {
@@ -140,24 +140,21 @@ export const processContentSchedule = webMethod(
           const result = await executeAction(item);
           if (result.success) {
             item.status = 'sent';
-            item.processedAt = now;
             item.error = '';
           } else {
             item.status = 'failed';
-            item.processedAt = now;
             item.error = result.error || 'Action failed';
-            failed++;
           }
         } catch (actionErr) {
           item.status = 'failed';
-          item.processedAt = now;
           item.error = 'Processing error';
           console.error(`[contentScheduler] Action failed for ${item._id}:`, actionErr);
-          failed++;
         }
 
+        item.processedAt = now;
         await wixData.update('ContentSchedule', item);
         if (item.status === 'sent') processed++;
+        else if (item.status === 'failed') failed++;
       }
 
       return { success: true, processed, failed, skipped };
@@ -248,7 +245,9 @@ export const getScheduleStats = webMethod(
     try {
       await requireAdmin();
 
+      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
       const result = await wixData.query('ContentSchedule')
+        .gt('scheduledAt', cutoff)
         .limit(1000)
         .find();
 
