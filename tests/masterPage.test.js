@@ -1488,4 +1488,328 @@ describe('masterPage.js', () => {
       expect(getEl('#siteLogo').alt).toBe('Carolina Futons');
     });
   });
+
+  // ── Promotional Lightbox ──────────────────────────────────────────
+
+  describe('promotional lightbox', () => {
+    it('populates promo lightbox when active promotion exists', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-1',
+        title: 'Spring Sale',
+        subtitle: 'Save 20% on all futons',
+        heroImage: 'https://example.com/hero.jpg',
+        discountCode: 'SPRING20',
+        ctaText: 'Shop Now',
+        ctaUrl: '/sales',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [
+          { _id: 'p1', name: 'Eureka', mainMedia: 'eureka.jpg', formattedPrice: '$499.00', formattedDiscountedPrice: '$399.00', slug: 'eureka' },
+        ],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000); // initPromoLightbox is setTimeout 3s
+      await vi.waitFor(() => {
+        expect(getEl('#promoTitle').text).toBe('Spring Sale');
+      });
+      expect(getEl('#promoSubtitle').text).toBe('Save 20% on all futons');
+      expect(getEl('#promoHeroImage').src).toBe('https://example.com/hero.jpg');
+      expect(getEl('#promoCode').text).toBe('SPRING20');
+      expect(getEl('#promoCTA').label).toBe('Shop Now');
+      expect(getEl('#promoOverlay').show).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('sets up promo product repeater', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-2',
+        title: 'Test Promo',
+        subtitle: 'Test',
+        discountCode: 'CODE',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [
+          { _id: 'p1', name: 'Product A', mainMedia: 'a.jpg', formattedPrice: '$100', slug: 'a' },
+          { _id: 'p2', name: 'Product B', mainMedia: 'b.jpg', formattedPrice: '$200', slug: 'b' },
+        ],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        expect(getEl('#promoRepeater').data).toHaveLength(2);
+      });
+      expect(getEl('#promoRepeater').onItemReady).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('hides promo code elements when no discount code', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-3',
+        title: 'No Code Promo',
+        subtitle: 'Just browse',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        expect(getEl('#promoCode').hide).toHaveBeenCalled();
+      });
+      vi.useRealTimers();
+    });
+
+    it('does not show promo lightbox when no active promotion', async () => {
+      getActivePromotion.mockResolvedValueOnce(null);
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(getEl('#promoTitle').text).toBe('');
+      vi.useRealTimers();
+    });
+
+    it('renders promo countdown timer', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-4',
+        title: 'Countdown Promo',
+        subtitle: 'Hurry!',
+        endDate: new Date(Date.now() + 2 * 86400000).toISOString(),
+        products: [],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        const text = getEl('#promoCountdown').text;
+        // Should show countdown in DD:HH:MM:SS format
+        expect(text).toMatch(/\d{2}:\d{2}:\d{2}:\d{2}/);
+      });
+      vi.useRealTimers();
+    });
+
+    it('shows Sale Ended when promo end date is in the past', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-5',
+        title: 'Expired Promo',
+        subtitle: 'Gone',
+        endDate: new Date(Date.now() - 86400000).toISOString(),
+        products: [],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+      await vi.waitFor(() => {
+        expect(getEl('#promoCountdown').text).toBe('Sale Ended');
+      });
+      vi.useRealTimers();
+    });
+
+    it('renders promo product onItemReady with discounted price', async () => {
+      getActivePromotion.mockResolvedValueOnce({
+        _id: 'promo-6',
+        title: 'Test',
+        subtitle: 'Test',
+        discountCode: 'CODE',
+        endDate: new Date(Date.now() + 86400000).toISOString(),
+        products: [
+          { _id: 'p1', name: 'Eureka', mainMedia: 'eureka.jpg', formattedPrice: '$499.00', formattedDiscountedPrice: '$399.00', slug: 'eureka' },
+        ],
+      });
+      vi.useFakeTimers();
+      elements.clear();
+      await onReadyHandler();
+      vi.advanceTimersByTime(3000);
+
+      await vi.waitFor(() => {
+        expect(getEl('#promoRepeater').onItemReady).toHaveBeenCalled();
+      });
+
+      const onItemReadyFn = getEl('#promoRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`promoItem_${sel}`);
+      const product = { _id: 'p1', name: 'Eureka', mainMedia: 'eureka.jpg', formattedPrice: '$499.00', formattedDiscountedPrice: '$399.00', slug: 'eureka' };
+      onItemReadyFn($item, product);
+
+      expect(getEl('promoItem_#promoImage').src).toBe('eureka.jpg');
+      expect(getEl('promoItem_#promoName').text).toBe('Eureka');
+      expect(getEl('promoItem_#promoPrice').text).toBe('$399.00');
+      expect(getEl('promoItem_#promoOrigPrice').text).toBe('$499.00');
+      expect(getEl('promoItem_#promoOrigPrice').show).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
+  // ── Core Web Vitals — advanced ────────────────────────────────────
+
+  describe('core web vitals — additional', () => {
+    it('collects FCP from paint entries', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+
+      globalThis.performance = {
+        timing: { responseStart: 200, navigationStart: 100 },
+        getEntriesByType: vi.fn((type) => {
+          if (type === 'paint') return [{ name: 'first-contentful-paint', startTime: 1234 }];
+          return [];
+        }),
+      };
+
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+
+      await vi.waitFor(() => {
+        expect(reportMetrics).toHaveBeenCalled();
+        const data = reportMetrics.mock.calls[0][0];
+        expect(data.fcp).toBe(1234);
+        expect(data.ttfb).toBe(100);
+      });
+
+      delete globalThis.performance;
+      vi.useRealTimers();
+    });
+
+    it('collects LCP from largest-contentful-paint entries', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+
+      globalThis.performance = {
+        timing: { responseStart: 200, navigationStart: 100 },
+        getEntriesByType: vi.fn((type) => {
+          if (type === 'largest-contentful-paint') return [{ startTime: 2500 }];
+          if (type === 'paint') return [{ name: 'first-contentful-paint', startTime: 800 }];
+          return [];
+        }),
+      };
+
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+
+      await vi.waitFor(() => {
+        expect(reportMetrics).toHaveBeenCalled();
+        const data = reportMetrics.mock.calls[0][0];
+        expect(data.lcp).toBe(2500);
+      });
+
+      delete globalThis.performance;
+      vi.useRealTimers();
+    });
+
+    it('collects CLS from layout-shift entries', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+
+      globalThis.performance = {
+        timing: { responseStart: 200, navigationStart: 100 },
+        getEntriesByType: vi.fn((type) => {
+          if (type === 'layout-shift') return [
+            { hadRecentInput: false, value: 0.05 },
+            { hadRecentInput: true, value: 0.5 }, // should be excluded
+            { hadRecentInput: false, value: 0.1 },
+          ];
+          if (type === 'paint') return [{ name: 'first-contentful-paint', startTime: 500 }];
+          return [];
+        }),
+      };
+
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+
+      await vi.waitFor(() => {
+        expect(reportMetrics).toHaveBeenCalled();
+        const data = reportMetrics.mock.calls[0][0];
+        expect(data.cls).toBe(0.15);
+      });
+
+      delete globalThis.performance;
+      vi.useRealTimers();
+    });
+
+    it('includes deviceType and connectionType in reported data', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+      mockGetViewport.mockReturnValueOnce('mobileLarge');
+
+      globalThis.performance = {
+        timing: { responseStart: 200, navigationStart: 100 },
+        getEntriesByType: vi.fn(() => []),
+      };
+
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+
+      await vi.waitFor(() => {
+        expect(reportMetrics).toHaveBeenCalled();
+        const data = reportMetrics.mock.calls[0][0];
+        expect(data.deviceType).toBe('mobile');
+      });
+
+      delete globalThis.performance;
+      vi.useRealTimers();
+    });
+
+    it('does not report when no metrics collected', async () => {
+      reportMetrics.mockClear();
+      vi.useFakeTimers();
+      elements.clear();
+
+      globalThis.performance = {
+        timing: { responseStart: 0, navigationStart: 0 },
+        getEntriesByType: vi.fn(() => []),
+      };
+
+      await onReadyHandler();
+      vi.advanceTimersByTime(5000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      // With responseStart=0, TTFB is not set; FCP/LCP/CLS all empty.
+      // hasMetric is false → reportMetrics should NOT be called.
+      expect(reportMetrics).not.toHaveBeenCalled();
+
+      vi.useRealTimers();
+      delete globalThis.performance;
+    });
+  });
+
+  // ── Footer Newsletter ─────────────────────────────────────────────
+
+  describe('footer newsletter — additional', () => {
+    it('disables submit button during submission', async () => {
+      submitContactForm.mockResolvedValueOnce({});
+      await onReadyHandler();
+      const submitHandler = getEl('#footerEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#footerEmailInput').value = 'test@example.com';
+      await submitHandler();
+      expect(getEl('#footerEmailSubmit').disable).toHaveBeenCalled();
+    });
+  });
+
+  // ── Newsletter Modal — additional ─────────────────────────────────
+
+  describe('newsletter modal — additional', () => {
+    it('wires trigger onClick to show modal', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalTrigger').onClick).toHaveBeenCalled();
+    });
+
+    it('sets subscribe ariaLabel on submit button', async () => {
+      await onReadyHandler();
+      expect(getEl('#newsletterModalSubmit').accessibility.ariaLabel).toBe('Subscribe for 10% off');
+    });
+
+    it('wires close button via accessible dialog', async () => {
+      await onReadyHandler();
+      // newsletterModalClose should have onClick wired by setupAccessibleDialog
+      expect(getEl('#newsletterModalClose').onClick).toHaveBeenCalled();
+    });
+  });
 });
