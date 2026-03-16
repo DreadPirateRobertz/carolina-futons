@@ -31,7 +31,7 @@ Murphy cabinet beds store a Queen mattress inside an elegant cabinet. When close
 
 **Price range:** $2,000-$3,500 (mattress included).
 
-**Our pick:** Arason and Night & Day Furniture cabinet beds. Freestanding — no wall mounting required. Set up in minutes.
+**Our pick:** Night & Day Furniture cabinet beds. Freestanding — no wall mounting required. Set up in minutes.
 
 ### Platform Beds: Low-Profile and Storage-Smart
 

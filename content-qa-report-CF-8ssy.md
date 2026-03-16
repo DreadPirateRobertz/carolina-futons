@@ -24,7 +24,7 @@ Products referenced in content that DO NOT exist in catalog-MASTER.json:
 | Fabricated Name | Files Affected | Notes |
 |---|---|---|
 | **"Seattle" frame** | welcome-02, education-01 | No such product exists |
-| **"Moonshadow" mattress** | welcome-02, seasonal-01, seasonal-02 | No such Otis product |
+| ~~"Moonshadow" mattress~~ | ~~welcome-02, seasonal-01, seasonal-02~~ | **RETRACTED** — Moonshadow IS a real Otis Bed product ($709, 8" all-foam). Listed in site_content.mattressModels and live-products-full.json. QA agent only searched products array. |
 | **"Portland" frame** | futon-frame-buying-guide.md, blogContent.js | No KD Frames product by this name |
 
 ### 2. Wrong Prices
@@ -36,7 +36,7 @@ Products referenced in content that DO NOT exist in catalog-MASTER.json:
 ### 3. Wrong Manufacturer Attribution
 | Claim | Actual | Files |
 |---|---|---|
-| "Otis Haley 8"" mattress | Haley 110 is **Night & Day Furniture**, not Otis | seasonal-02 |
+| ~~"Otis Haley 8"" mattress~~ | ~~Haley 110 is Night & Day~~ | **RETRACTED** — Haley is in Otis Bed mattress lineup (8" tier). Haley 110 frame is N&D, but Haley mattress is Otis. |
 | "Eureka Wall Hugger" | Eureka is **futon-frames** category, not wall-hugger | welcome-02 |
 
 ---

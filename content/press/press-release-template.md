@@ -12,12 +12,12 @@
 [Third paragraph: Quote from owner/stakeholder]
 "[Quote that adds personality and context]," said [Name, Title], Carolina Futons. "[Second sentence of quote expanding on vision/impact]."
 
-[Fourth paragraph: Background context. Company history, product line overview, what makes CF different — handcrafted frames, organic cotton covers, made-in-USA focus, family-owned since [year].]
+[Fourth paragraph: Background context. Company history, product line overview, what makes CF different — handcrafted frames, sustainable hardwoods, made-in-USA platform beds, family-owned since [year].]
 
 [Fifth paragraph (optional): Additional details — event logistics, how to purchase, availability, pricing.]
 
 **About Carolina Futons**
-Carolina Futons is a family-owned furniture retailer based in Hendersonville, NC, specializing in high-quality futon frames, mattresses, and covers. Known for solid hardwood construction, organic cotton options, and versatile convertible designs, Carolina Futons serves customers both in-store and online at carolinafutons.com. The company offers free local delivery in the Hendersonville/Asheville area and ships nationwide.
+Carolina Futons is a family-owned furniture retailer based in Hendersonville, NC, specializing in high-quality futon frames, platform beds, Murphy cabinet beds, mattresses, and accessories. Known for solid hardwood construction, sustainable materials, and versatile convertible designs, Carolina Futons serves customers both in-store and online at carolinafutons.com. The company offers free local delivery in the Hendersonville/Asheville area and ships nationwide.
 
 **Contact:**
 Carolina Futons

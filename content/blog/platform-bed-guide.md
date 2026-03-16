@@ -99,9 +99,9 @@ Before buying a platform bed, verify:
 
 We carry the full Night & Day Furniture platform bed line. These are our top sellers:
 
-**Why Night & Day:** Plantation-grown hardwood, coordinating finishes across all furniture pieces (nightstands, dressers, desks), 5-year structural warranty, and no box spring needed.
+**Why Night & Day:** Plantation-grown hardwood, coordinating finishes across all furniture pieces (nightstands, dressers, desks), 10-year limited warranty on cabinets, and no box spring needed.
 
-Their platform beds feature adjustable slat systems and optional storage drawers. Multiple finishes (honey oak, chocolate, dark espresso, natural) coordinate with their futon frames and casegoods.
+Their platform beds feature adjustable slat systems and optional storage drawers. Multiple finishes (cherry, chocolate, dark chocolate, natural) coordinate with their futon frames and casegoods.
 
 ## FAQ Section
 

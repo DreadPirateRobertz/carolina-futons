@@ -47,7 +47,7 @@ More care tips on our blog: carolinafutons.com/blog/futon-care-guide
 ### April 3 — Monterey Frame Feature
 Featured this week: The Monterey by Night & Day Furniture.
 
-Solid hardwood construction. Wall hugger design that saves 12–18 inches of floor space — your room feels bigger without moving any other furniture. Available in Cherry, Chocolate, Natural, Black Walnut, and Dark Chocolate.
+Solid hardwood construction. Wall hugger design that saves 12–18 inches of floor space — your room feels bigger without moving any other furniture. Available in Cherry, Chocolate, and Dark Chocolate.
 
 Built to last 20+ years. Converts smoothly between sofa and bed with quality hardware that doesn't fight you.
 

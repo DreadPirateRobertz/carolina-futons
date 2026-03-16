@@ -119,7 +119,7 @@ const BLOG_POSTS = {
       },
       {
         question: 'Do Murphy cabinet beds need to be mounted to the wall?',
-        answer: 'No. Our Murphy cabinet beds from Arason and Night & Day Furniture are completely freestanding. They look like elegant cabinets when closed and open to reveal a Queen-size gel memory foam mattress. No wall mounting, no installation, no tools required.',
+        answer: 'No. Our Murphy cabinet beds from Night & Day Furniture are completely freestanding. They look like elegant cabinets when closed and open to reveal a Queen-size gel memory foam mattress. No wall mounting, no installation, no tools required.',
       },
       {
         question: 'Which is more comfortable for sleeping — a Murphy bed or a futon?',
@@ -299,7 +299,7 @@ const BUYING_GUIDES = {
       },
       {
         heading: 'Top Picks from Carolina Futons',
-        content: 'Our best-selling frames include the Night & Day Furniture Phoenix — a solid hardwood wall hugger available in multiple finishes with a 500+ lb weight capacity. The KD Frames Fold-a-Bed is perfect for tight spaces with its tool-free assembly and packable design. For a modern look, the Strata Wall Hugger combines clean lines with practical space-saving design. All our frames include manufacturer warranties and fast nationwide shipping. For couples or everyday sleepers who need Queen-size comfort, the Night & Day Furniture Seattle is our most popular premium frame, featuring solid rubberwood construction, integrated side tables, and a butter-smooth wall hugger mechanism that converts from sofa to bed in seconds.',
+        content: 'Our best-selling frames include the Night & Day Furniture Phoenix — a solid hardwood wall hugger available in multiple finishes with a 500+ lb weight capacity. The KD Frames Fold-a-Bed is perfect for tight spaces with its tool-free assembly and packable design. For a modern look, the Strata Wall Hugger combines clean lines with practical space-saving design. All our frames include manufacturer warranties and fast nationwide shipping. For couples or everyday sleepers who need Queen-size comfort, the Night & Day Furniture Sunrise is our most popular premium frame, featuring solid rubberwood construction and a butter-smooth wall hugger mechanism that converts from sofa to bed in seconds.',
       },
       {
         heading: 'Frame Assembly and Room Planning',

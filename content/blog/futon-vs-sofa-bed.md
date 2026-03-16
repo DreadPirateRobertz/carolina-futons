@@ -73,7 +73,7 @@ Futons cost less upfront and less to maintain. Replacement futon mattresses come
 
 ## Style
 
-Modern futons have shed the college-dorm image. Night & Day Furniture frames come in rich finishes (honey oak, chocolate, dark espresso) with clean mid-century lines. They look like real furniture.
+Modern futons have shed the college-dorm image. Night & Day Furniture frames come in rich finishes (cherry, chocolate, dark chocolate) with clean mid-century lines. They look like real furniture.
 
 Sofa beds offer more traditional sofa styling — overstuffed cushions, upholstered arms, sectional configurations. If your room needs to look like a conventional living room, sofa beds blend in more naturally.
 

@@ -85,11 +85,11 @@ Wed–Sat, 10–5 in Hendersonville. Free shipping on orders over $999.
 
 | Platform | Format | Content |
 |----------|--------|---------|
-| Instagram | Grid post (carousel) | Slide 1: Monterey frame hero. Slide 2: Available finishes (Cherry, Chocolate, Natural, Black Walnut). Slide 3: Specs — solid hardwood, wall hugger design saves 12–18". Slide 4: Price + CTA |
+| Instagram | Grid post (carousel) | Slide 1: Monterey frame hero. Slide 2: Available finishes (Cherry, Chocolate, Dark Chocolate). Slide 3: Specs — solid hardwood, mission-style arms. Slide 4: Price + CTA |
 | Facebook | Post | Same carousel + "Why we love it" narrative |
-| Pinterest | Pin | "Monterey Futon Frame — 5 Finishes" — product grid, link to PDP |
+| Pinterest | Pin | "Monterey Futon Frame — 3 Finishes" — product grid, link to PDP |
 
-**Caption:** The Monterey by Night & Day Furniture. Solid hardwood. Wall hugger design saves 12–18 inches — your room just got bigger. Available in 5 finishes to match your space.
+**Caption:** The Monterey by Night & Day Furniture. Solid hardwood. Wall hugger design saves 12–18 inches — your room just got bigger. Available in 3 finishes to match your space.
 
 Built to last 20+ years. That's real furniture, not disposable.
 

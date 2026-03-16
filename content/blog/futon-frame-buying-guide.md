@@ -76,11 +76,11 @@ Smaller frames designed for single-person use. They fold out to a twin-size slee
 
 ### Night & Day Furniture
 
-The premium standard. Plantation-grown hardwood, multiple finish options (honey oak, chocolate, natural), and wall-hugger designs. Frames include a 5-year structural warranty. Best for everyday use.
+The premium standard. Plantation-grown hardwood, multiple finish options (cherry, chocolate, natural), and wall-hugger designs. Frames include a 10-year limited warranty on cabinets. Best for everyday use.
 
 ### KD Frames
 
-"Knock-down" design means easy assembly and disassembly. Great for apartments, dorm rooms, or anyone who moves frequently. Solid construction at a mid-range price point. The Portland frame is their bestseller.
+"Knock-down" design means easy assembly and disassembly. Great for apartments, dorm rooms, or anyone who moves frequently. Solid construction at a mid-range price point. The Nomad Platform Bed is their bestseller.
 
 ### Strata Furniture
 

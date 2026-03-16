@@ -33,7 +33,7 @@ More care tips on the blog — link in bio.
 ### April 3 — Monterey Frame (Carousel)
 The Monterey by Night & Day Furniture.
 
-Solid hardwood. Wall hugger design saves 12–18 inches — your room just got bigger. Available in 5 finishes to match your space.
+Solid hardwood. Wall hugger design saves 12–18 inches — your room just got bigger. Available in 3 finishes to match your space.
 
 Built to last 20+ years. That's real furniture, not disposable.
 
@@ -178,7 +178,7 @@ Come visit us in Hendersonville, where the Blue Ridge meets Main Street.
 
 ---
 
-### April 16 — Care Tip: Sunlight (Tip Card)
+### April 16 — Care Tip: Vacuuming (Tip Card)
 Brenda's Care Tip #3: Your futon mattress collects dust, skin cells, and allergens just like your bed.
 
 Monthly vacuuming with an upholstery attachment keeps it fresh and extends its life. 5 minutes a month. 10 extra years of comfort.
