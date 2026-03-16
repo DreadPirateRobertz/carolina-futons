@@ -7,6 +7,7 @@ import {
   getExitIntentConfig,
   getMobileExitIntentConfig,
   detectScrollExit,
+  submitExitCapture,
   SCROLL_EXIT_VELOCITY_THRESHOLD,
   EXIT_INTENT_STORAGE_KEY,
 } from '../src/public/exitIntentCapture.js';
@@ -262,5 +263,92 @@ describe('detectScrollExit', () => {
   it('exports a positive threshold constant', () => {
     expect(SCROLL_EXIT_VELOCITY_THRESHOLD).toBeGreaterThan(0);
     expect(typeof SCROLL_EXIT_VELOCITY_THRESHOLD).toBe('number');
+  });
+});
+
+// ── submitExitCapture ──────────────────────────────────────────────
+
+describe('submitExitCapture', () => {
+  let mockSubscribe;
+  let mockQueueWelcome;
+
+  beforeEach(() => {
+    mockSubscribe = vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' });
+    mockQueueWelcome = vi.fn().mockResolvedValue({ success: true, queued: 3 });
+
+    // Mock the dynamic backend imports
+    vi.doMock('backend/newsletterService.web', () => ({
+      subscribeToNewsletter: mockSubscribe,
+      captureExitIntentEmail: mockQueueWelcome,
+    }));
+  });
+
+  it('returns error for invalid email without calling backend', async () => {
+    const result = await submitExitCapture('not-an-email');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('invalid_email');
+    expect(mockSubscribe).not.toHaveBeenCalled();
+  });
+
+  it('returns error for empty email', async () => {
+    const result = await submitExitCapture('');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('invalid_email');
+  });
+
+  it('calls subscribeToNewsletter with exit_intent_popup source', async () => {
+    await submitExitCapture('user@test.com');
+    expect(mockSubscribe).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
+  });
+
+  it('calls captureExitIntentEmail to queue welcome series into EmailQueue', async () => {
+    await submitExitCapture('user@test.com');
+    expect(mockQueueWelcome).toHaveBeenCalledWith('user@test.com');
+  });
+
+  it('returns discountCode on success', async () => {
+    const result = await submitExitCapture('user@test.com');
+    expect(result.success).toBe(true);
+    expect(result.discountCode).toBe('WELCOME10');
+  });
+
+  it('marks exit intent as shown on success', async () => {
+    // Clear any prior state
+    globalThis.sessionStorage.clear();
+    expect(shouldShowExitIntent('/')).toBe(true);
+
+    await submitExitCapture('user@test.com');
+    expect(shouldShowExitIntent('/')).toBe(false);
+  });
+
+  it('does not mark as shown when subscription fails', async () => {
+    mockSubscribe.mockResolvedValue({ success: false, message: 'Subscription failed' });
+    globalThis.sessionStorage.clear();
+
+    await submitExitCapture('user@test.com');
+    expect(shouldShowExitIntent('/')).toBe(true);
+  });
+
+  it('returns subscription error message on failure', async () => {
+    mockSubscribe.mockResolvedValue({ success: false, message: 'Subscription failed' });
+    const result = await submitExitCapture('user@test.com');
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('Subscription failed');
+  });
+
+  it('still succeeds if EmailQueue queueing fails (non-blocking)', async () => {
+    mockQueueWelcome.mockRejectedValue(new Error('EmailQueue insert failed'));
+    const result = await submitExitCapture('user@test.com');
+    expect(result.success).toBe(true);
+    expect(result.discountCode).toBe('WELCOME10');
+  });
+
+  it('handles backend import failure gracefully', async () => {
+    vi.doMock('backend/newsletterService.web', () => {
+      throw new Error('Module not found');
+    });
+    const result = await submitExitCapture('user@test.com');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('submission_failed');
   });
 });

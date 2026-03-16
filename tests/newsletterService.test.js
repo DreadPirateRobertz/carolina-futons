@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __seed, __onInsert, __reset as resetData } from './__mocks__/wix-data.js';
 import { __reset as resetCrm, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __reset as resetMarketing, coupons } from './__mocks__/wix-marketing-backend.js';
-import { subscribeToNewsletter, syncToESP, unsubscribeFromESP, getESPStatus } from '../src/backend/newsletterService.web.js';
+import { subscribeToNewsletter, syncToESP, unsubscribeFromESP, getESPStatus, captureExitIntentEmail } from '../src/backend/newsletterService.web.js';
 import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler, __reset as resetFetch } from './__mocks__/wix-fetch.js';
 
@@ -542,5 +542,116 @@ describe('getESPStatus', () => {
     const result = await getESPStatus();
     expect(result.configured).toBe(true);
     expect(result.provider).toBe('klaviyo');
+  });
+});
+
+// ── captureExitIntentEmail ───────────────────────────────────────
+
+describe('captureExitIntentEmail', () => {
+  it('returns success with discount code for valid email', async () => {
+    const result = await captureExitIntentEmail('visitor@example.com');
+    expect(result.success).toBe(true);
+    expect(result.discountCode).toBe('WELCOME10');
+  });
+
+  it('does not insert into NewsletterSubscribers (that is subscribeToNewsletter responsibility)', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('visitor@test.com');
+
+    const newsletterInserts = inserts.filter(i => i.collection === 'NewsletterSubscribers');
+    expect(newsletterInserts).toHaveLength(0);
+  });
+
+  it('also queues welcome_series_1 into EmailQueue', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('visitor@test.com');
+
+    const emailQueueInsert = inserts.find(i => i.collection === 'EmailQueue');
+    expect(emailQueueInsert).toBeDefined();
+    expect(emailQueueInsert.item.templateId).toBe('welcome_series_1');
+    expect(emailQueueInsert.item.recipientEmail).toBe('visitor@test.com');
+    expect(emailQueueInsert.item.sequenceType).toBe('welcome');
+    expect(emailQueueInsert.item.status).toBe('pending');
+  });
+
+  it('queues all 3 welcome series steps into EmailQueue', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('visitor@test.com');
+
+    const emailQueueInserts = inserts.filter(i => i.collection === 'EmailQueue');
+    expect(emailQueueInserts).toHaveLength(3);
+    expect(emailQueueInserts[0].item.templateId).toBe('welcome_series_1');
+    expect(emailQueueInserts[1].item.templateId).toBe('welcome_series_2');
+    expect(emailQueueInserts[2].item.templateId).toBe('welcome_series_3');
+  });
+
+  it('sets delayed scheduledFor for steps 2 and 3', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('visitor@test.com');
+
+    const emailQueueInserts = inserts.filter(i => i.collection === 'EmailQueue');
+    const step1Time = emailQueueInserts[0].item.scheduledFor.getTime();
+    const step2Time = emailQueueInserts[1].item.scheduledFor.getTime();
+    const step3Time = emailQueueInserts[2].item.scheduledFor.getTime();
+
+    // Step 2 should be delayed (72 hours = 259200000ms)
+    expect(step2Time - step1Time).toBeGreaterThanOrEqual(259200000 - 1000);
+    // Step 3 should be delayed further (168 hours = 604800000ms)
+    expect(step3Time - step1Time).toBeGreaterThanOrEqual(604800000 - 1000);
+  });
+
+  it('returns error for invalid email', async () => {
+    const result = await captureExitIntentEmail('bad');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for empty email', async () => {
+    const result = await captureExitIntentEmail('');
+    expect(result.success).toBe(false);
+  });
+
+  it('deduplicates — does not re-queue if already subscribed', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'existing', email: 'existing@test.com', source: 'footer', subscribedAt: new Date() },
+    ]);
+
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('existing@test.com');
+
+    // Should NOT insert into EmailQueue since they already exist
+    const emailQueueInserts = inserts.filter(i => i.collection === 'EmailQueue');
+    expect(emailQueueInserts).toHaveLength(0);
+  });
+
+  it('still returns success for duplicate subscriber (prevents email enumeration)', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'existing', email: 'existing@test.com', source: 'footer', subscribedAt: new Date() },
+    ]);
+
+    const result = await captureExitIntentEmail('existing@test.com');
+    expect(result.success).toBe(true);
+    expect(result.discountCode).toBe('WELCOME10');
+  });
+
+  it('includes discountCode variable in welcome_series_1 queue item', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('visitor@test.com');
+
+    const step1 = inserts.find(i => i.collection === 'EmailQueue' && i.item.templateId === 'welcome_series_1');
+    expect(step1.item.variables).toBeDefined();
+    expect(step1.item.variables.discountCode).toBe('WELCOME10');
+    expect(step1.item.variables.email).toBe('visitor@test.com');
   });
 });
