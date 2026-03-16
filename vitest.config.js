@@ -273,6 +273,8 @@ export default defineConfig({
       'public/MultiImageGallery': path.resolve(__dirname, 'src/public/MultiImageGallery.js'),
       'public/CategoryPagePolish.js': path.resolve(__dirname, 'src/public/CategoryPagePolish.js'),
       'public/CategoryPagePolish': path.resolve(__dirname, 'src/public/CategoryPagePolish.js'),
+      'public/aboutIllustrations.js': path.resolve(__dirname, 'src/public/aboutIllustrations.js'),
+      'public/aboutIllustrations': path.resolve(__dirname, 'src/public/aboutIllustrations.js'),
     },
   },
 });
