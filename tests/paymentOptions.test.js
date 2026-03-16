@@ -107,6 +107,82 @@ describe('getPaymentOptions', () => {
     const result = await getPaymentOptions(998);
     expect(result.badges.some(b => b.type === 'free-shipping')).toBe(false);
   });
+
+  it('returns Afterpay eligible at exact $35 boundary', async () => {
+    const result = await getPaymentOptions(35);
+    expect(result.afterpay.eligible).toBe(true);
+    expect(result.afterpay.installmentAmount).toBe(8.75);
+  });
+
+  it('returns Afterpay eligible at exact $1000 boundary', async () => {
+    const result = await getPaymentOptions(1000);
+    expect(result.afterpay.eligible).toBe(true);
+    expect(result.afterpay.installmentAmount).toBe(250);
+  });
+
+  it('returns Afterpay ineligible at $34.99', async () => {
+    const result = await getPaymentOptions(34.99);
+    expect(result.afterpay.eligible).toBe(false);
+  });
+
+  it('returns Afterpay ineligible at $1000.01', async () => {
+    const result = await getPaymentOptions(1000.01);
+    expect(result.afterpay.eligible).toBe(false);
+  });
+
+  it('includes afterpay in methods for eligible price', async () => {
+    const result = await getPaymentOptions(500);
+    const afterpayMethod = result.methods.find(m => m.id === 'afterpay');
+    expect(afterpayMethod).toBeDefined();
+    expect(afterpayMethod.brands).toContain('Afterpay');
+  });
+
+  it('includes credit card brands', async () => {
+    const result = await getPaymentOptions(100);
+    const cc = result.methods.find(m => m.id === 'credit-card');
+    expect(cc.brands).toEqual(['Visa', 'Mastercard', 'Amex', 'Discover']);
+  });
+
+  it('always includes secure checkout badge', async () => {
+    const result = await getPaymentOptions(50);
+    const secure = result.badges.find(b => b.type === 'secure');
+    expect(secure).toBeDefined();
+    expect(secure.label).toBe('Secure Checkout');
+  });
+
+  it('includes afterpay badge for eligible price', async () => {
+    const result = await getPaymentOptions(200);
+    const badge = result.badges.find(b => b.type === 'afterpay');
+    expect(badge).toBeDefined();
+    expect(badge.label).toContain('4 payments of');
+  });
+
+  it('includes financing badge for $500', async () => {
+    const result = await getPaymentOptions(500);
+    const badge = result.badges.find(b => b.type === 'financing');
+    expect(badge).toBeDefined();
+    expect(badge.label).toContain('6 months interest-free');
+  });
+
+  it('returns financing ineligible below $300', async () => {
+    const result = await getPaymentOptions(200);
+    expect(result.financing.eligible).toBe(false);
+  });
+
+  it('returns financing eligible at $300', async () => {
+    const result = await getPaymentOptions(300);
+    expect(result.financing.eligible).toBe(true);
+  });
+
+  it('returns error for null price', async () => {
+    const result = await getPaymentOptions(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for undefined price', async () => {
+    const result = await getPaymentOptions(undefined);
+    expect(result.success).toBe(false);
+  });
 });
 
 // ── getAfterpayMessage ──────────────────────────────────────────────
@@ -143,6 +219,35 @@ describe('getAfterpayMessage', () => {
   it('rounds installments correctly for $99.99', async () => {
     const result = await getAfterpayMessage(99.99);
     expect(result.installmentAmount).toBe(25.0); // 99.99/4 = 24.9975, rounded to 25.00
+  });
+
+  it('returns eligible at exact $35 boundary', async () => {
+    const result = await getAfterpayMessage(35);
+    expect(result.eligible).toBe(true);
+    expect(result.installments).toBe(4);
+  });
+
+  it('returns eligible at exact $1000 boundary', async () => {
+    const result = await getAfterpayMessage(1000);
+    expect(result.eligible).toBe(true);
+    expect(result.totalCost).toBe(1000);
+  });
+
+  it('returns totalCost equal to original price (no fees)', async () => {
+    const result = await getAfterpayMessage(400);
+    expect(result.totalCost).toBe(400);
+  });
+
+  it('handles string price', async () => {
+    const result = await getAfterpayMessage('500');
+    expect(result.success).toBe(true);
+    expect(result.eligible).toBe(true);
+    expect(result.installmentAmount).toBe(125);
+  });
+
+  it('returns error for null', async () => {
+    const result = await getAfterpayMessage(null);
+    expect(result.success).toBe(false);
   });
 });
 
@@ -192,6 +297,42 @@ describe('getBatchPaymentBadges', () => {
     ]);
     expect(Object.keys(result.badges).length).toBe(0);
   });
+
+  it('uses _id as fallback when productId missing', async () => {
+    const result = await getBatchPaymentBadges([
+      { _id: 'fallback-id', price: 500 },
+    ]);
+    expect(result.badges['fallback-id']).toBeTruthy();
+  });
+
+  it('badge includes color and textColor', async () => {
+    const result = await getBatchPaymentBadges([
+      { productId: 'p1', price: 500 },
+    ]);
+    const badge = result.badges['p1'][0];
+    expect(badge.color).toBeDefined();
+    expect(badge.textColor).toBeDefined();
+  });
+
+  it('returns no badges for products below all thresholds', async () => {
+    const result = await getBatchPaymentBadges([
+      { productId: 'p1', price: 10 },
+    ]);
+    expect(result.badges['p1']).toBeUndefined();
+  });
+
+  it('skips negative priced products', async () => {
+    const result = await getBatchPaymentBadges([
+      { productId: 'neg', price: -50 },
+    ]);
+    expect(result.badges['neg']).toBeUndefined();
+  });
+
+  it('handles undefined input', async () => {
+    const result = await getBatchPaymentBadges(undefined);
+    expect(result.success).toBe(true);
+    expect(result.badges).toEqual({});
+  });
 });
 
 // ── getCheckoutPaymentSummary ───────────────────────────────────────
@@ -236,6 +377,41 @@ describe('getCheckoutPaymentSummary', () => {
     const result = await getCheckoutPaymentSummary('500');
     expect(result.success).toBe(true);
     expect(result.summary.cartTotal).toBe(500);
+  });
+
+  it('payNow message includes formatted dollar amount', async () => {
+    const result = await getCheckoutPaymentSummary(500);
+    expect(result.summary.payNow.message).toBe('Pay $500.00 now');
+  });
+
+  it('afterpay section includes all required fields', async () => {
+    const result = await getCheckoutPaymentSummary(500);
+    expect(result.summary.afterpay.installmentAmount).toBe(125);
+    expect(result.summary.afterpay.installments).toBe(4);
+    expect(result.summary.afterpay.totalCost).toBe(500);
+    expect(result.summary.afterpay.message).toBeDefined();
+  });
+
+  it('financing section includes tiers and bestTier', async () => {
+    const result = await getCheckoutPaymentSummary(500);
+    expect(result.summary.financing.tiers.length).toBeGreaterThan(0);
+    expect(result.summary.financing.bestTier).toBeDefined();
+    expect(result.summary.financing.message).toBeDefined();
+  });
+
+  it('excludes financing for $200 cart', async () => {
+    const result = await getCheckoutPaymentSummary(200);
+    expect(result.summary.financing).toBeUndefined();
+  });
+
+  it('returns error for null', async () => {
+    const result = await getCheckoutPaymentSummary(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for negative total', async () => {
+    const result = await getCheckoutPaymentSummary(-100);
+    expect(result.success).toBe(false);
   });
 });
 
@@ -316,6 +492,49 @@ describe('getInstallmentCalculation', () => {
 
   it('rejects negative months', async () => {
     const result = await getInstallmentCalculation(500, -6);
+    expect(result.success).toBe(false);
+  });
+
+  it('calculates 36-month tier for $7000', async () => {
+    const result = await getInstallmentCalculation(7000, 36);
+    expect(result.success).toBe(true);
+    expect(result.apr).toBe(9.99);
+    expect(result.isPromotional).toBe(false);
+    expect(result.tierLabel).toContain('36 months');
+    expect(result.totalInterest).toBeGreaterThan(0);
+  });
+
+  it('0% APR tier has zero total interest', async () => {
+    const result = await getInstallmentCalculation(600, 6);
+    expect(result.totalInterest).toBe(0);
+    expect(result.totalCost).toBe(600);
+  });
+
+  it('non-tier calculation includes totalCost > price', async () => {
+    const result = await getInstallmentCalculation(100, 12);
+    expect(result.totalCost).toBeGreaterThan(100);
+    expect(result.totalInterest).toBeGreaterThan(0);
+  });
+
+  it('returns error for months > 120', async () => {
+    const result = await getInstallmentCalculation(500, 121);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('1-120');
+  });
+
+  it('accepts exactly 120 months', async () => {
+    const result = await getInstallmentCalculation(500, 120);
+    expect(result.success).toBe(true);
+    expect(result.months).toBe(120);
+  });
+
+  it('returns error for NaN months string', async () => {
+    const result = await getInstallmentCalculation(500, 'abc');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for negative price', async () => {
+    const result = await getInstallmentCalculation(-500, 12);
     expect(result.success).toBe(false);
   });
 });
