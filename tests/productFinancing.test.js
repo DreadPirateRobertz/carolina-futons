@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initFinancingOptions, updateFinancingPrice } from '../src/public/ProductFinancing.js';
+import { initFinancingOptions, updateFinancingPrice, renderTermPills } from '../src/public/ProductFinancing.js';
 import { futonFrame } from './fixtures/products.js';
 
 // Mock financingCalc.web backend (replaces old financingService.web)
@@ -484,6 +484,72 @@ describe('ProductFinancing', () => {
       await updateFinancingPrice($w, 600);
 
       expect($w('#financingSection').collapse).toHaveBeenCalled();
+    });
+  });
+
+  describe('renderTermPills', () => {
+    const terms = [
+      { months: 6, monthly: 100, isZeroInterest: true },
+      { months: 12, monthly: 50, isZeroInterest: true },
+      { months: 24, monthly: 27.63, isZeroInterest: false },
+    ];
+
+    it('populates term pill repeater with financing terms', () => {
+      const $w = createMock$w();
+      renderTermPills($w, terms);
+      expect($w('#financingTermPills').data.length).toBe(3);
+    });
+
+    it('renders month and monthly payment in each pill', () => {
+      const $w = createMock$w();
+      renderTermPills($w, terms);
+      const readyCb = $w('#financingTermPills').onItemReady.mock.calls[0][0];
+      const $item = createMock$w();
+      readyCb($item, terms[0]);
+      expect($item('#termMonths').text).toBe('6mo');
+      expect($item('#termPayment').text).toBe('$100/mo');
+    });
+
+    it('marks zero-interest terms with badge', () => {
+      const $w = createMock$w();
+      renderTermPills($w, terms);
+      const readyCb = $w('#financingTermPills').onItemReady.mock.calls[0][0];
+      const $item = createMock$w();
+      readyCb($item, terms[0]);
+      expect($item('#termZeroBadge').show).toHaveBeenCalled();
+    });
+
+    it('hides zero-interest badge for interest-bearing terms', () => {
+      const $w = createMock$w();
+      renderTermPills($w, terms);
+      const readyCb = $w('#financingTermPills').onItemReady.mock.calls[0][0];
+      const $item = createMock$w();
+      readyCb($item, terms[2]);
+      expect($item('#termZeroBadge').hide).toHaveBeenCalled();
+    });
+
+    it('handles empty terms array', () => {
+      const $w = createMock$w();
+      renderTermPills($w, []);
+      expect($w('#financingTermPills').data.length).toBe(0);
+    });
+
+    it('is called during initFinancingOptions', async () => {
+      const $w = createMock$w();
+      const state = { product: { ...futonFrame, price: 600 } };
+      await initFinancingOptions($w, state);
+      // Term pills repeater should have been populated
+      expect($w('#financingTermPills').onItemReady).toHaveBeenCalled();
+    });
+
+    it('sets accessibility label on term pills', () => {
+      const $w = createMock$w();
+      renderTermPills($w, terms);
+      const readyCb = $w('#financingTermPills').onItemReady.mock.calls[0][0];
+      const $item = createMock$w();
+      readyCb($item, terms[0]);
+      expect($item('#termPill').accessibility.ariaLabel).toContain('6');
+      expect($item('#termPill').accessibility.ariaLabel).toContain('100');
     });
   });
 });

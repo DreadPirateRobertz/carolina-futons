@@ -349,6 +349,83 @@ export function initVisualSizeComparison($w, state) {
   } catch (e) {}
 }
 
+// ── Dimension Diagram (inline SVG) ─────────────────────────────────
+
+/**
+ * Render an inline SVG dimension diagram showing closed-position measurements.
+ * Includes a toggle to switch between closed and open positions.
+ *
+ * @param {Function} $w - Wix selector function.
+ * @param {Object} state - Product page state with state.dimensions.
+ */
+export function initDimensionDiagram($w, state) {
+  try {
+    if (!state.product || !state.dimensions) return;
+
+    const dims = state.dimensions;
+    const renderDiagram = (position) => {
+      const pos = position === 'open' ? (dims.open || {}) : (dims.closed || {});
+      const unit = dims.unit === 'cm' ? 'cm' : '"';
+      const fmt = (v) => v != null ? `${Number(v)}${unit}` : '\u2014';
+      const w = fmt(pos.width);
+      const d = fmt(pos.depth);
+      const h = fmt(pos.height);
+      const espresso = colors.espresso;
+      const ariaLabel = `Dimension diagram: ${w} wide, ${d} deep, ${h} high`;
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200" role="img" aria-label="${ariaLabel}">
+  <style>text{font-family:Source Sans 3,sans-serif;font-size:13px;fill:${espresso};}</style>
+  <rect x="50" y="40" width="200" height="120" fill="none" stroke="${espresso}" stroke-width="1.5" rx="4"/>
+  <text x="150" y="180" text-anchor="middle">${w} W</text>
+  <text x="270" y="100" text-anchor="start">${h} H</text>
+  <text x="150" y="30" text-anchor="middle">${d} D</text>
+</svg>`;
+    };
+
+    try { $w('#dimensionDiagramHtml').html = renderDiagram('closed'); } catch (e) {}
+
+    try {
+      const toggle = $w('#diagramPositionToggle');
+      if (toggle) {
+        toggle.onChange(() => {
+          try { $w('#dimensionDiagramHtml').html = renderDiagram(toggle.value); } catch (e) {}
+        });
+      }
+    } catch (e) {}
+  } catch (e) {}
+}
+
+// ── Room Fit Callout ──────────────────────────────────────────────────
+
+/**
+ * Display a room-fit callout message based on open-position depth.
+ * E.g., "Fits comfortably in a 10' × 10' room"
+ *
+ * @param {Function} $w - Wix selector function.
+ * @param {Object} state - Product page state with state.dimensions.
+ */
+export function initRoomFitCallout($w, state) {
+  try {
+    if (!state.product || !state.dimensions) return;
+
+    const dims = state.dimensions;
+    const open = dims.open;
+    if (!open) return;
+
+    // Calculate minimum room size (open depth + 24" clearance each side)
+    const depthFt = Math.ceil((open.depth + 48) / 12);
+    const widthFt = Math.ceil(((open.width || 0) + 48) / 12);
+    const roomSize = Math.max(depthFt, widthFt, 10);
+
+    const callout = $w('#roomFitCallout');
+    if (!callout) return;
+
+    callout.text = `Fits comfortably in a ${roomSize}' × ${roomSize}' room`;
+    callout.show();
+    try { callout.accessibility = { ariaLabel: `Room fit: fits in a ${roomSize} by ${roomSize} foot room` }; } catch (e) {}
+  } catch (e) {}
+}
+
 // ── Internal Helpers ──────────────────────────────────────────────────
 
 function buildDimensionOverlaySvg(dims) {

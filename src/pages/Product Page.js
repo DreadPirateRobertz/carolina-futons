@@ -162,6 +162,12 @@ async function initProductPage() {
         const m = await import('public/SizeGuideModal.js');
         await m.initSizeGuideModal($w, state);
       }, critical: false },
+      // Inline dimension diagram + room fit callout (mobile-ported patterns)
+      { name: 'dimensionDiagram', init: async () => {
+        const m = await import('public/ProductSizeGuide.js');
+        m.initDimensionDiagram($w, state);
+        m.initRoomFitCallout($w, state);
+      }, critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
