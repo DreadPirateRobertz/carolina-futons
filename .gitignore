@@ -27,6 +27,9 @@ __pycache__/
 PHOTO-GALLERY-AUDIT.json
 live-site-images.json
 
+# Hi-res image downloads (too large for git — 90MB+)
+content/nd-images/
+
 # Local strategy docs
 docs/EMAIL-ALIAS-STRATEGY.md
 PRODUCT-PAGE-BUILD-SPEC.md
