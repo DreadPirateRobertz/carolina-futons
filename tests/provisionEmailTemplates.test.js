@@ -19,8 +19,8 @@ import { _TEMPLATE_REGISTRY } from '../src/backend/emailTemplates.web.js';
 // ── TEMPLATE_MANIFEST ────────────────────────────────────────────────
 
 describe('TEMPLATE_MANIFEST', () => {
-  it('contains all 16 templates (12 Step 8 + 4 additional backend templates)', () => {
-    expect(TEMPLATE_MANIFEST).toHaveLength(16);
+  it('contains all 18 templates (12 Step 8 + 6 additional backend templates)', () => {
+    expect(TEMPLATE_MANIFEST).toHaveLength(18);
   });
 
   it('has all P0 templates (contact_form_submission, new_order_notification)', () => {
@@ -65,6 +65,33 @@ describe('TEMPLATE_MANIFEST', () => {
     const ids = TEMPLATE_MANIFEST.map((t) => t.templateId);
     expect(ids).toContain('price_drop_alert');
     expect(ids).toContain('back_in_stock_alert');
+  });
+
+  it('has restock_notification template', () => {
+    const ids = TEMPLATE_MANIFEST.map((t) => t.templateId);
+    expect(ids).toContain('restock_notification');
+  });
+
+  it('has review_thank_you template', () => {
+    const ids = TEMPLATE_MANIFEST.map((t) => t.templateId);
+    expect(ids).toContain('review_thank_you');
+  });
+
+  it('restock_notification has required variables matching emailAutomation usage', () => {
+    const tmpl = TEMPLATE_MANIFEST.find((t) => t.templateId === 'restock_notification');
+    expect(tmpl).toBeDefined();
+    expect(tmpl.variables).toContain('productName');
+    expect(tmpl.variables).toContain('productId');
+    expect(tmpl.variables).toContain('email');
+  });
+
+  it('review_thank_you has required variables matching emailAutomation usage', () => {
+    const tmpl = TEMPLATE_MANIFEST.find((t) => t.templateId === 'review_thank_you');
+    expect(tmpl).toBeDefined();
+    expect(tmpl.variables).toContain('firstName');
+    expect(tmpl.variables).toContain('productName');
+    expect(tmpl.variables).toContain('discountCode');
+    expect(tmpl.variables).toContain('email');
   });
 
   it('has unique template IDs', () => {
@@ -134,6 +161,7 @@ describe('TEMPLATE_MANIFEST ↔ TEMPLATE_REGISTRY cross-reference', () => {
       'contact_form_submission', 'new_order_notification', 'swatch_confirmation',
       'gift_card_purchase_confirmation', 'gift_card_received',
       'price_drop_alert', 'back_in_stock_alert',
+      'restock_notification', 'review_thank_you',
     ];
     const registryManaged = TEMPLATE_MANIFEST.filter(
       (t) => !directUseTemplates.includes(t.templateId)
@@ -192,6 +220,10 @@ describe('All backend template IDs are in TEMPLATE_MANIFEST', () => {
     expect(manifestIds).toContain('post_purchase_1');
     expect(manifestIds).toContain('post_purchase_2');
     expect(manifestIds).toContain('post_purchase_3');
+    // restock: restock_notification
+    expect(manifestIds).toContain('restock_notification');
+    // review_thanks: review_thank_you
+    expect(manifestIds).toContain('review_thank_you');
   });
 
   it('manifest variables match backend emailContact() call variables', () => {
@@ -294,7 +326,7 @@ describe('getTemplateStatus', () => {
       siteId: 'test-site',
     });
 
-    expect(status).toHaveLength(16);
+    expect(status).toHaveLength(18);
     expect(status.every((s) => s.exists === false)).toBe(true);
   });
 
@@ -367,14 +399,13 @@ describe('provisionTemplates', () => {
     vi.stubGlobal('fetch', vi.fn());
   });
 
-  it('creates all 16 templates when none exist', async () => {
+  it('creates all 18 templates when none exist', async () => {
     // List returns empty
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    // 12 create calls
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -382,10 +413,10 @@ describe('provisionTemplates', () => {
     }
 
     const { results } = await provisionTemplates(opts);
-    expect(results).toHaveLength(16);
+    expect(results).toHaveLength(18);
     expect(results.every((r) => r.status === 'CREATED')).toBe(true);
-    // 1 list + 16 creates = 17 calls
-    expect(fetch).toHaveBeenCalledTimes(17);
+    // 1 list + 18 creates = 19 calls
+    expect(fetch).toHaveBeenCalledTimes(19);
   });
 
   it('skips existing templates', async () => {
@@ -400,8 +431,8 @@ describe('provisionTemplates', () => {
         ],
       }),
     });
-    // 9 create calls for the rest
-    for (let i = 0; i < 9; i++) {
+    // 15 create calls for the rest
+    for (let i = 0; i < 15; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -411,7 +442,7 @@ describe('provisionTemplates', () => {
     const { results } = await provisionTemplates(opts);
     const created = results.filter((r) => r.status === 'CREATED');
     const skipped = results.filter((r) => r.status === 'EXISTS');
-    expect(created).toHaveLength(9);
+    expect(created).toHaveLength(15);
     expect(skipped).toHaveLength(3);
   });
 
@@ -422,7 +453,7 @@ describe('provisionTemplates', () => {
     });
 
     const { results } = await provisionTemplates({ ...opts, dryRun: true });
-    expect(results).toHaveLength(16);
+    expect(results).toHaveLength(18);
     expect(results.every((r) => r.status === 'WOULD_CREATE')).toBe(true);
     // Only the list call
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -440,7 +471,7 @@ describe('provisionTemplates', () => {
       text: async () => 'Forbidden',
     });
     // Rest succeed
-    for (let i = 1; i < 16; i++) {
+    for (let i = 1; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -452,7 +483,7 @@ describe('provisionTemplates', () => {
     const created = results.filter((r) => r.status === 'CREATED');
     expect(errors).toHaveLength(1);
     expect(errors[0].detail).toContain('403');
-    expect(created).toHaveLength(15);
+    expect(created).toHaveLength(17);
   });
 
   it('throws if listing templates fails', async () => {
@@ -470,7 +501,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -495,7 +526,7 @@ describe('provisionTemplates', () => {
       json: async () => ({ templates: [] }),
     });
     fetch.mockRejectedValueOnce(new Error('Connection reset'));
-    for (let i = 1; i < 16; i++) {
+    for (let i = 1; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -513,7 +544,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),

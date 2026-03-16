@@ -145,6 +145,22 @@ const TEMPLATE_MANIFEST = [
     priority: 2,
     description: 'Alerts subscribers when a previously out-of-stock product returns.',
   },
+
+  // Restock + review templates (used by emailAutomation.web.js SEQUENCES)
+  {
+    templateId: 'restock_notification',
+    subject: '{productName} is back in stock!',
+    variables: ['productName', 'productId', 'email'],
+    priority: 2,
+    description: 'Notifies back-in-stock subscribers when inventory is replenished.',
+  },
+  {
+    templateId: 'review_thank_you',
+    subject: 'Thanks for your review, {firstName}!',
+    variables: ['firstName', 'productName', 'discountCode', 'email'],
+    priority: 2,
+    description: 'Sends a thank-you with discount code after a customer leaves a review.',
+  },
 ].sort((a, b) => a.priority - b.priority);
 
 
