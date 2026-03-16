@@ -1098,7 +1098,7 @@ describe('wixEcom_onOrderCanceled', () => {
     // Only pending items should be cancelled (eq-pp2, eq-pp3), not sent (eq-pp1)
     expect(updatedItems).toHaveLength(2);
     expect(updatedItems.every(i => i.status === 'cancelled')).toBe(true);
-    expect(updatedItems.every(i => i.lastError === 'Order cancelled')).toBe(true);
+    expect(updatedItems.every(i => i.lastError === 'Order ORD-500 cancelled')).toBe(true);
   });
 
   it('does not cancel emails for different orders', async () => {

@@ -654,7 +654,7 @@ describe('wixEcom_onOrderCanceled', () => {
     await new Promise(r => setTimeout(r, 50));
     expect(updates.length).toBe(1);
     expect(updates[0].status).toBe('cancelled');
-    expect(updates[0].lastError).toBe('Order cancelled');
+    expect(updates[0].lastError).toBe('Order ORD-X cancelled');
   });
 
   it('does nothing when email missing', async () => {
@@ -671,37 +671,29 @@ describe('wixEcom_onOrderCanceled', () => {
 
 describe('A/B variant selection in welcome sequence', () => {
   it('step 1 gets abVariant set, other steps get null', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.3); // should pick 'A'
-    try {
-      const inserts = [];
-      __onInsert((col, item) => { if (col === 'EmailQueue') inserts.push(item); });
+    // ab@test.com hashes to variant A (deterministic)
+    const inserts = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') inserts.push(item); });
 
-      await triggerWelcomeSequence('c1', 'ab@test.com', 'Tester');
+    await triggerWelcomeSequence('c1', 'ab@test.com', 'Tester');
 
-      expect(inserts.length).toBe(3);
-      expect(inserts[0].abVariant).toBe('A');
-      expect(inserts[0].variables.subjectLine).toContain('Welcome to Carolina Futons');
-      expect(inserts[1].abVariant).toBeNull();
-      expect(inserts[2].abVariant).toBeNull();
-      expect(inserts[1].variables.subjectLine).toBeUndefined();
-    } finally {
-      vi.spyOn(Math, 'random').mockRestore();
-    }
+    expect(inserts.length).toBe(3);
+    expect(inserts[0].abVariant).toBe('A');
+    expect(inserts[0].variables.subjectLine).toContain('Welcome to Carolina Futons');
+    expect(inserts[1].abVariant).toBeNull();
+    expect(inserts[2].abVariant).toBeNull();
+    expect(inserts[1].variables.subjectLine).toBeUndefined();
   });
 
   it('variant B personalizes subject with firstName', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.7); // should pick 'B'
-    try {
-      const inserts = [];
-      __onInsert((col, item) => { if (col === 'EmailQueue') inserts.push(item); });
+    // alice@test.com hashes to variant B (deterministic)
+    const inserts = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') inserts.push(item); });
 
-      await triggerWelcomeSequence('c2', 'ab2@test.com', 'Dana');
+    await triggerWelcomeSequence('c2', 'alice@test.com', 'Dana');
 
-      expect(inserts[0].abVariant).toBe('B');
-      expect(inserts[0].variables.subjectLine).toContain('Dana');
-    } finally {
-      vi.spyOn(Math, 'random').mockRestore();
-    }
+    expect(inserts[0].abVariant).toBe('B');
+    expect(inserts[0].variables.subjectLine).toContain('Dana');
   });
 });
 
