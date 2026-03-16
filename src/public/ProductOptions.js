@@ -157,11 +157,28 @@ export async function initFinishSwatches($w, state) {
       try {
         $item('#finishSwatchLabel').text = itemData.description;
       } catch (e) {}
+      // OOS visual treatment
       try {
         if (itemData.outOfStock) {
           $item('#finishSwatchCircle').style.opacity = 0.3;
         }
       } catch (e) {}
+      // ARIA attributes
+      try {
+        const isSelected = dropdown.value === itemData.value;
+        const circle = $item('#finishSwatchCircle');
+        circle.accessibility.ariaChecked = isSelected ? 'true' : 'false';
+        if (itemData.outOfStock) {
+          circle.accessibility.ariaLabel = `${itemData.description} finish — Special Order`;
+          circle.accessibility.ariaDisabled = 'true';
+        } else {
+          circle.accessibility.ariaLabel = `${itemData.description} finish`;
+        }
+        // Selection styling — focus ring
+        circle.style.borderColor = isSelected ? colors.mountainBlue : colors.sandDark;
+        circle.style.borderWidth = isSelected ? '3px' : '1px';
+      } catch (e) {}
+      // Click handler
       try {
         $item('#finishSwatchCircle').onClick(() => {
           if (itemData.outOfStock) return;

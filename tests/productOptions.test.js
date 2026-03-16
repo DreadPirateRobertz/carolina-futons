@@ -472,6 +472,63 @@ describe('ProductOptions', () => {
       });
     });
 
+    describe('accessibility — individual swatch items', () => {
+      let itemReadyCallback;
+
+      beforeEach(async () => {
+        await initFinishSwatches($w, state);
+        itemReadyCallback = $w('#finishSwatches').onItemReady.mock.calls[0][0];
+      });
+
+      it('sets aria-label on each swatch circle with finish name', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaLabel).toBe('Natural Oak finish');
+      });
+
+      it('sets aria-checked="true" on selected swatch', () => {
+        $w('#finishDropdown').value = 'Walnut';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaChecked).toBe('true');
+      });
+
+      it('sets aria-checked="false" on non-selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').accessibility.ariaChecked).toBe('false');
+      });
+
+      it('sets aria-disabled on OOS swatch', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        expect($item('#finishSwatchCircle').accessibility.ariaDisabled).toBe('true');
+      });
+
+      it('sets tooltip text on OOS swatch', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-1', value: 'Espresso', description: 'Espresso', outOfStock: true });
+        expect($item('#finishSwatchCircle').accessibility.ariaLabel).toContain('Special Order');
+      });
+
+      it('applies focus ring border on selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false });
+        expect($item('#finishSwatchCircle').style.borderColor).toBe('#1e3a5f'); // mountainBlue
+        expect($item('#finishSwatchCircle').style.borderWidth).toBe('3px');
+      });
+
+      it('applies default border on non-selected swatch', () => {
+        $w('#finishDropdown').value = 'Natural Oak';
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-2', value: 'Walnut', description: 'Walnut', outOfStock: false });
+        expect($item('#finishSwatchCircle').style.borderColor).toBe('#c9b99a'); // sandDark
+        expect($item('#finishSwatchCircle').style.borderWidth).toBe('1px');
+      });
+    });
+
     it('skips first OOS finish and selects next in-stock as default', async () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockImplementation((_id, choices) => {
