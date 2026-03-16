@@ -383,7 +383,7 @@ const PAGES = [
       { name: "Blog Teasers", impl: `<h4>📰 Implementation — Blog Teasers</h4>
 <p><strong>Layout: HtmlComponent that displays a grid of 3 recent blog posts</strong></p>
 <ul>
-  <li><strong>#blogTeaserSection</strong>: HtmlComponent element. Code injects a grid of 3 recent blog posts via <code>HomeBlogTeasers.js</code> using <code>postMessage()</code>.</li>
+  <li><strong>#blogTeaserSection</strong>: HtmlComponent element. Code sets <code>.html</code> property with a grid of 3 recent blog posts via <code>HomeBlogTeasers.js</code>.</li>
   <li>Content is rendered as HTML inside the iframe — no direct child elements needed.</li>
   <li>Data sourced from <code>blogService.web.js</code> backend module.</li>
 </ul>`, elements: [
@@ -395,7 +395,7 @@ const PAGES = [
   <li><strong>#instagramFeedContainer</strong>: HtmlComponent. Code injects Instagram embed iframe via <code>SocialFeedEmbed.js</code>.</li>
   <li><strong>#tiktokFeedContainer</strong>: HtmlComponent. Code injects TikTok follow card via <code>SocialFeedEmbed.js</code>.</li>
   <li><strong>#pinterestBoardContainer</strong>: HtmlComponent. Code injects Pinterest follow card via <code>SocialFeedEmbed.js</code>.</li>
-  <li>All three use the <code>postMessage()</code> pattern to inject HTML into the iframe.</li>
+  <li>All three set the <code>.html</code> property to inject content into the HtmlComponent.</li>
 </ul>`, elements: [
         ["instagramFeedContainer","HtmlComponent","Instagram embed iframe"],
         ["tiktokFeedContainer","HtmlComponent","TikTok follow card"],
