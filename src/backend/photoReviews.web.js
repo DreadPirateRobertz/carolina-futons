@@ -152,13 +152,22 @@ export const getPhotoReviews = webMethod(
   }
 );
 
+// Valid status transitions for photo review moderation
+const PHOTO_STATUS_TRANSITIONS = {
+  pending:  ['approved', 'rejected', 'featured'],
+  approved: ['featured', 'rejected'],
+  featured: ['approved', 'rejected'],
+  rejected: ['pending'],  // Can re-queue rejected reviews for another look
+};
+
 /**
  * Moderate a photo review (approve, reject, or feature).
+ * Enforces valid status transitions to prevent workflow corruption.
  * Admin only.
  *
  * @param {string} reviewId - Review ID to moderate.
  * @param {string} action - 'approve'|'reject'|'feature'
- * @returns {Promise<{success: boolean}>}
+ * @returns {Promise<{success: boolean, previousStatus?: string, newStatus?: string}>}
  */
 export const moderatePhotoReview = webMethod(
   Permissions.Admin,
@@ -184,12 +193,24 @@ export const moderatePhotoReview = webMethod(
         return { success: false, error: 'Review not found.' };
       }
 
-      existing.status = statusMap[cleanAction];
+      const currentStatus = existing.status || 'pending';
+      const newStatus = statusMap[cleanAction];
+      const allowed = PHOTO_STATUS_TRANSITIONS[currentStatus];
+
+      if (!allowed || !allowed.includes(newStatus)) {
+        return {
+          success: false,
+          error: `Cannot ${cleanAction} a review with status '${currentStatus}'.`,
+        };
+      }
+
+      const previousStatus = currentStatus;
+      existing.status = newStatus;
       existing.moderatedAt = new Date();
       existing.moderatedBy = memberId;
 
       await wixData.update('PhotoReviews', existing);
-      return { success: true };
+      return { success: true, previousStatus, newStatus };
     } catch (err) {
       console.error('[photoReviews] Error moderating review:', err);
       return { success: false, error: 'Failed to moderate review.' };

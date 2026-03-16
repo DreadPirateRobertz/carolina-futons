@@ -65,17 +65,30 @@ export const getReviewSummary = webMethod(
         };
       }
 
+      // Filter out invalid/NaN/null ratings before aggregation
+      const validRatings = allRatings.filter(r => {
+        if (r == null) return false;
+        return !isNaN(Number(r));
+      });
+
+      if (validRatings.length === 0) {
+        return {
+          averageRating: 0, totalReviews: 0, totalPhotos: 0,
+          breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, recommendRate: 0,
+        };
+      }
+
       const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
       let sum = 0;
-      for (const r of allRatings) {
+      for (const r of validRatings) {
         const clamped = Math.min(5, Math.max(1, Math.round(r)));
         breakdown[clamped]++;
         sum += clamped;
       }
 
-      const avg = Math.round((sum / allRatings.length) * 10) / 10;
-      const highRatings = allRatings.filter(r => r >= 4).length;
-      const recommendRate = Math.round((highRatings / allRatings.length) * 100);
+      const avg = Math.round((sum / validRatings.length) * 10) / 10;
+      const highRatings = validRatings.filter(r => r >= 4).length;
+      const recommendRate = Math.round((highRatings / validRatings.length) * 100);
 
       // Count photos from both text reviews (multi-photo) and photo reviews
       const textPhotos = textReviews.items.reduce(
@@ -85,7 +98,7 @@ export const getReviewSummary = webMethod(
 
       return {
         averageRating: avg,
-        totalReviews: allRatings.length,
+        totalReviews: validRatings.length,
         totalPhotos: textPhotos + photoReviewPhotos,
         breakdown,
         recommendRate,

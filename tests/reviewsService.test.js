@@ -603,20 +603,31 @@ describe('reviewsService', () => {
   });
 
   describe('moderateReview', () => {
-    it('approves a review', async () => {
-      const result = await moderateReview('rev-001', 'approve');
+    it('approves a pending review', async () => {
+      // Seed a pending review since rev-001 is already approved
+      __seed('Reviews', [
+        ...sampleReviews,
+        { _id: 'rev-mod-pending', productId: 'prod-001', status: 'pending', rating: 4,
+          title: 'Test', body: 'Pending review for moderation', _createdDate: new Date() },
+      ]);
+      const result = await moderateReview('rev-mod-pending', 'approve');
       expect(result.success).toBe(true);
 
-      const review = await wixData.get('Reviews', 'rev-001');
+      const review = await wixData.get('Reviews', 'rev-mod-pending');
       expect(review.status).toBe('approved');
       expect(review.moderatedAt).toBeInstanceOf(Date);
     });
 
-    it('rejects a review', async () => {
-      const result = await moderateReview('rev-001', 'reject');
+    it('rejects a pending review', async () => {
+      __seed('Reviews', [
+        ...sampleReviews,
+        { _id: 'rev-mod-pending', productId: 'prod-001', status: 'pending', rating: 4,
+          title: 'Test', body: 'Pending review for moderation', _createdDate: new Date() },
+      ]);
+      const result = await moderateReview('rev-mod-pending', 'reject');
       expect(result.success).toBe(true);
 
-      const review = await wixData.get('Reviews', 'rev-001');
+      const review = await wixData.get('Reviews', 'rev-mod-pending');
       expect(review.status).toBe('rejected');
     });
 

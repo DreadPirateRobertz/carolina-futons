@@ -114,15 +114,24 @@ export const getAggregateRating = webMethod(
 
     const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     let sum = 0;
+    let validCount = 0;
     for (const r of reviews) {
-      const rating = Math.min(5, Math.max(1, Math.round(r.rating)));
+      if (r.rating == null) continue;
+      const raw = Number(r.rating);
+      if (isNaN(raw)) continue;
+      const rating = Math.min(5, Math.max(1, Math.round(raw)));
       breakdown[rating]++;
       sum += rating;
+      validCount++;
+    }
+
+    if (validCount === 0) {
+      return { average: 0, total: 0, breakdown };
     }
 
     return {
-      average: Math.round((sum / reviews.length) * 10) / 10,
-      total: reviews.length,
+      average: Math.round((sum / validCount) * 10) / 10,
+      total: validCount,
       breakdown,
     };
   }
@@ -309,12 +318,20 @@ export const getPendingReviews = webMethod(
   }
 );
 
+// Valid status transitions for text review moderation
+const REVIEW_STATUS_TRANSITIONS = {
+  pending:  ['approved', 'rejected'],
+  approved: ['rejected'],
+  rejected: ['pending'],  // Can re-queue for another look
+};
+
 /**
  * Moderate a review: approve or reject. Admin only.
+ * Enforces valid status transitions.
  *
  * @param {string} reviewId
  * @param {string} action - "approve" | "reject"
- * @returns {Promise<{success: boolean, error?: string}>}
+ * @returns {Promise<{success: boolean, previousStatus?: string, newStatus?: string, error?: string}>}
  */
 export const moderateReview = webMethod(
   Permissions.Admin,
@@ -331,11 +348,23 @@ export const moderateReview = webMethod(
       const review = await wixData.get(COLLECTION, rid);
       if (!review) return { success: false, error: 'Review not found.' };
 
-      review.status = action === 'approve' ? 'approved' : 'rejected';
+      const currentStatus = review.status || 'pending';
+      const newStatus = action === 'approve' ? 'approved' : 'rejected';
+      const allowed = REVIEW_STATUS_TRANSITIONS[currentStatus];
+
+      if (!allowed || !allowed.includes(newStatus)) {
+        return {
+          success: false,
+          error: `Cannot ${action} a review with status '${currentStatus}'.`,
+        };
+      }
+
+      const previousStatus = currentStatus;
+      review.status = newStatus;
       review.moderatedAt = new Date();
       await wixData.update(COLLECTION, review);
 
-      return { success: true };
+      return { success: true, previousStatus, newStatus };
     } catch (err) {
       console.error('[reviewsService] moderateReview error:', err);
       return { success: false, error: 'Failed to moderate review.' };
@@ -463,8 +492,11 @@ export const getCategoryReviewSummaries = webMethod(
       for (const review of result.items) {
         const pid = review.productId;
         if (!summaries[pid]) continue;
+        if (review.rating == null) continue;
+        const raw = Number(review.rating);
+        if (isNaN(raw)) continue;
         summaries[pid].total++;
-        summaries[pid]._sum = (summaries[pid]._sum || 0) + Math.min(5, Math.max(1, Math.round(review.rating)));
+        summaries[pid]._sum = (summaries[pid]._sum || 0) + Math.min(5, Math.max(1, Math.round(raw)));
       }
 
       for (const id of cleanIds) {
