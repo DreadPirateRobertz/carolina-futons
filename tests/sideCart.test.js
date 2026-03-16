@@ -42,6 +42,7 @@ vi.mock('public/cartService', () => ({
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 10,
   safeMultiply: vi.fn((a, b) => a * b),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -462,28 +463,14 @@ describe('refreshSideCart', () => {
     expect(getEl('#sideCartSubtotal').text).toBe('$499.00');
   });
 
-  it('updates shipping progress bar and text', async () => {
-    const { getShippingProgress } = await import('public/cartService');
-    getShippingProgress.mockReturnValue({ remaining: 200, progressPct: 60, qualifies: false });
-
+  it('hides shipping bar and text when free shipping is disabled', async () => {
     await triggerRefresh({
       lineItems: [{ _id: 'i1', name: 'Frame', price: 499, quantity: 1, options: [] }],
       totals: { subtotal: 499 },
     });
 
-    expect(getEl('#sideShippingText').text).toContain('$200.00 away from free shipping');
-  });
-
-  it('shows free shipping text when qualified', async () => {
-    const { getShippingProgress } = await import('public/cartService');
-    getShippingProgress.mockReturnValue({ remaining: 0, progressPct: 100, qualifies: true });
-
-    await triggerRefresh({
-      lineItems: [{ _id: 'i1', name: 'Frame', price: 1500, quantity: 1, options: [] }],
-      totals: { subtotal: 1500 },
-    });
-
-    expect(getEl('#sideShippingText').text).toBe('FREE shipping!');
+    expect(getEl('#sideShippingBar').hide).toHaveBeenCalled();
+    expect(getEl('#sideShippingText').hide).toHaveBeenCalled();
   });
 
   it('calls getCompletionSuggestions for cross-sell', async () => {

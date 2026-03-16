@@ -26,7 +26,7 @@ const OFFICE_HOURS = {
 const CANNED_RESPONSES = {
   shipping: {
     label: 'Shipping & Delivery',
-    response: 'We offer free shipping on orders over $999! Standard delivery takes 5-10 business days. White-glove delivery is available for larger items — local delivery within 50 miles is $149, regional is $249. Orders over $1,999 include free white-glove delivery.',
+    response: 'Standard delivery takes 5-10 business days with rates calculated at checkout. White-glove delivery is available for larger items — local delivery within 50 miles is $149, regional is $249.',
   },
   returns: {
     label: 'Returns & Exchanges',

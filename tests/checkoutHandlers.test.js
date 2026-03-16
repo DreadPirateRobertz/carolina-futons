@@ -41,6 +41,7 @@ vi.mock('public/cartService', () => ({
   })),
   FREE_SHIPPING_THRESHOLD: 999,
   getShippingProgress: vi.fn(() => ({ remaining: 499 })),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -349,24 +350,20 @@ describe('Checkout Page Handlers', () => {
   // ── 8. Free Shipping ─────────────────────────────────────────────
 
   describe('Free shipping messaging', () => {
-    it('shows "add more" message when subtotal below threshold', async () => {
+    it('hides free shipping element when free shipping is disabled', async () => {
       await loadAndRun();
       const el = getEl('#checkoutFreeShipping');
-      // subtotal=500, threshold=999, remaining=499
-      expect(el.text).toContain('499');
-      expect(el.text).toContain('free shipping');
-      expect(el.show).toHaveBeenCalled();
+      expect(el.hide).toHaveBeenCalled();
     });
 
-    it('shows qualifying message when subtotal >= threshold', async () => {
+    it('hides free shipping element even for high subtotals when disabled', async () => {
       getCurrentCart.mockResolvedValueOnce({
         totals: { subtotal: 1200 },
         lineItems: [{ name: 'Sofa', price: 1200, quantity: 1, productId: 'p2' }],
       });
       await loadAndRun();
       const el = getEl('#checkoutFreeShipping');
-      expect(el.text).toContain('qualifies for FREE shipping');
-      expect(el.show).toHaveBeenCalled();
+      expect(el.hide).toHaveBeenCalled();
     });
   });
 

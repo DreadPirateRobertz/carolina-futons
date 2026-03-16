@@ -161,7 +161,7 @@ describe('ProductDetails', () => {
 
     it('sets shipping info text', () => {
       initProductInfoAccordion($w);
-      expect($w('#infoContentShipping').text).toContain('Free standard shipping');
+      expect($w('#infoContentShipping').text).toContain('Shipping rates calculated at checkout');
     });
 
     it('sets Description arrow to minus sign', () => {

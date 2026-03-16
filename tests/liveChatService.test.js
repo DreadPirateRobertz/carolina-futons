@@ -76,7 +76,7 @@ describe('getCannedResponse', () => {
     const response = await getCannedResponse('shipping');
     expect(response).not.toBeNull();
     expect(response.label).toBe('Shipping & Delivery');
-    expect(response.response).toContain('free shipping');
+    expect(response.response).toContain('rates calculated at checkout');
   });
 
   it('returns null for unknown topic', async () => {

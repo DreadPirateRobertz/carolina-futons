@@ -187,13 +187,15 @@ export const getCheckoutPaymentSummary = webMethod(
         };
       }
 
-      // Free shipping threshold messaging
+      // Free shipping threshold messaging (disabled when threshold unreachable)
       const FREE_SHIPPING_THRESHOLD = 999999;
-      if (numTotal < FREE_SHIPPING_THRESHOLD) {
-        const remaining = FREE_SHIPPING_THRESHOLD - numTotal;
-        summary.shippingMessage = `Add $${remaining.toFixed(2)} more for free shipping`;
-      } else {
-        summary.shippingMessage = 'Free shipping included';
+      if (FREE_SHIPPING_THRESHOLD < 100000) {
+        if (numTotal < FREE_SHIPPING_THRESHOLD) {
+          const remaining = FREE_SHIPPING_THRESHOLD - numTotal;
+          summary.shippingMessage = `Add $${remaining.toFixed(2)} more for free shipping`;
+        } else {
+          summary.shippingMessage = 'Free shipping included';
+        }
       }
 
       return { success: true, summary };

@@ -79,6 +79,7 @@ vi.mock('public/cartService', () => ({
   FREE_SHIPPING_THRESHOLD: 199,
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 10,
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/mobileHelpers', () => ({
@@ -514,45 +515,25 @@ describe('Cart Page — #shippingProgressBar / #shippingProgressText hookup', ()
     vi.clearAllMocks();
   });
 
-  it('sets shipping progress bar value from getShippingProgress', async () => {
+  it('hides shipping progress bar when free shipping is disabled', async () => {
     await loadPage();
 
     const bar = getEl('#shippingProgressBar');
-    expect(bar.value).toBe(60);
+    expect(bar.hide).toHaveBeenCalled();
   });
 
-  it('sets shipping text with remaining amount', async () => {
+  it('hides shipping progress text when free shipping is disabled', async () => {
     await loadPage();
 
     const text = getEl('#shippingProgressText');
-    expect(text.text).toContain('$50.00');
-    expect(text.text).toContain('free shipping');
+    expect(text.hide).toHaveBeenCalled();
   });
 
-  it('sets ARIA attributes on shipping progress bar', async () => {
+  it('hides shipping progress icon when free shipping is disabled', async () => {
     await loadPage();
 
-    const bar = getEl('#shippingProgressBar');
-    expect(bar.accessibility.ariaLabel).toContain('Free shipping progress');
-    expect(bar.accessibility.ariaValueNow).toBe(60);
-    expect(bar.accessibility.ariaValueMin).toBe(0);
-    expect(bar.accessibility.ariaValueMax).toBe(100);
-  });
-
-  it('sets ARIA live region on shipping progress text', async () => {
-    await loadPage();
-
-    const text = getEl('#shippingProgressText');
-    expect(text.accessibility.ariaLive).toBe('polite');
-    expect(text.accessibility.role).toBe('status');
-  });
-
-  it('styles progress bar with brand colors', async () => {
-    await loadPage();
-
-    const bar = getEl('#shippingProgressBar');
-    expect(bar.style.backgroundColor).toBe('#ddd');
-    expect(bar.style.color).toBe('#5B8FA8');
+    const icon = getEl('#shippingProgressIcon');
+    expect(icon.hide).toHaveBeenCalled();
   });
 });
 

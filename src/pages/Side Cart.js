@@ -10,6 +10,7 @@ import {
   onCartChanged,
   getShippingProgress,
   getTierProgress,
+  isFreeShippingEnabled,
   MIN_QUANTITY,
   MAX_QUANTITY,
   safeMultiply,
@@ -331,6 +332,11 @@ async function refreshSideCart() {
 }
 
 function updateSideCartShipping(subtotal) {
+  if (!isFreeShippingEnabled()) {
+    try { $w('#sideShippingBar').hide(); } catch (e) {}
+    try { $w('#sideShippingText').hide(); } catch (e) {}
+    return;
+  }
   const { remaining, progressPct, qualifies } = getShippingProgress(subtotal);
   const barStyles = getProgressBarStyles('shipping', qualifies);
 

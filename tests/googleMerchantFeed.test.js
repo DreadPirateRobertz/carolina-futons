@@ -121,10 +121,12 @@ describe('generateFeed', () => {
     expect(xml).toContain('<g:identifier_exists>false</g:identifier_exists>');
   });
 
-  it('includes free shipping for items >= $999', async () => {
+  it('includes standard shipping at $49.99 for all items (free shipping disabled)', async () => {
     const xml = await generateFeed();
-    expect(xml).toContain('<g:service>Free Shipping</g:service>');
-    expect(xml).toContain('0.00 USD');
+    expect(xml).toContain('<g:service>Standard Shipping</g:service>');
+    expect(xml).toContain('49.99 USD');
+    // Free shipping no longer offered
+    expect(xml).not.toContain('<g:service>Free Shipping</g:service>');
   });
 
   it('detects correct brands from collections', async () => {

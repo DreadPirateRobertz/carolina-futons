@@ -85,6 +85,7 @@ vi.mock('public/cartService', () => ({
   getCurrentCart: vi.fn().mockResolvedValue({ lineItems: [] }),
   onCartChanged: vi.fn(),
   getShippingProgress: vi.fn(() => ({ remaining: 999, progressPct: 0, qualifies: false })),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
@@ -1248,31 +1249,16 @@ describe('masterPage.js', () => {
   // ── Header Shipping Progress ───────────────────────────────────────
 
   describe('header shipping progress', () => {
-    it('calls getShippingProgress and updates bar', async () => {
+    it('hides header shipping text when free shipping is disabled', async () => {
       getCurrentCart.mockResolvedValueOnce({
         lineItems: [],
         totals: { subtotal: 500 },
       });
-      getShippingProgress.mockReturnValueOnce({ remaining: 499, progressPct: 50, qualifies: false });
       elements.clear();
       await onReadyHandler();
 
       await vi.waitFor(() => {
-        expect(getEl('#headerShippingText').text).toContain('away from free shipping');
-      });
-    });
-
-    it('shows FREE shipping when threshold met', async () => {
-      getCurrentCart.mockResolvedValueOnce({
-        lineItems: [],
-        totals: { subtotal: 1200 },
-      });
-      getShippingProgress.mockReturnValueOnce({ remaining: 0, progressPct: 100, qualifies: true });
-      elements.clear();
-      await onReadyHandler();
-
-      await vi.waitFor(() => {
-        expect(getEl('#headerShippingText').text).toBe('FREE shipping!');
+        expect(getEl('#headerShippingText').hide).toHaveBeenCalled();
       });
     });
 

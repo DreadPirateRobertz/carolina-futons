@@ -721,7 +721,7 @@ describe('Product Info Accordion', () => {
 
   it('populates shipping content with policy text', () => {
     initProductInfoAccordion($w);
-    expect($w('#infoContentShipping').text).toContain('Free standard shipping');
+    expect($w('#infoContentShipping').text).toContain('Shipping rates calculated at checkout');
     expect($w('#infoContentShipping').text).toContain('White-glove delivery');
     expect($w('#infoContentShipping').text).toContain('Wed');
   });

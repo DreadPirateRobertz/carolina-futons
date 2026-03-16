@@ -299,7 +299,7 @@ const BUYING_GUIDES = {
       },
       {
         heading: 'Top Picks from Carolina Futons',
-        content: 'Our best-selling frames include the Night & Day Furniture Phoenix — a solid hardwood wall hugger available in multiple finishes with a 500+ lb weight capacity. The KD Frames Fold-a-Bed is perfect for tight spaces with its tool-free assembly and packable design. For a modern look, the Strata Wall Hugger combines clean lines with practical space-saving design. All our frames include manufacturer warranties and free shipping on orders over $999. For couples or everyday sleepers who need Queen-size comfort, the Night & Day Furniture Seattle is our most popular premium frame, featuring solid rubberwood construction, integrated side tables, and a butter-smooth wall hugger mechanism that converts from sofa to bed in seconds.',
+        content: 'Our best-selling frames include the Night & Day Furniture Phoenix — a solid hardwood wall hugger available in multiple finishes with a 500+ lb weight capacity. The KD Frames Fold-a-Bed is perfect for tight spaces with its tool-free assembly and packable design. For a modern look, the Strata Wall Hugger combines clean lines with practical space-saving design. All our frames include manufacturer warranties and fast nationwide shipping. For couples or everyday sleepers who need Queen-size comfort, the Night & Day Furniture Seattle is our most popular premium frame, featuring solid rubberwood construction, integrated side tables, and a butter-smooth wall hugger mechanism that converts from sofa to bed in seconds.',
       },
       {
         heading: 'Frame Assembly and Room Planning',
@@ -809,7 +809,7 @@ const BUYING_GUIDES = {
       },
       {
         heading: 'Price Comparison',
-        content: 'Here is what you save with bundles versus buying separately. An Essential bundle (frame + 6-inch mattress) saves $50-$100 compared to individual prices. A Comfort bundle (frame + 8-inch mattress + cover) saves $100-$200. A Premium bundle (frame + 10-inch mattress + cover + pillows) saves $200-$400. The savings increase with the bundle tier because each added component gets a deeper discount. All bundles include free shipping on orders over $999.',
+        content: 'Here is what you save with bundles versus buying separately. An Essential bundle (frame + 6-inch mattress) saves $50-$100 compared to individual prices. A Comfort bundle (frame + 8-inch mattress + cover) saves $100-$200. A Premium bundle (frame + 10-inch mattress + cover + pillows) saves $200-$400. The savings increase with the bundle tier because each added component gets a deeper discount.',
       },
       {
         heading: 'Customizing Your Bundle',
@@ -846,8 +846,8 @@ const BUYING_GUIDES = {
         answer: 'The Premium bundle is best for everyday sleeping. It includes a top-rated Night & Day hardwood frame, a 10-inch Otis Bed innerspring mattress, a premium microsuede cover, and bolster pillows. This combination provides mattress-level comfort for nightly use.',
       },
       {
-        question: 'Do futon bundles include free shipping?',
-        answer: 'Yes, all futon bundles qualify for free shipping on orders over $999. Most Comfort and Premium bundles exceed this threshold. Essential bundles may fall below the free shipping minimum, but shipping costs are still lower than ordering each component separately.',
+        question: 'What are the shipping options for futon bundles?',
+        answer: 'Shipping rates are calculated at checkout based on your location. Standard delivery takes 5-10 business days. White-glove delivery with in-home setup is available in select areas. Shipping costs are typically lower when ordering as a bundle versus separate items.',
       },
       {
         question: 'Can I return individual items from a bundle?',

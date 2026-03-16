@@ -119,7 +119,7 @@ describe('initProductInfoAccordion', () => {
 
   it('sets shipping info text', () => {
     initProductInfoAccordion($w);
-    expect(getEl('#infoContentShipping').text).toContain('Free standard shipping');
+    expect(getEl('#infoContentShipping').text).toContain('Shipping rates calculated at checkout');
   });
 });
 

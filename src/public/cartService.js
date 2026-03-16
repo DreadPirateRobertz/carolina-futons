@@ -146,6 +146,14 @@ export async function getProductVariants(productId, choices) {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
+ * Whether free shipping is reachable (threshold < $100,000 = enabled).
+ * @returns {boolean}
+ */
+export function isFreeShippingEnabled() {
+  return FREE_SHIPPING_THRESHOLD < 100000;
+}
+
+/**
  * Calculate shipping progress toward free shipping threshold.
  * @param {number} subtotal - Current cart subtotal
  * @returns {{ remaining: number, progressPct: number, qualifies: boolean }}

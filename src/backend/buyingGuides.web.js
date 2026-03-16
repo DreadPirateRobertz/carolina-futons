@@ -567,7 +567,7 @@ const GUIDES = {
         ['Savings', '5-10%', '10-15%', '5-10%', '10-15%'],
         ['Price Range', '$600-$1,400', '$900-$2,200', '$400-$700', '$2,500-$4,000'],
         ['Sizes Available', 'Twin, Full, Queen', 'Full, Queen', 'Twin, Full', 'Queen'],
-        ['Free Shipping', 'Orders $999+', 'Most qualify', 'Some qualify', 'Most qualify'],
+        ['Shipping', 'Rates at checkout', 'Rates at checkout', 'Rates at checkout', 'Rates at checkout'],
         ['Best For', 'Most buyers', 'Complete furnishing', 'Students/budget', 'Guest bedrooms'],
       ],
     },
@@ -580,15 +580,15 @@ const GUIDES = {
     faqs: [
       {
         question: 'How much do futon bundles save compared to buying separately?',
-        answer: 'Frame and mattress bundles save 5 to 10 percent, typically 50 to 150 dollars. Complete room bundles with frame, mattress, cover, and accessories save 10 to 15 percent, typically 200 to 400 dollars. Combined with free shipping on orders over 999 dollars, total savings can reach 300 to 600 dollars.',
+        answer: 'Frame and mattress bundles save 5 to 10 percent, typically 50 to 150 dollars. Complete room bundles with frame, mattress, cover, and accessories save 10 to 15 percent, typically 200 to 400 dollars. Total savings can reach 200 to 400 dollars.',
       },
       {
         question: 'Can I customize a futon bundle?',
         answer: 'Yes. While our pre-built bundles offer the best savings, you can customize any bundle by swapping the mattress size, cover fabric, or frame finish. Custom bundles may receive a slightly smaller discount than pre-built packages. Contact us to build a custom bundle that fits your exact needs.',
       },
       {
-        question: 'Do futon bundles include free shipping?',
-        answer: 'Most bundles over 999 dollars qualify for free shipping within the continental United States. Starter bundles under 999 dollars have standard shipping rates. Free shipping saves an additional 100 to 200 dollars on furniture that normally requires freight delivery.',
+        question: 'What are the shipping options for futon bundles?',
+        answer: 'Shipping rates are calculated at checkout based on your location. Standard delivery takes 5 to 10 business days. White-glove delivery with in-home setup is available in select areas for an additional fee.',
       },
       {
         question: 'What if I only need a mattress — should I still buy a bundle?',

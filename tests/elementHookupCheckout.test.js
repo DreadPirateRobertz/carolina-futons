@@ -82,6 +82,7 @@ vi.mock('public/cartService', () => ({
   getCurrentCart: vi.fn(),
   FREE_SHIPPING_THRESHOLD: 999,
   getShippingProgress: vi.fn(() => ({ remaining: 450, progressPct: 55 })),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -701,14 +702,13 @@ describe('Checkout — #checkoutFreeShipping / #checkoutItemCount', () => {
     vi.clearAllMocks();
   });
 
-  it('shows remaining for free shipping when below threshold', async () => {
+  it('hides free shipping element when free shipping is disabled', async () => {
     await loadPage();
     const el = getEl('#checkoutFreeShipping');
-    expect(el.text).toContain('$450.00');
-    expect(el.show).toHaveBeenCalled();
+    expect(el.hide).toHaveBeenCalled();
   });
 
-  it('shows qualifying message when above threshold', async () => {
+  it('hides free shipping element even for high subtotals when disabled', async () => {
     await loadPage({
       cart: {
         lineItems: [{ _id: 'i1', name: 'Expensive Frame', price: 1200, quantity: 1 }],
@@ -716,8 +716,7 @@ describe('Checkout — #checkoutFreeShipping / #checkoutItemCount', () => {
       },
     });
     const el = getEl('#checkoutFreeShipping');
-    expect(el.text).toContain('FREE shipping');
-    expect(el.show).toHaveBeenCalled();
+    expect(el.hide).toHaveBeenCalled();
   });
 
   it('sets item count text', async () => {

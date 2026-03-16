@@ -266,10 +266,9 @@ describe('Checkout payment summary integration', () => {
     expect(result.summary.shippingMessage).not.toBe('Free shipping included');
   });
 
-  it('shows shipping add-more message below threshold (free shipping disabled)', async () => {
+  it('does not set shipping message when free shipping is disabled', async () => {
     const result = await getCheckoutPaymentSummary(549);
-    expect(result.summary.shippingMessage).toContain('Add $');
-    expect(result.summary.shippingMessage).toContain('more for free shipping');
+    expect(result.summary.shippingMessage).toBeUndefined();
   });
 
   it('pay now methods exclude Afterpay (separate section)', async () => {

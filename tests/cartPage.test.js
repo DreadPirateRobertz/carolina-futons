@@ -80,6 +80,7 @@ vi.mock('public/cartService', () => ({
   FREE_SHIPPING_THRESHOLD: 199,
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 99,
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/mobileHelpers', () => ({
@@ -246,21 +247,11 @@ describe('empty cart', () => {
 // ── Shipping Progress ───────────────────────────────────────────────
 
 describe('shipping progress', () => {
-  it('updates shipping progress bar from cart', async () => {
+  it('hides shipping progress elements when free shipping is disabled', async () => {
     await loadPage();
-    const { getShippingProgress } = await import('public/cartService');
-    expect(getShippingProgress).toHaveBeenCalledWith(549.97);
-  });
-
-  it('sets ARIA attributes on progress bar', async () => {
-    await loadPage();
-    const bar = getEl('#shippingProgressBar');
-    expect(bar.value).toBe(60);
-  });
-
-  it('shows remaining amount text', async () => {
-    await loadPage();
-    expect(getEl('#shippingProgressText').text).toContain('$50.00');
+    expect(getEl('#shippingProgressBar').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressText').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressIcon').hide).toHaveBeenCalled();
   });
 });
 
@@ -610,47 +601,14 @@ describe('empty cart (deep)', () => {
 // ── Shipping Progress (Deep) ───────────────────────────────────────
 
 describe('shipping progress (deep)', () => {
-  it('shows qualification text when shipping qualifies', async () => {
-    const { getShippingProgress } = await import('public/cartService');
-    getShippingProgress.mockReturnValue({ remaining: 0, progressPct: 100, qualifies: true });
+  it('hides all shipping progress elements when free shipping is disabled', async () => {
     await loadPage();
-    expect(getEl('#shippingProgressText').text).toBe('You qualify for FREE shipping!');
+    expect(getEl('#shippingProgressBar').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressText').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressIcon').hide).toHaveBeenCalled();
   });
 
-  it('shows shipping icon when qualified', async () => {
-    const { getShippingProgress } = await import('public/cartService');
-    getShippingProgress.mockReturnValue({ remaining: 0, progressPct: 100, qualifies: true });
-    await loadPage();
-    expect(getEl('#shippingProgressIcon').show).toHaveBeenCalled();
-  });
-
-  it('sets ARIA attributes on shipping progress bar', async () => {
-    const { getShippingProgress } = await import('public/cartService');
-    getShippingProgress.mockReturnValue({ remaining: 50, progressPct: 60, qualifies: false });
-    await loadPage();
-    const bar = getEl('#shippingProgressBar');
-    expect(bar.accessibility.ariaLabel).toContain('Free shipping progress');
-    expect(bar.accessibility.ariaValueNow).toBe(60);
-    expect(bar.accessibility.ariaValueMin).toBe(0);
-    expect(bar.accessibility.ariaValueMax).toBe(100);
-  });
-
-  it('applies bar styling from getProgressBarStyles', async () => {
-    await loadPage();
-    const bar = getEl('#shippingProgressBar');
-    expect(bar.style.backgroundColor).toBe('#E8E0D5');
-    expect(bar.style.color).toBe('#4A7C59');
-  });
-
-  it('sets ARIA status on progress text', async () => {
-    await loadPage();
-    const text = getEl('#shippingProgressText');
-    expect(text.accessibility.ariaLive).toBe('polite');
-    expect(text.accessibility.role).toBe('status');
-    expect(text.style.color).toBe('#1E3A5F');
-  });
-
-  it('hides shipping bars when threshold is disabled', async () => {
+  it('hides shipping bars when threshold is disabled (vi.doMock)', async () => {
     vi.doMock('public/cartService', () => ({
       getCurrentCart: vi.fn().mockResolvedValue(mockCart),
       addToCart: vi.fn(),
@@ -663,6 +621,7 @@ describe('shipping progress (deep)', () => {
         remaining: 100, progressPct: 40,
       })),
       FREE_SHIPPING_THRESHOLD: 100000,
+      isFreeShippingEnabled: vi.fn(() => false),
       MIN_QUANTITY: 1,
       MAX_QUANTITY: 99,
     }));

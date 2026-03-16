@@ -65,13 +65,13 @@ const FAQ_DATA = [
     _id: 's1',
     category: 'shipping',
     question: 'What is your shipping policy?',
-    answer: 'We offer shipping across the United States. Orders over $999 qualify for free shipping. For specific shipping information, delivery timelines, and regional details, please visit our Shipping Policy page or contact us directly.',
+    answer: 'We offer shipping across the United States. Shipping rates are calculated at checkout based on your location. For specific shipping information, delivery timelines, and regional details, please visit our Shipping Policy page or contact us directly.',
   },
   {
     _id: 's2',
     category: 'shipping',
     question: 'Do you offer white-glove delivery?',
-    answer: 'Yes! We offer white-glove delivery and setup. Local delivery within the Hendersonville area is $149, regional delivery is $249, and orders over $1,999 qualify for free white-glove delivery. Our team handles all setup and packaging removal.',
+    answer: 'Yes! We offer white-glove delivery and setup. Local delivery within the Hendersonville area is $149, regional delivery is $249. Our team handles all setup and packaging removal.',
   },
   {
     _id: 's3',

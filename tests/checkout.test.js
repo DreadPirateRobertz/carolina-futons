@@ -70,6 +70,7 @@ vi.mock('public/cartService', () => ({
   getCurrentCart: vi.fn(),
   FREE_SHIPPING_THRESHOLD: 999,
   getShippingProgress: vi.fn(() => ({ remaining: 450, progressPct: 55 })),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -353,15 +354,14 @@ describe('checkout summary', () => {
     expect(fireInitiateCheckout).toHaveBeenCalled();
   });
 
-  it('shows shipping progress when under threshold', async () => {
+  it('hides free shipping element when free shipping is disabled', async () => {
     await loadPage();
-    expect(getEl('#checkoutFreeShipping').text).toContain('$450.00');
-    expect(getEl('#checkoutFreeShipping').show).toHaveBeenCalled();
+    expect(getEl('#checkoutFreeShipping').hide).toHaveBeenCalled();
   });
 
-  it('shows free shipping badge when qualifying', async () => {
+  it('hides free shipping element even for high subtotals when disabled', async () => {
     await loadPage({ cart: { ...mockCart, totals: { subtotal: 1200 } } });
-    expect(getEl('#checkoutFreeShipping').text).toContain('FREE shipping');
+    expect(getEl('#checkoutFreeShipping').hide).toHaveBeenCalled();
   });
 
   it('shows item count summary', async () => {

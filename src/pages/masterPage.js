@@ -5,7 +5,7 @@ import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
-import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
+import { getCurrentCart, onCartChanged, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
 import { sharePromise, deferInit } from 'public/performanceHelpers';
 import { isMobile, getViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -941,9 +941,14 @@ function dismissExitPopup() {
 }
 
 // ── Header Shipping Progress Bar ─────────────────────────────────
-// Persistent bar showing distance to $999 free shipping threshold
+// Persistent bar showing distance to free shipping threshold (currently disabled)
 
 function initHeaderShippingProgress() {
+  if (!isFreeShippingEnabled()) {
+    try { $w('#headerShippingBar').hide(); } catch (e) {}
+    try { $w('#headerShippingText').hide(); } catch (e) {}
+    return;
+  }
   async function updateHeaderShipping() {
     try {
       const cart = await getSharedCart();

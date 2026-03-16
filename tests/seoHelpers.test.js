@@ -166,7 +166,7 @@ describe('getProductFaqSchema', () => {
     const schema = JSON.parse(getProductFaqSchema(futonFrame));
     const questions = schema.mainEntity.map(q => q.name);
     expect(questions.some(q => q.includes('return policy'))).toBe(true);
-    expect(questions.some(q => q.includes('free shipping'))).toBe(true);
+    expect(questions.some(q => q.includes('shipping options'))).toBe(true);
     expect(questions.some(q => q.includes('delivery take'))).toBe(true);
   });
 
@@ -216,17 +216,17 @@ describe('getProductFaqSchema', () => {
     expect(questions.some(q => q.includes('Night & Day Furniture'))).toBe(true);
   });
 
-  it('shows free shipping confirmation for qualifying products', () => {
+  it('includes shipping options question with rates calculated at checkout', () => {
     const schema = JSON.parse(getProductFaqSchema(murphyBed)); // $1,899
-    const shippingQ = schema.mainEntity.find(q => q.name.includes('free shipping'));
-    expect(shippingQ.acceptedAnswer.text).toContain('Yes!');
-    expect(shippingQ.acceptedAnswer.text).toContain('free standard shipping');
+    const shippingQ = schema.mainEntity.find(q => q.name.includes('shipping options'));
+    expect(shippingQ).toBeDefined();
+    expect(shippingQ.acceptedAnswer.text).toContain('rates calculated at checkout');
   });
 
-  it('shows shipping threshold for non-qualifying products', () => {
+  it('shipping FAQ mentions white-glove delivery', () => {
     const schema = JSON.parse(getProductFaqSchema(futonFrame)); // $499
-    const shippingQ = schema.mainEntity.find(q => q.name.includes('free shipping'));
-    expect(shippingQ.acceptedAnswer.text).toContain('$999+');
+    const shippingQ = schema.mainEntity.find(q => q.name.includes('shipping options'));
+    expect(shippingQ.acceptedAnswer.text).toContain('White-glove delivery');
   });
 });
 
@@ -800,13 +800,13 @@ describe('Google Rich Results: Product schema', () => {
     expect(sd.shippingRate.currency).toBe('USD');
   });
 
-  it('has offers.shippingRate with value (free shipping for $999+)', () => {
-    // futonFrame is $499, so shipping is $49.99
+  it('has offers.shippingRate with flat $49.99 value (free shipping disabled)', () => {
+    // All products now show $49.99 shipping rate
     expect(schema.offers.shippingDetails.shippingRate.value).toBe(49.99);
-    // Test free shipping threshold
+    // Even expensive products show $49.99 (free shipping disabled)
     const expensive = { ...murphyBed, price: 1899 };
     const s2 = JSON.parse(getProductSchema(expensive));
-    expect(s2.offers.shippingDetails.shippingRate.value).toBe(0);
+    expect(s2.offers.shippingDetails.shippingRate.value).toBe(49.99);
   });
 
   it('has offers.deliveryTime with handling and transit (Google Merchant)', () => {
