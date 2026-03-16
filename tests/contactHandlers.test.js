@@ -112,13 +112,22 @@ vi.mock('public/pageSeo.js', () => ({
 // ── Import mock refs and page ────────────────────────────────────────
 let trackEvent, initBackToTop, makeClickable, initPageSeo;
 let initContactHeroSkyline, initContactShowroomScene;
+let sendEmail, submitContactForm, bookAppointment, getVisitTypes, getAvailableAppointmentSlots;
+let validateContactFields, announce;
+let getPageTitle, getCanonicalUrl, getPageMetaDescription;
 
 beforeAll(async () => {
   ({ trackEvent } = await import('public/engagementTracker'));
   ({ initBackToTop } = await import('public/mobileHelpers'));
   ({ makeClickable } = await import('public/a11yHelpers.js'));
+  ({ announce } = await import('public/a11yHelpers.js'));
   ({ initPageSeo } = await import('public/pageSeo.js'));
   ({ initContactHeroSkyline, initContactShowroomScene } = await import('public/contactIllustrations.js'));
+  ({ sendEmail } = await import('backend/emailService.web'));
+  ({ submitContactForm } = await import('backend/contactSubmissions.web'));
+  ({ bookAppointment, getVisitTypes, getAvailableAppointmentSlots } = await import('backend/deliveryScheduling.web'));
+  ({ validateContactFields } = await import('public/aboutContactHelpers.js'));
+  ({ getPageTitle, getCanonicalUrl, getPageMetaDescription } = await import('backend/seoHelpers.web'));
   await import('../src/pages/Contact.js');
 });
 
@@ -323,5 +332,399 @@ describe('Contact page — schema injection', () => {
   it('posts schema JSON to #contactSchemaHtml', async () => {
     await onReadyHandler();
     expect(getEl('#contactSchemaHtml').postMessage).toHaveBeenCalledWith('{}');
+  });
+});
+
+// ── Contact form submission tests ──────────────────────────────────
+
+describe('Contact page — form submission success', () => {
+  async function triggerSubmit(fields = {}) {
+    await onReadyHandler();
+    const submitBtn = getEl('#contactSubmit');
+    const handler = submitBtn.onClick.mock.calls[0][0];
+    // Set field values
+    getEl('#contactName').value = fields.name ?? 'Jane Doe';
+    getEl('#contactEmail').value = fields.email ?? 'jane@test.com';
+    getEl('#contactPhone').value = fields.phone ?? '555-1234';
+    getEl('#contactSubject').value = fields.subject ?? 'Question';
+    getEl('#contactMessage').value = fields.message ?? 'Hello there';
+    await handler();
+  }
+
+  it('calls sendEmail with sanitized form data', async () => {
+    await triggerSubmit();
+    expect(sendEmail).toHaveBeenCalledWith({
+      name: 'Jane Doe',
+      email: 'jane@test.com',
+      phone: '555-1234',
+      subject: 'Question',
+      message: 'Hello there',
+    });
+  });
+
+  it('calls submitContactForm for CMS save', async () => {
+    await triggerSubmit();
+    expect(submitContactForm).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'Jane Doe',
+      email: 'jane@test.com',
+      source: 'contact_page',
+      status: 'new',
+    }));
+  });
+
+  it('tracks contact_form_submit event', async () => {
+    await triggerSubmit();
+    expect(trackEvent).toHaveBeenCalledWith('contact_form_submit', { subject: 'Question' });
+  });
+
+  it('shows success and hides form on success', async () => {
+    await triggerSubmit();
+    expect(getEl('#contactSuccess').show).toHaveBeenCalled();
+    expect(getEl('#contactForm').hide).toHaveBeenCalled();
+  });
+
+  it('announces success message', async () => {
+    await triggerSubmit();
+    expect(announce).toHaveBeenCalledWith(globalThis.$w, 'Message sent successfully. We will respond within 24 hours.');
+  });
+
+  it('disables then re-enables submit button', async () => {
+    await triggerSubmit();
+    const btn = getEl('#contactSubmit');
+    expect(btn.disable).toHaveBeenCalled();
+    expect(btn.enable).toHaveBeenCalled();
+    expect(btn.label).toBe('Send Message');
+  });
+
+  it('uses default subject when none provided', async () => {
+    await triggerSubmit({ subject: '' });
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      subject: 'Website Contact Form',
+    }));
+  });
+
+  it('uses default phone when none provided', async () => {
+    await triggerSubmit({ phone: '' });
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
+      phone: 'Not provided',
+    }));
+  });
+});
+
+describe('Contact page — form submission failure', () => {
+  it('shows error message when sendEmail fails', async () => {
+    sendEmail.mockRejectedValueOnce(new Error('Network error'));
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    getEl('#contactName').value = 'Jane';
+    getEl('#contactEmail').value = 'jane@test.com';
+    getEl('#contactMessage').value = 'Hello';
+    await handler();
+    expect(getEl('#contactError').text).toBe('Something went wrong. Please call us at (828) 252-9449.');
+    expect(getEl('#contactError').show).toHaveBeenCalled();
+  });
+
+  it('re-enables submit button after failure', async () => {
+    sendEmail.mockRejectedValueOnce(new Error('fail'));
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    getEl('#contactName').value = 'Jane';
+    getEl('#contactEmail').value = 'jane@test.com';
+    getEl('#contactMessage').value = 'Hello';
+    await handler();
+    const btn = getEl('#contactSubmit');
+    expect(btn.enable).toHaveBeenCalled();
+    expect(btn.label).toBe('Send Message');
+  });
+});
+
+describe('Contact page — form validation errors', () => {
+  it('shows field errors when validation fails', async () => {
+    validateContactFields.mockReturnValueOnce({
+      valid: false,
+      errors: [
+        { field: 'name', message: 'Name is required' },
+        { field: 'email', message: 'Invalid email' },
+      ],
+    });
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    getEl('#contactName').value = '';
+    getEl('#contactEmail').value = 'bad';
+    getEl('#contactMessage').value = '';
+    await handler();
+    expect(getEl('#contactNameError').text).toBe('Name is required');
+    expect(getEl('#contactNameError').show).toHaveBeenCalled();
+    expect(getEl('#contactEmailError').text).toBe('Invalid email');
+    expect(getEl('#contactEmailError').show).toHaveBeenCalled();
+  });
+
+  it('does not call sendEmail when validation fails', async () => {
+    validateContactFields.mockReturnValueOnce({
+      valid: false,
+      errors: [{ field: 'message', message: 'Message is required' }],
+    });
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    await handler();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('announces form errors', async () => {
+    validateContactFields.mockReturnValueOnce({
+      valid: false,
+      errors: [{ field: 'name', message: 'Required' }],
+    });
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    await handler();
+    expect(announce).toHaveBeenCalledWith(globalThis.$w, 'Please fix the errors in the form');
+  });
+
+  it('hides previous errors before re-validating', async () => {
+    await onReadyHandler();
+    const handler = getEl('#contactSubmit').onClick.mock.calls[0][0];
+    getEl('#contactName').value = 'Jane';
+    getEl('#contactEmail').value = 'jane@test.com';
+    getEl('#contactMessage').value = 'Hello';
+    await handler();
+    // hideAllErrors hides all five error elements
+    expect(getEl('#contactNameError').hide).toHaveBeenCalled();
+    expect(getEl('#contactEmailError').hide).toHaveBeenCalled();
+    expect(getEl('#contactMessageError').hide).toHaveBeenCalled();
+    expect(getEl('#contactPhoneError').hide).toHaveBeenCalled();
+    expect(getEl('#contactError').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Appointment booking submission tests ───────────────────────────
+
+describe('Contact page — appointment booking success', () => {
+  async function triggerBooking(fields = {}) {
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = fields.name || 'John Doe';
+    getEl('#appointmentEmail').value = fields.email || 'john@test.com';
+    getEl('#appointmentPhone').value = fields.phone || '555-9999';
+    getEl('#appointmentVisitType').value = fields.visitType || 'general';
+    getEl('#appointmentDate').value = fields.date || '2026-03-20';
+    getEl('#appointmentTimeSlot').value = fields.timeSlot || '10:00';
+    getEl('#appointmentInterests').value = fields.interests || 'Futons';
+    await handler();
+  }
+
+  it('calls bookAppointment with form data', async () => {
+    await triggerBooking();
+    expect(bookAppointment).toHaveBeenCalledWith({
+      date: '2026-03-20',
+      timeSlot: '10:00',
+      visitType: 'general',
+      customerName: 'John Doe',
+      customerEmail: 'john@test.com',
+      customerPhone: '555-9999',
+      productInterests: 'Futons',
+    });
+  });
+
+  it('tracks appointment_booked event on success', async () => {
+    await triggerBooking();
+    expect(trackEvent).toHaveBeenCalledWith('appointment_booked', { visitType: 'general', date: '2026-03-20' });
+  });
+
+  it('populates confirmation text on success', async () => {
+    await triggerBooking();
+    const text = getEl('#appointmentConfirmation').text;
+    expect(text).toContain('General');
+    expect(text).toContain('Mon');
+    expect(text).toContain('Mar 15');
+    expect(text).toContain('10am');
+  });
+
+  it('shows appointment success and hides form', async () => {
+    await triggerBooking();
+    expect(getEl('#appointmentForm').hide).toHaveBeenCalled();
+    expect(getEl('#appointmentSuccess').show).toHaveBeenCalled();
+  });
+
+  it('disables then re-enables book button', async () => {
+    await triggerBooking();
+    const btn = getEl('#appointmentBookBtn');
+    expect(btn.disable).toHaveBeenCalled();
+    expect(btn.enable).toHaveBeenCalled();
+    expect(btn.label).toBe('Book Visit');
+  });
+});
+
+describe('Contact page — appointment booking failure', () => {
+  it('shows error when result.success is false', async () => {
+    bookAppointment.mockResolvedValueOnce({ success: false, message: 'Slot taken' });
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = 'John';
+    getEl('#appointmentEmail').value = 'john@test.com';
+    getEl('#appointmentVisitType').value = 'general';
+    getEl('#appointmentDate').value = '2026-03-20';
+    getEl('#appointmentTimeSlot').value = '10:00';
+    await handler();
+    expect(getEl('#appointmentError').text).toBe('Slot taken');
+    expect(getEl('#appointmentError').show).toHaveBeenCalled();
+  });
+
+  it('uses default error when result has no message', async () => {
+    bookAppointment.mockResolvedValueOnce({ success: false });
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = 'John';
+    getEl('#appointmentEmail').value = 'john@test.com';
+    getEl('#appointmentVisitType').value = 'general';
+    getEl('#appointmentDate').value = '2026-03-20';
+    getEl('#appointmentTimeSlot').value = '10:00';
+    await handler();
+    expect(getEl('#appointmentError').text).toBe('Unable to book. Please call (828) 252-9449.');
+  });
+
+  it('shows error when bookAppointment throws', async () => {
+    bookAppointment.mockRejectedValueOnce(new Error('Server error'));
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = 'John';
+    getEl('#appointmentEmail').value = 'john@test.com';
+    getEl('#appointmentVisitType').value = 'general';
+    getEl('#appointmentDate').value = '2026-03-20';
+    getEl('#appointmentTimeSlot').value = '10:00';
+    await handler();
+    expect(getEl('#appointmentError').text).toBe('Something went wrong. Please call us at (828) 252-9449.');
+  });
+
+  it('re-enables book button after exception', async () => {
+    bookAppointment.mockRejectedValueOnce(new Error('fail'));
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = 'John';
+    getEl('#appointmentEmail').value = 'john@test.com';
+    getEl('#appointmentVisitType').value = 'general';
+    getEl('#appointmentDate').value = '2026-03-20';
+    getEl('#appointmentTimeSlot').value = '10:00';
+    await handler();
+    expect(getEl('#appointmentBookBtn').enable).toHaveBeenCalled();
+    expect(getEl('#appointmentBookBtn').label).toBe('Book Visit');
+  });
+});
+
+describe('Contact page — appointment validation', () => {
+  it('shows error when required fields missing', async () => {
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    // Leave all fields empty (default mock value is '')
+    await handler();
+    expect(getEl('#appointmentError').text).toBe('Please fill in all required fields.');
+    expect(getEl('#appointmentError').show).toHaveBeenCalled();
+    expect(bookAppointment).not.toHaveBeenCalled();
+  });
+
+  it('announces missing fields error', async () => {
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    await handler();
+    expect(announce).toHaveBeenCalledWith(globalThis.$w, 'Please fill in all required fields.');
+  });
+
+  it('shows email error when email validation fails', async () => {
+    validateContactFields.mockReturnValueOnce({
+      valid: false,
+      errors: [{ field: 'email', message: 'Invalid email' }],
+    });
+    await onReadyHandler();
+    const handler = getEl('#appointmentBookBtn').onClick.mock.calls[0][0];
+    getEl('#appointmentName').value = 'John';
+    getEl('#appointmentEmail').value = 'bad-email';
+    getEl('#appointmentVisitType').value = 'general';
+    getEl('#appointmentDate').value = '2026-03-20';
+    getEl('#appointmentTimeSlot').value = '10:00';
+    await handler();
+    expect(getEl('#appointmentError').text).toBe('Please enter a valid email address.');
+    expect(bookAppointment).not.toHaveBeenCalled();
+  });
+});
+
+// ── loadVisitTypes tests ───────────────────────────────────────────
+
+describe('Contact page — loadVisitTypes', () => {
+  it('populates visit type dropdown options', async () => {
+    await onReadyHandler();
+    // loadVisitTypes is called during initAppointmentBooking, which is async
+    // We need to wait for it to resolve
+    await vi.waitFor(() => {
+      expect(getEl('#appointmentVisitType').options).toEqual([
+        { label: 'General (30 min)', value: 'general' },
+      ]);
+    });
+  });
+
+  it('does not set options when getVisitTypes returns empty', async () => {
+    getVisitTypes.mockResolvedValueOnce([]);
+    elements.clear();
+    vi.clearAllMocks();
+    await onReadyHandler();
+    await new Promise(r => setTimeout(r, 10));
+    expect(getEl('#appointmentVisitType').options).toEqual([]);
+  });
+});
+
+// ── loadAppointmentSlots tests ─────────────────────────────────────
+
+describe('Contact page — loadAppointmentSlots', () => {
+  it('registers onChange on #appointmentVisitType', async () => {
+    await onReadyHandler();
+    expect(getEl('#appointmentVisitType').onChange).toHaveBeenCalled();
+  });
+
+  it('registers onChange on #appointmentDate', async () => {
+    await onReadyHandler();
+    expect(getEl('#appointmentDate').onChange).toHaveBeenCalled();
+  });
+
+  it('populates date and time slot options when slots available', async () => {
+    getAvailableAppointmentSlots.mockResolvedValueOnce([
+      { date: '2026-03-20', dayOfWeek: 'Fri', timeLabel: '10am', timeSlot: '10:00', spotsLeft: 3 },
+      { date: '2026-03-20', dayOfWeek: 'Fri', timeLabel: '2pm', timeSlot: '14:00', spotsLeft: 1 },
+      { date: '2026-03-21', dayOfWeek: 'Sat', timeLabel: '11am', timeSlot: '11:00', spotsLeft: 5 },
+    ]);
+    await onReadyHandler();
+    // Trigger the onChange handler for visitType
+    const visitTypeEl = getEl('#appointmentVisitType');
+    visitTypeEl.value = 'general';
+    const onChangeHandler = visitTypeEl.onChange.mock.calls[0][0];
+    await onChangeHandler();
+
+    expect(getEl('#appointmentDate').options).toEqual([
+      { label: 'Fri, 2026-03-20', value: '2026-03-20' },
+      { label: 'Sat, 2026-03-21', value: '2026-03-21' },
+    ]);
+    expect(getEl('#appointmentTimeSlot').options).toEqual([
+      { label: '10am (3 spots left)', value: '10:00' },
+      { label: '2pm (1 spot left)', value: '14:00' },
+    ]);
+  });
+
+  it('shows "No slots available" when no slots returned', async () => {
+    getAvailableAppointmentSlots.mockResolvedValueOnce([]);
+    await onReadyHandler();
+    const visitTypeEl = getEl('#appointmentVisitType');
+    visitTypeEl.value = 'general';
+    const onChangeHandler = visitTypeEl.onChange.mock.calls[0][0];
+    await onChangeHandler();
+    expect(getEl('#appointmentTimeSlot').options).toEqual([{ label: 'No slots available', value: '' }]);
+  });
+});
+
+// ── Meta injection tests ───────────────────────────────────────────
+
+describe('Contact page — meta injection', () => {
+  it('posts meta JSON to #contactMetaHtml', async () => {
+    await onReadyHandler();
+    expect(getEl('#contactMetaHtml').postMessage).toHaveBeenCalledWith(
+      JSON.stringify({ title: 'T', description: 'D', canonical: 'U' })
+    );
   });
 });
