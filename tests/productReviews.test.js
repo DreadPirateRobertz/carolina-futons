@@ -25,6 +25,10 @@ vi.mock('public/ProductPagePolish.js', () => ({
   styleReviewCard: vi.fn(),
 }));
 
+vi.mock('public/sharedTokens.js', () => ({
+  colors: { sunsetCoral: '#4A7D94', espresso: '#3c2415', sandBase: '#E8D5B7' },
+}));
+
 vi.mock('backend/reviewsService.web', () => ({
   getAggregateRating: vi.fn(async () => mockAggregate),
   getProductReviews: vi.fn(async () => mockReviews),
@@ -1043,8 +1047,8 @@ describe('ProductReviews', () => {
       const $w = create$w();
       const state = { product: { ...futonFrame } };
       await initProductReviews($w, state);
-      // Bar 5 has count > 0, should have brand color
-      expect($w('#histogramBar5').style.backgroundColor).toBeTruthy();
+      // Bar 5 has count > 0, should use sunsetCoral brand color
+      expect($w('#histogramBar5').style.backgroundColor).toBe('#4A7D94');
     });
   });
 });

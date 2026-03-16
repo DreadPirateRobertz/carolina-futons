@@ -2,6 +2,7 @@
 // Displays product reviews with star ratings, sorting, pagination,
 // submission form for logged-in members, and helpful voting.
 import { styleReviewStars, styleReviewCard } from 'public/ProductPagePolish.js';
+import { colors } from 'public/sharedTokens.js';
 
 // Page-scoped review state — reset on every init to prevent SPA bleed
 const DEFAULT_SORT = 'newest';
@@ -113,7 +114,7 @@ function renderAggregate($w, aggregate) {
         const count = aggregate.breakdown[star] || 0;
         const widthPct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
         histBar.style.width = `${widthPct}%`;
-        if (count > 0) histBar.style.backgroundColor = '#E8845C';
+        if (count > 0) histBar.style.backgroundColor = colors.sunsetCoral;
       }
     } catch (e) {}
 
