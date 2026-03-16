@@ -2,7 +2,7 @@
  * Tests for protectionPlan.web.js and giftRegistry.web.js
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import wixData, {
+import {
   __reset as resetData,
   __seed as seed,
   __onInsert,
