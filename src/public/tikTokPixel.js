@@ -6,7 +6,15 @@
 // Setup: Set your TikTok Pixel ID in the PIXEL_ID constant below, or
 // configure it via Wix Dashboard > Marketing Integrations.
 
-const PIXEL_ID = ''; // Set TikTok Pixel ID here when obtained
+let PIXEL_ID = ''; // Set TikTok Pixel ID here when obtained
+
+/**
+ * Set the TikTok Pixel ID at runtime (useful for tests and dynamic config).
+ * @param {string} id - TikTok Pixel ID
+ */
+export function setPixelId(id) {
+  PIXEL_ID = id || '';
+}
 
 /**
  * Initialize TikTok Pixel tracking script and fire initial PageView.
