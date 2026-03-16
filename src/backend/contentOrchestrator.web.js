@@ -38,7 +38,7 @@ const CONFIG_KEY_MAP = {
   newsletter: 'enableNewsletter',
   social_story: 'enableSocialStory',
   catalog_sync: 'enableCatalogSync',
-  email: 'enableEmail',
+  email: 'enableEmail', // used by updateOrchestrationConfig, not by EVENT_ACTIONS loop
 };
 
 async function requireAdmin() {
