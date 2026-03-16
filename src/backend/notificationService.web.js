@@ -63,7 +63,7 @@ export const recordPriceSnapshots = webMethod(
           await wixData.insert('PriceHistory', {
             productId: product._id,
             price: product.price || 0,
-            comparePrice: product.discountedPrice || product.price || 0,
+            comparePrice: product.discountedPrice != null ? product.discountedPrice : (product.price || 0),
             inStock: product.inStock !== false,
             recordedAt: new Date(),
           });

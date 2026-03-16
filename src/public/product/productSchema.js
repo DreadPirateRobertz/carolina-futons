@@ -135,7 +135,7 @@ export async function injectPinterestMeta(product) {
       description: product.description,
       image: product.mainMedia,
       price: product.price,
-      salePrice: product.discountedPrice || undefined,
+      salePrice: product.discountedPrice != null ? product.discountedPrice : undefined,
       inStock: product.inStock !== false,
       brand: detectProductBrand(product) || undefined,
       category: detectProductCategory(product) || undefined,
