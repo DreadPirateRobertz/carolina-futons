@@ -13,6 +13,7 @@
  */
 export function safeParse(str, fallback = null, context) {
   if (str == null || str === '') return fallback;
+  if (typeof str !== 'string') return str;
   try {
     return JSON.parse(str);
   } catch (err) {

@@ -51,8 +51,17 @@ describe('safeParse utility', () => {
     expect(safeParse('{"items":[1,2,', [])).toEqual([]);
   });
 
-  it('returns fallback for non-string input types', () => {
+  it('passes through non-string number input without parsing', () => {
     expect(safeParse(12345, 'fallback')).toBe(12345);
+  });
+
+  it('passes through non-string object input without parsing', () => {
+    const obj = { a: 1, b: [2, 3] };
+    expect(safeParse(obj, 'fallback')).toBe(obj);
+  });
+
+  it('passes through non-string boolean input without parsing', () => {
+    expect(safeParse(true, 'fallback')).toBe(true);
   });
 
   it('logs to console when context provided and parse fails', () => {

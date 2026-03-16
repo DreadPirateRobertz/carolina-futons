@@ -263,4 +263,32 @@ describe('initFeelAndComfort', () => {
     await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
     expect(els['#comfortSection']._expanded).toBe(true);
   });
+
+  it('still shows swatches when comfort service throws', async () => {
+    // Seed comfort data that will cause a query miss (no matching product comfort mapping)
+    // but keep swatches available — simulates comfort service failure path
+    __seed('ProductComfort', []);
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    // Section should still expand because swatches exist
+    expect(els['#feelAndComfortSection']._expanded).toBe(true);
+    // Comfort sub-section collapsed, but swatch CTA visible
+    expect(els['#comfortSection']._collapsed).toBe(true);
+    expect(els['#feelSwatchCTA']._visible).toBe(true);
+  });
+
+  it('still shows comfort when swatch service returns empty', async () => {
+    // Swatches empty — simulates swatch service failure path
+    __seed('FabricSwatches', []);
+    const els = {};
+    const $w = make$w(els);
+    await initFeelAndComfort($w, { product: { _id: 'prod-a', name: 'Test' } });
+    // Section should still expand because comfort data exists
+    expect(els['#feelAndComfortSection']._expanded).toBe(true);
+    // Comfort card should render
+    expect(els['#comfortName'].text).toBe('Plush');
+    // Swatch CTA should be hidden
+    expect(els['#feelSwatchCTA']._visible).toBe(false);
+  });
 });
