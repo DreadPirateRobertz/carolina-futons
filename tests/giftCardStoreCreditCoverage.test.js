@@ -2,7 +2,7 @@
  * Tests for giftCards.web.js and storeCreditService.web.js
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
+import wixData, {
   __reset as resetData,
   __seed as seed,
   __onInsert,
@@ -349,6 +349,25 @@ describe('giftCards — redeemGiftCard', () => {
     const r = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', 50);
     expect(r.success).toBe(false);
     expect(r.message).toContain('no remaining balance');
+  });
+
+  it('rejects concurrent modification (claimId race-fix)', async () => {
+    // Simulate a concurrent writer changing the balance after our claimId update
+    // but before the re-read verification. The spy fires after the store write,
+    // so we use wixData.update to tamper with the stored balance before get() reads it.
+    let updateCount = 0;
+    __onUpdate((coll, item) => {
+      if (coll === 'GiftCards') {
+        updateCount++;
+        if (updateCount === 1) {
+          // Simulate concurrent writer changing balance (racing update)
+          wixData.update('GiftCards', { ...item, balance: 50 });
+        }
+      }
+    });
+    const r = await redeemGiftCard('CF-AAAA-BBBB-CCCC-DDDD', 30);
+    expect(r.success).toBe(false);
+    expect(r.message).toContain('concurrently');
   });
 });
 
