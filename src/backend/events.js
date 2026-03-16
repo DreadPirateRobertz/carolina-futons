@@ -243,6 +243,22 @@ export async function wixStores_onInventoryVariantUpdated(event) {
         impact: 'Back-in-stock subscribers not notified — trust erosion',
       });
     }
+
+    // Trigger content orchestration for back-in-stock
+    try {
+      const { triggerManualOrchestration } = await import('backend/contentOrchestrator.web');
+      const product = await wixData.get('Stores/Products', productId);
+      if (product) {
+        await triggerManualOrchestration('back_in_stock', {
+          productId,
+          productName: product.name || '',
+          productCategory: product.productType || '',
+          imageUrl: product.mainMedia || '',
+        });
+      }
+    } catch (orchErr) {
+      console.error('[events] Content orchestration failed for restock:', orchErr);
+    }
   } catch (err) {
     console.error(`[events] FAILED restock notifications — productId: ${productId || 'unknown'}, error:`, err);
     await logFailedEvent({
