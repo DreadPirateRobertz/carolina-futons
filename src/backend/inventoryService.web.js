@@ -413,10 +413,12 @@ export const getBackInStockDashboard = webMethod(
     try {
       const pending = await wixData.query('BackInStockSignups')
         .eq('notified', false)
+        .limit(1000)
         .find();
 
       const notified = await wixData.query('BackInStockSignups')
         .eq('notified', true)
+        .limit(1000)
         .find();
 
       // Group pending signups by product
@@ -438,8 +440,8 @@ export const getBackInStockDashboard = webMethod(
       }
 
       return {
-        pendingSignups: pending.totalCount,
-        notifiedCount: notified.totalCount,
+        pendingSignups: pending.items.length,
+        notifiedCount: notified.items.length,
         productBreakdown: Object.values(productMap),
       };
     } catch (err) {
