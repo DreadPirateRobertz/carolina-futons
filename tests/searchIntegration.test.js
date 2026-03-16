@@ -79,6 +79,7 @@ const catalogProducts = [
 // ── Setup ─────────────────────────────────────────────────────────
 
 beforeEach(() => {
+  vi.clearAllMocks();
   __reset();
   __seed('Stores/Products', catalogProducts);
   __clearCache();
@@ -145,9 +146,10 @@ describe('Search Integration: fullTextSearch', () => {
     expect(result.total).toBeGreaterThanOrEqual(result.products.length);
   });
 
-  it('returns query string in response', async () => {
+  it('returns normalized query string in response', async () => {
     const result = await fullTextSearch({ query: 'Seattle' });
-    expect(result.query).toBeTruthy();
+    expect(typeof result.query).toBe('string');
+    expect(result.query.length).toBeGreaterThan(0);
   });
 });
 
@@ -184,50 +186,60 @@ describe('Search Integration: searchProducts (non-text)', () => {
 });
 
 describe('Search Integration: getFilterValues → filter sidebar', () => {
-  it('returns facets with materials and colors', async () => {
+  it('returns materials array with value+count objects', async () => {
     const result = await getFilterValues('');
-    expect(result).toBeTruthy();
-    // Should have facets structure
-    const facets = result.facets || result;
-    expect(facets).toBeTruthy();
+    expect(Array.isArray(result.materials)).toBe(true);
+    expect(result.materials.length).toBeGreaterThan(0);
+    result.materials.forEach((m) => {
+      expect(m).toHaveProperty('value');
+      expect(m).toHaveProperty('count');
+    });
   });
 
   it('with category scopes facets to that collection', async () => {
     const result = await getFilterValues('mattresses');
-    const facets = result.facets || result;
-    const materials = facets.materials || [];
-    if (Array.isArray(materials) && materials.length > 0) {
-      // Only Foam exists in mattresses
-      expect(materials.some((m) => m.value === 'Foam' || m === 'Foam')).toBe(true);
-    }
+    const materials = result.materials;
+    expect(materials.length).toBeGreaterThan(0);
+    expect(materials.some((m) => m.value === 'Foam')).toBe(true);
   });
 
-  it('returns price ranges', async () => {
+  it('returns price ranges array', async () => {
     const result = await getFilterValues('');
-    const facets = result.facets || result;
-    const priceRanges = facets.priceRanges || [];
-    expect(Array.isArray(priceRanges)).toBe(true);
+    expect(Array.isArray(result.priceRanges)).toBe(true);
+    expect(result.priceRanges.length).toBeGreaterThan(0);
+  });
+
+  it('returns colors array with value+count objects', async () => {
+    const result = await getFilterValues('');
+    expect(Array.isArray(result.colors)).toBe(true);
+    expect(result.colors.length).toBeGreaterThan(0);
+    result.colors.forEach((c) => {
+      expect(c).toHaveProperty('value');
+      expect(c).toHaveProperty('count');
+    });
+  });
+
+  it('returns totalProducts count', async () => {
+    const result = await getFilterValues('');
+    expect(result.totalProducts).toBe(6);
   });
 });
 
 describe('Search Integration: autocomplete pipeline', () => {
   it('returns product name matches for prefix', async () => {
     const result = await getAutocompleteSuggestions('Seat', 5);
-    const suggestions = result.suggestions || result;
-    expect(Array.isArray(suggestions)).toBe(true);
-    if (suggestions.length > 0) {
-      const hasSeattle = suggestions.some(
-        (s) => (s.text || s.name || '').includes('Seat')
-      );
-      expect(hasSeattle).toBe(true);
-    }
+    expect(result).toHaveProperty('suggestions');
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    const hasSeattle = result.suggestions.some(
+      (s) => (s.text || s.name || '').includes('Seat')
+    );
+    expect(hasSeattle).toBe(true);
   });
 
   it('returns category matches for known category prefix', async () => {
     const result = await getAutocompleteSuggestions('Futon', 10);
-    const suggestions = result.suggestions || result;
-    expect(Array.isArray(suggestions)).toBe(true);
-    expect(suggestions.length).toBeGreaterThan(0);
+    expect(result).toHaveProperty('suggestions');
+    expect(result.suggestions.length).toBeGreaterThan(0);
   });
 
   it('recordSearchQuery + getPopularSearches round-trip', async () => {
@@ -236,12 +248,10 @@ describe('Search Integration: autocomplete pipeline', () => {
     await recordSearchQuery('murphy bed');
 
     const popular = await getPopularSearches(5);
-    const queries = popular.queries || popular;
-    expect(Array.isArray(queries)).toBe(true);
-    if (queries.length > 0) {
-      const texts = queries.map((q) => (q.query || q.text || q).toLowerCase());
-      expect(texts.some((t) => t.includes('futon'))).toBe(true);
-    }
+    expect(popular).toHaveProperty('queries');
+    expect(popular.queries.length).toBeGreaterThan(0);
+    const texts = popular.queries.map((q) => q.query.toLowerCase());
+    expect(texts.some((t) => t.includes('futon'))).toBe(true);
   });
 
   it('popular searches are sorted by frequency', async () => {
@@ -251,11 +261,8 @@ describe('Search Integration: autocomplete pipeline', () => {
     await recordSearchQuery('popular query');
 
     const popular = await getPopularSearches(5);
-    const queries = popular.queries || popular;
-    if (queries.length >= 2) {
-      const topQuery = (queries[0].query || queries[0].text || queries[0]).toLowerCase();
-      expect(topQuery).toContain('popular');
-    }
+    expect(popular.queries.length).toBeGreaterThanOrEqual(2);
+    expect(popular.queries[0].query.toLowerCase()).toContain('popular');
   });
 });
 
@@ -298,22 +305,20 @@ describe('Search Integration: categorySearch → Category Page', () => {
     expect(result.count).toBe(3);
   });
 
-  it('getFacetMetadata builds filter options', async () => {
+  it('getFacetMetadata builds filter options with materials', async () => {
     const facets = await getFacetMetadata('futon-frames');
-    expect(facets).toBeTruthy();
-    const materials = facets.materials || [];
-    if (Array.isArray(materials)) {
-      expect(materials.length).toBeGreaterThan(0);
-    }
+    expect(facets).toHaveProperty('materials');
+    expect(Array.isArray(facets.materials)).toBe(true);
+    expect(facets.materials.length).toBeGreaterThan(0);
   });
 
-  it('suggestFilterRelaxation on impossible combination', async () => {
+  it('suggestFilterRelaxation returns suggestions for impossible combination', async () => {
     const suggestion = await suggestFilterRelaxation({
       category: 'mattresses',
       materials: ['Hardwood'],
       colors: ['Black Walnut'],
     });
-    expect(suggestion).toBeTruthy();
+    expect(suggestion).toHaveProperty('suggestions');
   });
 
   it('sorts by price ascending', async () => {
@@ -382,9 +387,8 @@ describe('Search Integration: cross-service consistency', () => {
     const search = await searchProducts({ category: 'mattresses' });
     const cat = await categorySearch({ category: 'mattresses' });
 
-    expect(search.totalCount || search.products.length).toBe(
-      cat.totalCount || cat.items.length
-    );
+    // searchService returns .total, categorySearch returns .totalCount
+    expect(search.total).toBe(cat.totalCount);
   });
 
   it('caches are independent between services', async () => {
@@ -396,6 +400,7 @@ describe('Search Integration: cross-service consistency', () => {
 
     // categorySearch cache should still work
     const facets = await getFacetMetadata('futon-frames');
-    expect(facets).toBeTruthy();
+    expect(facets).toHaveProperty('materials');
+    expect(facets.materials.length).toBeGreaterThan(0);
   });
 });
