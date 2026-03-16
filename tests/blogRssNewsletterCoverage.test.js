@@ -85,11 +85,12 @@ describe('blogRssFeed — generateBlogRssFeed', () => {
   it('sorts posts by publishDate descending', async () => {
     const result = await generateBlogRssFeed();
     const items = result.xml.match(/<pubDate>[^<]+<\/pubDate>/g);
-    if (items && items.length >= 2) {
-      const dates = items.map(m => new Date(m.replace(/<\/?pubDate>/g, '')));
-      for (let i = 1; i < dates.length; i++) {
-        expect(dates[i - 1].getTime()).toBeGreaterThanOrEqual(dates[i].getTime());
-      }
+    // Blog content has posts with dates, so we should have multiple pubDates
+    expect(items).not.toBeNull();
+    expect(items.length).toBeGreaterThanOrEqual(2);
+    const dates = items.map(m => new Date(m.replace(/<\/?pubDate>/g, '')));
+    for (let i = 1; i < dates.length; i++) {
+      expect(dates[i - 1].getTime()).toBeGreaterThanOrEqual(dates[i].getTime());
     }
   });
 
@@ -540,5 +541,84 @@ describe('http-functions — get_productSitemap blog priorities', () => {
     for (const entry of blogEntries) {
       expect(entry).toContain('<priority>0.7</priority>');
     }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// Additional edge cases (review-agent findings)
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('blogNewsletter — dedup allows different slugs', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('does NOT block notification for a different slug', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub1', email: 'alice@example.com', status: 'active' },
+    ]);
+    // A different post was already notified
+    __seed('EmailQueue', [
+      {
+        _id: 'eq1',
+        templateId: _BLOG_NEWSLETTER_TEMPLATE,
+        sequenceType: _SEQUENCE_TYPE,
+        variables: { postSlug: 'futon-frame-buying-guide' },
+      },
+    ]);
+
+    const result = await notifySubscribersOfNewPost('best-futons-for-everyday-sleeping');
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(1);
+  });
+});
+
+describe('blogNewsletter — getBlogNewsletterStatus error field', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('returns error field on failure', async () => {
+    // Force a query error
+    const { __setQueryError } = await import('wix-data');
+    __setQueryError('EmailQueue', new Error('DB down'));
+
+    const result = await getBlogNewsletterStatus();
+    expect(result.success).toBe(false);
+    expect(result.posts).toEqual([]);
+    expect(result.error).toBe('DB down');
+
+    __reset();
+  });
+});
+
+describe('blogNewsletter — previewBlogNewsletter excerpt fallback', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('returns excerpt when available', async () => {
+    const result = await previewBlogNewsletter('best-futons-for-everyday-sleeping');
+    expect(result.success).toBe(true);
+    // The post should have an excerpt or metaDescription
+    expect(result.post.excerpt).toBeTruthy();
+  });
+});
+
+describe('blogNewsletter — subscriber with null email', () => {
+  beforeEach(() => {
+    __reset();
+  });
+
+  it('skips subscribers with null/undefined email', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub1', email: null, status: 'active' },
+      { _id: 'sub2', status: 'active' },
+      { _id: 'sub3', email: 'good@example.com', status: 'active' },
+    ]);
+
+    const result = await notifySubscribersOfNewPost('best-futons-for-everyday-sleeping');
+    expect(result.queued).toBe(1);
+    expect(result.skipped).toBe(2);
   });
 });

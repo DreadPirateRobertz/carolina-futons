@@ -199,7 +199,7 @@ export const getBlogNewsletterStatus = webMethod(
       return { success: true, posts: result };
     } catch (err) {
       console.error('[blogNewsletter] Error getting status:', err);
-      return { success: false, posts: [] };
+      return { success: false, posts: [], error: err.message };
     }
   }
 );

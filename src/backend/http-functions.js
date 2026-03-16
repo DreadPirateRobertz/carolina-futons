@@ -214,6 +214,7 @@ export async function get_blogRssFeed() {
     const result = await generateBlogRssFeed();
 
     if (!result.success) {
+      console.error('HTTP function error (blogRssFeed):', result.error);
       return serverError({
         body: 'Error generating RSS feed',
         headers: { 'Content-Type': 'text/plain' },
