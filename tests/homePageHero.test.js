@@ -122,6 +122,12 @@ vi.mock('wix-data', () => ({
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 
+// Force MountainSkyline dynamic import to reject so initRidgelineHeader
+// falls back to static ridgeline (which sets alt text on #ridgelineHeader).
+vi.mock('public/MountainSkyline.js', () => {
+  throw new Error('MountainSkyline not available');
+});
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 // Flush microtask queue so fire-and-forget deferred sections in
