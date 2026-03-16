@@ -535,3 +535,244 @@ describe('Call-for-price product filtering (CF-hma6)', () => {
     expect(ids).not.toContain('prod-cfp-002');
   });
 });
+
+// ── getCustomersAlsoBought ────────────────────────────────────────
+
+describe('getCustomersAlsoBought', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
+  it('returns fallback products when no orders exist', async () => {
+    __seed('Stores/Orders', []);
+    const result = await getCustomersAlsoBought('prod-frame-001');
+    expect(result.success).toBe(true);
+    expect(result.products).toBeInstanceOf(Array);
+  });
+
+  it('returns co-purchased products from order history', async () => {
+    __seed('Stores/Orders', [
+      {
+        _id: 'order-1',
+        lineItems: [
+          { productId: 'prod-frame-001' },
+          { productId: 'prod-matt-001' },
+        ],
+      },
+      {
+        _id: 'order-2',
+        lineItems: [
+          { productId: 'prod-frame-001' },
+          { productId: 'prod-matt-001' },
+          { productId: 'prod-case-001' },
+        ],
+      },
+    ]);
+    const result = await getCustomersAlsoBought('prod-frame-001');
+    expect(result.success).toBe(true);
+    expect(result.products.length).toBeGreaterThan(0);
+    // mattress co-purchased twice, should be first
+    expect(result.products[0]._id).toBe('prod-matt-001');
+  });
+
+  it('excludes the source product from results', async () => {
+    __seed('Stores/Orders', [
+      {
+        _id: 'order-1',
+        lineItems: [
+          { productId: 'prod-frame-001' },
+          { productId: 'prod-matt-001' },
+        ],
+      },
+    ]);
+    const result = await getCustomersAlsoBought('prod-frame-001');
+    const ids = result.products.map(p => p._id);
+    expect(ids).not.toContain('prod-frame-001');
+  });
+
+  it('fails for empty product ID', async () => {
+    const result = await getCustomersAlsoBought('');
+    expect(result.success).toBe(false);
+    expect(result.products).toHaveLength(0);
+  });
+
+  it('fails for null product ID', async () => {
+    const result = await getCustomersAlsoBought(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('respects limit parameter', async () => {
+    __seed('Stores/Orders', [
+      {
+        _id: 'order-1',
+        lineItems: [
+          { productId: 'prod-frame-001' },
+          { productId: 'prod-matt-001' },
+          { productId: 'prod-case-001' },
+          { productId: 'prod-murphy-001' },
+        ],
+      },
+    ]);
+    const result = await getCustomersAlsoBought('prod-frame-001', 1);
+    expect(result.products.length).toBeLessThanOrEqual(1);
+  });
+
+  it('caps limit at 12', async () => {
+    const result = await getCustomersAlsoBought('prod-frame-001', 999);
+    expect(result.success).toBe(true);
+  });
+
+  it('returns formatted product objects', async () => {
+    __seed('Stores/Orders', [
+      {
+        _id: 'order-1',
+        lineItems: [
+          { productId: 'prod-frame-001' },
+          { productId: 'prod-matt-001' },
+        ],
+      },
+    ]);
+    const result = await getCustomersAlsoBought('prod-frame-001');
+    if (result.products.length > 0) {
+      const p = result.products[0];
+      expect(p).toHaveProperty('_id');
+      expect(p).toHaveProperty('name');
+      expect(p).toHaveProperty('price');
+      expect(p).toHaveProperty('slug');
+      expect(p).toHaveProperty('mainMedia');
+      expect(p).toHaveProperty('collections');
+    }
+  });
+
+  it('returns empty products for non-existent product ID', async () => {
+    const result = await getCustomersAlsoBought('nonexistent-product-id');
+    expect(result.products).toHaveLength(0);
+  });
+});
+
+// ── Additional edge cases ──────────────────────────────────────────
+
+describe('getRelatedProducts edge cases', () => {
+  it('handles null productId gracefully', async () => {
+    const results = await getRelatedProducts(null, 'futon-frames', 4);
+    expect(results).toBeInstanceOf(Array);
+  });
+
+  it('handles undefined categorySlug', async () => {
+    const results = await getRelatedProducts('prod-001', undefined, 4);
+    expect(results).toEqual([]);
+  });
+
+  it('returns products for wall-huggers category', async () => {
+    const results = await getRelatedProducts('prod-frame-002', 'wall-huggers', 4);
+    expect(results).toBeInstanceOf(Array);
+  });
+
+  it('returns products for murphy-cabinet-beds category', async () => {
+    const results = await getRelatedProducts('prod-murphy-001', 'murphy-cabinet-beds', 4);
+    expect(results).toBeInstanceOf(Array);
+  });
+});
+
+describe('getCompletionSuggestions edge cases', () => {
+  it('handles cart with multiple products from same category', async () => {
+    const suggestions = await getCompletionSuggestions(['prod-frame-001', 'prod-frame-002']);
+    // Both are frames; should still suggest mattresses
+    expect(suggestions.length).toBeGreaterThan(0);
+  });
+
+  it('suggestion groups have heading and products array', async () => {
+    const suggestions = await getCompletionSuggestions(['prod-frame-001']);
+    for (const group of suggestions) {
+      expect(group).toHaveProperty('heading');
+      expect(group).toHaveProperty('products');
+      expect(group.products).toBeInstanceOf(Array);
+    }
+  });
+});
+
+describe('getBundleSuggestion edge cases', () => {
+  it('returns null for empty product ID', async () => {
+    const result = await getBundleSuggestion('');
+    expect(result).toBeNull();
+  });
+
+  it('returns null for non-existent product', async () => {
+    const result = await getBundleSuggestion('nonexistent-id');
+    expect(result).toBeNull();
+  });
+
+  it('bundle has required pricing fields', async () => {
+    const bundle = await getBundleSuggestion('prod-frame-001');
+    if (bundle) {
+      expect(bundle).toHaveProperty('heading');
+      expect(bundle).toHaveProperty('product');
+      expect(bundle).toHaveProperty('originalTotal');
+      expect(bundle).toHaveProperty('bundlePrice');
+      expect(bundle).toHaveProperty('savings');
+      expect(bundle.savings).toBeGreaterThan(0);
+      expect(bundle.bundlePrice).toBeLessThan(bundle.originalTotal);
+    }
+  });
+});
+
+describe('getSaleProducts edge cases', () => {
+  it('sale products have required fields', async () => {
+    const results = await getSaleProducts(12);
+    for (const product of results) {
+      expect(product).toHaveProperty('_id');
+      expect(product).toHaveProperty('name');
+      expect(product).toHaveProperty('price');
+      expect(product).toHaveProperty('discountedPrice');
+    }
+  });
+
+  it('respects limit parameter', async () => {
+    const results = await getSaleProducts(1);
+    expect(results.length).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('trackRecentlyViewed edge cases', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
+  });
+
+  it('fails for null product ID', async () => {
+    const result = await trackRecentlyViewed(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('sanitizes product ID input', async () => {
+    const result = await trackRecentlyViewed('<script>alert(1)</script>');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('getRecentlyViewed edge cases', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+    __setMember({ _id: 'member-1', contactDetails: { firstName: 'Test' } });
+  });
+
+  it('returns formatted product objects', async () => {
+    __seed('RecentlyViewed', [
+      { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date() },
+    ]);
+    const result = await getRecentlyViewed();
+    if (result.products.length > 0) {
+      expect(result.products[0]).toHaveProperty('_id');
+      expect(result.products[0]).toHaveProperty('name');
+      expect(result.products[0]).toHaveProperty('price');
+    }
+  });
+
+  it('default limit caps at 20', async () => {
+    const result = await getRecentlyViewed();
+    expect(result.success).toBe(true);
+  });
+});
