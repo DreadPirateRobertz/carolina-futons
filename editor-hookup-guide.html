@@ -926,7 +926,7 @@ Right column:
         ["swatchViewAll","Button","Opens full swatch gallery"],
         ["swatchRequestLink","Button","Request free swatch link"]
       ]},
-      { name: "Financing (PDP)", impl: `<h4>💳 Implementation — Financing (NEW v0.9.0+)</h4>
+      { name: "Financing (PDP)", repeater: "financingDetailRepeater", impl: `<h4>💳 Implementation — Financing (NEW v0.9.0+)</h4>
 <p><strong>Source: <code>src/public/ProductFinancing.js</code></strong></p>
 <p><strong>Layout: Financing teaser + Afterpay message + modal with plan details</strong></p>
 <ul>
@@ -989,21 +989,21 @@ Right column:
         ["reviewsSection","Section","Collapsible reviews area"],
         ["reviewsAverage","Text","Average rating (e.g. 4.5)"],
         ["reviewsCount","Text","Total review count"],
-        ["ratingBar1","Box","1-star distribution bar"],
-        ["ratingBar2","Box","2-star distribution bar"],
-        ["ratingBar3","Box","3-star distribution bar"],
-        ["ratingBar4","Box","4-star distribution bar"],
-        ["ratingBar5","Box","5-star distribution bar"],
+        ["ratingBar1","Box","1-star row container (label + bar + count)"],
+        ["ratingBar2","Box","2-star row container"],
+        ["ratingBar3","Box","3-star row container"],
+        ["ratingBar4","Box","4-star row container"],
+        ["ratingBar5","Box","5-star row container"],
         ["ratingCount1","Text","1-star count"],
         ["ratingCount2","Text","2-star count"],
         ["ratingCount3","Text","3-star count"],
         ["ratingCount4","Text","4-star count"],
         ["ratingCount5","Text","5-star count"],
-        ["histogramBar1","Box","1-star histogram bar"],
-        ["histogramBar2","Box","2-star histogram bar"],
-        ["histogramBar3","Box","3-star histogram bar"],
-        ["histogramBar4","Box","4-star histogram bar"],
-        ["histogramBar5","Box","5-star histogram bar"],
+        ["histogramBar1","Box","1-star filled progress bar (visual width)"],
+        ["histogramBar2","Box","2-star filled progress bar"],
+        ["histogramBar3","Box","3-star filled progress bar"],
+        ["histogramBar4","Box","4-star filled progress bar"],
+        ["histogramBar5","Box","5-star filled progress bar"],
         ["histogramPercent1","Text","1-star percentage"],
         ["histogramPercent2","Text","2-star percentage"],
         ["histogramPercent3","Text","3-star percentage"],
