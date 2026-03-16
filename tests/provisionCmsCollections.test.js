@@ -32,8 +32,8 @@ function makeCollection(overrides = {}) {
 // ─── Manifest Structure ───────────────────────────────────────────────────────
 
 describe('COLLECTION_MANIFEST', () => {
-  it('should contain exactly 22 collections', () => {
-    expect(COLLECTION_MANIFEST).toHaveLength(22);
+  it('should contain exactly 23 collections', () => {
+    expect(COLLECTION_MANIFEST).toHaveLength(23);
   });
 
   it('should have unique collection IDs', () => {
@@ -358,8 +358,8 @@ describe('provisionCollections', () => {
     vi.stubGlobal('fetch', mockFetch);
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(22);
-    expect(mockFetch).toHaveBeenCalledTimes(23); // 1 list + 22 creates
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(23);
+    expect(mockFetch).toHaveBeenCalledTimes(24); // 1 list + 23 creates
   });
 
   it('should respect dryRun flag', async () => {
@@ -380,7 +380,7 @@ describe('provisionCollections', () => {
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
     expect(results.filter((r) => r.status === 'ERROR')).toHaveLength(1);
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(21);
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(22);
   });
 
   it('should send correct request body structure to Wix API', async () => {
@@ -456,8 +456,8 @@ describe('provisionCollections', () => {
 
     const { results } = await provisionCollections({ apiKey: 'test', siteId: 'test' });
     expect(results.filter((r) => r.status === 'EXISTS')).toHaveLength(8);
-    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(14);
-    expect(results).toHaveLength(22);
+    expect(results.filter((r) => r.status === 'CREATED')).toHaveLength(15);
+    expect(results).toHaveLength(23);
   });
 
   it('should guard res.text() failure in error path', async () => {
