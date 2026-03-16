@@ -779,28 +779,36 @@ describe('getRecentlyViewed edge cases', () => {
   it('clamps negative limit to 1', async () => {
     __seed('RecentlyViewed', [
       { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date() },
+      { _id: 'rv-2', memberId: 'member-1', productId: 'prod-matt-001', viewedAt: new Date(Date.now() - 1000) },
+      { _id: 'rv-3', memberId: 'member-1', productId: 'prod-murphy-001', viewedAt: new Date(Date.now() - 2000) },
     ]);
     const result = await getRecentlyViewed(-5);
     expect(result.success).toBe(true);
+    // Negative clamped to 1 → at most 1 product returned
     expect(result.products.length).toBeLessThanOrEqual(1);
   });
 
   it('clamps limit above 20 to MAX_RECENTLY_VIEWED', async () => {
     __seed('RecentlyViewed', [
       { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date() },
+      { _id: 'rv-2', memberId: 'member-1', productId: 'prod-matt-001', viewedAt: new Date(Date.now() - 1000) },
     ]);
     const result = await getRecentlyViewed(999);
     expect(result.success).toBe(true);
+    // Clamped to 20, but only 2 seeded — should still return both
+    expect(result.products.length).toBe(2);
   });
 
   it('rounds float limit to nearest integer', async () => {
     __seed('RecentlyViewed', [
       { _id: 'rv-1', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date() },
       { _id: 'rv-2', memberId: 'member-1', productId: 'prod-matt-001', viewedAt: new Date(Date.now() - 1000) },
+      { _id: 'rv-3', memberId: 'member-1', productId: 'prod-murphy-001', viewedAt: new Date(Date.now() - 2000) },
     ]);
+    // 1.5 rounds to 2 → should return at most 2 of the 3 seeded products
     const result = await getRecentlyViewed(1.5);
     expect(result.success).toBe(true);
-    expect(result.products.length).toBeLessThanOrEqual(2);
+    expect(result.products.length).toBe(2);
   });
 
   it('handles deleted products gracefully (product no longer in store)', async () => {
@@ -833,6 +841,11 @@ describe('getRelatedProducts — cross-sell category coverage', () => {
   it('returns casegoods + mattresses for platform-beds', async () => {
     const results = await getRelatedProducts('prod-plat-001', 'platform-beds', 10);
     expect(results.length).toBeGreaterThan(0);
+    const ids = results.map(r => r._id);
+    // platform-beds maps to casegoods-accessories and mattresses
+    const hasCasegoods = ids.includes('prod-case-001');
+    const hasMattress = ids.includes('prod-matt-001');
+    expect(hasCasegoods || hasMattress).toBe(true);
   });
 
   it('returns platform beds + futon frames for casegoods-accessories', async () => {
@@ -847,12 +860,21 @@ describe('getRelatedProducts — cross-sell category coverage', () => {
   it('returns mattresses + casegoods for wall-huggers', async () => {
     const results = await getRelatedProducts('prod-frame-002', 'wall-huggers', 10);
     expect(results.length).toBeGreaterThan(0);
+    const ids = results.map(r => r._id);
+    // wall-huggers maps to mattresses and casegoods-accessories
+    const hasMattress = ids.includes('prod-matt-001');
+    const hasCasegoods = ids.includes('prod-case-001');
+    expect(hasMattress || hasCasegoods).toBe(true);
   });
 
   it('returns mattresses + casegoods for unfinished-wood', async () => {
-    // unfinished-wood maps to mattresses + casegoods-accessories
     const results = await getRelatedProducts('prod-frame-005', 'unfinished-wood', 10);
     expect(results.length).toBeGreaterThan(0);
+    const ids = results.map(r => r._id);
+    // unfinished-wood maps to mattresses and casegoods-accessories
+    const hasMattress = ids.includes('prod-matt-001');
+    const hasCasegoods = ids.includes('prod-case-001');
+    expect(hasMattress || hasCasegoods).toBe(true);
   });
 
   it('uses default limit of 4 when not specified', async () => {
@@ -966,11 +988,10 @@ describe('getBundleSuggestion — frame type detection', () => {
 
   it('bundle savings are always positive for valid products', async () => {
     const bundle = await getBundleSuggestion('prod-matt-001');
-    if (bundle) {
-      expect(bundle.savings).toBeGreaterThan(0);
-      expect(bundle.bundlePrice).toBeLessThan(bundle.originalTotal);
-      expect(bundle.originalTotal).toBeGreaterThan(0);
-    }
+    expect(bundle).not.toBeNull();
+    expect(bundle.savings).toBeGreaterThan(0);
+    expect(bundle.bundlePrice).toBeLessThan(bundle.originalTotal);
+    expect(bundle.originalTotal).toBeGreaterThan(0);
   });
 });
 
@@ -1004,10 +1025,15 @@ describe('getSimilarProducts — input clamping', () => {
     });
   });
 
-  it('clamps priceRange above 1 to 1', async () => {
+  it('clamps priceRange above 1 to 1 (100% range)', async () => {
     const result = await getSimilarProducts('prod-frame-001', { priceRange: 5 });
     expect(result.success).toBe(true);
-    // With 100% range on $499: $0-$998, essentially all products in same collection
+    // Clamped to 100% range on $499: $0-$998 — should include all futon-frames in range
+    expect(result.products.length).toBeGreaterThan(0);
+    result.products.forEach(p => {
+      expect(p.price).toBeGreaterThan(0);
+      expect(p.price).toBeLessThanOrEqual(998);
+    });
   });
 
   it('handles product with no collections', async () => {
@@ -1088,7 +1114,9 @@ describe('getCustomersAlsoBought — frequency ranking', () => {
     ]);
     const result = await getCustomersAlsoBought('prod-frame-001');
     expect(result.success).toBe(true);
-    // lineItem without productId should be skipped
+    // lineItem without productId should be skipped — no undefined entries
+    const ids = result.products.map(p => p._id);
+    ids.forEach(id => expect(id).toBeDefined());
   });
 
   it('returns empty when all co-purchased products are deleted from store', async () => {
