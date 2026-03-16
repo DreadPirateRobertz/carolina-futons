@@ -383,8 +383,8 @@ describe('ProductOptions', () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockClear();
       await initFinishSwatches($w, state);
-      // Should query variants for each finish to check stock
-      expect(getProductVariants).toHaveBeenCalled();
+      // 4 stock checks (one per finish) + 1 default selection = 5 calls
+      expect(getProductVariants).toHaveBeenCalledTimes(5);
     });
 
     it('marks out-of-stock finishes in swatch data', async () => {
@@ -527,6 +527,20 @@ describe('ProductOptions', () => {
         expect($item('#finishSwatchCircle').style.borderColor).toBe('#c9b99a'); // sandDark
         expect($item('#finishSwatchCircle').style.borderWidth).toBe('1px');
       });
+    });
+
+    it('survives single stock check failure without breaking init', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      let callCount = 0;
+      getProductVariants.mockImplementation(() => {
+        callCount++;
+        if (callCount === 2) return Promise.reject(new Error('Network error'));
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      // Should still render all 4 swatches despite one failure
+      expect($w('#finishSwatches').data).toHaveLength(4);
+      expect($w('#finishSwatches').expand).toHaveBeenCalled();
     });
 
     it('skips first OOS finish and selects next in-stock as default', async () => {
