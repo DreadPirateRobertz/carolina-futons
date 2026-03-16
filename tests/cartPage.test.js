@@ -594,6 +594,17 @@ describe('empty cart (deep)', () => {
     await loadPage({ cart: { lineItems: null } });
     expect(getEl('#emptyCartSection').expand).toHaveBeenCalled();
   });
+
+  it('survives getCurrentCart rejection without crashing', async () => {
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockRejectedValue(new Error('network error'));
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    getCompletionSuggestions.mockResolvedValue([]);
+    const { getCartFinancing } = await import('backend/financingCalc.web');
+    getCartFinancing.mockResolvedValue({ success: false });
+    await import('../src/pages/Cart Page.js');
+    await expect(onReadyHandler()).resolves.not.toThrow();
+  });
 });
 
 // ── Shipping Progress (Deep) ───────────────────────────────────────
@@ -998,15 +1009,15 @@ describe('cart listeners (deep)', () => {
     // Allow microtasks to settle
     await vi.advanceTimersByTimeAsync(0);
 
-    // After debounce, getCurrentCart should be called once (not 3 times)
-    expect(getCurrentCart.mock.calls.length).toBeGreaterThan(callsBefore);
+    // After debounce, getCurrentCart should be called exactly once (not 3 times)
+    expect(getCurrentCart.mock.calls.length).toBe(callsBefore + 1);
     vi.useRealTimers();
   });
 });
 
-// ── refreshCartTotals (Deep) ───────────────────────────────────────
+// ── refreshCartTotals (Deep) ────────────────────────────────────────
 
-describe('refreshCartTotals', () => {
+describe('refreshCartTotals (deep)', () => {
   it('formats subtotal, shipping, and total', async () => {
     await loadPage();
     const { getCurrentCart, onCartChanged } = await import('public/cartService');
