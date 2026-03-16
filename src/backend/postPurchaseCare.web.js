@@ -451,7 +451,7 @@ function formatRecommendation(item) {
     recommendedProductName: item.recommendedProductName,
     recommendedCategory: item.recommendedCategory,
     reason: item.reason,
-    discount: item.discount || 0,
+    discount: item.discount ?? 0,
     delayDays: item.delayDays ?? 3,
     priority: item.priority,
   };
