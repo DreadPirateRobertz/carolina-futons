@@ -347,6 +347,41 @@ describe('ProductOptions', () => {
       expect($w('#finishSwatches').accessibility.ariaLabel).toBe('Finish');
     });
 
+    it('maps colorHex from choice.color into swatch data', async () => {
+      state.product.productOptions = [
+        { name: 'Finish', choices: [
+          { value: 'Natural Oak', description: 'Natural Oak', color: '#D4A76A' },
+          { value: 'Espresso', description: 'Espresso', color: '#3C2415' },
+        ]},
+      ];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].colorHex).toBe('#D4A76A');
+      expect($w('#finishSwatches').data[1].colorHex).toBe('#3C2415');
+    });
+
+    it('sets colorHex to null when choice has no color', async () => {
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].colorHex).toBeNull();
+    });
+
+    it('registers onItemReady before setting data (Wix Repeater contract)', async () => {
+      const callOrder = [];
+      const origOnItemReady = $w('#finishSwatches').onItemReady;
+      $w('#finishSwatches').onItemReady = vi.fn((...args) => {
+        callOrder.push('onItemReady');
+        return origOnItemReady(...args);
+      });
+      Object.defineProperty($w('#finishSwatches'), 'data', {
+        set: function(v) { callOrder.push('data'); this._data = v; },
+        get: function() { return this._data || []; },
+        configurable: true,
+      });
+      await initFinishSwatches($w, state);
+      const itemReadyIdx = callOrder.indexOf('onItemReady');
+      const dataIdx = callOrder.indexOf('data');
+      expect(itemReadyIdx).toBeLessThan(dataIdx);
+    });
+
     it('populates finishSwatches repeater with finish options', async () => {
       await initFinishSwatches($w, state);
       expect($w('#finishSwatches').data).toHaveLength(4);
@@ -461,6 +496,22 @@ describe('ProductOptions', () => {
         expect($w('#finishDropdown').value).toBe('Natural Oak');
       });
 
+      it('click on swatch triggers re-render for ARIA update', async () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false, colorHex: null });
+        const clickHandler = $item('#finishSwatchCircle').onClick.mock.calls[0][0];
+        const dataBefore = $w('#finishSwatches').data;
+        $w('#finishSwatches').data = [{ _id: 'finish-0' }];
+        await clickHandler();
+        expect($w('#finishSwatches').data).not.toBe(dataBefore);
+      });
+
+      it('sets backgroundColor from colorHex on swatch circle', () => {
+        const $item = create$w();
+        itemReadyCallback($item, { _id: 'finish-0', value: 'Natural Oak', description: 'Natural Oak', outOfStock: false, colorHex: '#D4A76A' });
+        expect($item('#finishSwatchCircle').style.backgroundColor).toBe('#D4A76A');
+      });
+
       it('click on in-stock swatch triggers variant change', async () => {
         const { getProductVariants } = await import('public/cartService');
         getProductVariants.mockClear();
@@ -565,14 +616,24 @@ describe('ProductOptions', () => {
       expect(cherry.outOfStock).toBe(true);
     });
 
-    it('handles all finishes out of stock — no default selection', async () => {
+    it('handles all finishes out of stock — falls back to first as display default', async () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockResolvedValue([{ variant: { price: 599 }, inStock: false }]);
       await initFinishSwatches($w, state);
-      // All OOS — dropdown should not be set to any finish
       expect($w('#finishSwatches').data.every(d => d.outOfStock)).toBe(true);
-      // Container should still render
+      expect($w('#finishDropdown').value).toBe('Natural Oak');
       expect($w('#finishSwatches').expand).toHaveBeenCalled();
+    });
+
+    it('defaults to OOS when stock check returns empty array', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Cherry') return Promise.resolve([]);
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const cherry = $w('#finishSwatches').data.find(d => d.value === 'Cherry');
+      expect(cherry.outOfStock).toBe(true);
     });
 
     it('uses description fallback to value when description missing', async () => {

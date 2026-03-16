@@ -149,15 +149,22 @@ export async function initFinishSwatches($w, state) {
           _id: `finish-${i}`,
           value: choice.value,
           description: choice.description || choice.value,
+          colorHex: choice.color || null,
           outOfStock,
         };
       })
     );
 
-    container.data = swatchData;
+    // Register onItemReady BEFORE setting .data (Wix Repeater contract)
     container.onItemReady(($item, itemData) => {
       try {
         $item('#finishSwatchLabel').text = itemData.description;
+      } catch (e) {}
+      // Color fill
+      try {
+        if (itemData.colorHex) {
+          $item('#finishSwatchCircle').style.backgroundColor = itemData.colorHex;
+        }
       } catch (e) {}
       // OOS visual treatment
       try {
@@ -165,7 +172,7 @@ export async function initFinishSwatches($w, state) {
           $item('#finishSwatchCircle').style.opacity = 0.3;
         }
       } catch (e) {}
-      // ARIA attributes
+      // ARIA attributes + selection styling
       try {
         const isSelected = dropdown.value === itemData.value;
         const circle = $item('#finishSwatchCircle');
@@ -176,7 +183,6 @@ export async function initFinishSwatches($w, state) {
         } else {
           circle.accessibility.ariaLabel = `${itemData.description} finish`;
         }
-        // Selection styling — focus ring
         circle.style.borderColor = isSelected ? colors.mountainBlue : colors.sandDark;
         circle.style.borderWidth = isSelected ? '3px' : '1px';
       } catch (e) {}
@@ -185,16 +191,22 @@ export async function initFinishSwatches($w, state) {
         $item('#finishSwatchCircle').onClick(() => {
           if (itemData.outOfStock) return;
           dropdown.value = itemData.value;
+          // Re-render to update ARIA + selection styling on all items
+          container.data = [...container.data];
           handleCustomVariantChange($w, state);
         });
       } catch (e) {}
     });
+    container.data = swatchData;
 
-    // Select first in-stock finish by default
+    // Select first in-stock finish by default; fall back to first OOS
     const firstInStock = swatchData.find(d => !d.outOfStock);
-    if (firstInStock) {
-      dropdown.value = firstInStock.value;
-      await handleCustomVariantChange($w, state);
+    const defaultFinish = firstInStock || swatchData[0];
+    if (defaultFinish) {
+      dropdown.value = defaultFinish.value;
+      if (firstInStock) {
+        await handleCustomVariantChange($w, state);
+      }
     }
 
     container.expand();
