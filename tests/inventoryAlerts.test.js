@@ -136,6 +136,31 @@ describe('getStockStatus', () => {
     expect(typeof oos.stockLevel).toBe('number');
     expect(oos.stockLevel).toBe(0);
   });
+
+  it('uses default urgency threshold (5) when config has none', async () => {
+    __seed('InventoryThresholds', [
+      { _id: 't1', productId: 'prod-nourgency', currentStock: 4 },
+    ]);
+    const result = await getStockStatus('prod-nourgency');
+    expect(result.showUrgency).toBe(true);
+    expect(result.message).toContain('4 left');
+  });
+
+  it('stock exactly at urgency threshold shows urgency', async () => {
+    __seed('InventoryThresholds', [
+      { _id: 't1', productId: 'prod-exact', urgencyThreshold: 5, currentStock: 5 },
+    ]);
+    const result = await getStockStatus('prod-exact');
+    expect(result.showUrgency).toBe(true);
+  });
+
+  it('stock one above urgency threshold does not show urgency', async () => {
+    __seed('InventoryThresholds', [
+      { _id: 't1', productId: 'prod-above', urgencyThreshold: 5, currentStock: 6 },
+    ]);
+    const result = await getStockStatus('prod-above');
+    expect(result.showUrgency).toBe(false);
+  });
 });
 
 // ── getBatchStockStatus ─────────────────────────────────────────────
@@ -188,6 +213,18 @@ describe('getBatchStockStatus', () => {
       expect(status).toHaveProperty('showUrgency');
       expect(status).toHaveProperty('message');
     }
+  });
+
+  it('includes stockLevel for each product', async () => {
+    const result = await getBatchStockStatus(['prod-001', 'prod-002']);
+    expect(result.statuses['prod-001'].stockLevel).toBe(3);
+    expect(result.statuses['prod-002'].stockLevel).toBe(50);
+  });
+
+  it('returns default empty for undefined input', async () => {
+    const result = await getBatchStockStatus(undefined);
+    expect(result.success).toBe(true);
+    expect(result.statuses).toEqual({});
   });
 });
 
@@ -319,6 +356,39 @@ describe('syncInventory', () => {
     expect(result.success).toBe(true);
     // Should only process first 100
   });
+
+  it('floors fractional stock values', async () => {
+    let updated = null;
+    __onUpdate((col, item) => {
+      if (col === 'InventoryThresholds') updated = item;
+    });
+
+    await syncInventory([{ productId: 'prod-001', stock: 7.9 }]);
+    expect(updated.currentStock).toBe(7);
+  });
+
+  it('does not create duplicate alert if reorderAlertSent is true', async () => {
+    __seed('InventoryThresholds', [
+      { ...thresholdConfig, reorderAlertSent: true },
+    ]);
+    let alertCount = 0;
+    __onInsert((col) => { if (col === 'LowStockAlerts') alertCount++; });
+
+    const result = await syncInventory([{ productId: 'prod-001', stock: 2 }]);
+    expect(result.alertsCreated).toBe(0);
+    expect(alertCount).toBe(0);
+  });
+
+  it('updates sku and productName on existing config', async () => {
+    let updated = null;
+    __onUpdate((col, item) => {
+      if (col === 'InventoryThresholds') updated = item;
+    });
+
+    await syncInventory([{ productId: 'prod-001', sku: 'UPDATED-SKU', productName: 'Updated Name', stock: 20 }]);
+    expect(updated.sku).toBe('UPDATED-SKU');
+    expect(updated.productName).toBe('Updated Name');
+  });
 });
 
 // ── getLowStockAlerts ───────────────────────────────────────────────
@@ -370,6 +440,23 @@ describe('getLowStockAlerts', () => {
     const result = await getLowStockAlerts();
     expect(result.success).toBe(true);
     expect(result.alerts).toHaveLength(0);
+  });
+
+  it('rejects invalid status filter', async () => {
+    const result = await getLowStockAlerts({ status: 'invalid' });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Invalid status');
+  });
+
+  it('includes totalCount in response', async () => {
+    const result = await getLowStockAlerts();
+    expect(result).toHaveProperty('totalCount');
+  });
+
+  it('includes acknowledgedBy and acknowledgedAt as null for active alerts', async () => {
+    const result = await getLowStockAlerts();
+    expect(result.alerts[0].acknowledgedBy).toBeNull();
+    expect(result.alerts[0].acknowledgedAt).toBeNull();
   });
 });
 
@@ -582,5 +669,25 @@ describe('getLowStockSummary', () => {
     expect(result.success).toBe(true);
     expect(result.summary.totalProducts).toBe(0);
     expect(result.summary.activeAlerts).toBe(0);
+  });
+
+  it('classifies reorder level correctly (between urgency and reorder)', async () => {
+    __seed('InventoryThresholds', [
+      { _id: 't1', productId: 'p1', urgencyThreshold: 3, reorderThreshold: 10, currentStock: 7 },
+    ]);
+    const result = await getLowStockSummary();
+    expect(result.summary.reorderLevel).toBe(1);
+    expect(result.summary.urgencyLevel).toBe(0);
+    expect(result.summary.healthy).toBe(0);
+  });
+
+  it('uses default thresholds when config values are missing', async () => {
+    // Default urgency=5, reorder=10
+    __seed('InventoryThresholds', [
+      { _id: 't1', productId: 'p1', currentStock: 7 },
+    ]);
+    const result = await getLowStockSummary();
+    // stock 7 > urgency 5, but <= reorder 10
+    expect(result.summary.reorderLevel).toBe(1);
   });
 });

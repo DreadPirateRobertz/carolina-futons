@@ -125,6 +125,34 @@ describe('getAvailableDeliverySlots', () => {
     expect(match).toBeDefined();
     expect(match.spotsLeft).toBe(4);
   });
+
+  it('separates standard and white_glove slot counts', async () => {
+    const date = futureWed();
+    __seed('DeliverySchedule', Array.from({ length: 4 }, (_, i) => ({
+      _id: `d${i}`, date, timeWindow: 'morning', type: 'standard', status: 'scheduled',
+    })));
+    // Standard morning is full, but white_glove morning should still have 4 spots
+    const slots = await getAvailableDeliverySlots('white_glove');
+    const match = slots.find(s => s.date === date && s.timeWindow === 'morning');
+    expect(match).toBeDefined();
+    expect(match.spotsLeft).toBe(4);
+  });
+
+  it('each slot has type matching the request', async () => {
+    const slots = await getAvailableDeliverySlots('white_glove');
+    slots.forEach(s => expect(s.type).toBe('white_glove'));
+  });
+
+  it('returns slots within 21-day booking window', async () => {
+    const slots = await getAvailableDeliverySlots('standard');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate() + 22); // 21 days + 1 for start-from-tomorrow
+    for (const s of slots) {
+      expect(new Date(s.date + 'T12:00:00') <= maxDate).toBe(true);
+    }
+  });
 });
 
 // ── scheduleDelivery ───────────────────────────────────────────────
@@ -235,6 +263,30 @@ describe('scheduleDelivery', () => {
     const date = futureWed();
     const result = await scheduleDelivery({
       orderId: 'order-def', date, timeWindow: 'morning',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('sanitizes customer fields', async () => {
+    const date = futureWed();
+    const result = await scheduleDelivery({
+      orderId: 'order-san',
+      date,
+      timeWindow: 'morning',
+      customerEmail: '<script>test@example.com</script>',
+      notes: '<img onerror=alert(1)>Leave at door',
+    });
+    // Should succeed (sanitize strips tags, email validation is not enforced here)
+    expect(result.success).toBe(true);
+  });
+
+  it('allows white_glove type scheduling', async () => {
+    const result = await scheduleDelivery({
+      orderId: 'order-wg',
+      date: futureWed(),
+      timeWindow: 'afternoon',
+      type: 'white_glove',
+      customerEmail: 'test@example.com',
     });
     expect(result.success).toBe(true);
   });
@@ -597,5 +649,57 @@ describe('getVisitTypes', () => {
     types.filter(t => t.value !== 'consultation').forEach(t => {
       expect(t.duration).toBe(30);
     });
+  });
+
+  it('has descriptive labels', () => {
+    const types = getVisitTypes();
+    const labels = types.map(t => t.label);
+    expect(labels).toContain('Browse Showroom');
+    expect(labels).toContain('Design Consultation');
+    expect(labels).toContain('Fabric Swatch Viewing');
+    expect(labels).toContain('Order Pickup');
+  });
+});
+
+// ── Appointment slot edge cases ───────────────────────────────────
+
+describe('getAvailableAppointmentSlots — edge cases', () => {
+  it('swatch slots have 30-min duration', async () => {
+    const slots = await getAvailableAppointmentSlots('swatch');
+    slots.forEach(s => {
+      expect(s.duration).toBe(30);
+      expect(s.visitLabel).toBe('Fabric Swatch Viewing');
+    });
+  });
+
+  it('pickup slots have 30-min duration', async () => {
+    const slots = await getAvailableAppointmentSlots('pickup');
+    slots.forEach(s => {
+      expect(s.duration).toBe(30);
+      expect(s.visitLabel).toBe('Order Pickup');
+    });
+  });
+
+  it('cancelled appointments do not reduce availability', async () => {
+    const date = futureWed();
+    __seed('ShowroomAppointments', Array.from({ length: 3 }, (_, i) => ({
+      _id: `a${i}`, date, timeSlot: '10:00', duration: 30, visitType: 'browse', status: 'cancelled',
+    })));
+    const slots = await getAvailableAppointmentSlots('browse');
+    const match = slots.find(s => s.date === date && s.timeSlot === '10:00');
+    expect(match).toBeDefined();
+    expect(match.spotsLeft).toBe(3); // All 3 cancelled, so full availability
+  });
+
+  it('consultation overlaps block adjacent slots', async () => {
+    const date = futureWed();
+    // A 60-min consultation at 10:00 occupies both 10:00 and 10:30
+    __seed('ShowroomAppointments', Array.from({ length: 3 }, (_, i) => ({
+      _id: `a${i}`, date, timeSlot: '10:00', duration: 60, visitType: 'consultation', status: 'confirmed',
+    })));
+    const slots = await getAvailableAppointmentSlots('browse');
+    // 10:30 should also be fully blocked since all 3 consultations overlap it
+    const match1030 = slots.find(s => s.date === date && s.timeSlot === '10:30');
+    expect(match1030).toBeUndefined();
   });
 });
