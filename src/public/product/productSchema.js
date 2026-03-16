@@ -196,6 +196,10 @@ export function detectProductCategory(product) {
   if (colls.some(c => c.includes('wall-hugger'))) return 'Wall Hugger Futon Frame';
   if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
   if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
+  if (colls.some(c => c.includes('cover'))) return 'Futon Cover';
+  if (colls.some(c => c.includes('outdoor'))) return 'Outdoor Furniture';
+  if (colls.some(c => c.includes('pillow'))) return 'Pillow';
+  if (colls.some(c => c.includes('log'))) return 'Log Futon Frame';
   return 'Furniture';
 }
 
@@ -215,6 +219,10 @@ export function getCategoryFromCollections(collections) {
   if (collArr.some(c => c.includes('wall-hugger'))) return { label: 'Wall Hugger Frames', path: '/wall-huggers' };
   if (collArr.some(c => c.includes('unfinished'))) return { label: 'Unfinished Wood', path: '/unfinished-wood' };
   if (collArr.some(c => c.includes('casegood') || c.includes('accessor'))) return { label: 'Casegoods & Accessories', path: '/casegoods-accessories' };
+  if (collArr.some(c => c.includes('cover'))) return { label: 'Futon Covers', path: '/covers' };
+  if (collArr.some(c => c.includes('outdoor'))) return { label: 'Outdoor Furniture', path: '/outdoor-furniture' };
+  if (collArr.some(c => c.includes('pillow'))) return { label: 'Pillows', path: '/pillows' };
+  if (collArr.some(c => c.includes('log'))) return { label: 'Log Futon Frames', path: '/log-frames' };
   if (collArr.some(c => c.includes('futon') || c.includes('frame'))) return { label: 'Futon Frames', path: '/futon-frames' };
 
   return { label: 'Shop', path: '/shop-main' };

@@ -85,7 +85,7 @@ export const getProductSchema = webMethod(
         '@id': `${productUrl}#offer`,
         url: productUrl,
         priceCurrency: 'USD',
-        price: product.discountedPrice || product.price,
+        price: product.discountedPrice != null ? product.discountedPrice : product.price,
         availability: product.inStock !== false
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
@@ -599,6 +599,10 @@ export const getCategoryMetaDescription = webMethod(
       'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design sits close to your wall. Perfect for small rooms and apartments. Fast nationwide shipping.',
       'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA from Tulip Poplar hardwood. Ready for your personal stain or paint finish. Fast nationwide shipping.',
       'sales': 'Current deals and clearance on quality futon furniture. Save on frames, mattresses, Murphy beds, and more. Carolina Futons, Hendersonville NC.',
+      'covers': 'Premium futon covers in hundreds of fabrics. Custom and ready-made covers to refresh your futon. Fast nationwide shipping. Carolina Futons.',
+      'outdoor-furniture': 'Outdoor futon furniture built to last. Weather-resistant frames and cushions for patios and porches. Fast nationwide shipping. Carolina Futons.',
+      'pillows': 'Quality accent pillows and bolsters to complement your futon setup. Fast nationwide shipping. Carolina Futons.',
+      'log-frames': 'Rustic log futon frames for cabins and lodges. Natural wood construction with authentic character. Fast nationwide shipping. Carolina Futons.',
     };
     return descriptions[categorySlug] || 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.';
   }
@@ -618,6 +622,10 @@ function getCategoryLabel(product) {
   if (collections.some(c => c.includes('wall-hugger'))) return 'Wall Hugger Futon Frame';
   if (collections.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
   if (collections.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
+  if (collections.some(c => c.includes('cover'))) return 'Futon Cover';
+  if (collections.some(c => c.includes('outdoor'))) return 'Outdoor Furniture';
+  if (collections.some(c => c.includes('pillow'))) return 'Pillow';
+  if (collections.some(c => c.includes('log'))) return 'Log Futon Frame';
   return 'Furniture';
 }
 
@@ -736,6 +744,10 @@ export const getCategoryOgTags = webMethod(
       'wall-huggers': 'Wall Hugger Frames',
       'unfinished-wood': 'Unfinished Wood Furniture',
       'sales': 'Sale & Clearance',
+      'covers': 'Futon Covers',
+      'outdoor-furniture': 'Outdoor Furniture',
+      'pillows': 'Pillows & Bolsters',
+      'log-frames': 'Log Futon Frames',
     };
 
     const title = `${titles[categorySlug] || 'Shop'} | Carolina Futons`;
@@ -767,6 +779,10 @@ function getCategoryMetaDescriptionSync(slug) {
     'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design. Fast nationwide shipping.',
     'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA. Fast nationwide shipping.',
     'sales': 'Current deals and clearance on quality futon furniture at Carolina Futons.',
+    'covers': 'Premium futon covers in hundreds of fabrics. Carolina Futons.',
+    'outdoor-furniture': 'Outdoor futon furniture for patios and porches. Carolina Futons.',
+    'pillows': 'Quality accent pillows and bolsters. Carolina Futons.',
+    'log-frames': 'Rustic log futon frames for cabins and lodges. Carolina Futons.',
   };
   return descriptions[slug] || 'Quality futon furniture since 1991. Carolina Futons, Hendersonville NC.';
 }
@@ -956,6 +972,10 @@ const CATEGORY_TITLES = {
   'wall-huggers': 'Wall Hugger Futon Frames — Strata Furniture',
   'unfinished-wood': 'Unfinished Wood Furniture — Made in USA',
   'sales': 'Sale & Clearance — Furniture Deals',
+  'covers': 'Futon Covers — Premium Fabrics',
+  'outdoor-furniture': 'Outdoor Futon Furniture',
+  'pillows': 'Accent Pillows & Bolsters',
+  'log-frames': 'Log Futon Frames — Rustic Cabin Furniture',
 };
 
 /**
@@ -1063,7 +1083,7 @@ export const getCanonicalUrl = webMethod(
       case 'blog':
         return `${BASE_URL}/blog`;
       case 'blogPost':
-        return `${BASE_URL}/post/${slug}`;
+        return `${BASE_URL}/blog/${slug}`;
       case 'faq':
         return `${BASE_URL}/faq`;
       case 'contact':

@@ -568,7 +568,7 @@ describe('getCanonicalUrl — edge cases', () => {
   });
 
   it('appends slug to blog post path', () => {
-    expect(getCanonicalUrl('blogPost', 'my-post')).toContain('/post/my-post');
+    expect(getCanonicalUrl('blogPost', 'my-post')).toContain('/blog/my-post');
   });
 
   it('handles empty slug for product', () => {

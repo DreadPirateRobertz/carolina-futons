@@ -671,7 +671,7 @@ describe('getCanonicalUrl', () => {
 
   it('generates blog post canonical URL', () => {
     expect(getCanonicalUrl('blogPost', 'how-to-choose'))
-      .toBe('https://www.carolinafutons.com/post/how-to-choose');
+      .toBe('https://www.carolinafutons.com/blog/how-to-choose');
   });
 
   it('returns base URL for unknown page type', () => {
