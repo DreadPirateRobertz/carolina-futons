@@ -54,9 +54,8 @@ function initVideoGrid() {
       }
 
       try {
-        $item('#videoCategoryBadge').text = itemData.category === 'futon' ? 'Futon Frame'
-          : itemData.category === 'conversion' ? 'Conversion Demo'
-          : 'Overview';
+        const badgeLabels = { futon: 'Futon Frame', conversion: 'Conversion Demo', assembly: 'Assembly Guide', overview: 'Overview' };
+        $item('#videoCategoryBadge').text = badgeLabels[itemData.category] || 'Video';
       } catch (e) {}
 
       // Play button
@@ -144,16 +143,35 @@ function applyFilter() {
 
 function playVideo(videoData) {
   try {
-    const player = $w('#videoPlayer');
-    if (!player || !videoData.videoUrl) return;
+    if (!videoData.videoUrl && !videoData.embedUrl) return;
 
-    player.src = videoData.videoUrl;
-    player.play();
     trackEvent('video_play', { title: videoData.title, category: videoData.category });
     announce($w, `Now playing: ${videoData.title}`);
 
     try { $w('#nowPlayingTitle').text = videoData.title; } catch (e) {}
     try { $w('#videoPlayerContainer').expand(); } catch (e) {}
+
+    // YouTube embeds use the HTML component; Wix/MP4 use the video player
+    if (videoData.embedUrl) {
+      try {
+        $w('#videoPlayer').pause();
+        $w('#videoPlayer').hide();
+      } catch (e) {}
+      try {
+        $w('#videoEmbed').postMessage({ type: 'loadVideo', embedUrl: videoData.embedUrl, title: videoData.title });
+        $w('#videoEmbed').show();
+      } catch (e) {}
+    } else {
+      try { $w('#videoEmbed').hide(); } catch (e) {}
+      try {
+        const player = $w('#videoPlayer');
+        if (player) {
+          player.show();
+          player.src = videoData.videoUrl;
+          player.play();
+        }
+      } catch (e) {}
+    }
 
     // Update product link (handler registered once in initVideoGrid)
     if (videoData.productSlug) {
