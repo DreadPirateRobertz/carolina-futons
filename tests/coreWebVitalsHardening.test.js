@@ -199,6 +199,16 @@ describe('getBaseline', () => {
     expect(result.baseline.period).toBe('30 days');
   });
 
+  it('handles days: 0 by clamping to 1 (not defaulting to 7)', async () => {
+    __seed('PerformanceMetrics', [
+      { lcp: 2000, inp: 150, cls: 0.08, deviceType: 'desktop', page: '/home', timestamp: new Date() },
+    ]);
+
+    const result = await getBaseline({ days: 0 });
+    expect(result.success).toBe(true);
+    expect(result.baseline.period).toBe('1 days');
+  });
+
   it('includes overall pass/fail status', async () => {
     __seed('PerformanceMetrics', [
       { lcp: 5000, inp: 600, cls: 0.5, deviceType: 'desktop', page: '/home', timestamp: new Date() },

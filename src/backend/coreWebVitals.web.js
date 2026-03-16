@@ -129,7 +129,7 @@ export const getPerformanceSummary = webMethod(
   Permissions.Admin,
   async (options = {}) => {
     try {
-      const days = Math.min(Math.max(1, options.days || 7), 90);
+      const days = Math.min(Math.max(1, options.days ?? 7), 90);
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
       let query = wixData.query(METRICS_COLLECTION)
@@ -479,7 +479,7 @@ export const getBaseline = webMethod(
   Permissions.Admin,
   async (options = {}) => {
     try {
-      const days = Math.min(Math.max(1, options.days || 7), 90);
+      const days = Math.min(Math.max(1, options.days ?? 7), 90);
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
       const result = await wixData.query(METRICS_COLLECTION)
@@ -574,52 +574,33 @@ export const measureVitals = webMethod(
   Permissions.Anyone,
   async (data) => {
     try {
-      if (!data?.sessionId || !data?.page) {
-        return { success: false, error: 'sessionId and page are required' };
-      }
       if (!data?.vitals || typeof data.vitals !== 'object') {
         return { success: false, error: 'vitals object is required' };
       }
 
-      const sessionId = sanitize(data.sessionId, 100);
-      const page = sanitize(data.page, 500);
-      if (!sessionId || !page) {
-        return { success: false, error: 'Invalid sessionId or page' };
+      // Delegate storage to reportMetrics
+      const reportResult = await reportMetrics({
+        sessionId: data.sessionId,
+        page: data.page,
+        deviceType: data.deviceType,
+        connectionType: data.connectionType,
+        ...data.vitals,
+      });
+
+      if (!reportResult.success) {
+        return reportResult;
       }
 
-      const deviceType = VALID_DEVICE_TYPES.includes(data.deviceType)
-        ? data.deviceType : 'desktop';
-
-      const vitals = data.vitals;
-      const record = {
-        sessionId,
-        page,
-        deviceType,
-        lcp: clampMetric(vitals.lcp, 0, 60000),
-        fid: clampMetric(vitals.fid, 0, 10000),
-        inp: clampMetric(vitals.inp, 0, 10000),
-        cls: clampMetric(vitals.cls, 0, 10),
-        ttfb: clampMetric(vitals.ttfb, 0, 30000),
-        fcp: clampMetric(vitals.fcp, 0, 30000),
-        connectionType: sanitize(data.connectionType || 'unknown', 20),
-        timestamp: new Date(),
-      };
-
-      await wixData.insert(METRICS_COLLECTION, record);
-
-      // Rate each provided vital
+      // Add per-metric ratings on top of reportMetrics result
       const ratings = {};
       for (const metric of VALID_METRICS) {
-        const value = record[metric];
-        if (typeof value === 'number' && value > 0) {
+        const value = clampMetric(data.vitals[metric], 0, 60000);
+        if (typeof data.vitals[metric] === 'number' && value > 0) {
           ratings[metric] = rateMetric(value, DEFAULT_THRESHOLDS[metric]);
         }
       }
 
-      // Check violations
-      const violations = checkBudgetViolations(record);
-
-      return { success: true, ratings, violations };
+      return { success: true, ratings, violations: reportResult.violations };
     } catch (err) {
       console.error('[coreWebVitals] measureVitals error:', err);
       return { success: false, error: 'Failed to measure vitals' };

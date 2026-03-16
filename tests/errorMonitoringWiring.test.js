@@ -492,4 +492,147 @@ describe('createErrorBoundaryLogger', () => {
     await logger(new Error('fail'));
     expect(_collections.ErrorLogs[0].severity).toBe('error');
   });
+
+  it('never throws even when logError fails internally', async () => {
+    // Force wixData.insert to throw
+    const wixData = (await import('wix-data')).default;
+    const origInsert = wixData.insert;
+    wixData.insert = async () => { throw new Error('DB down'); };
+
+    const logger = createErrorBoundaryLogger('checkout');
+    const result = await logger(new Error('payment failed'));
+    // Must return gracefully, never throw
+    expect(result).toBeDefined();
+    expect(result.success).toBe(false);
+
+    wixData.insert = origInsert;
+  });
+
+  it('handles non-string context gracefully', () => {
+    const logger = createErrorBoundaryLogger(null);
+    expect(typeof logger).toBe('function');
+  });
+
+  it('handles numeric context gracefully', async () => {
+    const logger = createErrorBoundaryLogger(42);
+    const result = await logger(new Error('test'));
+    expect(result.success).toBe(true);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// configureAlert — additional edge cases from review
+// ═══════════════════════════════════════════════════════════════════
+describe('configureAlert — edge cases', () => {
+  it('rejects Infinity thresholdCount', async () => {
+    const result = await configureAlert({
+      name: 'Bad Threshold',
+      contextPattern: 'test',
+      thresholdCount: Infinity,
+      windowMinutes: 5,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('threshold');
+  });
+
+  it('rejects NaN windowMinutes', async () => {
+    const result = await configureAlert({
+      name: 'Bad Window',
+      contextPattern: 'test',
+      thresholdCount: 3,
+      windowMinutes: NaN,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('window');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// checkAlertConditions — fail-closed + per-rule isolation
+// ═══════════════════════════════════════════════════════════════════
+describe('checkAlertConditions — resilience', () => {
+  it('continues evaluating rules when one rule query fails', async () => {
+    __seed('AlertRules', [
+      { _id: 'r1', name: 'Good Rule', contextPattern: 'checkout', thresholdCount: 1, windowMinutes: 60, enabled: true },
+      { _id: 'r2', name: 'Bad Rule', contextPattern: 'corrupt', windowMinutes: undefined, thresholdCount: 1, enabled: true },
+    ]);
+
+    const now = new Date();
+    __seed('ErrorLogs', [
+      { _id: 'l1', context: 'checkout', _createdDate: now },
+    ]);
+
+    const result = await checkAlertConditions();
+    expect(result.success).toBe(true);
+    // Both rules should produce results
+    expect(result.alerts).toHaveLength(2);
+    // Good rule should evaluate normally
+    const goodAlert = result.alerts.find(a => a.rule === 'Good Rule');
+    expect(goodAlert.triggered).toBe(true);
+  });
+
+  it('fail-closed: failed rule reports triggered=true', async () => {
+    // Force wixData.query to throw for a specific pattern
+    const wixData = (await import('wix-data')).default;
+    const origQuery = wixData.query;
+    let callCount = 0;
+    wixData.query = (col) => {
+      callCount++;
+      if (callCount > 1) throw new Error('DB timeout');
+      return origQuery(col);
+    };
+
+    __seed('AlertRules', [
+      { _id: 'r1', name: 'Failing Rule', contextPattern: 'test', thresholdCount: 1, windowMinutes: 60, enabled: true },
+    ]);
+    __seed('ErrorLogs', []);
+
+    const result = await checkAlertConditions();
+    expect(result.success).toBe(true);
+    expect(result.alerts[0].triggered).toBe(true);
+    expect(result.alerts[0].error).toBeDefined();
+
+    wixData.query = origQuery;
+  });
+
+  it('case-insensitive messagePattern matching', async () => {
+    __seed('AlertRules', [{
+      _id: 'r1',
+      name: 'Timeout Alert',
+      messagePattern: 'TIMEOUT',
+      thresholdCount: 1,
+      windowMinutes: 60,
+      enabled: true,
+    }]);
+
+    const now = new Date();
+    __seed('ErrorLogs', [
+      { _id: 'l1', message: 'Network timeout on API call', context: 'api', _createdDate: now },
+    ]);
+
+    const result = await checkAlertConditions();
+    expect(result.alerts[0].triggered).toBe(true);
+    expect(result.alerts[0].currentCount).toBe(1);
+  });
+
+  it('exact threshold boundary: count === thresholdCount triggers', async () => {
+    __seed('AlertRules', [{
+      _id: 'r1',
+      name: 'Boundary Test',
+      contextPattern: 'test',
+      thresholdCount: 2,
+      windowMinutes: 60,
+      enabled: true,
+    }]);
+
+    const now = new Date();
+    __seed('ErrorLogs', [
+      { _id: 'l1', context: 'test', _createdDate: now },
+      { _id: 'l2', context: 'test', _createdDate: now },
+    ]);
+
+    const result = await checkAlertConditions();
+    expect(result.alerts[0].triggered).toBe(true);
+    expect(result.alerts[0].currentCount).toBe(2);
+  });
 });

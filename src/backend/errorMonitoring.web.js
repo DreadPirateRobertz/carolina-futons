@@ -533,45 +533,57 @@ export const checkAlertConditions = webMethod(
       const alerts = [];
 
       for (const rule of rulesResult.items) {
-        const windowCutoff = new Date(Date.now() - rule.windowMinutes * 60 * 1000);
+        try {
+          const windowCutoff = new Date(Date.now() - rule.windowMinutes * 60 * 1000);
 
-        // Build query matching this rule's filters
-        let query = wixData.query(ERROR_LOGS_COLLECTION)
-          .ge('_createdDate', windowCutoff);
+          // Build query matching this rule's filters
+          let query = wixData.query(ERROR_LOGS_COLLECTION)
+            .ge('_createdDate', windowCutoff);
 
-        if (rule.contextPattern) {
-          query = query.contains('context', rule.contextPattern);
+          if (rule.contextPattern) {
+            query = query.contains('context', rule.contextPattern);
+          }
+          if (rule.severityFilter) {
+            query = query.eq('severity', rule.severityFilter);
+          }
+
+          let count;
+          if (rule.messagePattern) {
+            const result = await query.limit(1000).find();
+            const lowerPattern = rule.messagePattern.toLowerCase();
+            count = result.items.filter(i =>
+              (i.message || '').toLowerCase().includes(lowerPattern)
+            ).length;
+          } else {
+            count = await query.count();
+          }
+
+          alerts.push({
+            rule: rule.name,
+            ruleId: rule._id,
+            triggered: count >= rule.thresholdCount,
+            currentCount: count,
+            threshold: rule.thresholdCount,
+            window: `${rule.windowMinutes} minutes`,
+          });
+        } catch (ruleErr) {
+          console.error(`checkAlertConditions: rule "${rule.name}" (${rule._id}) failed:`, ruleErr);
+          alerts.push({
+            rule: rule.name,
+            ruleId: rule._id,
+            triggered: true,
+            error: 'Rule evaluation failed',
+            currentCount: 0,
+            threshold: rule.thresholdCount,
+            window: `${rule.windowMinutes} minutes`,
+          });
         }
-        if (rule.severityFilter) {
-          query = query.eq('severity', rule.severityFilter);
-        }
-
-        let count;
-        if (rule.messagePattern) {
-          // Must post-filter by message since contains on message might have edge cases
-          const result = await query.limit(1000).find();
-          const lowerPattern = rule.messagePattern.toLowerCase();
-          count = result.items.filter(i =>
-            (i.message || '').toLowerCase().includes(lowerPattern)
-          ).length;
-        } else {
-          count = await query.count();
-        }
-
-        alerts.push({
-          rule: rule.name,
-          ruleId: rule._id,
-          triggered: count >= rule.thresholdCount,
-          currentCount: count,
-          threshold: rule.thresholdCount,
-          window: `${rule.windowMinutes} minutes`,
-        });
       }
 
       return { success: true, alerts };
     } catch (err) {
       console.error('checkAlertConditions error:', err);
-      return { success: false, error: 'Unable to check alert conditions' };
+      return { success: false, error: 'ALERT SYSTEM FAILURE: Unable to evaluate alert conditions' };
     }
   }
 );
@@ -581,26 +593,32 @@ export const checkAlertConditions = webMethod(
 const CRITICAL_CONTEXTS = ['checkout', 'payment'];
 
 export function createErrorBoundaryLogger(context) {
+  const safeContext = typeof context === 'string' ? context : String(context || 'unknown');
   return async (error, metadata = {}) => {
-    const isCritical = CRITICAL_CONTEXTS.some(c => context.startsWith(c));
+    try {
+      const isCritical = CRITICAL_CONTEXTS.some(c => safeContext.startsWith(c));
 
-    let message = 'Unknown error';
-    let stack = '';
+      let message = 'Unknown error';
+      let stack = '';
 
-    if (error instanceof Error) {
-      message = error.message || 'Unknown error';
-      stack = error.stack || '';
-    } else if (typeof error === 'string') {
-      message = error;
+      if (error instanceof Error) {
+        message = error.message || 'Unknown error';
+        stack = error.stack || '';
+      } else if (typeof error === 'string') {
+        message = error;
+      }
+
+      return logError({
+        message,
+        stack,
+        context: safeContext,
+        severity: isCritical ? 'critical' : 'error',
+        metadata,
+      });
+    } catch (loggingErr) {
+      console.error(`[errorBoundaryLogger] Failed to log for context="${safeContext}":`, loggingErr);
+      return { success: false, error: 'Error boundary logging failed' };
     }
-
-    return logError({
-      message,
-      stack,
-      context,
-      severity: isCritical ? 'critical' : 'error',
-      metadata,
-    });
   };
 }
 
