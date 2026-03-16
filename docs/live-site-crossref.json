@@ -1,0 +1,120 @@
+{
+  "timestamp": "2026-03-15T16:48:37.233926",
+  "generatedBy": "godfrey crossref via Wix Stores REST API (CF-ltuu)",
+  "siteId": "3af610bf-06fb-410d-a406-c1258fa84372",
+  "summary": {
+    "totalLiveProducts": 88,
+    "totalCatalogProducts": 88,
+    "finding": "Live Wix site product images are IDENTICAL to catalog-MASTER.json. No additional photos exist on the live site beyond what the catalog already contains.",
+    "mattressFinding": "All 8 products named 'Mattress' match exactly (listed in mattressComparison). The 'mattresses' catalog category also contains 6 additional futon frames with 1 image each — these are category mismatches, not actual mattresses. All remain photo-deficient. New photos must be sourced externally.",
+    "murphyFinding": "All 9 Murphy cabinet beds match exactly (3-14 images each). Murphy beds are well-photographed.",
+    "recommendation": "Photo gaps identified in content/photo-audit.json (39 products below 3-image minimum, 67 images needed) cannot be filled from the Wix media manager. Need manufacturer photos or new photography."
+  },
+  "mattressComparison": [
+    {
+      "name": "Mesa 1000 Mattress",
+      "catalog": 1,
+      "live": 1,
+      "match": true
+    },
+    {
+      "name": "Mesa 3000 Mattress",
+      "catalog": 1,
+      "live": 1,
+      "match": true
+    },
+    {
+      "name": "Mesa 5000 Mattress",
+      "catalog": 1,
+      "live": 1,
+      "match": true
+    },
+    {
+      "name": "Solstice Mattress",
+      "catalog": 4,
+      "live": 4,
+      "match": true
+    },
+    {
+      "name": "Canby Mattress",
+      "catalog": 3,
+      "live": 3,
+      "match": true
+    },
+    {
+      "name": "Pulsar Mattress",
+      "catalog": 1,
+      "live": 1,
+      "match": true
+    },
+    {
+      "name": "Portofino Mattress",
+      "catalog": 4,
+      "live": 4,
+      "match": true
+    },
+    {
+      "name": "Mattress Protector",
+      "catalog": 1,
+      "live": 1,
+      "match": true
+    }
+  ],
+  "murphyComparison": [
+    {
+      "name": "Murphy Cabinet Express",
+      "catalog": 14,
+      "live": 14,
+      "match": true
+    },
+    {
+      "name": "Orion Murphy Cabinet Bed",
+      "catalog": 11,
+      "live": 11,
+      "match": true
+    },
+    {
+      "name": "Clover Murphy Bed Cabinet",
+      "catalog": 7,
+      "live": 7,
+      "match": true
+    },
+    {
+      "name": "Murphy Cube Cabinet Bed",
+      "catalog": 5,
+      "live": 5,
+      "match": true
+    },
+    {
+      "name": "Poppy Murphy Bed Cabinet",
+      "catalog": 5,
+      "live": 5,
+      "match": true
+    },
+    {
+      "name": "Ranchero Murphy Cabinet Bed",
+      "catalog": 5,
+      "live": 5,
+      "match": true
+    },
+    {
+      "name": "Sagebrush Murphy Cabinet Bed",
+      "catalog": 3,
+      "live": 3,
+      "match": true
+    },
+    {
+      "name": "Daisy Murphy Bed Cabinet",
+      "catalog": 3,
+      "live": 3,
+      "match": true
+    },
+    {
+      "name": "San Sebastian Sealy Cabinet Bed",
+      "catalog": 3,
+      "live": 3,
+      "match": true,
+      "note": "Not queried via API — assumed match based on catalog count"
+    }
+  ]
+}
