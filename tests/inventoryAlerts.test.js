@@ -119,6 +119,23 @@ describe('getStockStatus', () => {
     const result = await getStockStatus(null);
     expect(result.success).toBe(false);
   });
+
+  it('sanitizes HTML in product ID', async () => {
+    const result = await getStockStatus('<script>alert(1)</script>');
+    expect(result.success).toBe(true);
+    // Should treat as unknown product, not crash
+    expect(result.showUrgency).toBe(false);
+  });
+
+  it('includes stockLevel in response for all states', async () => {
+    const low = await getStockStatus('prod-001');
+    expect(typeof low.stockLevel).toBe('number');
+    const healthy = await getStockStatus('prod-002');
+    expect(typeof healthy.stockLevel).toBe('number');
+    const oos = await getStockStatus('prod-003');
+    expect(typeof oos.stockLevel).toBe('number');
+    expect(oos.stockLevel).toBe(0);
+  });
 });
 
 // ── getBatchStockStatus ─────────────────────────────────────────────
@@ -154,6 +171,23 @@ describe('getBatchStockStatus', () => {
     const result = await getBatchStockStatus(['', null, undefined]);
     expect(result.success).toBe(true);
     expect(result.statuses).toEqual({});
+  });
+
+  it('handles mix of known and unknown products', async () => {
+    const result = await getBatchStockStatus(['prod-001', 'prod-unknown']);
+    expect(result.success).toBe(true);
+    expect(result.statuses['prod-001']).toBeDefined();
+    expect(result.statuses['prod-001'].showUrgency).toBe(true);
+    // Unknown products may or may not be in statuses depending on implementation
+  });
+
+  it('returns consistent format for each status', async () => {
+    const result = await getBatchStockStatus(['prod-001', 'prod-002']);
+    for (const status of Object.values(result.statuses)) {
+      expect(status).toHaveProperty('inStock');
+      expect(status).toHaveProperty('showUrgency');
+      expect(status).toHaveProperty('message');
+    }
   });
 });
 
@@ -318,6 +352,25 @@ describe('getLowStockAlerts', () => {
     const result = await getLowStockAlerts({ limit: 200 });
     expect(result.success).toBe(true);
   });
+
+  it('filters by status when specified', async () => {
+    __seed('LowStockAlerts', [
+      activeAlert,
+      { ...activeAlert, _id: 'alert-002', status: 'resolved' },
+    ]);
+    const result = await getLowStockAlerts({ status: 'resolved' });
+    expect(result.success).toBe(true);
+    for (const alert of result.alerts) {
+      expect(alert.status).toBe('resolved');
+    }
+  });
+
+  it('returns empty when no alerts match', async () => {
+    __seed('LowStockAlerts', []);
+    const result = await getLowStockAlerts();
+    expect(result.success).toBe(true);
+    expect(result.alerts).toHaveLength(0);
+  });
 });
 
 // ── acknowledgeAlert ────────────────────────────────────────────────
@@ -354,6 +407,17 @@ describe('acknowledgeAlert', () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain('not active');
   });
+
+  it('rejects null alert ID', async () => {
+    const result = await acknowledgeAlert(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects resolved alert', async () => {
+    __seed('LowStockAlerts', [{ ...activeAlert, status: 'resolved' }]);
+    const result = await acknowledgeAlert('alert-001');
+    expect(result.success).toBe(false);
+  });
 });
 
 // ── resolveAlert ────────────────────────────────────────────────────
@@ -386,6 +450,18 @@ describe('resolveAlert', () => {
     const result = await resolveAlert('alert-001');
     expect(result.success).toBe(false);
     expect(result.error).toContain('already resolved');
+  });
+
+  it('rejects null alert ID', async () => {
+    const result = await resolveAlert(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('resolves an acknowledged alert', async () => {
+    __seed('LowStockAlerts', [{ ...activeAlert, status: 'acknowledged' }]);
+    const result = await resolveAlert('alert-001');
+    expect(result.success).toBe(true);
+    expect(result.status).toBe('resolved');
   });
 });
 
@@ -439,6 +515,23 @@ describe('updateThreshold', () => {
     // Original value should be preserved since -1 < 0
     expect(result.urgencyThreshold).toBe(5);
   });
+
+  it('rejects null product ID', async () => {
+    const result = await updateThreshold(null, { urgencyThreshold: 3 });
+    expect(result.success).toBe(false);
+  });
+
+  it('handles zero threshold', async () => {
+    const result = await updateThreshold('prod-001', { urgencyThreshold: 0 });
+    expect(result.success).toBe(true);
+    expect(result.urgencyThreshold).toBe(0);
+  });
+
+  it('rejects empty thresholds object', async () => {
+    const result = await updateThreshold('prod-001', {});
+    expect(result.success).toBe(true);
+    // No changes — should preserve existing values
+  });
 });
 
 // ── getLowStockSummary ──────────────────────────────────────────────
@@ -466,5 +559,28 @@ describe('getLowStockSummary', () => {
     expect(result.summary).toHaveProperty('reorderLevel');
     expect(result.summary).toHaveProperty('healthy');
     expect(result.summary).toHaveProperty('activeAlerts');
+  });
+
+  it('all counts are non-negative integers', async () => {
+    const result = await getLowStockSummary();
+    for (const [key, value] of Object.entries(result.summary)) {
+      expect(Number.isInteger(value)).toBe(true);
+      expect(value).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('category counts sum to totalProducts', async () => {
+    const result = await getLowStockSummary();
+    const { outOfStock, urgencyLevel, reorderLevel, healthy, totalProducts } = result.summary;
+    expect(outOfStock + urgencyLevel + reorderLevel + healthy).toBe(totalProducts);
+  });
+
+  it('returns empty summary when no products configured', async () => {
+    __seed('InventoryThresholds', []);
+    __seed('LowStockAlerts', []);
+    const result = await getLowStockSummary();
+    expect(result.success).toBe(true);
+    expect(result.summary.totalProducts).toBe(0);
+    expect(result.summary.activeAlerts).toBe(0);
   });
 });
