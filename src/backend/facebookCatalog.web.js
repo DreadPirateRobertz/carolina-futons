@@ -337,6 +337,189 @@ export function getEnhancedCatalogFields(product) {
   return fields;
 }
 
+// ── Feed Validation ─────────────────────────────────────────────────
+
+/**
+ * Meta API rate limits — requests per hour per access token.
+ * These are informational for callers to implement backoff.
+ */
+const META_RATE_LIMITS = {
+  catalogBatchApi: 4800,     // Batch API: 4800/hr
+  conversionsApi: 100000,    // CAPI: ~100k events/hr
+  audienceApi: 700,          // Custom Audiences: 700/hr
+};
+
+/**
+ * Validate a product for Meta Commerce catalog feed requirements.
+ * Returns { valid, errors, warnings } for the product.
+ *
+ * @param {Object} product - Wix product object
+ * @returns {Object} { valid: boolean, errors: string[], warnings: string[] }
+ */
+export function validateFeedProduct(product) {
+  if (!product || typeof product !== 'object') {
+    return { valid: false, errors: ['Product object is required'], warnings: [] };
+  }
+
+  const errors = [];
+  const warnings = [];
+
+  // Required: product ID
+  if (!product._id) {
+    errors.push('Missing product ID (_id)');
+  }
+
+  // Required: title (name)
+  if (!product.name || !stripHtml(product.name).trim()) {
+    errors.push('Missing or empty product title (name)');
+  } else if (stripHtml(product.name).length > 200) {
+    warnings.push('Product title exceeds 200 chars — may be truncated in ads');
+  }
+
+  // Required: price
+  const price = Number(product.price);
+  if (!price || price <= 0) {
+    errors.push('Missing or invalid price — must be positive number');
+  }
+
+  // Required: image
+  const imageUrl = getImageUrl(product.mainMedia || product.image || '');
+  if (!imageUrl) {
+    errors.push('Missing product image — required for catalog');
+  } else if (!imageUrl.startsWith('https://')) {
+    warnings.push('Image URL is not HTTPS — Meta requires HTTPS for catalog images');
+  }
+
+  // Required: availability
+  if (product.inStock === undefined && product.inventoryStatus === undefined) {
+    warnings.push('No explicit stock status — defaulting to in stock');
+  }
+
+  // Required: link (slug-based)
+  if (!product.slug) {
+    errors.push('Missing product slug — required for product link');
+  }
+
+  // Optional but recommended: description
+  if (!product.description) {
+    warnings.push('Missing description — reduces ad quality');
+  }
+
+  // Optional: brand detection
+  const brand = detectBrand(product);
+  if (brand === 'Night & Day Furniture' && !product.brand) {
+    warnings.push('No explicit brand — using default');
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+/**
+ * Normalize a Wix media URL for Meta catalog feed.
+ * Ensures HTTPS, proper dimensions for DPA ads (min 600x600 recommended).
+ *
+ * @param {string|Object} media - Wix media reference
+ * @param {Object} [options]
+ * @param {number} [options.width=1200] - Target width
+ * @param {number} [options.height=1200] - Target height
+ * @param {string} [options.format='jpg'] - Image format
+ * @returns {string} Normalized HTTPS URL
+ */
+export function normalizeImageUrl(media, options = {}) {
+  const baseUrl = getImageUrl(media);
+  if (!baseUrl) return '';
+
+  const { width = 1200, height = 1200, format = 'jpg' } = options;
+
+  // Wix static URLs support resize via /v1/fill/ path segment
+  if (baseUrl.includes('static.wixstatic.com/media/')) {
+    const mediaId = baseUrl.split('/media/')[1]?.split(/[?#]/)[0];
+    if (mediaId) {
+      return `https://static.wixstatic.com/media/${mediaId}/v1/fill/w_${width},h_${height},al_c,q_85,enc_auto/${mediaId}.${format}`;
+    }
+  }
+
+  return baseUrl;
+}
+
+/**
+ * Process a batch of products for catalog feed with partial-failure recovery.
+ * Validates each product, generates enhanced fields, continues on failure.
+ *
+ * @param {Array<Object>} products - Array of Wix product objects
+ * @returns {Object} { success, processed, failed, results, errors }
+ */
+export function buildCatalogBatch(products) {
+  if (!Array.isArray(products)) {
+    return { success: false, processed: 0, failed: 0, results: [], errors: ['Input must be an array'] };
+  }
+
+  const results = [];
+  const errors = [];
+  let processed = 0;
+  let failed = 0;
+
+  for (const product of products) {
+    try {
+      const validation = validateFeedProduct(product);
+
+      if (!validation.valid) {
+        failed++;
+        errors.push({
+          productId: product?._id || 'unknown',
+          productName: stripHtml(product?.name || ''),
+          errors: validation.errors,
+          warnings: validation.warnings,
+        });
+        continue;
+      }
+
+      const enhanced = getEnhancedCatalogFields(product);
+      const imageUrl = normalizeImageUrl(product.mainMedia || product.image);
+
+      results.push({
+        id: product._id,
+        title: stripHtml(product.name || ''),
+        description: stripHtml(product.description || ''),
+        availability: product.inStock !== false ? 'in stock' : 'out of stock',
+        condition: 'new',
+        price: `${(product.discountedPrice || product.price || 0).toFixed(2)} USD`,
+        link: `https://www.carolinafutons.com/product-page/${sanitize(product.slug, 100)}`,
+        image_link: imageUrl,
+        brand: enhanced.custom_label_1 || 'Carolina Futons',
+        ...enhanced,
+        _warnings: validation.warnings,
+      });
+      processed++;
+    } catch (err) {
+      console.error('[facebookCatalog] buildCatalogBatch product error:', err);
+      failed++;
+      errors.push({
+        productId: product?._id || 'unknown',
+        productName: stripHtml(product?.name || ''),
+        errors: [`Unexpected error: ${err.message}`],
+      });
+    }
+  }
+
+  return {
+    success: products.length === 0 || failed < products.length,
+    processed,
+    failed,
+    total: products.length,
+    results,
+    errors,
+  };
+}
+
+/**
+ * Get Meta API rate limit configuration.
+ * @returns {Object} Rate limit info per API endpoint
+ */
+export function getMetaRateLimits() {
+  return { ...META_RATE_LIMITS };
+}
+
 /**
  * Export customer audience data for Meta Custom Audiences / Lookalike Audiences.
  * Queries orders and aggregates customer data (deduplicated by email).

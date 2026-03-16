@@ -56,6 +56,15 @@ const CATEGORY_HASHTAGS = {
 
 const BASE_HASHTAGS = ['#CarolinaFutons', '#HandcraftedFurniture', '#NCFurniture'];
 
+/**
+ * Pinterest API rate limits — informational for callers.
+ */
+const PINTEREST_RATE_LIMITS = {
+  catalogFeedRefresh: 6,     // Feed refresh: 6/day (every 4 hours)
+  pinCreation: 50,           // Pin creation: 50/hour
+  boardPins: 200,            // Pins per board per day: 200
+};
+
 // ── validateCatalogProduct ───────────────────────────────────────────
 
 /**
@@ -360,6 +369,133 @@ export const generatePinContent = webMethod(
       return { success: false, error: 'Pin content generation failed.', title: '', description: '', hashtags: [], link: '' };
     }
   }
+);
+
+// ── normalizePinterestImageUrl ───────────────────────────────────────
+
+/**
+ * Normalize image URL for Pinterest catalog requirements.
+ * Pinterest requires HTTPS, min 600x600, max 2:3 aspect ratio.
+ *
+ * @param {string} imageUrl - Image URL to normalize
+ * @returns {{ url: string, valid: boolean, issues: string[] }}
+ */
+export const normalizePinterestImageUrl = webMethod(
+  Permissions.Anyone,
+  async (imageUrl) => {
+    const issues = [];
+
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return { url: '', valid: false, issues: ['No image URL provided'] };
+    }
+
+    let url = imageUrl.trim();
+
+    // Convert wix:image:// URIs
+    if (url.startsWith('wix:image:')) {
+      const mediaId = url.replace('wix:image://v1/', '').split('/')[0].split('#')[0];
+      url = `https://static.wixstatic.com/media/${mediaId}/v1/fill/w_1000,h_1000,al_c,q_85,enc_auto/${mediaId}.jpg`;
+    }
+
+    // Check HTTPS
+    if (url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+      issues.push('Converted HTTP to HTTPS — Pinterest requires HTTPS');
+    }
+
+    if (!url.startsWith('https://')) {
+      return { url, valid: false, issues: ['Image URL must be absolute HTTPS'] };
+    }
+
+    // HTTP→HTTPS conversion is a soft warning, not a validity failure
+    return { url, valid: true, issues };
+  }
+);
+
+// ── syncCatalogBatch ────────────────────────────────────────────────
+
+/**
+ * Process a batch of products for Pinterest catalog with partial-failure recovery.
+ * Validates each product, generates pin content, continues on failure.
+ *
+ * @param {Array<Object>} products - Array of Wix product objects
+ * @returns {Promise<{success: boolean, processed: number, failed: number, results: Array, errors: Array}>}
+ */
+export const syncCatalogBatch = webMethod(
+  Permissions.Admin,
+  async (products) => {
+    if (!Array.isArray(products)) {
+      return { success: false, processed: 0, failed: 0, results: [], errors: ['Input must be an array'] };
+    }
+
+    const results = [];
+    const errors = [];
+    let processed = 0;
+    let failed = 0;
+
+    for (const product of products) {
+      try {
+        const validation = await validateCatalogProduct(product);
+
+        if (!validation.valid) {
+          failed++;
+          errors.push({
+            productId: product?._id || 'unknown',
+            productName: sanitize(product?.name || '', 100),
+            issues: validation.issues,
+            warnings: validation.warnings,
+          });
+          continue;
+        }
+
+        const pinContent = await generatePinContent(product);
+        const boardMapping = await mapProductToBoard(product);
+        const imageResult = await normalizePinterestImageUrl(product.mainMedia || '');
+
+        results.push({
+          productId: product._id,
+          productName: validation.sanitizedName,
+          board: boardMapping.board,
+          pinTitle: pinContent.title,
+          pinDescription: pinContent.description,
+          pinLink: pinContent.link,
+          hashtags: pinContent.hashtags,
+          imageUrl: imageResult.url,
+          imageIssues: imageResult.issues,
+          warnings: validation.warnings,
+        });
+        processed++;
+      } catch (err) {
+        console.error('[pinterestCatalogSync] syncCatalogBatch product error:', err);
+        failed++;
+        errors.push({
+          productId: product?._id || 'unknown',
+          productName: sanitize(product?.name || '', 100),
+          issues: [{ field: 'system', type: 'error', message: `Unexpected error: ${err.message}` }],
+        });
+      }
+    }
+
+    return {
+      success: products.length === 0 || failed < products.length,
+      processed,
+      failed,
+      total: products.length,
+      results,
+      errors,
+    };
+  }
+);
+
+// ── getPinterestRateLimits ─────────────────────────────────────────
+
+/**
+ * Get Pinterest API rate limit configuration.
+ * @returns {Promise<Object>} Rate limit info
+ */
+export const getPinterestRateLimits = webMethod(
+  Permissions.Anyone,
+  async () => ({ ...PINTEREST_RATE_LIMITS })
 );
 
 // ── getBoardStructure ────────────────────────────────────────────────
