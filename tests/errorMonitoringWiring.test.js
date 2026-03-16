@@ -541,6 +541,90 @@ describe('createErrorBoundaryLogger', () => {
 // ═══════════════════════════════════════════════════════════════════
 // configureAlert — additional edge cases from review
 // ═══════════════════════════════════════════════════════════════════
+describe('configureAlert — severity normalization', () => {
+  it('normalizes "Critical" to "critical"', async () => {
+    const result = await configureAlert({
+      name: 'Mixed Case',
+      contextPattern: 'test',
+      severityFilter: 'Critical',
+      thresholdCount: 1,
+      windowMinutes: 5,
+    });
+    expect(result.success).toBe(true);
+    expect(result.rule.severityFilter).toBe('critical');
+  });
+
+  it('normalizes "ERROR" to "error"', async () => {
+    const result = await configureAlert({
+      name: 'Upper Case',
+      contextPattern: 'test',
+      severityFilter: 'ERROR',
+      thresholdCount: 1,
+      windowMinutes: 5,
+    });
+    expect(result.success).toBe(true);
+    expect(result.rule.severityFilter).toBe('error');
+  });
+
+  it('falls back to empty string for invalid severity', async () => {
+    const result = await configureAlert({
+      name: 'Bad Severity',
+      contextPattern: 'test',
+      severityFilter: 'fatal',
+      thresholdCount: 1,
+      windowMinutes: 5,
+    });
+    expect(result.success).toBe(true);
+    expect(result.rule.severityFilter).toBe('');
+  });
+});
+
+describe('checkAlertConditions — severity filtering', () => {
+  it('only counts errors matching severityFilter', async () => {
+    __seed('AlertRules', [{
+      _id: 'r1',
+      name: 'Critical Only',
+      severityFilter: 'critical',
+      thresholdCount: 2,
+      windowMinutes: 60,
+      enabled: true,
+    }]);
+
+    const now = new Date();
+    __seed('ErrorLogs', [
+      { _id: 'l1', severity: 'critical', _createdDate: now },
+      { _id: 'l2', severity: 'error', _createdDate: now },
+      { _id: 'l3', severity: 'warning', _createdDate: now },
+      { _id: 'l4', severity: 'critical', _createdDate: now },
+    ]);
+
+    const result = await checkAlertConditions();
+    expect(result.alerts[0].triggered).toBe(true);
+    expect(result.alerts[0].currentCount).toBe(2);
+  });
+
+  it('does not trigger when only non-matching severities exist', async () => {
+    __seed('AlertRules', [{
+      _id: 'r1',
+      name: 'Critical Only',
+      severityFilter: 'critical',
+      thresholdCount: 1,
+      windowMinutes: 60,
+      enabled: true,
+    }]);
+
+    const now = new Date();
+    __seed('ErrorLogs', [
+      { _id: 'l1', severity: 'error', _createdDate: now },
+      { _id: 'l2', severity: 'warning', _createdDate: now },
+    ]);
+
+    const result = await checkAlertConditions();
+    expect(result.alerts[0].triggered).toBe(false);
+    expect(result.alerts[0].currentCount).toBe(0);
+  });
+});
+
 describe('configureAlert — edge cases', () => {
   it('rejects Infinity thresholdCount', async () => {
     const result = await configureAlert({

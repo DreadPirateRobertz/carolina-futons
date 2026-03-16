@@ -222,7 +222,7 @@ export const getPagePerformance = webMethod(
       // Group by page
       const pageMap = {};
       for (const item of result.items) {
-        const page = item.page || 'unknown';
+        const page = item.page ?? 'unknown';
         if (!pageMap[page]) {
           pageMap[page] = { page, samples: [] };
         }
@@ -524,7 +524,7 @@ export const getBaseline = webMethod(
       // Per-page breakdown
       const pageMap = {};
       for (const item of items) {
-        const page = item.page || 'unknown';
+        const page = item.page ?? 'unknown';
         if (!pageMap[page]) pageMap[page] = [];
         pageMap[page].push(item);
       }
@@ -534,7 +534,7 @@ export const getBaseline = webMethod(
       }
 
       // Overall rating: worst of LCP, INP, CLS
-      const coreRatings = ['lcp', 'inp', 'cls'].map(m => overall[m]?.rating || 'no-data');
+      const coreRatings = ['lcp', 'inp', 'cls'].map(m => overall[m]?.rating ?? 'no-data');
       const overallRating = getWorstRating(coreRatings);
 
       return {
