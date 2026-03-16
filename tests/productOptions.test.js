@@ -828,6 +828,65 @@ describe('ProductOptions', () => {
       await openGallery();
       expect($w('#swatchSearch').onInput).toHaveBeenCalled();
     });
+
+    it('filters gallery by swatch name on search input', async () => {
+      await openGallery();
+      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
+      searchHandler({ target: { value: 'Ocean' } });
+      expect($w('#swatchGalleryGrid').data).toHaveLength(1);
+      expect($w('#swatchGalleryGrid').data[0].swatchName).toBe('Ocean Blue');
+    });
+
+    it('filters gallery by material on search input', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      getProductSwatches.mockResolvedValueOnce([
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'https://example.com/sw1.jpg' },
+        { _id: 'sw-2', swatchName: 'Forest Green', colorHex: '#228B22', swatchImage: 'https://example.com/sw2.jpg' },
+      ]);
+      getProductSwatches.mockResolvedValueOnce([
+        { _id: 'sw-1', swatchName: 'Ocean Blue', material: 'Linen', colorHex: '#2244AA' },
+        { _id: 'sw-2', swatchName: 'Forest Green', material: 'Velvet', colorHex: '#228B22' },
+      ]);
+      await initSwatchSelector($w, state);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
+      searchHandler({ target: { value: 'velvet' } });
+      expect($w('#swatchGalleryGrid').data).toHaveLength(1);
+      expect($w('#swatchGalleryGrid').data[0].swatchName).toBe('Forest Green');
+    });
+
+    it('shows all swatches when search is empty', async () => {
+      await openGallery();
+      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
+      searchHandler({ target: { value: '' } });
+      expect($w('#swatchGalleryGrid').data).toHaveLength(2);
+    });
+
+    it('Escape key hides modal and restores focus', async () => {
+      await openGallery();
+      const keydownHandler = globalThis.document.addEventListener.mock.calls
+        .find(c => c[0] === 'keydown')[1];
+      keydownHandler({ key: 'Escape' });
+      expect($w('#swatchGalleryModal').hide).toHaveBeenCalled();
+      expect($w('#swatchViewAll').focus).toHaveBeenCalled();
+    });
+
+    it('Escape key removes its own listener after closing', async () => {
+      await openGallery();
+      const keydownHandler = globalThis.document.addEventListener.mock.calls
+        .find(c => c[0] === 'keydown')[1];
+      keydownHandler({ key: 'Escape' });
+      expect(globalThis.document.removeEventListener).toHaveBeenCalledWith('keydown', keydownHandler);
+    });
+
+    it('non-Escape key does not close modal', async () => {
+      await openGallery();
+      const keydownHandler = globalThis.document.addEventListener.mock.calls
+        .find(c => c[0] === 'keydown')[1];
+      keydownHandler({ key: 'Enter' });
+      expect($w('#swatchGalleryModal').hide).not.toHaveBeenCalled();
+    });
   });
 
   describe('renderSwatchGalleryGrid — onItemReady behavior', () => {
@@ -897,7 +956,7 @@ describe('ProductOptions', () => {
       expect($item('#sgThumb').style.borderWidth).toBe('1px');
     });
 
-    it('shows empty material when swatch has no material', async () => {
+    it('shows empty material in gallery grid cell when swatch has no material', async () => {
       const callback = await setupGalleryGrid();
       const $item = create$w();
       callback($item, { _id: 'sw-1', swatchName: 'Ocean Blue', swatchImage: 'https://example.com/sw.jpg' });
@@ -936,80 +995,6 @@ describe('ProductOptions', () => {
     it('capitalizes first letter of colorFamily', async () => {
       await setupAndClickSwatch({ _id: 'sw-1', swatchName: 'Ocean Blue', colorFamily: 'blue' });
       expect($w('#swatchDetailFamily').text).toBe('Color Family: Blue');
-    });
-  });
-
-  describe('openSwatchGallery — search filtering', () => {
-    beforeEach(() => {
-      globalThis.document = {
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      };
-    });
-
-    afterEach(() => {
-      delete globalThis.document;
-    });
-
-    it('filters gallery by swatch name on search input', async () => {
-      await initSwatchSelector($w, state);
-      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
-      await viewAllHandler();
-      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
-      searchHandler({ target: { value: 'Ocean' } });
-      // Should filter to only Ocean Blue
-      expect($w('#swatchGalleryGrid').data).toHaveLength(1);
-      expect($w('#swatchGalleryGrid').data[0].swatchName).toBe('Ocean Blue');
-    });
-
-    it('filters gallery by material on search input', async () => {
-      const { getProductSwatches } = await import('backend/swatchService.web');
-      getProductSwatches.mockResolvedValueOnce([
-        { _id: 'sw-1', swatchName: 'Ocean Blue', colorHex: '#2244AA', swatchImage: 'https://example.com/sw1.jpg' },
-        { _id: 'sw-2', swatchName: 'Forest Green', colorHex: '#228B22', swatchImage: 'https://example.com/sw2.jpg' },
-      ]);
-      // The gallery call will also need swatches
-      getProductSwatches.mockResolvedValueOnce([
-        { _id: 'sw-1', swatchName: 'Ocean Blue', material: 'Linen', colorHex: '#2244AA' },
-        { _id: 'sw-2', swatchName: 'Forest Green', material: 'Velvet', colorHex: '#228B22' },
-      ]);
-      await initSwatchSelector($w, state);
-      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
-      await viewAllHandler();
-      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
-      searchHandler({ target: { value: 'velvet' } });
-      expect($w('#swatchGalleryGrid').data).toHaveLength(1);
-      expect($w('#swatchGalleryGrid').data[0].swatchName).toBe('Forest Green');
-    });
-
-    it('shows all swatches when search is empty', async () => {
-      await initSwatchSelector($w, state);
-      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
-      await viewAllHandler();
-      const searchHandler = $w('#swatchSearch').onInput.mock.calls[0][0];
-      searchHandler({ target: { value: '' } });
-      expect($w('#swatchGalleryGrid').data).toHaveLength(2);
-    });
-
-    it('Escape key triggers close handler', async () => {
-      await initSwatchSelector($w, state);
-      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
-      await viewAllHandler();
-      const keydownHandler = globalThis.document.addEventListener.mock.calls
-        .find(c => c[0] === 'keydown')[1];
-      keydownHandler({ key: 'Escape' });
-      expect($w('#swatchGalleryModal').hide).toHaveBeenCalled();
-      expect($w('#swatchViewAll').focus).toHaveBeenCalled();
-    });
-
-    it('non-Escape key does not close modal', async () => {
-      await initSwatchSelector($w, state);
-      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
-      await viewAllHandler();
-      const keydownHandler = globalThis.document.addEventListener.mock.calls
-        .find(c => c[0] === 'keydown')[1];
-      keydownHandler({ key: 'Enter' });
-      expect($w('#swatchGalleryModal').hide).not.toHaveBeenCalled();
     });
   });
 
