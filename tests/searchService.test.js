@@ -809,10 +809,14 @@ describe('search cache', () => {
   });
 
   it('different offset params produce different cache entries', async () => {
-    const r1 = await fullTextSearch({ query: 'Futon', offset: 0 });
-    const r2 = await fullTextSearch({ query: 'Futon', offset: 1 });
-    // These should be separate cache entries (different keys)
-    expect(r1.products.length).toBeGreaterThan(0);
+    await fullTextSearch({ query: 'Futon', offset: 0 });
+    __seed('Stores/Products', []);
+    // Same query+offset=0 should hit cache and return non-empty
+    const cached = await fullTextSearch({ query: 'Futon', offset: 0 });
+    expect(cached.products.length).toBeGreaterThan(0);
+    // Different offset should miss cache and return empty (data is gone)
+    const missed = await fullTextSearch({ query: 'Futon', offset: 1 });
+    expect(missed.products).toHaveLength(0);
   });
 });
 
@@ -1072,8 +1076,10 @@ describe('fullTextSearch (extended)', () => {
   });
 
   it('clamps negative offset to 0', async () => {
-    const result = await fullTextSearch({ query: 'Futon', offset: -5 });
-    expect(result.products.length).toBeGreaterThan(0);
+    const noOffset = await fullTextSearch({ query: 'Futon', offset: 0 });
+    __clearCache();
+    const negOffset = await fullTextSearch({ query: 'Futon', offset: -5 });
+    expect(negOffset.products.length).toBe(noOffset.products.length);
   });
 
   it('clamps NaN limit to default 24', async () => {
@@ -1082,16 +1088,21 @@ describe('fullTextSearch (extended)', () => {
     expect(result.products.length).toBeLessThanOrEqual(24);
   });
 
-  it('clamps limit minimum to 1', async () => {
+  it('treats limit=0 as default 24 (0 is falsy)', async () => {
     const result = await fullTextSearch({ query: 'Futon', limit: 0 });
-    expect(result.products.length).toBeGreaterThanOrEqual(1);
+    // Number(0) || 24 = 24 — 0 is falsy, default 24 kicks in
+    // All futon matches returned since 24 > match count
+    const allResults = await fullTextSearch({ query: 'Futon', limit: 100 });
+    expect(result.products.length).toBe(allResults.products.length);
   });
 
   it('sorts by relevance by default (name matches before description)', async () => {
-    // 'Premium' in p6 name AND description. 'storage' only in p6 description + p4 featureTags
-    const result = await fullTextSearch({ query: 'storage' });
-    // First result should be description match (higher relevance)
+    // 'Premium' appears in p6 name and p6 description. Name match gets _relevance=2.
+    const result = await fullTextSearch({ query: 'Premium' });
     expect(result.products.length).toBeGreaterThan(0);
+    // First result should be the name-matched product
+    expect(result.products[0].name).toContain('Premium');
+    expect(result.products[0].slug).toBe('premium-plat');
   });
 
   it('records query for popular tracking', async () => {
@@ -1172,12 +1183,14 @@ describe('getAutocompleteSuggestions (extended)', () => {
   it('treats limit=0 as default 8 (0 is falsy)', async () => {
     const result = await getAutocompleteSuggestions('Fu', 0);
     // Number(0) || 8 = 8 — 0 is falsy so default kicks in
+    expect(result.suggestions.length).toBeGreaterThan(0);
     expect(result.suggestions.length).toBeLessThanOrEqual(8);
   });
 
   it('handles NaN limit gracefully', async () => {
     const result = await getAutocompleteSuggestions('Fu', 'abc');
     // NaN → default 8
+    expect(result.suggestions.length).toBeGreaterThan(0);
     expect(result.suggestions.length).toBeLessThanOrEqual(8);
   });
 
@@ -1186,11 +1199,11 @@ describe('getAutocompleteSuggestions (extended)', () => {
     expect(result.suggestions.some(s => s.type === 'category' && s.text === 'Platform Beds')).toBe(true);
   });
 
-  it('returns multiple category matches', async () => {
-    // 'fu' matches 'Futon Frames' and 'Front Loading & Nesting'
+  it('returns category match for Futon Frames', async () => {
     const result = await getAutocompleteSuggestions('fu', 20);
     const cats = result.suggestions.filter(s => s.type === 'category');
     expect(cats.length).toBeGreaterThanOrEqual(1);
+    expect(cats.some(c => c.text === 'Futon Frames')).toBe(true);
   });
 });
 
