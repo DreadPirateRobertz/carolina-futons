@@ -477,8 +477,8 @@ describe('getAlertHistory', () => {
   it('returns alert history for authenticated member', async () => {
     __setMember({ _id: 'member-1', loginEmail: 'test@test.com' });
     __seed('WishlistAlertsSent', [
-      { _id: 'wa-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date(), price: 400, previousHigh: 500, dropPercent: 20 },
-      { _id: 'wa-2', memberId: 'member-1', productId: 'prod-2', alertType: 'back_in_stock', sentAt: new Date(), productName: 'Futon' },
+      { _id: 'wa-1', memberId: 'member-1', productId: 'prod-1', alertType: 'price_drop', sentAt: new Date('2026-03-16T12:00:00Z'), price: 400, previousHigh: 500, dropPercent: 20 },
+      { _id: 'wa-2', memberId: 'member-1', productId: 'prod-2', alertType: 'back_in_stock', sentAt: new Date('2026-03-16T11:00:00Z'), productName: 'Futon' },
     ]);
 
     const result = await getAlertHistory();
