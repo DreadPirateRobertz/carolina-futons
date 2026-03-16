@@ -178,6 +178,13 @@ describe('membershipService — CF-k6a0', () => {
       const status = await getMembershipStatus();
       expect(status.active).toBe(false);
     });
+
+    it('returns inactive when getMember throws (transient auth error)', async () => {
+      const { currentMember } = await import('wix-members-backend');
+      currentMember.getMember.mockRejectedValueOnce(new Error('auth timeout'));
+      const status = await getMembershipStatus();
+      expect(status.active).toBe(false);
+    });
   });
 
   // ── getActiveOrder filtering ─────────────────────────────────
@@ -289,7 +296,7 @@ describe('membershipService — CF-k6a0', () => {
 
       const badge = await getMemberBadge();
       expect(badge.label).toBe('CF+');
-      expect(badge.color).toBeTruthy();
+      expect(badge.color).toBe('#1a5276');
       expect(badge.planName).toBe('CF+ Annual');
     });
 
