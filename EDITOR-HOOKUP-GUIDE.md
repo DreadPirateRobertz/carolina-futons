@@ -257,6 +257,18 @@ For each section below:
 | `swatchPromoSubtitle` | Text | Subheading |
 | `swatchPromoCTA` | Button | Order swatches |
 
+### Blog Teasers (CF-iix7)
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `blogTeaserSection` | HtmlComponent | Blog post cards — code injects HTML grid of 3 recent posts via `HomeBlogTeasers.js` |
+
+### Social Feeds (CF-iix7)
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `instagramFeedContainer` | HtmlComponent | Instagram embed iframe — code injects via `SocialFeedEmbed.js` |
+| `tiktokFeedContainer` | HtmlComponent | TikTok follow card — code injects via `SocialFeedEmbed.js` |
+| `pinterestBoardContainer` | HtmlComponent | Pinterest follow card — code injects via `SocialFeedEmbed.js` |
+
 ### Newsletter
 | Element ID | Wix Element | Notes |
 |---|---|---|
