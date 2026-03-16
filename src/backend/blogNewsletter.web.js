@@ -11,7 +11,7 @@
  *
  * @setup
  * 1. Create triggered email template 'blog_newsletter' in Dashboard > Marketing
- *    with variables: postTitle, postExcerpt, postUrl, postCategory, email
+ *    with variables: postTitle, postExcerpt, postUrl, postSlug, postCategory, email
  * 2. Call notifySubscribersOfNewPost() after publishing a new blog post.
  */
 import { Permissions, webMethod } from 'wix-web-module';
