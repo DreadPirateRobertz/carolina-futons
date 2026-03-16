@@ -12,6 +12,10 @@
  *    cartTotal (number), lineItems (text/JSON), abandonedAt (dateTime),
  *    status (text: abandoned|recovered), recoveryEmailSent (boolean),
  *    recoveryEmailSentAt (dateTime)
+ * 2. Create `FailedEvents` CMS collection for dead-letter queue:
+ *    handler (text), checkoutId (text), buyerEmail (text), productId (text),
+ *    error (text), severity (text), impact (text), failedAt (dateTime),
+ *    resolved (boolean)
  */
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
@@ -41,12 +45,13 @@ async function logFailedEvent(entry) {
  * Inserts a record into AbandonedCarts for the cart recovery sequence.
  */
 export async function wixEcom_onAbandonedCheckoutCreated(event) {
+  const checkout = event.entity || event;
+  const checkoutId = checkout._id || checkout.checkoutId || '';
+  const buyerEmail = checkout.buyerInfo?.email || '';
+
   try {
-    const checkout = event.entity || event;
-    const checkoutId = checkout._id || checkout.checkoutId || '';
     if (!checkoutId) return;
 
-    const buyerEmail = checkout.buyerInfo?.email || '';
     const buyerName = sanitize(
       checkout.buyerInfo?.firstName ||
       checkout.billingInfo?.firstName ||
@@ -82,13 +87,11 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
       recoveryEmailSent: false,
     });
   } catch (err) {
-    const checkoutId = (event.entity || event)._id || (event.entity || event).checkoutId || 'unknown';
-    const buyerEmail = (event.entity || event).buyerInfo?.email || 'unknown';
-    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId}, email: ${buyerEmail}, error:`, err);
+    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId || 'unknown'}, email: ${buyerEmail || 'unknown'}, error:`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutCreated',
-      checkoutId,
-      buyerEmail,
+      checkoutId: checkoutId || 'unknown',
+      buyerEmail: buyerEmail || 'unknown',
       error: err.message,
       severity: 'HIGH',
       impact: 'Abandoned cart data lost — customer will not receive recovery emails',
@@ -101,9 +104,10 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
  * Updates the AbandonedCarts record status to 'recovered'.
  */
 export async function wixEcom_onAbandonedCheckoutRecovered(event) {
+  const checkout = event.entity || event;
+  const checkoutId = checkout._id || checkout.checkoutId || '';
+
   try {
-    const checkout = event.entity || event;
-    const checkoutId = checkout._id || checkout.checkoutId || '';
     if (!checkoutId) return;
 
     const result = await wixData.query('AbandonedCarts')
@@ -118,11 +122,10 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
       status: 'recovered',
     });
   } catch (err) {
-    const checkoutId = (event.entity || event)._id || (event.entity || event).checkoutId || 'unknown';
-    console.error(`[events] FAILED to mark cart recovered — checkoutId: ${checkoutId}, error:`, err);
+    console.error(`[events] FAILED to mark cart recovered — checkoutId: ${checkoutId || 'unknown'}, error:`, err);
     await logFailedEvent({
       handler: 'wixEcom_onAbandonedCheckoutRecovered',
-      checkoutId,
+      checkoutId: checkoutId || 'unknown',
       error: err.message,
       severity: 'CRITICAL',
       impact: 'Cart stays abandoned — customer may receive recovery emails after purchasing',
@@ -137,9 +140,10 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
  * Detects restock (quantity goes from 0 to positive) and triggers notifications.
  */
 export async function wixStores_onInventoryVariantUpdated(event) {
+  const variant = event.entity || event;
+  const productId = variant.productId || '';
+
   try {
-    const variant = event.entity || event;
-    const productId = variant.productId || '';
     const variantId = variant.variantId || variant._id || '';
     const newQuantity = variant.quantity ?? variant.inStock ?? 0;
     const oldQuantity = event.previousEntity?.quantity ?? event.previousEntity?.inStock ?? 0;
@@ -158,13 +162,24 @@ export async function wixStores_onInventoryVariantUpdated(event) {
 
     // Queue restock notification emails via emailAutomation
     const { triggerRestockNotifications } = await import('backend/emailAutomation.web');
-    await triggerRestockNotifications(productId, signups.items);
+    const result = await triggerRestockNotifications(productId, signups.items);
+
+    // Check for soft failure (returned { success: false } without throwing)
+    if (result && !result.success) {
+      console.error(`[events] Restock notifications returned failure — productId: ${productId}, error: ${result.error || 'unknown'}`);
+      await logFailedEvent({
+        handler: 'wixStores_onInventoryVariantUpdated',
+        productId: productId || 'unknown',
+        error: result.error || 'triggerRestockNotifications returned success: false',
+        severity: 'HIGH',
+        impact: 'Back-in-stock subscribers not notified — trust erosion',
+      });
+    }
   } catch (err) {
-    const productId = (event.entity || event).productId || 'unknown';
-    console.error(`[events] FAILED restock notifications — productId: ${productId}, error:`, err);
+    console.error(`[events] FAILED restock notifications — productId: ${productId || 'unknown'}, error:`, err);
     await logFailedEvent({
       handler: 'wixStores_onInventoryVariantUpdated',
-      productId,
+      productId: productId || 'unknown',
       error: err.message,
       severity: 'HIGH',
       impact: 'Back-in-stock subscribers not notified — trust erosion',

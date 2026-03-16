@@ -835,7 +835,7 @@ async function cancelSequenceForOrder(email, orderNumber) {
  * @function triggerRestockNotifications
  * @param {string} productId - The restocked product's ID
  * @param {Array<{email: string, contactId?: string, productName?: string}>} subscribers
- * @returns {Promise<{success: boolean, notified: number}>}
+ * @returns {Promise<{success: boolean, notified: number, failed: number, error?: string}>}
  * @permission Admin
  */
 export const triggerRestockNotifications = webMethod(
