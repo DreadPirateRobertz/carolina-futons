@@ -34,12 +34,14 @@ All required dashboard/API configurations are now in place for editor hookup:
 - `src/public/premiumMembershipHelpers.js` — Premium display helpers
 - Plans expect slugs `cf-plus-monthly` and `cf-plus-annual` (now created on staging)
 
-**Current Release**: v0.9.0 (2026-03-16) — 18,524 tests, 445 files
-- Dev: [carolina-futons v0.9.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v0.9.0)
-- Velo: [carolina-futons-stage3-velo v0.9.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v0.9.0)
+**Current Dev Release**: v0.10.0 (2026-03-16) — 23,178 tests, 545 files
+- Dev: [carolina-futons v0.10.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v0.10.0)
+- Velo: [carolina-futons-stage3-velo v0.9.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v0.9.0) (sync pending — accumulating sizable release)
 - Pages synced to Wix page ID format (19 pages)
 - 47+ src files synced (backend, public, pages, styles, assets)
 - **New PDP modules**: ProductOptions (variant swatches), ProductFinancing (BNPL), ProductReviews (full review system), ProductSizeGuide (dimensions + room fit checker)
+- **New Homepage modules (v0.10.0)**: SocialFeedEmbed (Instagram/TikTok/Pinterest), HomeBlogTeasers (3 recent posts)
+- **New backend (v0.10.0)**: blogService.web.js (web module wrapper for blog content)
 
 ---
 
