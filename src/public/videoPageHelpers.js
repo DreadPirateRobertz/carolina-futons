@@ -1,7 +1,10 @@
 // videoPageHelpers.js — Product Videos page data
-// Static catalog of CF product demo videos hosted on Wix
+// Static catalog of CF product demo videos (Wix-hosted) and manufacturer videos
+// (YouTube, self-hosted MP4) for the product videos gallery page.
 
-const VIDEOS = [
+// ── Wix-hosted Carolina Futons product demos ────────────────────────
+
+const WIX_VIDEOS = [
   {
     _id: 'vid-intro',
     title: 'Intro',
@@ -99,12 +102,106 @@ const VIDEOS = [
   },
 ];
 
+// ── Manufacturer videos (YouTube, MP4) ──────────────────────────────
+
+const MANUFACTURER_VIDEOS = [
+  {
+    _id: 'v-kd-001',
+    title: 'Nomad Platform Bed Assembly',
+    description: 'Step-by-step assembly guide for the KD Frames Nomad Platform Bed.',
+    category: 'assembly',
+    brand: 'KD Frames',
+    youtubeId: 'EC1GCQ5CiSo',
+    productSlug: 'nomad-platform-bed',
+    sortOrder: 100,
+  },
+  {
+    _id: 'v-kd-002',
+    title: 'Charleston Platform Bed Assembly',
+    description: 'Assembly instructions for the KD Frames Charleston Platform Bed.',
+    category: 'assembly',
+    brand: 'KD Frames',
+    youtubeId: 'ouc5kWkEMfE',
+    productSlug: 'charleston-platform-bed',
+    sortOrder: 101,
+  },
+  {
+    _id: 'v-kd-003',
+    title: 'Fold Platform Bed Assembly',
+    description: 'How to assemble the KD Frames Fold Platform Bed.',
+    category: 'assembly',
+    brand: 'KD Frames',
+    youtubeId: 'Xi4Gddlhzd0',
+    productSlug: 'fold-platform-bed',
+    sortOrder: 102,
+  },
+  {
+    _id: 'v-kd-004',
+    title: 'Studio Bifold Futon Assembly',
+    description: 'Assembly walkthrough for the KD Frames Studio Bifold Futon.',
+    category: 'assembly',
+    brand: 'KD Frames',
+    youtubeId: 'lDnFOcn7qZ8',
+    productSlug: 'studio-bifold-futon',
+    sortOrder: 103,
+  },
+  {
+    _id: 'v-kd-005',
+    title: 'KD Lounger Assembly',
+    description: 'Assembly guide for the KD Frames Lounger.',
+    category: 'assembly',
+    brand: 'KD Frames',
+    youtubeId: 'RjBfOFzDxuo',
+    productSlug: 'kd-lounger',
+    sortOrder: 104,
+  },
+  {
+    _id: 'v-strata-001',
+    title: 'Dillon Wall Hugger Conversion',
+    description: 'Watch the Strata Dillon wall hugger futon convert smoothly — no wall clearance needed.',
+    category: 'conversion',
+    brand: 'Strata Furniture',
+    mp4Url: 'https://store.stratafurniture.com/wp-content/uploads/2022/01/Dillon_animation.mp4',
+    productSlug: 'dillon-futon-frame',
+    sortOrder: 11,
+  },
+];
+
+// ── Data accessors ──────────────────────────────────────────────────
+
+function buildVideoEntry(v) {
+  if (v.videoUri) {
+    return {
+      ...v,
+      source: 'wix',
+      videoUrl: `https://video.wixstatic.com/video/${v.videoUri}/1080p/mp4/file.mp4`,
+      posterUrl: `https://static.wixstatic.com/media/${v.videoUri}f000.jpg/v1/fill/w_640,h_360,q_80/file.jpg`,
+    };
+  }
+  if (v.youtubeId) {
+    return {
+      ...v,
+      source: 'youtube',
+      videoUrl: `https://www.youtube.com/watch?v=${v.youtubeId}`,
+      embedUrl: `https://www.youtube.com/embed/${v.youtubeId}`,
+      posterUrl: `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`,
+    };
+  }
+  if (v.mp4Url) {
+    return {
+      ...v,
+      source: 'mp4',
+      videoUrl: v.mp4Url,
+      posterUrl: null,
+    };
+  }
+  return { ...v, source: 'unknown', videoUrl: null, posterUrl: null };
+}
+
 export function getVideoData() {
-  return VIDEOS.map(v => ({
-    ...v,
-    videoUrl: `https://video.wixstatic.com/video/${v.videoUri}/1080p/mp4/file.mp4`,
-    posterUrl: `https://static.wixstatic.com/media/${v.videoUri}f000.jpg/v1/fill/w_640,h_360,q_80/file.jpg`,
-  }));
+  return [...WIX_VIDEOS, ...MANUFACTURER_VIDEOS]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map(buildVideoEntry);
 }
 
 export function getVideoCategories() {
@@ -112,6 +209,7 @@ export function getVideoCategories() {
     { id: 'overview', label: 'Overview' },
     { id: 'futon', label: 'Futon Frames' },
     { id: 'conversion', label: 'Conversion Demos' },
+    { id: 'assembly', label: 'Assembly Guides' },
   ];
 }
 
