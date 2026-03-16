@@ -548,10 +548,11 @@ describe('getESPStatus', () => {
 // ── captureExitIntentEmail ───────────────────────────────────────
 
 describe('captureExitIntentEmail', () => {
-  it('returns success with discount code for valid email', async () => {
+  it('returns success with discount code and queued count for valid email', async () => {
     const result = await captureExitIntentEmail('visitor@example.com');
     expect(result.success).toBe(true);
     expect(result.discountCode).toBe('WELCOME10');
+    expect(result.queued).toBe(3);
   });
 
   it('does not insert into NewsletterSubscribers (that is subscribeToNewsletter responsibility)', async () => {
@@ -653,5 +654,39 @@ describe('captureExitIntentEmail', () => {
     expect(step1.item.variables).toBeDefined();
     expect(step1.item.variables.discountCode).toBe('WELCOME10');
     expect(step1.item.variables.email).toBe('visitor@test.com');
+  });
+
+  it('normalizes email to lowercase and trims whitespace', async () => {
+    const inserts = [];
+    __onInsert((collection, item) => { inserts.push({ collection, item }); });
+
+    await captureExitIntentEmail('  Visitor@EXAMPLE.com  ');
+
+    const step1 = inserts.find(i => i.collection === 'EmailQueue');
+    expect(step1.item.recipientEmail).toBe('visitor@example.com');
+  });
+
+  it('returns error for null/undefined input', async () => {
+    expect((await captureExitIntentEmail(null)).success).toBe(false);
+    expect((await captureExitIntentEmail(undefined)).success).toBe(false);
+    expect((await captureExitIntentEmail(123)).success).toBe(false);
+  });
+
+  it('returns graceful error when CMS query throws', async () => {
+    // Seed a broken state — force wixData.query to throw by seeding invalid data
+    // The catch-all in captureExitIntentEmail should handle this
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Override wixData query to throw
+    const wixData = await import('wix-data');
+    const origQuery = wixData.default.query;
+    wixData.default.query = () => { throw new Error('CMS unavailable'); };
+
+    const result = await captureExitIntentEmail('visitor@test.com');
+    expect(result.success).toBe(false);
+    expect(result.message).toContain('failed');
+
+    wixData.default.query = origQuery;
+    vi.restoreAllMocks();
   });
 });

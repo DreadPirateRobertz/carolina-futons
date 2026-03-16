@@ -296,6 +296,11 @@ describe('submitExitCapture', () => {
     expect(result.error).toBe('invalid_email');
   });
 
+  it('returns error for null/undefined email', async () => {
+    expect((await submitExitCapture(null)).error).toBe('invalid_email');
+    expect((await submitExitCapture(undefined)).error).toBe('invalid_email');
+  });
+
   it('calls subscribeToNewsletter with exit_intent_popup source', async () => {
     await submitExitCapture('user@test.com');
     expect(mockSubscribe).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
