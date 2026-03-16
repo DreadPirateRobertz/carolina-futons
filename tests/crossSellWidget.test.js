@@ -1,4 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('public/sharedTokens.js', () => ({
+  colors: {
+    sandLight: '#F5EDE0',
+    espresso: '#3A2518',
+    espressoLight: '#5A4538',
+    sunsetCoral: '#E8845C',
+    white: '#FFFFFF',
+    mountainBlue: '#5B8FA8',
+    success: '#2E7D32',
+    mutedBrown: '#8B7355',
+  },
+}));
+
 import {
   buildRoomBundles,
   calculateBundleSavings,
@@ -552,3 +566,4 @@ describe('initCrossSellWidget', () => {
     expect(() => initCrossSellWidget($w, { bundles, addToCart: vi.fn(), announce: vi.fn(), elements, cardElements })).not.toThrow();
   });
 });
+
