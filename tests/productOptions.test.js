@@ -543,6 +543,48 @@ describe('ProductOptions', () => {
       expect($w('#finishSwatches').expand).toHaveBeenCalled();
     });
 
+    it('defaults to OOS when stock check fails (safe direction)', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Walnut') return Promise.reject(new Error('timeout'));
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const walnut = $w('#finishSwatches').data.find(d => d.value === 'Walnut');
+      expect(walnut.outOfStock).toBe(true);
+    });
+
+    it('defaults to OOS when stock check returns empty array', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockImplementation((_id, choices) => {
+        if (choices?.Finish === 'Cherry') return Promise.resolve([]);
+        return Promise.resolve([{ variant: { price: 599 }, inStock: true }]);
+      });
+      await initFinishSwatches($w, state);
+      const cherry = $w('#finishSwatches').data.find(d => d.value === 'Cherry');
+      expect(cherry.outOfStock).toBe(true);
+    });
+
+    it('handles all finishes out of stock — no default selection', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValue([{ variant: { price: 599 }, inStock: false }]);
+      await initFinishSwatches($w, state);
+      // All OOS — dropdown should not be set to any finish
+      expect($w('#finishSwatches').data.every(d => d.outOfStock)).toBe(true);
+      // Container should still render
+      expect($w('#finishSwatches').expand).toHaveBeenCalled();
+    });
+
+    it('uses description fallback to value when description missing', async () => {
+      state.product.productOptions = [
+        { name: 'Finish', choices: [
+          { value: 'Natural Oak' },
+        ]},
+      ];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].description).toBe('Natural Oak');
+    });
+
     it('skips first OOS finish and selects next in-stock as default', async () => {
       const { getProductVariants } = await import('public/cartService');
       getProductVariants.mockImplementation((_id, choices) => {

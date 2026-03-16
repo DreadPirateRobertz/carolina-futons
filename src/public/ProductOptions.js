@@ -133,16 +133,18 @@ export async function initFinishSwatches($w, state) {
       container.accessibility.ariaLabel = 'Finish';
     } catch (e) {}
 
-    // Check stock for each finish
+    // Check stock for each finish — default OOS on failure (safe direction)
     const swatchData = await Promise.all(
       finishOption.choices.map(async (choice, i) => {
-        let outOfStock = false;
+        let outOfStock = true;
         try {
           const variants = await getProductVariants(state.product._id, { Finish: choice.value });
           if (variants?.length > 0) {
             outOfStock = !variants[0].inStock;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error(`Stock check failed for finish "${choice.value}":`, e);
+        }
         return {
           _id: `finish-${i}`,
           value: choice.value,
