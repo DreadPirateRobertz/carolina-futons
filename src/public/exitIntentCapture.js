@@ -123,14 +123,17 @@ export async function submitExitCapture(email) {
       return result;
     }
 
-    // Queue welcome series into EmailQueue (non-blocking)
+    // Queue welcome series into EmailQueue — failure here should not block capture
     try {
       await captureExitIntentEmail(email);
-    } catch (_) { /* EmailQueue failure should not block the capture */ }
+    } catch (queueErr) {
+      console.warn('EmailQueue welcome series failed (non-blocking):', queueErr);
+    }
 
     markExitIntentShown();
     return result;
   } catch (err) {
+    console.error('Exit intent submission failed:', err);
     return { success: false, error: 'submission_failed' };
   }
 }
