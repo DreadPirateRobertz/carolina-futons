@@ -105,6 +105,30 @@ describe('assignVariant', () => {
     const v = assignVariant('test', 'visitor-1', [TEST_VARIANTS[0]]);
     expect(v.id).toBe('control');
   });
+
+  it('respects variant weights', () => {
+    const weighted = [
+      { id: 'heavy', name: 'Heavy', weight: 90 },
+      { id: 'light', name: 'Light', weight: 10 },
+    ];
+    let heavyCount = 0;
+    for (let i = 0; i < 100; i++) {
+      const v = assignVariant('weighted-test', `visitor-${i}`, weighted);
+      if (v.id === 'heavy') heavyCount++;
+    }
+    // With 90/10 weight, heavy should get majority
+    expect(heavyCount).toBeGreaterThan(60);
+  });
+
+  it('uses default weight of 50 when weight is missing', () => {
+    const noWeight = [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ];
+    // Should not throw — defaults to 50
+    const v = assignVariant('test', 'visitor-1', noWeight);
+    expect(['a', 'b']).toContain(v.id);
+  });
 });
 
 // ── calculateSignificance ───────────────────────────────────────────
@@ -137,6 +161,23 @@ describe('calculateSignificance', () => {
     const result = calculateSignificance(1000, 100, 1000, 200);
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.confidence).toBeLessThanOrEqual(100);
+  });
+
+  it('handles 100% conversion in both groups', () => {
+    const result = calculateSignificance(100, 100, 100, 100);
+    expect(result.significant).toBe(false);
+  });
+
+  it('handles equal conversion rates', () => {
+    const result = calculateSignificance(1000, 100, 1000, 100);
+    expect(result.significant).toBe(false);
+    expect(result.zScore).toBe(0);
+  });
+
+  it('returns zScore rounded to 2 decimals', () => {
+    const result = calculateSignificance(1000, 100, 1000, 200);
+    const decimals = String(result.zScore).split('.')[1] || '';
+    expect(decimals.length).toBeLessThanOrEqual(2);
   });
 });
 
@@ -197,6 +238,36 @@ describe('getVariant', () => {
     expect(result.success).toBe(true);
     expect(result.testActive).toBe(false); // Outside test
   });
+
+  it('returns error for null testName', async () => {
+    const result = await getVariant(null, 'visitor-1');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for null visitorId', async () => {
+    const result = await getVariant('test', null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for test with empty variants', async () => {
+    seedTest({ variants: '[]' });
+    const result = await getVariant('free-shipping-threshold', 'visitor-1');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('no variants');
+  });
+
+  it('returns first variant when disabled winner not found', async () => {
+    seedTest({ active: false, winnerVariant: 'nonexistent-variant' });
+    const result = await getVariant('free-shipping-threshold', 'visitor-1');
+    expect(result.variant.id).toBe('control');
+  });
+
+  it('returns variant name in response', async () => {
+    seedTest();
+    const result = await getVariant('free-shipping-threshold', 'visitor-1');
+    expect(result.variant.name).toBeTruthy();
+    expect(typeof result.variant.name).toBe('string');
+  });
 });
 
 // ── trackEvent ──────────────────────────────────────────────────────
@@ -245,6 +316,38 @@ describe('trackEvent', () => {
     await trackEvent('test-1', 'control', 'visitor-1', 'IMPRESSION');
     expect(inserted.eventType).toBe('impression');
   });
+
+  it('returns false for null testName', async () => {
+    expect((await trackEvent(null, 'c', 'v', 'impression')).success).toBe(false);
+  });
+
+  it('returns false for null variantId', async () => {
+    expect((await trackEvent('t', null, 'v', 'impression')).success).toBe(false);
+  });
+
+  it('returns false for null visitorId', async () => {
+    expect((await trackEvent('t', 'c', null, 'impression')).success).toBe(false);
+  });
+
+  it('includes timestamp in inserted event', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbEvents') inserted = item;
+    });
+
+    await trackEvent('test-1', 'control', 'visitor-1', 'impression');
+    expect(inserted.timestamp).toBeInstanceOf(Date);
+  });
+
+  it('defaults page to empty string', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbEvents') inserted = item;
+    });
+
+    await trackEvent('test-1', 'control', 'visitor-1', 'conversion');
+    expect(inserted.page).toBe('');
+  });
 });
 
 // ── getTestResults ──────────────────────────────────────────────────
@@ -285,6 +388,35 @@ describe('getTestResults', () => {
 
   it('returns error for missing test name', async () => {
     const result = await getTestResults('');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns null winner when not significant', async () => {
+    seedTest();
+    __seed('AbEvents', []);
+
+    const result = await getTestResults('free-shipping-threshold');
+    expect(result.results.winner).toBeNull();
+  });
+
+  it('includes test active status', async () => {
+    seedTest({ active: false });
+    __seed('AbEvents', []);
+
+    const result = await getTestResults('free-shipping-threshold');
+    expect(result.results.active).toBe(false);
+  });
+
+  it('includes winnerVariant from test config', async () => {
+    seedTest({ winnerVariant: 'variant-a' });
+    __seed('AbEvents', []);
+
+    const result = await getTestResults('free-shipping-threshold');
+    expect(result.results.winnerVariant).toBe('variant-a');
+  });
+
+  it('returns null for missing test name', async () => {
+    const result = await getTestResults(null);
     expect(result.success).toBe(false);
   });
 });
@@ -376,5 +508,81 @@ describe('createTest', () => {
   it('returns error for missing inputs', async () => {
     const result = await createTest({});
     expect(result.success).toBe(false);
+  });
+
+  it('defaults variant weight to 50', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbTests') inserted = item;
+    });
+
+    await createTest({
+      testName: 'weight-test',
+      variants: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+    });
+
+    const variants = JSON.parse(inserted.variants);
+    expect(variants[0].weight).toBe(50);
+    expect(variants[1].weight).toBe(50);
+  });
+
+  it('accepts custom traffic percent', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbTests') inserted = item;
+    });
+
+    await createTest({
+      testName: 'partial-test',
+      variants: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+      trafficPercent: 50,
+    });
+
+    expect(inserted.trafficPercent).toBe(50);
+  });
+
+  it('clamps negative traffic to 0', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbTests') inserted = item;
+    });
+
+    await createTest({
+      testName: 'neg-test',
+      variants: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+      trafficPercent: -10,
+    });
+
+    expect(inserted.trafficPercent).toBe(0);
+  });
+
+  it('sets createdAt timestamp', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbTests') inserted = item;
+    });
+
+    await createTest({
+      testName: 'time-test',
+      variants: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+    });
+
+    expect(inserted.createdAt).toBeInstanceOf(Date);
+  });
+
+  it('stores variants as JSON string', async () => {
+    let inserted = null;
+    __onInsert((collection, item) => {
+      if (collection === 'AbTests') inserted = item;
+    });
+
+    await createTest({
+      testName: 'json-test',
+      variants: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }],
+    });
+
+    expect(typeof inserted.variants).toBe('string');
+    const parsed = JSON.parse(inserted.variants);
+    expect(parsed).toHaveLength(2);
   });
 });
