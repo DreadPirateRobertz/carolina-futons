@@ -16,6 +16,8 @@ import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/Wishlis
 import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, getBadgeColor } from 'public/productCardHelpers.js';
 import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
+import { initSocialFeeds } from 'public/SocialFeedEmbed.js';
+import { initHomeBlogTeasers } from 'public/HomeBlogTeasers.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,6 +71,8 @@ $w.onReady(async function () {
     { name: 'quizCTA', init: initQuizCTA, critical: false },
     { name: 'featuredQuickView', init: initFeaturedQuickView, critical: false },
     { name: 'swatchPromo', init: initSwatchPromo, critical: false },
+    { name: 'blogTeasers', init: () => initHomeBlogTeasers($w, state), critical: false },
+    { name: 'socialFeeds', init: () => initSocialFeeds($w, state), critical: false },
     { name: 'newsletter', init: initNewsletterSection, critical: false },
     { name: 'ridgeline', init: initRidgelineHeader, critical: false },
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
