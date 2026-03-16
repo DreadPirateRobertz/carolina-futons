@@ -25,6 +25,109 @@ beforeEach(() => {
   __seed('Stores/Products', []);
 });
 
+// ── Data Integrity ────────────────────────────────────────────────
+
+describe('data integrity', () => {
+  it('all guides have unique slugs', async () => {
+    const result = await getBuyingGuideSlugs();
+    expect(new Set(result.slugs).size).toBe(result.slugs.length);
+  });
+
+  it('all guides have unique titles', async () => {
+    const result = await getAllBuyingGuides();
+    const titles = result.guides.map(g => g.title);
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it('all guides have unique metaDescriptions', async () => {
+    const result = await getAllBuyingGuides();
+    const descs = result.guides.map(g => g.metaDescription);
+    expect(new Set(descs).size).toBe(descs.length);
+  });
+
+  it('all guides have unique heroImage URLs', async () => {
+    const result = await getAllBuyingGuides();
+    const images = result.guides.map(g => g.heroImage);
+    expect(new Set(images).size).toBe(images.length);
+  });
+
+  it('no duplicate FAQ questions across all guides', async () => {
+    const allQuestions = [];
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getGuideFaqs(slug);
+      allQuestions.push(...result.faqs.map(f => f.question));
+    }
+    expect(new Set(allQuestions).size).toBe(allQuestions.length);
+  });
+
+  it('all comparison tables have consistent row/header alignment', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getGuideComparisonTable(slug);
+      const colCount = result.table.headers.length;
+      for (const row of result.table.rows) {
+        expect(row.length).toBe(colCount);
+      }
+    }
+  });
+
+  it('metaDescriptions stay under 160 chars for SEO', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getBuyingGuide(slug);
+      expect(result.guide.metaDescription.length).toBeLessThanOrEqual(160);
+    }
+  });
+
+  it('each guide has at least 3 keywords', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getBuyingGuide(slug);
+      expect(result.guide.keywords.length).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('product links across guides use absolute paths', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getBuyingGuide(slug);
+      for (const link of result.guide.productLinks) {
+        expect(link.url.startsWith('/')).toBe(true);
+      }
+    }
+  });
+
+  it('section headings within each guide are unique', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getBuyingGuide(slug);
+      const headings = result.guide.sections.map(s => s.heading);
+      expect(new Set(headings).size).toBe(headings.length);
+    }
+  });
+
+  it('Article and FAQPage schemas are valid JSON for all guides', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const result = await getBuyingGuideSchema(slug);
+      expect(() => JSON.parse(result.articleSchema)).not.toThrow();
+      expect(() => JSON.parse(result.faqSchema)).not.toThrow();
+    }
+  });
+
+  it('FAQ schema question text matches guide FAQ questions', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const guideResult = await getGuideFaqs(slug);
+      const schemaResult = await getBuyingGuideSchema(slug);
+      const schema = JSON.parse(schemaResult.faqSchema);
+      const schemaQuestions = schema.mainEntity.map(e => e.name);
+      const guideQuestions = guideResult.faqs.map(f => f.question);
+      expect(schemaQuestions).toEqual(guideQuestions);
+    }
+  });
+
+  it('social share URLs match guide URLs', async () => {
+    for (const slug of EXPECTED_SLUGS) {
+      const share = await getSocialShareLinks(slug);
+      expect(share.links.url).toBe(`https://www.carolinafutons.com/buying-guides/${slug}`);
+    }
+  });
+});
+
 // ── getBuyingGuideSlugs ─────────────────────────────────────────────
 
 describe('getBuyingGuideSlugs', () => {
@@ -34,6 +137,21 @@ describe('getBuyingGuideSlugs', () => {
     expect(result.slugs).toHaveLength(8);
     for (const slug of EXPECTED_SLUGS) {
       expect(result.slugs).toContain(slug);
+    }
+  });
+
+  it('slugs are non-empty strings', async () => {
+    const result = await getBuyingGuideSlugs();
+    for (const slug of result.slugs) {
+      expect(typeof slug).toBe('string');
+      expect(slug.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('slugs use URL-safe characters', async () => {
+    const result = await getBuyingGuideSlugs();
+    for (const slug of result.slugs) {
+      expect(slug).toMatch(/^[a-z0-9-]+$/);
     }
   });
 });
