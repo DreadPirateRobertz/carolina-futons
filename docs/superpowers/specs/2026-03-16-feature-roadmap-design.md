@@ -312,12 +312,144 @@ Features that increase AOV and conversion rate.
 - **v2**: Promoted Delivery Estimator/Scheduling + Reviews to Tier 1 (radahn + miquella feedback). Added Product Comparison, Size Guide, Assembly Guide on PDP.
 - **v3**: Demoted Gift Cards + Financing to Tier 2 (miquella: not launch blockers). Reordered Tier 2 (Recs before Bundles). Added Abandoned Cart SMS to Tier 2. Marked Assembly Guide as quick win. Tier 1 tightened to 8 focused features.
 
+## Tier 1 Implementation Order
+
+Features should be wired in this sequence (dependencies flow downward):
+
+```
+1. Search (1.1) — foundation for Category Page filter engine
+   ↓
+2. Delivery Estimator (1.3) — zip-to-zone mapping feeds scheduling
+   ↓
+3. Delivery Scheduling (1.4) — depends on estimator's zone data
+   ↓
+4. Cart Recovery + Email Automation (1.2) — depends on email infra (SPF/DKIM on sending domain, Wix Triggered Emails app installed)
+   ↓
+5. Order Tracking (1.5) — independent, low effort
+   ↓
+6. Returns Portal (1.6) — independent, requires new page creation
+   ↓
+7. Reviews/Ratings (1.7) — independent, requires review import strategy for cold start
+   ↓
+8. Assembly Guide on PDP (1.8) — quick win, independent, can ship anytime
+```
+
+**Parallel tracks**: Items 5-8 can be worked in parallel once items 1-4 are underway. Assembly Guide (1.8) has zero dependencies and can ship immediately.
+
+**Pages requiring editor creation**: Order Tracking, Returns, Admin Returns. All other Tier 1 features wire into existing pages.
+
+**Checkout note**: Wix eCommerce provides native checkout. `checkoutOptimization.web.js` and `paymentOptions.web.js` exist for enhancements but are not Tier 1 blockers — native checkout works out of the box.
+
+## Tier 1 Acceptance Criteria
+
+### 1.1 Search
+- Full-text search returns relevant products ranked by relevance
+- Autocomplete shows suggestions after 2+ characters typed
+- Zero results page shows "No products found" + suggested categories
+- Category Page filters work (price range, material, size)
+- 10 results per page with pagination
+
+### 1.2 Cart Recovery + Email Automation
+- Abandoned cart email sends 1 hour after checkout abandonment
+- Email includes cart contents, images, and "Complete Purchase" CTA
+- Welcome email sends within 5 minutes of member signup
+- Unsubscribe link works in all automated emails
+- Email stats dashboard shows send/open/click rates
+
+### 1.3 Delivery Estimator
+- Zip code input on Product Page shows estimated delivery date
+- Cart page shows delivery estimate for all items
+- Estimates reflect real UPS zone data + processing time
+- "Delivery estimate unavailable" fallback for invalid/unsupported zips
+
+### 1.4 Delivery Scheduling
+- Checkout shows available delivery windows (date + AM/PM)
+- Liftgate and white glove options displayed with pricing
+- Customer receives confirmation email with scheduled window
+- Admin can view/modify scheduled deliveries
+
+### 1.5 Order Tracking
+- Lookup by order number + email (no login required)
+- Visual timeline: Ordered → Processing → Shipped → Delivered
+- UPS tracking number linked to UPS tracking page
+- Email notification opt-in for status changes
+
+### 1.6 Returns Portal
+- Customer can initiate return within 30 days of delivery
+- RMA number generated and emailed
+- Return label downloadable (if applicable)
+- 10% restocking fee displayed before submission
+- Admin dashboard shows all returns with status filters
+
+### 1.7 Reviews/Ratings
+- Star rating (1-5) + text review submission on Product Page
+- Photo upload with review (optional)
+- Average rating + review count displayed on product cards
+- Moderation queue — reviews require approval before display
+- Minimum 5 seed reviews imported before launch
+
+### 1.8 Assembly Guide on PDP
+- Product Page shows "Assembly: Easy/Medium | ~30 min" badge
+- Link to full assembly guide page
+- Guide loads correct instructions by product SKU
+
+## Effort Estimates (Tier 1)
+
+| # | Feature | Hookup | Testing | Total | New Pages? |
+|---|---------|--------|---------|-------|------------|
+| 1.1 | Search | 2d | 1d | 3d | No (existing) |
+| 1.2 | Cart Recovery + Email | 2d | 1d | 3d | No (backend) |
+| 1.3 | Delivery Estimator | 1.5d | 0.5d | 2d | No (widget) |
+| 1.4 | Delivery Scheduling | 2d | 1d | 3d | No (checkout widget) |
+| 1.5 | Order Tracking | 1d | 0.5d | 1.5d | Yes (1 page) |
+| 1.6 | Returns Portal | 2d | 1d | 3d | Yes (2 pages) |
+| 1.7 | Reviews/Ratings | 2d | 1d | 3d | No (PDP widget) |
+| 1.8 | Assembly Guide on PDP | 0.5d | 0.5d | 1d | No (existing) |
+| | **Total Tier 1** | **13d** | **6.5d** | **19.5d** | **3 new pages** |
+
+## Not In Scope (Existing modules intentionally deferred)
+
+These backend modules exist but are not included in any tier. They are either already active, too niche for current phase, or need further scoping:
+
+| Module | Reason |
+|--------|--------|
+| `checkoutOptimization.web.js` | Wix native checkout works; optimization is post-launch |
+| `paymentOptions.web.js` | Wix Payments handles this natively |
+| `fulfillment.web.js` | Backend order processing; not customer-facing |
+| `inventoryAlerts.web.js` | Low priority — most products are made-to-order |
+| `newsletterService.web.js` | Wix Forms handles newsletter signup natively |
+| `productQA.web.js` | Deferred to post-reviews (Tier 2+) |
+| `protectionPlan.web.js` | Extended warranty — future upsell feature |
+| `warrantyService.web.js` | Standard warranty info is in product descriptions |
+| `customizationService.web.js` | Custom fabric/finish selection — future enhancement |
+| `promotionsEngine.web.js` | Live discount rules already replicated via API |
+| `giftRegistry.web.js` | Low demand for furniture registry |
+| `liveChat.web.js` + `liveChatService.web.js` | Needs third-party chat provider decision |
+| `subscriptionService.web.js` | No subscription products currently |
+| `affiliateProgram.web.js` | Growth phase (post-Tier 4) |
+| `currencyService.web.js` | USD only for now |
+| `customsEstimator.web.js` | Domestic shipping only |
+| `internationalShipping.web.js` | Domestic shipping only |
+
+## Cross-Cutting Status
+
+| Feature | Module | Status | Notes |
+|---------|--------|--------|-------|
+| Accessibility | `accessibility.web.js` + `a11yHelpers.js` | Needs hookup | Wire to all pages during Tier 1 |
+| Core Web Vitals | `coreWebVitals.web.js` | Needs hookup | Performance monitoring on all pages |
+| Error Monitoring | `errorMonitoring.web.js` | Needs hookup | Runtime error capture |
+| SEO Helpers | `seoHelpers.web.js` + `imageAltText.web.js` | Partially active | Meta tags on masterPage; alt text needs batch run |
+| Dynamic Pricing | `dynamicPricing.web.js` | Active | Discount rules already replicated |
+| Notifications | `notificationService.web.js` | Needs hookup | Unified layer for email/SMS/push |
+
 ## Dependencies
 
 - **All Tier 1 features** depend on editor login being resolved (currently blocked)
-- **Reviews** may benefit from Google/Yelp import tool for starter content
-- **Delivery Scheduling** depends on UPS API (already configured)
-- **Email Automation** depends on Wix Triggered Emails app being installed
+- **Search (1.1)** must be wired before Category Page filters
+- **Delivery Scheduling (1.4)** depends on Delivery Estimator (1.3) zip-to-zone mapping
+- **Cart Recovery (1.2)** depends on: Wix Triggered Emails app installed + SPF/DKIM configured on sending domain
+- **Reviews (1.7)** needs seed content import (Google/Yelp) before launch
+- **Returns + Order Tracking** require new pages created in editor
 - **Loyalty** depends on Wix Loyalty app
 - **Gift Cards** depends on Wix Gift Cards app
 - **SMS** depends on SMS provider selection (Twilio, etc.)
@@ -326,6 +458,7 @@ Features that increase AOV and conversion rate.
 
 1. **Editor access blocker** — most hookup work requires Wix Studio editor login (currently blocked)
 2. **App installation** — several features need Wix apps installed (eCommerce, Gift Cards, Loyalty)
-3. **Review cold start** — launching with zero reviews hurts conversion. Need import strategy.
+3. **Review cold start** — launching with zero reviews hurts conversion. Need 5+ seed reviews per top product.
 4. **Delivery complexity** — furniture shipping is complex. Estimator accuracy depends on UPS zone data quality.
-5. **Email deliverability** — need to verify sending domain and warm up email reputation.
+5. **Email deliverability** — requires SPF/DKIM/DMARC configuration on sending domain. Plan phased rollout: start with transactional (order confirm), then marketing (cart recovery). Monitor bounce/spam rates.
+6. **Page creation dependency** — 3 new pages needed for Tier 1 (Order Tracking, Returns, Admin Returns). All require editor access.
