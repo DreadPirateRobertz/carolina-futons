@@ -8,6 +8,7 @@ import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence } from 'backend/emailAutomation.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
+import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
@@ -883,6 +884,51 @@ export async function post_klaviyoWebhook(request) {
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Sitemap XML ──────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/sitemapXml
+export async function get_sitemapXml() {
+  try {
+    const products = await fetchAllProducts();
+    const sitemapData = getSitemapData(products);
+    const xml = buildSitemapXml(sitemapData);
+
+    return ok({
+      body: xml,
+      headers: {
+        'Content-Type': 'application/xml',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (sitemapXml):', err);
+    return serverError({
+      body: 'Error generating sitemap',
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// ── robots.txt ───────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/robotsTxt
+export function get_robotsTxt() {
+  try {
+    const content = getRobotsTxtContent();
+    return ok({
+      body: content,
+      headers: {
+        'Content-Type': 'text/plain',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (robotsTxt):', err);
+    return serverError({
+      body: 'Error generating robots.txt',
+      headers: { 'Content-Type': 'text/plain' },
     });
   }
 }
