@@ -4,34 +4,11 @@
  * search with debounce, contact CTA, filter application, no-results state, SEO.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { createMockElement, createItemScope } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  return {
-    text: '',
-    value: '',
-    label: '',
-    src: '',
-    data: [],
-    collapsed: false,
-    style: { color: '' },
-    accessibility: { ariaLabel: '', ariaLive: '', role: '', ariaExpanded: false, tabIndex: -1 },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(function () { this.collapsed = true; }),
-    expand: vi.fn(function () { this.collapsed = false; }),
-    scrollTo: vi.fn(),
-    focus: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onKeyPress: vi.fn(),
-    onReady: vi.fn(() => Promise.resolve()),
-    onItemReady: vi.fn(),
-  };
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());
@@ -163,72 +140,40 @@ describe('FAQ Page', () => {
     it('onItemReady sets category label text', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { role: '', ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-products', id: 'products', label: 'Products' });
-      expect(itemEls['#categoryLabel'].text).toBe('Products');
+      expect(els.get('#categoryLabel').text).toBe('Products');
     });
 
     it('onItemReady sets ARIA role=tab on category label', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { role: '', ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-products', id: 'products', label: 'Products' });
-      expect(itemEls['#categoryLabel'].accessibility.role).toBe('tab');
+      expect(els.get('#categoryLabel').accessibility.role).toBe('tab');
     });
 
     it('onItemReady registers onClick for category selection', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { role: '', ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-products', id: 'products', label: 'Products' });
-      expect(itemEls['#categoryLabel'].onClick).toHaveBeenCalled();
+      expect(els.get('#categoryLabel').onClick).toHaveBeenCalled();
     });
 
     it('category click triggers tracking and announcement', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { role: '', ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-shipping', id: 'shipping', label: 'Shipping' });
 
       trackEvent.mockClear();
       announce.mockClear();
-      const clickHandler = itemEls['#categoryLabel'].onClick.mock.calls[0][0];
+      const clickHandler = els.get('#categoryLabel').onClick.mock.calls[0][0];
       clickHandler();
 
       expect(trackEvent).toHaveBeenCalledWith('faq_category', { category: 'Shipping' });
@@ -238,18 +183,10 @@ describe('FAQ Page', () => {
     it('category click filters FAQ repeater data', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqCategoryRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { role: '', ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-shipping', id: 'shipping', label: 'Shipping' });
-      const clickHandler = itemEls['#categoryLabel'].onClick.mock.calls[0][0];
+      const clickHandler = els.get('#categoryLabel').onClick.mock.calls[0][0];
       clickHandler();
 
       const faqRepeater = getEl('#faqRepeater');
@@ -274,162 +211,85 @@ describe('FAQ Page', () => {
     it('onItemReady sets question and answer text', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      expect(itemEls['#faqQuestion'].text).toBe('What is a futon?');
-      expect(itemEls['#faqAnswer'].text).toContain('convertible sofa-bed');
+      expect(els.get('#faqQuestion').text).toBe('What is a futon?');
+      expect(els.get('#faqAnswer').text).toContain('convertible sofa-bed');
     });
 
     it('onItemReady starts FAQ answer collapsed', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      expect(itemEls['#faqAnswer'].collapse).toHaveBeenCalled();
-      expect(itemEls['#faqToggle'].text).toBe('+');
+      expect(els.get('#faqAnswer').collapse).toHaveBeenCalled();
+      expect(els.get('#faqToggle').text).toBe('+');
     });
 
     it('onItemReady sets ARIA role=button on question', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      expect(itemEls['#faqQuestion'].accessibility.role).toBe('button');
+      expect(els.get('#faqQuestion').accessibility.role).toBe('button');
     });
 
     it('onItemReady sets ariaExpanded=false on toggle initially', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      expect(itemEls['#faqToggle'].accessibility.ariaExpanded).toBe(false);
+      expect(els.get('#faqToggle').accessibility.ariaExpanded).toBe(false);
     });
 
     it('clicking question expands answer and updates toggle', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
       // Answer starts collapsed
-      itemEls['#faqAnswer'].collapse();
+      els.get('#faqAnswer').collapse();
 
       // Click the question
-      const questionClick = itemEls['#faqQuestion'].onClick.mock.calls[0][0];
+      const questionClick = els.get('#faqQuestion').onClick.mock.calls[0][0];
       questionClick();
 
-      expect(itemEls['#faqAnswer'].expand).toHaveBeenCalled();
-      expect(itemEls['#faqToggle'].text).toBe('\u2212'); // minus sign
-      expect(itemEls['#faqToggle'].accessibility.ariaExpanded).toBe(true);
+      expect(els.get('#faqAnswer').expand).toHaveBeenCalled();
+      expect(els.get('#faqToggle').text).toBe('\u2212'); // minus sign
+      expect(els.get('#faqToggle').accessibility.ariaExpanded).toBe(true);
     });
 
     it('clicking toggle collapses already-expanded answer', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
       // Start collapsed, then expand
-      itemEls['#faqAnswer'].collapse();
-      const questionClick = itemEls['#faqQuestion'].onClick.mock.calls[0][0];
+      els.get('#faqAnswer').collapse();
+      const questionClick = els.get('#faqQuestion').onClick.mock.calls[0][0];
       questionClick(); // expand
       questionClick(); // collapse again
 
-      expect(itemEls['#faqToggle'].text).toBe('+');
-      expect(itemEls['#faqToggle'].accessibility.ariaExpanded).toBe(false);
+      expect(els.get('#faqToggle').text).toBe('+');
+      expect(els.get('#faqToggle').accessibility.ariaExpanded).toBe(false);
     });
 
     it('expanding FAQ tracks faq_expand event', async () => {
       await onReadyHandler();
       trackEvent.mockClear();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      itemEls['#faqAnswer'].collapse();
+      els.get('#faqAnswer').collapse();
 
-      const questionClick = itemEls['#faqQuestion'].onClick.mock.calls[0][0];
+      const questionClick = els.get('#faqQuestion').onClick.mock.calls[0][0];
       questionClick();
 
       expect(trackEvent).toHaveBeenCalledWith('faq_expand', { question: 'What is a futon?' });
@@ -438,22 +298,11 @@ describe('FAQ Page', () => {
     it('registers onClick on both question and toggle', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#faqRepeater').onItemReady.mock.calls[0][0];
-
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', collapsed: false,
-          accessibility: { role: '', ariaLabel: '', ariaExpanded: false, tabIndex: -1 },
-          collapse: vi.fn(function () { this.collapsed = true; }),
-          expand: vi.fn(function () { this.collapsed = false; }),
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockFaqData[0]);
-      expect(itemEls['#faqQuestion'].onClick).toHaveBeenCalled();
-      expect(itemEls['#faqToggle'].onClick).toHaveBeenCalled();
+      expect(els.get('#faqQuestion').onClick).toHaveBeenCalled();
+      expect(els.get('#faqToggle').onClick).toHaveBeenCalled();
     });
   });
 

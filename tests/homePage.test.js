@@ -1,47 +1,17 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { createMockElement, createItemScope } from './helpers/wixMocks.js';
 // ── $w Mock Infrastructure ──────────────────────────────────────────
+
+const homePageOverrides = {
+  onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+  getTotalCount: vi.fn(() => 0), getItems: vi.fn(() => ({ items: [] })),
+  setSort: vi.fn(), setFilter: vi.fn(), next: vi.fn(),
+};
 
 const elements = new Map();
 
-function createMockElement() {
-  return {
-    text: '',
-    src: '',
-    alt: '',
-    value: '',
-    label: '',
-    options: [],
-    data: [],
-    style: { color: '', backgroundColor: '' },
-    accessibility: { ariaLabel: '', ariaLive: '', role: '' },
-    background: { src: '' },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(),
-    expand: vi.fn(),
-    scrollTo: vi.fn(),
-    postMessage: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onItemReady: vi.fn(),
-    onItemClicked: vi.fn(),
-    onReady: vi.fn(() => Promise.resolve()),
-    onCurrentIndexChanged: vi.fn(),
-    onMouseIn: vi.fn(),
-    onMouseOut: vi.fn(),
-    getCurrentItem: vi.fn(),
-    getTotalCount: vi.fn(() => 0),
-    getItems: vi.fn(() => ({ items: [] })),
-    setSort: vi.fn(),
-    setFilter: vi.fn(),
-    disable: vi.fn(),
-    enable: vi.fn(),
-    next: vi.fn(),
-  };
-}
-
 function getEl(sel) {
-  if (!elements.has(sel)) elements.set(sel, createMockElement());
+  if (!elements.has(sel)) elements.set(sel, createMockElement(homePageOverrides));
   return elements.get(sel);
 }
 
@@ -248,21 +218,12 @@ describe('Home Page', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            show: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: itemElements } = createItemScope();
 
       itemReadyCb($item, mockFeatured[0]);
-      expect(itemElements['#featuredImage'].src).toBe(mockFeatured[0].mainMedia);
-      expect(itemElements['#featuredName'].text).toBe(mockFeatured[0].name);
-      expect(itemElements['#featuredPrice'].text).toBe(mockFeatured[0].formattedPrice);
+      expect(itemElements.get('#featuredImage').src).toBe(mockFeatured[0].mainMedia);
+      expect(itemElements.get('#featuredName').text).toBe(mockFeatured[0].name);
+      expect(itemElements.get('#featuredPrice').text).toBe(mockFeatured[0].formattedPrice);
     });
 
     it('onItemReady shows sale badge for discounted products', async () => {
@@ -271,21 +232,12 @@ describe('Home Page', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            show: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: itemElements } = createItemScope();
 
       itemReadyCb($item, mockFeatured[2]);
-      expect(itemElements['#featuredPrice'].text).toBe(mockFeatured[2].formattedDiscountedPrice);
-      expect(itemElements['#featuredSaleBadge'].show).toHaveBeenCalled();
-      expect(itemElements['#featuredOriginalPrice'].show).toHaveBeenCalled();
+      expect(itemElements.get('#featuredPrice').text).toBe(mockFeatured[2].formattedDiscountedPrice);
+      expect(itemElements.get('#featuredSaleBadge').show).toHaveBeenCalled();
+      expect(itemElements.get('#featuredOriginalPrice').show).toHaveBeenCalled();
     });
 
     it('onItemReady registers makeClickable on image and name', async () => {
@@ -295,24 +247,14 @@ describe('Home Page', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: itemElements } = createItemScope();
 
       makeClickable.mockClear();
       itemReadyCb($item, mockFeatured[1]);
       // makeClickable should be called for image and name
       const calls = makeClickable.mock.calls;
-      expect(calls.some(c => c[0] === itemElements['#featuredImage'])).toBe(true);
-      expect(calls.some(c => c[0] === itemElements['#featuredName'])).toBe(true);
+      expect(calls.some(c => c[0] === itemElements.get('#featuredImage'))).toBe(true);
+      expect(calls.some(c => c[0] === itemElements.get('#featuredName'))).toBe(true);
     });
 
     it('onItemReady sets SEO alt text on image', async () => {
@@ -321,20 +263,11 @@ describe('Home Page', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            show: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: itemElements } = createItemScope();
 
       itemReadyCb($item, mockFeatured[1]);
-      expect(itemElements['#featuredImage'].alt).toContain('Eureka');
-      expect(itemElements['#featuredImage'].alt).toContain('Carolina Futons');
+      expect(itemElements.get('#featuredImage').alt).toContain('Eureka');
+      expect(itemElements.get('#featuredImage').alt).toContain('Carolina Futons');
     });
   });
 
@@ -357,21 +290,12 @@ describe('Home Page', () => {
       const repeater = getEl('#saleRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            show: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: itemElements } = createItemScope();
 
       itemReadyCb($item, mockSaleItems[0]);
-      expect(itemElements['#saleImage'].src).toBe(mockSaleItems[0].mainMedia);
-      expect(itemElements['#saleName'].text).toBe(mockSaleItems[0].name);
-      expect(itemElements['#salePrice'].text).toBe(mockSaleItems[0].formattedDiscountedPrice);
+      expect(itemElements.get('#saleImage').src).toBe(mockSaleItems[0].mainMedia);
+      expect(itemElements.get('#saleName').text).toBe(mockSaleItems[0].name);
+      expect(itemElements.get('#salePrice').text).toBe(mockSaleItems[0].formattedDiscountedPrice);
     });
 
     it('collapses sale section when no sale items available', async () => {

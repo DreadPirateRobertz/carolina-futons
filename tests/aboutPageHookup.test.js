@@ -5,35 +5,11 @@
  * FAQ link, local business schema injection.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { createMockElement, createItemScope } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  return {
-    text: '',
-    html: '',
-    value: '',
-    label: '',
-    src: '',
-    alt: '',
-    link: '',
-    target: '',
-    data: [],
-    collapsed: false,
-    style: { color: '' },
-    accessibility: { ariaLabel: '', role: '', tabIndex: -1 },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(function () { this.collapsed = true; }),
-    expand: vi.fn(function () { this.collapsed = false; }),
-    scrollTo: vi.fn(),
-    onClick: vi.fn(),
-    onItemReady: vi.fn(),
-    postMessage: vi.fn(),
-  };
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());
@@ -172,16 +148,12 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#brandStoryRepeater').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', alt: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, mockBrandStory[0]);
-      expect(itemEls['#storyHeading'].text).toBe('From Humble Beginnings');
-      expect(itemEls['#storyBody'].text).toContain('1991');
-      expect(itemEls['#storyImage'].alt).toContain('Hendersonville');
+      expect(itemEls.get('#storyHeading').text).toBe('From Humble Beginnings');
+      expect(itemEls.get('#storyBody').text).toContain('1991');
+      expect(itemEls.get('#storyImage').alt).toContain('Hendersonville');
     });
   });
 
@@ -204,16 +176,12 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#teamRepeater').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, mockTeamMembers[0]);
-      expect(itemEls['#teamName'].text).toBe('Brenda Deal');
-      expect(itemEls['#teamRole'].text).toBe('Owner');
-      expect(itemEls['#teamBio'].text).toContain('20 years');
+      expect(itemEls.get('#teamName').text).toBe('Brenda Deal');
+      expect(itemEls.get('#teamRole').text).toBe('Owner');
+      expect(itemEls.get('#teamBio').text).toContain('20 years');
     });
   });
 
@@ -234,29 +202,21 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#teamGallery').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { alt: '', text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, { title: 'Team picnic 2024', description: 'Annual team outing' });
-      expect(itemEls['#polaroidImage'].alt).toBe('Team picnic 2024');
-      expect(itemEls['#polaroidCaption'].text).toBe('Annual team outing');
+      expect(itemEls.get('#polaroidImage').alt).toBe('Team picnic 2024');
+      expect(itemEls.get('#polaroidCaption').text).toBe('Annual team outing');
     });
 
     it('onItemReady uses default alt when title is missing', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#teamGallery').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { alt: '', text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, { title: '', description: null });
-      expect(itemEls['#polaroidImage'].alt).toContain('Carolina Futons team');
+      expect(itemEls.get('#polaroidImage').alt).toContain('Carolina Futons team');
     });
   });
 
@@ -282,31 +242,23 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#timelineRepeater').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '' } };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, { year: '1991', title: "Sims' Futon Gallery Opens", description: 'Richard and Liz...' });
-      expect(itemEls['#timelineYear'].text).toBe('1991');
-      expect(itemEls['#timelineTitle'].text).toContain('Futon Gallery');
-      expect(itemEls['#timelineDesc'].text).toContain('Richard');
+      expect(itemEls.get('#timelineYear').text).toBe('1991');
+      expect(itemEls.get('#timelineTitle').text).toContain('Futon Gallery');
+      expect(itemEls.get('#timelineDesc').text).toContain('Richard');
     });
 
     it('onItemReady sets ARIA label on year element', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#timelineRepeater').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '' } };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, { year: '2021', title: 'A New Chapter Begins', description: 'Desc' });
-      expect(itemEls['#timelineYear'].accessibility.ariaLabel).toContain('2021');
-      expect(itemEls['#timelineYear'].accessibility.ariaLabel).toContain('New Chapter');
+      expect(itemEls.get('#timelineYear').accessibility.ariaLabel).toContain('2021');
+      expect(itemEls.get('#timelineYear').accessibility.ariaLabel).toContain('New Chapter');
     });
   });
 
@@ -339,14 +291,10 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#showroomFeatures').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, { _id: 'feat-0', text: 'Free fabric swatches' });
-      expect(itemEls['#featureText'].text).toBe('Free fabric swatches');
+      expect(itemEls.get('#featureText').text).toBe('Free fabric swatches');
     });
 
     it('uses makeClickable on directions button', async () => {
@@ -395,29 +343,21 @@ describe('About Page', () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#aboutTestimonials').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, mockSocialProof[0]);
-      expect(itemEls['#testimonialQuote'].text).toBe('"Best furniture store in WNC!"');
-      expect(itemEls['#testimonialAuthor'].text).toBe('— Sarah M.');
+      expect(itemEls.get('#testimonialQuote').text).toBe('"Best furniture store in WNC!"');
+      expect(itemEls.get('#testimonialAuthor').text).toBe('— Sarah M.');
     });
 
     it('onItemReady renders star rating with filled and empty stars', async () => {
       await onReadyHandler();
       const itemReadyCb = getEl('#aboutTestimonials').onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: itemEls } = createItemScope();
 
       itemReadyCb($item, mockSocialProof[1]); // rating: 4
-      expect(itemEls['#testimonialStars'].text).toBe('★★★★☆');
+      expect(itemEls.get('#testimonialStars').text).toBe('★★★★☆');
     });
   });
 
