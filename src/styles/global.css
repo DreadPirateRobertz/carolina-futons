@@ -1046,7 +1046,412 @@ h4.font_4,
 
 
 /* ═══════════════════════════════════════════════════════════════════════
-   20. REDUCED MOTION — respect user preference (WCAG 2.3.3)
+   21. CHECKOUT PAGE — form inputs, progress steps, order summary
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Checkout form inputs — consistent with Contact page (13) */
+[data-hook="checkout-root"] input,
+[data-hook="checkout-root"] select,
+[data-hook="checkout-root"] textarea {
+  font-size: 15px !important;
+  border-radius: 4px !important;
+}
+
+[data-hook="checkout-root"] label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--cf-navy) !important;
+}
+
+/* Checkout section headings */
+[data-hook="checkout-root"] h2,
+[data-hook="checkout-root"] h3 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+/* Order summary — sidebar totals */
+[data-hook="order-summary-total"],
+[data-hook="order-summary-subtotal"] {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="order-summary-item-name"] {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+[data-hook="order-summary-item-price"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+/* Place Order button */
+[data-hook="place-order-button"],
+[data-hook="checkout-button"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border-radius: 4px !important;
+  min-height: 48px !important; /* WCAG 2.5.8 touch target — primary purchase CTA */
+}
+
+[data-hook="place-order-button"]:hover,
+[data-hook="checkout-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+}
+
+/* Express checkout (Apple Pay / Google Pay / PayPal — rendered by Wix Payments) */
+[data-hook="express-checkout-button"] {
+  border-radius: 4px !important;
+  min-height: 44px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   22. SIDE CART (mini cart flyout)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="side-cart-item-name"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="side-cart-item-price"] {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+[data-hook="side-cart-subtotal"] {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+[data-hook="side-cart-checkout-button"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border-radius: 4px !important;
+  min-height: 44px !important;
+}
+
+[data-hook="side-cart-checkout-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+}
+
+[data-hook="side-cart-continue-shopping"] {
+  font-size: 14px !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   23. THANK YOU PAGE — order confirmation, delivery timeline
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="thank-you-page-title"],
+[data-hook="order-confirmation-title"] {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="thank-you-page-subtitle"],
+[data-hook="order-confirmation-subtitle"] {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+[data-hook="order-number"] {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--cf-navy) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   24. RETURNS & ORDER TRACKING — status timeline, form inputs
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Shared form styling for Returns + Order Tracking lookup */
+[data-hook="returns-root"] input,
+[data-hook="order-tracking-root"] input {
+  font-size: 15px !important;
+  border-radius: 4px !important;
+}
+
+[data-hook="returns-root"] label,
+[data-hook="order-tracking-root"] label {
+  font-size: 14px !important;
+  color: var(--cf-navy) !important;
+}
+
+/* Status timeline — shared pattern */
+[data-hook="status-timeline"] {
+  font-size: 14px !important;
+}
+
+[data-hook="status-timeline-step-active"] {
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="status-timeline-step-completed"] {
+  color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   25. MEMBER PAGE — account portal, order history, loyalty
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="member-page-title"] {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="member-order-item-name"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+[data-hook="member-order-item-price"] {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+[data-hook="member-order-status"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   26. STYLE QUIZ — question cards, progress, results
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="quiz-title"] {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="quiz-question-text"] {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="quiz-option-label"] {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+[data-hook="quiz-progress-bar"] {
+  background-color: var(--cf-gray-light) !important;
+  border-radius: 9999px !important;
+  height: 8px !important;
+}
+
+[data-hook="quiz-progress-fill"] {
+  background-color: var(--cf-blue) !important;
+  border-radius: 9999px !important;
+  transition: width 0.3s ease !important; /* disabled by §32 reduced-motion rule */
+}
+
+[data-hook="quiz-next-button"],
+[data-hook="quiz-submit-button"] {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border-radius: 4px !important;
+  min-height: 44px !important;
+}
+
+[data-hook="quiz-next-button"]:hover,
+[data-hook="quiz-submit-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   27. GIFT CARDS — purchase form, balance checker
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="gift-card-denomination"] {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="gift-card-balance-amount"] {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   28. SALE PAGE — promo banners, discount badges
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="sale-banner-title"] {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="sale-discount-badge"] {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   29. SEARCH RESULTS — search input, result counts, suggestions
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="search-input"] {
+  font-size: 16px !important;
+  border-radius: 4px !important;
+}
+
+[data-hook="search-results-count"] {
+  font-size: 14px !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="search-no-results-text"] {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="search-suggestion-text"] {
+  font-size: 15px !important;
+  color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   30. UGC GALLERY — customer photo grid
+   ═══════════════════════════════════════════════════════════════════════ */
+
+[data-hook="ugc-gallery-title"] {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: var(--cf-navy) !important;
+}
+
+[data-hook="ugc-photo-caption"] {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+[data-hook="ugc-submit-button"] {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  background-color: var(--cf-blue) !important;
+  color: var(--cf-white) !important;
+  border-radius: 4px !important;
+}
+
+[data-hook="ugc-submit-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   31. RESPONSIVE — new page sections (768px + 480px)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Checkout headings — scale down for tablet */
+  [data-hook="checkout-root"] h2,
+  [data-hook="checkout-root"] h3 {
+    font-size: 16px !important;
+  }
+
+  [data-hook="thank-you-page-title"],
+  [data-hook="order-confirmation-title"],
+  [data-hook="member-page-title"],
+  [data-hook="quiz-title"],
+  [data-hook="ugc-gallery-title"] {
+    font-size: 22px !important;
+  }
+
+  [data-hook="sale-banner-title"] {
+    font-size: 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Full-width inputs — prevent iOS zoom (font-size: 16px) */
+  [data-hook="checkout-root"] input,
+  [data-hook="checkout-root"] select,
+  [data-hook="checkout-root"] textarea,
+  [data-hook="returns-root"] input,
+  [data-hook="returns-root"] select,
+  [data-hook="order-tracking-root"] input,
+  [data-hook="order-tracking-root"] select,
+  [data-hook="search-input"] {
+    width: 100% !important;
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    box-sizing: border-box !important;
+  }
+
+  /* Full-width CTA buttons — 48px touch target */
+  [data-hook="place-order-button"],
+  [data-hook="checkout-button"],
+  [data-hook="side-cart-checkout-button"],
+  [data-hook="quiz-next-button"],
+  [data-hook="quiz-submit-button"] {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  [data-hook="thank-you-page-title"],
+  [data-hook="order-confirmation-title"] {
+    font-size: 20px !important;
+  }
+
+  /* Gift card denominations — 44px touch targets */
+  [data-hook="gift-card-denomination"] {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   32. REDUCED MOTION — respect user preference (WCAG 2.3.3)
    ═══════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
