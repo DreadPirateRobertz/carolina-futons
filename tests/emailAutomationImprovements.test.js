@@ -73,6 +73,11 @@ describe('selectABVariant — deterministic A/B selection', () => {
     expect(['A', 'B']).toContain(result);
   });
 
+  it('returns either A or B for null (random fallback)', () => {
+    const result = _selectABVariant(null);
+    expect(['A', 'B']).toContain(result);
+  });
+
   it('produces both variants across a range of emails', () => {
     const variants = new Set();
     for (let i = 0; i < 100; i++) {
@@ -193,6 +198,7 @@ describe('processEmailQueue — send window deferral', () => {
 
     // Email should be deferred (rescheduled), not sent
     expect(result.sent).toBe(0);
+    expect(result.deferred).toBe(1);
     const deferredUpdate = updates.find(u => u.item._id === 'eq-1');
     expect(deferredUpdate).toBeTruthy();
     expect(deferredUpdate.item.scheduledFor).toBeInstanceOf(Date);
@@ -433,6 +439,65 @@ describe('triggerAbandonedCartRecovery — cross-cart dedup', () => {
     const result = await triggerAbandonedCartRecovery();
     // Email gets lowercased, matches existing — should skip
     expect(result.cartsProcessed).toBe(0);
+  });
+
+  it('does not block on cancelled/failed recovery in last 24h', async () => {
+    const now = Date.now();
+
+    // Recent step 1 that was CANCELLED — should NOT block new recovery
+    __seed('EmailQueue', [{
+      _id: 'eq-cancelled',
+      recipientEmail: 'retry@test.com',
+      sequenceType: 'cart_recovery',
+      sequenceStep: 1,
+      createdAt: new Date(now - 3 * 60 * 60 * 1000), // 3h ago
+      checkoutId: 'chk-cancelled',
+      status: 'cancelled',
+    }]);
+
+    __seed('AbandonedCarts', [{
+      _id: 'cart-retry',
+      checkoutId: 'chk-new',
+      status: 'abandoned',
+      recoveryEmailSent: false,
+      abandonedAt: new Date(now - 2 * 60 * 60 * 1000),
+      buyerEmail: 'retry@test.com',
+      buyerName: 'Retry',
+      cartTotal: 300,
+      lineItems: '[]',
+    }]);
+
+    const result = await triggerAbandonedCartRecovery();
+    expect(result.cartsProcessed).toBe(1);
+  });
+
+  it('does not block on failed recovery in last 24h', async () => {
+    const now = Date.now();
+
+    __seed('EmailQueue', [{
+      _id: 'eq-failed',
+      recipientEmail: 'fail@test.com',
+      sequenceType: 'cart_recovery',
+      sequenceStep: 1,
+      createdAt: new Date(now - 5 * 60 * 60 * 1000),
+      checkoutId: 'chk-failed',
+      status: 'failed',
+    }]);
+
+    __seed('AbandonedCarts', [{
+      _id: 'cart-fail',
+      checkoutId: 'chk-new2',
+      status: 'abandoned',
+      recoveryEmailSent: false,
+      abandonedAt: new Date(now - 2 * 60 * 60 * 1000),
+      buyerEmail: 'fail@test.com',
+      buyerName: 'Fail',
+      cartTotal: 250,
+      lineItems: '[]',
+    }]);
+
+    const result = await triggerAbandonedCartRecovery();
+    expect(result.cartsProcessed).toBe(1);
   });
 });
 

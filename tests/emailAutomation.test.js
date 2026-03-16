@@ -796,7 +796,7 @@ describe('processEmailQueue', () => {
 
   it('returns zeros when queue is empty', async () => {
     const result = await processEmailQueue();
-    expect(result).toEqual({ sent: 0, failed: 0, cancelled: 0 });
+    expect(result).toEqual({ sent: 0, failed: 0, cancelled: 0, deferred: 0 });
   });
 
   it('does not send emails scheduled for the future', async () => {

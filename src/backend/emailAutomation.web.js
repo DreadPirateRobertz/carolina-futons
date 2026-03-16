@@ -338,6 +338,8 @@ export const triggerAbandonedCartRecovery = webMethod(
         console.warn('[emailAutomation] Cart recovery discount unavailable, emails will omit discount:', e.message);
       }
 
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
       for (const cart of result.items) {
         const cartEmail = (cart.buyerEmail || '').toLowerCase().trim();
         if (!cartEmail || !validateEmail(cartEmail)) continue;
@@ -352,8 +354,8 @@ export const triggerAbandonedCartRecovery = webMethod(
 
         if (alreadyQueued.items.length > 0) continue;
 
-        // Cross-cart dedup: skip if any cart recovery was sent to this email in last 24h
-        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        // Cross-cart dedup: skip if any active cart recovery was queued for this email in last 24h
+        // Only count pending/sent — cancelled/failed should not block new recovery
         const recentRecovery = await wixData.query('EmailQueue')
           .eq('recipientEmail', cartEmail)
           .eq('sequenceType', 'cart_recovery')
@@ -361,7 +363,10 @@ export const triggerAbandonedCartRecovery = webMethod(
           .ge('createdAt', oneDayAgo)
           .find();
 
-        if (recentRecovery.items.length > 0) continue;
+        const hasActiveRecovery = recentRecovery.items.some(
+          item => item.status === 'pending' || item.status === 'sent'
+        );
+        if (hasActiveRecovery) continue;
 
         const abandonedAt = new Date(cart.abandonedAt);
         let parsedItems = [];
@@ -488,7 +493,7 @@ export const triggerReengagement = webMethod(
  * passed. Should be called by a scheduled job every 15-30 minutes.
  *
  * @function processEmailQueue
- * @returns {Promise<{sent: number, failed: number, cancelled: number}>}
+ * @returns {Promise<{sent: number, failed: number, cancelled: number, deferred: number}>}
  * @permission Admin
  */
 export const processEmailQueue = webMethod(
@@ -505,6 +510,7 @@ export const processEmailQueue = webMethod(
       let sent = 0;
       let failed = 0;
       let cancelled = 0;
+      let deferred = 0;
 
       // Send-time optimization: defer non-transactional emails outside business hours
       const windowCheck = checkSendWindow(now);
@@ -523,6 +529,7 @@ export const processEmailQueue = webMethod(
             ...item,
             scheduledFor: windowCheck.nextWindowOpen,
           });
+          deferred++;
           continue;
         }
 
@@ -583,10 +590,10 @@ export const processEmailQueue = webMethod(
         }
       }
 
-      return { sent, failed, cancelled };
+      return { sent, failed, cancelled, deferred };
     } catch (err) {
       console.error('Error processing email queue:', err);
-      return { sent: 0, failed: 0, cancelled: 0 };
+      return { sent: 0, failed: 0, cancelled: 0, deferred: 0 };
     }
   }
 );
