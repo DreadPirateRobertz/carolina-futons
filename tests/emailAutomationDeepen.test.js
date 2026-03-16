@@ -495,7 +495,6 @@ describe('triggerRestockNotifications', () => {
 
 describe('triggerReviewThanks', () => {
   it('still sends email when discount secret is unavailable', async () => {
-    const origGetSecret = getSecret;
     getSecret.mockRejectedValueOnce(new Error('Secret not found'));
 
     const inserts = [];

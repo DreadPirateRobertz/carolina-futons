@@ -264,22 +264,14 @@ describe('unsubscribeFromESP', () => {
 
   it('no ESP key returns no_esp_configured', async () => {
     _secretOverrides.ESP_API_KEY = '';
-    try {
-      const res = await unsubscribeFromESP('test@test.com');
-      expect(res).toEqual({ unsubscribed: false, reason: 'no_esp_configured' });
-    } finally {
-      delete _secretOverrides.ESP_API_KEY;
-    }
+    const res = await unsubscribeFromESP('test@test.com');
+    expect(res).toEqual({ unsubscribed: false, reason: 'no_esp_configured' });
   });
 
   it('suppress API error returns esp_api_error', async () => {
     _fetchResponse = { ok: false, status: 500, json: async () => ({}) };
-    try {
-      const res = await unsubscribeFromESP('test@test.com');
-      expect(res).toEqual({ unsubscribed: false, reason: 'esp_api_error' });
-    } finally {
-      _fetchResponse = { ok: true, status: 200, json: async () => ({ data: { id: 'profile-123' } }) };
-    }
+    const res = await unsubscribeFromESP('test@test.com');
+    expect(res).toEqual({ unsubscribed: false, reason: 'esp_api_error' });
   });
 
   it('updates CMS record status to unsubscribed', async () => {
@@ -326,32 +318,20 @@ describe('syncToESP', () => {
 
   it('rate limited (429) returns esp_rate_limited', async () => {
     _fetchResponse = { ok: false, status: 429, json: async () => ({}) };
-    try {
-      const res = await syncToESP('sync@test.com', 'footer');
-      expect(res).toEqual({ synced: false, reason: 'esp_rate_limited' });
-    } finally {
-      _fetchResponse = { ok: true, status: 200, json: async () => ({ data: { id: 'profile-123' } }) };
-    }
+    const res = await syncToESP('sync@test.com', 'footer');
+    expect(res).toEqual({ synced: false, reason: 'esp_rate_limited' });
   });
 
   it('API error (non-429) returns esp_api_error', async () => {
     _fetchResponse = { ok: false, status: 500, json: async () => ({}) };
-    try {
-      const res = await syncToESP('sync@test.com', 'footer');
-      expect(res).toEqual({ synced: false, reason: 'esp_api_error' });
-    } finally {
-      _fetchResponse = { ok: true, status: 200, json: async () => ({ data: { id: 'profile-123' } }) };
-    }
+    const res = await syncToESP('sync@test.com', 'footer');
+    expect(res).toEqual({ synced: false, reason: 'esp_api_error' });
   });
 
   it('no ESP key returns no_esp_configured', async () => {
     _secretOverrides.ESP_API_KEY = '';
-    try {
-      const res = await syncToESP('sync@test.com', 'footer');
-      expect(res).toEqual({ synced: false, reason: 'no_esp_configured' });
-    } finally {
-      delete _secretOverrides.ESP_API_KEY;
-    }
+    const res = await syncToESP('sync@test.com', 'footer');
+    expect(res).toEqual({ synced: false, reason: 'no_esp_configured' });
   });
 
   it('invalid email returns invalid_email', async () => {
@@ -367,15 +347,11 @@ describe('syncToESP', () => {
   it('list subscription step skipped when no listId', async () => {
     _secretOverrides.ESP_LIST_ID = '';
     const { fetch } = await import('wix-fetch');
-    try {
-      const res = await syncToESP('sync@test.com', 'footer');
-      expect(res).toEqual({ synced: true });
-      // Only 1 fetch call (profile create), no list subscribe
-      expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch.mock.calls[0][0]).toContain('/profiles/');
-    } finally {
-      delete _secretOverrides.ESP_LIST_ID;
-    }
+    const res = await syncToESP('sync@test.com', 'footer');
+    expect(res).toEqual({ synced: true });
+    // Only 1 fetch call (profile create), no list subscribe
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toContain('/profiles/');
   });
 
   it('makes profile create call with correct headers', async () => {
@@ -418,11 +394,7 @@ describe('getESPStatus', () => {
 
   it('returns configured: false when no key', async () => {
     _secretOverrides.ESP_API_KEY = '';
-    try {
-      const res = await getESPStatus();
-      expect(res).toEqual({ configured: false });
-    } finally {
-      delete _secretOverrides.ESP_API_KEY;
-    }
+    const res = await getESPStatus();
+    expect(res).toEqual({ configured: false });
   });
 });
