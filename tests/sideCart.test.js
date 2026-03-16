@@ -179,8 +179,8 @@ describe('initSideCartRepeater', () => {
     quantity: 2,
     image: 'https://example.com/clover.jpg',
     lineTotal: 5196,
-    variantDetails: 'Size: Queen · Finish: Honey Oak',
-    variantName: 'Queen, Honey Oak',
+    variantDetails: 'Size: Queen · Finish: Cherry',
+    variantName: 'Queen, Cherry',
   };
 
   async function getItemReadyFn() {
@@ -239,7 +239,7 @@ describe('initSideCartRepeater', () => {
 
     itemReadyFn($item, mockItem);
 
-    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Honey Oak');
+    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Cherry');
     expect($item('#sideItemVariant').show).toHaveBeenCalled();
   });
 
