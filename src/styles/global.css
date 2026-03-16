@@ -1381,6 +1381,10 @@ h4.font_4,
   border-radius: 4px !important;
 }
 
+[data-hook="ugc-submit-button"]:hover {
+  background-color: var(--cf-blue-dark) !important;
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    31. RESPONSIVE — new page sections (768px + 480px)
@@ -1410,8 +1414,11 @@ h4.font_4,
   /* Full-width inputs — prevent iOS zoom (font-size: 16px) */
   [data-hook="checkout-root"] input,
   [data-hook="checkout-root"] select,
+  [data-hook="checkout-root"] textarea,
   [data-hook="returns-root"] input,
+  [data-hook="returns-root"] select,
   [data-hook="order-tracking-root"] input,
+  [data-hook="order-tracking-root"] select,
   [data-hook="search-input"] {
     width: 100% !important;
     font-size: 16px !important; /* prevents iOS zoom on focus */
