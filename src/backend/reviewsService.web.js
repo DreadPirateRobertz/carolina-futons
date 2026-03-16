@@ -116,10 +116,11 @@ export const getAggregateRating = webMethod(
     let sum = 0;
     let validCount = 0;
     for (const r of reviews) {
-      if (r.rating == null) continue;
-      const raw = Number(r.rating);
-      if (isNaN(raw)) continue;
-      const rating = Math.min(5, Math.max(1, Math.round(raw)));
+      if (r.rating == null || isNaN(Number(r.rating))) {
+        console.warn(`[reviewsService] Skipping review ${r._id}: invalid rating (${r.rating})`);
+        continue;
+      }
+      const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating))));
       breakdown[rating]++;
       sum += rating;
       validCount++;
@@ -353,6 +354,7 @@ export const moderateReview = webMethod(
       const allowed = REVIEW_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
+        console.warn(`[reviewsService] Blocked transition: ${rid} ${currentStatus} → ${newStatus}`);
         return {
           success: false,
           error: `Cannot ${action} a review with status '${currentStatus}'.`,
@@ -492,9 +494,11 @@ export const getCategoryReviewSummaries = webMethod(
       for (const review of result.items) {
         const pid = review.productId;
         if (!summaries[pid]) continue;
-        if (review.rating == null) continue;
+        if (review.rating == null || isNaN(Number(review.rating))) {
+          console.warn(`[reviewsService] Skipping review ${review._id}: invalid rating (${review.rating})`);
+          continue;
+        }
         const raw = Number(review.rating);
-        if (isNaN(raw)) continue;
         summaries[pid].total++;
         summaries[pid]._sum = (summaries[pid]._sum || 0) + Math.min(5, Math.max(1, Math.round(raw)));
       }

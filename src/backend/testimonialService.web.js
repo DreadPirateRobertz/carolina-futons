@@ -115,7 +115,7 @@ export const getFeaturedTestimonials = webMethod(
       return { items: rotated, success: true };
     } catch (err) {
       console.error('[testimonialService] Error getting featured testimonials:', err);
-      return { items: [], success: false };
+      return { items: [], success: false, error: 'Failed to load featured testimonials.' };
     }
   }
 );
@@ -125,11 +125,13 @@ export const getFeaturedTestimonials = webMethod(
  * Uses a deterministic offset so the same day always shows the same set,
  * but different days show different testimonials.
  *
- * @param {Array} pool - Full pool of items.
+ * @precondition count < pool.length — caller must guard against this to avoid duplicates
+ * @param {Array} pool - Full pool of items (must be non-empty).
  * @param {number} count - How many to select.
  * @returns {Array} Selected subset.
  */
 function rotateSelection(pool, count) {
+  if (!pool || pool.length === 0 || count <= 0) return [];
   const now = new Date();
   const dayOfYear = Math.floor(
     (now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24)
@@ -260,7 +262,7 @@ const VALID_STATUSES = ['pending', 'approved', 'rejected', 'featured', 'flagged'
  * Update testimonial status (admin curation).
  *
  * @param {string} testimonialId - Testimonial _id.
- * @param {string} newStatus - One of: approved, rejected, featured, flagged.
+ * @param {string} newStatus - One of: pending, approved, rejected, featured, flagged.
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const updateTestimonialStatus = webMethod(

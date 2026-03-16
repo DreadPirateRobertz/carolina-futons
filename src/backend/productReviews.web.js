@@ -65,11 +65,11 @@ export const getReviewSummary = webMethod(
         };
       }
 
-      // Filter out invalid/NaN/null ratings before aggregation
-      const validRatings = allRatings.filter(r => {
-        if (r == null) return false;
-        return !isNaN(Number(r));
-      });
+      // Skip null/NaN ratings — they propagate as NaN through Math.round/min/max and corrupt sums and breakdowns
+      const validRatings = allRatings.filter(r => r != null && !isNaN(Number(r)));
+      if (validRatings.length < allRatings.length) {
+        console.warn(`[productReviews] Skipped ${allRatings.length - validRatings.length} reviews with invalid ratings for product ${pid}`);
+      }
 
       if (validRatings.length === 0) {
         return {

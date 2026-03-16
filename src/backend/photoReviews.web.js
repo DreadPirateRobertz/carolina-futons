@@ -167,7 +167,7 @@ const PHOTO_STATUS_TRANSITIONS = {
  *
  * @param {string} reviewId - Review ID to moderate.
  * @param {string} action - 'approve'|'reject'|'feature'
- * @returns {Promise<{success: boolean, previousStatus?: string, newStatus?: string}>}
+ * @returns {Promise<{success: boolean, previousStatus?: string, newStatus?: string, error?: string}>}
  */
 export const moderatePhotoReview = webMethod(
   Permissions.Admin,
@@ -198,6 +198,7 @@ export const moderatePhotoReview = webMethod(
       const allowed = PHOTO_STATUS_TRANSITIONS[currentStatus];
 
       if (!allowed || !allowed.includes(newStatus)) {
+        console.warn(`[photoReviews] Blocked transition: ${cleanId} ${currentStatus} → ${newStatus} by ${memberId}`);
         return {
           success: false,
           error: `Cannot ${cleanAction} a review with status '${currentStatus}'.`,
