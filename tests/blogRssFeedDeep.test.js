@@ -1,6 +1,6 @@
 // blogRssFeedDeep.test.js — CF-xr0u: Deep coverage for blogRssFeed.web.js
 // Edge cases: empty blog, special characters in titles, very long posts,
-// missing images, XML escaping boundaries, feed structure validation.
+// XML escaping boundaries, date handling, category/tag combos, feed structure.
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -83,14 +83,15 @@ describe('_buildRssXml — special characters in titles', () => {
     expect(xml).toContain('&gt;');
   });
 
-  it('escapes double quotes in title', () => {
+  it('handles double quotes in title', () => {
     const xml = _buildRssXml([{
       slug: 'test',
       title: 'The "Best" Futon',
       publishDate: '2026-01-01',
     }]);
-    // escapeXml may use &quot; or leave them
+    expect(xml).toContain('<title>');
     expect(xml).toContain('Best');
+    expect(xml).toContain('Futon');
   });
 
   it('handles unicode characters in title', () => {

@@ -1,6 +1,6 @@
 // contentSchedulerDeep.test.js — CF-xr0u: Deep coverage for contentScheduler.web.js
-// Edge cases: empty queue, cancelled items, rate limit exceeded, timezone boundaries,
-// dedup window boundaries, mixed status processing, auth, stats edge cases.
+// Edge cases: empty queue, cancelled items, dedup window boundaries, action execution,
+// auth, batch processing, queue filtering, stats edge cases.
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
