@@ -7,8 +7,14 @@ import { __seed, __onInsert, __onUpdate, __reset as __resetData } from './__mock
 
 // Mock the dynamic import of emailAutomation
 const mockTriggerRestockNotifications = vi.fn().mockResolvedValue({ success: true, notified: 1 });
+const mockTriggerWelcomeSequence = vi.fn().mockResolvedValue({ success: true, queued: 3 });
+const mockTriggerPostPurchaseSequence = vi.fn().mockResolvedValue({ success: true, queued: 3 });
+const mockCancelSequenceForOrder = vi.fn().mockResolvedValue({ success: true, cancelled: 1 });
 vi.mock('backend/emailAutomation.web', () => ({
   triggerRestockNotifications: mockTriggerRestockNotifications,
+  triggerWelcomeSequence: mockTriggerWelcomeSequence,
+  triggerPostPurchaseSequence: mockTriggerPostPurchaseSequence,
+  cancelSequenceForOrder: mockCancelSequenceForOrder,
 }));
 
 vi.mock('backend/utils/sanitize', () => ({
@@ -19,6 +25,9 @@ import {
   wixEcom_onAbandonedCheckoutCreated,
   wixEcom_onAbandonedCheckoutRecovered,
   wixStores_onInventoryVariantUpdated,
+  wixMembers_onMemberCreated,
+  wixEcom_onOrderCreated,
+  wixEcom_onOrderCanceled,
 } from '../src/backend/events.js';
 
 beforeEach(() => {
@@ -250,6 +259,200 @@ describe('wixStores_onInventoryVariantUpdated', () => {
       wixStores_onInventoryVariantUpdated({
         entity: { productId: 'prod-err', quantity: 5 },
         previousEntity: { quantity: 0 },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixMembers_onMemberCreated ──────────────────────────────────────
+
+describe('wixMembers_onMemberCreated', () => {
+  it('triggers welcome sequence with member email and name', async () => {
+    await wixMembers_onMemberCreated({
+      entity: {
+        _id: 'member-1',
+        loginEmail: 'alice@test.com',
+        contactDetails: { firstName: 'Alice' },
+      },
+    });
+
+    expect(mockTriggerWelcomeSequence).toHaveBeenCalledWith(
+      'member-1',
+      'alice@test.com',
+      'Alice',
+    );
+  });
+
+  it('falls back to contactDetails email when loginEmail missing', async () => {
+    await wixMembers_onMemberCreated({
+      entity: {
+        _id: 'member-2',
+        contactDetails: { emails: ['bob@test.com'], firstName: 'Bob' },
+      },
+    });
+
+    expect(mockTriggerWelcomeSequence).toHaveBeenCalledWith(
+      'member-2',
+      'bob@test.com',
+      'Bob',
+    );
+  });
+
+  it('falls back to profile.nickname when firstName missing', async () => {
+    await wixMembers_onMemberCreated({
+      entity: {
+        _id: 'member-3',
+        loginEmail: 'carol@test.com',
+        profile: { nickname: 'Carol' },
+      },
+    });
+
+    expect(mockTriggerWelcomeSequence).toHaveBeenCalledWith(
+      'member-3',
+      'carol@test.com',
+      'Carol',
+    );
+  });
+
+  it('skips when email is empty', async () => {
+    await wixMembers_onMemberCreated({
+      entity: { _id: 'member-4' },
+    });
+
+    expect(mockTriggerWelcomeSequence).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when triggerWelcomeSequence fails', async () => {
+    mockTriggerWelcomeSequence.mockRejectedValueOnce(new Error('fail'));
+
+    await expect(
+      wixMembers_onMemberCreated({
+        entity: { _id: 'm-err', loginEmail: 'err@test.com' },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderCreated ──────────────────────────────────────────
+
+describe('wixEcom_onOrderCreated', () => {
+  it('triggers post-purchase sequence with order details', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-001',
+        buyerInfo: { email: 'alice@test.com', contactId: 'c1' },
+        billingInfo: { firstName: 'Alice' },
+        priceSummary: { total: { amount: 899 } },
+        lineItems: [
+          { productName: { original: 'Eureka Futon' }, quantity: 1, price: { amount: 899 } },
+        ],
+      },
+    });
+
+    expect(mockTriggerPostPurchaseSequence).toHaveBeenCalledWith(
+      'c1',
+      'alice@test.com',
+      'Alice',
+      'ORD-001',
+      899,
+      [{ name: 'Eureka Futon', quantity: 1, price: 899 }],
+    );
+  });
+
+  it('uses buyerInfo.firstName when billingInfo missing', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-002',
+        buyerInfo: { email: 'bob@test.com', firstName: 'Bob', contactId: 'c2' },
+        lineItems: [],
+      },
+    });
+
+    expect(mockTriggerPostPurchaseSequence).toHaveBeenCalledWith(
+      'c2', 'bob@test.com', 'Bob', 'ORD-002', 0, [],
+    );
+  });
+
+  it('skips when buyer email is empty', async () => {
+    await wixEcom_onOrderCreated({
+      entity: { number: 'ORD-003', buyerInfo: {} },
+    });
+
+    expect(mockTriggerPostPurchaseSequence).not.toHaveBeenCalled();
+  });
+
+  it('handles totals.total fallback', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-004',
+        buyerInfo: { email: 'x@test.com', contactId: 'c4' },
+        totals: { total: 499 },
+        lineItems: [],
+      },
+    });
+
+    expect(mockTriggerPostPurchaseSequence).toHaveBeenCalledWith(
+      'c4', 'x@test.com', '', 'ORD-004', 499, [],
+    );
+  });
+
+  it('maps lineItems with name fallback', async () => {
+    await wixEcom_onOrderCreated({
+      entity: {
+        number: 'ORD-005',
+        buyerInfo: { email: 'y@test.com', contactId: 'c5' },
+        lineItems: [
+          { name: 'Night Frame', quantity: 2, price: 299 },
+        ],
+      },
+    });
+
+    const callArgs = mockTriggerPostPurchaseSequence.mock.calls[0];
+    expect(callArgs[5]).toEqual([{ name: 'Night Frame', quantity: 2, price: 299 }]);
+  });
+
+  it('does not throw when triggerPostPurchaseSequence fails', async () => {
+    mockTriggerPostPurchaseSequence.mockRejectedValueOnce(new Error('fail'));
+
+    await expect(
+      wixEcom_onOrderCreated({
+        entity: { number: 'ORD-ERR', buyerInfo: { email: 'err@test.com' }, lineItems: [] },
+      })
+    ).resolves.not.toThrow();
+  });
+});
+
+// ── wixEcom_onOrderCanceled ─────────────────────────────────────────
+
+describe('wixEcom_onOrderCanceled', () => {
+  it('cancels pending email sequences for the order', async () => {
+    await wixEcom_onOrderCanceled({
+      entity: {
+        number: 'ORD-001',
+        buyerInfo: { email: 'alice@test.com' },
+      },
+    });
+
+    expect(mockCancelSequenceForOrder).toHaveBeenCalledWith(
+      'alice@test.com',
+      'ORD-001',
+    );
+  });
+
+  it('skips when buyer email is empty', async () => {
+    await wixEcom_onOrderCanceled({
+      entity: { number: 'ORD-002', buyerInfo: {} },
+    });
+
+    expect(mockCancelSequenceForOrder).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when cancelSequenceForOrder fails', async () => {
+    mockCancelSequenceForOrder.mockRejectedValueOnce(new Error('fail'));
+
+    await expect(
+      wixEcom_onOrderCanceled({
+        entity: { number: 'ORD-ERR', buyerInfo: { email: 'err@test.com' } },
       })
     ).resolves.not.toThrow();
   });

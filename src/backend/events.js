@@ -94,6 +94,74 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
   }
 }
 
+// ── Member + Order Lifecycle Handlers ────────────────────────────────
+
+/**
+ * Fired when a new site member is created.
+ * Delegates to emailAutomation to queue the welcome email series.
+ */
+export async function wixMembers_onMemberCreated(event) {
+  const member = event.entity || event;
+  const email = member.loginEmail || member.contactDetails?.emails?.[0] || '';
+  const firstName = member.contactDetails?.firstName || member.profile?.nickname || '';
+  const contactId = member._id || '';
+
+  if (!email) return;
+
+  try {
+    const { triggerWelcomeSequence } = await import('backend/emailAutomation.web');
+    await triggerWelcomeSequence(contactId, email, firstName);
+  } catch (err) {
+    console.error('[events] Error triggering welcome sequence:', err);
+  }
+}
+
+/**
+ * Fired when an order is created (completed checkout).
+ * Delegates to emailAutomation to queue the post-purchase care sequence.
+ */
+export async function wixEcom_onOrderCreated(event) {
+  const order = event.entity || event;
+  const email = order.buyerInfo?.email || '';
+  const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+  const contactId = order.buyerInfo?.contactId || '';
+  const orderNumber = order.number || '';
+  const total = order.priceSummary?.total?.amount || order.totals?.total || 0;
+  const lineItems = (order.lineItems || []).map(item => ({
+    name: item.productName?.original || item.name || '',
+    quantity: item.quantity || 1,
+    price: item.price?.amount || item.price || 0,
+  }));
+
+  if (!email) return;
+
+  try {
+    const { triggerPostPurchaseSequence } = await import('backend/emailAutomation.web');
+    await triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems);
+  } catch (err) {
+    console.error('[events] Error triggering post-purchase sequence:', err);
+  }
+}
+
+/**
+ * Fired when an order is cancelled.
+ * Delegates to emailAutomation to cancel pending post-purchase care emails.
+ */
+export async function wixEcom_onOrderCanceled(event) {
+  const order = event.entity || event;
+  const email = order.buyerInfo?.email || '';
+  const orderNumber = order.number || '';
+
+  if (!email) return;
+
+  try {
+    const { cancelSequenceForOrder } = await import('backend/emailAutomation.web');
+    await cancelSequenceForOrder(email, orderNumber);
+  } catch (err) {
+    console.error('[events] Error cancelling care sequence:', err);
+  }
+}
+
 // ── Inventory Restock Handler ────────────────────────────────────────
 
 /**

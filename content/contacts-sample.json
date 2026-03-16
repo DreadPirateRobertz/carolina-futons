@@ -1,0 +1,11 @@
+[
+  {
+    "email": "example@domain.com",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "phone": "828-555-0001",
+    "company": "",
+    "lifetimeSpend": 0,
+    "loyaltyTier": "Bronze"
+  }
+]

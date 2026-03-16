@@ -907,8 +907,10 @@ export const triggerReviewThanks = webMethod(
       if (await isUnsubscribed(cleanEmail, 'review_thanks')) return { success: false };
 
       let discountCode = '';
+      let discountAvailable = false;
       try {
         discountCode = await getSecret('REVIEW_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
       } catch (e) {
         // Discount not configured yet — send email without it
       }
@@ -921,6 +923,7 @@ export const triggerReviewThanks = webMethod(
           firstName: sanitize(firstName, 200),
           productName: sanitize(productName, 200),
           discountCode,
+          discountAvailable,
           email: cleanEmail,
         },
         sequenceType: 'review_thanks',
