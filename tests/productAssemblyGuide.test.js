@@ -183,4 +183,120 @@ describe('initProductAssemblyGuide', () => {
     // Should not throw
     await initProductAssemblyGuide(throwing$w, makeState());
   });
+
+  // ── Deepened coverage ──────────────────────────────────────────────
+
+  it('PDF ARIA label includes the guide title', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideLink').accessibility.ariaLabel).toContain('Seattle Futon Frame Assembly');
+    expect($w('#assemblyGuideLink').accessibility.ariaLabel).toContain('PDF');
+  });
+
+  it('video ARIA label includes the guide title', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideVideoLink').accessibility.ariaLabel).toContain('Seattle Futon Frame Assembly');
+    expect($w('#assemblyGuideVideoLink').accessibility.ariaLabel).toContain('video');
+  });
+
+  it('video link target is _blank', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideVideoLink').target).toBe('_blank');
+  });
+
+  it('section title text is "Assembly & Care Guide"', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideTitle').text).toBe('Assembly & Care Guide');
+  });
+
+  it('button ARIA label is "View assembly guide"', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideBtn').accessibility.ariaLabel).toBe('View assembly guide');
+  });
+
+  it('button onClick opens PDF via wix-window-frontend', async () => {
+    const wixWindow = await import('wix-window-frontend');
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    await initProductAssemblyGuide($w, makeState());
+
+    // Extract the onClick handler and invoke it
+    const handler = $w('#assemblyGuideBtn').onClick.mock.calls[0][0];
+    handler();
+    // The handler does dynamic import().then() — flush microtasks
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(wixWindow.openUrl).toHaveBeenCalledWith(MOCK_GUIDE.pdfUrl);
+  });
+
+  it('skips estimatedTime when field is absent', async () => {
+    const guideNoTime = { ...MOCK_GUIDE, estimatedTime: undefined };
+    getAssemblyGuide.mockResolvedValue(guideNoTime);
+    await initProductAssemblyGuide($w, makeState());
+
+    // Time element should remain at default (empty string from make$w)
+    expect($w('#assemblyGuideTime').text).toBe('');
+    // Section should still expand
+    expect($w('#assemblyGuideSection').expand).toHaveBeenCalled();
+  });
+
+  it('hides both PDF and video links when neither URL exists', async () => {
+    const guideNoLinks = { ...MOCK_GUIDE, pdfUrl: null, videoUrl: null };
+    getAssemblyGuide.mockResolvedValue(guideNoLinks);
+    await initProductAssemblyGuide($w, makeState());
+
+    expect($w('#assemblyGuideLink').hide).toHaveBeenCalled();
+    expect($w('#assemblyGuideVideoLink').hide).toHaveBeenCalled();
+    // Section still expands (title + time are available)
+    expect($w('#assemblyGuideSection').expand).toHaveBeenCalled();
+  });
+
+  it('collapses section when SKU is undefined', async () => {
+    await initProductAssemblyGuide($w, makeState({ sku: undefined }));
+
+    expect($w('#assemblyGuideSection').collapse).toHaveBeenCalled();
+    expect(getAssemblyGuide).not.toHaveBeenCalled();
+  });
+
+  it('returns early when state is null', async () => {
+    await initProductAssemblyGuide($w, null);
+
+    expect(getAssemblyGuide).not.toHaveBeenCalled();
+  });
+
+  it('returns early when state is undefined', async () => {
+    await initProductAssemblyGuide($w, undefined);
+
+    expect(getAssemblyGuide).not.toHaveBeenCalled();
+  });
+
+  it('handles guide with empty string title gracefully', async () => {
+    const guideEmptyTitle = { ...MOCK_GUIDE, title: '' };
+    getAssemblyGuide.mockResolvedValue(guideEmptyTitle);
+    await initProductAssemblyGuide($w, makeState());
+
+    // PDF ARIA label should still set (with empty title portion)
+    expect($w('#assemblyGuideLink').accessibility.ariaLabel).toContain('PDF');
+    expect($w('#assemblyGuideSection').expand).toHaveBeenCalled();
+  });
+
+  it('handles multiple elements throwing without propagating errors', async () => {
+    getAssemblyGuide.mockResolvedValue(MOCK_GUIDE);
+    const fragile$w = (id) => {
+      if (id === '#assemblyGuideTime') throw new TypeError('Missing element');
+      if (id === '#assemblyGuideLink') throw new TypeError('Missing element');
+      return $w(id);
+    };
+    // Should not throw — all try-catches protect individual element access
+    await initProductAssemblyGuide(fragile$w, makeState());
+    expect($w('#assemblyGuideSection').expand).toHaveBeenCalled();
+  });
 });
