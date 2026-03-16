@@ -5,6 +5,9 @@ import {
   getUrgencyMessage,
   formatDealBanner,
   buildAnnouncementMessage,
+  initCountdownTimer,
+  initFlashSaleBanner,
+  initProductUrgencyBadge,
 } from '../src/public/flashSaleHelpers.js';
 
 const now = Date.now();
@@ -345,5 +348,254 @@ describe('buildAnnouncementMessage', () => {
     };
     const msg = buildAnnouncementMessage(deal);
     expect(msg.toLowerCase()).toMatch(/ending soon|hour|last chance/);
+  });
+
+  it('critical deal without percent uses title', () => {
+    const deal = {
+      title: 'Free Shipping',
+      endDate: new Date(now + 1 * HOUR),
+    };
+    const msg = buildAnnouncementMessage(deal);
+    expect(msg).toContain('Free Shipping');
+    expect(msg).toContain('Ending Soon');
+  });
+});
+
+// ── initCountdownTimer ─────────────────────────────────────────────
+
+describe('initCountdownTimer', () => {
+  let $w, elements;
+
+  function createMockElement() {
+    return { text: '' };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    elements = new Map();
+    $w = (sel) => {
+      if (!elements.has(sel)) elements.set(sel, createMockElement());
+      return elements.get(sel);
+    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('sets initial countdown text immediately', () => {
+    initCountdownTimer($w, '#flashCountdown', new Date(now + DAY + HOUR));
+    expect(elements.get('#flashCountdown').text).toBe('01:01:00:00');
+  });
+
+  it('updates text after 1 second', () => {
+    initCountdownTimer($w, '#flashCountdown', new Date(now + 10000));
+    vi.advanceTimersByTime(1000);
+    expect(elements.get('#flashCountdown').text).toBe('00:00:00:09');
+  });
+
+  it('shows "Sale Ended" when timer expires', () => {
+    initCountdownTimer($w, '#flashCountdown', new Date(now + 2000));
+    vi.advanceTimersByTime(3000);
+    expect(elements.get('#flashCountdown').text).toBe('Sale Ended');
+  });
+
+  it('calls onExpire when timer expires', () => {
+    const onExpire = vi.fn();
+    initCountdownTimer($w, '#flashCountdown', new Date(now + 2000), { onExpire });
+    vi.advanceTimersByTime(3000);
+    expect(onExpire).toHaveBeenCalled();
+  });
+
+  it('returns cleanup function that clears interval', () => {
+    const cleanup = initCountdownTimer($w, '#flashCountdown', new Date(now + DAY));
+    cleanup();
+    const textBefore = elements.get('#flashCountdown').text;
+    vi.advanceTimersByTime(5000);
+    expect(elements.get('#flashCountdown').text).toBe(textBefore);
+  });
+
+  it('shows "Sale Ended" immediately for expired endDate', () => {
+    initCountdownTimer($w, '#flashCountdown', new Date(now - 1000));
+    expect(elements.get('#flashCountdown').text).toBe('Sale Ended');
+  });
+});
+
+// ── initFlashSaleBanner ────────────────────────────────────────────
+
+describe('initFlashSaleBanner', () => {
+  let $w, elements;
+
+  function createMockElement() {
+    return {
+      text: '', label: '', link: '',
+      show: vi.fn(() => Promise.resolve()),
+      hide: vi.fn(() => Promise.resolve()),
+      collapse: vi.fn(), expand: vi.fn(),
+    };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    elements = new Map();
+    $w = (sel) => {
+      if (!elements.has(sel)) elements.set(sel, createMockElement());
+      return elements.get(sel);
+    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('populates banner with deal data', () => {
+    const deal = {
+      title: 'Weekend Sale',
+      subtitle: 'Up to 30% off',
+      endDate: new Date(now + DAY),
+      discountPercent: 30,
+      discountCode: 'SAVE30',
+      ctaUrl: '/sale',
+      ctaText: 'Shop Deals',
+    };
+    initFlashSaleBanner($w, { deal });
+    expect(elements.get('#flashSaleTitle').text).toBe('Weekend Sale');
+    expect(elements.get('#flashSaleSubtitle').text).toBe('Up to 30% off');
+    expect(elements.get('#flashSaleCode').text).toContain('SAVE30');
+    expect(elements.get('#flashSaleCta').label).toBe('Shop Deals');
+    expect(elements.get('#flashSaleCta').link).toBe('/sale');
+  });
+
+  it('expands and shows the banner', () => {
+    const deal = { title: 'Sale', endDate: new Date(now + DAY), discountPercent: 20 };
+    initFlashSaleBanner($w, { deal });
+    expect(elements.get('#flashSaleBanner').expand).toHaveBeenCalled();
+    expect(elements.get('#flashSaleBanner').show).toHaveBeenCalled();
+  });
+
+  it('starts countdown timer on banner', () => {
+    const deal = { title: 'Sale', endDate: new Date(now + DAY), discountPercent: 20 };
+    initFlashSaleBanner($w, { deal });
+    expect(elements.get('#flashSaleCountdown').text).toMatch(/\d{2}:\d{2}:\d{2}:\d{2}/);
+  });
+
+  it('returns cleanup function', () => {
+    const deal = { title: 'Sale', endDate: new Date(now + DAY), discountPercent: 20 };
+    const cleanup = initFlashSaleBanner($w, { deal });
+    expect(typeof cleanup).toBe('function');
+    cleanup();
+  });
+
+  it('collapses banner when deal is null', () => {
+    const result = initFlashSaleBanner($w, { deal: null });
+    expect(result).toBeNull();
+    expect(elements.get('#flashSaleBanner').collapse).toHaveBeenCalled();
+  });
+
+  it('collapses banner when deal is expired', () => {
+    const deal = { endDate: new Date(now - 1000), discountPercent: 20 };
+    const result = initFlashSaleBanner($w, { deal });
+    expect(result).toBeNull();
+  });
+
+  it('collapses banner on timer expiry', () => {
+    const deal = { title: 'Sale', endDate: new Date(now + 2000), discountPercent: 20 };
+    initFlashSaleBanner($w, { deal });
+    vi.advanceTimersByTime(3000);
+    expect(elements.get('#flashSaleBanner').collapse).toHaveBeenCalled();
+  });
+
+  it('uses custom element IDs', () => {
+    const deal = { title: 'Custom', endDate: new Date(now + DAY), discountPercent: 10 };
+    initFlashSaleBanner($w, {
+      deal,
+      elements: { banner: '#myBanner', title: '#myTitle' },
+    });
+    expect(elements.get('#myBanner').expand).toHaveBeenCalled();
+    expect(elements.get('#myTitle').text).toBe('Custom');
+  });
+
+  it('uses "Shop Now" as default CTA label', () => {
+    const deal = { title: 'Sale', endDate: new Date(now + DAY), discountPercent: 10, ctaUrl: '/deals' };
+    initFlashSaleBanner($w, { deal });
+    expect(elements.get('#flashSaleCta').label).toBe('Shop Now');
+  });
+});
+
+// ── initProductUrgencyBadge ────────────────────────────────────────
+
+describe('initProductUrgencyBadge', () => {
+  let $w, elements;
+
+  function createMockElement() {
+    return {
+      text: '', show: vi.fn(() => Promise.resolve()),
+      collapse: vi.fn(), expand: vi.fn(),
+    };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    elements = new Map();
+    $w = (sel) => {
+      if (!elements.has(sel)) elements.set(sel, createMockElement());
+      return elements.get(sel);
+    };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('shows urgency message on badge', () => {
+    const deal = { endDate: new Date(now + HOUR), discountPercent: 25 };
+    initProductUrgencyBadge($w, { deal });
+    expect(elements.get('#flashSaleBadge').text).toContain('25%');
+    expect(elements.get('#flashSaleBadge').expand).toHaveBeenCalled();
+    expect(elements.get('#flashSaleBadge').show).toHaveBeenCalled();
+  });
+
+  it('returns cleanup function', () => {
+    const deal = { endDate: new Date(now + DAY), discountPercent: 10 };
+    const cleanup = initProductUrgencyBadge($w, { deal });
+    expect(typeof cleanup).toBe('function');
+    cleanup();
+  });
+
+  it('collapses badge for null deal', () => {
+    const result = initProductUrgencyBadge($w, { deal: null });
+    expect(result).toBeNull();
+    expect(elements.get('#flashSaleBadge').collapse).toHaveBeenCalled();
+  });
+
+  it('collapses badge for expired deal', () => {
+    const deal = { endDate: new Date(now - 1000), discountPercent: 20 };
+    const result = initProductUrgencyBadge($w, { deal });
+    expect(result).toBeNull();
+  });
+
+  it('uses custom badge element ID', () => {
+    const deal = { endDate: new Date(now + HOUR), discountPercent: 15 };
+    initProductUrgencyBadge($w, { deal, badgeElementId: '#myBadge' });
+    expect(elements.get('#myBadge').text).toContain('15%');
+  });
+
+  it('updates badge text periodically', () => {
+    const deal = { endDate: new Date(now + 2 * HOUR), discountPercent: 20 };
+    initProductUrgencyBadge($w, { deal });
+    const initialText = elements.get('#flashSaleBadge').text;
+    vi.advanceTimersByTime(60000);
+    // Text should still be set (same urgency level)
+    expect(elements.get('#flashSaleBadge').text).toBeTruthy();
+  });
+
+  it('collapses badge when deal expires during interval', () => {
+    const deal = { endDate: new Date(now + 30000), discountPercent: 20 };
+    initProductUrgencyBadge($w, { deal });
+    vi.advanceTimersByTime(60000);
+    expect(elements.get('#flashSaleBadge').collapse).toHaveBeenCalled();
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   formatCreditBalance,
   getReasonLabel,
@@ -7,7 +7,20 @@ import {
   isExpiringSoon,
   formatExpirationMessage,
   formatTransaction,
+  initStoreCreditDashboard,
+  initCheckoutStoreCredit,
 } from '../src/public/storeCreditHelpers.js';
+
+vi.mock('backend/storeCreditService.web', () => ({
+  getMyStoreCredit: vi.fn(() => Promise.resolve({ success: true, totalBalance: 125.50 })),
+  getExpiringCredits: vi.fn(() => Promise.resolve({ success: true, expiringTotal: 25 })),
+}));
+
+vi.mock('wix-members-frontend', () => ({
+  currentMember: {
+    getMember: vi.fn(() => Promise.resolve({ _id: 'member-1' })),
+  },
+}));
 
 const DAY = 86400000;
 
@@ -221,5 +234,157 @@ describe('formatTransaction', () => {
   it('handles missing date', () => {
     const result = formatTransaction({ type: 'issue', amount: 50 });
     expect(result.dateDisplay).toBe('');
+  });
+
+  it('handles unknown transaction type as label', () => {
+    const result = formatTransaction({ type: 'manual_adjust', amount: 10, date: '2026-01-01T00:00:00Z' });
+    expect(result.label).toBe('manual_adjust');
+    expect(result.amountDisplay).toBe('+$10.00');
+  });
+});
+
+// ── initStoreCreditDashboard ───────────────────────────────────────
+
+describe('initStoreCreditDashboard', () => {
+  let $w, elements;
+
+  function createMockElement() {
+    return {
+      text: '', show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    elements = new Map();
+    $w = (sel) => {
+      if (!elements.has(sel)) elements.set(sel, createMockElement());
+      return elements.get(sel);
+    };
+  });
+
+  it('displays balance when member has credit', async () => {
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditBalance').text).toBe('$125.50');
+  });
+
+  it('shows credit section when balance > 0', async () => {
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditSection').show).toHaveBeenCalled();
+  });
+
+  it('shows expiration warning when credits expiring', async () => {
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditExpirationWarning').text).toContain('$25.00');
+    expect(elements.get('#storeCreditExpirationWarning').show).toHaveBeenCalled();
+  });
+
+  it('hides section when member is not logged in', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    currentMember.getMember.mockResolvedValueOnce(null);
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditSection').hide).toHaveBeenCalled();
+  });
+
+  it('hides section when getMyStoreCredit fails', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockResolvedValueOnce({ success: false });
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditSection').hide).toHaveBeenCalled();
+  });
+
+  it('hides section when balance is zero', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockResolvedValueOnce({ success: true, totalBalance: 0 });
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditSection').hide).toHaveBeenCalled();
+  });
+
+  it('hides section on exception', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockRejectedValueOnce(new Error('Network error'));
+    await initStoreCreditDashboard($w);
+    expect(elements.get('#storeCreditSection').hide).toHaveBeenCalled();
+  });
+
+  it('does not show expiration warning when no credits expiring', async () => {
+    const { getExpiringCredits } = await import('backend/storeCreditService.web');
+    getExpiringCredits.mockResolvedValueOnce({ success: true, expiringTotal: 0 });
+    await initStoreCreditDashboard($w);
+    const warningEl = elements.get('#storeCreditExpirationWarning');
+    // Element may not exist at all (not touched) or exist but not shown
+    if (warningEl) {
+      expect(warningEl.show).not.toHaveBeenCalled();
+    }
+  });
+});
+
+// ── initCheckoutStoreCredit ────────────────────────────────────────
+
+describe('initCheckoutStoreCredit', () => {
+  let $w, elements;
+
+  function createMockElement() {
+    return {
+      text: '', show: vi.fn(() => Promise.resolve()), hide: vi.fn(() => Promise.resolve()),
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    elements = new Map();
+    $w = (sel) => {
+      if (!elements.has(sel)) elements.set(sel, createMockElement());
+      return elements.get(sel);
+    };
+  });
+
+  it('returns available credit info', async () => {
+    const result = await initCheckoutStoreCredit($w, 200);
+    expect(result.available).toBe(true);
+    expect(result.balance).toBe(125.50);
+    expect(result.applicableAmount).toBe(125.50);
+  });
+
+  it('caps applicable amount to order total', async () => {
+    const result = await initCheckoutStoreCredit($w, 50);
+    expect(result.applicableAmount).toBe(50);
+  });
+
+  it('updates checkout UI elements', async () => {
+    await initCheckoutStoreCredit($w, 200);
+    expect(elements.get('#storeCreditAvailable').text).toContain('$125.50');
+    expect(elements.get('#storeCreditApplyAmount').text).toBe('-$125.50');
+    expect(elements.get('#storeCreditCheckoutSection').show).toHaveBeenCalled();
+  });
+
+  it('returns unavailable when not logged in', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    currentMember.getMember.mockResolvedValueOnce(null);
+    const result = await initCheckoutStoreCredit($w, 200);
+    expect(result.available).toBe(false);
+    expect(result.balance).toBe(0);
+  });
+
+  it('returns unavailable when credit fetch fails', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockResolvedValueOnce({ success: false });
+    const result = await initCheckoutStoreCredit($w, 200);
+    expect(result.available).toBe(false);
+  });
+
+  it('returns unavailable when balance is zero', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockResolvedValueOnce({ success: true, totalBalance: 0 });
+    const result = await initCheckoutStoreCredit($w, 200);
+    expect(result.available).toBe(false);
+  });
+
+  it('returns unavailable on exception', async () => {
+    const { getMyStoreCredit } = await import('backend/storeCreditService.web');
+    getMyStoreCredit.mockRejectedValueOnce(new Error('fail'));
+    const result = await initCheckoutStoreCredit($w, 200);
+    expect(result.available).toBe(false);
+    expect(result.balance).toBe(0);
   });
 });
