@@ -1812,4 +1812,602 @@ describe('masterPage.js', () => {
       expect(getEl('#newsletterModalClose').onClick).toHaveBeenCalled();
     });
   });
+
+  // ── Exit Intent Lead Capture ─────────────────────────────────────
+
+  describe('exit intent — desktop initialization', () => {
+    let exitMod;
+    let origDoc;
+
+    beforeEach(async () => {
+      exitMod = await import('public/exitIntentCapture');
+      vi.useRealTimers();
+      if (typeof globalThis.performance === 'undefined') {
+        globalThis.performance = { now: () => Date.now() };
+      }
+      vi.useFakeTimers();
+      origDoc = globalThis.document;
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      globalThis.document = origDoc;
+    });
+
+    it('sets up mouseleave handler on desktop when shouldShowExitIntent returns true', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      const mouseleaveCall = calls.find(c => c[0] === 'mouseleave');
+      expect(mouseleaveCall).toBeDefined();
+    });
+
+    it('does not set up exit intent when shouldShowExitIntent returns false', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      const mouseleaveCall = calls.find(c => c[0] === 'mouseleave');
+      expect(mouseleaveCall).toBeUndefined();
+    });
+
+    it('does not show exit intent when promo lightbox is visible', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = false;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      const mouseleaveCall = calls.find(c => c[0] === 'mouseleave');
+      expect(mouseleaveCall).toBeUndefined();
+    });
+  });
+
+  describe('exit intent — showExitPopup', () => {
+    let exitMod;
+    let origDoc;
+
+    beforeEach(async () => {
+      exitMod = await import('public/exitIntentCapture');
+      exitMod.markExitIntentShown.mockClear();
+      exitMod.markExitIntentDismissed.mockClear();
+      vi.useRealTimers();
+      if (typeof globalThis.performance === 'undefined') {
+        globalThis.performance = { now: () => Date.now() };
+      }
+      vi.useFakeTimers();
+      origDoc = globalThis.document;
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(async () => {
+      // Dismiss popup to reset module-level _exitPopupShown for next test
+      try {
+        const overlayClicks = getEl('#exitOverlay').onClick.mock.calls;
+        if (overlayClicks.length > 0) {
+          overlayClicks[0][0]();
+          await vi.advanceTimersByTimeAsync(50);
+        }
+      } catch (e) {}
+      vi.useRealTimers();
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      globalThis.document = origDoc;
+    });
+
+    function getMouseleaveHandler() {
+      const calls = globalThis.document.addEventListener.mock.calls;
+      const mouseleaveCall = calls.find(c => c[0] === 'mouseleave');
+      return mouseleaveCall ? mouseleaveCall[1] : undefined;
+    }
+
+    it('does not show popup when mouseleave clientY > 0', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      getMouseleaveHandler()({ clientY: 100 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(exitMod.markExitIntentShown).not.toHaveBeenCalled();
+      expect(getEl('#exitTitle').text).toBe('');
+    });
+
+    it('populates title, subtitle, shows overlay, and marks shown on desktop', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      const handler = getMouseleaveHandler();
+      expect(handler).toBeDefined();
+      handler({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitTitle').text).toBe('Wait!');
+      expect(getEl('#exitSubtitle').text).toBe('test');
+      expect(getEl('#exitOverlay').show).toHaveBeenCalled();
+      expect(exitMod.markExitIntentShown).toHaveBeenCalled();
+    });
+
+    it('sets up email capture submit button with config ctaText', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      getMouseleaveHandler()({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitEmailSubmit').label).toBe('Subscribe');
+      expect(getEl('#exitEmailInput').accessibility.ariaLabel).toBe('Email');
+    });
+
+    it('wires overlay click to dismiss', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      getMouseleaveHandler()({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitOverlay').onClick).toHaveBeenCalled();
+    });
+
+    it('wires swatch link onClick', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      getMouseleaveHandler()({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitSwatchLink').onClick).toHaveBeenCalled();
+    });
+
+    it('does not fire popup twice (mouseleave uses once option)', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      getMouseleaveHandler()({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(exitMod.markExitIntentShown).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('exit intent — email capture', () => {
+    let exitMod;
+    let newsletterMod;
+    let origDoc;
+
+    async function triggerExitPopup() {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      const mouseleaveCall = calls.find(c => c[0] === 'mouseleave');
+      mouseleaveCall[1]({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+    }
+
+    beforeEach(async () => {
+      exitMod = await import('public/exitIntentCapture');
+      newsletterMod = await import('backend/newsletterService.web');
+      exitMod.markExitIntentShown.mockClear();
+      exitMod.markExitIntentDismissed.mockClear();
+      exitMod.validateCaptureEmail.mockClear();
+      exitMod.validateCaptureEmail.mockReturnValue(true);
+      newsletterMod.subscribeToNewsletter.mockClear();
+      newsletterMod.subscribeToNewsletter.mockResolvedValue({ success: true });
+      vi.useRealTimers();
+      if (typeof globalThis.performance === 'undefined') {
+        globalThis.performance = { now: () => Date.now() };
+      }
+      vi.useFakeTimers();
+      origDoc = globalThis.document;
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(async () => {
+      // Dismiss popup to reset module-level _exitPopupShown for next test
+      try {
+        const overlayClicks = getEl('#exitOverlay').onClick.mock.calls;
+        if (overlayClicks.length > 0) {
+          overlayClicks[0][0]();
+          await vi.advanceTimersByTimeAsync(50);
+        }
+      } catch (e) {}
+      vi.useRealTimers();
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      exitMod.validateCaptureEmail.mockReturnValue(true);
+      newsletterMod.subscribeToNewsletter.mockResolvedValue({ success: true });
+      globalThis.document = origDoc;
+    });
+
+    it('successful email capture: disables button, subscribes, shows success', async () => {
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+
+      await submitHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(newsletterMod.subscribeToNewsletter).toHaveBeenCalledWith(
+        'user@example.com',
+        { source: 'exit_intent_popup' }
+      );
+      expect(getEl('#exitEmailSubmit').label).toBe('Sent!');
+      expect(getEl('#exitSuccess').text).toBe('Thanks!');
+      expect(getEl('#exitSuccess').show).toHaveBeenCalled();
+    });
+
+    it('clears email input after successful capture', async () => {
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+      await submitHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitEmailInput').value).toBe('');
+    });
+
+    it('shows validation error when email is invalid', async () => {
+      exitMod.validateCaptureEmail.mockReturnValue(false);
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'bad-email';
+      await submitHandler();
+
+      expect(getEl('#exitEmailError').text).toBe('Please enter a valid email address.');
+      expect(getEl('#exitEmailError').show).toHaveBeenCalled();
+      expect(newsletterMod.subscribeToNewsletter).not.toHaveBeenCalled();
+    });
+
+    it('shows error and re-enables button on subscribe failure', async () => {
+      newsletterMod.subscribeToNewsletter.mockResolvedValueOnce({ success: false, message: 'Already subscribed' });
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+      await submitHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitEmailError').text).toBe('Already subscribed');
+      expect(getEl('#exitEmailError').show).toHaveBeenCalled();
+      expect(getEl('#exitEmailSubmit').enable).toHaveBeenCalled();
+      expect(getEl('#exitEmailSubmit').label).toBe('Subscribe');
+    });
+
+    it('shows generic error when subscribe throws', async () => {
+      newsletterMod.subscribeToNewsletter.mockRejectedValueOnce(new Error('Network error'));
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+      await submitHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitEmailError').text).toBe('Something went wrong. Please try again.');
+      expect(getEl('#exitEmailSubmit').enable).toHaveBeenCalled();
+    });
+
+    it('disables submit button during subscription attempt', async () => {
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+      await submitHandler();
+
+      expect(getEl('#exitEmailSubmit').disable).toHaveBeenCalled();
+    });
+
+    it('auto-dismisses popup 4 seconds after successful capture', async () => {
+      await triggerExitPopup();
+
+      const submitHandler = getEl('#exitEmailSubmit').onClick.mock.calls[0][0];
+      getEl('#exitEmailInput').value = 'user@example.com';
+      await submitHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      vi.advanceTimersByTime(4000);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(getEl('#exitIntentPopup').hide).toHaveBeenCalled();
+    });
+  });
+
+  describe('exit intent — dismissExitPopup', () => {
+    let exitMod;
+    let origDoc;
+
+    beforeEach(async () => {
+      exitMod = await import('public/exitIntentCapture');
+      vi.useRealTimers();
+      if (typeof globalThis.performance === 'undefined') {
+        globalThis.performance = { now: () => Date.now() };
+      }
+      vi.useFakeTimers();
+      origDoc = globalThis.document;
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      globalThis.document = origDoc;
+    });
+
+    it('hides popup via dialog close when overlay is clicked', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      calls.find(c => c[0] === 'mouseleave')[1]({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      const overlayClickHandler = getEl('#exitOverlay').onClick.mock.calls[0][0];
+      overlayClickHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitIntentPopup').hide).toHaveBeenCalled();
+      expect(exitMod.markExitIntentDismissed).toHaveBeenCalled();
+    });
+
+    it('hides exit overlay on dismiss', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+      const calls = globalThis.document.addEventListener.mock.calls;
+      calls.find(c => c[0] === 'mouseleave')[1]({ clientY: -5 });
+      await vi.advanceTimersByTimeAsync(50);
+
+      const overlayClickHandler = getEl('#exitOverlay').onClick.mock.calls[0][0];
+      overlayClickHandler();
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitOverlay').hide).toHaveBeenCalled();
+    });
+  });
+
+  describe('exit intent — mobile bottom sheet & swipe dismiss', () => {
+    let exitMod;
+    let origDoc;
+    let origSessionStorage;
+
+    beforeEach(async () => {
+      exitMod = await import('public/exitIntentCapture');
+      vi.useRealTimers();
+      if (typeof globalThis.performance === 'undefined') {
+        globalThis.performance = { now: () => Date.now() };
+      }
+      vi.useFakeTimers();
+      origDoc = globalThis.document;
+      origSessionStorage = globalThis.sessionStorage;
+    });
+
+    afterEach(async () => {
+      // Dismiss popup to reset module-level _exitPopupShown for next test
+      try {
+        const overlayClicks = getEl('#exitOverlay').onClick.mock.calls;
+        if (overlayClicks.length > 0) {
+          overlayClicks[0][0]();
+          await vi.advanceTimersByTimeAsync(50);
+        }
+      } catch (e) {}
+      vi.useRealTimers();
+      exitMod.shouldShowExitIntent.mockReturnValue(false);
+      mockIsMobile.mockReturnValue(false);
+      globalThis.document = origDoc;
+      globalThis.sessionStorage = origSessionStorage;
+    });
+
+    it('sets up visibility change and scroll listeners on mobile', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      mockIsMobile.mockReturnValue(true);
+      globalThis.document = {
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+        visibilityState: 'visible',
+      };
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      const events = globalThis.document.addEventListener.mock.calls.map(c => c[0]);
+      expect(events).toContain('visibilitychange');
+      expect(events).toContain('scroll');
+    });
+
+    it('shows drag handle and uses mobile config on mobile popup', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      mockIsMobile.mockReturnValue(true);
+      const listenerMap = {};
+      globalThis.document = {
+        addEventListener: vi.fn((event, fn, opts) => {
+          if (!listenerMap[event]) listenerMap[event] = [];
+          listenerMap[event].push(fn);
+        }),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+        visibilityState: 'visible',
+      };
+      globalThis.sessionStorage = {
+        getItem: vi.fn((k) => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      const visHandlers = listenerMap['visibilitychange'] || [];
+      expect(visHandlers.length).toBeGreaterThan(0);
+
+      globalThis.document.visibilityState = 'hidden';
+      visHandlers.forEach(h => h());
+      globalThis.document.visibilityState = 'visible';
+      globalThis.sessionStorage.getItem.mockImplementation((k) => {
+        if (k === 'cf_exit_pending') return '1';
+        return null;
+      });
+      visHandlers.forEach(h => h());
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitDragHandle').show).toHaveBeenCalled();
+      expect(getEl('#exitTitle').text).toBe('Wait!');
+    });
+
+    it('swipe dismiss fires when swipe distance exceeds threshold', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      mockIsMobile.mockReturnValue(true);
+      const listenerMap = {};
+      globalThis.document = {
+        addEventListener: vi.fn((event, fn, opts) => {
+          if (!listenerMap[event]) listenerMap[event] = [];
+          listenerMap[event].push(fn);
+        }),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+        visibilityState: 'visible',
+      };
+      globalThis.sessionStorage = {
+        getItem: vi.fn((k) => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      const visHandlers = listenerMap['visibilitychange'] || [];
+      globalThis.document.visibilityState = 'hidden';
+      visHandlers.forEach(h => h());
+      globalThis.document.visibilityState = 'visible';
+      globalThis.sessionStorage.getItem.mockImplementation((k) => {
+        if (k === 'cf_exit_pending') return '1';
+        return null;
+      });
+      visHandlers.forEach(h => h());
+      await vi.advanceTimersByTimeAsync(50);
+
+      const touchstartHandlers = listenerMap['touchstart'] || [];
+      const touchendHandlers = listenerMap['touchend'] || [];
+
+      expect(touchstartHandlers.length).toBeGreaterThan(0);
+      expect(touchendHandlers.length).toBeGreaterThan(0);
+      touchstartHandlers[0]({ touches: [{ clientY: 100 }] });
+      touchendHandlers[0]({ changedTouches: [{ clientY: 250 }] });
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitIntentPopup').hide).toHaveBeenCalled();
+    });
+
+    it('swipe does NOT dismiss when distance is below threshold', async () => {
+      exitMod.shouldShowExitIntent.mockReturnValue(true);
+      mockIsMobile.mockReturnValue(true);
+      const listenerMap = {};
+      globalThis.document = {
+        addEventListener: vi.fn((event, fn, opts) => {
+          if (!listenerMap[event]) listenerMap[event] = [];
+          listenerMap[event].push(fn);
+        }),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+        visibilityState: 'visible',
+      };
+      globalThis.sessionStorage = {
+        getItem: vi.fn((k) => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+      elements.clear();
+      getEl('#promoLightbox').hidden = true;
+      await onReadyHandler();
+      vi.advanceTimersByTime(10000);
+      await vi.advanceTimersByTimeAsync(100);
+
+      const visHandlers = listenerMap['visibilitychange'] || [];
+      globalThis.document.visibilityState = 'hidden';
+      visHandlers.forEach(h => h());
+      globalThis.document.visibilityState = 'visible';
+      globalThis.sessionStorage.getItem.mockImplementation((k) => {
+        if (k === 'cf_exit_pending') return '1';
+        return null;
+      });
+      visHandlers.forEach(h => h());
+      await vi.advanceTimersByTimeAsync(50);
+
+      const touchstartHandlers = listenerMap['touchstart'] || [];
+      const touchendHandlers = listenerMap['touchend'] || [];
+
+      expect(touchstartHandlers.length).toBeGreaterThan(0);
+      getEl('#exitIntentPopup').hide.mockClear();
+      touchstartHandlers[0]({ touches: [{ clientY: 100 }] });
+      touchendHandlers[0]({ changedTouches: [{ clientY: 150 }] }); // 50px < 100 threshold
+      await vi.advanceTimersByTimeAsync(50);
+
+      expect(getEl('#exitIntentPopup').hide).not.toHaveBeenCalled();
+    });
+  });
 });

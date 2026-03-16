@@ -605,6 +605,181 @@ describe('initReturnsSection', () => {
     expect($w._store['#returnItemsRepeater'].onItemReady).toHaveBeenCalled();
   });
 
+  it('return window info shows eligible color for recent orders', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    const recentDate = new Date(Date.now() - 5 * 86400000).toISOString();
+    const orders = [
+      { _id: 'o1', number: '1001', date: recentDate, total: 499, lineItems: [{ _id: 'li1', name: 'Futon', quantity: 1, price: 499 }] },
+    ];
+    getReturnEligibleOrders.mockResolvedValue({ orders });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    $w._store['#returnOrderDropdown'].value = 'o1';
+    const changeHandler = $w._store['#returnOrderDropdown'].onChange.mock.calls[0][0];
+    changeHandler();
+
+    expect($w._store['#returnWindowInfo'].text).toContain('remaining');
+    expect($w._store['#returnWindowInfo'].style.color).toBe(colors.success);
+  });
+
+  it('submit button handler calls submitReturnRequest on valid form', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [{ label: 'Wrong Size', value: 'wrong_size' }] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockResolvedValue({ success: true, rmaNumber: 'RMA-001' });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    // Set form values
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'wrong_size';
+    $w('#returnDetailsInput').value = 'Too small';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect(submitReturnRequest).toHaveBeenCalled();
+    expect($w._store['#returnSuccess'].text).toContain('RMA-001');
+    expect($w._store['#returnSuccess'].show).toHaveBeenCalled();
+    expect($w._store['#returnFlowSection'].hide).toHaveBeenCalled();
+  });
+
+  it('submit handler shows error for missing order', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = '';
+    $w('#returnReasonDropdown').value = '';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#returnError'].show).toHaveBeenCalled();
+  });
+
+  it('submit handler shows backend error on failure', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockResolvedValue({ success: false, error: 'Service unavailable' });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'damaged';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#returnError'].text).toBe('Service unavailable');
+    expect($w._store['#returnError'].show).toHaveBeenCalled();
+  });
+
+  it('submit handler re-enables button after success', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockResolvedValue({ success: true, rmaNumber: 'RMA-002' });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'wrong_size';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#submitReturnBtn'].enable).toHaveBeenCalled();
+    expect($w._store['#submitReturnBtn'].label).toBe('Submit Return');
+  });
+
+  it('submit handler disables button during submission', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockResolvedValue({ success: true, rmaNumber: 'RMA-003' });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'damaged';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#submitReturnBtn'].disable).toHaveBeenCalled();
+  });
+
+  it('submit handler shows default error when no error message', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockResolvedValue({ success: false });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'wrong_size';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#returnError'].text).toBe('Unable to submit return');
+  });
+
+  it('submit handler re-enables button on exception', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    submitReturnRequest.mockRejectedValue(new Error('network'));
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    $w('#returnOrderDropdown').value = 'order-1';
+    $w('#returnReasonDropdown').value = 'damaged';
+
+    const submitHandler = $w._store['#submitReturnBtn'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#submitReturnBtn'].enable).toHaveBeenCalled();
+    expect($w._store['#submitReturnBtn'].label).toBe('Submit Return');
+  });
+
+  it('sets accessibility label on reason dropdown', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [{ label: 'Damaged', value: 'damaged' }] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    expect($w._store['#returnReasonDropdown'].accessibility.ariaLabel).toBe('Select return reason');
+  });
+
+  it('order dropdown sets ariaLabel on show', async () => {
+    getReturnReasons.mockResolvedValue({ reasons: [] });
+    getMyReturns.mockResolvedValue({ returns: [] });
+    getReturnEligibleOrders.mockResolvedValue({
+      orders: [{ _id: 'o1', number: '1001', date: '2026-03-10', total: 499, lineItems: [] }],
+    });
+
+    const $w = mock$w();
+    await initReturnsSection($w);
+
+    const startHandler = $w._store['#startReturnBtn'].onClick.mock.calls[0][0];
+    await startHandler();
+
+    expect($w._store['#returnOrderDropdown'].accessibility.ariaLabel).toBe('Select order to return');
+  });
+
   it('populateReturnItems renders item details and handles non-returnable items', async () => {
     getReturnReasons.mockResolvedValue({ reasons: [] });
     getMyReturns.mockResolvedValue({ returns: [] });

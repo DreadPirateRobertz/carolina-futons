@@ -513,3 +513,307 @@ describe('submitRequest', () => {
     expect(call.swatchNames).toEqual(['A', 'B', 'C']);
   });
 });
+
+// ── initSwatchRequestFlow ───────────────────────────────────────
+
+vi.mock('backend/swatchService.web', () => ({
+  getProductSwatches: vi.fn(),
+}));
+
+vi.mock('public/designTokens.js', () => ({
+  colors: { mountainBlue: '#1e3a5f', success: '#22c55e' },
+}));
+
+vi.mock('public/a11yHelpers', () => ({
+  announce: vi.fn(),
+}));
+
+import { getProductSwatches } from 'backend/swatchService.web';
+import { initSwatchRequestFlow } from '../src/public/SwatchRequestFlow.js';
+
+describe('initSwatchRequestFlow', () => {
+  function mock$w() {
+    const store = {};
+    const $w = (selector) => {
+      if (!store[selector]) {
+        store[selector] = {
+          id: selector, text: '', value: '', src: '', alt: '',
+          style: { backgroundColor: '' },
+          accessibility: {},
+          data: null,
+          onClick: vi.fn(), onChange: vi.fn(),
+          show: vi.fn(), hide: vi.fn(),
+          expand: vi.fn(), collapse: vi.fn(),
+          onItemReady: vi.fn(),
+        };
+      }
+      return store[selector];
+    };
+    $w._store = store;
+    return $w;
+  }
+
+  beforeEach(() => {
+    clearSelectedSwatches();
+    vi.clearAllMocks();
+  });
+
+  it('collapses section when product is null', async () => {
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: null });
+    expect($w._store['#swatchRequestSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when state is null', async () => {
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, null);
+    expect($w._store['#swatchRequestSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when no swatches returned', async () => {
+    getProductSwatches.mockResolvedValue([]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+    expect($w._store['#swatchRequestSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('collapses section when swatches are null', async () => {
+    getProductSwatches.mockResolvedValue(null);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+    expect($w._store['#swatchRequestSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('sets up grid with swatches and expands section', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'blue.jpg' },
+      { _id: 'sw-2', swatchName: 'Red', colorHex: '#FF0000' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    const grid = $w._store['#swatchRequestGrid'];
+    expect(grid.data).toHaveLength(2);
+    expect(grid.onItemReady).toHaveBeenCalled();
+    expect($w._store['#swatchRequestSection'].expand).toHaveBeenCalled();
+  });
+
+  it('assigns generated _id when swatch lacks one', async () => {
+    getProductSwatches.mockResolvedValue([
+      { swatchName: 'Blue', swatchImage: 'blue.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    expect($w._store['#swatchRequestGrid'].data[0]._id).toBe('sr-0');
+  });
+
+  it('sets grid ARIA label', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    expect($w._store['#swatchRequestGrid'].accessibility.ariaLabel).toBe(
+      'Select fabric swatches to request'
+    );
+  });
+
+  it('onItemReady sets image src and alt for swatchImage items', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'blue.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    const onItemReadyFn = $w._store['#swatchRequestGrid'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'blue.jpg' });
+
+    expect($item._store['#srThumb'].src).toBe('blue.jpg');
+    expect($item._store['#srThumb'].alt).toBe('Blue');
+    expect($item._store['#srLabel'].text).toBe('Blue');
+  });
+
+  it('onItemReady sets backgroundColor for colorHex items', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-2', swatchName: 'Red', colorHex: '#FF0000' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    const onItemReadyFn = $w._store['#swatchRequestGrid'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'sw-2', swatchName: 'Red', colorHex: '#FF0000' });
+
+    expect($item._store['#srThumb'].style.backgroundColor).toBe('#FF0000');
+  });
+
+  it('onItemReady registers onClick that toggles swatch selection', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    const onItemReadyFn = $w._store['#swatchRequestGrid'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' });
+
+    expect($item._store['#srThumb'].onClick).toHaveBeenCalled();
+    // Trigger the click handler
+    const clickHandler = $item._store['#srThumb'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    // Swatch should be selected
+    expect(getSelectedSwatches()).toHaveLength(1);
+    expect(getSelectedSwatches()[0]._id).toBe('sw-1');
+  });
+
+  it('shows limit error when max swatches reached', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-99', swatchName: 'Over Limit', swatchImage: 'x.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    // Select MAX_SWATCHES AFTER init (init clears selections)
+    for (let i = 1; i <= MAX_SWATCHES; i++) {
+      toggleSwatchSelection({ _id: `sw-${i}`, swatchName: `S${i}` });
+    }
+
+    const onItemReadyFn = $w._store['#swatchRequestGrid'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'sw-99', swatchName: 'Over Limit', swatchImage: 'x.jpg' });
+
+    const clickHandler = $item._store['#srThumb'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect($w._store['#swatchRequestError'].text).toContain('Maximum');
+    expect($w._store['#swatchRequestError'].show).toHaveBeenCalled();
+  });
+
+  it('hides error on normal selection', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    const onItemReadyFn = $w._store['#swatchRequestGrid'].onItemReady.mock.calls[0][0];
+    const $item = mock$w();
+    onItemReadyFn($item, { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' });
+
+    const clickHandler = $item._store['#srThumb'].onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect($w._store['#swatchRequestError'].hide).toHaveBeenCalled();
+  });
+
+  it('updates counter text on selection', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    // Counter should be set initially to "0 of 6 selected"
+    expect($w._store['#swatchRequestCount'].text).toBe('0 of 6 selected');
+  });
+
+  it('registers submit button onClick', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    expect($w._store['#swatchRequestSubmit'].onClick).toHaveBeenCalled();
+  });
+
+  it('submit handler shows confirmation on success', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    submitSwatchRequest.mockResolvedValue({ success: true });
+
+    const $w = mock$w();
+    $w('#srName').value = 'Jane';
+    $w('#srEmail').value = 'jane@test.com';
+    $w('#srAddress').value = '123 Main St';
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    // Select swatch AFTER init (init clears selections)
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Blue' });
+
+    const submitHandler = $w._store['#swatchRequestSubmit'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#swatchRequestConfirmation'].expand).toHaveBeenCalled();
+    expect($w._store['#swatchRequestForm'].collapse).toHaveBeenCalled();
+  });
+
+  it('submit handler shows validation errors', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+
+    const $w = mock$w();
+    $w('#srName').value = '';
+    $w('#srEmail').value = '';
+    $w('#srAddress').value = '';
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    // Select swatch AFTER init (init clears selections)
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Blue' });
+
+    const submitHandler = $w._store['#swatchRequestSubmit'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#swatchRequestError'].show).toHaveBeenCalled();
+  });
+
+  it('submit handler shows error message on failure', async () => {
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    submitSwatchRequest.mockResolvedValue({ success: false, message: 'Server error' });
+
+    const $w = mock$w();
+    $w('#srName').value = 'Jane';
+    $w('#srEmail').value = 'jane@test.com';
+    $w('#srAddress').value = '123 Main St';
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    // Select swatch AFTER init (init clears selections)
+    toggleSwatchSelection({ _id: 'sw-1', swatchName: 'Blue' });
+
+    const submitHandler = $w._store['#swatchRequestSubmit'].onClick.mock.calls[0][0];
+    await submitHandler();
+
+    expect($w._store['#swatchRequestError'].text).toBe('Server error');
+    expect($w._store['#swatchRequestError'].show).toHaveBeenCalled();
+  });
+
+  it('collapses section on backend error during init', async () => {
+    getProductSwatches.mockRejectedValue(new Error('network'));
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    expect($w._store['#swatchRequestSection'].collapse).toHaveBeenCalled();
+  });
+
+  it('clears previous selections on init', async () => {
+    toggleSwatchSelection({ _id: 'sw-old', swatchName: 'Old' });
+    expect(getSelectedSwatches()).toHaveLength(1);
+
+    getProductSwatches.mockResolvedValue([
+      { _id: 'sw-1', swatchName: 'Blue', swatchImage: 'b.jpg' },
+    ]);
+    const $w = mock$w();
+    await initSwatchRequestFlow($w, { product: { _id: 'p1', name: 'Futon' } });
+
+    expect(getSelectedSwatches()).toHaveLength(0);
+  });
+});

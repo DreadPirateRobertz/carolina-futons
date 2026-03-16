@@ -275,6 +275,10 @@ export default defineConfig({
       'public/CategoryPagePolish': path.resolve(__dirname, 'src/public/CategoryPagePolish.js'),
       'public/aboutIllustrations.js': path.resolve(__dirname, 'src/public/aboutIllustrations.js'),
       'public/aboutIllustrations': path.resolve(__dirname, 'src/public/aboutIllustrations.js'),
+      'public/contactIllustrations.js': path.resolve(__dirname, 'src/public/contactIllustrations.js'),
+      'public/contactIllustrations': path.resolve(__dirname, 'src/public/contactIllustrations.js'),
+      'public/localBusinessSeo.js': path.resolve(__dirname, 'src/public/localBusinessSeo.js'),
+      'public/localBusinessSeo': path.resolve(__dirname, 'src/public/localBusinessSeo.js'),
     },
   },
 });
