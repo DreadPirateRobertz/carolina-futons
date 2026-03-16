@@ -71,6 +71,8 @@ export function createMockElement(overrides = {}) {
     onInput: vi.fn(),
     onBlur: vi.fn(),
     onKeyPress: vi.fn(),
+    onMouseIn: vi.fn(),
+    onMouseOut: vi.fn(),
     onItemReady: vi.fn(),
     onItemClicked: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),

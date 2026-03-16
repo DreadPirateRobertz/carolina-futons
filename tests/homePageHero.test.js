@@ -1,50 +1,20 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { futonFrame, futonMattress, wallHuggerFrame, saleProduct, outdoorFrame } from './fixtures/products.js';
+import { createMockElement, createItemScope } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
+const heroOverrides = {
+  onMouseIn: vi.fn(), onMouseOut: vi.fn(),
+  next: vi.fn(), previous: vi.fn(),
+  getTotalCount: vi.fn(() => 0), getItems: vi.fn(() => ({ items: [] })),
+  setSort: vi.fn(), setFilter: vi.fn(),
+};
+
 const elements = new Map();
 
-function createMockElement() {
-  return {
-    text: '',
-    src: '',
-    alt: '',
-    value: '',
-    label: '',
-    html: '',
-    options: [],
-    data: [],
-    style: { color: '', backgroundColor: '' },
-    accessibility: { ariaLabel: '' },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(),
-    expand: vi.fn(),
-    scrollTo: vi.fn(),
-    postMessage: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onInput: vi.fn(),
-    onKeyPress: vi.fn(),
-    onMouseIn: vi.fn(),
-    onMouseOut: vi.fn(),
-    onItemReady: vi.fn(),
-    onItemClicked: vi.fn(),
-    onReady: vi.fn(() => Promise.resolve()),
-    onCurrentIndexChanged: vi.fn(),
-    next: vi.fn(),
-    previous: vi.fn(),
-    getCurrentItem: vi.fn(),
-    getTotalCount: vi.fn(() => 0),
-    getItems: vi.fn(() => ({ items: [] })),
-    setSort: vi.fn(),
-    setFilter: vi.fn(),
-  };
-}
-
 function getEl(sel) {
-  if (!elements.has(sel)) elements.set(sel, createMockElement());
+  if (!elements.has(sel)) elements.set(sel, createMockElement(heroOverrides));
   return elements.get(sel);
 }
 
@@ -466,23 +436,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12 };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardTitle'].text).toBe('Futon Frames');
+      expect(els.get('#categoryCardTitle').text).toBe('Futon Frames');
     });
 
     it('category onItemReady sets tagline', async () => {
@@ -490,23 +449,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12 };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardTagline'].text).toBe('Solid hardwood');
+      expect(els.get('#categoryCardTagline').text).toBe('Solid hardwood');
     });
 
     it('category onItemReady sets product count text', async () => {
@@ -514,23 +462,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12 };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardCount'].text).toContain('12');
+      expect(els.get('#categoryCardCount').text).toContain('12');
     });
 
     it('category card has accessible aria label for browsing', async () => {
@@ -538,23 +475,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12 };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardTitle'].accessibility.ariaLabel).toContain('Futon Frames');
+      expect(els.get('#categoryCardTitle').accessibility.ariaLabel).toContain('Futon Frames');
     });
 
     it('registers click handlers on individual category card elements', async () => {
@@ -574,23 +500,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'sale', name: 'Sale & Clearance', tagline: 'Deals', path: '/sales', count: null };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardCount'].text).toBe('');
+      expect(els.get('#categoryCardCount').text).toBe('');
     });
   });
 
@@ -753,23 +668,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardImage'].src).toBeTruthy();
+      expect(els.get('#categoryCardImage').src).toBeTruthy();
     });
 
     it('category card image has alt text', async () => {
@@ -777,23 +681,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCardImage'].alt).toContain('Futon Frames');
+      expect(els.get('#categoryCardImage').alt).toContain('Futon Frames');
     });
 
     it('category card registers mouseIn hover handler', async () => {
@@ -801,23 +694,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCard'].onMouseIn).toHaveBeenCalled();
+      expect(els.get('#categoryCard').onMouseIn).toHaveBeenCalled();
     });
 
     it('category card registers mouseOut hover handler', async () => {
@@ -825,23 +707,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#categoryRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), onClick: vi.fn(), onMouseIn: vi.fn(), onMouseOut: vi.fn(),
-            style: { backgroundColor: '' },
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       const catData = { _id: 'futonFrames', name: 'Futon Frames', tagline: 'Solid hardwood', path: '/futon-frames', count: 12, collection: 'futon-frames' };
       itemReadyCb($item, catData);
 
-      expect(itemElements['#categoryCard'].onMouseOut).toHaveBeenCalled();
+      expect(els.get('#categoryCard').onMouseOut).toHaveBeenCalled();
     });
   });
 
@@ -854,22 +725,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       // wallHuggerFrame has ribbon: 'Featured'
       itemReadyCb($item, wallHuggerFrame);
-      expect(itemElements['#featuredRibbon'].text).toBe('Featured');
-      expect(itemElements['#featuredRibbon'].show).toHaveBeenCalled();
+      expect(els.get('#featuredRibbon').text).toBe('Featured');
+      expect(els.get('#featuredRibbon').show).toHaveBeenCalled();
     });
 
     it('hides ribbon badge when product has no ribbon', async () => {
@@ -878,21 +739,11 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       // futonFrame has ribbon: ''
       itemReadyCb($item, futonFrame);
-      expect(itemElements['#featuredRibbon'].hide).toHaveBeenCalled();
+      expect(els.get('#featuredRibbon').hide).toHaveBeenCalled();
     });
 
     it('shows "New" ribbon for new arrival products', async () => {
@@ -901,22 +752,12 @@ describe('Home Page — CF-edk1 Hero & Visual Polish', () => {
       const repeater = getEl('#featuredRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemElements = {};
-      const $item = (sel) => {
-        if (!itemElements[sel]) {
-          itemElements[sel] = {
-            text: '', src: '', alt: '',
-            accessibility: { ariaLabel: '' },
-            show: vi.fn(), hide: vi.fn(), onClick: vi.fn(),
-          };
-        }
-        return itemElements[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       // outdoorFrame has ribbon: 'New'
       itemReadyCb($item, outdoorFrame);
-      expect(itemElements['#featuredRibbon'].text).toBe('New');
-      expect(itemElements['#featuredRibbon'].show).toHaveBeenCalled();
+      expect(els.get('#featuredRibbon').text).toBe('New');
+      expect(els.get('#featuredRibbon').show).toHaveBeenCalled();
     });
   });
 
