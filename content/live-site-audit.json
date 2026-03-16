@@ -1,0 +1,4360 @@
+{
+  "meta": {
+    "generatedAt": "2026-03-16T00:52:31.538298Z",
+    "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+    "siteName": "Carolina Futons",
+    "source": "Wix REST API (read-only)",
+    "totalProducts": 88,
+    "totalCollections": 14,
+    "totalInstalledApps": 83
+  },
+  "products": [
+    {
+      "id": "bfa17eaa-5ee1-30d7-b1b1-7efe63f1bc26",
+      "name": "Albany",
+      "slug": "albany",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$529.00",
+      "numericPrice": 529.0,
+      "discountedPrice": "$529.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_491530e166394f50b3895b39ef88607d~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "9c1743f2-7e15-4f4f-5562-fc3404d5d44a",
+      "name": "Alpine",
+      "slug": "alpine",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_c54a59af156b423b9d0a0b57df7f17ae~mv2.jpg/v1/fit/w_5312,h_2988,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "19254cc8-9363-4e6e-9f80-50ab58d007af",
+      "name": "Alpine Futon Frame",
+      "slug": "alpine-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-ALPINE",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_29ebcb345ffd49ae96547d2b149a5a62~mv2.jpg/v1/fit/w_2000,h_1125,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "01c37bd0-4e7a-8fde-c59e-151e62d421cd",
+      "name": "Asheville",
+      "slug": "asheville",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_9a21133f83c3412ebe88d2f232c56cf9~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "1c079222-60f1-44cc-aff5-2465d54aacc3",
+      "name": "Asheville Futon Frame",
+      "slug": "asheville-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-ASHEVILLE",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "e593256d-d861-f1ee-1ed7-5c3adb35fd0d",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_1224985805ba4f988eae2d6d93c6270b~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "14f82e10-2e6c-f32d-d64d-38c0e84e7074",
+      "name": "Autumn",
+      "slug": "autumn",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$739.00",
+      "numericPrice": 739.0,
+      "discountedPrice": "$739.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_8d3bd05dd2a94ac698cc7d301fb6b4b0~mv2.jpg/v1/fit/w_3000,h_2001,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "04dede05-bb9e-43a2-9734-58c855122915",
+      "name": "Bali Futon Frame",
+      "slug": "bali-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-BALI",
+      "price": "$729.00",
+      "numericPrice": 729.0,
+      "discountedPrice": "$729.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "6dbe158f-0a69-47f2-8a68-8ed23dec5dee",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_1df94375950c49d0964261c82cb8e771~mv2.jpg/v1/fit/w_1336,h_891,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "ff4fd5d5-9cc7-7646-853b-c63e986f2d19",
+      "name": "Basic Platform Bed",
+      "slug": "basic-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$486.00",
+      "numericPrice": 486.0,
+      "discountedPrice": "$486.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 8,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_daa8513102cd41ca9203d9130e01ba42~mv2.jpg/v1/fit/w_4487,h_3204,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "04e0a1b3-72aa-2b37-f2b8-a94cce65c1e1",
+      "name": "Black Pepper",
+      "slug": "black-pepper",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$349.00",
+      "numericPrice": 349.0,
+      "discountedPrice": "$349.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 6,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_20b37a9a069646b197fcbb4eccdd576d~mv2.jpg/v1/fit/w_4771,h_3408,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Stonewash Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "30dcf383-7350-4880-a339-a1950ca9fbe2",
+      "name": "Black Pepper Futon Frame",
+      "slug": "black-pepper-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-BLACKPEPPER",
+      "price": "$349.00",
+      "numericPrice": 349.0,
+      "discountedPrice": "$349.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "1a30c315-56d5-4ca8-8569-adaf12805f9f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 6,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_d6c081263ce145eaa704f7fa528d4381~mv2.jpg/v1/fit/w_2000,h_1428,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "b0c9923d-aa49-dc4e-e7c5-25719b7f189a",
+      "name": "Cambridge",
+      "slug": "cambridge",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_17660b22850343059377d2a0edd7475c~mv2.jpg/v1/fit/w_3732,h_2116,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "f9e221b6-1695-4c32-96cc-b8ffd19b5094",
+      "name": "Cambridge Futon Frame",
+      "slug": "cambridge-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-CAMBRIDGE",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_2397fcd09cdb4b29831444c2890f6669~mv2.jpg/v1/fit/w_2000,h_1133,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "d53d1eb2-eddf-ec0d-0d14-6a58f65964fa",
+      "name": "Canby",
+      "slug": "canby",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$737.00",
+      "numericPrice": 737.0,
+      "discountedPrice": "$737.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_ceded0aeb93c4f838fff56b05098dfc6~mv2.jpg/v1/fit/w_2500,h_1667,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut",
+            "Warm Cherry",
+            "Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "44a7a248-2334-f07d-f39e-18968b355dfa",
+      "name": "Center Legs",
+      "slug": "center-legs",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$35.00",
+      "numericPrice": 35.0,
+      "discountedPrice": "$35.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "000d3d44-6d21-ca4d-c291-197a7b405c9c",
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0f099224141448be98f5ce46b4f42f35~mv2.jpg/v1/fit/w_360,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "8f62df61-79f7-2a66-b5b1-a001d6f8643a",
+      "name": "Chandler",
+      "slug": "chandler",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_354d2b79d3004c6e95e629a6d99d2e8e~mv2.jpg/v1/fit/w_4160,h_2340,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "41640120-15de-490a-a498-3f0205542123",
+      "name": "Chandler Futon Frame",
+      "slug": "chandler-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-CHANDLER",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_fd98caef1b1a49b5870c4b180311bc79~mv2.jpg/v1/fit/w_2000,h_1125,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "ee0354b7-1d71-2530-d193-556434597640",
+      "name": "Charleston",
+      "slug": "charleston",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$319.00",
+      "numericPrice": 319.0,
+      "discountedPrice": "$319.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "ab6ffc77-bc01-404a-5eba-9f79e076450a",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_f010f958f7844c9c83a051312637d02f~mv2.jpg/v1/fit/w_2500,h_1838,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Twin XL",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "2eabec14-54f2-459f-e62f-8f3ddfaa052b",
+      "name": "Clove 2-Drawer Nightstand",
+      "slug": "clove-nightstand",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$343.00",
+      "numericPrice": 343.0,
+      "discountedPrice": "$343.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_878e19160818483899af0cec99383e7f~mv2.jpg/v1/fit/w_600,h_600,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "83be63a0-5ae1-9365-2957-70cfaeebe58b",
+      "name": "Clove 5-Drawer Chest",
+      "slug": "clove-5-drawer-chest",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$873.00",
+      "numericPrice": 873.0,
+      "discountedPrice": "$873.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_3059d9f6d42d43b785efe5bfa4806f90~mv2.jpg/v1/fit/w_2000,h_3008,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "d50d7a34-1ddf-5ed7-4960-49330329f01e",
+      "name": "Clove 6-Drawer Dresser",
+      "slug": "clove-6-drawer-dresser",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$994.00",
+      "numericPrice": 994.0,
+      "discountedPrice": "$994.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_925a30a4404b42078a25c467ee46c11e~mv2.jpg/v1/fit/w_2000,h_3008,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "46a3e8c5-dd61-2374-2535-65efca5e1868",
+      "name": "Clove 6-Drawer Lingerie Chest",
+      "slug": "lingerie-chest",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$836.00",
+      "numericPrice": 836.0,
+      "discountedPrice": "$836.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_413d0f30cdd44d0080532a0301310251~mv2.jpg/v1/fit/w_600,h_780,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "c4f4d8d1-cb70-0f39-43c8-f7ba3a06baaf",
+      "name": "Clover Murphy Cabinet Bed",
+      "slug": "clover-murphy-bed-cabinet",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,598.00",
+      "numericPrice": 2598.0,
+      "discountedPrice": "$2,598.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 7,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_1b364a642b194fc8b51807d3b36e24e5~mv2.jpg/v1/fit/w_600,h_600,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "7338a70b-3998-9584-e64d-7d5e629ae452",
+      "name": "Daisy Murphy Cabinet Bed",
+      "slug": "daisy-murphy-bed-cabinet",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,798.00",
+      "numericPrice": 2798.0,
+      "discountedPrice": "$2,798.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg/v1/fit/w_2560,h_1707,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Buttercream",
+            "Black Walnut",
+            "White",
+            "Vintage White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "a601d7ae-f11c-55fa-69a9-4235fdf73241",
+      "name": "Denali",
+      "slug": "denali",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$737.00",
+      "numericPrice": 737,
+      "discountedPrice": "$737.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_dc02f16124414700a764ceaea356cbbf~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Dark Cherry",
+            "Warm Cherry",
+            "Gray",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "fb78f6bc-88bc-9a61-7c0c-21af775b496f",
+      "name": "Dillon",
+      "slug": "dillon",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$642.00",
+      "numericPrice": 642.0,
+      "discountedPrice": "$642.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 7,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_241b8a589d964e41a3094fbcd1597728~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut",
+            "Dark Cherry",
+            "Warm Cherry",
+            "Gray",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "7e1452fd-2732-3190-c453-2a75d94db94b",
+      "name": "Durango",
+      "slug": "durango",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$704.00",
+      "numericPrice": 704.0,
+      "discountedPrice": "$704.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_5610973ac57d4ca28982a8be8d441235~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Dark Cherry",
+            "Warm Cherry",
+            "Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "6e7ecdb2-7e80-57a3-ac4b-8f0fc03d328d",
+      "name": "Ekko Platform Bed",
+      "slug": "ekko",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$249.00",
+      "numericPrice": 249.0,
+      "discountedPrice": "$249.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "ab6ffc77-bc01-404a-5eba-9f79e076450a",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_dd8edec4d8d147c7a043698551f9e231~mv2.png/v1/fit/w_480,h_322,q_90/file.png",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Twin XL",
+            "Full",
+            "Queen"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "42ca5d48-99de-cfe3-4376-67fc03e12478",
+      "name": "Flagstaff",
+      "slug": "flagstaff",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "74f3ef96-799b-4293-aab5-aa43077f8c53",
+      "name": "Flagstaff Futon Frame",
+      "slug": "flagstaff-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-FLAGSTAFF",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_a5a3550b2a5e4f1eac606a1dfb926623~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "6d4e4123-22db-8cf4-0bc3-88ed67e715f9",
+      "name": "Galena",
+      "slug": "galena",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$722.00",
+      "numericPrice": 722.0,
+      "discountedPrice": "$722.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_86caccf98ec24689b92e0d7b9088e847~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut",
+            "Dark Cherry"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "3e514b04-095d-4f38-8bed-0b443d92fa02",
+      "name": "Gemini Futon Frame",
+      "slug": "gemini-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-GEMINI",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_5912cdf7cb3041c9b8d4a534666d9e7c~mv2.jpg/v1/fit/w_512,h_512,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "bbb50802-8cdd-ce46-2c46-f74f1cbb6cc6",
+      "name": "Gemini II",
+      "slug": "gemini",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_4cab654aac414b82bec33508dce4b1b3~mv2.jpg/v1/fit/w_512,h_512,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "5e6a00c8-fdd7-e0f8-0c32-fcc422e2690e",
+      "name": "Haley 110",
+      "slug": "haley-110",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$709.00",
+      "numericPrice": 709.0,
+      "discountedPrice": "$659.00",
+      "ribbon": "New Product",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "c735f8f3-8185-f76b-4895-d5c9111e1588",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/ed8a72_a3340eb058db41d5ad5d32a888b970f5~mv2.png/v1/fit/w_1200,h_627,q_90/file.png",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": "Otis Bed"
+    },
+    {
+      "id": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+      "name": "KD Lounger",
+      "slug": "kd-lounger",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$199.00",
+      "numericPrice": 199,
+      "discountedPrice": "$199.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "2049663a-2049-e7c7-b1b4-3028b1a68982",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0afa9805d55f41bfa134b56a2b5d0109~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Lounger",
+            "Full Lounger",
+            "Queen Lounger"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Finishing Options"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "a9622ae5-7d7b-5848-b57c-0dc763093df8",
+      "name": "Key West",
+      "slug": "key-west",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$719.00",
+      "numericPrice": 719.0,
+      "discountedPrice": "$719.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0cab553616744ccfb0c7afb01fd1bf7b~mv2.jpg/v1/fit/w_3000,h_1995,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+      "name": "Kingston",
+      "slug": "kingston",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$619.00",
+      "numericPrice": 619.0,
+      "discountedPrice": "$619.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_cc0d90e192f64690988673747fac299d~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "fc4519da-2c43-8eb4-3c02-5e05d0c750aa",
+      "name": "Lambton",
+      "slug": "lambton",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$778.00",
+      "numericPrice": 778.0,
+      "discountedPrice": "$778.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_a2b5cd4926dd4d72ba6b528df8ea56c4~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen",
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Dark Cherry",
+            "Warm Cherry"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "3d3738dd-9db1-7fc3-b6df-fd236a285e70",
+      "name": "Lexington",
+      "slug": "lexington-1",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$319.00",
+      "numericPrice": 319.0,
+      "discountedPrice": "$319.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "ab6ffc77-bc01-404a-5eba-9f79e076450a",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0c35989bde4d4ece9f0c91eed30a4aad~mv2.jpg/v1/fit/w_2500,h_2206,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Twin XL",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "913a35fa-d090-ae40-e0f4-1cef2511237b",
+      "name": "Maricopa",
+      "slug": "maricopa",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_b9e01e79be954d298c27105c5652345a~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "62d7e0c8-a8d0-4ba6-abb5-965a0172fdff",
+      "name": "Maricopa Futon Frame",
+      "slug": "maricopa-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-MARICOPA",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_2f67f5e29d4443049d217cfbb9dfdf58~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "e8b02be6-5887-930a-1300-62eb930d41d4",
+      "name": "Mattress Protector",
+      "slug": "mattress-protector",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$89.00",
+      "numericPrice": 89.0,
+      "discountedPrice": "$89.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "c735f8f3-8185-f76b-4895-d5c9111e1588",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_015aaccdf0c548da95e09b93970fb260~mv2.jpg/v1/fit/w_977,h_977,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "3fbfd637-a987-156e-1b49-f5165580f867",
+      "name": "Mesa 1000",
+      "slug": "mesa-1000",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "74338913-60bc-4319-8fdf-561cebca937d",
+      "name": "Mesa 1000 Mattress",
+      "slug": "mesa-1000-mattress",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-MATTRESS-MESA1000",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "f86231e3-0c51-4369-80f7-76e23c79caf3",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_d44526ad0005490bb51ee325bf2a9cc1~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "68eebb79-8b1b-7da5-bbf4-445771a57113",
+      "name": "Mesa 3000",
+      "slug": "mesa-3000",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_71ae301362a742ea96dc352f6cdaa0d0~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "4e5e3ee6-a0da-4c3c-b10e-a0dd67a899d7",
+      "name": "Mesa 3000 Mattress",
+      "slug": "mesa-3000-mattress",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-MATTRESS-MESA3000",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "f86231e3-0c51-4369-80f7-76e23c79caf3",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_5729c12a687d40b38d39b3d20584c6be~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "182239ef-4dd3-70e8-37dc-d64e3f1e8576",
+      "name": "Mesa 5000",
+      "slug": "mesa-5000",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0128a414ce614faf8498fabc458950c1~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "fa01e658-fe11-4945-ab9a-207d7a3dd6f7",
+      "name": "Mesa 5000 Mattress",
+      "slug": "mesa-5000-mattress",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-MATTRESS-MESA5000",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "f86231e3-0c51-4369-80f7-76e23c79caf3",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_cbba16b581b4469683306cc54313df68~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "01bedfb6-2e34-3b46-aaf4-37075f0b9dc1",
+      "name": "Monterey",
+      "slug": "monterey",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$549.00",
+      "numericPrice": 549.0,
+      "discountedPrice": "$549.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_cf15142c61714ecfad7852522e0a98e4~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "62949841-86ae-7ed1-2472-2b7f6d0ceb69",
+      "name": "Moonshadow",
+      "slug": "pulsar",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$759.00",
+      "numericPrice": 759.0,
+      "discountedPrice": "$709.00",
+      "ribbon": "New Product",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "c735f8f3-8185-f76b-4895-d5c9111e1588",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/ed8a72_2074fe930da5463f9b691838b720645d~mv2.png/v1/fit/w_1920,h_1080,q_90/file.png",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "b6448a9c-fe4e-3791-fc81-c46143a39e08",
+      "name": "Mountainaire",
+      "slug": "mountainaire",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_420f5592eca647ac9400e3fa635a1f03~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "ef80a41e-3138-4c3c-b0ec-c5b1c6f12dbd",
+      "name": "Mountainaire Log Futon",
+      "slug": "mountainaire-log-futon",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-LOG-MOUNTAINAIRE",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_9a589cab68444007bb0349ea2f5f9a1e~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "a19578f8-443d-af01-9f0c-94866e5f697e",
+      "name": "Murphy Cube Cabinet Bed",
+      "slug": "murphy-cube2",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$1,898.00",
+      "numericPrice": 1898.0,
+      "discountedPrice": "$1,898.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_82796c3f0c504578b1219e51cb2fd7f8~mv2.jpg/v1/fit/w_3894,h_2781,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "e43382af-54a5-61f7-954e-1da9ac15273f",
+      "name": "Murphy Express Cabinet Bed",
+      "slug": "murphy-cabinet-express",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,138.00",
+      "numericPrice": 2138.0,
+      "discountedPrice": "$2,138.00",
+      "ribbon": "New Product",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 14,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_3887b1acf16f4360979b0a66479934ac~mv2.png/v1/fit/w_1057,h_552,q_90/file.png",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Wildwood Brown",
+            "Normandy",
+            "Provence"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Size"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "b122dd71-c71b-8c9a-c3e6-e8fbf37174a4",
+      "name": "Nomad",
+      "slug": "nomad",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$259.00",
+      "numericPrice": 259.0,
+      "discountedPrice": "$259.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "ab6ffc77-bc01-404a-5eba-9f79e076450a",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0f1ec504063c4f0bb1d4adfd451f9038~mv2.jpg/v1/fit/w_2500,h_2230,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Twin XL",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "a67e996c-d1b7-fc72-c859-fc491ba4fa99",
+      "name": "Northampton",
+      "slug": "northampton",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_0eb04eaa5f7f4ebfb28e59ac8dbc7372~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "00874240-ec1a-4f25-bcda-60c2c87f60f1",
+      "name": "Northampton Futon Frame",
+      "slug": "northampton-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-NORTHAMPTON",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_3125d5262aa74170b60c012074aa2543~mv2.jpg/v1/fit/w_640,h_480,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "84019026-284d-4d1a-cc52-d8bf9fc06053",
+      "name": "Nutmeg",
+      "slug": "nutmeg-platform-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$266.00",
+      "numericPrice": 266.0,
+      "discountedPrice": "$266.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 10,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_1138b007dc604020b1d9c571febd608b~mv2.jpg/v1/fit/w_4786,h_3418,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "ab51ab04-e796-4e49-9e95-1bdb5c0da432",
+      "name": "Pagoda",
+      "slug": "pagoda",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$737.00",
+      "numericPrice": 737.0,
+      "discountedPrice": "$737.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_64a88a98a65c44a184a777765d4ab582~mv2.jpg/v1/fit/w_2000,h_1333,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen",
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut",
+            "Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "9a2e231d-de36-482e-b712-feb831bd361e",
+      "name": "Pagoda Futon Frame",
+      "slug": "pagoda-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-PAGODA",
+      "price": "$737.00",
+      "numericPrice": 737.0,
+      "discountedPrice": "$737.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "6d17b1b6-ea2c-4cfd-8b11-7c499da475e3",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_3824b1d5201f49838ed8cd8c249d43c6~mv2.jpg/v1/fit/w_2000,h_1333,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "31186b22-1466-4ed4-1b2e-235d1e59a478",
+      "name": "Paprika",
+      "slug": "paprika",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$244.00",
+      "numericPrice": 244.0,
+      "discountedPrice": "$244.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 8,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_b6e84d376eb34dd49612c0164c7dac87~mv2.jpg/v1/fit/w_4736,h_3383,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Red",
+            "Teal",
+            "Charcoal",
+            "Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "ead13118-940b-2330-fded-cfb3cbcb2352",
+      "name": "Poppy Murphy Cabinet Bed",
+      "slug": "poppy-murphy-bed-cabinet",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,958.00",
+      "numericPrice": 2958.0,
+      "discountedPrice": "$2,958.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_85ae7cc5b18f4343a4aa0507a078d9dd~mv2.jpg/v1/fit/w_5152,h_3680,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "White Bark",
+            "Brushed Driftwood",
+            "Antique Blue",
+            "Harvest Brown"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "88f62215-85b4-5f54-db80-747ca8bcd29c",
+      "name": "Portofino",
+      "slug": "portofino",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$859.00",
+      "numericPrice": 859.0,
+      "discountedPrice": "$859.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_d7ea16ef2c2c4d938abbda1ecc1f5c77~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "c593ca2c-cdf6-0d39-8324-e20deb804f0a",
+      "name": "Raleigh",
+      "slug": "raleigh",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$699.00",
+      "numericPrice": 699.0,
+      "discountedPrice": "$699.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_31b09cbd740e4a63b8d95cbd69f309fc~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Brushed Driftwood"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "ff67091b-4b91-214a-0e43-a7a257644f9b",
+      "name": "Ranchero  Murphy Cabinet Bed",
+      "slug": "ranchero-murphy-cabinet-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,978.00",
+      "numericPrice": 2978.0,
+      "discountedPrice": "$2,978.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 5,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_00aa9b1d12114969b32e8e982d9bf5c2~mv2.png/v1/fit/w_2780,h_1854,q_90/file.png",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Bakar",
+            "Wildwood Brown",
+            "Wildwood Vintage White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "df19c1f7-07d8-a265-42f8-e8dfa824cc6e",
+      "name": "Rockwell",
+      "slug": "rockwell",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$743.00",
+      "numericPrice": 743.0,
+      "discountedPrice": "$743.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_fa9b333ca16d437c83a19415213aec3a~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "366961bb-5f81-0370-b4e6-3e787890baf9",
+      "name": "Rolling Drawers",
+      "slug": "accessories",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$219.00",
+      "numericPrice": 219.0,
+      "discountedPrice": "$219.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "000d3d44-6d21-ca4d-c291-197a7b405c9c",
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_688deb874844479f824296b59eadaeea~mv2.jpg/v1/fit/w_480,h_386,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "6fd6476e-f200-47e6-91bb-3b214fd7a3d7",
+      "name": "Rosemary Futon Frame",
+      "slug": "rosemary-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-ROSEMARY",
+      "price": "$251.00",
+      "numericPrice": 251.0,
+      "discountedPrice": "$251.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "1a30c315-56d5-4ca8-8569-adaf12805f9f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 7,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_a5e8d5aa576442959170359ef0085d6c~mv2.jpg/v1/fit/w_2000,h_1428,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "a3136816-edaf-6377-2178-b957a245fc2b",
+      "name": "Ruskin",
+      "slug": "ruskin",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$629.00",
+      "numericPrice": 629.0,
+      "discountedPrice": "$629.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_55f6efa6554646da8f74db10b161ba71~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "1d9b58af-5ff1-c239-e791-c5514956b449",
+      "name": "Sagebrush Murphy Cabinet Bed",
+      "slug": "sagebrush-murphy-cabinet-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$2,878.00",
+      "numericPrice": 2878.0,
+      "discountedPrice": "$2,878.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_ca73275a55ae4bd8947c8cf4f3700278~mv2.jpg/v1/fit/w_4507,h_3219,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Chocolate",
+            "Stonewash Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty",
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+      "name": "Sealy San Sebastian Cabinet Bed",
+      "slug": "san-sebastian-sealy-cabinet-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$1,778.00",
+      "numericPrice": 1778.0,
+      "discountedPrice": "$1,778.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 3,
+      "mainImage": null,
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Espresso",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Warranty"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "266c622f-f396-7462-dda4-a8603a8c68de",
+      "name": "Secrets 7-Drawer Dresser",
+      "slug": "secrets-7-drawer-dresser",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$1,098.00",
+      "numericPrice": 1098.0,
+      "discountedPrice": "$1,098.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 8,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_b32fbaec605244aa9809db1db8f92a31~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "3533644b-b544-a6f4-0b06-09e7a7972124",
+      "name": "Secrets Nightstand",
+      "slug": "secrets-nightstand",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$425.00",
+      "numericPrice": 425.0,
+      "discountedPrice": "$425.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 7,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_60ca20e4e5c44381a3c69de6aaaf005a~mv2.jpg/v1/fit/w_5760,h_3840,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "7e97fece-ddf5-da32-f38c-a091a9e93953",
+      "name": "Sedona",
+      "slug": "sedona",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_1784a066b6d04f51b8882618474df1dc~mv2.jpg/v1/fit/w_4160,h_2340,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "dabe4e5f-b6dd-468b-a105-e5c388e6b26d",
+      "name": "Sedona Futon Frame",
+      "slug": "sedona-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-SEDONA",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_c27f59398d4043899de85e8ed0b0fb35~mv2.jpg/v1/fit/w_2000,h_1125,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "fd99e666-2297-f291-2c43-7a4ecf2980ee",
+      "name": "Solstice",
+      "slug": "solstice",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$829.00",
+      "numericPrice": 829.0,
+      "discountedPrice": "$829.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_7e9b8a8110ed42f7a558b7cae5999b42~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "31c3d546-b0c2-26f4-5ee4-3b54e9576518",
+      "name": "Solstice",
+      "slug": "solstice-1",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$420.00",
+      "numericPrice": 420.0,
+      "discountedPrice": "$420.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_03173d058c6445b5abacd19d6a0d1775~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+      "name": "Studio Frame",
+      "slug": "studio-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$229.00",
+      "numericPrice": 229,
+      "discountedPrice": "$229.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "2049663a-2049-e7c7-b1b4-3028b1a68982",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_4cd3b2c8e6c24c2b89bc72bbebbc4248~mv2.jpg/v1/fit/w_691,h_460,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Finishing Options"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "e18eced6-fa31-396d-beef-1703bc682ffa",
+      "name": "Sunrise",
+      "slug": "sunrise",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$779.00",
+      "numericPrice": 779.0,
+      "discountedPrice": "$779.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_bd61c37885e04934b0d219eb23c5d36f~mv2.jpg/v1/fit/w_3000,h_1995,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Tech Specs"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "a6af1818-1258-4c06-a727-aafdfb0a33bf",
+      "name": "Tamarind Futon Frame",
+      "slug": "tamarind-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-TAMARIND",
+      "price": "$321.00",
+      "numericPrice": 321.0,
+      "discountedPrice": "$321.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "1a30c315-56d5-4ca8-8569-adaf12805f9f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 8,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_b524b0ad680c4c65b91c2339633c5208~mv2.jpg/v1/fit/w_2000,h_1330,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    },
+    {
+      "id": "2cfaff7f-d87b-f1e6-69a6-04b2cd1df063",
+      "name": "Tarragon",
+      "slug": "tarragon",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$297.00",
+      "numericPrice": 297.0,
+      "discountedPrice": "$297.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 10,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_1dd7f840025044478981e6e883863d55~mv2.jpg/v1/fit/w_4478,h_3199,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "7556c31d-06fd-efcf-b9ae-bbf6bd619fdd",
+      "name": "Thyme",
+      "slug": "thyme",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$224.00",
+      "numericPrice": 224.0,
+      "discountedPrice": "$224.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "d855ea64-da2c-4764-a2ff-50732f7b441f",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 9,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_b4b165c6c9e64f90858fdc5a544e2bcd~mv2.jpg/v1/fit/w_4851,h_3465,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin Headboard Only",
+            "Full Headboard Only",
+            "Queen Headboard Only",
+            "King Headboard Only",
+            "Twin P-Series",
+            "Full P-Series",
+            "Queen P-Series",
+            "King P-Series"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Natural",
+            "Stonewash Gray",
+            "White"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "cd59cd36-b6d2-2cf3-9d48-81793a7bdbbd",
+      "name": "Tiro",
+      "slug": "tiro",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$782.00",
+      "numericPrice": 782.0,
+      "discountedPrice": "$782.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_36ddfc4cab4c40f5b5188f325a982984~mv2.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Dark Cherry",
+            "Warm Cherry"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "c8539b66-7a44-fe18-affc-afec4be8562a",
+      "name": "Tozi",
+      "slug": "tozi",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$656.00",
+      "numericPrice": 656.0,
+      "discountedPrice": "$656.00",
+      "ribbon": "",
+      "inStock": false,
+      "inventoryStatus": "OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_ddd2575f54504a6cbb7be09c774bbfe6~mv2.jpg/v1/fit/w_2679,h_1786,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Dark Cherry",
+            "Warm Cherry"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "179cd0e8-4afb-4235-7cae-d7e22ccb38e3",
+      "name": "Trelli",
+      "slug": "trelli",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$773.00",
+      "numericPrice": 773.0,
+      "discountedPrice": "$773.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_bf297cf70f0a43a99f7fa29da11d142e~mv2.jpg/v1/fit/w_2048,h_2048,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full Loveseat w/Ottoman",
+            "Queen Loveseat w/Ottoman",
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Black Walnut",
+            "Warm Cherry"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "1327fac4-90ad-e120-eb2f-a47d01e23f71",
+      "name": "Trinity",
+      "slug": "trinity",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$549.00",
+      "numericPrice": 549.0,
+      "discountedPrice": "$549.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "PARTIALLY_OUT_OF_STOCK",
+      "collectionIds": [
+        "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 4,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_d39f32f6ca484d1b91e62e9c56514f4e~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Full",
+            "Queen"
+          ]
+        },
+        {
+          "name": "Color",
+          "choices": [
+            "Cherry",
+            "Chocolate",
+            "Black Walnut",
+            "Natural"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Dimensions"
+      ],
+      "brand": ""
+    },
+    {
+      "id": "aef9f2b6-4e12-ca44-7cb9-1092dc898607",
+      "name": "Twin Trundle Bed",
+      "slug": "twin-trundle-bed",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$199.00",
+      "numericPrice": 199.0,
+      "discountedPrice": "$199.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "000d3d44-6d21-ca4d-c291-197a7b405c9c",
+        "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 2,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_48edd2b97f994c6bb08401915a054ca5~mv2.jpg/v1/fit/w_480,h_320,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "d4607c9a-4f85-aace-6f54-a01400dc1e10",
+      "name": "Yuma",
+      "slug": "yuma",
+      "visible": true,
+      "productType": "physical",
+      "sku": "",
+      "price": "$0.00",
+      "numericPrice": 0.0,
+      "discountedPrice": "$0.00",
+      "ribbon": "",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/e04e89_ff7419677f7b4d5a87d1815aa167dbc2~mv2.jpg/v1/fit/w_2982,h_1890,q_90/file.jpg",
+      "options": [
+        {
+          "name": "Size",
+          "choices": [
+            "Twin",
+            "Full",
+            "Queen",
+            "King"
+          ]
+        }
+      ],
+      "numVariants": 0,
+      "additionalInfoSections": [],
+      "brand": ""
+    },
+    {
+      "id": "e69ff847-f1f7-4529-95b0-7a64951022f0",
+      "name": "Yuma Futon Frame",
+      "slug": "yuma-futon-frame",
+      "visible": true,
+      "productType": "physical",
+      "sku": "CF-FRAME-YUMA",
+      "price": "$1.00",
+      "numericPrice": 1.0,
+      "discountedPrice": "$1.00",
+      "ribbon": "Call for Price",
+      "inStock": true,
+      "inventoryStatus": "IN_STOCK",
+      "collectionIds": [
+        "00000000-000000-000000-000000000001"
+      ],
+      "numImages": 1,
+      "mainImage": "https://static.wixstatic.com/media/cc389e_89406067967b4aa4ae7b1c891d0d4e60~mv2.jpg/v1/fit/w_2000,h_1267,q_90/file.jpg",
+      "options": [],
+      "numVariants": 0,
+      "additionalInfoSections": [
+        "Manufacturer"
+      ],
+      "brand": "Carolina Futons"
+    }
+  ],
+  "collections": [
+    {
+      "id": "83de0e12-61df-b8e2-ef4b-6df53cb7fc7b",
+      "name": "Accessories Finished",
+      "slug": "accessories-finished",
+      "visible": true,
+      "products": [],
+      "productCount": 0
+    },
+    {
+      "id": "000d3d44-6d21-ca4d-c291-197a7b405c9c",
+      "name": "Accessories Unfinished",
+      "slug": "accessories-unfinished",
+      "visible": true,
+      "products": [
+        "Center Legs",
+        "Rolling Drawers",
+        "Twin Trundle Bed"
+      ],
+      "productCount": 3
+    },
+    {
+      "id": "00000000-000000-000000-000000000001",
+      "name": "All Products",
+      "slug": "all-products",
+      "visible": true,
+      "products": [
+        "Albany",
+        "Alpine",
+        "Alpine Futon Frame",
+        "Asheville",
+        "Asheville Futon Frame",
+        "Autumn",
+        "Bali Futon Frame",
+        "Basic Platform Bed",
+        "Black Pepper",
+        "Black Pepper Futon Frame",
+        "Cambridge",
+        "Cambridge Futon Frame",
+        "Canby",
+        "Center Legs",
+        "Chandler",
+        "Chandler Futon Frame",
+        "Charleston",
+        "Clove 2-Drawer Nightstand",
+        "Clove 5-Drawer Chest",
+        "Clove 6-Drawer Dresser",
+        "Clove 6-Drawer Lingerie Chest",
+        "Clover Murphy Cabinet Bed",
+        "Daisy Murphy Cabinet Bed",
+        "Dillon",
+        "Durango",
+        "Ekko Platform Bed",
+        "Flagstaff",
+        "Flagstaff Futon Frame",
+        "Galena",
+        "Gemini Futon Frame",
+        "Gemini II",
+        "Haley 110",
+        "Key West",
+        "Kingston",
+        "Lambton",
+        "Lexington",
+        "Maricopa",
+        "Maricopa Futon Frame",
+        "Mattress Protector",
+        "Mesa 1000",
+        "Mesa 1000 Mattress",
+        "Mesa 3000",
+        "Mesa 3000 Mattress",
+        "Mesa 5000",
+        "Mesa 5000 Mattress",
+        "Monterey",
+        "Moonshadow",
+        "Mountainaire",
+        "Mountainaire Log Futon",
+        "Murphy Cube Cabinet Bed",
+        "Murphy Express Cabinet Bed",
+        "Nomad",
+        "Northampton",
+        "Northampton Futon Frame",
+        "Nutmeg",
+        "Pagoda",
+        "Pagoda Futon Frame",
+        "Paprika",
+        "Poppy Murphy Cabinet Bed",
+        "Portofino",
+        "Raleigh",
+        "Ranchero  Murphy Cabinet Bed",
+        "Rockwell",
+        "Rolling Drawers",
+        "Rosemary Futon Frame",
+        "Ruskin",
+        "Sagebrush Murphy Cabinet Bed",
+        "Sealy San Sebastian Cabinet Bed",
+        "Secrets 7-Drawer Dresser",
+        "Secrets Nightstand",
+        "Sedona",
+        "Sedona Futon Frame",
+        "Solstice",
+        "Solstice",
+        "Sunrise",
+        "Tamarind Futon Frame",
+        "Tarragon",
+        "Thyme",
+        "Tiro",
+        "Tozi",
+        "Trelli",
+        "Trinity",
+        "Twin Trundle Bed",
+        "Yuma",
+        "Yuma Futon Frame",
+        "Studio Frame",
+        "KD Lounger",
+        "Denali"
+      ],
+      "productCount": 88
+    },
+    {
+      "id": "d855ea64-da2c-4764-a2ff-50732f7b441f",
+      "name": "Bedroom Finished",
+      "slug": "bedroom-finished",
+      "visible": true,
+      "products": [
+        "Basic Platform Bed",
+        "Black Pepper",
+        "Nutmeg",
+        "Paprika",
+        "Solstice",
+        "Tarragon",
+        "Thyme"
+      ],
+      "productCount": 7
+    },
+    {
+      "id": "ab6ffc77-bc01-404a-5eba-9f79e076450a",
+      "name": "Bedroom Unfinished",
+      "slug": "bedroom-unfinished",
+      "visible": true,
+      "products": [
+        "Charleston",
+        "Ekko Platform Bed",
+        "Lexington",
+        "Nomad"
+      ],
+      "productCount": 4
+    },
+    {
+      "id": "e0c66dee-e3c6-8de5-3f28-d6b1f6c9dba9",
+      "name": "Casegoods & Accessories",
+      "slug": "casegoods-accessories",
+      "visible": true,
+      "products": [
+        "Center Legs",
+        "Clove 2-Drawer Nightstand",
+        "Clove 5-Drawer Chest",
+        "Clove 6-Drawer Dresser",
+        "Clove 6-Drawer Lingerie Chest",
+        "Rolling Drawers",
+        "Secrets 7-Drawer Dresser",
+        "Secrets Nightstand",
+        "Twin Trundle Bed"
+      ],
+      "productCount": 9
+    },
+    {
+      "id": "f17eaf8d-2684-f2a2-838d-9cdd7d68e028",
+      "name": "Fabrics",
+      "slug": "fabrics",
+      "visible": true,
+      "products": [],
+      "productCount": 0
+    },
+    {
+      "id": "71c1884c-dd0e-dbe0-a011-825caf0cef58",
+      "name": "Front Loading & Nesting",
+      "slug": "front-loading-nesting",
+      "visible": true,
+      "products": [
+        "Albany",
+        "Autumn",
+        "Key West",
+        "Kingston",
+        "Monterey",
+        "Portofino",
+        "Raleigh",
+        "Ruskin",
+        "Solstice",
+        "Sunrise",
+        "Trinity"
+      ],
+      "productCount": 11
+    },
+    {
+      "id": "c735f8f3-8185-f76b-4895-d5c9111e1588",
+      "name": "Mattresses",
+      "slug": "mattresses",
+      "visible": true,
+      "products": [
+        "Haley 110",
+        "Mattress Protector",
+        "Moonshadow"
+      ],
+      "productCount": 3
+    },
+    {
+      "id": "9c9dbb1a-9af4-c486-91f7-bb990dc4bfca",
+      "name": "Mattresses - In-Store",
+      "slug": "mattresses-in-store",
+      "visible": true,
+      "products": [
+        "Alpine",
+        "Asheville",
+        "Cambridge",
+        "Chandler",
+        "Flagstaff",
+        "Gemini II",
+        "Maricopa",
+        "Mesa 1000",
+        "Mesa 3000",
+        "Mesa 5000",
+        "Mountainaire",
+        "Northampton",
+        "Sedona",
+        "Yuma"
+      ],
+      "productCount": 14
+    },
+    {
+      "id": "1c18e7ab-b12e-4bff-60dc-6d5da02a8a2f",
+      "name": "Murphy Cabinet Beds",
+      "slug": "murphy-cabinet-beds",
+      "visible": true,
+      "products": [
+        "Clover Murphy Cabinet Bed",
+        "Daisy Murphy Cabinet Bed",
+        "Murphy Cube Cabinet Bed",
+        "Poppy Murphy Cabinet Bed",
+        "Ranchero  Murphy Cabinet Bed",
+        "Sagebrush Murphy Cabinet Bed",
+        "Sealy San Sebastian Cabinet Bed"
+      ],
+      "productCount": 7
+    },
+    {
+      "id": "d312368b-45b9-d290-28b4-550f7a599479",
+      "name": "Rustic Log Futons",
+      "slug": "rustic-log-futons",
+      "visible": true,
+      "products": [],
+      "productCount": 0
+    },
+    {
+      "id": "2049663a-2049-e7c7-b1b4-3028b1a68982",
+      "name": "Unfinished Wood",
+      "slug": "unfinished-wood",
+      "visible": true,
+      "products": [
+        "Studio Frame",
+        "KD Lounger"
+      ],
+      "productCount": 2
+    },
+    {
+      "id": "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef",
+      "name": "Wall Huggers",
+      "slug": "wall-huggers",
+      "visible": true,
+      "products": [
+        "Canby",
+        "Dillon",
+        "Durango",
+        "Galena",
+        "Lambton",
+        "Pagoda",
+        "Rockwell",
+        "Tiro",
+        "Tozi",
+        "Trelli",
+        "Denali"
+      ],
+      "productCount": 11
+    }
+  ],
+  "installedApps": [
+    {
+      "appDefId": "HtmlAnywhere",
+      "name": "HTML Embed (Custom Code)",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "deadbeef-c8e7-4177-b99a-0084c0924fae",
+      "name": "Velo by Wix",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "cf06bdf3-5bab-4f20-b165-97fb723dac6a",
+      "name": "Wix AI Text Creator",
+      "enabled": true,
+      "version": "^0.9.0"
+    },
+    {
+      "appDefId": "28bbdbd0-ce7f-4674-b133-f03cf4db2349",
+      "name": "Wix API Keys",
+      "enabled": true,
+      "version": "^0.0.0"
+    },
+    {
+      "appDefId": "bd2e09f8-e902-4c27-b535-a4e896cc4ac9",
+      "name": "Wix Accept Payments",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "45c44b27-ca7b-4891-8c0d-1747d588b835",
+      "name": "Wix Accessibility Wizard",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "eec3496e-44a8-45ac-9581-868a67345be8",
+      "name": "Wix Accordion",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "55cd9036-36bb-480b-8ddc-afda3cb2eb8d",
+      "name": "Wix Add to Cart Button",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "13aa9735-aa50-4bdb-877c-0bb46804bd71",
+      "name": "Wix Analytics",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "cfb50983-8afe-41d6-8c2b-d11b453b339f",
+      "name": "Wix Anchor",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "251a12da-ff5c-4f20-a7b0-4fc8a9eb3cf4",
+      "name": "Wix Ascend",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "e593b0bd-b783-45b8-97c2-873d42aacaf4",
+      "name": "Wix Automations",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1973457f-c021-4da5-941f-58444ff761d4",
+      "name": "Wix Back in Stock",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "969262e4-c158-4692-8193-a5f335524bff",
+      "name": "Wix Blocks",
+      "enabled": true,
+      "version": "^0.0.8"
+    },
+    {
+      "appDefId": "14cc59bc-f0b7-15b8-e1c7-89ce41d0e0c9",
+      "name": "Wix Blog",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14dbef06-cc42-5583-32a7-3abd44da4908",
+      "name": "Wix Bookings",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "d6708a0e-5b2a-458e-8cfe-bdca240aa2ce",
+      "name": "Wix Branded App",
+      "enabled": true,
+      "version": "^0.16.0"
+    },
+    {
+      "appDefId": "e4b5f1bc-c77a-4319-a60d-a46acb17f6fc",
+      "name": "Wix Business Manager",
+      "enabled": true,
+      "version": "^0.22.0"
+    },
+    {
+      "appDefId": "4b10fcce-732d-4be3-9d46-801d271acda9",
+      "name": "Wix CMS",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "3ee93544-967e-407e-85c7-69a4aab05217",
+      "name": "Wix CRM",
+      "enabled": true,
+      "version": "^1.0.3"
+    },
+    {
+      "appDefId": "f123e8f1-4350-4c9b-b269-04adfadda977",
+      "name": "Wix Cart",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "ea2821fc-7d97-40a9-9f75-772f29178430",
+      "name": "Wix Category Page",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "a88e3d6b-3bd0-4fd8-a5e4-ba204fd7b214",
+      "name": "Wix Challenges",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14dbefd2-01b4-fb61-32a7-3abd44da4908",
+      "name": "Wix Chat",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "8ea9df15-9ff6-4acf-bbb8-8d3a69ae5841",
+      "name": "Wix Checkout",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "7516f85b-0868-4c23-9fcb-cea7784243df",
+      "name": "Wix Code",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "e81d3ca5-7ca5-4188-bfac-f4997a34065e",
+      "name": "Wix Comments",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "146c0d71-352e-4464-9a03-2e868aabe7b9",
+      "name": "Wix Contacts",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "eb377299-86b4-4a86-a1b5-774a2d1d374b",
+      "name": "Wix Coupons",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "4aebd0cb-fbdb-4da7-b5d1-d05660a30172",
+      "name": "Wix Dashboard",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "140eb9f1-b164-4640-915a-f3afb8d114a2",
+      "name": "Wix Data",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "d80111c5-a0f4-47a8-b63a-65b54d774a27",
+      "name": "Wix Dev Mode",
+      "enabled": true,
+      "version": "^0.0.0"
+    },
+    {
+      "appDefId": "8725b255-2aa2-4a53-b76d-7d3c363aaeea",
+      "name": "Wix Email Marketing",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1484cb44-49cd-5b39-9681-75188ab429de",
+      "name": "Wix Events",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "35aec784-bbec-4e6e-abcb-d3d724af52cf",
+      "name": "Wix Favicon",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "13ee94c1-b635-8505-3391-97919052c16f",
+      "name": "Wix File Share",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "141fbfae-511e-6817-c9f0-48993a7547d1",
+      "name": "Wix Forms",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14cffd81-5215-0a7f-22f8-074b0e2401fb",
+      "name": "Wix Forum",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "50d8c12f-715e-41ad-be25-d0f61375dbee",
+      "name": "Wix Get Subscribers",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "94bc563b-675f-41ad-a2a6-5494f211c47b",
+      "name": "Wix Gift Cards",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "ad836327-80ba-4b72-8c9e-6c273a555d5c",
+      "name": "Wix Go",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14b89688-9b25-5214-d1cb-a3fb9683618b",
+      "name": "Wix Hotels",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "e3118e0a-b1c1-4e1d-b67d-ddf0cb92309b",
+      "name": "Wix Inbox",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1505b775-e885-eb1b-b665-1e485d9bf90e",
+      "name": "Wix Instagram Feed",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14e12b04-943e-fd32-456d-70b1820a2ff2",
+      "name": "Wix Language Menu",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "7bdf8746-da2b-4c2b-a597-e4ef8b8c74b4",
+      "name": "Wix Lightbox",
+      "enabled": true,
+      "version": "^1.1.0"
+    },
+    {
+      "appDefId": "14d7032a-0a65-5270-cca7-30f599708fed",
+      "name": "Wix Loyalty Program",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "fc9314bc-a317-4a2b-a9d4-5ad21cc57856",
+      "name": "Wix Members Area",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "44562f1b-17ec-4907-b242-b76ac06e707a",
+      "name": "Wix Mini Cart",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1537b24e-29d1-6d8f-b8e1-d6860f2f70b9",
+      "name": "Wix Multilingual",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "150ae7ee-c74a-eecd-d3d7-2112895b988a",
+      "name": "Wix Music",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "edd04d8e-3c81-46d7-b176-39b076fe7bbd",
+      "name": "Wix Notifications",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "8d8ba777-9a97-4f63-88da-3d21f7914863",
+      "name": "Wix Order Page",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "d70b68e2-8d77-4e0c-9c00-c292d6e0025e",
+      "name": "Wix Owner App",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "f4d83b06-b408-4f3b-afd4-de8db311d7d8",
+      "name": "Wix Payments",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "6580b7e9-4031-4a62-a0a5-8e2fa92e8e18",
+      "name": "Wix Photo Albums",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+      "name": "Wix Point of Sale",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "3e9885e0-57be-460d-9d6d-b1de852cf343",
+      "name": "Wix Pop Ups",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14ce1214-b278-a7e4-1373-00cebd1bef7c",
+      "name": "Wix Pricing Plans",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14bca956-e09f-f4d6-14d7-466cb3f09103",
+      "name": "Wix Pro Gallery",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "74bff718-5977-47f2-9e5f-a9fd0047fd1f",
+      "name": "Wix Product Page",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "78640cbb-be47-45f8-b6de-8ed97287872c",
+      "name": "Wix Product Widget",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "2fb6d5de-10e5-405c-8726-cf97cfae84cd",
+      "name": "Wix Promote",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "9bead16f-1c73-4cda-b6c4-28cff46988db",
+      "name": "Wix REST API",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "a322993b-2c74-426f-bbb8-444db73d0d1b",
+      "name": "Wix Related Products",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "57d13128-4a4c-494b-80b3-a6fb2e28018d",
+      "name": "Wix Rich Content",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "14271d6f-ba62-d045-549b-ab972ae1f70e",
+      "name": "Wix SEO Tools",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "2bef2abe-7abe-43da-889c-53c1500a328c",
+      "name": "Wix Shipping",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "9f7cfe1c-222c-450f-a21d-cc406008890b",
+      "name": "Wix Sidebar",
+      "enabled": true,
+      "version": "^3.10.0"
+    },
+    {
+      "appDefId": "14ce28f7-7eb0-3745-22f8-074b0e2401fb",
+      "name": "Wix Site Members",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "138afa6d-d5b7-4e10-bf87-c8c2e83df82d",
+      "name": "Wix Site Properties",
+      "enabled": true,
+      "version": "^3.32.0"
+    },
+    {
+      "appDefId": "139ef4fa-c108-8f9a-c7be-d5f492a2c939",
+      "name": "Wix Site Search",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "36c09775-5ced-4ae9-9ba9-0c3119fbd7c1",
+      "name": "Wix Site Speed",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1503ddb9-1dc0-4ae4-bcc9-cbf47b94a476",
+      "name": "Wix Social",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "7479d596-137c-4fa3-89cd-d7091042ba61",
+      "name": "Wix Social Media Icons",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1380b703-ce81-ff05-f115-39571d94dfcd",
+      "name": "Wix Stores",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "1480c568-5cbd-9392-5604-1148f5faffa0",
+      "name": "Wix Table Reservations",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "2f70e2b4-ff36-472e-bdb9-ce393b13669e",
+      "name": "Wix Tasks",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "446ac100-e83d-4a06-b1ac-edb4595ca2c1",
+      "name": "Wix Thank You Page",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "307ba931-689c-4b55-bb1d-6a382bad9222",
+      "name": "Wix Triggers",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "135c3d92-0fea-1f9d-2ba5-2a1dfb04297e",
+      "name": "Wix Video",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "70fcd45c-78df-44c0-ab2a-9d2be2350239",
+      "name": "Wix Workflows",
+      "enabled": true,
+      "version": null
+    },
+    {
+      "appDefId": "399a2612-a042-4fb7-aeff-ed331c7d1c39",
+      "name": "Wix eCommerce",
+      "enabled": true,
+      "version": null
+    }
+  ],
+  "summary": {
+    "visibleProducts": 88,
+    "hiddenProducts": 0,
+    "inStockProducts": 57,
+    "outOfStockProducts": 31,
+    "productsWithNoImages": [],
+    "productsWithOneImage": [
+      "Alpine",
+      "Alpine Futon Frame",
+      "Asheville",
+      "Asheville Futon Frame",
+      "Cambridge",
+      "Cambridge Futon Frame",
+      "Center Legs",
+      "Chandler",
+      "Chandler Futon Frame",
+      "Ekko Platform Bed",
+      "Flagstaff",
+      "Flagstaff Futon Frame",
+      "Gemini Futon Frame",
+      "Gemini II",
+      "Haley 110",
+      "Key West",
+      "Maricopa",
+      "Maricopa Futon Frame",
+      "Mattress Protector",
+      "Mesa 1000",
+      "Mesa 1000 Mattress",
+      "Mesa 3000",
+      "Mesa 3000 Mattress",
+      "Mesa 5000",
+      "Mesa 5000 Mattress",
+      "Moonshadow",
+      "Mountainaire",
+      "Mountainaire Log Futon",
+      "Northampton",
+      "Northampton Futon Frame",
+      "Pagoda",
+      "Pagoda Futon Frame",
+      "Rolling Drawers",
+      "Sedona",
+      "Sedona Futon Frame",
+      "Yuma",
+      "Yuma Futon Frame"
+    ],
+    "callForPriceProducts": [
+      {
+        "name": "Alpine",
+        "price": 0.0
+      },
+      {
+        "name": "Alpine Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Asheville",
+        "price": 0.0
+      },
+      {
+        "name": "Asheville Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Cambridge",
+        "price": 0.0
+      },
+      {
+        "name": "Cambridge Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Chandler",
+        "price": 0.0
+      },
+      {
+        "name": "Chandler Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Flagstaff",
+        "price": 0.0
+      },
+      {
+        "name": "Flagstaff Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Gemini Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Gemini II",
+        "price": 0.0
+      },
+      {
+        "name": "Maricopa",
+        "price": 0.0
+      },
+      {
+        "name": "Maricopa Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Mesa 1000",
+        "price": 0.0
+      },
+      {
+        "name": "Mesa 1000 Mattress",
+        "price": 1.0
+      },
+      {
+        "name": "Mesa 3000",
+        "price": 0.0
+      },
+      {
+        "name": "Mesa 3000 Mattress",
+        "price": 1.0
+      },
+      {
+        "name": "Mesa 5000",
+        "price": 0.0
+      },
+      {
+        "name": "Mesa 5000 Mattress",
+        "price": 1.0
+      },
+      {
+        "name": "Mountainaire",
+        "price": 0.0
+      },
+      {
+        "name": "Mountainaire Log Futon",
+        "price": 1.0
+      },
+      {
+        "name": "Northampton",
+        "price": 0.0
+      },
+      {
+        "name": "Northampton Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Sedona",
+        "price": 0.0
+      },
+      {
+        "name": "Sedona Futon Frame",
+        "price": 1.0
+      },
+      {
+        "name": "Yuma",
+        "price": 0.0
+      },
+      {
+        "name": "Yuma Futon Frame",
+        "price": 1.0
+      }
+    ],
+    "discountedProducts": [
+      {
+        "name": "Haley 110",
+        "price": "$709.00",
+        "discounted": "$659.00"
+      },
+      {
+        "name": "Moonshadow",
+        "price": "$759.00",
+        "discounted": "$709.00"
+      }
+    ],
+    "emptyCollections": [
+      "Accessories Finished",
+      "Fabrics",
+      "Rustic Log Futons"
+    ],
+    "collectionsWithProducts": [
+      {
+        "name": "All Products",
+        "count": 88
+      },
+      {
+        "name": "Accessories Unfinished",
+        "count": 3
+      },
+      {
+        "name": "Bedroom Finished",
+        "count": 7
+      },
+      {
+        "name": "Bedroom Unfinished",
+        "count": 4
+      },
+      {
+        "name": "Casegoods & Accessories",
+        "count": 9
+      },
+      {
+        "name": "Front Loading & Nesting",
+        "count": 11
+      },
+      {
+        "name": "Mattresses",
+        "count": 3
+      },
+      {
+        "name": "Mattresses - In-Store",
+        "count": 14
+      },
+      {
+        "name": "Murphy Cabinet Beds",
+        "count": 7
+      },
+      {
+        "name": "Unfinished Wood",
+        "count": 2
+      },
+      {
+        "name": "Wall Huggers",
+        "count": 11
+      }
+    ],
+    "knownApps": [
+      "HTML Embed (Custom Code)",
+      "Velo by Wix",
+      "Wix AI Text Creator",
+      "Wix API Keys",
+      "Wix Accept Payments",
+      "Wix Accessibility Wizard",
+      "Wix Accordion",
+      "Wix Add to Cart Button",
+      "Wix Analytics",
+      "Wix Anchor",
+      "Wix Ascend",
+      "Wix Automations",
+      "Wix Back in Stock",
+      "Wix Blocks",
+      "Wix Blog",
+      "Wix Bookings",
+      "Wix Branded App",
+      "Wix Business Manager",
+      "Wix CMS",
+      "Wix CRM",
+      "Wix Cart",
+      "Wix Category Page",
+      "Wix Challenges",
+      "Wix Chat",
+      "Wix Checkout",
+      "Wix Code",
+      "Wix Comments",
+      "Wix Contacts",
+      "Wix Coupons",
+      "Wix Dashboard",
+      "Wix Data",
+      "Wix Dev Mode",
+      "Wix Email Marketing",
+      "Wix Events",
+      "Wix Favicon",
+      "Wix File Share",
+      "Wix Forms",
+      "Wix Forum",
+      "Wix Get Subscribers",
+      "Wix Gift Cards",
+      "Wix Go",
+      "Wix Hotels",
+      "Wix Inbox",
+      "Wix Instagram Feed",
+      "Wix Language Menu",
+      "Wix Lightbox",
+      "Wix Loyalty Program",
+      "Wix Members Area",
+      "Wix Mini Cart",
+      "Wix Multilingual",
+      "Wix Music",
+      "Wix Notifications",
+      "Wix Order Page",
+      "Wix Owner App",
+      "Wix Payments",
+      "Wix Photo Albums",
+      "Wix Point of Sale",
+      "Wix Pop Ups",
+      "Wix Pricing Plans",
+      "Wix Pro Gallery",
+      "Wix Product Page",
+      "Wix Product Widget",
+      "Wix Promote",
+      "Wix REST API",
+      "Wix Related Products",
+      "Wix Rich Content",
+      "Wix SEO Tools",
+      "Wix Shipping",
+      "Wix Sidebar",
+      "Wix Site Members",
+      "Wix Site Properties",
+      "Wix Site Search",
+      "Wix Site Speed",
+      "Wix Social",
+      "Wix Social Media Icons",
+      "Wix Stores",
+      "Wix Table Reservations",
+      "Wix Tasks",
+      "Wix Thank You Page",
+      "Wix Triggers",
+      "Wix Video",
+      "Wix Workflows",
+      "Wix eCommerce"
+    ],
+    "unknownApps": 0
+  },
+  "crossReference": {
+    "onlyOnLive": [
+      "alpine-futon-frame",
+      "asheville-futon-frame",
+      "bali-futon-frame",
+      "black-pepper-futon-frame",
+      "cambridge-futon-frame",
+      "chandler-futon-frame",
+      "flagstaff-futon-frame",
+      "gemini-futon-frame",
+      "maricopa-futon-frame",
+      "mesa-1000-mattress",
+      "mesa-3000-mattress",
+      "mesa-5000-mattress",
+      "mountainaire-log-futon",
+      "northampton-futon-frame",
+      "pagoda-futon-frame",
+      "rosemary-futon-frame",
+      "sedona-futon-frame",
+      "tamarind-futon-frame",
+      "yuma-futon-frame"
+    ],
+    "onlyInStaging": [
+      "bali",
+      "eureka",
+      "folding-platform-bed",
+      "fuji",
+      "hook-on-nightstand",
+      "leg-length-options-for-charleston-platform-bed",
+      "leg-length-options-for-lexington-platform-bed",
+      "leg-length-options-for-nomad-platform-bed",
+      "northern-exposure-log-futon",
+      "orion-murphy-cabinet-bed",
+      "rosemary",
+      "secrets-5-drawer-chest",
+      "storage-drawers",
+      "tamarind",
+      "trundle-bed",
+      "venice",
+      "wilderness-log-futon",
+      "winchester",
+      "winter"
+    ],
+    "priceMismatches": [
+      {
+        "name": "Haley 110",
+        "slug": "haley-110",
+        "livePrice": 709.0,
+        "stagingPrice": 659
+      },
+      {
+        "name": "Moonshadow",
+        "slug": "pulsar",
+        "livePrice": 759.0,
+        "stagingPrice": 709
+      }
+    ],
+    "stockMismatches": [
+      {
+        "name": "Autumn",
+        "slug": "autumn",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Basic Platform Bed",
+        "slug": "basic-bed",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Black Pepper",
+        "slug": "black-pepper",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Clove 5-Drawer Chest",
+        "slug": "clove-5-drawer-chest",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Clove 6-Drawer Dresser",
+        "slug": "clove-6-drawer-dresser",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Clove 6-Drawer Lingerie Chest",
+        "slug": "lingerie-chest",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Ekko Platform Bed",
+        "slug": "ekko",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Haley 110",
+        "slug": "haley-110",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Key West",
+        "slug": "key-west",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Kingston",
+        "slug": "kingston",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Lambton",
+        "slug": "lambton",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Mattress Protector",
+        "slug": "mattress-protector",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Monterey",
+        "slug": "monterey",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Moonshadow",
+        "slug": "pulsar",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Murphy Cube Cabinet Bed",
+        "slug": "murphy-cube2",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Murphy Express Cabinet Bed",
+        "slug": "murphy-cabinet-express",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Nutmeg",
+        "slug": "nutmeg-platform-bed",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Pagoda",
+        "slug": "pagoda",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Poppy Murphy Cabinet Bed",
+        "slug": "poppy-murphy-bed-cabinet",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Raleigh",
+        "slug": "raleigh",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Ranchero  Murphy Cabinet Bed",
+        "slug": "ranchero-murphy-cabinet-bed",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Ruskin",
+        "slug": "ruskin",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Sagebrush Murphy Cabinet Bed",
+        "slug": "sagebrush-murphy-cabinet-bed",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Sealy San Sebastian Cabinet Bed",
+        "slug": "san-sebastian-sealy-cabinet-bed",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Secrets 7-Drawer Dresser",
+        "slug": "secrets-7-drawer-dresser",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Solstice",
+        "slug": "solstice",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Solstice",
+        "slug": "solstice-1",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Tarragon",
+        "slug": "tarragon",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Thyme",
+        "slug": "thyme",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Tozi",
+        "slug": "tozi",
+        "liveInStock": false,
+        "stagingInStock": true
+      },
+      {
+        "name": "Denali",
+        "slug": "denali",
+        "liveInStock": false,
+        "stagingInStock": true
+      }
+    ],
+    "totalLiveProducts": 88,
+    "totalStagingProducts": 88,
+    "matchedProducts": 69
+  }
+}
