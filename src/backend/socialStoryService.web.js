@@ -19,13 +19,12 @@ const RETRY_DELAY_MS = 2000;
  * @param {Object} params
  * @param {string} params.imageUrl - Public URL of the story image (must be accessible to Meta)
  * @param {string} params.caption - Story caption text
- * @param {string} params.storyType - Story type for logging
  * @param {boolean} [params.dryRun=false] - If true, validate payload without posting
  * @returns {Promise<{success: boolean, storyId?: string, error?: string, dryRun?: boolean}>}
  */
 export const postStory = webMethod(
   Permissions.Admin,
-  async ({ imageUrl, caption, storyType, dryRun = false }) => {
+  async ({ imageUrl, caption, dryRun = false }) => {
     if (!imageUrl) return { success: false, error: 'imageUrl is required' };
 
     const sanitizedCaption = caption ? sanitize(String(caption), 2200) : '';
@@ -57,7 +56,7 @@ export const postStory = webMethod(
     }
 
     const endpoint = `${META_GRAPH_BASE}/${pageId}/photo_stories`;
-    return postWithRetry(endpoint, accessToken, payload, storyType);
+    return postWithRetry(endpoint, accessToken, payload);
   }
 );
 
@@ -127,7 +126,7 @@ export const getScheduleStatus = webMethod(
 
 // ── Internal helpers ─────────────────────────────────────────────────
 
-async function postWithRetry(endpoint, accessToken, payload, storyType, attempt = 1) {
+async function postWithRetry(endpoint, accessToken, payload, attempt = 1) {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -151,7 +150,7 @@ async function postWithRetry(endpoint, accessToken, payload, storyType, attempt 
     if ((isRateLimited || isServerError) && attempt < MAX_RETRIES) {
       const delay = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
       await sleep(delay);
-      return postWithRetry(endpoint, accessToken, payload, storyType, attempt + 1);
+      return postWithRetry(endpoint, accessToken, payload, attempt + 1);
     }
 
     return { success: false, error: errorMsg, status: response.status };
@@ -159,7 +158,7 @@ async function postWithRetry(endpoint, accessToken, payload, storyType, attempt 
     if (attempt < MAX_RETRIES) {
       const delay = RETRY_DELAY_MS * Math.pow(2, attempt - 1);
       await sleep(delay);
-      return postWithRetry(endpoint, accessToken, payload, storyType, attempt + 1);
+      return postWithRetry(endpoint, accessToken, payload, attempt + 1);
     }
     return { success: false, error: `Network error: ${err.message}` };
   }

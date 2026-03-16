@@ -204,52 +204,38 @@ describe('weekend-visit template', () => {
 // ── Generate Script ──────────────────────────────────────────────────
 
 describe('generate-story.mjs', () => {
+  let script;
+
+  beforeAll(async () => {
+    script = await readFile(resolve(__dirname, '../scripts/generate-story.mjs'), 'utf-8');
+  });
+
   it('script file exists', () => {
     const scriptPath = resolve(__dirname, '../scripts/generate-story.mjs');
     expect(existsSync(scriptPath)).toBe(true);
   });
 
-  it('script references all template types', async () => {
-    const script = await readFile(
-      resolve(__dirname, '../scripts/generate-story.mjs'),
-      'utf-8'
-    );
+  it('script references all template types', () => {
     expect(script).toContain('did_you_know');
     expect(script).toContain('care_tip');
     expect(script).toContain('weekend_visit');
   });
 
-  it('script uses headless browser', async () => {
-    const script = await readFile(
-      resolve(__dirname, '../scripts/generate-story.mjs'),
-      'utf-8'
-    );
+  it('script uses headless browser', () => {
     expect(script).toContain('headless: true');
   });
 
-  it('script sets correct viewport', async () => {
-    const script = await readFile(
-      resolve(__dirname, '../scripts/generate-story.mjs'),
-      'utf-8'
-    );
+  it('script sets correct viewport', () => {
     expect(script).toContain('1080');
     expect(script).toContain('1920');
   });
 
-  it('script supports --dry-run flag', async () => {
-    const script = await readFile(
-      resolve(__dirname, '../scripts/generate-story.mjs'),
-      'utf-8'
-    );
+  it('script supports --dry-run flag', () => {
     expect(script).toContain('--dry-run');
     expect(script).toContain('dryRun');
   });
 
-  it('script calls __injectStoryData on page', async () => {
-    const script = await readFile(
-      resolve(__dirname, '../scripts/generate-story.mjs'),
-      'utf-8'
-    );
+  it('script calls __injectStoryData on page', () => {
     expect(script).toContain('__injectStoryData');
   });
 });
