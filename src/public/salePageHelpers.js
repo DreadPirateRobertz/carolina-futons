@@ -45,7 +45,7 @@ export function formatDiscount(originalPrice, salePrice) {
 export function formatSalePrice(product) {
   if (!product || !product.price) return '';
   const orig = `$${product.price.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
-  if (!product.discountedPrice || product.discountedPrice >= product.price) {
+  if (product.discountedPrice == null || product.discountedPrice >= product.price) {
     return orig;
   }
   const sale = `$${product.discountedPrice.toLocaleString('en-US', { minimumFractionDigits: 0 })}`;
@@ -59,8 +59,8 @@ export function formatSalePrice(product) {
  */
 export function sortByDiscount(items) {
   return [...items].sort((a, b) => {
-    const pctA = a.price ? (a.price - (a.discountedPrice || a.price)) / a.price : 0;
-    const pctB = b.price ? (b.price - (b.discountedPrice || b.price)) / b.price : 0;
+    const pctA = a.price ? (a.price - (a.discountedPrice != null ? a.discountedPrice : a.price)) / a.price : 0;
+    const pctB = b.price ? (b.price - (b.discountedPrice != null ? b.discountedPrice : b.price)) / b.price : 0;
     return pctB - pctA;
   });
 }

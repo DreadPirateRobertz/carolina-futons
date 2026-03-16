@@ -174,7 +174,7 @@ export function buildCapiEvent(eventName, data) {
         content_type: (product.variants && product.variants.length > 1) ? 'product_group' : 'product',
         content_name: stripHtml(product.name || ''),
         content_category: (product.collections || [])[0] || '',
-        value: Math.max(0, product.discountedPrice || product.price || 0),
+        value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
         currency: 'USD',
       };
       break;
@@ -187,7 +187,7 @@ export function buildCapiEvent(eventName, data) {
         content_ids: [product._id || ''],
         content_type: (product.variants && product.variants.length > 1) ? 'product_group' : 'product',
         content_name: stripHtml(product.name || ''),
-        value: Math.max(0, product.discountedPrice || product.price || 0),
+        value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
         currency: 'USD',
         num_items: Math.max(1, eventData.quantity || 1),
       };
@@ -254,7 +254,7 @@ export function buildCapiEvent(eventName, data) {
       event.custom_data = {
         content_ids: [product._id || ''],
         content_name: stripHtml(product.name || ''),
-        value: Math.max(0, product.discountedPrice || product.price || 0),
+        value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
         currency: 'USD',
       };
       break;
@@ -300,7 +300,7 @@ export function buildProductSetParams(product, eventName) {
 export function getEnhancedCatalogFields(product) {
   if (!product || typeof product !== 'object') return {};
 
-  const price = product.discountedPrice || product.price || 0;
+  const price = product.discountedPrice != null ? product.discountedPrice : (product.price || 0);
   const brand = detectBrand(product);
   const collections = (product.collections || []).map(c =>
     (typeof c === 'string' ? c : c.id || '').toLowerCase()
@@ -483,7 +483,7 @@ export function buildCatalogBatch(products) {
         description: stripHtml(product.description || ''),
         availability: product.inStock !== false ? 'in stock' : 'out of stock',
         condition: 'new',
-        price: `${(product.discountedPrice || product.price || 0).toFixed(2)} USD`,
+        price: `${(product.discountedPrice != null ? product.discountedPrice : (product.price || 0)).toFixed(2)} USD`,
         link: `https://www.carolinafutons.com/product-page/${sanitize(product.slug, 100)}`,
         image_link: imageUrl,
         brand: enhanced.custom_label_1 || 'Carolina Futons',

@@ -276,8 +276,8 @@ export const getSaleProducts = webMethod(
       return results.items
         .map(formatProduct)
         .sort((a, b) => {
-          const discountA = (a.price || 0) - (a.discountedPrice || a.price || 0);
-          const discountB = (b.price || 0) - (b.discountedPrice || b.price || 0);
+          const discountA = (a.price || 0) - (a.discountedPrice != null ? a.discountedPrice : (a.price || 0));
+          const discountB = (b.price || 0) - (b.discountedPrice != null ? b.discountedPrice : (b.price || 0));
           return discountB - discountA;
         });
     } catch (err) {

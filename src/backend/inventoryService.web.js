@@ -159,7 +159,7 @@ export const updateStockLevel = webMethod(
       const previousQty = existing.items.length > 0 ? existing.items[0].quantity : 0;
       const threshold = options.threshold !== undefined
         ? Math.max(0, Number(options.threshold) || 0)
-        : (existing.items[0]?.threshold || DEFAULT_LOW_STOCK_THRESHOLD);
+        : (existing.items[0]?.threshold != null ? existing.items[0].threshold : DEFAULT_LOW_STOCK_THRESHOLD);
 
       const record = {
         productId: cleanProductId,

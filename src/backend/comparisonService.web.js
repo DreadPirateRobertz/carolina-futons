@@ -207,7 +207,7 @@ function buildComparisonRows(products, sharedCategory) {
     label: 'Price',
     cells: products.map(p => ({
       value: p.formattedDiscountedPrice || p.formattedPrice,
-      raw: p.discountedPrice || p.price,
+      raw: p.discountedPrice != null ? p.discountedPrice : p.price,
     })),
     differs: false,
   };
@@ -270,8 +270,8 @@ function computeWinnerBadges(products) {
   const withPrices = products.filter(p => typeof p.price === 'number');
   if (withPrices.length >= 2) {
     const sorted = [...withPrices].sort((a, b) => {
-      const aPrice = a.discountedPrice || a.price;
-      const bPrice = b.discountedPrice || b.price;
+      const aPrice = a.discountedPrice != null ? a.discountedPrice : a.price;
+      const bPrice = b.discountedPrice != null ? b.discountedPrice : b.price;
       return aPrice - bPrice;
     });
     badges.bestValue = sorted[0]._id;

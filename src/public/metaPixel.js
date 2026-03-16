@@ -111,7 +111,7 @@ export async function fireMetaViewContent(product) {
       content_type: (product.variants && product.variants.length > 1) ? 'product_group' : 'product',
       content_name: sanitizeParam(product.name),
       content_category: (product.collections || [])[0] || '',
-      value: Math.max(0, product.discountedPrice || product.price || 0),
+      value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
       currency: 'USD',
     });
   } catch (e) {
@@ -134,7 +134,7 @@ export async function fireMetaAddToCart(product, quantity = 1) {
       content_ids: [product._id || ''],
       content_type: (product.variants && product.variants.length > 1) ? 'product_group' : 'product',
       content_name: sanitizeParam(product.name),
-      value: Math.max(0, product.discountedPrice || product.price || 0),
+      value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
       currency: 'USD',
       num_items: Math.max(0, quantity || 1),
     });
@@ -244,7 +244,7 @@ export async function fireMetaAddToWishlist(product) {
       content_ids: [product._id || ''],
       content_name: sanitizeParam(product.name),
       content_category: (product.collections || [])[0] || '',
-      value: Math.max(0, product.discountedPrice || product.price || 0),
+      value: Math.max(0, product.discountedPrice != null ? product.discountedPrice : (product.price || 0)),
       currency: 'USD',
     });
   } catch (e) {}

@@ -236,7 +236,7 @@ export const getRevenueAttribution = webMethod(
       let totalAttributedRevenue = 0;
       const topProducts = analytics.items.map(a => {
         const product = productMap.get(a.productId);
-        const price = product ? (product.discountedPrice || product.price || 0) : 0;
+        const price = product ? (product.discountedPrice != null ? product.discountedPrice : (product.price || 0)) : 0;
         const revenue = price * (a.purchaseCount || 0);
         totalAttributedRevenue += revenue;
 
