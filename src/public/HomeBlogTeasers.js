@@ -119,8 +119,8 @@ export async function initHomeBlogTeasers($w, state) {
     if (!container) return;
 
     // Fetch blog posts from backend
-    const { getAllBlogPosts } = await import('backend/blogService.web');
-    const posts = await getAllBlogPosts();
+    const { fetchAllBlogPosts } = await import('backend/blogService.web');
+    const posts = await fetchAllBlogPosts();
 
     if (!posts || posts.length === 0) {
       try { container.collapse(); } catch (_) {}

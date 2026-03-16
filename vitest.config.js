@@ -284,6 +284,11 @@ export default defineConfig({
       'public/illustrationShared': path.resolve(__dirname, 'src/public/illustrationShared.js'),
       'public/illustrations.js': path.resolve(__dirname, 'src/public/illustrations.js'),
       'public/illustrations': path.resolve(__dirname, 'src/public/illustrations.js'),
+      'backend/blogService.web': path.resolve(__dirname, 'src/backend/blogService.web.js'),
+      'public/SocialFeedEmbed.js': path.resolve(__dirname, 'src/public/SocialFeedEmbed.js'),
+      'public/SocialFeedEmbed': path.resolve(__dirname, 'src/public/SocialFeedEmbed.js'),
+      'public/HomeBlogTeasers.js': path.resolve(__dirname, 'src/public/HomeBlogTeasers.js'),
+      'public/HomeBlogTeasers': path.resolve(__dirname, 'src/public/HomeBlogTeasers.js'),
     },
   },
 });
