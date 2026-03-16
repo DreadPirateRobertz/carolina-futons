@@ -95,11 +95,14 @@ export const submitUGCPhoto = webMethod(
         caption,
         productId: data.productId ? sanitize(data.productId, 100) : null,
         productName: data.productName ? sanitize(data.productName, 200) : null,
-        tags: Array.isArray(data.tags) ? data.tags : [],
+        tags: Array.isArray(data.tags)
+          ? data.tags.map(t => sanitize(String(t), 50)).filter(Boolean)
+          : [],
         socialSource: data.socialSource ? sanitize(data.socialSource, 50) : null,
         socialPostUrl: data.socialPostUrl ? sanitize(data.socialPostUrl, 500) : null,
         beforeAfterId: data.beforeAfterId ? sanitize(data.beforeAfterId, 100) : null,
-        beforeAfterType: data.beforeAfterType ? sanitize(data.beforeAfterType, 20) : null,
+        beforeAfterType: data.beforeAfterType && ['before', 'after'].includes(data.beforeAfterType)
+          ? data.beforeAfterType : null,
         status: 'pending',
         voteCount: 0,
         reportCount: 0,

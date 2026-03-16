@@ -164,6 +164,8 @@ export const moderatePhotoReview = webMethod(
   Permissions.Admin,
   async (reviewId, action) => {
     try {
+      const memberId = await requireMember();
+
       const cleanId = validateId(reviewId);
       if (!cleanId) {
         return { success: false, error: 'Valid review ID is required.' };
@@ -184,6 +186,7 @@ export const moderatePhotoReview = webMethod(
 
       existing.status = statusMap[cleanAction];
       existing.moderatedAt = new Date();
+      existing.moderatedBy = memberId;
 
       await wixData.update('PhotoReviews', existing);
       return { success: true };
