@@ -3,39 +3,11 @@
  * Covers: panel init, repeater items, quantity controls, remove, refresh, shipping/tier progress.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createMockElement } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  return {
-    text: '',
-    value: 0,
-    src: '',
-    alt: '',
-    html: '',
-    label: '',
-    hidden: false,
-    data: [],
-    options: [],
-    htmlElement: null,
-    style: { color: '', backgroundColor: '' },
-    accessibility: { ariaLabel: '', ariaModal: false, ariaLive: '', role: '' },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(),
-    expand: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    focus: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onInput: vi.fn(),
-    onItemReady: vi.fn(),
-    postMessage: vi.fn(),
-  };
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());

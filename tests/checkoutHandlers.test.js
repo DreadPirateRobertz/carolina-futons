@@ -6,30 +6,11 @@
  * express checkout init, protection plan section, store credit, gift card.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { createMockElement } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  return {
-    text: '', src: '', alt: '', value: '', label: '',
-    options: [], data: [],
-    style: { color: '', fontWeight: '', backgroundColor: '', borderColor: '' },
-    accessibility: {},
-    hidden: false, collapsed: false, checked: false,
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(function () { this.collapsed = true; }),
-    expand: vi.fn(function () { this.collapsed = false; }),
-    scrollTo: vi.fn(), postMessage: vi.fn(),
-    onClick: vi.fn(), onChange: vi.fn(), onInput: vi.fn(), onBlur: vi.fn(),
-    onItemReady: vi.fn(), onItemClicked: vi.fn(),
-    onKeyPress: vi.fn(),
-    onReady: vi.fn(() => Promise.resolve()),
-    focus: vi.fn(), disable: vi.fn(), enable: vi.fn(),
-  };
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());

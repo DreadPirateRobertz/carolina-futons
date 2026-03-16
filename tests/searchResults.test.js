@@ -5,37 +5,11 @@
  * popular search chips, loading states, and accessibility.
  */
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { createMockElement } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  const el = {
-    text: '',
-    src: '',
-    alt: '',
-    value: '',
-    label: '',
-    hidden: false,
-    options: [],
-    data: [],
-    style: { backgroundColor: '' },
-    accessibility: {},
-    show: vi.fn(() => { el.hidden = false; return Promise.resolve(); }),
-    hide: vi.fn(() => { el.hidden = true; return Promise.resolve(); }),
-    collapse: vi.fn(),
-    expand: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onInput: vi.fn(),
-    onKeyPress: vi.fn(),
-    onItemReady: vi.fn(),
-  };
-  return el;
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());
