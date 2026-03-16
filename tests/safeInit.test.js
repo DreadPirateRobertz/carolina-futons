@@ -56,6 +56,31 @@ describe('safeSelect', () => {
     expect(safeSelect(mock$w, '#btn')).toBe(el);
     delete globalThis.$w;
   });
+
+  it('returns element when $w returns object without id property', () => {
+    const elNoId = { text: 'hello', expand: vi.fn() };
+    const $w = () => elNoId;
+    const result = safeSelect($w, '#noId');
+    // id is undefined → falls through to `return el || null`
+    // el is truthy → returns el
+    expect(result).toBe(elNoId);
+  });
+
+  it('returns null when $w returns falsy value', () => {
+    const $w = () => null;
+    expect(safeSelect($w, '#nope')).toBeNull();
+  });
+
+  it('returns null when $w returns undefined', () => {
+    const $w = () => undefined;
+    expect(safeSelect($w, '#nope')).toBeNull();
+  });
+
+  it('returns element when id is explicitly set', () => {
+    const el = { id: 'btn', text: 'Click' };
+    const $w = () => el;
+    expect(safeSelect($w, '#btn')).toBe(el);
+  });
 });
 
 // ── safeCall ────────────────────────────────────────────────────────

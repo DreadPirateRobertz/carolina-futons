@@ -276,4 +276,59 @@ describe('initSizeGuideModal', () => {
 
     expect($w('#sizeGuideBtn').hide).toHaveBeenCalled();
   });
+
+  it('hides trigger button when state is null', async () => {
+    await initSizeGuideModal($w, null);
+    expect($w('#sizeGuideBtn').hide).toHaveBeenCalled();
+  });
+
+  it('hides trigger button when state is undefined', async () => {
+    await initSizeGuideModal($w, undefined);
+    expect($w('#sizeGuideBtn').hide).toHaveBeenCalled();
+  });
+
+  // ── Individual element failure resilience ────────────────────────
+
+  it('continues when collapse() throws on modal', async () => {
+    const failCollapse$w = createMock$w();
+    failCollapse$w._elements['#sizeGuideModal'] = {
+      ...createMockElement(),
+      collapse: vi.fn(() => { throw new Error('collapse fail'); }),
+    };
+    await expect(initSizeGuideModal(failCollapse$w, state)).resolves.not.toThrow();
+    // Should still set up ARIA and button
+    expect(setupAccessibleDialog).toHaveBeenCalled();
+  });
+
+  it('continues when ARIA label throws on button', async () => {
+    const ariaFail$w = createMock$w();
+    // Create btn with non-writable accessibility
+    const btn = createMockElement();
+    Object.defineProperty(btn, 'accessibility', {
+      get() { throw new Error('no accessibility'); },
+      configurable: true,
+    });
+    ariaFail$w._elements['#sizeGuideBtn'] = btn;
+    // initSizeGuideModal should still work despite ARIA failure
+    await expect(initSizeGuideModal(ariaFail$w, state)).resolves.not.toThrow();
+  });
+
+  it('continues when ARIA role throws on modal', async () => {
+    const custom$w = createMock$w();
+    const modal = createMockElement();
+    Object.defineProperty(modal, 'accessibility', {
+      get() { throw new Error('no accessibility on modal'); },
+      configurable: true,
+    });
+    custom$w._elements['#sizeGuideModal'] = modal;
+    await expect(initSizeGuideModal(custom$w, state)).resolves.not.toThrow();
+  });
+
+  it('does not throw when hide() throws on missing button (no product)', async () => {
+    const fail$w = vi.fn((sel) => {
+      if (sel === '#sizeGuideBtn') throw new Error('Button not found');
+      return createMockElement();
+    });
+    await expect(initSizeGuideModal(fail$w, { product: null })).resolves.not.toThrow();
+  });
 });

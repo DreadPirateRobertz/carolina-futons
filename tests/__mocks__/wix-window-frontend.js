@@ -14,4 +14,9 @@ const wixWindowFrontend = {
 };
 
 export const openUrl = vi.fn();
+export const trackEvent = wixWindowFrontend.trackEvent;
+export const scrollTo = wixWindowFrontend.scrollTo;
+export const openLightbox = wixWindowFrontend.openLightbox;
+export const copyToClipboard = wixWindowFrontend.copyToClipboard;
+export const getBoundingRect = wixWindowFrontend.getBoundingRect;
 export default wixWindowFrontend;
