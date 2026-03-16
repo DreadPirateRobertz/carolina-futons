@@ -133,6 +133,7 @@ describe('Search Integration: fullTextSearch', () => {
   it('with category filter narrows results', async () => {
     const all = await fullTextSearch({ query: 'Futon' });
     const frames = await fullTextSearch({ query: 'Futon', category: 'futon-frames' });
+    expect(frames.products.length).toBeGreaterThan(0);
     expect(frames.products.length).toBeLessThanOrEqual(all.products.length);
     frames.products.forEach((p) => {
       expect(p.collections || []).toContain('futon-frames');
@@ -149,6 +150,7 @@ describe('Search Integration: fullTextSearch', () => {
 
   it('with color filter returns matching products', async () => {
     const result = await fullTextSearch({ query: 'Futon', color: 'Espresso' });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.color).toBe('Espresso');
     });
@@ -188,6 +190,7 @@ describe('Search Integration: fullTextSearch', () => {
 
   it('inStockOnly filters out-of-stock products', async () => {
     const result = await fullTextSearch({ query: 'Futon', inStockOnly: true });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.inStock).toBe(true);
     });
@@ -199,6 +202,7 @@ describe('Search Integration: fullTextSearch', () => {
       query: 'Futon',
       features: ['wall-hugger'],
     });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.featureTags).toContain('wall-hugger');
     });
@@ -209,6 +213,7 @@ describe('Search Integration: fullTextSearch', () => {
       query: 'Futon',
       features: ['wall-hugger', 'usb-charging'],
     });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.featureTags).toContain('wall-hugger');
       expect(p.featureTags).toContain('usb-charging');
@@ -220,6 +225,7 @@ describe('Search Integration: fullTextSearch', () => {
       query: 'Futon',
       priceRange: '300-500',
     });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.price).toBeGreaterThanOrEqual(300);
       expect(p.price).toBeLessThanOrEqual(500);
@@ -233,6 +239,7 @@ describe('Search Integration: fullTextSearch', () => {
       material: 'Hardwood',
       color: 'Espresso',
     });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.collections).toContain('futon-frames');
       expect(p.material).toBe('Hardwood');
@@ -499,6 +506,7 @@ describe('Search Integration: searchProducts (non-text)', () => {
 
   it('with price range 500-800 returns mid-range products', async () => {
     const result = await searchProducts({ priceRange: '500-800' });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach((p) => {
       expect(p.price).toBeGreaterThanOrEqual(500);
       expect(p.price).toBeLessThanOrEqual(800);
@@ -506,8 +514,10 @@ describe('Search Integration: searchProducts (non-text)', () => {
   });
 
   it('with price range 0-300 returns budget products', async () => {
+    // PRICE_RANGES defines '0-300' as { min: 0, max: 299.99 } — upper bound is exclusive of $300
     const result = await searchProducts({ priceRange: '0-300' });
     result.products.forEach((p) => {
+      expect(p.price).toBeGreaterThanOrEqual(0);
       expect(p.price).toBeLessThanOrEqual(299.99);
     });
   });
@@ -526,14 +536,15 @@ describe('Search Integration: searchProducts (non-text)', () => {
 
   it('with material filter returns matching products', async () => {
     const result = await searchProducts({ material: 'Foam' });
+    expect(result.products.length).toBe(1);
     result.products.forEach(p => {
       expect(p.material).toBe('Foam');
     });
-    expect(result.products.length).toBe(1);
   });
 
   it('with color filter returns matching products', async () => {
     const result = await searchProducts({ color: 'Espresso' });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach(p => {
       expect(p.color).toBe('Espresso');
     });
@@ -541,6 +552,7 @@ describe('Search Integration: searchProducts (non-text)', () => {
 
   it('with feature tags filter returns matching products', async () => {
     const result = await searchProducts({ features: ['storage'] });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach(p => {
       expect(p.featureTags).toContain('storage');
     });
@@ -548,6 +560,7 @@ describe('Search Integration: searchProducts (non-text)', () => {
 
   it('with width range filter narrows results', async () => {
     const result = await searchProducts({ widthRange: [58, 70] });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach(p => {
       expect(p.width).toBeGreaterThanOrEqual(58);
       expect(p.width).toBeLessThanOrEqual(70);
@@ -556,6 +569,7 @@ describe('Search Integration: searchProducts (non-text)', () => {
 
   it('with depth range filter narrows results', async () => {
     const result = await searchProducts({ depthRange: [30, 40] });
+    expect(result.products.length).toBeGreaterThan(0);
     result.products.forEach(p => {
       expect(p.depth).toBeGreaterThanOrEqual(30);
       expect(p.depth).toBeLessThanOrEqual(40);
@@ -928,9 +942,8 @@ describe('Search Integration: popular searches + query tracking', () => {
     await recordSearchQuery('test query');
     const popular = await getPopularSearches(5);
     const match = popular.queries.find(q => q.query.includes('test'));
-    if (match) {
-      expect(match.count).toBeGreaterThanOrEqual(2);
-    }
+    expect(match).toBeTruthy();
+    expect(match.count).toBeGreaterThanOrEqual(2);
   });
 
   it('respects limit parameter', async () => {
@@ -958,9 +971,8 @@ describe('Search Integration: popular searches + query tracking', () => {
     await recordSearchQuery('futon frame');
     const popular = await getPopularSearches(5);
     const match = popular.queries.find(q => q.query === 'futon frame');
-    if (match) {
-      expect(match.count).toBeGreaterThanOrEqual(2);
-    }
+    expect(match).toBeTruthy();
+    expect(match.count).toBeGreaterThanOrEqual(2);
   });
 
   it('fullTextSearch records query for popularity', async () => {
@@ -1015,14 +1027,15 @@ describe('Search Integration: categorySearch → Category Page', () => {
     const result = await categorySearch({
       materials: ['Hardwood', 'Foam'],
     });
+    expect(result.items.length).toBeGreaterThanOrEqual(2);
     result.items.forEach(p => {
       expect(['Hardwood', 'Foam']).toContain(p.material);
     });
-    expect(result.items.length).toBeGreaterThanOrEqual(2);
   });
 
   it('color filter narrows results', async () => {
     const result = await categorySearch({ colors: ['Espresso'] });
+    expect(result.items.length).toBeGreaterThan(0);
     result.items.forEach(p => {
       expect(p.color).toBe('Espresso');
     });
@@ -1032,6 +1045,7 @@ describe('Search Integration: categorySearch → Category Page', () => {
     const result = await categorySearch({
       colors: ['Espresso', 'White'],
     });
+    expect(result.items.length).toBeGreaterThan(0);
     result.items.forEach(p => {
       expect(['Espresso', 'White']).toContain(p.color);
     });
@@ -1041,6 +1055,7 @@ describe('Search Integration: categorySearch → Category Page', () => {
     const result = await categorySearch({
       featureTags: ['usb-charging'],
     });
+    expect(result.items.length).toBeGreaterThan(0);
     result.items.forEach(p => {
       expect(p.featureTags).toContain('usb-charging');
     });
@@ -1050,6 +1065,7 @@ describe('Search Integration: categorySearch → Category Page', () => {
     const result = await categorySearch({
       brands: ['Night & Day'],
     });
+    expect(result.items.length).toBeGreaterThan(0);
     result.items.forEach(p => {
       expect(p.brand).toBe('Night & Day');
     });
@@ -1433,9 +1449,9 @@ describe('Search Integration: cross-service consistency', () => {
     });
 
     // Both should find the Seattle Futon Frame
-    if (fts.products.length > 0 && cs.items.length > 0) {
-      expect(fts.products[0]._id).toBe(cs.items[0]._id);
-    }
+    expect(fts.products.length).toBeGreaterThan(0);
+    expect(cs.items.length).toBeGreaterThan(0);
+    expect(fts.products[0]._id).toBe(cs.items[0]._id);
   });
 });
 
