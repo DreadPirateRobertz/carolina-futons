@@ -48,7 +48,7 @@ export const recordPriceSnapshot = webMethod(
       if (!productId) return { success: false };
       const cleanId = sanitize(productId, 50);
       const numPrice = Number(price);
-      if (isNaN(numPrice) || numPrice < 0) return { success: false };
+      if (!isFinite(numPrice) || numPrice < 0) return { success: false };
 
       // Dedup: skip if snapshot already recorded today
       const today = new Date();
@@ -135,7 +135,7 @@ export const checkPriceDrops = webMethod(
       const productPrices = {};
       for (const item of historyResult.items) {
         const numPrice = Number(item.price);
-        if (!item.productId || item.price == null || isNaN(numPrice) || numPrice < 0) {
+        if (!item.productId || item.price == null || !isFinite(numPrice) || numPrice < 0) {
           console.warn('[wishlistAlerts] Skipping invalid price history entry:', item.productId, item.price);
           continue;
         }
