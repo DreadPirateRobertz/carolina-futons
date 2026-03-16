@@ -96,7 +96,7 @@ export const getStockStatus = webMethod(
 
       const config = thresholdResult.items[0];
       const stock = config.currentStock;
-      const urgencyThreshold = config.urgencyThreshold || DEFAULT_URGENCY_THRESHOLD;
+      const urgencyThreshold = config.urgencyThreshold != null ? config.urgencyThreshold : DEFAULT_URGENCY_THRESHOLD;
 
       if (stock <= 0) {
         return {
@@ -170,7 +170,7 @@ export const getBatchStockStatus = webMethod(
 
       for (const config of result.items) {
         const stock = config.currentStock;
-        const urgencyThreshold = config.urgencyThreshold || DEFAULT_URGENCY_THRESHOLD;
+        const urgencyThreshold = config.urgencyThreshold != null ? config.urgencyThreshold : DEFAULT_URGENCY_THRESHOLD;
 
         if (stock <= 0) {
           statuses[config.productId] = {
@@ -259,7 +259,7 @@ export const syncInventory = webMethod(
           if (cleanName) config.productName = cleanName;
 
           // Reset reorder alert if stock has been replenished above threshold
-          const reorderThreshold = config.reorderThreshold || DEFAULT_REORDER_THRESHOLD;
+          const reorderThreshold = config.reorderThreshold != null ? config.reorderThreshold : DEFAULT_REORDER_THRESHOLD;
           if (stock > reorderThreshold && config.reorderAlertSent) {
             config.reorderAlertSent = false;
           }
@@ -561,8 +561,8 @@ export const getLowStockSummary = webMethod(
 
       for (const config of all.items) {
         const stock = config.currentStock;
-        const urgency = config.urgencyThreshold || DEFAULT_URGENCY_THRESHOLD;
-        const reorder = config.reorderThreshold || DEFAULT_REORDER_THRESHOLD;
+        const urgency = config.urgencyThreshold != null ? config.urgencyThreshold : DEFAULT_URGENCY_THRESHOLD;
+        const reorder = config.reorderThreshold != null ? config.reorderThreshold : DEFAULT_REORDER_THRESHOLD;
 
         if (stock <= 0) {
           outOfStock++;
