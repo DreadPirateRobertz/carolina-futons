@@ -288,6 +288,22 @@ const COLLECTION_MANIFEST = [
     ],
     permissions: PUBLIC_READ,
   },
+  {
+    id: 'FailedEvents',
+    displayName: 'Failed Events',
+    fields: [
+      field('handler', 'Handler', 'TEXT'),
+      field('checkoutId', 'Checkout ID', 'TEXT'),
+      field('buyerEmail', 'Buyer Email', 'TEXT'),
+      field('productId', 'Product ID', 'TEXT'),
+      field('error', 'Error', 'TEXT'),
+      field('severity', 'Severity', 'TEXT'),
+      field('impact', 'Impact', 'TEXT'),
+      field('failedAt', 'Failed At', 'DATETIME'),
+      field('resolved', 'Resolved', 'BOOLEAN'),
+    ],
+    permissions: ADMIN_ONLY,
+  },
 ];
 
 /**

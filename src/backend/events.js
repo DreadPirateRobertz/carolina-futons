@@ -16,6 +16,24 @@
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 
+// ── Dead-Letter Queue Helper ─────────────────────────────────────────
+
+/**
+ * Write a failed event to the FailedEvents dead-letter collection for
+ * manual recovery. Best-effort — never throws.
+ */
+async function logFailedEvent(entry) {
+  try {
+    await wixData.insert('FailedEvents', {
+      ...entry,
+      failedAt: new Date(),
+      resolved: false,
+    });
+  } catch (dlErr) {
+    console.warn('[events] Dead-letter queue write also failed:', dlErr.message);
+  }
+}
+
 // ── Abandoned Cart Handlers ──────────────────────────────────────────
 
 /**
@@ -64,7 +82,17 @@ export async function wixEcom_onAbandonedCheckoutCreated(event) {
       recoveryEmailSent: false,
     });
   } catch (err) {
-    console.error('[events] Error handling abandoned checkout:', err);
+    const checkoutId = (event.entity || event)._id || (event.entity || event).checkoutId || 'unknown';
+    const buyerEmail = (event.entity || event).buyerInfo?.email || 'unknown';
+    console.error(`[events] DROPPED abandoned cart — checkoutId: ${checkoutId}, email: ${buyerEmail}, error:`, err);
+    await logFailedEvent({
+      handler: 'wixEcom_onAbandonedCheckoutCreated',
+      checkoutId,
+      buyerEmail,
+      error: err.message,
+      severity: 'HIGH',
+      impact: 'Abandoned cart data lost — customer will not receive recovery emails',
+    });
   }
 }
 
@@ -90,7 +118,15 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
       status: 'recovered',
     });
   } catch (err) {
-    console.error('[events] Error handling recovered checkout:', err);
+    const checkoutId = (event.entity || event)._id || (event.entity || event).checkoutId || 'unknown';
+    console.error(`[events] FAILED to mark cart recovered — checkoutId: ${checkoutId}, error:`, err);
+    await logFailedEvent({
+      handler: 'wixEcom_onAbandonedCheckoutRecovered',
+      checkoutId,
+      error: err.message,
+      severity: 'CRITICAL',
+      impact: 'Cart stays abandoned — customer may receive recovery emails after purchasing',
+    });
   }
 }
 
@@ -124,6 +160,14 @@ export async function wixStores_onInventoryVariantUpdated(event) {
     const { triggerRestockNotifications } = await import('backend/emailAutomation.web');
     await triggerRestockNotifications(productId, signups.items);
   } catch (err) {
-    console.error('[events] Error handling inventory restock:', err);
+    const productId = (event.entity || event).productId || 'unknown';
+    console.error(`[events] FAILED restock notifications — productId: ${productId}, error:`, err);
+    await logFailedEvent({
+      handler: 'wixStores_onInventoryVariantUpdated',
+      productId,
+      error: err.message,
+      severity: 'HIGH',
+      impact: 'Back-in-stock subscribers not notified — trust erosion',
+    });
   }
 }
