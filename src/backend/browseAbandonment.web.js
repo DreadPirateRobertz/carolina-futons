@@ -210,12 +210,14 @@ export const triggerBrowseRecovery = webMethod(
     try {
       const cutoff = new Date(Date.now() - RECOVERY_WINDOW_MS);
 
-      // Find high-intent sessions with emails, not converted, not fully recovered
+      // Find high-intent sessions with emails, not converted, not fully recovered,
+      // and created within the recovery window (48h)
       const sessions = await wixData.query('BrowseSessions')
         .eq('isHighIntent', true)
         .eq('hasEmail', true)
         .eq('converted', false)
         .lt('recoveryStep', RECOVERY_SEQUENCE.length)
+        .ge('createdAt', cutoff)
         .limit(50)
         .find();
 
