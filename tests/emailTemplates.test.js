@@ -78,6 +78,47 @@ describe('_TEMPLATE_REGISTRY', () => {
       expect(template.variables).toContain('email');
     }
   });
+
+  it('has unique template IDs', () => {
+    const ids = Object.keys(_TEMPLATE_REGISTRY);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('template ID matches registry key', () => {
+    for (const [key, template] of Object.entries(_TEMPLATE_REGISTRY)) {
+      expect(template.id).toBe(key);
+    }
+  });
+
+  it('every template has non-empty subjectLine and previewText', () => {
+    for (const template of Object.values(_TEMPLATE_REGISTRY)) {
+      expect(template.subjectLine.length).toBeGreaterThan(5);
+      expect(template.previewText.length).toBeGreaterThan(5);
+    }
+  });
+
+  it('category is one of the valid types', () => {
+    const validCategories = ['onboarding', 'recovery', 'transactional', 'marketing'];
+    for (const template of Object.values(_TEMPLATE_REGISTRY)) {
+      expect(validCategories).toContain(template.category);
+    }
+  });
+
+  it('step is a positive integer', () => {
+    for (const template of Object.values(_TEMPLATE_REGISTRY)) {
+      expect(template.step).toBeGreaterThanOrEqual(1);
+      expect(Number.isInteger(template.step)).toBe(true);
+    }
+  });
+
+  it('variables arrays contain only strings', () => {
+    for (const template of Object.values(_TEMPLATE_REGISTRY)) {
+      for (const v of template.variables) {
+        expect(typeof v).toBe('string');
+        expect(v.length).toBeGreaterThan(0);
+      }
+    }
+  });
 });
 
 // ── getTemplatesBySequence ──────────────────────────────────────────
@@ -105,6 +146,32 @@ describe('getTemplatesBySequence', () => {
     const templates = await getTemplatesBySequence('<script>alert("xss")</script>');
     expect(templates).toEqual([]);
   });
+
+  it('returns post_purchase templates', async () => {
+    const templates = await getTemplatesBySequence('post_purchase');
+    expect(templates).toHaveLength(3);
+    expect(templates.every(t => t.sequence === 'post_purchase')).toBe(true);
+  });
+
+  it('returns promotional templates', async () => {
+    const templates = await getTemplatesBySequence('promotional');
+    expect(templates.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('returns reengagement templates', async () => {
+    const templates = await getTemplatesBySequence('reengagement');
+    expect(templates).toHaveLength(1);
+  });
+
+  it('returns empty for null input', async () => {
+    const templates = await getTemplatesBySequence(null);
+    expect(templates).toEqual([]);
+  });
+
+  it('returns empty for undefined input', async () => {
+    const templates = await getTemplatesBySequence(undefined);
+    expect(templates).toEqual([]);
+  });
 });
 
 // ── getTemplate ─────────────────────────────────────────────────────
@@ -126,6 +193,23 @@ describe('getTemplate', () => {
     const template = await getTemplate('');
     expect(template).toBeNull();
   });
+
+  it('returns null for null input', async () => {
+    const template = await getTemplate(null);
+    expect(template).toBeNull();
+  });
+
+  it('returns cart recovery template', async () => {
+    const template = await getTemplate('cart_recovery_1');
+    expect(template).not.toBeNull();
+    expect(template.category).toBe('recovery');
+  });
+
+  it('returns promotional template', async () => {
+    const template = await getTemplate('promotional_sale');
+    expect(template).not.toBeNull();
+    expect(template.category).toBe('marketing');
+  });
 });
 
 // ── getTemplateIndex ────────────────────────────────────────────────
@@ -143,6 +227,25 @@ describe('getTemplateIndex', () => {
   it('welcome has 3 template IDs', async () => {
     const index = await getTemplateIndex();
     expect(index.welcome).toHaveLength(3);
+  });
+
+  it('cart_recovery has 3 template IDs', async () => {
+    const index = await getTemplateIndex();
+    expect(index.cart_recovery).toHaveLength(3);
+  });
+
+  it('post_purchase has 3 template IDs', async () => {
+    const index = await getTemplateIndex();
+    expect(index.post_purchase).toHaveLength(3);
+  });
+
+  it('all IDs in index exist in registry', async () => {
+    const index = await getTemplateIndex();
+    for (const ids of Object.values(index)) {
+      for (const id of ids) {
+        expect(_TEMPLATE_REGISTRY[id]).toBeDefined();
+      }
+    }
   });
 });
 
@@ -180,6 +283,41 @@ describe('resolveSubjectLine', () => {
     });
     expect(subject).not.toContain('<script>');
     expect(subject).toContain('Jane');
+  });
+
+  it('handles null variables object', async () => {
+    const subject = await resolveSubjectLine('post_purchase_1');
+    // Should not throw, unreplaced vars remain
+    expect(subject).toContain('{firstName}');
+  });
+
+  it('resolves new_arrival subject line', async () => {
+    const subject = await resolveSubjectLine('promotional_new_arrival', {
+      productName: 'Oak Platform Bed',
+    });
+    expect(subject).toContain('Oak Platform Bed');
+  });
+
+  it('resolves seasonal subject line', async () => {
+    const subject = await resolveSubjectLine('promotional_seasonal', {
+      seasonName: 'Fall',
+    });
+    expect(subject).toContain('Fall');
+  });
+
+  it('resolves reengagement subject line', async () => {
+    const subject = await resolveSubjectLine('reengagement_1', {
+      firstName: 'Sam',
+    });
+    expect(subject).toContain('Sam');
+  });
+
+  it('handles numeric variable value', async () => {
+    const subject = await resolveSubjectLine('promotional_sale', {
+      saleName: 'Test',
+      discountPercent: 30,
+    });
+    expect(subject).toContain('30');
   });
 });
 
@@ -223,6 +361,42 @@ describe('validateTemplateVariables', () => {
     });
     expect(result.valid).toBe(true);
   });
+
+  it('treats empty string as missing', async () => {
+    const result = await validateTemplateVariables('welcome_series_1', {
+      firstName: '',
+      discountCode: 'CODE',
+      email: 'j@e.com',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.missing).toContain('firstName');
+  });
+
+  it('validates cart recovery variables', async () => {
+    const result = await validateTemplateVariables('cart_recovery_1', {
+      buyerName: 'Jane',
+      cartTotal: '$299',
+      itemSummary: 'Oak Futon',
+      checkoutId: 'ck-1',
+      email: 'j@e.com',
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('reports all missing variables for post_purchase', async () => {
+    const result = await validateTemplateVariables('post_purchase_1', {});
+    expect(result.valid).toBe(false);
+    expect(result.missing).toContain('firstName');
+    expect(result.missing).toContain('orderNumber');
+    expect(result.missing).toContain('assemblyGuideUrl');
+    expect(result.missing).toContain('email');
+  });
+
+  it('handles null variables argument', async () => {
+    const result = await validateTemplateVariables('welcome_series_1');
+    expect(result.valid).toBe(false);
+    expect(result.missing.length).toBeGreaterThan(0);
+  });
 });
 
 // ── getTemplatePerformance ──────────────────────────────────────────
@@ -246,6 +420,45 @@ describe('getTemplatePerformance', () => {
   it('returns zeros for template with no data', async () => {
     const stats = await getTemplatePerformance('cart_recovery_1');
     expect(stats).toEqual({ sent: 0, failed: 0, cancelled: 0, pending: 0 });
+  });
+
+  it('counts cancelled status', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', templateId: 'cart_recovery_1', status: 'cancelled', createdAt: new Date() },
+      { _id: 'eq-2', templateId: 'cart_recovery_1', status: 'cancelled', createdAt: new Date() },
+    ]);
+
+    const stats = await getTemplatePerformance('cart_recovery_1');
+    expect(stats.cancelled).toBe(2);
+  });
+
+  it('ignores unknown status values', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', templateId: 'welcome_series_1', status: 'bounced', createdAt: new Date() },
+      { _id: 'eq-2', templateId: 'welcome_series_1', status: 'sent', createdAt: new Date() },
+    ]);
+
+    const stats = await getTemplatePerformance('welcome_series_1');
+    expect(stats.sent).toBe(1);
+    // 'bounced' is not a tracked status, should not affect counts
+  });
+
+  it('only counts records for the specified template', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq-1', templateId: 'welcome_series_1', status: 'sent', createdAt: new Date() },
+      { _id: 'eq-2', templateId: 'cart_recovery_1', status: 'sent', createdAt: new Date() },
+    ]);
+
+    const stats = await getTemplatePerformance('welcome_series_1');
+    expect(stats.sent).toBe(1);
+  });
+
+  it('returns all four status keys in response', async () => {
+    const stats = await getTemplatePerformance('welcome_series_1');
+    expect(stats).toHaveProperty('sent');
+    expect(stats).toHaveProperty('failed');
+    expect(stats).toHaveProperty('cancelled');
+    expect(stats).toHaveProperty('pending');
   });
 });
 
@@ -305,5 +518,92 @@ describe('queuePromotionalEmail', () => {
     const result = await queuePromotionalEmail('promotional_sale', null, {});
     expect(result.success).toBe(true);
     expect(result.queued).toBe(0);
+  });
+
+  it('handles empty recipients array', async () => {
+    const result = await queuePromotionalEmail('promotional_sale', [], {});
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(0);
+    expect(result.skipped).toBe(0);
+  });
+
+  it('skips promotional-unsubscribed recipients', async () => {
+    __seed('Unsubscribes', [
+      { _id: 'u1', email: 'a@test.com', sequenceType: 'promotional' },
+    ]);
+
+    const result = await queuePromotionalEmail('promotional_sale', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], {});
+
+    expect(result.queued).toBe(0);
+    expect(result.skipped).toBe(1);
+  });
+
+  it('rejects unknown template ID', async () => {
+    const result = await queuePromotionalEmail('nonexistent_template', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], {});
+
+    expect(result.success).toBe(false);
+  });
+
+  it('lowercases email addresses', async () => {
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') inserted.push(item); });
+
+    await queuePromotionalEmail('promotional_sale', [
+      { email: 'Alice@Test.COM', contactId: 'c1', firstName: 'Alice' },
+    ], { saleName: 'Test' });
+
+    expect(inserted[0].recipientEmail).toBe('alice@test.com');
+  });
+
+  it('sets correct queue fields on inserted record', async () => {
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') inserted.push(item); });
+
+    await queuePromotionalEmail('promotional_sale', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], { saleName: 'Spring Sale' });
+
+    expect(inserted[0].status).toBe('pending');
+    expect(inserted[0].sequenceType).toBe('promotional');
+    expect(inserted[0].sequenceStep).toBe(1);
+    expect(inserted[0].attempt).toBe(0);
+    expect(inserted[0].sentAt).toBeNull();
+    expect(inserted[0].abVariant).toBeNull();
+  });
+
+  it('merges campaign variables with recipient data', async () => {
+    const inserted = [];
+    __onInsert((col, item) => { if (col === 'EmailQueue') inserted.push(item); });
+
+    await queuePromotionalEmail('promotional_sale', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], { saleName: 'Fall Sale', discountPercent: '15' });
+
+    expect(inserted[0].variables.saleName).toBe('Fall Sale');
+    expect(inserted[0].variables.discountPercent).toBe('15');
+    expect(inserted[0].variables.firstName).toBe('Alice');
+    expect(inserted[0].variables.email).toBe('a@test.com');
+  });
+
+  it('works with new_arrival template', async () => {
+    const result = await queuePromotionalEmail('promotional_new_arrival', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], { productName: 'Oak Bed' });
+
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(1);
+  });
+
+  it('works with seasonal template', async () => {
+    const result = await queuePromotionalEmail('promotional_seasonal', [
+      { email: 'a@test.com', contactId: 'c1', firstName: 'Alice' },
+    ], { seasonName: 'Summer' });
+
+    expect(result.success).toBe(true);
+    expect(result.queued).toBe(1);
   });
 });
