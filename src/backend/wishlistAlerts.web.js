@@ -134,13 +134,18 @@ export const checkPriceDrops = webMethod(
       // Group by productId, find 30-day high and current price
       const productPrices = {};
       for (const item of historyResult.items) {
+        const numPrice = Number(item.price);
+        if (!item.productId || isNaN(numPrice) || numPrice < 0) {
+          console.warn('[wishlistAlerts] Skipping invalid price history entry:', item.productId, item.price);
+          continue;
+        }
         if (!productPrices[item.productId]) {
           productPrices[item.productId] = { high: 0, current: 0, currentDate: null };
         }
         const entry = productPrices[item.productId];
-        if (item.price > entry.high) entry.high = item.price;
+        if (numPrice > entry.high) entry.high = numPrice;
         if (!entry.currentDate || new Date(item.date) > new Date(entry.currentDate)) {
-          entry.current = item.price;
+          entry.current = numPrice;
           entry.currentDate = item.date;
         }
       }
@@ -400,9 +405,8 @@ export const checkLowStock = webMethod(
 // ── Notification Preferences ────────────────────────────────────────
 
 /**
- * Get notification preferences for a member's wishlisted products.
+ * Get notification preferences for the current member's wishlisted products.
  *
- * @param {string} memberId
  * @returns {Promise<{prefs: Array<{productId: string, priceDrops: boolean, backInStock: boolean}>}>}
  */
 export const getAlertPrefs = webMethod(
@@ -432,10 +436,10 @@ export const getAlertPrefs = webMethod(
 
 /**
  * Update notification preference for a specific wishlisted product.
+ * Uses the current authenticated member's identity.
  *
- * @param {string} memberId
  * @param {string} productId
- * @param {Object} prefs - { priceDrops?: boolean, backInStock?: boolean }
+ * @param {Object} [prefs={}] - { priceDrops?: boolean, backInStock?: boolean }
  * @returns {Promise<{success: boolean}>}
  */
 export const updateAlertPrefs = webMethod(
@@ -462,8 +466,8 @@ export const updateAlertPrefs = webMethod(
         await wixData.insert('WishlistAlertPrefs', {
           memberId: cleanMemberId,
           productId: cleanProductId,
-          priceDrops: prefs.priceDrops !== false,
-          backInStock: prefs.backInStock !== false,
+          priceDrops: prefs.priceDrops === undefined ? true : !!prefs.priceDrops,
+          backInStock: prefs.backInStock === undefined ? true : !!prefs.backInStock,
         });
       }
 

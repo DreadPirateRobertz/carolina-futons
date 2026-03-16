@@ -91,14 +91,21 @@ export function initCardWishlistButton($item, product, isWishlisted) {
           setHeartState($item, false, product.name);
           trackEvent('wishlist_remove', { productId: product._id, source: 'product_card' });
         } else {
-          // Add to wishlist
-          await wixData.insert('Wishlist', {
-            memberId: member._id,
-            productId: product._id,
-            productName: product.name,
-            productImage: product.mainMedia,
-            addedDate: new Date(),
-          });
+          // Dedup check before adding — prevents duplicates from stale UI state
+          const dupCheck = await wixData.query('Wishlist')
+            .eq('memberId', member._id)
+            .eq('productId', product._id)
+            .find();
+
+          if (dupCheck.items.length === 0) {
+            await wixData.insert('Wishlist', {
+              memberId: member._id,
+              productId: product._id,
+              productName: product.name,
+              productImage: product.mainMedia,
+              addedDate: new Date(),
+            });
+          }
           wishlisted = true;
           setHeartState($item, true, product.name);
           trackEvent('wishlist_add', { productId: product._id, source: 'product_card' });
