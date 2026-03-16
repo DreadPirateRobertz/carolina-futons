@@ -65,6 +65,8 @@ const { getRecentlyViewed, getProductBadge, initImageLightbox, initImageZoom } =
   await import('public/galleryHelpers.js');
 const { getProductFallbackImage, getPlaceholderProductImages } = await import('public/placeholderImages.js');
 const { generateAltText } = await import('backend/seoHelpers.web');
+const { enableSwipe } = await import('public/touchHelpers');
+const { trackGalleryInteraction } = await import('public/engagementTracker');
 
 const { initImageGallery, loadRecentlyViewed, initProductBadge } =
   await import('../src/public/product/productGallery.js');
@@ -118,6 +120,88 @@ describe('initImageGallery', () => {
     const product = { mainMedia: 'img.jpg', mediaItems: [] };
     initImageGallery($w, product);
     expect(initImageZoom).toHaveBeenCalled();
+  });
+
+  it('does not set fallback when product has mainMedia', () => {
+    const product = { mainMedia: 'real.jpg', mediaItems: [] };
+    initImageGallery($w, product);
+    expect(getProductFallbackImage).not.toHaveBeenCalled();
+  });
+
+  it('does not fill placeholders when 3+ media items exist', () => {
+    const product = {
+      name: 'Futon', mainMedia: 'img.jpg',
+      mediaItems: [{ src: 'a.jpg' }, { src: 'b.jpg' }, { src: 'c.jpg' }],
+    };
+    initImageGallery($w, product);
+    expect(getPlaceholderProductImages).not.toHaveBeenCalled();
+  });
+
+  it('handles null product without error', () => {
+    initImageGallery($w, null);
+    // Should still initialize lightbox/zoom
+    expect(initImageLightbox).toHaveBeenCalled();
+    expect(initImageZoom).toHaveBeenCalled();
+  });
+
+  it('uses product name as fallback alt when item has no title', () => {
+    const product = { name: 'My Futon', mainMedia: 'img.jpg', mediaItems: [] };
+    initImageGallery($w, product);
+    const callback = getEl('#productGallery').onItemClicked.mock.calls[0][0];
+    callback({ item: { src: 'clicked.jpg' } }); // no title
+    expect(getEl('#productMainImage').alt).toBe('My Futon');
+  });
+
+  it('calls enableSwipe when gallery element is available', () => {
+    const galleryElement = { addEventListener: vi.fn() };
+    getEl('#productGallery').getElement = vi.fn(() => galleryElement);
+    const product = { mainMedia: 'img.jpg', mediaItems: [] };
+    initImageGallery($w, product);
+    expect(enableSwipe).toHaveBeenCalledWith(galleryElement, expect.any(Function), { threshold: 40 });
+  });
+
+  it('swipe left advances to next image', () => {
+    const galleryElement = {};
+    getEl('#productGallery').getElement = vi.fn(() => galleryElement);
+    const items = [{ src: 'a.jpg', title: 'A' }, { src: 'b.jpg', title: 'B' }, { src: 'c.jpg', title: 'C' }];
+    const product = { mainMedia: 'a.jpg', mediaItems: items };
+    initImageGallery($w, product);
+    // Set items after init (init doesn't fill placeholders when 3+ items)
+    getEl('#productGallery').items = items;
+    const swipeCallback = enableSwipe.mock.calls[0][1];
+    swipeCallback('left');
+    expect(getEl('#productMainImage').src).toBe('b.jpg');
+    expect(getEl('#productMainImage').alt).toBe('B');
+    expect(trackGalleryInteraction).toHaveBeenCalledWith('swipe', 'left');
+  });
+
+  it('swipe right goes to previous image', () => {
+    const galleryElement = {};
+    getEl('#productGallery').getElement = vi.fn(() => galleryElement);
+    const items = [{ src: 'a.jpg', title: 'A' }, { src: 'b.jpg', title: 'B' }, { src: 'c.jpg', title: 'C' }];
+    const product = { mainMedia: 'a.jpg', mediaItems: items };
+    initImageGallery($w, product);
+    getEl('#productGallery').items = items;
+    const swipeCallback = enableSwipe.mock.calls[0][1];
+    swipeCallback('left'); // go to index 1
+    swipeCallback('right'); // back to index 0
+    expect(getEl('#productMainImage').src).toBe('a.jpg');
+  });
+
+  it('syncs gallery index when thumbnail clicked', () => {
+    const galleryElement = {};
+    getEl('#productGallery').getElement = vi.fn(() => galleryElement);
+    const items = [{ src: 'a.jpg', title: 'A' }, { src: 'b.jpg', title: 'B' }, { src: 'c.jpg', title: 'C' }];
+    const product = { mainMedia: 'a.jpg', mediaItems: items };
+    initImageGallery($w, product);
+    getEl('#productGallery').items = items;
+    // Click on third thumbnail — syncs index to 2
+    const clickCallback = getEl('#productGallery').onItemClicked.mock.calls[0][0];
+    clickCallback({ item: { src: 'c.jpg', title: 'C' } });
+    // Swipe left from index 2 should NOT advance past end
+    const swipeCallback = enableSwipe.mock.calls[0][1];
+    swipeCallback('left');
+    expect(getEl('#productMainImage').src).toBe('c.jpg');
   });
 });
 
@@ -179,6 +263,36 @@ describe('loadRecentlyViewed', () => {
     expect($item('#recentImage').accessibility.tabIndex).toBe(0);
     expect($item('#recentImage').accessibility.role).toBe('link');
     expect($item('#recentImage').onKeyPress).toHaveBeenCalled();
+  });
+
+  it('registers onClick on image and name for navigation', async () => {
+    const items = [{ _id: 'r1', name: 'R', mainMedia: 'r.jpg', price: '$1', slug: 'r' }];
+    getRecentlyViewed.mockReturnValue(items);
+    await loadRecentlyViewed($w, { _id: 'p1' });
+    const callback = getEl('#recentlyViewedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, items[0]);
+    expect($item('#recentImage').onClick).toHaveBeenCalled();
+    expect($item('#recentName').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ARIA label on name element', async () => {
+    const items = [{ _id: 'r1', name: 'Comfy Futon', mainMedia: 'r.jpg', price: '$99', slug: 'r' }];
+    getRecentlyViewed.mockReturnValue(items);
+    await loadRecentlyViewed($w, { _id: 'p1' });
+    const callback = getEl('#recentlyViewedRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    callback($item, items[0]);
+    expect($item('#recentName').accessibility.ariaLabel).toBe('View Comfy Futon details');
+    expect($item('#recentName').accessibility.role).toBe('link');
   });
 });
 
