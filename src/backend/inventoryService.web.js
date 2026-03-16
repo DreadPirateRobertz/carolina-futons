@@ -56,8 +56,8 @@ export const getStockStatus = webMethod(
         variantId: item.variantId,
         variantLabel: item.variantLabel || '',
         quantity: item.quantity,
-        threshold: item.threshold || DEFAULT_LOW_STOCK_THRESHOLD,
-        status: getVariantStatus(item.quantity, item.threshold || DEFAULT_LOW_STOCK_THRESHOLD),
+        threshold: item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD,
+        status: getVariantStatus(item.quantity, item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD),
         preOrder: !!item.preOrder,
       }));
 
@@ -108,8 +108,8 @@ export const getInventoryDashboard = webMethod(
         productName: item.productName || '',
         variantLabel: item.variantLabel || '',
         quantity: item.quantity,
-        threshold: item.threshold || DEFAULT_LOW_STOCK_THRESHOLD,
-        status: getVariantStatus(item.quantity, item.threshold || DEFAULT_LOW_STOCK_THRESHOLD),
+        threshold: item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD,
+        status: getVariantStatus(item.quantity, item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD),
         preOrder: !!item.preOrder,
         lastRestocked: item.lastRestocked,
       }));
@@ -375,7 +375,7 @@ export const getLowStockAlerts = webMethod(
 
       const alerts = result.items
         .filter(item => {
-          const threshold = item.threshold || DEFAULT_LOW_STOCK_THRESHOLD;
+          const threshold = item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD;
           return item.quantity <= threshold;
         })
         .map(item => ({
@@ -384,8 +384,8 @@ export const getLowStockAlerts = webMethod(
           productName: item.productName || '',
           variantLabel: item.variantLabel || '',
           quantity: item.quantity,
-          threshold: item.threshold || DEFAULT_LOW_STOCK_THRESHOLD,
-          status: getVariantStatus(item.quantity, item.threshold || DEFAULT_LOW_STOCK_THRESHOLD),
+          threshold: item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD,
+          status: getVariantStatus(item.quantity, item.threshold != null ? item.threshold : DEFAULT_LOW_STOCK_THRESHOLD),
           sku: item.sku || '',
         }));
 

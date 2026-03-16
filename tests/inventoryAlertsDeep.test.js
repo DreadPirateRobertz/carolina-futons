@@ -118,20 +118,17 @@ describe('getStockStatus — deep edge cases', () => {
     expect(result.message).toBe('Out of stock');
   });
 
-  // Known gap: falsy urgencyThreshold (0) falls through to DEFAULT_URGENCY_THRESHOLD (5)
-  // because of `config.urgencyThreshold || DEFAULT_URGENCY_THRESHOLD`
-  // 0 is falsy, so || replaces it with 5. This is a known behavioral quirk.
-  it('urgencyThreshold of 0 falls back to default 5 due to || operator (known gap)', async () => {
+  it('urgencyThreshold of 0 disables urgency display (falsy-zero fix)', async () => {
     __seed(THRESHOLDS, [mkThreshold({ currentStock: 3, urgencyThreshold: 0 })]);
     const result = await getStockStatus('prod-aaa111');
-    // Because 0 || 5 === 5, stock(3) <= 5 => urgency shown even though threshold was set to 0
-    expect(result.showUrgency).toBe(true);
+    // With != null check, urgencyThreshold 0 means "never show urgency"
+    expect(result.showUrgency).toBe(false);
+    expect(result.inStock).toBe(true);
   });
 
-  it('urgencyThreshold of 0 with stock above default(5) does not show urgency', async () => {
+  it('urgencyThreshold of 0 with higher stock still shows in-stock', async () => {
     __seed(THRESHOLDS, [mkThreshold({ currentStock: 6, urgencyThreshold: 0 })]);
     const result = await getStockStatus('prod-aaa111');
-    // 0 || 5 => 5, stock(6) <= 5 is false => no urgency
     expect(result.showUrgency).toBe(false);
     expect(result.inStock).toBe(true);
   });
@@ -755,13 +752,12 @@ describe('getLowStockSummary — deep edge cases', () => {
     expect(result.summary.healthy).toBe(1);
   });
 
-  it('uses default thresholds when urgencyThreshold is 0 (falsy — known gap)', async () => {
-    // urgencyThreshold: 0 || 5 => 5, reorderThreshold: 0 || 10 => 10
+  it('respects urgencyThreshold of 0 and reorderThreshold of 0 (falsy-zero fix)', async () => {
+    // With != null check, threshold 0 means stock(3) > urgency(0) and stock(3) > reorder(0) => healthy
     __seed(THRESHOLDS, [mkThreshold({ currentStock: 3, urgencyThreshold: 0, reorderThreshold: 0 })]);
     __seed(ALERTS, []);
     const result = await getLowStockSummary();
-    // Due to || operator, urgency=5, reorder=10, stock=3 <= urgency(5) => urgencyLevel
-    expect(result.summary.urgencyLevel).toBe(1);
+    expect(result.summary.healthy).toBe(1);
   });
 
   it('counts active alerts separately from thresholds', async () => {
