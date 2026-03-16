@@ -79,7 +79,7 @@ export function getTrustBadges() {
     { label: 'Family Owned Since 1991', icon: '\u2764' },
     { label: 'Largest Selection in the Carolinas', icon: '\u26F0' },
     { label: '700+ Fabric Swatches', icon: '\uD83C\uDFA8' },
-    { label: 'Free Shipping $999+', icon: '\uD83D\uDE9A' },
+    { label: 'Fast Nationwide Shipping', icon: '\uD83D\uDE9A' },
   ];
 }
 

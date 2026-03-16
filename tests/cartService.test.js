@@ -12,6 +12,7 @@ import {
   clampQuantity,
   safeMultiply,
   FREE_SHIPPING_THRESHOLD,
+  isFreeShippingEnabled,
   TIER_THRESHOLDS,
   MIN_QUANTITY,
   MAX_QUANTITY,
@@ -41,6 +42,10 @@ describe('cartService constants', () => {
   it('TIER_THRESHOLDS labels return strings', () => {
     expect(TIER_THRESHOLDS[0].label('100.00')).toContain('100.00');
     expect(TIER_THRESHOLDS[2].label()).toContain('10% off');
+  });
+
+  it('isFreeShippingEnabled returns false when threshold >= 100000', () => {
+    expect(isFreeShippingEnabled()).toBe(false);
   });
 });
 

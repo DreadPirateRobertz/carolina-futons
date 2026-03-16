@@ -275,7 +275,7 @@ describe('Shipping Policy / Getting It Home Page', () => {
 
       getEl('#shippingZipInput').value = '30301'; // Atlanta GA
       handler();
-      expect(getEl('#shippingResult').text).toMatch(/free shipping/i);
+      expect(getEl('#shippingResult').text).toMatch(/standard shipping/i);
       expect(trackEvent).toHaveBeenCalledWith('shipping_calculator', expect.objectContaining({ zone: 'regional' }));
     });
 

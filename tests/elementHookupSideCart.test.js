@@ -71,6 +71,7 @@ vi.mock('public/cartService', () => ({
   MIN_QUANTITY: 1,
   MAX_QUANTITY: 10,
   safeMultiply: vi.fn((a, b) => a * b),
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/a11yHelpers.js', () => ({
@@ -503,31 +504,15 @@ describe('Side Cart — #sideShippingBar / #sideShippingText after refresh', () 
     vi.clearAllMocks();
   });
 
-  it('sets shipping progress bar and text on cart refresh', async () => {
+  it('hides shipping bar and text when free shipping is disabled', async () => {
     await loadPage();
     await refreshSideCart({
       lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
       totals: { subtotal: 500 },
     });
 
-    const bar = getEl('#sideShippingBar');
-    expect(bar.value).toBe(50); // from mock
-    expect(bar.style.backgroundColor).toBeDefined();
-
-    const text = getEl('#sideShippingText');
-    expect(text.text).toContain('$100.00');
-    expect(text.text).toContain('free shipping');
-  });
-
-  it('sets ARIA live on shipping text', async () => {
-    await loadPage();
-    await refreshSideCart({
-      lineItems: [{ _id: 'i1', name: 'Frame', price: 500, quantity: 1 }],
-      totals: { subtotal: 500 },
-    });
-
-    expect(getEl('#sideShippingText').accessibility.ariaLive).toBe('polite');
-    expect(getEl('#sideShippingText').accessibility.role).toBe('status');
+    expect(getEl('#sideShippingBar').hide).toHaveBeenCalled();
+    expect(getEl('#sideShippingText').hide).toHaveBeenCalled();
   });
 });
 

@@ -184,8 +184,8 @@ export const getShippingRates = async (options) => {
       const whiteGloveBase = isLocal ? WHITE_GLOVE_LOCAL_PRICE : WHITE_GLOVE_REGIONAL_PRICE;
       const whiteGlovePrice = orderSubtotal >= WHITE_GLOVE_FREE_THRESHOLD ? 0 : whiteGloveBase;
       const whiteGloveLabel = whiteGlovePrice === 0
-        ? 'White Glove Delivery (Free over $1,999)'
-        : `White Glove Delivery — In-Home Setup`;
+        ? 'White Glove Delivery (Free)'
+        : 'White Glove Delivery — In-Home Setup';
 
       shippingRates.push({
         code: 'white-glove',

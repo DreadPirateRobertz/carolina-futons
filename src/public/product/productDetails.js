@@ -52,8 +52,8 @@ export function initProductInfoAccordion($w) {
 
     try {
       $w('#infoContentShipping').text =
-        'Free standard shipping on orders $999+. ' +
-        'White-glove delivery available: $149 local (WNC), $249 regional, free on orders over $1,999. ' +
+        'Shipping rates calculated at checkout. ' +
+        'White-glove delivery available: $149 local (WNC), $249 regional. ' +
         'Standard delivery: 5\u201310 business days. ' +
         'Local customers: call (828) 252-9449 to schedule Wed\u2013Sat delivery.';
     } catch (e) {}

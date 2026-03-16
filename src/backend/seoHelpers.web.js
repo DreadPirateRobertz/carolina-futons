@@ -118,7 +118,7 @@ export const getProductSchema = webMethod(
           },
           shippingRate: {
             '@type': 'MonetaryAmount',
-            value: product.price >= 999 ? 0 : 49.99,
+            value: 49.99,
             currency: 'USD',
           },
         },
@@ -410,7 +410,7 @@ export const getFaqSchema = webMethod(
 
 /**
  * Generate a product-specific FAQ schema for product pages.
- * Dynamically builds category-relevant Q&A pairs (return policy, free shipping,
+ * Dynamically builds category-relevant Q&A pairs (return policy, shipping,
  * assembly, mattress compatibility, etc.) for SEO structured data.
  * @param {Object} product - Wix product object
  * @returns {string|null} Stringified JSON-LD FAQPage schema, or null if product is invalid
@@ -431,12 +431,10 @@ export const getProductFaqSchema = webMethod(
       answer: 'Carolina Futons offers a 30-day return policy on unused items in original packaging. Contact us at (828) 252-9449 for return authorization.',
     });
 
-    // Free shipping — universal
+    // Shipping info — universal
     faqs.push({
-      question: `Does the ${product.name} qualify for free shipping?`,
-      answer: product.price >= 999
-        ? `Yes! The ${product.name} qualifies for free standard shipping within the continental US.`
-        : `Free standard shipping is available on orders $999+. The ${product.name} is priced at ${product.formattedPrice || '$' + product.price}.`,
+      question: `What are the shipping options for the ${product.name}?`,
+      answer: `The ${product.name} ships via UPS Ground with rates calculated at checkout. White-glove delivery is available in select areas. Visit our Shipping Policy page for details.`,
     });
 
     // Category-specific questions
@@ -593,13 +591,13 @@ export const getCategoryMetaDescription = webMethod(
   Permissions.Anyone,
   (categorySlug) => {
     const descriptions = {
-      'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Full and Queen sizes with solid hardwood construction. Free shipping over $999. Visit our Hendersonville, NC showroom.',
-      'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. No turning required, 10-15 year lifespan. Free shipping over $999. Carolina Futons, Hendersonville NC.',
-      'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed - sets up in under 2 minutes. Space-saving bedroom furniture. Free shipping over $999.',
-      'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Designed for memory foam and latex mattresses. American-made options available. Free shipping over $999.',
-      'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Nightstands, dressers, and storage to complete your bedroom set. Free shipping over $999.',
-      'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design sits close to your wall. Perfect for small rooms and apartments. Free shipping over $999.',
-      'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA from Tulip Poplar hardwood. Ready for your personal stain or paint finish. Free shipping over $999.',
+      'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Full and Queen sizes with solid hardwood construction. Fast nationwide shipping. Visit our Hendersonville, NC showroom.',
+      'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. No turning required, 10-15 year lifespan. Fast nationwide shipping. Carolina Futons, Hendersonville NC.',
+      'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed - sets up in under 2 minutes. Space-saving bedroom furniture. Fast nationwide shipping.',
+      'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Designed for memory foam and latex mattresses. American-made options available. Fast nationwide shipping.',
+      'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Nightstands, dressers, and storage to complete your bedroom set. Fast nationwide shipping.',
+      'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design sits close to your wall. Perfect for small rooms and apartments. Fast nationwide shipping.',
+      'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA from Tulip Poplar hardwood. Ready for your personal stain or paint finish. Fast nationwide shipping.',
       'sales': 'Current deals and clearance on quality futon furniture. Save on frames, mattresses, Murphy beds, and more. Carolina Futons, Hendersonville NC.',
     };
     return descriptions[categorySlug] || 'The largest selection of quality futon furniture in the Carolinas. Futon frames, mattresses, Murphy cabinet beds, and platform beds. Family-owned in Hendersonville, NC since 1991.';
@@ -761,13 +759,13 @@ export const getCategoryOgTags = webMethod(
 // Sync version of getCategoryMetaDescription for internal use
 function getCategoryMetaDescriptionSync(slug) {
   const descriptions = {
-    'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Free shipping over $999.',
-    'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. Free shipping over $999.',
-    'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed. Free shipping over $999.',
-    'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Free shipping over $999.',
-    'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Free shipping over $999.',
-    'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design. Free shipping over $999.',
-    'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA. Free shipping over $999.',
+    'futon-frames': 'Shop quality futon frames from Night & Day Furniture, Strata wall huggers, and KD Frames. Fast nationwide shipping.',
+    'mattresses': 'Premium futon mattresses by Otis Bed - hypoallergenic, CertiPUR-US certified foam. Fast nationwide shipping.',
+    'murphy-cabinet-beds': 'Freestanding Murphy cabinet beds by Night & Day Furniture. No wall mounting needed. Fast nationwide shipping.',
+    'platform-beds': 'Solid wood platform beds from Night & Day Furniture and KD Frames. Fast nationwide shipping.',
+    'casegoods-accessories': 'Matching bedroom furniture and accessories by Night & Day Furniture. Fast nationwide shipping.',
+    'wall-huggers': 'Wall hugger futon frames by Strata Furniture. Patented space-saving design. Fast nationwide shipping.',
+    'unfinished-wood': 'Unfinished wood futon frames by KD Frames. Made in USA. Fast nationwide shipping.',
     'sales': 'Current deals and clearance on quality futon furniture at Carolina Futons.',
   };
   return descriptions[slug] || 'Quality futon furniture since 1991. Carolina Futons, Hendersonville NC.';

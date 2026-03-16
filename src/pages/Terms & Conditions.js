@@ -51,7 +51,7 @@ const TERMS_SECTIONS = [
     anchor: '#termsShipping',
     content:
       'Shipping details:\n\n' +
-      '\u2022 We ship to all 50 US states. Free shipping on orders over $999\n' +
+      '\u2022 We ship to all 50 US states. Shipping rates calculated at checkout\n' +
       '\u2022 Standard shipping: 5\u201314 business days depending on destination and product\n' +
       '\u2022 Local delivery available in the Hendersonville/Asheville area with optional in-home setup\n' +
       '\u2022 In-store pickup available at our showroom: 824 Locust St, Ste 200, Hendersonville, NC 28792\n' +

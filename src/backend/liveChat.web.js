@@ -51,7 +51,7 @@ const DEFAULT_CANNED_RESPONSES = [
     trigger: 'shipping',
     title: 'Shipping Times & Costs',
     response: 'Most items ship within 3-5 business days via UPS Ground. ' +
-      'Orders over $999 qualify for FREE shipping within the continental US. ' +
+      'Shipping rates are calculated at checkout based on your location. ' +
       'Local delivery in the Hendersonville, NC area is available — just ask!',
   },
   {

@@ -198,7 +198,7 @@ export function getFinancingFaqs() {
     },
     {
       question: 'Can I use financing with other promotions?',
-      answer: 'Yes, financing can be combined with most Carolina Futons promotions and free shipping offers. Financing applies to the final price after discounts.',
+      answer: 'Yes, financing can be combined with most Carolina Futons promotions. Financing applies to the final price after discounts.',
       topic: 'eligibility',
     },
     {

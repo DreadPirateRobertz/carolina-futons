@@ -62,6 +62,7 @@ vi.mock('public/cartService', () => ({
   getCurrentCart: mockGetCurrentCart,
   onCartChanged: mockOnCartChanged,
   getShippingProgress: mockGetShippingProgress,
+  isFreeShippingEnabled: vi.fn(() => false),
 }));
 
 vi.mock('public/performanceHelpers', () => ({

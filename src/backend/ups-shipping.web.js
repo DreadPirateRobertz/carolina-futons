@@ -189,7 +189,7 @@ export const getUPSRates = webMethod(
           title: 'FREE UPS Ground Shipping',
           cost: 0,
           estimatedDelivery: '5-7 business days',
-          description: 'Free shipping on orders over $999!',
+          description: 'Your order qualifies for free shipping!',
         }];
       }
 

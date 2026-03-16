@@ -359,13 +359,13 @@ describe('getCheckoutPaymentSummary', () => {
     // Financing
     expect(result.summary.financing).toBeTruthy();
 
-    // Shipping message (free shipping disabled — all orders show add-more message)
-    expect(result.summary.shippingMessage).toContain('more for free shipping');
+    // Shipping message not set when free shipping is disabled
+    expect(result.summary.shippingMessage).toBeUndefined();
   });
 
-  it('does NOT show free shipping for $1000 cart (free shipping disabled)', async () => {
+  it('does NOT set shipping message for $1000 cart (free shipping disabled)', async () => {
     const result = await getCheckoutPaymentSummary(1000);
-    expect(result.summary.shippingMessage).not.toBe('Free shipping included');
+    expect(result.summary.shippingMessage).toBeUndefined();
   });
 
   it('excludes afterpay for $1500 cart', async () => {

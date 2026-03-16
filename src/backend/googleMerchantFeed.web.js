@@ -169,14 +169,12 @@ function formatProductItem(product) {
     }
   }
 
-  // Shipping: free over $999, otherwise flat rate estimate
-  if (product.price >= 999) {
-    item += `\n      <g:shipping>
+  // Shipping: flat rate estimate (free shipping currently disabled)
+  item += `\n      <g:shipping>
         <g:country>US</g:country>
-        <g:service>Free Shipping</g:service>
-        <g:price>0.00 USD</g:price>
+        <g:service>Standard Shipping</g:service>
+        <g:price>49.99 USD</g:price>
       </g:shipping>`;
-  }
 
   item += '\n    </item>';
   return item;

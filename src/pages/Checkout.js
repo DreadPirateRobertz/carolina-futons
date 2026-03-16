@@ -5,7 +5,7 @@
 // express checkout
 import { trackCheckoutStart } from 'public/engagementTracker';
 import { fireInitiateCheckout } from 'public/ga4Tracking';
-import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress } from 'public/cartService';
+import { getCurrentCart, FREE_SHIPPING_THRESHOLD, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
 import { announce, applyFocusRing } from 'public/a11yHelpers.js';
 import { collapseOnMobile, initBackToTop } from 'public/mobileHelpers';
 import { colors } from 'public/designTokens.js';
@@ -216,15 +216,16 @@ async function initCheckoutSummary() {
     trackCheckoutStart(subtotal, itemCount);
     fireInitiateCheckout(lineItems, subtotal);
 
-    // Show free shipping badge if qualifying
-    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    // Show free shipping badge if qualifying (hidden when free shipping disabled)
+    if (!isFreeShippingEnabled()) {
+      try { $w('#checkoutFreeShipping').hide(); } catch (e) {}
+    } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
       try {
         $w('#checkoutFreeShipping').text = 'Your order qualifies for FREE shipping!';
         try { $w('#checkoutFreeShipping').accessibility.role = 'status'; } catch (e) {}
         $w('#checkoutFreeShipping').show();
       } catch (e) {}
     } else {
-      // Show shipping progress toward free threshold
       try {
         const { remaining } = getShippingProgress(subtotal);
         $w('#checkoutFreeShipping').text = `Add $${remaining.toFixed(2)} more for free shipping`;

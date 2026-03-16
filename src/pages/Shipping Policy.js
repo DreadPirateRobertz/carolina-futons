@@ -65,7 +65,7 @@ function getShippingZone(zip) {
   if (prefix >= 287 && prefix <= 289) {
     return {
       zone: 'local',
-      message: 'Local delivery may be available! Contact us at (828) 252-9449 for details and scheduling. Free delivery on orders over $999.',
+      message: 'Local delivery may be available! Contact us at (828) 252-9449 for details and scheduling.',
     };
   }
 
@@ -78,14 +78,14 @@ function getShippingZone(zip) {
       (prefix >= 370 && prefix <= 385)) { // TN
     return {
       zone: 'regional',
-      message: 'Standard shipping to your area. Free shipping on orders over $999! Estimated delivery: 5-10 business days.',
+      message: 'Standard shipping to your area. Estimated delivery: 5-10 business days. Exact shipping calculated at checkout.',
     };
   }
 
   // Rest of US
   return {
     zone: 'national',
-    message: 'We ship nationwide! Free shipping on orders over $999. Estimated delivery: 7-14 business days. Exact shipping calculated at checkout.',
+    message: 'We ship nationwide! Estimated delivery: 7-14 business days. Exact shipping calculated at checkout.',
   };
 }
 
