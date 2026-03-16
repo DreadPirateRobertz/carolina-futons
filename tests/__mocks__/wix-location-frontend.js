@@ -31,4 +31,7 @@ export function __getToCallLog() { return _toCallLog; }
 
 export function __resetToCallLog() { _toCallLog = []; }
 
+// Named export so `import('wix-location-frontend').then(({ to }) => ...)` works
+export const to = wixLocationFrontend.to.bind(wixLocationFrontend);
+
 export default wixLocationFrontend;

@@ -359,6 +359,262 @@ describe('CouponCodeInput', () => {
     });
   });
 
+  // ── parseCouponError branches ──────────────────────────────────
+
+  describe('parseCouponError (via applyCouponCode)', () => {
+    it('returns minimum order message for "minimum" error', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Cart minimum not met'));
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.message).toContain('minimum');
+    });
+
+    it('returns minimum order message for "subtotal" error', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Subtotal too low'));
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.message).toContain('minimum');
+    });
+
+    it('returns already-applied message for "already applied" error', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Coupon already applied'));
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.message).toContain('already applied');
+    });
+
+    it('returns already-applied message for "duplicate" error', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Duplicate coupon'));
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.message).toContain('already applied');
+    });
+
+    it('returns "does not exist" variant of not-found message', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Coupon does not exist'));
+      const result = await applyCouponCode($w, 'GONE');
+      expect(result.message).toContain('not found');
+    });
+
+    it('returns generic message for unknown errors', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('Something weird'));
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.message).toContain('Could not apply');
+    });
+
+    it('handles error with no message property', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue({});
+      const result = await applyCouponCode($w, 'SAVE10');
+      expect(result.success).toBe(false);
+      expect(result.message).toBeTruthy();
+    });
+  });
+
+  // ── initCouponCodeInput — callbacks and deep branches ────────────
+
+  describe('initCouponCodeInput — callbacks', () => {
+    it('onClick calls onApplied callback on successful apply', async () => {
+      const onApplied = vi.fn();
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await initCouponCodeInput($w, { onApplied });
+      $w('#couponInput').value = 'SAVE10';
+
+      const clickHandler = $w('#couponApplyBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+
+      expect(onApplied).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+
+    it('onClick does not call onApplied on failed apply', async () => {
+      const onApplied = vi.fn();
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('fail'));
+
+      await initCouponCodeInput($w, { onApplied });
+      $w('#couponInput').value = 'BAD';
+
+      const clickHandler = $w('#couponApplyBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+
+      expect(onApplied).not.toHaveBeenCalled();
+    });
+
+    it('Enter key calls onApplied callback on success', async () => {
+      const onApplied = vi.fn();
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await initCouponCodeInput($w, { onApplied });
+      $w('#couponInput').value = 'ENTER10';
+
+      const keyHandler = $w('#couponInput').onKeyPress.mock.calls[0][0];
+      await keyHandler({ key: 'Enter' });
+
+      expect(onApplied).toHaveBeenCalled();
+    });
+
+    it('remove button calls onRemoved callback on success', async () => {
+      const onRemoved = vi.fn();
+      wixStoresFrontend.cart.removeCoupon.mockResolvedValue({});
+
+      $w('#couponRemoveBtn').getAttribute = vi.fn(() => 'coupon-123');
+      await initCouponCodeInput($w, { onRemoved });
+
+      const removeHandler = $w('#couponRemoveBtn').onClick.mock.calls[0][0];
+      await removeHandler();
+
+      expect(onRemoved).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+
+    it('remove button does not call onRemoved on failure', async () => {
+      const onRemoved = vi.fn();
+      wixStoresFrontend.cart.removeCoupon.mockRejectedValue(new Error('fail'));
+
+      $w('#couponRemoveBtn').getAttribute = vi.fn(() => 'bad-id');
+      await initCouponCodeInput($w, { onRemoved });
+
+      const removeHandler = $w('#couponRemoveBtn').onClick.mock.calls[0][0];
+      await removeHandler();
+
+      expect(onRemoved).not.toHaveBeenCalled();
+    });
+
+    it('remove button falls back to options.appliedCoupon._id when getAttribute returns null', async () => {
+      const onRemoved = vi.fn();
+      wixStoresFrontend.cart.removeCoupon.mockResolvedValue({});
+
+      $w('#couponRemoveBtn').getAttribute = vi.fn(() => null);
+      await initCouponCodeInput($w, {
+        appliedCoupon: { code: 'SAVE10', _id: 'fallback-id' },
+        onRemoved,
+      });
+
+      const removeHandler = $w('#couponRemoveBtn').onClick.mock.calls[0][0];
+      await removeHandler();
+
+      expect(wixStoresFrontend.cart.removeCoupon).toHaveBeenCalledWith('fallback-id');
+    });
+
+    it('remove button falls back when getAttribute is undefined', async () => {
+      wixStoresFrontend.cart.removeCoupon.mockResolvedValue({});
+
+      // No getAttribute method at all
+      delete $w('#couponRemoveBtn').getAttribute;
+      await initCouponCodeInput($w, {
+        appliedCoupon: { code: 'SAVE10', _id: 'fb-id' },
+      });
+
+      const removeHandler = $w('#couponRemoveBtn').onClick.mock.calls[0][0];
+      await removeHandler();
+
+      expect(wixStoresFrontend.cart.removeCoupon).toHaveBeenCalledWith('fb-id');
+    });
+
+    it('does not call onApplied when it is not a function', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await initCouponCodeInput($w, { onApplied: 'not-a-function' });
+      $w('#couponInput').value = 'SAVE10';
+
+      const clickHandler = $w('#couponApplyBtn').onClick.mock.calls[0][0];
+      await expect(clickHandler()).resolves.not.toThrow();
+    });
+  });
+
+  // ── showAppliedState branches ─────────────────────────────────────
+
+  describe('showAppliedState (via applyCouponCode)', () => {
+    it('hides input and apply button on success', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await applyCouponCode($w, 'SAVE10');
+
+      expect($w('#couponInput').hide).toHaveBeenCalled();
+      expect($w('#couponApplyBtn').hide).toHaveBeenCalled();
+    });
+
+    it('sets success text with code', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await applyCouponCode($w, 'SAVE10');
+
+      expect($w('#couponSuccessText').text).toContain('SAVE10');
+    });
+  });
+
+  // ── showError edge case ───────────────────────────────────────────
+
+  describe('showError (via applyCouponCode)', () => {
+    it('survives when error elements throw on validation failure', async () => {
+      // Empty code triggers showError → both $w calls in showError throw
+      const broken$w = vi.fn(() => { throw new Error('no el'); });
+      const result = await applyCouponCode(broken$w, '');
+      expect(result.success).toBe(false);
+    });
+
+    it('survives when error elements throw on API failure', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockRejectedValue(new Error('fail'));
+      const broken$w = vi.fn(() => { throw new Error('no el'); });
+      const result = await applyCouponCode(broken$w, 'SAVE10');
+      expect(result.success).toBe(false);
+    });
+  });
+
+  // ── applyCouponCode — loading icon ────────────────────────────────
+
+  describe('applyCouponCode — loading state', () => {
+    it('shows and hides loading icon', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await applyCouponCode($w, 'SAVE10');
+
+      expect($w('#couponLoadingIcon').show).toHaveBeenCalled();
+      expect($w('#couponLoadingIcon').hide).toHaveBeenCalled();
+    });
+
+    it('sets and resets button label', async () => {
+      wixStoresFrontend.cart.applyCoupon.mockResolvedValue({ applied: true });
+
+      await applyCouponCode($w, 'SAVE10');
+
+      expect($w('#couponApplyBtn').label).toBe('Apply');
+    });
+  });
+
+  // ── removeCouponCode — success state cleanup ──────────────────────
+
+  describe('removeCouponCode — success cleanup', () => {
+    it('clears input value after removal', async () => {
+      wixStoresFrontend.cart.removeCoupon.mockResolvedValue({});
+
+      await removeCouponCode($w, 'coupon-123');
+
+      expect($w('#couponInput').value).toBe('');
+    });
+
+    it('shows apply button after removal', async () => {
+      wixStoresFrontend.cart.removeCoupon.mockResolvedValue({});
+
+      await removeCouponCode($w, 'coupon-123');
+
+      expect($w('#couponApplyBtn').show).toHaveBeenCalled();
+    });
+  });
+
+  // ── ARIA branches ─────────────────────────────────────────────────
+
+  describe('ARIA setup', () => {
+    it('sets ariaLive assertive on error element', async () => {
+      await initCouponCodeInput($w);
+      expect($w('#couponError').accessibility.ariaLive).toBe('assertive');
+    });
+
+    it('sets role alert on error element', async () => {
+      await initCouponCodeInput($w);
+      expect($w('#couponError').accessibility.role).toBe('alert');
+    });
+
+    it('sets ariaLive polite on success element', async () => {
+      await initCouponCodeInput($w);
+      expect($w('#couponSuccess').accessibility.ariaLive).toBe('polite');
+    });
+  });
+
   // ── Input Validation Edge Cases ─────────────────────────────────
 
   describe('input validation', () => {
