@@ -1094,4 +1094,390 @@ describe('ProductOptions', () => {
       expect($w('#swatchGalleryModal').show).not.toHaveBeenCalled();
     });
   });
+
+  describe('updateVariantDisplay — stock badge', () => {
+    it('shows stock badge after updating status', async () => {
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#stockStatus').show).toHaveBeenCalled();
+    });
+
+    it('sets stock text to "In Stock" for in-stock variant', async () => {
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#stockStatus').text).toBe('In Stock');
+    });
+
+    it('sets stock text to "Special Order" for OOS variant', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 499 }, inStock: false, imageSrc: null, mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#stockStatus').text).toBe('Special Order');
+    });
+  });
+
+  describe('updateVariantDisplay — compare price visibility', () => {
+    it('shows compare price element when variant has comparePrice', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 499, comparePrice: 699 }, inStock: true, imageSrc: null, mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productComparePrice').show).toHaveBeenCalled();
+      expect($w('#productComparePrice').text).toBe('$699.00');
+    });
+
+    it('hides compare price element when variant has no comparePrice', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 499 }, inStock: true, imageSrc: null, mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productComparePrice').hide).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateVariantDisplay — gallery from mediaItems', () => {
+    it('updates gallery items array from variant mediaItems', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true, imageSrc: 'img.jpg',
+        mediaItems: [
+          { src: 'https://example.com/a.jpg', alt: 'Front view' },
+          { src: 'https://example.com/b.jpg', alt: 'Side view' },
+        ],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productGallery').items).toEqual([
+        { type: 'image', src: 'https://example.com/a.jpg', alt: 'Front view' },
+        { type: 'image', src: 'https://example.com/b.jpg', alt: 'Side view' },
+      ]);
+    });
+
+    it('does not update gallery when mediaItems is empty', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true, imageSrc: 'img.jpg', mediaItems: [],
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      // Gallery items should remain at default (empty array)
+      expect($w('#productGallery').items).toEqual([]);
+    });
+
+    it('does not update gallery when mediaItems is undefined', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true, imageSrc: 'img.jpg',
+      }]);
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productGallery').items).toEqual([]);
+    });
+  });
+
+  describe('renderSwatchGrid — edge cases', () => {
+    it('assigns fallback _id when swatch has no _id', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      getProductSwatches.mockResolvedValueOnce([
+        { swatchName: 'No ID Swatch', colorHex: '#333', swatchImage: null },
+      ]);
+      await initSwatchSelector($w, state);
+      const grid = $w('#swatchGrid');
+      expect(grid.data[0]._id).toBe('swatch-0');
+    });
+
+    it('preserves existing _id on swatch data', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      getProductSwatches.mockResolvedValueOnce([
+        { _id: 'custom-id', swatchName: 'Named', colorHex: '#444', swatchImage: null },
+      ]);
+      await initSwatchSelector($w, state);
+      const grid = $w('#swatchGrid');
+      expect(grid.data[0]._id).toBe('custom-id');
+    });
+
+    it('sets backgroundColor when swatch has colorHex but no image', async () => {
+      await initSwatchSelector($w, state);
+      const grid = $w('#swatchGrid');
+      const readyCb = grid.onItemReady.mock.calls[0][0];
+      const $item = create$w();
+      readyCb($item, { _id: 'sw-x', swatchName: 'Plain', colorHex: '#FF0000', swatchImage: null });
+      expect($item('#swatchThumb').style.backgroundColor).toBe('#FF0000');
+    });
+  });
+
+  describe('selectSwatch — grid refresh edge cases', () => {
+    it('handles null grid data gracefully', async () => {
+      const $wLocal = create$w();
+      const localState = { product: { ...futonFrame, _id: 'prod-1' }, selectedSwatchId: null };
+      $wLocal('#swatchGrid').data = null;
+      $wLocal('#finishDropdown').options = [];
+      // Should not throw
+      await selectSwatch($wLocal, localState, { _id: 'sw-1', swatchName: 'Test', colorHex: '#000' });
+      expect(localState.selectedSwatchId).toBe('sw-1');
+    });
+
+    it('applies tint overlay with correct opacity', async () => {
+      const $wLocal = create$w();
+      const localState = { product: { ...futonFrame, _id: 'prod-1' }, selectedSwatchId: null };
+      $wLocal('#finishDropdown').options = [];
+      await selectSwatch($wLocal, localState, { _id: 'sw-1', swatchName: 'Coral', colorHex: '#FF6B6B' });
+      expect($wLocal('#swatchTintOverlay').style.backgroundColor).toBe('#FF6B6B');
+      expect($wLocal('#swatchTintOverlay').style.opacity).toBe(0.25);
+      expect($wLocal('#swatchTintOverlay').show).toHaveBeenCalled();
+    });
+  });
+
+  describe('initFinishSwatches — edge cases', () => {
+    it('handles empty choices array', async () => {
+      state.product.productOptions = [{ name: 'Finish', choices: [] }];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data).toEqual([]);
+    });
+
+    it('sets description to choice.value when description is missing', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
+      state.product.productOptions = [{ name: 'Finish', choices: [
+        { value: 'Walnut', color: '#654321' },
+      ] }];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].description).toBe('Walnut');
+    });
+
+    it('uses description when present', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
+      state.product.productOptions = [{ name: 'Finish', choices: [
+        { value: 'Walnut', description: 'Rich Walnut', color: '#654321' },
+      ] }];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data[0].description).toBe('Rich Walnut');
+    });
+
+    it('does not trigger variant change when all finishes are OOS', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      // Use mockImplementation to return OOS for all stock checks, then restore
+      getProductVariants
+        .mockResolvedValueOnce([{ inStock: false, variant: { price: 500 } }])
+        .mockResolvedValueOnce([{ inStock: false, variant: { price: 500 } }]);
+      state.product.productOptions = [{ name: 'Finish', choices: [
+        { value: 'Oak', color: '#DEB887' },
+        { value: 'Maple', color: '#FFE4B5' },
+      ] }];
+      await initFinishSwatches($w, state);
+      // Default is set to first OOS; no variant change since no in-stock finish exists
+      expect($w('#finishDropdown').value).toBe('Oak');
+    });
+
+    it('handles single finish option', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
+      state.product.productOptions = [{ name: 'Finish', choices: [
+        { value: 'Natural', color: '#F5DEB3' },
+      ] }];
+      await initFinishSwatches($w, state);
+      expect($w('#finishSwatches').data).toHaveLength(1);
+      expect($w('#finishDropdown').value).toBe('Natural');
+    });
+  });
+
+  describe('showSwatchDetail — complete detail', () => {
+    it('shows all detail fields when swatch has full data', async () => {
+      // We need to trigger showSwatchDetail through gallery click
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      const fullSwatch = {
+        _id: 'sw-full', swatchName: 'Midnight Velvet', colorHex: '#191970',
+        swatchImage: 'https://example.com/midnight.jpg',
+        material: 'Velvet', careInstructions: 'Dry clean only',
+        colorFamily: 'blue',
+      };
+      getProductSwatches.mockResolvedValueOnce([fullSwatch]);
+      await initSwatchSelector($w, state);
+      // Open gallery
+      getProductSwatches.mockResolvedValueOnce([fullSwatch]);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      // Click the swatch in gallery
+      const galleryGrid = $w('#swatchGalleryGrid');
+      const readyCb = galleryGrid.onItemReady.mock.calls[galleryGrid.onItemReady.mock.calls.length - 1][0];
+      const $item = create$w();
+      readyCb($item, fullSwatch);
+      const clickHandler = $item('#sgThumb').onClick.mock.calls[0][0];
+      await clickHandler();
+      // Verify detail panel
+      expect($w('#swatchDetailName').text).toBe('Midnight Velvet');
+      expect($w('#swatchDetailMaterial').text).toBe('Material: Velvet');
+      expect($w('#swatchDetailCare').text).toBe('Care: Dry clean only');
+      expect($w('#swatchDetailFamily').text).toBe('Color Family: Blue');
+      expect($w('#swatchDetailImage').src).toBe('https://example.com/midnight.jpg');
+      expect($w('#swatchDetail').expand).toHaveBeenCalled();
+    });
+
+    it('shows detail image with enlarged alt text', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      const swatch = {
+        _id: 'sw-img', swatchName: 'Sage', swatchImage: 'https://example.com/sage.jpg',
+        colorHex: '#9DC183',
+      };
+      getProductSwatches.mockResolvedValueOnce([swatch]);
+      await initSwatchSelector($w, state);
+      getProductSwatches.mockResolvedValueOnce([swatch]);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      const galleryGrid = $w('#swatchGalleryGrid');
+      const readyCb = galleryGrid.onItemReady.mock.calls[galleryGrid.onItemReady.mock.calls.length - 1][0];
+      const $item = create$w();
+      readyCb($item, swatch);
+      const clickHandler = $item('#sgThumb').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#swatchDetailImage').alt).toBe('Sage swatch - enlarged view');
+      expect($w('#swatchDetailImage').show).toHaveBeenCalled();
+    });
+  });
+
+  describe('initSwatchColorFilter — edge cases', () => {
+    it('skips filter setup when families array is empty', async () => {
+      const { getAllSwatchFamilies } = await import('backend/swatchService.web');
+      getAllSwatchFamilies.mockResolvedValueOnce([]);
+      await initSwatchSelector($w, state);
+      const filter = $w('#swatchColorFilter');
+      // With no families, onChange should not be registered
+      expect(filter.onChange).not.toHaveBeenCalled();
+    });
+
+    it('capitalizes family names in filter options', async () => {
+      const { getAllSwatchFamilies } = await import('backend/swatchService.web');
+      getAllSwatchFamilies.mockResolvedValueOnce(['red', 'green']);
+      await initSwatchSelector($w, state);
+      const filter = $w('#swatchColorFilter');
+      expect(filter.options).toEqual([
+        { label: 'All', value: '' },
+        { label: 'Red', value: 'red' },
+        { label: 'Green', value: 'green' },
+      ]);
+    });
+
+    it('filters out falsy family values', async () => {
+      const { getAllSwatchFamilies } = await import('backend/swatchService.web');
+      getAllSwatchFamilies.mockResolvedValueOnce(['blue', null, '', 'neutral']);
+      await initSwatchSelector($w, state);
+      const filter = $w('#swatchColorFilter');
+      expect(filter.options).toEqual([
+        { label: 'All', value: '' },
+        { label: 'Blue', value: 'blue' },
+        { label: 'Neutral', value: 'neutral' },
+      ]);
+    });
+  });
+
+  describe('openSwatchGallery — search edge cases', () => {
+    it('filters gallery by colorFamily on search input', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorFamily: 'blue', material: 'Cotton', colorHex: '#2244AA', swatchImage: 'img.jpg' },
+        { _id: 'sw-2', swatchName: 'Forest Green', colorFamily: 'green', material: 'Velvet', colorHex: '#228B22', swatchImage: 'img.jpg' },
+      ];
+      getProductSwatches.mockResolvedValueOnce(swatches);
+      await initSwatchSelector($w, state);
+      // Open gallery
+      getProductSwatches.mockResolvedValueOnce(swatches);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      // Search by colorFamily
+      const searchCb = $w('#swatchSearch').onInput.mock.calls[0][0];
+      searchCb({ target: { value: 'green' } });
+      // Should filter to only Forest Green (colorFamily match)
+      const galleryGrid = $w('#swatchGalleryGrid');
+      expect(galleryGrid.data).toHaveLength(1);
+      expect(galleryGrid.data[0].swatchName).toBe('Forest Green');
+    });
+
+    it('returns all swatches when search query is cleared', async () => {
+      const { getProductSwatches } = await import('backend/swatchService.web');
+      const swatches = [
+        { _id: 'sw-1', swatchName: 'Ocean Blue', colorFamily: 'blue', material: 'Cotton', colorHex: '#2244AA', swatchImage: 'img.jpg' },
+        { _id: 'sw-2', swatchName: 'Forest Green', colorFamily: 'green', material: 'Velvet', colorHex: '#228B22', swatchImage: 'img.jpg' },
+      ];
+      getProductSwatches.mockResolvedValueOnce(swatches);
+      await initSwatchSelector($w, state);
+      getProductSwatches.mockResolvedValueOnce(swatches);
+      const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
+      await viewAllHandler();
+      // Clear search
+      const searchCb = $w('#swatchSearch').onInput.mock.calls[0][0];
+      searchCb({ target: { value: '' } });
+      const galleryGrid = $w('#swatchGalleryGrid');
+      expect(galleryGrid.data).toHaveLength(2);
+    });
+  });
+
+  describe('initVariantSelector — resilience', () => {
+    it('survives when sizeDropdown is null', () => {
+      const els = new Map();
+      const $wNull = (sel) => {
+        if (sel === '#sizeDropdown') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
+      initVariantSelector($wNull, state);
+    });
+
+    it('survives when finishDropdown is null', () => {
+      const els = new Map();
+      const $wNull = (sel) => {
+        if (sel === '#finishDropdown') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
+      initVariantSelector($wNull, state);
+    });
+
+    it('survives when productDataset throws', () => {
+      const els = new Map();
+      const $wBroken = (sel) => {
+        if (sel === '#productDataset') throw new Error('No dataset');
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
+      initVariantSelector($wBroken, state);
+    });
+  });
+
+  describe('handleCustomVariantChange — call-for-price', () => {
+    it('sets CALL_FOR_PRICE_TEXT when product is call-for-price regardless of variant price', async () => {
+      state.product.price = 0; // triggers isCallForPrice
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productPrice').text).toBe('Call for Pricing \u2014 (828) 327-8030');
+    });
+
+    it('shows normal price when product is NOT call-for-price', async () => {
+      const { getProductVariants } = await import('public/cartService');
+      getProductVariants.mockResolvedValueOnce([{
+        variant: { price: 599 }, inStock: true, imageSrc: null, mediaItems: [],
+      }]);
+      state.product.price = 599;
+      $w('#sizeDropdown').value = 'Full';
+      $w('#finishDropdown').value = '';
+      await handleCustomVariantChange($w, state);
+      expect($w('#productPrice').text).toBe('$599.00');
+    });
+  });
 });
