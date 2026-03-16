@@ -518,6 +518,24 @@ describe('createErrorBoundaryLogger', () => {
     const result = await logger(new Error('test'));
     expect(result.success).toBe(true);
   });
+
+  it('case-insensitive: "Checkout" gets critical severity', async () => {
+    const logger = createErrorBoundaryLogger('Checkout.submit');
+    await logger(new Error('fail'));
+    expect(_collections.ErrorLogs[0].severity).toBe('critical');
+  });
+
+  it('case-insensitive: "PAYMENT" gets critical severity', async () => {
+    const logger = createErrorBoundaryLogger('PAYMENT.process');
+    await logger(new Error('fail'));
+    expect(_collections.ErrorLogs[0].severity).toBe('critical');
+  });
+
+  it('detects payment in nested context via includes', async () => {
+    const logger = createErrorBoundaryLogger('order.payment.confirm');
+    await logger(new Error('fail'));
+    expect(_collections.ErrorLogs[0].severity).toBe('critical');
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -590,6 +608,7 @@ describe('checkAlertConditions — resilience', () => {
     const result = await checkAlertConditions();
     expect(result.success).toBe(true);
     expect(result.alerts[0].triggered).toBe(true);
+    expect(result.alerts[0].evaluationFailed).toBe(true);
     expect(result.alerts[0].error).toBeDefined();
 
     wixData.query = origQuery;

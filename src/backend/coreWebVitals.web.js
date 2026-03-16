@@ -559,8 +559,8 @@ export const getBaseline = webMethod(
 // ─── measureVitals ──────────────────────────────────────────────────
 
 /**
- * Convenience function for frontend to report individual vital measurements.
- * Validates, stores, and returns per-metric ratings + violations.
+ * Backend webMethod for reporting vital measurements (callable from frontend via RPC).
+ * Delegates to reportMetrics for storage, adds per-metric ratings.
  *
  * @param {Object} data
  * @param {string} data.sessionId
@@ -612,7 +612,7 @@ export const measureVitals = webMethod(
 
 /**
  * Clamp a numeric metric value to a valid range.
- * Returns 0 for non-numeric inputs.
+ * Returns 0 for non-numeric or non-finite inputs (NaN, Infinity, -Infinity).
  */
 function clampMetric(value, min, max) {
   if (typeof value !== 'number' || !isFinite(value)) return 0;

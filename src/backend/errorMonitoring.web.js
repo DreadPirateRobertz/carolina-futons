@@ -572,6 +572,7 @@ export const checkAlertConditions = webMethod(
             rule: rule.name,
             ruleId: rule._id,
             triggered: true,
+            evaluationFailed: true,
             error: 'Rule evaluation failed',
             currentCount: 0,
             threshold: rule.thresholdCount,
@@ -596,7 +597,8 @@ export function createErrorBoundaryLogger(context) {
   const safeContext = typeof context === 'string' ? context : String(context || 'unknown');
   return async (error, metadata = {}) => {
     try {
-      const isCritical = CRITICAL_CONTEXTS.some(c => safeContext.startsWith(c));
+      const lowerContext = safeContext.toLowerCase();
+      const isCritical = CRITICAL_CONTEXTS.some(c => lowerContext.includes(c));
 
       let message = 'Unknown error';
       let stack = '';
