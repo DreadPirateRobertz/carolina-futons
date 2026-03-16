@@ -71,6 +71,8 @@ export function createMockElement(overrides = {}) {
     onInput: vi.fn(),
     onBlur: vi.fn(),
     onKeyPress: vi.fn(),
+    onMouseIn: vi.fn(),
+    onMouseOut: vi.fn(),
     onItemReady: vi.fn(),
     onItemClicked: vi.fn(),
     onReady: vi.fn(() => Promise.resolve()),
@@ -103,4 +105,23 @@ export function create$w(presets = {}) {
     }
     return els.get(sel);
   };
+}
+
+/**
+ * Create a mock $item scope for repeater onItemReady callbacks.
+ * Returns { $item, elements } where elements is the backing Map
+ * for post-callback assertions.
+ *
+ * @param {Object} [presets] - Map of selector → override object
+ * @returns {{ $item: Function, elements: Map }}
+ */
+export function createItemScope(presets = {}) {
+  const elements = new Map();
+  const $item = (sel) => {
+    if (!elements.has(sel)) {
+      elements.set(sel, createMockElement(presets[sel] || {}));
+    }
+    return elements.get(sel);
+  };
+  return { $item, elements };
 }

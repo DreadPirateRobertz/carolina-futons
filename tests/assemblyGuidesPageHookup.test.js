@@ -4,43 +4,11 @@
  * care tips, SEO schema, loading states, navigation.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { createMockElement, createItemScope } from './helpers/wixMocks.js';
 
 // ── $w Mock Infrastructure ──────────────────────────────────────────
 
 const elements = new Map();
-
-function createMockElement() {
-  return {
-    text: '',
-    html: '',
-    value: '',
-    label: '',
-    src: '',
-    alt: '',
-    link: '',
-    target: '',
-    data: [],
-    options: [],
-    collapsed: false,
-    style: { color: '' },
-    accessibility: { ariaLabel: '', ariaLive: '', role: '', tabIndex: -1 },
-    show: vi.fn(() => Promise.resolve()),
-    hide: vi.fn(() => Promise.resolve()),
-    collapse: vi.fn(function () { this.collapsed = true; }),
-    expand: vi.fn(function () { this.collapsed = false; }),
-    scrollTo: vi.fn(),
-    focus: vi.fn(),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    onClick: vi.fn(),
-    onChange: vi.fn(),
-    onKeyPress: vi.fn(),
-    onMessage: vi.fn(),
-    postMessage: vi.fn(),
-    onReady: vi.fn(() => Promise.resolve()),
-    onItemReady: vi.fn(),
-  };
-}
 
 function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());
@@ -257,14 +225,10 @@ describe('Assembly Guides Page', () => {
       const catRepeater = getEl('#guideCategoryRepeater');
       const itemReadyCb = catRepeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '', tabIndex: -1 }, onClick: vi.fn(), onKeyPress: vi.fn() };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-futon-frames', id: 'futon-frames', label: 'Futon Frames', icon: '🛋️' });
-      expect(itemEls['#catLabel'].text).toContain('Futon Frames');
+      expect(els.get('#catLabel').text).toContain('Futon Frames');
     });
 
     it('onItemReady registers onClick for category selection', async () => {
@@ -272,14 +236,10 @@ describe('Assembly Guides Page', () => {
       const catRepeater = getEl('#guideCategoryRepeater');
       const itemReadyCb = catRepeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '', tabIndex: -1 }, onClick: vi.fn(), onKeyPress: vi.fn() };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-futon-frames', id: 'futon-frames', label: 'Futon Frames', icon: '🛋️' });
-      expect(itemEls['#catLabel'].onClick).toHaveBeenCalled();
+      expect(els.get('#catLabel').onClick).toHaveBeenCalled();
     });
 
     it('category click triggers filter and tracking', async () => {
@@ -287,18 +247,14 @@ describe('Assembly Guides Page', () => {
       const catRepeater = getEl('#guideCategoryRepeater');
       const itemReadyCb = catRepeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '', tabIndex: -1 }, onClick: vi.fn(), onKeyPress: vi.fn() };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'cat-futon-frames', id: 'futon-frames', label: 'Futon Frames', icon: '🛋️' });
 
       // Invoke the onClick handler
       trackEvent.mockClear();
       announce.mockClear();
-      const clickHandler = itemEls['#catLabel'].onClick.mock.calls[0][0];
+      const clickHandler = els.get('#catLabel').onClick.mock.calls[0][0];
       clickHandler();
 
       expect(trackEvent).toHaveBeenCalledWith('assembly_guide_category', { category: 'Futon Frames' });
@@ -310,15 +266,11 @@ describe('Assembly Guides Page', () => {
       const catRepeater = getEl('#guideCategoryRepeater');
       const itemReadyCb = catRepeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '', accessibility: { ariaLabel: '', tabIndex: -1 }, onClick: vi.fn(), onKeyPress: vi.fn() };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       // The "All Guides" option has empty id
       itemReadyCb($item, { _id: 'cat-all', id: '', label: 'All Guides', icon: '📋' });
-      const clickHandler = itemEls['#catLabel'].onClick.mock.calls[0][0];
+      const clickHandler = els.get('#catLabel').onClick.mock.calls[0][0];
       clickHandler();
 
       // List should show all guides (filter with null category)
@@ -403,17 +355,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
-      expect(itemEls['#guideTitle'].text).toBe('Seattle Futon Frame Assembly');
+      expect(els.get('#guideTitle').text).toBe('Seattle Futon Frame Assembly');
     });
 
     it('onItemReady sets category label with icon', async () => {
@@ -421,17 +366,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
-      expect(itemEls['#guideCategory'].text).toContain('Futon Frames');
+      expect(els.get('#guideCategory').text).toContain('Futon Frames');
     });
 
     it('onItemReady shows estimated time with clock emoji', async () => {
@@ -439,17 +377,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
-      expect(itemEls['#guideTime'].text).toContain('30 minutes');
+      expect(els.get('#guideTime').text).toContain('30 minutes');
     });
 
     it('onItemReady shows PDF badge when hasPdf is true', async () => {
@@ -457,17 +388,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]); // hasPdf: true
-      expect(itemEls['#guidePdfBadge'].text).toContain('PDF');
+      expect(els.get('#guidePdfBadge').text).toContain('PDF');
     });
 
     it('onItemReady shows Video badge when hasVideo is true', async () => {
@@ -475,17 +399,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]); // hasVideo: true
-      expect(itemEls['#guideVideoBadge'].text).toContain('Video');
+      expect(els.get('#guideVideoBadge').text).toContain('Video');
     });
 
     it('onItemReady hides badges when hasPdf/hasVideo are false', async () => {
@@ -493,18 +410,11 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[2]); // hasPdf: false, hasVideo: false
-      expect(itemEls['#guidePdfBadge'].text).toBe('');
-      expect(itemEls['#guideVideoBadge'].text).toBe('');
+      expect(els.get('#guidePdfBadge').text).toBe('');
+      expect(els.get('#guideVideoBadge').text).toBe('');
     });
 
     it('onItemReady uses makeClickable for guide title', async () => {
@@ -513,19 +423,12 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
 
       const titleCalls = makeClickable.mock.calls.filter(
-        call => call[0] === itemEls['#guideTitle']
+        call => call[0] === els.get('#guideTitle')
       );
       expect(titleCalls.length).toBeGreaterThanOrEqual(1);
     });
@@ -536,19 +439,12 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
 
       const btnCalls = makeClickable.mock.calls.filter(
-        call => call[0] === itemEls['#guideViewBtn']
+        call => call[0] === els.get('#guideViewBtn')
       );
       expect(btnCalls.length).toBeGreaterThanOrEqual(1);
     });
@@ -558,17 +454,10 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
-      expect(itemEls['#guideTitle'].accessibility.ariaLabel).toContain('Seattle Futon Frame Assembly');
+      expect(els.get('#guideTitle').accessibility.ariaLabel).toContain('Seattle Futon Frame Assembly');
     });
 
     it('guide click triggers detail load and tracking', async () => {
@@ -579,20 +468,13 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
 
       // Find the makeClickable call for the title and invoke its handler
       const titleCall = makeClickable.mock.calls.find(
-        call => call[0] === itemEls['#guideTitle']
+        call => call[0] === els.get('#guideTitle')
       );
       expect(titleCall).toBeDefined();
       titleCall[1](); // invoke the openGuide handler
@@ -615,18 +497,11 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, mockGuides[0]);
       const titleCall = makeClickable.mock.calls.find(
-        call => call[0] === itemEls['#guideTitle']
+        call => call[0] === els.get('#guideTitle')
       );
       titleCall[1]();
       await flushAsync();
@@ -701,16 +576,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -725,16 +593,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -749,16 +610,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -773,16 +627,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -867,15 +714,11 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#careTipsRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = { text: '' };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
 
       itemReadyCb($item, { _id: 'tip-0', title: 'Wood Care', tip: 'Dust weekly' });
-      expect(itemEls['#careTipTitle'].text).toBe('Wood Care');
-      expect(itemEls['#careTipText'].text).toBe('Dust weekly');
+      expect(els.get('#careTipTitle').text).toBe('Wood Care');
+      expect(els.get('#careTipText').text).toBe('Dust weekly');
     });
 
     it('expands care tips section when tips available', async () => {
@@ -886,16 +729,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -911,16 +747,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -938,16 +767,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
       titleCall[1]();
       await flushAsync();
 
@@ -967,16 +789,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
 
       // Clear postMessage before triggering
       getEl('#guideSchemaHtml').postMessage.mockClear();
@@ -999,16 +814,9 @@ describe('Assembly Guides Page', () => {
       const repeater = getEl('#guideListRepeater');
       const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
 
-      const itemEls = {};
-      const $item = (sel) => {
-        if (!itemEls[sel]) itemEls[sel] = {
-          text: '', accessibility: { ariaLabel: '', tabIndex: -1 },
-          onClick: vi.fn(), onKeyPress: vi.fn(),
-        };
-        return itemEls[sel];
-      };
+      const { $item, elements: els } = createItemScope();
       itemReadyCb($item, mockGuides[0]);
-      const titleCall = makeClickable.mock.calls.find(c => c[0] === itemEls['#guideTitle']);
+      const titleCall = makeClickable.mock.calls.find(c => c[0] === els.get('#guideTitle'));
 
       titleCall[1]();
       await flushAsync();
