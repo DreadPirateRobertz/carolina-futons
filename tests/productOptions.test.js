@@ -1095,8 +1095,6 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- Additional variant dropdown coverage ---
-
   describe('updateVariantDisplay — stock badge', () => {
     it('shows stock badge after updating status', async () => {
       $w('#sizeDropdown').value = 'Full';
@@ -1192,8 +1190,6 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- Additional swatch selector coverage ---
-
   describe('renderSwatchGrid — edge cases', () => {
     it('assigns fallback _id when swatch has no _id', async () => {
       const { getProductSwatches } = await import('backend/swatchService.web');
@@ -1247,8 +1243,6 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- Additional initFinishSwatches coverage ---
-
   describe('initFinishSwatches — edge cases', () => {
     it('handles empty choices array', async () => {
       state.product.productOptions = [{ name: 'Finish', choices: [] }];
@@ -1258,7 +1252,7 @@ describe('ProductOptions', () => {
 
     it('sets description to choice.value when description is missing', async () => {
       const { getProductVariants } = await import('public/cartService');
-      getProductVariants.mockResolvedValue([{ inStock: true, variant: { price: 500 } }]);
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
       state.product.productOptions = [{ name: 'Finish', choices: [
         { value: 'Walnut', color: '#654321' },
       ] }];
@@ -1268,7 +1262,7 @@ describe('ProductOptions', () => {
 
     it('uses description when present', async () => {
       const { getProductVariants } = await import('public/cartService');
-      getProductVariants.mockResolvedValue([{ inStock: true, variant: { price: 500 } }]);
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
       state.product.productOptions = [{ name: 'Finish', choices: [
         { value: 'Walnut', description: 'Rich Walnut', color: '#654321' },
       ] }];
@@ -1278,23 +1272,22 @@ describe('ProductOptions', () => {
 
     it('does not trigger variant change when all finishes are OOS', async () => {
       const { getProductVariants } = await import('public/cartService');
-      getProductVariants.mockResolvedValue([{ inStock: false, variant: { price: 500 } }]);
+      // Use mockImplementation to return OOS for all stock checks, then restore
+      getProductVariants
+        .mockResolvedValueOnce([{ inStock: false, variant: { price: 500 } }])
+        .mockResolvedValueOnce([{ inStock: false, variant: { price: 500 } }]);
       state.product.productOptions = [{ name: 'Finish', choices: [
         { value: 'Oak', color: '#DEB887' },
         { value: 'Maple', color: '#FFE4B5' },
       ] }];
       await initFinishSwatches($w, state);
-      // Default is set to first OOS but no variant change triggered
+      // Default is set to first OOS; no variant change since no in-stock finish exists
       expect($w('#finishDropdown').value).toBe('Oak');
-      // Restore default mock for subsequent tests
-      getProductVariants.mockResolvedValue([{
-        variant: { price: 599 }, inStock: true, imageSrc: 'https://example.com/variant.jpg', mediaItems: [],
-      }]);
     });
 
     it('handles single finish option', async () => {
       const { getProductVariants } = await import('public/cartService');
-      getProductVariants.mockResolvedValue([{ inStock: true, variant: { price: 500 } }]);
+      getProductVariants.mockResolvedValueOnce([{ inStock: true, variant: { price: 500 } }]);
       state.product.productOptions = [{ name: 'Finish', choices: [
         { value: 'Natural', color: '#F5DEB3' },
       ] }];
@@ -1303,8 +1296,6 @@ describe('ProductOptions', () => {
       expect($w('#finishDropdown').value).toBe('Natural');
     });
   });
-
-  // --- showSwatchDetail — full detail view ---
 
   describe('showSwatchDetail — complete detail', () => {
     it('shows all detail fields when swatch has full data', async () => {
@@ -1360,17 +1351,14 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- initSwatchColorFilter edge cases ---
-
   describe('initSwatchColorFilter — edge cases', () => {
     it('skips filter setup when families array is empty', async () => {
       const { getAllSwatchFamilies } = await import('backend/swatchService.web');
       getAllSwatchFamilies.mockResolvedValueOnce([]);
       await initSwatchSelector($w, state);
-      // Filter should not have onChange registered (no families)
       const filter = $w('#swatchColorFilter');
-      // The first option 'All' would still be set if filter was initialized
-      // With empty families, filter is skipped
+      // With no families, onChange should not be registered
+      expect(filter.onChange).not.toHaveBeenCalled();
     });
 
     it('capitalizes family names in filter options', async () => {
@@ -1398,8 +1386,6 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- openSwatchGallery — search filtering by material and colorFamily ---
-
   describe('openSwatchGallery — search edge cases', () => {
     it('filters gallery by colorFamily on search input', async () => {
       const { getProductSwatches } = await import('backend/swatchService.web');
@@ -1407,7 +1393,7 @@ describe('ProductOptions', () => {
         { _id: 'sw-1', swatchName: 'Ocean Blue', colorFamily: 'blue', material: 'Cotton', colorHex: '#2244AA', swatchImage: 'img.jpg' },
         { _id: 'sw-2', swatchName: 'Forest Green', colorFamily: 'green', material: 'Velvet', colorHex: '#228B22', swatchImage: 'img.jpg' },
       ];
-      getProductSwatches.mockResolvedValueOnce(swatches.slice(0, 2));
+      getProductSwatches.mockResolvedValueOnce(swatches);
       await initSwatchSelector($w, state);
       // Open gallery
       getProductSwatches.mockResolvedValueOnce(swatches);
@@ -1428,7 +1414,7 @@ describe('ProductOptions', () => {
         { _id: 'sw-1', swatchName: 'Ocean Blue', colorFamily: 'blue', material: 'Cotton', colorHex: '#2244AA', swatchImage: 'img.jpg' },
         { _id: 'sw-2', swatchName: 'Forest Green', colorFamily: 'green', material: 'Velvet', colorHex: '#228B22', swatchImage: 'img.jpg' },
       ];
-      getProductSwatches.mockResolvedValueOnce(swatches.slice(0, 2));
+      getProductSwatches.mockResolvedValueOnce(swatches);
       await initSwatchSelector($w, state);
       getProductSwatches.mockResolvedValueOnce(swatches);
       const viewAllHandler = $w('#swatchViewAll').onClick.mock.calls[0][0];
@@ -1441,33 +1427,37 @@ describe('ProductOptions', () => {
     });
   });
 
-  // --- initVariantSelector — resilience ---
-
   describe('initVariantSelector — resilience', () => {
     it('survives when sizeDropdown is null', () => {
-      const $wNull = (sel) => sel === '#sizeDropdown' ? null : createMockElement();
-      // Should not throw
+      const els = new Map();
+      const $wNull = (sel) => {
+        if (sel === '#sizeDropdown') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
       initVariantSelector($wNull, state);
     });
 
     it('survives when finishDropdown is null', () => {
-      const $wNull = (sel) => sel === '#finishDropdown' ? null : createMockElement();
+      const els = new Map();
+      const $wNull = (sel) => {
+        if (sel === '#finishDropdown') return null;
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
+      };
       initVariantSelector($wNull, state);
     });
 
     it('survives when productDataset throws', () => {
-      const elements = new Map();
+      const els = new Map();
       const $wBroken = (sel) => {
         if (sel === '#productDataset') throw new Error('No dataset');
-        if (!elements.has(sel)) elements.set(sel, createMockElement());
-        return elements.get(sel);
+        if (!els.has(sel)) els.set(sel, createMockElement());
+        return els.get(sel);
       };
-      // Should not throw
       initVariantSelector($wBroken, state);
     });
   });
-
-  // --- handleCustomVariantChange — call-for-price edge cases ---
 
   describe('handleCustomVariantChange — call-for-price', () => {
     it('sets CALL_FOR_PRICE_TEXT when product is call-for-price regardless of variant price', async () => {
