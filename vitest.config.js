@@ -85,6 +85,7 @@ export default defineConfig({
       'backend/utils/errorHandler': path.resolve(__dirname, 'src/backend/utils/errorHandler.js'),
       'backend/utils/safeParse': path.resolve(__dirname, 'src/backend/utils/safeParse.js'),
       'backend/utils/httpHelpers': path.resolve(__dirname, 'src/backend/utils/httpHelpers.js'),
+      'backend/referralService.web': path.resolve(__dirname, 'src/backend/referralService.web.js'),
       'backend/assemblyGuides.web': path.resolve(__dirname, 'src/backend/assemblyGuides.web.js'),
       'backend/errorMonitoring.web': path.resolve(__dirname, 'src/backend/errorMonitoring.web.js'),
       'backend/liveChat.web': path.resolve(__dirname, 'src/backend/liveChat.web.js'),
