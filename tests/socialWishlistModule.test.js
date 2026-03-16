@@ -161,4 +161,97 @@ describe('initWishlistButton', () => {
     const { authentication } = await import('wix-members-frontend');
     expect(authentication.promptLogin).toHaveBeenCalled();
   });
+
+  it('sets heart icon active when product is already in wishlist', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    const wixData = (await import('wix-data')).default;
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({ items: [{ _id: 'wish-1' }] })),
+    });
+    await initWishlistButton($w, product);
+    expect(getEl('#wishlistIcon').src).toContain('svg');
+    expect(getEl('#wishlistBtn').accessibility.ariaLabel).toBe('Remove from wishlist');
+  });
+
+  it('adds product to wishlist on click when logged in', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    // Init getMember — returns member, default query returns empty (no existing wishlist item)
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    await initWishlistButton($w, product);
+
+    // Click getMember — returns member
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    const wixData = (await import('wix-data')).default;
+    // Click query — returns empty (not in wishlist) → triggers insert
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({ items: [] })),
+    });
+    const clickHandler = getEl('#wishlistBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+    expect(wixData.insert).toHaveBeenCalledWith('Wishlist', expect.objectContaining({
+      memberId: 'member-1',
+      productId: 'p1',
+      productName: 'Test',
+    }));
+    // After adding, heart is active → label is "Remove from wishlist"
+    expect(getEl('#wishlistBtn').accessibility.ariaLabel).toBe('Remove from wishlist');
+  });
+
+  it('removes product from wishlist when already saved', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    await initWishlistButton($w, product);
+
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    const wixData = (await import('wix-data')).default;
+    // Click query — returns existing item → triggers remove
+    wixData.query.mockReturnValueOnce({
+      eq: vi.fn(function () { return this; }),
+      find: vi.fn(() => Promise.resolve({ items: [{ _id: 'wish-1' }] })),
+    });
+    const clickHandler = getEl('#wishlistBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+    expect(wixData.remove).toHaveBeenCalledWith('Wishlist', 'wish-1');
+    // After removing, heart is inactive → label is "Add to wishlist"
+    expect(getEl('#wishlistBtn').accessibility.ariaLabel).toBe('Add to wishlist');
+  });
+
+  it('handles wishlist toggle error gracefully', async () => {
+    const { currentMember } = await import('wix-members-frontend');
+    currentMember.getMember.mockResolvedValueOnce({ _id: 'member-1' });
+    await initWishlistButton($w, product);
+
+    currentMember.getMember.mockRejectedValueOnce(new Error('Auth error'));
+    const clickHandler = getEl('#wishlistBtn').onClick.mock.calls[0][0];
+    await clickHandler(); // Should not throw
+  });
+});
+
+describe('initSocialShare — copy link clipboard', () => {
+  beforeEach(() => { elements.clear(); vi.clearAllMocks(); });
+
+  const product = { _id: 'p1', name: 'Test Futon', slug: 'test-futon', mainMedia: 'img.jpg' };
+
+  it('copies product URL to clipboard and shows "Copied!" label', async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { clipboard: { writeText } },
+      writable: true,
+      configurable: true,
+    });
+
+    initSocialShare($w, product);
+    const handler = getEl('#shareCopyLink').onClick.mock.calls[0][0];
+    handler();
+    await new Promise(r => setTimeout(r, 0));
+    expect(writeText).toHaveBeenCalledWith('https://www.carolinafutons.com/product-page/test-futon');
+    // Wait for writeText promise to resolve
+    await new Promise(r => setTimeout(r, 0));
+    expect(getEl('#shareCopyLink').label).toBe('Copied!');
+
+    delete globalThis.navigator;
+  });
 });
