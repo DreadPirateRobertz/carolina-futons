@@ -307,6 +307,7 @@ function mapTrackingStatus(statusCode) {
   const code = statusCode.toUpperCase();
   if (code === 'D' || code === 'DELIVERED') return 'DELIVERED';
   if (code === 'I' || code === 'IN TRANSIT' || code === 'IT') return 'IN_TRANSIT';
+  if (code === 'OD' || code === 'OUT FOR DELIVERY') return 'OUT_FOR_DELIVERY';
   if (code === 'P' || code === 'PICKUP') return 'PICKED_UP';
   if (code === 'X' || code === 'EXCEPTION') return 'EXCEPTION';
   if (code === 'RS' || code === 'RETURNED') return 'RETURNED';
