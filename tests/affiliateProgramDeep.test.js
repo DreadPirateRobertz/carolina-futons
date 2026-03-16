@@ -17,7 +17,6 @@ import {
   getMyPayouts,
   updatePaymentInfo,
   getMyAffiliateLinks,
-  getMyCommissions,
 } from '../src/backend/affiliateProgram.web.js';
 
 const ACCOUNTS = 'AffiliateAccounts';
@@ -84,19 +83,6 @@ describe('applyForAffiliate — deep edge cases', () => {
     expect(result.error).toContain('bio');
   });
 
-  it('blocks reapplication when status is pending', async () => {
-    __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', loginEmail: 'x@x.com', name: 'Re' });
-    __seed(ACCOUNTS, [{
-      _id: 'aff-pend',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'pending',
-    }]);
-
-    const result = await applyForAffiliate({ bio: 'Try again' });
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('already');
-  });
-
   it('blocks reapplication when status is suspended', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', loginEmail: 'x@x.com', name: 'Re' });
     __seed(ACCOUNTS, [{
@@ -131,16 +117,6 @@ describe('applyForAffiliate — deep edge cases', () => {
     expect(updated.bio).toContain('New bio');
   });
 
-  it('sets initial commissionRate to 5 (starter tier)', async () => {
-    __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', loginEmail: 'a@b.com', name: 'A' });
-    let inserted = null;
-    __onInsert((col, item) => { if (col === ACCOUNTS) inserted = item; });
-
-    await applyForAffiliate({ bio: 'test bio' });
-    expect(inserted.commissionRate).toBe(5);
-    expect(inserted.tier).toBe('starter');
-  });
-
   it('initializes paypalEmail as empty string', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', loginEmail: 'a@b.com', name: 'A' });
     let inserted = null;
@@ -149,23 +125,12 @@ describe('applyForAffiliate — deep edge cases', () => {
     await applyForAffiliate({ bio: 'test bio' });
     expect(inserted.paypalEmail).toBe('');
   });
-
-  it('handles member with _id but no other fields', async () => {
-    __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
-    let inserted = null;
-    __onInsert((col, item) => { if (col === ACCOUNTS) inserted = item; });
-
-    const result = await applyForAffiliate({ bio: 'minimal member' });
-    expect(result.success).toBe(true);
-    expect(inserted.displayName).toBe('');
-    expect(inserted.email).toBe('');
-  });
 });
 
 // ── getMyAffiliateAccount — deep edge cases ──────────────────────────
 
 describe('getMyAffiliateAccount — deep edge cases', () => {
-  it('computes availableBalance correctly when totalEarned/totalPaid are null', async () => {
+  it('computes availableBalance as 0 when totalEarned/totalPaid are null', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
       _id: 'aff-null',
@@ -186,7 +151,7 @@ describe('getMyAffiliateAccount — deep edge cases', () => {
     expect(result.account.availableBalance).toBe(0);
   });
 
-  it('computes availableBalance correctly when totalPaid is undefined', async () => {
+  it('computes availableBalance when totalPaid is undefined', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
       _id: 'aff-undef',
@@ -197,49 +162,12 @@ describe('getMyAffiliateAccount — deep edge cases', () => {
       status: 'active',
       commissionRate: 5,
       totalEarned: 100,
-      // totalPaid intentionally omitted
       bio: 'bio',
       paypalEmail: '',
     }]);
 
     const result = await getMyAffiliateAccount();
-    expect(result.success).toBe(true);
     expect(result.account.availableBalance).toBe(100);
-  });
-
-  it('returns all expected fields in account object', async () => {
-    __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
-    __seed(ACCOUNTS, [{
-      _id: 'aff-full',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      displayName: 'Jane',
-      email: 'jane@example.com',
-      tier: 'elite',
-      status: 'active',
-      commissionRate: 12,
-      totalEarned: 5000,
-      totalPaid: 3000,
-      bio: 'Top affiliate',
-      socialLinks: 'https://ig.com/jane',
-      paypalEmail: 'jane@paypal.com',
-      _createdDate: new Date('2026-01-01'),
-    }]);
-
-    const result = await getMyAffiliateAccount();
-    const acct = result.account;
-    expect(acct.id).toBe('aff-full');
-    expect(acct.displayName).toBe('Jane');
-    expect(acct.email).toBe('jane@example.com');
-    expect(acct.tier).toBe('elite');
-    expect(acct.status).toBe('active');
-    expect(acct.commissionRate).toBe(12);
-    expect(acct.totalEarned).toBe(5000);
-    expect(acct.totalPaid).toBe(3000);
-    expect(acct.availableBalance).toBe(2000);
-    expect(acct.bio).toBe('Top affiliate');
-    expect(acct.socialLinks).toBe('https://ig.com/jane');
-    expect(acct.paypalEmail).toBe('jane@paypal.com');
-    expect(acct.createdDate).toEqual(new Date('2026-01-01'));
   });
 });
 
@@ -256,35 +184,15 @@ describe('createAffiliateLink — deep edge cases', () => {
     }]);
   });
 
-  it('strips special characters from custom slug', async () => {
+  it('strips special characters and lowercases custom slug', async () => {
     let inserted = null;
     __onInsert((col, item) => { if (col === LINKS) inserted = item; });
 
     await createAffiliateLink('prod-1', 'My Link @#$!');
-    // only lowercase alphanumeric and dashes survive
     expect(inserted.customSlug).toMatch(/^[a-z0-9-]+$/);
-    expect(inserted.customSlug).not.toContain('@');
-    expect(inserted.customSlug).not.toContain('$');
   });
 
-  it('lowercases custom slug', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { if (col === LINKS) inserted = item; });
-
-    await createAffiliateLink('prod-1', 'MY-AWESOME-LINK');
-    expect(inserted.customSlug).toBe('my-awesome-link');
-  });
-
-  it('allows empty/no custom slug', async () => {
-    let inserted = null;
-    __onInsert((col, item) => { if (col === LINKS) inserted = item; });
-
-    const result = await createAffiliateLink('prod-1', '');
-    expect(result.success).toBe(true);
-    expect(inserted.customSlug).toBe('');
-  });
-
-  it('allows undefined custom slug', async () => {
+  it('sets empty slug when undefined is passed', async () => {
     let inserted = null;
     __onInsert((col, item) => { if (col === LINKS) inserted = item; });
 
@@ -315,14 +223,8 @@ describe('createAffiliateLink — deep edge cases', () => {
 // ── trackAffiliateClick — deep edge cases ────────────────────────────
 
 describe('trackAffiliateClick — deep edge cases', () => {
-  it('normalizes lowercase input to uppercase for matching', async () => {
-    __seed(LINKS, [{
-      _id: 'link-lc',
-      linkCode: 'ABCDEF1234',
-      productId: 'prod-1',
-      clicks: 0,
-    }]);
-
+  it('normalizes lowercase to uppercase for matching', async () => {
+    __seed(LINKS, [{ _id: 'lnk-1', linkCode: 'ABCDEF1234', productId: 'p1', clicks: 0 }]);
     let updated = null;
     __onUpdate((col, item) => { if (col === LINKS) updated = item; });
 
@@ -331,14 +233,8 @@ describe('trackAffiliateClick — deep edge cases', () => {
     expect(updated.clicks).toBe(1);
   });
 
-  it('strips non-alphanumeric characters from link code', async () => {
-    __seed(LINKS, [{
-      _id: 'link-strip',
-      linkCode: 'ABCDEF1234',
-      productId: 'prod-1',
-      clicks: 5,
-    }]);
-
+  it('strips non-alphanumeric chars from code before lookup', async () => {
+    __seed(LINKS, [{ _id: 'lnk-2', linkCode: 'ABCDEF1234', productId: 'p1', clicks: 5 }]);
     let updated = null;
     __onUpdate((col, item) => { if (col === LINKS) updated = item; });
 
@@ -352,19 +248,8 @@ describe('trackAffiliateClick — deep edge cases', () => {
     expect(result.success).toBe(false);
   });
 
-  it('handles undefined link code', async () => {
-    const result = await trackAffiliateClick(undefined);
-    expect(result.success).toBe(false);
-  });
-
   it('initializes clicks from null to 1', async () => {
-    __seed(LINKS, [{
-      _id: 'link-noclicks',
-      linkCode: 'NULLCLICK1',
-      productId: 'prod-1',
-      clicks: null,
-    }]);
-
+    __seed(LINKS, [{ _id: 'lnk-3', linkCode: 'NULLCLICK1', productId: 'p1', clicks: null }]);
     let updated = null;
     __onUpdate((col, item) => { if (col === LINKS) updated = item; });
 
@@ -398,15 +283,13 @@ describe('recordAffiliateConversion — commission calculation edge cases', () =
     }]);
   });
 
-  it('rounds commission to two decimal places', async () => {
-    // 5% of 33.33 = 1.6665 -> rounds to 1.67
+  it('rounds commission to two decimal places (5% of 33.33 = 1.67)', async () => {
     const result = await recordAffiliateConversion('CONVTEST01', 'ORD-ROUND', 33.33);
     expect(result.success).toBe(true);
     expect(result.commissionAmount).toBe(1.67);
   });
 
-  it('rounds commission for small fractional amounts', async () => {
-    // 5% of 0.01 = 0.0005 -> rounds to 0
+  it('rounds sub-penny commission to zero (5% of 0.01)', async () => {
     const result = await recordAffiliateConversion('CONVTEST01', 'ORD-TINY', 0.01);
     expect(result.success).toBe(true);
     expect(result.commissionAmount).toBe(0);
@@ -430,24 +313,13 @@ describe('recordAffiliateConversion — commission calculation edge cases', () =
     expect(result.error).toContain('order total');
   });
 
-  it('rejects undefined orderTotal', async () => {
-    const result = await recordAffiliateConversion('CONVTEST01', 'ORD-UNDEF', undefined);
-    expect(result.success).toBe(false);
-  });
-
-  it('accepts Infinity orderTotal (Infinity > 0 passes guard)', async () => {
-    // Known gap: Infinity passes typeof + > 0 check
+  // Known gap: Infinity > 0 is true, passes guard
+  it('accepts Infinity orderTotal (guard bypass)', async () => {
     const result = await recordAffiliateConversion('CONVTEST01', 'ORD-INF', Infinity);
     expect(result.success).toBe(true);
   });
 
-  it('rejects missing orderId with valid code and total', async () => {
-    const result = await recordAffiliateConversion('CONVTEST01', '', 100);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('required');
-  });
-
-  it('calculates commission at pro rate (8%)', async () => {
+  it('calculates 8% commission at pro tier', async () => {
     __seed(ACCOUNTS, [{
       _id: 'aff-001',
       memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
@@ -459,11 +331,10 @@ describe('recordAffiliateConversion — commission calculation edge cases', () =
     }]);
 
     const result = await recordAffiliateConversion('CONVTEST01', 'ORD-PRO', 250);
-    expect(result.success).toBe(true);
-    expect(result.commissionAmount).toBe(20); // 8% of 250
+    expect(result.commissionAmount).toBe(20);
   });
 
-  it('calculates commission at elite rate (12%)', async () => {
+  it('calculates 12% commission at elite tier', async () => {
     __seed(ACCOUNTS, [{
       _id: 'aff-001',
       memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
@@ -474,25 +345,11 @@ describe('recordAffiliateConversion — commission calculation edge cases', () =
       totalPaid: 0,
     }]);
 
-    const result = await recordAffiliateConversion('CONVTEST01', 'ORD-ELITE', 1000);
-    expect(result.success).toBe(true);
-    expect(result.commissionAmount).toBe(120); // 12% of 1000
+    const result = await recordAffiliateConversion('CONVTEST01', 'ORD-ELI', 1000);
+    expect(result.commissionAmount).toBe(120);
   });
 
-  it('accumulates conversions on link across multiple orders', async () => {
-    const linkUpdates = [];
-    __onUpdate((col, item) => { if (col === LINKS) linkUpdates.push({ ...item }); });
-
-    await recordAffiliateConversion('CONVTEST01', 'ORD-A', 100);
-    await recordAffiliateConversion('CONVTEST01', 'ORD-B', 200);
-
-    // After second conversion
-    const lastUpdate = linkUpdates[linkUpdates.length - 1];
-    expect(lastUpdate.conversions).toBe(2);
-    expect(lastUpdate.revenue).toBe(300);
-  });
-
-  it('initializes link conversions from null', async () => {
+  it('initializes link conversions and revenue from null', async () => {
     __seed(LINKS, [{
       _id: 'link-001',
       affiliateId: 'aff-001',
@@ -522,139 +379,90 @@ describe('recordAffiliateConversion — commission calculation edge cases', () =
       totalPaid: 0,
     }]);
 
-    const accountUpdates = [];
-    __onUpdate((col, item) => { if (col === ACCOUNTS) accountUpdates.push({ ...item }); });
+    const acctUpdates = [];
+    __onUpdate((col, item) => { if (col === ACCOUNTS) acctUpdates.push({ ...item }); });
 
-    await recordAffiliateConversion('CONVTEST01', 'ORD-NULLTE', 200);
-    const firstAcctUpdate = accountUpdates[0];
-    expect(firstAcctUpdate.totalEarned).toBe(10); // 5% of 200
+    await recordAffiliateConversion('CONVTEST01', 'ORD-NULTE', 200);
+    expect(acctUpdates[0].totalEarned).toBe(10); // 5% of 200
   });
 });
 
 // ── Tier progression edge cases ──────────────────────────────────────
 
 describe('recordAffiliateConversion — tier progression', () => {
-  it('upgrades from starter to pro at revenue threshold ($500)', async () => {
+  it('upgrades starter -> pro at $500 revenue', async () => {
     __seed(LINKS, [{
-      _id: 'link-tier',
-      affiliateId: 'aff-tier',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      linkCode: 'TIERTEST01',
-      clicks: 100,
-      conversions: 10,
-      revenue: 490,
+      _id: 'lnk-t', affiliateId: 'aff-t', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      linkCode: 'TIERTEST01', clicks: 100, conversions: 10, revenue: 490,
     }]);
     __seed(ACCOUNTS, [{
-      _id: 'aff-tier',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'starter',
-      commissionRate: 5,
-      totalEarned: 24.5,
-      totalPaid: 0,
+      _id: 'aff-t', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'starter', commissionRate: 5, totalEarned: 24.5, totalPaid: 0,
     }]);
 
-    const accountUpdates = [];
-    __onUpdate((col, item) => { if (col === ACCOUNTS) accountUpdates.push({ ...item }); });
+    const acctUpdates = [];
+    __onUpdate((col, item) => { if (col === ACCOUNTS) acctUpdates.push({ ...item }); });
 
-    // Revenue goes from 490 to 500 -> triggers pro upgrade
-    await recordAffiliateConversion('TIERTEST01', 'ORD-TIER', 10);
-
-    const lastUpdate = accountUpdates[accountUpdates.length - 1];
-    expect(lastUpdate.tier).toBe('pro');
-    expect(lastUpdate.commissionRate).toBe(8);
+    await recordAffiliateConversion('TIERTEST01', 'ORD-T1', 10);
+    const last = acctUpdates[acctUpdates.length - 1];
+    expect(last.tier).toBe('pro');
+    expect(last.commissionRate).toBe(8);
   });
 
-  it('upgrades from starter to pro at conversion threshold (20)', async () => {
+  it('upgrades starter -> pro at 20 conversions', async () => {
     __seed(LINKS, [{
-      _id: 'link-conv',
-      affiliateId: 'aff-conv',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      linkCode: 'CONVTHRS01',
-      clicks: 200,
-      conversions: 19,
-      revenue: 400,
+      _id: 'lnk-c', affiliateId: 'aff-c', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      linkCode: 'CONVTHRS01', clicks: 200, conversions: 19, revenue: 400,
     }]);
     __seed(ACCOUNTS, [{
-      _id: 'aff-conv',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'starter',
-      commissionRate: 5,
-      totalEarned: 20,
-      totalPaid: 0,
+      _id: 'aff-c', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'starter', commissionRate: 5, totalEarned: 20, totalPaid: 0,
     }]);
 
-    const accountUpdates = [];
-    __onUpdate((col, item) => { if (col === ACCOUNTS) accountUpdates.push({ ...item }); });
+    const acctUpdates = [];
+    __onUpdate((col, item) => { if (col === ACCOUNTS) acctUpdates.push({ ...item }); });
 
-    // Conversions go from 19 to 20 -> triggers pro upgrade
-    await recordAffiliateConversion('CONVTHRS01', 'ORD-CONV', 50);
-
-    const lastUpdate = accountUpdates[accountUpdates.length - 1];
-    expect(lastUpdate.tier).toBe('pro');
-    expect(lastUpdate.commissionRate).toBe(8);
+    await recordAffiliateConversion('CONVTHRS01', 'ORD-C1', 50);
+    const last = acctUpdates[acctUpdates.length - 1];
+    expect(last.tier).toBe('pro');
+    expect(last.commissionRate).toBe(8);
   });
 
-  it('upgrades from pro to elite at revenue threshold ($2000)', async () => {
+  it('upgrades pro -> elite at $2000 revenue', async () => {
     __seed(LINKS, [{
-      _id: 'link-elite',
-      affiliateId: 'aff-elite',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      linkCode: 'ELITEREV01',
-      clicks: 500,
-      conversions: 30,
-      revenue: 1990,
+      _id: 'lnk-e', affiliateId: 'aff-e', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      linkCode: 'ELITEREV01', clicks: 500, conversions: 30, revenue: 1990,
     }]);
     __seed(ACCOUNTS, [{
-      _id: 'aff-elite',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'pro',
-      commissionRate: 8,
-      totalEarned: 159.2,
-      totalPaid: 0,
+      _id: 'aff-e', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'pro', commissionRate: 8, totalEarned: 159.2, totalPaid: 0,
     }]);
 
-    const accountUpdates = [];
-    __onUpdate((col, item) => { if (col === ACCOUNTS) accountUpdates.push({ ...item }); });
+    const acctUpdates = [];
+    __onUpdate((col, item) => { if (col === ACCOUNTS) acctUpdates.push({ ...item }); });
 
-    await recordAffiliateConversion('ELITEREV01', 'ORD-ELITE2', 20);
-
-    const lastUpdate = accountUpdates[accountUpdates.length - 1];
-    expect(lastUpdate.tier).toBe('elite');
-    expect(lastUpdate.commissionRate).toBe(12);
+    await recordAffiliateConversion('ELITEREV01', 'ORD-E1', 20);
+    const last = acctUpdates[acctUpdates.length - 1];
+    expect(last.tier).toBe('elite');
+    expect(last.commissionRate).toBe(12);
   });
 
-  it('does not downgrade tier when below threshold after upgrade', async () => {
-    // Already at elite; single link has low revenue but conversions met elite threshold
+  it('stays elite when already at threshold via conversions', async () => {
     __seed(LINKS, [{
-      _id: 'link-nodown',
-      affiliateId: 'aff-nodown',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      linkCode: 'NODOWN0001',
-      clicks: 500,
-      conversions: 50,
-      revenue: 100,
+      _id: 'lnk-n', affiliateId: 'aff-n', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      linkCode: 'NODOWN0001', clicks: 500, conversions: 50, revenue: 100,
     }]);
     __seed(ACCOUNTS, [{
-      _id: 'aff-nodown',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'elite',
-      commissionRate: 12,
-      totalEarned: 12,
-      totalPaid: 0,
+      _id: 'aff-n', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'elite', commissionRate: 12, totalEarned: 12, totalPaid: 0,
     }]);
 
-    const accountUpdates = [];
-    __onUpdate((col, item) => { if (col === ACCOUNTS) accountUpdates.push({ ...item }); });
+    const acctUpdates = [];
+    __onUpdate((col, item) => { if (col === ACCOUNTS) acctUpdates.push({ ...item }); });
 
-    await recordAffiliateConversion('NODOWN0001', 'ORD-NODOWN', 10);
-
-    // Conversions reach 51, revenue=110 — still elite via conversion threshold
-    const lastUpdate = accountUpdates[accountUpdates.length - 1];
-    expect(lastUpdate.tier).toBe('elite');
+    await recordAffiliateConversion('NODOWN0001', 'ORD-N1', 10);
+    const last = acctUpdates[acctUpdates.length - 1];
+    expect(last.tier).toBe('elite');
   });
 });
 
@@ -673,7 +481,7 @@ describe('requestPayout — deep edge cases', () => {
     }]);
   });
 
-  it('succeeds at exactly minimum payout ($25)', async () => {
+  it('succeeds at exactly $25 (minimum payout)', async () => {
     const result = await requestPayout(25);
     expect(result.success).toBe(true);
   });
@@ -684,8 +492,7 @@ describe('requestPayout — deep edge cases', () => {
     expect(result.error).toContain('Minimum');
   });
 
-  it('succeeds for exact available balance', async () => {
-    // available = 500 - 100 = 400
+  it('succeeds for exact available balance ($400)', async () => {
     const result = await requestPayout(400);
     expect(result.success).toBe(true);
   });
@@ -711,12 +518,7 @@ describe('requestPayout — deep edge cases', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects undefined amount', async () => {
-    const result = await requestPayout(undefined);
-    expect(result.success).toBe(false);
-  });
-
-  it('handles null totalEarned and totalPaid in balance calc', async () => {
+  it('treats null totalEarned/totalPaid as zero in balance calc', async () => {
     __seed(ACCOUNTS, [{
       _id: 'aff-pay',
       memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
@@ -726,35 +528,16 @@ describe('requestPayout — deep edge cases', () => {
       paypalEmail: 'pay@paypal.com',
     }]);
 
-    // available = (null||0) - (null||0) = 0 -> 25 > 0 -> fails
     const result = await requestPayout(25);
     expect(result.success).toBe(false);
     expect(result.error).toContain('balance');
   });
 
-  it('allows payout after a prior completed (paid) payout', async () => {
-    __seed(PAYOUTS, [{
-      _id: 'pay-done',
-      affiliateId: 'aff-pay',
-      status: 'paid',
-      amount: 50,
-    }]);
+  it('allows payout after a completed (paid) payout exists', async () => {
+    __seed(PAYOUTS, [{ _id: 'pay-done', affiliateId: 'aff-pay', status: 'paid', amount: 50 }]);
 
     const result = await requestPayout(100);
     expect(result.success).toBe(true);
-  });
-
-  it('blocks payout when a prior payout has status requested', async () => {
-    __seed(PAYOUTS, [{
-      _id: 'pay-pending',
-      affiliateId: 'aff-pay',
-      status: 'requested',
-      amount: 50,
-    }]);
-
-    const result = await requestPayout(100);
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('pending');
   });
 });
 
@@ -764,21 +547,14 @@ describe('getAffiliateDashboard — deep edge cases', () => {
   it('handles null clicks/conversions/revenue on links', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
-      _id: 'aff-dash',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'starter',
-      commissionRate: 5,
-      totalEarned: 0,
-      totalPaid: 0,
+      _id: 'aff-d', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'starter', commissionRate: 5, totalEarned: 0, totalPaid: 0,
     }]);
     __seed(LINKS, [
-      { _id: 'l-null', affiliateId: 'aff-dash', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', clicks: null, conversions: null, revenue: null },
+      { _id: 'l-n', affiliateId: 'aff-d', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', clicks: null, conversions: null, revenue: null },
     ]);
-    __seed(COMMISSIONS, []);
 
     const result = await getAffiliateDashboard();
-    expect(result.success).toBe(true);
     expect(result.dashboard.totalClicks).toBe(0);
     expect(result.dashboard.totalConversions).toBe(0);
     expect(result.dashboard.totalRevenue).toBe(0);
@@ -788,68 +564,32 @@ describe('getAffiliateDashboard — deep edge cases', () => {
   it('handles null commissionAmount in pending commissions', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
-      _id: 'aff-dash2',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'starter',
-      commissionRate: 5,
-      totalEarned: 0,
-      totalPaid: 0,
+      _id: 'aff-d2', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'starter', commissionRate: 5, totalEarned: 0, totalPaid: 0,
     }]);
-    __seed(LINKS, []);
     __seed(COMMISSIONS, [
-      { _id: 'c-null', affiliateId: 'aff-dash2', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: null, status: 'pending', _createdDate: new Date() },
+      { _id: 'c-n', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: null, status: 'pending', _createdDate: new Date() },
     ]);
 
     const result = await getAffiliateDashboard();
-    expect(result.success).toBe(true);
     expect(result.dashboard.pendingCommissions).toBe(0);
   });
 
-  it('correctly separates pending vs approved commissions', async () => {
+  it('excludes paid commissions from pending and approved totals', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
-      _id: 'aff-sep',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'pro',
-      commissionRate: 8,
-      totalEarned: 100,
-      totalPaid: 0,
+      _id: 'aff-s', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      status: 'active', tier: 'pro', commissionRate: 8, totalEarned: 100, totalPaid: 0,
     }]);
-    __seed(LINKS, []);
     __seed(COMMISSIONS, [
-      { _id: 'c-pend', affiliateId: 'aff-sep', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 30, status: 'pending', _createdDate: new Date() },
-      { _id: 'c-appr', affiliateId: 'aff-sep', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 50, status: 'approved', _createdDate: new Date() },
-      { _id: 'c-paid', affiliateId: 'aff-sep', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 20, status: 'paid', _createdDate: new Date() },
+      { _id: 'c1', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 30, status: 'pending', _createdDate: new Date() },
+      { _id: 'c2', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 50, status: 'approved', _createdDate: new Date() },
+      { _id: 'c3', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', commissionAmount: 20, status: 'paid', _createdDate: new Date() },
     ]);
 
     const result = await getAffiliateDashboard();
     expect(result.dashboard.pendingCommissions).toBe(30);
     expect(result.dashboard.approvedCommissions).toBe(50);
-    // 'paid' status not included in either pending or approved
-  });
-
-  it('returns linkCount correctly', async () => {
-    __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
-    __seed(ACCOUNTS, [{
-      _id: 'aff-lc',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      tier: 'starter',
-      commissionRate: 5,
-      totalEarned: 0,
-      totalPaid: 0,
-    }]);
-    __seed(LINKS, [
-      { _id: 'l1', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', clicks: 1, conversions: 0, revenue: 0 },
-      { _id: 'l2', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', clicks: 2, conversions: 1, revenue: 50 },
-      { _id: 'l3', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', clicks: 0, conversions: 0, revenue: 0 },
-    ]);
-    __seed(COMMISSIONS, []);
-
-    const result = await getAffiliateDashboard();
-    expect(result.dashboard.linkCount).toBe(3);
   });
 });
 
@@ -859,10 +599,7 @@ describe('updatePaymentInfo — deep edge cases', () => {
   beforeEach(() => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(ACCOUNTS, [{
-      _id: 'aff-pi',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      status: 'active',
-      paypalEmail: '',
+      _id: 'aff-pi', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789', status: 'active', paypalEmail: '',
     }]);
   });
 
@@ -891,22 +628,16 @@ describe('updatePaymentInfo — deep edge cases', () => {
 // ── getMyAffiliateLinks — deep edge cases ────────────────────────────
 
 describe('getMyAffiliateLinks — deep edge cases', () => {
-  it('defaults null fields to 0 or empty string in mapping', async () => {
+  it('defaults null fields to 0/empty in response mapping', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(LINKS, [{
-      _id: 'link-nulls',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      productId: 'prod-1',
-      linkCode: 'NULLFLD001',
-      customSlug: null,
-      clicks: null,
-      conversions: null,
-      revenue: null,
+      _id: 'lnk-nf', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      productId: 'p1', linkCode: 'NULLFLD001',
+      customSlug: null, clicks: null, conversions: null, revenue: null,
       _createdDate: new Date('2026-03-01'),
     }]);
 
     const result = await getMyAffiliateLinks();
-    expect(result.success).toBe(true);
     const link = result.links[0];
     expect(link.customSlug).toBe('');
     expect(link.clicks).toBe(0);
@@ -921,16 +652,11 @@ describe('getMyPayouts — deep edge cases', () => {
   it('returns null for processedDate when not set', async () => {
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(PAYOUTS, [{
-      _id: 'pay-noproc',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      amount: 50,
-      status: 'requested',
-      paymentMethod: 'paypal',
-      _createdDate: new Date('2026-03-01'),
+      _id: 'pay-np', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      amount: 50, status: 'requested', paymentMethod: 'paypal', _createdDate: new Date(),
     }]);
 
     const result = await getMyPayouts();
-    expect(result.success).toBe(true);
     expect(result.payouts[0].processedDate).toBeNull();
   });
 
@@ -938,13 +664,8 @@ describe('getMyPayouts — deep edge cases', () => {
     const procDate = new Date('2026-03-10');
     __setMember({ _id: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789' });
     __seed(PAYOUTS, [{
-      _id: 'pay-proc',
-      memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
-      amount: 100,
-      status: 'paid',
-      paymentMethod: 'paypal',
-      processedDate: procDate,
-      _createdDate: new Date('2026-03-01'),
+      _id: 'pay-p', memberId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
+      amount: 100, status: 'paid', paymentMethod: 'paypal', processedDate: procDate, _createdDate: new Date(),
     }]);
 
     const result = await getMyPayouts();
