@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-03-15T22:32:57.342Z",
+    "generatedAt": "2026-03-16T02:06:01.807Z",
     "generatedBy": "scripts/photo-audit.mjs (CF-ltuu)",
     "catalogVersion": "1.0.0",
     "urlsChecked": true,
@@ -9,12 +9,12 @@
   },
   "summary": {
     "totalProducts": 88,
-    "totalImages": 313,
+    "totalImages": 312,
     "productsWithGaps": 39,
     "productsMeetingMinimum": 49,
     "productsMeetingIdeal": 15,
-    "averageImagesPerProduct": 3.6,
-    "totalBrokenUrls": 1,
+    "averageImagesPerProduct": 3.5,
+    "totalBrokenUrls": 0,
     "totalImagesNeeded": 67
   },
   "categoryBreakdown": [
@@ -69,10 +69,10 @@
     {
       "category": "murphy-cabinet-beds",
       "products": 9,
-      "totalImages": 56,
-      "avgImagesPerProduct": 6.2,
+      "totalImages": 55,
+      "avgImagesPerProduct": 6.1,
       "productsWithGaps": 0,
-      "brokenUrls": 1
+      "brokenUrls": 0
     }
   ],
   "gaps": [
@@ -2372,7 +2372,7 @@
       "sku": "CF-MURPHY-EXPRESS",
       "category": "murphy-cabinet-beds",
       "url": "https://www.carolinafutons.com/product-page/murphy-cabinet-express",
-      "imageCount": 14,
+      "imageCount": 13,
       "meetsMinimum": true,
       "meetsIdeal": true,
       "deficit": 0,
@@ -2438,13 +2438,6 @@
           "status": 200,
           "ok": true,
           "sizeBytes": 184994,
-          "error": null
-        },
-        {
-          "url": "https://static.wixstatic.com/media/e04e89_107b1c1521304466a2f26aa10e07a9b2~mv2.jpg/v1/fit/w_2000,h_2000,q_90/file.jpg",
-          "status": 400,
-          "ok": false,
-          "sizeBytes": 63,
           "error": null
         },
         {

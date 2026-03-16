@@ -1,7 +1,7 @@
 # Photo Audit & Gap Report — Carolina Futons
 
-**Generated:** 2026-03-15
-**Bead:** CF-ltuu
+**Generated:** 2026-03-15 (updated 2026-03-16)
+**Bead:** CF-ltuu (remediation: CF-xeer)
 **Auditor:** cfutons/crew/rennala
 
 ## Summary
@@ -9,9 +9,10 @@
 | Metric | Value |
 |--------|-------|
 | Total products | 88 |
-| Total images in catalog | 313 |
+| Total images in catalog | 312 |
 | Products with 0 images | 0 |
 | Products with only 1 image | 28 |
+| Broken URLs fixed | 1 (Murphy Cabinet Express) |
 | Mattress image deficit | 38 images needed |
 
 ## Category Breakdown
@@ -82,6 +83,29 @@ These products also have only 1 image but are lower priority:
 | Mesa 5000 Mattress | mattresses |
 | Pulsar Mattress | mattresses |
 
+## Remediation (CF-xeer)
+
+### Broken URL Fixed
+
+Removed 1 broken image URL (HTTP 400) from **Murphy Cabinet Express** in `catalog-MASTER.json`:
+- `e04e89_107b1c1521304466a2f26aa10e07a9b2~mv2.jpg` — returned 400, 63 bytes
+- Product still has 13 working images (well above the 6-image ideal)
+
+### Remaining Gaps (39 products, 67 images needed)
+
+These gaps require **external sourcing** — the live Wix dashboard has the exact same images as the catalog. No additional media can be pulled programmatically.
+
+**Priority tiers for sourcing:**
+
+| Tier | Category | Products | Images Needed | Action |
+|------|----------|----------|---------------|--------|
+| 1 (Critical) | mattresses | 14 | 27 | Contact Otis Bed / Night & Day Furniture |
+| 2 (High) | futon-frames | 8 | 11 | Request from manufacturer or photograph |
+| 3 (Medium) | platform-beds | 9 | 14 | Request from manufacturer or photograph |
+| 4 (Medium) | wall-hugger-frames | 4 | 5 | Request from manufacturer or photograph |
+| 5 (Low) | casegoods-accessories | 3 | 4 | Photograph in-house |
+| 6 (Low) | front-loading-nesting | 1 | 1 | Photograph in-house |
+
 ## Conclusion
 
 **No missing media can be pulled from the live site** — the live Wix dashboard has the same images as our catalog. The mattress image deficit (38 images) requires new photography or sourcing from the manufacturer (Otis Bed / Night & Day Furniture).
@@ -95,5 +119,6 @@ These products also have only 1 image but are lower priority:
 
 ## Deliverables
 
-- `content/photo-audit.json` — Full tagged audit of all 313 images across 88 products
+- `content/photo-audit.json` — Full tagged audit of all 312 images across 88 products
 - `content/photo-gap-report.md` — This report
+- `docs/photo-audit.json` — Detailed audit with URL status checks
