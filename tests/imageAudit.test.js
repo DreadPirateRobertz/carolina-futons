@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
 import {
   auditCatalogImages,
+  auditLiveProducts,
   getImagePipelineStatus,
 } from '../src/backend/imageAudit.web.js';
+
+beforeEach(() => {
+  resetData();
+});
 
 function makeProduct(overrides = {}) {
   return {
@@ -141,6 +147,178 @@ describe('auditCatalogImages', () => {
     expect(result.coverage.noImages).toBe(1);
     expect(result.totalImages).toBe(0);
   });
+
+  it('classifies invalid URLs', () => {
+    const products = [makeProduct({ images: [null, undefined, ''] })];
+    const result = auditCatalogImages(products);
+    expect(result.urlTypes.invalid).toBeGreaterThanOrEqual(2);
+  });
+
+  it('classifies unknown URL schemes', () => {
+    const products = [makeProduct({ images: ['data:image/png;base64,abc'] })];
+    const result = auditCatalogImages(products);
+    expect(result.urlTypes.unknown).toBe(1);
+  });
+
+  it('defaults category to uncategorized', () => {
+    const products = [makeProduct({ category: undefined, images: ['https://static.wixstatic.com/media/a.jpg'] })];
+    const result = auditCatalogImages(products);
+    expect(result.categoryBreakdown['uncategorized']).toBeDefined();
+    expect(result.categoryBreakdown['uncategorized'].products).toBe(1);
+  });
+
+  it('reports uniqueImageCount', () => {
+    const products = [
+      makeProduct({ images: ['https://static.wixstatic.com/media/a.jpg', 'https://static.wixstatic.com/media/b.jpg'] }),
+      makeProduct({ slug: 's', images: ['https://static.wixstatic.com/media/a.jpg'] }),
+    ];
+    const result = auditCatalogImages(products);
+    expect(result.uniqueImageCount).toBe(2);
+  });
+
+  it('handles null input', () => {
+    const result = auditCatalogImages(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('detects duplicate via wix:image media ID extraction', () => {
+    const products = [
+      makeProduct({ images: ['wix:image://v1/abc123/file.jpg'] }),
+      makeProduct({ slug: 's', images: ['https://static.wixstatic.com/media/abc123'] }),
+    ];
+    const result = auditCatalogImages(products);
+    expect(result.duplicateUrls).toContain('abc123');
+  });
+
+  it('flagged products include name, slug, and category', () => {
+    const products = [makeProduct({ name: 'Test Frame', slug: 'test-frame', category: 'frames', images: [] })];
+    const result = auditCatalogImages(products);
+    expect(result.flaggedProducts[0].name).toBe('Test Frame');
+    expect(result.flaggedProducts[0].slug).toBe('test-frame');
+    expect(result.flaggedProducts[0].category).toBe('frames');
+  });
+});
+
+// ── auditLiveProducts ──────────────────────────────────────────────
+
+describe('auditLiveProducts', () => {
+  it('returns empty report when no products', async () => {
+    __seed('Stores/Products', []);
+    const result = await auditLiveProducts();
+    expect(result.success).toBe(true);
+    expect(result.totalProducts).toBe(0);
+    expect(result.flagged).toEqual([]);
+  });
+
+  it('counts products with no images', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'Bare Frame', slug: 'bare', mediaItems: [], mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.totalWithNoImages).toBe(1);
+    expect(result.flagged).toHaveLength(1);
+  });
+
+  it('counts products with single image', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'One Image', slug: 'one', mediaItems: [{ src: 'wix:image://v1/abc/img.jpg' }], mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.totalWithSingleImage).toBe(1);
+  });
+
+  it('counts adequate products (3+ images)', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'p1', name: 'Full', slug: 'full', mainMedia: null,
+        mediaItems: [
+          { src: 'wix:image://v1/a/img.jpg' },
+          { src: 'wix:image://v1/b/img.jpg' },
+          { src: 'wix:image://v1/c/img.jpg' },
+        ],
+      },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.totalAdequate).toBe(1);
+  });
+
+  it('computes avgImagesPerProduct', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'A', slug: 'a', mediaItems: [{ src: 'a' }, { src: 'b' }], mainMedia: null },
+      { _id: 'p2', name: 'B', slug: 'b', mediaItems: [{ src: 'c' }, { src: 'd' }, { src: 'e' }, { src: 'f' }], mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.avgImagesPerProduct).toBe(3);
+  });
+
+  it('includes mainMedia in count when not in mediaItems', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'p1', name: 'With Main', slug: 'wm',
+        mediaItems: [{ src: 'wix:image://v1/a/img.jpg' }],
+        mainMedia: 'wix:image://v1/b/img.jpg',
+      },
+    ]);
+
+    const result = await auditLiveProducts();
+    // mainMedia is different from mediaItems src, so should count as +1
+    expect(result.allProducts[0].imageCount).toBe(2);
+  });
+
+  it('does not double-count mainMedia when it is in mediaItems', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'p1', name: 'Dup Main', slug: 'dm',
+        mediaItems: [{ src: 'wix:image://v1/a/img.jpg' }],
+        mainMedia: 'wix:image://v1/a/img.jpg',
+      },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.allProducts[0].imageCount).toBe(1);
+  });
+
+  it('classifies mainMedia type', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'A', slug: 'a', mediaItems: [], mainMedia: 'https://static.wixstatic.com/media/test.jpg' },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.allProducts[0].mainMediaType).toBe('wixstatic');
+    expect(result.allProducts[0].hasMainMedia).toBe(true);
+  });
+
+  it('reports none for missing mainMedia type', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'A', slug: 'a', mediaItems: [], mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.allProducts[0].mainMediaType).toBe('none');
+    expect(result.allProducts[0].hasMainMedia).toBe(false);
+  });
+
+  it('defaults name to Unknown', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', mediaItems: [], mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.allProducts[0].name).toBe('Unknown');
+  });
+
+  it('handles products with missing mediaItems field', async () => {
+    __seed('Stores/Products', [
+      { _id: 'p1', name: 'Bare', slug: 'bare', mainMedia: null },
+    ]);
+
+    const result = await auditLiveProducts();
+    expect(result.allProducts[0].imageCount).toBe(0);
+  });
 });
 
 // ── getImagePipelineStatus ──────────────────────────────────────────
@@ -193,5 +371,33 @@ describe('getImagePipelineStatus', () => {
     expect(result.totalProducts).toBe(2);
     expect(result.totalImageUrls).toBe(3);
     expect(result.avgImagesPerProduct).toBe(1.5);
+  });
+
+  it('handles empty array', () => {
+    const result = getImagePipelineStatus([]);
+    expect(result.success).toBe(true);
+    expect(result.totalProducts).toBe(0);
+    expect(result.avgImagesPerProduct).toBe(0);
+    expect(result.readyForImport).toBe(true);
+  });
+
+  it('handles products with missing images field', () => {
+    const result = getImagePipelineStatus([{ name: 'Bare' }]);
+    expect(result.productsWithoutImages).toBe(1);
+    expect(result.readyForImport).toBe(false);
+  });
+
+  it('readyForImport requires all products have images AND all on Wix CDN', () => {
+    const products = [
+      makeProduct({ images: ['https://static.wixstatic.com/media/a.jpg'] }),
+    ];
+    const result = getImagePipelineStatus(products);
+    expect(result.readyForImport).toBe(true);
+    expect(result.allImagesOnWixCdn).toBe(true);
+  });
+
+  it('returns string error for non-array', () => {
+    const result = getImagePipelineStatus('string');
+    expect(result.error).toContain('array');
   });
 });
