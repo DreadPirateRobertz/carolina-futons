@@ -619,9 +619,9 @@ describe('captureExitIntentEmail', () => {
     expect(result.success).toBe(false);
   });
 
-  it('deduplicates — does not re-queue if already subscribed', async () => {
-    __seed('NewsletterSubscribers', [
-      { _id: 'existing', email: 'existing@test.com', source: 'footer', subscribedAt: new Date() },
+  it('deduplicates — does not re-queue if welcome step 1 already in EmailQueue', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq1', recipientEmail: 'existing@test.com', sequenceType: 'welcome', sequenceStep: 1, status: 'pending' },
     ]);
 
     const inserts = [];
@@ -629,14 +629,14 @@ describe('captureExitIntentEmail', () => {
 
     await captureExitIntentEmail('existing@test.com');
 
-    // Should NOT insert into EmailQueue since they already exist
+    // Should NOT insert into EmailQueue since step 1 already queued
     const emailQueueInserts = inserts.filter(i => i.collection === 'EmailQueue');
     expect(emailQueueInserts).toHaveLength(0);
   });
 
-  it('still returns success for duplicate subscriber (prevents email enumeration)', async () => {
-    __seed('NewsletterSubscribers', [
-      { _id: 'existing', email: 'existing@test.com', source: 'footer', subscribedAt: new Date() },
+  it('still returns success for duplicate (prevents email enumeration)', async () => {
+    __seed('EmailQueue', [
+      { _id: 'eq1', recipientEmail: 'existing@test.com', sequenceType: 'welcome', sequenceStep: 1, status: 'pending' },
     ]);
 
     const result = await captureExitIntentEmail('existing@test.com');
