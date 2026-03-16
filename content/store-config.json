@@ -1,0 +1,134 @@
+{
+  "exportDate": "2026-03-15",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "siteName": "Carolina Futons (carolinafutons.com)",
+  "discounts": {
+    "totalRules": 6,
+    "activeRules": [
+      {
+        "id": "8abce328-9a1c-449e-b01a-a8132603bf23",
+        "name": "March Sale",
+        "status": "LIVE",
+        "active": true,
+        "type": "PERCENTAGE",
+        "value": "10% off",
+        "targets": "Wall Huggers and 1 more (specific collections)",
+        "validFrom": "2026-03-04T14:15:00Z",
+        "validUntil": "2026-03-31T06:00:00Z",
+        "usageCount": 0
+      }
+    ],
+    "inactiveRules": [
+      {
+        "id": "0b9d708f-3485-4d2e-a02d-5d8328f10961",
+        "name": "Happy New Year",
+        "status": "LIVE",
+        "active": false,
+        "type": "PERCENTAGE",
+        "value": "10% off",
+        "targets": "Front Loading & Nesting and 1 more",
+        "note": "Active flag is false despite LIVE status"
+      }
+    ],
+    "expiredRules": [
+      {
+        "id": "0e776711-7079-4880-85c8-848084831bd3",
+        "name": "Flash Sale",
+        "status": "EXPIRED",
+        "type": "PERCENTAGE",
+        "value": "15% off",
+        "targets": "Wall Huggers and 1 more",
+        "expired": "2026-03-01T07:00:00Z"
+      },
+      {
+        "id": "460ea77d-13a8-407a-ae1d-77afec212a43",
+        "name": "Flash Sale (July 2025)",
+        "status": "EXPIRED",
+        "type": "BUY_X_GET_Y",
+        "value": "Buy 1 item, Get $75.00 off 1 Mattress",
+        "expired": "2025-07-20T06:00:00Z"
+      },
+      {
+        "id": "af4c1716-4b88-4c07-b7d7-5ddc2df5dd25",
+        "name": "Happy 4th!!!",
+        "status": "EXPIRED",
+        "type": "FIXED_AMOUNT",
+        "value": "$37.00 off Mattresses and 4 more",
+        "trigger": "Subtotal >= $950 AND qty >= 2",
+        "expired": "2025-07-05T06:00:00Z"
+      },
+      {
+        "id": "cae37487-e2fc-447f-8921-3778962d1c71",
+        "name": "Flash Sale (July 2025 - specific products)",
+        "status": "EXPIRED",
+        "type": "FIXED_AMOUNT",
+        "value": "$150.00 off Orion Murphy Cabinet Bed and 8 more",
+        "expired": "2025-07-20T06:00:00Z"
+      }
+    ],
+    "collectionIds": {
+      "71c1884c-dd0e-dbe0-a011-825caf0cef58": "Front Loading & Nesting",
+      "5a5d3fdf-34f2-0ce5-2e0a-a6d296c71eef": "Wall Huggers",
+      "c735f8f3-8185-f76b-4895-d5c9111e1588": "Mattresses",
+      "d312368b-45b9-d290-28b4-550f7a599479": "Collection (unknown name)",
+      "2049663a-2049-e7c7-b1b4-3028b1a68982": "Collection (unknown name)"
+    },
+    "coupons": {
+      "status": "NOT_INSTALLED",
+      "error": "Coupons App is not installed or unauthorized"
+    }
+  },
+  "locations": {
+    "totalLocations": 1,
+    "primary": {
+      "id": "ce0a8597-e9ee-48b2-bbc2-98cf0f8ee275",
+      "name": "Carolina Futons",
+      "status": "ACTIVE",
+      "default": true,
+      "timeZone": "America/Denver",
+      "email": "carolinafutons@gmail.com",
+      "phone": "(828) 252-9449",
+      "address": {
+        "street": "824 Locust Street",
+        "hint": "Suite 200",
+        "city": "Hendersonville",
+        "state": "NC",
+        "postalCode": "28792",
+        "country": "US",
+        "formattedAddress": "824 Locust Street, Hendersonville, NC, USA"
+      },
+      "geocode": {
+        "latitude": 35.3227434,
+        "longitude": -82.45945139999999
+      }
+    }
+  },
+  "shipping": {
+    "status": "NOT_AVAILABLE_VIA_API",
+    "error": "404 Not Found on all attempted endpoints",
+    "endpointsTried": [
+      "GET /stores-reader/v1/shipping-rules",
+      "POST /ecom/v1/shipping-rates/query",
+      "GET /stores/v1/shipping/rules"
+    ],
+    "note": "Shipping configuration is managed through Wix dashboard. Known config: free shipping thresholds set to 999999 (effectively disabled)."
+  },
+  "tax": {
+    "status": "NOT_AVAILABLE_VIA_API",
+    "error": "404 Not Found on all attempted endpoints",
+    "endpointsTried": [
+      "GET /tax/v1/tax-settings",
+      "GET /stores/v1/taxSettings",
+      "GET /ecom/v1/tax-settings"
+    ],
+    "note": "Tax settings managed through Wix dashboard."
+  },
+  "payment": {
+    "status": "NOT_AVAILABLE_VIA_API",
+    "error": "404 Not Found",
+    "endpointsTried": [
+      "GET /payment-services-web/merchant/v2/paymentMethods"
+    ],
+    "note": "Payment method configuration is managed through Wix dashboard."
+  }
+}

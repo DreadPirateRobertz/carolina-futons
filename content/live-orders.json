@@ -1,0 +1,3702 @@
+{
+  "orders": [
+    {
+      "id": "997a9a15-f2c2-4d78-a09b-d643fde1085b",
+      "number": "10008",
+      "createdDate": "2026-02-28T13:55:19.676Z",
+      "updatedDate": "2026-02-28T14:11:03.865Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Kingston",
+            "translated": "Kingston"
+          },
+          "catalogReference": {
+            "catalogItemId": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Queen",
+                "Color": "Cherry"
+              },
+              "variantId": "f4b742c8-e088-477f-bc1c-4e01e31f6736"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Queen",
+                "translated": "Queen"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Queen",
+                "translated": "Queen"
+              },
+              "modifierDescriptionLine": false
+            },
+            {
+              "name": {
+                "original": "Color",
+                "translated": "Color"
+              },
+              "plainText": {
+                "original": "Cherry",
+                "translated": "Cherry"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Cherry",
+                "translated": "Cherry"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_cc0d90e192f64690988673747fac299d~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_cc0d90e192f64690988673747fac299d~mv2.jpg/v1/fit/w_3000,h_2000,q_90/file.jpg",
+            "height": 2000,
+            "width": 3000
+          },
+          "physicalProperties": {
+            "weight": 132.0,
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "669.00",
+            "formattedAmount": "$669.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "669.00",
+            "formattedAmount": "$669.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "669.00",
+            "formattedAmount": "$669.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "669.00",
+            "formattedAmount": "$669.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "714.16",
+            "formattedAmount": "$714.16"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "669.00",
+              "formattedAmount": "$669.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "45.16",
+              "formattedAmount": "$45.16"
+            },
+            "exemptAmount": {
+              "amount": "0",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "45.16",
+              "formattedAmount": "$45.16"
+            },
+            "taxableAmount": {
+              "amount": "669.00",
+              "formattedAmount": "$669.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "31.78",
+                  "formattedAmount": "$31.78"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "669.00",
+                  "formattedAmount": "$669.00"
+                }
+              },
+              {
+                "jurisdiction": "HENDERSON",
+                "rate": "0.020000",
+                "taxAmount": {
+                  "amount": "13.38",
+                  "formattedAmount": "$13.38"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "669.00",
+                  "formattedAmount": "$669.00"
+                }
+              }
+            ],
+            "exemptAmount": {
+              "amount": "0",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "669.00",
+            "formattedAmount": "$669.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "879c800f-eeed-46ec-9089-157d5acf2a82",
+        "email": "mkaris1@me.com",
+        "visitorId": "662dda5d-4e06-43c0-a45b-496b45364ab9"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "NOT_FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "669.00",
+          "formattedAmount": "$669.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "45.16",
+          "formattedAmount": "$45.16"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "total": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalWithGiftCard": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Fayetteville",
+          "postalCode": "28312",
+          "addressLine": "3816 Chadbourne Dr",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Eric",
+          "lastName": "Karis",
+          "phone": "9107970152"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "50d8c12f-715e-41ad-be25-d0f61375dbee",
+        "code": "pickup-00000000-0000-0000-0000-000000000001",
+        "title": "Store Pickup",
+        "logistics": {
+          "deliveryTime": "",
+          "instructions": "Please wait for notification before picking up your order.  Your order confirmation and ID will be needed for pickup.  Store opening hours Wednesday - Saturday 10 AM - 5 PM.  Call or Text  (828) 252-9449 for any questions.\n",
+          "pickupDetails": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Hendersonville",
+              "postalCode": "28792",
+              "addressLine": "824 Locust Street, Suite 200",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "pickupMethod": "STORE_PICKUP"
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxableAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "45.16",
+          "formattedAmount": "$45.16"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "45.16",
+          "formattedAmount": "$45.16"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0",
+        "totalExempt": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "96d2c629-4288-4f13-b754-7c329d0db7e9",
+          "createdDate": "2026-02-28T13:55:19.666Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "7ac49763-694d-4c4e-948c-9552dcce6905",
+          "createdDate": "2026-02-28T13:55:25.587Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "ca727402-29bc-400d-83ab-eeddff4cae26",
+      "customFields": [],
+      "cartId": "ca727402-29bc-400d-83ab-eeddff4cae26",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "669.00",
+          "formattedAmount": "$669.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "45.16",
+          "formattedAmount": "$45.16"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "total": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalWithGiftCard": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "platformFees": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "totalMinusPlatformFees": {
+          "amount": "714.16",
+          "formattedAmount": "$714.16"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "5da9d20f-2a34-4ba1-8f08-7c0e6753d19e",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Fayetteville",
+          "postalCode": "28312",
+          "addressLine": "3816 Chadbourne Dr",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Eric",
+          "lastName": "Karis",
+          "phone": "9107970152"
+        }
+      },
+      "purchasedDate": "2026-02-28T13:55:19.666Z",
+      "payAfterFreeTrial": {
+        "subtotal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": [],
+      "platformFeeSummary": {
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPassOn": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAbsorbed": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "fees": []
+      }
+    },
+    {
+      "id": "56d6358d-36c2-4787-9be8-f399bdcabf35",
+      "number": "10007",
+      "createdDate": "2025-12-10T04:56:05.442Z",
+      "updatedDate": "2026-03-05T16:03:31.706Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Studio Frame",
+            "translated": "Studio Frame"
+          },
+          "catalogReference": {
+            "catalogItemId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Full"
+              },
+              "variantId": "5ae07acc-e0fe-4818-9d66-def83d52e004"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_4cd3b2c8e6c24c2b89bc72bbebbc4248~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_4cd3b2c8e6c24c2b89bc72bbebbc4248~mv2.jpg/v1/fit/w_691,h_460,q_90/file.jpg",
+            "height": 460,
+            "width": 691
+          },
+          "physicalProperties": {
+            "weight": 48.0,
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "229.00",
+            "formattedAmount": "$229.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "229.00",
+            "formattedAmount": "$229.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "229.00",
+            "formattedAmount": "$229.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "229.00",
+            "formattedAmount": "$229.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "244.46",
+            "formattedAmount": "$244.46"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "229.00",
+              "formattedAmount": "$229.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "15.46",
+              "formattedAmount": "$15.46"
+            },
+            "exemptAmount": {
+              "amount": "0",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "15.46",
+              "formattedAmount": "$15.46"
+            },
+            "taxableAmount": {
+              "amount": "229.00",
+              "formattedAmount": "$229.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "10.88",
+                  "formattedAmount": "$10.88"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "229.00",
+                  "formattedAmount": "$229.00"
+                }
+              },
+              {
+                "jurisdiction": "POLK",
+                "rate": "0.020000",
+                "taxAmount": {
+                  "amount": "4.58",
+                  "formattedAmount": "$4.58"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "229.00",
+                  "formattedAmount": "$229.00"
+                }
+              }
+            ],
+            "exemptAmount": {
+              "amount": "0",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "229.00",
+            "formattedAmount": "$229.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "f6e6ebb4-3f72-4176-b256-064d45478619",
+        "email": "jamesallen1016@gmail.com",
+        "memberId": "f6e6ebb4-3f72-4176-b256-064d45478619"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "229.00",
+          "formattedAmount": "$229.00"
+        },
+        "shipping": {
+          "amount": "110.00",
+          "formattedAmount": "$110.00"
+        },
+        "tax": {
+          "amount": "22.89",
+          "formattedAmount": "$22.89"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "total": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalWithGiftCard": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Mill Spring",
+          "postalCode": "28756",
+          "addressLine": "253 Henry Ruff Rd",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "James",
+          "lastName": "Allen",
+          "phone": "8288171016"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "fc9314bc-a317-4a2b-a9d4-5ad21cc57856",
+        "code": "af8bbd8d-4dd2-4eb8-b4b2-54f10c0e71fd",
+        "title": "Assembly & Delivery-R3",
+        "logistics": {
+          "deliveryTime": "1-3 days",
+          "shippingDestination": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Mill Spring",
+              "postalCode": "28756",
+              "addressLine": "253 Henry Ruff Rd",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "contactDetails": {
+              "firstName": "James",
+              "lastName": "Allen",
+              "phone": "8288171016"
+            }
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "110.00",
+            "formattedAmount": "$110.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "110.00",
+            "formattedAmount": "$110.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "117.43",
+            "formattedAmount": "$117.43"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "110.00",
+              "formattedAmount": "$110.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "7.43",
+              "formattedAmount": "$7.43"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "7.43",
+              "formattedAmount": "$7.43"
+            },
+            "taxableAmount": {
+              "amount": "110.00",
+              "formattedAmount": "$110.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "22.89",
+          "formattedAmount": "$22.89"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "22.89",
+          "formattedAmount": "$22.89"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0",
+        "totalExempt": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "9c06b992-703b-40ac-821a-3746a61731f1",
+          "createdDate": "2025-12-10T04:56:05.435Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "7fbc0dde-0730-4525-aab6-0430c3e2fd98",
+          "createdDate": "2025-12-10T04:56:10.134Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "123aa33b-5498-49b6-b4cd-9aeb44a8d0c8",
+          "createdDate": "2026-03-05T16:03:31.700Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "5b805941-8132-4705-ab34-e7962c26d1d0",
+      "customFields": [],
+      "cartId": "6dad0eaf-6ac0-4a43-a3de-ed0c40bc1500",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "229.00",
+          "formattedAmount": "$229.00"
+        },
+        "shipping": {
+          "amount": "110.00",
+          "formattedAmount": "$110.00"
+        },
+        "tax": {
+          "amount": "22.89",
+          "formattedAmount": "$22.89"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "total": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalWithGiftCard": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "361.89",
+          "formattedAmount": "$361.89"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "e3cdb2c4-2d98-465c-9cdd-b4b271ee36e8",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Mill Spring",
+          "postalCode": "28756",
+          "addressLine": "253 Henry Ruff Rd",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "James",
+          "lastName": "Allen",
+          "phone": "8288171016"
+        }
+      },
+      "purchasedDate": "2025-12-10T04:56:05.435Z",
+      "payAfterFreeTrial": {
+        "subtotal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "8f1789a4-23bb-4416-a4a4-5b52329dd37f",
+      "number": "10006",
+      "createdDate": "2025-09-18T01:23:11.393Z",
+      "updatedDate": "2025-12-10T16:17:41.576Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Eureka",
+            "translated": "Eureka"
+          },
+          "catalogReference": {
+            "catalogItemId": "c812814d-4813-bbc0-ce25-54276c61cd2e",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Full",
+                "Color": "Cherry"
+              },
+              "variantId": "5790b43c-eb4b-4d4d-b0c4-904ddb356465"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "modifierDescriptionLine": false
+            },
+            {
+              "name": {
+                "original": "Color",
+                "translated": "Color"
+              },
+              "plainText": {
+                "original": "Cherry",
+                "translated": "Cherry"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Cherry",
+                "translated": "Cherry"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_73e4f0964a3148bc842537e0bfc7cf58~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_73e4f0964a3148bc842537e0bfc7cf58~mv2.jpg/v1/fit/w_3000,h_1995,q_90/file.jpg",
+            "height": 1995,
+            "width": 3000
+          },
+          "physicalProperties": {
+            "weight": 93.7,
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "499.00",
+            "formattedAmount": "$499.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "499.00",
+            "formattedAmount": "$499.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "499.00",
+            "formattedAmount": "$499.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "499.00",
+            "formattedAmount": "$499.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "532.68",
+            "formattedAmount": "$532.68"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "499.00",
+              "formattedAmount": "$499.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "33.68",
+              "formattedAmount": "$33.68"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "33.68",
+              "formattedAmount": "$33.68"
+            },
+            "taxableAmount": {
+              "amount": "499.00",
+              "formattedAmount": "$499.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "23.70",
+                  "formattedAmount": "$23.70"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "499.00",
+                  "formattedAmount": "$499.00"
+                }
+              },
+              {
+                "jurisdiction": "HENDERSON",
+                "rate": "0.020000",
+                "taxAmount": {
+                  "amount": "9.98",
+                  "formattedAmount": "$9.98"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "499.00",
+                  "formattedAmount": "$499.00"
+                }
+              }
+            ]
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "499.00",
+            "formattedAmount": "$499.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "c812814d-4813-bbc0-ce25-54276c61cd2e",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "97147274-6e1a-4e15-9a9e-fd8c0d1bf7ba",
+        "email": "scworthi@gmail.com",
+        "visitorId": "7af07535-4774-45ea-873d-98f76417f32d"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "499.00",
+          "formattedAmount": "$499.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "33.68",
+          "formattedAmount": "$33.68"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "total": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalWithGiftCard": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "countryFullname": "United States"
+        },
+        "contactDetails": {
+          "firstName": "Cynthia",
+          "lastName": "Worthington"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "50d8c12f-715e-41ad-be25-d0f61375dbee",
+        "code": "pickup-00000000-0000-0000-0000-000000000001",
+        "title": "Store Pickup",
+        "logistics": {
+          "deliveryTime": "",
+          "instructions": "Please wait for notification before picking up your order.  Your order confirmation and ID will be needed for pickup.  Store opening hours Wednesday - Saturday 10 AM - 5 PM.  Call or Text  (828) 252-9449 for any questions.\n",
+          "pickupDetails": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Hendersonville",
+              "postalCode": "28792",
+              "addressLine": "824 Locust Street, Suite 200",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "pickupMethod": "STORE_PICKUP"
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxableAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "buyerNote": "Will be picked up by George or Cynthia Worthington Thursday",
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "33.68",
+          "formattedAmount": "$33.68"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "33.68",
+          "formattedAmount": "$33.68"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0"
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "49da9681-e4af-4e12-bd62-c516b28ea1cc",
+          "createdDate": "2025-09-18T01:23:11.386Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "ef06a0f7-5bfa-478f-9354-1eb3d7dd6d53",
+          "createdDate": "2025-09-18T01:23:16.760Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "0b75a5fe-de24-41c3-91ee-93ad54d3e7ed",
+          "createdDate": "2025-12-10T16:17:41.572Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "49ccd0a2-85b4-3bb9-8515-61e612715a45",
+      "customFields": [],
+      "cartId": "49ccd0a2-85b4-3bb9-8515-61e612715a45",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "499.00",
+          "formattedAmount": "$499.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "33.68",
+          "formattedAmount": "$33.68"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "total": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalWithGiftCard": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "532.68",
+          "formattedAmount": "$532.68"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "c9e2c50c-2540-4837-b024-6396db874148",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "postalCode": "28721",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Cynthia",
+          "lastName": "Worthington",
+          "phone": "8643144868"
+        }
+      },
+      "purchasedDate": "2025-09-18T01:23:11.386Z",
+      "payAfterFreeTrial": {
+        "subtotal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "41a33dbf-eeab-4faf-a304-38ccdec18460",
+      "number": "10005",
+      "createdDate": "2025-07-12T19:24:36.623Z",
+      "updatedDate": "2025-12-10T16:17:11.597Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Studio Frame",
+            "translated": "Studio Frame"
+          },
+          "catalogReference": {
+            "catalogItemId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Full"
+              },
+              "variantId": "5ae07acc-e0fe-4818-9d66-def83d52e004"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Full",
+                "translated": "Full"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_4cd3b2c8e6c24c2b89bc72bbebbc4248~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_4cd3b2c8e6c24c2b89bc72bbebbc4248~mv2.jpg/v1/fit/w_691,h_460,q_90/file.jpg",
+            "height": 460,
+            "width": 691
+          },
+          "physicalProperties": {
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "199.00",
+            "formattedAmount": "$199.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "199.00",
+            "formattedAmount": "$199.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "199.00",
+            "formattedAmount": "$199.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "199.00",
+            "formattedAmount": "$199.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "212.43",
+            "formattedAmount": "$212.43"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "199.00",
+              "formattedAmount": "$199.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "13.43",
+              "formattedAmount": "$13.43"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "13.43",
+              "formattedAmount": "$13.43"
+            },
+            "taxableAmount": {
+              "amount": "199.00",
+              "formattedAmount": "$199.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "9.45",
+                  "formattedAmount": "$9.45"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "199.00",
+                  "formattedAmount": "$199.00"
+                }
+              },
+              {
+                "jurisdiction": "HENDERSON",
+                "rate": "0.020000",
+                "taxAmount": {
+                  "amount": "3.98",
+                  "formattedAmount": "$3.98"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "199.00",
+                  "formattedAmount": "$199.00"
+                }
+              }
+            ]
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "199.00",
+            "formattedAmount": "$199.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "35921d8a-daa2-4e0e-b201-a33062300590",
+        "email": "djmynx@gmail.com",
+        "visitorId": "43472fff-7588-4c25-aba9-a52f46836fdc"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "199.00",
+          "formattedAmount": "$199.00"
+        },
+        "shipping": {
+          "amount": "70.00",
+          "formattedAmount": "$70.00"
+        },
+        "tax": {
+          "amount": "18.16",
+          "formattedAmount": "$18.16"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "total": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalWithGiftCard": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Hendersonville",
+          "postalCode": "28791-9786",
+          "addressLine": "288 Lake Rugby Dr",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Jamie",
+          "lastName": "Petersen",
+          "phone": "8288662826"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "fc9314bc-a317-4a2b-a9d4-5ad21cc57856",
+        "code": "15ea4e19-9e92-42d9-938b-599bcf3e4b5d",
+        "title": "Delivery-R5",
+        "logistics": {
+          "deliveryTime": "1-3 days",
+          "shippingDestination": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Hendersonville",
+              "postalCode": "28791-9786",
+              "addressLine": "288 Lake Rugby Dr",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "contactDetails": {
+              "firstName": "Jamie",
+              "lastName": "Petersen",
+              "phone": "8288662826"
+            }
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "70",
+            "formattedAmount": "$70.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "70",
+            "formattedAmount": "$70.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "74.73",
+            "formattedAmount": "$74.73"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "70.00",
+              "formattedAmount": "$70.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "4.73",
+              "formattedAmount": "$4.73"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "4.73",
+              "formattedAmount": "$4.73"
+            },
+            "taxableAmount": {
+              "amount": "70.00",
+              "formattedAmount": "$70.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "18.16",
+          "formattedAmount": "$18.16"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "18.16",
+          "formattedAmount": "$18.16"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0"
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "0f11b9d9-5f2d-4082-ae60-d1b46e5cfcc7",
+          "createdDate": "2025-07-12T19:24:36.614Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "dd5c3ffd-e287-4868-9641-b5591b2b647a",
+          "createdDate": "2025-07-12T19:24:41.113Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "8512c5b8-bf45-4447-a8e5-344b3a2fa011",
+          "createdDate": "2025-12-10T16:17:11.593Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "74eccb50-fd7c-41ec-9c5a-87b77defa7b3",
+      "customFields": [],
+      "cartId": "3cdba0ce-0c22-4678-82f1-d27547a9306d",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "199.00",
+          "formattedAmount": "$199.00"
+        },
+        "shipping": {
+          "amount": "70.00",
+          "formattedAmount": "$70.00"
+        },
+        "tax": {
+          "amount": "18.16",
+          "formattedAmount": "$18.16"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "total": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalWithGiftCard": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "287.16",
+          "formattedAmount": "$287.16"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "37cb26c5-a1df-4a73-8ac2-74e6c5cf4370",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Hendersonville",
+          "postalCode": "28791-9786",
+          "addressLine": "288 Lake Rugby Dr",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Jamie",
+          "lastName": "Petersen",
+          "phone": "8288662826"
+        }
+      },
+      "purchasedDate": "2025-07-12T19:24:36.614Z",
+      "payAfterFreeTrial": {
+        "subtotal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "f681d8ce-ed52-458e-a51a-858dbe9a1567",
+      "number": "10004",
+      "createdDate": "2025-05-04T19:13:45.644Z",
+      "updatedDate": "2025-05-30T17:11:15.001Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "San Sebastian Sealy Cabinet Bed",
+            "translated": "San Sebastian Sealy Cabinet Bed"
+          },
+          "catalogReference": {
+            "catalogItemId": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Queen",
+                "Color": "Espresso"
+              },
+              "variantId": "3a4e4844-23fc-4497-a71f-9e1b136c5a8d"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Queen",
+                "translated": "Queen"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Queen",
+                "translated": "Queen"
+              },
+              "modifierDescriptionLine": false
+            },
+            {
+              "name": {
+                "original": "Color",
+                "translated": "Color"
+              },
+              "plainText": {
+                "original": "Espresso",
+                "translated": "Espresso"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Espresso",
+                "translated": "Espresso"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_52b22978b544467cbba99eb139b56c97f002.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_52b22978b544467cbba99eb139b56c97f002.jpg/v1/fit/w_1920,h_1080,q_90/file.jpg",
+            "height": 1080,
+            "width": 1920
+          },
+          "physicalProperties": {
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "2299.00",
+            "formattedAmount": "$2,299.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "2299.00",
+            "formattedAmount": "$2,299.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "2299.00",
+            "formattedAmount": "$2,299.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "2299.00",
+            "formattedAmount": "$2,299.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "2459.93",
+            "formattedAmount": "$2,459.93"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "2299.00",
+              "formattedAmount": "$2,299.00"
+            },
+            "taxRate": "0.0700",
+            "totalTax": {
+              "amount": "160.93",
+              "formattedAmount": "$160.93"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "160.93",
+              "formattedAmount": "$160.93"
+            },
+            "taxableAmount": {
+              "amount": "2299.00",
+              "formattedAmount": "$2,299.00"
+            },
+            "taxRate": "0.0700",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "109.20",
+                  "formattedAmount": "$109.20"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "2299.00",
+                  "formattedAmount": "$2,299.00"
+                }
+              },
+              {
+                "jurisdiction": "BUNCOMBE",
+                "rate": "0.022500",
+                "taxAmount": {
+                  "amount": "51.73",
+                  "formattedAmount": "$51.73"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "2299.00",
+                  "formattedAmount": "$2,299.00"
+                }
+              }
+            ]
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "2299.00",
+            "formattedAmount": "$2,299.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "inventoryAppId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "1d0d9bd9-629e-4995-87b6-eb2824b70245",
+        "email": "juliasabotin@outlook.com",
+        "visitorId": "0ff767e4-b6f8-4995-9b8d-92a7e44aef5e"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "2299.00",
+          "formattedAmount": "$2,299.00"
+        },
+        "shipping": {
+          "amount": "120.00",
+          "formattedAmount": "$120.00"
+        },
+        "tax": {
+          "amount": "169.33",
+          "formattedAmount": "$169.33"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "total": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalWithGiftCard": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Swannanoa",
+          "postalCode": "28778",
+          "addressLine": "25 Honeycomb Circle",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Julia",
+          "lastName": "Sabotin",
+          "phone": "714-474-4969"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "b3cd3107-a586-4cad-ba93-6dab9383f7b7",
+        "code": "e7e94b72-ab42-440b-a080-e0c554237357",
+        "title": "Assembly & Delivery-R4",
+        "logistics": {
+          "deliveryTime": "1-3 days",
+          "shippingDestination": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Swannanoa",
+              "postalCode": "28778",
+              "addressLine": "25 Honeycomb Circle",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "contactDetails": {
+              "firstName": "Julia",
+              "lastName": "Sabotin",
+              "phone": "714-474-4969"
+            }
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "120",
+            "formattedAmount": "$120.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "120",
+            "formattedAmount": "$120.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "128.40",
+            "formattedAmount": "$128.40"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "120.00",
+              "formattedAmount": "$120.00"
+            },
+            "taxRate": "0.0700",
+            "totalTax": {
+              "amount": "8.40",
+              "formattedAmount": "$8.40"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "8.40",
+              "formattedAmount": "$8.40"
+            },
+            "taxableAmount": {
+              "amount": "120.00",
+              "formattedAmount": "$120.00"
+            },
+            "taxRate": "0.0700",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "169.33",
+          "formattedAmount": "$169.33"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "169.33",
+          "formattedAmount": "$169.33"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0"
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "70a46b89-8841-4c75-b6c1-e10097cbe83c",
+          "createdDate": "2025-05-04T19:13:45.638Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "00c214ac-1ea6-45dc-a4bf-acca8658eb76",
+          "createdDate": "2025-05-04T19:13:50.377Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "bddec29d-171e-4181-ae43-9e17ff0e806c",
+          "authorEmail": "carolinafutons@gmail.com",
+          "createdDate": "2025-05-07T20:48:24.258Z",
+          "merchantComment": {
+            "message": "Delivery 5/24 at 3:30-4:00"
+          },
+          "type": "MERCHANT_COMMENT",
+          "activityType": "MERCHANT_COMMENT"
+        },
+        {
+          "id": "8faa45a6-eaf6-42e9-ad15-9334578786eb",
+          "createdDate": "2025-05-30T17:11:14.997Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "f03ed510-438b-4da4-be00-c7de66285785",
+      "customFields": [],
+      "cartId": "fa3a1875-1442-4879-9826-c3b63b744eec",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "2299.00",
+          "formattedAmount": "$2,299.00"
+        },
+        "shipping": {
+          "amount": "120.00",
+          "formattedAmount": "$120.00"
+        },
+        "tax": {
+          "amount": "169.33",
+          "formattedAmount": "$169.33"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "total": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalWithGiftCard": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "2588.33",
+          "formattedAmount": "$2,588.33"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "9137e172-7bcf-47de-bc49-22db806ef028",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Swannanoa",
+          "postalCode": "28778",
+          "addressLine": "25 Honeycomb Circle",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Julia",
+          "lastName": "Sabotin",
+          "phone": "714-474-4969"
+        }
+      },
+      "purchasedDate": "2025-05-04T19:13:45.637Z",
+      "payAfterFreeTrial": {
+        "subtotal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "shipping": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "total": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "fef8d160-9465-4c74-9820-dd2c922391b7",
+      "number": "10003",
+      "createdDate": "2024-12-31T20:33:00.628Z",
+      "updatedDate": "2025-01-06T17:01:35.621Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Daisy Murphy Cabinet Bed",
+            "translated": "Daisy Murphy Cabinet Bed"
+          },
+          "catalogReference": {
+            "catalogItemId": "7338a70b-3998-9584-e64d-7d5e629ae452",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Color": "Black Walnut"
+              },
+              "variantId": "5f1302a8-54d0-4885-83e6-ad2b39890084"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Color",
+                "translated": "Color"
+              },
+              "plainText": {
+                "original": "Black Walnut",
+                "translated": "Black Walnut"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Black Walnut",
+                "translated": "Black Walnut"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg/v1/fit/w_2560,h_1707,q_90/file.jpg",
+            "height": 1707,
+            "width": 2560
+          },
+          "physicalProperties": {
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "2499.00",
+            "formattedAmount": "$2,499.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "2499.00",
+            "formattedAmount": "$2,499.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "2499.00",
+            "formattedAmount": "$2,499.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "2499.00",
+            "formattedAmount": "$2,499.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "2667.68",
+            "formattedAmount": "$2,667.68"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "2499.00",
+              "formattedAmount": "$2,499.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "168.68",
+              "formattedAmount": "$168.68"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "168.68",
+              "formattedAmount": "$168.68"
+            },
+            "taxableAmount": {
+              "amount": "2499.00",
+              "formattedAmount": "$2,499.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "NORTH CAROLINA",
+                "rate": "0.047500",
+                "taxAmount": {
+                  "amount": "118.70",
+                  "formattedAmount": "$118.70"
+                },
+                "taxType": "Sales",
+                "taxName": "NC STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "2499.00",
+                  "formattedAmount": "$2,499.00"
+                }
+              },
+              {
+                "jurisdiction": "HENDERSON",
+                "rate": "0.020000",
+                "taxAmount": {
+                  "amount": "49.98",
+                  "formattedAmount": "$49.98"
+                },
+                "taxType": "Sales",
+                "taxName": "NC COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "2499.00",
+                  "formattedAmount": "$2,499.00"
+                }
+              }
+            ]
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "2499.00",
+            "formattedAmount": "$2,499.00"
+          },
+          "customLineItem": false,
+          "rootCatalogItemId": "7338a70b-3998-9584-e64d-7d5e629ae452",
+          "taxableAddress": {
+            "addressType": "SHIPPING"
+          },
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "5a60a3a3-0766-4e4d-9e39-bdeede08ca24",
+        "email": "jsstnana@gmail.com",
+        "visitorId": "84000c5f-28ee-4b66-b3bb-ed91716fa1a1"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "siteLanguage": "en",
+      "priceSummary": {
+        "subtotal": {
+          "amount": "2499.00",
+          "formattedAmount": "$2,499.00"
+        },
+        "shipping": {
+          "amount": "85.00",
+          "formattedAmount": "$85.00"
+        },
+        "tax": {
+          "amount": "174.42",
+          "formattedAmount": "$174.42"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "total": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalWithGiftCard": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Hendersonville",
+          "postalCode": "28791",
+          "addressLine": "301 Wild Oak Ln",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Barb",
+          "lastName": "Price",
+          "phone": "8282434837"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "b3cd3107-a586-4cad-ba93-6dab9383f7b7",
+        "code": "a6cd9792-3fcd-4cf6-a014-064d617aeedf",
+        "title": "Assembly & Delivery-R1",
+        "logistics": {
+          "deliveryTime": "1-3 Days",
+          "shippingDestination": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Hendersonville",
+              "postalCode": "28791",
+              "addressLine": "301 Wild Oak Ln",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "contactDetails": {
+              "firstName": "Barb",
+              "lastName": "Price",
+              "phone": "8282434837"
+            }
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "85",
+            "formattedAmount": "$85.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "85",
+            "formattedAmount": "$85.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "90.74",
+            "formattedAmount": "$90.74"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "85.00",
+              "formattedAmount": "$85.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "5.74",
+              "formattedAmount": "$5.74"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "5.74",
+              "formattedAmount": "$5.74"
+            },
+            "taxableAmount": {
+              "amount": "85.00",
+              "formattedAmount": "$85.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "174.42",
+          "formattedAmount": "$174.42"
+        },
+        "manualTaxRate": "0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "174.42",
+          "formattedAmount": "$174.42"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0"
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "0f23b116-25d4-4e98-8c8b-513184313e66",
+          "createdDate": "2024-12-31T20:33:00.622Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "dcfd3947-3e05-4f5a-a451-0d1434de23be",
+          "createdDate": "2024-12-31T20:37:32.038Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "fd07c529-3413-49b2-a4bf-5130d96b1022",
+          "createdDate": "2024-12-31T21:24:11.662Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {},
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "6b0f2ed8-3fef-490b-9f4b-79e968f26b37",
+      "customFields": [],
+      "cartId": "e6ac12fd-31bf-4599-8adb-a45d60b2a3fc",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "2499.00",
+          "formattedAmount": "$2,499.00"
+        },
+        "shipping": {
+          "amount": "85.00",
+          "formattedAmount": "$85.00"
+        },
+        "tax": {
+          "amount": "174.42",
+          "formattedAmount": "$174.42"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "total": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalWithGiftCard": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "2758.42",
+          "formattedAmount": "$2,758.42"
+        },
+        "refunded": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchaseFlowId": "f5007ca3-d33e-4c47-934e-f1feffdffc88",
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Hendersonville",
+          "postalCode": "28791",
+          "addressLine": "301 Wild Oak Ln",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Barb",
+          "lastName": "Price",
+          "phone": "8282434837"
+        }
+      },
+      "purchasedDate": "2024-12-31T20:33:00.628Z",
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "cca6eac4-8085-42e8-a45f-deef82211bfb",
+      "number": "10002",
+      "createdDate": "2024-09-25T18:26:35.309Z",
+      "updatedDate": "2024-09-25T18:29:46.480Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "Leg length options for Lexington Platform Bed"
+          },
+          "catalogReference": {
+            "catalogItemId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "variantId": "789307f7-0e52-4caa-bdb1-1fcd7deb8d10"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "12\" Footboard and 37\" Headboard",
+                "translated": "12\" Footboard and 37\" Headboard"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "12\" Footboard and 37\" Headboard",
+                "translated": "12\" Footboard and 37\" Headboard"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_0eb29f0fd8df4a0f8329bd9756bbe97c~mv2.png",
+            "url": "https://static.wixstatic.com/media/e04e89_0eb29f0fd8df4a0f8329bd9756bbe97c~mv2.png/v1/fit/w_1024,h_683,q_90/file.png",
+            "height": 683,
+            "width": 1024
+          },
+          "physicalProperties": {
+            "sku": "",
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "restockLocations": [],
+          "price": {
+            "amount": "45.00",
+            "formattedAmount": "$45.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "45.00",
+            "formattedAmount": "$45.00"
+          },
+          "priceBeforeDiscountsAndTax": {
+            "amount": "45.00",
+            "formattedAmount": "$45.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "45.00",
+            "formattedAmount": "$45.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "46.81",
+            "formattedAmount": "$46.81"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxRate": "0.0400",
+            "totalTax": {
+              "amount": "1.81",
+              "formattedAmount": "$1.81"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "1.81",
+              "formattedAmount": "$1.81"
+            },
+            "taxableAmount": {
+              "amount": "45.00",
+              "formattedAmount": "$45.00"
+            },
+            "taxRate": "0.0400",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": [
+              {
+                "jurisdiction": "COLORADO",
+                "rate": "0.029000",
+                "taxAmount": {
+                  "amount": "1.31",
+                  "formattedAmount": "$1.31"
+                },
+                "taxType": "Use",
+                "taxName": "CO STATE TAX",
+                "jurisdictionType": "STATE",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "45.00",
+                  "formattedAmount": "$45.00"
+                }
+              },
+              {
+                "jurisdiction": "DOUGLAS",
+                "rate": "0.000000",
+                "taxAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxType": "Use",
+                "taxName": "CO COUNTY TAX",
+                "jurisdictionType": "COUNTY",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "45.00",
+                  "formattedAmount": "$45.00"
+                }
+              },
+              {
+                "jurisdiction": "SCIENTIFIC & CULTURAL FAC.(CD)",
+                "rate": "0.001000",
+                "taxAmount": {
+                  "amount": "0.05",
+                  "formattedAmount": "$0.05"
+                },
+                "taxType": "Use",
+                "taxName": "CO SPECIAL TAX",
+                "jurisdictionType": "SPECIAL",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "45.00",
+                  "formattedAmount": "$45.00"
+                }
+              },
+              {
+                "jurisdiction": "RTD GREATER DENVER",
+                "rate": "0.010000",
+                "taxAmount": {
+                  "amount": "0.45",
+                  "formattedAmount": "$0.45"
+                },
+                "taxType": "Use",
+                "taxName": "CO SPECIAL TAX",
+                "jurisdictionType": "SPECIAL",
+                "nonTaxableAmount": {
+                  "amount": "0.00",
+                  "formattedAmount": "$0.00"
+                },
+                "taxableAmount": {
+                  "amount": "45.00",
+                  "formattedAmount": "$45.00"
+                }
+              }
+            ]
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "45.00",
+            "formattedAmount": "$45.00"
+          },
+          "rootCatalogItemId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "42818e16-8fec-4036-956d-e3f88c84cffd",
+        "email": "chrisdealglass@gmail.com",
+        "memberId": "42818e16-8fec-4036-956d-e3f88c84cffd"
+      },
+      "paymentStatus": "NOT_PAID",
+      "fulfillmentStatus": "NOT_FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "priceSummary": {
+        "subtotal": {
+          "amount": "45.00",
+          "formattedAmount": "$45.00"
+        },
+        "shipping": {
+          "amount": "77.00",
+          "formattedAmount": "$77.00"
+        },
+        "tax": {
+          "amount": "4.89",
+          "formattedAmount": "$4.89"
+        },
+        "discount": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        },
+        "total": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        },
+        "totalWithGiftCard": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-CO",
+          "city": "Parker",
+          "postalCode": "80134",
+          "addressLine": "17577 Pine LN",
+          "addressLine2": "Apt 3406",
+          "countryFullname": "United States"
+        },
+        "contactDetails": {
+          "firstName": "Chris",
+          "lastName": "Deal",
+          "phone": "720-666-0764",
+          "company": ""
+        }
+      },
+      "shippingInfo": {
+        "code": "Custom Shipping",
+        "title": "Flat",
+        "logistics": {
+          "shippingDestination": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-CO",
+              "city": "Parker",
+              "postalCode": "80134",
+              "addressLine": "17577 Pine LN",
+              "addressLine2": "Apt 3406",
+              "countryFullname": "United States"
+            },
+            "contactDetails": {
+              "firstName": "Chris",
+              "lastName": "Deal",
+              "phone": "720-666-0764",
+              "company": ""
+            }
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "77",
+            "formattedAmount": "$77.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "77",
+            "formattedAmount": "$77.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "80.08",
+            "formattedAmount": "$80.08"
+          },
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "77.00",
+              "formattedAmount": "$77.00"
+            },
+            "taxRate": "0.0400",
+            "totalTax": {
+              "amount": "3.08",
+              "formattedAmount": "$3.08"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "3.08",
+              "formattedAmount": "$3.08"
+            },
+            "taxableAmount": {
+              "amount": "77.00",
+              "formattedAmount": "$77.00"
+            },
+            "taxRate": "0.0400",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          }
+        },
+        "region": {}
+      },
+      "status": "CANCELED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "4.89",
+          "formattedAmount": "$4.89"
+        }
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "4.89",
+          "formattedAmount": "$4.89"
+        },
+        "taxBreakdown": []
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "58e4b843-88c9-4aa7-9b55-6ea47763c4c4",
+          "createdDate": "2024-09-25T18:26:35.283Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "8c1786ff-0f72-45bb-b043-3dcd390a440a",
+          "createdDate": "2024-09-25T18:29:46.480Z",
+          "type": "ORDER_CANCELED",
+          "activityType": "ORDER_CANCELED"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {
+        "userId": "ed8a7220-8b9b-438b-91f3-2c5b5e3bf0ed"
+      },
+      "channelInfo": {
+        "type": "BACKOFFICE_MERCHANT"
+      },
+      "seenByAHuman": true,
+      "customFields": [],
+      "isInternalOrderCreate": false,
+      "balanceSummary": {
+        "balance": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        },
+        "paid": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "refunded": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "totalMinusPlatformFees": {
+          "amount": "126.89",
+          "formattedAmount": "$126.89"
+        }
+      },
+      "additionalFees": [],
+      "recipientInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-CO",
+          "city": "Parker",
+          "postalCode": "80134",
+          "addressLine": "17577 Pine LN",
+          "addressLine2": "Apt 3406",
+          "countryFullname": "United States"
+        },
+        "contactDetails": {
+          "firstName": "Chris",
+          "lastName": "Deal",
+          "phone": "720-666-0764",
+          "company": ""
+        }
+      },
+      "purchasedDate": "2024-09-25T18:26:35.309Z",
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    },
+    {
+      "id": "eb1d2ac4-c60c-4022-a47d-e37611187cf8",
+      "number": "10001",
+      "createdDate": "2023-12-04T23:49:50.540Z",
+      "updatedDate": "2023-12-06T01:54:51.427Z",
+      "lineItems": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "productName": {
+            "original": "KD Lounger",
+            "translated": "KD Lounger"
+          },
+          "catalogReference": {
+            "catalogItemId": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+            "appId": "215238eb-22a5-4c36-9e7b-e7c08025e04e",
+            "options": {
+              "options": {
+                "Size": "Full Lounger"
+              },
+              "variantId": "000241da-bd0f-42ce-863f-cc74affeeb86"
+            }
+          },
+          "quantity": 1,
+          "totalDiscount": {
+            "amount": "0.0",
+            "formattedAmount": "$0.00"
+          },
+          "descriptionLines": [
+            {
+              "name": {
+                "original": "Size",
+                "translated": "Size"
+              },
+              "plainText": {
+                "original": "Full Lounger",
+                "translated": "Full Lounger"
+              },
+              "lineType": "PLAIN_TEXT",
+              "plainTextValue": {
+                "original": "Full Lounger",
+                "translated": "Full Lounger"
+              },
+              "modifierDescriptionLine": false
+            }
+          ],
+          "image": {
+            "id": "e04e89_0afa9805d55f41bfa134b56a2b5d0109~mv2.jpg",
+            "url": "https://static.wixstatic.com/media/e04e89_0afa9805d55f41bfa134b56a2b5d0109~mv2.jpg/v1/fit/w_640,h_426,q_90/file.jpg",
+            "height": 426,
+            "width": 640
+          },
+          "physicalProperties": {
+            "shippable": true
+          },
+          "itemType": {
+            "preset": "PHYSICAL"
+          },
+          "refundQuantity": 0,
+          "restockLocations": [],
+          "price": {
+            "amount": "199.0",
+            "formattedAmount": "$199.00"
+          },
+          "priceBeforeDiscounts": {
+            "amount": "199.0",
+            "formattedAmount": "$199.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "199.0",
+            "formattedAmount": "$199.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "212.43",
+            "formattedAmount": "$212.43"
+          },
+          "paymentOption": "FULL_PAYMENT_ONLINE",
+          "taxDetails": {
+            "taxableAmount": {
+              "amount": "199.00",
+              "formattedAmount": "$199.00"
+            },
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "13.43",
+              "formattedAmount": "$13.43"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "13.43",
+              "formattedAmount": "$13.43"
+            },
+            "taxableAmount": {
+              "amount": "199.00",
+              "formattedAmount": "$199.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          },
+          "locations": [],
+          "lineItemPrice": {
+            "amount": "199.0",
+            "formattedAmount": "$199.00"
+          },
+          "rootCatalogItemId": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+          "priceUndetermined": false,
+          "fixedQuantity": false,
+          "modifierGroups": []
+        }
+      ],
+      "buyerInfo": {
+        "contactId": "256d2e13-2dbc-4b65-8814-a8d46af8e726",
+        "email": "bkdeal.bd@gmail.com",
+        "visitorId": "72d8a440-4986-4434-99db-00942920867c"
+      },
+      "paymentStatus": "PAID",
+      "fulfillmentStatus": "FULFILLED",
+      "buyerLanguage": "en",
+      "weightUnit": "LB",
+      "currency": "USD",
+      "taxIncludedInPrices": false,
+      "priceSummary": {
+        "subtotal": {
+          "amount": "199.0",
+          "formattedAmount": "$199.00"
+        },
+        "shipping": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "13.43",
+          "formattedAmount": "$13.43"
+        },
+        "discount": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "total": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "totalWithGiftCard": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "totalAdditionalFees": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "billingInfo": {
+        "address": {
+          "country": "US",
+          "subdivision": "US-NC",
+          "city": "Hendersonville",
+          "postalCode": "28792-9253",
+          "addressLine": "511 Red Fox Ct",
+          "countryFullname": "United States",
+          "subdivisionFullname": "North Carolina"
+        },
+        "contactDetails": {
+          "firstName": "Brenda",
+          "lastName": "Deal",
+          "phone": "9727575059"
+        }
+      },
+      "shippingInfo": {
+        "carrierId": "c8a08776-c095-4dec-8553-8f9698d86adc",
+        "code": "c4925f4a-0a30-477f-8b0d-dc70da57e1d8",
+        "title": "Store Pickup",
+        "logistics": {
+          "deliveryTime": "",
+          "instructions": "Please wait for notification before picking up your order.  Your order confirmation and ID will be needed for pickup.  Store opening hours Wednesday - Saturday 10 AM - 5 PM.  Call or Text  (828) 252-9449 for any questions.\n",
+          "pickupDetails": {
+            "address": {
+              "country": "US",
+              "subdivision": "US-NC",
+              "city": "Hendersonville",
+              "postalCode": "28792",
+              "addressLine": "824 Locust Street, Suite 200",
+              "countryFullname": "United States",
+              "subdivisionFullname": "North Carolina"
+            },
+            "pickupMethod": "STORE_PICKUP"
+          }
+        },
+        "cost": {
+          "price": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceBeforeTax": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          },
+          "totalPriceAfterTax": {
+            "amount": "0.00",
+            "formattedAmount": "$0.00"
+          },
+          "taxDetails": {
+            "taxRate": "0.0675",
+            "totalTax": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            }
+          },
+          "taxInfo": {
+            "taxAmount": {
+              "amount": "0.00",
+              "formattedAmount": "$0.00"
+            },
+            "taxRate": "0.0675",
+            "taxIncludedInPrice": false,
+            "taxBreakdown": []
+          },
+          "discount": {
+            "amount": "0",
+            "formattedAmount": "$0.00"
+          }
+        },
+        "region": {
+          "name": "Domestic"
+        }
+      },
+      "status": "APPROVED",
+      "archived": false,
+      "taxSummary": {
+        "totalTax": {
+          "amount": "13.43",
+          "formattedAmount": "$13.43"
+        },
+        "manualTaxRate": "0.0"
+      },
+      "taxInfo": {
+        "totalTax": {
+          "amount": "13.43",
+          "formattedAmount": "$13.43"
+        },
+        "taxBreakdown": [],
+        "manualTaxRate": "0.0"
+      },
+      "appliedDiscounts": [],
+      "activities": [
+        {
+          "id": "08e90063-e866-4a2f-8868-702d03a77bbe",
+          "createdDate": "2023-12-04T23:49:50.540Z",
+          "type": "ORDER_PLACED",
+          "activityType": "ORDER_PLACED"
+        },
+        {
+          "id": "05fd0ffc-11dd-48ab-8999-a093353a8131",
+          "createdDate": "2023-12-04T23:49:57.247Z",
+          "type": "ORDER_PAID",
+          "activityType": "ORDER_PAID"
+        },
+        {
+          "id": "afe23a0c-16e2-462f-b9c5-c1dc461309bd",
+          "createdDate": "2023-12-05T00:11:44.169Z",
+          "type": "PICKUP_READY_EMAIL_SENT",
+          "activityType": "PICKUP_READY_EMAIL_SENT"
+        },
+        {
+          "id": "ccd971fc-74a2-4a5f-86c4-0f368be24291",
+          "createdDate": "2023-12-05T01:22:40.075Z",
+          "type": "ORDER_FULFILLED",
+          "activityType": "ORDER_FULFILLED"
+        },
+        {
+          "id": "b6cd96e9-0212-48de-9113-4bb3be07497a",
+          "createdDate": "2023-12-05T16:33:43.818Z",
+          "merchantComment": {
+            "message": "Online Order Test"
+          },
+          "type": "MERCHANT_COMMENT",
+          "activityType": "MERCHANT_COMMENT"
+        }
+      ],
+      "attributionSource": "UNSPECIFIED",
+      "createdBy": {
+        "visitorId": "72d8a440-4986-4434-99db-00942920867c"
+      },
+      "channelInfo": {
+        "type": "WEB"
+      },
+      "seenByAHuman": true,
+      "checkoutId": "316adcda-303c-46ee-bec7-f576be11de6a",
+      "customFields": [],
+      "cartId": "775f8b7a-c528-42b7-a44a-f7ba6523323a",
+      "isInternalOrderCreate": false,
+      "payNow": {
+        "subtotal": {
+          "amount": "199.0",
+          "formattedAmount": "$199.00"
+        },
+        "shipping": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "tax": {
+          "amount": "13.43",
+          "formattedAmount": "$13.43"
+        },
+        "discount": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "totalPrice": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "total": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "totalWithGiftCard": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "totalWithoutGiftCard": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        }
+      },
+      "balanceSummary": {
+        "balance": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "paid": {
+          "amount": "212.43",
+          "formattedAmount": "$212.43"
+        },
+        "refunded": {
+          "amount": "0.0",
+          "formattedAmount": "$0.00"
+        },
+        "authorized": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "pendingRefund": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "pending": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "chargeback": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "chargebackReversal": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        },
+        "cashRoundingAdjustment": {
+          "amount": "0.00",
+          "formattedAmount": "$0.00"
+        }
+      },
+      "additionalFees": [],
+      "purchasedDate": "2023-12-04T23:49:50.540Z",
+      "settings": {
+        "editableByEveryone": true,
+        "specificItemsCouponBehavior": "UNDEFINED_COUPON_BEHAVIOR"
+      },
+      "forms": []
+    }
+  ],
+  "metadata": {
+    "count": 8,
+    "total": 8,
+    "cursors": {}
+  }
+}

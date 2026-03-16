@@ -1,0 +1,445 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e9]:
+      - link [ref=e11] [cursor=pointer]:
+        - /url: https://wix.com/?referralAdditionalInfo=Dashboard
+      - generic [ref=e13]:
+        - button "Christopher Deal" [ref=e16] [cursor=pointer]:
+          - generic "Christopher Deal" [ref=e20]:
+            - generic [ref=e21]: CD
+          - img [ref=e22]
+        - generic [ref=e27]:
+          - generic [ref=e28]: My Site 1
+          - img [ref=e30]
+        - generic [ref=e33] [cursor=pointer]:
+          - generic [ref=e34]: Resources
+          - img [ref=e36]
+        - generic [ref=e39] [cursor=pointer]:
+          - generic [ref=e40]: Community
+          - img [ref=e42]
+        - button "Help" [ref=e45] [cursor=pointer]:
+          - generic [ref=e46]: Help
+          - img [ref=e48]
+        - button "Upgrade" [ref=e51] [cursor=pointer]:
+          - generic [ref=e52]: Upgrade
+      - generic [ref=e53]:
+        - generic [ref=e62]:
+          - img [ref=e64]
+          - textbox "Search..." [ref=e66]
+        - generic [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e83]: "17"
+        - generic [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+          - generic [ref=e97]: "15"
+        - generic [ref=e105] [cursor=pointer]:
+          - img [ref=e106]
+          - generic:
+            - generic:
+              - generic: 20+
+        - button [ref=e112] [cursor=pointer]:
+          - img [ref=e117]
+          - img [ref=e119]
+        - button "AI" [ref=e127] [cursor=pointer]:
+          - generic [ref=e128]:
+            - img [ref=e130]
+            - img [ref=e133]
+          - generic [ref=e135]: AI
+    - generic [ref=e138]:
+      - region "Sidebar" [ref=e141]:
+        - button [ref=e144] [cursor=pointer]:
+          - img [ref=e146]
+        - generic [ref=e149]:
+          - generic [ref=e151]:
+            - generic [ref=e152]:
+              - button [ref=e156] [cursor=pointer]:
+                - img [ref=e158]
+              - button "Quick Actions" [ref=e168] [cursor=pointer]:
+                - generic [ref=e169]: Quick Actions
+                - img [ref=e170]
+            - separator [ref=e173]
+          - generic [ref=e180]:
+            - listitem [level=1] [ref=e181]:
+              - link "Let's set up your business 17 1/6 completed" [ref=e185]:
+                - generic [ref=e193]:
+                  - generic [ref=e194]:
+                    - generic [ref=e196]: Let's set up your business
+                    - img [ref=e198]
+                  - progressbar [ref=e201]
+                  - generic [ref=e205]: 1/6 completed
+            - separator [ref=e207]
+        - navigation [ref=e209]:
+          - list [ref=e210]:
+            - listitem [level=1] [ref=e211]:
+              - link "Setup" [ref=e215] [cursor=pointer]:
+                - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/setup?referralInfo=sidebar
+                - img [ref=e217]
+                - generic [ref=e226]: Setup
+            - listitem [level=1] [ref=e227]:
+              - link "Home" [ref=e231] [cursor=pointer]:
+                - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/home?referralInfo=sidebar
+                - img [ref=e233]
+                - generic [ref=e242]: Home
+            - listitem [level=1] [ref=e243]:
+              - button "AI Agents" [ref=e249] [cursor=pointer]:
+                - img [ref=e251]
+                - generic [ref=e259]: AI Agents
+                - generic [ref=e260]:
+                  - generic [ref=e264]: NEW
+                  - img [ref=e267]
+              - listitem [level=2] [ref=e269]:
+                - link [ref=e273] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/ai-assistants/marketing-assistant?referralInfo=sidebar
+                  - generic [ref=e281]: Marketing Agent
+              - listitem [level=2] [ref=e282]:
+                - link [ref=e286] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/ai-assistants/frontdesk-assistant?referralInfo=sidebar
+                  - generic [ref=e294]: Front Desk Agent
+              - listitem [level=2] [ref=e295]:
+                - link [ref=e299] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/custom-agent?referralInfo=sidebar
+                  - generic [ref=e307]: Custom Agent
+            - listitem [level=1] [ref=e308]:
+              - button "Sales" [ref=e314] [cursor=pointer]:
+                - img [ref=e316]
+                - generic [ref=e324]: Sales
+                - img [ref=e328]
+              - listitem [level=2] [ref=e330]:
+                - button [ref=e336] [cursor=pointer]:
+                  - generic [ref=e343]: Payments & Finances
+                  - img [ref=e347]
+                - listitem [level=3] [ref=e349]:
+                  - link [ref=e353] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/payments-dashboard?referralInfo=sidebar
+                    - generic [ref=e361]: All Payments
+                - listitem [level=3] [ref=e362]:
+                  - link [ref=e366] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/receipts/list?referralInfo=sidebar
+                    - generic [ref=e374]: Receipts
+              - listitem [level=2] [ref=e375]:
+                - link [ref=e379] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/overviews/sales?referralInfo=sidebar
+                  - generic [ref=e387]: Sales Overview
+            - listitem [level=1] [ref=e388]:
+              - button "Apps" [ref=e394] [cursor=pointer]:
+                - img [ref=e396]
+                - generic [ref=e404]: Apps
+                - generic [ref=e405]:
+                  - generic [ref=e408]: "1"
+                  - img [ref=e411]
+              - listitem [level=2] [ref=e413]:
+                - link [ref=e417] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/manage-installed-apps?referralInfo=sidebar
+                  - generic [ref=e425]: Manage Apps
+                  - generic [ref=e429]: "1"
+              - listitem [level=2] [ref=e430]:
+                - link [ref=e434] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/app-market?referralInfo=sidebar
+                  - generic [ref=e442]: App Market
+              - separator [ref=e444]
+              - listitem [level=2] [ref=e445]:
+                - link [ref=e449] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pixel-conversion-all-channel?referralInfo=sidebar
+                  - generic [ref=e457]: Pixel Conversion & All Channel
+            - separator [ref=e459]
+            - listitem [level=1] [ref=e460]:
+              - button "Site & Mobile App" [ref=e466] [cursor=pointer]:
+                - img [ref=e468]
+                - generic [ref=e477]: Site & Mobile App
+                - img [ref=e481]
+              - listitem [level=2] [ref=e483]:
+                - button [ref=e489] [cursor=pointer]:
+                  - generic [ref=e496]: Website Overview
+                  - img [ref=e500]
+                - listitem [level=3] [ref=e502]:
+                  - link [ref=e506] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/website-channel?referralInfo=sidebar
+                    - generic [ref=e514]: Website
+                - listitem [level=3] [ref=e515]:
+                  - link [ref=e519] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/performance/site-speed?referralInfo=sidebar
+                    - generic [ref=e527]: Site Speed
+                - listitem [level=3] [ref=e528]:
+                  - link [ref=e532] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/performance/reliability?referralInfo=sidebar
+                    - generic [ref=e540]: Uptime & Security
+              - listitem [level=2] [ref=e541]:
+                - link [ref=e545] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/mobile-app?referralInfo=sidebar
+                  - generic [ref=e553]: Mobile App
+              - listitem [level=2] [ref=e554]:
+                - link [ref=e558] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/brand-maker?referralInfo=sidebar
+                  - generic [ref=e566]: Logo & Brand
+              - listitem [level=2] [ref=e567]:
+                - link [ref=e571] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/hopp?referralInfo=sidebar
+                  - generic [ref=e579]: Hopp - Link in Bio
+            - listitem [level=1] [ref=e580]:
+              - button "Marketing" [ref=e586] [cursor=pointer]:
+                - img [ref=e588]
+                - generic [ref=e596]: Marketing
+                - img [ref=e600]
+              - listitem [level=2] [ref=e602]:
+                - link [ref=e606] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/seo-home?referralInfo=sidebar
+                  - generic [ref=e614]: SEO & GEO
+              - listitem [level=2] [ref=e615]:
+                - link [ref=e619] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/google-ads?referralInfo=sidebar
+                  - generic [ref=e627]: Google Ads
+              - listitem [level=2] [ref=e628]:
+                - link [ref=e632] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/facebook-ads?referralInfo=sidebar
+                  - generic [ref=e640]: Facebook & Instagram Ads
+              - listitem [level=2] [ref=e641]:
+                - link [ref=e645] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/email-marketing?referralInfo=sidebar
+                  - generic [ref=e653]: Email Marketing
+              - listitem [level=2] [ref=e654]:
+                - link [ref=e658] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/social-marketing-web?referralInfo=sidebar
+                  - generic [ref=e666]: Social Media Marketing
+              - listitem [level=2] [ref=e667]:
+                - link [ref=e671] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/referral-program?referralInfo=sidebar
+                  - generic [ref=e679]: Referral Program
+              - listitem [level=2] [ref=e680]:
+                - link [ref=e684] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/google-my-business?referralInfo=sidebar
+                  - generic [ref=e692]: Google Business Profile
+            - listitem [level=1] [ref=e693]:
+              - button "Getting Paid" [ref=e699] [cursor=pointer]:
+                - img [ref=e701]
+                - generic [ref=e709]: Getting Paid
+                - img [ref=e713]
+              - listitem [level=2] [ref=e715]:
+                - link [ref=e719] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/getting-paid?referralInfo=sidebar
+                  - generic [ref=e727]: Connect & Setup
+              - listitem [level=2] [ref=e728]:
+                - link [ref=e732] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pay-links?referralInfo=sidebar
+                  - generic [ref=e740]: Pay Links
+              - listitem [level=2] [ref=e741]:
+                - link [ref=e745] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/wix-invoices?referralInfo=sidebar
+                  - generic [ref=e753]: Invoices
+              - listitem [level=2] [ref=e754]:
+                - link [ref=e758] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pricequotes?referralInfo=sidebar
+                  - generic [ref=e766]: Price Quotes
+              - listitem [level=2] [ref=e767]:
+                - link [ref=e771] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/proposals?referralInfo=sidebar
+                  - generic [ref=e779]: Proposals
+              - listitem [level=2] [ref=e780]:
+                - button [ref=e786] [cursor=pointer]:
+                  - generic [ref=e793]: Point of Sale
+                  - img [ref=e797]
+                - listitem [level=3] [ref=e799]:
+                  - link [ref=e803] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pos?referralInfo=sidebar
+                    - generic [ref=e811]: POS Home
+                - listitem [level=3] [ref=e812]:
+                  - link [ref=e816] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pos-checkout?referralInfo=sidebar
+                    - generic [ref=e824]: POS Checkout
+              - listitem [level=2] [ref=e825]:
+                - link [ref=e829] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/premium-quickbooks-bm?referralInfo=sidebar
+                  - generic [ref=e837]: QuickBooks
+            - listitem [level=1] [ref=e838]:
+              - link "Inbox" [ref=e842] [cursor=pointer]:
+                - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/inbox?referralInfo=sidebar
+                - img [ref=e844]
+                - generic [ref=e853]: Inbox
+            - listitem [level=1] [ref=e854]:
+              - button "Customers & Leads" [ref=e860] [cursor=pointer]:
+                - img [ref=e862]
+                - generic [ref=e870]: Customers & Leads
+                - img [ref=e874]
+              - listitem [level=2] [ref=e876]:
+                - link [ref=e880] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/contacts?referralInfo=sidebar
+                  - generic [ref=e888]: Contacts
+              - listitem [level=2] [ref=e889]:
+                - link [ref=e893] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/wix-forms-and-payments?referralInfo=sidebar
+                  - generic [ref=e901]: Forms & Submissions
+              - listitem [level=2] [ref=e902]:
+                - link [ref=e906] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/wix-meetings?referralInfo=sidebar
+                  - generic [ref=e914]: Meetings
+              - listitem [level=2] [ref=e915]:
+                - link [ref=e919] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/pipelines?referralInfo=sidebar
+                  - generic [ref=e927]: Pipelines
+              - listitem [level=2] [ref=e928]:
+                - link [ref=e932] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/community?referralInfo=sidebar
+                  - generic [ref=e940]: Community
+              - listitem [level=2] [ref=e941]:
+                - link [ref=e945] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/loyalty-program?referralInfo=sidebar
+                  - generic [ref=e953]: Loyalty Program
+              - listitem [level=2] [ref=e954]:
+                - link [ref=e958] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/my-mailboxes-site-level/mailboxes?referralInfo=sidebar
+                  - generic [ref=e966]: Business Email
+            - listitem [level=1] [ref=e967]:
+              - button "Analytics" [ref=e973] [cursor=pointer]:
+                - img [ref=e975]
+                - generic [ref=e983]: Analytics
+                - img [ref=e987]
+              - listitem [level=2] [ref=e989]:
+                - link [ref=e993] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/highlights?referralInfo=sidebar
+                  - generic [ref=e1001]: Highlights
+              - listitem [level=2] [ref=e1002]:
+                - link [ref=e1006] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/overviews/realtime?referralInfo=sidebar
+                  - generic [ref=e1014]: Real-time
+              - listitem [level=2] [ref=e1015]:
+                - link [ref=e1019] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/overviews/traffic?referralInfo=sidebar
+                  - generic [ref=e1027]: Traffic
+              - listitem [level=2] [ref=e1028]:
+                - link [ref=e1032] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/overviews/behavior?referralInfo=sidebar
+                  - generic [ref=e1040]: Behavior
+              - listitem [level=2] [ref=e1041]:
+                - link [ref=e1045] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/overviews/marketing?referralInfo=sidebar
+                  - generic [ref=e1053]: Marketing
+              - listitem [level=2] [ref=e1054]:
+                - link [ref=e1058] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/session-recordings?referralInfo=sidebar
+                  - generic [ref=e1066]: Session Recordings
+              - listitem [level=2] [ref=e1067]:
+                - link [ref=e1071] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/performance/insights?referralInfo=sidebar
+                  - generic [ref=e1079]: Insights
+              - listitem [level=2] [ref=e1080]:
+                - link [ref=e1084] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/performance/benchmarks?referralInfo=sidebar
+                  - generic [ref=e1092]: Benchmarks
+              - listitem [level=2] [ref=e1093]:
+                - link [ref=e1097] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/analytics/reports?referralInfo=sidebar
+                  - generic [ref=e1105]: All Reports
+            - listitem [level=1] [ref=e1106]:
+              - button "Automations" [ref=e1112] [cursor=pointer]:
+                - img [ref=e1114]
+                - generic [ref=e1122]: Automations
+                - img [ref=e1126]
+              - listitem [level=2] [ref=e1128]:
+                - link [ref=e1132] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/triggers?referralInfo=sidebar
+                  - generic [ref=e1140]: Automations
+              - listitem [level=2] [ref=e1141]:
+                - link [ref=e1145] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/functions?referralInfo=sidebar
+                  - generic [ref=e1153]: Functions
+            - separator [ref=e1155]
+            - listitem [level=1] [ref=e1156]:
+              - link "Settings" [ref=e1160] [cursor=pointer]:
+                - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/settings?referralInfo=sidebar
+                - img [ref=e1162]
+                - generic [ref=e1171]: Settings
+            - listitem [level=1] [ref=e1172]:
+              - link "CMS" [ref=e1176] [cursor=pointer]:
+                - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/database?referralInfo=sidebar
+                - img [ref=e1178]
+                - generic [ref=e1187]: CMS
+            - listitem [level=1] [ref=e1188]:
+              - button "Developer Tools" [ref=e1194] [cursor=pointer]:
+                - img [ref=e1196]
+                - generic [ref=e1204]: Developer Tools
+                - img [ref=e1208]
+              - listitem [level=2] [ref=e1210]:
+                - button [ref=e1216] [cursor=pointer]:
+                  - generic [ref=e1223]: Logging Tools
+                  - img [ref=e1227]
+                - listitem [level=3] [ref=e1229]:
+                  - link [ref=e1233] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/logging-tools/wix-logs?referralInfo=sidebar
+                    - generic [ref=e1241]: Wix Logs
+                - listitem [level=3] [ref=e1242]:
+                  - link [ref=e1246] [cursor=pointer]:
+                    - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/logging-tools/more-tools?referralInfo=sidebar
+                    - generic [ref=e1254]: Advanced Log Tools
+              - listitem [level=2] [ref=e1255]:
+                - link [ref=e1259] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/monitoring-dashboard?referralInfo=sidebar
+                  - generic [ref=e1267]: Monitoring
+              - listitem [level=2] [ref=e1268]:
+                - link [ref=e1272] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/secrets-manager?referralInfo=sidebar
+                  - generic [ref=e1280]: Secrets Manager
+              - listitem [level=2] [ref=e1281]:
+                - link [ref=e1285] [cursor=pointer]:
+                  - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/triggered-emails?referralInfo=sidebar
+                  - generic [ref=e1293]: Triggered Emails
+        - generic [ref=e1296]:
+          - separator [ref=e1298]
+          - generic [ref=e1301]: Built on
+          - generic [ref=e1304]:
+            - separator [ref=e1306]
+            - button "Design Site" [ref=e1308] [cursor=pointer]:
+              - img [ref=e1309]
+              - generic [ref=e1311]: Design Site
+      - main "CMS" [ref=e1314]:
+        - generic [ref=e1326]:
+          - generic [ref=e1330]:
+            - generic [ref=e1333]:
+              - heading "CMS" [level=1] [ref=e1334]
+              - generic [ref=e1335]: Store and manage content to display anywhere on your site.
+            - generic [ref=e1337]:
+              - button "Upgrade" [ref=e1340] [cursor=pointer]:
+                - generic [ref=e1341]: Upgrade
+              - button "More Actions" [ref=e1347] [cursor=pointer]:
+                - generic [ref=e1348]: More Actions
+                - img [ref=e1349]
+              - button "Create Collection" [ref=e1351] [cursor=pointer]:
+                - img [ref=e1352]
+                - generic [ref=e1354]: Create Collection
+          - generic [ref=e1357]:
+            - generic [ref=e1365]:
+              - img [ref=e1367]
+              - textbox "Search" [ref=e1369]
+            - generic [ref=e1370]:
+              - generic [ref=e1372]:
+                - heading "Your Collections 0" [level=2] [ref=e1375]:
+                  - generic [ref=e1379]:
+                    - heading "Your Collections" [level=3] [ref=e1380]
+                    - generic [ref=e1381]: "0"
+                - separator [ref=e1382]
+              - generic [ref=e1385]:
+                - generic [ref=e1387]:
+                  - text: You have 0/10,000 items. Need more?
+                  - button "Upgrade your site" [ref=e1388] [cursor=pointer]:
+                    - generic [ref=e1389]: Upgrade your site
+                  - text: .
+                - generic [ref=e1393]:
+                  - heading "Create your first collection" [level=3] [ref=e1395]
+                  - generic [ref=e1396]: Store and manage content separately from design. Connect it to a dynamic page or layout to show it on your site.
+                  - button "Create Collection" [ref=e1398] [cursor=pointer]:
+                    - img [ref=e1399]
+                    - generic [ref=e1401]: Create Collection
+  - list [ref=e1405]:
+    - button [ref=e1411] [cursor=pointer]:
+      - generic [ref=e1418]: Logging Tools
+      - img [ref=e1422]
+    - listitem [level=2] [ref=e1424]:
+      - link [ref=e1428] [cursor=pointer]:
+        - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/monitoring-dashboard?referralInfo=sidebar
+        - generic [ref=e1436]: Monitoring
+    - listitem [level=2] [ref=e1437]:
+      - link [ref=e1441] [cursor=pointer]:
+        - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/secrets-manager?referralInfo=sidebar
+        - generic [ref=e1449]: Secrets Manager
+    - listitem [level=2] [ref=e1450]:
+      - link [ref=e1454] [cursor=pointer]:
+        - /url: /dashboard/ec78177c-6912-40e1-957a-c6d6aa0c9ff9/developer-tools/triggered-emails?referralInfo=sidebar
+        - generic [ref=e1462]: Triggered Emails

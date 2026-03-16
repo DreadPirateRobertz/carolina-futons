@@ -1,0 +1,68 @@
+{
+  "source": "Wix Site Properties API + Playwright page scrapes",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "fetchedAt": "2026-03-15",
+  "business": {
+    "name": "Carolina Futons",
+    "siteDisplayName": "Carolina Futons",
+    "tagline": "Where Comfort Meets Design With Your Budget & Style In Mind",
+    "description": "Established family business featuring Murphy Cabinet Beds, futon frames, futon mattresses, futon covers, and platform beds and accessories.",
+    "category": "online-store",
+    "secondaryCategory": "Online Futon Retailer",
+    "businessTermId": "78f07799-d0e1-4ce9-8a77-8c5c198682ca",
+    "businessConfig": "STORE"
+  },
+  "contact": {
+    "email": "carolinafutons@gmail.com",
+    "phone": "(828) 252-9449",
+    "address": {
+      "street": "Locust Street",
+      "streetNumber": "824",
+      "hint": "Suite 200",
+      "city": "Hendersonville",
+      "state": "NC",
+      "zip": "28792",
+      "country": "US",
+      "isPhysical": true,
+      "googleFormattedAddress": "824 Locust Street, Hendersonville, NC, USA",
+      "coordinates": {
+        "latitude": 35.3227434,
+        "longitude": -82.45945139999999
+      }
+    }
+  },
+  "hours": {
+    "source": "Header announcement bar on all pages",
+    "showroomHours": "Wed-Sat: 10-5",
+    "byAppointment": "Sun-Tue: By Appt.",
+    "note": "Business schedule not configured in Wix Site Properties API (returned empty). Hours displayed via header announcement bar on all pages."
+  },
+  "locale": {
+    "languageCode": "en",
+    "country": "US",
+    "paymentCurrency": "USD",
+    "timeZone": "America/Denver"
+  },
+  "social": {
+    "instagram": "http://www.instagram.com/carolinafutons",
+    "facebook": "http://www.facebook.com/carolinafutons",
+    "googleReview": "https://g.page/r/CdmJFg79aiTOEB0/review"
+  },
+  "aboutPage": {
+    "url": "https://www.carolinafutons.com/about",
+    "title": "About | Carolina Futons | Hendersonville",
+    "heading": "About Us",
+    "content": [
+      "Richard and Liz Sims started Sims' Futon Gallery (now Carolina Futons) in 1991 in the city of Hendersonville, NC. The Sims gained a loyal customer base with their honesty and integrity, fair pricing, great selection of high-quality products, and outstanding service in their 30 years in business. After making the decision to retire in 2021, Brenda and Howard Deal saw the opportunity to continue these same principles that attract new customers as well as previous customers to shop locally. Bobby (pup pictured below) does his part in greeting and helping customers sample the futon mattresses!",
+      "Carolina Futons gives each customer the attention and service only an in-store visit can provide. We take the time to show and demonstrate our quality wood collection of Murphy cabinets, futon frames, and platform beds and accessories; our selection of Otis high-density foam mattresses; and over 700 swatches of our premium lines of fabric for choosing a custom futon cover. We welcome you to our store to discover a new experience in shopping for furniture for your home, office, RV, vacation home, or rental property."
+    ],
+    "owners": "Brenda and Howard Deal (acquired from Richard and Liz Sims in 2021)",
+    "founded": 1991,
+    "storeMascot": "Bobby McGee (rescue dog, store greeter and mattress tester)"
+  },
+  "contactPage": {
+    "url": "https://www.carolinafutons.com/contact",
+    "title": "Contact | Carolina Futons | Hendersonville",
+    "formFields": ["Name", "Email", "Phone", "Address", "Subject", "Size (Twin/Full/Queen/King)", "Message"]
+  }
+}

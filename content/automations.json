@@ -1,0 +1,14 @@
+{
+  "exportDate": "2026-03-15",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "automations": {
+    "status": "NOT_AVAILABLE",
+    "error": "404 Not Found on all attempted endpoints",
+    "endpointsTried": [
+      "GET /automations/v1/automations",
+      "POST /automations/v1/automations/query",
+      "GET /triggered-emails/v2/email-templates"
+    ],
+    "note": "Automations and triggered email APIs returned 404. These may require dashboard-level access or specific app installations. Wix automations are configured through the dashboard UI, not always exposed via REST API."
+  }
+}

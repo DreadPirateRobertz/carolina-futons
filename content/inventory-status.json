@@ -1,0 +1,131 @@
+{
+  "exportDate": "2026-03-15",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "totalInventoryItems": 89,
+  "summary": {
+    "totalProducts": 89,
+    "trackingEnabled": "Mix of tracked and untracked items",
+    "preorderEnabled": "Many items support preorder with message 'Please contact us for estimated delivery dates' or 'Usually available within 5-7 days of order'",
+    "generalStockStatus": "Most variants show inStock:false with quantity:0. Store appears to operate primarily on preorder/made-to-order basis."
+  },
+  "stockCategories": {
+    "inStockItems": [
+      {
+        "productId": "96920200-c881-5ae6-14b5-481c9b7230cc",
+        "note": "2 variants in stock (qty 1 each)"
+      },
+      {
+        "productId": "51048abf-da35-d963-6124-6ad2f11fac82",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "3533644b-b544-a6f4-0b06-09e7a7972124",
+        "note": "1 variant in stock (qty 1)"
+      },
+      {
+        "productId": "b122dd71-c71b-8c9a-c3e6-e8fbf37174a4",
+        "note": "4 variants in stock (qty 1 each)"
+      },
+      {
+        "productId": "3d3738dd-9db1-7fc3-b6df-fd236a285e70",
+        "note": "3 variants in stock (qty 1-2)"
+      },
+      {
+        "productId": "ee0354b7-1d71-2530-d193-556434597640",
+        "note": "4 variants in stock (qty 1 each)"
+      },
+      {
+        "productId": "d4607c9a-4f85-aace-6f54-a01400dc1e10",
+        "note": "4 variants in stock"
+      },
+      {
+        "productId": "a67e996c-d1b7-fc72-c859-fc491ba4fa99",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "b0c9923d-aa49-dc4e-e7c5-25719b7f189a",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "6d4e4123-22db-8cf4-0bc3-88ed67e715f9",
+        "note": "1 variant in stock (qty 1)"
+      },
+      {
+        "productId": "d53d1eb2-eddf-ec0d-0d14-6a58f65964fa",
+        "note": "1 variant in stock (qty 3)"
+      },
+      {
+        "productId": "7e97fece-ddf5-da32-f38c-a091a9e93953",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "b6448a9c-fe4e-3791-fc81-c46143a39e08",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "182239ef-4dd3-70e8-37dc-d64e3f1e8576",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "68eebb79-8b1b-7da5-bbf4-445771a57113",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "3fbfd637-a987-156e-1b49-f5165580f867",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "913a35fa-d090-ae40-e0f4-1cef2511237b",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "bbb50802-8cdd-ce46-2c46-f74f1cbb6cc6",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "42ca5d48-99de-cfe3-4376-67fc03e12478",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "8f62df61-79f7-2a66-b5b1-a001d6f8643a",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "01c37bd0-4e7a-8fde-c59e-151e62d421cd",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "9c1743f2-7e15-4f4f-5562-fc3404d5d44a",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "44a7a248-2334-f07d-f39e-18968b355dfa",
+        "note": "1 variant in stock"
+      },
+      {
+        "productId": "aef9f2b6-4e12-ca44-7cb9-1092dc898607",
+        "note": "1 variant in stock (qty 1)"
+      },
+      {
+        "productId": "366961bb-5f81-0370-b4e6-3e787890baf9",
+        "note": "1 variant in stock (qty 3)"
+      },
+      {
+        "productId": "2eabec14-54f2-459f-e62f-8f3ddfaa052b",
+        "note": "1 variant in stock (qty 1)"
+      }
+    ],
+    "preorderOnlyItems": "Many products configured with preorder enabled, 0 stock, message indicating 5-7 day or contact-for-delivery timeline",
+    "outOfStockNoPreorder": "Several items show inStock:false, quantity:0, availableForPreorder:false - fully unavailable"
+  },
+  "preorderMessages": [
+    "Please contact us for estimated delivery dates",
+    "Usually available within 5-7 days of order",
+    "Out of Stock"
+  ],
+  "note": "Full inventory data (89 items with all variant details) available via Wix Stores Inventory API v2. Most products are made-to-order furniture with preorder support."
+}

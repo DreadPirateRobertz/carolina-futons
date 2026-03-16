@@ -1,0 +1,711 @@
+- generic [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - generic [ref=e10]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - link "Skip to content" [ref=e14] [cursor=pointer]:
+          - /url: ""
+        - link "Using Gmail with screen readers" [ref=e15] [cursor=pointer]:
+          - /url: ""
+      - heading [level=1] [ref=e17]:
+        - banner [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]:
+              - button "Main menu" [expanded] [ref=e21] [cursor=pointer]:
+                - img [ref=e22]
+              - link "Gmail" [ref=e26] [cursor=pointer]:
+                - /url: "#inbox"
+                - img [ref=e27]
+            - generic [ref=e28]:
+              - search [ref=e30]:
+                - heading "Search" [level=2] [ref=e31]
+                - table [ref=e868]:
+                  - rowgroup [ref=e869]:
+                    - row [ref=e870]:
+                      - cell [ref=e871]:
+                        - textbox "Search mail" [ref=e872]
+                - button "Advanced search options" [ref=e34] [cursor=pointer]:
+                  - img [ref=e35]
+                - button "Search mail" [disabled] [ref=e37] [cursor=pointer]:
+                  - img [ref=e38]
+              - generic [ref=e41]:
+                - button "Support" [ref=e874] [cursor=pointer]:
+                  - img [ref=e875]
+                - button "Settings" [ref=e45] [cursor=pointer]:
+                  - img [ref=e46]
+                - generic [ref=e50]:
+                  - generic:
+                    - button "Try Gemini" [ref=e53] [cursor=pointer]:
+                      - img [ref=e56]
+                    - tooltip [ref=e59]: Try Gemini
+            - generic [ref=e61]:
+              - button "Google apps" [ref=e65] [cursor=pointer]:
+                - img [ref=e66]
+              - 'button "Google Account: Hal Worker (halworker85@gmail.com)" [ref=e71] [cursor=pointer]':
+                - img [ref=e73]
+      - alert [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]: Enable desktop notifications for Gmail.
+          - generic [ref=e79]:
+            - link "OK" [ref=e80] [cursor=pointer]
+            - link "No thanks" [ref=e81] [cursor=pointer]
+          - button "Close" [ref=e82] [cursor=pointer]
+    - generic [ref=e84]:
+      - navigation [ref=e85]:
+        - button "Compose" [ref=e88] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic "Labels" [ref=e96]:
+            - heading "Labels" [level=2] [ref=e97]
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e101]:
+                  - link "Inbox" [ref=e108] [cursor=pointer]:
+                    - /url: https://mail.google.com/mail/u/0/#inbox
+                  - link "Starred" [ref=e115] [cursor=pointer]:
+                    - /url: https://mail.google.com/mail/u/0/#starred
+                  - link "Snoozed" [ref=e122] [cursor=pointer]:
+                    - /url: https://mail.google.com/mail/u/0/#snoozed
+                  - link "Sent" [ref=e129] [cursor=pointer]:
+                    - /url: https://mail.google.com/mail/u/0/#sent
+                  - link "Drafts" [ref=e136] [cursor=pointer]:
+                    - /url: https://mail.google.com/mail/u/0/#drafts
+                - link "Purchases has menu" [ref=e145] [cursor=pointer]:
+                  - /url: https://mail.google.com/mail/u/0/#category/purchases
+                  - text: Purchases
+              - button "More labels" [ref=e147] [cursor=pointer]:
+                - generic [ref=e148]: More
+          - generic [ref=e151]:
+            - heading "Labels" [ref=e152]
+            - button "Create new label" [ref=e153] [cursor=pointer]
+          - generic "Labels" [ref=e155]:
+            - heading "Labels" [level=2] [ref=e156]
+            - generic [ref=e160]:
+              - link "Analytics has menu" [ref=e167] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/u/0/#label/Analytics
+                - text: Analytics
+              - link "API has menu" [ref=e174] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/u/0/#label/API
+                - text: API
+              - link "GitHub has menu" [ref=e181] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/u/0/#label/GitHub
+                - text: GitHub
+              - link "Monitoring has menu" [ref=e188] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/u/0/#label/Monitoring
+                - text: Monitoring
+              - link "Wix has menu" [ref=e195] [cursor=pointer]:
+                - /url: https://mail.google.com/mail/u/0/#label/Wix
+                - text: Wix
+        - generic [ref=e202]:
+          - link "Upgrade" [ref=e204] [cursor=pointer]:
+            - img [ref=e207]
+            - generic [ref=e208]: Upgrade
+          - img
+      - generic [ref=e212]:
+        - generic [ref=e214]:
+          - toolbar "search refinement"
+          - generic [ref=e215]:
+            - generic [ref=e218]:
+              - button "Select" [ref=e220] [cursor=pointer]:
+                - checkbox [ref=e222]
+              - button "Refresh" [ref=e225] [cursor=pointer]
+              - button "More email options" [ref=e229] [cursor=pointer]
+            - generic [ref=e234]:
+              - button "Show more messages" [ref=e235] [cursor=pointer]:
+                - generic [ref=e236]:
+                  - generic [ref=e237]: 1–27
+                  - text: of 27
+              - button "Newer" [disabled] [ref=e238]
+              - button "Older" [disabled] [ref=e239]
+        - generic [ref=e241]:
+          - main [ref=e244]:
+            - heading "Conversations" [level=2] [ref=e246]
+            - table [ref=e248]:
+              - rowgroup [ref=e249]:
+                - tablist [ref=e250]:
+                  - heading "Primary" [level=3] [ref=e251]:
+                    - tab "Primary" [selected] [ref=e252] [cursor=pointer]:
+                      - generic [ref=e257]: Primary
+                  - heading "Promotions, 8 new messages," [level=3] [ref=e258]:
+                    - tab "Promotions, 8 new messages," [ref=e259] [cursor=pointer]:
+                      - generic [ref=e261]:
+                        - generic [ref=e263]:
+                          - generic [ref=e264]: 8 new
+                          - generic [ref=e265]: Promotions
+                        - generic [ref=e266]: Notion Team — Unlock the best features in Notion
+                  - heading "Social" [level=3] [ref=e267]:
+                    - tab "Social" [ref=e268] [cursor=pointer]:
+                      - generic [ref=e273]: Social
+                  - cell
+                  - cell
+                - row
+            - generic [ref=e274]:
+              - generic [ref=e275]:
+                - generic [ref=e276]: Get started with Gmail
+                - generic [ref=e277]:
+                  - generic [ref=e278]:
+                    - button "Customize your inbox" [ref=e279] [cursor=pointer]
+                    - generic [ref=e281] [cursor=pointer]: Customize your inbox
+                  - generic [ref=e282]:
+                    - button "Change profile image" [ref=e283] [cursor=pointer]
+                    - generic [ref=e285] [cursor=pointer]: Change profile image
+                  - generic [ref=e286]:
+                    - button "Import contacts and mail" [ref=e287] [cursor=pointer]
+                    - generic [ref=e289] [cursor=pointer]: Import contacts and mail
+                  - generic [ref=e290]:
+                    - button "Get Gmail for mobile" [ref=e291] [cursor=pointer]
+                    - generic [ref=e293] [cursor=pointer]: Get Gmail for mobile
+              - button "Dismiss" [ref=e294] [cursor=pointer]
+            - tabpanel "Primary" [ref=e297]:
+              - grid [ref=e300]:
+                - rowgroup [ref=e301]:
+                  - row "unread, Wix.com 2, Reset your password, 11:53 PM, You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e881] [cursor=pointer]:
+                    - gridcell [ref=e882]
+                    - gridcell "unread, Wix.com 2, Reset your password, 11:53 PM, You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e883]:
+                      - checkbox "unread, Wix.com 2, Reset your password, 11:53 PM, You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e884]
+                    - gridcell "Not starred" [ref=e885]:
+                      - button "Not starred" [ref=e886]
+                    - gridcell "Wix.com 2" [ref=e887]:
+                      - generic [ref=e888]:
+                        - generic [ref=e889]: Wix.com
+                        - generic [ref=e890]: "2"
+                    - gridcell "Reset your password - You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e891]:
+                      - link "Reset your password - You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e892]:
+                        - generic [ref=e893]:
+                          - generic [ref=e895]: Reset your password
+                          - generic [ref=e896]:
+                            - generic [ref=e897]: "-"
+                            - text: You requested to reset the password for your account.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e898]
+                    - gridcell "Fri, Mar 13, 2026, 11:53 PM" [ref=e899]:
+                      - generic "Fri, Mar 13, 2026, 11:53 PM" [ref=e900]: 11:53 PM
+                    - gridcell
+                  - row "unread, Asana, 📅 You have 2 overdue tasks, Mar 13, It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M." [ref=e901] [cursor=pointer]:
+                    - gridcell [ref=e902]
+                    - gridcell "unread, Asana, 📅 You have 2 overdue tasks, Mar 13, It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M." [ref=e903]:
+                      - checkbox "unread, Asana, 📅 You have 2 overdue tasks, Mar 13, It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M." [ref=e904]
+                    - gridcell "Not starred" [ref=e905]:
+                      - button "Not starred" [ref=e906]
+                    - gridcell "Asana" [ref=e907]:
+                      - generic [ref=e909]: Asana
+                    - gridcell "📅 You have 2 overdue tasks - It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M" [ref=e910]:
+                      - link "📅 You have 2 overdue tasks - It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M" [ref=e911]:
+                        - generic [ref=e912]:
+                          - generic [ref=e915]:
+                            - img "📅" [ref=e916]
+                            - text: You have 2 overdue tasks
+                          - generic [ref=e917]:
+                            - generic [ref=e918]: "-"
+                            - text: It's time to catch up. HW 2 tasks from the past week are overdueJump in and keep your team's work on track.My workspace Respond now Your overdue tasks between M
+                    - gridcell [ref=e919]
+                    - gridcell "Fri, Mar 13, 2026, 10:21 AM" [ref=e920]:
+                      - generic "Fri, Mar 13, 2026, 10:21 AM" [ref=e921]: Mar 13
+                    - gridcell
+                  - row "unread, Notion Team, 4 quick wins for your workspace, Mar 12, Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ." [ref=e922] [cursor=pointer]:
+                    - gridcell [ref=e923]
+                    - gridcell "unread, Notion Team, 4 quick wins for your workspace, Mar 12, Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ." [ref=e924]:
+                      - checkbox "unread, Notion Team, 4 quick wins for your workspace, Mar 12, Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ." [ref=e925]
+                    - gridcell "Not starred" [ref=e926]:
+                      - button "Not starred" [ref=e927]
+                    - gridcell "Notion Team" [ref=e928]:
+                      - generic [ref=e930]: Notion Team
+                    - gridcell "4 quick wins for your workspace - Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e931]:
+                      - link "4 quick wins for your workspace - Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e933]:
+                        - generic [ref=e934]:
+                          - generic [ref=e936]: 4 quick wins for your workspace
+                          - generic [ref=e937]:
+                            - generic [ref=e938]: "-"
+                            - text: Set up your Notion workspace and workflows the right way. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+                    - gridcell [ref=e939]
+                    - gridcell "Thu, Mar 12, 2026, 11:51 AM" [ref=e940]:
+                      - generic "Thu, Mar 12, 2026, 11:51 AM" [ref=e941]: Mar 12
+                    - gridcell
+                  - 'row "unread, Asana, Thursday - tasks due soon: 1 - My workspace, Mar 12, Hi Hal, here''s your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1 ." [ref=e942] [cursor=pointer]':
+                    - gridcell [ref=e943]
+                    - 'gridcell "unread, Asana, Thursday - tasks due soon: 1 - My workspace, Mar 12, Hi Hal, here''s your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1 ." [ref=e944]':
+                      - 'checkbox "unread, Asana, Thursday - tasks due soon: 1 - My workspace, Mar 12, Hi Hal, here''s your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1 ." [ref=e945]'
+                    - gridcell "Not starred" [ref=e946]:
+                      - button "Not starred" [ref=e947]
+                    - gridcell "Asana" [ref=e948]:
+                      - generic [ref=e950]: Asana
+                    - 'gridcell "Thursday - tasks due soon: 1 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1" [ref=e951]':
+                      - 'link "Thursday - tasks due soon: 1 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1" [ref=e952]':
+                        - generic [ref=e953]:
+                          - generic [ref=e955]: "Thursday - tasks due soon: 1 - My workspace"
+                          - generic [ref=e956]:
+                            - generic [ref=e957]: "-"
+                            - text: "Hi Hal, here's your daily update of Asana tasks: Schedule kickoff meeting… HW Thursday: tasks assigned to youMy workspace View in Asana Due soon: 1 Due soon: 1"
+                    - gridcell [ref=e958]
+                    - gridcell "Thu, Mar 12, 2026, 5:07 AM" [ref=e959]:
+                      - generic "Thu, Mar 12, 2026, 5:07 AM" [ref=e960]: Mar 12
+                    - gridcell
+                  - 'row "unread, Asana, Wednesday - tasks due soon: 2 - My workspace, Mar 11, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du." [ref=e961] [cursor=pointer]':
+                    - gridcell [ref=e962]
+                    - 'gridcell "unread, Asana, Wednesday - tasks due soon: 2 - My workspace, Mar 11, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du." [ref=e963]':
+                      - 'checkbox "unread, Asana, Wednesday - tasks due soon: 2 - My workspace, Mar 11, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du." [ref=e964]'
+                    - gridcell "Not starred" [ref=e965]:
+                      - button "Not starred" [ref=e966]
+                    - gridcell "Asana" [ref=e967]:
+                      - generic [ref=e969]: Asana
+                    - 'gridcell "Wednesday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du" [ref=e970]':
+                      - 'link "Wednesday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du" [ref=e971]':
+                        - generic [ref=e972]:
+                          - generic [ref=e974]: "Wednesday - tasks due soon: 2 - My workspace"
+                          - generic [ref=e975]:
+                            - generic [ref=e976]: "-"
+                            - text: "Hi Hal, here's your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Wednesday: tasks assigned to youMy workspace View in Asana Du"
+                    - gridcell [ref=e977]
+                    - gridcell "Wed, Mar 11, 2026, 5:07 AM" [ref=e978]:
+                      - generic "Wed, Mar 11, 2026, 5:07 AM" [ref=e979]: Mar 11
+                    - gridcell
+                  - 'row "unread, Asana, Tuesday - tasks due soon: 2 - My workspace, Mar 10, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due ." [ref=e980] [cursor=pointer]':
+                    - gridcell [ref=e981]
+                    - 'gridcell "unread, Asana, Tuesday - tasks due soon: 2 - My workspace, Mar 10, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due ." [ref=e982]':
+                      - 'checkbox "unread, Asana, Tuesday - tasks due soon: 2 - My workspace, Mar 10, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due ." [ref=e983]'
+                    - gridcell "Not starred" [ref=e984]:
+                      - button "Not starred" [ref=e985]
+                    - gridcell "Asana" [ref=e986]:
+                      - generic [ref=e988]: Asana
+                    - 'gridcell "Tuesday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due" [ref=e989]':
+                      - 'link "Tuesday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due" [ref=e990]':
+                        - generic [ref=e991]:
+                          - generic [ref=e993]: "Tuesday - tasks due soon: 2 - My workspace"
+                          - generic [ref=e994]:
+                            - generic [ref=e995]: "-"
+                            - text: "Hi Hal, here's your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Tuesday: tasks assigned to youMy workspace View in Asana Due"
+                    - gridcell [ref=e996]
+                    - gridcell "Tue, Mar 10, 2026, 5:07 AM" [ref=e997]:
+                      - generic "Tue, Mar 10, 2026, 5:07 AM" [ref=e998]: Mar 10
+                    - gridcell
+                  - row "unread, Wix Studio, Welcome to Wix Studio, Mar 9, Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e999] [cursor=pointer]:
+                    - gridcell [ref=e1000]
+                    - gridcell "unread, Wix Studio, Welcome to Wix Studio, Mar 9, Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e1001]:
+                      - checkbox "unread, Wix Studio, Welcome to Wix Studio, Mar 9, Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e1002]
+                    - gridcell "Not starred" [ref=e1003]:
+                      - button "Not starred" [ref=e1004]
+                    - gridcell "Wix Studio" [ref=e1005]:
+                      - generic [ref=e1007]: Wix Studio
+                    - gridcell "Welcome to Wix Studio - Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e1008]:
+                      - link "Welcome to Wix Studio - Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e1010]:
+                        - generic [ref=e1011]:
+                          - generic [ref=e1013]: Welcome to Wix Studio
+                          - generic [ref=e1014]:
+                            - generic [ref=e1015]: "-"
+                            - text: Start strong with live sessions and other resources. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e1016]
+                    - gridcell "Mon, Mar 9, 2026, 12:49 PM" [ref=e1017]:
+                      - generic "Mon, Mar 9, 2026, 12:49 PM" [ref=e1018]: Mar 9
+                    - gridcell
+                  - row "unread, Asana, 🎉 You started your first project, Mar 9, Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan. ." [ref=e1019] [cursor=pointer]:
+                    - gridcell [ref=e1020]
+                    - gridcell "unread, Asana, 🎉 You started your first project, Mar 9, Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan. ." [ref=e1021]:
+                      - checkbox "unread, Asana, 🎉 You started your first project, Mar 9, Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan. ." [ref=e1022]
+                    - gridcell "Not starred" [ref=e1023]:
+                      - button "Not starred" [ref=e1024]
+                    - gridcell "Asana" [ref=e1025]:
+                      - generic [ref=e1027]: Asana
+                    - gridcell "🎉 You started your first project - Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan." [ref=e1028]:
+                      - link "🎉 You started your first project - Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan." [ref=e1029]:
+                        - generic [ref=e1030]:
+                          - generic [ref=e1033]:
+                            - img "🎉" [ref=e1034]
+                            - text: You started your first project
+                          - generic [ref=e1035]:
+                            - generic [ref=e1036]: "-"
+                            - text: Get your team on the same page by adding more tasks and details to your first project. Congrats! You started your first project, Cross-functional project plan.
+                    - gridcell [ref=e1037]
+                    - gridcell "Mon, Mar 9, 2026, 12:48 PM" [ref=e1038]:
+                      - generic "Mon, Mar 9, 2026, 12:48 PM" [ref=e1039]: Mar 9
+                    - gridcell
+                  - row "unread, Google Analytics, Get started with your new Analytics account, Mar 9, Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e1040] [cursor=pointer]:
+                    - gridcell [ref=e1041]
+                    - gridcell "unread, Google Analytics, Get started with your new Analytics account, Mar 9, Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e1042]:
+                      - checkbox "unread, Google Analytics, Get started with your new Analytics account, Mar 9, Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e1043]
+                    - gridcell "Not starred" [ref=e1044]:
+                      - button "Not starred" [ref=e1045]
+                    - gridcell "Google Analytics" [ref=e1046]:
+                      - generic [ref=e1048]: Google Analytics
+                    - gridcell "Get started with your new Analytics account - Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e1049]:
+                      - link "Get started with your new Analytics account - Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e1051]:
+                        - generic [ref=e1052]:
+                          - generic [ref=e1054]: Get started with your new Analytics account
+                          - generic [ref=e1055]:
+                            - generic [ref=e1056]: "-"
+                            - text: Sign up for setup help, recommendations, and more. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e1057]
+                    - gridcell "Mon, Mar 9, 2026, 6:56 AM" [ref=e1058]:
+                      - generic "Mon, Mar 9, 2026, 6:56 AM" [ref=e1059]: Mar 9
+                    - gridcell
+                  - 'row "unread, Asana, Monday - tasks due soon: 2 - My workspace, Mar 9, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s." [ref=e1060] [cursor=pointer]':
+                    - gridcell [ref=e1061]
+                    - 'gridcell "unread, Asana, Monday - tasks due soon: 2 - My workspace, Mar 9, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s." [ref=e1062]':
+                      - 'checkbox "unread, Asana, Monday - tasks due soon: 2 - My workspace, Mar 9, Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s." [ref=e1063]'
+                    - gridcell "Not starred" [ref=e1064]:
+                      - button "Not starred" [ref=e1065]
+                    - gridcell "Asana" [ref=e1066]:
+                      - generic [ref=e1068]: Asana
+                    - 'gridcell "Monday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s" [ref=e1069]':
+                      - 'link "Monday - tasks due soon: 2 - My workspace - Hi Hal, here''s your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s" [ref=e1070]':
+                        - generic [ref=e1071]:
+                          - generic [ref=e1073]: "Monday - tasks due soon: 2 - My workspace"
+                          - generic [ref=e1074]:
+                            - generic [ref=e1075]: "-"
+                            - text: "Hi Hal, here's your daily update of Asana tasks: Draft project brief, Schedule kickoff meeting… HW Monday: tasks assigned to youMy workspace View in Asana Due s"
+                    - gridcell [ref=e1076]
+                    - gridcell "Mon, Mar 9, 2026, 5:07 AM" [ref=e1077]:
+                      - generic "Mon, Mar 9, 2026, 5:07 AM" [ref=e1078]: Mar 9
+                    - gridcell
+                  - row "unread, Google Tag Manager, Set up a Google tag on your website, Mar 8, Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing." [ref=e500] [cursor=pointer]:
+                    - gridcell [ref=e501]
+                    - gridcell "unread, Google Tag Manager, Set up a Google tag on your website, Mar 8, Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing." [ref=e502]:
+                      - checkbox "unread, Google Tag Manager, Set up a Google tag on your website, Mar 8, Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing." [ref=e503]
+                    - gridcell "Not starred" [ref=e504]:
+                      - button "Not starred" [ref=e505]
+                    - gridcell "Google Tag Manager" [ref=e506]:
+                      - generic [ref=e508]: Google Tag Manager
+                    - gridcell "Set up a Google tag on your website - Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing" [ref=e509]:
+                      - link "Set up a Google tag on your website - Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing" [ref=e510]:
+                        - generic [ref=e511]:
+                          - generic [ref=e513]: Set up a Google tag on your website
+                          - generic [ref=e514]:
+                            - generic [ref=e515]: "-"
+                            - text: Finish setting up measurement on your website You recently viewed instructions on how to set up measurement on your website. We haven't found a Google tag on your website, so we're sharing
+                    - gridcell [ref=e516]
+                    - gridcell "Sun, Mar 8, 2026, 11:28 PM" [ref=e517]:
+                      - generic "Sun, Mar 8, 2026, 11:28 PM" [ref=e518]: Mar 8
+                    - gridcell
+                  - row "Wix Studio, Start collaborating on My Site 2, Mar 8, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e519] [cursor=pointer]:
+                    - gridcell [ref=e520]
+                    - gridcell "Wix Studio, Start collaborating on My Site 2, Mar 8, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e521]:
+                      - checkbox "Wix Studio, Start collaborating on My Site 2, Mar 8, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e522]
+                    - gridcell "Not starred" [ref=e523]:
+                      - button "Not starred" [ref=e524]
+                    - gridcell "Wix Studio" [ref=e525]:
+                      - generic [ref=e527]: Wix Studio
+                    - gridcell "Start collaborating on My Site 2 - chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e528]:
+                      - link "Start collaborating on My Site 2 - chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e529]:
+                        - generic [ref=e530]:
+                          - generic [ref=e532]: Start collaborating on My Site 2
+                          - generic [ref=e533]:
+                            - generic [ref=e534]: "-"
+                            - text: chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e535]
+                    - gridcell "Sun, Mar 8, 2026, 6:09 PM" [ref=e536]:
+                      - generic "Sun, Mar 8, 2026, 6:09 PM" [ref=e537]: Mar 8
+                    - gridcell
+                  - row "unread, Google, Security alert, Mar 8, New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account.." [ref=e538] [cursor=pointer]:
+                    - gridcell [ref=e539]
+                    - gridcell "unread, Google, Security alert, Mar 8, New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account.." [ref=e540]:
+                      - checkbox "unread, Google, Security alert, Mar 8, New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account.." [ref=e541]
+                    - gridcell "Not starred" [ref=e542]:
+                      - button "Not starred" [ref=e543]
+                    - gridcell "Google" [ref=e544]:
+                      - generic [ref=e546]: Google
+                    - gridcell "Security alert - New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account." [ref=e547]:
+                      - link "Security alert - New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account." [ref=e549]:
+                        - generic [ref=e550]:
+                          - generic [ref=e552]: Security alert
+                          - generic [ref=e553]:
+                            - generic [ref=e554]: "-"
+                            - text: New sign-in to your account halworker85@gmail.com We noticed a new sign-in to your Google Account. If this was you, you don't need to do anything. If not, we'll help you secure your account.
+                    - gridcell [ref=e555]
+                    - gridcell "Sun, Mar 8, 2026, 6:03 PM" [ref=e556]:
+                      - generic "Sun, Mar 8, 2026, 6:03 PM" [ref=e557]: Mar 8
+                    - gridcell
+                  - row "unread, Notion Team, Make Agent feel like your teammate, Mar 8, Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e558] [cursor=pointer]:
+                    - gridcell [ref=e559]
+                    - gridcell "unread, Notion Team, Make Agent feel like your teammate, Mar 8, Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e560]:
+                      - checkbox "unread, Notion Team, Make Agent feel like your teammate, Mar 8, Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e561]
+                    - gridcell "Not starred" [ref=e562]:
+                      - button "Not starred" [ref=e563]
+                    - gridcell "Notion Team" [ref=e564]:
+                      - generic [ref=e566]: Notion Team
+                    - gridcell "Make Agent feel like your teammate - Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e567]:
+                      - link "Make Agent feel like your teammate - Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e569]:
+                        - generic [ref=e570]:
+                          - generic [ref=e572]: Make Agent feel like your teammate
+                          - generic [ref=e573]:
+                            - generic [ref=e574]: "-"
+                            - text: Set preferences, add memory, and choose a look. ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+                    - gridcell [ref=e575]
+                    - gridcell "Sun, Mar 8, 2026, 11:31 AM" [ref=e576]:
+                      - generic "Sun, Mar 8, 2026, 11:31 AM" [ref=e577]: Mar 8
+                    - gridcell
+                  - row "unread, Linear, Welcome to Linear, Mar 7, At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And." [ref=e578] [cursor=pointer]:
+                    - gridcell [ref=e579]
+                    - gridcell "unread, Linear, Welcome to Linear, Mar 7, At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And." [ref=e580]:
+                      - checkbox "unread, Linear, Welcome to Linear, Mar 7, At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And." [ref=e581]
+                    - gridcell "Not starred" [ref=e582]:
+                      - button "Not starred" [ref=e583]
+                    - gridcell "Linear" [ref=e584]:
+                      - generic [ref=e586]: Linear
+                    - gridcell "Welcome to Linear - At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And" [ref=e587]:
+                      - link "Welcome to Linear - At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And" [ref=e588]:
+                        - generic [ref=e589]:
+                          - generic [ref=e591]: Welcome to Linear
+                          - generic [ref=e592]:
+                            - generic [ref=e593]: "-"
+                            - text: At Linear, we believe software can feel magical. Well-designed tools and practices encourage momentum and level up execution in our teams. We're excited to welcome you to the Linear community. And
+                    - gridcell [ref=e594]
+                    - gridcell "Sat, Mar 7, 2026, 4:14 PM" [ref=e595]:
+                      - generic "Sat, Mar 7, 2026, 4:14 PM" [ref=e596]: Mar 7
+                    - gridcell
+                  - row "unread, Linear, New login to Linear, Mar 7, Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e597] [cursor=pointer]:
+                    - gridcell [ref=e598]
+                    - gridcell "unread, Linear, New login to Linear, Mar 7, Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e599]:
+                      - checkbox "unread, Linear, New login to Linear, Mar 7, Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏." [ref=e600]
+                    - gridcell "Not starred" [ref=e601]:
+                      - button "Not starred" [ref=e602]
+                    - gridcell "Linear" [ref=e603]:
+                      - generic [ref=e605]: Linear
+                    - gridcell "New login to Linear - Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e606]:
+                      - link "New login to Linear - Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏" [ref=e607]:
+                        - generic [ref=e608]:
+                          - generic [ref=e610]: New login to Linear
+                          - generic [ref=e611]:
+                            - generic [ref=e612]: "-"
+                            - text: Login detected with Chrome on macOS from Denver, CO, US ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏
+                    - gridcell [ref=e613]
+                    - gridcell "Sat, Mar 7, 2026, 3:13 PM" [ref=e614]:
+                      - generic "Sat, Mar 7, 2026, 3:13 PM" [ref=e615]: Mar 7
+                    - gridcell
+                  - row "unread, Asana, Welcome to your Asana trial, Mar 6, Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e616] [cursor=pointer]:
+                    - gridcell [ref=e617]
+                    - gridcell "unread, Asana, Welcome to your Asana trial, Mar 6, Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e618]:
+                      - checkbox "unread, Asana, Welcome to your Asana trial, Mar 6, Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e619]
+                    - gridcell "Not starred" [ref=e620]:
+                      - button "Not starred" [ref=e621]
+                    - gridcell "Asana" [ref=e622]:
+                      - generic [ref=e624]: Asana
+                    - gridcell "Welcome to your Asana trial - Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e625]:
+                      - link "Welcome to your Asana trial - Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e626]:
+                        - generic [ref=e627]:
+                          - generic [ref=e629]: Welcome to your Asana trial
+                          - generic [ref=e630]:
+                            - generic [ref=e631]: "-"
+                            - text: Three steps to get started ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e632]
+                    - gridcell "Fri, Mar 6, 2026, 12:46 PM" [ref=e633]:
+                      - generic "Fri, Mar 6, 2026, 12:46 PM" [ref=e634]: Mar 6
+                    - gridcell
+                  - row "unread, Google, Hal, review your Google Account settings, Mar 6, Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e635] [cursor=pointer]:
+                    - gridcell [ref=e636]
+                    - gridcell "unread, Google, Hal, review your Google Account settings, Mar 6, Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e637]:
+                      - checkbox "unread, Google, Hal, review your Google Account settings, Mar 6, Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e638]
+                    - gridcell "Not starred" [ref=e639]:
+                      - button "Not starred" [ref=e640]
+                    - gridcell "Google" [ref=e641]:
+                      - generic [ref=e643]: Google
+                    - gridcell "Hal, review your Google Account settings - Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e644]:
+                      - link "Hal, review your Google Account settings - Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e646]:
+                        - generic [ref=e647]:
+                          - generic [ref=e649]: Hal, review your Google Account settings
+                          - generic [ref=e650]:
+                            - generic [ref=e651]: "-"
+                            - text: Hi Hal, Welcome to Google on your new PC. Here are a few of tips to get you started. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e652]
+                    - gridcell "Fri, Mar 6, 2026, 12:41 PM" [ref=e653]:
+                      - generic "Fri, Mar 6, 2026, 12:41 PM" [ref=e654]: Mar 6
+                    - gridcell
+                  - row "unread, Google, Security alert, Mar 6, A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your." [ref=e655] [cursor=pointer]:
+                    - gridcell [ref=e656]
+                    - gridcell "unread, Google, Security alert, Mar 6, A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your." [ref=e657]:
+                      - checkbox "unread, Google, Security alert, Mar 6, A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your." [ref=e658]
+                    - gridcell "Not starred" [ref=e659]:
+                      - button "Not starred" [ref=e660]
+                    - gridcell "Google" [ref=e661]:
+                      - generic [ref=e663]: Google
+                    - gridcell "Security alert - A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your" [ref=e664]:
+                      - link "Security alert - A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your" [ref=e666]:
+                        - generic [ref=e667]:
+                          - generic [ref=e669]: Security alert
+                          - generic [ref=e670]:
+                            - generic [ref=e671]: "-"
+                            - text: A new sign-in on Mac halworker85@gmail.com We noticed a new sign-in to your Google Account on a Mac device. If this was you, you don't need to do anything. If not, we'll help you secure your
+                    - gridcell [ref=e672]
+                    - gridcell "Fri, Mar 6, 2026, 12:40 PM" [ref=e673]:
+                      - generic "Fri, Mar 6, 2026, 12:40 PM" [ref=e674]: Mar 6
+                    - gridcell
+                  - row "unread, The Self Service Te., Get the most out of Auth0 - Let’s discuss your use case, Feb 23, Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e675] [cursor=pointer]:
+                    - gridcell [ref=e676]
+                    - gridcell "unread, The Self Service Te., Get the most out of Auth0 - Let’s discuss your use case, Feb 23, Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e677]:
+                      - checkbox "unread, The Self Service Te., Get the most out of Auth0 - Let’s discuss your use case, Feb 23, Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e678]
+                    - gridcell "Not starred" [ref=e679]:
+                      - button "Not starred" [ref=e680]
+                    - gridcell "The Self Service Te." [ref=e681]:
+                      - generic [ref=e683]: The Self Service Te.
+                    - gridcell "Get the most out of Auth0 - Let’s discuss your use case - Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e684]:
+                      - link "Get the most out of Auth0 - Let’s discuss your use case - Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e686]:
+                        - generic [ref=e687]:
+                          - generic [ref=e689]: Get the most out of Auth0 - Let’s discuss your use case
+                          - generic [ref=e690]:
+                            - generic [ref=e691]: "-"
+                            - text: Feel free to reply to this email or schedule a meeting ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e692]
+                    - gridcell "Mon, Feb 23, 2026, 11:03 AM" [ref=e693]:
+                      - generic "Mon, Feb 23, 2026, 11:03 AM" [ref=e694]: Feb 23
+                    - gridcell
+                  - row "Chris, Mayor Hal, Feb 20, Please give me a status update.." [ref=e695] [cursor=pointer]:
+                    - gridcell [ref=e696]
+                    - gridcell "Chris, Mayor Hal, Feb 20, Please give me a status update.." [ref=e697]:
+                      - checkbox "Chris, Mayor Hal, Feb 20, Please give me a status update.." [ref=e698]
+                    - gridcell "Not starred" [ref=e699]:
+                      - button "Not starred" [ref=e700]
+                    - gridcell "Chris" [ref=e701]:
+                      - generic [ref=e703]: Chris
+                    - gridcell "Mayor Hal - Please give me a status update." [ref=e704]:
+                      - link "Mayor Hal - Please give me a status update." [ref=e705]:
+                        - generic [ref=e706]:
+                          - generic [ref=e708]: Mayor Hal
+                          - generic [ref=e709]:
+                            - generic [ref=e710]: "-"
+                            - text: Please give me a status update.
+                    - gridcell [ref=e711]
+                    - gridcell "Fri, Feb 20, 2026, 9:00 AM" [ref=e712]:
+                      - generic "Fri, Feb 20, 2026, 9:00 AM" [ref=e713]: Feb 20
+                    - gridcell
+                  - row "unread, The Auth0 Team, Resources for getting started with Auth0, Feb 17, ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e714] [cursor=pointer]:
+                    - gridcell [ref=e715]
+                    - gridcell "unread, The Auth0 Team, Resources for getting started with Auth0, Feb 17, ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e716]:
+                      - checkbox "unread, The Auth0 Team, Resources for getting started with Auth0, Feb 17, ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e717]
+                    - gridcell "Not starred" [ref=e718]:
+                      - button "Not starred" [ref=e719]
+                    - gridcell "The Auth0 Team" [ref=e720]:
+                      - generic [ref=e722]: The Auth0 Team
+                    - gridcell "Resources for getting started with Auth0 - ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e723]:
+                      - link "Resources for getting started with Auth0 - ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e725]:
+                        - generic [ref=e726]:
+                          - generic [ref=e728]: Resources for getting started with Auth0
+                          - generic [ref=e729]:
+                            - generic [ref=e730]: "-"
+                            - text: ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e731]
+                    - gridcell "Tue, Feb 17, 2026, 11:00 AM" [ref=e732]:
+                      - generic "Tue, Feb 17, 2026, 11:00 AM" [ref=e733]: Feb 17
+                    - gridcell
+                  - row "Wix.com, Start collaborating on Carolina Futons, Feb 15, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e734] [cursor=pointer]:
+                    - gridcell [ref=e735]
+                    - gridcell "Wix.com, Start collaborating on Carolina Futons, Feb 15, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e736]:
+                      - checkbox "Wix.com, Start collaborating on Carolina Futons, Feb 15, chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌." [ref=e737]
+                    - gridcell "Not starred" [ref=e738]:
+                      - button "Not starred" [ref=e739]
+                    - gridcell "Wix.com" [ref=e740]:
+                      - generic [ref=e742]: Wix.com
+                    - gridcell "Start collaborating on Carolina Futons - chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e743]:
+                      - link "Start collaborating on Carolina Futons - chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌" [ref=e744]:
+                        - generic [ref=e745]:
+                          - generic [ref=e747]: Start collaborating on Carolina Futons
+                          - generic [ref=e748]:
+                            - generic [ref=e749]: "-"
+                            - text: chrisdealglass@gmail.com invited you to collaborate on a site.‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌
+                    - gridcell [ref=e750]
+                    - gridcell "Sun, Feb 15, 2026, 11:15 PM" [ref=e751]:
+                      - generic "Sun, Feb 15, 2026, 11:15 PM" [ref=e752]: Feb 15
+                    - gridcell
+                  - row "Google AI Studio, Hi Hal, welcome to Google AI Studio, Feb 15, Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏." [ref=e753] [cursor=pointer]:
+                    - gridcell [ref=e754]
+                    - gridcell "Google AI Studio, Hi Hal, welcome to Google AI Studio, Feb 15, Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏." [ref=e755]:
+                      - checkbox "Google AI Studio, Hi Hal, welcome to Google AI Studio, Feb 15, Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏." [ref=e756]
+                    - gridcell "Not starred" [ref=e757]:
+                      - button "Not starred" [ref=e758]
+                    - gridcell "Google AI Studio" [ref=e759]:
+                      - generic [ref=e761]: Google AI Studio
+                    - gridcell "Hi Hal, welcome to Google AI Studio - Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏" [ref=e762]:
+                      - link "Hi Hal, welcome to Google AI Studio - Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏" [ref=e763]:
+                        - generic [ref=e764]:
+                          - generic [ref=e766]: Hi Hal, welcome to Google AI Studio
+                          - generic [ref=e767]:
+                            - generic [ref=e768]: "-"
+                            - text: Build with the latest state-of-the-art models from Google DeepMind. ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏ ͏ ‍͏
+                    - gridcell [ref=e769]
+                    - gridcell "Sun, Feb 15, 2026, 5:39 PM" [ref=e770]:
+                      - generic "Sun, Feb 15, 2026, 5:39 PM" [ref=e771]: Feb 15
+                    - gridcell
+                  - 'row "Brave Search API, Brave Search API login attempt, Feb 15, Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For." [ref=e772] [cursor=pointer]':
+                    - gridcell [ref=e773]
+                    - 'gridcell "Brave Search API, Brave Search API login attempt, Feb 15, Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For." [ref=e774]':
+                      - 'checkbox "Brave Search API, Brave Search API login attempt, Feb 15, Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For." [ref=e775]'
+                    - gridcell "Not starred" [ref=e776]:
+                      - button "Not starred" [ref=e777]
+                    - gridcell "Brave Search API" [ref=e778]:
+                      - generic [ref=e780]: Brave Search API
+                    - 'gridcell "Brave Search API login attempt - Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For" [ref=e781]':
+                      - 'link "Brave Search API login attempt - Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For" [ref=e782]':
+                        - generic [ref=e783]:
+                          - generic [ref=e785]: Brave Search API login attempt
+                          - generic [ref=e786]:
+                            - generic [ref=e787]: "-"
+                            - text: "Brave Hi Hal worker, Here is your verification code to complete the sign-in process: 954681 This verification code will expire in 15 minutes. For security reasons, this code can only be used once. For"
+                    - gridcell [ref=e788]
+                    - gridcell "Sun, Feb 15, 2026, 12:38 PM" [ref=e789]:
+                      - generic "Sun, Feb 15, 2026, 12:38 PM" [ref=e790]: Feb 15
+                    - gridcell
+                  - 'row "unread, Brave Search API, Brave Search API new user created, Feb 15, Brave Hi Hal worker, Your account is now active. You''re almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for." [ref=e791] [cursor=pointer]':
+                    - gridcell [ref=e792]
+                    - 'gridcell "unread, Brave Search API, Brave Search API new user created, Feb 15, Brave Hi Hal worker, Your account is now active. You''re almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for." [ref=e793]':
+                      - 'checkbox "unread, Brave Search API, Brave Search API new user created, Feb 15, Brave Hi Hal worker, Your account is now active. You''re almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for." [ref=e794]'
+                    - gridcell "Not starred" [ref=e795]:
+                      - button "Not starred" [ref=e796]
+                    - gridcell "Brave Search API" [ref=e797]:
+                      - generic [ref=e799]: Brave Search API
+                    - 'gridcell "Brave Search API new user created - Brave Hi Hal worker, Your account is now active. You''re almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for" [ref=e800]':
+                      - 'link "Brave Search API new user created - Brave Hi Hal worker, Your account is now active. You''re almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for" [ref=e801]':
+                        - generic [ref=e802]:
+                          - generic [ref=e804]: Brave Search API new user created
+                          - generic [ref=e805]:
+                            - generic [ref=e806]: "-"
+                            - text: "Brave Hi Hal worker, Your account is now active. You're almost ready to build with the power of programmable Web search! Next steps: Subscribe to a plan Generate an API key Review the docs for"
+                    - gridcell [ref=e807]
+                    - gridcell "Sun, Feb 15, 2026, 12:38 PM" [ref=e808]:
+                      - generic "Sun, Feb 15, 2026, 12:38 PM" [ref=e809]: Feb 15
+                    - gridcell
+                  - 'row "Brave Search API, Brave Search API verify your email, Feb 15, Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn." [ref=e810] [cursor=pointer]':
+                    - gridcell [ref=e811]
+                    - 'gridcell "Brave Search API, Brave Search API verify your email, Feb 15, Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn." [ref=e812]':
+                      - 'checkbox "Brave Search API, Brave Search API verify your email, Feb 15, Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn." [ref=e813]'
+                    - gridcell "Not starred" [ref=e814]:
+                      - button "Not starred" [ref=e815]
+                    - gridcell "Brave Search API" [ref=e816]:
+                      - generic [ref=e818]: Brave Search API
+                    - 'gridcell "Brave Search API verify your email - Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn" [ref=e819]':
+                      - 'link "Brave Search API verify your email - Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn" [ref=e820]':
+                        - generic [ref=e821]:
+                          - generic [ref=e823]: Brave Search API verify your email
+                          - generic [ref=e824]:
+                            - generic [ref=e825]: "-"
+                            - text: "Brave Hi Hal worker, Please follow the link below to verify your email address: Verify Email The verification link will expire in 24 hours. View our Privacy Policy and Terms of Service. If you didn"
+                    - gridcell [ref=e826]
+                    - gridcell "Sun, Feb 15, 2026, 12:38 PM" [ref=e827]:
+                      - generic "Sun, Feb 15, 2026, 12:38 PM" [ref=e828]: Feb 15
+                    - gridcell
+          - contentinfo [ref=e830]:
+            - link "0% of 15 GB used Follow link to manage storage" [ref=e835] [cursor=pointer]:
+              - /url: https://drive.google.com/u/0/settings/storage?hl=en&utm_medium=web&utm_source=gmail&utm_campaign=storage_meter&utm_content=storage_normal
+              - generic [ref=e837]:
+                - generic [ref=e838]: 0% of 15 GB used
+                - img "Follow link to manage storage" [ref=e839]
+            - generic [ref=e843]:
+              - link "Terms" [ref=e844] [cursor=pointer]:
+                - /url: https://www.google.com/intl/en/policies/terms/
+              - text: ·
+              - link "Privacy" [ref=e845] [cursor=pointer]:
+                - /url: https://www.google.com/intl/en/policies/privacy/
+              - text: ·
+              - link "Program Policies" [ref=e846] [cursor=pointer]:
+                - /url: https://www.google.com/gmail/about/policy/
+            - generic [ref=e878]:
+              - generic [ref=e879]: "Last account activity: 0 minutes ago"
+              - text: Open in 1 other location ·
+              - link "Details" [ref=e880] [cursor=pointer]
+      - generic [ref=e854]:
+        - complementary "Side panel" [ref=e855]:
+          - tablist [ref=e857]:
+            - tab "Calendar"
+            - tab "Keep"
+            - tab "Tasks"
+            - tab "Contacts"
+            - separator [disabled] [ref=e862]
+            - tab "Get Add-ons"
+        - generic:
+          - button "Hide side panel":
+            - img [ref=e865] [cursor=pointer]

@@ -1,0 +1,1817 @@
+{
+  "generatedAt": "2026-03-15",
+  "source": "Wix Media Manager API - halworker85 live site",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "notes": "Complete manifest: 122 original + 70 from new folders = 192 total",
+  "folders": {
+    "Bedroom Collection": 35,
+    "root": 30,
+    "Murphy Cabinet Beds": 34,
+    "Mattresses": 17,
+    "Frames": 1,
+    "Misc": 5,
+    "Night&Day": 0,
+    "Logo": "not queried"
+  },
+  "totalFiles": 192,
+  "files": [
+    {
+      "wixMediaId": "e04e89_692348e36c9347579c7af2a1f1e7acb0~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard Low Full Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_692348e36c9347579c7af2a1f1e7acb0~mv2.jpg",
+      "width": 4771,
+      "height": 3408,
+      "sizeInBytes": 5075108
+    },
+    {
+      "wixMediaId": "e04e89_931c94e9434b4e66ba448b02761c0689~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard Low Full Cherry Futon Drawers 2.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_931c94e9434b4e66ba448b02761c0689~mv2.jpg",
+      "width": 4771,
+      "height": 3408,
+      "sizeInBytes": 5184400
+    },
+    {
+      "wixMediaId": "e04e89_f16a544fc8524631ac46462b86296c8a~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard High Full Stonewash Cinnamon Drawers 1.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_f16a544fc8524631ac46462b86296c8a~mv2.jpg",
+      "width": 4616,
+      "height": 3297,
+      "sizeInBytes": 4027019
+    },
+    {
+      "wixMediaId": "e04e89_87db5d8ff9bd4c53b7fc4fed95e3d3a8~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard Low Full Dark Chocolate.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_87db5d8ff9bd4c53b7fc4fed95e3d3a8~mv2.jpg",
+      "width": 4771,
+      "height": 3408,
+      "sizeInBytes": 3662712
+    },
+    {
+      "wixMediaId": "e04e89_2f885bfb9834409984fc72242f1c1544~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard High Full Stonewash Cinnamon Drawers 2.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_2f885bfb9834409984fc72242f1c1544~mv2.jpg",
+      "width": 4616,
+      "height": 3297,
+      "sizeInBytes": 4175816
+    },
+    {
+      "wixMediaId": "e04e89_bbb1b26f27e6468589b01980f1e29568~mv2.jpg",
+      "displayName": "Blackpepper KPQ-Footboard Low Full Dark Chocolate Futon Drawers 2.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_bbb1b26f27e6468589b01980f1e29568~mv2.jpg",
+      "width": 4771,
+      "height": 3408,
+      "sizeInBytes": 3945353
+    },
+    {
+      "wixMediaId": "e04e89_b9d4cf76a1a84bf5bb4821edc53f6df2~mv2.jpg",
+      "displayName": "Tarragon-Bed-Natural-K-Series-scaled.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_b9d4cf76a1a84bf5bb4821edc53f6df2~mv2.jpg",
+      "width": 2560,
+      "height": 1828,
+      "sizeInBytes": 420805
+    },
+    {
+      "wixMediaId": "e04e89_8cd0de059f244e8485a600d4783caa92~mv2.jpg",
+      "displayName": "Tarragon-Bed-Full-Cherry-P-Series-2048x1463.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_8cd0de059f244e8485a600d4783caa92~mv2.jpg",
+      "width": 2048,
+      "height": 1463,
+      "sizeInBytes": 197677
+    },
+    {
+      "wixMediaId": "e04e89_e3357a2ebecc403aab16cf851d974fbc~mv2.jpg",
+      "displayName": "Tarragon-Bed-Dark-Chocolate-K-Series-2048x1463.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_e3357a2ebecc403aab16cf851d974fbc~mv2.jpg",
+      "width": 2048,
+      "height": 1463,
+      "sizeInBytes": 153725
+    },
+    {
+      "wixMediaId": "e04e89_1216e94c6cc944bebfbe14ff59b89e6d~mv2.jpg",
+      "displayName": "blackpepper_sw_720.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_1216e94c6cc944bebfbe14ff59b89e6d~mv2.jpg",
+      "width": 720,
+      "height": 480,
+      "sizeInBytes": 85967
+    },
+    {
+      "wixMediaId": "e04e89_411fb961ebc54d43adaf70e74e75fe2b~mv2.jpg",
+      "displayName": "Basic-Bed-Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_411fb961ebc54d43adaf70e74e75fe2b~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 135163
+    },
+    {
+      "wixMediaId": "e04e89_7ff63da181f148fa8ad23acfb61a7a22~mv2.jpg",
+      "displayName": "Basic-Bed-Natural.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_7ff63da181f148fa8ad23acfb61a7a22~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 62440
+    },
+    {
+      "wixMediaId": "e04e89_e083aabd35ea46f48740d6acbc6961fe~mv2.jpg",
+      "displayName": "Basic-Bed-Dark-Chocolate.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_e083aabd35ea46f48740d6acbc6961fe~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 61513
+    },
+    {
+      "wixMediaId": "e04e89_bce18fcc2e524496af6534ec31c62b6d~mv2.jpg",
+      "displayName": "Basic-Bed-Medium-Oak.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_bce18fcc2e524496af6534ec31c62b6d~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 64963
+    },
+    {
+      "wixMediaId": "e04e89_2897f1fc9b94493b974f40e15fe4eeca~mv2.jpg",
+      "displayName": "Blackpepper-Bed-Full-Dark-Chocolate.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_2897f1fc9b94493b974f40e15fe4eeca~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 59503
+    },
+    {
+      "wixMediaId": "e04e89_22dc16577aa345199fb5a501a71a7567~mv2.jpg",
+      "displayName": "Basic-Bed-Suite-Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_22dc16577aa345199fb5a501a71a7567~mv2.jpg",
+      "width": 3008,
+      "height": 2066,
+      "sizeInBytes": 1543364
+    },
+    {
+      "wixMediaId": "e04e89_a587145397464537b41086e656075de0~mv2.jpg",
+      "displayName": "Basic-Bed-White.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_a587145397464537b41086e656075de0~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 62282
+    },
+    {
+      "wixMediaId": "e04e89_7b851f8dc2c74fbaa382a987ade1662e~mv2.jpg",
+      "displayName": "Chameleon-Bed-Eastern-King-Medium-Oak-w-P-Series-Height.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_7b851f8dc2c74fbaa382a987ade1662e~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 61446
+    },
+    {
+      "wixMediaId": "e04e89_4b7803144cf241d6bb6b79bb740f6234~mv2.jpg",
+      "displayName": "Chameleon-Bed-Full-Medium-Oak.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_4b7803144cf241d6bb6b79bb740f6234~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 58018
+    },
+    {
+      "wixMediaId": "e04e89_b5f0f654b6174c79b8497a7d7e9291a6~mv2.jpg",
+      "displayName": "Chameleon-Bed-Full-Cherry-2.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_b5f0f654b6174c79b8497a7d7e9291a6~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 52961
+    },
+    {
+      "wixMediaId": "e04e89_784e5cc9af1443fabbbfeb125c4b445e~mv2.jpg",
+      "displayName": "Chameleon-Bed-Full-Dark-Chocolate.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_784e5cc9af1443fabbbfeb125c4b445e~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 52619
+    },
+    {
+      "wixMediaId": "e04e89_0b77371f806a43679fffaaf5429823de~mv2.jpg",
+      "displayName": "Chameleon-Medium-Oak.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_0b77371f806a43679fffaaf5429823de~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 63016
+    },
+    {
+      "wixMediaId": "e04e89_4e0a3f9862cc43af94792c6d6f06c791~mv2.jpg",
+      "displayName": "Chameleon-White.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_4e0a3f9862cc43af94792c6d6f06c791~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 76806
+    },
+    {
+      "wixMediaId": "e04e89_f6406f68b37140a7a3f2d7c609cab0e5~mv2.jpg",
+      "displayName": "Clove_Casegoods_Cherry_Metal_Knobs.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_f6406f68b37140a7a3f2d7c609cab0e5~mv2.jpg",
+      "width": 600,
+      "height": 400,
+      "sizeInBytes": 32746
+    },
+    {
+      "wixMediaId": "e04e89_2c3ff7e0eb1e4e219760244ad87f2241~mv2.jpg",
+      "displayName": "Cherry_Open_with_Drawer_Closed-1024x681.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_2c3ff7e0eb1e4e219760244ad87f2241~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 135309
+    },
+    {
+      "wixMediaId": "e04e89_7e22335a0145460896eae57bc4ee5ba2~mv2.jpg",
+      "displayName": "Chameleon-Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_7e22335a0145460896eae57bc4ee5ba2~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 88113
+    },
+    {
+      "wixMediaId": "e04e89_59ad34e8e2244a188b827203b10f3a1e~mv2.jpg",
+      "displayName": "Chameleon-Natural.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_59ad34e8e2244a188b827203b10f3a1e~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 65644
+    },
+    {
+      "wixMediaId": "e04e89_a69925dcfd704bcc9e5d385f753ca424~mv2.jpg",
+      "displayName": "Clove_Hook-on_Nightstand_Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_a69925dcfd704bcc9e5d385f753ca424~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 139716
+    },
+    {
+      "wixMediaId": "e04e89_634eb2e21a114e98ae0ded9f3647a356~mv2.jpg",
+      "displayName": "Clove_Hook-on_Nightstand_Dark_Chocolate.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_634eb2e21a114e98ae0ded9f3647a356~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 118001
+    },
+    {
+      "wixMediaId": "e04e89_9ba2cf903416434cba9ada40a93a5fa3~mv2.jpg",
+      "displayName": "Clove_Casegoods_Medium_Oak_Wood_Knobs.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_9ba2cf903416434cba9ada40a93a5fa3~mv2.jpg",
+      "width": 600,
+      "height": 400,
+      "sizeInBytes": 103418
+    },
+    {
+      "wixMediaId": "e04e89_110aa4c33abf405d81897ba557b0623a~mv2.jpg",
+      "displayName": "Clove_Hook-on_Nightstand_Natural.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_110aa4c33abf405d81897ba557b0623a~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 123229
+    },
+    {
+      "wixMediaId": "e04e89_413d0f30cdd44d0080532a0301310251~mv2.jpg",
+      "displayName": "Clove_Lingerie_Chest_Cherry.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_413d0f30cdd44d0080532a0301310251~mv2.jpg",
+      "width": 600,
+      "height": 780,
+      "sizeInBytes": 106642
+    },
+    {
+      "wixMediaId": "e04e89_6d1335d6e247413c978b9a62874ab210~mv2.jpg",
+      "displayName": "Clove_Casegoods_White_Wood_Knobs-100x100.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_6d1335d6e247413c978b9a62874ab210~mv2.jpg",
+      "width": 100,
+      "height": 100,
+      "sizeInBytes": 1816
+    },
+    {
+      "wixMediaId": "e04e89_67114b5a431645fd9fee1d4edc8d086a~mv2.jpg",
+      "displayName": "Clove_Hook-on_Nightstand_Medium_Oak.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_67114b5a431645fd9fee1d4edc8d086a~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 119229
+    },
+    {
+      "wixMediaId": "e04e89_48173cff5fc949eca62179fcd8f17aca~mv2.jpg",
+      "displayName": "Clove_Hook-on_Nightstand_Cherry_w_Drawers_open_2.jpg",
+      "folder": "Bedroom Collection",
+      "url": "https://static.wixstatic.com/media/e04e89_48173cff5fc949eca62179fcd8f17aca~mv2.jpg",
+      "width": 640,
+      "height": 426,
+      "sizeInBytes": 146103
+    },
+    {
+      "wixMediaId": "e04e89_72d82110638045c39e0f6274363c15f8~mv2.jpg",
+      "displayName": "couple sitting on futon frame with clovers.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_72d82110638045c39e0f6274363c15f8~mv2.jpg",
+      "width": 1024,
+      "height": 1024,
+      "sizeInBytes": 435225
+    },
+    {
+      "wixMediaId": "ed8a72_ff1be4997e124e098fb183939de2a131~mv2.png",
+      "displayName": "A stylish living room featuring a modern, space-saving wall hugger sofa in a comfortable setting..png",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/ed8a72_ff1be4997e124e098fb183939de2a131~mv2.png",
+      "width": 1024,
+      "height": 768,
+      "sizeInBytes": 2360909
+    },
+    {
+      "wixMediaId": "e04e89_9e74e8e4dfa04048b0f983dc4076f513~mv2.jpg",
+      "displayName": "Rudy_edited_edited_edited.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_9e74e8e4dfa04048b0f983dc4076f513~mv2.jpg",
+      "width": 696,
+      "height": 839,
+      "sizeInBytes": 600628
+    },
+    {
+      "wixMediaId": "e04e89_db758fcc340c44fc982a09dd78f275d6~mv2.jpg",
+      "displayName": "Rudy_edited_edited.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_db758fcc340c44fc982a09dd78f275d6~mv2.jpg",
+      "width": 960,
+      "height": 1196,
+      "sizeInBytes": 1005297
+    },
+    {
+      "wixMediaId": "ed8a72_b9070e2ba0fc4a68a17a4ea0563e68a3~mv2.jpg",
+      "displayName": "snowy really bad weather, furniture store closed     .jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/ed8a72_b9070e2ba0fc4a68a17a4ea0563e68a3~mv2.jpg",
+      "width": 1024,
+      "height": 926,
+      "sizeInBytes": 758604
+    },
+    {
+      "wixMediaId": "ed8a72_4d8c303d571040db8ec09f8e08eedda3~mv2.png",
+      "displayName": "A-festive-scene-with-confetti-and-party-streamers-on-a-celebratory-table-arrangement-against-a-blurred-background-with-warm-lighting..png",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/ed8a72_4d8c303d571040db8ec09f8e08eedda3~mv2.png",
+      "width": 1024,
+      "height": 768,
+      "sizeInBytes": 1166086
+    },
+    {
+      "wixMediaId": "e04e89_828735a4ec7842eda440e8d807cbf5c1~mv2.jpg",
+      "displayName": "Happy New Year 2026.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_828735a4ec7842eda440e8d807cbf5c1~mv2.jpg",
+      "width": 1024,
+      "height": 1024,
+      "sizeInBytes": 819067
+    },
+    {
+      "wixMediaId": "e04e89_49cc68ad3fea424d9790d95b582ab151~mv2.jpg",
+      "displayName": "banner_edited.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_49cc68ad3fea424d9790d95b582ab151~mv2.jpg",
+      "width": 3000,
+      "height": 1117,
+      "sizeInBytes": 1761440
+    },
+    {
+      "wixMediaId": "e04e89_182f9c9bc47d40c284ac91d497c5b500~mv2.jpg",
+      "displayName": "banner.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_182f9c9bc47d40c284ac91d497c5b500~mv2.jpg",
+      "width": 1313,
+      "height": 3525,
+      "sizeInBytes": 836600
+    },
+    {
+      "wixMediaId": "e04e89_d9206b33892d4c59b551b62264ed5ac4~mv2.jpg",
+      "displayName": "banner.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_d9206b33892d4c59b551b62264ed5ac4~mv2.jpg",
+      "width": 3283,
+      "height": 1303,
+      "sizeInBytes": 6259384
+    },
+    {
+      "wixMediaId": "ed8a72_22bac7985bd64743852587b2676859d2~mv2.jpg",
+      "displayName": "nice thanksgiving scene with the blue ridge mountain in background,  add some turkeys.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/ed8a72_22bac7985bd64743852587b2676859d2~mv2.jpg",
+      "width": 1024,
+      "height": 1024,
+      "sizeInBytes": 901128
+    },
+    {
+      "wixMediaId": "e04e89_f1ed7807cac74a00aeb7b5782daef22e~mv2.png",
+      "displayName": "A-cozy-living-room-scene-featuring-a-stylish-futon-with-decorative-pillows-under-warm-lighting..png",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_f1ed7807cac74a00aeb7b5782daef22e~mv2.png",
+      "width": 1024,
+      "height": 768,
+      "sizeInBytes": 1171267
+    },
+    {
+      "wixMediaId": "e04e89_c635351c60d64a7f95c776693d588ac4~mv2.png",
+      "displayName": "A cozy-living-room-scene-featuring-a-comfortable-futon-with-throw-blankets-and-decorative-pillows-in-a-warm-and-inviting-setting lifestyle-p.png",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_c635351c60d64a7f95c776693d588ac4~mv2.png",
+      "width": 1024,
+      "height": 768,
+      "sizeInBytes": 1210357
+    },
+    {
+      "wixMediaId": "e04e89_ac870f287e7a46438711546d1111f244~mv2.jpg",
+      "displayName": "Secrets 6 Drawer Dresser & Mirror Cherry.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_ac870f287e7a46438711546d1111f244~mv2.jpg",
+      "width": 3195,
+      "height": 4473,
+      "sizeInBytes": 1682185
+    },
+    {
+      "wixMediaId": "e04e89_9eb97af8c02040839e01aa120c19658f~mv2.jpg",
+      "displayName": "Paprika Bed Queen Grey_Cherry P-Series.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_9eb97af8c02040839e01aa120c19658f~mv2.jpg",
+      "width": 4706,
+      "height": 3361,
+      "sizeInBytes": 1702548
+    },
+    {
+      "wixMediaId": "e04e89_551426375268416397cb5c0d6e3ac3c0~mv2.jpg",
+      "displayName": "Paprika Bed Queen Charcoal_Dark Chocolate P-Series.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_551426375268416397cb5c0d6e3ac3c0~mv2.jpg",
+      "width": 4616,
+      "height": 3297,
+      "sizeInBytes": 1407739
+    },
+    {
+      "wixMediaId": "e04e89_47457cd6232943b78e246df9b5d6268b~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard High Full Cherry-Teal.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_47457cd6232943b78e246df9b5d6268b~mv2.jpg",
+      "width": 4861,
+      "height": 3472,
+      "sizeInBytes": 5424637
+    },
+    {
+      "wixMediaId": "e04e89_6411c411074b43809afa38f615964d67~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard High Full Cherry-Red.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_6411c411074b43809afa38f615964d67~mv2.jpg",
+      "width": 4736,
+      "height": 3383,
+      "sizeInBytes": 4661781
+    },
+    {
+      "wixMediaId": "e04e89_e0f700b6d35c4bcd8214cb4de99fb068~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard Full Cherry-Teal Cinnamon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_e0f700b6d35c4bcd8214cb4de99fb068~mv2.jpg",
+      "width": 4868,
+      "height": 3477,
+      "sizeInBytes": 5598548
+    },
+    {
+      "wixMediaId": "e04e89_b6d5077317ec4a13a09258a88120cf83~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard Full Cherry-Red Cinnamon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_b6d5077317ec4a13a09258a88120cf83~mv2.jpg",
+      "width": 4736,
+      "height": 3383,
+      "sizeInBytes": 5109983
+    },
+    {
+      "wixMediaId": "e04e89_71b8666dabf641e9ab00ac553283db2e~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard High Queen Natural-Red Cinnamon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_71b8666dabf641e9ab00ac553283db2e~mv2.jpg",
+      "width": 4619,
+      "height": 3300,
+      "sizeInBytes": 4628876
+    },
+    {
+      "wixMediaId": "e04e89_20c35ac16c59449a8dd1bb9b883a772e~mv2.jpg",
+      "displayName": "Paprika KPQ-Footboard High Queen Natural-Red.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_20c35ac16c59449a8dd1bb9b883a772e~mv2.jpg",
+      "width": 4619,
+      "height": 3300,
+      "sizeInBytes": 4227385
+    },
+    {
+      "wixMediaId": "e04e89_07c8333935e54d7cadd63ab2520693f7~mv2.jpg",
+      "displayName": "Thyme KPQ Low Full Cherry Futon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_07c8333935e54d7cadd63ab2520693f7~mv2.jpg",
+      "width": 4845,
+      "height": 3460,
+      "sizeInBytes": 4751762
+    },
+    {
+      "wixMediaId": "e04e89_4bea49a709a3470a8315b5acd7309b0f~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full Natural Futon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_4bea49a709a3470a8315b5acd7309b0f~mv2.jpg",
+      "width": 4494,
+      "height": 3209,
+      "sizeInBytes": 3692414
+    },
+    {
+      "wixMediaId": "e04e89_98f4d8a416054db5a318e14204464c80~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full Natural.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_98f4d8a416054db5a318e14204464c80~mv2.jpg",
+      "width": 4494,
+      "height": 3209,
+      "sizeInBytes": 3439982
+    },
+    {
+      "wixMediaId": "e04e89_6adbe4f158fc417384ac330a0cdb64a0~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full Stonewash.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_6adbe4f158fc417384ac330a0cdb64a0~mv2.jpg",
+      "width": 4611,
+      "height": 3294,
+      "sizeInBytes": 2957711
+    },
+    {
+      "wixMediaId": "e04e89_3b21f44da4ac486581f5e5983c7e0973~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full White.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_3b21f44da4ac486581f5e5983c7e0973~mv2.jpg",
+      "width": 4457,
+      "height": 3190,
+      "sizeInBytes": 4626296
+    },
+    {
+      "wixMediaId": "e04e89_2b97bbd4133d408f822de2697526c4dc~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full White Futon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_2b97bbd4133d408f822de2697526c4dc~mv2.jpg",
+      "width": 4457,
+      "height": 3190,
+      "sizeInBytes": 4757214
+    },
+    {
+      "wixMediaId": "e04e89_2b18c31513b34fa5a01198b0c26677bb~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full Dark Chocolate.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_2b18c31513b34fa5a01198b0c26677bb~mv2.jpg",
+      "width": 4497,
+      "height": 3212,
+      "sizeInBytes": 4377307
+    },
+    {
+      "wixMediaId": "e04e89_cee3c1d8619f4bf3b7ff83e614e4a49d~mv2.jpg",
+      "displayName": "Thyme KPQ-Footboard Low Full Dark Chocolate Futon Drawers 2.jpg",
+      "folder": "root",
+      "url": "https://static.wixstatic.com/media/e04e89_cee3c1d8619f4bf3b7ff83e614e4a49d~mv2.jpg",
+      "width": 4494,
+      "height": 3209,
+      "sizeInBytes": 4263955
+    },
+    {
+      "wixMediaId": "e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg",
+      "displayName": "Daisy-Murphy-Cabinet-Black-Walnut-1-scaled.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_818d75df410a41e1a0721207333bc93d~mv2.jpg",
+      "width": 2560,
+      "height": 1707,
+      "sizeInBytes": 336072
+    },
+    {
+      "wixMediaId": "e04e89_cf4697c58989464a946db65cc60bcaa1~mv2.jpg",
+      "displayName": "Daisy-Murphy-Cabinet-White-1-scaled.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_cf4697c58989464a946db65cc60bcaa1~mv2.jpg",
+      "width": 2560,
+      "height": 1707,
+      "sizeInBytes": 207951
+    },
+    {
+      "wixMediaId": "e04e89_1b364a642b194fc8b51807d3b36e24e5~mv2.jpg",
+      "displayName": "Cherry_Closed-1024x681.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_1b364a642b194fc8b51807d3b36e24e5~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 107565
+    },
+    {
+      "wixMediaId": "e04e89_9bd2a9207cc64dc78762c396c9a4f1aa~mv2.jpg",
+      "displayName": "Daisy_Butter_Cream_Open-1024x683.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_9bd2a9207cc64dc78762c396c9a4f1aa~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 105795
+    },
+    {
+      "wixMediaId": "e04e89_ac12cbb2902b47b9817c7136d43b6d60~mv2.jpg",
+      "displayName": "Daisy_Buttercream_Closed-1024x683.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_ac12cbb2902b47b9817c7136d43b6d60~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 98108
+    },
+    {
+      "wixMediaId": "e04e89_2e3fa168292841258c47787aae13d635~mv2.jpg",
+      "displayName": "Daisy_Buttercream_Closed-1024x683-600x600.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_2e3fa168292841258c47787aae13d635~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 26149
+    },
+    {
+      "wixMediaId": "e04e89_77a77a9b1baa48c5a9f60bd5748b335b~mv2.jpg",
+      "displayName": "Dark_Chocolate_Open-1024x681.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_77a77a9b1baa48c5a9f60bd5748b335b~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 103230
+    },
+    {
+      "wixMediaId": "e04e89_63be412d9ac84e87a655adebc27b00c9~mv2.jpg",
+      "displayName": "Daisy_Buttercream_Side_View_-683x1024.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_63be412d9ac84e87a655adebc27b00c9~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 118117
+    },
+    {
+      "wixMediaId": "e04e89_2c24e42ba5c542f98997fb3d74867ab9~mv2.jpg",
+      "displayName": "Dark_Chocolate_Closed-1024x683.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_2c24e42ba5c542f98997fb3d74867ab9~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 108444
+    },
+    {
+      "wixMediaId": "e04e89_6325b61f1ce747c9b642bbcccc74be9d~mv2.jpg",
+      "displayName": "Sagebrush_Stonewash_Closed-1024x731.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_6325b61f1ce747c9b642bbcccc74be9d~mv2.jpg",
+      "width": 600,
+      "height": 600,
+      "sizeInBytes": 71281
+    },
+    {
+      "wixMediaId": "e04e89_15831905ff7c4982bc2d9d41b2b579a7~mv2.jpg",
+      "displayName": "White_Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_15831905ff7c4982bc2d9d41b2b579a7~mv2.jpg",
+      "width": 3888,
+      "height": 2777,
+      "sizeInBytes": 2348871
+    },
+    {
+      "wixMediaId": "e04e89_82796c3f0c504578b1219e51cb2fd7f8~mv2.jpg",
+      "displayName": "Murphy-Cube-Cabinet-Bed-Cherry-1.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_82796c3f0c504578b1219e51cb2fd7f8~mv2.jpg",
+      "width": 3894,
+      "height": 2781,
+      "sizeInBytes": 1041052
+    },
+    {
+      "wixMediaId": "e04e89_c92ae613e67046e789245f78ae817e34~mv2.jpg",
+      "displayName": "Clover-Murphy-Cabinet-Side-View-Cherry.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_c92ae613e67046e789245f78ae817e34~mv2.jpg",
+      "width": 2832,
+      "height": 4256,
+      "sizeInBytes": 1776554
+    },
+    {
+      "wixMediaId": "e04e89_9a398b73e6214ed9993fb6f9f0e9b2de~mv2.jpg",
+      "displayName": "Murphy-Cube-Cabinet-Bed-D.Chocolate-2.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_9a398b73e6214ed9993fb6f9f0e9b2de~mv2.jpg",
+      "width": 5053,
+      "height": 3609,
+      "sizeInBytes": 2081649
+    },
+    {
+      "wixMediaId": "e04e89_7894c47082d2450c88efef580433ff18~mv2.jpg",
+      "displayName": "Murphy-Cube-Cabinet-Bed-Stonewash-1.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_7894c47082d2450c88efef580433ff18~mv2.jpg",
+      "width": 5053,
+      "height": 3609,
+      "sizeInBytes": 2390025
+    },
+    {
+      "wixMediaId": "e04e89_0917b139bdb848f88b06eeb4549b368e~mv2.jpg",
+      "displayName": "Poppy-Murphy-Cabinet-Bed-Blizzard-Side-View.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_0917b139bdb848f88b06eeb4549b368e~mv2.jpg",
+      "width": 2967,
+      "height": 4154,
+      "sizeInBytes": 3938073
+    },
+    {
+      "wixMediaId": "e04e89_6326dfe7d01e4788bb3bb753e83601d6~mv2.jpg",
+      "displayName": "Murphy-Cube-Cabinet-Bed-D.Chocolate-1.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_6326dfe7d01e4788bb3bb753e83601d6~mv2.jpg",
+      "width": 5008,
+      "height": 3577,
+      "sizeInBytes": 2350083
+    },
+    {
+      "wixMediaId": "e04e89_ca73275a55ae4bd8947c8cf4f3700278~mv2.jpg",
+      "displayName": "Sagebrush-Dark-Chocolate-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_ca73275a55ae4bd8947c8cf4f3700278~mv2.jpg",
+      "width": 4507,
+      "height": 3219,
+      "sizeInBytes": 2578435
+    },
+    {
+      "wixMediaId": "e04e89_0f1ef995219145fc8d24ff5a76f0f01c~mv2.jpg",
+      "displayName": "2018-Murphy-Complete-NEW-colors.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_0f1ef995219145fc8d24ff5a76f0f01c~mv2.jpg",
+      "width": 1920,
+      "height": 1080,
+      "sizeInBytes": 2170363
+    },
+    {
+      "wixMediaId": "e04e89_d574bd8705bb4b1f92776ea804336239~mv2.jpg",
+      "displayName": "Home-Page.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_d574bd8705bb4b1f92776ea804336239~mv2.jpg",
+      "width": 4256,
+      "height": 2832,
+      "sizeInBytes": 886676
+    },
+    {
+      "wixMediaId": "e04e89_d8270161c8774f36b15b2d9784903589~mv2.jpg",
+      "displayName": "Murphy-Page-Banner.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_d8270161c8774f36b15b2d9784903589~mv2.jpg",
+      "width": 4769,
+      "height": 3406,
+      "sizeInBytes": 4781490
+    },
+    {
+      "wixMediaId": "e04e89_a25a9697be0b46aea41fae6724276ce6~mv2.jpg",
+      "displayName": "1-B-Clover-Cherry-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_a25a9697be0b46aea41fae6724276ce6~mv2.jpg",
+      "width": 4256,
+      "height": 2832,
+      "sizeInBytes": 1919203
+    },
+    {
+      "wixMediaId": "e04e89_90a7c808b3204519afffaddd7a499dcf~mv2.jpg",
+      "displayName": "3-B-Clover-White-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_90a7c808b3204519afffaddd7a499dcf~mv2.jpg",
+      "width": 4732,
+      "height": 3380,
+      "sizeInBytes": 305452
+    },
+    {
+      "wixMediaId": "e04e89_4db23e464ec0466fa0e9a3109014cae6~mv2.jpg",
+      "displayName": "3-A-Clover-White-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_4db23e464ec0466fa0e9a3109014cae6~mv2.jpg",
+      "width": 3888,
+      "height": 2777,
+      "sizeInBytes": 146038
+    },
+    {
+      "wixMediaId": "e04e89_3379f363fe5247059ae5bdb1d8ac636a~mv2.jpg",
+      "displayName": "2-B-Clover-Dark-Chocolate-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_3379f363fe5247059ae5bdb1d8ac636a~mv2.jpg",
+      "width": 4256,
+      "height": 2832,
+      "sizeInBytes": 332454
+    },
+    {
+      "wixMediaId": "e04e89_e19c05c937b94ec69869cb0d91cedeaa~mv2.jpg",
+      "displayName": "2-A-Clover-Dark-Chocolate-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_e19c05c937b94ec69869cb0d91cedeaa~mv2.jpg",
+      "width": 2748,
+      "height": 1832,
+      "sizeInBytes": 153461
+    },
+    {
+      "wixMediaId": "e04e89_b8bb16e13941497cbbee9fe8746c8a34~mv2.jpg",
+      "displayName": "Murphy-Cube-White-Closed-2.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_b8bb16e13941497cbbee9fe8746c8a34~mv2.jpg",
+      "width": 5053,
+      "height": 3609,
+      "sizeInBytes": 1974888
+    },
+    {
+      "wixMediaId": "e04e89_8f15358d8a0c4c23aad3288b443a8907~mv2.jpg",
+      "displayName": "Poppy-Brushed-Driftwood-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_8f15358d8a0c4c23aad3288b443a8907~mv2.jpg",
+      "width": 5152,
+      "height": 3680,
+      "sizeInBytes": 4785129
+    },
+    {
+      "wixMediaId": "e04e89_9cb967042c5f4c1bb1de028745fee502~mv2.jpg",
+      "displayName": "1-B-Daisy-Buttercream-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_9cb967042c5f4c1bb1de028745fee502~mv2.jpg",
+      "width": 4689,
+      "height": 3126,
+      "sizeInBytes": 1963210
+    },
+    {
+      "wixMediaId": "e04e89_85ae7cc5b18f4343a4aa0507a078d9dd~mv2.jpg",
+      "displayName": "Poppy-White-Bark-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_85ae7cc5b18f4343a4aa0507a078d9dd~mv2.jpg",
+      "width": 5152,
+      "height": 3680,
+      "sizeInBytes": 6266048
+    },
+    {
+      "wixMediaId": "e04e89_4d107a77c6f8483aa0e7d722ef01e79b~mv2.jpg",
+      "displayName": "Poppy-White-Bark-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_4d107a77c6f8483aa0e7d722ef01e79b~mv2.jpg",
+      "width": 4769,
+      "height": 3406,
+      "sizeInBytes": 4781490
+    },
+    {
+      "wixMediaId": "e04e89_280902fb1739493080f6c64bb852fce6~mv2.jpg",
+      "displayName": "Sagebrush-Stonewash-Open.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_280902fb1739493080f6c64bb852fce6~mv2.jpg",
+      "width": 4844,
+      "height": 3460,
+      "sizeInBytes": 1564205
+    },
+    {
+      "wixMediaId": "e04e89_81d95d386fb04fd5b72475cfeb53267e~mv2.jpg",
+      "displayName": "Sagebrush-Stonewash-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_81d95d386fb04fd5b72475cfeb53267e~mv2.jpg",
+      "width": 4147,
+      "height": 2962,
+      "sizeInBytes": 920040
+    },
+    {
+      "wixMediaId": "e04e89_8bf73d98a358401c8487b6afb3424318~mv2.jpg",
+      "displayName": "Poppy-Skye-Closed.jpg",
+      "folder": "Murphy Cabinet Beds",
+      "url": "https://static.wixstatic.com/media/e04e89_8bf73d98a358401c8487b6afb3424318~mv2.jpg",
+      "width": 5152,
+      "height": 3680,
+      "sizeInBytes": 5303931
+    },
+    {
+      "wixMediaId": "ed8a72_a3340eb058db41d5ad5d32a888b970f5~mv2.png",
+      "displayName": "Haley 110.png",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/ed8a72_a3340eb058db41d5ad5d32a888b970f5~mv2.png",
+      "width": 1200,
+      "height": 627,
+      "sizeInBytes": 144215
+    },
+    {
+      "wixMediaId": "e04e89_21d4a97bc7a740f9a49b93d9cf8f773a~mv2.jpg",
+      "displayName": "Yuma.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_21d4a97bc7a740f9a49b93d9cf8f773a~mv2.jpg",
+      "width": 3000,
+      "height": 1901,
+      "sizeInBytes": 874323
+    },
+    {
+      "wixMediaId": "e04e89_0eb04eaa5f7f4ebfb28e59ac8dbc7372~mv2.jpg",
+      "displayName": "Northampton.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_0eb04eaa5f7f4ebfb28e59ac8dbc7372~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 189263
+    },
+    {
+      "wixMediaId": "e04e89_015aaccdf0c548da95e09b93970fb260~mv2.jpg",
+      "displayName": "Protect-it-MASTER.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_015aaccdf0c548da95e09b93970fb260~mv2.jpg",
+      "width": 977,
+      "height": 977,
+      "sizeInBytes": 112331
+    },
+    {
+      "wixMediaId": "e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg",
+      "displayName": "Flagstaff.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_07621d698bdd4ab6a62b372d433fdb22~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 145843
+    },
+    {
+      "wixMediaId": "e04e89_55ecd0dfe1d5498b8a3f8cb583d5089b~mv2.jpg",
+      "displayName": "Gemini.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_55ecd0dfe1d5498b8a3f8cb583d5089b~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 177879
+    },
+    {
+      "wixMediaId": "e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg",
+      "displayName": "Mesa1000.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_8ba94e9ad1f44717839eae0aa49aa810~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 158801
+    },
+    {
+      "wixMediaId": "e04e89_b9e01e79be954d298c27105c5652345a~mv2.jpg",
+      "displayName": "Maricopa.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_b9e01e79be954d298c27105c5652345a~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 177799
+    },
+    {
+      "wixMediaId": "e04e89_71ae301362a742ea96dc352f6cdaa0d0~mv2.jpg",
+      "displayName": "Mesa3000.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_71ae301362a742ea96dc352f6cdaa0d0~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 178371
+    },
+    {
+      "wixMediaId": "e04e89_9a21133f83c3412ebe88d2f232c56cf9~mv2.jpg",
+      "displayName": "Asheville.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_9a21133f83c3412ebe88d2f232c56cf9~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 102882
+    },
+    {
+      "wixMediaId": "e04e89_0128a414ce614faf8498fabc458950c1~mv2.jpg",
+      "displayName": "Mesa5000.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_0128a414ce614faf8498fabc458950c1~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 154554
+    },
+    {
+      "wixMediaId": "e04e89_420f5592eca647ac9400e3fa635a1f03~mv2.jpg",
+      "displayName": "Mountainaire.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_420f5592eca647ac9400e3fa635a1f03~mv2.jpg",
+      "width": 640,
+      "height": 480,
+      "sizeInBytes": 152493
+    },
+    {
+      "wixMediaId": "e04e89_c045ab11f0d6444ebe53832daac7235f~mv2.jpg",
+      "displayName": "Gemini-II.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_c045ab11f0d6444ebe53832daac7235f~mv2.jpg",
+      "width": 512,
+      "height": 512,
+      "sizeInBytes": 39736
+    },
+    {
+      "wixMediaId": "e04e89_c54a59af156b423b9d0a0b57df7f17ae~mv2.jpg",
+      "displayName": "Alpine.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_c54a59af156b423b9d0a0b57df7f17ae~mv2.jpg",
+      "width": 5312,
+      "height": 2988,
+      "sizeInBytes": 1594608
+    },
+    {
+      "wixMediaId": "e04e89_0eef782d82834b0b8cdeeb720ea8a499~mv2.png",
+      "displayName": "Screen-Shot-2019-09-14-at-9.11.17-AM.png",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_0eef782d82834b0b8cdeeb720ea8a499~mv2.png",
+      "width": 258,
+      "height": 307,
+      "sizeInBytes": 30787
+    },
+    {
+      "wixMediaId": "e04e89_354d2b79d3004c6e95e629a6d99d2e8e~mv2.jpg",
+      "displayName": "Chandler.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_354d2b79d3004c6e95e629a6d99d2e8e~mv2.jpg",
+      "width": 4160,
+      "height": 2340,
+      "sizeInBytes": 3224026
+    },
+    {
+      "wixMediaId": "e04e89_1784a066b6d04f51b8882618474df1dc~mv2.jpg",
+      "displayName": "Sedona.jpg",
+      "folder": "Mattresses",
+      "url": "https://static.wixstatic.com/media/e04e89_1784a066b6d04f51b8882618474df1dc~mv2.jpg",
+      "width": 4160,
+      "height": 2340,
+      "sizeInBytes": 2840683
+    },
+    {
+      "wixMediaId": "e04e89_fa397f21149f4392b557d88130a154e8~mv2.jpg",
+      "displayName": "Sofa__edited_edited.jpg",
+      "folder": "Frames",
+      "url": "https://static.wixstatic.com/media/e04e89_fa397f21149f4392b557d88130a154e8~mv2.jpg",
+      "width": 999,
+      "height": 665,
+      "sizeInBytes": 68116
+    },
+    {
+      "wixMediaId": "e04e89_3954242741dc4be6acca9fee26e64654~mv2.jpg",
+      "displayName": "Frequently_asked_questions.jpg",
+      "folder": "Misc",
+      "url": "https://static.wixstatic.com/media/e04e89_3954242741dc4be6acca9fee26e64654~mv2.jpg",
+      "width": 525,
+      "height": 350,
+      "sizeInBytes": 15642
+    },
+    {
+      "wixMediaId": "e04e89_baeb615584e34bff8a1d2750fd7cb3e3~mv2.jpg",
+      "displayName": "home.jpg",
+      "folder": "Misc",
+      "url": "https://static.wixstatic.com/media/e04e89_baeb615584e34bff8a1d2750fd7cb3e3~mv2.jpg",
+      "width": 900,
+      "height": 598,
+      "sizeInBytes": 447845
+    },
+    {
+      "wixMediaId": "e04e89_ad46762c53004c109e3f7aa71f524b55~mv2.jpg",
+      "displayName": "Futon_as_porch_swing.jpg",
+      "folder": "Misc",
+      "url": "https://static.wixstatic.com/media/e04e89_ad46762c53004c109e3f7aa71f524b55~mv2.jpg",
+      "width": 1200,
+      "height": 990,
+      "sizeInBytes": 1015222
+    },
+    {
+      "wixMediaId": "e04e89_0aec18eedf7a475cbd5cf8c707787b52~mv2.jpg",
+      "displayName": "bobz_mom_edited_edited_edited_edited.jpg",
+      "folder": "Misc",
+      "url": "https://static.wixstatic.com/media/e04e89_0aec18eedf7a475cbd5cf8c707787b52~mv2.jpg",
+      "width": 100,
+      "height": 100,
+      "sizeInBytes": 6149
+    },
+    {
+      "wixMediaId": "e04e89_9f177ec827f64a2081f97957defd2e00~mv2.jpg",
+      "displayName": "home.jpg",
+      "folder": "Misc",
+      "url": "https://static.wixstatic.com/media/e04e89_9f177ec827f64a2081f97957defd2e00~mv2.jpg",
+      "width": 1794,
+      "height": 1009,
+      "sizeInBytes": 607026
+    },
+    {
+      "folder": "Google Ads AI generated images",
+      "folderId": "21010fc36f204338af8d60a772395e74",
+      "displayName": "b4ced5d9-5120-49ed-922b-3088f07a7e5c.jpg",
+      "url": "https://static.wixstatic.com/media/e04e89_9ef303b8b7ca490ab550bffa601f72d0~mv2.jpg",
+      "mediaType": "IMAGE",
+      "mimeType": "image/jpeg",
+      "sizeInBytes": "131576",
+      "wixMediaId": "e04e89_9ef303b8b7ca490ab550bffa601f72d0~mv2.jpg"
+    },
+    {
+      "folder": "Google Ads AI generated images",
+      "folderId": "21010fc36f204338af8d60a772395e74",
+      "displayName": "52823e17-6eef-4977-a978-4357cb52e906.jpg",
+      "url": "https://static.wixstatic.com/media/e04e89_0e9ce4b1458042abb9c523ed4df82fb1~mv2.jpg",
+      "mediaType": "IMAGE",
+      "mimeType": "image/jpeg",
+      "sizeInBytes": "25925",
+      "wixMediaId": "e04e89_0e9ce4b1458042abb9c523ed4df82fb1~mv2.jpg"
+    },
+    {
+      "folder": "Social Planner AI Images 1",
+      "folderId": "7cb044e48e1b42b1ab7209de528ce9ce",
+      "displayName": "c9bc3c05-5695-4639-9c67-306a91f296dd.png",
+      "url": "https://static.wixstatic.com/media/e04e89_80262cbdd1eb49879a6c47027c4bc031~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3471806",
+      "wixMediaId": "e04e89_80262cbdd1eb49879a6c47027c4bc031~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 1",
+      "folderId": "7cb044e48e1b42b1ab7209de528ce9ce",
+      "displayName": "33218b1c-aba6-44f4-84a1-51bac5633324.png",
+      "url": "https://static.wixstatic.com/media/e04e89_dd4998e3e41f4456bd6f807b3b3b4e32~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3405799",
+      "wixMediaId": "e04e89_dd4998e3e41f4456bd6f807b3b3b4e32~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 1",
+      "folderId": "7cb044e48e1b42b1ab7209de528ce9ce",
+      "displayName": "8425b13f-d655-4677-bd9b-a9a8f7ab9d67.png",
+      "url": "https://static.wixstatic.com/media/e04e89_71b0759379b84cbdac5f2b31a86cadfd~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3465048",
+      "wixMediaId": "e04e89_71b0759379b84cbdac5f2b31a86cadfd~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 1",
+      "folderId": "7cb044e48e1b42b1ab7209de528ce9ce",
+      "displayName": "a18212ff-c106-4a80-a17d-70954cf213cb.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_fa1150245b47417f936c60144486e47e~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3447602",
+      "wixMediaId": "ed8a72_fa1150245b47417f936c60144486e47e~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 2",
+      "folderId": "53506ec814bc4248b79302e92eb01eea",
+      "displayName": "33981310-8e54-411d-a028-0802fe5755cc.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_172d486d7d4a4f4ea78d591b821ecbaa~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3481891",
+      "wixMediaId": "ed8a72_172d486d7d4a4f4ea78d591b821ecbaa~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "08a5a7fa-06e4-4427-bbd7-e35d02ca4600.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_a7828639adce4839988562e64b92aee0~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3664835",
+      "wixMediaId": "ed8a72_a7828639adce4839988562e64b92aee0~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "d3e3a8b3-dbf4-4318-937e-0422a1819342.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_6926c0b76458465ea971394e4329e1b7~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3402449",
+      "wixMediaId": "ed8a72_6926c0b76458465ea971394e4329e1b7~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "a18212ff-c106-4a80-a17d-70954cf213cb.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_41f1add0b7fc41d7b04d156a757da9c9~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3375311",
+      "wixMediaId": "ed8a72_41f1add0b7fc41d7b04d156a757da9c9~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "33981310-8e54-411d-a028-0802fe5755cc.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_3e115b93042844e1b8d044497513f9dc~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3490325",
+      "wixMediaId": "ed8a72_3e115b93042844e1b8d044497513f9dc~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "7eec3f97-6db0-46b1-ba69-3b5a3605e30b.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_4d1ebae538944aa5b044186b61ba79a1~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3382532",
+      "wixMediaId": "ed8a72_4d1ebae538944aa5b044186b61ba79a1~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "b818829c-bdc2-4d38-82e3-2c654029d9eb.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_33274b55390b4632a578efa9eefc5042~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3643465",
+      "wixMediaId": "ed8a72_33274b55390b4632a578efa9eefc5042~mv2.png"
+    },
+    {
+      "folder": "Social Planner AI Images 3",
+      "folderId": "588c20140db2427192d30477cd488987",
+      "displayName": "80c60b0d-2dec-4326-8bb9-0d21b481bc5d.png",
+      "url": "https://static.wixstatic.com/media/ed8a72_57d13b3660fe4e69814cdb783c749f0d~mv2.png",
+      "mediaType": "IMAGE",
+      "mimeType": "image/png",
+      "sizeInBytes": "3554317",
+      "wixMediaId": "ed8a72_57d13b3660fe4e69814cdb783c749f0d~mv2.png"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Studio conversion.mp4",
+      "url": "https://video.wixstatic.com/video/e04e89_d9ffa580eb5a4fa784bc6bb6a6105257/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "122420844",
+      "wixMediaId": "e04e89_d9ffa580eb5a4fa784bc6bb6a6105257"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Maricopa.3-27-25.mp4",
+      "url": "https://video.wixstatic.com/video/e04e89_b10b923982664fa39409244ac93dadcf/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "158203912",
+      "wixMediaId": "e04e89_b10b923982664fa39409244ac93dadcf"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Flagstaff.3-27-25.mp4",
+      "url": "https://video.wixstatic.com/video/e04e89_973ed5df7eb34c1d9ad7c1697e8d0f72/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "164275771",
+      "wixMediaId": "e04e89_973ed5df7eb34c1d9ad7c1697e8d0f72"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Mountainnaire 3-6-25",
+      "url": "https://video.wixstatic.com/video/e04e89_b6c0b062855d432a91698f3460b74552/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "88382625",
+      "wixMediaId": "e04e89_b6c0b062855d432a91698f3460b74552"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Sedona 2-28-25",
+      "url": "https://video.wixstatic.com/video/e04e89_8483b56d2ef5417c95242c821934e2b2/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "128771077",
+      "wixMediaId": "e04e89_8483b56d2ef5417c95242c821934e2b2"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Alpine 2-2025R",
+      "url": "https://video.wixstatic.com/video/e04e89_dba4fc2f08ee4a42906dcb76bcb9b31a/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "95330711",
+      "wixMediaId": "e04e89_dba4fc2f08ee4a42906dcb76bcb9b31a"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Asheville 2-27-25",
+      "url": "https://video.wixstatic.com/video/e04e89_c2e8bedf07c74b249894fffffc0564b7/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "211345014",
+      "wixMediaId": "e04e89_c2e8bedf07c74b249894fffffc0564b7"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Northampton 2-21-25",
+      "url": "https://video.wixstatic.com/video/e04e89_c1969fc88dcb4c829f3840b250f19166/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "211057788",
+      "wixMediaId": "e04e89_c1969fc88dcb4c829f3840b250f19166"
+    },
+    {
+      "folder": "~Videos~",
+      "folderId": "36f3bea6a3504ea98b691eae5004fdfb",
+      "displayName": "Video blog intro2",
+      "url": "https://video.wixstatic.com/video/e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "142703402",
+      "wixMediaId": "e04e89_ea16ef6edfe64c03a5bfdd0ee468ab7f"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_SQUARE-tan.jpg",
+      "url": "https://static.wixstatic.com/media/e04e89_9fb593a27e794246a9297af27eff7d54~mv2.jpg",
+      "mediaType": "IMAGE",
+      "mimeType": "image/jpeg",
+      "sizeInBytes": "1288946",
+      "wixMediaId": "e04e89_9fb593a27e794246a9297af27eff7d54~mv2.jpg"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_SQUARE-brown.jpg",
+      "url": "https://static.wixstatic.com/media/e04e89_660d0e159dd24a4da0ae72bf01dc6f05~mv2.jpg",
+      "mediaType": "IMAGE",
+      "mimeType": "image/jpeg",
+      "sizeInBytes": "1278127",
+      "wixMediaId": "e04e89_660d0e159dd24a4da0ae72bf01dc6f05~mv2.jpg"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_SQUARE-blue.jpg",
+      "url": "https://static.wixstatic.com/media/e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg",
+      "mediaType": "IMAGE",
+      "mimeType": "image/jpeg",
+      "sizeInBytes": "1335126",
+      "wixMediaId": "e04e89_cab07c9f067748338ea32234e56dddf9~mv2.jpg"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_FINAL-LOGO.ai",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_bd6bb93526cc4520822cce3f30425e1d.ai",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/illustrator",
+      "sizeInBytes": "185108",
+      "wixMediaId": "e04e89_bd6bb93526cc4520822cce3f30425e1d.ai"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_LOGO-v7.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_225c424a9ec44bba91c704c215dd8aef.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "465512",
+      "wixMediaId": "e04e89_225c424a9ec44bba91c704c215dd8aef.pdf"
+    },
+    {
+      "folder": "Logo",
+      "folderId": "b3a831e749964be1ae97d55c58451eae",
+      "displayName": "CF_FINAL-LOGO.eps",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_6f07059cf68e4b828cadb244f8950484.eps",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/postscript",
+      "sizeInBytes": "1013190",
+      "wixMediaId": "e04e89_6f07059cf68e4b828cadb244f8950484.eps"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Winchester Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_82e9fec4b07e453b9ceb1250c4a4cdad.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "190909",
+      "wixMediaId": "e04e89_82e9fec4b07e453b9ceb1250c4a4cdad.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Winter Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_2d4830d1053740ae8f1a2266dffda7c4.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "194465",
+      "wixMediaId": "e04e89_2d4830d1053740ae8f1a2266dffda7c4.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Venice Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_ff547c849da346ea87aa21cd2c199899.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "228192",
+      "wixMediaId": "e04e89_ff547c849da346ea87aa21cd2c199899.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Twilight Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_9edd826d186943ef8cf456770feffc1e.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "207603",
+      "wixMediaId": "e04e89_9edd826d186943ef8cf456770feffc1e.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Sunrise Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_278e5110642a4bf2817fe21bbc3f5cff.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "218704",
+      "wixMediaId": "e04e89_278e5110642a4bf2817fe21bbc3f5cff.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Solstice Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_f1996dfd9cf84cffb0298422533c509b.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "207752",
+      "wixMediaId": "e04e89_f1996dfd9cf84cffb0298422533c509b.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Seattle Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_473acbec69a943b388d9fa711567ac93.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "185991",
+      "wixMediaId": "e04e89_473acbec69a943b388d9fa711567ac93.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Portofino Dimensio.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_293d44da96d54e1a847bdc7e2acb8a37.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "234513",
+      "wixMediaId": "e04e89_293d44da96d54e1a847bdc7e2acb8a37.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Kingston Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_ace413394afa4cadbe22947f5a3d6a32.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "228226",
+      "wixMediaId": "e04e89_ace413394afa4cadbe22947f5a3d6a32.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Fuji Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_f78109bd1b964f73a5f301876c2a2cfa.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "226648",
+      "wixMediaId": "e04e89_f78109bd1b964f73a5f301876c2a2cfa.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Autumn Dimension.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_07a5def4e52b491288c6afcc91d53c1b.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "223790",
+      "wixMediaId": "e04e89_07a5def4e52b491288c6afcc91d53c1b.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Key West Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_3aae95e9942d4ab5b718ddda0cfa6838.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "187733",
+      "wixMediaId": "e04e89_3aae95e9942d4ab5b718ddda0cfa6838.pdf"
+    },
+    {
+      "folder": "Finished PDFs",
+      "folderId": "d44592c09c264c7c91d36e72275786c1",
+      "displayName": "Albany Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_27eb463660414750b6be7354eb03bae7.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "224390",
+      "wixMediaId": "e04e89_27eb463660414750b6be7354eb03bae7.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "MoonGlider conversion 5-21-25",
+      "url": "https://video.wixstatic.com/video/e04e89_b8d2371453a0487abf8224d6256bdfe0/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "139852968",
+      "wixMediaId": "e04e89_b8d2371453a0487abf8224d6256bdfe0"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "WallHugger conversion 5-17-25.mp4",
+      "url": "https://video.wixstatic.com/video/e04e89_d49b6de8f0b4471bb132c612497fd53c/file",
+      "mediaType": "VIDEO",
+      "mimeType": "video/mp4",
+      "sizeInBytes": "106590693",
+      "wixMediaId": "e04e89_d49b6de8f0b4471bb132c612497fd53c"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad King Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_d886c253f4934b7c9783dd90016f63d9.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "414322",
+      "wixMediaId": "e04e89_d886c253f4934b7c9783dd90016f63d9.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad Queen Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_f0b3e87ab9ee45e88b791c61bde49a62.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "359470",
+      "wixMediaId": "e04e89_f0b3e87ab9ee45e88b791c61bde49a62.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad Twin Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_64ce417055c6446b889b97423eb1909e.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "349122",
+      "wixMediaId": "e04e89_64ce417055c6446b889b97423eb1909e.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad Twin XL Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_0f9000efdec246df82010d5a9bbc65c4.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "349950",
+      "wixMediaId": "e04e89_0f9000efdec246df82010d5a9bbc65c4.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad Full Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_ff1d36eacab04f8f8c3a98c2764fd7e0.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "371409",
+      "wixMediaId": "e04e89_ff1d36eacab04f8f8c3a98c2764fd7e0.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Lexington Twin Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_b3d94942086f4d7397e0e5c9b007916c.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "576341",
+      "wixMediaId": "e04e89_b3d94942086f4d7397e0e5c9b007916c.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Nomad Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_aecf5239b4d8409dbe084f4ca6a58bd9.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "263129",
+      "wixMediaId": "e04e89_aecf5239b4d8409dbe084f4ca6a58bd9.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Lexington Twin XL Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_97c34e96a2ef49c69839cb879aa70fd9.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "576786",
+      "wixMediaId": "e04e89_97c34e96a2ef49c69839cb879aa70fd9.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Lexington Full Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_c856458cb2254397bf32ebccad5cf71c.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "615028",
+      "wixMediaId": "e04e89_c856458cb2254397bf32ebccad5cf71c.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Lexington Queen Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_c21679ae1566436e86c3be0747cd2b32.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "615399",
+      "wixMediaId": "e04e89_c21679ae1566436e86c3be0747cd2b32.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Lexington Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_16507be862754c44ba779c4aff9386d7.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "211939",
+      "wixMediaId": "e04e89_16507be862754c44ba779c4aff9386d7.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Folding Bed Twin XL Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_336ad0451916443386b4ef56a57ad4db.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "405660",
+      "wixMediaId": "e04e89_336ad0451916443386b4ef56a57ad4db.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Folding Bed Queen Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_0c2801d8231041a38371a8281a829fa4.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "417697",
+      "wixMediaId": "e04e89_0c2801d8231041a38371a8281a829fa4.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Folding Bed Twin Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_4901791858d14960b3338cfef2278163.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "416974",
+      "wixMediaId": "e04e89_4901791858d14960b3338cfef2278163.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Folding Bed Full Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_77eb31dd2c4b4b64a44e3aa1dd378019.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "416962",
+      "wixMediaId": "e04e89_77eb31dd2c4b4b64a44e3aa1dd378019.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Folding Bed Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_c1530090d62846cb8d98b31147129bf4.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "172917",
+      "wixMediaId": "e04e89_c1530090d62846cb8d98b31147129bf4.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Ekko Twin Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_08b4b1fb75f7477f901354703f8058aa.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "662287",
+      "wixMediaId": "e04e89_08b4b1fb75f7477f901354703f8058aa.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Ekko Twin XL Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_9166f4639ef344fdb6fc4ffe1283acf4.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "667911",
+      "wixMediaId": "e04e89_9166f4639ef344fdb6fc4ffe1283acf4.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Ekko Queen Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_d6b3a7ab1bff4af78ece9bcae72d9c7b.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "668180",
+      "wixMediaId": "e04e89_d6b3a7ab1bff4af78ece9bcae72d9c7b.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Ekko Full Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_b656ddc3761a4d019c65d0ecdf2b1ab8.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "661538",
+      "wixMediaId": "e04e89_b656ddc3761a4d019c65d0ecdf2b1ab8.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Ekko Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_2c9d699973eb4f25a869a9e77d3980b5.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "166979",
+      "wixMediaId": "e04e89_2c9d699973eb4f25a869a9e77d3980b5.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Charleston Twin XL Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_3877315068184e2eb91fb8096b158fae.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "410702",
+      "wixMediaId": "e04e89_3877315068184e2eb91fb8096b158fae.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Charleston Full Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_ccd276ee2347497e88a9b6e3e91d7b19.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "451968",
+      "wixMediaId": "e04e89_ccd276ee2347497e88a9b6e3e91d7b19.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Charleston_Dimensions.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_5d00f1ba245346b9a8a25d628d945064.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "309605",
+      "wixMediaId": "e04e89_5d00f1ba245346b9a8a25d628d945064.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Charleston Queen Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_ed2e68ea6c3f4219806500073631470a.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "669302",
+      "wixMediaId": "e04e89_ed2e68ea6c3f4219806500073631470a.pdf"
+    },
+    {
+      "folder": "Unfinished PDFs",
+      "folderId": "497ca4330d2343d295e25953e25acf0c",
+      "displayName": "Charleston Twin Assembly.pdf",
+      "url": "https://16b31c24-caf2-4249-b752-1b3be4bda9b9.usrfiles.com/ugd/e04e89_946a94924d824e15a86b6f80670a77f5.pdf",
+      "mediaType": "DOCUMENT",
+      "mimeType": "application/pdf",
+      "sizeInBytes": "408618",
+      "wixMediaId": "e04e89_946a94924d824e15a86b6f80670a77f5.pdf"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "version": "53",
+  "properties": {
+    "categories": {
+      "primary": "online-store",
+      "secondary": [
+        "Online Futon Retailer"
+      ],
+      "businessTermId": "78f07799-d0e1-4ce9-8a77-8c5c198682ca"
+    },
+    "locale": {
+      "languageCode": "en",
+      "country": "US"
+    },
+    "language": "en",
+    "paymentCurrency": "USD",
+    "timeZone": "America/Denver",
+    "email": "carolinafutons@gmail.com",
+    "phone": "(828) 252-9449",
+    "address": {
+      "street": "Locust Street",
+      "city": "Hendersonville",
+      "country": "US",
+      "state": "NC",
+      "zip": "28792",
+      "hint": {
+        "text": "Suite 200",
+        "placement": "BEFORE"
+      },
+      "isPhysical": true,
+      "googleFormattedAddress": "824 Locust Street, Hendersonville, NC, USA",
+      "streetNumber": "824",
+      "apartmentNumber": "",
+      "coordinates": {
+        "latitude": 35.3227434,
+        "longitude": -82.45945139999999
+      }
+    },
+    "siteDisplayName": "Carolina Futons",
+    "businessName": "Carolina Futons",
+    "description": "Established family business featuring Murphy Cabinet Beds, futon frames, futon mattresses, futon covers, and platform beds and accessories.",
+    "businessConfig": "STORE",
+    "trackClicksAnalytics": true
+  }
+}

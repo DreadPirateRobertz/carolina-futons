@@ -1,0 +1,493 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - iframe [ref=e7]:
+      - generic [active] [ref=f8e1]:
+        - generic:
+          - generic:
+            - region "top of page"
+            - region "bottom of page"
+    - generic [ref=e8]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - img "Logo" [ref=e17] [cursor=pointer]
+          - generic [ref=e22] [cursor=pointer]:
+            - generic [ref=e28]: Home
+            - img [ref=e30]
+          - generic [ref=e38]:
+            - img [ref=e461]
+            - generic [ref=e463]: Autosave on
+        - generic [ref=e43]:
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - img [ref=e52] [cursor=pointer]
+              - img [ref=e59] [cursor=pointer]
+              - img [ref=e66] [cursor=pointer]
+            - button [ref=e73] [cursor=pointer]:
+              - img [ref=e75]
+            - button "1280px" [ref=e82] [cursor=pointer]:
+              - generic [ref=e85]: 1280px
+              - img [ref=e88]
+          - generic [ref=e96] [cursor=pointer]:
+            - generic [ref=e99]: 100%
+            - img [ref=e100]
+          - generic [ref=e105]:
+            - button "Upgrade":
+              - generic: Upgrade
+        - generic [ref=e106]:
+          - img "Avatar" [ref=e114] [cursor=pointer]
+          - generic [ref=e118]:
+            - button [disabled]:
+              - generic:
+                - generic:
+                  - img
+          - generic [ref=e121]:
+            - button [disabled]:
+              - generic:
+                - generic:
+                  - img
+          - generic [ref=e130] [cursor=pointer]:
+            - img [ref=e131]
+            - generic [ref=e135]: "3"
+          - generic [ref=e140]:
+            - button [ref=e141] [cursor=pointer]:
+              - img [ref=e143]
+            - button [ref=e145] [cursor=pointer]:
+              - img [ref=e150]
+          - button "Publish" [ref=e154] [cursor=pointer]:
+            - generic [ref=e156]: Publish
+      - generic [ref=e159]:
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - button [ref=e171] [cursor=pointer]:
+              - img [ref=e176]
+            - button [ref=e184] [cursor=pointer]:
+              - img [ref=e189]
+            - button [ref=e197] [cursor=pointer]:
+              - img [ref=e202]
+            - button [ref=e210] [cursor=pointer]:
+              - img [ref=e215]
+            - button [ref=e224] [cursor=pointer]:
+              - img [ref=e229]
+            - button [ref=e237] [cursor=pointer]:
+              - img [ref=e242]
+            - button [ref=e250] [cursor=pointer]:
+              - img [ref=e255]
+            - button [ref=e263] [cursor=pointer]:
+              - img [ref=e269]
+            - button [ref=e277] [cursor=pointer]:
+              - img [ref=e282]
+            - button [ref=e290] [cursor=pointer]:
+              - img [ref=e295]
+            - button [ref=e303] [cursor=pointer]:
+              - img [ref=e308]
+          - generic [ref=e311]:
+            - button [ref=e318] [cursor=pointer]:
+              - img [ref=e323]
+            - button [ref=e331] [cursor=pointer]:
+              - img [ref=e336]
+            - button [ref=e344] [cursor=pointer]:
+              - img [ref=e349]
+            - button [ref=e357] [cursor=pointer]:
+              - img [ref=e363]
+        - generic [ref=e367]:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                            - text: Desktop
+                            - generic: (Primary)
+          - iframe [ref=e377]:
+            - generic [active] [ref=f2e1]:
+              - generic [ref=f2e3]:
+                - region "top of page"
+                - generic [ref=f2e10]:
+                  - generic:
+                    - generic:
+                      - banner:
+                        - generic [ref=f2e11]:
+                          - paragraph [ref=f2e18]: Free Shipping on Orders Over $1,999
+                          - generic [ref=f2e19]:
+                            - generic:
+                              - link [ref=f2e22] [cursor=pointer]:
+                                - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287
+                                - img [ref=f2e24]
+                              - generic [ref=f2e30]:
+                                - link "Shop" [ref=f2e33] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/all-products
+                                  - generic [ref=f2e35]: Shop
+                                - search [ref=f2e37]:
+                                  - button "Search" [ref=f2e39] [cursor=pointer]:
+                                    - img [ref=f2e43]
+                                - button "Hal Worker account" [ref=f2e49] [cursor=pointer]
+                                - link [ref=f2e56] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/members-area/my/my-wishlist
+                                  - img [ref=f2e58]
+                                - button "Cart with 0 items" [ref=f2e64] [cursor=pointer]:
+                                  - img [ref=f2e66]:
+                                    - generic [ref=f2e67]: "0"
+                                - navigation "Site" [ref=f2e72]:
+                                  - list [ref=f2e73]:
+                                    - listitem [ref=f2e74]:
+                                      - link "Futon Frames" [ref=f2e76] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/futon-frames
+                                        - generic [ref=f2e78]: Futon Frames
+                                    - listitem [ref=f2e79]:
+                                      - link "Murphy Cabinet Beds" [ref=f2e81] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/murphy-cabinet-beds
+                                        - generic [ref=f2e83]: Murphy Cabinet Beds
+                                    - listitem [ref=f2e84]:
+                                      - link "Platform Beds" [ref=f2e86] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/platform-beds
+                                        - generic [ref=f2e88]: Platform Beds
+                                    - listitem [ref=f2e89]:
+                                      - link "Mattresses" [ref=f2e91] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/mattresses
+                                        - generic [ref=f2e93]: Mattresses
+                                    - listitem [ref=f2e94]:
+                                      - link "Contact" [ref=f2e96] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/contact
+                                        - generic [ref=f2e98]: Contact
+                    - main:
+                      - generic [ref=f2e110]:
+                        - paragraph [ref=f2e113]: Carolina Futons
+                        - heading "QUALITY FUTONS & FURNITURE FOR YOUR HOME" [level=1] [ref=f2e115]
+                        - link "Shop" [ref=f2e117] [cursor=pointer]:
+                          - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/all-products
+                          - generic [ref=f2e119]: Shop
+                      - generic [ref=f2e120]:
+                        - heading "SHOP BY COLLECTIONS" [level=2] [ref=f2e127]:
+                          - generic [ref=f2e128]: SHOP BY COLLECTIONS
+                        - generic [ref=f2e129]:
+                          - generic:
+                            - link [ref=f2e137] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/futon-frames
+                            - link [ref=f2e144] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/futon-frames
+                              - img [ref=f2e146]
+                            - heading "FUTON FRAMES" [level=3] [ref=f2e151]
+                        - generic [ref=f2e153]:
+                          - generic:
+                            - link [ref=f2e160] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/murphy-cabinet-beds
+                            - link [ref=f2e167] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/murphy-cabinet-beds
+                              - img [ref=f2e169]
+                            - heading "MURPHY CABINET BEDS" [level=3] [ref=f2e177]
+                        - generic [ref=f2e178]:
+                          - generic:
+                            - link [ref=f2e185] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/platform-beds
+                            - link [ref=f2e192] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/platform-beds
+                              - img [ref=f2e194]
+                            - heading "PLATFORM BEDS" [level=3] [ref=f2e199]
+                        - generic [ref=f2e200]:
+                          - generic:
+                            - link [ref=f2e207] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/mattresses
+                            - link [ref=f2e214] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/mattresses
+                              - img [ref=f2e216]
+                            - heading "MATTRESSES" [level=3] [ref=f2e223]
+                      - generic [ref=f2e235]:
+                        - heading "HANDPICKED FUTON FRAMES" [level=2] [ref=f2e238]
+                        - paragraph [ref=f2e240]: Handcrafted quality for every living space
+                        - link "Discover More" [ref=f2e242] [cursor=pointer]:
+                          - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/futon-frames
+                          - generic [ref=f2e244]: Discover More
+                      - generic [ref=f2e245]:
+                        - heading "NEW IN" [level=2] [ref=f2e252]
+                        - region "Product Gallery" [ref=f2e262]:
+                          - list [ref=f2e264]:
+                            - listitem [ref=f2e265]:
+                              - group "Asheville Futon Frame. Call for Price gallery" [ref=f2e267]:
+                                - generic [ref=f2e276] [cursor=pointer]: Call for Price
+                                - generic [ref=f2e282] [cursor=pointer]:
+                                  - heading "Asheville Futon Frame" [level=3] [ref=f2e284]
+                                  - generic [ref=f2e287]:
+                                    - generic [ref=f2e288]: Price
+                                    - generic [ref=f2e289]: $1.00
+                            - listitem [ref=f2e290]:
+                              - group "Sunrise Futon Frame gallery" [ref=f2e292]:
+                                - generic [ref=f2e304] [cursor=pointer]:
+                                  - heading "Sunrise Futon Frame" [level=3] [ref=f2e306]
+                                  - generic [ref=f2e309]:
+                                    - generic [ref=f2e310]: Price
+                                    - generic [ref=f2e311]: $779.00
+                            - listitem [ref=f2e312]:
+                              - group "Dillon Futon Frame gallery" [ref=f2e314]:
+                                - generic [ref=f2e326] [cursor=pointer]:
+                                  - heading "Dillon Futon Frame" [level=3] [ref=f2e328]
+                                  - generic [ref=f2e331]:
+                                    - generic [ref=f2e332]: Price
+                                    - generic [ref=f2e333]: $642.00
+                            - listitem [ref=f2e334]:
+                              - group "Monterey Futon Frame gallery" [ref=f2e336]:
+                                - generic [ref=f2e348] [cursor=pointer]:
+                                  - heading "Monterey Futon Frame" [level=3] [ref=f2e350]
+                                  - generic [ref=f2e353]:
+                                    - generic [ref=f2e354]: Price
+                                    - generic [ref=f2e355]: $549.00
+                        - img [ref=f2e360]
+                      - generic [ref=f2e379]:
+                        - generic:
+                          - generic [ref=f2e381]:
+                            - paragraph [ref=f2e384]: Since 1991, Carolina Futons has been Hendersonville's trusted source for quality futons, Murphy beds, platform beds, and home furnishings. We believe furniture should be beautiful, functional, and built to last. Visit our showroom to experience the comfort firsthand.
+                            - link "Learn More" [ref=f2e386] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/about
+                              - generic [ref=f2e388]: Learn More
+                          - heading "THE CAROLINA FUTONS STORY" [level=2] [ref=f2e390]
+                      - generic [ref=f2e391]:
+                        - heading "BEST SELLERS MOST LOVED ITEMS" [level=2] [ref=f2e398]:
+                          - generic [ref=f2e399]: BEST SELLERS MOST LOVED ITEMS
+                        - region "Product Gallery" [ref=f2e409]:
+                          - list [ref=f2e411]:
+                            - listitem [ref=f2e412]:
+                              - group "Murphy Cube Cabinet Bed gallery" [ref=f2e414]:
+                                - generic [ref=f2e426] [cursor=pointer]:
+                                  - heading "Murphy Cube Cabinet Bed" [level=3] [ref=f2e428]
+                                  - generic [ref=f2e431]:
+                                    - generic [ref=f2e432]: Price
+                                    - generic [ref=f2e433]: $1,898.00
+                            - listitem [ref=f2e434]:
+                              - group "Studio Futon Frame gallery" [ref=f2e436]:
+                                - generic [ref=f2e448] [cursor=pointer]:
+                                  - heading "Studio Futon Frame" [level=3] [ref=f2e450]
+                                  - generic [ref=f2e453]:
+                                    - generic [ref=f2e454]: Price
+                                    - generic [ref=f2e455]: $229.00
+                            - listitem [ref=f2e456]:
+                              - group "Monterey Futon Frame gallery" [ref=f2e458]:
+                                - generic [ref=f2e470] [cursor=pointer]:
+                                  - heading "Monterey Futon Frame" [level=3] [ref=f2e472]
+                                  - generic [ref=f2e475]:
+                                    - generic [ref=f2e476]: Price
+                                    - generic [ref=f2e477]: $549.00
+                            - listitem [ref=f2e478]:
+                              - group "Lambton Futon Frame gallery" [ref=f2e480]:
+                                - generic [ref=f2e492] [cursor=pointer]:
+                                  - heading "Lambton Futon Frame" [level=3] [ref=f2e494]
+                                  - generic [ref=f2e497]:
+                                    - generic [ref=f2e498]: Price
+                                    - generic [ref=f2e499]: $778.00
+                        - img [ref=f2e504]
+                      - generic [ref=f2e507]:
+                        - heading "FOLLOW US @CAROLINAFUTONS" [level=2] [ref=f2e514]:
+                          - link "FOLLOW US @CAROLINAFUTONS" [ref=f2e515] [cursor=pointer]:
+                            - /url: https://www.instagram.com/carolinafutons/
+                        - region [ref=f2e524]:
+                          - generic [ref=f2e527]:
+                            - generic "image"
+                      - generic [ref=f2e567]:
+                        - heading "AS SEEN IN" [level=2] [ref=f2e574]
+                        - generic [ref=f2e580]:
+                          - list:
+                            - listitem [ref=f2e581]:
+                              - img [ref=f2e585]
+                            - listitem [ref=f2e593]:
+                              - img [ref=f2e597]
+                            - listitem [ref=f2e608]:
+                              - img [ref=f2e612]
+                            - listitem [ref=f2e624]:
+                              - img [ref=f2e628]
+                            - listitem [ref=f2e635]:
+                              - img [ref=f2e639]
+                            - listitem [ref=f2e651]:
+                              - img [ref=f2e655]
+                            - listitem [ref=f2e665]:
+                              - img [ref=f2e669]
+                    - contentinfo:
+                      - generic [ref=f2e677]:
+                        - generic [ref=f2e681]:
+                          - generic:
+                            - paragraph [ref=f2e684]:
+                              - generic [ref=f2e685]:
+                                - text: © 2025 by Carolina Futons. Made with
+                                - link "Wix Studio™" [ref=f2e686] [cursor=pointer]:
+                                  - /url: https://www.wix.com/studio
+                            - paragraph [ref=f2e688]: Carolina Futons
+                        - generic [ref=f2e691]:
+                          - generic [ref=f2e693]:
+                            - generic [ref=f2e695]:
+                              - paragraph [ref=f2e698]:
+                                - link "Futon Frames" [ref=f2e699] [cursor=pointer]:
+                                  - /url: /category/futon-frames
+                              - paragraph [ref=f2e701]:
+                                - link "Murphy Cabinet Beds" [ref=f2e702] [cursor=pointer]:
+                                  - /url: /category/murphy-cabinet-beds
+                              - paragraph [ref=f2e704]:
+                                - link "Platform Beds" [ref=f2e705] [cursor=pointer]:
+                                  - /url: /category/platform-beds
+                              - paragraph [ref=f2e707]:
+                                - link "Mattresses" [ref=f2e708] [cursor=pointer]:
+                                  - /url: /category/mattresses
+                              - paragraph [ref=f2e710]:
+                                - link "Contact" [ref=f2e711] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/contact
+                            - generic [ref=f2e712]:
+                              - paragraph [ref=f2e715]:
+                                - link "Terms & Conditions" [ref=f2e716] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/terms-and-conditions
+                              - paragraph [ref=f2e718]:
+                                - link "Privacy Policy" [ref=f2e719] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/privacy-policy
+                              - paragraph [ref=f2e721]:
+                                - link "Refund Policy" [ref=f2e722] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/refund-policy
+                              - paragraph [ref=f2e724]:
+                                - link "Shipping policy" [ref=f2e725] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/shipping-policy
+                              - paragraph [ref=f2e727]:
+                                - link "Accessibility statement" [ref=f2e728] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/accessibility-statement
+                              - paragraph [ref=f2e730]:
+                                - link "FAQ" [ref=f2e731] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/faq
+                          - generic [ref=f2e732]:
+                            - paragraph [ref=f2e735]: Facebook
+                            - paragraph [ref=f2e737]: Instagram
+                            - paragraph [ref=f2e739]: TikTok
+                            - paragraph [ref=f2e741]: Pinterest
+                        - generic [ref=f2e744]:
+                          - paragraph [ref=f2e747]: Stay Inspired
+                          - paragraph [ref=f2e749]: Receive the latest trends to your inbox
+                          - form "Contact us" [ref=f2e756]:
+                            - group [ref=f2e757]:
+                              - generic [ref=f2e758]:
+                                - generic [ref=f2e759]:
+                                  - generic [ref=f2e761]:
+                                    - generic [ref=f2e763]:
+                                      - text: Email address
+                                      - generic [ref=f2e764]: "*"
+                                    - textbox "Email address" [ref=f2e769]:
+                                      - /placeholder: Enter Email
+                                  - generic [ref=f2e776] [cursor=pointer]:
+                                    - checkbox "Yes, subscribe me to your newsletter."
+                                    - paragraph [ref=f2e785]:
+                                      - generic [ref=f2e786]: Yes, subscribe me to your newsletter.
+                                  - button "Submit" [ref=f2e791] [cursor=pointer]:
+                                    - generic [ref=f2e792]: Submit
+                                - region
+                        - generic [ref=f2e793]:
+                          - generic:
+                            - generic [ref=f2e795]:
+                              - paragraph [ref=f2e798]: Contact
+                              - paragraph [ref=f2e800]:
+                                - link "carolinafutons@gmail.com" [ref=f2e801] [cursor=pointer]:
+                                  - /url: mailto:carolinafutons@gmail.com
+                              - paragraph [ref=f2e803]: "Tel: (828) 327-8030"
+                              - paragraph [ref=f2e805]: Hickory, NC
+                              - paragraph [ref=f2e807]: Monday-Friday 9:00am - 5:00pm EST
+                            - link "Send" [ref=f2e809] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287
+                              - img [ref=f2e813]
+                        - paragraph [ref=f2e820]:
+                          - generic [ref=f2e821]:
+                            - text: © 2025 by Carolina Futons. Built on
+                            - link "Wix Studio" [ref=f2e822] [cursor=pointer]:
+                              - /url: https://www.wix.com/studio
+                - region "bottom of page"
+              - iframe [ref=f2e825]:
+                
+              - log [ref=f2e826]
+              - log [ref=f2e827]
+              - log [ref=f2e828]
+              - log [ref=f2e829]
+          - generic [ref=e378]:
+            - link "https://halworker85.wixstudio.com/my-site" [ref=e379] [cursor=pointer]:
+              - /url: https://halworker85.wixstudio.com/my-site
+            - button "Connect Domain" [ref=e381] [cursor=pointer]
+        - img [ref=e386] [cursor=pointer]
+      - generic [ref=e388]:
+        - generic [ref=e396]:
+          - generic [ref=e398]:
+            - region "scrollable content" [ref=e403]:
+              - generic [ref=e406] [cursor=pointer]:
+                - img [ref=e465]
+                - generic [ref=e410]: Home.c1dmp.js
+                - img [ref=e414]
+            - generic [ref=e418]:
+              - button "Run" [ref=e425] [cursor=pointer]:
+                - generic [ref=e426]:
+                  - img [ref=e427]
+                  - text: Run
+              - generic [ref=e429]:
+                - button [disabled]:
+                  - generic:
+                    - img
+              - button [ref=e430] [cursor=pointer]:
+                - img [ref=e431]
+              - generic [ref=e433]:
+                - button [ref=e467] [cursor=pointer]:
+                  - img [ref=e468]
+                - button [ref=e470] [cursor=pointer]:
+                  - img [ref=e471]
+              - img [ref=e444] [cursor=pointer]
+          - generic [ref=e447]:
+            - generic [ref=e473]:
+              - code [ref=e476]:
+                - generic [ref=e477]:
+                  - generic [ref=e480]:
+                    - generic [ref=e483]: "1"
+                    - generic [ref=e485]: "2"
+                    - generic [ref=e487]: "3"
+                    - generic [ref=e489]: "4"
+                    - generic [ref=e491]: "5"
+                    - generic [ref=e493]: "6"
+                    - generic [ref=e495]: "7"
+                    - generic [ref=e497]: "8"
+                    - generic [ref=e499]: "9"
+                    - generic [ref=e501]: "10"
+                    - generic [ref=e503]: "11"
+                    - generic [ref=e505]: "12"
+                    - generic [ref=e507]: "13"
+                    - generic [ref=e509]: "14"
+                    - generic [ref=e511]: "15"
+                  - generic [ref=e531]:
+                    - generic [ref=e533]: // Home.js - Homepage
+                    - generic [ref=e535]: // "Handcrafted Comfort, Mountain Inspired."
+                    - generic [ref=e537]: // Hero, categories, featured products, trust bar, newsletter, testimonials
+                    - generic [ref=e539]: "import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';"
+                    - generic [ref=e541]: "import { getWebSiteSchema } from 'backend/seoHelpers.web';"
+                    - generic [ref=e543]: "import { initPageSeo } from 'public/pageSeo.js';"
+                    - generic [ref=e545]: "import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';"
+                    - generic [ref=e547]: "import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';"
+                    - generic [ref=e549]: "import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';"
+                    - generic [ref=e551]: "import { trackEvent } from 'public/engagementTracker';"
+                    - generic [ref=e553]: "import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';"
+                    - generic [ref=e555]: "import { colors } from 'public/designTokens.js';"
+                    - generic [ref=e557]: "import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js';"
+                    - generic [ref=e559]: "import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';"
+                    - generic [ref=e561]: "import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';"
+                  - textbox "Editor content;Press Alt+F1 for Accessibility Options." [ref=e563]
+              - generic [ref=e565]:
+                - img [ref=e566]
+                - generic [ref=e568]: You're viewing the latest code from origin/main as read-only.
+                - button "Local Dev Setup" [ref=e569] [cursor=pointer]:
+                  - generic [ref=e570]:
+                    - text: Local Dev Setup
+                    - img [ref=e572]
+            - generic [ref=e454]:
+              - generic [ref=e575]:
+                - generic [ref=e580] [cursor=pointer]: Properties & Events
+                - generic [ref=e585] [cursor=pointer]: CSS Classes
+              - generic [ref=e588]:
+                - img [ref=e590]
+                - generic [ref=e596]:
+                  - paragraph [ref=e597]: Select an element to add events, edit its ID, and more.
+                  - text: Learn more
+        - generic [ref=e459]:
+          - button "Page":
+            - generic: Page
+  - application "Rich Text Editor, editor1":
+    - iframe
+  - generic [ref=e598]:
+    - alert
+    - alert

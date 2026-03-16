@@ -1,0 +1,45 @@
+{
+  "exportDate": "2026-03-15",
+  "siteId": "16b31c24-caf2-4249-b752-1b3be4bda9b9",
+  "totalContacts": 183,
+  "dateRange": "2022-01-23 to 2026-03-10",
+  "sources": {
+    "WIX_FORMS": "Contact form submissions - majority of contacts",
+    "WIX_SITE_MEMBERS": "Site member registrations",
+    "WIX_STORES": "eCommerce purchase contacts"
+  },
+  "notableSummary": {
+    "owner": {
+      "email": "carolinafutons@gmail.com",
+      "id": "e784cecf-4af6-42f4-9d28-c25e9bdc42f5",
+      "role": "OWNER"
+    },
+    "contributor": {
+      "email": "chrisdealglass@gmail.com",
+      "name": "Chris Deal",
+      "id": "42818e16-8fec-4036-956d-e3f88c84cffd",
+      "role": "CONTRIBUTOR"
+    },
+    "halworker85": {
+      "email": "halworker85@gmail.com",
+      "id": "779d207c-6f17-43d3-b008-a5c18e23e805",
+      "note": "Test/staging account"
+    },
+    "latestContact": {
+      "email": "classymax1@gmail.com",
+      "date": "2026-03-10",
+      "source": "WIX_FORMS"
+    }
+  },
+  "contactsData": "Full contact data available via Wix Contacts API v4 - POST /contacts/v4/contacts/query with paging",
+  "sampleTopics": [
+    "Murphy cabinet bed inquiries",
+    "Futon frame pricing and availability",
+    "Shipping to NC cities (Charlotte, Chapel Hill, Raleigh, Durham)",
+    "Futon mattress and cover purchases",
+    "Delivery and assembly requests",
+    "Platform bed orders",
+    "Store hours and location inquiries"
+  ],
+  "note": "Full raw contact data exceeds 180KB. Contact details include: name, email, phone, address, form messages, membership status, last activity. Use Wix API to pull full records as needed."
+}

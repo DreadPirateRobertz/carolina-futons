@@ -1,0 +1,639 @@
+- generic [ref=e1]:
+  - generic [ref=e5]:
+    - iframe [ref=e40]:
+      - generic [active] [ref=f44e1]:
+        - generic:
+          - generic:
+            - region "top of page"
+            - region "bottom of page"
+    - generic [ref=e6]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - img "Logo" [ref=e49] [cursor=pointer]
+          - generic [ref=e54] [cursor=pointer]:
+            - generic [ref=e60]: Home
+            - img [ref=e62]
+          - generic [ref=e70]:
+            - img [ref=e1366]
+            - generic [ref=e1368]: Autosave on
+        - generic [ref=e75]:
+          - generic [ref=e77]:
+            - generic [ref=e78]:
+              - img [ref=e84] [cursor=pointer]
+              - img [ref=e91] [cursor=pointer]
+              - img [ref=e98] [cursor=pointer]
+            - button [ref=e105] [cursor=pointer]:
+              - img [ref=e107]
+            - button "1280px" [ref=e114] [cursor=pointer]:
+              - generic [ref=e117]: 1280px
+              - img [ref=e120]
+          - generic [ref=e128] [cursor=pointer]:
+            - generic [ref=e2280]: 100%
+            - img [ref=e2281]
+          - generic [ref=e137]:
+            - button "Upgrade":
+              - generic: Upgrade
+        - generic [ref=e138]:
+          - img "Avatar" [ref=e146] [cursor=pointer]
+          - button [ref=e1127] [cursor=pointer]:
+            - img [ref=e1132]
+          - generic [ref=e153]:
+            - button [disabled]:
+              - generic:
+                - generic:
+                  - img
+          - img [ref=e163] [cursor=pointer]
+          - generic [ref=e169]:
+            - button [ref=e170] [cursor=pointer]:
+              - img [ref=e172]
+            - button [ref=e174] [cursor=pointer]:
+              - img [ref=e179]
+          - button "Publish" [ref=e183] [cursor=pointer]:
+            - generic [ref=e185]: Publish
+      - generic [ref=e7]:
+        - generic [ref=e188]:
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - button [ref=e199] [cursor=pointer]:
+                - img [ref=e204]
+              - button [ref=e212] [cursor=pointer]:
+                - img [ref=e217]
+              - button [ref=e225] [cursor=pointer]:
+                - img [ref=e230]
+              - button [ref=e238] [cursor=pointer]:
+                - img [ref=e243]
+              - button [ref=e252] [cursor=pointer]:
+                - img [ref=e257]
+              - button [ref=e265] [cursor=pointer]:
+                - img [ref=e270]
+              - button [ref=e278] [cursor=pointer]:
+                - img [ref=e283]
+              - button [ref=e291] [cursor=pointer]:
+                - img [ref=e297]
+              - button [ref=e305] [cursor=pointer]:
+                - img [ref=e310]
+              - button [ref=e318] [cursor=pointer]:
+                - img [ref=e323]
+              - button [ref=e331] [cursor=pointer]:
+                - img [ref=e336]
+            - generic [ref=e339]:
+              - button [ref=e346] [cursor=pointer]:
+                - img [ref=e351]
+              - button [ref=e359] [cursor=pointer]:
+                - img [ref=e364]
+              - button [ref=e372] [cursor=pointer]:
+                - img [ref=e377]
+              - button [ref=e385] [cursor=pointer]:
+                - img [ref=e391]
+          - generic [ref=e606]:
+            - banner [ref=e608]:
+              - generic [ref=e613]:
+                - generic [ref=e614]: Site Styles
+                - button [ref=e622] [cursor=pointer]:
+                  - img [ref=e624]
+                - button [ref=e626] [cursor=pointer]:
+                  - img [ref=e628]
+              - button [ref=e630] [cursor=pointer]:
+                - img [ref=e632]
+            - generic [ref=e637]:
+              - generic [ref=e638]:
+                - img [ref=e640] [cursor=pointer]
+                - generic [ref=e642]:
+                  - button "All" [pressed] [ref=e646] [cursor=pointer]:
+                    - generic [ref=e650]: All
+                  - button "Colors" [ref=e654] [cursor=pointer]:
+                    - generic [ref=e658]: Colors
+                  - button "Typography" [ref=e662] [cursor=pointer]:
+                    - generic [ref=e666]: Typography
+                  - button "Max width" [ref=e670] [cursor=pointer]:
+                    - generic [ref=e674]: Max width
+                  - button "Page transitions" [ref=e678] [cursor=pointer]:
+                    - generic [ref=e682]: Page transitions
+              - generic [ref=e684]:
+                - generic [ref=e688]:
+                  - generic [ref=e689] [cursor=pointer]:
+                    - img [ref=e691]
+                    - generic [ref=e697]: Colors
+                    - button [ref=e701]:
+                      - img [ref=e703]
+                  - generic [ref=e712]:
+                    - generic [ref=e714] [cursor=pointer]:
+                      - generic [ref=e722]: Color 1
+                      - generic [ref=e727]: "#E8D5B7"
+                    - generic [ref=e729] [cursor=pointer]:
+                      - generic [ref=e737]: Color 2
+                      - generic [ref=e742]: "#3A2518"
+                    - generic [ref=e744] [cursor=pointer]:
+                      - generic [ref=e752]: Color 3
+                      - generic [ref=e757]: "#5B8FA8"
+                    - generic [ref=e759] [cursor=pointer]:
+                      - generic [ref=e767]: Color 4
+                      - generic [ref=e772]: "#E8845C"
+                    - generic [ref=e774] [cursor=pointer]:
+                      - generic [ref=e782]: Color 5
+                      - generic [ref=e787]: "#F2E8D5"
+                    - generic [ref=e789] [cursor=pointer]:
+                      - generic [ref=e797]: Color 6
+                      - generic [ref=e802]: "#A8CCD8"
+                    - generic [ref=e804] [cursor=pointer]:
+                      - generic [ref=e812]: Color 7
+                      - generic [ref=e817]: "#C9A0A0"
+                    - generic [ref=e819] [cursor=pointer]:
+                      - generic [ref=e827]: Color 8
+                      - generic [ref=e832]: "#5C4033"
+                - generic [ref=e837]:
+                  - generic [ref=e838] [cursor=pointer]:
+                    - img [ref=e840]
+                    - generic [ref=e846]: Fonts
+                  - generic [ref=e854]:
+                    - generic [ref=e2220] [cursor=pointer]: Playfair Display
+                    - generic [ref=e860] [cursor=pointer]: Sora Light
+                - generic [ref=e865]:
+                  - generic [ref=e866] [cursor=pointer]:
+                    - img [ref=e868]
+                    - generic [ref=e874]: Text styles
+                  - generic [ref=e882]:
+                    - generic [ref=e884] [cursor=pointer]:
+                      - generic [ref=e887]: Ag
+                      - generic [ref=e893]: Heading 1
+                      - generic [ref=e897]: 210px*
+                    - generic [ref=e899] [cursor=pointer]:
+                      - generic [ref=e902]: Ag
+                      - generic [ref=e908]: Heading 2
+                      - generic [ref=e912]: 180px*
+                    - generic [ref=e914] [cursor=pointer]:
+                      - generic [ref=e917]: Ag
+                      - generic [ref=e923]: Heading 3
+                      - generic [ref=e927]: 70px*
+                    - generic [ref=e929] [cursor=pointer]:
+                      - generic [ref=e932]: Ag
+                      - generic [ref=e938]: Heading 4
+                      - generic [ref=e942]: 40px*
+                    - generic [ref=e944] [cursor=pointer]:
+                      - generic [ref=e947]: Ag
+                      - generic [ref=e953]: Heading 5
+                      - generic [ref=e957]: 40px*
+                    - generic [ref=e959] [cursor=pointer]:
+                      - generic [ref=e962]: Ag
+                      - generic [ref=e968]: Heading 6
+                      - generic [ref=e972]: 20px*
+                    - generic [ref=e974] [cursor=pointer]:
+                      - generic [ref=e977]: Ag
+                      - generic [ref=e983]: Paragraph 1
+                      - generic [ref=e987]: 16px
+                    - generic [ref=e989] [cursor=pointer]:
+                      - generic [ref=e992]: Ag
+                      - generic [ref=e998]: Paragraph 2
+                      - generic [ref=e1002]: 16px
+                    - generic [ref=e1004] [cursor=pointer]:
+                      - generic [ref=e1007]: Ag
+                      - generic [ref=e1013]: Paragraph 3
+                      - generic [ref=e1017]: 14px
+                - generic [ref=e1022] [cursor=pointer]:
+                  - generic [ref=e1027]: Max width
+                  - img [ref=e1030]
+                - generic [ref=e1034] [cursor=pointer]:
+                  - generic [ref=e1039]: Page transitions
+                  - img [ref=e1042]
+        - generic [ref=e10]:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - img
+                            - text: Desktop
+                            - generic: (Primary)
+          - iframe [ref=e17]:
+            - generic [active] [ref=f38e1]:
+              - generic [ref=f38e3]:
+                - region "top of page"
+                - generic [ref=f38e10]:
+                  - generic:
+                    - generic:
+                      - banner:
+                        - generic [ref=f38e11]:
+                          - paragraph [ref=f38e18]: Free Shipping on all intl. orders over $200
+                          - generic [ref=f38e19]:
+                            - generic:
+                              - link [ref=f38e22] [cursor=pointer]:
+                                - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287
+                                - img [ref=f38e24]
+                              - generic [ref=f38e30]:
+                                - link "Shop" [ref=f38e33] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/all-products
+                                  - generic [ref=f38e35]: Shop
+                                - search [ref=f38e37]:
+                                  - button "Search" [ref=f38e39] [cursor=pointer]:
+                                    - img [ref=f38e43]
+                                - button "Hal Worker account" [ref=f38e49] [cursor=pointer]
+                                - link [ref=f38e56] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/members-area/my/my-wishlist
+                                  - img [ref=f38e58]
+                                - button "Cart with 0 items" [ref=f38e64] [cursor=pointer]:
+                                  - img [ref=f38e66]:
+                                    - generic [ref=f38e67]: "0"
+                                - navigation "Site" [ref=f38e72]:
+                                  - list [ref=f38e73]:
+                                    - listitem [ref=f38e74]:
+                                      - link "Sofas" [ref=f38e76] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/sofas
+                                        - generic [ref=f38e78]: Sofas
+                                    - listitem [ref=f38e79]:
+                                      - link "Lounge Chairs" [ref=f38e81] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/lounge-chairs
+                                        - generic [ref=f38e83]: Lounge Chairs
+                                    - listitem [ref=f38e84]:
+                                      - link "Tables" [ref=f38e86] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/tables
+                                        - generic [ref=f38e88]: Tables
+                                    - listitem [ref=f38e89]:
+                                      - link "Chairs" [ref=f38e91] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/chairs
+                                        - generic [ref=f38e93]: Chairs
+                                    - listitem [ref=f38e94]:
+                                      - link "Contact" [ref=f38e96] [cursor=pointer]:
+                                        - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/contact
+                                        - generic [ref=f38e98]: Contact
+                    - main:
+                      - generic [ref=f38e110]:
+                        - paragraph [ref=f38e113]: tera
+                        - heading "UNIQUE DESIGNS FOR DISTINCTIVE SPACES" [level=1] [ref=f38e115]
+                        - link "Shop" [ref=f38e117] [cursor=pointer]:
+                          - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/all-products
+                          - generic [ref=f38e119]: Shop
+                      - generic [ref=f38e120]:
+                        - heading "SHOP BY COLLECTIONS" [level=2] [ref=f38e127]:
+                          - generic [ref=f38e128]: SHOP BY COLLECTIONS
+                        - generic [ref=f38e129]:
+                          - generic:
+                            - link [ref=f38e137] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/sofas
+                            - link [ref=f38e144] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/sofas
+                              - img [ref=f38e146]
+                            - heading "SOFAS" [level=3] [ref=f38e151]
+                        - generic [ref=f38e153]:
+                          - generic:
+                            - link [ref=f38e160] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/couches
+                            - link [ref=f38e167] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/lounge-chairs
+                              - img [ref=f38e169]
+                            - heading "LOUNGE CHAIRS" [level=3] [ref=f38e177]
+                        - generic [ref=f38e178]:
+                          - generic:
+                            - link [ref=f38e185] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/chairs
+                            - link [ref=f38e192] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/chairs
+                              - img [ref=f38e194]
+                            - heading "CHAIRS" [level=3] [ref=f38e199]
+                        - generic [ref=f38e200]:
+                          - generic:
+                            - link [ref=f38e207] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/tables
+                            - link [ref=f38e214] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/tables
+                              - img [ref=f38e216]
+                            - heading "TABLES" [level=3] [ref=f38e223]
+                      - generic [ref=f38e235]:
+                        - heading "HANDPICKED LOUNGE CHAIRS" [level=2] [ref=f38e238]
+                        - paragraph [ref=f38e240]: Curated to perfect every space
+                        - link "Discover More" [ref=f38e242] [cursor=pointer]:
+                          - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/lounge-chairs
+                          - generic [ref=f38e244]: Discover More
+                      - generic [ref=f38e245]:
+                        - heading "NEW IN" [level=2] [ref=f38e252]
+                        - region "Product Gallery" [ref=f38e262]:
+                          - list [ref=f38e264]:
+                            - listitem [ref=f38e265]:
+                              - group "MODO. NEW gallery" [ref=f38e267]:
+                                - generic [ref=f38e276] [cursor=pointer]: NEW
+                                - generic [ref=f38e282] [cursor=pointer]:
+                                  - heading "MODO" [level=3] [ref=f38e284]
+                                  - generic [ref=f38e287]:
+                                    - generic [ref=f38e288]: Price
+                                    - generic [ref=f38e289]: $1,200.00
+                            - listitem [ref=f38e290]:
+                              - group "NYX. NEW gallery" [ref=f38e292]:
+                                - generic [ref=f38e301] [cursor=pointer]: NEW
+                                - generic [ref=f38e307] [cursor=pointer]:
+                                  - heading "NYX" [level=3] [ref=f38e309]
+                                  - generic [ref=f38e312]:
+                                    - generic [ref=f38e313]: Price
+                                    - generic [ref=f38e314]: $200.00
+                            - listitem [ref=f38e315]:
+                              - group "ORION. NEW gallery" [ref=f38e317]:
+                                - generic [ref=f38e326] [cursor=pointer]: NEW
+                                - generic [ref=f38e332] [cursor=pointer]:
+                                  - heading "ORION" [level=3] [ref=f38e334]
+                                  - generic [ref=f38e337]:
+                                    - generic [ref=f38e338]: Price
+                                    - generic [ref=f38e339]: $600.00
+                        - img [ref=f38e344]
+                      - generic [ref=f38e363]:
+                        - generic:
+                          - generic [ref=f38e365]:
+                            - paragraph [ref=f38e368]: This is the space to introduce visitors to the business or brand. Briefly explain who's behind it, what it does and what makes it unique. Share its core values and what this site has to offer.
+                            - link "Learn More" [ref=f38e370] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/about
+                              - generic [ref=f38e372]: Learn More
+                          - heading "THE TERA WORLD" [level=2] [ref=f38e374]
+                      - generic [ref=f38e375]:
+                        - heading "BEST SELLERS MOST LOVED ITEMS" [level=2] [ref=f38e382]:
+                          - generic [ref=f38e383]: BEST SELLERS MOST LOVED ITEMS
+                        - region "Product Gallery" [ref=f38e393]:
+                          - list [ref=f38e395]:
+                            - listitem [ref=f38e396]:
+                              - group "RAVEN. BEST SELLER gallery" [ref=f38e398]:
+                                - generic [ref=f38e407] [cursor=pointer]: BEST SELLER
+                                - generic [ref=f38e413] [cursor=pointer]:
+                                  - heading "RAVEN" [level=3] [ref=f38e415]
+                                  - generic [ref=f38e418]:
+                                    - generic [ref=f38e419]: Price
+                                    - generic [ref=f38e420]: $1,000.00
+                            - listitem [ref=f38e421]:
+                              - group "AXARA. BEST SELLER gallery" [ref=f38e423]:
+                                - generic [ref=f38e432] [cursor=pointer]: BEST SELLER
+                                - generic [ref=f38e438] [cursor=pointer]:
+                                  - heading "AXARA" [level=3] [ref=f38e440]
+                                  - generic [ref=f38e443]:
+                                    - generic [ref=f38e444]: Price
+                                    - generic [ref=f38e445]: $200.00
+                            - listitem [ref=f38e446]:
+                              - group "TARIAN. BEST SELLER gallery" [ref=f38e448]:
+                                - generic [ref=f38e457] [cursor=pointer]: BEST SELLER
+                                - generic [ref=f38e463] [cursor=pointer]:
+                                  - heading "TARIAN" [level=3] [ref=f38e465]
+                                  - generic [ref=f38e468]:
+                                    - generic [ref=f38e469]: Price
+                                    - generic [ref=f38e470]: $200.00
+                            - listitem [ref=f38e471]:
+                              - group "VELARA. BEST SELLER gallery" [ref=f38e473]:
+                                - generic [ref=f38e482] [cursor=pointer]: BEST SELLER
+                                - generic [ref=f38e488] [cursor=pointer]:
+                                  - heading "VELARA" [level=3] [ref=f38e490]
+                                  - generic [ref=f38e493]:
+                                    - generic [ref=f38e494]: Price
+                                    - generic [ref=f38e495]: $130.00
+                        - img [ref=f38e500]
+                      - generic [ref=f38e503]:
+                        - 'heading "FOLLOW US #TERAHOME" [level=2] [ref=f38e510]':
+                          - 'link "FOLLOW US #TERAHOME" [ref=f38e511] [cursor=pointer]':
+                            - /url: https://www.instagram.com/wixstudio/?hl=en
+                        - region [ref=f38e520]:
+                          - generic [ref=f38e523]:
+                            - generic "image"
+                      - generic [ref=f38e563]:
+                        - heading "AS SEEN IN" [level=2] [ref=f38e570]
+                        - generic [ref=f38e576]:
+                          - list:
+                            - listitem [ref=f38e577]:
+                              - img [ref=f38e581]
+                            - listitem [ref=f38e589]:
+                              - img [ref=f38e593]
+                            - listitem [ref=f38e604]:
+                              - img [ref=f38e608]
+                            - listitem [ref=f38e620]:
+                              - img [ref=f38e624]
+                            - listitem [ref=f38e631]:
+                              - img [ref=f38e635]
+                            - listitem [ref=f38e647]:
+                              - img [ref=f38e651]
+                            - listitem [ref=f38e661]:
+                              - img [ref=f38e665]
+                    - contentinfo:
+                      - generic [ref=f38e673]:
+                        - generic [ref=f38e677]:
+                          - generic:
+                            - paragraph [ref=f38e680]:
+                              - generic [ref=f38e681]:
+                                - text: © 2035 by Business Name. Made with
+                                - link "Wix Studio™" [ref=f38e683] [cursor=pointer]:
+                                  - /url: https://www.wix.com/studio
+                            - paragraph [ref=f38e685]: tera
+                        - generic [ref=f38e688]:
+                          - generic [ref=f38e690]:
+                            - generic [ref=f38e692]:
+                              - paragraph [ref=f38e695]:
+                                - link "Sofas" [ref=f38e696] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/sofas
+                              - paragraph [ref=f38e698]:
+                                - link "Lounge Chairs" [ref=f38e699] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/lounge-chairs
+                              - paragraph [ref=f38e701]:
+                                - link "Tables" [ref=f38e702] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/tables
+                              - paragraph [ref=f38e704]:
+                                - link "Chairs" [ref=f38e705] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/category/chairs
+                              - paragraph [ref=f38e707]:
+                                - link "Contact" [ref=f38e708] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/contact
+                            - generic [ref=f38e709]:
+                              - paragraph [ref=f38e712]:
+                                - link "Terms & Conditions" [ref=f38e713] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/terms-and-conditions
+                              - paragraph [ref=f38e715]:
+                                - link "Privacy Policy" [ref=f38e716] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/privacy-policy
+                              - paragraph [ref=f38e718]:
+                                - link "Refund Policy" [ref=f38e719] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/refund-policy
+                              - paragraph [ref=f38e721]:
+                                - link "Shipping policy" [ref=f38e722] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/shipping-policy
+                              - paragraph [ref=f38e724]:
+                                - link "Accessibility statement" [ref=f38e725] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/accessibility-statement
+                              - paragraph [ref=f38e727]:
+                                - link "FAQ" [ref=f38e728] [cursor=pointer]:
+                                  - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287/faq
+                          - generic [ref=f38e729]:
+                            - paragraph [ref=f38e732]:
+                              - link "Facebook" [ref=f38e733] [cursor=pointer]:
+                                - /url: https://www.facebook.com/WixStudio
+                            - paragraph [ref=f38e735]:
+                              - link "Instagram" [ref=f38e736] [cursor=pointer]:
+                                - /url: https://www.instagram.com/wixstudio
+                            - paragraph [ref=f38e738]:
+                              - link "TikTok" [ref=f38e739] [cursor=pointer]:
+                                - /url: https://www.tiktok.com/@wixstudio
+                            - paragraph [ref=f38e741]:
+                              - link "Pinterest" [ref=f38e742] [cursor=pointer]:
+                                - /url: https://www.pinterest.com/wixcom/
+                        - generic [ref=f38e745]:
+                          - paragraph [ref=f38e748]: Stay Inspired
+                          - paragraph [ref=f38e750]: Receive the latest trends to your inbox
+                          - form "Contact us" [ref=f38e757]:
+                            - group [ref=f38e758]:
+                              - generic [ref=f38e759]:
+                                - generic [ref=f38e760]:
+                                  - generic [ref=f38e762]:
+                                    - generic [ref=f38e764]:
+                                      - text: Email address
+                                      - generic [ref=f38e765]: "*"
+                                    - textbox "Email address" [ref=f38e770]:
+                                      - /placeholder: Enter Email
+                                  - generic [ref=f38e777] [cursor=pointer]:
+                                    - checkbox "Yes, subscribe me to your newsletter."
+                                    - paragraph [ref=f38e786]:
+                                      - generic [ref=f38e787]: Yes, subscribe me to your newsletter.
+                                  - button "Submit" [ref=f38e792] [cursor=pointer]:
+                                    - generic [ref=f38e793]: Submit
+                                - region
+                        - generic [ref=f38e794]:
+                          - generic:
+                            - generic [ref=f38e796]:
+                              - paragraph [ref=f38e799]: Contact
+                              - paragraph [ref=f38e801]: Info@mysite.com
+                              - paragraph [ref=f38e803]: "Tel: 123-456-7890"
+                              - generic [ref=f38e804]:
+                                - paragraph [ref=f38e805]: 500 Terry Francine St
+                                - paragraph [ref=f38e806]: San Francisco, CA 94158
+                              - paragraph [ref=f38e808]: Monday-Friday 9:00am - 7:00pm EST
+                            - link "Send" [ref=f38e810] [cursor=pointer]:
+                              - /url: https://editor.wix.com/html/editor/web/renderer/render/document/47bd7d06-bee1-4723-8fe4-5508a0aed287
+                              - img [ref=f38e814]
+                        - paragraph [ref=f38e821]:
+                          - generic [ref=f38e822]:
+                            - text: © 2035 by tera. Built on
+                            - link "Wix Studio" [ref=f38e824] [cursor=pointer]:
+                              - /url: https://www.wix.com/studio
+                - region "bottom of page"
+              - iframe [ref=f38e827]:
+                
+              - log [ref=f38e828]
+              - log [ref=f38e829]
+              - log [ref=f38e830]
+              - log [ref=f38e831]
+          - generic [ref=e396]:
+            - generic [ref=e397]: https://halworker85.wixstudio.com/my-site
+            - button "Connect Domain" [ref=e399] [cursor=pointer]
+        - img [ref=e404] [cursor=pointer]
+      - generic [ref=e406]:
+        - generic [ref=e414]:
+          - generic [ref=e416]:
+            - region "scrollable content" [ref=e421]:
+              - generic [ref=e424] [cursor=pointer]:
+                - img [ref=e2227]
+                - generic [ref=e428]: Home.c1dmp.js
+                - img [ref=e432]
+            - generic [ref=e436]:
+              - button "Run" [ref=e438] [cursor=pointer]:
+                - generic [ref=e439]:
+                  - img [ref=e440]
+                  - text: Run
+              - generic [ref=e442]:
+                - button [disabled]:
+                  - generic:
+                    - img
+              - button [ref=e443] [cursor=pointer]:
+                - img [ref=e444]
+              - generic [ref=e446]:
+                - button [ref=e2229] [cursor=pointer]:
+                  - img [ref=e2230]
+                - button [ref=e2232] [cursor=pointer]:
+                  - img [ref=e2233]
+              - img [ref=e457] [cursor=pointer]
+          - generic [ref=e460]:
+            - generic [ref=e462]:
+              - code [ref=e465]:
+                - generic [ref=e466]:
+                  - generic [ref=e469]:
+                    - generic [ref=e472]: "1"
+                    - generic [ref=e474]: "2"
+                    - generic [ref=e476]: "3"
+                    - generic [ref=e478]: "4"
+                    - generic [ref=e480]: "5"
+                    - generic [ref=e482]: "6"
+                    - generic [ref=e484]: "7"
+                    - generic [ref=e486]: "8"
+                    - generic [ref=e488]: "9"
+                    - generic [ref=e490]: "10"
+                    - generic [ref=e492]: "11"
+                    - generic [ref=e494]: "12"
+                    - generic [ref=e496]: "13"
+                    - generic [ref=e498]: "14"
+                    - generic [ref=e500]: "15"
+                  - generic [ref=e520]:
+                    - generic [ref=e522]: // Home.js - Homepage
+                    - generic [ref=e524]: // "Handcrafted Comfort, Mountain Inspired."
+                    - generic [ref=e526]: // Hero, categories, featured products, trust bar, newsletter, testimonials
+                    - generic [ref=e528]: "import { getFeaturedProducts, getSaleProducts } from 'backend/productRecommendations.web';"
+                    - generic [ref=e530]: "import { getWebSiteSchema } from 'backend/seoHelpers.web';"
+                    - generic [ref=e532]: "import { initPageSeo } from 'public/pageSeo.js';"
+                    - generic [ref=e534]: "import { getRecentlyViewed, buildRecentlyViewedSection } from 'public/galleryHelpers.js';"
+                    - generic [ref=e536]: "import { getHomepageHeroImage, getCategoryCardImage } from 'public/placeholderImages.js';"
+                    - generic [ref=e538]: "import { isMobile, collapseOnMobile, initBackToTop, limitForViewport, onViewportChange } from 'public/mobileHelpers';"
+                    - generic [ref=e540]: "import { trackEvent } from 'public/engagementTracker';"
+                    - generic [ref=e542]: "import { announce, makeClickable, setupAccessibleDialog } from 'public/a11yHelpers';"
+                    - generic [ref=e544]: "import { colors } from 'public/designTokens.js';"
+                    - generic [ref=e546]: "import { prioritizeSections, lazyLoadImage } from 'public/performanceHelpers.js';"
+                    - generic [ref=e548]: "import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard.js';"
+                    - generic [ref=e550]: "import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton.js';"
+                  - textbox "Editor content;Press Alt+F1 for Accessibility Options." [ref=e552]
+              - generic [ref=e554]:
+                - img [ref=e555]
+                - generic [ref=e557]: You're viewing the latest code from origin/main as read-only.
+                - button "Local Dev Setup" [ref=e558] [cursor=pointer]:
+                  - generic [ref=e559]:
+                    - text: Local Dev Setup
+                    - img [ref=e561]
+            - generic [ref=e567]:
+              - generic [ref=e568]:
+                - generic [ref=e573] [cursor=pointer]: Properties & Events
+                - generic [ref=e578] [cursor=pointer]: CSS Classes
+              - generic [ref=e582]:
+                - img [ref=e584]
+                - generic [ref=e590]:
+                  - paragraph [ref=e591]: Select an element to add events, edit its ID, and more.
+                  - text: Learn more
+        - generic [ref=e595]:
+          - button "Page":
+            - generic: Page
+    - generic [ref=e2240]:
+      - banner [ref=e2242]:
+        - generic [ref=e2246]: Update Font
+        - button [ref=e2247] [cursor=pointer]:
+          - img [ref=e2249]
+      - generic [ref=e2251]:
+        - generic [ref=e2257]: All styles using this font will update
+        - button "Sora Light" [ref=e2263] [cursor=pointer]:
+          - generic [ref=e2264]:
+            - generic [ref=e2265]: Sora Light
+            - img [ref=e2267]
+        - generic [ref=e2269]:
+          - button "Cancel" [ref=e2270] [cursor=pointer]:
+            - generic [ref=e2273]: Cancel
+          - button "Update" [ref=e2274] [cursor=pointer]:
+            - generic [ref=e2275]: Update
+  - application "Rich Text Editor, editor1":
+    - iframe
+  - generic [ref=e2284]:
+    - generic [ref=e2285]:
+      - generic [ref=e2288]:
+        - img [ref=e2290]
+        - textbox "Search fonts…" [active] [ref=e2292]: Source
+      - separator [ref=e2293]
+    - generic [ref=e2763]:
+      - generic [ref=e2764]: No fonts found
+      - generic [ref=e2765]: Check for any typos and try again. If you still can’t find the font you’re looking for, you can upload it.
+    - generic [ref=e2744]:
+      - separator [ref=e2745]
+      - generic [ref=e2747]:
+        - button "Upload fonts" [ref=e2748] [cursor=pointer]:
+          - img [ref=e2749]
+          - generic [ref=e2751]: Upload fonts
+        - separator [ref=e2752]
+        - button [ref=e2753] [cursor=pointer]:
+          - img [ref=e2756]
+  - generic [ref=e596]:
+    - alert
+    - alert

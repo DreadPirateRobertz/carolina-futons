@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "description": "Option C remap: our code element IDs → template's actual nicknames (My Site 3, Furniture Store #3563)",
+    "usage": "node scripts/remap-element-ids.js scripts/masterpage-remap.json [--apply]",
+    "scope": "masterPage elements only (header, footer, overlays)",
+    "created": "2026-03-13",
+    "source": "Template IDs extracted via documentServices API"
+  },
+
+  "mapping": {
+    "siteLogo": "vectorImage10",
+    "cartIcon": "shoppingCartIcon1",
+    "cartBadge": "NOT_IN_TEMPLATE",
+    "headerSearchInput": "searchButton2",
+    "announcementText": "text42",
+    "announcementBar": "box45",
+    "navShop": "button7",
+    "mobileMenuButton": "hamburgerOpenButton1",
+    "footerLogo": "text41",
+    "footerEmailInput": "NOT_IN_TEMPLATE_USE_FORM2",
+    "footerEmailSubmit": "button4",
+    "footerPhone": "text18",
+    "footerAddress": "text18",
+    "footerHours": "text18"
+  },
+
+  "notes": {
+    "cartBadge": "Template cart (shoppingCartIcon1) is a TPAWidget — has built-in badge. Our code references #cartBadge separately. May need to use the TPAWidget's API instead or add a Text element in editor.",
+    "footerEmailInput_footerEmailSubmit": "Template uses form2 (TPAWidget newsletter form), not separate input+button. Our FooterSection.js references #footerEmailInput and #footerEmailSubmit individually. Options: (a) add separate input+button elements alongside form2, or (b) rewrite FooterSection.js to use form2's TPAWidget API.",
+    "footerPhone_Address_Hours": "Template has a single text block (text18) for all contact info. Our code references #footerPhone, #footerAddress, #footerHours separately. Options: (a) split text18 into 3 Text elements in editor, or (b) rewrite FooterSection.js to set all info in text18.",
+    "socialLinks": "Template footer has social links but they're inside box32 as part of the nav structure — not individually nicknamed. May need to add individual IDs in editor for #socialFacebook, #socialInstagram, #socialPinterest.",
+    "overlays_phase2": "exitIntentPopup, promoLightbox, newsletterModal, installBanner, sideCartPanel, headerShippingBar — all GAP elements not in template. Defer to Phase 2 or add as hidden elements in editor.",
+    "a11yLiveRegion": "GAP — needs hidden Text element added in editor",
+    "businessSchemaHtml": "GAP — needs hidden HtmlComponent added in editor",
+    "websiteSchemaHtml": "GAP — needs hidden HtmlComponent added in editor"
+  },
+
+  "clean_remap": {
+    "_comment": "Only renames that can be directly applied via remap-element-ids.js (both old and new exist)",
+    "siteLogo": "vectorImage10",
+    "headerSearchInput": "searchButton2",
+    "announcementText": "text42",
+    "announcementBar": "box45",
+    "navShop": "button7",
+    "mobileMenuButton": "hamburgerOpenButton1",
+    "footerEmailSubmit": "button4"
+  }
+}

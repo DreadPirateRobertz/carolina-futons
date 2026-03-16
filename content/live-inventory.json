@@ -1,0 +1,5595 @@
+{
+  "inventoryItems": [
+    {
+      "id": "a195ff37-0228-1f07-f3cd-033bdd1d96f1",
+      "externalId": "5e6a00c8-fdd7-e0f8-0c32-fcc422e2690e",
+      "productId": "5e6a00c8-fdd7-e0f8-0c32-fcc422e2690e",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "071bfff3-a3ec-4742-a631-4dc7eab32514",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "14e95bc1-4471-4177-ae3e-ea7f73fd0de9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "77945961-cf79-4bba-ab2c-e0208fa6d34a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-09-27T19:26:13.828Z",
+      "numericId": "1737327652670000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Usually available within 5-7 days of order"
+      }
+    },
+    {
+      "id": "9d6b67be-7951-812e-db8d-d48092f31496",
+      "externalId": "62949841-86ae-7ed1-2472-2b7f6d0ceb69",
+      "productId": "62949841-86ae-7ed1-2472-2b7f6d0ceb69",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "e3fe1f33-758b-495d-90fd-fa80b44fd087",
+          "inStock": false,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5250277e-f1a5-4060-8b56-775b7a10c95f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fcb8c9b2-b483-4a69-9b34-4515fed78a9d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-09-27T19:24:59.931Z",
+      "numericId": "1737326894422000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Usually available within 5-7 days of order"
+      }
+    },
+    {
+      "id": "1bcc7d50-ab5a-9e08-6ab1-e25653ead8c0",
+      "externalId": "e43382af-54a5-61f7-954e-1da9ac15273f",
+      "productId": "e43382af-54a5-61f7-954e-1da9ac15273f",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "c205ef9f-bd30-4819-9280-796ae297589b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f5d17daa-5cf3-4374-8d7c-cac2786f5adc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "74c1a376-21a1-47ca-a172-38f0ed958c9b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8bbe26f2-c449-4f29-a80b-fadc5c9898ec",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e8c1a666-149f-4d5c-9e70-024e7d3bac6d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cd6e7717-a564-4cb1-bb09-1bd8298ae03b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b37a6940-09cb-4705-bc95-c999b1ff871a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e4f0682c-99db-48b0-b899-e96fa3aa67d7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "222d9539-9a03-492e-a71f-6b6def3a0c2e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:58:22.855Z",
+      "numericId": "1729802354212000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "1ac8d55b-5abd-2e21-430d-c01a3e67f91a",
+      "externalId": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+      "productId": "e5372aa4-a542-d1de-bcf2-3fe5c19806e5",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "a678a9a8-27aa-462f-8ecd-fba97338f442",
+          "inStock": false,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2688788b-b207-4df9-b087-272a602eff3d",
+          "inStock": false,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b21401e9-f96f-4152-bf34-a13dc88834d3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c8d90b07-e9e9-4e91-8186-16de2fdb5035",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3a4e4844-23fc-4497-a71f-9e1b136c5a8d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7c6df93f-4819-482d-b6a9-a1189de6ecb7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-04T21:44:40.748Z",
+      "numericId": "1714593488022000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "0098f6e4-b46e-deb5-f1bc-585da89bb064",
+      "externalId": "ff67091b-4b91-214a-0e43-a7a257644f9b",
+      "productId": "ff67091b-4b91-214a-0e43-a7a257644f9b",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "07651262-05e6-4fdc-9a1f-6d5ba597c6b9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a403d803-4a0e-4320-8a2a-53130b202267",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ad39a197-7782-4cd1-b770-d1404c8a9f25",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:57:31.479Z",
+      "numericId": "1687976614657000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Usually available within 5-7 days of order"
+      }
+    },
+    {
+      "id": "5c9259a8-5236-3ad4-d951-e6b8917d39ba",
+      "externalId": "a36da657-adc9-c52b-26ae-19476e82c645",
+      "productId": "a36da657-adc9-c52b-26ae-19476e82c645",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "2ea2d1a5-2152-4046-8374-3040b65e0b64",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1d4b9d2b-e882-41e7-88ed-364f14f83197",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b0cea36a-9b1c-4af0-84d2-2dd24890ea92",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c3b43b44-84c9-473e-a93a-f2c243d58917",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d1d4d517-f85a-4d0e-a4db-3daf7dba4b3d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d4ab4354-a0b8-40e7-a15f-68aede42c5a8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9188c300-7c14-4517-b06c-67e3ec3fe17e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "13469709-78d7-45fc-a6fd-19e668547a9e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ffaabf25-22cb-4a54-b119-3974097fe4ea",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ea7a85fc-2f59-40db-a66b-8e4c4f669d8c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-06T20:57:03.751Z",
+      "numericId": "1677268140828000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "696dfdff-377e-a519-eb4a-b7e3648dcf33",
+      "externalId": "96920200-c881-5ae6-14b5-481c9b7230cc",
+      "productId": "96920200-c881-5ae6-14b5-481c9b7230cc",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "31a336ee-7894-40c3-a00b-67d1060264c9",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a6cd25b7-5fb1-43ad-84f5-eed60d02b13d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c6ac6cdc-379e-4b0a-a6db-4d8c9630d6c8",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cf556b41-e5bd-4b51-960d-0e3dd53b9791",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-09T17:56:28.909Z",
+      "numericId": "1675272728030000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "aefb7540-25ca-269c-9edb-952d0ee0537d",
+      "externalId": "51048abf-da35-d963-6124-6ad2f11fac82",
+      "productId": "51048abf-da35-d963-6124-6ad2f11fac82",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "9d80229c-8dc5-4362-9175-8e65041808f9",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "684b16a5-d6c0-490b-984d-d7b9396f6e6d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2024-04-06T20:13:32.317Z",
+      "numericId": "1675272263195000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "3de4738d-173b-dee1-0320-50f84a0d47d1",
+      "externalId": "c21b8c72-e8c4-211e-fcdf-af07b5f2b82e",
+      "productId": "c21b8c72-e8c4-211e-fcdf-af07b5f2b82e",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "c45aaf7a-0ff5-46bd-b8b9-712b749aafdf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0487ac59-737c-40a7-b8f8-2a75af97c4f7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "54ba9ea8-9f54-4f6f-9b14-ee4940e5ce21",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bc6f3209-ded2-4f41-ba54-d2d222c4f501",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9abed6bb-61b0-4156-a262-6b1fb4b77f3d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f585ad43-765f-49e3-af98-eeba0660f31e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fc18d334-5ba2-4dab-8828-0b203c995086",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1478ee35-92d8-494b-972d-baa5e982569c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e0e7535d-17ec-41d1-a61e-c3fa4ea3c014",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5d27f463-b1e6-424b-ad1f-fc42b9ed38c7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:47:52.377Z",
+      "numericId": "1656003206512000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "bf13a361-8865-e938-02dd-e4a9f30f49f1",
+      "externalId": "40ec5c9e-779a-16c7-fd22-1b560cf0b60e",
+      "productId": "40ec5c9e-779a-16c7-fd22-1b560cf0b60e",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "5cc05a52-c0f4-469e-a606-6ab6d8dc9373",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e9620f97-66cb-4fa5-a36e-31d110079e0a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:48:12.296Z",
+      "numericId": "1656002749918000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "303a0406-6af1-ae5e-5012-8bfa2fb55efa",
+      "externalId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+      "productId": "cfc5fbf9-950e-51a1-afed-7405d04aa105",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "789307f7-0e52-4caa-bdb1-1fcd7deb8d10",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5651249a-136c-4777-8322-c99eb9890c61",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:48:33.800Z",
+      "numericId": "1656002465774000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "878e6a8b-4ac5-9e89-e035-33b9db149adb",
+      "externalId": "78719574-b53a-6176-1fca-cc4624eb6524",
+      "productId": "78719574-b53a-6176-1fca-cc4624eb6524",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "bb230b4c-21aa-4c75-8933-1899b3dd381f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "93770d73-b07d-4076-adc4-768942b74e64",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c7d1c560-d26e-4e62-a19a-9df97ea40648",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5110ffee-8404-4064-86da-be9187599ba5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-08-16T17:48:15.199Z",
+      "numericId": "1655575116790000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "45f261e3-6143-7b06-1864-addf0c328875",
+      "externalId": "ba0d9e1c-9ebc-84f9-e79b-5220f3cd778a",
+      "productId": "ba0d9e1c-9ebc-84f9-e79b-5220f3cd778a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:42:04.525Z",
+      "numericId": "1655321421200000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "cacc9bb4-4abb-590b-f4f9-f6185868dedb",
+      "externalId": "3533644b-b544-a6f4-0b06-09e7a7972124",
+      "productId": "3533644b-b544-a6f4-0b06-09e7a7972124",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "fa64e2d8-36fd-4740-914b-255580d939fe",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9b6651c2-4105-4539-b9b8-beb034209625",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d5ce9628-7c9a-4dd3-9fa5-c063a75b28d4",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "97794cd5-c584-46e8-be10-920b6f7bb579",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7176185f-0b5b-4cad-b854-2595466e75b5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-08-01T15:35:49.543Z",
+      "numericId": "1655319451880000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "d9939dd0-0c69-8b9d-225b-579fc5739721",
+      "externalId": "266c622f-f396-7462-dda4-a8603a8c68de",
+      "productId": "266c622f-f396-7462-dda4-a8603a8c68de",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "d7860688-75a6-4f98-888b-429c283a7113",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "496c7d8e-891f-441a-b72a-b8b5ac123e62",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b77e4008-7d8f-4ee3-bb85-59d6397f3a73",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "359a6b38-8b3b-451f-9bd4-fd36ac9759e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "75e1b3a5-cf01-4319-a7b4-cd88cefc48da",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-10-17T16:58:17.438Z",
+      "numericId": "1655319291759000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "a38ad3c1-a075-f939-b5d4-98cb256ba4d4",
+      "externalId": "5c752c3e-5f8a-06c6-4a2b-6734da945b2b",
+      "productId": "5c752c3e-5f8a-06c6-4a2b-6734da945b2b",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "5a0ad14c-9dbe-4320-87dc-8e52693c790d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1c4a2c83-db8e-4075-af37-70566e54fad0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9f0df533-03fa-4c12-9828-15747791d056",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "13384bfe-8bb2-4dd6-be2e-98822918b3f4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "556cba60-86dc-425c-87d6-f89d6d2c90cb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-09-26T18:54:56.135Z",
+      "numericId": "1655315930052000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "0defc8fa-8f5c-f980-ae9e-10f6c0e3bc78",
+      "externalId": "f2103705-70a3-067f-5161-ef093f1c4387",
+      "productId": "f2103705-70a3-067f-5161-ef093f1c4387",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "5bfb848a-cfc2-4a76-854f-a11d7ad2a712",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7048f737-6031-4a38-a2e6-779c2d989b19",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "35acc315-b131-4042-a5de-de40e1c227ce",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b5a4b106-5a52-48b5-9512-86579d45642a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e9ff3b1e-0d08-43d2-ae51-d485cbdc7167",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e2a1241d-4f15-474d-936f-17f28d082636",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2e914a04-19a4-4ebd-b9fb-fe726b63fdcd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1058d470-882b-47da-a8ee-ed30cfed3e56",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "53122dcd-a322-467d-ac2e-30dc88addb5f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4e3618cc-5bd8-499a-ab30-326d1448471e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3efca846-2c6d-49ac-b8c5-fb9a862d5b3a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0f609a98-4fe3-414b-ba8d-1a0eba028165",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "21bba318-96e0-43ff-8edf-db863808de1f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d555883a-210a-4f51-90c2-5cd5de7e0df6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "14feb9a2-08be-4790-a255-8827fdfa429a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "89c5287a-6783-496f-90cb-0bb1eebfcd5c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "48b1b498-3caf-4f54-ae2d-6598a54af43d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "88dd7ab8-ac08-4ee9-a637-7c15085300fe",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8d6cba3d-ec70-4b83-9234-30d805fce9c2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8959dc66-6e7a-46d0-b9d0-b9f85b3c924e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "49659d90-6671-4b41-a6ae-db0b1ab565b7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "42d2558c-1f03-4a08-bc9c-0eaae5a275cc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "08a26bf2-aeb6-48e8-a171-31feb8701cfe",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f7897119-9ae4-486c-982c-77d3abcd73e9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0e93a82b-4f03-4143-a7eb-51bffa37a3e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c1126c58-8dd7-441c-948c-615b607363ae",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5d0ef483-c002-4d0f-8504-fa924f1c8cbb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5ceecd12-5825-4749-bb3f-38be21dd9db8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "beeee165-2350-46fd-9ba5-14716358f54d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "01f8ea08-a0b7-4709-ad57-01c2f9c9fabf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d278373c-6ed1-4b96-ab57-7df1f0f5b385",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0a40fdea-dab1-420f-a233-4777237604e7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "187a3320-482b-45e0-8ae0-585720c9e3c6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5d12fcda-fb2c-43a9-8b5b-6fdcb31a52f5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a58e461c-9e4a-4c3f-a242-c686b0647a16",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f3bcdd7c-6134-46df-8e51-b34659204d86",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "126c69b5-0f4c-4916-b34c-809779a5ccfe",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1b5ab229-ac48-4bb6-8231-0b9e0cc67e79",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d4adc457-6406-45b7-88e3-117a3a673e06",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "733c29e8-1d37-4fec-b211-72b3e3b782f0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2023-12-05T21:27:18.296Z",
+      "numericId": "1655314719668000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "be07d1e2-4a33-dc53-28a6-1d0c62999946",
+      "externalId": "41f82e1d-b5cc-23ac-d759-e2f39d6666b9",
+      "productId": "41f82e1d-b5cc-23ac-d759-e2f39d6666b9",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:49:15.043Z",
+      "numericId": "1655234687161000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "2af285cb-e220-a128-b69f-b6ccfcd60fe1",
+      "externalId": "d50d7a34-1ddf-5ed7-4960-49330329f01e",
+      "productId": "d50d7a34-1ddf-5ed7-4960-49330329f01e",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "584fc401-fa67-482d-a6df-e7cf54d5e5e0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cd316f8f-c489-45a1-84e5-bc7950f0b65e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bbe769db-36df-4a97-9ff6-8e63654f4cba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "fc2c6fb6-4996-4a00-b141-9b649349e19f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1b6acead-e7d3-4350-95a8-bb7662b588e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-08-17T21:18:13.289Z",
+      "numericId": "1655232124798000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "7c419c5f-a51e-6c9a-d6a8-8f3051141a74",
+      "externalId": "83be63a0-5ae1-9365-2957-70cfaeebe58b",
+      "productId": "83be63a0-5ae1-9365-2957-70cfaeebe58b",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "5d11bc46-0eea-400a-b380-e2b034926de3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b9cf811d-60da-473a-8dd7-c0573fd9af68",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6fdf64f9-8a74-4e74-90be-0993781acddf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "264a9d17-37fc-4052-93fc-e8c007ea7113",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d18cc9e7-c72f-4625-b4bd-3c13e0271aa6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-10-17T17:07:16.714Z",
+      "numericId": "1655231550954000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "4edd228e-38e4-7365-3c19-17040c8e8b5b",
+      "externalId": "b122dd71-c71b-8c9a-c3e6-e8fbf37174a4",
+      "productId": "b122dd71-c71b-8c9a-c3e6-e8fbf37174a4",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "d39847d4-4cac-4d8e-898f-aa173dc1d7b9",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bc0a2466-0af7-49b5-a683-4ba7683b766f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3f2ed9b7-b0af-4aa9-a011-6ac0b46bd41d",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7de2320b-22d3-47af-9355-681fb0c3a82f",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "189808b9-be38-4e28-8616-04cecbcac3ae",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-12-24T16:21:12.272Z",
+      "numericId": "1654620511139000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "c2c8c722-624e-803c-4920-02dc95d7a18f",
+      "externalId": "3d3738dd-9db1-7fc3-b6df-fd236a285e70",
+      "productId": "3d3738dd-9db1-7fc3-b6df-fd236a285e70",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "05a2600c-bc2c-4794-83f3-d5d65434bc42",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1badf9fb-ed5c-40dd-ae56-4597e92cd7b4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "99ebe852-d4d1-4244-a7fd-ff90dd0eb937",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2c22bd70-32b0-4e0f-bd66-54c43bb002e1",
+          "inStock": true,
+          "quantity": 2,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "21e578de-8e43-4570-8d4a-971992a2108a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-12-11T17:36:54.083Z",
+      "numericId": "1654620435071000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "11fcab48-e28e-dacf-2e6c-aa9bcba689bf",
+      "externalId": "ee0354b7-1d71-2530-d193-556434597640",
+      "productId": "ee0354b7-1d71-2530-d193-556434597640",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "bcd69785-461e-4569-8084-7b6957c714d7",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f7ba563e-aac6-4771-a632-eaaf7cc3d7d5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "70b9191f-f5bb-4e9b-a768-97848e341beb",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "36e888a2-f583-48d8-adb7-fd38f1098ec0",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "feee1bb1-d89f-4617-b63c-ee6416919d61",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-12-11T17:35:35.197Z",
+      "numericId": "1654620353791000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Out of Stock"
+      }
+    },
+    {
+      "id": "9181324d-817f-a85c-53b4-70f03fc2cd72",
+      "externalId": "6e7ecdb2-7e80-57a3-ac4b-8f0fc03d328d",
+      "productId": "6e7ecdb2-7e80-57a3-ac4b-8f0fc03d328d",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "3da7354e-14a9-4050-ae24-13ae6897b449",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "39c5e64f-9eb7-4fd3-8afb-73a22ed2cc2f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c70c5c67-283a-4ad4-a836-46a9b0cfcc2d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "07034ae7-37db-4d83-9f38-2308e12f639e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-06-05T23:52:31.125Z",
+      "numericId": "1654620165055000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "54ae54fb-1869-b1b6-616a-e424a3f25bcd",
+      "externalId": "ab51ab04-e796-4e49-9e95-1bdb5c0da432",
+      "productId": "ab51ab04-e796-4e49-9e95-1bdb5c0da432",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "0c9b1410-38aa-4b15-a434-38fd3936fb55",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "04322315-b625-4f5d-9a42-68942ac58fcb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7b801776-e68e-4b68-83cf-e47dd7b040de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0fb22d3f-219c-4fec-b4e0-db52a6691865",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ceee2890-5433-4f1f-a512-d53fcdac58cb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9bd85eb1-39fa-43f0-8681-305b25f505de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "77a71f27-aa42-49bd-8d83-bcc99bb85bf1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "10e31dbd-a8c6-4934-8eab-e7227867e93e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-27T01:49:37.502Z",
+      "numericId": "1654189479262000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "2b9f8365-b07a-5531-90ab-5febff23e1ef",
+      "externalId": "d4607c9a-4f85-aace-6f54-a01400dc1e10",
+      "productId": "d4607c9a-4f85-aace-6f54-a01400dc1e10",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "01c77d55-27c1-4488-b07a-05c3ee5ef557",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "246ceb7f-a858-431a-a287-2223236d40f9",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ee452b73-b344-488f-8bfc-20eb6f86764b",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "810a1c22-047e-4b49-8211-ebbce6b4a609",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-10-14T14:58:27.077Z",
+      "numericId": "1648154909164000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "59816693-2e48-038d-37a6-03b6e45b0566",
+      "externalId": "a67e996c-d1b7-fc72-c859-fc491ba4fa99",
+      "productId": "a67e996c-d1b7-fc72-c859-fc491ba4fa99",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:15:30.420Z",
+      "numericId": "1646829874355000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "4f366dc2-55b6-23b1-183a-da8e6480e765",
+      "externalId": "b0c9923d-aa49-dc4e-e7c5-25719b7f189a",
+      "productId": "b0c9923d-aa49-dc4e-e7c5-25719b7f189a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:09:35.692Z",
+      "numericId": "1646827329604000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "174fd419-a778-6cf5-ecff-9d146cf2be2b",
+      "externalId": "e8b02be6-5887-930a-1300-62eb930d41d4",
+      "productId": "e8b02be6-5887-930a-1300-62eb930d41d4",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "a3a946d4-1561-4242-a8b2-7d51b7d6732b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3327142a-6de5-4f02-b047-6c097f5bb345",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ecd7ad23-c3a0-4759-8934-7e038d9a9a80",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-10-18T17:53:15.770Z",
+      "numericId": "1646823922686000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "3dc5a35e-f766-688a-3aa1-67458a68ae7f",
+      "externalId": "c23a5ca1-0899-9775-c55e-98ba75975180",
+      "productId": "c23a5ca1-0899-9775-c55e-98ba75975180",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "1970-01-01T00:00:00Z",
+      "numericId": "1646685319615000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "92b1bedc-dd24-730b-f43c-77129818ea06",
+      "externalId": "6d4e4123-22db-8cf4-0bc3-88ed67e715f9",
+      "productId": "6d4e4123-22db-8cf4-0bc3-88ed67e715f9",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "a85c27c0-a52f-4314-b8b9-690b0504167f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "477b7205-9cc1-48b0-85e7-6061961286b5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "54a4f0e4-fbb2-4fe9-8789-33e1e1451657",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a624b765-01d5-44f8-a218-ca1504bbe63a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2d6602e5-0a43-487f-b12b-ef34905b6d33",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a4755f59-9a45-4aa8-acdf-4e727c3cbe62",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9f2ca32a-e570-4bd0-a052-24dd08c4372f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "19b3ee35-b29d-44bf-ab67-2629ae6a9539",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-01T16:57:24.605Z",
+      "numericId": "1646657748093000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "2ac2e14d-1220-13f2-f2eb-95a709a69b05",
+      "externalId": "d53d1eb2-eddf-ec0d-0d14-6a58f65964fa",
+      "productId": "d53d1eb2-eddf-ec0d-0d14-6a58f65964fa",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "0444281b-3c98-47b2-b6f6-7c550cbe4726",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d118fb15-1e08-4d4a-940e-46ef749366f7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "82e2ffe2-a4d3-48f8-8958-c34221788459",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "19aaf9b8-f139-4bb0-b62d-57528c2a51de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8f2fd962-d698-4a83-8e3d-151cae47390b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "93609db4-f9a2-4fa2-a486-a22cad2d67c0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3ae62d56-c54b-4313-bf8d-ae343a8482ed",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "956050aa-8895-4a9f-855e-c7a05acd911a",
+          "inStock": true,
+          "quantity": 3,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9f95d7b3-3602-4bbe-81ee-5573387c928c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "71754c9d-1c40-403c-b10f-7552c9e72cb4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "958ba40c-0dcf-4bd3-8a30-ff0e61c5e05e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "dd1659d1-d846-4459-88ba-294fedc09554",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-11-08T15:41:56.801Z",
+      "numericId": "1646657277944000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "81680131-220a-25cd-0c73-5f6e5616c6ac",
+      "externalId": "7e97fece-ddf5-da32-f38c-a091a9e93953",
+      "productId": "7e97fece-ddf5-da32-f38c-a091a9e93953",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:16:08.727Z",
+      "numericId": "1646224085987000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "49bb7563-01b1-c86e-037e-3b9ebc5c61f7",
+      "externalId": "b6448a9c-fe4e-3791-fc81-c46143a39e08",
+      "productId": "b6448a9c-fe4e-3791-fc81-c46143a39e08",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:14:58.176Z",
+      "numericId": "1646224039682000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "e7ddc610-b22c-8f17-c823-29b1c0e17a89",
+      "externalId": "182239ef-4dd3-70e8-37dc-d64e3f1e8576",
+      "productId": "182239ef-4dd3-70e8-37dc-d64e3f1e8576",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:14:31.702Z",
+      "numericId": "1646224009109000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "97114486-74e4-825a-440b-bba88e5a8eec",
+      "externalId": "68eebb79-8b1b-7da5-bbf4-445771a57113",
+      "productId": "68eebb79-8b1b-7da5-bbf4-445771a57113",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:13:59.641Z",
+      "numericId": "1646223975558000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "c04029c8-5678-ea91-e4b6-0ae9aa7f0798",
+      "externalId": "3fbfd637-a987-156e-1b49-f5165580f867",
+      "productId": "3fbfd637-a987-156e-1b49-f5165580f867",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:13:15.279Z",
+      "numericId": "1646223937740000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "6ec5ca05-2f6f-51bf-1f0b-e310daeedc84",
+      "externalId": "913a35fa-d090-ae40-e0f4-1cef2511237b",
+      "productId": "913a35fa-d090-ae40-e0f4-1cef2511237b",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:12:38.759Z",
+      "numericId": "1646223876215000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "444af7fd-7322-31b9-d3b9-08b0e3449339",
+      "externalId": "bbb50802-8cdd-ce46-2c46-f74f1cbb6cc6",
+      "productId": "bbb50802-8cdd-ce46-2c46-f74f1cbb6cc6",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:11:51.826Z",
+      "numericId": "1646223833864000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "bd35a2b7-6621-301c-bc89-9803fc1edb87",
+      "externalId": "42ca5d48-99de-cfe3-4376-67fc03e12478",
+      "productId": "42ca5d48-99de-cfe3-4376-67fc03e12478",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:11:16.241Z",
+      "numericId": "1646223792953000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "709d209e-8608-d599-4a4e-5ffe29079bc5",
+      "externalId": "8f62df61-79f7-2a66-b5b1-a001d6f8643a",
+      "productId": "8f62df61-79f7-2a66-b5b1-a001d6f8643a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:10:18.907Z",
+      "numericId": "1646223722411000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "fe3c842f-b185-7021-3a61-eae19d2bde32",
+      "externalId": "01c37bd0-4e7a-8fde-c59e-151e62d421cd",
+      "productId": "01c37bd0-4e7a-8fde-c59e-151e62d421cd",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:08:44.914Z",
+      "numericId": "1646223675525000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "63e8bc0d-81ea-b0b0-aa9d-03cbfb2a2bb5",
+      "externalId": "9c1743f2-7e15-4f4f-5562-fc3404d5d44a",
+      "productId": "9c1743f2-7e15-4f4f-5562-fc3404d5d44a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2022-06-02T19:07:42.816Z",
+      "numericId": "1646223632416000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "bb585db7-dccb-0f82-0c61-e76974caa205",
+      "externalId": "44a7a248-2334-f07d-f39e-18968b355dfa",
+      "productId": "44a7a248-2334-f07d-f39e-18968b355dfa",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "1970-01-01T00:00:00Z",
+      "numericId": "1646222211061000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "51060d49-b1ed-35bb-8346-ef6d237679f8",
+      "externalId": "aef9f2b6-4e12-ca44-7cb9-1092dc898607",
+      "productId": "aef9f2b6-4e12-ca44-7cb9-1092dc898607",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-06T19:45:30.797Z",
+      "numericId": "1646221895195000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "c9969e44-a07e-fc8f-4b19-c187876f4506",
+      "externalId": "366961bb-5f81-0370-b4e6-3e787890baf9",
+      "productId": "366961bb-5f81-0370-b4e6-3e787890baf9",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "00000000-0000-0000-0000-000000000000",
+          "inStock": true,
+          "quantity": 3,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-12-11T16:38:06.756Z",
+      "numericId": "1646220414539000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "d15413eb-ab0d-ba60-19d0-70c22055fad4",
+      "externalId": "2eabec14-54f2-459f-e62f-8f3ddfaa052b",
+      "productId": "2eabec14-54f2-459f-e62f-8f3ddfaa052b",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "5ce57911-1cdd-45b4-a898-679a849273ec",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "6bafa718-6565-48ad-b6a7-88137c161079",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fde36e99-05aa-4329-a924-eec5aa4cc2b7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3057d97d-7c64-4c3c-b66a-23e63ffc2ef0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "828bf23b-18dd-48e5-a0ad-daefb6d40472",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-10-17T17:10:54.825Z",
+      "numericId": "1645789396647000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "b95c173a-229e-dc8b-daca-9a1035a1e797",
+      "externalId": "46a3e8c5-dd61-2374-2535-65efca5e1868",
+      "productId": "46a3e8c5-dd61-2374-2535-65efca5e1868",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "7a47c2b6-9c38-48c2-8e36-0351c4753dd0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7ffef302-dbc4-44cd-b795-9a4090c6ed41",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a92452cc-8836-4d1a-ad53-3433140b7bc6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4b5197e1-209e-4b10-abe2-e7096135a331",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f2c49e63-52bd-4a1b-80af-0336c8d05956",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-10-17T17:10:15.824Z",
+      "numericId": "1645788745527000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "8aa93ce2-f902-1030-4651-4409429e6022",
+      "externalId": "7556c31d-06fd-efcf-b9ae-bbf6bd619fdd",
+      "productId": "7556c31d-06fd-efcf-b9ae-bbf6bd619fdd",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "89709c71-aefe-42a9-8900-9ed1678fcd7c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3e8589b5-3b48-4c91-9092-6bd318c0f6b7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "21157e65-bc66-473a-88ac-c43e532193c9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "73968fc4-d5a4-42f6-a720-2659bb0673fa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3e021e8e-c5d0-4ff2-a7d9-640bf1040c2d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "670a5a52-73ce-4738-988e-203fa082340f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "49c23798-e8ec-4790-be32-1709efbc9f6f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d7052d38-14ee-42f4-a19e-e30f734b8c22",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0fae2098-80c0-4778-b01d-caab3fe69d80",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d629a24f-8158-4f12-8621-e5425a6a6e36",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b21a59a7-7ffe-43fa-9123-852984704d3c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1ed7c228-134c-4064-b12a-e0225968fc19",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1b386f8a-969e-4b29-b95a-86de557aa6a5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9288c851-aac2-41d8-b703-3751d3f9665f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "342b7f1d-d4ac-4d54-835d-9f530db257f3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c6dd849d-86ee-4033-a939-131e3ec6b5f9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b0fb5ecd-1c72-453c-86be-86ea67ea4f20",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f89952c0-2fb3-4ecb-994a-d9bcd2ef4fc0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cb65f932-c3ee-454f-b63d-301a4fd28b08",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1a12d5e2-ef4f-43d6-9edc-7b641649b06e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e2417634-f9b9-4e6e-8520-7be577a24312",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "00b5b316-720a-4abb-a095-1f72cc1b0ae3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0570060f-4cb8-4d6a-8bb7-63976cf9f48a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c415afd8-3e6f-4018-8cd3-c48755131cf1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2edfa8c2-9110-45b8-8773-bf5cba1a7662",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7fb6629c-a197-4d3f-b784-89a80591952a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8c7b4dfe-b425-49b2-b53c-a08ce7041071",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3eb358d8-3831-4c07-bd75-5efc819f00d0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d21074c6-3e37-4d07-905f-4114e96a94ee",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "58d80cbf-0162-409e-aafc-94b90874133b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b87eb4a3-33be-4ebc-b418-4cf9c750cfbd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7958e277-8a12-4126-8434-102dcbd51aec",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e1f28286-bd91-459c-b418-48fa55e7213d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6057a499-c47c-4b49-a9ae-6981f03ed580",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0d288418-8bac-4c00-ade6-ac6d5033f9a6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3044f20d-19f6-45d6-9cae-27c6e5f8ae46",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ad1aeb71-6950-4371-92e1-84d716314924",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b3a3746c-5438-498a-8f80-872e457f81df",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "89ab96ea-c91b-4020-ac69-d647a829f8b2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "af476f9d-c128-42d7-a315-8315081602ee",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:41:17.335Z",
+      "numericId": "1645653042135000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "d3050080-2784-0e19-9659-fb4d32e20f9c",
+      "externalId": "2cfaff7f-d87b-f1e6-69a6-04b2cd1df063",
+      "productId": "2cfaff7f-d87b-f1e6-69a6-04b2cd1df063",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "db572c34-51cd-42ec-a1aa-f6f7bb6f2e54",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "145eada0-f04d-4f92-ae54-92577ad0e4e6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cbc2781d-bf3c-4320-a27b-d1e5a45ccc12",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a115642a-d2a5-4506-9b33-0c265b16ec8e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3c989e5f-efa2-4a8a-bc74-58dd4a32b335",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "79be3f66-a905-4e06-80e6-13804a6ebf24",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3401010e-f484-49cd-a2ac-778e32bc7106",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "17b88ee4-3f53-494c-bf52-0413ac5c6bb9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "72244ac2-6746-435a-b71a-63feac1b5ece",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "897016de-9668-4d91-bfde-4163f0dac39d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d86b2f63-1808-450d-abac-ce7ae31b02ee",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2269b1f5-a133-4d76-a61c-27274b0d8a70",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d76e4ed3-0a2d-4fa7-8bf3-a1e18a214c9f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "dfd65e77-a2d1-4613-b0a7-8f2cf8532c56",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "73c2ebce-8e31-4a2c-8548-ccde6eafaffd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6f327d8c-9809-4926-be20-571cfc9581d5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b211e9ef-e413-4904-ab81-2e2f349150ee",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1ab106ec-94a8-4ed1-9aac-05061bb25d93",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f6ca5708-9f98-4d47-bf66-07b745ed7bab",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d7720583-d402-4b6c-9139-e47fff790b8e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "901922be-f84c-42e6-8bdd-3928857085be",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "15a0dd2e-1df1-40f7-a6b3-84b68df06f5e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bd7eb9e0-525d-483a-aec5-1dc0d2c46faa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e1243f03-6752-4924-84a8-9fef93fa18a3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "598c65ab-856b-4781-a27f-16cb1c62d6f8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "28ce4265-e744-4f89-aaa1-f0729afc1142",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e6403ad6-4d76-4494-8594-e1bfd58823f4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0b29f5cf-d03b-4333-b4f4-b9420303c35a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "50e9e90e-ae93-422b-b582-a6eaf63b502f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b4d328cd-d1d8-4cc0-9a6e-1a6dfbd5f27b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "41338fb5-c85f-41a0-907c-3289e3edcd7f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a9331b4f-97ae-4766-80fe-33cb116d28a6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7fd5f5cc-d39d-4a45-aeba-634fc6d6653c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f4b0410d-1ba9-46ce-9591-2ec7d3c7b552",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6b6fc5bb-4f5e-4bd5-ada3-65a4ace382be",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c3629e84-c11d-407b-985c-73e759f3cc56",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b416f066-7e81-4429-9199-77b1480cff9f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3a3d4af7-41a2-4575-95bd-69a53132b2ba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "218cbb32-ab68-432a-b19c-450804156cb2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "71c96ccf-05d4-4087-a621-345fd54e6ef5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:39:47.405Z",
+      "numericId": "1645652946265000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "569f4b78-14fd-cb48-e4e6-e339137959f7",
+      "externalId": "a960b487-eb02-34b7-1b19-1cc6ec86a608",
+      "productId": "a960b487-eb02-34b7-1b19-1cc6ec86a608",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "a82a5909-80f5-452e-a54f-ed023cdb7339",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "284351eb-4b37-415b-8999-4429ab4d15ac",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d79c9dd3-9883-44dc-9bb7-a814f54d848b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ac88d0cb-c7cf-48d5-bc27-4fd31cd7f982",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2ea3b743-6978-4faf-ba33-ad056c71d786",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "db930d4e-9893-4e9c-aea9-18ce1495bce2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "18968a50-6ace-4c47-bf68-00a3a7127622",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "acee5567-bb3b-4783-bad6-e8a784d1f4f1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1df795b4-1f7a-4226-b6c6-4d9d2ae31a67",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d57a1dc6-a9e2-4188-838a-0befc00f7844",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "90c3171e-8aaf-4878-a262-d4c20330acdc",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5cd12a70-7ea6-49df-935e-1284756cc42a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c927915c-ba30-4f19-91b7-9f32b37b0150",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "67302e22-ddcb-47a1-a0e6-4af0ad3d243a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cfc117aa-eabb-4b70-a35f-549289df47a5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "07563c2a-a559-4d3d-be4f-f399924bea2f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ff2b8e79-d580-45cd-b498-e019ba6a50f0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f938f818-0c12-472a-b215-e65079e02094",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "114e1eee-3b26-4d6e-aca5-2356fe052216",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5117283c-709a-4196-ba6e-7d7c74c9aa48",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cdf8d525-9308-49fc-860e-fc4e33199d97",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "328e5fe7-8e77-46a4-8d5f-16b5d96e80de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "637180b5-5cf9-4e06-b1ed-26cf6066610d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b7e54e01-aa99-4e4c-918f-d9e7b67f46fc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9729d7af-4633-4ace-a574-cbb1f8e208ce",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b06ec012-0922-43a0-9a07-ebbb5db0d846",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "93a9caae-1511-4e48-8225-bf93fe6306f2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "26928439-c722-428d-b557-52b67c6bfd10",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7cc4d422-c39f-405a-9b7e-e6c75e95e4f3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0370fb1f-c7e1-476c-821e-7e0592fa8883",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f3c85c2e-ca94-4ab3-b336-cb05d218a652",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ea2e1ed2-f80b-4782-ae15-ac189d219c16",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b0552e99-3ab3-49e9-a1e0-e08bfe2d0f04",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "79ad8552-fde5-4811-9649-931c9f368744",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7d5b5215-b3a8-4c3a-b499-c0a4f39c3f06",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e1016cc6-73fa-4a75-8142-83b2ccf1949d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "55d8f13e-bd1a-4fb0-b36c-5731b7500c6b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bd3899fe-63ab-4df2-8d0b-a5e5f62ced7c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9c831b59-4200-41ad-b306-a88ec36a929e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "09f54004-54a2-40e7-bede-0e7485398949",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:39:26.343Z",
+      "numericId": "1645652874253000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "ce3c2ab9-4f3d-d90b-a11b-c4ab16a89ae7",
+      "externalId": "31c3d546-b0c2-26f4-5ee4-3b54e9576518",
+      "productId": "31c3d546-b0c2-26f4-5ee4-3b54e9576518",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "d09bd21c-31f2-4876-a60d-9f4ee21b8cb1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4b552842-e2de-47ca-8246-506efa279425",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b8a9729b-d810-4fc0-bb08-1a3b97131322",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c1c9ec22-fded-4834-9376-e57acbaa93ab",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "13ac2b18-2006-490b-a5a4-81f0f172b3c0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "99bbcfe2-ebb4-476b-b2d0-e0693003d31e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "85aa4952-5e10-4c0e-aa86-af6492097491",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0fc526f9-4a83-4e40-a2d5-6c398b0c06dc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2c4f9da6-76c0-4ba4-841c-c2ca010eb07d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "01bb2b98-f0d9-4afa-b7a0-fffbf8bd8951",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bc372031-927b-4058-a01d-52d39a4e086b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "10194b0b-924d-41b8-9f1a-6edb24aba762",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3e364897-eb6f-41e6-8d44-3008ea995e28",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bc212e55-56ca-4e3d-b858-71cc45f711a2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7fb791fd-edd8-4976-9597-8b75499725cc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "45063e97-30df-4920-b6d7-00d38a0720d2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "859c9623-fea0-4cb7-b768-d0cedf59cb64",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0525d23a-d4fd-479b-9db3-279c1ff4b8dd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a3f9d6af-e7f6-4a48-9dee-5e0a5cbce6f6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fc447d67-d492-4ca0-8b44-bcef39d35702",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8ba2ac3f-c9d2-48ee-9bb0-20698aab6f91",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "32ce9616-bc8e-410a-9c14-22520b05f800",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "56b2bce4-e982-4680-8f42-a22a63830e96",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2d23733b-8704-4c39-b32d-119fa3c1612b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ca2ac34e-1227-40e6-950c-212907850cce",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "383035ba-d8a4-406d-943b-ba10bf43243d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d5f7ecdf-812b-424f-bbe6-4fdec58c3aba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "347871f0-2d96-4155-914f-e4b2cd92756c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a4a33499-0bcc-4865-a8d8-ba076320647d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5dba40d9-4708-40d7-89be-42df8160b503",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "48bc3b66-674f-4571-9863-622f7895f7c1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "77863d8c-b6cb-454d-b751-bf9b732d78ed",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:33:18.999Z",
+      "numericId": "1645652077189000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "02d9026a-919b-76a2-fef1-69c3f3396260",
+      "externalId": "fd26fd95-6e64-895d-010e-963c0cc69d9f",
+      "productId": "fd26fd95-6e64-895d-010e-963c0cc69d9f",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "6736fa5d-12e6-4a04-859b-fa064dc7ae8d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f9124bf3-7a00-47a8-9f82-a22bcb00d7ea",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6f1c3983-e8af-4a32-a3d2-7124f052ffef",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b062b069-6ed9-4104-be4e-3d720cf3fd9a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8b64d1c6-def6-4c97-a849-4298a7b35833",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "21721028-e19e-4038-aefe-3751df007732",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "15609f27-b135-47d4-ace0-f04f27669e2d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "189f0061-195e-4dea-9791-c8ad3d1f3765",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cdd917dc-60cb-4ff8-adfd-4304f73873a1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e66608a6-27d0-4e9e-a31f-05362d722236",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "27f97a70-1387-4368-a2f9-dd53642e66e3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "174d52f2-91bd-4d2f-bab3-e974fa6ebfd5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9f5ccdb8-43bf-4a55-b784-5299e79bd763",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "823d383d-1680-443f-b446-70818bf9df6f",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "82bb6eeb-7ed8-4932-9009-91743a0d341b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "77f2199b-9bea-4bcb-a08a-779453fc29aa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a9323343-cb79-400e-8624-0ab7bfa4eb91",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "82384dd8-8903-4a81-b49d-7385e609bd76",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d4aef97a-1711-4e7b-a597-94b8755134da",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ebe2d9fd-c4a9-4051-beac-7e52fb9752bd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "05e8f7c5-b2fe-4211-81b0-c0042cb81e5d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c67d8483-0525-4d60-9518-692eba345653",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "dbf99e47-b992-4c4e-80ae-1b5ca988ad07",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "04514020-0bda-4a5a-92ed-a11380cc4421",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "37b46310-9ad5-4b61-8082-4bce6beedb3a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8ecd20ab-44c1-4b83-b509-a6df116c7ea9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "df13a9f0-e6f0-4c78-a8a0-dca0071e768a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "dc8aec2f-7f14-44a7-b094-f76bfeb243a0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "38d68ff7-a740-4d2a-890b-ebcbb5a86413",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d2706a89-f453-4017-bbab-6c2caba5ae80",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4d8b2ac1-0aea-4597-800b-8a689d854d06",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e489e7ad-2cf4-4dea-a784-1d7698cb9dd7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9615becc-31eb-4f76-94fe-46d994e982d9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "70e28ccc-2518-485f-8def-dd83d484e7cd",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "fb536925-b8a3-469c-9aff-542f88909273",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9d50cd79-e344-452a-9502-d2300c1d6182",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f3d9c37a-d09e-416f-b536-1253f2ba2040",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "08ca8d47-da4a-4419-917e-15fa5fa6bbf5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9d6e00c2-fe30-43c0-b6f7-4807565cb1de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8be881e8-d4e4-46ae-b6e1-b1c3f5ec6cf6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:38:41.003Z",
+      "numericId": "1645651140498000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "cee794dd-eb99-b12b-e4d1-dca2e1a65b87",
+      "externalId": "31186b22-1466-4ed4-1b2e-235d1e59a478",
+      "productId": "31186b22-1466-4ed4-1b2e-235d1e59a478",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "8d3e7c4b-89b2-408e-9c41-5c21d30c79ba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6591a76b-d273-4635-8711-eab494a453da",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2fe7a95b-44d6-46d6-88e8-3c43c25051e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b36183d1-6e9c-4b20-bb50-1490911d3fc0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "71632c08-6213-473d-99f9-350a1a797bd8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "53102cc4-f80a-4bd1-8b97-744f4dd986ca",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f4049b0d-c060-47e4-b913-752ba9eb3de8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "faa6b0ab-fd53-42d3-9b7d-921d1522c3c4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "b11e156a-5519-444b-9f3b-9bc5131c8621",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8660f4f4-d3c3-45bc-91ff-5b2e41c3ba07",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8d28c184-929f-48d3-8b36-7835943ac971",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9e5ba032-0101-420c-bb73-d94d1b86f61e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2c53d90e-f79b-4ea3-82ba-2a6d8714fa77",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "07133290-f861-48e8-bcbf-7d2a4828f4d5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "91821a4b-0f1d-436e-8994-41a03591e3ce",
+          "inStock": true,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0bab7e8d-1290-498d-a338-2cfa65548b1a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c2f3d19c-d8e0-417e-bd05-d4ada1f08acc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a6628fd1-c4fe-44b9-883a-8ef0cf507084",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8ef796b4-d62a-49c8-b3d8-7a07fe50a2b1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4827bf71-ca6a-4bea-ac23-afd67f18df23",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "15d05cc9-8b01-4573-a9cb-cc25d363eb53",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "16153423-b387-49d2-b562-b41a9f7f6109",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d40d17c7-5ca8-4415-be42-649860f333a6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bc19644b-2561-4eea-b6f7-a9f94efad98d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "a64ce322-1d3f-4b23-9c79-30063591e1d8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "eb2e2192-56df-440e-8086-253198a6c66d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d4903d32-e96f-4cbd-9de9-736633eb50e7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2c6ab5ed-9553-4521-bdf0-9ec9fdf43184",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "398e08a8-d26b-48d1-be6b-ab828b529d0c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8e510d13-3797-426d-9d79-91fe229c1bae",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "dce33c95-820c-476f-b89c-e409a92b2cd7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e52d6ef7-fe15-40a9-a1ea-00f02936f765",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-10-17T16:27:12.886Z",
+      "numericId": "1645650792447000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "7bfe6fd9-d7b2-b2e5-33ad-2740603f9fac",
+      "externalId": "84019026-284d-4d1a-cc52-d8bf9fc06053",
+      "productId": "84019026-284d-4d1a-cc52-d8bf9fc06053",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "d6d0048c-795f-4095-aa7a-421904f60235",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "df4c2eb9-53be-47d8-a5c4-84f518311c32",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "272a93ee-0a5f-4f6f-b759-4d1ca234c47a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6500a756-7580-43c9-8a1c-f3ced08bd09c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9872bab4-945f-4014-b4b2-24e41d3f2ef4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8da89a27-d4a9-4f81-91b6-0c0dd63fb05b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4e6099c6-7635-41f5-8a1c-ee39769762ba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "710a865d-eb69-4a96-bf29-ccbefebf9aa8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4067ef7c-10b4-433a-8a99-bffc0b372b0a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1284b6ed-4735-4988-a019-2c1defa3d91f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e5d37c27-254f-4b78-a2df-0a129eb43a1f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ec1ec5e9-7884-43a8-8048-c4735d1d6ec3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7d3e7bfa-5671-4f3d-9012-23a95af0358e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5c482213-1c49-4dcc-bca4-13103a829d00",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5a3c46bd-0575-4c51-8c84-0c68d5edab95",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "168623b8-6b6c-468c-ae1a-cf804e43e492",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5930002d-81ab-4e0d-a2bf-a4163fbecfec",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "95746ee9-9bd4-4ba2-8b2f-086973245088",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f5a21990-71ab-4ecd-bee1-ec3a8475291e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6c628d5c-41a0-49a9-ad92-966ecc81e716",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "582696e3-ea2a-4b42-86e5-84ca80e500bd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "053f14cc-659f-494b-9b16-a6a26eb65b17",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5a8e6798-51a6-4821-ad20-1db1671af50e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ffd2a741-346f-4a33-96dc-2ea6212845ba",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ee35d78c-9e01-4ea6-8591-ed56b096e7e3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2c08c4d4-18ab-45b4-8d83-97d5edbc82c0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "80bc0e34-8108-4a68-b129-4427882f0864",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "cd5bc22a-520d-47ef-9d54-90c40dcd87be",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "3f5b91ff-c695-4b71-90c5-612c70b97858",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "dc73c422-b17c-47f2-9d51-ea0c2e356bbf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "051edf46-e525-4483-ac2a-410af508f739",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "2d1c5571-6356-4204-a7ab-12fcd1155751",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1545c587-9e59-46a1-9c85-434c073d177e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "92f18145-35ac-4a56-81fd-721743b3830a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f52bf180-c8d3-4f76-a882-0c501c6ae608",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4296c36b-edf5-4c29-b015-461d9ec3a0e0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d043b197-69fa-4ce7-afdd-2e73adc65125",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8b938cc6-82f6-4c7f-b1c7-9c8e8c9ac934",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d1be46ad-5e72-41d1-8c34-242541c7aed1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ad94df33-a464-4d06-bbfa-24426b0698cd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-02-28T20:36:42.418Z",
+      "numericId": "1645649978894000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "00b02a2a-6338-89b9-7ac4-39c16790d2e6",
+      "externalId": "ff4fd5d5-9cc7-7646-853b-c63e986f2d19",
+      "productId": "ff4fd5d5-9cc7-7646-853b-c63e986f2d19",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "d1bd504b-3a83-4479-99d9-79ce2cc3581b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "70505e24-75b1-4ccc-a11c-9ce874cda587",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ff366fd3-3ca5-48a3-99e8-6ec959ba137e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8b6691b3-8deb-4961-a02a-c87ce61c4a2c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c830e804-3d98-41b8-b404-4763ba6073c0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c8233dfe-b203-4a24-adae-04b67aaae788",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "faba473c-c980-4325-90b5-3876ad62b7f8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "02db3057-5994-43c8-bc24-966cbed78ac6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "20c2c936-f8e9-4e8a-bf7a-63659e11e733",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0585a312-82e0-499d-a9e8-521ac78e7693",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7473bb48-4ad8-4d11-b5ef-09b429c0bad9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8d291721-745f-4c55-bc31-3166caa51b3d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0b6bb950-63d2-4eb1-9d2a-208b1ee20a9e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "900a092a-f2f1-446b-9471-1d0344c968cc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9c98a0e7-1fe1-4441-93bf-9ac690c9b502",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2abe8895-cb2d-4f7e-a107-44edc514a4d7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "246efada-29c9-4470-8fb3-748dc6083070",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "32bd3a2a-7e25-4d49-b55a-786681f848e3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9de0c794-ce1c-4532-8b64-5aa7687903bd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ddd2a384-a416-401d-bb2a-fb93d895e461",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-08-19T11:53:53.841Z",
+      "numericId": "1645648730752000",
+      "preorderInfo": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "fb1f5e4c-8d55-d4c8-0d47-56b3319a3e1e",
+      "externalId": "04e0a1b3-72aa-2b37-f2b8-a94cce65c1e1",
+      "productId": "04e0a1b3-72aa-2b37-f2b8-a94cce65c1e1",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "90bbdde9-da79-4ee0-aa33-686f4de66ce0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7da38d64-bb7a-487c-9f0a-5ce4c7485191",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "8c35fb4b-061a-43ae-aa17-ac6f82cbb9cd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fde9383a-7b56-4ca4-8251-de1161a877e1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "847c97f8-447c-42cf-b63a-e666da1116b3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "5e1d10b6-5a6b-4117-87df-e5c763d29dd7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fa97812a-5056-49e0-bd9a-70ba4e3fde03",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d99690b9-d580-48e9-88d4-58b60de28ab4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "55d4a762-522e-403c-a97a-037084b106d4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e081c7b0-928d-4784-bb1f-41edb921f9a2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "0a620e7c-1935-476f-9950-e7a2129e5006",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "e97ca5eb-8042-447f-ac61-f8e78b644754",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "7e614bb9-fb3e-41c6-9885-5bcec3d652e0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "ba6521ab-19c8-4a8b-bad0-fd1badad928f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "f8467635-a20c-45e8-9db4-27471536e952",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "6eac7857-1bde-427e-8dba-fddf97ecfe2a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "9b667c02-bbfb-4a30-b7b4-9c548e54ff0d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "bdb62041-4fcc-4317-b8e0-36075f995d32",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "23a13e2a-d114-44f6-841f-d4f412a72b4c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "4898fd49-52d0-40d2-a5ae-fe329d9d7b6d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "1a860468-fd1c-48a9-b3d8-d87985f2109b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "c1128c65-8d2e-41f7-ba32-dc636e4619e6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "d2939dfe-ff2e-4d35-a6ff-0069efa9c184",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "fd89ac53-8bdb-446c-a741-080f7c611f4c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        }
+      ],
+      "lastUpdated": "2025-08-19T12:13:29.247Z",
+      "numericId": "1645647905151000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "3a6c35d3-3209-f2c6-7cdb-1df2147fb0f5",
+      "externalId": "c593ca2c-cdf6-0d39-8324-e20deb804f0a",
+      "productId": "c593ca2c-cdf6-0d39-8324-e20deb804f0a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "c20cce68-af84-43a8-9d5e-293aec57a4fc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d03ee33b-25fe-45aa-aa58-0d1e6ca64cd9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:48:00.609Z",
+      "numericId": "1645621118091000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "fe412049-d1cb-c4b9-550b-c8f8a0f4623e",
+      "externalId": "01bedfb6-2e34-3b46-aaf4-37075f0b9dc1",
+      "productId": "01bedfb6-2e34-3b46-aaf4-37075f0b9dc1",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "c679a68c-bc9e-448c-bb08-f29c461cf8a8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "878f8804-f8d9-40b6-83e1-1c43fc8f3dee",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b37a5c30-22d2-48c7-9dce-42595a08a67a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2a7bbdf6-9701-48fa-85b3-650b1f6d7bf6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:40:24.921Z",
+      "numericId": "1645620866453000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "175bca17-f218-1e1c-f660-567cefaa1b77",
+      "externalId": "e8a435e8-0de7-e1e3-099f-a9831055e488",
+      "productId": "e8a435e8-0de7-e1e3-099f-a9831055e488",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "29f41dcb-3bbb-4171-a21d-016f57233ec0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ff4a3c94-7f51-450f-a28c-9fa33bb55197",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cc2c0010-cbf3-424b-870c-3c35f442e89e",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ae867e34-4e30-4437-9dd9-2202c341e00c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2350cb1d-ef9c-4dcf-b871-a73666eb1f75",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1cb376ca-3f42-44bc-b826-6e18ee3a3081",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d92e5686-2de2-48fe-82ef-950cdf5ce934",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bbffdd9e-fd4b-46e9-ab06-a2a609297303",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-28T14:14:45.319Z",
+      "numericId": "1645548422567000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "20a01636-5d83-b105-dec7-95877a246dac",
+      "externalId": "df5fe9c9-a27c-4efa-2138-6a7885db9253",
+      "productId": "df5fe9c9-a27c-4efa-2138-6a7885db9253",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "6b8ae2bf-2eb7-4a75-9daf-8167031ff500",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "6d8d857c-e766-4837-9d2c-d9315277b92f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f8436233-0e49-456f-8a2f-c499629ad47b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "63e365d3-bb87-4570-8e4d-675294b25419",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "229202bc-141c-42c8-bd0e-9bbec3815a50",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "04d451e1-9e98-441a-b5ae-eb3e20ad39af",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "45575aba-cfc6-483c-b2b5-38a8f126fc35",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d6b291af-dfe2-4875-b60c-928f209b8ada",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-28T14:15:46.320Z",
+      "numericId": "1645547784731000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "baa56be0-060e-96d8-a924-af606485459c",
+      "externalId": "455a941f-f9f1-6927-56db-509f9b7aba63",
+      "productId": "455a941f-f9f1-6927-56db-509f9b7aba63",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "373d807f-c78e-4bb3-9aaf-6641283cefc5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "59f5d425-d752-4b29-856c-df13455101c2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bb65f2a8-34c5-47f0-99c5-30e66b5b1aca",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "dace9687-7956-4b46-b5cc-7cd361abdc86",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0853e00b-57e4-43f2-8937-149571e7b9f9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a0f7974f-fc7c-46d7-bf14-313e53376503",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-28T14:13:07.463Z",
+      "numericId": "1645533414613000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "ecd8053b-6f52-1edf-14d0-5b82fe1dc08e",
+      "externalId": "1327fac4-90ad-e120-eb2f-a47d01e23f71",
+      "productId": "1327fac4-90ad-e120-eb2f-a47d01e23f71",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "0cba2c32-5efe-4075-9f60-86f384d0bec7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7e3e46f3-275b-4d02-8d95-40587508c649",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "51842b17-d0f9-46ac-b2e0-eb14ac2e4608",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2432cc84-fa2a-4c5e-a3ca-4925e34f6106",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a99c044f-5381-4182-a7fa-0baa34b4c725",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "93aca1bb-b0cc-4900-9b9b-eb149b323800",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bf974882-54e5-49e0-b96b-6a384e5e975b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "edf9eb97-f398-4358-a56d-6cdc4e6a8eeb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:33:12.166Z",
+      "numericId": "1645532667081000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "1e713129-05ce-c692-4110-e8fc4397d005",
+      "externalId": "e18eced6-fa31-396d-beef-1703bc682ffa",
+      "productId": "e18eced6-fa31-396d-beef-1703bc682ffa",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "b6c17279-cf14-48f6-a875-17710d46280b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bf62d982-20af-456b-bb6f-280ee6f4cee5",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "41efcafb-a534-4d42-88ba-48283f866d70",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "edd5be97-7aeb-4657-be9b-d66365837655",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1bbce0c7-6273-4e40-a59a-bb7bfa1ed5f8",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9fafa858-202a-4d95-9dcc-0179ea132980",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "03d7e7df-7f5f-4a45-a6bf-c6b801d8e708",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1dc2ef97-1fe2-4606-b0c8-f1db8e023ffa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:45:08.888Z",
+      "numericId": "1645532414012000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "02661999-dd68-0d6e-d3bc-85b130d67f11",
+      "externalId": "fd99e666-2297-f291-2c43-7a4ecf2980ee",
+      "productId": "fd99e666-2297-f291-2c43-7a4ecf2980ee",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "e991024d-747f-4a5e-b58e-303c05673232",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "953dedc9-c2fd-4263-a9c4-8b79b6582180",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b57ec4f7-e86a-4e0d-b520-e0b04fad1d75",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "12a95ca3-bc1e-4919-8d3a-8fdd03729f00",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5faf44a7-ae71-4fbb-a1cc-4d9db8232fcc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8e94cb6c-3c59-4f62-b198-43ddd062f217",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "94835f97-52ca-4326-a7f0-a9e487756e37",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "952bbb64-7b72-44c1-a2b4-7644efb6990a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-15T03:13:54.506Z",
+      "numericId": "1645531984332000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "5cec97e9-1250-9c88-de87-46a85dba03d4",
+      "externalId": "a3136816-edaf-6377-2178-b957a245fc2b",
+      "productId": "a3136816-edaf-6377-2178-b957a245fc2b",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "b1328a31-8f23-4b0e-99be-aef82890fbdf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4a7f9a13-9b6e-48ed-898e-84b89274aac8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d45e146c-3bda-4c79-a7d1-ee4a0d6e69a5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cfd88b8a-fd87-417e-95c8-7f8627e28513",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:41:34.072Z",
+      "numericId": "1645530056736000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "7709ddea-7a4b-a0ab-247f-8b8357432d63",
+      "externalId": "88f62215-85b4-5f54-db80-747ca8bcd29c",
+      "productId": "88f62215-85b4-5f54-db80-747ca8bcd29c",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "f24c013b-112a-4559-b761-f7a95708859c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5fcb46eb-8a45-4aab-b687-2df39a125a9e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5182055d-42b1-4808-8436-50b40c1879c5",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4a5716a9-25a8-4f9b-ab8d-93971a18db9a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b2facaf9-c334-4a6b-bb08-e183da620019",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b3bac3d4-b740-4056-a6d7-18a83f898ebd",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "12523e3e-aee9-4688-8a84-7c416ca8c301",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e531ee5b-87ea-4f33-a5a8-aac6308dea0a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-15T03:14:47.891Z",
+      "numericId": "1645529350411000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "569dd51a-8284-a7b7-4a83-f2389cf6c207",
+      "externalId": "a9622ae5-7d7b-5848-b57c-0dc763093df8",
+      "productId": "a9622ae5-7d7b-5848-b57c-0dc763093df8",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "aef7ec8e-1053-46fd-a99d-fdc9ce15ad06",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8db64c9e-2e34-49a5-9aa1-66a077bdc349",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:42:38.816Z",
+      "numericId": "1645529048011000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "f3edc72d-6027-0745-ceb4-f473702cab6e",
+      "externalId": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+      "productId": "0c1238d2-9fd8-f8ba-314b-0b8c8fd35491",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "c85aa8af-99ba-46c8-9968-19cefcdd4d37",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "69c63b32-7945-4793-be2d-1608b88d2dd7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0434b0a3-5d0c-4e68-b883-1d39ef10b7d4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f00c97ba-afe5-4534-9679-f8e785ea2a12",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f4b742c8-e088-477f-bc1c-4e01e31f6736",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b3d45ccb-bad9-469b-b9dd-191120eca3d8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3b24e42d-5368-4932-9a3c-e7d6b31b3365",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e4142727-2fe1-430d-aa75-575f9803beaa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-28T13:55:19.893Z",
+      "numericId": "1645528535542000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "4e3da343-39bd-c6e6-c4c2-e79b1ec59fe9",
+      "externalId": "b1c25cbc-c642-3919-3b3d-1864e13a6016",
+      "productId": "b1c25cbc-c642-3919-3b3d-1864e13a6016",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "db2d6656-b0af-44cb-a8b4-65a5f47157df",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ff4696f4-91a9-4012-af46-bdecb51430e5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "97d42dd6-13db-4305-bc23-8812406e0f75",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "64ac21f3-75d6-4bea-ad7e-73ca02a3a45d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:40:48.880Z",
+      "numericId": "1645527186178000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "37ed7eb2-b7ec-443f-31da-abd8939e32d1",
+      "externalId": "c812814d-4813-bbc0-ce25-54276c61cd2e",
+      "productId": "c812814d-4813-bbc0-ce25-54276c61cd2e",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "5790b43c-eb4b-4d4d-b0c4-904ddb356465",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b3614988-414b-4ad0-820f-7e5d2afb9294",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5f474a79-2b18-4363-bf7c-c6f85cc81d12",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7c7ccc8b-76fe-4ee7-9549-6c47ece24df1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0ed86115-bd06-4a8f-9a99-3c6610ca8baf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "fa7b8304-3138-4cce-95a4-24c3405c7cb2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4fe1be7d-eaa4-4784-a6af-f0da9fb07d1c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "6d79bd42-68fc-4398-954c-aa8ca71ad874",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ddf2c779-bc33-4970-97fc-c57e2e374ddc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ac1d0010-583e-4028-8b34-8b7a23e2fa40",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:40:02.237Z",
+      "numericId": "1645526490173000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "8e4fb79f-a8d9-5bfe-2622-8636947ac541",
+      "externalId": "71b04860-5726-a401-d9dd-79c96b853abe",
+      "productId": "71b04860-5726-a401-d9dd-79c96b853abe",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "73886597-6fa1-4b6f-aa60-17302c115057",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8659939a-2fe7-4864-85f0-7e644eeadd09",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f6061a4f-6fb2-4113-a6a0-2321c6d60be4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "38bd5269-9516-477b-8d87-260b21467e24",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:49:39.647Z",
+      "numericId": "1645447711619000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "eb07d1ef-d193-0cd2-29b2-c73f17b18f8b",
+      "externalId": "14f82e10-2e6c-f32d-d64d-38c0e84e7074",
+      "productId": "14f82e10-2e6c-f32d-d64d-38c0e84e7074",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "db1dcea6-604d-487e-aa58-a95b5fe9c893",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1169cd00-8b9a-4a55-81cc-5e186ef260b3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3fc65aff-8762-428d-b3e8-77d8d0f35212",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "813f3547-a494-436e-80c3-d5765fe40d14",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ce2a9604-9bb4-404f-801a-631a953144e0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "75947792-8435-425c-8730-872c99b2d716",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "946f53ce-dd37-4088-aac5-7b397f0f27c8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cfa1f0f1-13de-4fd5-9284-61f92971cc06",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:44:14.138Z",
+      "numericId": "1645445928665000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "5e6a8707-bbc2-50fe-60f3-6b7991a09681",
+      "externalId": "a19578f8-443d-af01-9f0c-94866e5f697e",
+      "productId": "a19578f8-443d-af01-9f0c-94866e5f697e",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "95fe2691-d3c5-4fa1-92a4-22638b35ae05",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "487eaba3-b2e9-4f6d-8095-a2325cc8d827",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "15fd34e3-0f0e-441c-93a0-7cfaf1fbe64e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e225a422-9916-47f4-a677-57c459d06ca9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:58:06.599Z",
+      "numericId": "1645015886071000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Usually available within 5-7 days of order"
+      }
+    },
+    {
+      "id": "e264a750-a00e-3dc6-186e-3aaeb6a94bb6",
+      "externalId": "1d9b58af-5ff1-c239-e791-c5514956b449",
+      "productId": "1d9b58af-5ff1-c239-e791-c5514956b449",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "1d694417-f848-4243-a110-71513383883e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9cb918a8-167f-4f70-8b0d-cdcd39698e82",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:55:37.626Z",
+      "numericId": "1645015230567000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "152ecee7-6bf4-dccf-0212-304c3434dcad",
+      "externalId": "ead13118-940b-2330-fded-cfb3cbcb2352",
+      "productId": "ead13118-940b-2330-fded-cfb3cbcb2352",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "ba350e4a-9add-4c88-9e19-452ef52fc532",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4847c8e6-ede3-4af4-b5ea-b319192d1018",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "296a7bbc-b03f-4727-8e7b-5626773ffab6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b3d42a35-a4e0-4394-a116-f02de0da27e0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:56:43.786Z",
+      "numericId": "1645014868161000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "8cc758f4-c667-6a7b-19b2-82a19d651bad",
+      "externalId": "7338a70b-3998-9584-e64d-7d5e629ae452",
+      "productId": "7338a70b-3998-9584-e64d-7d5e629ae452",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "fb172446-bb54-4685-bb5a-6d8c2d18e7e8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5f1302a8-54d0-4885-83e6-ad2b39890084",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "deef42cb-6fc6-45ce-b28c-ca7c98442691",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "da36df7f-1d04-41c8-80ac-3f78347fbe01",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:54:53.740Z",
+      "numericId": "1645013548887000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "3b0b272e-348f-f0c6-bc37-0845c5f94550",
+      "externalId": "c4f4d8d1-cb70-0f39-43c8-f7ba3a06baaf",
+      "productId": "c4f4d8d1-cb70-0f39-43c8-f7ba3a06baaf",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "384c8aca-6e8f-4397-b916-dbce62fbc0d2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "89612932-3123-4909-bdff-a77178dc597c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0a0ceccd-f8ec-4973-8dfd-477e52c4f857",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-07T20:53:59.416Z",
+      "numericId": "1645013332199000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "405e8155-a11e-cf28-4e4e-81019c0e43d9",
+      "externalId": "bfa17eaa-5ee1-30d7-b1b1-7efe63f1bc26",
+      "productId": "bfa17eaa-5ee1-30d7-b1b1-7efe63f1bc26",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "5afc195d-5678-4eb3-99b7-a0657e7d103b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "16a51a28-7783-4724-b1e5-4c48351c0b21",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "274c9c5b-e43d-4ca9-8557-e4ad0c57744c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "14c204ef-c891-4193-a5fc-788c386d812a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "24d12497-f957-4ebf-a005-2f9949ef71a0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "6b08cb56-5510-4adc-91ec-0febb8ed7def",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5d164f18-f564-402c-85c0-9ba222b77af2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b424a554-cb65-4560-9af9-0b91c6ae7423",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-01-03T15:32:49.679Z",
+      "numericId": "1644962684441000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates",
+        "limit": 1
+      }
+    },
+    {
+      "id": "e8632f17-b504-bdca-8351-281dd334c71c",
+      "externalId": "179cd0e8-4afb-4235-7cae-d7e22ccb38e3",
+      "productId": "179cd0e8-4afb-4235-7cae-d7e22ccb38e3",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "c99fe777-0dd2-4fe2-9d28-f96fa7d615ea",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5ccabe2b-7a22-4e04-bb33-226619941f40",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "e2526d8b-8303-41af-b59a-a2a2babdb45f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "62790531-d1de-4c09-864c-7a6d9b3047f0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "356d5df0-8a65-43e3-b900-63ead966e2fd",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "42e00680-0a72-42de-b318-d4d60244d7a9",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3dc5cd8f-fa75-467b-8223-2e4b9628f83b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "757318c9-aab3-4651-8a7a-bb7dc6c46e6a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-07-30T20:52:44.163Z",
+      "numericId": "1644960846670000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "9b784984-b1e7-ad44-61e6-a34644632f02",
+      "externalId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+      "productId": "6487b67b-4e18-52bb-9e19-5cb9bb9cd0fd",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "5ae07acc-e0fe-4818-9d66-def83d52e004",
+          "inStock": true,
+          "quantity": 5,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "04b61596-b74f-470e-9389-1faca6a53627",
+          "inStock": true,
+          "quantity": 2,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-03-13T20:49:05.315Z",
+      "numericId": "1522312832646000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "1ee4a40a-0a01-6c25-1e10-5a84a0b465da",
+      "externalId": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+      "productId": "e11b5bf5-f5fe-93da-e1ef-a57b5f4b9a25",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "00738be6-5023-4e90-9131-f817e0556b9e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": true
+        },
+        {
+          "variantId": "000241da-bd0f-42ce-863f-cc74affeeb86",
+          "inStock": true,
+          "quantity": 2,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bd1734f3-755d-4d1a-b923-37603f462b85",
+          "inStock": true,
+          "quantity": 2,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2026-02-21T19:24:56.635Z",
+      "numericId": "1522312734764000",
+      "preorderInfo": {
+        "enabled": true,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "59fe2851-0ee3-aa05-9656-bdca0208cdbe",
+      "externalId": "a601d7ae-f11c-55fa-69a9-4235fdf73241",
+      "productId": "a601d7ae-f11c-55fa-69a9-4235fdf73241",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "584589c7-594d-43a5-a512-3d58104f8a82",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0e18edcb-68a9-4c32-b908-c41c898fc8d7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a7ebd4ba-fdc8-4570-8e3e-4a45f1662cc3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "7a3489f0-96b9-4991-bd1f-7a2a2eaeedcb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f6bbcb35-384f-43ad-bb35-25674bca1781",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "1183dd09-2197-46f1-8437-205c5c38e0bc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8c3abf64-836b-4a08-9570-78328204a642",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "64aa19b9-5017-4cfb-9205-5ab0c933031a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9b27d79e-ce01-4401-b953-ec6c6a198255",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "22adcf8b-ecf3-4138-8999-1f8ce0878ac4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "fbaa1725-9885-4502-9295-d5db1f0cd829",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "0fee5f28-60ab-4cce-9a79-a72c08ff2c20",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ad8d00ab-ac49-4b41-aadd-275f481abc48",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "46b0de63-2319-456c-ad9e-04d0309151de",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a7882e04-e182-4959-817f-52644a73f5e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5d517762-75c4-4f18-a80b-e7e15c35c48f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-09-20T20:09:08.056Z",
+      "numericId": "1522312716349000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "04870943-7743-659e-83f3-de5088a4b690",
+      "externalId": "fb78f6bc-88bc-9a61-7c0c-21af775b496f",
+      "productId": "fb78f6bc-88bc-9a61-7c0c-21af775b496f",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "fd4d59e1-382f-4ce8-8730-cb05f257d43e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5695d9e6-59fb-4f5d-97ef-41caafac3a3a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "02be97f6-b18f-453e-a546-001a7994b4a5",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "10eca26e-e8d9-4edf-9dee-44456f21cd98",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a137ff1d-e296-458f-8378-57e3289904fc",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "85d74945-137d-42b1-a0c0-d44573fb73fb",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "31d35230-2a8b-48b8-aa6e-25daf4dacb2f",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d52e50e9-6cfc-4d6d-9170-957948feab35",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "9c602ffa-c2de-4e41-a63d-9d8b3de64ad2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2982d929-a4b6-465a-8565-fbbdb3e0118a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "16249f97-64d7-43a9-87df-6011dc2c2d29",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f4c23acf-cd1a-42bc-b66d-8f61d903a1fd",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "30bbcfa9-60dc-463d-9be3-3b7472667527",
+          "inStock": true,
+          "quantity": 2,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d877ca8c-3869-4009-9fcf-efd9d53072a1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c1a99c3e-3cb3-4c3f-a5f9-296e54e894c8",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c6281b6c-4a4b-4a7d-8b6a-3b80f164f6a3",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "b52d2735-83d7-41a1-b18a-4f62042b7d49",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cef6ec65-62d7-4d10-8dc6-08b544642a3a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "75fa0dce-9803-4d9d-be81-00f24545902b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "86add866-df3c-4f81-b66a-252256e7142a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-11-07T22:02:42.333Z",
+      "numericId": "1522312664102000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "81ebad02-d8cd-ce6f-3bac-d58a26b246b4",
+      "externalId": "7e1452fd-2732-3190-c453-2a75d94db94b",
+      "productId": "7e1452fd-2732-3190-c453-2a75d94db94b",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "36b11624-9ef3-489b-a1d5-ccddeaab5761",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4c4e4767-2685-4ab0-ad3b-fa93f78da08c",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5ded0d27-3a12-44bb-bbc8-36cae85fc06d",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "cf3504aa-1d0a-4d1f-9978-da3218d657df",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ad10aaa3-80cd-4b0a-8e7f-d4d3d9092c74",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ca3f696a-b12c-4ccc-ae9f-c72cbc948049",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "787b4d47-68f5-4a65-b5c0-3d18c92c2c44",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "141c6fe9-75b0-446f-94a3-8b1ab08233aa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "fc442804-a28f-4497-a5bf-2fe46cb2dbe0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bc441043-cda2-4d76-aa28-bb44229bf6d4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "80247578-7cec-48c7-b2a3-7de412511e9e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a5bc578a-6f94-407b-90e9-9ca9e44a9346",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-27T01:49:05.021Z",
+      "numericId": "1522312644566000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "03bae625-d3bc-714b-c3fd-a1fa2f38af55",
+      "externalId": "fc4519da-2c43-8eb4-3c02-5e05d0c750aa",
+      "productId": "fc4519da-2c43-8eb4-3c02-5e05d0c750aa",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "18796aa4-b498-452a-9149-e9507b656b59",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2f7e2e0f-2b2e-4dca-acb1-ed8891c04aac",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "2244a405-253c-4a3f-8bcf-bc4ac335528e",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "af96321e-a0db-45cf-a0a8-a368e9f58881",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "940756fa-754b-496f-bd95-761a0c7183e4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3741e389-e2de-42dc-8cfd-ac32bc8cc543",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "f92ee99c-b73b-495a-91b6-b3b8e6c29fc4",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3b43cb5e-96a7-444b-801e-956bd4ba6e78",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-27T01:49:26.795Z",
+      "numericId": "1522312629187000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "20e63e08-f827-5d9a-bd07-172057db3391",
+      "externalId": "df19c1f7-07d8-a265-42f8-e8dfa824cc6e",
+      "productId": "df19c1f7-07d8-a265-42f8-e8dfa824cc6e",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "e63dc698-63be-49e8-b12c-4024fe60ac2b",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "89263e75-0b20-4d05-889d-a977b5a2367a",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "4925127d-6c7b-4b88-9cb7-ac8147580802",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "34cea04e-297e-4c35-bb0b-556861cb0b72",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-27T01:49:47.222Z",
+      "numericId": "1462356045882000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "32a632c9-492d-d30c-62b7-7e86c5842442",
+      "externalId": "cd59cd36-b6d2-2cf3-9d48-81793a7bdbbd",
+      "productId": "cd59cd36-b6d2-2cf3-9d48-81793a7bdbbd",
+      "trackQuantity": true,
+      "variants": [
+        {
+          "variantId": "e362a59b-ecaa-4a9f-81a8-a80cf0ccc3e2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ae011c03-73f1-4e1b-b367-45f4b1f9f8f2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "42f8c4c3-1be3-43c4-85f6-eef0e34fe6d6",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3881d47e-38e1-47df-995c-1a2bce002852",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "d5717d8a-d7d1-4e4d-b554-75203a50603b",
+          "inStock": true,
+          "quantity": 1,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "5467c90f-46b7-4c32-a133-ca0b7d2031c7",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "ca18ce1f-5c65-4cab-ae34-cd8ae7c568b1",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "bc06eaca-e3e7-4bdb-9a60-4f7ad0704d59",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-06-27T01:49:56.842Z",
+      "numericId": "1462356034769000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    },
+    {
+      "id": "37ac6499-85bb-01e7-5003-5013b417a9d5",
+      "externalId": "c8539b66-7a44-fe18-affc-afec4be8562a",
+      "productId": "c8539b66-7a44-fe18-affc-afec4be8562a",
+      "trackQuantity": false,
+      "variants": [
+        {
+          "variantId": "2c478055-3c5b-4a29-8b7e-8d15e269eb24",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "15cbb4aa-8a5a-4fe3-808a-acb66cc1c807",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c88b03b7-ba42-4211-8a40-17bf5cded6bf",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "c185b249-5b05-4dfc-bc5d-ed5991d10396",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "a0635ebe-49eb-40ad-a596-ef217187bd33",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "09918cfc-6d62-4928-a75f-a540f892d0fa",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "3bdad4d2-a07f-4546-9416-a86c3a7e36f2",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        },
+        {
+          "variantId": "8818c531-ba3a-45e7-ac6c-2ceca26b4be0",
+          "inStock": false,
+          "quantity": 0,
+          "availableForPreorder": false
+        }
+      ],
+      "lastUpdated": "2025-07-23T15:40:56.735Z",
+      "numericId": "1462356020245000",
+      "preorderInfo": {
+        "enabled": false,
+        "message": "Please contact us for estimated delivery dates"
+      }
+    }
+  ],
+  "metadata": {
+    "items": 100,
+    "offset": 0
+  },
+  "totalResults": 89
+}
