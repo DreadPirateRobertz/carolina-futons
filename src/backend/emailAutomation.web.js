@@ -918,7 +918,7 @@ export const triggerReviewThanks = webMethod(
         discountCode = await getSecret('REVIEW_DISCOUNT_CODE');
         discountAvailable = !!discountCode;
       } catch (e) {
-        console.warn('[emailAutomation] Could not retrieve REVIEW_DISCOUNT_CODE secret — sending review email without discount:', e.message);
+        console.warn('[emailAutomation] Could not retrieve review discount secret — sending review email without discount:', e.message);
       }
 
       await queueEmail({
