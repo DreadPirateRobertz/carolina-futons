@@ -1,6 +1,6 @@
 // contentPipelineIntegration.test.js — CF-qy9o: Content pipeline end-to-end flow verification
 // Integration tests spanning contentOrchestrator → contentScheduler → downstream generators.
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
 import { __setSecrets, __reset as __resetSecrets } from 'wix-secrets-backend';
@@ -8,7 +8,6 @@ import { __setSecrets, __reset as __resetSecrets } from 'wix-secrets-backend';
 import {
   triggerManualOrchestration,
   getOrchestrationHistory,
-  getOrchestrationConfig,
   updateOrchestrationConfig,
 } from '../src/backend/contentOrchestrator.web.js';
 
@@ -381,10 +380,10 @@ describe('priority queue ordering', () => {
   });
 });
 
-// ── 5. Rate limit integration (Meta + Pinterest) ─────────────────────
+// ── 5. Downstream dispatch (catalog sync + social story) ─────────────
 
-describe('rate limit awareness', () => {
-  it('catalog_sync action calls both facebook and pinterest validators', async () => {
+describe('downstream dispatch paths', () => {
+  it('catalog_sync action dispatches to facebook and pinterest modules', async () => {
     // Create a catalog_sync entry directly
     __seed('ContentSchedule', [
       {
@@ -406,8 +405,8 @@ describe('rate limit awareness', () => {
 
     const result = await processContentSchedule(CRON_SECRET);
     expect(result.success).toBe(true);
-    // catalog_sync calls getEnhancedCatalogFields + validateCatalogProduct
-    // May succeed or fail based on mock availability — should not crash
+    // catalog_sync dispatches to getEnhancedCatalogFields + validateCatalogProduct
+    // May succeed or fail depending on downstream mock availability — should not crash
     expect(result.processed + result.failed).toBe(1);
   });
 
@@ -435,7 +434,7 @@ describe('rate limit awareness', () => {
 
     const result = await processContentSchedule(CRON_SECRET);
     expect(result.success).toBe(true);
-    // social_story import chain: socialStoryHelpers + socialStoryService
+    // social_story dispatches to socialStoryHelpers + socialStoryService
     expect(result.processed + result.failed).toBe(1);
   });
 });
@@ -588,12 +587,20 @@ describe('cancel and requeue flow', () => {
     await triggerManualOrchestration('new_arrival', baseProduct);
     await processContentSchedule(CRON_SECRET);
 
-    const queue = await getScheduleQueue({ status: 'sent' });
-    if (queue.items.length > 0) {
-      const result = await cancelScheduledItem(queue.items[0]._id);
+    // At least some items should have been processed (sent or failed)
+    const sent = await getScheduleQueue({ status: 'sent' });
+    const failed = await getScheduleQueue({ status: 'failed' });
+    const processedItems = [...sent.items, ...failed.items];
+    expect(processedItems.length).toBeGreaterThan(0);
+
+    // Sent items cannot be cancelled
+    if (sent.items.length > 0) {
+      const result = await cancelScheduledItem(sent.items[0]._id);
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/already|sent/i);
     }
+
+    // Failed items CAN be cancelled (verified separately in unit tests)
   });
 });
 
@@ -682,6 +689,8 @@ describe('auth boundaries across pipeline', () => {
         status: 'pending',
         scheduledAt: new Date(Date.now() - 60000),
         priority: 3,
+        eventType: 'new_arrival',
+        createdBy: 'new_arrival-prod-1-2026-03-16',
         payload: '{}',
         processedAt: null,
         error: '',
