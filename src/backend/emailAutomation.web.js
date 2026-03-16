@@ -886,7 +886,7 @@ export const triggerRestockNotifications = webMethod(
       return { success: true, notified, failed };
     } catch (err) {
       console.error('[emailAutomation] Error triggering restock notifications:', err);
-      return { success: false, notified: 0 };
+      return { success: false, notified: 0, failed: 0, error: err.message };
     }
   }
 );
