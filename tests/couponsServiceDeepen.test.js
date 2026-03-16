@@ -115,7 +115,7 @@ describe('generateCode collision handling', () => {
     }
   });
 
-  it('returns code when queryV2 throws (line 199)', async () => {
+  it('returns code when queryV2 throws during collision check', async () => {
     _queryV2Error = new Error('DB connection lost');
     const r = await mod.createWelcomeCoupon('a@b.com');
     expect(r.success).toBe(true);

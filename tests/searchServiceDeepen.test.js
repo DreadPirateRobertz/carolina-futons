@@ -94,10 +94,10 @@ beforeEach(() => {
   __seed('Stores/Products', products);
 });
 
-// ─── 1. Search cache eviction (LRU at 50 entries) ───────────────
+// ─── 1. Search cache eviction (FIFO at 50 entries) ──────────────
 
 describe('search cache eviction', () => {
-  it('evicts oldest search cache entry when MAX_SEARCH_CACHE_ENTRIES (50) is reached', async () => {
+  it('evicts oldest-written search cache entry when MAX_SEARCH_CACHE_ENTRIES (50) is reached', async () => {
     // Fill cache with 50 unique searches
     for (let i = 0; i < 50; i++) {
       await fullTextSearch({ query: `futon query${i}` });
@@ -121,10 +121,7 @@ describe('search cache eviction', () => {
     for (let i = 0; i < 50; i++) {
       await fullTextSearch({ query: `futon batch${i}` });
     }
-    // Access batch0 again to make it "recently used" in practice
-    // (though setCachedSearch doesn't update timestamp on read — it's write-time LRU)
-    // Adding a 51st should evict the one with the oldest write timestamp (batch0)
-    // since they were written sequentially
+    // Eviction is write-time FIFO — batch0 has the oldest write timestamp
     const result = await fullTextSearch({ query: 'futon batch51' });
     expect(result.query).toBe('futon batch51');
   });
