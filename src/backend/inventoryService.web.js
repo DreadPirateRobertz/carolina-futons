@@ -397,6 +397,97 @@ export const getLowStockAlerts = webMethod(
   }
 );
 
+// ── Back In Stock Dashboard ──────────────────────────────────────────
+
+/**
+ * Get back-in-stock system status for admin dashboard.
+ * Reports pending signups, recent notifications, and queue health.
+ *
+ * @function getBackInStockDashboard
+ * @returns {Promise<Object>} { pendingSignups, notifiedCount, recentSignups }
+ * @permission Admin
+ */
+export const getBackInStockDashboard = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const pending = await wixData.query('BackInStockSignups')
+        .eq('notified', false)
+        .find();
+
+      const notified = await wixData.query('BackInStockSignups')
+        .eq('notified', true)
+        .find();
+
+      // Group pending signups by product
+      const productMap = {};
+      for (const item of pending.items) {
+        const pid = item.productId;
+        if (!productMap[pid]) {
+          productMap[pid] = {
+            productId: pid,
+            productName: item.productName || '',
+            count: 0,
+            oldestSignup: item.signedUpAt,
+          };
+        }
+        productMap[pid].count += 1;
+        if (item.signedUpAt < productMap[pid].oldestSignup) {
+          productMap[pid].oldestSignup = item.signedUpAt;
+        }
+      }
+
+      return {
+        pendingSignups: pending.totalCount,
+        notifiedCount: notified.totalCount,
+        productBreakdown: Object.values(productMap),
+      };
+    } catch (err) {
+      console.error('[inventoryService] Error getting back-in-stock dashboard:', err);
+      return { pendingSignups: 0, notifiedCount: 0, productBreakdown: [] };
+    }
+  }
+);
+
+/**
+ * Mark back-in-stock signups as notified after sending notifications.
+ * Called by the notification flow after emails are sent.
+ *
+ * @function markSignupsNotified
+ * @param {string} productId - Product ID to mark notified
+ * @returns {Promise<{success: boolean, count: number}>}
+ * @permission Admin
+ */
+export const markSignupsNotified = webMethod(
+  Permissions.Admin,
+  async (productId) => {
+    try {
+      if (!productId) return { success: false, count: 0 };
+
+      const cleanId = sanitize(productId, 50);
+      const result = await wixData.query('BackInStockSignups')
+        .eq('productId', cleanId)
+        .eq('notified', false)
+        .find();
+
+      let count = 0;
+      for (const item of result.items) {
+        await wixData.update('BackInStockSignups', {
+          ...item,
+          notified: true,
+          notifiedAt: new Date(),
+        });
+        count += 1;
+      }
+
+      return { success: true, count };
+    } catch (err) {
+      console.error('[inventoryService] Error marking signups notified:', err);
+      return { success: false, count: 0 };
+    }
+  }
+);
+
 // ── Internal Helpers ────────────────────────────────────────────────
 
 function getVariantStatus(quantity, threshold) {

@@ -8,6 +8,8 @@ import {
   signUpBackInStock,
   getBackInStockSignups,
   getLowStockAlerts,
+  getBackInStockDashboard,
+  markSignupsNotified,
   _DEFAULT_LOW_STOCK_THRESHOLD,
   _getVariantStatus,
 } from '../src/backend/inventoryService.web.js';
@@ -403,5 +405,92 @@ describe('getRestockSuggestions', () => {
     const result = await getRestockSuggestions();
     expect(result.suggestions[0].productId).toBe('prod-2'); // 5 qty, more urgent
     expect(result.suggestions[1].productId).toBe('prod-1'); // 30 qty, less urgent
+  });
+});
+
+// ── getBackInStockDashboard ─────────────────────────────────────────
+
+describe('getBackInStockDashboard', () => {
+  it('returns zero counts when no signups exist', async () => {
+    const result = await getBackInStockDashboard();
+    expect(result.pendingSignups).toBe(0);
+    expect(result.notifiedCount).toBe(0);
+    expect(result.productBreakdown).toEqual([]);
+  });
+
+  it('counts pending vs notified signups', async () => {
+    __seed('BackInStockSignups', [
+      { _id: 's-1', productId: 'prod-1', productName: 'Futon A', email: 'a@test.com', notified: false, signedUpAt: new Date('2026-03-01') },
+      { _id: 's-2', productId: 'prod-1', productName: 'Futon A', email: 'b@test.com', notified: false, signedUpAt: new Date('2026-03-02') },
+      { _id: 's-3', productId: 'prod-2', productName: 'Futon B', email: 'c@test.com', notified: false, signedUpAt: new Date('2026-03-03') },
+      { _id: 's-4', productId: 'prod-1', productName: 'Futon A', email: 'd@test.com', notified: true, signedUpAt: new Date('2026-02-15') },
+    ]);
+
+    const result = await getBackInStockDashboard();
+    expect(result.pendingSignups).toBe(3);
+    expect(result.notifiedCount).toBe(1);
+    expect(result.productBreakdown).toHaveLength(2);
+
+    const prod1 = result.productBreakdown.find(p => p.productId === 'prod-1');
+    expect(prod1.count).toBe(2);
+    expect(prod1.productName).toBe('Futon A');
+
+    const prod2 = result.productBreakdown.find(p => p.productId === 'prod-2');
+    expect(prod2.count).toBe(1);
+  });
+
+  it('tracks oldest signup date per product', async () => {
+    __seed('BackInStockSignups', [
+      { _id: 's-1', productId: 'prod-1', productName: 'Futon A', email: 'a@test.com', notified: false, signedUpAt: new Date('2026-03-10') },
+      { _id: 's-2', productId: 'prod-1', productName: 'Futon A', email: 'b@test.com', notified: false, signedUpAt: new Date('2026-03-01') },
+    ]);
+
+    const result = await getBackInStockDashboard();
+    const prod1 = result.productBreakdown.find(p => p.productId === 'prod-1');
+    expect(prod1.oldestSignup).toEqual(new Date('2026-03-01'));
+  });
+});
+
+// ── markSignupsNotified ─────────────────────────────────────────────
+
+describe('markSignupsNotified', () => {
+  it('marks pending signups as notified for a product', async () => {
+    const updates = [];
+    __onUpdate((collection, item) => {
+      if (collection === 'BackInStockSignups') updates.push(item);
+    });
+
+    __seed('BackInStockSignups', [
+      { _id: 's-1', productId: 'prod-1', email: 'a@test.com', notified: false },
+      { _id: 's-2', productId: 'prod-1', email: 'b@test.com', notified: false },
+      { _id: 's-3', productId: 'prod-2', email: 'c@test.com', notified: false },
+    ]);
+
+    const result = await markSignupsNotified('prod-1');
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(2);
+    expect(updates).toHaveLength(2);
+    expect(updates[0].notified).toBe(true);
+    expect(updates[0].notifiedAt).toBeInstanceOf(Date);
+  });
+
+  it('returns count 0 when no pending signups', async () => {
+    __seed('BackInStockSignups', [
+      { _id: 's-1', productId: 'prod-1', email: 'a@test.com', notified: true },
+    ]);
+
+    const result = await markSignupsNotified('prod-1');
+    expect(result.success).toBe(true);
+    expect(result.count).toBe(0);
+  });
+
+  it('returns failure for missing productId', async () => {
+    const result = await markSignupsNotified('');
+    expect(result.success).toBe(false);
+  });
+
+  it('returns failure for null productId', async () => {
+    const result = await markSignupsNotified(null);
+    expect(result.success).toBe(false);
   });
 });
