@@ -1,8 +1,8 @@
 /**
  * Shared Wix Velo mock helpers for tests.
  *
- * Provides createMockElement() and create$w() used across 140+ test files.
- * Import from 'tests/helpers/wixMocks.js' instead of redefining per file.
+ * Replaces the duplicated createMockElement()/create$w() pattern found
+ * across ~140 test files. 5 files migrated so far; others can adopt incrementally.
  */
 import { vi } from 'vitest';
 
@@ -53,8 +53,8 @@ export function createMockElement(overrides = {}) {
     background: { src: '', ...overrides.background },
 
     // Visibility methods — stateful to support assertions on hidden/collapsed
-    show: vi.fn(function (...args) { this.hidden = false; return Promise.resolve(); }),
-    hide: vi.fn(function (...args) { this.hidden = true; return Promise.resolve(); }),
+    show: vi.fn(function () { this.hidden = false; return Promise.resolve(); }),
+    hide: vi.fn(function () { this.hidden = true; return Promise.resolve(); }),
     collapse: vi.fn(function () { this.collapsed = true; }),
     expand: vi.fn(function () { this.collapsed = false; }),
 
@@ -92,20 +92,14 @@ export function createMockElement(overrides = {}) {
  * Create a mock $w selector function that lazily creates elements.
  * Each selector string gets a unique mock element, memoized across calls.
  *
- * @param {Object} [presets] - Map of selector → element overrides or pre-built elements
+ * @param {Object} [presets] - Map of selector → override object for createMockElement
  * @returns {Function} Mock $w selector
  */
 export function create$w(presets = {}) {
   const els = new Map();
   return (sel) => {
     if (!els.has(sel)) {
-      if (presets[sel] && typeof presets[sel] === 'object' && !presets[sel]._isMock) {
-        els.set(sel, createMockElement(presets[sel]));
-      } else if (presets[sel]) {
-        els.set(sel, presets[sel]);
-      } else {
-        els.set(sel, createMockElement());
-      }
+      els.set(sel, createMockElement(presets[sel] || {}));
     }
     return els.get(sel);
   };
