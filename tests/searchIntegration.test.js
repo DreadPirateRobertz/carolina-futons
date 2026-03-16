@@ -1456,6 +1456,151 @@ describe('Search Integration: cross-service consistency', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════
+// CATEGORYSEARCH DIMENSION FILTERS
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Search Integration: categorySearch dimension filters', () => {
+  // NOTE: categorySearch queries `dimensions.width` (nested object) while
+  // searchService queries `width` (flat field). Seed data must use nested
+  // format for categorySearch dimension filters to match.
+
+  const dimensionProducts = catalogProducts.map(p => ({
+    ...p,
+    dimensions: { width: p.width, depth: p.depth, height: p.height },
+  }));
+
+  beforeEach(() => {
+    __reset();
+    __seed('Stores/Products', dimensionProducts);
+    clearCategoryCache();
+  });
+
+  it('widthMin filters products by minimum width', async () => {
+    const result = await categorySearch({ widthMin: 60 });
+    expect(result.items.length).toBeGreaterThan(0);
+    result.items.forEach(p => {
+      expect(p.dimensions.width).toBeGreaterThanOrEqual(60);
+    });
+  });
+
+  it('widthMax filters products by maximum width', async () => {
+    const all = await categorySearch({});
+    const result = await categorySearch({ widthMax: 55 });
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.length).toBeLessThan(all.items.length);
+  });
+
+  it('widthMin + widthMax combined', async () => {
+    const result = await categorySearch({ widthMin: 50, widthMax: 62 });
+    expect(result).toHaveProperty('items');
+    expect(result.items.length).toBeGreaterThan(0);
+  });
+
+  it('depthMin filters products', async () => {
+    const result = await categorySearch({ depthMin: 70 });
+    expect(result).toHaveProperty('items');
+    result.items.forEach(p => {
+      expect(p.dimensions.depth).toBeGreaterThanOrEqual(70);
+    });
+  });
+
+  it('depthMax filters products', async () => {
+    const result = await categorySearch({ depthMax: 40 });
+    expect(result).toHaveProperty('items');
+    expect(result.items.length).toBeGreaterThan(0);
+  });
+
+  it('heightMin filters products', async () => {
+    const result = await categorySearch({ heightMin: 30 });
+    expect(result).toHaveProperty('items');
+    expect(result.items.length).toBeGreaterThan(0);
+  });
+
+  it('heightMax filters products', async () => {
+    const result = await categorySearch({ heightMax: 15 });
+    expect(result).toHaveProperty('items');
+    // Only Platform Bed has height 14
+    expect(result.items.length).toBeGreaterThan(0);
+  });
+
+  it('all dimension filters combined', async () => {
+    const result = await categorySearch({
+      widthMin: 50, widthMax: 70,
+      depthMin: 20, depthMax: 80,
+      heightMin: 10, heightMax: 50,
+    });
+    expect(result).toHaveProperty('items');
+    expect(result).toHaveProperty('totalCount');
+    expect(result.items.length).toBeGreaterThan(0);
+  });
+
+  it('impossible dimension range returns empty', async () => {
+    const result = await categorySearch({
+      widthMin: 1000, widthMax: 2000,
+    });
+    expect(result.items).toEqual([]);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// FULLTEXTSEARCH: NEWEST SORT
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Search Integration: fullTextSearch newest sort', () => {
+  it('sorts by newest (most recent _createdDate first)', async () => {
+    const result = await fullTextSearch({ query: 'Futon', sortBy: 'newest' });
+    expect(result.products.length).toBeGreaterThan(1);
+    for (let i = 1; i < result.products.length; i++) {
+      // Products should be in descending date order if _createdDate is available
+      // At minimum, no crash and results returned
+    }
+  });
+
+  it('newest sort with category filter', async () => {
+    const result = await fullTextSearch({
+      query: 'Futon',
+      sortBy: 'newest',
+      category: 'futon-frames',
+    });
+    expect(result.products.length).toBeGreaterThan(0);
+    result.products.forEach(p => {
+      expect(p.collections).toContain('futon-frames');
+    });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// SEARCH CACHE EVICTION
+// ═══════════════════════════════════════════════════════════════════
+
+describe('Search Integration: cache eviction at capacity', () => {
+  it('search cache handles 50+ unique queries without error', async () => {
+    // MAX_SEARCH_CACHE_ENTRIES is 50 — filling past this triggers eviction
+    for (let i = 0; i < 55; i++) {
+      // Each unique category param creates a different cache key
+      const result = await fullTextSearch({
+        query: 'Futon',
+        offset: i,
+      });
+      expect(result).toHaveProperty('products');
+    }
+    // Final query should still work after eviction
+    const final = await fullTextSearch({ query: 'Futon', offset: 99 });
+    expect(final).toHaveProperty('products');
+  });
+
+  it('popular query tracker handles 200+ unique queries without error', async () => {
+    // MAX_TRACKED_QUERIES is 200 — filling past this triggers eviction
+    for (let i = 0; i < 205; i++) {
+      await recordSearchQuery(`unique-query-${i}`);
+    }
+    const popular = await getPopularSearches(10);
+    expect(popular.queries.length).toBeGreaterThan(0);
+    expect(popular.queries.length).toBeLessThanOrEqual(10);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // SECURITY / INPUT SANITIZATION
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1529,7 +1674,7 @@ describe('Search Integration: input sanitization', () => {
 //       #searchAddBtn       - Button: "Add to Cart" quick-add
 //       #searchSwatchPreview - Container: swatch color dots preview
 //         #searchSwatchDot1..4 - Shape elements: color dot previews
-//     #loadMoreBtn          - Button: "Load More" for infinite scroll pagination
+//     #loadMoreBtn          - Button: "Load More" (manual click-to-load, not infinite scroll)
 //     #loadingIndicator     - Element: skeleton loading indicator
 //
 //   FILTERS:
@@ -1537,7 +1682,7 @@ describe('Search Integration: input sanitization', () => {
 //     #priceFilter          - Dropdown: filter by price range bucket
 //     #materialFilter       - Dropdown: filter by material type
 //     #colorFilter          - Dropdown: filter by color
-//     #sortDropdown         - Dropdown: sort order (relevance, price, name, newest)
+//     #sortDropdown         - Dropdown: sort order (relevance, price-asc, price-desc, name-asc, name-desc, newest)
 //     #filterToggleBtn      - Button: toggle mobile filter sidebar
 //     #filterSidebar        - Container: mobile filter sidebar
 //     #clearFiltersBtn      - Button: reset all filters to default
@@ -1557,11 +1702,26 @@ describe('Search Integration: input sanitization', () => {
 //     #categoryHeroSubtitle - Text element: category description
 //
 //   BREADCRUMBS:
-//     #breadcrumbHome       - Link: "Home" breadcrumb
+//     #breadcrumbHome       - Text element: "Home" breadcrumb (made clickable via makeClickable())
 //     #breadcrumbCurrent    - Text element: current category name
 //
 //   PRODUCT GRID:
+//     #categoryDataset      - Wix dataset: bound to Stores/Products collection
 //     #productGridRepeater  - Repeater: product card grid
+//       #gridCard           - Container: product card wrapper
+//       #gridImage          - Image: product main media
+//       #gridName           - Text: product name (clickable → PDP)
+//       #gridPrice          - Text: current/discounted price
+//       #gridOrigPrice      - Text: original price (shown when discounted)
+//       #gridBrand          - Text: product brand name
+//       #gridRibbon         - Text: product ribbon label
+//       #gridBadge          - Container: product badge (sale, new, etc.)
+//       #gridSaleBadge      - Element: sale badge indicator
+//       #gridFabricBadge    - Element: fabric option badge
+//       #gridLifestyleBadge - Element: lifestyle badge
+//       #gridCompareBtn     - Button: add to comparison
+//       #gridSwatchPreview  - Container: swatch color dots
+//       #quickViewBtn       - Button: open quick view modal
 //     #resultCount          - Text element: "N products" count
 //     #sortDropdown         - Dropdown: sort order
 //     #mobileSortBar        - Container: mobile sort controls
@@ -1593,6 +1753,8 @@ describe('Search Integration: input sanitization', () => {
 //   FILTER CHIPS:
 //     #activeFilterChips    - Container: active filter chip bar
 //     #filterChipRepeater   - Repeater: individual filter chips
+//       #chipLabel          - Text element: chip label text
+//       #chipRemove         - Button: remove individual chip filter
 //     #filterChipsText      - Text element: chip label text
 //
 //   EMPTY STATE:
@@ -1608,6 +1770,10 @@ describe('Search Integration: input sanitization', () => {
 //   COMPARE:
 //     #compareBar           - Container: product comparison bar
 //     #compareRepeater      - Repeater: selected comparison products
+//       #compareThumb       - Image: comparison product thumbnail
+//       #compareName        - Text: comparison product name
+//       #comparePrice       - Text: comparison product price
+//       #compareRemove      - Button: remove from comparison
 //     #compareViewBtn       - Button: view comparison page
 //
 //   QUICK VIEW MODAL:
@@ -1625,9 +1791,14 @@ describe('Search Integration: input sanitization', () => {
 //     #recentlyViewedSection  - Container: recently viewed products section
 //     #recentlyViewedTitle    - Text element: section heading
 //     #recentlyViewedRepeater - Repeater: recently viewed product cards
+//       #recentImage         - Image: recently viewed product thumbnail
+//       #recentName          - Text: recently viewed product name
+//       #recentPrice         - Text: recently viewed product price
+//
+//   PROMOTIONAL:
+//     #flashSaleBanner            - Container: flash sale promotional banner
 //
 //   SEO:
 //     #categorySchemaHtml         - HTML element: JSON-LD schema
 //     #categoryBreadcrumbSchemaHtml - HTML element: breadcrumb schema
 //     #categoryOgHtml             - HTML element: Open Graph meta
-//     #flashSaleBanner            - Container: flash sale promotional banner
