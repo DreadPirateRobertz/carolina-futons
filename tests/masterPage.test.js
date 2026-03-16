@@ -1180,8 +1180,11 @@ describe('masterPage.js', () => {
     });
 
     it('opens side cart when cart item count increases', async () => {
-      // getCurrentCart is called multiple times: badge, shared cart initial count, then callback
-      // Set up mock to return 1 item for all initial calls, then 2 items for callback call
+      // Clear accumulated mock calls from prior tests to isolate this test
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+
+      // All initial calls (badge, shipping, initSideCartAutoOpen) see 1 item
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 1 }],
       });
@@ -1191,8 +1194,7 @@ describe('masterPage.js', () => {
       // Wait for all initial async calls to resolve (badge, shipping, initial count)
       await new Promise(r => setTimeout(r, 100));
 
-      // Find the onCartChanged callback registered by initSideCartAutoOpen
-      // (not the badge or shipping ones — the one from initSideCartAutoOpen)
+      // Get only THIS test's onCartChanged callbacks (mock was cleared above)
       const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
 
       // Now cart has 2 items (count increased from 1 to 2)
@@ -1212,6 +1214,11 @@ describe('masterPage.js', () => {
     });
 
     it('does not open side cart when item count decreases', async () => {
+      // Clear accumulated mock calls to isolate this test
+      onCartChanged.mockClear();
+      getCurrentCart.mockClear();
+
+      // Initial calls see 3 items total
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 2 }, { _id: '2', quantity: 1 }],
       });
@@ -1219,9 +1226,10 @@ describe('masterPage.js', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 100));
 
+      // Get only THIS test's callbacks
       const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
 
-      // Cart now has fewer items
+      // Cart now has fewer items (3 → 1)
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 1 }],
       });
@@ -1280,6 +1288,7 @@ describe('masterPage.js', () => {
   describe('canonical URL injection', () => {
     it('calls wix-seo-frontend head.setLinks', async () => {
       const { head } = await import('wix-seo-frontend');
+      head.setLinks.mockClear();
       elements.clear();
       await onReadyHandler();
 
@@ -1297,6 +1306,7 @@ describe('masterPage.js', () => {
 
   describe('business schema injection', () => {
     it('calls getBusinessSchema and posts to element', async () => {
+      getBusinessSchema.mockClear();
       getBusinessSchema.mockResolvedValueOnce('{"@type":"LocalBusiness"}');
       elements.clear();
       await onReadyHandler();
@@ -1307,12 +1317,14 @@ describe('masterPage.js', () => {
     });
 
     it('does not throw when getBusinessSchema returns null', async () => {
+      getBusinessSchema.mockClear();
       getBusinessSchema.mockResolvedValueOnce(null);
       elements.clear();
       await expect(onReadyHandler()).resolves.not.toThrow();
     });
 
     it('posts WebSite schema to websiteSchemaHtml element', async () => {
+      getWebSiteSchema.mockClear();
       getWebSiteSchema.mockResolvedValueOnce('{"@type":"WebSite"}');
       elements.clear();
       await onReadyHandler();
@@ -1412,6 +1424,7 @@ describe('masterPage.js', () => {
 
   describe('core web vitals', () => {
     it('calls reportMetrics after 5s timeout', async () => {
+      reportMetrics.mockClear();
       vi.useFakeTimers();
       elements.clear();
       await onReadyHandler();
