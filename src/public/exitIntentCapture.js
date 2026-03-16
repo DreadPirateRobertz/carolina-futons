@@ -104,3 +104,33 @@ export function detectScrollExit(velocityPxPerMs) {
   if (typeof velocityPxPerMs !== 'number' || isNaN(velocityPxPerMs)) return false;
   return velocityPxPerMs >= SCROLL_EXIT_VELOCITY_THRESHOLD;
 }
+
+/**
+ * Submit exit-intent email capture: validate, subscribe, queue welcome series.
+ * @param {string} email - Email from the popup form
+ * @returns {Promise<{success: boolean, discountCode?: string, error?: string, message?: string}>}
+ */
+export async function submitExitCapture(email) {
+  if (!validateCaptureEmail(email)) {
+    return { success: false, error: 'invalid_email' };
+  }
+
+  try {
+    const { subscribeToNewsletter, captureExitIntentEmail } = await import('backend/newsletterService.web');
+    const result = await subscribeToNewsletter(email, { source: 'exit_intent_popup' });
+
+    if (!result.success) {
+      return result;
+    }
+
+    // Queue welcome series into EmailQueue (non-blocking)
+    try {
+      await captureExitIntentEmail(email);
+    } catch (_) { /* EmailQueue failure should not block the capture */ }
+
+    markExitIntentShown();
+    return result;
+  } catch (err) {
+    return { success: false, error: 'submission_failed' };
+  }
+}

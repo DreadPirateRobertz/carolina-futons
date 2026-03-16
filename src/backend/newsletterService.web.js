@@ -291,3 +291,72 @@ export const subscribeToNewsletter = webMethod(
     }
   }
 );
+
+// Welcome sequence steps matching emailAutomation.web.js SEQUENCES.welcome
+const WELCOME_STEPS = [
+  { step: 1, templateId: 'welcome_series_1', delayHours: 0 },
+  { step: 2, templateId: 'welcome_series_2', delayHours: 72 },
+  { step: 3, templateId: 'welcome_series_3', delayHours: 168 },
+];
+
+/**
+ * Capture an exit-intent email and queue the welcome series into EmailQueue.
+ * Deduplicates — skips queueing if the email is already a subscriber.
+ *
+ * @function captureExitIntentEmail
+ * @param {string} email - Visitor email from exit-intent popup
+ * @returns {Promise<{success: boolean, discountCode?: string, queued?: number}>}
+ * @permission Anyone — captures from anonymous visitors.
+ */
+export const captureExitIntentEmail = webMethod(
+  Permissions.Anyone,
+  async (email) => {
+    try {
+      if (!email || typeof email !== 'string' || !email.trim()) {
+        return { success: false, message: 'Email is required' };
+      }
+
+      const cleaned = sanitize(email, 254).toLowerCase().trim();
+      if (!validateEmail(cleaned)) {
+        return { success: false, message: 'Invalid email format' };
+      }
+
+      // Check if already subscribed — skip EmailQueue if so
+      const existing = await wixData.query('NewsletterSubscribers')
+        .eq('email', cleaned)
+        .find();
+
+      if (existing.items.length > 0) {
+        return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
+      }
+
+      // Queue all 3 welcome series steps into EmailQueue
+      const now = new Date();
+      for (const step of WELCOME_STEPS) {
+        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        await wixData.insert('EmailQueue', {
+          templateId: step.templateId,
+          recipientEmail: cleaned,
+          recipientContactId: '',
+          variables: {
+            discountCode: DISCOUNT_CODE,
+            email: cleaned,
+          },
+          sequenceType: 'welcome',
+          sequenceStep: step.step,
+          status: 'pending',
+          scheduledFor,
+          sentAt: null,
+          attempt: 0,
+          lastError: '',
+          createdAt: new Date(),
+        });
+      }
+
+      return { success: true, discountCode: DISCOUNT_CODE, queued: WELCOME_STEPS.length };
+    } catch (err) {
+      console.error('Exit intent email capture error:', err);
+      return { success: false, message: 'Capture failed. Please try again.' };
+    }
+  }
+);
