@@ -55,6 +55,56 @@ describe('getContentHub', () => {
     expect(slugs).toContain('accessories');
     expect(slugs).toContain('bundle-deals');
   });
+
+  it('guide slugs are unique', async () => {
+    const result = await getContentHub();
+    const slugs = result.hub.guides.map(g => g.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it('guide titles are unique', async () => {
+    const result = await getContentHub();
+    const titles = result.hub.guides.map(g => g.title);
+    expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  it('all guide URLs use carolinafutons.com domain', async () => {
+    const result = await getContentHub();
+    for (const guide of result.hub.guides) {
+      expect(guide.url).toMatch(/^https:\/\/www\.carolinafutons\.com\//);
+    }
+  });
+
+  it('hub URL does not include a trailing guide slug', async () => {
+    const result = await getContentHub();
+    expect(result.hub.url).toBe('https://www.carolinafutons.com/buying-guides');
+  });
+
+  it('guideCount matches guides array length', async () => {
+    const result = await getContentHub();
+    expect(result.hub.guideCount).toBe(result.hub.guides.length);
+  });
+
+  it('guide descriptions are 50-200 chars (SEO snippet range)', async () => {
+    const result = await getContentHub();
+    for (const guide of result.hub.guides) {
+      expect(guide.description.length).toBeGreaterThanOrEqual(50);
+      expect(guide.description.length).toBeLessThanOrEqual(200);
+    }
+  });
+
+  it('guide hero images are absolute URLs', async () => {
+    const result = await getContentHub();
+    for (const guide of result.hub.guides) {
+      expect(guide.heroImage).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('hub metaDescription is 100-200 chars', async () => {
+    const result = await getContentHub();
+    expect(result.hub.metaDescription.length).toBeGreaterThanOrEqual(100);
+    expect(result.hub.metaDescription.length).toBeLessThanOrEqual(200);
+  });
 });
 
 // ── getPillarGuide ────────────────────────────────────────────────────
@@ -106,6 +156,40 @@ describe('getPillarGuide', () => {
       expect(result.relatedGuides.length).toBeGreaterThan(0);
     }
   });
+
+  it('returns null for null slug', async () => {
+    const result = await getPillarGuide(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('guide URL matches slug', async () => {
+    const result = await getPillarGuide('covers');
+    expect(result.guide.url).toContain('/buying-guides/covers');
+  });
+
+  it('related guides do not include the guide itself', async () => {
+    const result = await getPillarGuide('futon-frames');
+    const relatedSlugs = result.relatedGuides.map(g => g.slug);
+    expect(relatedSlugs).not.toContain('futon-frames');
+  });
+
+  it('guide has all expected fields', async () => {
+    const result = await getPillarGuide('mattresses');
+    const fields = ['slug', 'title', 'shortTitle', 'description', 'heroImage', 'category', 'url', 'publishDate', 'updatedDate'];
+    for (const field of fields) {
+      expect(result.guide).toHaveProperty(field);
+      expect(result.guide[field]).toBeTruthy();
+    }
+  });
+
+  it('each guide has 2-4 related guides', async () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const result = await getPillarGuide(slug);
+      expect(result.relatedGuides.length).toBeGreaterThanOrEqual(2);
+      expect(result.relatedGuides.length).toBeLessThanOrEqual(4);
+    }
+  });
 });
 
 // ── getPillarGuideSlugs ───────────────────────────────────────────────
@@ -122,6 +206,18 @@ describe('getPillarGuideSlugs', () => {
     for (const slug of result.slugs) {
       expect(slug).toMatch(/^[a-z0-9-]+$/);
     }
+  });
+
+  it('slugs are unique', async () => {
+    const result = await getPillarGuideSlugs();
+    expect(new Set(result.slugs).size).toBe(result.slugs.length);
+  });
+
+  it('slugs match getContentHub guide slugs', async () => {
+    const slugResult = await getPillarGuideSlugs();
+    const hubResult = await getContentHub();
+    const hubSlugs = hubResult.hub.guides.map(g => g.slug);
+    expect(slugResult.slugs.sort()).toEqual(hubSlugs.sort());
   });
 });
 
@@ -167,6 +263,45 @@ describe('getHubSchema', () => {
       expect(item.name).toBeTruthy();
       expect(item.image).toBeTruthy();
     }
+  });
+
+  it('ItemList positions are sequential 1-8', async () => {
+    const result = await getHubSchema();
+    const schema = JSON.parse(result.itemListSchema);
+    for (let i = 0; i < schema.itemListElement.length; i++) {
+      expect(schema.itemListElement[i].position).toBe(i + 1);
+    }
+  });
+
+  it('CollectionPage mainEntity ItemList positions match', async () => {
+    const result = await getHubSchema();
+    const schema = JSON.parse(result.collectionSchema);
+    const items = schema.mainEntity.itemListElement;
+    for (let i = 0; i < items.length; i++) {
+      expect(items[i].position).toBe(i + 1);
+    }
+  });
+
+  it('all schemas are valid JSON', async () => {
+    const result = await getHubSchema();
+    expect(() => JSON.parse(result.collectionSchema)).not.toThrow();
+    expect(() => JSON.parse(result.itemListSchema)).not.toThrow();
+    expect(() => JSON.parse(result.breadcrumbSchema)).not.toThrow();
+  });
+
+  it('all schemas have @context schema.org', async () => {
+    const result = await getHubSchema();
+    for (const key of ['collectionSchema', 'itemListSchema', 'breadcrumbSchema']) {
+      const schema = JSON.parse(result[key]);
+      expect(schema['@context']).toBe('https://schema.org');
+    }
+  });
+
+  it('publisher logo is an ImageObject', async () => {
+    const result = await getHubSchema();
+    const schema = JSON.parse(result.collectionSchema);
+    expect(schema.publisher.logo['@type']).toBe('ImageObject');
+    expect(schema.publisher.logo.url).toContain('logo.png');
   });
 });
 
@@ -223,6 +358,45 @@ describe('getGuideSchema', () => {
       expect(schema.itemListElement[2].item).toContain(slug);
     }
   });
+
+  it('returns null for null slug', async () => {
+    const result = await getGuideSchema(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('all 8 guides produce valid schemas', async () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const result = await getGuideSchema(slug);
+      expect(result.success).toBe(true);
+      expect(() => JSON.parse(result.breadcrumbSchema)).not.toThrow();
+      expect(() => JSON.parse(result.navigationSchema)).not.toThrow();
+    }
+  });
+
+  it('breadcrumb positions are sequential 1-3', async () => {
+    const result = await getGuideSchema('pillows');
+    const schema = JSON.parse(result.breadcrumbSchema);
+    for (let i = 0; i < schema.itemListElement.length; i++) {
+      expect(schema.itemListElement[i].position).toBe(i + 1);
+    }
+  });
+
+  it('navigation hasPart items are WebPage type', async () => {
+    const result = await getGuideSchema('storage');
+    const schema = JSON.parse(result.navigationSchema);
+    for (const part of schema.hasPart) {
+      expect(part['@type']).toBe('WebPage');
+      expect(part.name).toBeTruthy();
+      expect(part.url).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('breadcrumb Home item links to site root', async () => {
+    const result = await getGuideSchema('accessories');
+    const schema = JSON.parse(result.breadcrumbSchema);
+    expect(schema.itemListElement[0].item).toBe('https://www.carolinafutons.com');
+  });
 });
 
 // ── getSitemapEntries ─────────────────────────────────────────────────
@@ -265,5 +439,46 @@ describe('getSitemapEntries', () => {
     const result = await getSitemapEntries();
     const hub = result.entries[0];
     expect(hub.lastmod).toBe('2026-02-20');
+  });
+
+  it('every entry has all required sitemap fields', async () => {
+    const result = await getSitemapEntries();
+    for (const entry of result.entries) {
+      expect(entry).toHaveProperty('url');
+      expect(entry).toHaveProperty('lastmod');
+      expect(entry).toHaveProperty('changefreq');
+      expect(entry).toHaveProperty('priority');
+      expect(entry).toHaveProperty('title');
+    }
+  });
+
+  it('entry URLs are unique', async () => {
+    const result = await getSitemapEntries();
+    const urls = result.entries.map(e => e.url);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it('entry lastmod dates are valid YYYY-MM-DD format', async () => {
+    const result = await getSitemapEntries();
+    for (const entry of result.entries) {
+      expect(entry.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it('guide entries contain guide slug in URL', async () => {
+    const result = await getSitemapEntries();
+    const guideEntries = result.entries.slice(1);
+    const slugResult = await getPillarGuideSlugs();
+    for (let i = 0; i < guideEntries.length; i++) {
+      expect(guideEntries[i].url).toContain(slugResult.slugs[i]);
+    }
+  });
+
+  it('priority values are between 0 and 1', async () => {
+    const result = await getSitemapEntries();
+    for (const entry of result.entries) {
+      expect(entry.priority).toBeGreaterThanOrEqual(0);
+      expect(entry.priority).toBeLessThanOrEqual(1);
+    }
   });
 });
