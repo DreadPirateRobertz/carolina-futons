@@ -268,13 +268,13 @@ describe('getUpsellRecommendations', () => {
     expect(result.recommendations[0].discount).toBe(0);
   });
 
-  it('defaults delayDays to 3 in output when present in data', async () => {
+  it('preserves delayDays of 0 in output (bug fix: || → ??)', async () => {
     __seed('PostPurchaseUpsells', [
       { _id: 'u1', sourceCategory: 'futons', active: true, priority: 1, delayDays: 0 },
     ]);
     const result = await getUpsellRecommendations('futons', null, 5);
-    // delayDays 0 is falsy, so formatRecommendation defaults to 3
-    expect(result.recommendations[0].delayDays).toBe(3);
+    // delayDays 0 is valid (show immediately), preserved by ?? operator
+    expect(result.recommendations[0].delayDays).toBe(0);
   });
 });
 

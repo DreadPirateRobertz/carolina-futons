@@ -196,7 +196,8 @@ export const getUpsellRecommendations = webMethod(
         return { success: false, error: 'Product category is required.', recommendations: [] };
       }
 
-      const days = Math.max(0, Math.min(30, Math.round(Number(daysSincePurchase) || 3)));
+      const rawDays = Number(daysSincePurchase);
+      const days = Number.isFinite(rawDays) ? Math.max(0, Math.min(30, Math.round(rawDays))) : 3;
 
       let query = wixData.query('PostPurchaseUpsells')
         .eq('sourceCategory', category)
@@ -451,7 +452,7 @@ function formatRecommendation(item) {
     recommendedCategory: item.recommendedCategory,
     reason: item.reason,
     discount: item.discount || 0,
-    delayDays: item.delayDays || 3,
+    delayDays: item.delayDays ?? 3,
     priority: item.priority,
   };
 }
