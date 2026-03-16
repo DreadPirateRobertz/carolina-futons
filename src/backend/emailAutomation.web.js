@@ -72,6 +72,16 @@ const SEQUENCES = {
       { step: 1, templateId: 'reengagement_1', delayHours: 0, description: 'We miss you + exclusive offer' },
     ],
   },
+  restock: {
+    steps: [
+      { step: 1, templateId: 'restock_notification', delayHours: 0, description: 'Product back in stock notification' },
+    ],
+  },
+  review_thanks: {
+    steps: [
+      { step: 1, templateId: 'review_thank_you', delayHours: 0, description: 'Thank you for your review + 10% discount' },
+    ],
+  },
 };
 
 // Maximum retry attempts for failed emails
@@ -815,6 +825,116 @@ async function cancelSequenceForOrder(email, orderNumber) {
     }
   }
 }
+
+// ── Restock Notifications ─────────────────────────────────────────────
+
+/**
+ * Queue restock notification emails for back-in-stock subscribers.
+ * Called by events.js when inventory goes from 0 → positive.
+ *
+ * @function triggerRestockNotifications
+ * @param {string} productId - The restocked product's ID
+ * @param {Array<{email: string, contactId?: string, productName?: string}>} subscribers
+ * @returns {Promise<{success: boolean, notified: number}>}
+ * @permission Admin
+ */
+export const triggerRestockNotifications = webMethod(
+  Permissions.Admin,
+  async (productId, subscribers) => {
+    try {
+      if (!productId || !Array.isArray(subscribers) || subscribers.length === 0) {
+        return { success: false, notified: 0 };
+      }
+
+      let notified = 0;
+      for (const sub of subscribers) {
+        const email = (sub.email || '').toLowerCase();
+        if (!email || !validateEmail(email)) continue;
+        if (await isUnsubscribed(email, 'restock')) continue;
+
+        await queueEmail({
+          templateId: SEQUENCES.restock.steps[0].templateId,
+          recipientEmail: email,
+          recipientContactId: sub.contactId || '',
+          variables: {
+            productName: sanitize(sub.productName || '', 200),
+            productId,
+            email,
+          },
+          sequenceType: 'restock',
+          sequenceStep: 1,
+          scheduledFor: new Date(),
+        });
+
+        // Mark subscriber as notified
+        if (sub._id) {
+          await wixData.update('BackInStockSignups', {
+            ...sub,
+            notified: true,
+            notifiedAt: new Date(),
+          });
+        }
+        notified++;
+      }
+
+      return { success: true, notified };
+    } catch (err) {
+      console.error('[emailAutomation] Error triggering restock notifications:', err);
+      return { success: false, notified: 0 };
+    }
+  }
+);
+
+// ── Review Thank-You ──────────────────────────────────────────────────
+
+/**
+ * Queue a review thank-you email with discount code.
+ *
+ * @function triggerReviewThanks
+ * @param {string} contactId - Reviewer's contact ID
+ * @param {string} email - Reviewer's email
+ * @param {string} firstName - Reviewer's first name
+ * @param {string} productName - Product that was reviewed
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin
+ */
+export const triggerReviewThanks = webMethod(
+  Permissions.Admin,
+  async (contactId, email, firstName, productName) => {
+    try {
+      const cleanEmail = (email || '').toLowerCase();
+      if (!cleanEmail || !validateEmail(cleanEmail)) return { success: false };
+      if (await isUnsubscribed(cleanEmail, 'review_thanks')) return { success: false };
+
+      let discountCode = '';
+      try {
+        discountCode = await getSecret('REVIEW_DISCOUNT_CODE');
+      } catch (e) {
+        // Discount not configured yet — send email without it
+      }
+
+      await queueEmail({
+        templateId: SEQUENCES.review_thanks.steps[0].templateId,
+        recipientEmail: cleanEmail,
+        recipientContactId: sanitize(contactId, 50),
+        variables: {
+          firstName: sanitize(firstName, 200),
+          productName: sanitize(productName, 200),
+          discountCode,
+          email: cleanEmail,
+        },
+        sequenceType: 'review_thanks',
+        sequenceStep: 1,
+        scheduledFor: new Date(),
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[emailAutomation] Error triggering review thank-you:', err);
+      return { success: false };
+    }
+  }
+);
 
 // Export sequence definitions for testing
 export const _SEQUENCES = SEQUENCES;
