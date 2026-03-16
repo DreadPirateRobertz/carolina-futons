@@ -280,6 +280,10 @@ export default defineConfig({
       'public/contactIllustrations': path.resolve(__dirname, 'src/public/contactIllustrations.js'),
       'public/localBusinessSeo.js': path.resolve(__dirname, 'src/public/localBusinessSeo.js'),
       'public/localBusinessSeo': path.resolve(__dirname, 'src/public/localBusinessSeo.js'),
+      'public/illustrationShared.js': path.resolve(__dirname, 'src/public/illustrationShared.js'),
+      'public/illustrationShared': path.resolve(__dirname, 'src/public/illustrationShared.js'),
+      'public/illustrations.js': path.resolve(__dirname, 'src/public/illustrations.js'),
+      'public/illustrations': path.resolve(__dirname, 'src/public/illustrations.js'),
     },
   },
 });
