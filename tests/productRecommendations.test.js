@@ -828,6 +828,11 @@ describe('getRecentlyViewed edge cases', () => {
 // ── getRelatedProducts — all cross-sell category mappings ──────────
 
 describe('getRelatedProducts — cross-sell category coverage', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
   it('returns casegoods + platform beds for murphy-cabinet-beds', async () => {
     const results = await getRelatedProducts('prod-murphy-001', 'murphy-cabinet-beds', 10);
     expect(results.length).toBeGreaterThan(0);
@@ -886,6 +891,11 @@ describe('getRelatedProducts — cross-sell category coverage', () => {
 // ── getCompletionSuggestions — advanced cart scenarios ────────────
 
 describe('getCompletionSuggestions — advanced scenarios', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
   it('does not suggest mattresses or frames when cart has both', async () => {
     const suggestions = await getCompletionSuggestions(['prod-frame-001', 'prod-matt-001']);
     // Cart already has frame + mattress, should NOT suggest mattresses or frames
@@ -948,6 +958,11 @@ describe('getCompletionSuggestions — advanced scenarios', () => {
 // ── getBundleSuggestion — frame type detection ─────────────────────
 
 describe('getBundleSuggestion — frame type detection', () => {
+  beforeEach(() => {
+    resetData();
+    __seed('Stores/Products', allProducts);
+  });
+
   it('detects wall-hugger as frame and suggests mattress', async () => {
     const bundle = await getBundleSuggestion('prod-frame-002');
     expect(bundle).not.toBeNull();
@@ -1153,17 +1168,27 @@ describe('trackRecentlyViewed — trim behavior', () => {
     }
     __seed('RecentlyViewed', entries);
 
-    // Track another product — should trigger trim
+    // Track another product — should trigger trim (now 22 → trimmed to 20)
     const result = await trackRecentlyViewed('prod-frame-001');
     expect(result.success).toBe(true);
+
+    // Verify trim actually occurred — request all 25, should get ≤ 20
+    const viewed = await getRecentlyViewed(25);
+    expect(viewed.success).toBe(true);
+    expect(viewed.products.length).toBeLessThanOrEqual(20);
   });
 
-  it('updates viewedAt when re-viewing a product', async () => {
+  it('updates viewedAt when re-viewing a product (dedup — removes old, inserts fresh)', async () => {
     __seed('RecentlyViewed', [
       { _id: 'rv-old', memberId: 'member-1', productId: 'prod-frame-001', viewedAt: new Date('2025-01-01') },
     ]);
     const result = await trackRecentlyViewed('prod-frame-001');
     expect(result.success).toBe(true);
-    // Old entry removed and fresh one inserted
+
+    // Verify dedup: product still appears exactly once, not duplicated
+    const viewed = await getRecentlyViewed(20);
+    expect(viewed.success).toBe(true);
+    const frameEntries = viewed.products.filter(p => p._id === 'prod-frame-001');
+    expect(frameEntries.length).toBe(1);
   });
 });
