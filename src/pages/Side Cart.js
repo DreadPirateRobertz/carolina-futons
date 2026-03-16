@@ -203,7 +203,7 @@ function initSideCartRepeater() {
         $item('#sideItemLineTotal').text = `$${Number(itemData.lineTotal).toFixed(2)}`;
       } catch (e) {}
 
-      // Variant details (e.g., "Size: Queen · Finish: Honey Oak")
+      // Variant details (e.g., "Size: Queen · Finish: Cherry")
       if (itemData.variantDetails) {
         try {
           $item('#sideItemVariant').text = itemData.variantDetails;
