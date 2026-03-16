@@ -656,7 +656,7 @@ export const getBuyingGuide = webMethod(
           ribbon: p.ribbon,
         }));
       } catch (e) {
-        // Products unavailable — continue without sidebar
+        console.error('getBuyingGuide: CMS product query failed:', e);
       }
 
       return {
