@@ -180,8 +180,8 @@ export const getPinterestMetaTags = webMethod(
       const tags = [];
       for (const [property, content] of Object.entries(meta)) {
         if (content === null || content === undefined || content === '') continue;
-        const safeProperty = sanitize(String(property), 100);
-        const safeContent = sanitize(String(content), 1000);
+        const safeProperty = escapeAttr(sanitize(String(property), 100));
+        const safeContent = escapeAttr(sanitize(String(content), 1000));
         tags.push(`<meta property="${safeProperty}" content="${safeContent}" />`);
       }
 
@@ -279,3 +279,9 @@ export const validatePinMarkup = webMethod(
     }
   }
 );
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function escapeAttr(str) {
+  return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
