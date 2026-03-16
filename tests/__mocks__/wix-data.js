@@ -5,6 +5,7 @@ let _store = {};     // collection -> items[]
 let _insertSpy = null;
 let _updateSpy = null;
 let _removeSpy = null;
+let _queryErrors = {};  // collection -> Error to throw on query
 
 // Reset all mock state between tests
 export function __reset() {
@@ -12,6 +13,12 @@ export function __reset() {
   _insertSpy = null;
   _updateSpy = null;
   _removeSpy = null;
+  _queryErrors = {};
+}
+
+// Force a query error for a specific collection
+export function __setQueryError(collection, error) {
+  _queryErrors[collection] = error;
 }
 
 // Seed a collection with items
@@ -85,6 +92,7 @@ function createQueryBuilder(collection) {
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
     async find() {
+      if (_queryErrors[collection]) throw _queryErrors[collection];
       let items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
       );
@@ -103,6 +111,7 @@ function createQueryBuilder(collection) {
       return { items, totalCount, length: items.length };
     },
     async distinct(field) {
+      if (_queryErrors[collection]) throw _queryErrors[collection];
       const items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
       );
@@ -110,6 +119,7 @@ function createQueryBuilder(collection) {
       return { items: values, totalCount: values.length, length: values.length };
     },
     async count() {
+      if (_queryErrors[collection]) throw _queryErrors[collection];
       const items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))
       );
