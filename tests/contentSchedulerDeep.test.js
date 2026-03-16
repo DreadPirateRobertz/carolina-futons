@@ -297,10 +297,10 @@ describe('getScheduleQueue — edge cases', () => {
     expect(result.success).toBe(true);
   });
 
-  it('handles null filters gracefully', async () => {
+  it('returns error for null filters (property access on null caught by error handler)', async () => {
     const result = await getScheduleQueue(null);
-    // null filters causes property access on null → caught by error handler
-    expect(result).toHaveProperty('success');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
   });
 
   it('sanitizes status filter', async () => {

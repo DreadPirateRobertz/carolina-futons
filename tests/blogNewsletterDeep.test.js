@@ -515,9 +515,8 @@ describe('getBlogNewsletterStatus — edge cases', () => {
 
     const result = await getBlogNewsletterStatus();
     const sleeping = result.posts.find(p => p.slug === 'best-futons-for-everyday-sleeping');
-    if (sleeping) {
-      expect(sleeping.notified).toBe(false);
-    }
+    expect(sleeping).toBeDefined();
+    expect(sleeping.notified).toBe(false);
   });
 
   it('ignores EmailQueue items with different sequenceStep', async () => {
@@ -532,8 +531,7 @@ describe('getBlogNewsletterStatus — edge cases', () => {
 
     const result = await getBlogNewsletterStatus();
     const sleeping = result.posts.find(p => p.slug === 'best-futons-for-everyday-sleeping');
-    if (sleeping) {
-      expect(sleeping.notified).toBe(false);
-    }
+    expect(sleeping).toBeDefined();
+    expect(sleeping.notified).toBe(false);
   });
 });

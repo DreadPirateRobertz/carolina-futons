@@ -256,14 +256,15 @@ describe('_buildRssXml — date handling', () => {
     expect(itemXml).not.toContain('<pubDate>');
   });
 
-  it('lastBuildDate uses first post date when post has no publishDate', () => {
+  it('lastBuildDate uses current date when first post has no publishDate', () => {
     const xml = _buildRssXml([{
       slug: 'no-date-first',
       title: 'First',
     }]);
-    // First post has no publishDate → lastBuildDate falls back to current date
     const lastBuild = xml.match(/<lastBuildDate>([^<]+)<\/lastBuildDate>/)[1];
-    expect(new Date(lastBuild)).toBeTruthy();
+    const parsed = new Date(lastBuild);
+    expect(parsed.toString()).not.toBe('Invalid Date');
+    expect(parsed.getFullYear()).toBeGreaterThanOrEqual(2026);
   });
 });
 
@@ -475,23 +476,24 @@ describe('generateBlogRssFeed — integration', () => {
   it('every item link matches its guid', async () => {
     const result = await generateBlogRssFeed();
     const items = result.xml.split('<item>').slice(1);
+    expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
       const link = item.match(/<link>([^<]+)<\/link>/)?.[1];
       const guid = item.match(/<guid[^>]*>([^<]+)<\/guid>/)?.[1];
-      if (link && guid) {
-        expect(link).toBe(guid);
-      }
+      expect(link).toBeDefined();
+      expect(guid).toBeDefined();
+      expect(link).toBe(guid);
     }
   });
 
   it('posts are sorted by date descending', async () => {
     const result = await generateBlogRssFeed();
     const pubDates = result.xml.match(/<pubDate>([^<]+)<\/pubDate>/g);
-    if (pubDates && pubDates.length >= 2) {
-      const dates = pubDates.map(m => new Date(m.replace(/<\/?pubDate>/g, '')).getTime());
-      for (let i = 1; i < dates.length; i++) {
-        expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
-      }
+    expect(pubDates).not.toBeNull();
+    expect(pubDates.length).toBeGreaterThanOrEqual(2);
+    const dates = pubDates.map(m => new Date(m.replace(/<\/?pubDate>/g, '')).getTime());
+    for (let i = 1; i < dates.length; i++) {
+      expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
     }
   });
 });
