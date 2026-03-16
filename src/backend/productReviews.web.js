@@ -346,8 +346,9 @@ export const getBatchReviewSummaries = webMethod(
 
       for (const r of allReviews) {
         if (!summaries[r.productId]) continue;
+        if (r.rating == null || isNaN(Number(r.rating))) continue;
         summaries[r.productId].totalReviews++;
-        summaries[r.productId].averageRating += Math.min(5, Math.max(1, Math.round(r.rating)));
+        summaries[r.productId].averageRating += Math.min(5, Math.max(1, Math.round(Number(r.rating))));
       }
 
       for (const pid of cleanIds) {

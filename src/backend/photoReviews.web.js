@@ -299,21 +299,38 @@ export const getPhotoReviewStats = webMethod(
         };
       }
 
-      const totalRating = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+      // Skip null/NaN ratings to prevent corrupted aggregation
+      const validReviews = reviews.filter(r => r.rating != null && !isNaN(Number(r.rating)));
+      if (validReviews.length < reviews.length) {
+        console.warn(`[photoReviews] Skipped ${reviews.length - validReviews.length} photo reviews with invalid ratings for product ${cleanId}`);
+      }
+
       const photoCount = reviews.filter(r => r.photoUrl).length;
       const featuredCount = reviews.filter(r => r.status === 'featured').length;
 
+      if (validReviews.length === 0) {
+        return {
+          success: true,
+          stats: {
+            totalReviews: 0, averageRating: 0, photoCount,
+            ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, featuredCount,
+          },
+        };
+      }
+
+      const totalRating = validReviews.reduce((sum, r) => sum + Math.min(5, Math.max(1, Math.round(Number(r.rating)))), 0);
+
       const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-      for (const r of reviews) {
-        const star = Math.min(5, Math.max(1, r.rating || 5));
+      for (const r of validReviews) {
+        const star = Math.min(5, Math.max(1, Math.round(Number(r.rating))));
         distribution[star]++;
       }
 
       return {
         success: true,
         stats: {
-          totalReviews: reviews.length,
-          averageRating: Math.round((totalRating / reviews.length) * 10) / 10,
+          totalReviews: validReviews.length,
+          averageRating: Math.round((totalRating / validReviews.length) * 10) / 10,
           photoCount,
           ratingDistribution: distribution,
           featuredCount,
