@@ -28,7 +28,20 @@ import { sendEmail } from '../src/backend/emailService.web.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-const wait = (ms = 50) => new Promise(r => setTimeout(r, ms));
+/** Flush fire-and-forget async handlers (event handlers use .catch()) */
+const tick = (ms = 50) => new Promise(r => setTimeout(r, ms));
+
+function captureInserts(collection) {
+  const items = [];
+  __onInsert((col, item) => { if (col === collection) items.push(item); });
+  return items;
+}
+
+function captureUpdates(collection) {
+  const items = [];
+  __onUpdate((col, item) => { if (col === collection) items.push(item); });
+  return items;
+}
 
 function makeCheckoutEvent(overrides = {}) {
   return {
@@ -56,7 +69,6 @@ function makeCheckoutEvent(overrides = {}) {
 }
 
 function seedAbandonedCart(overrides = {}) {
-  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
   return {
     _id: 'ac-flow-1',
     checkoutId: 'checkout-flow-1',
@@ -67,9 +79,25 @@ function seedAbandonedCart(overrides = {}) {
       { productId: 'prod-seattle', name: 'Seattle Futon Frame', quantity: 1, price: 499 },
       { productId: 'prod-cover', name: 'Denim Futon Cover', quantity: 1, price: 400 },
     ],
-    abandonedAt: twoHoursAgo,
+    abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
     status: 'abandoned',
     recoveryEmailSent: false,
+    ...overrides,
+  };
+}
+
+function makeQueueItem(overrides = {}) {
+  return {
+    _id: 'eq-1',
+    recipientEmail: 'shopper@example.com',
+    recipientContactId: 'contact-1',
+    templateId: 'cart_recovery_1',
+    sequenceType: 'cart_recovery',
+    sequenceStep: 1,
+    status: 'pending',
+    scheduledFor: new Date(Date.now() - 1000),
+    variables: {},
+    attempt: 0,
     ...overrides,
   };
 }
@@ -92,57 +120,47 @@ beforeEach(() => {
 
 describe('Abandon Detection Flow', () => {
   it('records abandoned cart from checkout event', async () => {
-    let inserted = null;
-    __onInsert((col, item) => {
-      if (col === 'AbandonedCarts') inserted = item;
-    });
+    const inserted = captureInserts('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent());
-    await wait();
+    await tick();
 
-    expect(inserted).not.toBeNull();
-    expect(inserted.checkoutId).toBe('checkout-int-1');
-    expect(inserted.buyerEmail).toBe('shopper@example.com');
-    expect(inserted.status).toBe('abandoned');
-    expect(inserted.recoveryEmailSent).toBe(false);
-    expect(inserted.cartTotal).toBe(899);
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].checkoutId).toBe('checkout-int-1');
+    expect(inserted[0].buyerEmail).toBe('shopper@example.com');
+    expect(inserted[0].status).toBe('abandoned');
+    expect(inserted[0].recoveryEmailSent).toBe(false);
+    expect(inserted[0].cartTotal).toBe(899);
 
-    const lineItems = JSON.parse(inserted.lineItems);
+    const lineItems = JSON.parse(inserted[0].lineItems);
     expect(lineItems).toHaveLength(2);
     expect(lineItems[0].name).toBe('Seattle Futon Frame');
   });
 
   it('deduplicates same checkoutId when already abandoned', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart({ checkoutId: 'checkout-int-1' })]);
-
-    let insertCount = 0;
-    __onInsert(() => { insertCount++; });
+    const inserted = captureInserts('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent());
-    await wait();
+    await tick();
 
-    expect(insertCount).toBe(0);
+    expect(inserted).toHaveLength(0);
   });
 
   it('allows re-abandonment after previous recovery', async () => {
     __seed('AbandonedCarts', [
       seedAbandonedCart({ checkoutId: 'checkout-int-1', status: 'recovered' }),
     ]);
-
-    let insertCount = 0;
-    __onInsert(() => { insertCount++; });
+    const inserted = captureInserts('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent());
-    await wait();
+    await tick();
 
-    expect(insertCount).toBe(1);
+    expect(inserted).toHaveLength(1);
   });
 
   it('handles checkout event without entity wrapper', async () => {
-    let inserted = null;
-    __onInsert((col, item) => {
-      if (col === 'AbandonedCarts') inserted = item;
-    });
+    const inserted = captureInserts('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutCreated({
       _id: 'checkout-direct',
@@ -150,17 +168,14 @@ describe('Abandon Detection Flow', () => {
       payNow: { total: { amount: 100 } },
       lineItems: [],
     });
-    await wait();
+    await tick();
 
-    expect(inserted).not.toBeNull();
-    expect(inserted.buyerEmail).toBe('direct@example.com');
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].buyerEmail).toBe('direct@example.com');
   });
 
   it('sanitizes XSS in buyer info during abandon detection', async () => {
-    let inserted = null;
-    __onInsert((col, item) => {
-      if (col === 'AbandonedCarts') inserted = item;
-    });
+    const inserted = captureInserts('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent({
       _id: 'checkout-xss',
@@ -169,11 +184,11 @@ describe('Abandon Detection Flow', () => {
         firstName: '<img onerror=hack>',
       },
     }));
-    await wait();
+    await tick();
 
-    expect(inserted).not.toBeNull();
-    expect(inserted.buyerEmail).not.toContain('<script>');
-    expect(inserted.buyerName).not.toContain('<img');
+    expect(inserted).toHaveLength(1);
+    expect(inserted[0].buyerEmail).not.toContain('<script>');
+    expect(inserted[0].buyerName).not.toContain('<img');
   });
 });
 
@@ -199,62 +214,47 @@ describe('Recovery Email Queuing', () => {
   });
 
   it('skips carts that already had recovery email sent', async () => {
-    __seed('AbandonedCarts', [
-      seedAbandonedCart({ recoveryEmailSent: true }),
-    ]);
+    __seed('AbandonedCarts', [seedAbandonedCart({ recoveryEmailSent: true })]);
 
     const result = await triggerAbandonedCartRecovery();
     expect(result.cartsProcessed).toBe(0);
   });
 
   it('skips recovered carts', async () => {
-    __seed('AbandonedCarts', [
-      seedAbandonedCart({ status: 'recovered' }),
-    ]);
+    __seed('AbandonedCarts', [seedAbandonedCart({ status: 'recovered' })]);
 
     const result = await triggerAbandonedCartRecovery();
     expect(result.cartsProcessed).toBe(0);
   });
 
   it('marks recoveryEmailSent=true after queuing', async () => {
-    const cart = seedAbandonedCart();
-    __seed('AbandonedCarts', [cart]);
-
-    let updatedCart = null;
-    __onUpdate((col, item) => {
-      if (col === 'AbandonedCarts' && item._id === 'ac-flow-1') updatedCart = item;
-    });
+    __seed('AbandonedCarts', [seedAbandonedCart()]);
+    const updated = captureUpdates('AbandonedCarts');
 
     await triggerAbandonedCartRecovery();
 
-    expect(updatedCart).not.toBeNull();
-    expect(updatedCart.recoveryEmailSent).toBe(true);
-    expect(updatedCart.recoveryEmailSentAt).toBeInstanceOf(Date);
+    const cartUpdate = updated.find(i => i._id === 'ac-flow-1');
+    expect(cartUpdate).toBeTruthy();
+    expect(cartUpdate.recoveryEmailSent).toBe(true);
+    expect(cartUpdate.recoveryEmailSentAt).toBeInstanceOf(Date);
   });
 
   it('includes discount code only in step 3 email', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart()]);
-
-    const queuedEmails = [];
-    __onInsert((col, item) => {
-      if (col === 'EmailQueue') queuedEmails.push(item);
-    });
+    const queued = captureInserts('EmailQueue');
 
     await triggerAbandonedCartRecovery();
 
-    expect(queuedEmails).toHaveLength(3);
-    // Steps 1 and 2 should not have discount
-    expect(queuedEmails[0].variables.discountCode).toBe('');
-    expect(queuedEmails[0].variables.discountAvailable).toBe(false);
-    expect(queuedEmails[1].variables.discountCode).toBe('');
-    // Step 3 should have discount
-    expect(queuedEmails[2].variables.discountCode).toBe('COMEBACK15');
-    expect(queuedEmails[2].variables.discountAvailable).toBe(true);
+    expect(queued).toHaveLength(3);
+    expect(queued[0].variables.discountCode).toBe('');
+    expect(queued[0].variables.discountAvailable).toBe(false);
+    expect(queued[1].variables.discountCode).toBe('');
+    expect(queued[2].variables.discountCode).toBe('COMEBACK15');
+    expect(queued[2].variables.discountAvailable).toBe(true);
   });
 
   it('handles missing discount secret gracefully', async () => {
     __setSecrets({ SITE_OWNER_CONTACT_ID: 'owner-contact-123' });
-    // RECOVERY_DISCOUNT_CODE not set — getSecret will throw
     __seed('AbandonedCarts', [seedAbandonedCart()]);
 
     const result = await triggerAbandonedCartRecovery();
@@ -263,16 +263,13 @@ describe('Recovery Email Queuing', () => {
   });
 
   it('skips carts with invalid buyer email', async () => {
-    __seed('AbandonedCarts', [
-      seedAbandonedCart({ buyerEmail: 'not-an-email' }),
-    ]);
+    __seed('AbandonedCarts', [seedAbandonedCart({ buyerEmail: 'not-an-email' })]);
 
     const result = await triggerAbandonedCartRecovery();
     expect(result.cartsProcessed).toBe(0);
   });
 
   it('processes multiple eligible carts', async () => {
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     __seed('AbandonedCarts', [
       seedAbandonedCart({ _id: 'ac-1', checkoutId: 'ck-1', buyerEmail: 'a@test.com' }),
       seedAbandonedCart({ _id: 'ac-2', checkoutId: 'ck-2', buyerEmail: 'b@test.com' }),
@@ -289,13 +286,10 @@ describe('Recovery Email Queuing', () => {
 describe('Cooldown and Dedup', () => {
   it('does not re-queue recovery for same cart if already queued', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart()]);
-    __seed('EmailQueue', [{
+    __seed('EmailQueue', [makeQueueItem({
       _id: 'eq-existing',
-      recipientEmail: 'shopper@example.com',
-      sequenceType: 'cart_recovery',
       checkoutId: 'checkout-flow-1',
-      status: 'pending',
-    }]);
+    })]);
 
     const result = await triggerAbandonedCartRecovery();
     expect(result.cartsProcessed).toBe(0);
@@ -314,7 +308,6 @@ describe('Cooldown and Dedup', () => {
   });
 
   it('getRecoverableCarts returns carts past cooldown', async () => {
-    // getRecoverableCarts uses .toISOString() in its query, so seed with ISO strings
     __seed('AbandonedCarts', [
       seedAbandonedCart({ abandonedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() }),
     ]);
@@ -331,36 +324,26 @@ describe('Cooldown and Dedup', () => {
 describe('Cart Recovery Event', () => {
   it('marks abandoned cart as recovered on checkout completion', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart()]);
-
-    let updatedItem = null;
-    __onUpdate((col, item) => {
-      if (col === 'AbandonedCarts') updatedItem = item;
-    });
+    const updated = captureUpdates('AbandonedCarts');
 
     wixEcom_onAbandonedCheckoutRecovered({
       entity: { _id: 'checkout-flow-1' },
     });
-    await wait();
+    await tick();
 
-    expect(updatedItem).not.toBeNull();
-    expect(updatedItem.status).toBe('recovered');
-    expect(updatedItem.recoveredAt).toBeTruthy();
+    expect(updated).toHaveLength(1);
+    expect(updated[0].status).toBe('recovered');
+    expect(updated[0].recoveredAt).toBeTruthy();
   });
 
   it('cancels pending recovery emails when cart is recovered during queue processing', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart({ status: 'recovered' })]);
-    __seed('EmailQueue', [{
+    __seed('EmailQueue', [makeQueueItem({
       _id: 'eq-pending',
-      recipientEmail: 'shopper@example.com',
-      recipientContactId: 'contact-1',
       templateId: 'cart_recovery_2',
-      sequenceType: 'cart_recovery',
       sequenceStep: 2,
-      status: 'pending',
-      scheduledFor: new Date(Date.now() - 1000),
       variables: { checkoutId: 'checkout-flow-1' },
-      attempt: 0,
-    }]);
+    })]);
 
     const result = await processEmailQueue();
     expect(result.cancelled).toBe(1);
@@ -383,33 +366,15 @@ describe('Unsubscribe Flow', () => {
 
   it('cancels pending recovery emails on unsubscribe', async () => {
     __seed('EmailQueue', [
-      {
-        _id: 'eq-1',
-        recipientEmail: 'shopper@example.com',
-        sequenceType: 'cart_recovery',
-        sequenceStep: 1,
-        status: 'pending',
-        scheduledFor: new Date(Date.now() + 3600000),
-      },
-      {
-        _id: 'eq-2',
-        recipientEmail: 'shopper@example.com',
-        sequenceType: 'cart_recovery',
-        sequenceStep: 2,
-        status: 'pending',
-        scheduledFor: new Date(Date.now() + 86400000),
-      },
+      makeQueueItem({ _id: 'eq-1', scheduledFor: new Date(Date.now() + 3600000) }),
+      makeQueueItem({ _id: 'eq-2', sequenceStep: 2, scheduledFor: new Date(Date.now() + 86400000) }),
     ]);
-
-    let updatedItems = [];
-    __onUpdate((col, item) => {
-      if (col === 'EmailQueue') updatedItems.push(item);
-    });
+    const updated = captureUpdates('EmailQueue');
 
     await unsubscribeContact('shopper@example.com', 'cart_recovery');
 
-    expect(updatedItems).toHaveLength(2);
-    expect(updatedItems.every(i => i.status === 'cancelled')).toBe(true);
+    expect(updated).toHaveLength(2);
+    expect(updated.every(i => i.status === 'cancelled')).toBe(true);
   });
 
   it('skips unsubscribed contacts during recovery queuing', async () => {
@@ -450,29 +415,14 @@ describe('Unsubscribe Flow', () => {
 
   it('cancels only matching sequence type, not others', async () => {
     __seed('EmailQueue', [
-      {
-        _id: 'eq-cart',
-        recipientEmail: 'shopper@example.com',
-        sequenceType: 'cart_recovery',
-        status: 'pending',
-        scheduledFor: new Date(Date.now() + 3600000),
-      },
-      {
-        _id: 'eq-welcome',
-        recipientEmail: 'shopper@example.com',
-        sequenceType: 'welcome',
-        status: 'pending',
-        scheduledFor: new Date(Date.now() + 3600000),
-      },
+      makeQueueItem({ _id: 'eq-cart', scheduledFor: new Date(Date.now() + 3600000) }),
+      makeQueueItem({ _id: 'eq-welcome', sequenceType: 'welcome', scheduledFor: new Date(Date.now() + 3600000) }),
     ]);
-
-    let updatedIds = [];
-    __onUpdate((col, item) => {
-      if (col === 'EmailQueue') updatedIds.push(item._id);
-    });
+    const updated = captureUpdates('EmailQueue');
 
     await unsubscribeContact('shopper@example.com', 'cart_recovery');
 
+    const updatedIds = updated.map(i => i._id);
     expect(updatedIds).toContain('eq-cart');
     expect(updatedIds).not.toContain('eq-welcome');
   });
@@ -482,12 +432,20 @@ describe('Unsubscribe Flow', () => {
 
 describe('Cart Stats Integration', () => {
   it('reflects abandon + recovery in stats', async () => {
-    // getAbandonedCartStats uses .toISOString() in its ge() query
     const now = Date.now();
     __seed('AbandonedCarts', [
-      seedAbandonedCart({ _id: 'ac-s1', checkoutId: 'ck-s1', status: 'abandoned', abandonedAt: new Date(now - 3600000).toISOString() }),
-      seedAbandonedCart({ _id: 'ac-s2', checkoutId: 'ck-s2', status: 'recovered', abandonedAt: new Date(now - 7200000).toISOString() }),
-      seedAbandonedCart({ _id: 'ac-s3', checkoutId: 'ck-s3', status: 'abandoned', abandonedAt: new Date(now - 1800000).toISOString() }),
+      seedAbandonedCart({
+        _id: 'ac-s1', checkoutId: 'ck-s1', status: 'abandoned',
+        abandonedAt: new Date(now - 3600000).toISOString(),
+      }),
+      seedAbandonedCart({
+        _id: 'ac-s2', checkoutId: 'ck-s2', status: 'recovered',
+        abandonedAt: new Date(now - 7200000).toISOString(),
+      }),
+      seedAbandonedCart({
+        _id: 'ac-s3', checkoutId: 'ck-s3', status: 'abandoned',
+        abandonedAt: new Date(now - 1800000).toISOString(),
+      }),
     ]);
 
     const stats = await getAbandonedCartStats();
@@ -517,10 +475,7 @@ describe('Cart Stats Integration', () => {
 
 describe('Post-Purchase Sequence', () => {
   it('queues 3-step post-purchase care sequence', async () => {
-    const queuedEmails = [];
-    __onInsert((col, item) => {
-      if (col === 'EmailQueue') queuedEmails.push(item);
-    });
+    const queued = captureInserts('EmailQueue');
 
     const result = await triggerPostPurchaseSequence(
       'contact-buyer',
@@ -533,12 +488,12 @@ describe('Post-Purchase Sequence', () => {
 
     expect(result.success).toBe(true);
     expect(result.queued).toBe(3);
-    expect(queuedEmails).toHaveLength(3);
-    expect(queuedEmails[0].templateId).toBe('post_purchase_1');
-    expect(queuedEmails[1].templateId).toBe('post_purchase_2');
-    expect(queuedEmails[2].templateId).toBe('post_purchase_3');
-    expect(queuedEmails[0].variables.orderNumber).toBeTruthy();
-    expect(queuedEmails[0].variables.firstName).toBe('Alex');
+    expect(queued).toHaveLength(3);
+    expect(queued[0].templateId).toBe('post_purchase_1');
+    expect(queued[1].templateId).toBe('post_purchase_2');
+    expect(queued[2].templateId).toBe('post_purchase_3');
+    expect(queued[0].variables.orderNumber).toBeTruthy();
+    expect(queued[0].variables.firstName).toBe('Alex');
   });
 
   it('rejects post-purchase sequence for invalid email', async () => {
@@ -575,18 +530,11 @@ describe('Queue Processing', () => {
       sequenceType: 'all',
       unsubscribedAt: new Date(),
     }]);
-    __seed('EmailQueue', [{
+    __seed('EmailQueue', [makeQueueItem({
       _id: 'eq-proc',
       recipientEmail: 'gone@example.com',
       recipientContactId: 'contact-gone',
-      templateId: 'cart_recovery_1',
-      sequenceType: 'cart_recovery',
-      sequenceStep: 1,
-      status: 'pending',
-      scheduledFor: new Date(Date.now() - 1000),
-      variables: {},
-      attempt: 0,
-    }]);
+    })]);
 
     const result = await processEmailQueue();
     expect(result.cancelled).toBe(1);
@@ -594,18 +542,12 @@ describe('Queue Processing', () => {
   });
 
   it('does not process future-scheduled emails', async () => {
-    __seed('EmailQueue', [{
+    __seed('EmailQueue', [makeQueueItem({
       _id: 'eq-future',
       recipientEmail: 'future@example.com',
       recipientContactId: 'contact-future',
-      templateId: 'cart_recovery_1',
-      sequenceType: 'cart_recovery',
-      sequenceStep: 1,
-      status: 'pending',
-      scheduledFor: new Date(Date.now() + 86400000), // tomorrow
-      variables: {},
-      attempt: 0,
-    }]);
+      scheduledFor: new Date(Date.now() + 86400000),
+    })]);
 
     const result = await processEmailQueue();
     expect(result.sent).toBe(0);
@@ -613,29 +555,21 @@ describe('Queue Processing', () => {
   });
 
   it('sends email and marks as sent for valid queued item', async () => {
-    __seed('EmailQueue', [{
+    __seed('EmailQueue', [makeQueueItem({
       _id: 'eq-send',
       recipientEmail: 'valid@example.com',
       recipientContactId: 'contact-valid',
-      templateId: 'cart_recovery_1',
-      sequenceType: 'cart_recovery',
-      sequenceStep: 1,
-      status: 'pending',
-      scheduledFor: new Date(Date.now() - 1000),
       variables: { buyerName: 'Valid' },
-      attempt: 0,
-    }]);
-
-    let updatedItem = null;
-    __onUpdate((col, item) => {
-      if (col === 'EmailQueue' && item._id === 'eq-send') updatedItem = item;
-    });
+    })]);
+    const updated = captureUpdates('EmailQueue');
 
     const result = await processEmailQueue();
     expect(result.sent).toBe(1);
-    expect(updatedItem).not.toBeNull();
-    expect(updatedItem.status).toBe('sent');
-    expect(updatedItem.sentAt).toBeInstanceOf(Date);
+
+    const sentItem = updated.find(i => i._id === 'eq-send');
+    expect(sentItem).toBeTruthy();
+    expect(sentItem.status).toBe('sent');
+    expect(sentItem.sentAt).toBeInstanceOf(Date);
 
     const emailLog = __getEmailLog();
     expect(emailLog).toHaveLength(1);
@@ -647,7 +581,6 @@ describe('Queue Processing', () => {
 
 describe('Email Service Integration', () => {
   it('sendEmail works alongside cart recovery flow', async () => {
-    // Verify emailService.web.js works in same test context
     const result = await sendEmail({
       name: 'Cart Abandoner',
       email: 'shopper@example.com',
@@ -672,7 +605,6 @@ describe('markRecoveryEmailSent Integration', () => {
     const markResult = await markRecoveryEmailSent('ac-flow-1');
     expect(markResult.success).toBe(true);
 
-    // Now recovery should skip this cart
     const recoveryResult = await triggerAbandonedCartRecovery();
     expect(recoveryResult.cartsProcessed).toBe(0);
   });
@@ -683,33 +615,23 @@ describe('markRecoveryEmailSent Integration', () => {
 describe('End-to-End: Abandon → Queue → Recover → Cancel', () => {
   it('full lifecycle: abandon → queue recovery → customer recovers → cancel pending', async () => {
     // Step 1: Customer abandons checkout
-    wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent({
-      _id: 'ck-e2e',
-    }));
-    await wait();
+    wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent({ _id: 'ck-e2e' }));
+    await tick();
 
-    // Step 2: Trigger recovery (need to re-seed with proper timing)
-    __seed('AbandonedCarts', [
-      seedAbandonedCart({ checkoutId: 'ck-e2e' }),
-    ]);
-
-    const queuedEmails = [];
-    __onInsert((col, item) => {
-      if (col === 'EmailQueue') queuedEmails.push(item);
-    });
+    // Step 2: Trigger recovery (re-seed with proper timing for le() comparison)
+    __seed('AbandonedCarts', [seedAbandonedCart({ checkoutId: 'ck-e2e' })]);
+    const queued = captureInserts('EmailQueue');
 
     const recoveryResult = await triggerAbandonedCartRecovery();
     expect(recoveryResult.success).toBe(true);
     expect(recoveryResult.cartsProcessed).toBe(1);
-    expect(queuedEmails.length).toBe(3);
+    expect(queued).toHaveLength(3);
 
     // Step 3: Customer comes back and completes purchase
     __seed('AbandonedCarts', [
       seedAbandonedCart({ checkoutId: 'ck-e2e', status: 'recovered', recoveryEmailSent: true }),
     ]);
-
-    // Seed queue with pending recovery emails
-    __seed('EmailQueue', queuedEmails.map((e, i) => ({
+    __seed('EmailQueue', queued.map((e, i) => ({
       ...e,
       _id: `eq-e2e-${i}`,
       status: 'pending',
