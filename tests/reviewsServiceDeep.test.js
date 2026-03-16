@@ -243,17 +243,13 @@ describe('reviewsServiceDeep', () => {
       expect(r.average).toBe(5);
     });
 
-    // Known gap: NaN passes `typeof x === 'number'` but Math.round(NaN) = NaN.
-    // In getAggregateRating, Math.max(1, NaN) = NaN, Math.min(5, NaN) = NaN.
-    // NaN becomes a key in breakdown which is not 1-5 range.
-    it('NaN rating does not crash getAggregateRating', async () => {
+    it('NaN rating is excluded from aggregation', async () => {
       __seed('Reviews', [makeReview({ rating: NaN })]);
       const r = await getAggregateRating('prod-100');
-      // The function still returns without throwing
-      expect(r.total).toBe(1);
-      // Known gap: NaN key in breakdown, average becomes NaN
-      // This documents the behavior rather than asserting correctness
-      expect(typeof r.average).toBe('number');
+      // NaN ratings are now skipped entirely
+      expect(r.total).toBe(0);
+      expect(r.average).toBe(0);
+      expect(r.breakdown).toEqual({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
     });
   });
 
@@ -696,12 +692,11 @@ describe('reviewsServiceDeep', () => {
       expect(review.status).toBe('rejected');
     });
 
-    it('can re-approve a rejected review', async () => {
+    it('blocks re-approving a rejected review (must go through pending first)', async () => {
       __seed('Reviews', [makeReview({ status: 'rejected' })]);
       const r = await moderateReview('rev-100', 'approve');
-      expect(r.success).toBe(true);
-      const review = await wixData.get('Reviews', 'rev-100');
-      expect(review.status).toBe('approved');
+      expect(r.success).toBe(false);
+      expect(r.error).toContain('rejected');
     });
   });
 

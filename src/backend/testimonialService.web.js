@@ -85,7 +85,8 @@ export const submitTestimonial = webMethod(
 
 /**
  * Get featured testimonials for the Home page carousel.
- * Returns top 6 featured testimonials, sorted by most recent approval.
+ * Fetches a pool of featured testimonials and rotates selection
+ * based on the current day, so visitors see varied content across visits.
  *
  * @param {number} [limit=6] - Max testimonials to return.
  * @returns {Promise<{items: Array, success: boolean}>}
@@ -94,19 +95,55 @@ export const getFeaturedTestimonials = webMethod(
   Permissions.Anyone,
   async (limit = 6) => {
     try {
+      const safeLimit = Math.min(Math.max(1, limit), 20);
+
+      // Fetch a larger pool to enable rotation
+      const poolSize = Math.min(safeLimit * 3, 50);
       const result = await wixData.query('Testimonials')
         .eq('status', 'featured')
         .descending('approvedAt')
-        .limit(Math.min(limit, 20))
+        .limit(poolSize)
         .find();
 
-      return { items: result.items, success: true };
+      const pool = result.items;
+      if (pool.length <= safeLimit) {
+        return { items: pool, success: true };
+      }
+
+      // Rotate based on day-of-year so content shifts daily
+      const rotated = rotateSelection(pool, safeLimit);
+      return { items: rotated, success: true };
     } catch (err) {
       console.error('[testimonialService] Error getting featured testimonials:', err);
-      return { items: [], success: false };
+      return { items: [], success: false, error: 'Failed to load featured testimonials.' };
     }
   }
 );
+
+/**
+ * Select a rotating subset from a pool based on the current day.
+ * Uses a deterministic offset so the same day always shows the same set,
+ * but different days show different testimonials.
+ *
+ * @precondition count < pool.length — caller must guard against this to avoid duplicates
+ * @param {Array} pool - Full pool of items (must be non-empty).
+ * @param {number} count - How many to select.
+ * @returns {Array} Selected subset.
+ */
+function rotateSelection(pool, count) {
+  if (!pool || pool.length === 0 || count <= 0) return [];
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (now - new Date(now.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24)
+  );
+  const offset = dayOfYear % pool.length;
+
+  const selected = [];
+  for (let i = 0; i < count; i++) {
+    selected.push(pool[(offset + i) % pool.length]);
+  }
+  return selected;
+}
 
 /**
  * Get approved testimonials filtered by product category.
@@ -225,7 +262,7 @@ const VALID_STATUSES = ['pending', 'approved', 'rejected', 'featured', 'flagged'
  * Update testimonial status (admin curation).
  *
  * @param {string} testimonialId - Testimonial _id.
- * @param {string} newStatus - One of: approved, rejected, featured, flagged.
+ * @param {string} newStatus - One of: pending, approved, rejected, featured, flagged.
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const updateTestimonialStatus = webMethod(
@@ -236,7 +273,10 @@ export const updateTestimonialStatus = webMethod(
         return { success: false, error: 'Testimonial ID and status required' };
       }
 
-      const cleanId = sanitize(testimonialId, 50);
+      const cleanId = validateId(testimonialId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid testimonial ID required' };
+      }
       const cleanStatus = sanitize(newStatus, 20).toLowerCase();
 
       if (!VALID_STATUSES.includes(cleanStatus)) {

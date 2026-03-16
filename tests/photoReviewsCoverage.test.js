@@ -273,7 +273,7 @@ describe('getPhotoGallery — featured status', () => {
 // ── getPhotoReviewStats edge cases ────────────────────────────────────────────
 
 describe('getPhotoReviewStats — null/missing ratings', () => {
-  it('treats null rating as 0 in sum but clamps to 1 in distribution', async () => {
+  it('skips null rating from aggregation', async () => {
     __seed('PhotoReviews', [
       { _id: 'r1', productId: 'a0b1c2d3', rating: null, photoUrl: 'img.jpg', status: 'approved' },
       { _id: 'r2', productId: 'a0b1c2d3', rating: 4, photoUrl: 'img2.jpg', status: 'approved' },
@@ -282,16 +282,13 @@ describe('getPhotoReviewStats — null/missing ratings', () => {
     const result = await getPhotoReviewStats('a0b1c2d3');
 
     expect(result.success).toBe(true);
-    expect(result.stats.totalReviews).toBe(2);
-    // null rating treated as 0 in sum → (0+4)/2 = 2.0
-    expect(result.stats.averageRating).toBe(2);
-    // null rating → r.rating||5 = 5 in distribution? Check source:
-    // source: Math.min(5, Math.max(1, r.rating || 5)) — null||5 = 5
-    expect(result.stats.ratingDistribution[5]).toBe(1); // null→5
+    // null rating is now skipped entirely
+    expect(result.stats.totalReviews).toBe(1);
+    expect(result.stats.averageRating).toBe(4);
     expect(result.stats.ratingDistribution[4]).toBe(1);
   });
 
-  it('treats undefined rating as 5 in distribution (null coalesce behavior)', async () => {
+  it('skips undefined rating from aggregation', async () => {
     __seed('PhotoReviews', [
       { _id: 'r1', productId: 'a0b1c2d3', photoUrl: 'img.jpg', status: 'approved' },
     ]);
@@ -299,8 +296,9 @@ describe('getPhotoReviewStats — null/missing ratings', () => {
     const result = await getPhotoReviewStats('a0b1c2d3');
 
     expect(result.success).toBe(true);
-    // undefined||5 = 5 in distribution
-    expect(result.stats.ratingDistribution[5]).toBe(1);
+    // undefined rating is now skipped — no reviews counted
+    expect(result.stats.totalReviews).toBe(0);
+    expect(result.stats.averageRating).toBe(0);
   });
 });
 
