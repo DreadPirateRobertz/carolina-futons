@@ -520,17 +520,13 @@ describe('AddToCart', () => {
 
     it('plus button stops at MAX_QUANTITY', () => {
       initQuantitySelector($w, state);
-      state.selectedQuantity = 99; // MAX_QUANTITY from cartService
+      state.selectedQuantity = 99;
       const plusCb = $w('#quantityPlus').onClick.mock.calls[0][0];
       plusCb();
-      // Should remain at MAX or increment if under
-      // MAX_QUANTITY is typically 99 based on cartService
-      expect(state.selectedQuantity).toBeLessThanOrEqual(100);
+      expect(state.selectedQuantity).toBe(99);
     });
 
     it('returns early when quantityInput is null', () => {
-      const $wNull = create$w();
-      const origGet = (sel) => sel === '#quantityInput' ? null : $wNull(sel);
       const els = new Map();
       const $wCustom = (sel) => {
         if (sel === '#quantityInput') return null;
@@ -538,6 +534,7 @@ describe('AddToCart', () => {
         return els.get(sel);
       };
       expect(() => initQuantitySelector($wCustom, state)).not.toThrow();
+      expect(els.has('#quantityPlus')).toBe(false);
     });
   });
 
@@ -567,7 +564,7 @@ describe('AddToCart', () => {
         return els.get(sel);
       };
       await initBackInStockNotification($wCustom, state);
-      // Should not throw and should not register submit handler
+      expect(els.get('#backInStockBtn')?.onClick).not.toHaveBeenCalled();
     });
   });
 
