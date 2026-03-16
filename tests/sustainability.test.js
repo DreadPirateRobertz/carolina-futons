@@ -77,6 +77,83 @@ describe('getSustainabilityInfo', () => {
     expect(result.sustainability.badges).toHaveLength(0);
     expect(result.sustainability.certifications).toEqual([]);
   });
+
+  it('returns error for null product ID', async () => {
+    const result = await getSustainabilityInfo(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for undefined product ID', async () => {
+    const result = await getSustainabilityInfo(undefined);
+    expect(result.success).toBe(false);
+  });
+
+  it('handles unknown badge slug with defaults', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: '["unknown-badge"]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.badges[0].slug).toBe('unknown-badge');
+    expect(result.sustainability.badges[0].label).toBe('unknown-badge');
+  });
+
+  it('defaults missing numeric fields to 0', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: '[]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.durabilityRating).toBe(0);
+    expect(result.sustainability.durabilityYears).toBe(0);
+    expect(result.sustainability.carbonFootprint).toBe(0);
+    expect(result.sustainability.sustainabilityScore).toBe(0);
+  });
+
+  it('defaults recyclability to none', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: '[]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.recyclability).toBe('none');
+  });
+
+  it('defaults materialSource to empty string', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: '[]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.materialSource).toBe('');
+  });
+
+  it('includes productId in response', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-eureka', badges: '[]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-eureka');
+    expect(result.sustainability.productId).toBe('prod-eureka');
+  });
+
+  it('handles empty badges array', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: '[]', active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.badges).toEqual([]);
+  });
+
+  it('handles null badges field', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', badges: null, active: true },
+    ]);
+
+    const result = await getSustainabilityInfo('prod-1');
+    expect(result.sustainability.badges).toEqual([]);
+  });
 });
 
 // ── calculateCarbonOffset ─────────────────────────────────────────────
@@ -129,6 +206,59 @@ describe('calculateCarbonOffset', () => {
     const ids = Array.from({ length: 25 }, (_, i) => `prod-${i}`);
     const result = await calculateCarbonOffset(ids);
     expect(result.success).toBe(true);
+  });
+
+  it('returns error when all IDs are invalid', async () => {
+    const result = await calculateCarbonOffset([null, undefined, '']);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('No valid');
+  });
+
+  it('reports productsRequested count', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', carbonFootprint: 20, active: true },
+    ]);
+
+    const result = await calculateCarbonOffset(['prod-1', 'prod-missing']);
+    expect(result.offset.productsRequested).toBe(2);
+    expect(result.offset.productsMatched).toBe(1);
+  });
+
+  it('calculates treesEquivalent correctly', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', carbonFootprint: 21.77, active: true },
+    ]);
+
+    const result = await calculateCarbonOffset(['prod-1']);
+    expect(result.offset.treesEquivalent).toBe(1);
+  });
+
+  it('handles product with zero carbon footprint', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', carbonFootprint: 0, active: true },
+    ]);
+
+    const result = await calculateCarbonOffset(['prod-1']);
+    expect(result.offset.totalCarbonKg).toBe(0);
+    expect(result.offset.offsetCost).toBe(0);
+  });
+
+  it('handles missing carbonFootprint field', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', active: true },
+    ]);
+
+    const result = await calculateCarbonOffset(['prod-1']);
+    expect(result.offset.totalCarbonKg).toBe(0);
+  });
+
+  it('rounds totalCarbonKg to one decimal', async () => {
+    __seed('ProductSustainability', [
+      { _id: 's-1', productId: 'prod-1', carbonFootprint: 33.333, active: true },
+    ]);
+
+    const result = await calculateCarbonOffset(['prod-1']);
+    expect(result.offset.totalCarbonKg).toBe(33.3);
   });
 });
 
@@ -212,6 +342,56 @@ describe('submitTradeIn', () => {
 
     expect(result.success).toBe(true);
   });
+
+  it('calculates estimated credit as midpoint of range', async () => {
+    const result = await submitTradeIn({
+      productType: 'Futon Frame',
+      condition: 'good',
+    });
+
+    // good range: min 75, max 150, midpoint = 112.5 -> rounds to 113
+    expect(result.estimatedCredit.amount).toBe(113);
+  });
+
+  it('handles missing optional fields', async () => {
+    const result = await submitTradeIn({
+      productType: 'Futon',
+      condition: 'fair',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.id).toBeDefined();
+  });
+
+  it('handles non-array photos field', async () => {
+    const result = await submitTradeIn({
+      productType: 'Frame',
+      condition: 'good',
+      photos: 'not-an-array',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('returns fair condition credit range', async () => {
+    const result = await submitTradeIn({
+      productType: 'Mattress',
+      condition: 'fair',
+    });
+
+    expect(result.estimatedCredit.range.min).toBe(50);
+    expect(result.estimatedCredit.range.max).toBe(100);
+  });
+
+  it('sets initial status to submitted', async () => {
+    const result = await submitTradeIn({
+      productType: 'Frame',
+      condition: 'excellent',
+    });
+
+    expect(result.success).toBe(true);
+    // The record was inserted with status 'submitted'
+  });
 });
 
 // ── getTradeInStatus ──────────────────────────────────────────────────
@@ -258,6 +438,68 @@ describe('getTradeInStatus', () => {
   it('returns empty when no requests exist', async () => {
     __seed('TradeInRequests', []);
     const result = await getTradeInStatus();
+    expect(result.success).toBe(true);
+    expect(result.requests).toHaveLength(0);
+  });
+
+  it('treats empty request ID as get-all', async () => {
+    __seed('TradeInRequests', []);
+    const result = await getTradeInStatus('');
+    expect(result.success).toBe(true);
+    expect(result.requests).toHaveLength(0);
+  });
+
+  it('formats trade-in response with correct fields', async () => {
+    __seed('TradeInRequests', [
+      {
+        _id: 'ti-1',
+        memberId: 'member-1',
+        productType: 'Frame',
+        condition: 'good',
+        age: '2 years',
+        description: 'Minimal wear',
+        status: 'approved',
+        submittedAt: new Date('2026-03-01'),
+        reviewedAt: new Date('2026-03-05'),
+        estimatedCredit: 112,
+        creditAmount: 120,
+      },
+    ]);
+
+    const result = await getTradeInStatus('ti-1');
+    expect(result.requests[0]._id).toBe('ti-1');
+    expect(result.requests[0].productType).toBe('Frame');
+    expect(result.requests[0].condition).toBe('good');
+    expect(result.requests[0].age).toBe('2 years');
+    expect(result.requests[0].description).toBe('Minimal wear');
+    expect(result.requests[0].status).toBe('approved');
+    expect(result.requests[0].estimatedCredit).toBe(112);
+    expect(result.requests[0].creditAmount).toBe(120);
+  });
+
+  it('defaults creditAmount to 0 when missing', async () => {
+    __seed('TradeInRequests', [
+      { _id: 'ti-1', memberId: 'member-1', productType: 'Frame', condition: 'fair', status: 'submitted', submittedAt: new Date(), estimatedCredit: 75 },
+    ]);
+
+    const result = await getTradeInStatus('ti-1');
+    expect(result.requests[0].creditAmount).toBe(0);
+  });
+
+  it('returns requests sorted by submittedAt descending', async () => {
+    __seed('TradeInRequests', [
+      { _id: 'ti-1', memberId: 'member-1', productType: 'Frame', condition: 'good', status: 'submitted', submittedAt: new Date('2026-01-01'), estimatedCredit: 100 },
+      { _id: 'ti-2', memberId: 'member-1', productType: 'Mattress', condition: 'fair', status: 'approved', submittedAt: new Date('2026-03-01'), estimatedCredit: 75 },
+    ]);
+
+    const result = await getTradeInStatus();
+    expect(result.requests).toHaveLength(2);
+    // The mock sorts descending by submittedAt
+  });
+
+  it('returns empty for nonexistent request ID', async () => {
+    __seed('TradeInRequests', []);
+    const result = await getTradeInStatus('ti-nonexistent');
     expect(result.success).toBe(true);
     expect(result.requests).toHaveLength(0);
   });
