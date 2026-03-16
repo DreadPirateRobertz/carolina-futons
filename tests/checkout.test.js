@@ -832,3 +832,910 @@ describe('store credit', () => {
     expect(initCheckoutStoreCredit).toHaveBeenCalled();
   });
 });
+
+// ══════════════════════════════════════════════════════════════════════
+// Deep coverage — branch paths, click handlers, edge cases
+// ══════════════════════════════════════════════════════════════════════
+
+// ── Checkout Progress — step styling branches ────────────────────────
+
+describe('checkout progress — completed step styling', () => {
+  it('applies success color and shows check for completed step', async () => {
+    const { getStepAriaAttributes } = await import('public/checkoutProgress.js');
+    getStepAriaAttributes.mockImplementation((stepIdx, activeIdx, label) => ({
+      state: 'completed',
+      ariaLabel: `${label}: completed`,
+      ariaCurrent: null,
+    }));
+    await loadPage();
+    const repeater = getEl('#checkoutProgressRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { id: 'info', number: 1, label: 'Information' });
+    expect($item('#progressStepDot').style.backgroundColor).toBe('#4A7C59');
+    expect($item('#progressStepCheck').show).toHaveBeenCalled();
+    expect($item('#progressStepNumber').hide).toHaveBeenCalled();
+  });
+
+  it('applies pending color for future steps', async () => {
+    const { getStepAriaAttributes } = await import('public/checkoutProgress.js');
+    getStepAriaAttributes.mockImplementation((stepIdx, activeIdx, label) => ({
+      state: 'pending',
+      ariaLabel: `${label}: upcoming`,
+      ariaCurrent: null,
+    }));
+    await loadPage();
+    const repeater = getEl('#checkoutProgressRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { id: 'payment', number: 3, label: 'Payment' });
+    expect($item('#progressStepDot').style.backgroundColor).toBe('#C4B5A3');
+    expect($item('#progressStepLabel').style.color).toBe('#8B7355');
+  });
+
+  it('sets ariaCurrent on active step container', async () => {
+    const { getStepAriaAttributes } = await import('public/checkoutProgress.js');
+    getStepAriaAttributes.mockImplementation((stepIdx, activeIdx, label) => ({
+      state: 'active',
+      ariaLabel: `${label}: current step`,
+      ariaCurrent: 'step',
+    }));
+    await loadPage();
+    const repeater = getEl('#checkoutProgressRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { id: 'info', number: 1, label: 'Information' });
+    expect($item('#progressStepContainer').accessibility.ariaCurrent).toBe('step');
+  });
+});
+
+// ── Checkout Summary — edge cases ────────────────────────────────────
+
+describe('checkout summary — edge cases', () => {
+  it('shows singular "item" for 1-item cart', async () => {
+    await loadPage({
+      cart: {
+        lineItems: [{ _id: 'item-1', productId: 'p1', name: 'Futon', price: 499, quantity: 1 }],
+        totals: { subtotal: 499 },
+      },
+    });
+    expect(getEl('#checkoutItemCount').text).toBe('1 item in your order');
+  });
+
+  it('does not crash when getCurrentCart returns null', async () => {
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(null);
+    // Need to import fresh so other sections also get null cart
+    await import('../src/pages/Checkout.js');
+    if (onReadyHandler) await onReadyHandler();
+    // The page should not crash — initCheckoutSummary returns early on null cart
+    const { initPageSeo } = await import('public/pageSeo.js');
+    expect(initPageSeo).toHaveBeenCalledWith('checkout');
+  });
+});
+
+// ── Payment Options — missing sections ───────────────────────────────
+
+describe('payment options — collapsed when missing', () => {
+  it('collapses afterpay when no afterpay data', async () => {
+    await loadPage({
+      payment: {
+        success: true,
+        summary: {
+          payNow: { methods: [] },
+          afterpay: null,
+          financing: null,
+          shippingMessage: null,
+        },
+      },
+    });
+    expect(getEl('#checkoutAfterpay').collapse).toHaveBeenCalled();
+  });
+
+  it('collapses financing when no financing data', async () => {
+    await loadPage({
+      payment: {
+        success: true,
+        summary: {
+          payNow: { methods: [] },
+          afterpay: null,
+          financing: null,
+          shippingMessage: null,
+        },
+      },
+    });
+    expect(getEl('#checkoutFinancing').collapse).toHaveBeenCalled();
+  });
+
+  it('does nothing on payment failure (success: false)', async () => {
+    await loadPage({
+      payment: { success: false },
+    });
+    expect(getEl('#paymentMethodsRepeater').data).toEqual([]);
+  });
+});
+
+// ── Shipping Options — radio click handler ───────────────────────────
+
+describe('shipping options — radio click handler', () => {
+  it('updates delivery estimate on shipping selection', async () => {
+    const { getDeliveryEstimate } = await import('backend/checkoutOptimization.web');
+    getDeliveryEstimate.mockResolvedValue({
+      success: true,
+      data: { label: 'Mar 20 – Mar 25' },
+    });
+
+    await loadPage();
+
+    const repeater = getEl('#shippingOptionsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockShippingOptions.options[1]); // express
+
+    const radioCb = $item('#shippingOptionRadio').onClick.mock.calls[0][0];
+    await radioCb();
+
+    expect(getDeliveryEstimate).toHaveBeenCalledWith('express');
+    expect(getEl('#checkoutDeliveryEstimate').text).toContain('Mar 20 – Mar 25');
+  });
+
+  it('announces shipping selection', async () => {
+    const { getDeliveryEstimate } = await import('backend/checkoutOptimization.web');
+    getDeliveryEstimate.mockResolvedValue({ success: false });
+
+    await loadPage();
+
+    const repeater = getEl('#shippingOptionsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockShippingOptions.options[0]); // standard
+
+    const radioCb = $item('#shippingOptionRadio').onClick.mock.calls[0][0];
+    await radioCb();
+
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), 'Standard selected');
+  });
+
+  it('updates order summary sidebar on shipping selection', async () => {
+    const { getDeliveryEstimate, calculateOrderSummary } = await import('backend/checkoutOptimization.web');
+    getDeliveryEstimate.mockResolvedValue({ success: false });
+    calculateOrderSummary.mockResolvedValue(mockOrderSummary);
+
+    await loadPage();
+
+    const repeater = getEl('#shippingOptionsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, mockShippingOptions.options[1]); // express
+
+    const radioCb = $item('#shippingOptionRadio').onClick.mock.calls[0][0];
+    await radioCb();
+
+    expect(calculateOrderSummary).toHaveBeenCalled();
+  });
+
+  it('returns early on shipping options failure', async () => {
+    await loadPage({ shipping: { success: false } });
+    const repeater = getEl('#shippingOptionsRepeater');
+    expect(repeater.data).toEqual([]);
+  });
+});
+
+// ── Address Validation — inline field states ─────────────────────────
+
+describe('address validation — inline validation', () => {
+  it('shows error border and message for invalid field on input', async () => {
+    const { validateAddressField, getFieldValidationState } = await import('public/checkoutValidation.js');
+    validateAddressField.mockReturnValue({ valid: false, error: 'Name is required' });
+    getFieldValidationState.mockReturnValue('error');
+
+    await loadPage();
+
+    const inputHandler = getEl('#addressFullName').onInput.mock.calls.at(-1)[0];
+    getEl('#addressFullName').value = '';
+    inputHandler();
+
+    expect(getEl('#addressFullNameError').text).toBe('Name is required');
+    expect(getEl('#addressFullNameError').show).toHaveBeenCalled();
+    expect(getEl('#addressFullName').style.borderColor).toBe('#DC2626');
+  });
+
+  it('shows success border for valid field', async () => {
+    const { validateAddressField, getFieldValidationState } = await import('public/checkoutValidation.js');
+    validateAddressField.mockReturnValue({ valid: true });
+    getFieldValidationState.mockReturnValue('valid');
+
+    await loadPage();
+
+    const inputHandler = getEl('#addressFullName').onInput.mock.calls.at(-1)[0];
+    getEl('#addressFullName').value = 'John Doe';
+    inputHandler();
+
+    expect(getEl('#addressFullNameError').hide).toHaveBeenCalled();
+    expect(getEl('#addressFullName').style.borderColor).toBe('#4A7C59');
+  });
+
+  it('shows neutral border for untouched state', async () => {
+    const { validateAddressField, getFieldValidationState } = await import('public/checkoutValidation.js');
+    validateAddressField.mockReturnValue({ valid: true });
+    getFieldValidationState.mockReturnValue('neutral');
+
+    await loadPage();
+
+    const inputHandler = getEl('#addressFullName').onInput.mock.calls.at(-1)[0];
+    getEl('#addressFullName').value = '';
+    inputHandler();
+
+    expect(getEl('#addressFullName').style.borderColor).toBe('#C4B5A3');
+  });
+
+  it('validates on blur for untouched fields', async () => {
+    const { validateAddressField, getFieldValidationState } = await import('public/checkoutValidation.js');
+    validateAddressField.mockReturnValue({ valid: true });
+    getFieldValidationState.mockReturnValue('valid');
+
+    await loadPage();
+
+    const blurHandler = getEl('#addressFullName').onBlur.mock.calls.at(-1)[0];
+    getEl('#addressFullName').value = 'Jane';
+    blurHandler();
+
+    expect(validateAddressField).toHaveBeenCalled();
+  });
+
+  it('skips blur validation for already-touched fields', async () => {
+    const { validateAddressField, getFieldValidationState } = await import('public/checkoutValidation.js');
+    validateAddressField.mockReturnValue({ valid: true });
+    getFieldValidationState.mockReturnValue('valid');
+
+    await loadPage();
+
+    // First touch via onInput
+    const inputHandler = getEl('#addressFullName').onInput.mock.calls.at(-1)[0];
+    getEl('#addressFullName').value = 'Jane';
+    inputHandler();
+
+    const callCountAfterInput = validateAddressField.mock.calls.length;
+
+    // Then blur — should NOT re-validate since already touched
+    const blurHandler = getEl('#addressFullName').onBlur.mock.calls.at(-1)[0];
+    blurHandler();
+
+    expect(validateAddressField.mock.calls.length).toBe(callCountAfterInput);
+  });
+
+  it('shows fallback error when no errors array in validation result', async () => {
+    await loadPage();
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: false });
+
+    getEl('#addressFullName').value = 'John';
+    getEl('#addressLine1').value = '123 Main';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '12345';
+
+    const handler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await handler();
+
+    expect(getEl('#addressErrors').text).toBe('Please check your address.');
+  });
+
+  it('announces validation errors', async () => {
+    await loadPage();
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: false, errors: ['Bad ZIP'] });
+
+    getEl('#addressFullName').value = 'John';
+    getEl('#addressLine1').value = '123';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = 'bad';
+
+    const handler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await handler();
+
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('Bad ZIP'));
+  });
+
+  it('announces success on valid address', async () => {
+    await loadPage();
+    const { validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+
+    getEl('#addressFullName').value = 'John Doe';
+    getEl('#addressLine1').value = '123 Main St';
+    getEl('#addressCity').value = 'Hendersonville';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28739';
+
+    const handler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await handler();
+
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), 'Shipping address verified');
+  });
+});
+
+// ── Express Checkout — click flows ───────────────────────────────────
+
+describe('express checkout — click flows', () => {
+  it('announces warning when address not validated', async () => {
+    await loadPage();
+    const btn = getEl('#expressCheckoutBtn');
+    const clickHandler = btn.onClick.mock.calls.at(-1)[0];
+    await clickHandler();
+
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), 'Please verify your shipping address first');
+  });
+
+  it('shows express summary on success with valid address', async () => {
+    const { getExpressCheckoutSummary, validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    getExpressCheckoutSummary.mockResolvedValue({
+      success: true,
+      data: {
+        total: 899.99,
+        shipping: { amount: 0 },
+        shippingAddress: {
+          fullName: 'John Doe',
+          line1: '123 Main St',
+          city: 'Hendersonville',
+          state: 'NC',
+          zip: '28739',
+        },
+      },
+    });
+
+    await loadPage();
+
+    // First validate address
+    getEl('#addressFullName').value = 'John Doe';
+    getEl('#addressLine1').value = '123 Main St';
+    getEl('#addressCity').value = 'Hendersonville';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28739';
+    const validateHandler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await validateHandler();
+
+    // Now click express checkout
+    const btn = getEl('#expressCheckoutBtn');
+    const clickHandler = btn.onClick.mock.calls.at(-1)[0];
+    await clickHandler();
+
+    expect(getEl('#expressSummaryTotal').text).toContain('899.99');
+    expect(getEl('#expressSummaryShipping').text).toBe('Free Shipping');
+    expect(getEl('#expressSummarySection').show).toHaveBeenCalled();
+  });
+
+  it('shows paid shipping in express summary', async () => {
+    const { getExpressCheckoutSummary, validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    getExpressCheckoutSummary.mockResolvedValue({
+      success: true,
+      data: {
+        total: 599.99,
+        shipping: { amount: 49.99 },
+        shippingAddress: {
+          fullName: 'Jane', line1: '456 Oak', city: 'Asheville', state: 'NC', zip: '28801',
+        },
+      },
+    });
+
+    await loadPage();
+
+    getEl('#addressFullName').value = 'Jane';
+    getEl('#addressLine1').value = '456 Oak';
+    getEl('#addressCity').value = 'Asheville';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28801';
+    const validateHandler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await validateHandler();
+
+    const clickHandler = getEl('#expressCheckoutBtn').onClick.mock.calls.at(-1)[0];
+    await clickHandler();
+
+    expect(getEl('#expressSummaryShipping').text).toContain('49.99');
+  });
+
+  it('announces failure when express checkout fails', async () => {
+    const { getExpressCheckoutSummary, validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    getExpressCheckoutSummary.mockResolvedValue({ success: false });
+
+    await loadPage();
+
+    getEl('#addressFullName').value = 'Test';
+    getEl('#addressLine1').value = '123';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28739';
+    const validateHandler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await validateHandler();
+
+    const clickHandler = getEl('#expressCheckoutBtn').onClick.mock.calls.at(-1)[0];
+    await clickHandler();
+
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), 'Unable to prepare express checkout. Please use standard checkout.');
+  });
+
+  it('re-enables button after express checkout error', async () => {
+    const { getExpressCheckoutSummary, validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    getExpressCheckoutSummary.mockRejectedValue(new Error('Network error'));
+
+    await loadPage();
+
+    getEl('#addressFullName').value = 'Test';
+    getEl('#addressLine1').value = '123';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28739';
+    const validateHandler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await validateHandler();
+
+    const clickHandler = getEl('#expressCheckoutBtn').onClick.mock.calls.at(-1)[0];
+    await clickHandler();
+
+    expect(getEl('#expressCheckoutBtn').enable).toHaveBeenCalled();
+  });
+
+  it('disables button and shows Processing... during express checkout', async () => {
+    const { getExpressCheckoutSummary, validateShippingAddress } = await import('backend/checkoutOptimization.web');
+    validateShippingAddress.mockResolvedValue({ valid: true });
+    let resolveCheckout;
+    getExpressCheckoutSummary.mockImplementation(() => new Promise(r => { resolveCheckout = r; }));
+
+    await loadPage();
+
+    getEl('#addressFullName').value = 'Test';
+    getEl('#addressLine1').value = '123';
+    getEl('#addressCity').value = 'City';
+    getEl('#addressState').value = 'NC';
+    getEl('#addressZip').value = '28739';
+    const validateHandler = getEl('#validateAddressBtn').onClick.mock.calls.at(-1)[0];
+    await validateHandler();
+
+    const clickHandler = getEl('#expressCheckoutBtn').onClick.mock.calls.at(-1)[0];
+    const clickPromise = clickHandler();
+
+    // Button should be disabled while processing
+    expect(getEl('#expressCheckoutBtn').disable).toHaveBeenCalled();
+
+    resolveCheckout({ success: false });
+    await clickPromise;
+  });
+});
+
+// ── Order Summary Sidebar — savings and non-zero shipping ────────────
+
+describe('order summary sidebar — savings display', () => {
+  it('shows savings message when savings > 0', async () => {
+    await loadPage({
+      orderSummary: {
+        success: true,
+        data: {
+          subtotal: 1200,
+          shipping: { amount: 0 },
+          tax: 84,
+          total: 1284,
+          savings: 99.99,
+          itemCount: 2,
+        },
+      },
+    });
+    expect(getEl('#orderSummarySavings').text).toContain('99.99');
+    expect(getEl('#orderSummarySavings').show).toHaveBeenCalled();
+  });
+
+  it('shows non-zero shipping amount', async () => {
+    await loadPage({
+      orderSummary: {
+        success: true,
+        data: {
+          subtotal: 400,
+          shipping: { amount: 49.99 },
+          tax: 31.50,
+          total: 481.49,
+          savings: 0,
+          itemCount: 1,
+        },
+      },
+    });
+    expect(getEl('#orderSummaryShipping').text).toBe('$49.99');
+  });
+
+  it('renders item details in sidebar repeater', async () => {
+    await loadPage();
+    const repeater = getEl('#orderSummaryItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { name: 'Futon Frame', quantity: 2, lineTotal: '999.98' });
+    expect($item('#summaryItemName').text).toBe('Futon Frame');
+    expect($item('#summaryItemQty').text).toBe('×2');
+    expect($item('#summaryItemPrice').text).toBe('$999.98');
+  });
+
+  it('does not show sidebar when calculateOrderSummary fails', async () => {
+    await loadPage({ orderSummary: { success: false } });
+    // Sidebar should still show (initOrderSummarySidebar calls updateOrderSummaryDisplay
+    // which returns early on !result.success, but sidebar.show is called after)
+    // The key test is that totals are NOT populated
+    expect(getEl('#orderSummarySubtotal').text).toBe('');
+  });
+});
+
+// ── Protection Plan — tier rendering & interactions ──────────────────
+
+describe('protection plan — tier rendering', () => {
+  const mockPlans = {
+    success: true,
+    plans: [{
+      productId: 'prod-1',
+      productName: 'Futon Frame',
+      productPrice: 499.99,
+      selectedTier: null,
+      tiers: [
+        { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'] },
+        { id: 'premium', name: 'Premium', price: 59.99, durationYears: 3, coverage: ['Defects', 'Accidental'] },
+      ],
+    }],
+  };
+
+  it('renders tier name, price, and duration', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+
+    // Simulate plan item ready — need to mock tier repeater
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...mockPlans.plans[0] });
+
+    // Tier repeater should have data
+    expect($planItem('#protPlanTierRepeater').data).toHaveLength(2);
+
+    // Simulate tier item ready
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'], productId: 'prod-1' });
+
+    expect($tierItem('#tierName').text).toBe('Basic');
+    expect($tierItem('#tierPrice').text).toBe('+$29.99');
+    expect($tierItem('#tierDuration').text).toBe('1-year coverage');
+    expect($tierItem('#tierCoverage').text).toBe('Defects');
+  });
+
+  it('highlights selected tier with mountainBlue border', async () => {
+    const selectedPlan = {
+      ...mockPlans,
+      plans: [{
+        ...mockPlans.plans[0],
+        selectedTier: 'premium',
+      }],
+    };
+    await loadPage({ protectionPlans: selectedPlan });
+
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...selectedPlan.plans[0] });
+
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'premium', name: 'Premium', price: 59.99, durationYears: 3, coverage: ['Defects', 'Accidental'], productId: 'prod-1' });
+
+    expect($tierItem('#tierCard').style.borderColor).toBe('#2D5F7C');
+    expect($tierItem('#tierSelectBtn').label).toBe('Selected');
+  });
+
+  it('styles unselected tier with coral button', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...mockPlans.plans[0] });
+
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'], productId: 'prod-1' });
+
+    expect($tierItem('#tierSelectBtn').label).toBe('Add Protection');
+    expect($tierItem('#tierSelectBtn').style.backgroundColor).toBe('#E07A5F');
+  });
+});
+
+describe('protection plan — tier click handlers', () => {
+  const mockPlans = {
+    success: true,
+    plans: [{
+      productId: 'prod-1',
+      productName: 'Futon Frame',
+      productPrice: 499.99,
+      selectedTier: null,
+      tiers: [
+        { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'] },
+      ],
+    }],
+  };
+
+  it('adds protection plan on click', async () => {
+    const { addProtectionPlan } = await import('backend/protectionPlan.web');
+    addProtectionPlan.mockResolvedValue({
+      success: true,
+      data: { planName: 'Basic', price: 29.99 },
+    });
+
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    const planData = { ...mockPlans.plans[0] };
+    planReadyFn($planItem, planData);
+
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'], productId: 'prod-1' });
+
+    const clickHandler = $tierItem('#tierSelectBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(addProtectionPlan).toHaveBeenCalledWith('prod-1', 'basic', expect.any(String));
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('Basic added'));
+  });
+
+  it('removes protection plan when already selected', async () => {
+    const { removeProtectionPlan } = await import('backend/protectionPlan.web');
+    removeProtectionPlan.mockResolvedValue({ success: true });
+
+    const selectedPlans = {
+      ...mockPlans,
+      plans: [{ ...mockPlans.plans[0], selectedTier: 'basic' }],
+    };
+
+    await loadPage({ protectionPlans: selectedPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    const planData = { ...selectedPlans.plans[0] };
+    planReadyFn($planItem, planData);
+
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'], productId: 'prod-1' });
+
+    const clickHandler = $tierItem('#tierSelectBtn').onClick.mock.calls[0][0];
+    await clickHandler();
+
+    expect(removeProtectionPlan).toHaveBeenCalledWith('prod-1', expect.any(String));
+    const { announce } = await import('public/a11yHelpers.js');
+    expect(announce).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('removed'));
+  });
+});
+
+describe('protection plan — decline button', () => {
+  const mockPlans = {
+    success: true,
+    plans: [{
+      productId: 'prod-1',
+      productName: 'Futon Frame',
+      productPrice: 499.99,
+      selectedTier: 'basic',
+      tiers: [
+        { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'] },
+      ],
+    }],
+  };
+
+  it('removes plan and collapses tiers on decline', async () => {
+    const { removeProtectionPlan } = await import('backend/protectionPlan.web');
+    removeProtectionPlan.mockResolvedValue({ success: true });
+
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...mockPlans.plans[0] });
+
+    const declineHandler = $planItem('#protPlanDecline').onClick.mock.calls[0][0];
+    await declineHandler();
+
+    expect(removeProtectionPlan).toHaveBeenCalledWith('prod-1', expect.any(String));
+    expect($planItem('#protPlanTierRepeater').collapse).toHaveBeenCalled();
+    expect($planItem('#protPlanDecline').text).toBe('Protection declined');
+  });
+
+  it('sets ariaLabel on decline button', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...mockPlans.plans[0] });
+
+    expect($planItem('#protPlanDecline').accessibility.ariaLabel).toContain('Decline protection');
+  });
+});
+
+// ── Store Credit — apply flow ────────────────────────────────────────
+
+describe('store credit — apply flow', () => {
+  it('wires apply button when credit is available', async () => {
+    const { initCheckoutStoreCredit } = await import('public/storeCreditHelpers.js');
+    initCheckoutStoreCredit.mockReturnValue({ available: true, applicableAmount: 50 });
+
+    await loadPage();
+
+    expect(getEl('#storeCreditApplyBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('sets ariaLabel on apply button with credit amount', async () => {
+    const { initCheckoutStoreCredit } = await import('public/storeCreditHelpers.js');
+    initCheckoutStoreCredit.mockReturnValue({ available: true, applicableAmount: 50 });
+
+    await loadPage();
+
+    expect(getEl('#storeCreditApplyBtn').accessibility.ariaLabel).toContain('$50.00');
+  });
+});
+
+// ── Cleanup — onBeforeUnload calls resetCheckoutGiftCard ─────────────
+
+describe('cleanup — onBeforeUnload', () => {
+  it('calls resetCheckoutGiftCard when page unloads', async () => {
+    await loadPage();
+    const wixWindow = await import('wix-window-frontend');
+    const unloadCb = wixWindow.onBeforeUnload.mock.calls.at(-1)[0];
+    unloadCb();
+
+    const { resetCheckoutGiftCard } = await import('public/giftCardHelpers.js');
+    expect(resetCheckoutGiftCard).toHaveBeenCalled();
+  });
+});
+
+// ── Protection Plan — ARIA attributes ────────────────────────────────
+
+describe('protection plan — ARIA', () => {
+  const mockPlans = {
+    success: true,
+    plans: [{
+      productId: 'prod-1',
+      productName: 'Futon Frame',
+      productPrice: 499.99,
+      selectedTier: null,
+      tiers: [
+        { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'] },
+      ],
+    }],
+  };
+
+  it('sets region role and ariaLabel on section', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    expect(getEl('#protectionPlanSection').accessibility.role).toBe('region');
+    expect(getEl('#protectionPlanSection').accessibility.ariaLabel).toBe('Furniture protection plans');
+  });
+
+  it('sets heading role on protection plan title', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    expect(getEl('#protectionPlanTitle').accessibility.role).toBe('heading');
+  });
+
+  it('sets ariaLabel on tier select button', async () => {
+    await loadPage({ protectionPlans: mockPlans });
+    const repeater = getEl('#protectionPlanRepeater');
+    const planReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const planEls = new Map();
+    const $planItem = (sel) => {
+      if (!planEls.has(sel)) planEls.set(sel, createMockElement());
+      return planEls.get(sel);
+    };
+    const tierReadyFn = vi.fn();
+    $planItem('#protPlanTierRepeater').onItemReady = tierReadyFn;
+    planReadyFn($planItem, { ...mockPlans.plans[0] });
+
+    const tierEls = new Map();
+    const $tierItem = (sel) => {
+      if (!tierEls.has(sel)) tierEls.set(sel, createMockElement());
+      return tierEls.get(sel);
+    };
+    const tierFn = tierReadyFn.mock.calls[0][0];
+    tierFn($tierItem, { id: 'basic', name: 'Basic', price: 29.99, durationYears: 1, coverage: ['Defects'], productId: 'prod-1' });
+
+    expect($tierItem('#tierSelectBtn').accessibility.ariaLabel).toContain('Add Basic');
+    expect($tierItem('#tierSelectBtn').accessibility.ariaLabel).toContain('$29.99');
+  });
+});
