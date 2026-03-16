@@ -6,6 +6,7 @@ import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
 import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence } from 'backend/emailAutomation.web';
+import { processContentSchedule } from 'backend/contentScheduler.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import wixData from 'wix-data';
@@ -749,6 +750,47 @@ export async function get_processPostPurchaseCareCron(request) {
     });
   } catch (err) {
     console.error('HTTP function error (processPostPurchaseCareCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Content Schedule Processor Cron ────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/processContentScheduleCron
+// Schedule every 30 minutes via Wix Automations or external cron.
+// Pass X-Cron-Secret header for auth (CONTENT_CRON_KEY in Secrets Manager).
+export async function get_processContentScheduleCron(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('CONTENT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const result = await processContentSchedule(requestKey);
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        processed: result.processed || 0,
+        failed: result.failed || 0,
+        skipped: result.skipped || 0,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (processContentScheduleCron):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
