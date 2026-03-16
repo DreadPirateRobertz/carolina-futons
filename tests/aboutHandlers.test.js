@@ -24,7 +24,7 @@ vi.mock('public/a11yHelpers.js', () => ({
   makeClickable: vi.fn(),
 }));
 
-vi.mock('public/AboutIllustrations.js', () => ({
+vi.mock('public/aboutIllustrations.js', () => ({
   initAboutIllustrations: vi.fn(),
 }));
 
@@ -99,7 +99,7 @@ beforeAll(async () => {
   ({ trackEvent } = await import('public/engagementTracker'));
   ({ initBackToTop } = await import('public/mobileHelpers'));
   ({ makeClickable } = await import('public/a11yHelpers.js'));
-  ({ initAboutIllustrations } = await import('public/AboutIllustrations.js'));
+  ({ initAboutIllustrations } = await import('public/aboutIllustrations.js'));
   ({ getBrandStory, getTeamMembers, getShowroomDetails, formatBusinessHours, getSocialProofSnippets } =
     await import('public/aboutContactHelpers.js'));
   await import('../src/pages/About.js');

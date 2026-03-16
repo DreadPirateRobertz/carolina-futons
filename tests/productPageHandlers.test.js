@@ -74,7 +74,7 @@ vi.mock('public/performanceHelpers.js', () => ({
     const critical = sections.filter(s => s.critical);
     const deferred = sections.filter(s => !s.critical);
     const results = await Promise.allSettled(critical.map(s => s.init()));
-    Promise.allSettled(deferred.map(s => s.init())).catch(() => {});
+    Promise.allSettled(deferred.map(s => s.init()));
     return { critical: results };
   }),
 }));

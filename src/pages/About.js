@@ -13,7 +13,7 @@ import {
   formatBusinessHours,
   getSocialProofSnippets,
 } from 'public/aboutContactHelpers.js';
-import { initAboutIllustrations } from 'public/AboutIllustrations.js';
+import { initAboutIllustrations } from 'public/aboutIllustrations.js';
 
 $w.onReady(async function () {
   initBackToTop($w);
