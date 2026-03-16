@@ -530,3 +530,621 @@ describe('cart mutation errors', () => {
     expect(removeCartItem).toHaveBeenCalled();
   });
 });
+
+// ── Empty Cart (Deep) ──────────────────────────────────────────────
+
+describe('empty cart (deep)', () => {
+  it('sets heading color and ARIA role', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#emptyCartTitle').style.color).toBe('#1E3A5F');
+    expect(getEl('#emptyCartTitle').accessibility.role).toBe('heading');
+  });
+
+  it('sets message text and color', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#emptyCartMessage').text).toContain('Browse our collection');
+    expect(getEl('#emptyCartMessage').style.color).toBe('#5B8FA8');
+  });
+
+  it('styles continue shopping button with brand colors', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#continueShoppingBtn').style.backgroundColor).toBe('#1E3A5F');
+    expect(getEl('#continueShoppingBtn').style.color).toBe('#FFFFFF');
+  });
+
+  it('sets ARIA label on continue shopping button', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#continueShoppingBtn').accessibility.ariaLabel).toContain('Continue shopping');
+  });
+
+  it('hides shipping and tier progress bars', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#shippingProgressBar').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressText').hide).toHaveBeenCalled();
+    expect(getEl('#tierProgressBar').hide).toHaveBeenCalled();
+    expect(getEl('#tierProgressText').hide).toHaveBeenCalled();
+  });
+
+  it('collapses financing and delivery sections', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    expect(getEl('#cartFinancingSection').collapse).toHaveBeenCalled();
+    expect(getEl('#cartDeliverySection').collapse).toHaveBeenCalled();
+  });
+
+  it('initializes back-to-top for empty cart', async () => {
+    await loadPage({ cart: { lineItems: [] } });
+    const { initBackToTop } = await import('public/mobileHelpers');
+    const calls = initBackToTop.mock.calls;
+    expect(calls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('handles null cart as empty', async () => {
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(null);
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    getCompletionSuggestions.mockResolvedValue([]);
+    const { getCartFinancing } = await import('backend/financingCalc.web');
+    getCartFinancing.mockResolvedValue({ success: false });
+    await import('../src/pages/Cart Page.js');
+    if (onReadyHandler) await onReadyHandler();
+    expect(getEl('#emptyCartSection').expand).toHaveBeenCalled();
+  });
+
+  it('handles cart with null lineItems as empty', async () => {
+    await loadPage({ cart: { lineItems: null } });
+    expect(getEl('#emptyCartSection').expand).toHaveBeenCalled();
+  });
+
+  it('survives getCurrentCart rejection without crashing', async () => {
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockRejectedValue(new Error('network error'));
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    getCompletionSuggestions.mockResolvedValue([]);
+    const { getCartFinancing } = await import('backend/financingCalc.web');
+    getCartFinancing.mockResolvedValue({ success: false });
+    await import('../src/pages/Cart Page.js');
+    await expect(onReadyHandler()).resolves.not.toThrow();
+  });
+});
+
+// ── Shipping Progress (Deep) ───────────────────────────────────────
+
+describe('shipping progress (deep)', () => {
+  it('shows qualification text when shipping qualifies', async () => {
+    const { getShippingProgress } = await import('public/cartService');
+    getShippingProgress.mockReturnValue({ remaining: 0, progressPct: 100, qualifies: true });
+    await loadPage();
+    expect(getEl('#shippingProgressText').text).toBe('You qualify for FREE shipping!');
+  });
+
+  it('shows shipping icon when qualified', async () => {
+    const { getShippingProgress } = await import('public/cartService');
+    getShippingProgress.mockReturnValue({ remaining: 0, progressPct: 100, qualifies: true });
+    await loadPage();
+    expect(getEl('#shippingProgressIcon').show).toHaveBeenCalled();
+  });
+
+  it('sets ARIA attributes on shipping progress bar', async () => {
+    const { getShippingProgress } = await import('public/cartService');
+    getShippingProgress.mockReturnValue({ remaining: 50, progressPct: 60, qualifies: false });
+    await loadPage();
+    const bar = getEl('#shippingProgressBar');
+    expect(bar.accessibility.ariaLabel).toContain('Free shipping progress');
+    expect(bar.accessibility.ariaValueNow).toBe(60);
+    expect(bar.accessibility.ariaValueMin).toBe(0);
+    expect(bar.accessibility.ariaValueMax).toBe(100);
+  });
+
+  it('applies bar styling from getProgressBarStyles', async () => {
+    await loadPage();
+    const bar = getEl('#shippingProgressBar');
+    expect(bar.style.backgroundColor).toBe('#E8E0D5');
+    expect(bar.style.color).toBe('#4A7C59');
+  });
+
+  it('sets ARIA status on progress text', async () => {
+    await loadPage();
+    const text = getEl('#shippingProgressText');
+    expect(text.accessibility.ariaLive).toBe('polite');
+    expect(text.accessibility.role).toBe('status');
+    expect(text.style.color).toBe('#1E3A5F');
+  });
+
+  it('hides shipping bars when threshold is disabled', async () => {
+    vi.doMock('public/cartService', () => ({
+      getCurrentCart: vi.fn().mockResolvedValue(mockCart),
+      addToCart: vi.fn(),
+      updateCartItemQuantity: vi.fn(),
+      removeCartItem: vi.fn(),
+      onCartChanged: vi.fn(),
+      getShippingProgress: vi.fn(),
+      getTierProgress: vi.fn(() => ({
+        tier: { label: (r) => `Spend $${r} more` },
+        remaining: 100, progressPct: 40,
+      })),
+      FREE_SHIPPING_THRESHOLD: 100000,
+      MIN_QUANTITY: 1,
+      MAX_QUANTITY: 99,
+    }));
+    const { getCompletionSuggestions } = await import('backend/productRecommendations.web');
+    getCompletionSuggestions.mockResolvedValue([]);
+    const { getCartFinancing } = await import('backend/financingCalc.web');
+    getCartFinancing.mockResolvedValue({ success: false });
+    await import('../src/pages/Cart Page.js');
+    if (onReadyHandler) await onReadyHandler();
+
+    expect(getEl('#shippingProgressBar').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressText').hide).toHaveBeenCalled();
+    expect(getEl('#shippingProgressIcon').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Tier Progress (Deep) ───────────────────────────────────────────
+
+describe('tier progress (deep)', () => {
+  it('sets ARIA attributes on tier progress bar', async () => {
+    await loadPage();
+    const bar = getEl('#tierProgressBar');
+    expect(bar.accessibility.ariaLabel).toContain('Discount tier progress');
+    expect(bar.accessibility.ariaValueNow).toBe(40);
+    expect(bar.accessibility.ariaValueMin).toBe(0);
+    expect(bar.accessibility.ariaValueMax).toBe(100);
+  });
+
+  it('applies tier bar styling', async () => {
+    await loadPage();
+    const bar = getEl('#tierProgressBar');
+    expect(bar.style.backgroundColor).toBe('#E8E0D5');
+    expect(bar.style.color).toBe('#4A7C59');
+  });
+
+  it('sets ARIA status on tier text', async () => {
+    await loadPage();
+    const text = getEl('#tierProgressText');
+    expect(text.accessibility.ariaLive).toBe('polite');
+    expect(text.accessibility.role).toBe('status');
+    expect(text.style.color).toBe('#1E3A5F');
+  });
+});
+
+// ── Recently Viewed (Deep) ─────────────────────────────────────────
+
+describe('recently viewed (deep)', () => {
+  it('filters out items already in cart', async () => {
+    const { getRecentlyViewed } = await import('public/galleryHelpers');
+    getRecentlyViewed.mockReturnValue([
+      { _id: 'prod-1', name: 'In Cart', slug: 'in-cart', mainMedia: 'x.jpg', price: '$99' },
+      { _id: 'rv-new', name: 'Not In Cart', slug: 'not-in-cart', mainMedia: 'y.jpg', price: '$49' },
+    ]);
+    await loadPage();
+    const repeater = getEl('#cartRecentRepeater');
+    expect(repeater.data).toHaveLength(1);
+    expect(repeater.data[0]._id).toBe('rv-new');
+  });
+
+  it('expands section when recent products exist', async () => {
+    const { getRecentlyViewed } = await import('public/galleryHelpers');
+    getRecentlyViewed.mockReturnValue([
+      { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' },
+    ]);
+    await loadPage();
+    expect(getEl('#cartRecentSection').expand).toHaveBeenCalled();
+  });
+
+  it('renders repeater items with image, name, and price', async () => {
+    const { getRecentlyViewed } = await import('public/galleryHelpers');
+    getRecentlyViewed.mockReturnValue([
+      { _id: 'rv-1', name: 'Side Table', slug: 'side-table', mainMedia: 'table.jpg', price: '$79.99' },
+    ]);
+    await loadPage();
+
+    const repeater = getEl('#cartRecentRepeater');
+    expect(repeater.onItemReady).toHaveBeenCalled();
+
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { _id: 'rv-1', name: 'Side Table', slug: 'side-table', mainMedia: 'table.jpg', price: '$79.99' });
+
+    expect($item('#cartRecentImage').src).toBe('table.jpg');
+    expect($item('#cartRecentImage').alt).toContain('Side Table');
+    expect($item('#cartRecentName').text).toBe('Side Table');
+    expect($item('#cartRecentPrice').text).toBe('$79.99');
+  });
+
+  it('makes recent items clickable for navigation', async () => {
+    const { getRecentlyViewed } = await import('public/galleryHelpers');
+    getRecentlyViewed.mockReturnValue([
+      { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' },
+    ]);
+    const { makeClickable } = await import('public/a11yHelpers');
+    await loadPage();
+
+    const repeater = getEl('#cartRecentRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { _id: 'rv-1', name: 'Lamp', slug: 'lamp', mainMedia: 'lamp.jpg', price: '$39' });
+
+    const clickableCalls = makeClickable.mock.calls.filter(
+      c => c[0] === $item('#cartRecentImage') || c[0] === $item('#cartRecentName')
+    );
+    expect(clickableCalls.length).toBe(2);
+  });
+
+  it('sets ARIA label on recent item images', async () => {
+    const { getRecentlyViewed } = await import('public/galleryHelpers');
+    getRecentlyViewed.mockReturnValue([
+      { _id: 'rv-1', name: 'Desk', slug: 'desk', mainMedia: 'desk.jpg', price: '$199' },
+    ]);
+    await loadPage();
+
+    const repeater = getEl('#cartRecentRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    itemReadyFn($item, { _id: 'rv-1', name: 'Desk', slug: 'desk', mainMedia: 'desk.jpg', price: '$199' });
+
+    expect($item('#cartRecentImage').accessibility.ariaLabel).toContain('Desk');
+  });
+});
+
+// ── Financing (Deep) ───────────────────────────────────────────────
+
+describe('financing (deep)', () => {
+  it('collapses section when subtotal is 0', async () => {
+    await loadPage({
+      cart: { ...mockCart, totals: { subtotal: 0, shipping: 0, total: 0 }, lineItems: mockCart.lineItems },
+      financing: { success: true, financing: {}, afterpay: {} },
+    });
+    expect(getEl('#cartFinancingSection').collapse).toHaveBeenCalled();
+  });
+
+  it('shows threshold message when present', async () => {
+    await loadPage({
+      financing: {
+        success: true,
+        thresholdMessage: 'Add $50 more to unlock financing',
+        financing: { lowestMonthly: null },
+        afterpay: { eligible: false },
+      },
+    });
+    expect(getEl('#financingThreshold').text).toBe('Add $50 more to unlock financing');
+    expect(getEl('#financingThreshold').show).toHaveBeenCalled();
+  });
+
+  it('hides threshold element when no message', async () => {
+    await loadPage({
+      financing: {
+        success: true,
+        thresholdMessage: null,
+        financing: { lowestMonthly: '$45/mo' },
+        afterpay: { eligible: false },
+      },
+    });
+    expect(getEl('#financingThreshold').hide).toHaveBeenCalled();
+  });
+
+  it('hides teaser when no lowestMonthly', async () => {
+    await loadPage({
+      financing: {
+        success: true,
+        thresholdMessage: null,
+        financing: { lowestMonthly: null },
+        afterpay: { eligible: true, message: '4 payments' },
+      },
+    });
+    expect(getEl('#cartFinancingTeaser').hide).toHaveBeenCalled();
+  });
+
+  it('hides afterpay when not eligible', async () => {
+    await loadPage({
+      financing: {
+        success: true,
+        thresholdMessage: null,
+        financing: { lowestMonthly: '$30/mo' },
+        afterpay: { eligible: false },
+      },
+    });
+    expect(getEl('#cartAfterpayMessage').hide).toHaveBeenCalled();
+  });
+});
+
+// ── Quantity Controls (Deep) ────────────────────────────────────────
+
+describe('quantity controls (deep)', () => {
+  async function setupItem(itemData = mockCart.lineItems[0], qtyValue = '2') {
+    await loadPage();
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = qtyValue;
+    itemReadyFn($item, itemData);
+    return $item;
+  }
+
+  it('does not exceed MAX_QUANTITY on plus', async () => {
+    const { updateCartItemQuantity } = await import('public/cartService');
+    const $item = await setupItem(mockCart.lineItems[0], '99');
+    updateCartItemQuantity.mockClear();
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+    expect(updateCartItemQuantity).not.toHaveBeenCalled();
+  });
+
+  it('announces quantity change on minus', async () => {
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    const { announce } = await import('public/a11yHelpers');
+    const $item = await setupItem(mockCart.lineItems[0], '3');
+    const announceBefore = announce.mock.calls.length;
+    const minusHandler = $item('#qtyMinus').onClick.mock.calls[0][0];
+    await minusHandler();
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('quantity updated to 2'))).toBe(true);
+  });
+
+  it('announces quantity change on plus', async () => {
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    const { announce } = await import('public/a11yHelpers');
+    const $item = await setupItem(mockCart.lineItems[0], '1');
+    const announceBefore = announce.mock.calls.length;
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('quantity updated to 2'))).toBe(true);
+  });
+
+  it('announces item removal', async () => {
+    const { removeCartItem } = await import('public/cartService');
+    removeCartItem.mockResolvedValue();
+    const { announce } = await import('public/a11yHelpers');
+    const $item = await setupItem();
+    const announceBefore = announce.mock.calls.length;
+    const removeHandler = $item('#removeItem').onClick.mock.calls[0][0];
+    await removeHandler();
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('removed from cart'))).toBe(true);
+  });
+
+  it('updates ariaValueNow after quantity change', async () => {
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    const $item = await setupItem(mockCart.lineItems[0], '2');
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+    expect($item('#qtyInput').accessibility.ariaValueNow).toBe(3);
+  });
+
+  it('save for later announces login for unauthenticated user', async () => {
+    const { saveForLater } = await import('public/SaveForLater.js');
+    saveForLater.mockResolvedValue({ success: false, reason: 'not_authenticated' });
+    const { announce } = await import('public/a11yHelpers');
+    const $item = await setupItem();
+    const announceBefore = announce.mock.calls.length;
+    const saveHandler = $item('#saveForLaterBtn').onClick.mock.calls[0][0];
+    await saveHandler();
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('log in'))).toBe(true);
+  });
+
+  it('save for later announces wishlist save on success', async () => {
+    const { saveForLater } = await import('public/SaveForLater.js');
+    saveForLater.mockResolvedValue({ success: true });
+    const { announce } = await import('public/a11yHelpers');
+    const $item = await setupItem();
+    const announceBefore = announce.mock.calls.length;
+    const saveHandler = $item('#saveForLaterBtn').onClick.mock.calls[0][0];
+    await saveHandler();
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('saved to your wishlist'))).toBe(true);
+  });
+
+  it('applies spinner styling to quantity controls', async () => {
+    const $item = await setupItem();
+    expect($item('#qtyMinus').style.color).toBe('#2D5F7C');
+    expect($item('#qtyPlus').style.color).toBe('#2D5F7C');
+    expect($item('#qtyInput').style.color).toBe('#1E3A5F');
+  });
+
+  it('applies item name and price styling', async () => {
+    const $item = await setupItem();
+    expect($item('#cartItemName').style.color).toBe('#1E3A5F');
+    expect($item('#cartItemPrice').style.color).toBe('#2D5F7C');
+  });
+
+  it('applies remove button styling', async () => {
+    const $item = await setupItem();
+    expect($item('#removeItem').style.color).toBe('#E07A5F');
+  });
+
+  it('sets spinbutton role and min/max on qty input', async () => {
+    const $item = await setupItem();
+    expect($item('#qtyInput').accessibility.role).toBe('spinbutton');
+    expect($item('#qtyInput').accessibility.ariaValueMin).toBe(1);
+    expect($item('#qtyInput').accessibility.ariaValueMax).toBe(99);
+  });
+
+  it('sets save for later ARIA label', async () => {
+    const $item = await setupItem();
+    expect($item('#saveForLaterBtn').accessibility.ariaLabel).toContain('Save Futon Frame for later');
+  });
+});
+
+// ── Cart Listeners (Deep) ──────────────────────────────────────────
+
+describe('cart listeners (deep)', () => {
+  it('debounces cart change handler at 300ms', async () => {
+    vi.useFakeTimers();
+    await loadPage();
+    const { onCartChanged, getCurrentCart } = await import('public/cartService');
+
+    const changeCb = onCartChanged.mock.calls.at(-1)[0];
+    const callsBefore = getCurrentCart.mock.calls.length;
+
+    // Fire 3 rapid changes — should debounce to 1
+    changeCb();
+    changeCb();
+    changeCb();
+
+    // Before debounce fires, no new getCurrentCart calls
+    expect(getCurrentCart.mock.calls.length).toBe(callsBefore);
+
+    getCurrentCart.mockResolvedValue(mockCart);
+    await vi.advanceTimersByTimeAsync(300);
+    // Allow microtasks to settle
+    await vi.advanceTimersByTimeAsync(0);
+
+    // After debounce, getCurrentCart should be called exactly once (not 3 times)
+    expect(getCurrentCart.mock.calls.length).toBe(callsBefore + 1);
+    vi.useRealTimers();
+  });
+});
+
+// ── refreshCartTotals (Deep) ────────────────────────────────────────
+
+describe('refreshCartTotals (deep)', () => {
+  it('formats subtotal, shipping, and total', async () => {
+    await loadPage();
+    const { getCurrentCart, onCartChanged } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue({
+      ...mockCart,
+      totals: { subtotal: 499.99, shipping: 25, total: 524.99 },
+    });
+
+    // Trigger refreshCartTotals via quantity change
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = '2';
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+
+    expect(getEl('#cartSubtotal').text).toBe('$499.99');
+    expect(getEl('#cartShipping').text).toBe('$25.00');
+    expect(getEl('#cartTotal').text).toBe('$524.99');
+  });
+
+  it('shows "Calculated at checkout" for zero shipping', async () => {
+    await loadPage();
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue({
+      ...mockCart,
+      totals: { subtotal: 499, shipping: 0, total: 499 },
+    });
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = '2';
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+
+    expect(getEl('#cartShipping').text).toBe('Calculated at checkout');
+  });
+
+  it('announces total update', async () => {
+    await loadPage();
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(mockCart);
+    const { announce } = await import('public/a11yHelpers');
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = '1';
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const announceBefore = announce.mock.calls.length;
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+
+    const newCalls = announce.mock.calls.slice(announceBefore);
+    expect(newCalls.some(c => c[1].includes('Cart total updated'))).toBe(true);
+  });
+
+  it('sets ARIA live and status on subtotal and total', async () => {
+    await loadPage();
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(mockCart);
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = '1';
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+
+    expect(getEl('#cartSubtotal').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#cartSubtotal').accessibility.role).toBe('status');
+    expect(getEl('#cartTotal').accessibility.ariaLive).toBe('polite');
+    expect(getEl('#cartTotal').accessibility.role).toBe('status');
+  });
+
+  it('applies bold font weight to total', async () => {
+    await loadPage();
+    const { getCurrentCart } = await import('public/cartService');
+    getCurrentCart.mockResolvedValue(mockCart);
+
+    const repeater = getEl('#cartItemsRepeater');
+    const itemReadyFn = repeater.onItemReady.mock.calls.at(-1)[0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    $item('#qtyInput').value = '1';
+    const { updateCartItemQuantity } = await import('public/cartService');
+    updateCartItemQuantity.mockResolvedValue();
+    itemReadyFn($item, mockCart.lineItems[0]);
+
+    const plusHandler = $item('#qtyPlus').onClick.mock.calls[0][0];
+    await plusHandler();
+
+    expect(getEl('#cartTotal').style.fontWeight).toBe('bold');
+  });
+});
