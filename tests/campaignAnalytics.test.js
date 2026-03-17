@@ -199,6 +199,28 @@ describe('getCampaignAnalytics', () => {
 
     const result = await getCampaignAnalytics(30);
     expect(result.success).toBe(false);
+    expect(result.error).toBe('Database unavailable');
+    expect(result.campaigns).toBeUndefined();
+  });
+
+  it('clamps days to valid range (1–365)', async () => {
+    mockQuery.mockImplementation(() => makeChain());
+
+    const tooLow = await getCampaignAnalytics(0);
+    expect(tooLow.periodDays).toBe(1);
+
+    const tooHigh = await getCampaignAnalytics(9999);
+    expect(tooHigh.periodDays).toBe(365);
+
+    const negative = await getCampaignAnalytics(-5);
+    expect(negative.periodDays).toBe(1);
+  });
+
+  it('handles NaN days by defaulting to 30', async () => {
+    mockQuery.mockImplementation(() => makeChain());
+
+    const result = await getCampaignAnalytics('not-a-number');
+    expect(result.periodDays).toBe(30);
   });
 });
 

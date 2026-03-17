@@ -1048,8 +1048,17 @@ export const createAbTest = webMethod(
     try {
       const { sequenceType, testStep, variants, sampleSize = 100, metricField = 'openRate' } = config;
 
-      if (!sequenceType || testStep == null) return { success: false };
-      if (!variants || !variants.A || !variants.B) return { success: false };
+      if (!sequenceType || testStep == null) return { success: false, reason: 'Missing sequenceType or testStep' };
+      if (!variants || !variants.A || !variants.B) return { success: false, reason: 'Missing variant definitions' };
+      if (metricField !== 'openRate' && metricField !== 'clickRate') return { success: false, reason: 'Invalid metricField' };
+
+      // Prevent duplicate active tests for same sequence+step
+      const existing = await wixData.query('AbTests')
+        .eq('sequenceType', sequenceType)
+        .eq('testStep', testStep)
+        .eq('status', 'active')
+        .find();
+      if (existing.items.length > 0) return { success: false, reason: 'Active test already exists for this sequence step' };
 
       await wixData.insert('AbTests', {
         sequenceType,
@@ -1069,7 +1078,7 @@ export const createAbTest = webMethod(
       return { success: true };
     } catch (err) {
       console.error('[emailAutomation] Error creating A/B test:', err);
-      return { success: false };
+      return { success: false, error: err.message };
     }
   }
 );
@@ -1190,7 +1199,7 @@ export const getAbTestResults = webMethod(
       };
     } catch (err) {
       console.error('[emailAutomation] Error getting A/B test results:', err);
-      return { tests: [] };
+      return { tests: [], error: err.message };
     }
   }
 );
@@ -1215,7 +1224,7 @@ export const getAbTestConfig = webMethod(
       return { test: result.items.length > 0 ? result.items[0] : null };
     } catch (err) {
       console.error('[emailAutomation] Error getting A/B test config:', err);
-      return { test: null };
+      return { test: null, error: err.message };
     }
   }
 );
@@ -1236,7 +1245,9 @@ export const getCampaignAnalytics = webMethod(
   Permissions.Admin,
   async (days = 30) => {
     try {
-      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const parsed = Number(days);
+      const safeDays = Number.isFinite(parsed) ? Math.max(1, Math.min(parsed, 365)) : 30;
+      const since = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
 
       // 1. Fetch emails in period (limit 1000 — Wix find() defaults to 50)
       const emailResult = await wixData.query('EmailQueue')
@@ -1351,7 +1362,7 @@ export const getCampaignAnalytics = webMethod(
 
       return {
         success: true,
-        periodDays: days,
+        periodDays: safeDays,
         campaigns,
         completionRates,
         unsubscribes: {
@@ -1364,11 +1375,7 @@ export const getCampaignAnalytics = webMethod(
       console.error('[emailAutomation] Error fetching campaign analytics:', err);
       return {
         success: false,
-        periodDays: days,
-        campaigns: {},
-        completionRates: {},
-        unsubscribes: { total: 0, byType: {} },
-        abTestSummary: [],
+        error: err.message,
       };
     }
   }

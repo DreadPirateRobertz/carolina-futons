@@ -853,6 +853,17 @@ export async function get_campaignAnalytics(request) {
     const days = parseInt(request.query?.days, 10) || 30;
     const result = await getCampaignAnalytics(days);
 
+    if (!result.success) {
+      return serverError({
+        body: JSON.stringify({
+          status: 'error',
+          timestamp: new Date().toISOString(),
+          error: result.error || 'Analytics query failed',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return ok({
       body: JSON.stringify({
         status: 'ok',
