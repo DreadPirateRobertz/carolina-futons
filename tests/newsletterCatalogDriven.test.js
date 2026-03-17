@@ -34,7 +34,7 @@ function makePriceDropProducts(count = 4) {
     .slice(0, count)
     .map(p => ({
       ...p,
-      previousPrice: p.price * 1.25, // 20% off from previous
+      previousPrice: p.price * 1.25, // previousPrice is 25% above current, yielding a 20% savings
     }));
 }
 
@@ -167,6 +167,59 @@ describe('getPriceDropSection', () => {
     expect(html).toContain('style=');
     expect(html).toContain('font-family:Arial');
   });
+
+  it('returns empty for previousPrice === price (boundary)', async () => {
+    const items = [{ name: 'Same Price', price: 100, previousPrice: 100, slug: 'sp' }];
+    expect(await getPriceDropSection(items)).toBe('');
+  });
+
+  it('filters out products with non-numeric price (NaN guard)', async () => {
+    const items = [
+      { name: 'Bad Price', price: 'free', previousPrice: 100, slug: 'bp' },
+      { name: 'Bad Prev', price: 100, previousPrice: 'was-200', slug: 'bpv' },
+      { ...products[0], previousPrice: products[0].price + 100 },
+    ];
+    const html = await getPriceDropSection(items, 4);
+    expect(html).not.toContain('Bad Price');
+    expect(html).not.toContain('Bad Prev');
+    expect(html).not.toContain('NaN');
+    expect(html).toContain(products[0].name);
+  });
+
+  it('sanitizes product names to strip HTML tags', async () => {
+    const items = [{
+      name: '<script>alert(1)</script>Legit Name',
+      price: 50,
+      previousPrice: 100,
+      slug: 'xss',
+      images: ['https://example.com/img.jpg'],
+    }];
+    const html = await getPriceDropSection(items, 4);
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('alert(1)Legit Name');
+  });
+
+  it('renders card without image when images array is empty', async () => {
+    const items = [{
+      name: 'No Image Product',
+      price: 50,
+      previousPrice: 100,
+      slug: 'nip',
+      images: [],
+    }];
+    const html = await getPriceDropSection(items, 1);
+    expect(html).toContain('No Image Product');
+    expect(html).toContain('$50.00');
+    expect(html).not.toContain('<img');
+  });
+
+  it('handles negative limit by clamping to 1', async () => {
+    const items = makePriceDropProducts(2);
+    const html = await getPriceDropSection(items, -5);
+    expect(html).toContain('Price Drop');
+    const cardCount = (html.match(/<table[^>]*width="200"/g) || []).length;
+    expect(cardCount).toBe(1);
+  });
 });
 
 // ── getBackInStockSection ────────────────────────────────────────────
@@ -206,13 +259,14 @@ describe('getBackInStockSection', () => {
     }
   });
 
-  it('includes product images when available', async () => {
+  it('includes product images', async () => {
     const items = makeBackInStockProducts(2);
+    // Verify test data has images to avoid vacuous assertion
+    const withImages = items.filter(p => p.images && p.images[0]);
+    expect(withImages.length).toBeGreaterThan(0);
     const html = await getBackInStockSection(items, 4);
-    for (const p of items) {
-      if (p.images && p.images[0]) {
-        expect(html).toContain(p.images[0]);
-      }
+    for (const p of withImages) {
+      expect(html).toContain(p.images[0]);
     }
   });
 
@@ -325,12 +379,11 @@ describe('generateNewArrivalsEmail', () => {
   });
 
   it('respects product limit', async () => {
-    const html = await generateNewArrivalsEmail(products, 2);
     const eligible = products.filter(p => p.name && p.price != null);
-    if (eligible.length > 2) {
-      const notIncluded = eligible[eligible.length - 3];
-      expect(html).not.toContain(notIncluded.name);
-    }
+    expect(eligible.length).toBeGreaterThan(2);
+    const html = await generateNewArrivalsEmail(products, 2);
+    const notIncluded = eligible[eligible.length - 3];
+    expect(html).not.toContain(notIncluded.name);
   });
 });
 

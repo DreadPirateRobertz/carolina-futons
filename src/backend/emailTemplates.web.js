@@ -545,18 +545,21 @@ export const getProductRecommendationBlock = webMethod(
  * Build an HTML block for a price-drop product card.
  * Shows strikethrough previous price, current price, and savings %.
  *
- * @param {Object} product - Product with previousPrice field
- * @returns {string} HTML string for the price-drop product card
+ * @param {Object} product - Product requiring name, price, previousPrice (> price), and optionally url, slug, images
+ * @returns {string} HTML string for the price-drop product card, or empty string if product is invalid or price did not drop
  */
 function buildPriceDropBlock(product) {
   if (!product || !product.name) return '';
   if (product.price == null || product.previousPrice == null) return '';
-  if (product.previousPrice <= product.price) return '';
+  const priceNum = Number(product.price);
+  const prevPriceNum = Number(product.previousPrice);
+  if (isNaN(priceNum) || isNaN(prevPriceNum)) return '';
+  if (prevPriceNum <= priceNum) return '';
 
   const name = sanitize(product.name, 200);
-  const currentPrice = `$${Number(product.price).toFixed(2)}`;
-  const prevPrice = `$${Number(product.previousPrice).toFixed(2)}`;
-  const savingsPercent = Math.round(((product.previousPrice - product.price) / product.previousPrice) * 100);
+  const currentPrice = `$${priceNum.toFixed(2)}`;
+  const prevPrice = `$${prevPriceNum.toFixed(2)}`;
+  const savingsPercent = Math.round(((prevPriceNum - priceNum) / prevPriceNum) * 100);
   const url = product.url || `${SITE_URL}/product-page/${product.slug || ''}`;
   const image = (product.images && product.images[0]) || '';
 
@@ -578,8 +581,8 @@ function buildPriceDropBlock(product) {
  * Products must have a `previousPrice` field > current `price`.
  *
  * @function getPriceDropSection
- * @param {Array<Object>} products - Products with previousPrice field
- * @param {number} [limit=4] - Max products to feature
+ * @param {Array<Object>} products - Products with previousPrice field (must be > price)
+ * @param {number} [limit=4] - Max products to feature (clamped to 1-8)
  * @returns {Promise<string>} HTML section string
  * @permission Anyone
  */
@@ -610,8 +613,8 @@ export const getPriceDropSection = webMethod(
  * Products must have availability='InStock' and a restockedAt field.
  *
  * @function getBackInStockSection
- * @param {Array<Object>} products - Products with restockedAt field
- * @param {number} [limit=4] - Max products to feature
+ * @param {Array<Object>} products - Products with availability='InStock' and restockedAt field
+ * @param {number} [limit=4] - Max products to feature (clamped to 1-8)
  * @returns {Promise<string>} HTML section string
  * @permission Anyone
  */
