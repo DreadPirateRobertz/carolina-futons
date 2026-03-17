@@ -3,7 +3,7 @@
  * validation, template selection, queue processing, timing boundaries,
  * restock notifications, review thank-you, and input sanitization.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets, __reset as __resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
@@ -371,8 +371,14 @@ describe('triggerAbandonedCartRecovery — edge cases', () => {
 
 // ── processEmailQueue — retry/backoff edge cases ────────────────────
 
-// TODO: unskip when processEmailQueue retry/backoff features are implemented
-describe.skip('processEmailQueue — retry and backoff edge cases', () => {
+describe('processEmailQueue — retry and backoff edge cases', () => {
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('applies 15min backoff on first retry attempt', async () => {
     __seed('EmailQueue', [{
       _id: 'eq-retry1',

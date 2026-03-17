@@ -6,7 +6,7 @@
  *
  * Covers: cartRecovery.web.js + emailAutomation.web.js + emailService.web.js
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog } from './__mocks__/wix-crm-backend.js';
@@ -321,8 +321,14 @@ describe('Cooldown and Dedup', () => {
 
 // ── Cart Recovery Event ────────────────────────────────────────────────
 
-// TODO: implement cart recovery cancellation during queue processing
-describe.skip('Cart Recovery Event', () => {
+describe('Cart Recovery Event', () => {
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('marks abandoned cart as recovered on checkout completion', async () => {
     __seed('AbandonedCarts', [seedAbandonedCart()]);
     const updated = captureUpdates('AbandonedCarts');
@@ -613,8 +619,14 @@ describe('markRecoveryEmailSent Integration', () => {
 
 // ── End-to-End Flow ────────────────────────────────────────────────────
 
-// TODO: implement full end-to-end abandon → queue → recover → cancel lifecycle
-describe.skip('End-to-End: Abandon → Queue → Recover → Cancel', () => {
+describe('End-to-End: Abandon → Queue → Recover → Cancel', () => {
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('full lifecycle: abandon → queue recovery → customer recovers → cancel pending', async () => {
     // Step 1: Customer abandons checkout
     wixEcom_onAbandonedCheckoutCreated(makeCheckoutEvent({ _id: 'ck-e2e' }));

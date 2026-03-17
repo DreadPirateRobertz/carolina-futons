@@ -2648,6 +2648,337 @@ Action buttons (right):
         ["detailApr","Text","APR"],["detailInterest","Text","Interest"]
       ]}
     ]
+  },
+  // ═══════════════════════════════════════════════════════════════════════
+  // DASHBOARD & ADMIN INTEGRATIONS (v0.10.0+)
+  // These pages connect to backend web modules for analytics, content
+  // management, and account features. Each exposes admin endpoints that
+  // need editor-side UI elements for display.
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    name: "Admin Analytics Dashboard", file: "analyticsDashboard.web.js", priority: "P2", est: "40 min",
+    sections: [
+      { name: "KPI Summary Cards", impl: `<h4>📊 Implementation — Analytics KPI Dashboard</h4>
+<p><strong>Backend</strong>: <code>analyticsDashboard.web.js</code> → <code>getDashboardSummary(days)</code> returns conversion funnel rates, views, cart adds, purchases, email metrics, revenue.</p>
+<div class="layer-diagram">DATA FLOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+analyticsDashboard.web.js
+  ├─ getDashboardSummary(30)    → KPI cards
+  ├─ getConversionFunnel(30)    → Funnel chart
+  ├─ getTopConverters(10)       → Top products table
+  ├─ getCategoryPerformance()   → Category breakdown
+  ├─ getEmailFunnelMetrics(30)  → Email campaign metrics
+  └─ getRevenueAttribution(10)  → Revenue by product</div>
+<ul>
+  <li><strong>#dashKpiSection</strong>: Container for 6 KPI cards (views, cart adds, purchases, conversion rate, email opens, revenue).</li>
+  <li><strong>#dashKpiRepeater</strong>: 6-column grid (desktop), 3×2 (tablet), 2×3 (mobile). Each card shows metric label + value + trend arrow.</li>
+  <li><strong>#dashDateRange</strong>: Dropdown to select time window (7d, 30d, 90d). Triggers re-fetch of all dashboard data.</li>
+  <li><strong>#dashFunnelSection</strong>: Box for conversion funnel visualization. Code injects an HTML funnel chart via HtmlComponent.</li>
+  <li><strong>#dashTopProducts</strong>: Repeater for top-converting products table (name, views, conversion rate, revenue).</li>
+  <li><span class="impl-warn">⚠️ Admin-only page — requires Permissions.Admin. Add "Members Area" login gate.</span></li>
+</ul>`, elements: [
+        ["dashKpiSection","Section","Dashboard container"],
+        ["dashDateRange","Dropdown","Time range selector"],
+        ["dashKpiRepeater","Repeater","6 KPI cards"],
+        ["dashFunnelSection","Box","Funnel chart container"],
+        ["dashFunnelHtml","HtmlComponent","Funnel visualization"],
+        ["dashTopProducts","Repeater","Top products table"]
+      ], children: [
+        ["dashKpiLabel","Text","Metric name"],
+        ["dashKpiValue","Text","Metric value"],
+        ["dashKpiTrend","Text","Trend indicator"],
+        ["dashProductName","Text","Product name"],
+        ["dashProductViews","Text","View count"],
+        ["dashProductConv","Text","Conversion rate"],
+        ["dashProductRev","Text","Revenue"]
+      ]},
+      { name: "Category & Email Performance", impl: `<h4>📊 Implementation — Category & Email Metrics</h4>
+<ul>
+  <li><strong>#dashCategoryRepeater</strong>: Category performance breakdown — each row shows category name, views, add-to-cart rate, purchase rate.</li>
+  <li><strong>#dashEmailSection</strong>: Email funnel metrics from <code>getEmailFunnelMetrics()</code> — sent, opened, clicked, converted by sequence type (welcome, cart recovery, browse abandonment).</li>
+  <li><strong>#dashRevenueChart</strong>: HtmlComponent for revenue attribution chart. Code renders via <code>getRevenueAttribution()</code>.</li>
+</ul>`, elements: [
+        ["dashCategoryRepeater","Repeater","Category breakdown"],
+        ["dashEmailSection","Box","Email metrics container"],
+        ["dashEmailRepeater","Repeater","Email sequence metrics"],
+        ["dashRevenueChart","HtmlComponent","Revenue chart"]
+      ], children: [
+        ["dashCatName","Text","Category name"],
+        ["dashCatViews","Text","Views"],
+        ["dashCatCartRate","Text","Add-to-cart %"],
+        ["dashEmailType","Text","Sequence type"],
+        ["dashEmailSent","Text","Sent count"],
+        ["dashEmailOpened","Text","Open rate"],
+        ["dashEmailClicked","Text","Click rate"]
+      ]}
+    ]
+  },
+  {
+    name: "Content Orchestrator Admin", file: "contentOrchestrator.web.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Orchestration Controls", impl: `<h4>🎛️ Implementation — Content Orchestrator</h4>
+<p><strong>Backend</strong>: <code>contentOrchestrator.web.js</code> — event-driven content coordinator. Triggers newsletter, social story, catalog sync, and email when catalog changes happen.</p>
+<div class="layer-diagram">ORCHESTRATION PIPELINE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
+  → contentOrchestrator.web.js
+    ├─ emailTemplates.web.js → newsletter section
+    ├─ socialStoryHelpers.js → social story content
+    ├─ emailAutomation.web.js → queued email campaign
+    ├─ facebookCatalog.web.js → FB catalog sync
+    └─ pinterestCatalogSync.web.js → Pinterest sync
+  → contentScheduler.web.js → queue with dedup + rate limits</div>
+<ul>
+  <li><strong>#orchConfigSection</strong>: Toggle switches for each action type (newsletter, social, catalog sync, email). Uses <code>getOrchestrationConfig()</code> / <code>updateOrchestrationConfig()</code>.</li>
+  <li><strong>#orchTriggerBtn</strong>: Manual trigger button — calls <code>triggerManualOrchestration(eventType, productData, {dryRun})</code>.</li>
+  <li><strong>#orchDryRunToggle</strong>: Toggle for dry-run mode (log what would happen without executing).</li>
+  <li><strong>#orchEventType</strong>: Dropdown to select event type (new_arrival, price_drop, back_in_stock, seasonal).</li>
+  <li><strong>#orchHistoryRepeater</strong>: Recent orchestration events from <code>getOrchestrationHistory(20)</code>.</li>
+  <li><span class="impl-warn">⚠️ Requires CONTENT_EVENT_KEY secret in Wix Secrets Manager for production auth.</span></li>
+</ul>`, elements: [
+        ["orchConfigSection","Section","Orchestrator admin page"],
+        ["orchNewsletterToggle","Toggle","Enable newsletter generation"],
+        ["orchSocialToggle","Toggle","Enable social story generation"],
+        ["orchCatalogToggle","Toggle","Enable catalog sync"],
+        ["orchEmailToggle","Toggle","Enable email campaigns"],
+        ["orchEventType","Dropdown","Event type selector"],
+        ["orchDryRunToggle","Toggle","Dry-run mode"],
+        ["orchTriggerBtn","Button","Manual trigger"],
+        ["orchStatusText","Text","Last trigger result"]
+      ]},
+      { name: "Schedule Queue", impl: `<h4>📅 Implementation — Content Schedule Queue</h4>
+<p><strong>Backend</strong>: <code>contentScheduler.web.js</code> — queue-based scheduler with dedup, rate limits, and priority ordering.</p>
+<ul>
+  <li><strong>#schedQueueRepeater</strong>: Pending/sent/failed items from <code>getScheduleQueue({status})</code>. Shows content type, platform, product, scheduled time, status.</li>
+  <li><strong>#schedStatsSection</strong>: Queue statistics from <code>getScheduleStats(30)</code> — counts by status (pending, sent, failed, cancelled).</li>
+  <li><strong>#schedCancelBtn</strong>: Cancel button per row — calls <code>cancelScheduledItem(itemId)</code>.</li>
+  <li><strong>Priority order</strong>: back_in_stock > price_drop > new_arrival > seasonal</li>
+  <li><strong>Rate limits</strong>: IG/FB 25/day, Pinterest 50/day. No duplicate product within 7-day window.</li>
+</ul>`, elements: [
+        ["schedQueueRepeater","Repeater","Content queue"],
+        ["schedStatusFilter","Dropdown","Filter by status"],
+        ["schedStatsSection","Box","Queue statistics"],
+        ["schedStatsPending","Text","Pending count"],
+        ["schedStatsSent","Text","Sent count"],
+        ["schedStatsFailed","Text","Failed count"]
+      ], children: [
+        ["schedContentType","Text","newsletter/social/catalog"],
+        ["schedPlatform","Text","Platform name"],
+        ["schedProduct","Text","Product name"],
+        ["schedTime","Text","Scheduled datetime"],
+        ["schedStatus","Text","Status badge"],
+        ["schedCancelBtn","Button","Cancel item"]
+      ]}
+    ]
+  },
+  {
+    name: "Bundle Analytics (on Product Page)", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
+    sections: [
+      { name: "Bundle Performance", impl: `<h4>📦 Implementation — Bundle Analytics</h4>
+<p><strong>Backend</strong>: <code>bundleAnalytics.web.js</code> — tracks bundle impressions, clicks, add-to-cart, and purchases.</p>
+<ul>
+  <li><strong>#bundleAnalyticsSection</strong>: Admin-only panel showing bundle performance metrics.</li>
+  <li><code>getBundlePerformance(30, 10)</code> returns conversion rates and revenue per bundle.</li>
+  <li><code>getRecommendedBundles(30)</code> returns AI-driven recommendations: promote, adjust_price, retire, expand_placement.</li>
+  <li>Tracking functions (<code>trackBundleImpression</code>) fire automatically from frontend bundle display code — no editor elements needed for tracking.</li>
+</ul>`, elements: [
+        ["bundleAnalyticsSection","Box","Admin analytics panel"],
+        ["bundlePerformanceRepeater","Repeater","Bundle comparison"],
+        ["bundleRecommendations","Repeater","AI recommendations"]
+      ], children: [
+        ["bundleName","Text","Bundle name"],
+        ["bundleConv","Text","Conversion rate"],
+        ["bundleRevenue","Text","Revenue"],
+        ["bundleAction","Text","Recommended action"]
+      ]}
+    ]
+  },
+  {
+    name: "Core Web Vitals Monitor", file: "coreWebVitals.web.js", priority: "P2", est: "15 min",
+    sections: [
+      { name: "Performance Dashboard", impl: `<h4>⚡ Implementation — Core Web Vitals</h4>
+<p><strong>Backend</strong>: <code>coreWebVitals.web.js</code> — reports and monitors LCP, FID, INP, CLS, TTFB, FCP.</p>
+<div class="layer-diagram">METRICS TRACKED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LCP  (Largest Contentful Paint) — target < 2.5s
+FID  (First Input Delay)       — target < 100ms
+INP  (Interaction to Next Paint)— target < 200ms
+CLS  (Cumulative Layout Shift) — target < 0.1
+TTFB (Time to First Byte)      — target < 800ms
+FCP  (First Contentful Paint)   — target < 1.8s</div>
+<ul>
+  <li><strong>#cwvDashboard</strong>: Container for performance metrics display.</li>
+  <li><code>getPerformanceSummary()</code> returns current metric averages + pass/fail against budget.</li>
+  <li><code>getPagePerformance(page, 30)</code> breaks down by page.</li>
+  <li><code>getImageOptimizationHints()</code> returns optimization recommendations.</li>
+  <li><code>checkPerformanceBudget()</code> returns pass/fail for each metric threshold.</li>
+  <li><strong>Frontend</strong>: <code>measureVitals()</code> called from page onReady — reports metrics to CMS automatically.</li>
+</ul>`, elements: [
+        ["cwvDashboard","Box","CWV dashboard container"],
+        ["cwvMetricsRepeater","Repeater","6 metric cards"],
+        ["cwvPageDropdown","Dropdown","Page selector"],
+        ["cwvImageHints","Repeater","Image optimization tips"]
+      ], children: [
+        ["cwvMetricName","Text","Metric name"],
+        ["cwvMetricValue","Text","Current value"],
+        ["cwvMetricTarget","Text","Target threshold"],
+        ["cwvMetricStatus","Text","Pass/Fail badge"]
+      ]}
+    ]
+  },
+  {
+    name: "Error Monitoring Admin", file: "errorMonitoring.web.js", priority: "P2", est: "15 min",
+    sections: [
+      { name: "Error Dashboard", impl: `<h4>🚨 Implementation — Error Monitoring</h4>
+<p><strong>Backend</strong>: <code>errorMonitoring.web.js</code> — collects runtime errors from critical user flows.</p>
+<ul>
+  <li><strong>#errorDashboard</strong>: Admin panel showing recent errors grouped by flow (checkout, cart, product page, search).</li>
+  <li>Error boundaries in page code catch and report failures automatically.</li>
+  <li>Dashboard alerts for: payment failures, API timeouts, missing product data.</li>
+  <li><span class="impl-warn">⚠️ Error dashboard is admin-only. Errors are reported from frontend via <code>reportError()</code> (Anyone permission), but dashboard queries require Admin.</span></li>
+</ul>`, elements: [
+        ["errorDashboard","Box","Error dashboard container"],
+        ["errorRepeater","Repeater","Error log entries"],
+        ["errorFlowFilter","Dropdown","Filter by flow"],
+        ["errorDateRange","Dropdown","Time range"]
+      ], children: [
+        ["errorTimestamp","Text","When"],
+        ["errorFlow","Text","Checkout/Cart/Product"],
+        ["errorMessage","Text","Error summary"],
+        ["errorCount","Text","Occurrence count"]
+      ]}
+    ]
+  },
+  // ═══════════════════════════════════════════════════════════════════════
+  // SOCIAL MEDIA INTEGRATIONS (v0.9.0+)
+  // Backend modules for social posting, catalog sync, feed embeds,
+  // and cross-platform content distribution.
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    name: "Social Media Hub (on Home/Product Pages)", file: "SocialFeedEmbed.js + socialStoryHelpers.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "Social Feed Embeds", impl: `<h4>📱 Implementation — Social Feed Embeds</h4>
+<p><strong>Frontend</strong>: <code>SocialFeedEmbed.js</code> — embeds live social feeds on any page.</p>
+<div class="layer-diagram">SOCIAL MODULES (104 backend + 47 frontend files):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POSTING PIPELINE:
+  socialStoryHelpers.js      → 4 story templates
+    buildProductSpotlight()  → Single product feature
+    buildNewArrivalStory()   → New product announcement
+    buildSeasonalPromo()     → Campaign with promo codes
+    buildTestimonialStory()  → Customer testimonial
+  socialStoryService.web.js  → Meta Graph API posting
+    postStory()              → Post to IG/FB
+    checkTokenHealth()       → Token validity
+    getScheduleStatus()      → Day schedule check
+
+SCHEDULING:
+  contentScheduler.web.js    → Queue with rate limits
+    IG/FB: 25 posts/day max
+    Pinterest: 50 pins/day max
+    7-day product dedup per platform
+
+CATALOG SYNC:
+  facebookCatalog.web.js     → FB/Meta product feed
+    buildCatalogBatch()      → Product batch export
+    getMetaRateLimits()      → API rate awareness
+  pinterestCatalogSync.web.js → Pinterest catalog
+    syncCatalogBatch()       → Pin batch sync
+    getBoardStructure()      → Board organization
+
+SHARING:
+  socialMediaKit.web.js      → Share URLs + OG validation
+  socialProof.web.js         → Social proof notifications
+  socialWishlist.js          → Share + wishlist buttons</div>
+<ul>
+  <li><strong>#socialFeedSection</strong>: Section containing all social feed embeds. Place on Home page below product grids.</li>
+  <li><strong>#instagramFeed</strong>: HtmlComponent — <code>initInstagramFeed()</code> renders a grid of recent IG posts. Falls back to styled cards if API unavailable.</li>
+  <li><strong>#tiktokEmbed</strong>: HtmlComponent — <code>initTikTokFeed()</code> renders TikTok video embeds.</li>
+  <li><strong>#pinterestBoard</strong>: HtmlComponent — <code>initPinterestBoard()</code> renders Pinterest board widget.</li>
+  <li><strong>#socialSectionTitle</strong>: Text heading — "Follow Us" or "See Us On Social".</li>
+  <li><strong>Share buttons</strong> (on Product Page): <code>socialWishlist.js → initSocialShare()</code> creates Facebook, Pinterest, Email, Copy Link buttons. Uses <code>socialMediaKit.web.js → getShareUrls()</code>.</li>
+  <li><strong>Social proof toasts</strong>: <code>socialProofToast.js → initProductSocialProof()</code> shows "X people bought this" notifications. No editor element needed — injected via code.</li>
+</ul>`, elements: [
+        ["socialFeedSection","Section","Social feeds container"],
+        ["socialSectionTitle","Text","Section heading"],
+        ["instagramFeed","HtmlComponent","Instagram grid embed"],
+        ["tiktokEmbed","HtmlComponent","TikTok video embed"],
+        ["pinterestBoard","HtmlComponent","Pinterest board embed"]
+      ]},
+      { name: "Social Catalog Sync Status", impl: `<h4>🔄 Implementation — Catalog Sync Admin</h4>
+<p><strong>Admin-only</strong>: Status panels for Facebook + Pinterest catalog sync health.</p>
+<ul>
+  <li><strong>#catalogSyncStatus</strong>: Admin panel showing sync status for FB and Pinterest feeds.</li>
+  <li><code>facebookCatalog.web.js → getMetaRateLimits()</code>: Current API usage vs limits.</li>
+  <li><code>pinterestCatalogSync.web.js → getCatalogSyncStatus()</code>: Feed health, last sync time, error count.</li>
+  <li><code>pinterestCatalogSync.web.js → auditCatalog()</code>: Full audit of product readiness for Pinterest (88 products).</li>
+  <li><strong>Validation</strong>: <code>validateCatalogProduct()</code> checks each product against platform requirements before sync.</li>
+</ul>`, elements: [
+        ["catalogSyncStatus","Box","Sync status container"],
+        ["fbSyncStatus","Text","Facebook sync health"],
+        ["fbRateLimit","Text","FB API rate usage"],
+        ["pinSyncStatus","Text","Pinterest sync health"],
+        ["pinRateLimit","Text","Pinterest API rate usage"],
+        ["catalogAuditBtn","Button","Run catalog audit"],
+        ["catalogAuditResults","Repeater","Audit results"]
+      ], children: [
+        ["auditProductName","Text","Product name"],
+        ["auditFbReady","Text","FB ready status"],
+        ["auditPinReady","Text","Pinterest ready status"],
+        ["auditIssues","Text","Issues found"]
+      ]}
+    ]
+  },
+  {
+    name: "Social Media Content Calendar", file: "contentScheduler.web.js + socialStoryHelpers.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Content Calendar View", impl: `<h4>📅 Implementation — Social Content Calendar</h4>
+<p><strong>Content pipeline</strong>: Automated content generation tied to catalog events. The orchestrator creates content, the scheduler queues it with rate limiting and dedup.</p>
+<div class="layer-diagram">CONTENT TYPES GENERATED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📰 NEWSLETTER: emailTemplates.web.js
+   buildProductBlock()         → Single product feature block
+   getNewArrivalsSection()     → New arrivals section
+   getCategorySpotlightSection() → Category spotlight
+   Full catalog-driven templates (43+ tests)
+
+📸 SOCIAL STORIES: socialStoryHelpers.js
+   4 templates × 3 platforms (IG/FB/Pinterest)
+   Platform-specific formatting:
+     IG Story: 1080×1920 (9:16 vertical)
+     FB Post:  1200×630 (landscape)
+     Pinterest: 1000×1500 (2:3 pin)
+   Engagement window scheduling per platform
+
+📧 EMAIL CAMPAIGNS: emailAutomation.web.js
+   Welcome sequence (3 emails over 7 days)
+   Cart recovery (3 reminders: 1h, 24h, 72h)
+   Browse abandonment (2 nudges: 4h, 48h)
+   Post-purchase follow-up (2 emails)
+   A/B testing with send-time optimization
+
+🔄 CATALOG SYNC: facebookCatalog + pinterestCatalogSync
+   88 CF products synced to FB + Pinterest
+   Enhanced fields: custom_label_0-4, color, material
+   Partial recovery on batch failures</div>
+<ul>
+  <li><strong>#contentCalendar</strong>: Calendar/list view of scheduled content from <code>getScheduleQueue()</code>.</li>
+  <li><strong>#calendarViewToggle</strong>: Switch between calendar grid and list views.</li>
+  <li><strong>#calendarPlatformFilter</strong>: Filter by platform (all, email, instagram, facebook, pinterest).</li>
+  <li>Calendar shows scheduled posts with status badges (pending=yellow, sent=green, failed=red, cancelled=gray).</li>
+</ul>`, elements: [
+        ["contentCalendar","Box","Calendar container"],
+        ["calendarViewToggle","Button","Grid/List toggle"],
+        ["calendarPlatformFilter","Dropdown","Platform filter"],
+        ["calendarRepeater","Repeater","Scheduled content items"]
+      ], children: [
+        ["calendarDate","Text","Schedule date"],
+        ["calendarType","Text","Content type"],
+        ["calendarPlatform","Text","Platform"],
+        ["calendarProduct","Text","Product name"],
+        ["calendarStatus","Text","Status badge"]
+      ]}
+    ]
   }
 ];
 
