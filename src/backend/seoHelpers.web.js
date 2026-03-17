@@ -5,7 +5,7 @@
  * page titles, and keyword-rich image alt text. All exports use the webMethod pattern
  * with Permissions.Anyone unless noted otherwise.
  *
- * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs).
+ * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs, getAllBlogPosts).
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { getBlogFaqs, getAllBlogPosts } from 'backend/blogContent';
@@ -1233,14 +1233,16 @@ export const getSitemapData = webMethod(
         };
       });
 
-    const blogPosts = getAllBlogPosts();
-    const blogPages = blogPosts.map(post => ({
-      url: `${baseUrl}/blog/${post.slug}`,
-      title: post.title,
-      slug: post.slug,
-      priority: '0.7',
-      changefreq: 'weekly',
-    }));
+    const blogPosts = Array.isArray(getAllBlogPosts()) ? getAllBlogPosts() : [];
+    const blogPages = blogPosts
+      .filter(post => post && typeof post.slug === 'string' && post.slug.length > 0)
+      .map(post => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        title: post.title || '',
+        slug: post.slug,
+        priority: '0.7',
+        changefreq: 'weekly',
+      }));
 
     return { staticPages, categoryPages, productPages, blogPages };
   }
@@ -1248,7 +1250,7 @@ export const getSitemapData = webMethod(
 
 /**
  * Generate XML sitemap string from sitemap data.
- * @param {{ staticPages: Array, categoryPages: Array, productPages: Array }} sitemapData
+ * @param {{ staticPages: Array, categoryPages: Array, productPages: Array, blogPages?: Array }} sitemapData
  * @returns {string} Valid XML sitemap
  */
 export const buildSitemapXml = webMethod(
