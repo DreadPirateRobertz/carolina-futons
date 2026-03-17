@@ -5,10 +5,10 @@
  * page titles, and keyword-rich image alt text. All exports use the webMethod pattern
  * with Permissions.Anyone unless noted otherwise.
  *
- * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs).
+ * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs, getAllBlogPosts).
  */
 import { Permissions, webMethod } from 'wix-web-module';
-import { getBlogFaqs } from 'backend/blogContent';
+import { getBlogFaqs, getAllBlogPosts } from 'backend/blogContent';
 import { detectProductBrand } from 'public/productPageUtils.js';
 
 const BUSINESS_INFO = {
@@ -1194,7 +1194,7 @@ const STATIC_PAGES = [
  * Product pages require a products array from the caller (CMS query).
  *
  * @param {Array<{slug: string, _updatedDate?: string|Date}>} [products=[]] - Product items
- * @returns {{ staticPages: Array, categoryPages: Array, productPages: Array }}
+ * @returns {{ staticPages: Array, categoryPages: Array, productPages: Array, blogPages: Array }}
  */
 export const getSitemapData = webMethod(
   Permissions.Anyone,
@@ -1233,13 +1233,24 @@ export const getSitemapData = webMethod(
         };
       });
 
-    return { staticPages, categoryPages, productPages };
+    const blogPosts = Array.isArray(getAllBlogPosts()) ? getAllBlogPosts() : [];
+    const blogPages = blogPosts
+      .filter(post => post && typeof post.slug === 'string' && post.slug.length > 0)
+      .map(post => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        title: post.title || '',
+        slug: post.slug,
+        priority: '0.7',
+        changefreq: 'weekly',
+      }));
+
+    return { staticPages, categoryPages, productPages, blogPages };
   }
 );
 
 /**
  * Generate XML sitemap string from sitemap data.
- * @param {{ staticPages: Array, categoryPages: Array, productPages: Array }} sitemapData
+ * @param {{ staticPages: Array, categoryPages: Array, productPages: Array, blogPages?: Array }} sitemapData
  * @returns {string} Valid XML sitemap
  */
 export const buildSitemapXml = webMethod(
@@ -1253,6 +1264,7 @@ export const buildSitemapXml = webMethod(
       ...(sitemapData.staticPages || []),
       ...(sitemapData.categoryPages || []),
       ...(sitemapData.productPages || []),
+      ...(sitemapData.blogPages || []),
     ];
 
     for (const page of allPages) {
