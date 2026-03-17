@@ -11,7 +11,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import {
-  buildProductBlock,
   getNewArrivalsSection,
   getPriceDropSection,
   getBackInStockSection,
@@ -112,6 +111,8 @@ describe('getPriceDropSection', () => {
     const items = makePriceDropProducts(2);
     const html = await getPriceDropSection(items, 0);
     expect(html).toContain('Price Drop');
+    const cardCount = (html.match(/<table[^>]*width="200"/g) || []).length;
+    expect(cardCount).toBe(1);
   });
 
   it('filters out products without previousPrice', async () => {
@@ -289,6 +290,8 @@ describe('getBackInStockSection', () => {
     const items = makeBackInStockProducts(2);
     const html = await getBackInStockSection(items, 0);
     expect(html).toContain('Back in Stock');
+    const cardCount = (html.match(/<table[^>]*width="200"/g) || []).length;
+    expect(cardCount).toBe(1);
   });
 
   it('filters out products not marked InStock', async () => {

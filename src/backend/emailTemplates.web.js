@@ -429,29 +429,28 @@ export function buildProductBlock(product) {
  * @returns {Promise<string>} HTML section string
  * @permission Anyone
  */
-export const getNewArrivalsSection = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
+async function _getNewArrivalsSection(products, limit = 4) {
+  if (!Array.isArray(products) || products.length === 0) return '';
 
-    const cap = Math.min(Math.max(1, limit), 8);
-    // Newest products are at the end of the catalog array
-    const arrivals = products
-      .filter(p => p.name && p.price != null)
-      .slice(-cap)
-      .reverse();
+  const cap = Math.min(Math.max(1, limit), 8);
+  // Newest products are at the end of the catalog array
+  const arrivals = products
+    .filter(p => p.name && p.price != null)
+    .slice(-cap)
+    .reverse();
 
-    if (arrivals.length === 0) return '';
+  if (arrivals.length === 0) return '';
 
-    const blocks = arrivals.map(p => buildProductBlock(p)).join('\n');
+  const blocks = arrivals.map(p => buildProductBlock(p)).join('\n');
 
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
   <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">New Arrivals</td></tr>
   <tr><td style="text-align:center;">${blocks}</td></tr>
   <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">View all products →</a></td></tr>
 </table>`;
-  }
-);
+}
+
+export const getNewArrivalsSection = webMethod(Permissions.Anyone, _getNewArrivalsSection);
 
 /**
  * Generate a "Category Spotlight" email section featuring products from a specific category.
@@ -586,27 +585,26 @@ function buildPriceDropBlock(product) {
  * @returns {Promise<string>} HTML section string
  * @permission Anyone
  */
-export const getPriceDropSection = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
+async function _getPriceDropSection(products, limit = 4) {
+  if (!Array.isArray(products) || products.length === 0) return '';
 
-    const cap = Math.min(Math.max(1, limit), 8);
-    const drops = products
-      .filter(p => p.name && p.price != null && p.previousPrice != null && p.previousPrice > p.price)
-      .slice(0, cap);
+  const cap = Math.min(Math.max(1, limit), 8);
+  const drops = products
+    .filter(p => p.name && p.price != null && p.previousPrice != null && p.previousPrice > p.price)
+    .slice(0, cap);
 
-    if (drops.length === 0) return '';
+  if (drops.length === 0) return '';
 
-    const blocks = drops.map(p => buildPriceDropBlock(p)).join('\n');
+  const blocks = drops.map(p => buildPriceDropBlock(p)).join('\n');
 
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
   <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">Price Drop Alert</td></tr>
   <tr><td style="text-align:center;">${blocks}</td></tr>
   <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">View all deals →</a></td></tr>
 </table>`;
-  }
-);
+}
+
+export const getPriceDropSection = webMethod(Permissions.Anyone, _getPriceDropSection);
 
 /**
  * Generate a "Back in Stock" email section from restocked products.
@@ -618,27 +616,26 @@ export const getPriceDropSection = webMethod(
  * @returns {Promise<string>} HTML section string
  * @permission Anyone
  */
-export const getBackInStockSection = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
+async function _getBackInStockSection(products, limit = 4) {
+  if (!Array.isArray(products) || products.length === 0) return '';
 
-    const cap = Math.min(Math.max(1, limit), 8);
-    const restocked = products
-      .filter(p => p.name && p.price != null && p.availability === 'InStock' && p.restockedAt)
-      .slice(0, cap);
+  const cap = Math.min(Math.max(1, limit), 8);
+  const restocked = products
+    .filter(p => p.name && p.price != null && p.availability === 'InStock' && p.restockedAt)
+    .slice(0, cap);
 
-    if (restocked.length === 0) return '';
+  if (restocked.length === 0) return '';
 
-    const blocks = restocked.map(p => buildProductBlock(p)).join('\n');
+  const blocks = restocked.map(p => buildProductBlock(p)).join('\n');
 
-    return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+  return `<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
   <tr><td style="padding:16px 0 8px;font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#1a1a1a;text-align:center;">Back in Stock</td></tr>
   <tr><td style="text-align:center;">${blocks}</td></tr>
   <tr><td style="text-align:center;padding:12px 0;"><a href="${SITE_URL}/shop-main" style="font-family:Arial,sans-serif;font-size:14px;color:#8B4513;text-decoration:underline;">Shop now before they sell out →</a></td></tr>
 </table>`;
-  }
-);
+}
+
+export const getBackInStockSection = webMethod(Permissions.Anyone, _getBackInStockSection);
 
 // ── Full Email Template Generators ──────────────────────────────────
 
@@ -695,17 +692,17 @@ function makeEmailGenerator(title, sectionFn) {
 
 /** Generate a complete "New Arrivals" HTML email from catalog products. */
 export const generateNewArrivalsEmail = makeEmailGenerator(
-  'New Arrivals at Carolina Futons', getNewArrivalsSection
+  'New Arrivals at Carolina Futons', _getNewArrivalsSection
 );
 
 /** Generate a complete "Price Drop" HTML email from products with reduced prices. */
 export const generatePriceDropEmail = makeEmailGenerator(
-  'Price Drops at Carolina Futons', getPriceDropSection
+  'Price Drops at Carolina Futons', _getPriceDropSection
 );
 
 /** Generate a complete "Back in Stock" HTML email from restocked products. */
 export const generateBackInStockEmail = makeEmailGenerator(
-  'Back in Stock at Carolina Futons', getBackInStockSection
+  'Back in Stock at Carolina Futons', _getBackInStockSection
 );
 
 // Export for testing
