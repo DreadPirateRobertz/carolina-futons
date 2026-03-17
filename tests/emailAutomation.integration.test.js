@@ -9,7 +9,7 @@
  * - Re-engagement filtering: only dormant contacts, skip recent purchases
  * - A/B test consistency: variant persists across queue+process cycle
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
@@ -25,6 +25,13 @@ import {
   wixEcom_onOrderCreated,
 } from '../src/backend/emailAutomation.web.js';
 
+// Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+beforeAll(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+});
+afterAll(() => { vi.useRealTimers(); });
+
 beforeEach(() => {
   __setSecrets({
     WELCOME_DISCOUNT_CODE: 'WELCOME10',
@@ -34,8 +41,7 @@ beforeEach(() => {
 
 // ── Full Welcome Lifecycle ─────────────────────────────────────────
 
-// TODO: implement welcome sequence lifecycle tests
-describe.skip('welcome sequence lifecycle', () => {
+describe('welcome sequence lifecycle', () => {
   it('member created → 3 emails queued → step 1 sent immediately → steps 2-3 stay pending', async () => {
     // Step 1: Trigger welcome sequence
     const queued = await triggerWelcomeSequence('contact-lc1', 'lifecycle@test.com', 'Lori');
@@ -175,8 +181,7 @@ describe.skip('welcome sequence lifecycle', () => {
 
 // ── Cart Recovery Lifecycle ────────────────────────────────────────
 
-// TODO: implement cart recovery lifecycle tests
-describe.skip('cart recovery lifecycle', () => {
+describe('cart recovery lifecycle', () => {
   it('abandoned cart → recovery queued → cart recovered → remaining emails cancelled', async () => {
     // Step 1: Seed an abandoned cart >1h old
     __seed('AbandonedCarts', [{
@@ -414,8 +419,7 @@ describe('unsubscribe mid-sequence', () => {
 
 // ── Retry Exhaustion ───────────────────────────────────────────────
 
-// TODO: implement retry exhaustion tests
-describe.skip('retry exhaustion', () => {
+describe('retry exhaustion', () => {
   it('email fails 3 times → marked permanently failed with error', async () => {
     // Attempt 0: first try
     __seed('EmailQueue', [{
@@ -561,8 +565,7 @@ describe('re-engagement filtering', () => {
 
 // ── Post-Purchase Full Flow ────────────────────────────────────────
 
-// TODO: implement post-purchase full flow tests
-describe.skip('post-purchase full flow', () => {
+describe('post-purchase full flow', () => {
   it('order event → care sequence queued → first email sent → stats updated', async () => {
     let insertedItems = [];
     __onInsert((collection, item) => { insertedItems.push(item); });
