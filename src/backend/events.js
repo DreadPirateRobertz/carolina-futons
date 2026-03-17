@@ -214,8 +214,10 @@ export async function wixStores_onProductCreated(event) {
   if (!productId) return;
 
   try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const eventSecret = await getSecret('CONTENT_EVENT_KEY');
     const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
-    await triggerEventOrchestration('new_arrival', {
+    await triggerEventOrchestration(eventSecret, 'new_arrival', {
       productId,
       productName: product.name || '',
       productCategory: product.productType || '',
@@ -251,8 +253,10 @@ export async function wixStores_onProductUpdated(event) {
   if (oldPrice == null || newPrice == null || newPrice >= oldPrice) return;
 
   try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const eventSecret = await getSecret('CONTENT_EVENT_KEY');
     const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
-    await triggerEventOrchestration('price_drop', {
+    await triggerEventOrchestration(eventSecret, 'price_drop', {
       productId,
       productName: product.name || '',
       productCategory: product.productType || '',

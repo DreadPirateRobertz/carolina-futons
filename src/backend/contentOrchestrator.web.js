@@ -72,6 +72,87 @@ function getPlatformForAction(action) {
   }
 }
 
+async function verifyEventSecret(providedSecret) {
+  if (!providedSecret) return false;
+  const { getSecret } = await import('wix-secrets-backend');
+  const expected = await getSecret('CONTENT_EVENT_KEY');
+  return providedSecret === expected;
+}
+
+/**
+ * Shared scheduling logic. Validates inputs, checks config + idempotency,
+ * and either writes CMS entries or returns a dry-run preview.
+ *
+ * @param {string} eventType
+ * @param {Object} productData
+ * @param {Object} options - { dryRun?: boolean }
+ * @returns {{scheduled: Array, skipped: number, eventId: string}}
+ */
+async function scheduleActions(eventType, productData, options = {}) {
+  const cleanType = sanitize(eventType, 50);
+  if (!VALID_EVENT_TYPES.includes(cleanType)) {
+    return { error: 'Invalid event type. Must be: ' + VALID_EVENT_TYPES.join(', ') };
+  }
+
+  const productId = validateId(productData?.productId);
+  if (!productId) {
+    return { error: 'Valid product ID is required.' };
+  }
+
+  const config = await getConfig();
+  const actions = EVENT_ACTIONS[cleanType] || [];
+  const eventId = buildEventId(cleanType, productId);
+  const dryRun = !!options.dryRun;
+
+  const existing = await wixData.query('ContentSchedule')
+    .eq('createdBy', eventId)
+    .find();
+  const existingTypes = new Set(existing.items.map(i => i.contentType));
+
+  const scheduled = [];
+  let skipped = 0;
+
+  for (const action of actions) {
+    const configKey = CONFIG_KEY_MAP[action];
+    if (configKey && config[configKey] === false) {
+      skipped++;
+      continue;
+    }
+
+    if (existingTypes.has(action)) {
+      skipped++;
+      continue;
+    }
+
+    const entry = {
+      contentType: action,
+      platform: getPlatformForAction(action),
+      productId,
+      productName: sanitize(productData.productName || '', 200),
+      scheduledAt: new Date(),
+      status: 'pending',
+      priority: ACTION_PRIORITY[cleanType] ?? 3,
+      eventType: cleanType,
+      createdBy: eventId,
+      payload: JSON.stringify({
+        productCategory: sanitize(productData.productCategory || '', 100),
+        imageUrl: sanitize(productData.imageUrl || '', 500),
+        oldPrice: productData.oldPrice ?? null,
+        newPrice: productData.newPrice ?? null,
+      }),
+      processedAt: null,
+      error: '',
+    };
+
+    if (!dryRun) {
+      await wixData.insert('ContentSchedule', entry);
+    }
+    scheduled.push({ contentType: action, platform: entry.platform, eventId });
+  }
+
+  return { scheduled, skipped, eventId };
+}
+
 // ── WebMethods ──────────────────────────────────────────────────────
 
 /**
@@ -89,71 +170,14 @@ export const triggerManualOrchestration = webMethod(
     try {
       await requireAdmin();
 
-      const cleanType = sanitize(eventType, 50);
-      if (!VALID_EVENT_TYPES.includes(cleanType)) {
-        return { success: false, error: 'Invalid event type. Must be: ' + VALID_EVENT_TYPES.join(', '), scheduled: [] };
+      const result = await scheduleActions(eventType, productData, options);
+      if (result.error) {
+        return { success: false, error: result.error, scheduled: [] };
       }
 
-      const productId = validateId(productData?.productId);
-      if (!productId) {
-        return { success: false, error: 'Valid product ID is required.', scheduled: [] };
-      }
-
-      const config = await getConfig();
-      const actions = EVENT_ACTIONS[cleanType] || [];
-      const eventId = buildEventId(cleanType, productId);
-      const dryRun = !!options.dryRun;
-
-      // Idempotency: check for existing entries with same eventId
-      const existing = await wixData.query('ContentSchedule')
-        .eq('createdBy', eventId)
-        .find();
-      const existingTypes = new Set(existing.items.map(i => i.contentType));
-
-      const scheduled = [];
-      let skipped = 0;
-
-      for (const action of actions) {
-        const configKey = CONFIG_KEY_MAP[action];
-        if (configKey && config[configKey] === false) {
-          skipped++;
-          continue;
-        }
-
-        if (existingTypes.has(action)) {
-          skipped++;
-          continue;
-        }
-
-        const entry = {
-          contentType: action,
-          platform: getPlatformForAction(action),
-          productId,
-          productName: sanitize(productData.productName || '', 200),
-          scheduledAt: new Date(),
-          status: 'pending',
-          priority: ACTION_PRIORITY[cleanType] ?? 3,
-          eventType: cleanType,
-          createdBy: eventId,
-          payload: JSON.stringify({
-            productCategory: sanitize(productData.productCategory || '', 100),
-            imageUrl: productData.imageUrl || '',
-            oldPrice: productData.oldPrice ?? null,
-            newPrice: productData.newPrice ?? null,
-          }),
-          processedAt: null,
-          error: '',
-        };
-
-        if (!dryRun) {
-          await wixData.insert('ContentSchedule', entry);
-        }
-        scheduled.push({ contentType: action, platform: entry.platform, eventId });
-      }
-
-      const result = { success: true, scheduled, skipped };
-      if (dryRun) result.dryRun = true;
-      return result;
+      const response = { success: true, scheduled: result.scheduled, skipped: result.skipped };
+      if (options.dryRun) response.dryRun = true;
+      return response;
     } catch (err) {
       console.error('[contentOrchestrator] Error in triggerManualOrchestration:', err);
       return { success: false, error: err.message || 'Orchestration failed.', scheduled: [] };
@@ -162,77 +186,29 @@ export const triggerManualOrchestration = webMethod(
 );
 
 /**
- * Event-triggered orchestration — called by Wix event handlers (no admin auth).
- * Uses the same scheduling logic as triggerManualOrchestration but authenticates
- * via system context (event handlers run server-side without user session).
+ * Event-triggered orchestration — called by Wix event handlers.
+ * Authenticates via shared secret (event handlers run server-side without user session).
  *
+ * @param {string} eventSecret - Shared secret for event authentication
  * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'
  * @param {Object} productData - { productId, productName, productCategory, imageUrl?, oldPrice?, newPrice? }
  * @returns {Promise<{success: boolean, scheduled: Array, skipped?: number, error?: string}>}
  */
 export const triggerEventOrchestration = webMethod(
   Permissions.Anyone,
-  async (eventType, productData) => {
+  async (eventSecret, eventType, productData) => {
     try {
-      const cleanType = sanitize(eventType, 50);
-      if (!VALID_EVENT_TYPES.includes(cleanType)) {
-        return { success: false, error: 'Invalid event type.', scheduled: [] };
+      const valid = await verifyEventSecret(eventSecret);
+      if (!valid) {
+        return { success: false, error: 'Authentication failed: invalid event secret.', scheduled: [] };
       }
 
-      const productId = validateId(productData?.productId);
-      if (!productId) {
-        return { success: false, error: 'Valid product ID is required.', scheduled: [] };
+      const result = await scheduleActions(eventType, productData);
+      if (result.error) {
+        return { success: false, error: result.error, scheduled: [] };
       }
 
-      const config = await getConfig();
-      const actions = EVENT_ACTIONS[cleanType] || [];
-      const eventId = buildEventId(cleanType, productId);
-
-      const existing = await wixData.query('ContentSchedule')
-        .eq('createdBy', eventId)
-        .find();
-      const existingTypes = new Set(existing.items.map(i => i.contentType));
-
-      const scheduled = [];
-      let skipped = 0;
-
-      for (const action of actions) {
-        const configKey = CONFIG_KEY_MAP[action];
-        if (configKey && config[configKey] === false) {
-          skipped++;
-          continue;
-        }
-
-        if (existingTypes.has(action)) {
-          skipped++;
-          continue;
-        }
-
-        const entry = {
-          contentType: action,
-          platform: getPlatformForAction(action),
-          productId,
-          productName: sanitize(productData.productName || '', 200),
-          scheduledAt: new Date(),
-          status: 'pending',
-          priority: ACTION_PRIORITY[cleanType] ?? 3,
-          eventType: cleanType,
-          createdBy: eventId,
-          payload: JSON.stringify({
-            productCategory: sanitize(productData.productCategory || '', 100),
-            imageUrl: productData.imageUrl || '',
-            oldPrice: productData.oldPrice ?? null,
-            newPrice: productData.newPrice ?? null,
-          }),
-          processedAt: null,
-          error: '',
-        };
-
-        await wixData.insert('ContentSchedule', entry);
-        scheduled.push({ contentType: action, platform: entry.platform, eventId });
-      }
-
-      return { success: true, scheduled, skipped };
+      return { success: true, scheduled: result.scheduled, skipped: result.skipped };
     } catch (err) {
       console.error('[contentOrchestrator] Error in triggerEventOrchestration:', err);
       return { success: false, error: err.message || 'Event orchestration failed.', scheduled: [] };
@@ -252,48 +228,18 @@ export const previewOrchestration = webMethod(
     try {
       await requireAdmin();
 
-      const cleanType = sanitize(eventType, 50);
-      if (!VALID_EVENT_TYPES.includes(cleanType)) {
-        return { success: false, error: 'Invalid event type.', planned: [] };
+      const result = await scheduleActions(eventType, productData, { dryRun: true });
+      if (result.error) {
+        return { success: false, error: result.error, planned: [] };
       }
 
-      const productId = validateId(productData?.productId);
-      if (!productId) {
-        return { success: false, error: 'Valid product ID is required.', planned: [] };
-      }
+      const planned = result.scheduled.map(s => ({
+        ...s,
+        priority: ACTION_PRIORITY[sanitize(eventType, 50)] ?? 3,
+        reason: `${sanitize(eventType, 50)} → ${s.contentType}`,
+      }));
 
-      const config = await getConfig();
-      const actions = EVENT_ACTIONS[cleanType] || [];
-      const eventId = buildEventId(cleanType, productId);
-
-      const existing = await wixData.query('ContentSchedule')
-        .eq('createdBy', eventId)
-        .find();
-      const existingTypes = new Set(existing.items.map(i => i.contentType));
-
-      const planned = [];
-      let wouldSkip = 0;
-
-      for (const action of actions) {
-        const configKey = CONFIG_KEY_MAP[action];
-        const disabled = configKey && config[configKey] === false;
-        const duplicate = existingTypes.has(action);
-
-        if (disabled || duplicate) {
-          wouldSkip++;
-          continue;
-        }
-
-        planned.push({
-          contentType: action,
-          platform: getPlatformForAction(action),
-          priority: ACTION_PRIORITY[cleanType] ?? 3,
-          eventId,
-          reason: `${cleanType} → ${action}`,
-        });
-      }
-
-      return { success: true, planned, wouldSkip };
+      return { success: true, planned, wouldSkip: result.skipped };
     } catch (err) {
       console.error('[contentOrchestrator] Error in previewOrchestration:', err);
       return { success: false, error: err.message || 'Preview failed.', planned: [] };

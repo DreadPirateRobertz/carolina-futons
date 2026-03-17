@@ -2,6 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __reset, __seed } from 'wix-data';
 import { __setMember, __setRoles } from 'wix-members-backend';
+import { __setSecrets, __reset as __resetSecrets } from 'wix-secrets-backend';
 
 import {
   triggerEventOrchestration,
@@ -15,10 +16,14 @@ import {
   wixStores_onProductUpdated,
 } from '../src/backend/events.js';
 
+const EVENT_SECRET = 'test-event-secret';
+
 beforeEach(() => {
   __reset();
+  __resetSecrets();
   __setMember({ _id: 'admin-1' });
   __setRoles([{ title: 'Admin' }]);
+  __setSecrets({ CONTENT_EVENT_KEY: EVENT_SECRET });
   __seed('OrchestrationConfig', [{
     _id: 'config-1',
     enableNewsletter: true,
@@ -35,19 +40,35 @@ const baseProduct = {
   imageUrl: 'https://example.com/blue-ridge.jpg',
 };
 
-// ── triggerEventOrchestration (system-level, no admin auth) ──────────
+// ── triggerEventOrchestration (secret-authenticated) ─────────────────
 
 describe('triggerEventOrchestration', () => {
-  it('schedules actions for new_arrival without admin auth', async () => {
+  it('schedules actions for new_arrival with valid secret', async () => {
     __setMember(null);
     __setRoles([]);
-    const result = await triggerEventOrchestration('new_arrival', baseProduct);
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
     expect(result.success).toBe(true);
     expect(result.scheduled.length).toBe(3);
   });
 
+  it('rejects invalid secret', async () => {
+    const result = await triggerEventOrchestration('wrong-secret', 'new_arrival', baseProduct);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/auth|secret/i);
+  });
+
+  it('rejects empty secret', async () => {
+    const result = await triggerEventOrchestration('', 'new_arrival', baseProduct);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects null secret', async () => {
+    const result = await triggerEventOrchestration(null, 'new_arrival', baseProduct);
+    expect(result.success).toBe(false);
+  });
+
   it('schedules actions for price_drop', async () => {
-    const result = await triggerEventOrchestration('price_drop', {
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'price_drop', {
       ...baseProduct,
       oldPrice: 899,
       newPrice: 749,
@@ -60,30 +81,30 @@ describe('triggerEventOrchestration', () => {
   });
 
   it('schedules actions for back_in_stock', async () => {
-    const result = await triggerEventOrchestration('back_in_stock', baseProduct);
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'back_in_stock', baseProduct);
     expect(result.success).toBe(true);
     expect(result.scheduled.length).toBe(3);
   });
 
   it('schedules actions for seasonal', async () => {
-    const result = await triggerEventOrchestration('seasonal', baseProduct);
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'seasonal', baseProduct);
     expect(result.success).toBe(true);
     expect(result.scheduled.length).toBe(2);
   });
 
   it('rejects invalid event type', async () => {
-    const result = await triggerEventOrchestration('invalid', baseProduct);
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'invalid', baseProduct);
     expect(result.success).toBe(false);
   });
 
   it('rejects missing productId', async () => {
-    const result = await triggerEventOrchestration('new_arrival', { productName: 'Test' });
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', { productName: 'Test' });
     expect(result.success).toBe(false);
   });
 
   it('idempotent — second call skips duplicates', async () => {
-    await triggerEventOrchestration('new_arrival', baseProduct);
-    const r2 = await triggerEventOrchestration('new_arrival', baseProduct);
+    await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
+    const r2 = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
     expect(r2.scheduled.length).toBe(0);
     expect(r2.skipped).toBeGreaterThan(0);
   });
@@ -96,7 +117,7 @@ describe('triggerEventOrchestration', () => {
       enableCatalogSync: true,
       enableEmail: true,
     }]);
-    const result = await triggerEventOrchestration('new_arrival', baseProduct);
+    const result = await triggerEventOrchestration(EVENT_SECRET, 'new_arrival', baseProduct);
     expect(result.scheduled.map(s => s.contentType)).not.toContain('newsletter');
     expect(result.skipped).toBeGreaterThan(0);
   });
@@ -115,7 +136,6 @@ describe('wixStores_onProductCreated', () => {
       },
     });
 
-    // Verify entries were created in ContentSchedule
     const { items } = await (await import('wix-data')).default
       .query('ContentSchedule')
       .eq('productId', 'prod-new1')
@@ -126,7 +146,6 @@ describe('wixStores_onProductCreated', () => {
 
   it('skips products without _id', async () => {
     await wixStores_onProductCreated({ entity: { name: 'No ID Product' } });
-    // Should not throw, and no entries created
     const { items } = await (await import('wix-data')).default
       .query('ContentSchedule')
       .find();
@@ -135,7 +154,6 @@ describe('wixStores_onProductCreated', () => {
 
   it('handles missing event entity gracefully', async () => {
     await wixStores_onProductCreated({});
-    // Should not throw
   });
 });
 
@@ -158,7 +176,7 @@ describe('wixStores_onProductUpdated', () => {
       .query('ContentSchedule')
       .eq('productId', 'prod-pd1')
       .find();
-    expect(items.length).toBe(2); // social_story + catalog_sync
+    expect(items.length).toBe(2);
     expect(items[0].eventType).toBe('price_drop');
   });
 
@@ -222,7 +240,6 @@ describe('wixStores_onProductUpdated', () => {
       entity: { name: 'No ID', price: { amount: 500 } },
       previousEntity: { price: { amount: 700 } },
     });
-    // No throw, no entries
   });
 
   it('handles flat price values (not nested objects)', async () => {
@@ -253,7 +270,6 @@ describe('previewOrchestration', () => {
     expect(result.success).toBe(true);
     expect(result.planned.length).toBe(3);
 
-    // Verify nothing written
     const { items } = await (await import('wix-data')).default
       .query('ContentSchedule')
       .find();
@@ -285,9 +301,7 @@ describe('previewOrchestration', () => {
   });
 
   it('shows wouldSkip for already-existing entries', async () => {
-    // First, create entries via real orchestration
     await triggerManualOrchestration('new_arrival', baseProduct);
-    // Preview same event — all should be skipped
     const result = await previewOrchestration('new_arrival', baseProduct);
     expect(result.planned.length).toBe(0);
     expect(result.wouldSkip).toBe(3);
@@ -318,16 +332,10 @@ describe('getOrchestrationDashboard', () => {
 
     const dashboard = await getOrchestrationDashboard();
     expect(dashboard.success).toBe(true);
-
-    // Pending items
     expect(dashboard.pending.length).toBe(3);
     expect(dashboard.pending[0].status).toBe('pending');
-
-    // Config
     expect(dashboard.config.enableNewsletter).toBe(true);
     expect(dashboard.config.enableSocialStory).toBe(true);
-
-    // Stats
     expect(dashboard.stats.pending).toBe(3);
     expect(dashboard.stats.sent).toBe(0);
   });
