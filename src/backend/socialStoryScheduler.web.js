@@ -13,12 +13,12 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize } from 'backend/utils/sanitize';
 
 const DEDUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const PLATFORMS = ['instagram', 'facebook', 'pinterest'];
 
-// Engagement windows (hours, ET) — optimal posting times per platform
+// Engagement windows (hours, server time) — optimal posting times per platform
 const ENGAGEMENT_WINDOWS = {
   instagram: { start: 11, end: 13 },  // 11am-1pm
   facebook: { start: 10, end: 12 },   // 10am-12pm
@@ -272,23 +272,27 @@ export const scheduleNewArrivalStories = webMethod(
           continue;
         }
 
-        const scheduledAt = getNextEngagementWindow(platform);
+        const scheduledAt = getNextEngagementWindow(platform) || new Date();
 
-        await wixData.insert('ContentSchedule', {
-          contentType: 'social_story',
-          platform,
-          productId,
-          productName: sanitize(product.name, 200),
-          eventType: 'new_arrival',
-          priority,
-          status: 'pending',
-          scheduledAt,
-          payload: JSON.stringify(content),
-          createdBy: `new_arrival-${productId}-${new Date().toISOString().slice(0, 10)}`,
-          processedAt: null,
-          error: '',
-        });
-        scheduled++;
+        try {
+          await wixData.insert('ContentSchedule', {
+            contentType: 'social_story',
+            platform,
+            productId,
+            productName: sanitize(product.name, 200),
+            eventType: 'new_arrival',
+            priority,
+            status: 'pending',
+            scheduledAt,
+            payload: JSON.stringify(content),
+            createdBy: `new_arrival-${productId}-${new Date().toISOString().slice(0, 10)}`,
+            processedAt: null,
+            error: '',
+          });
+          scheduled++;
+        } catch (insertErr) {
+          errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+        }
       }
 
       return { success: true, scheduled, skipped, rateLimited, errors };
@@ -356,23 +360,27 @@ export const schedulePriceDropStories = webMethod(
         content.previousPrice = `$${Number(product.previousPrice).toFixed(2)}`;
         content.savings = `$${(Number(product.previousPrice) - Number(product.price)).toFixed(2)}`;
 
-        const scheduledAt = getNextEngagementWindow(platform);
+        const scheduledAt = getNextEngagementWindow(platform) || new Date();
 
-        await wixData.insert('ContentSchedule', {
-          contentType: 'social_story',
-          platform,
-          productId,
-          productName: sanitize(product.name, 200),
-          eventType: 'price_drop',
-          priority,
-          status: 'pending',
-          scheduledAt,
-          payload: JSON.stringify(content),
-          createdBy: `price_drop-${productId}-${new Date().toISOString().slice(0, 10)}`,
-          processedAt: null,
-          error: '',
-        });
-        scheduled++;
+        try {
+          await wixData.insert('ContentSchedule', {
+            contentType: 'social_story',
+            platform,
+            productId,
+            productName: sanitize(product.name, 200),
+            eventType: 'price_drop',
+            priority,
+            status: 'pending',
+            scheduledAt,
+            payload: JSON.stringify(content),
+            createdBy: `price_drop-${productId}-${new Date().toISOString().slice(0, 10)}`,
+            processedAt: null,
+            error: '',
+          });
+          scheduled++;
+        } catch (insertErr) {
+          errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+        }
       }
 
       return { success: true, scheduled, skipped, rateLimited, errors };
@@ -449,23 +457,27 @@ export const scheduleSeasonalPromo = webMethod(
           storyType: 'seasonal_promo',
         };
 
-        const scheduledAt = getNextEngagementWindow(platform);
+        const scheduledAt = getNextEngagementWindow(platform) || new Date();
 
-        await wixData.insert('ContentSchedule', {
-          contentType: 'social_story',
-          platform,
-          productId: `promo-${sanitize(params.seasonName, 30)}`,
-          productName: sanitize(params.seasonName, 200),
-          eventType: 'seasonal_promo',
-          priority,
-          status: 'pending',
-          scheduledAt,
-          payload: JSON.stringify(content),
-          createdBy: `seasonal-${sanitize(params.seasonName, 30)}-${new Date().toISOString().slice(0, 10)}`,
-          processedAt: null,
-          error: '',
-        });
-        scheduled++;
+        try {
+          await wixData.insert('ContentSchedule', {
+            contentType: 'social_story',
+            platform,
+            productId: `promo-${sanitize(params.seasonName, 30)}`,
+            productName: sanitize(params.seasonName, 200),
+            eventType: 'seasonal_promo',
+            priority,
+            status: 'pending',
+            scheduledAt,
+            payload: JSON.stringify(content),
+            createdBy: `seasonal-${sanitize(params.seasonName, 30)}-${new Date().toISOString().slice(0, 10)}`,
+            processedAt: null,
+            error: '',
+          });
+          scheduled++;
+        } catch (insertErr) {
+          errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+        }
       }
 
       return { success: true, scheduled, rateLimited, errors };
