@@ -1026,6 +1026,352 @@ function checkSendWindow(now = new Date()) {
   return { inWindow: false, nextWindowOpen: tomorrow8am };
 }
 
+// ── A/B Test Management ──────────────────────────────────────────────
+
+/**
+ * Create a new A/B test configuration for a sequence.
+ * Supports subject line variants and send-time offset variants.
+ *
+ * @function createAbTest
+ * @param {Object} config
+ * @param {string} config.sequenceType - Sequence to test (welcome, cart_recovery, etc.)
+ * @param {number} config.testStep - Step number within the sequence to test
+ * @param {Object} config.variants - { A: {...}, B: {...} } variant definitions
+ * @param {number} [config.sampleSize=100] - Min sends per variant before resolving
+ * @param {string} [config.metricField='openRate'] - Metric to compare (openRate or clickRate)
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin
+ */
+export const createAbTest = webMethod(
+  Permissions.Admin,
+  async (config = {}) => {
+    try {
+      const { sequenceType, testStep, variants, sampleSize = 100, metricField = 'openRate' } = config;
+
+      if (!sequenceType || !testStep) return { success: false };
+      if (!variants || !variants.A || !variants.B) return { success: false };
+
+      await wixData.insert('AbTests', {
+        sequenceType,
+        testStep,
+        variantA: variants.A,
+        variantB: variants.B,
+        sampleSize,
+        metricField,
+        status: 'active',
+        winner: null,
+        variantARate: null,
+        variantBRate: null,
+        createdAt: new Date(),
+        resolvedAt: null,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[emailAutomation] Error creating A/B test:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
+ * Resolve an A/B test winner based on open/click rates.
+ * Compares variant performance after sufficient sample size.
+ *
+ * @function resolveAbTestWinner
+ * @param {string} testId - AbTests record _id
+ * @returns {Promise<{success: boolean, winner?: string, variantARate?: number, variantBRate?: number, reason?: string}>}
+ * @permission Admin
+ */
+export const resolveAbTestWinner = webMethod(
+  Permissions.Admin,
+  async (testId) => {
+    try {
+      if (!testId) return { success: false, reason: 'Missing test ID' };
+
+      const testResult = await wixData.query('AbTests')
+        .eq('_id', testId)
+        .find();
+
+      if (testResult.items.length === 0) {
+        return { success: false, reason: 'Test not found' };
+      }
+
+      const test = testResult.items[0];
+
+      if (test.status !== 'active') {
+        return { success: false, reason: 'Test already resolved' };
+      }
+
+      // Get sent emails per variant
+      const variantAResult = await wixData.query('EmailQueue')
+        .eq('sequenceType', test.sequenceType)
+        .eq('sequenceStep', test.testStep)
+        .eq('abVariant', 'A')
+        .eq('status', 'sent')
+        .find();
+
+      const variantBResult = await wixData.query('EmailQueue')
+        .eq('sequenceType', test.sequenceType)
+        .eq('sequenceStep', test.testStep)
+        .eq('abVariant', 'B')
+        .eq('status', 'sent')
+        .find();
+
+      const aSent = variantAResult.items.length;
+      const bSent = variantBResult.items.length;
+
+      if (aSent < test.sampleSize || bSent < test.sampleSize) {
+        return { success: false, reason: `Sample size not met: A=${aSent}, B=${bSent}, required=${test.sampleSize}` };
+      }
+
+      // Get events for these emails
+      const aIds = new Set(variantAResult.items.map(i => i._id));
+      const bIds = new Set(variantBResult.items.map(i => i._id));
+
+      const eventsResult = await wixData.query('EmailEvents')
+        .eq('eventType', test.metricField === 'clickRate' ? 'click' : 'open')
+        .find();
+
+      let aEvents = 0;
+      let bEvents = 0;
+      for (const event of eventsResult.items) {
+        if (aIds.has(event.emailQueueId)) aEvents++;
+        if (bIds.has(event.emailQueueId)) bEvents++;
+      }
+
+      const variantARate = aSent > 0 ? aEvents / aSent : 0;
+      const variantBRate = bSent > 0 ? bEvents / bSent : 0;
+      const winner = variantARate >= variantBRate ? 'A' : 'B';
+
+      // Store results
+      await wixData.update('AbTests', {
+        ...test,
+        status: 'resolved',
+        winner,
+        variantARate,
+        variantBRate,
+        resolvedAt: new Date(),
+      });
+
+      return { success: true, winner, variantARate, variantBRate };
+    } catch (err) {
+      console.error('[emailAutomation] Error resolving A/B test:', err);
+      return { success: false, reason: err.message };
+    }
+  }
+);
+
+/**
+ * Get all A/B test results.
+ *
+ * @function getAbTestResults
+ * @returns {Promise<{tests: Array}>}
+ * @permission Admin
+ */
+export const getAbTestResults = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      const result = await wixData.query('AbTests').find();
+      return {
+        tests: result.items.map(t => ({
+          _id: t._id,
+          sequenceType: t.sequenceType,
+          testStep: t.testStep,
+          status: t.status,
+          winner: t.winner,
+          variantARate: t.variantARate,
+          variantBRate: t.variantBRate,
+          sampleSize: t.sampleSize,
+          metricField: t.metricField,
+          createdAt: t.createdAt,
+          resolvedAt: t.resolvedAt,
+        })),
+      };
+    } catch (err) {
+      console.error('[emailAutomation] Error getting A/B test results:', err);
+      return { tests: [] };
+    }
+  }
+);
+
+/**
+ * Get active A/B test config for a sequence type.
+ *
+ * @function getAbTestConfig
+ * @param {string} sequenceType
+ * @returns {Promise<{test: Object|null}>}
+ * @permission Admin
+ */
+export const getAbTestConfig = webMethod(
+  Permissions.Admin,
+  async (sequenceType) => {
+    try {
+      const result = await wixData.query('AbTests')
+        .eq('sequenceType', sequenceType)
+        .eq('status', 'active')
+        .find();
+
+      return { test: result.items.length > 0 ? result.items[0] : null };
+    } catch (err) {
+      console.error('[emailAutomation] Error getting A/B test config:', err);
+      return { test: null };
+    }
+  }
+);
+
+// ── Campaign Analytics Dashboard ─────────────────────────────────────
+
+/**
+ * Get comprehensive campaign analytics for the admin dashboard.
+ * Includes send/open/click rates per campaign, sequence completion rates,
+ * unsubscribe trending, and A/B test results.
+ *
+ * @function getCampaignAnalytics
+ * @param {number} [days=30] - Lookback window in days
+ * @returns {Promise<Object>} Dashboard analytics data
+ * @permission Admin
+ */
+export const getCampaignAnalytics = webMethod(
+  Permissions.Admin,
+  async (days = 30) => {
+    try {
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      // 1. Fetch emails in period
+      const emailResult = await wixData.query('EmailQueue')
+        .ge('createdAt', since)
+        .find();
+      const emails = emailResult.items || [];
+
+      // 2. Fetch events in period
+      const eventsResult = await wixData.query('EmailEvents')
+        .ge('timestamp', since)
+        .find();
+      const events = eventsResult.items || [];
+
+      // Build event lookup: emailQueueId → { opens, clicks }
+      const eventsByEmail = {};
+      for (const evt of events) {
+        if (!eventsByEmail[evt.emailQueueId]) {
+          eventsByEmail[evt.emailQueueId] = { opens: 0, clicks: 0 };
+        }
+        if (evt.eventType === 'open') eventsByEmail[evt.emailQueueId].opens++;
+        if (evt.eventType === 'click') eventsByEmail[evt.emailQueueId].clicks++;
+      }
+
+      // 3. Build per-campaign stats
+      const campaigns = {};
+      for (const email of emails) {
+        const seq = email.sequenceType || 'unknown';
+        if (!campaigns[seq]) {
+          campaigns[seq] = { sent: 0, failed: 0, cancelled: 0, pending: 0, opens: 0, clicks: 0 };
+        }
+        campaigns[seq][email.status] = (campaigns[seq][email.status] || 0) + 1;
+
+        const emailEvents = eventsByEmail[email._id];
+        if (emailEvents) {
+          campaigns[seq].opens += emailEvents.opens;
+          campaigns[seq].clicks += emailEvents.clicks;
+        }
+      }
+
+      // Calculate rates
+      for (const seq of Object.keys(campaigns)) {
+        const c = campaigns[seq];
+        c.openRate = c.sent > 0 ? c.opens / c.sent : 0;
+        c.clickRate = c.sent > 0 ? c.clicks / c.sent : 0;
+      }
+
+      // 4. Sequence completion rates
+      const completionRates = {};
+      const seqsByRecipient = {};
+      for (const email of emails) {
+        const key = `${email.sequenceType}:${email.recipientEmail}`;
+        if (!seqsByRecipient[key]) {
+          seqsByRecipient[key] = { seq: email.sequenceType, maxStep: 0, sentSteps: new Set() };
+        }
+        if (email.status === 'sent') {
+          seqsByRecipient[key].sentSteps.add(email.sequenceStep);
+          seqsByRecipient[key].maxStep = Math.max(seqsByRecipient[key].maxStep, email.sequenceStep);
+        }
+      }
+
+      // Determine max step per sequence from SEQUENCES config
+      const seqMaxSteps = {};
+      for (const [seqName, seqDef] of Object.entries(SEQUENCES)) {
+        seqMaxSteps[seqName] = Math.max(...seqDef.steps.map(s => s.step));
+      }
+
+      const seqEntered = {};
+      const seqCompleted = {};
+      for (const data of Object.values(seqsByRecipient)) {
+        const seq = data.seq;
+        seqEntered[seq] = (seqEntered[seq] || 0) + 1;
+        const maxStep = seqMaxSteps[seq] || data.maxStep;
+        if (data.sentSteps.has(maxStep)) {
+          seqCompleted[seq] = (seqCompleted[seq] || 0) + 1;
+        }
+      }
+
+      for (const seq of Object.keys(seqEntered)) {
+        completionRates[seq] = {
+          entered: seqEntered[seq],
+          completed: seqCompleted[seq] || 0,
+          rate: seqEntered[seq] > 0 ? (seqCompleted[seq] || 0) / seqEntered[seq] : 0,
+        };
+      }
+
+      // 5. Unsubscribe trending
+      const unsubResult = await wixData.query('Unsubscribes')
+        .ge('unsubscribedAt', since)
+        .find();
+      const unsubs = unsubResult.items || [];
+
+      const unsubByType = {};
+      for (const u of unsubs) {
+        const t = u.sequenceType || 'unknown';
+        unsubByType[t] = (unsubByType[t] || 0) + 1;
+      }
+
+      // 6. A/B test summary
+      const abResult = await wixData.query('AbTests').find();
+      const abTestSummary = (abResult.items || []).map(t => ({
+        _id: t._id,
+        sequenceType: t.sequenceType,
+        testStep: t.testStep,
+        status: t.status,
+        winner: t.winner,
+        variantARate: t.variantARate,
+        variantBRate: t.variantBRate,
+      }));
+
+      return {
+        success: true,
+        periodDays: days,
+        campaigns,
+        completionRates,
+        unsubscribes: {
+          total: unsubs.length,
+          byType: unsubByType,
+        },
+        abTestSummary,
+      };
+    } catch (err) {
+      console.error('[emailAutomation] Error fetching campaign analytics:', err);
+      return {
+        success: false,
+        periodDays: days,
+        campaigns: {},
+        completionRates: {},
+        unsubscribes: { total: 0, byType: {} },
+        abTestSummary: [],
+      };
+    }
+  }
+);
+
 // Export sequence definitions for testing
 export const _SEQUENCES = SEQUENCES;
 export const _MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
