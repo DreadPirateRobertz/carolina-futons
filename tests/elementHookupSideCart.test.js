@@ -548,12 +548,12 @@ describe('Side Cart — #sideItemVariant display logic', () => {
     await loadPage();
     const itemData = {
       _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
-      variantDetails: 'Size: Queen · Finish: Honey Oak',
+      variantDetails: 'Size: Queen · Finish: Cherry',
     };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
     expect($item).not.toBeNull();
 
-    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Honey Oak');
+    expect($item('#sideItemVariant').text).toBe('Size: Queen · Finish: Cherry');
     expect($item('#sideItemVariant').show).toHaveBeenCalled();
   });
 
@@ -561,12 +561,12 @@ describe('Side Cart — #sideItemVariant display logic', () => {
     await loadPage();
     const itemData = {
       _id: 'i1', name: 'Frame', price: 500, quantity: 1, image: 'f.jpg', lineTotal: 500,
-      variantName: 'Queen / Honey Oak',
+      variantName: 'Queen / Cherry',
     };
     const $item = simulateRepeaterItem('#sideCartRepeater', itemData);
     expect($item).not.toBeNull();
 
-    expect($item('#sideItemVariant').text).toBe('Queen / Honey Oak');
+    expect($item('#sideItemVariant').text).toBe('Queen / Cherry');
     expect($item('#sideItemVariant').show).toHaveBeenCalled();
   });
 });

@@ -51,4 +51,4 @@ Web: carolinafutons.com
 - Industry award or recognition
 - Seasonal sale events
 - Partnership announcements (local designers, campus housing)
-- Sustainability initiative (organic materials, eco-friendly packaging)
+- Sustainability initiative (sustainable hardwoods, eco-friendly packaging)
