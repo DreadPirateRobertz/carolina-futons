@@ -1,10 +1,13 @@
 /**
  * @module events
  * @description Wix platform event handlers for eCommerce lifecycle events.
- * Populates the AbandonedCarts CMS collection and triggers restock notifications.
+ * Populates the AbandonedCarts CMS collection, triggers restock notifications,
+ * and fires content orchestration for product lifecycle changes (new arrivals, price drops).
  *
  * @requires wix-data
+ * @requires wix-secrets-backend - CONTENT_EVENT_KEY for orchestrator auth
  * @requires backend/emailAutomation.web - triggerRestockNotifications
+ * @requires backend/contentOrchestrator.web - triggerEventOrchestration
  *
  * @setup
  * 1. Create `AbandonedCarts` CMS collection with fields:
@@ -211,7 +214,10 @@ export async function wixStores_onProductCreated(event) {
   const product = event.entity || event;
   const productId = product._id || '';
 
-  if (!productId) return;
+  if (!productId) {
+    console.warn('[events] wixStores_onProductCreated received event without product ID');
+    return;
+  }
 
   try {
     const { getSecret } = await import('wix-secrets-backend');
@@ -244,7 +250,10 @@ export async function wixStores_onProductUpdated(event) {
   const previous = event.previousEntity || {};
   const productId = product._id || '';
 
-  if (!productId) return;
+  if (!productId) {
+    console.warn('[events] wixStores_onProductUpdated received event without product ID');
+    return;
+  }
 
   const newPrice = product.price?.amount ?? product.price ?? null;
   const oldPrice = previous.price?.amount ?? previous.price ?? null;

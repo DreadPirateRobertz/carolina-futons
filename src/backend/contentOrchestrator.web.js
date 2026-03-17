@@ -186,8 +186,8 @@ export const triggerManualOrchestration = webMethod(
 );
 
 /**
- * Event-triggered orchestration — called by Wix event handlers.
- * Authenticates via shared secret (event handlers run server-side without user session).
+ * Event-triggered orchestration — called by Wix event handlers via shared secret.
+ * Delegates to scheduleActions() (shared with manual trigger). Does not support dry-run.
  *
  * @param {string} eventSecret - Shared secret for event authentication
  * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'
