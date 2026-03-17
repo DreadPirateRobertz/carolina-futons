@@ -40,7 +40,11 @@ beforeEach(() => {
 // ── 1. processEmailQueue retry logic ─────────────────────────────────
 
 describe('processEmailQueue retry logic', () => {
-  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
   afterAll(() => { vi.useRealTimers(); });
 
   it('attempt 1 failure: stays pending with 15min backoff', async () => {
@@ -110,7 +114,11 @@ describe('processEmailQueue retry logic', () => {
 // ── 2. processEmailQueue cart recovery check ─────────────────────────
 
 describe('processEmailQueue cart recovery cancellation', () => {
-  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
   afterAll(() => { vi.useRealTimers(); });
 
   it('cancels cart_recovery email when cart status is recovered', async () => {
@@ -154,7 +162,11 @@ describe('processEmailQueue cart recovery cancellation', () => {
 // ── 3. processEmailQueue no contactId ────────────────────────────────
 
 describe('processEmailQueue no contactId', () => {
-  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
   afterAll(() => { vi.useRealTimers(); });
 
   it('increments attempt and sets lastError when contactId is missing', async () => {
@@ -709,7 +721,11 @@ describe('A/B variant selection in welcome sequence', () => {
 // ── Additional edge cases ────────────────────────────────────────────
 
 describe('processEmailQueue unsubscribe-after-queue', () => {
-  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  // Pin time to 2pm EDT (within 8am–8pm send window) so tests pass regardless of real clock
+  beforeAll(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z'));
+  });
   afterAll(() => { vi.useRealTimers(); });
 
   it('cancels email if recipient unsubscribed since queuing', async () => {
