@@ -675,66 +675,34 @@ ${EMAIL_FOOTER}
 }
 
 /**
- * Generate a complete "New Arrivals" HTML email from catalog products.
- *
- * @function generateNewArrivalsEmail
- * @param {Array<Object>} products - Products array from catalog-MASTER.json
- * @param {number} [limit=4] - Max products to feature
- * @returns {Promise<string>} Complete HTML email string
- * @permission Anyone
+ * Factory for catalog-driven email generators.
+ * Each generator validates input, calls a section builder, and wraps in full HTML.
  */
-export const generateNewArrivalsEmail = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
+function makeEmailGenerator(title, sectionFn) {
+  return webMethod(
+    Permissions.Anyone,
+    async (products, limit = 4) => {
+      if (!Array.isArray(products) || products.length === 0) return '';
+      const section = await sectionFn(products, limit);
+      if (!section) return '';
+      return wrapEmailHtml(title, section);
+    }
+  );
+}
 
-    const section = await getNewArrivalsSection(products, limit);
-    if (!section) return '';
-
-    return wrapEmailHtml('New Arrivals at Carolina Futons', section);
-  }
+/** Generate a complete "New Arrivals" HTML email from catalog products. */
+export const generateNewArrivalsEmail = makeEmailGenerator(
+  'New Arrivals at Carolina Futons', getNewArrivalsSection
 );
 
-/**
- * Generate a complete "Price Drop" HTML email from products with reduced prices.
- *
- * @function generatePriceDropEmail
- * @param {Array<Object>} products - Products with previousPrice field
- * @param {number} [limit=4] - Max products to feature
- * @returns {Promise<string>} Complete HTML email string
- * @permission Anyone
- */
-export const generatePriceDropEmail = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
-
-    const section = await getPriceDropSection(products, limit);
-    if (!section) return '';
-
-    return wrapEmailHtml('Price Drops at Carolina Futons', section);
-  }
+/** Generate a complete "Price Drop" HTML email from products with reduced prices. */
+export const generatePriceDropEmail = makeEmailGenerator(
+  'Price Drops at Carolina Futons', getPriceDropSection
 );
 
-/**
- * Generate a complete "Back in Stock" HTML email from restocked products.
- *
- * @function generateBackInStockEmail
- * @param {Array<Object>} products - Products with restockedAt field
- * @param {number} [limit=4] - Max products to feature
- * @returns {Promise<string>} Complete HTML email string
- * @permission Anyone
- */
-export const generateBackInStockEmail = webMethod(
-  Permissions.Anyone,
-  async (products, limit = 4) => {
-    if (!Array.isArray(products) || products.length === 0) return '';
-
-    const section = await getBackInStockSection(products, limit);
-    if (!section) return '';
-
-    return wrapEmailHtml('Back in Stock at Carolina Futons', section);
-  }
+/** Generate a complete "Back in Stock" HTML email from restocked products. */
+export const generateBackInStockEmail = makeEmailGenerator(
+  'Back in Stock at Carolina Futons', getBackInStockSection
 );
 
 // Export for testing
