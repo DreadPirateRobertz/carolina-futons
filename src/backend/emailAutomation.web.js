@@ -1048,7 +1048,7 @@ export const createAbTest = webMethod(
     try {
       const { sequenceType, testStep, variants, sampleSize = 100, metricField = 'openRate' } = config;
 
-      if (!sequenceType || !testStep) return { success: false };
+      if (!sequenceType || testStep == null) return { success: false };
       if (!variants || !variants.A || !variants.B) return { success: false };
 
       await wixData.insert('AbTests', {
@@ -1103,20 +1103,18 @@ export const resolveAbTestWinner = webMethod(
         return { success: false, reason: 'Test already resolved' };
       }
 
-      // Get sent emails per variant
-      const variantAResult = await wixData.query('EmailQueue')
+      // Get sent emails per variant (parallel, with pagination limit)
+      const queryVariant = (variant) => wixData.query('EmailQueue')
         .eq('sequenceType', test.sequenceType)
         .eq('sequenceStep', test.testStep)
-        .eq('abVariant', 'A')
+        .eq('abVariant', variant)
         .eq('status', 'sent')
+        .limit(1000)
         .find();
 
-      const variantBResult = await wixData.query('EmailQueue')
-        .eq('sequenceType', test.sequenceType)
-        .eq('sequenceStep', test.testStep)
-        .eq('abVariant', 'B')
-        .eq('status', 'sent')
-        .find();
+      const [variantAResult, variantBResult] = await Promise.all([
+        queryVariant('A'), queryVariant('B'),
+      ]);
 
       const aSent = variantAResult.items.length;
       const bSent = variantBResult.items.length;
@@ -1131,6 +1129,7 @@ export const resolveAbTestWinner = webMethod(
 
       const eventsResult = await wixData.query('EmailEvents')
         .eq('eventType', test.metricField === 'clickRate' ? 'click' : 'open')
+        .limit(1000)
         .find();
 
       let aEvents = 0;
@@ -1239,15 +1238,17 @@ export const getCampaignAnalytics = webMethod(
     try {
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      // 1. Fetch emails in period
+      // 1. Fetch emails in period (limit 1000 — Wix find() defaults to 50)
       const emailResult = await wixData.query('EmailQueue')
         .ge('createdAt', since)
+        .limit(1000)
         .find();
       const emails = emailResult.items || [];
 
       // 2. Fetch events in period
       const eventsResult = await wixData.query('EmailEvents')
         .ge('timestamp', since)
+        .limit(1000)
         .find();
       const events = eventsResult.items || [];
 
@@ -1326,6 +1327,7 @@ export const getCampaignAnalytics = webMethod(
       // 5. Unsubscribe trending
       const unsubResult = await wixData.query('Unsubscribes')
         .ge('unsubscribedAt', since)
+        .limit(1000)
         .find();
       const unsubs = unsubResult.items || [];
 

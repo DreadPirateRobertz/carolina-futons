@@ -65,6 +65,7 @@ function makeChain(findResult = { items: [] }) {
   chain.eq = vi.fn().mockReturnValue(chain);
   chain.ge = vi.fn().mockReturnValue(chain);
   chain.le = vi.fn().mockReturnValue(chain);
+  chain.limit = vi.fn().mockReturnValue(chain);
   chain.find = vi.fn().mockResolvedValue(findResult);
   return chain;
 }
