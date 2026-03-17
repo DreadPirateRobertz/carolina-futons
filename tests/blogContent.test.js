@@ -26,14 +26,20 @@ const EXPECTED_SLUGS = [
   'futon-vs-sofa-bed',
   'small-space-furniture-guide',
   'platform-bed-guide',
+  'top-murphy-cabinet-beds',
+  'platform-bed-buyers-guide',
+  'choosing-futon-cover',
+  'wood-frame-care-guide',
+  'studio-apartment-furniture',
+  'eco-friendly-furniture-guide',
 ];
 
 // ── blogContent exports ──────────────────────────────────────────────
 
 describe('getBlogSlugs', () => {
-  it('returns all 8 pillar post slugs', () => {
+  it('returns all 14 pillar post slugs', () => {
     const slugs = getBlogSlugs();
-    expect(slugs).toHaveLength(8);
+    expect(slugs).toHaveLength(14);
     for (const expected of EXPECTED_SLUGS) {
       expect(slugs).toContain(expected);
     }
@@ -94,7 +100,7 @@ describe('getBlogPost', () => {
   });
 
   it.each(EXPECTED_SLUGS)('post %s has a valid category', (slug) => {
-    const validCategories = ['Buying Guides', 'Comparisons', 'Care & Maintenance', 'Lifestyle'];
+    const validCategories = ['Buying Guides', 'Comparisons', 'Care & Maintenance', 'Lifestyle', 'Room Design'];
     expect(validCategories).toContain(getBlogPost(slug).category);
   });
 
@@ -177,9 +183,9 @@ describe('getBlogFaqs', () => {
 });
 
 describe('getAllBlogPosts', () => {
-  it('returns array of all 8 posts', () => {
+  it('returns array of all 14 posts', () => {
     const posts = getAllBlogPosts();
-    expect(posts).toHaveLength(8);
+    expect(posts).toHaveLength(14);
     for (const post of posts) {
       expect(post.slug).toBeTruthy();
       expect(post.title).toBeTruthy();

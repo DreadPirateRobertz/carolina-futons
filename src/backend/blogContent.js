@@ -1,5 +1,5 @@
 // Blog Content Data Module
-// Structured data for 8 SEO pillar blog posts targeting long-tail futon keywords
+// Structured data for 14 SEO pillar blog posts targeting long-tail futon keywords
 // Used by seoHelpers for FAQ/Article schema injection on Blog Post pages
 // Human imports the matching content files from content/blog/ into Wix Blog Dashboard
 
@@ -252,6 +252,204 @@ const BLOG_POSTS = {
       {
         question: 'Do platform beds squeak?',
         answer: 'Solid wood platform beds rarely squeak because wood joints absorb movement. Metal platform beds are more prone to squeaking at connection points. If squeaking occurs, tighten all bolts and apply felt pads between metal contact points.',
+      },
+    ],
+  },
+
+  'top-murphy-cabinet-beds': {
+    slug: 'top-murphy-cabinet-beds',
+    title: 'Top 10 Murphy Cabinet Beds for Small Apartments in 2026',
+    metaDescription: 'Discover the best Murphy cabinet beds for small apartments. Compare Night & Day models, prices, and features. Freestanding, no wall mount needed.',
+    keywords: ['murphy cabinet bed', 'best murphy bed for apartment', 'freestanding murphy bed', 'cabinet bed', 'murphy bed small space'],
+    excerpt: 'Murphy cabinet beds hide a Queen bed inside an elegant cabinet — no wall mounting required. Here are the top picks for small apartments and guest rooms.',
+    category: 'Buying Guides',
+    tags: ['murphy beds', 'small spaces', 'Night & Day', 'buying guide'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'How much do Murphy cabinet beds cost?',
+        answer: 'Murphy cabinet beds from Night & Day Furniture range from $2,100 to $3,500 depending on the model and finish. All include a tri-fold premium gel memory foam Queen mattress. Models like the Murphy Cube start around $2,100, while full-featured models like the Daisy with USB charging and storage drawers are around $2,800.',
+      },
+      {
+        question: 'Do Murphy cabinet beds require wall mounting?',
+        answer: 'No. All Night & Day Murphy cabinet beds are completely freestanding. They look like a standard cabinet or credenza when closed. No wall mounting, no installation, and no tools required to set up. Simply roll it into position and start using it.',
+      },
+      {
+        question: 'What size mattress fits a Murphy cabinet bed?',
+        answer: 'Night & Day Murphy cabinet beds include a Queen-size (60" x 80") tri-fold gel memory foam mattress. The mattress is specifically designed for the cabinet enclosure and cannot be swapped for a standard mattress due to the fold-in design.',
+      },
+      {
+        question: 'How long does it take to set up a Murphy cabinet bed?',
+        answer: 'Murphy cabinet beds convert from cabinet to bed in under one minute. Simply open the cabinet front, unfold the tri-fold mattress, and you have a full Queen bed. Closing is equally fast — fold the mattress, close the cabinet, done.',
+      },
+      {
+        question: 'Which Murphy cabinet bed has the most storage?',
+        answer: 'The Daisy Murphy Bed Cabinet features the largest rolling storage drawer plus a higher sleep platform. The Sagebrush and Ranchero models also include storage drawers. The Murphy Cube is the most compact option for tight spaces.',
+      },
+    ],
+  },
+
+  'platform-bed-buyers-guide': {
+    slug: 'platform-bed-buyers-guide',
+    title: 'Platform Bed Buyer\'s Guide: KD Frames & Night & Day Compared',
+    metaDescription: 'Compare KD Frames and Night & Day platform beds. USA-made vs imported, assembly options, storage, and which platform bed is right for your bedroom.',
+    keywords: ['platform bed buying guide', 'kd frames platform bed', 'night and day platform bed', 'best platform bed 2026', 'usa made platform bed'],
+    excerpt: 'Two great manufacturers, different strengths. Compare KD Frames (USA-made, tool-free assembly) with Night & Day (plantation hardwood, coordinating furniture) to find your perfect platform bed.',
+    category: 'Comparisons',
+    tags: ['platform beds', 'KD Frames', 'Night & Day', 'comparison', 'buying guide'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'Are KD Frames platform beds made in the USA?',
+        answer: 'Yes. KD Frames manufactures their platform beds in Athens, Georgia using sustainable hardwoods. "KD" stands for knock-down — their frames are designed for easy assembly and disassembly, ideal for moves or tight stairways.',
+      },
+      {
+        question: 'What is the difference between KD Frames and Night & Day platform beds?',
+        answer: 'KD Frames are USA-made with tool-free assembly and a straightforward, functional design. Night & Day platform beds use plantation-grown rubberwood with multiple finish options (cherry, chocolate, dark chocolate, natural) and coordinate with matching nightstands, dressers, and desks. KD Frames prioritize portability; Night & Day prioritizes a complete bedroom set.',
+      },
+      {
+        question: 'Do platform beds come with headboards?',
+        answer: 'It depends on the model. Night & Day platform beds like the Lexington include integrated headboards. KD Frames offers both headboard and no-headboard options — their Basic Platform Bed and Folding Platform Bed skip the headboard to keep costs low and maximize flexibility.',
+      },
+      {
+        question: 'Can you get a platform bed with storage drawers?',
+        answer: 'Yes. Several Night & Day platform bed models offer optional under-bed storage drawers that match the frame finish. KD Frames models sit low to the ground with clearance for standard under-bed storage containers.',
+      },
+      {
+        question: 'What sizes do platform beds come in?',
+        answer: 'Both manufacturers offer platform beds in Twin, Full, Queen, and King sizes. Night & Day also offers California King in select models. Check individual product pages for size availability, as not every model comes in every size.',
+      },
+    ],
+  },
+
+  'choosing-futon-cover': {
+    slug: 'choosing-futon-cover',
+    title: 'How to Choose the Perfect Futon Cover: Fabrics, Fits & Colors',
+    metaDescription: 'Find the right futon cover for your style and lifestyle. Compare fabric types, learn how to measure for a perfect fit, and discover our top picks.',
+    keywords: ['futon cover', 'best futon cover', 'futon cover fabric', 'futon cover size', 'how to choose futon cover'],
+    excerpt: 'The right futon cover transforms your futon\'s look and protects your mattress. Here\'s how to choose the perfect fabric, fit, and color for your space.',
+    category: 'Buying Guides',
+    tags: ['futon covers', 'buying guide', 'home decor', 'fabric guide'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'What is the best fabric for a futon cover?',
+        answer: 'Cotton twill and cotton duck are the most popular choices — they are durable, breathable, and machine washable. Microfiber is softer and stain-resistant. Canvas is the toughest option for high-traffic areas. For pets or kids, look for tightly woven fabrics that resist snagging.',
+      },
+      {
+        question: 'How do you measure for a futon cover?',
+        answer: 'Measure your futon mattress length, width, and thickness. Standard Full futon mattresses are 54" x 75"; Queen mattresses are 60" x 80". Mattress thickness matters most for fit — a cover for a 6-inch mattress will be too loose on a 10-inch mattress and vice versa. Always match the cover to your exact mattress dimensions.',
+      },
+      {
+        question: 'Can you machine wash futon covers?',
+        answer: 'Most removable futon covers are machine washable on a gentle cycle with cold water. Check the care label first. Tumble dry on low or line dry to prevent shrinkage. We recommend washing covers every 1-2 months to keep them fresh and extend mattress life.',
+      },
+      {
+        question: 'How often should you replace a futon cover?',
+        answer: 'With regular washing, a quality futon cover lasts 3-5 years. Replace it when you notice thinning fabric, pilling that does not wash away, fading that bothers you, or if the elastic or zippers lose their hold. Rotating between two covers extends the life of each.',
+      },
+      {
+        question: 'Do futon covers come in custom sizes?',
+        answer: 'Standard futon covers fit Full and Queen mattresses in 6", 8", and 10" thicknesses. For non-standard sizes or extra-thick mattresses, contact us — we can help you find a cover that fits or recommend custom options.',
+      },
+    ],
+  },
+
+  'wood-frame-care-guide': {
+    slug: 'wood-frame-care-guide',
+    title: 'Furniture Care: Maintaining Your Wood Futon & Platform Bed Frame',
+    metaDescription: 'Keep your wood furniture looking beautiful for years. Care tips for Night & Day and KD Frames hardwood futon frames and platform beds.',
+    keywords: ['wood furniture care', 'futon frame maintenance', 'platform bed care', 'hardwood furniture care', 'wood frame cleaning'],
+    excerpt: 'Solid hardwood frames last decades with basic maintenance. Here are care tips specific to Night & Day rubberwood and KD Frames solid hardwood furniture.',
+    category: 'Care & Maintenance',
+    tags: ['furniture care', 'maintenance', 'Night & Day', 'KD Frames', 'wood care'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'How do you clean a solid wood futon frame?',
+        answer: 'Dust weekly with a soft, dry microfiber cloth. For deeper cleaning, use a slightly damp cloth followed by a dry one — never leave moisture sitting on wood. Avoid all-purpose sprays and abrasive cleaners. For stubborn marks, use a wood-specific cleaner.',
+      },
+      {
+        question: 'Should you oil or polish a wood futon frame?',
+        answer: 'For finished frames (Night & Day, KD Frames), apply furniture polish or wood conditioner once or twice a year to maintain the finish. For unfinished wood frames, apply a natural oil (tung oil or Danish oil) every 6-12 months to protect the grain and prevent drying.',
+      },
+      {
+        question: 'How do you prevent scratches on wood furniture?',
+        answer: 'Use felt pads under anything that sits on or slides across the wood. Lift — do not drag — furniture when moving it. Keep pets\' nails trimmed. For futon frames, check that the mattress does not have any rough backing material that could scuff the wood during conversion.',
+      },
+      {
+        question: 'How do you fix loose bolts on a futon frame?',
+        answer: 'Check and hand-tighten all bolts and screws every 6 months. Daily folding and unfolding naturally loosens hardware over time. Use the original wrench or Allen key included with your frame. If a bolt hole strips, use a slightly larger bolt with a washer, or contact us for replacement hardware.',
+      },
+      {
+        question: 'Does sunlight damage wood frames?',
+        answer: 'Direct sunlight fades and dries wood finishes over time. If your frame sits near a window, rotate it periodically or use curtains during peak sun hours. UV-filtering window film protects both your furniture and your futon cover fabric from fading.',
+      },
+    ],
+  },
+
+  'studio-apartment-furniture': {
+    slug: 'studio-apartment-furniture',
+    title: 'Studio Apartment Furniture Solutions: Maximize Every Square Foot',
+    metaDescription: 'Furnish your studio apartment with space-saving futons, Murphy cabinet beds, and multi-function furniture. Room layouts and product recommendations.',
+    keywords: ['studio apartment furniture', 'small space furniture', 'studio apartment layout', 'space saving bed', 'multi-function furniture'],
+    excerpt: 'Living in a studio means every piece of furniture needs to earn its space. Here\'s how to create separate living, sleeping, and working zones with convertible furniture.',
+    category: 'Room Design',
+    tags: ['small spaces', 'studio apartment', 'futon frames', 'murphy beds', 'room design'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'Is a futon or Murphy bed better for a studio apartment?',
+        answer: 'It depends on your priorities. A futon provides daily seating and sleeping in one piece for $500-$1,500. A Murphy cabinet bed ($2,100-$3,500) completely hides the bed, giving you more open floor space during the day. If you work from home, a Murphy bed keeps your workspace feeling professional.',
+      },
+      {
+        question: 'How do you separate sleeping and living areas in a studio?',
+        answer: 'Use your furniture as a room divider. A futon placed perpendicular to the wall creates a natural boundary. Bookshelves, curtain dividers, and area rugs define zones visually. Murphy cabinet beds help the most — when closed, the sleeping area disappears entirely.',
+      },
+      {
+        question: 'What furniture should you avoid in a studio apartment?',
+        answer: 'Avoid oversized sofas, bulky entertainment centers, and single-purpose furniture. Skip dining tables — use a counter-height table or desk that doubles as a dining surface. Avoid large dressers when a closet organizer system works better.',
+      },
+      {
+        question: 'Can you fit a Queen-size bed in a studio apartment?',
+        answer: 'Yes, with the right furniture. A Queen futon frame folds to sofa depth during the day. A Murphy cabinet bed stores a full Queen mattress in a 24"-deep cabinet. Both give you Queen sleeping space without permanently dedicating floor area to a bed.',
+      },
+      {
+        question: 'What is the minimum studio apartment size for a futon?',
+        answer: 'A Full futon frame needs about 55" x 80" of floor space when open as a bed. In sofa position, it needs about 55" x 36". You can comfortably use a futon in studios as small as 300 square feet. For tighter spaces, consider a wall-hugger frame that sits closer to the wall.',
+      },
+    ],
+  },
+
+  'eco-friendly-furniture-guide': {
+    slug: 'eco-friendly-furniture-guide',
+    title: 'Eco-Friendly Furniture: Materials, Sustainability & What to Look For',
+    metaDescription: 'Learn about sustainable furniture materials. Plantation-grown rubberwood, solid hardwoods, CertiPUR-US foam, and what eco-friendly labels actually mean.',
+    keywords: ['eco-friendly furniture', 'sustainable furniture', 'rubberwood furniture', 'certipur-us mattress', 'green furniture buying guide'],
+    excerpt: 'Sustainability in furniture starts with materials. Here\'s what to look for — from plantation-grown hardwoods to certified foam — and which labels actually matter.',
+    category: 'Buying Guides',
+    tags: ['sustainability', 'eco-friendly', 'materials', 'buying guide'],
+    publishDate: '2026-03-17',
+    faqs: [
+      {
+        question: 'What is plantation-grown rubberwood?',
+        answer: 'Rubberwood (Hevea brasiliensis) is harvested from rubber plantations after trees stop producing latex, typically at 25-30 years. Instead of being burned or discarded, the wood is kiln-dried and used for furniture. Night & Day Furniture uses plantation-grown rubberwood for all their frames — it is dense, durable, and a sustainable alternative to old-growth hardwoods.',
+      },
+      {
+        question: 'What does CertiPUR-US mean for futon mattresses?',
+        answer: 'CertiPUR-US certification means the foam in your mattress is made without ozone-depleting chemicals, heavy metals, formaldehyde, or prohibited phthalates. It also means low VOC emissions for better indoor air quality. Our Otis Bed mattresses are CertiPUR-US certified.',
+      },
+      {
+        question: 'Is solid wood furniture more sustainable than particleboard?',
+        answer: 'Generally yes. Solid wood furniture lasts decades and can be refinished, while particleboard furniture often ends up in landfills within a few years. Solid hardwood frames from Night & Day and KD Frames last 15-20 years. Particleboard cannot be repaired or refinished when damaged.',
+      },
+      {
+        question: 'Are futons eco-friendly?',
+        answer: 'Futons are inherently efficient — one piece of furniture serves as both sofa and bed, reducing total furniture consumption. Solid hardwood frames are long-lasting, mattresses use CertiPUR-US certified foam, and covers are removable and washable, extending mattress life. The dual-purpose design means fewer resources used per function.',
+      },
+      {
+        question: 'What should I look for in sustainable furniture?',
+        answer: 'Look for solid wood construction (not particleboard), CertiPUR-US certified foam, manufacturer transparency about sourcing, and long warranty periods indicating lasting quality. Avoid furniture with excessive plastic components, MDF containing formaldehyde, and brands that do not disclose material origins.',
       },
     ],
   },
