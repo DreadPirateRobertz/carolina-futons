@@ -201,6 +201,77 @@ export async function wixEcom_onOrderCanceled(event) {
   }
 }
 
+// ── Product Lifecycle → Content Orchestration ────────────────────────
+
+/**
+ * Fired when a new product is created in the store.
+ * Triggers content orchestration for new_arrival.
+ */
+export async function wixStores_onProductCreated(event) {
+  const product = event.entity || event;
+  const productId = product._id || '';
+
+  if (!productId) return;
+
+  try {
+    const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
+    await triggerEventOrchestration('new_arrival', {
+      productId,
+      productName: product.name || '',
+      productCategory: product.productType || '',
+      imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
+    });
+  } catch (err) {
+    console.error('[events] Content orchestration failed for new product:', err);
+    await logFailedEvent({
+      handler: 'wixStores_onProductCreated',
+      productId,
+      error: err.message,
+      severity: 'MEDIUM',
+      impact: 'New arrival content not auto-generated — manual trigger available',
+    });
+  }
+}
+
+/**
+ * Fired when a product is updated.
+ * Detects price drops and triggers content orchestration.
+ */
+export async function wixStores_onProductUpdated(event) {
+  const product = event.entity || event;
+  const previous = event.previousEntity || {};
+  const productId = product._id || '';
+
+  if (!productId) return;
+
+  const newPrice = product.price?.amount ?? product.price ?? null;
+  const oldPrice = previous.price?.amount ?? previous.price ?? null;
+
+  // Only trigger on actual price drops (not increases, not identical)
+  if (oldPrice == null || newPrice == null || newPrice >= oldPrice) return;
+
+  try {
+    const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
+    await triggerEventOrchestration('price_drop', {
+      productId,
+      productName: product.name || '',
+      productCategory: product.productType || '',
+      imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
+      oldPrice,
+      newPrice,
+    });
+  } catch (err) {
+    console.error('[events] Content orchestration failed for price drop:', err);
+    await logFailedEvent({
+      handler: 'wixStores_onProductUpdated',
+      productId,
+      error: err.message,
+      severity: 'MEDIUM',
+      impact: 'Price drop content not auto-generated — manual trigger available',
+    });
+  }
+}
+
 // ── Inventory Restock Handler ────────────────────────────────────────
 
 /**
