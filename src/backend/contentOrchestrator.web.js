@@ -72,6 +72,87 @@ function getPlatformForAction(action) {
   }
 }
 
+async function verifyEventSecret(providedSecret) {
+  if (!providedSecret) return false;
+  const { getSecret } = await import('wix-secrets-backend');
+  const expected = await getSecret('CONTENT_EVENT_KEY');
+  return providedSecret === expected;
+}
+
+/**
+ * Shared scheduling logic. Validates inputs, checks config + idempotency,
+ * and either writes CMS entries or returns a dry-run preview.
+ *
+ * @param {string} eventType
+ * @param {Object} productData
+ * @param {Object} options - { dryRun?: boolean }
+ * @returns {{scheduled: Array, skipped: number, eventId: string}}
+ */
+async function scheduleActions(eventType, productData, options = {}) {
+  const cleanType = sanitize(eventType, 50);
+  if (!VALID_EVENT_TYPES.includes(cleanType)) {
+    return { error: 'Invalid event type. Must be: ' + VALID_EVENT_TYPES.join(', ') };
+  }
+
+  const productId = validateId(productData?.productId);
+  if (!productId) {
+    return { error: 'Valid product ID is required.' };
+  }
+
+  const config = await getConfig();
+  const actions = EVENT_ACTIONS[cleanType] || [];
+  const eventId = buildEventId(cleanType, productId);
+  const dryRun = !!options.dryRun;
+
+  const existing = await wixData.query('ContentSchedule')
+    .eq('createdBy', eventId)
+    .find();
+  const existingTypes = new Set(existing.items.map(i => i.contentType));
+
+  const scheduled = [];
+  let skipped = 0;
+
+  for (const action of actions) {
+    const configKey = CONFIG_KEY_MAP[action];
+    if (configKey && config[configKey] === false) {
+      skipped++;
+      continue;
+    }
+
+    if (existingTypes.has(action)) {
+      skipped++;
+      continue;
+    }
+
+    const entry = {
+      contentType: action,
+      platform: getPlatformForAction(action),
+      productId,
+      productName: sanitize(productData.productName || '', 200),
+      scheduledAt: new Date(),
+      status: 'pending',
+      priority: ACTION_PRIORITY[cleanType] ?? 3,
+      eventType: cleanType,
+      createdBy: eventId,
+      payload: JSON.stringify({
+        productCategory: sanitize(productData.productCategory || '', 100),
+        imageUrl: sanitize(productData.imageUrl || '', 500),
+        oldPrice: productData.oldPrice ?? null,
+        newPrice: productData.newPrice ?? null,
+      }),
+      processedAt: null,
+      error: '',
+    };
+
+    if (!dryRun) {
+      await wixData.insert('ContentSchedule', entry);
+    }
+    scheduled.push({ contentType: action, platform: entry.platform, eventId });
+  }
+
+  return { scheduled, skipped, eventId };
+}
+
 // ── WebMethods ──────────────────────────────────────────────────────
 
 /**
@@ -89,74 +170,122 @@ export const triggerManualOrchestration = webMethod(
     try {
       await requireAdmin();
 
-      const cleanType = sanitize(eventType, 50);
-      if (!VALID_EVENT_TYPES.includes(cleanType)) {
-        return { success: false, error: 'Invalid event type. Must be: ' + VALID_EVENT_TYPES.join(', '), scheduled: [] };
+      const result = await scheduleActions(eventType, productData, options);
+      if (result.error) {
+        return { success: false, error: result.error, scheduled: [] };
       }
 
-      const productId = validateId(productData?.productId);
-      if (!productId) {
-        return { success: false, error: 'Valid product ID is required.', scheduled: [] };
-      }
-
-      const config = await getConfig();
-      const actions = EVENT_ACTIONS[cleanType] || [];
-      const eventId = buildEventId(cleanType, productId);
-      const dryRun = !!options.dryRun;
-
-      // Idempotency: check for existing entries with same eventId
-      const existing = await wixData.query('ContentSchedule')
-        .eq('createdBy', eventId)
-        .find();
-      const existingTypes = new Set(existing.items.map(i => i.contentType));
-
-      const scheduled = [];
-      let skipped = 0;
-
-      for (const action of actions) {
-        const configKey = CONFIG_KEY_MAP[action];
-        if (configKey && config[configKey] === false) {
-          skipped++;
-          continue;
-        }
-
-        if (existingTypes.has(action)) {
-          skipped++;
-          continue;
-        }
-
-        const entry = {
-          contentType: action,
-          platform: getPlatformForAction(action),
-          productId,
-          productName: sanitize(productData.productName || '', 200),
-          scheduledAt: new Date(),
-          status: 'pending',
-          priority: ACTION_PRIORITY[cleanType] ?? 3,
-          eventType: cleanType,
-          createdBy: eventId,
-          payload: JSON.stringify({
-            productCategory: sanitize(productData.productCategory || '', 100),
-            imageUrl: productData.imageUrl || '',
-            oldPrice: productData.oldPrice ?? null,
-            newPrice: productData.newPrice ?? null,
-          }),
-          processedAt: null,
-          error: '',
-        };
-
-        if (!dryRun) {
-          await wixData.insert('ContentSchedule', entry);
-        }
-        scheduled.push({ contentType: action, platform: entry.platform, eventId });
-      }
-
-      const result = { success: true, scheduled, skipped };
-      if (dryRun) result.dryRun = true;
-      return result;
+      const response = { success: true, scheduled: result.scheduled, skipped: result.skipped };
+      if (options.dryRun) response.dryRun = true;
+      return response;
     } catch (err) {
       console.error('[contentOrchestrator] Error in triggerManualOrchestration:', err);
       return { success: false, error: err.message || 'Orchestration failed.', scheduled: [] };
+    }
+  }
+);
+
+/**
+ * Event-triggered orchestration — called by Wix event handlers via shared secret.
+ * Delegates to scheduleActions() (shared with manual trigger). Does not support dry-run.
+ *
+ * @param {string} eventSecret - Shared secret for event authentication
+ * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'
+ * @param {Object} productData - { productId, productName, productCategory, imageUrl?, oldPrice?, newPrice? }
+ * @returns {Promise<{success: boolean, scheduled: Array, skipped?: number, error?: string}>}
+ */
+export const triggerEventOrchestration = webMethod(
+  Permissions.Anyone,
+  async (eventSecret, eventType, productData) => {
+    try {
+      const valid = await verifyEventSecret(eventSecret);
+      if (!valid) {
+        return { success: false, error: 'Authentication failed: invalid event secret.', scheduled: [] };
+      }
+
+      const result = await scheduleActions(eventType, productData);
+      if (result.error) {
+        return { success: false, error: result.error, scheduled: [] };
+      }
+
+      return { success: true, scheduled: result.scheduled, skipped: result.skipped };
+    } catch (err) {
+      console.error('[contentOrchestrator] Error in triggerEventOrchestration:', err);
+      return { success: false, error: err.message || 'Event orchestration failed.', scheduled: [] };
+    }
+  }
+);
+
+/**
+ * Dry-run preview — shows what actions would be scheduled without writing to CMS.
+ * @param {string} eventType
+ * @param {Object} productData
+ * @returns {Promise<{success: boolean, planned: Array, wouldSkip: number, error?: string}>}
+ */
+export const previewOrchestration = webMethod(
+  Permissions.Admin,
+  async (eventType, productData) => {
+    try {
+      await requireAdmin();
+
+      const result = await scheduleActions(eventType, productData, { dryRun: true });
+      if (result.error) {
+        return { success: false, error: result.error, planned: [] };
+      }
+
+      const planned = result.scheduled.map(s => ({
+        ...s,
+        priority: ACTION_PRIORITY[sanitize(eventType, 50)] ?? 3,
+        reason: `${sanitize(eventType, 50)} → ${s.contentType}`,
+      }));
+
+      return { success: true, planned, wouldSkip: result.skipped };
+    } catch (err) {
+      console.error('[contentOrchestrator] Error in previewOrchestration:', err);
+      return { success: false, error: err.message || 'Preview failed.', planned: [] };
+    }
+  }
+);
+
+/**
+ * Admin dashboard endpoint — returns pending schedule, config, and stats in one call.
+ * @returns {Promise<{success: boolean, pending: Array, config: Object, stats: Object, error?: string}>}
+ */
+export const getOrchestrationDashboard = webMethod(
+  Permissions.Admin,
+  async () => {
+    try {
+      await requireAdmin();
+
+      const [configResult, pendingResult, statsResult] = await Promise.all([
+        getConfig(),
+        wixData.query('ContentSchedule')
+          .eq('status', 'pending')
+          .ascending('priority')
+          .limit(100)
+          .find(),
+        wixData.query('ContentSchedule')
+          .gt('scheduledAt', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+          .limit(1000)
+          .find(),
+      ]);
+
+      const stats = { pending: 0, sent: 0, failed: 0, cancelled: 0 };
+      for (const item of statsResult.items) {
+        if (stats[item.status] !== undefined) {
+          stats[item.status]++;
+        }
+      }
+
+      return {
+        success: true,
+        pending: pendingResult.items,
+        config: configResult,
+        stats,
+      };
+    } catch (err) {
+      console.error('[contentOrchestrator] Error getting dashboard:', err);
+      return { success: false, error: err.message || 'Dashboard failed.', pending: [], config: {}, stats: {} };
     }
   }
 );

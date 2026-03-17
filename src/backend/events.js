@@ -1,10 +1,13 @@
 /**
  * @module events
  * @description Wix platform event handlers for eCommerce lifecycle events.
- * Populates the AbandonedCarts CMS collection and triggers restock notifications.
+ * Populates the AbandonedCarts CMS collection, triggers restock notifications,
+ * and fires content orchestration for product lifecycle changes (new arrivals, price drops).
  *
  * @requires wix-data
+ * @requires wix-secrets-backend - CONTENT_EVENT_KEY for orchestrator auth
  * @requires backend/emailAutomation.web - triggerRestockNotifications
+ * @requires backend/contentOrchestrator.web - triggerEventOrchestration
  *
  * @setup
  * 1. Create `AbandonedCarts` CMS collection with fields:
@@ -198,6 +201,87 @@ export async function wixEcom_onOrderCanceled(event) {
     await cancelSequenceForOrder(email, orderNumber);
   } catch (err) {
     console.error('[events] Error cancelling care sequence:', err);
+  }
+}
+
+// ── Product Lifecycle → Content Orchestration ────────────────────────
+
+/**
+ * Fired when a new product is created in the store.
+ * Triggers content orchestration for new_arrival.
+ */
+export async function wixStores_onProductCreated(event) {
+  const product = event.entity || event;
+  const productId = product._id || '';
+
+  if (!productId) {
+    console.warn('[events] wixStores_onProductCreated received event without product ID');
+    return;
+  }
+
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const eventSecret = await getSecret('CONTENT_EVENT_KEY');
+    const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
+    await triggerEventOrchestration(eventSecret, 'new_arrival', {
+      productId,
+      productName: product.name || '',
+      productCategory: product.productType || '',
+      imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
+    });
+  } catch (err) {
+    console.error('[events] Content orchestration failed for new product:', err);
+    await logFailedEvent({
+      handler: 'wixStores_onProductCreated',
+      productId,
+      error: err.message,
+      severity: 'MEDIUM',
+      impact: 'New arrival content not auto-generated — manual trigger available',
+    });
+  }
+}
+
+/**
+ * Fired when a product is updated.
+ * Detects price drops and triggers content orchestration.
+ */
+export async function wixStores_onProductUpdated(event) {
+  const product = event.entity || event;
+  const previous = event.previousEntity || {};
+  const productId = product._id || '';
+
+  if (!productId) {
+    console.warn('[events] wixStores_onProductUpdated received event without product ID');
+    return;
+  }
+
+  const newPrice = product.price?.amount ?? product.price ?? null;
+  const oldPrice = previous.price?.amount ?? previous.price ?? null;
+
+  // Only trigger on actual price drops (not increases, not identical)
+  if (oldPrice == null || newPrice == null || newPrice >= oldPrice) return;
+
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const eventSecret = await getSecret('CONTENT_EVENT_KEY');
+    const { triggerEventOrchestration } = await import('backend/contentOrchestrator.web');
+    await triggerEventOrchestration(eventSecret, 'price_drop', {
+      productId,
+      productName: product.name || '',
+      productCategory: product.productType || '',
+      imageUrl: product.mainMedia || product.media?.mainMedia?.image?.url || '',
+      oldPrice,
+      newPrice,
+    });
+  } catch (err) {
+    console.error('[events] Content orchestration failed for price drop:', err);
+    await logFailedEvent({
+      handler: 'wixStores_onProductUpdated',
+      productId,
+      error: err.message,
+      severity: 'MEDIUM',
+      impact: 'Price drop content not auto-generated — manual trigger available',
+    });
   }
 }
 
