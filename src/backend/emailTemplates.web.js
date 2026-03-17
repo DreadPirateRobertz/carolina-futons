@@ -558,8 +558,8 @@ function buildPriceDropBlock(product) {
   const name = sanitize(product.name, 200);
   const currentPrice = `$${priceNum.toFixed(2)}`;
   const prevPrice = `$${prevPriceNum.toFixed(2)}`;
-  const savingsPercent = Math.round(((prevPriceNum - priceNum) / prevPriceNum) * 100);
-  const url = product.url || `${SITE_URL}/product-page/${product.slug || ''}`;
+  const savingsPercent = Math.max(1, Math.round(((prevPriceNum - priceNum) / prevPriceNum) * 100));
+  const url = product.url || (product.slug ? `${SITE_URL}/product-page/${product.slug}` : `${SITE_URL}/shop-main`);
   const image = (product.images && product.images[0]) || '';
 
   const imageHtml = image
