@@ -161,7 +161,7 @@ async function scheduleActions(eventType, productData, options = {}) {
  * Trigger content orchestration for a catalog event.
  * Creates schedule entries in ContentSchedule CMS queue.
  *
- * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'
+ * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'|'blog_published'
  * @param {Object} productData - { productId, productName, productCategory, imageUrl?, oldPrice?, newPrice? }
  * @param {Object} [options] - { dryRun: boolean }
  * @returns {Promise<{success: boolean, scheduled: Array, skipped?: number, dryRun?: boolean, error?: string}>}
@@ -192,7 +192,7 @@ export const triggerManualOrchestration = webMethod(
  * Delegates to scheduleActions() (shared with manual trigger). Does not support dry-run.
  *
  * @param {string} eventSecret - Shared secret for event authentication
- * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'
+ * @param {string} eventType - 'new_arrival'|'price_drop'|'back_in_stock'|'seasonal'|'blog_published'
  * @param {Object} productData - { productId, productName, productCategory, imageUrl?, oldPrice?, newPrice? }
  * @returns {Promise<{success: boolean, scheduled: Array, skipped?: number, error?: string}>}
  */

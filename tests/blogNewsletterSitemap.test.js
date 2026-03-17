@@ -36,7 +36,6 @@ beforeEach(() => {
     enableSocialStory: true,
     enableCatalogSync: true,
     enableEmail: true,
-    enableBlogNewsletter: true,
   }]);
 });
 
@@ -115,9 +114,9 @@ describe('blog_published event orchestration', () => {
       if (collection === 'ContentSchedule') inserts.push(item);
     });
     await triggerManualOrchestration('blog_published', blogData);
-    // blog_published should have priority 5 (lower urgency than seasonal=4)
+    // blog_published has priority 5 (lower urgency than seasonal=4)
     for (const item of inserts) {
-      expect(item.priority).toBeGreaterThanOrEqual(4);
+      expect(item.priority).toBe(5);
     }
   });
 
@@ -128,11 +127,24 @@ describe('blog_published event orchestration', () => {
       enableSocialStory: true,
       enableCatalogSync: true,
       enableEmail: true,
-      enableBlogNewsletter: true,
     }]);
     const result = await triggerManualOrchestration('blog_published', blogData);
     const types = result.scheduled.map(s => s.contentType);
     expect(types).not.toContain('newsletter');
+  });
+
+  it('respects enableSocialStory config toggle', async () => {
+    __seed('OrchestrationConfig', [{
+      _id: 'config-1',
+      enableNewsletter: true,
+      enableSocialStory: false,
+      enableCatalogSync: true,
+      enableEmail: true,
+    }]);
+    const result = await triggerManualOrchestration('blog_published', blogData);
+    const types = result.scheduled.map(s => s.contentType);
+    expect(types).not.toContain('social_story');
+    expect(types).toContain('newsletter');
   });
 
   it('payload includes blog-specific data', async () => {

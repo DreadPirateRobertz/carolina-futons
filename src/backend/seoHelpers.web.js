@@ -1194,7 +1194,7 @@ const STATIC_PAGES = [
  * Product pages require a products array from the caller (CMS query).
  *
  * @param {Array<{slug: string, _updatedDate?: string|Date}>} [products=[]] - Product items
- * @returns {{ staticPages: Array, categoryPages: Array, productPages: Array }}
+ * @returns {{ staticPages: Array, categoryPages: Array, productPages: Array, blogPages: Array }}
  */
 export const getSitemapData = webMethod(
   Permissions.Anyone,
