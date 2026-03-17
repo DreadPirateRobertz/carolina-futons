@@ -18,13 +18,14 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 
-const VALID_EVENT_TYPES = ['new_arrival', 'price_drop', 'back_in_stock', 'seasonal'];
+const VALID_EVENT_TYPES = ['new_arrival', 'price_drop', 'back_in_stock', 'seasonal', 'blog_published'];
 
 const EVENT_ACTIONS = {
   new_arrival:    ['newsletter', 'social_story', 'catalog_sync'],
   price_drop:     ['social_story', 'catalog_sync'],
   back_in_stock:  ['newsletter', 'social_story', 'catalog_sync'],
   seasonal:       ['newsletter', 'social_story'],
+  blog_published: ['newsletter', 'social_story'],
 };
 
 const ACTION_PRIORITY = {
@@ -32,6 +33,7 @@ const ACTION_PRIORITY = {
   price_drop: 2,
   new_arrival: 3,
   seasonal: 4,
+  blog_published: 5,
 };
 
 const CONFIG_KEY_MAP = {

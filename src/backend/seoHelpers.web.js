@@ -8,7 +8,7 @@
  * Dependencies: wix-web-module, backend/blogContent (getBlogFaqs).
  */
 import { Permissions, webMethod } from 'wix-web-module';
-import { getBlogFaqs } from 'backend/blogContent';
+import { getBlogFaqs, getAllBlogPosts } from 'backend/blogContent';
 import { detectProductBrand } from 'public/productPageUtils.js';
 
 const BUSINESS_INFO = {
@@ -1233,7 +1233,16 @@ export const getSitemapData = webMethod(
         };
       });
 
-    return { staticPages, categoryPages, productPages };
+    const blogPosts = getAllBlogPosts();
+    const blogPages = blogPosts.map(post => ({
+      url: `${baseUrl}/blog/${post.slug}`,
+      title: post.title,
+      slug: post.slug,
+      priority: '0.7',
+      changefreq: 'weekly',
+    }));
+
+    return { staticPages, categoryPages, productPages, blogPages };
   }
 );
 
@@ -1253,6 +1262,7 @@ export const buildSitemapXml = webMethod(
       ...(sitemapData.staticPages || []),
       ...(sitemapData.categoryPages || []),
       ...(sitemapData.productPages || []),
+      ...(sitemapData.blogPages || []),
     ];
 
     for (const page of allPages) {
