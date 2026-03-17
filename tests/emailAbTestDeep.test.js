@@ -233,6 +233,45 @@ describe('createAbTest', () => {
       expect.objectContaining({ metricField: 'openRate' })
     );
   });
+
+  it('rejects invalid metricField', async () => {
+    const result = await createAbTest({
+      sequenceType: 'welcome',
+      testStep: 1,
+      variants: { A: { subjectLine: 'X' }, B: { subjectLine: 'Y' } },
+      metricField: 'bounceRate',
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toMatch(/metricField/i);
+  });
+
+  it('prevents duplicate active test for same sequence step', async () => {
+    mockQuery.mockImplementation(() =>
+      makeChain({ items: [{ _id: 'existing', status: 'active' }] })
+    );
+
+    const result = await createAbTest({
+      sequenceType: 'welcome',
+      testStep: 1,
+      variants: { A: { subjectLine: 'X' }, B: { subjectLine: 'Y' } },
+    });
+    expect(result.success).toBe(false);
+    expect(result.reason).toMatch(/already exists/i);
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('includes error message on database failure', async () => {
+    mockQuery.mockImplementation(() => makeChain());
+    mockInsert.mockRejectedValueOnce(new Error('DB write failed'));
+
+    const result = await createAbTest({
+      sequenceType: 'welcome',
+      testStep: 1,
+      variants: { A: { subjectLine: 'X' }, B: { subjectLine: 'Y' } },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('DB write failed');
+  });
 });
 
 // ── resolveAbTestWinner ──────────────────────────────────────────────
@@ -325,6 +364,65 @@ describe('resolveAbTestWinner', () => {
     const result = await resolveAbTestWinner('test-small');
     expect(result.success).toBe(false);
     expect(result.reason).toMatch(/sample/i);
+  });
+
+  it('selects A on tie (A >= B)', async () => {
+    const mockTest = {
+      _id: 'test-tie', sequenceType: 'welcome', testStep: 1,
+      status: 'active', sampleSize: 2, metricField: 'openRate',
+    };
+    const aItems = [{ _id: 'a-0', status: 'sent' }, { _id: 'a-1', status: 'sent' }];
+    const bItems = [{ _id: 'b-0', status: 'sent' }, { _id: 'b-1', status: 'sent' }];
+    const openEvents = [
+      { emailQueueId: 'a-0', eventType: 'open' },
+      { emailQueueId: 'b-0', eventType: 'open' },
+    ];
+
+    let eqCallNum = 0;
+    mockQuery.mockImplementation((collection) => {
+      if (collection === 'AbTests') return makeChain({ items: [mockTest] });
+      if (collection === 'EmailQueue') {
+        eqCallNum++;
+        return makeChain({ items: eqCallNum <= 1 ? aItems : bItems });
+      }
+      if (collection === 'EmailEvents') return makeChain({ items: openEvents });
+      return makeChain();
+    });
+
+    const result = await resolveAbTestWinner('test-tie');
+    expect(result.success).toBe(true);
+    expect(result.winner).toBe('A');
+    expect(result.variantARate).toEqual(result.variantBRate);
+  });
+
+  it('resolves using click events when metricField is clickRate', async () => {
+    const mockTest = {
+      _id: 'test-click', sequenceType: 'welcome', testStep: 1,
+      status: 'active', sampleSize: 2, metricField: 'clickRate',
+    };
+    const aItems = [{ _id: 'a-0', status: 'sent' }, { _id: 'a-1', status: 'sent' }];
+    const bItems = [{ _id: 'b-0', status: 'sent' }, { _id: 'b-1', status: 'sent' }];
+    const clickEvents = [
+      { emailQueueId: 'b-0', eventType: 'click' },
+      { emailQueueId: 'b-1', eventType: 'click' },
+    ];
+
+    let eqCallNum = 0;
+    mockQuery.mockImplementation((collection) => {
+      if (collection === 'AbTests') return makeChain({ items: [mockTest] });
+      if (collection === 'EmailQueue') {
+        eqCallNum++;
+        return makeChain({ items: eqCallNum <= 1 ? aItems : bItems });
+      }
+      if (collection === 'EmailEvents') return makeChain({ items: clickEvents });
+      return makeChain();
+    });
+
+    const result = await resolveAbTestWinner('test-click');
+    expect(result.success).toBe(true);
+    expect(result.winner).toBe('B');
+    expect(result.variantARate).toBe(0);
+    expect(result.variantBRate).toBe(1);
   });
 });
 
