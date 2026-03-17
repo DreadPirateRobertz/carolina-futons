@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { __seed, __reset, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 
 vi.mock('wix-crm-backend', () => ({
@@ -39,7 +39,10 @@ beforeEach(() => {
 
 // ── 1. processEmailQueue retry logic ─────────────────────────────────
 
-describe.skip('processEmailQueue retry logic', () => { // TODO: implement retry with backoff in emailAutomation.web.js
+describe('processEmailQueue retry logic', () => {
+  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('attempt 1 failure: stays pending with 15min backoff', async () => {
     triggeredEmails.emailContact.mockRejectedValueOnce(new Error('Timeout'));
     const now = new Date();
@@ -106,7 +109,10 @@ describe.skip('processEmailQueue retry logic', () => { // TODO: implement retry 
 
 // ── 2. processEmailQueue cart recovery check ─────────────────────────
 
-describe.skip('processEmailQueue cart recovery cancellation', () => { // TODO: implement cart status check before sending
+describe('processEmailQueue cart recovery cancellation', () => {
+  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('cancels cart_recovery email when cart status is recovered', async () => {
     const now = new Date();
     __seed('EmailQueue', [{
@@ -147,7 +153,10 @@ describe.skip('processEmailQueue cart recovery cancellation', () => { // TODO: i
 
 // ── 3. processEmailQueue no contactId ────────────────────────────────
 
-describe.skip('processEmailQueue no contactId', () => { // TODO: implement contactId validation in processEmailQueue
+describe('processEmailQueue no contactId', () => {
+  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('increments attempt and sets lastError when contactId is missing', async () => {
     const now = new Date();
     __seed('EmailQueue', [{
@@ -699,7 +708,10 @@ describe('A/B variant selection in welcome sequence', () => {
 
 // ── Additional edge cases ────────────────────────────────────────────
 
-describe.skip('processEmailQueue unsubscribe-after-queue', () => { // TODO: implement unsubscribe check before sending
+describe('processEmailQueue unsubscribe-after-queue', () => {
+  beforeAll(() => { vi.useFakeTimers({ shouldAdvanceTime: true }); vi.setSystemTime(new Date('2026-03-16T18:00:00.000Z')); });
+  afterAll(() => { vi.useRealTimers(); });
+
   it('cancels email if recipient unsubscribed since queuing', async () => {
     const now = new Date();
     __seed('EmailQueue', [{
