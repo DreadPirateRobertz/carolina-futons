@@ -5,7 +5,7 @@ import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
 import { triggerBrowseRecovery } from 'backend/browseAbandonment.web';
-import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence } from 'backend/emailAutomation.web';
+import { triggerAbandonedCartRecovery, processEmailQueue, triggerReengagement, triggerPostPurchaseSequence, getCampaignAnalytics } from 'backend/emailAutomation.web';
 import { processContentSchedule } from 'backend/contentScheduler.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
@@ -825,6 +825,47 @@ export async function get_processContentScheduleCron(request) {
     });
   } catch (err) {
     console.error('HTTP function error (processContentScheduleCron):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Campaign Analytics Dashboard ──────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/campaignAnalytics
+// Admin dashboard endpoint for email campaign performance metrics.
+// Pass X-Cron-Secret header for auth (ALERT_CRON_KEY in Secrets Manager).
+// Optional query param: ?days=30 (lookback window, default 30)
+export async function get_campaignAnalytics(request) {
+  try {
+    const { getSecret } = await import('wix-secrets-backend');
+    const cronKey = await getSecret('ALERT_CRON_KEY');
+    const requestKey = request.headers?.['x-cron-secret'];
+
+    if (!cronKey || !requestKey || !timingSafeEqual(requestKey, cronKey)) {
+      return forbidden({
+        body: JSON.stringify({ error: 'Unauthorized' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const days = parseInt(request.query?.days, 10) || 30;
+    const result = await getCampaignAnalytics(days);
+
+    return ok({
+      body: JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        ...result,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (campaignAnalytics):', err);
     return serverError({
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
