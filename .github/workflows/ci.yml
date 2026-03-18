@@ -17,7 +17,7 @@ jobs:
   # ── Unit Tests ───────────────────────────────────────────────────────────────
   # Runs Vitest across Node 20 + 22 matrix. On Node 20: also collects coverage
   # and uploads to Codecov. Codecov bot posts PR comments automatically.
-  # Coverage thresholds: lines 70%, branches 60%, functions 70%.
+  # Coverage thresholds: statements 90%, branches 85%, functions 88%, lines 91%.
   # Secret required: CODECOV_TOKEN (fail_ci_if_error: true — Codecov errors fail the build)
   test:
     runs-on: ubuntu-latest

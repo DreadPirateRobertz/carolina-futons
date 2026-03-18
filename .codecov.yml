@@ -1,8 +1,8 @@
 # Codecov configuration for Carolina Futons
 # Docs: https://docs.codecov.com/docs/codecov-yaml
 #
-# Codecov uses a single aggregate target (70%). Per-metric thresholds
-# (lines 70%, branches 60%, functions 70%) are enforced by vitest.config.js.
+# Codecov uses a single aggregate target (91%). Per-metric thresholds
+# (statements 90%, branches 85%, functions 88%, lines 91%) are enforced by vitest.config.js.
 
 codecov:
   require_ci_to_pass: true
@@ -10,12 +10,12 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "60...90"
+  range: "85...95"
 
   status:
     project:
       default:
-        target: 70%
+        target: 91%
         threshold: 2%
         if_ci_failed: error
     patch:
