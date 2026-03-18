@@ -2234,6 +2234,172 @@ Action buttons (right):
     ]
   },
   {
+    name: "Blog", file: "Blog.js", priority: "P1", est: "40 min",
+    sections: [
+      { name: "Blog List Repeater (Paginated)", repeater: "blogListRepeater", impl: `<h4>📰 Implementation — Blog List Repeater</h4>
+<p><strong>Layout: Paginated list of blog post cards + pagination controls + post count badge</strong></p>
+<ul>
+  <li><strong>#blogListRepeater</strong>: Repeater element. Code populates with PAGE_SIZE (6) posts per page. Each item has: #listTitle, #listExcerpt, #listCategory, #listDate, #listReadTime, #listPostLink.</li>
+  <li><strong>#blogPostCount</strong>: Text element. Shows total or filtered post count (e.g. "12 posts").</li>
+  <li><strong>#blogPageIndicator</strong>: Text element. Shows "Page X of Y" during pagination.</li>
+  <li><strong>#blogPrevBtn</strong>: Button. Navigates to previous page. Disabled on first page.</li>
+  <li><strong>#blogNextBtn</strong>: Button. Navigates to next page. Disabled on last page.</li>
+  <li><strong>#blogEmptyState</strong>: Box/Text. Shown when no posts match the active filter. Hidden otherwise.</li>
+</ul>`, elements: [
+        ["blogListRepeater","Repeater","Paginated blog post list"],
+        ["blogPostCount","Text","Post count (e.g. '12 posts')"],
+        ["blogPageIndicator","Text","Page X of Y"],
+        ["blogPrevBtn","Button","Previous page — disabled on first page"],
+        ["blogNextBtn","Button","Next page — disabled on last page"],
+        ["blogEmptyState","Box","Shown when no posts match filter"]
+      ]},
+      { name: "Blog Grid (viewport-limited)", repeater: "blogGridRepeater", impl: `<h4>📰 Implementation — Blog Grid</h4>
+<p><strong>Layout: Responsive card grid (desktop 9 / tablet 6 / mobile 4)</strong></p>
+<ul>
+  <li><strong>#blogGridRepeater</strong>: Repeater. Shows viewport-limited posts. Each item: #cardTitle, #cardExcerpt, #cardCategory, #cardDate, #cardReadTime, #blogCardLink.</li>
+</ul>`, elements: [
+        ["blogGridRepeater","Repeater","Viewport-limited blog card grid"],
+      ]},
+      { name: "Featured Hero", impl: `<h4>🌟 Implementation — Featured Post Hero</h4>
+<p><strong>Layout: Full-width hero showing the most recent post</strong></p>
+<ul>
+  <li><strong>#featuredHeroSection</strong>: Section. Collapsed if no posts. Expanded with post data when posts exist.</li>
+  <li><strong>#featuredTitle</strong>: Text. Set to most recent post title.</li>
+  <li><strong>#featuredExcerpt</strong>: Text. Set to post excerpt.</li>
+  <li><strong>#featuredCategory</strong>: Text. Category badge text.</li>
+  <li><strong>#featuredDate</strong>: Text. Formatted publish date.</li>
+  <li><strong>#featuredReadTime</strong>: Text. "X min read" badge.</li>
+  <li><strong>#featuredAuthor</strong>: Text. Author name ("Carolina Futons").</li>
+  <li><strong>#featuredHeroLink</strong>: Box/Button. Clickable — navigates to /blog/{slug}.</li>
+</ul>`, elements: [
+        ["featuredHeroSection","Section","Featured post hero — collapses if empty"],
+        ["featuredTitle","Text","Most recent post title"],
+        ["featuredExcerpt","Text","Post excerpt"],
+        ["featuredCategory","Text","Category badge"],
+        ["featuredDate","Text","Formatted date"],
+        ["featuredReadTime","Text","Reading time badge"],
+        ["featuredAuthor","Text","Author name"],
+        ["featuredHeroLink","Box","Click → /blog/{slug}"]
+      ]},
+      { name: "Category Filter", repeater: "categoryFilterRepeater", impl: `<h4>📂 Implementation — Category Filter</h4>
+<p><strong>Layout: Horizontal filter chips — "All" + each unique category</strong></p>
+<ul>
+  <li><strong>#categoryFilterRepeater</strong>: Repeater. Items: #filterChip (Box/Button), #filterLabel (Text).</li>
+  <li>Active chip styled with mountainBlue background. Clicking a chip re-renders both blogListRepeater and blogGridRepeater.</li>
+</ul>`, elements: [
+        ["categoryFilterRepeater","Repeater","Category filter chips"],
+      ]},
+      { name: "Social Share (Blog list)", impl: `<h4>🔗 Implementation — Social Share (Blog page)</h4>
+<ul>
+  <li><strong>#shareFacebook</strong>: Box/Button. Opens Facebook share dialog for current URL.</li>
+  <li><strong>#sharePinterest</strong>: Box/Button. Opens Pinterest pin dialog.</li>
+  <li><strong>#shareTwitter</strong>: Box/Button. Opens Twitter/X tweet intent.</li>
+  <li><strong>#shareEmail</strong>: Box/Button. Opens mailto: link.</li>
+</ul>`, elements: [
+        ["shareFacebook","Box","Share on Facebook"],
+        ["sharePinterest","Box","Share on Pinterest"],
+        ["shareTwitter","Box","Share on X/Twitter"],
+        ["shareEmail","Box","Share via email"]
+      ]},
+      { name: "Newsletter CTA (Blog list)", impl: `<h4>📧 Implementation — Blog Newsletter CTA</h4>
+<ul>
+  <li><strong>#blogNewsletterEmail</strong>: Input. Email address field. Validates @ presence before submit.</li>
+  <li><strong>#blogNewsletterSubmit</strong>: Button. Triggers subscription. Disabled during request.</li>
+  <li><strong>#blogNewsletterSuccess</strong>: Box/Text. Shown on successful subscription.</li>
+  <li><strong>#blogNewsletterError</strong>: Text. Error message display.</li>
+</ul>`, elements: [
+        ["blogNewsletterEmail","Input","Email input for newsletter"],
+        ["blogNewsletterSubmit","Button","Subscribe button"],
+        ["blogNewsletterSuccess","Box","Success state"],
+        ["blogNewsletterError","Text","Error message"]
+      ]},
+      { name: "SEO Schema", impl: `<h4>🔍 Implementation — Blog SEO</h4>
+<ul>
+  <li><strong>#blogSeoSchema</strong>: HtmlComponent. Receives JSON-LD BusinessSchema via postMessage.</li>
+</ul>`, elements: [
+        ["blogSeoSchema","HtmlComponent","JSON-LD schema injection"]
+      ]}
+    ]
+  },
+  {
+    name: "Blog Post", file: "Blog Post.js", priority: "P1", est: "35 min",
+    sections: [
+      { name: "Post Metadata", impl: `<h4>📰 Implementation — Blog Post Metadata</h4>
+<p><strong>Layout: Reading time badge, author bio, date/category display</strong></p>
+<ul>
+  <li><strong>#postReadTime</strong>: Text. Set to "X min read" (estimated at 200 wpm).</li>
+  <li><strong>#postDate</strong>: Text. Formatted publish date (e.g. "February 20, 2026").</li>
+  <li><strong>#postCategory</strong>: Text. Category name (e.g. "Buying Guides").</li>
+  <li>Blog title and body are rendered by Wix Blog app natively — no $w() ID needed.</li>
+  <li>Breadcrumbs: Home > Blog > Post Title — built from wixLocationFrontend.path.</li>
+</ul>`, elements: [
+        ["postReadTime","Text","Reading time — e.g. '5 min read'"],
+        ["postDate","Text","Formatted publish date"],
+        ["postCategory","Text","Category name"]
+      ]},
+      { name: "Author Bio", impl: `<h4>👤 Implementation — Author Bio</h4>
+<ul>
+  <li><strong>#authorName</strong>: Text. "Carolina Futons".</li>
+  <li><strong>#authorDescription</strong>: Text. Store description.</li>
+  <li><strong>#authorLocation</strong>: Text. "Hendersonville, NC".</li>
+  <li><strong>#authorEstablished</strong>: Text. "Est. 1991".</li>
+  <li><strong>#authorBioSection</strong>: Section/Box. Expanded by code when post loads.</li>
+</ul>`, elements: [
+        ["authorName","Text","Author name — Carolina Futons"],
+        ["authorDescription","Text","Store bio text"],
+        ["authorLocation","Text","Hendersonville, NC"],
+        ["authorEstablished","Text","Est. 1991"],
+        ["authorBioSection","Section","Expanded when post loads"]
+      ]},
+      { name: "Social Share (Post page)", impl: `<h4>🔗 Implementation — Social Share (Post page)</h4>
+<p><strong>Layout: 5 share buttons — FB, Pinterest, X, email, copy link</strong></p>
+<ul>
+  <li><strong>#postShareFacebook</strong>: Box/Button. Opens facebook.com/sharer with post URL.</li>
+  <li><strong>#postSharePinterest</strong>: Box/Button. Opens Pinterest pin with URL + title.</li>
+  <li><strong>#postShareTwitter</strong>: Box/Button. Opens twitter.com/intent/tweet.</li>
+  <li><strong>#postShareEmail</strong>: Box/Button. Opens mailto: with subject + body.</li>
+  <li><strong>#copyLink</strong>: Box/Button. Copies post URL to clipboard. Label temporarily changes to "Copied!" for 2s. Fires blog_copy_link GA4 event.</li>
+</ul>`, elements: [
+        ["postShareFacebook","Box","Share on Facebook (opens new tab)"],
+        ["postSharePinterest","Box","Share on Pinterest (opens new tab)"],
+        ["postShareTwitter","Box","Share on X/Twitter (opens new tab)"],
+        ["postShareEmail","Box","Share via email (mailto)"],
+        ["copyLink","Box","Copy post URL to clipboard — label: 'Copied!' for 2s"]
+      ]},
+      { name: "Related Posts", repeater: "relatedPostsRepeater", impl: `<h4>🔗 Implementation — Related Posts</h4>
+<p><strong>Layout: Up to 3 related post cards, tag + category matched</strong></p>
+<ul>
+  <li><strong>#relatedPostsRepeater</strong>: Repeater. Populated with up to 3 posts via getRelatedPosts(). Items: #relatedTitle, #relatedCategory, #relatedReadTime, #relatedPostLink.</li>
+  <li><strong>#relatedPostsSection</strong>: Section/Box. Collapses when no related posts. Expands when 1+ related posts found.</li>
+  <li>Scoring: +10 for same category, +3 per shared tag. Returns top 3.</li>
+</ul>`, elements: [
+        ["relatedPostsRepeater","Repeater","Related posts — up to 3"],
+        ["relatedPostsSection","Section","Collapses when empty"]
+      ]},
+      { name: "Newsletter Subscription (Post)", impl: `<h4>📧 Implementation — Newsletter Subscription (Post page)</h4>
+<ul>
+  <li><strong>#blogNewsletterInput</strong>: Input. Email address for inline newsletter form on post page.</li>
+  <li><strong>#blogNewsletterSubmit</strong>: Button. Triggers subscribeToNewsletter() with source: 'blog_post'.</li>
+  <li><strong>#blogNewsletterSuccess</strong>: Box/Text. Shown on success.</li>
+  <li><strong>#blogNewsletterError</strong>: Text. Error message.</li>
+</ul>`, elements: [
+        ["blogNewsletterInput","Input","Inline email newsletter input on post page"],
+        ["blogNewsletterSubmit","Button","Subscribe button"],
+        ["blogNewsletterSuccess","Box","Success state"],
+        ["blogNewsletterError","Text","Error message"]
+      ]},
+      { name: "SEO Schema (Post)", impl: `<h4>🔍 Implementation — Blog Post SEO</h4>
+<ul>
+  <li><strong>#postSeoSchema</strong>: HtmlComponent. Receives BlogPosting JSON-LD + optional FAQPage schema via postMessage. Both injected as separate script tags if both are available.</li>
+  <li><strong>#postMetaHtml</strong>: HtmlComponent. Receives JSON payload {title, description, canonical} via postMessage for dynamic meta tag injection.</li>
+  <li>og:image set via initPageSeo() using post.coverImage. Canonical URL: https://www.carolinafutons.com/blog/{slug}.</li>
+</ul>`, elements: [
+        ["postSeoSchema","HtmlComponent","BlogPosting JSON-LD + FAQ schema injection"],
+        ["postMetaHtml","HtmlComponent","Dynamic title/description/canonical injection"]
+      ]}
+    ]
+  },
+  {
     name: "Contact", file: "Contact.k14wx.js", priority: "P2", est: "30 min",
     sections: [
       { name: "Contact Form", impl: `<h4>📬 Implementation — Contact Form</h4>
@@ -3516,6 +3682,63 @@ SHARING:
   <li>Invalid/missing token: noindex applied via <code>seo.setMetaTag({ name: 'robots', content: 'noindex' })</code>.</li>
   <li>All SEO set via <code>wix-seo</code> API — no HTML component needed.</li>
 </ul>`, elements: []}
+    ]
+  },
+  {
+    name: "Showroom (Product Page)", file: "showroomService.web.js + Product Page.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
+<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
+<ul>
+  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
+  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
+  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
+</ul>`, elements: [
+        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
+      ]},
+      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
+<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
+<ul>
+  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
+  <li>Collapses automatically in normal customer UX (no qr param).</li>
+</ul>`, elements: [
+        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
+      ]}
+    ]
+  },
+  {
+    name: "Showroom (Category Page)", file: "showroomService.web.js + Category Page.js", priority: "P2", est: "10 min",
+    sections: [
+      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
+<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
+<ul>
+  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
+  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
+  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
+</ul>`, elements: [
+        ["showroomBadge","Text","See It In Store badge (repeater child)"]
+      ]}
+    ]
+  },
+  {
+    name: "Showroom (Home Page)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Showroom Section (S4)", impl: `<h4>🏪 Implementation — Home Page Showroom Section (S4)</h4>
+<p><strong>CF-6cxf S4</strong>: Dedicated showroom section on the Home page with hours, address, booking CTA, and map link.</p>
+<ul>
+  <li><strong>#showroomSection</strong>: Section container — hidden by default, shown after <code>getShowroomSectionData()</code> succeeds.</li>
+  <li><strong>#showroomAddress</strong>: Text — multi-line: name, street, city/state/zip, phone (from SHOWROOM_INFO constant).</li>
+  <li><strong>#showroomHours</strong>: Text — formatted hours (Wed–Fri 10–5, Sat 10–4, Sun–Tue Closed) via <code>formatShowroomHours()</code>.</li>
+  <li><strong>#showroomBookingCTA</strong>: Button — label "Book a Visit", onClick navigates to Wix Bookings service URL.</li>
+  <li><strong>#showroomMapEmbed</strong>: Link/Button — <code>.url</code> set to Google Maps search URL for the showroom address.</li>
+  <li>Loaded as deferred section — fails silently if elements absent.</li>
+</ul>`, elements: [
+        ["showroomSection","Section","Showroom info container (hidden by default)"],
+        ["showroomAddress","Text","Address: name, street, city/state/zip, phone"],
+        ["showroomHours","Text","Formatted hours (Wed–Fri/Sat/closed)"],
+        ["showroomBookingCTA","Button","Book a Visit → Wix Bookings"],
+        ["showroomMapEmbed","Button","Google Maps link (url property set)"]
+      ]}
     ]
   }
 ];

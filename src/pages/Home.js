@@ -77,8 +77,6 @@ $w.onReady(async function () {
     { name: 'ridgeline', init: initRidgelineHeader, critical: false },
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },
     { name: 'homeSeo', init: () => initPageSeo('home'), critical: false },
-    // CF-mwpw: Gift card hero section — isolated to #giftCard* elements
-    { name: 'giftCardSection', init: () => initGiftCardSection($w), critical: false },
   ];
 
   const { critical: criticalResults } = await prioritizeSections(sections, {
@@ -1082,32 +1080,4 @@ function detectCategory(product) {
   if (colls.some(c => c.includes('futon') || c.includes('frame'))) return 'Futon Frame';
   if (colls.some(c => c.includes('casegood') || c.includes('accessor'))) return 'Bedroom Furniture';
   return 'Furniture';
-}
-
-// ── Gift Card Section (CF-mwpw) ──────────────────────────────────────
-// Isolated initializer — only touches #giftCard* elements.
-
-/**
- * Initialize the gift card hero CTA section on the homepage.
- * Targets: #giftCardHeroText, #giftCardCta
- * @param {Function} $wFn - Wix selector function
- */
-export function initGiftCardSection($wFn) {
-  try {
-    try { $wFn('#giftCardHeroText').text = 'Gift Cards — Give the Perfect Gift'; } catch (e) {}
-    try {
-      const cta = $wFn('#giftCardCta');
-      cta.text = 'Shop Gift Cards';
-      try { cta.accessibility.ariaLabel = 'Shop Carolina Futons Gift Cards — from $25 to $500'; } catch (e) {}
-      cta.onClick(() => {
-        import('wix-location-frontend').then(loc => {
-          const navFn = loc.default?.to ?? loc.to;
-          navFn('/gift-cards');
-        }).catch(() => {});
-      });
-    } catch (e) {}
-    trackEvent('gift_card_section_view', { page: 'home' });
-  } catch (e) {
-    // Gift card section is optional — fail silently
-  }
 }
