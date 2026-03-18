@@ -6,6 +6,23 @@
 
 import { business } from 'public/sharedTokens.js';
 
+// ── XSS protection ───────────────────────────────────────────────────────────
+
+/**
+ * Escape HTML special characters to prevent XSS injection.
+ * Applied to all attribute values before they are placed into .html strings.
+ * @param {string} str
+ * @returns {string}
+ */
+export function htmlEscape(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── S1: URL param parsing ─────────────────────────────────────────────────────
 
 /**
@@ -105,7 +122,7 @@ export function getProductAttribute(product, attrName) {
   const section = sections.find(
     s => s.title?.toLowerCase() === attrName.toLowerCase()
   );
-  return section?.description || '—';
+  return htmlEscape(section?.description || '—');
 }
 
 /**
