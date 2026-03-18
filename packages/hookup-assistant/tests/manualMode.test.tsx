@@ -300,6 +300,35 @@ describe('ManualModePanel — S6 default state setter', () => {
     expect(onApplyDefaultState).not.toHaveBeenCalled();
   });
 
+  it('Override also calls onApplyDefaultState for defaultHidden element', () => {
+    const onMarkDone = vi.fn();
+    const onApplyDefaultState = vi.fn();
+    render(
+      <ManualModePanel
+        {...baseProps}
+        currentElement={heroTitle}
+        selectedType="Button"
+        onMarkDone={onMarkDone}
+        onApplyDefaultState={onApplyDefaultState}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Override/i }));
+    expect(onApplyDefaultState).toHaveBeenCalledWith(heroTitle);
+  });
+
+  it('Tab key also triggers onApplyDefaultState for defaultHidden element', () => {
+    const onApplyDefaultState = vi.fn();
+    render(
+      <ManualModePanel
+        {...baseProps}
+        currentElement={heroTitle}
+        onApplyDefaultState={onApplyDefaultState}
+      />
+    );
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: false });
+    expect(onApplyDefaultState).toHaveBeenCalledWith(heroTitle);
+  });
+
   it('works correctly when onApplyDefaultState is not provided (no crash)', () => {
     render(
       <ManualModePanel

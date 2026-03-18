@@ -12,7 +12,7 @@
  *   - Progress bar shows done / total
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import type { ElementDef, WixElementType } from '../types/index.js';
 import { useClipboard } from '../hooks/useClipboard.js';
 
@@ -44,33 +44,34 @@ export function ManualModePanel({
 
   const typeMismatch = selectedType !== null && currentElement !== null && selectedType !== currentElement.type;
 
-  function handleMarkDone() {
+  const applyDefaultStateIfNeeded = useCallback(() => {
+    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
+      onApplyDefaultState?.(currentElement);
+    }
+  }, [currentElement, onApplyDefaultState]);
+
+  const handleMarkDone = useCallback(() => {
     if (typeMismatch) return;
     onMarkDone();
-    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
-      onApplyDefaultState?.(currentElement);
-    }
-  }
+    applyDefaultStateIfNeeded();
+  }, [typeMismatch, onMarkDone, applyDefaultStateIfNeeded]);
 
-  function handleOverride() {
+  const handleOverride = useCallback(() => {
     onMarkDone();
-    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
-      onApplyDefaultState?.(currentElement);
-    }
-  }
+    applyDefaultStateIfNeeded();
+  }, [onMarkDone, applyDefaultStateIfNeeded]);
 
   // Tab key advances to next element (Mark Done) — disabled on type mismatch
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Tab' && !e.shiftKey && document.activeElement?.tagName !== 'INPUT') {
-        if (typeMismatch) return;
         e.preventDefault();
         handleMarkDone();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onMarkDone, typeMismatch, currentElement, onApplyDefaultState]);
+  }, [handleMarkDone]);
 
   if (!currentElement) {
     return (
