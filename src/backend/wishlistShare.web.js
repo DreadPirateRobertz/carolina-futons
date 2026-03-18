@@ -28,13 +28,10 @@ const TOKEN_MAX_LENGTH = 128;
 // Generate a URL-safe random token
 function makeToken() {
   const bytes = new Uint8Array(18);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < bytes.length; i++) {
-      bytes[i] = Math.floor(Math.random() * 256);
-    }
+  if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+    throw new Error('[wishlistShare] crypto.getRandomValues unavailable — cannot generate secure token');
   }
+  crypto.getRandomValues(bytes);
   // base64url without padding, lowercase
   return btoa(String.fromCharCode(...bytes))
     .replace(/\+/g, '-')
@@ -57,7 +54,7 @@ export const generateShareToken = webMethod(
       const member = await currentMember.getMember();
       if (!member?._id) return { error: 'Not authenticated' };
 
-      const rawDays = Number(opts?.expiryDays) || TOKEN_DEFAULT_EXPIRY_DAYS;
+      const rawDays = opts?.expiryDays != null ? Number(opts.expiryDays) : TOKEN_DEFAULT_EXPIRY_DAYS;
       const expiryDays = Math.min(
         TOKEN_MAX_EXPIRY_DAYS,
         Math.max(TOKEN_MIN_EXPIRY_DAYS, Math.round(rawDays))
@@ -109,10 +106,10 @@ export const resolveShareToken = webMethod(
 
       const memberId = record.memberId;
 
-      // Fetch wishlist items for this member
+      // Fetch wishlist items for this member (suppressAuth: resolveShareToken is Anyone-accessible)
       const wishlistResult = await wixData.query('Wishlist')
         .eq('memberId', memberId)
-        .find();
+        .find({ suppressAuth: true });
 
       const items = wishlistResult.items.map(i => ({
         _id: i._id,
@@ -129,7 +126,7 @@ export const resolveShareToken = webMethod(
         const memberResult = await wixData.query('Members/FullData')
           .eq('_id', memberId)
           .limit(1)
-          .find();
+          .find({ suppressAuth: true });
 
         if (memberResult.items.length > 0) {
           const profile = memberResult.items[0].profile || {};

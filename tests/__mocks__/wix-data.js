@@ -98,7 +98,7 @@ function createQueryBuilder(collection) {
     skip(n) { skipVal = n; return builder; },
     limit(n) { limitVal = n; return builder; },
     __getFilters() { return filters; },
-    async find() {
+    async find(_options = {}) {
       if (_queryErrors[collection]) throw _queryErrors[collection];
       let items = (_store[collection] || []).filter(item =>
         filters.every(f => f(item))

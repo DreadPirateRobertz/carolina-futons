@@ -64,14 +64,25 @@ describe('generateShareToken', () => {
     expect(expiresMs).toBeLessThanOrEqual(before + sevenDays + 5000);
   });
 
-  it('clamps expiryDays to 1–365', async () => {
+  it('clamps expiryDays 0 up to 1 day minimum', async () => {
     __setMember(MEMBER);
-    const r1 = await generateShareToken({ expiryDays: 0 });
-    const r2 = await generateShareToken({ expiryDays: 9999 });
+    const before = Date.now();
+    const result = await generateShareToken({ expiryDays: 0 });
     const oneDay = 24 * 60 * 60 * 1000;
+    const expiresMs = result.expiresAt.getTime();
+    // Must be clamped to 1 day, NOT 30 days (the default)
+    expect(expiresMs).toBeGreaterThanOrEqual(before + oneDay - 2000);
+    expect(expiresMs).toBeLessThanOrEqual(before + oneDay + 5000);
+  });
+
+  it('clamps expiryDays 9999 down to 365 day maximum', async () => {
+    __setMember(MEMBER);
+    const before = Date.now();
+    const result = await generateShareToken({ expiryDays: 9999 });
     const maxDay = 365 * 24 * 60 * 60 * 1000;
-    expect(r1.expiresAt.getTime()).toBeGreaterThanOrEqual(Date.now() + oneDay - 2000);
-    expect(r2.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + maxDay + 5000);
+    const expiresMs = result.expiresAt.getTime();
+    expect(expiresMs).toBeGreaterThanOrEqual(before + maxDay - 2000);
+    expect(expiresMs).toBeLessThanOrEqual(before + maxDay + 5000);
   });
 
   it('token contains only URL-safe characters', async () => {
