@@ -1052,18 +1052,11 @@ async function initCommunicationPrefs() {
 // ── Wishlist Share URL Builder ────────────────────────────────────────
 
 async function getWishlistShareUrl() {
-  try {
-    const { generateShareToken } = await import('backend/wishlistShare.web');
-    const result = await generateShareToken({ expiryDays: 30 });
-    if (result.shareUrl) return result.shareUrl;
-  } catch (err) {
-    console.error('[MemberPage] Failed to generate share token:', err);
-  }
-  // Fallback: plain member URL if token generation fails
-  const wixLocation = await import('wix-location-frontend');
-  const baseUrl = wixLocation.baseUrl;
-  const memberId = currentMember?._id || '';
-  return `${baseUrl}/shared-wishlist?member=${memberId}`;
+  const { generateShareToken } = await import('backend/wishlistShare.web');
+  const result = await generateShareToken({ expiryDays: 30 });
+  if (result.shareUrl) return result.shareUrl;
+  // Token generation returned an error (e.g. not authenticated)
+  throw new Error(result.error || 'Could not generate share link');
 }
 
 // ── Error Fallback ──────────────────────────────────────────────────

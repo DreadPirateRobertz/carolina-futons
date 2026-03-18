@@ -18,6 +18,7 @@ function createEl(id) {
     _expanded: true,
     data: [],
     _itemReadyCb: null,
+    _clickHandler: null,
     style: {},
     accessibility: { ariaLabel: '' },
     show:     vi.fn(function () { return Promise.resolve(); }),
@@ -26,7 +27,7 @@ function createEl(id) {
     collapse: vi.fn(function () { this._expanded = false; return Promise.resolve(); }),
     enable:   vi.fn(),
     disable:  vi.fn(),
-    onClick:  vi.fn(),
+    onClick:  vi.fn(function (fn) { this._clickHandler = fn; }),
     onItemReady: vi.fn(function (cb) { this._itemReadyCb = cb; }),
   };
 }
@@ -55,21 +56,17 @@ vi.mock('public/a11yHelpers', () => ({
   setupAccessibleDialog: vi.fn(() => ({ open: vi.fn(), close: vi.fn() })),
 }));
 
+const mockAddToCart = vi.fn(async () => ({ cart: { lineItems: [{}] } }));
+
 vi.mock('wix-stores-frontend', () => ({
-  default: {
-    cart: {
-      addToCart: vi.fn(async () => ({ cart: { lineItems: [{}] } })),
-    },
-  },
-  cart: {
-    addToCart: vi.fn(async () => ({ cart: { lineItems: [{}] } })),
-  },
+  default: { cart: { addToCart: (...a) => mockAddToCart(...a) } },
+  cart:    { addToCart: (...a) => mockAddToCart(...a) },
 }));
 
 // ── Dynamic import of page module (so $w is defined when it loads) ────
 
 const mod = await import('../src/pages/Shared Wishlist.js');
-const { _resolveAndRender, initSharedWishlistPage } = mod;
+const { _resolveAndRender } = mod;
 
 // ── Test helpers ──────────────────────────────────────────────────────
 
@@ -88,6 +85,8 @@ function makeItem(overrides = {}) {
 beforeEach(() => {
   elements.clear();
   mockResolveShareToken.mockReset();
+  mockAddToCart.mockReset();
+  mockAddToCart.mockResolvedValue({ cart: { lineItems: [{}] } });
   __setQuery({});
 });
 
@@ -304,6 +303,91 @@ describe('add to cart from shared view', () => {
 
     expect(itemEls.get('shareAddCart').onClick).toHaveBeenCalled();
   });
+
+  it('clicking shareAddCart calls cart.addToCart with productId', async () => {
+    __setQuery({ share: 'valid-tok' });
+    mockResolveShareToken.mockResolvedValue({
+      items: [makeItem({ productId: 'prod-42' })],
+      ownerName: 'Alex',
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    await _resolveAndRender();
+
+    const itemEls = new Map();
+    const $item = (sel) => {
+      const key = sel.replace(/^#/, '');
+      if (!itemEls.has(key)) itemEls.set(key, createEl(key));
+      return itemEls.get(key);
+    };
+
+    getEl('shareRepeater')._itemReadyCb($item, makeItem({ productId: 'prod-42' }));
+
+    const addBtn = itemEls.get('shareAddCart');
+    expect(addBtn._clickHandler).toBeTypeOf('function');
+
+    await addBtn._clickHandler();
+
+    expect(mockAddToCart).toHaveBeenCalledWith('prod-42');
+  });
+
+  it('button shows Added! then resets to Add to Cart on success', async () => {
+    vi.useFakeTimers();
+    __setQuery({ share: 'valid-tok' });
+    mockResolveShareToken.mockResolvedValue({
+      items: [makeItem()],
+      ownerName: 'Alex',
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+    mockAddToCart.mockResolvedValue({ cart: { lineItems: [{}, {}] } });
+
+    await _resolveAndRender();
+
+    const itemEls = new Map();
+    const $item = (sel) => {
+      const key = sel.replace(/^#/, '');
+      if (!itemEls.has(key)) itemEls.set(key, createEl(key));
+      return itemEls.get(key);
+    };
+
+    getEl('shareRepeater')._itemReadyCb($item, makeItem());
+    const addBtn = itemEls.get('shareAddCart');
+    await addBtn._clickHandler();
+
+    expect(addBtn.label).toBe('Added!');
+
+    vi.advanceTimersByTime(2100);
+    expect(addBtn.label).toBe('Add to Cart');
+    expect(addBtn.enable).toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('button shows Try Again on cart failure and re-enables', async () => {
+    __setQuery({ share: 'valid-tok' });
+    mockResolveShareToken.mockResolvedValue({
+      items: [makeItem()],
+      ownerName: 'Alex',
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+    mockAddToCart.mockRejectedValue(new Error('out of stock'));
+
+    await _resolveAndRender();
+
+    const itemEls = new Map();
+    const $item = (sel) => {
+      const key = sel.replace(/^#/, '');
+      if (!itemEls.has(key)) itemEls.set(key, createEl(key));
+      return itemEls.get(key);
+    };
+
+    getEl('shareRepeater')._itemReadyCb($item, makeItem());
+    const addBtn = itemEls.get('shareAddCart');
+    await addBtn._clickHandler();
+
+    expect(addBtn.label).toBe('Try Again');
+    expect(addBtn.enable).toHaveBeenCalled();
+  });
 });
 
 // ── S5: SEO ───────────────────────────────────────────────────────────
@@ -342,5 +426,51 @@ describe('SEO', () => {
     await _resolveAndRender();
 
     expect(getEl('shareNoIndex')._expanded).toBe(false);
+  });
+
+  it('expands noindex when no ?share param present', async () => {
+    __setQuery({});
+    await _resolveAndRender();
+    expect(getEl('shareNoIndex')._expanded).toBe(true);
+  });
+
+  it('shows "1 item" singular when wishlist has exactly one item', async () => {
+    __setQuery({ share: 'valid-tok' });
+    mockResolveShareToken.mockResolvedValue({
+      items: [makeItem()],
+      ownerName: 'Alex',
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    await _resolveAndRender();
+
+    expect(getEl('shareItemCount').text).toBe('1 item');
+  });
+
+  it('shows plural "items" for two items', async () => {
+    __setQuery({ share: 'valid-tok' });
+    mockResolveShareToken.mockResolvedValue({
+      items: [makeItem(), makeItem({ _id: 'p2' })],
+      ownerName: 'Alex',
+      expiresAt: new Date(Date.now() + 86400000),
+    });
+
+    await _resolveAndRender();
+
+    expect(getEl('shareItemCount').text).toBe('2 items');
+  });
+});
+
+// ── Error from thrown resolveShareToken (not resolved error) ──────────
+
+describe('_resolveAndRender — resolveShareToken throws', () => {
+  it('shows generic error when resolveShareToken rejects', async () => {
+    __setQuery({ share: 'tok' });
+    mockResolveShareToken.mockRejectedValue(new Error('network error'));
+
+    await _resolveAndRender();
+
+    expect(getEl('shareErrorSection')._expanded).toBe(true);
+    expect(getEl('shareErrorText').text).toContain('wrong');
   });
 });

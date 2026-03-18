@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert, __getInserted } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __getInserted, __setQueryError, __setInsertError } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   generateShareToken,
@@ -187,5 +187,40 @@ describe('resolveShareToken', () => {
     const longToken = 'a'.repeat(200);
     const result = await resolveShareToken(longToken);
     expect(result.error).toBe('Invalid token');
+  });
+
+  it('rejects non-string token types (number)', async () => {
+    const result = await resolveShareToken(42);
+    expect(result.error).toBe('Invalid token');
+  });
+
+  it('rejects non-string token types (object)', async () => {
+    const result = await resolveShareToken({});
+    expect(result.error).toBe('Invalid token');
+  });
+
+  it('returns error when profile fetch throws (falls back to A friend)', async () => {
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    __seed('WishlistShareTokens', [
+      { _id: 'tok-1', token: 'valid-token', memberId: 'mem-1', expiresAt },
+    ]);
+    __seed('Wishlist', []);
+    __setQueryError('Members/FullData', new Error('CMS unavailable'));
+
+    const result = await resolveShareToken('valid-token');
+    expect(result.error).toBeUndefined();
+    expect(result.ownerName).toBe('A friend');
+  });
+});
+
+// ── generateShareToken — insert failure ───────────────────────────────
+
+describe('generateShareToken — insert failure', () => {
+  it('returns error when CMS insert throws', async () => {
+    __setMember(MEMBER);
+    __setInsertError(new Error('CMS write failed'));
+
+    const result = await generateShareToken();
+    expect(result.error).toBe('Failed to generate share link');
   });
 });

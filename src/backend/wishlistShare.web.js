@@ -83,7 +83,12 @@ export const generateShareToken = webMethod(
  * Resolve a share token and return the wishlist items + owner name.
  *
  * @param {string} token
- * @returns {Promise<{ items: Array, ownerName: string, expiresAt: Date } | { error: string }>}
+ * @returns {Promise<{
+ *   items: Array<{ _id: string, productId: string, productName: string,
+ *                  productImage: string, price: number, slug: string }>,
+ *   ownerName: string,
+ *   expiresAt: string|Date
+ * } | { error: string }>}
  */
 export const resolveShareToken = webMethod(
   Permissions.Anyone,
