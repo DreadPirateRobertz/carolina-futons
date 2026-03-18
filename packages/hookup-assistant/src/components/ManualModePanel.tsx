@@ -1,15 +1,23 @@
 /**
- * ManualModePanel — S10: Fallback Manual Mode UI.
+ * ManualModePanel — Manual Mode UI for element ID hookup.
  *
- * The guaranteed-always-works baseline for element ID hookup.
- * When in manual mode:
- *   - Shows the target Velo ID in large monospace font
- *   - "Copy ID" button copies it to clipboard
+ * Covers S10 (baseline), S5 (type validator), and S6 (default state setter).
+ *
+ * S10 — Fallback manual mode:
+ *   - Shows target Velo ID in large monospace font
+ *   - "Copy ID" button copies to clipboard
  *   - Instructions: open Properties & Events → paste the ID
- *   - "Mark Done" advances to next element
- *   - "Skip" skips current element
- *   - Tab key advances to next element
+ *   - "Mark Done" / Tab advances; "Skip" skips current element
  *   - Progress bar shows done / total
+ *
+ * S5 — Type validator:
+ *   - Mark Done and Tab are disabled when selectedType mismatches element type
+ *   - "Override type check" button bypasses the guard intentionally
+ *
+ * S6 — Default state setter:
+ *   - Calls onApplyDefaultState(element) after Mark Done / Override
+ *     when element has defaultHidden or defaultCollapsed set
+ *   - cssOnly elements do not trigger onApplyDefaultState
  */
 
 import React, { useCallback, useEffect, useRef } from 'react';
