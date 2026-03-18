@@ -192,6 +192,60 @@ jobs:
               labels: ['bug', 'ci-nightly'],
             });
 
+      # CF-z6zl: Email alert on nightly test failure.
+      # Requires MAIL_USERNAME + MAIL_PASSWORD secrets (Gmail App Password).
+      # continue-on-error: true ensures a missing secret or SMTP hiccup does
+      # not mask the real test failure reported by the step below.
+      - name: Send email alert on nightly failure
+        if: steps.integration.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[CF CI] Nightly tests FAILED -- run ${{ github.run_id }}"
+          to: carolinafutons@gmail.com
+          from: "Carolina Futons CI <${{ secrets.MAIL_USERNAME }}>"
+          body: |
+            Nightly integration tests failed for carolina-futons.
+
+            Repository: ${{ github.repository }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            A GitHub Issue has been opened automatically (labels: bug, ci-nightly).
+            Download the nightly-test-results artifact from the run for full output.
+        continue-on-error: true
+
       - name: Fail workflow if tests failed
         if: steps.integration.outcome == 'failure'
         run: exit 1
+
+  # -- Element ID Sync Check (CF-p3ri) ------------------------------------------
+  # Validates that element IDs declared in hookup-assistant/src/data/pages.ts
+  # are referenced as $w('#id') selectors in the corresponding src/pages/*.js
+  # file. Warning-only -- continue-on-error: true, never blocks merges.
+  # Runs on PRs, nightly schedule, and manual dispatch.
+  element-id-sync:
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Check element ID sync
+        run: node scripts/check-element-id-sync.js
+        continue-on-error: true
