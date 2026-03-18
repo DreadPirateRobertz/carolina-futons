@@ -10,7 +10,10 @@ import { business } from 'public/sharedTokens.js';
 
 /**
  * Escape HTML special characters to prevent XSS injection.
- * Applied to all attribute values before they are placed into .html strings.
+ * Escapes &, <, >, ", and ' for safe interpolation into HTML strings.
+ * Applied to free-text CMS values (additionalInfoSections.description).
+ * Price, Rating, and In Stock values are computed from structured fields
+ * and are not passed through this function.
  * @param {string} str
  * @returns {string}
  */
@@ -109,12 +112,14 @@ export const COMPARE_ATTRIBUTES = [
  */
 export function getProductAttribute(product, attrName) {
   if (attrName === 'Price') {
-    return product.formattedPrice || _formatPrice(product.price);
+    // formattedPrice is Wix-sourced but escape defensively before .html injection
+    return htmlEscape(product.formattedPrice || _formatPrice(product.price));
   }
   if (attrName === 'Rating') {
-    return product.numericRating != null ? `${product.numericRating} / 5` : '—';
+    return product.numericRating != null ? htmlEscape(`${product.numericRating} / 5`) : '—';
   }
   if (attrName === 'In Stock') {
+    // Hardcoded strings — no escaping needed
     return product.inStock ? 'In Stock' : 'Out of Stock';
   }
 
