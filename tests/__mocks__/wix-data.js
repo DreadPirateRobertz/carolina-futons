@@ -31,6 +31,13 @@ export function __onInsert(fn) { _insertSpy = fn; }
 export function __onUpdate(fn) { _updateSpy = fn; }
 export function __onRemove(fn) { _removeSpy = fn; }
 
+// Return all items inserted into a collection (after __seed, includes both seeded + inserted)
+// For test assertions: items inserted AFTER __seed appear after the seeded items.
+// Use __seed() then call this after the action under test.
+export function __getInserted(collection) {
+  return _store[collection] || [];
+}
+
 // Resolve dot-notation field paths (e.g. "variables.checkoutId")
 function getField(item, field) {
   if (!field.includes('.')) return item[field];
