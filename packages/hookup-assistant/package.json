@@ -1,0 +1,35 @@
+{
+  "name": "@cfutons/hookup-assistant",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wix/design-system": "^1.260.0",
+    "@wix/editor": "^1.451.0",
+    "@wix/sdk": "^1.21.4",
+    "@wix/sdk-react": "^1.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.0",
+    "vite-plugin-mkcert": "^1.17.10",
+    "vitest": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "jsdom": "^26.1.0"
+  }
+}
