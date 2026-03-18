@@ -4,10 +4,14 @@
 //          S4 member share generation, S5 SEO
 
 import wixLocation from 'wix-location-frontend';
+import { seo } from 'wix-seo';
 import { resolveShareToken } from 'backend/wishlistShare.web.js';
 import {
   parseShareToken,
   buildInvalidMessage,
+  buildWishlistTitle,
+  buildWishlistDescription,
+  buildWishlistOgTags,
 } from 'public/wishlistShareHelpers.js';
 import { isMobile } from 'public/mobileHelpers';
 
@@ -27,6 +31,7 @@ $w.onReady(async () => {
   _safe(() => $w('#wishlistShareShopBtn').onClick(() => wixLocation.to('/shop-main')));
 
   if (!token) {
+    _applyNoindex();
     _showInvalidState('missing_token');
     return;
   }
@@ -36,14 +41,19 @@ $w.onReady(async () => {
     result = await resolveShareToken(token);
   } catch (err) {
     console.error('[WishlistShare] Token resolution failed:', err);
+    _applyNoindex();
     _showInvalidState('error');
     return;
   }
 
   if (!result.valid) {
+    _applyNoindex();
     _showInvalidState(result.reason);
     return;
   }
+
+  // S5: Dynamic SEO for valid wishlist
+  _applySeo(result);
 
   // S1: Success — render content (S2 wires product cards)
   _safe(() => { $w('#wishlistShareContentSection').style.opacity = '1'; });
@@ -91,6 +101,29 @@ $w.onReady(async () => {
     });
   });
 });
+
+// ── S5: SEO ───────────────────────────────────────────────────────────────────
+
+function _applySeo(result) {
+  try {
+    const title = buildWishlistTitle(result.ownerName);
+    const desc = buildWishlistDescription(result.ownerName, result.items.length);
+    seo.setTitle(title);
+    seo.setMetaTag({ name: 'description', content: desc });
+    for (const tag of buildWishlistOgTags(result.ownerName, desc, result.items)) {
+      seo.setMetaTag(tag);
+    }
+  } catch (e) {
+    console.warn('[WishlistShare] SEO setup failed:', e);
+  }
+}
+
+function _applyNoindex() {
+  try {
+    seo.setTitle(buildWishlistTitle(null));
+    seo.setMetaTag({ name: 'robots', content: 'noindex' });
+  } catch (e) {}
+}
 
 // ── State helpers ─────────────────────────────────────────────────────────────
 
