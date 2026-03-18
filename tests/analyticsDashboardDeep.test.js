@@ -274,3 +274,272 @@ describe('getDashboardSummary', () => {
     expect(r.totalRevenue).toBe(0);
   });
 });
+
+// ── Additional edge cases ────────────────────────────────────────
+
+describe('getConversionFunnel edge cases', () => {
+  it('handles records where only viewCount is set (no addToCart or purchase)', async () => {
+    __seed('ProductAnalytics', [
+      { viewCount: 100 },
+    ]);
+    const r = await mod.getConversionFunnel();
+    expect(r.stages[0].count).toBe(100);
+    expect(r.stages[1].count).toBe(0);
+    expect(r.stages[2].count).toBe(0);
+    expect(r.conversionRates.viewToCart).toBe(0);
+    expect(r.conversionRates.viewToPurchase).toBe(0);
+  });
+
+  it('handles large view counts without overflow', async () => {
+    __seed('ProductAnalytics', [
+      { viewCount: 1000000, addToCartCount: 50000, purchaseCount: 10000 },
+    ]);
+    const r = await mod.getConversionFunnel();
+    expect(r.stages[0].count).toBe(1000000);
+    expect(r.conversionRates.viewToCart).toBe(5);
+    expect(r.conversionRates.viewToPurchase).toBe(1);
+  });
+
+  it('returns zero viewToCart when all views have no cart adds', async () => {
+    __seed('ProductAnalytics', [
+      { viewCount: 500, addToCartCount: 0, purchaseCount: 0 },
+    ]);
+    const r = await mod.getConversionFunnel();
+    expect(r.conversionRates.viewToCart).toBe(0);
+    expect(r.conversionRates.cartToPurchase).toBe(0);
+  });
+
+  it('rounds conversion rates to 2 decimal places', async () => {
+    __seed('ProductAnalytics', [
+      { viewCount: 3, addToCartCount: 1, purchaseCount: 0 },
+    ]);
+    const r = await mod.getConversionFunnel();
+    // 1/3 * 100 = 33.33...
+    expect(r.conversionRates.viewToCart).toBe(33.33);
+  });
+});
+
+describe('getTopConverters edge cases', () => {
+  it('returns 0 conversion rate for item with no addToCart', async () => {
+    __seed('ProductAnalytics', [
+      { productId: 'p1', viewCount: 50, addToCartCount: 0, purchaseCount: 0 },
+    ]);
+    const r = await mod.getTopConverters(10, 10);
+    expect(r[0].conversionRate).toBe(0);
+  });
+
+  it('handles ties in conversion rate consistently', async () => {
+    __seed('ProductAnalytics', [
+      { productId: 'p1', viewCount: 100, addToCartCount: 50, purchaseCount: 5 },
+      { productId: 'p2', viewCount: 200, addToCartCount: 100, purchaseCount: 10 },
+    ]);
+    const r = await mod.getTopConverters(10, 10);
+    // Both have 50% — should return 2 items
+    expect(r).toHaveLength(2);
+    expect(r[0].conversionRate).toBe(50);
+    expect(r[1].conversionRate).toBe(50);
+  });
+});
+
+describe('getCategoryPerformance edge cases', () => {
+  it('handles single category with zero views', async () => {
+    __seed('ProductAnalytics', [
+      { category: 'covers', viewCount: 0, addToCartCount: 0, purchaseCount: 0 },
+    ]);
+    const r = await mod.getCategoryPerformance();
+    expect(r[0].category).toBe('covers');
+    expect(r[0].conversionRate).toBe(0);
+  });
+
+  it('aggregates multiple items with same category correctly', async () => {
+    __seed('ProductAnalytics', [
+      { category: 'futons', viewCount: 100, addToCartCount: 10, purchaseCount: 2 },
+      { category: 'futons', viewCount: 200, addToCartCount: 20, purchaseCount: 4 },
+      { category: 'futons', viewCount: 50, addToCartCount: 5, purchaseCount: 1 },
+    ]);
+    const r = await mod.getCategoryPerformance();
+    expect(r).toHaveLength(1);
+    expect(r[0].views).toBe(350);
+    expect(r[0].addToCart).toBe(35);
+    expect(r[0].purchases).toBe(7);
+  });
+});
+
+describe('getEmailFunnelMetrics edge cases', () => {
+  it('calculates 100% delivery rate when all sent', async () => {
+    __seed('EmailQueue', [
+      { sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+    ]);
+    const r = await mod.getEmailFunnelMetrics();
+    expect(r.metrics.welcome.deliveryRate).toBe(100);
+  });
+
+  it('calculates 0% delivery rate when all failed', async () => {
+    __seed('EmailQueue', [
+      { sequenceType: 'cart', status: 'failed', createdAt: new Date() },
+      { sequenceType: 'cart', status: 'failed', createdAt: new Date() },
+    ]);
+    const r = await mod.getEmailFunnelMetrics();
+    expect(r.metrics.cart.deliveryRate).toBe(0);
+    expect(r.metrics.cart.failed).toBe(2);
+  });
+
+  it('counts cancelled emails separately from failed', async () => {
+    __seed('EmailQueue', [
+      { sequenceType: 'promo', status: 'sent', createdAt: new Date() },
+      { sequenceType: 'promo', status: 'cancelled', createdAt: new Date() },
+      { sequenceType: 'promo', status: 'cancelled', createdAt: new Date() },
+    ]);
+    const r = await mod.getEmailFunnelMetrics();
+    expect(r.metrics.promo.sent).toBe(1);
+    expect(r.metrics.promo.cancelled).toBe(2);
+    expect(r.metrics.promo.queued).toBe(3);
+  });
+
+  it('uses unknown sequence type for emails missing sequenceType', async () => {
+    __seed('EmailQueue', [
+      { status: 'sent', createdAt: new Date() },
+    ]);
+    const r = await mod.getEmailFunnelMetrics();
+    expect(r.metrics.unknown).toBeDefined();
+    expect(r.metrics.unknown.sent).toBe(1);
+  });
+
+  it('period reflects custom days argument', async () => {
+    __seed('EmailQueue', []);
+    const r = await mod.getEmailFunnelMetrics(14);
+    expect(r.period).toBe('14 days');
+  });
+});
+
+describe('getRevenueAttribution edge cases', () => {
+  it('handles analytics entry with no matching product (price defaults to 0)', async () => {
+    __seed('ProductAnalytics', [
+      { productId: 'missing-product', productName: 'Ghost Product', purchaseCount: 5 },
+    ]);
+    __seed('Stores/Products', []); // no matching product
+    const r = await mod.getRevenueAttribution();
+    // Product not found → price 0 → revenue 0 → filtered out by purchaseCount>0 filter?
+    // Actually 5 purchases but price=0 → attributedRevenue=0 — still included since purchaseCount>0
+    expect(r.topProducts[0].price).toBe(0);
+    expect(r.topProducts[0].attributedRevenue).toBe(0);
+  });
+
+  it('respects limit parameter', async () => {
+    __seed('ProductAnalytics', [
+      { productId: 'p1', productName: 'A', purchaseCount: 10 },
+      { productId: 'p2', productName: 'B', purchaseCount: 8 },
+      { productId: 'p3', productName: 'C', purchaseCount: 6 },
+    ]);
+    __seed('Stores/Products', [
+      { _id: 'p1', price: 100 },
+      { _id: 'p2', price: 100 },
+      { _id: 'p3', price: 100 },
+    ]);
+    const r = await mod.getRevenueAttribution(2);
+    expect(r.topProducts.length).toBeLessThanOrEqual(2);
+  });
+
+  it('uses productName from analytics when product not in catalog', async () => {
+    __seed('ProductAnalytics', [
+      { productId: 'p1', productName: 'Archived Futon', purchaseCount: 3 },
+    ]);
+    __seed('Stores/Products', []);
+    const r = await mod.getRevenueAttribution();
+    expect(r.topProducts[0].productName).toBe('Archived Futon');
+  });
+});
+
+describe('getDashboardSummary edge cases', () => {
+  it('propagates custom days to period string', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary(7);
+    expect(r.period).toBe('7 days');
+  });
+
+  it('sums emailsSent across all sequence types', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', [
+      { sequenceType: 'welcome', status: 'sent', createdAt: new Date() },
+      { sequenceType: 'cart', status: 'sent', createdAt: new Date() },
+      { sequenceType: 'promo', status: 'failed', createdAt: new Date() },
+    ]);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.emailsSent).toBe(2); // only sent ones counted
+  });
+
+  it('returns none for topCategory when all analytics empty', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.topCategory).toBe('none');
+  });
+
+  it('result has all required KPI fields', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r).toHaveProperty('funnel');
+    expect(r).toHaveProperty('totalViews');
+    expect(r).toHaveProperty('totalAddToCart');
+    expect(r).toHaveProperty('totalPurchases');
+    expect(r).toHaveProperty('topCategory');
+    expect(r).toHaveProperty('emailsSent');
+    expect(r).toHaveProperty('totalRevenue');
+    expect(r).toHaveProperty('period');
+  });
+
+  it('funnel sub-object has viewToCart, cartToPurchase, viewToPurchase keys', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.funnel).toHaveProperty('viewToCart');
+    expect(r.funnel).toHaveProperty('cartToPurchase');
+    expect(r.funnel).toHaveProperty('viewToPurchase');
+  });
+
+  it('emailsSent is a non-negative number', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.emailsSent).toBeGreaterThanOrEqual(0);
+  });
+
+  it('totalRevenue is a non-negative number', async () => {
+    __seed('ProductAnalytics', []);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.totalRevenue).toBeGreaterThanOrEqual(0);
+  });
+
+  it('topCategory is a non-empty string', async () => {
+    __seed('ProductAnalytics', [
+      { category: 'covers', viewCount: 100, addToCartCount: 10, purchaseCount: 2 },
+    ]);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(typeof r.topCategory).toBe('string');
+    expect(r.topCategory.length).toBeGreaterThan(0);
+  });
+
+  it('identifies correct topCategory when multiple categories exist', async () => {
+    __seed('ProductAnalytics', [
+      { category: 'covers', viewCount: 50, addToCartCount: 5, purchaseCount: 1 },
+      { category: 'frames', viewCount: 300, addToCartCount: 30, purchaseCount: 6 },
+    ]);
+    __seed('EmailQueue', []);
+    __seed('Stores/Products', []);
+    const r = await mod.getDashboardSummary();
+    expect(r.topCategory).toBe('frames'); // highest views
+  });
+});

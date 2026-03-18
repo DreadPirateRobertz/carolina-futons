@@ -1153,3 +1153,311 @@ describe('post_klaviyoWebhook', () => {
     expect(result.headers['Content-Type']).toBe('application/json');
   });
 });
+
+// ── Brand detection edge cases ───────────────────────────────────────
+
+describe('Brand detection (detectBrandFromProduct)', () => {
+  it('wall-hugger collection maps to Strata Furniture brand', async () => {
+    __seed('Stores/Products', [{
+      _id: 'wh-1', name: 'Wallhugger Futon', slug: 'wallhugger', price: 599,
+      discountedPrice: null, mainMedia: 'https://example.com/wh.jpg',
+      description: 'Wall hugger futon', inStock: true,
+      collections: ['wall-huggers'], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('Strata Furniture');
+  });
+
+  it('unfinished collection maps to KD Frames brand', async () => {
+    __seed('Stores/Products', [{
+      _id: 'uf-1', name: 'Unfinished Futon', slug: 'unfinished-futon', price: 249,
+      discountedPrice: null, mainMedia: 'https://example.com/uf.jpg',
+      description: 'Unfinished frame', inStock: true,
+      collections: ['unfinished-wood'], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('KD Frames');
+  });
+
+  it('murphy in product name maps to Arason Enterprises brand', async () => {
+    __seed('Stores/Products', [{
+      _id: 'murphy-name-1', name: 'Murphy Cabinet Bed Queen', slug: 'murphy-queen', price: 1899,
+      discountedPrice: null, mainMedia: 'https://example.com/murphy.jpg',
+      description: 'Cabinet bed', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('Arason Enterprises');
+  });
+
+  it('no matching collection maps to Night & Day Furniture brand', async () => {
+    __seed('Stores/Products', [{
+      _id: 'generic-1', name: 'Generic Product', slug: 'generic', price: 299,
+      discountedPrice: null, mainMedia: 'https://example.com/gen.jpg',
+      description: 'Generic', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('Night & Day Furniture');
+  });
+
+  it('cabinet bed in product name maps to Arason Enterprises brand', async () => {
+    __seed('Stores/Products', [{
+      _id: 'cab-1', name: 'Sagebrush Cabinet Bed', slug: 'sagebrush-cabinet', price: 1599,
+      discountedPrice: null, mainMedia: 'https://example.com/cab.jpg',
+      description: 'Cabinet bed', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('Arason Enterprises');
+  });
+});
+
+// ── Google category detection ────────────────────────────────────────
+
+describe('Google category detection (detectGoogleCategory)', () => {
+  it('murphy collection maps to beds category (436)', async () => {
+    __seed('Stores/Products', [{
+      _id: 'gc-murphy', name: 'Murphy Bed', slug: 'murphy-gc', price: 1500,
+      discountedPrice: null, mainMedia: 'https://example.com/m.jpg',
+      description: 'Murphy', inStock: true,
+      collections: ['murphy-cabinet-beds'], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('436');
+  });
+
+  it('mattresses collection maps to mattresses category (2462)', async () => {
+    __seed('Stores/Products', [{
+      _id: 'gc-mattress', name: 'Mattress', slug: 'mattress-gc', price: 350,
+      discountedPrice: null, mainMedia: 'https://example.com/m.jpg',
+      description: 'Mattress', inStock: true,
+      collections: ['mattresses'], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('2462');
+  });
+
+  it('no matching collection defaults to futons category (4295)', async () => {
+    __seed('Stores/Products', [{
+      _id: 'gc-default', name: 'Standard Futon', slug: 'standard-futon', price: 450,
+      discountedPrice: null, mainMedia: 'https://example.com/sf.jpg',
+      description: 'Futon', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('4295');
+  });
+});
+
+// ── Pinterest product type detection ────────────────────────────────
+
+describe('Pinterest product type detection (detectProductType)', () => {
+  it('platform collection maps to Platform Beds type', async () => {
+    __seed('Stores/Products', [{
+      _id: 'pin-platform', name: 'Platform Bed', slug: 'platform-gc', price: 800,
+      discountedPrice: null, mainMedia: 'https://example.com/pb.jpg',
+      description: 'Platform bed', inStock: true,
+      collections: ['platform-beds'], _updatedDate: new Date(),
+    }]);
+    const result = await get_pinterestProductFeed();
+    expect(result.body).toContain('Platform Beds');
+  });
+
+  it('casegood collection maps to Casegoods & Accessories type', async () => {
+    __seed('Stores/Products', [{
+      _id: 'pin-casegood', name: 'Futon Cover', slug: 'cover-gc', price: 80,
+      discountedPrice: null, mainMedia: 'https://example.com/fc.jpg',
+      description: 'Cover', inStock: true,
+      collections: ['casegoods-accessories'], _updatedDate: new Date(),
+    }]);
+    const result = await get_pinterestProductFeed();
+    expect(result.body).toContain('Casegoods & Accessories');
+  });
+
+  it('no matching collection defaults to Futon Frames type', async () => {
+    __seed('Stores/Products', [{
+      _id: 'pin-frame', name: 'Basic Futon', slug: 'basic-futon', price: 400,
+      discountedPrice: null, mainMedia: 'https://example.com/bf.jpg',
+      description: 'Basic futon', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_pinterestProductFeed();
+    expect(result.body).toContain('Futon Frames');
+  });
+
+  it('product with no mediaItems has empty additional_image_link', async () => {
+    __seed('Stores/Products', [{
+      _id: 'pin-no-media', name: 'No Media Product', slug: 'no-media', price: 300,
+      discountedPrice: null, mainMedia: 'https://example.com/nm.jpg',
+      description: 'No extra media', inStock: true,
+      collections: [], _updatedDate: new Date(),
+      mediaItems: [],
+    }]);
+    const result = await get_pinterestProductFeed();
+    expect(result.status).toBe(200);
+    const lines = result.body.split('\n');
+    // Should produce header + 1 data row
+    expect(lines.length).toBe(2);
+  });
+});
+
+// ── get_facebookCatalogFeed edge cases ──────────────────────────────
+
+describe('get_facebookCatalogFeed edge cases', () => {
+  it('product with null price outputs 0.00 USD', async () => {
+    __seed('Stores/Products', [{
+      _id: 'price-null', name: 'Free Item', slug: 'free-item', price: null,
+      discountedPrice: null, mainMedia: 'https://example.com/fi.jpg',
+      description: 'No price', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    expect(result.body).toContain('0.00 USD');
+  });
+
+  it('does not include sale_price column when product has no discount', async () => {
+    __seed('Stores/Products', [{
+      _id: 'no-discount', name: 'Full Price', slug: 'full-price', price: 500,
+      discountedPrice: null, mainMedia: 'https://example.com/fp.jpg',
+      description: 'Full price product', inStock: true,
+      collections: [], _updatedDate: new Date(),
+    }]);
+    const result = await get_facebookCatalogFeed();
+    // sale_price column is empty for no-discount products (tab-separated empty)
+    expect(result.status).toBe(200);
+    const lines = result.body.split('\n');
+    const headerCols = lines[0].split('\t');
+    const salePriceIdx = headerCols.indexOf('sale_price');
+    const dataRow = lines[1].split('\t');
+    expect(dataRow[salePriceIdx]).toBe('');
+  });
+});
+
+// ── get_manifest additional fields ──────────────────────────────────
+
+describe('get_manifest additional fields', () => {
+  it('includes orientation field set to any', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.orientation).toBe('any');
+  });
+
+  it('includes lifestyle in categories', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.categories).toContain('lifestyle');
+  });
+
+  it('icons have purpose field for maskable support', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    for (const icon of manifest.icons) {
+      expect(icon.purpose).toBeDefined();
+      expect(icon.purpose).toContain('maskable');
+    }
+  });
+
+  it('description field is non-empty', () => {
+    const result = get_manifest();
+    const manifest = JSON.parse(result.body);
+    expect(manifest.description.length).toBeGreaterThan(0);
+  });
+});
+
+// ── get_serviceWorker additional content ────────────────────────────
+
+describe('get_serviceWorker additional content', () => {
+  it('includes skipWaiting call in install handler', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain('skipWaiting');
+  });
+
+  it('includes clients.claim in activate handler', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain('clients.claim');
+  });
+
+  it('includes offline fallback URL /offline', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain('/offline');
+  });
+
+  it('includes navigate request handling for SPA routing', () => {
+    const result = get_serviceWorker();
+    expect(result.body).toContain("mode === 'navigate'");
+  });
+});
+
+// ── post_klaviyoWebhook email normalization ──────────────────────────
+
+describe('post_klaviyoWebhook email normalization', () => {
+  const makeRequest = (headers, bodyObj) => ({
+    headers,
+    body: { async text() { return JSON.stringify(bodyObj); } },
+  });
+
+  beforeEach(() => {
+    __setSecrets({ KLAVIYO_WEBHOOK_SECRET: 'klav-secret' });
+  });
+
+  it('normalizes email to lowercase before lookup', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-upper', email: 'test@example.com', status: 'subscribed' },
+    ]);
+    const updates = [];
+    __onUpdate((collection, item) => updates.push({ collection, item }));
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed', email: 'TEST@EXAMPLE.COM' },
+      ),
+    );
+    expect(result.status).toBe(200);
+    expect(updates.length).toBeGreaterThan(0);
+    expect(updates[0].item.status).toBe('unsubscribed');
+  });
+
+  it('sets unsubscribedAt date when processing unsubscribe', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-2', email: 'user@test.com', status: 'subscribed' },
+    ]);
+    const updates = [];
+    __onUpdate((collection, item) => updates.push({ collection, item }));
+    const before = new Date();
+    await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'unsubscribed', email: 'user@test.com' },
+      ),
+    );
+    const unsubscribedAt = updates[0]?.item?.unsubscribedAt;
+    expect(unsubscribedAt).toBeDefined();
+    expect(new Date(unsubscribedAt).getTime()).toBeGreaterThanOrEqual(before.getTime());
+  });
+
+  it('returns 200 and echoes event type for unknown event types', async () => {
+    const result = await post_klaviyoWebhook(
+      makeRequest(
+        { 'x-klaviyo-webhook-secret': 'klav-secret' },
+        { type: 'suppressed', email: 'x@y.com' },
+      ),
+    );
+    expect(result.status).toBe(200);
+    expect(JSON.parse(result.body).received).toBe('suppressed');
+  });
+});
+
+// ── get_robots completeness ──────────────────────────────────────────
+
+describe('get_robots completeness', () => {
+  it('has User-agent: * directive', () => {
+    const result = get_robots();
+    expect(result.body).toContain('User-agent: *');
+  });
+
+  it('sitemap URLs use full canonical domain', () => {
+    const result = get_robots();
+    expect(result.body).toContain('https://www.carolinafutons.com/');
+  });
+});
