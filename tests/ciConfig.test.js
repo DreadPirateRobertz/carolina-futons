@@ -39,7 +39,7 @@ describe('CF-1d06: Codecov fail_ci_if_error', () => {
     for (const step of codecovSteps) {
       expect(
         step.with?.fail_ci_if_error,
-        `Step "${step.name}" uses codecov-action but fail_ci_if_error is not true`
+        `Step "${step.uses}" uses codecov-action but fail_ci_if_error is not true`
       ).toBe(true);
     }
   });
@@ -60,7 +60,7 @@ describe('CF-7d6k: setup-node cache-dependency-path', () => {
       if (step.with?.cache === 'npm') {
         expect(
           step.with['cache-dependency-path'],
-          `Step "${step.name}" uses setup-node with cache: npm but is missing cache-dependency-path`
+          `Step "${step.uses}" uses setup-node with cache: npm but is missing cache-dependency-path`
         ).toBeTruthy();
       }
     }
