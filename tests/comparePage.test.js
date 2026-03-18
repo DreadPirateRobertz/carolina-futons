@@ -266,6 +266,70 @@ describe('Compare Page — edge cases', () => {
     expect(stockRow.hasDiff).toBe(true);
   });
 
+  // ── CF-28uz: htmlEscape + XSS protection in attribute rows ───────────────
+
+  it('htmlEscape escapes < > & " characters', async () => {
+    const { htmlEscape } = await import('../src/public/comparePageHelpers.js');
+    expect(htmlEscape('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(htmlEscape('A & B')).toBe('A &amp; B');
+    expect(htmlEscape('"quoted"')).toBe('&quot;quoted&quot;');
+    expect(htmlEscape("it's fine")).toBe('it&#39;s fine');
+  });
+
+  it('htmlEscape coerces null/undefined/number to string without throwing', async () => {
+    const { htmlEscape } = await import('../src/public/comparePageHelpers.js');
+    // Contract: String() coercion — callers using || '—' fallback prevent these in practice
+    expect(htmlEscape(null)).toBe('null');
+    expect(htmlEscape(undefined)).toBe('undefined');
+    expect(htmlEscape(0)).toBe('0');
+  });
+
+  it('htmlEscape returns plain string unchanged', async () => {
+    const { htmlEscape } = await import('../src/public/comparePageHelpers.js');
+    expect(htmlEscape('Steel Frame')).toBe('Steel Frame');
+    expect(htmlEscape('—')).toBe('—');
+  });
+
+  it('getProductAttribute escapes XSS payload from additionalInfoSections', async () => {
+    const { getProductAttribute } = await import('../src/public/comparePageHelpers.js');
+    const xssProd = {
+      additionalInfoSections: [
+        { title: 'Frame Material', description: '<img src=x onerror=alert(1)>' },
+      ],
+    };
+    const val = getProductAttribute(xssProd, 'Frame Material');
+    expect(val).not.toContain('<img');
+    expect(val).toContain('&lt;img');
+  });
+
+  it('buildAttributeRows escapes XSS payloads in all returned values', async () => {
+    const { buildAttributeRows } = await import('../src/public/comparePageHelpers.js');
+    const xssProd = {
+      _id: 'xss-prod',
+      name: 'XSS Test',
+      price: 0,
+      inStock: true,
+      additionalInfoSections: [
+        { title: 'Frame Material', description: '<script>evil()</script>' },
+        { title: 'Weight Capacity', description: '"><svg onload=x()>' },
+      ],
+    };
+    const rows = buildAttributeRows([xssProd]);
+    const xssRows = rows.filter(r =>
+      r.label === 'Frame Material' || r.label === 'Weight Capacity'
+    );
+    expect(xssRows).toHaveLength(2);
+    xssRows.forEach(row => {
+      row.values.forEach(val => {
+        // No raw angle brackets — all HTML tags must be escaped
+        expect(val).not.toMatch(/<[a-z]/i);
+        expect(val).not.toContain('>');
+        // Positive check: escaping happened (not just stripping)
+        expect(val).toMatch(/&lt;|&gt;|&amp;|&quot;|&#39;/);
+      });
+    });
+  });
+
   // ── S5: Schema HTML injection ─────────────────────────────────────────────
 
   it('buildItemListSchema produces valid JSON-LD for injection', async () => {

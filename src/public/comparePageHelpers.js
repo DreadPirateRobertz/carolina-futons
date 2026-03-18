@@ -6,6 +6,26 @@
 
 import { business } from 'public/sharedTokens.js';
 
+// ── XSS protection ───────────────────────────────────────────────────────────
+
+/**
+ * Escape HTML special characters to prevent XSS injection.
+ * Escapes &, <, >, ", and ' for safe interpolation into HTML strings.
+ * Applied to free-text CMS values (additionalInfoSections.description).
+ * Price, Rating, and In Stock values are computed from structured fields
+ * and are not passed through this function.
+ * @param {string} str
+ * @returns {string}
+ */
+export function htmlEscape(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── S1: URL param parsing ─────────────────────────────────────────────────────
 
 /**
@@ -92,12 +112,14 @@ export const COMPARE_ATTRIBUTES = [
  */
 export function getProductAttribute(product, attrName) {
   if (attrName === 'Price') {
-    return product.formattedPrice || _formatPrice(product.price);
+    // formattedPrice is Wix-sourced but escape defensively before .html injection
+    return htmlEscape(product.formattedPrice || _formatPrice(product.price));
   }
   if (attrName === 'Rating') {
-    return product.numericRating != null ? `${product.numericRating} / 5` : '—';
+    return product.numericRating != null ? htmlEscape(`${product.numericRating} / 5`) : '—';
   }
   if (attrName === 'In Stock') {
+    // Hardcoded strings — no escaping needed
     return product.inStock ? 'In Stock' : 'Out of Stock';
   }
 
@@ -105,7 +127,8 @@ export function getProductAttribute(product, attrName) {
   const section = sections.find(
     s => s.title?.toLowerCase() === attrName.toLowerCase()
   );
-  return section?.description || '—';
+  // user-editable CMS content — must escape to prevent XSS in .html contexts
+  return htmlEscape(section?.description || '—');
 }
 
 /**
