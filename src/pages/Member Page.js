@@ -19,6 +19,7 @@ import {
   getNextMilestone,
 } from 'public/loyaltyHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { addShareToken } from 'backend/wishlistShare.web.js';
 
 let currentMember = null;
 let wishlistData = [];
@@ -666,6 +667,30 @@ async function initWishlist() {
       });
     } catch (e) {}
 
+    // Share Wishlist — primary share button (#shareWishlistBtn, CF-pvxf S4)
+    try {
+      try { $w('#shareWishlistBtn').accessibility.ariaLabel = 'Share your wishlist'; } catch (e) {}
+      $w('#shareWishlistBtn').onClick(async () => {
+        try {
+          const result = await addShareToken();
+          if (result.error) throw new Error(result.error);
+          const wixWindow = await import('wix-window-frontend');
+          await wixWindow.copyToClipboard(result.shareUrl);
+          trackEvent('wishlist_share', { method: 'copy_link', context: 'shareWishlistBtn' });
+          $w('#shareWishlistBtn').label = 'Link Copied!';
+          setTimeout(() => {
+            $w('#shareWishlistBtn').label = 'Share Wishlist';
+          }, 3000);
+        } catch (err) {
+          console.error('[MemberPage] #shareWishlistBtn error:', err);
+          try {
+            $w('#shareWishlistBtn').label = 'Share Failed';
+            setTimeout(() => { $w('#shareWishlistBtn').label = 'Share Wishlist'; }, 3000);
+          } catch (e) {}
+        }
+      });
+    } catch (e) {}
+
     // Share Wishlist — Pinterest board
     try {
       try { $w('#wishSharePinterest').accessibility.ariaLabel = 'Share wishlist on Pinterest'; } catch (e) {}
@@ -1052,10 +1077,9 @@ async function initCommunicationPrefs() {
 // ── Wishlist Share URL Builder ────────────────────────────────────────
 
 async function getWishlistShareUrl() {
-  const wixLocation = await import('wix-location-frontend');
-  const baseUrl = wixLocation.baseUrl;
-  const memberId = currentMember?._id || '';
-  return `${baseUrl}/wishlist?member=${memberId}`;
+  const result = await addShareToken();
+  if (result.error) throw new Error(result.error);
+  return result.shareUrl;
 }
 
 // ── Error Fallback ──────────────────────────────────────────────────

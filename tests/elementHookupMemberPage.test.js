@@ -262,6 +262,15 @@ vi.mock('wix-window-frontend', () => ({
   openUrl: vi.fn(),
 }));
 
+vi.mock('backend/wishlistShare.web.js', () => ({
+  addShareToken: vi.fn(() => Promise.resolve({
+    token: 'mock-share-token',
+    shareUrl: 'https://www.carolinafutons.com/shared-wishlist?share=mock-share-token',
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  })),
+  resolveShareToken: vi.fn(() => Promise.resolve({ valid: false, reason: 'not_found' })),
+}));
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 async function loadPage() {

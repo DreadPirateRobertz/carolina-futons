@@ -159,6 +159,15 @@ vi.mock('wix-window-frontend', () => ({
   openModal: vi.fn(),
 }));
 
+vi.mock('backend/wishlistShare.web.js', () => ({
+  addShareToken: vi.fn(() => Promise.resolve({
+    token: 'mock-token',
+    shareUrl: 'https://www.carolinafutons.com/shared-wishlist?share=mock-token',
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  })),
+  resolveShareToken: vi.fn(() => Promise.resolve({ valid: false, reason: 'not_found' })),
+}));
+
 vi.mock('backend/loyaltyService.web', () => ({
   getMyLoyaltyAccount: vi.fn().mockResolvedValue({ success: true, data: { points: 0, tier: 'Bronze' } }),
   redeemReward: vi.fn(),
