@@ -59,10 +59,11 @@ export function ManualModePanel({
   }, [currentElement, onApplyDefaultState]);
 
   const handleMarkDone = useCallback(() => {
+    if (!currentElement) return; // completion state — no element to advance past
     if (typeMismatch) return;
     onMarkDone();
     applyDefaultStateIfNeeded();
-  }, [typeMismatch, onMarkDone, applyDefaultStateIfNeeded]);
+  }, [currentElement, typeMismatch, onMarkDone, applyDefaultStateIfNeeded]);
 
   const handleOverride = useCallback(() => {
     onMarkDone();

@@ -352,4 +352,29 @@ describe('ManualModePanel — completion state', () => {
     render(<ManualModePanel {...baseProps} currentElement={null} />);
     expect(screen.queryByText(/Copy ID/i)).toBeNull();
   });
+
+  it('Tab key does NOT call onMarkDone in completion state (currentElement null)', () => {
+    const onMarkDone = vi.fn();
+    render(<ManualModePanel {...baseProps} currentElement={null} onMarkDone={onMarkDone} />);
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: false });
+    expect(onMarkDone).not.toHaveBeenCalled();
+  });
+});
+
+// ── S6 edge cases ──────────────────────────────────────────────────────────
+
+describe('ManualModePanel — S6 edge cases', () => {
+  it('calls onApplyDefaultState when element has BOTH defaultHidden and defaultCollapsed', () => {
+    const bothFlags: ElementDef = { id: 'doubleEl', type: 'Box', notes: '', defaultHidden: true, defaultCollapsed: true };
+    const onApplyDefaultState = vi.fn();
+    render(
+      <ManualModePanel
+        {...baseProps}
+        currentElement={bothFlags}
+        onApplyDefaultState={onApplyDefaultState}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Mark Done/i }));
+    expect(onApplyDefaultState).toHaveBeenCalledWith(bothFlags);
+  });
 });
