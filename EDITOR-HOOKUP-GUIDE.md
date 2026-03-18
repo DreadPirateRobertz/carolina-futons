@@ -1238,6 +1238,66 @@ Add these elements to the **Product Page** in the editor:
 
 ---
 
+## COMPARE PAGE (`Compare Page.js`)
+
+**Route**: `/compare?ids=<id1>,<id2>,...` (up to 4 products)
+
+### URL Params / Fetch
+`compareGridSection` (Section — opacity skeleton), `compareEmptySection` (Section), `compareErrorSection` (Section), `compareAttrSection` (Section), `compareEmptyShopBtn` (Button), `compareErrorText` (Text)
+
+### Column Rendering ⚠️ REPEATER
+`compareSubtitle` (Text), `compareColRepeater` (Repeater) → `compareColImage` (Image), `compareColName` (Text), `compareColPrice` (Text), `compareColOrigPrice` (Text), `compareColBadge` (Text), `compareColAddCart` (Button), `compareColViewBtn` (Button), `compareColRemoveBtn` (Button)
+
+### Attributes Table ⚠️ REPEATER
+`compareAttrRepeater` (Repeater) → `compareAttrLabel` (Text), `compareAttrRow` (HtmlComponent — diff-highlighted cells)
+
+### Mobile & Reset
+`compareMobileSnapHtml` (HtmlComponent — snap-scroll CSS via postMessage, mobile only), `compareResetBtn` (Button)
+
+### SEO
+`compareSchemaHtml` (HtmlComponent — ItemList JSON-LD via postMessage)
+
+---
+
+## FABRIC SWATCHES (`Fabric Swatches.js`)
+
+**Route**: `/swatches` — optional `?product=<slug>` pre-filters by product referral
+
+### Filter Controls
+`swatchDataset` (Dataset — FabricSwatches CMS), `swatchSearchInput` (Input — debounced 250ms), `swatchColorFilter` (Dropdown), `swatchMaterialFilter` (Dropdown), `swatchBrandFilter` (Dropdown — client-side), `swatchClearFilters` (Button), `swatchResultCount` (Text — aria-live polite), `swatchEmptyState` (Box — collapsed until 0 results)
+
+### Swatch Grid ⚠️ REPEATER
+`swatchGridRepeater` (Repeater — CMS-driven) → `swatchCard` (Box — border on select), `swatchColorDot` (Box — hexColor bg), `swatchImage` (Image), `swatchName` (Text), `swatchMaterial` (Text), `swatchBrand` (Text), `swatchOutOfStock` (Box — expanded when out of stock), `swatchSelectedBadge` (Box — expanded when selected), `swatchSelectBtn` (Button — "Add"/"Remove" toggle, disabled at max-5)
+
+### Selection Tray ⚠️ REPEATER
+`swatchTraySection` (Section — collapsed at 0 selections), `swatchTrayTitle` (Text — "Your Selections (N / 5)"), `swatchSelectionRepeater` (Repeater) → `swatchTrayDot` (Box), `swatchTrayName` (Text), `swatchTrayRemove` (Button)
+`swatchTrayProceedBtn` (Button — opens form), `swatchTrayClearBtn` (Button — clears all)
+
+### Request Form
+`swatchFormOverlay` (Box — collapsible overlay), `swatchFormModal` (Box — accessible dialog), `swatchFormClose` (Button — X close)
+`swatchFirstName` (Input), `swatchLastName` (Input), `swatchEmail` (Input), `swatchAddress1` (Input), `swatchAddress2` (Input — optional), `swatchCity` (Input), `swatchState` (Input), `swatchZip` (Input — 5-digit), `swatchPhone` (Input — optional)
+`swatchSubmitBtn` (Button — cycles "Send My Swatches"/"Sending..."), `swatchFormError` (Text — collapsed until error), `swatchFormSuccess` (Box — collapsed until success), `swatchSuccessShopBtn` (Button)
+
+### SEO
+`swatchSchemaHtml` (HtmlComponent — Service JSON-LD: Free Fabric Swatch Program)
+
+---
+
+## WISHLIST SHARE (`Wishlist Share.js`)
+
+**Route**: `/wishlist-share?token=<token>` — public shareable wishlist
+
+### Token Resolution
+`wishlistShareContentSection` (Section — opacity skeleton), `wishlistShareInvalidSection` (Section), `wishlistShareInvalidText` (Text), `wishlistShareShopBtn` (Button — all states), `wishlistShareTitle` (Text — "{ownerName}'s Wishlist"), `wishlistShareSubtitle` (Text — "N item(s)"), `wishlistShareEmptySection` (Section)
+
+### Product Cards ⚠️ REPEATER
+`wishlistShareRepeater` (Repeater) → `shareImage` (Image), `shareName` (Text), `shareAddCart` (Button — cycles "Add to Cart"/"Adding..."/"Added!", 2s reset)
+
+### SEO
+Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + title. Invalid: noindex.
+
+---
+
 ## PAGES THAT NEED CREATING (no frontend code yet)
 
 These have **backend code only** — frontend pages must be built from scratch:
@@ -1246,7 +1306,6 @@ These have **backend code only** — frontend pages must be built from scratch:
 |---|---|---|---|
 | Style Quiz | `styleQuiz.web.js` | 60-second product recommendation quiz | FAQ page (repeater + progress) |
 | Blog | `blogContent.js` | 8 SEO pillar posts, FAQ schema | Privacy/Terms (repeater + TOC) |
-| Compare Page | `comparisonService.web.js` | Side-by-side product comparison (max 4) | Category page (grid + filters) |
 | Room Planner | `roomPlanner.web.js` | Virtual room layout tool | New page (unique UI) |
 
 ---

@@ -1,7 +1,7 @@
 /**
  * PAGES data bundle — S2 (CF-4rv2).
  * Extracted from docs/EDITOR_HOOKUP_GUIDE.html.
- * 28 pages, 1093 elements. DO NOT edit by hand — re-run extraction script.
+ * 31 pages, 1093+ elements. DO NOT edit by hand — re-run extraction script.
  */
 import type { PageDef, ElementDef } from '../types/index.js';
 
@@ -202,6 +202,14 @@ export const PAGES: PageDef[] = [
         ],
       },
       {
+        name: 'Gift Card Section (CF-mwpw)',
+        elements: [
+          { id: 'giftCardSection', type: 'Section', notes: 'Gift card CTA hero — links to /gift-cards' },
+          { id: 'giftCardHeroText', type: 'Text', notes: 'Heading text, set by code' },
+          { id: 'giftCardCta', type: 'Button', notes: 'Shop Gift Cards CTA button' },
+        ],
+      },
+      {
         name: 'SEO / Decorative',
         elements: [
           { id: 'websiteSchemaHtml', type: 'HtmlComponent', notes: 'SEO schema' },
@@ -241,6 +249,7 @@ export const PAGES: PageDef[] = [
           { id: 'navFAQ', type: 'Text', notes: 'Nav link' },
           { id: 'navAbout', type: 'Text', notes: 'Nav link' },
           { id: 'navBlog', type: 'Text', notes: 'Nav link' },
+          { id: 'navGiftCards', type: 'Text', notes: 'Nav link — Gift Cards (CF-t6b8)' },
           { id: 'navFreeSwatches', type: 'Text', notes: 'Nav link' },
           { id: 'siteLogo', type: 'Image', notes: 'Logo' },
           { id: 'headerSearchInput', type: 'Input', notes: 'Search bar' },
@@ -447,6 +456,7 @@ export const PAGES: PageDef[] = [
           { id: 'productDescription', type: 'Text', notes: 'Description' },
           { id: 'productComparePrice', type: 'Text', notes: 'Original price' },
           { id: 'addToCartButton', type: 'Button', notes: 'Add to cart' },
+          { id: 'giftProductBtn', type: 'Button', notes: 'Give as a Gift — links to /gift-cards (CF-9fv2)', defaultHidden: true },
           { id: 'quantityInput', type: 'Input', notes: 'Quantity' },
           { id: 'quantityMinus', type: 'Button', notes: 'Decrease qty' },
           { id: 'quantityPlus', type: 'Button', notes: 'Increase qty' },
@@ -1344,6 +1354,163 @@ export const PAGES: PageDef[] = [
     ],
   },
   {
+    name: 'Blog',
+    file: 'Blog.js',
+    priority: 'P1',
+    est: '40 min',
+    sections: [
+      {
+        name: 'Blog List Repeater (Paginated)',
+        repeater: 'blogListRepeater',
+        elements: [
+          { id: 'blogListRepeater', type: 'Repeater', notes: 'Paginated blog post list' },
+          { id: 'blogPostCount', type: 'Text', notes: "Post count (e.g. '12 posts')" },
+          { id: 'blogPageIndicator', type: 'Text', notes: 'Page X of Y' },
+          { id: 'blogPrevBtn', type: 'Button', notes: 'Previous page — disabled on first page' },
+          { id: 'blogNextBtn', type: 'Button', notes: 'Next page — disabled on last page' },
+          { id: 'blogEmptyState', type: 'Box', notes: 'Shown when no posts match filter', defaultHidden: true },
+        ],
+        children: [
+          { id: 'listTitle', type: 'Text', notes: 'Post title' },
+          { id: 'listExcerpt', type: 'Text', notes: 'Post excerpt' },
+          { id: 'listCategory', type: 'Text', notes: 'Category badge' },
+          { id: 'listDate', type: 'Text', notes: 'Formatted publish date' },
+          { id: 'listReadTime', type: 'Text', notes: 'Reading time badge' },
+          { id: 'listPostLink', type: 'Box', notes: 'Click navigates to /blog/{slug}' },
+        ],
+      },
+      {
+        name: 'Blog Grid (Viewport-limited)',
+        repeater: 'blogGridRepeater',
+        elements: [
+          { id: 'blogGridRepeater', type: 'Repeater', notes: 'Viewport-limited blog card grid' },
+        ],
+        children: [
+          { id: 'cardTitle', type: 'Text', notes: 'Post title' },
+          { id: 'cardExcerpt', type: 'Text', notes: 'Post excerpt' },
+          { id: 'cardCategory', type: 'Text', notes: 'Category badge' },
+          { id: 'cardDate', type: 'Text', notes: 'Formatted date' },
+          { id: 'cardReadTime', type: 'Text', notes: 'Reading time' },
+          { id: 'blogCardLink', type: 'Box', notes: 'Click navigates to /blog/{slug}' },
+        ],
+      },
+      {
+        name: 'Featured Hero',
+        elements: [
+          { id: 'featuredHeroSection', type: 'Section', notes: 'Featured post hero — collapses if empty' },
+          { id: 'featuredTitle', type: 'Text', notes: 'Most recent post title' },
+          { id: 'featuredExcerpt', type: 'Text', notes: 'Post excerpt' },
+          { id: 'featuredCategory', type: 'Text', notes: 'Category badge' },
+          { id: 'featuredDate', type: 'Text', notes: 'Formatted date' },
+          { id: 'featuredReadTime', type: 'Text', notes: 'Reading time badge' },
+          { id: 'featuredAuthor', type: 'Text', notes: 'Author name' },
+          { id: 'featuredHeroLink', type: 'Box', notes: 'Click navigates to /blog/{slug}' },
+        ],
+      },
+      {
+        name: 'Category Filter',
+        repeater: 'categoryFilterRepeater',
+        elements: [
+          { id: 'categoryFilterRepeater', type: 'Repeater', notes: 'Category filter chips' },
+        ],
+        children: [
+          { id: 'filterChip', type: 'Box', notes: 'Clickable chip — active state changes color' },
+          { id: 'filterLabel', type: 'Text', notes: 'Category name' },
+        ],
+      },
+      {
+        name: 'Social Share',
+        elements: [
+          { id: 'shareFacebook', type: 'Box', notes: 'Share on Facebook' },
+          { id: 'sharePinterest', type: 'Box', notes: 'Share on Pinterest' },
+          { id: 'shareTwitter', type: 'Box', notes: 'Share on X/Twitter' },
+          { id: 'shareEmail', type: 'Box', notes: 'Share via email' },
+        ],
+      },
+      {
+        name: 'Newsletter CTA',
+        elements: [
+          { id: 'blogNewsletterEmail', type: 'Input', notes: 'Email input for newsletter' },
+          { id: 'blogNewsletterSubmit', type: 'Button', notes: 'Subscribe button' },
+          { id: 'blogNewsletterSuccess', type: 'Box', notes: 'Success state', defaultHidden: true },
+          { id: 'blogNewsletterError', type: 'Text', notes: 'Error message', defaultHidden: true },
+        ],
+      },
+      {
+        name: 'SEO Schema',
+        elements: [
+          { id: 'blogSeoSchema', type: 'HtmlComponent', notes: 'JSON-LD schema injection' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Blog Post',
+    file: 'Blog Post.js',
+    priority: 'P1',
+    est: '35 min',
+    sections: [
+      {
+        name: 'Post Metadata',
+        elements: [
+          { id: 'postReadTime', type: 'Text', notes: "Reading time — e.g. '5 min read'" },
+          { id: 'postDate', type: 'Text', notes: 'Formatted publish date' },
+          { id: 'postCategory', type: 'Text', notes: 'Category name' },
+        ],
+      },
+      {
+        name: 'Author Bio',
+        elements: [
+          { id: 'authorName', type: 'Text', notes: 'Author name — Carolina Futons' },
+          { id: 'authorDescription', type: 'Text', notes: 'Store bio text' },
+          { id: 'authorLocation', type: 'Text', notes: 'Hendersonville, NC' },
+          { id: 'authorEstablished', type: 'Text', notes: 'Est. 1991' },
+          { id: 'authorBioSection', type: 'Section', notes: 'Expanded when post loads' },
+        ],
+      },
+      {
+        name: 'Social Share (Post page)',
+        elements: [
+          { id: 'postShareFacebook', type: 'Box', notes: 'Share on Facebook (opens new tab)' },
+          { id: 'postSharePinterest', type: 'Box', notes: 'Share on Pinterest (opens new tab)' },
+          { id: 'postShareTwitter', type: 'Box', notes: 'Share on X/Twitter (opens new tab)' },
+          { id: 'postShareEmail', type: 'Box', notes: 'Share via email (mailto)' },
+          { id: 'copyLink', type: 'Box', notes: "Copy post URL to clipboard — label changes to 'Copied!' for 2s" },
+        ],
+      },
+      {
+        name: 'Related Posts',
+        repeater: 'relatedPostsRepeater',
+        elements: [
+          { id: 'relatedPostsRepeater', type: 'Repeater', notes: 'Related posts — up to 3' },
+          { id: 'relatedPostsSection', type: 'Section', notes: 'Collapses when empty' },
+        ],
+        children: [
+          { id: 'relatedTitle', type: 'Text', notes: 'Related post title' },
+          { id: 'relatedCategory', type: 'Text', notes: 'Category' },
+          { id: 'relatedReadTime', type: 'Text', notes: 'Reading time' },
+          { id: 'relatedPostLink', type: 'Box', notes: 'Click navigates to /blog/{slug}' },
+        ],
+      },
+      {
+        name: 'Newsletter Subscription (Post)',
+        elements: [
+          { id: 'blogNewsletterInput', type: 'Input', notes: 'Inline email newsletter input on post page' },
+          { id: 'blogNewsletterSubmit', type: 'Button', notes: 'Subscribe button' },
+          { id: 'blogNewsletterSuccess', type: 'Box', notes: 'Success state', defaultHidden: true },
+          { id: 'blogNewsletterError', type: 'Text', notes: 'Error message', defaultHidden: true },
+        ],
+      },
+      {
+        name: 'SEO Schema (Post)',
+        elements: [
+          { id: 'postSeoSchema', type: 'HtmlComponent', notes: 'BlogPosting JSON-LD + optional FAQ schema' },
+          { id: 'postMetaHtml', type: 'HtmlComponent', notes: 'Dynamic title/description/canonical injection' },
+        ],
+      },
+    ],
+  },
+  {
     name: 'Contact',
     file: 'Contact.k14wx.js',
     priority: 'P2',
@@ -1577,6 +1744,49 @@ export const PAGES: PageDef[] = [
     ],
   },
   {
+    name: 'Gift Cards',
+    file: 'Gift Cards.js',
+    priority: 'P2',
+    est: '20 min',
+    sections: [
+      {
+        name: 'Denomination Picker',
+        elements: [
+          { id: 'gcDenomRepeater', type: 'Repeater', notes: 'Amount picker' },
+        ],
+        children: [
+          { id: 'gcDenomLabel', type: 'Text', notes: 'Amount label' },
+        ],
+      },
+      {
+        name: 'Purchase Form',
+        elements: [
+          { id: 'gcPurchaserEmail', type: 'Input', notes: 'Buyer email' },
+          { id: 'gcRecipientEmail', type: 'Input', notes: 'Recipient email' },
+          { id: 'gcRecipientName', type: 'Input', notes: 'Recipient name (optional)' },
+          { id: 'gcMessage', type: 'TextBox', notes: 'Personal message (optional)' },
+          { id: 'gcPurchaseBtn', type: 'Button', notes: 'Purchase Gift Card button' },
+          { id: 'gcPurchaseForm', type: 'Section', notes: 'Purchase form container' },
+          { id: 'gcPurchaseSuccess', type: 'Text', notes: 'Success message (hidden)', defaultHidden: true },
+          { id: 'gcPurchaseError', type: 'Text', notes: 'Error message (hidden)', defaultHidden: true },
+        ],
+      },
+      {
+        name: 'Balance Checker',
+        elements: [
+          { id: 'gcCodeInput', type: 'Input', notes: 'Gift card code input' },
+          { id: 'gcCheckBalanceBtn', type: 'Button', notes: 'Check Balance button' },
+          { id: 'gcBalanceResult', type: 'Section', notes: 'Balance result (hidden)', defaultHidden: true },
+          { id: 'gcBalanceAmount', type: 'Text', notes: 'Balance dollar amount' },
+          { id: 'gcBalanceStatus', type: 'Text', notes: 'Active/Expired/Redeemed' },
+          { id: 'gcBalanceUsage', type: 'Text', notes: 'Usage text' },
+          { id: 'gcBalanceExpiry', type: 'Text', notes: 'Expiry date' },
+          { id: 'gcBalanceError', type: 'Text', notes: 'Error message (hidden)', defaultHidden: true },
+        ],
+      },
+    ],
+  },
+  {
     name: 'Thank You Page',
     file: 'Thank You Page.dk9x8.js',
     priority: 'P2',
@@ -1651,6 +1861,15 @@ export const PAGES: PageDef[] = [
           { id: 'ppImage', type: 'Image', notes: 'Image' },
           { id: 'ppName', type: 'Text', notes: 'Name' },
           { id: 'ppPrice', type: 'Text', notes: 'Price' },
+        ],
+      },
+      {
+        name: 'Gift Card Upsell (CF-ou1f)',
+        elements: [
+          { id: 'giftUpsellSection', type: 'Section', notes: 'Post-purchase gift card upsell', defaultHidden: true },
+          { id: 'giftUpsellHeading', type: 'Text', notes: 'Heading text' },
+          { id: 'giftUpsellText', type: 'Text', notes: 'Body copy' },
+          { id: 'giftUpsellCta', type: 'Button', notes: 'Send a Gift Card CTA' },
         ],
       },
       {
@@ -2265,6 +2484,237 @@ export const PAGES: PageDef[] = [
           { id: 'calendarPlatform', type: 'Text', notes: 'Platform' },
           { id: 'calendarProduct', type: 'Text', notes: 'Product name' },
           { id: 'calendarStatus', type: 'Text', notes: 'Status badge' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Compare Page',
+    file: 'Compare Page.js',
+    priority: 'P1',
+    est: '35 min',
+    sections: [
+      {
+        name: 'URL Params / Fetch',
+        elements: [
+          { id: 'compareGridSection', type: 'Section', notes: 'Main content — opacity 0.4 skeleton on load' },
+          { id: 'compareEmptySection', type: 'Section', notes: 'Shown when no products to compare' },
+          { id: 'compareErrorSection', type: 'Section', notes: 'Shown on fetch failure' },
+          { id: 'compareAttrSection', type: 'Section', notes: 'Attributes table section' },
+          { id: 'compareEmptyShopBtn', type: 'Button', notes: '→ /shop-main (empty state)' },
+          { id: 'compareErrorText', type: 'Text', notes: 'Error message' },
+        ],
+      },
+      {
+        name: 'Column Rendering',
+        repeater: 'compareColRepeater',
+        elements: [
+          { id: 'compareSubtitle', type: 'Text', notes: 'Comparing N products count' },
+          { id: 'compareColRepeater', type: 'Repeater', notes: 'One column per product' },
+        ],
+        children: [
+          { id: 'compareColImage', type: 'Image', notes: 'Product image' },
+          { id: 'compareColName', type: 'Text', notes: 'Product name' },
+          { id: 'compareColPrice', type: 'Text', notes: 'Current/sale price' },
+          { id: 'compareColOrigPrice', type: 'Text', notes: 'Original price strikethrough', defaultHidden: true },
+          { id: 'compareColBadge', type: 'Text', notes: 'Sale/ribbon badge', defaultHidden: true },
+          { id: 'compareColAddCart', type: 'Button', notes: 'Add to cart — cycles states (2s)' },
+          { id: 'compareColViewBtn', type: 'Button', notes: 'View product page' },
+          { id: 'compareColRemoveBtn', type: 'Button', notes: 'Remove from compare' },
+        ],
+      },
+      {
+        name: 'Attributes Table',
+        repeater: 'compareAttrRepeater',
+        elements: [
+          { id: 'compareAttrRepeater', type: 'Repeater', notes: 'Attribute rows' },
+        ],
+        children: [
+          { id: 'compareAttrLabel', type: 'Text', notes: 'Attribute name' },
+          { id: 'compareAttrRow', type: 'HtmlComponent', notes: 'Inline-block value cells with diff highlight' },
+        ],
+      },
+      {
+        name: 'Mobile & Reset',
+        elements: [
+          { id: 'compareMobileSnapHtml', type: 'HtmlComponent', notes: 'Mobile snap-scroll CSS via postMessage' },
+          { id: 'compareResetBtn', type: 'Button', notes: 'Start Over → /shop-main' },
+        ],
+      },
+      {
+        name: 'SEO',
+        elements: [
+          { id: 'compareSchemaHtml', type: 'HtmlComponent', notes: 'ItemList JSON-LD schema via postMessage' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Fabric Swatches',
+    file: 'Fabric Swatches.js',
+    priority: 'P1',
+    est: '40 min',
+    sections: [
+      {
+        name: 'Filter Controls',
+        elements: [
+          { id: 'swatchDataset', type: 'Dataset', notes: 'FabricSwatches CMS collection' },
+          { id: 'swatchSearchInput', type: 'Input', notes: 'Debounced 250ms name/color search' },
+          { id: 'swatchColorFilter', type: 'Dropdown', notes: 'Color family filter' },
+          { id: 'swatchMaterialFilter', type: 'Dropdown', notes: 'Material filter' },
+          { id: 'swatchBrandFilter', type: 'Dropdown', notes: 'Brand client-side filter' },
+          { id: 'swatchClearFilters', type: 'Button', notes: 'Reset all filters' },
+          { id: 'swatchResultCount', type: 'Text', notes: 'N swatches count (aria-live polite)' },
+          { id: 'swatchEmptyState', type: 'Box', notes: 'No results state', defaultHidden: true },
+        ],
+      },
+      {
+        name: 'Swatch Grid',
+        repeater: 'swatchGridRepeater',
+        elements: [
+          { id: 'swatchGridRepeater', type: 'Repeater', notes: 'CMS-driven swatch grid' },
+        ],
+        children: [
+          { id: 'swatchCard', type: 'Box', notes: 'Card container (border color on select)' },
+          { id: 'swatchColorDot', type: 'Box', notes: 'Color preview dot (hexColor bg)' },
+          { id: 'swatchImage', type: 'Image', notes: 'Swatch fabric image' },
+          { id: 'swatchName', type: 'Text', notes: 'Swatch name' },
+          { id: 'swatchMaterial', type: 'Text', notes: 'Material type' },
+          { id: 'swatchBrand', type: 'Text', notes: 'Brand name' },
+          { id: 'swatchOutOfStock', type: 'Box', notes: 'Out of stock overlay', defaultHidden: true },
+          { id: 'swatchSelectedBadge', type: 'Box', notes: 'Selected checkmark badge', defaultHidden: true },
+          { id: 'swatchSelectBtn', type: 'Button', notes: 'Add/Remove toggle — disabled at max-5' },
+        ],
+      },
+      {
+        name: 'Selection Tray',
+        repeater: 'swatchSelectionRepeater',
+        elements: [
+          { id: 'swatchTraySection', type: 'Section', notes: 'Collapsed at 0 selections, expanded otherwise' },
+          { id: 'swatchTrayTitle', type: 'Text', notes: 'Your Selections (N / 5)' },
+          { id: 'swatchSelectionRepeater', type: 'Repeater', notes: 'Selected swatch mini-cards' },
+          { id: 'swatchTrayProceedBtn', type: 'Button', notes: 'Open request form' },
+          { id: 'swatchTrayClearBtn', type: 'Button', notes: 'Clear all selections' },
+        ],
+        children: [
+          { id: 'swatchTrayDot', type: 'Box', notes: 'Color preview dot' },
+          { id: 'swatchTrayName', type: 'Text', notes: 'Swatch name' },
+          { id: 'swatchTrayRemove', type: 'Button', notes: 'Remove swatch from selection' },
+        ],
+      },
+      {
+        name: 'Request Form',
+        elements: [
+          { id: 'swatchFormOverlay', type: 'Box', notes: 'Collapsible form overlay' },
+          { id: 'swatchFormModal', type: 'Box', notes: 'Accessible dialog container' },
+          { id: 'swatchFormClose', type: 'Button', notes: 'Close form (X)' },
+          { id: 'swatchFirstName', type: 'Input', notes: 'First name (required)' },
+          { id: 'swatchLastName', type: 'Input', notes: 'Last name (required)' },
+          { id: 'swatchEmail', type: 'Input', notes: 'Email (required, validated)' },
+          { id: 'swatchAddress1', type: 'Input', notes: 'Street address (required)' },
+          { id: 'swatchAddress2', type: 'Input', notes: 'Address line 2 (optional)' },
+          { id: 'swatchCity', type: 'Input', notes: 'City (required)' },
+          { id: 'swatchState', type: 'Input', notes: 'State (required)' },
+          { id: 'swatchZip', type: 'Input', notes: 'ZIP 5-digit (required)' },
+          { id: 'swatchPhone', type: 'Input', notes: 'Phone (optional)' },
+          { id: 'swatchSubmitBtn', type: 'Button', notes: 'Submit — cycles Send My Swatches/Sending...' },
+          { id: 'swatchFormError', type: 'Text', notes: 'Validation/API error', defaultHidden: true },
+          { id: 'swatchFormSuccess', type: 'Box', notes: 'Success state', defaultHidden: true },
+          { id: 'swatchSuccessShopBtn', type: 'Button', notes: 'Continue shopping post-success' },
+        ],
+      },
+      {
+        name: 'SEO',
+        elements: [
+          { id: 'swatchSchemaHtml', type: 'HtmlComponent', notes: 'Service JSON-LD: Free Fabric Swatch Program' },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Wishlist Share',
+    file: 'Wishlist Share.js',
+    priority: 'P1',
+    est: '25 min',
+    sections: [
+      {
+        name: 'Token Resolution',
+        elements: [
+          { id: 'wishlistShareContentSection', type: 'Section', notes: 'Main content — opacity 0.4 skeleton on load' },
+          { id: 'wishlistShareInvalidSection', type: 'Section', notes: 'Invalid/expired/missing token state' },
+          { id: 'wishlistShareInvalidText', type: 'Text', notes: 'Error message for invalid token' },
+          { id: 'wishlistShareShopBtn', type: 'Button', notes: '→ /shop-main (wired in all states)' },
+          { id: 'wishlistShareTitle', type: 'Text', notes: "{ownerName}'s Wishlist" },
+          { id: 'wishlistShareSubtitle', type: 'Text', notes: 'N item(s) count' },
+          { id: 'wishlistShareEmptySection', type: 'Section', notes: 'Empty wishlist state', defaultHidden: true },
+        ],
+      },
+      {
+        name: 'Product Cards',
+        repeater: 'wishlistShareRepeater',
+        elements: [
+          { id: 'wishlistShareRepeater', type: 'Repeater', notes: 'Shared wishlist product cards' },
+        ],
+        children: [
+          { id: 'shareImage', type: 'Image', notes: 'Product image (src + alt via populateShareCard)' },
+          { id: 'shareName', type: 'Text', notes: 'Product name' },
+          { id: 'shareAddCart', type: 'Button', notes: 'Add to cart — cycles states (2s reset)' },
+        ],
+      },
+      {
+        name: 'SEO',
+        elements: [],
+      },
+    ],
+  },
+  {
+    name: 'Showroom (Product Page)',
+    file: 'showroomService.web.js + Product Page.js',
+    priority: 'P2',
+    est: '20 min',
+    sections: [
+      {
+        name: 'Showroom CTA (S1)',
+        elements: [
+          { id: 'showroomCTA', type: 'Button', notes: 'Book a Showroom Visit → Wix Bookings' },
+        ],
+      },
+      {
+        name: 'QR / Store Mode (S3)',
+        elements: [
+          { id: 'storeModeBar', type: 'Text', notes: 'Staff store-mode banner (shown only when ?qr=1)', defaultHidden: true },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Showroom (Category Page)',
+    file: 'showroomService.web.js + Category Page.js',
+    priority: 'P2',
+    est: '10 min',
+    sections: [
+      {
+        name: 'See It In Store Badge (S2)',
+        elements: [
+          { id: 'showroomBadge', type: 'Text', notes: 'See It In Store badge (repeater child — shown for eligible products)', defaultHidden: true },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Showroom (Home Page)',
+    file: 'showroomService.web.js + Home.js',
+    priority: 'P2',
+    est: '20 min',
+    sections: [
+      {
+        name: 'Showroom Section (S4)',
+        elements: [
+          { id: 'showroomSection', type: 'Section', notes: 'Showroom info container — hidden until data loads', defaultHidden: true },
+          { id: 'showroomAddress', type: 'Text', notes: 'Address: name, street, city/state/zip, phone' },
+          { id: 'showroomHours', type: 'Text', notes: 'Formatted hours (Wed–Fri 10–5, Sat 10–4, closed Sun–Tue)' },
+          { id: 'showroomBookingCTA', type: 'Button', notes: 'Book a Visit → Wix Bookings' },
+          { id: 'showroomMapEmbed', type: 'Button', notes: 'Google Maps link (.url property set by code)' },
         ],
       },
     ],

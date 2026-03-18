@@ -721,6 +721,17 @@ function initProductGrid() {
           });
         }
       } catch (e) {}
+
+      // CF-1wvf: "See It In Store" showroom badge for eligible products
+      try {
+        import('backend/showroomService.web.js').then(({ isShowroomEligible }) => {
+          if (isShowroomEligible(itemData)) {
+            const badge = $item('#showroomBadge');
+            badge.text = 'See It In Store';
+            badge.show();
+          }
+        }).catch(() => {});
+      } catch (e) {}
     });
   } catch (e) {
     console.error('Error initializing product grid:', e);

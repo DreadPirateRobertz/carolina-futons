@@ -2234,6 +2234,172 @@ Action buttons (right):
     ]
   },
   {
+    name: "Blog", file: "Blog.js", priority: "P1", est: "40 min",
+    sections: [
+      { name: "Blog List Repeater (Paginated)", repeater: "blogListRepeater", impl: `<h4>📰 Implementation — Blog List Repeater</h4>
+<p><strong>Layout: Paginated list of blog post cards + pagination controls + post count badge</strong></p>
+<ul>
+  <li><strong>#blogListRepeater</strong>: Repeater element. Code populates with PAGE_SIZE (6) posts per page. Each item has: #listTitle, #listExcerpt, #listCategory, #listDate, #listReadTime, #listPostLink.</li>
+  <li><strong>#blogPostCount</strong>: Text element. Shows total or filtered post count (e.g. "12 posts").</li>
+  <li><strong>#blogPageIndicator</strong>: Text element. Shows "Page X of Y" during pagination.</li>
+  <li><strong>#blogPrevBtn</strong>: Button. Navigates to previous page. Disabled on first page.</li>
+  <li><strong>#blogNextBtn</strong>: Button. Navigates to next page. Disabled on last page.</li>
+  <li><strong>#blogEmptyState</strong>: Box/Text. Shown when no posts match the active filter. Hidden otherwise.</li>
+</ul>`, elements: [
+        ["blogListRepeater","Repeater","Paginated blog post list"],
+        ["blogPostCount","Text","Post count (e.g. '12 posts')"],
+        ["blogPageIndicator","Text","Page X of Y"],
+        ["blogPrevBtn","Button","Previous page — disabled on first page"],
+        ["blogNextBtn","Button","Next page — disabled on last page"],
+        ["blogEmptyState","Box","Shown when no posts match filter"]
+      ]},
+      { name: "Blog Grid (viewport-limited)", repeater: "blogGridRepeater", impl: `<h4>📰 Implementation — Blog Grid</h4>
+<p><strong>Layout: Responsive card grid (desktop 9 / tablet 6 / mobile 4)</strong></p>
+<ul>
+  <li><strong>#blogGridRepeater</strong>: Repeater. Shows viewport-limited posts. Each item: #cardTitle, #cardExcerpt, #cardCategory, #cardDate, #cardReadTime, #blogCardLink.</li>
+</ul>`, elements: [
+        ["blogGridRepeater","Repeater","Viewport-limited blog card grid"],
+      ]},
+      { name: "Featured Hero", impl: `<h4>🌟 Implementation — Featured Post Hero</h4>
+<p><strong>Layout: Full-width hero showing the most recent post</strong></p>
+<ul>
+  <li><strong>#featuredHeroSection</strong>: Section. Collapsed if no posts. Expanded with post data when posts exist.</li>
+  <li><strong>#featuredTitle</strong>: Text. Set to most recent post title.</li>
+  <li><strong>#featuredExcerpt</strong>: Text. Set to post excerpt.</li>
+  <li><strong>#featuredCategory</strong>: Text. Category badge text.</li>
+  <li><strong>#featuredDate</strong>: Text. Formatted publish date.</li>
+  <li><strong>#featuredReadTime</strong>: Text. "X min read" badge.</li>
+  <li><strong>#featuredAuthor</strong>: Text. Author name ("Carolina Futons").</li>
+  <li><strong>#featuredHeroLink</strong>: Box/Button. Clickable — navigates to /blog/{slug}.</li>
+</ul>`, elements: [
+        ["featuredHeroSection","Section","Featured post hero — collapses if empty"],
+        ["featuredTitle","Text","Most recent post title"],
+        ["featuredExcerpt","Text","Post excerpt"],
+        ["featuredCategory","Text","Category badge"],
+        ["featuredDate","Text","Formatted date"],
+        ["featuredReadTime","Text","Reading time badge"],
+        ["featuredAuthor","Text","Author name"],
+        ["featuredHeroLink","Box","Click → /blog/{slug}"]
+      ]},
+      { name: "Category Filter", repeater: "categoryFilterRepeater", impl: `<h4>📂 Implementation — Category Filter</h4>
+<p><strong>Layout: Horizontal filter chips — "All" + each unique category</strong></p>
+<ul>
+  <li><strong>#categoryFilterRepeater</strong>: Repeater. Items: #filterChip (Box/Button), #filterLabel (Text).</li>
+  <li>Active chip styled with mountainBlue background. Clicking a chip re-renders both blogListRepeater and blogGridRepeater.</li>
+</ul>`, elements: [
+        ["categoryFilterRepeater","Repeater","Category filter chips"],
+      ]},
+      { name: "Social Share (Blog list)", impl: `<h4>🔗 Implementation — Social Share (Blog page)</h4>
+<ul>
+  <li><strong>#shareFacebook</strong>: Box/Button. Opens Facebook share dialog for current URL.</li>
+  <li><strong>#sharePinterest</strong>: Box/Button. Opens Pinterest pin dialog.</li>
+  <li><strong>#shareTwitter</strong>: Box/Button. Opens Twitter/X tweet intent.</li>
+  <li><strong>#shareEmail</strong>: Box/Button. Opens mailto: link.</li>
+</ul>`, elements: [
+        ["shareFacebook","Box","Share on Facebook"],
+        ["sharePinterest","Box","Share on Pinterest"],
+        ["shareTwitter","Box","Share on X/Twitter"],
+        ["shareEmail","Box","Share via email"]
+      ]},
+      { name: "Newsletter CTA (Blog list)", impl: `<h4>📧 Implementation — Blog Newsletter CTA</h4>
+<ul>
+  <li><strong>#blogNewsletterEmail</strong>: Input. Email address field. Validates @ presence before submit.</li>
+  <li><strong>#blogNewsletterSubmit</strong>: Button. Triggers subscription. Disabled during request.</li>
+  <li><strong>#blogNewsletterSuccess</strong>: Box/Text. Shown on successful subscription.</li>
+  <li><strong>#blogNewsletterError</strong>: Text. Error message display.</li>
+</ul>`, elements: [
+        ["blogNewsletterEmail","Input","Email input for newsletter"],
+        ["blogNewsletterSubmit","Button","Subscribe button"],
+        ["blogNewsletterSuccess","Box","Success state"],
+        ["blogNewsletterError","Text","Error message"]
+      ]},
+      { name: "SEO Schema", impl: `<h4>🔍 Implementation — Blog SEO</h4>
+<ul>
+  <li><strong>#blogSeoSchema</strong>: HtmlComponent. Receives JSON-LD BusinessSchema via postMessage.</li>
+</ul>`, elements: [
+        ["blogSeoSchema","HtmlComponent","JSON-LD schema injection"]
+      ]}
+    ]
+  },
+  {
+    name: "Blog Post", file: "Blog Post.js", priority: "P1", est: "35 min",
+    sections: [
+      { name: "Post Metadata", impl: `<h4>📰 Implementation — Blog Post Metadata</h4>
+<p><strong>Layout: Reading time badge, author bio, date/category display</strong></p>
+<ul>
+  <li><strong>#postReadTime</strong>: Text. Set to "X min read" (estimated at 200 wpm).</li>
+  <li><strong>#postDate</strong>: Text. Formatted publish date (e.g. "February 20, 2026").</li>
+  <li><strong>#postCategory</strong>: Text. Category name (e.g. "Buying Guides").</li>
+  <li>Blog title and body are rendered by Wix Blog app natively — no $w() ID needed.</li>
+  <li>Breadcrumbs: Home > Blog > Post Title — built from wixLocationFrontend.path.</li>
+</ul>`, elements: [
+        ["postReadTime","Text","Reading time — e.g. '5 min read'"],
+        ["postDate","Text","Formatted publish date"],
+        ["postCategory","Text","Category name"]
+      ]},
+      { name: "Author Bio", impl: `<h4>👤 Implementation — Author Bio</h4>
+<ul>
+  <li><strong>#authorName</strong>: Text. "Carolina Futons".</li>
+  <li><strong>#authorDescription</strong>: Text. Store description.</li>
+  <li><strong>#authorLocation</strong>: Text. "Hendersonville, NC".</li>
+  <li><strong>#authorEstablished</strong>: Text. "Est. 1991".</li>
+  <li><strong>#authorBioSection</strong>: Section/Box. Expanded by code when post loads.</li>
+</ul>`, elements: [
+        ["authorName","Text","Author name — Carolina Futons"],
+        ["authorDescription","Text","Store bio text"],
+        ["authorLocation","Text","Hendersonville, NC"],
+        ["authorEstablished","Text","Est. 1991"],
+        ["authorBioSection","Section","Expanded when post loads"]
+      ]},
+      { name: "Social Share (Post page)", impl: `<h4>🔗 Implementation — Social Share (Post page)</h4>
+<p><strong>Layout: 5 share buttons — FB, Pinterest, X, email, copy link</strong></p>
+<ul>
+  <li><strong>#postShareFacebook</strong>: Box/Button. Opens facebook.com/sharer with post URL.</li>
+  <li><strong>#postSharePinterest</strong>: Box/Button. Opens Pinterest pin with URL + title.</li>
+  <li><strong>#postShareTwitter</strong>: Box/Button. Opens twitter.com/intent/tweet.</li>
+  <li><strong>#postShareEmail</strong>: Box/Button. Opens mailto: with subject + body.</li>
+  <li><strong>#copyLink</strong>: Box/Button. Copies post URL to clipboard. Label temporarily changes to "Copied!" for 2s. Fires blog_copy_link GA4 event.</li>
+</ul>`, elements: [
+        ["postShareFacebook","Box","Share on Facebook (opens new tab)"],
+        ["postSharePinterest","Box","Share on Pinterest (opens new tab)"],
+        ["postShareTwitter","Box","Share on X/Twitter (opens new tab)"],
+        ["postShareEmail","Box","Share via email (mailto)"],
+        ["copyLink","Box","Copy post URL to clipboard — label: 'Copied!' for 2s"]
+      ]},
+      { name: "Related Posts", repeater: "relatedPostsRepeater", impl: `<h4>🔗 Implementation — Related Posts</h4>
+<p><strong>Layout: Up to 3 related post cards, tag + category matched</strong></p>
+<ul>
+  <li><strong>#relatedPostsRepeater</strong>: Repeater. Populated with up to 3 posts via getRelatedPosts(). Items: #relatedTitle, #relatedCategory, #relatedReadTime, #relatedPostLink.</li>
+  <li><strong>#relatedPostsSection</strong>: Section/Box. Collapses when no related posts. Expands when 1+ related posts found.</li>
+  <li>Scoring: +10 for same category, +3 per shared tag. Returns top 3.</li>
+</ul>`, elements: [
+        ["relatedPostsRepeater","Repeater","Related posts — up to 3"],
+        ["relatedPostsSection","Section","Collapses when empty"]
+      ]},
+      { name: "Newsletter Subscription (Post)", impl: `<h4>📧 Implementation — Newsletter Subscription (Post page)</h4>
+<ul>
+  <li><strong>#blogNewsletterInput</strong>: Input. Email address for inline newsletter form on post page.</li>
+  <li><strong>#blogNewsletterSubmit</strong>: Button. Triggers subscribeToNewsletter() with source: 'blog_post'.</li>
+  <li><strong>#blogNewsletterSuccess</strong>: Box/Text. Shown on success.</li>
+  <li><strong>#blogNewsletterError</strong>: Text. Error message.</li>
+</ul>`, elements: [
+        ["blogNewsletterInput","Input","Inline email newsletter input on post page"],
+        ["blogNewsletterSubmit","Button","Subscribe button"],
+        ["blogNewsletterSuccess","Box","Success state"],
+        ["blogNewsletterError","Text","Error message"]
+      ]},
+      { name: "SEO Schema (Post)", impl: `<h4>🔍 Implementation — Blog Post SEO</h4>
+<ul>
+  <li><strong>#postSeoSchema</strong>: HtmlComponent. Receives BlogPosting JSON-LD + optional FAQPage schema via postMessage. Both injected as separate script tags if both are available.</li>
+  <li><strong>#postMetaHtml</strong>: HtmlComponent. Receives JSON payload {title, description, canonical} via postMessage for dynamic meta tag injection.</li>
+  <li>og:image set via initPageSeo() using post.coverImage. Canonical URL: https://www.carolinafutons.com/blog/{slug}.</li>
+</ul>`, elements: [
+        ["postSeoSchema","HtmlComponent","BlogPosting JSON-LD + FAQ schema injection"],
+        ["postMetaHtml","HtmlComponent","Dynamic title/description/canonical injection"]
+      ]}
+    ]
+  },
+  {
     name: "Contact", file: "Contact.k14wx.js", priority: "P2", est: "30 min",
     sections: [
       { name: "Contact Form", impl: `<h4>📬 Implementation — Contact Form</h4>
@@ -3268,6 +3434,310 @@ SHARING:
         ["calendarPlatform","Text","Platform"],
         ["calendarProduct","Text","Product name"],
         ["calendarStatus","Text","Status badge"]
+      ]}
+    ]
+  },
+  {
+    name: "Compare Page", file: "Compare Page.js", priority: "P1", est: "35 min",
+    sections: [
+      { name: "URL Params / Fetch", impl: `<h4>🔗 Implementation — URL Params &amp; Fetch (Compare Page)</h4>
+<p><strong>Route</strong>: <code>/compare?ids=&lt;id1&gt;,&lt;id2&gt;,...</code> (up to 4 products)</p>
+<ul>
+  <li><strong>#compareGridSection</strong>: Main content section. Code sets <code>opacity=0.4</code> as skeleton while products load, restores to <code>1</code> on success.</li>
+  <li><strong>#compareEmptySection</strong>: Shown when no valid IDs in query string. Has <code>#compareEmptyShopBtn</code> → navigates to <code>/shop-main</code>.</li>
+  <li><strong>#compareErrorSection</strong>: Shown on fetch failure. Contains <code>#compareErrorText</code> with error message.</li>
+  <li><strong>#compareAttrSection</strong>: Attributes table section — hidden in empty/error states.</li>
+  <li>Products fetched in parallel via <code>products.getProduct(id)</code> from <code>wix-stores-frontend</code>.</li>
+</ul>`, elements: [
+        ["compareGridSection","Section","Main content — skeleton opacity on load"],
+        ["compareEmptySection","Section","Shown when no products to compare"],
+        ["compareErrorSection","Section","Shown on fetch failure"],
+        ["compareAttrSection","Section","Attributes table section"],
+        ["compareEmptyShopBtn","Button","→ /shop-main (empty state)"],
+        ["compareErrorText","Text","Error message"]
+      ]},
+      { name: "Column Rendering", repeater: "compareColRepeater", impl: `<h4>📊 Implementation — Column Rendering (Compare Page)</h4>
+<p><strong>Layout</strong>: One column per product, side-by-side with image, name, price, add-to-cart, and remove controls.</p>
+<ul>
+  <li><strong>#compareSubtitle</strong>: Text — "Comparing N product(s)".</li>
+  <li><strong>#compareColRepeater</strong>: Repeater — one item per product column.</li>
+  <li><strong>#compareColImage</strong>: Product image (repeater child).</li>
+  <li><strong>#compareColName</strong>: Product name — clickable → product page.</li>
+  <li><strong>#compareColPrice</strong>: Current or sale price.</li>
+  <li><strong>#compareColOrigPrice</strong>: Original price with strikethrough — <span class="impl-warn">hidden if no sale</span>.</li>
+  <li><strong>#compareColBadge</strong>: Sale/ribbon badge — <span class="impl-warn">hidden by default</span>.</li>
+  <li><strong>#compareColAddCart</strong>: Add to Cart button. States: "Add to Cart" → "Adding..." → "Added!" → reset (2s delay).</li>
+  <li><strong>#compareColViewBtn</strong>: View product button — navigates to product page.</li>
+  <li><strong>#compareColRemoveBtn</strong>: Remove from compare — updates URL params without full navigation.</li>
+</ul>`, elements: [
+        ["compareSubtitle","Text","Comparing N products count"],
+        ["compareColRepeater","Repeater","One column per product"]
+      ], children: [
+        ["compareColImage","Image","Product image"],
+        ["compareColName","Text","Product name"],
+        ["compareColPrice","Text","Current/sale price"],
+        ["compareColOrigPrice","Text","Original price strikethrough"],
+        ["compareColBadge","Text","Sale/ribbon badge"],
+        ["compareColAddCart","Button","Add to cart"],
+        ["compareColViewBtn","Button","View product page"],
+        ["compareColRemoveBtn","Button","Remove from compare"]
+      ]},
+      { name: "Attributes Table", repeater: "compareAttrRepeater", impl: `<h4>📋 Implementation — Attributes Table (Compare Page)</h4>
+<p><strong>Layout</strong>: Row-per-attribute repeater — label on left, one cell per product. Differing values highlighted.</p>
+<ul>
+  <li><strong>#compareAttrRepeater</strong>: Repeater — one row per attribute (material, dimensions, weight, etc.).</li>
+  <li><strong>#compareAttrLabel</strong>: Attribute name (repeater child).</li>
+  <li><strong>#compareAttrRow</strong>: HtmlComponent — renders inline-block cells with optional diff highlight background (<code>rgba(168,204,216,0.15)</code>). Falls back to <code>.text</code> with pipe separator if html property unavailable.</li>
+  <li>Rows where all products share the same value show no highlight; differing rows get blue-tinted background.</li>
+</ul>`, elements: [
+        ["compareAttrRepeater","Repeater","Attribute rows"]
+      ], children: [
+        ["compareAttrLabel","Text","Attribute name"],
+        ["compareAttrRow","HtmlComponent","Attribute value cells"]
+      ]},
+      { name: "Mobile &amp; Reset", impl: `<h4>📱 Implementation — Mobile &amp; Reset (Compare Page)</h4>
+<ul>
+  <li><strong>#compareMobileSnapHtml</strong>: HtmlComponent — receives <code>postMessage()</code> with CSS for horizontal snap-scroll on mobile. Only wired when <code>isMobile()</code> returns true.</li>
+  <li><strong>#compareResetBtn</strong>: Start Over button — navigates to <code>/shop-main</code>.</li>
+</ul>`, elements: [
+        ["compareMobileSnapHtml","HtmlComponent","Mobile snap-scroll CSS injection"],
+        ["compareResetBtn","Button","Start Over → /shop-main"]
+      ]},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Compare Page)</h4>
+<ul>
+  <li>Static defaults applied via <code>initPageSeo('compareProducts')</code> before products load.</li>
+  <li>Dynamic title: "Compare [Product A] vs [Product B]" set via <code>seo.setTitle()</code> after fetch.</li>
+  <li>Meta description: dynamically built from product names.</li>
+  <li>Canonical link: <code>/compare</code>.</li>
+  <li><strong>#compareSchemaHtml</strong>: HtmlComponent — receives <code>postMessage()</code> with <code>ItemList</code> JSON-LD schema for all compared products.</li>
+</ul>`, elements: [
+        ["compareSchemaHtml","HtmlComponent","ItemList JSON-LD schema"]
+      ]}
+    ]
+  },
+  {
+    name: "Fabric Swatches", file: "Fabric Swatches.js", priority: "P1", est: "40 min",
+    sections: [
+      { name: "Filter Controls", impl: `<h4>🎛️ Implementation — Filter Controls (Fabric Swatches)</h4>
+<p><strong>Route</strong>: <code>/swatches</code> — optional <code>?product=&lt;slug&gt;</code> pre-filters by product referral.</p>
+<ul>
+  <li><strong>#swatchDataset</strong>: CMS Dataset connected to FabricSwatches collection — filters applied via <code>setFilter()</code>.</li>
+  <li><strong>#swatchSearchInput</strong>: Text input — debounced 250ms search on swatch name and color family.</li>
+  <li><strong>#swatchColorFilter</strong>: Dropdown — filter by color family (CMS field).</li>
+  <li><strong>#swatchMaterialFilter</strong>: Dropdown — filter by material.</li>
+  <li><strong>#swatchBrandFilter</strong>: Dropdown — client-side brand filter applied after dataset filter.</li>
+  <li><strong>#swatchClearFilters</strong>: Button — resets all 4 filter controls and re-applies.</li>
+  <li><strong>#swatchResultCount</strong>: Text — "N swatches" (ARIA live="polite").</li>
+  <li><strong>#swatchEmptyState</strong>: Collapsed by default — expanded when filtered results count is 0.</li>
+</ul>`, elements: [
+        ["swatchDataset","Dataset","FabricSwatches CMS collection"],
+        ["swatchSearchInput","Input","Debounced name/color search"],
+        ["swatchColorFilter","Dropdown","Color family filter"],
+        ["swatchMaterialFilter","Dropdown","Material filter"],
+        ["swatchBrandFilter","Dropdown","Brand client-side filter"],
+        ["swatchClearFilters","Button","Reset all filters"],
+        ["swatchResultCount","Text","N swatches count (aria-live)"],
+        ["swatchEmptyState","Box","No results state"]
+      ]},
+      { name: "Swatch Grid", repeater: "swatchGridRepeater", impl: `<h4>🎨 Implementation — Swatch Grid (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: CMS-driven repeater grid — up to 5 swatches selectable per request.</p>
+<ul>
+  <li><strong>#swatchGridRepeater</strong>: Repeater connected to #swatchDataset — one card per fabric swatch.</li>
+  <li><strong>#swatchCard</strong>: Box — border color set to mountainBlue (#5B8FA8) when selected.</li>
+  <li><strong>#swatchColorDot</strong>: Box — background set to swatch hexColor.</li>
+  <li><strong>#swatchImage</strong>: Image — alt text set to "{name} fabric swatch by {brand}".</li>
+  <li><strong>#swatchName</strong>: Text — swatch name.</li>
+  <li><strong>#swatchMaterial</strong>: Text — material type.</li>
+  <li><strong>#swatchBrand</strong>: Text — brand name.</li>
+  <li><strong>#swatchOutOfStock</strong>: Expanded when <code>inStock=false</code>. Select button disabled.</li>
+  <li><strong>#swatchSelectedBadge</strong>: Expanded when swatch is in current selection.</li>
+  <li><strong>#swatchSelectBtn</strong>: Button — label toggles "Add" / "Remove". Disabled for unselected swatches when max-5 limit reached.</li>
+</ul>`, elements: [
+        ["swatchGridRepeater","Repeater","CMS swatch grid"]
+      ], children: [
+        ["swatchCard","Box","Card container (border on select)"],
+        ["swatchColorDot","Box","Color preview dot"],
+        ["swatchImage","Image","Swatch fabric image"],
+        ["swatchName","Text","Swatch name"],
+        ["swatchMaterial","Text","Material type"],
+        ["swatchBrand","Text","Brand name"],
+        ["swatchOutOfStock","Box","Out of stock overlay"],
+        ["swatchSelectedBadge","Box","Selected checkmark badge"],
+        ["swatchSelectBtn","Button","Add / Remove toggle"]
+      ]},
+      { name: "Selection Tray", repeater: "swatchSelectionRepeater", impl: `<h4>🛒 Implementation — Selection Tray (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: Collapsed tray that expands when selections &gt; 0. Shows mini cards for each selected swatch with remove buttons.</p>
+<ul>
+  <li><strong>#swatchTraySection</strong>: Collapsed when 0 selections, expanded otherwise.</li>
+  <li><strong>#swatchTrayTitle</strong>: Text — "Your Selections (N / 5)".</li>
+  <li><strong>#swatchSelectionRepeater</strong>: Mini repeater — one item per selected swatch.</li>
+  <li><strong>#swatchTrayDot</strong>: Box — color dot (repeater child), background set to hexColor.</li>
+  <li><strong>#swatchTrayName</strong>: Text — swatch name (repeater child).</li>
+  <li><strong>#swatchTrayRemove</strong>: Button — remove this swatch from selection (repeater child).</li>
+  <li><strong>#swatchTrayProceedBtn</strong>: Opens the request form overlay.</li>
+  <li><strong>#swatchTrayClearBtn</strong>: Clears all selections.</li>
+</ul>`, elements: [
+        ["swatchTraySection","Section","Collapsed tray (expands on selection)"],
+        ["swatchTrayTitle","Text","Your Selections (N / 5)"],
+        ["swatchSelectionRepeater","Repeater","Selected swatch mini-cards"],
+        ["swatchTrayProceedBtn","Button","Open request form"],
+        ["swatchTrayClearBtn","Button","Clear all selections"]
+      ], children: [
+        ["swatchTrayDot","Box","Color preview dot"],
+        ["swatchTrayName","Text","Swatch name"],
+        ["swatchTrayRemove","Button","Remove swatch"]
+      ]},
+      { name: "Request Form", impl: `<h4>📋 Implementation — Request Form (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: Modal overlay with shipping address form — collapsed until Proceed is clicked.</p>
+<ul>
+  <li><strong>#swatchFormOverlay</strong>: Collapsible overlay — expanded by <code>openForm()</code>.</li>
+  <li><strong>#swatchFormModal</strong>: Inner modal container — accessible dialog via <code>setupAccessibleDialog()</code>.</li>
+  <li><strong>#swatchFormClose</strong>: X button — collapses overlay.</li>
+  <li><strong>#swatchFirstName</strong>, <strong>#swatchLastName</strong>: Required name fields.</li>
+  <li><strong>#swatchEmail</strong>: Required email field (regex validated).</li>
+  <li><strong>#swatchAddress1</strong>: Required street address.</li>
+  <li><strong>#swatchAddress2</strong>: Optional address line 2.</li>
+  <li><strong>#swatchCity</strong>, <strong>#swatchState</strong>: Required city/state.</li>
+  <li><strong>#swatchZip</strong>: Required 5-digit ZIP (regex validated).</li>
+  <li><strong>#swatchPhone</strong>: Optional phone.</li>
+  <li><strong>#swatchSubmitBtn</strong>: Submit button — label cycles "Send My Swatches" → "Sending..." → reset.</li>
+  <li><strong>#swatchFormError</strong>: Validation/API error text — collapsed until error occurs.</li>
+  <li><strong>#swatchFormSuccess</strong>: Success state — collapsed until submission succeeds.</li>
+  <li><strong>#swatchSuccessShopBtn</strong>: Post-success "Continue Shopping" button — collapses overlay.</li>
+  <li>Calls <code>submitSwatchRequest()</code> backend function → triggers 4-email nurture sequence.</li>
+</ul>`, elements: [
+        ["swatchFormOverlay","Box","Form modal overlay"],
+        ["swatchFormModal","Box","Accessible dialog container"],
+        ["swatchFormClose","Button","Close form (X)"],
+        ["swatchFirstName","Input","First name (required)"],
+        ["swatchLastName","Input","Last name (required)"],
+        ["swatchEmail","Input","Email (required, validated)"],
+        ["swatchAddress1","Input","Street address (required)"],
+        ["swatchAddress2","Input","Address line 2 (optional)"],
+        ["swatchCity","Input","City (required)"],
+        ["swatchState","Input","State (required)"],
+        ["swatchZip","Input","ZIP 5-digit (required)"],
+        ["swatchPhone","Input","Phone (optional)"],
+        ["swatchSubmitBtn","Button","Submit — label cycles on submit"],
+        ["swatchFormError","Text","Validation/API error"],
+        ["swatchFormSuccess","Box","Success state"],
+        ["swatchSuccessShopBtn","Button","Continue shopping post-success"]
+      ]},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Fabric Swatches)</h4>
+<ul>
+  <li><strong>#swatchSchemaHtml</strong>: HtmlComponent — receives Service JSON-LD schema for free fabric swatch program. Code sets via <code>.html</code> or <code>.value</code> property (whichever available).</li>
+  <li>Schema type: <code>Service</code> — Free Fabric Swatch Program, price: $0, provider: Carolina Futons.</li>
+</ul>`, elements: [
+        ["swatchSchemaHtml","HtmlComponent","Service JSON-LD schema"]
+      ]}
+    ]
+  },
+  {
+    name: "Wishlist Share", file: "Wishlist Share.js", priority: "P1", est: "25 min",
+    sections: [
+      { name: "Token Resolution", impl: `<h4>🔑 Implementation — Token Resolution (Wishlist Share)</h4>
+<p><strong>Route</strong>: <code>/wishlist-share?token=&lt;token&gt;</code> — public shareable wishlist page.</p>
+<ul>
+  <li><strong>#wishlistShareContentSection</strong>: Main content section. Code sets <code>opacity=0.4</code> as skeleton while token resolves, restores on success.</li>
+  <li><strong>#wishlistShareInvalidSection</strong>: Shown when token is missing, expired, or invalid.</li>
+  <li><strong>#wishlistShareInvalidText</strong>: Text — human-readable error (invalid/expired/missing token message).</li>
+  <li><strong>#wishlistShareShopBtn</strong>: "Shop Now" button — navigates to <code>/shop-main</code>. Wired in all states.</li>
+  <li>Token resolved via <code>resolveShareToken()</code> backend function. If <code>result.valid=false</code>, noindex applied and invalid state shown.</li>
+  <li><strong>#wishlistShareTitle</strong>: Text — "{ownerName}'s Wishlist".</li>
+  <li><strong>#wishlistShareSubtitle</strong>: Text — "N item(s)".</li>
+  <li><strong>#wishlistShareEmptySection</strong>: Shown when wishlist has 0 items.</li>
+</ul>`, elements: [
+        ["wishlistShareContentSection","Section","Main content (opacity skeleton)"],
+        ["wishlistShareInvalidSection","Section","Invalid/expired token state"],
+        ["wishlistShareInvalidText","Text","Error message for invalid token"],
+        ["wishlistShareShopBtn","Button","→ /shop-main (all states)"],
+        ["wishlistShareTitle","Text","'{ownerName}'s Wishlist'"],
+        ["wishlistShareSubtitle","Text","N item(s) count"],
+        ["wishlistShareEmptySection","Section","Empty wishlist state"]
+      ]},
+      { name: "Product Cards", repeater: "wishlistShareRepeater", impl: `<h4>🛍️ Implementation — Product Cards (Wishlist Share)</h4>
+<p><strong>Layout</strong>: Repeater of shared wishlist product cards — image, name, add-to-cart.</p>
+<ul>
+  <li><strong>#wishlistShareRepeater</strong>: Repeater — one card per wishlist item.</li>
+  <li><strong>#shareImage</strong>: Product image (repeater child) — src and alt set via <code>populateShareCard()</code>.</li>
+  <li><strong>#shareName</strong>: Product name text (repeater child) — set via <code>populateShareCard()</code>.</li>
+  <li>onItemReady registered BEFORE .data is set (Velo requirement).</li>
+  <li>Item data shape: <code>{ _id, productId, productName, productImage }</code>.</li>
+</ul>`, elements: [
+        ["wishlistShareRepeater","Repeater","Shared wishlist product cards"]
+      ], children: [
+        ["shareImage","Image","Product image"],
+        ["shareName","Text","Product name"],
+        ["shareAddCart","Button","Add to cart"]
+      ]},
+      { name: "Add to Cart", impl: `<h4>🛒 Implementation — Add to Cart (Wishlist Share)</h4>
+<ul>
+  <li><strong>#shareAddCart</strong>: Add to Cart button per card (repeater child). States: "Add to Cart" → "Adding..." → "Added!" → reset (2s delay).</li>
+  <li>On error: label shows "Error — Try Again", re-enables after 2s.</li>
+  <li>Calls <code>addToCart(itemData.productId)</code> from <code>public/cartService</code> (dynamic import).</li>
+</ul>`, elements: []},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Wishlist Share)</h4>
+<ul>
+  <li>Valid wishlist: dynamic title "Share {ownerName}'s Wishlist", meta description "N items chosen by {ownerName}", OG tags with first product image.</li>
+  <li>Invalid/missing token: noindex applied via <code>seo.setMetaTag({ name: 'robots', content: 'noindex' })</code>.</li>
+  <li>All SEO set via <code>wix-seo</code> API — no HTML component needed.</li>
+</ul>`, elements: []}
+    ]
+  },
+  {
+    name: "Showroom (Product Page)", file: "showroomService.web.js + Product Page.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
+<p><strong>CF-ac80 S1</strong>: Surfaces a "Book a Showroom Visit" CTA on the Product Page that launches Wix Bookings.</p>
+<ul>
+  <li><strong>#showroomCTA</strong>: Button — label "Book a Showroom Visit". onClick navigates to <code>/booking-calendar/showroom-visit</code> via <code>getShowroomBookingUrl()</code> backend call.</li>
+  <li>Loaded as deferred section in <code>prioritizeSections()</code> — does not block above-fold render.</li>
+  <li>Element is optional — fails silently if absent (not all product page variants need this).</li>
+</ul>`, elements: [
+        ["showroomCTA","Button","Book a Showroom Visit → Wix Bookings"]
+      ]},
+      { name: "QR / Store Mode (S3)", impl: `<h4>📱 Implementation — QR / Store Mode (Product Page)</h4>
+<p><strong>CF-1792 S3</strong>: When staff scan a QR code on a product, URL includes <code>?qr=1</code>, triggering a staff-facing banner.</p>
+<ul>
+  <li><strong>#storeModeBar</strong>: Text element — shown only when <code>isQrMode(query)</code> returns true (qr=1 in URL). Displays "Store Mode" staff instructions.</li>
+  <li>Collapses automatically in normal customer UX (no qr param).</li>
+</ul>`, elements: [
+        ["storeModeBar","Text","Staff store-mode banner (qr=1 only)"]
+      ]}
+    ]
+  },
+  {
+    name: "Showroom (Category Page)", file: "showroomService.web.js + Category Page.js", priority: "P2", est: "10 min",
+    sections: [
+      { name: "See It In Store Badge (S2)", impl: `<h4>🏷️ Implementation — See It In Store Badge (Category Page)</h4>
+<p><strong>CF-1wvf S2</strong>: Badge overlay on product cards for showroom-eligible products.</p>
+<ul>
+  <li><strong>#showroomBadge</strong>: Text element inside the category grid repeater item. Text "See It In Store". Shown only when <code>isShowroomEligible(itemData)</code> returns true.</li>
+  <li>Eligibility: product tag "showroom-eligible" (ribbon text, case-insensitive) OR <code>customFields.showroomEligible === true</code>.</li>
+  <li>Dynamic import of <code>showroomService.web.js</code> — does not block card render.</li>
+</ul>`, elements: [
+        ["showroomBadge","Text","See It In Store badge (repeater child)"]
+      ]}
+    ]
+  },
+  {
+    name: "Showroom (Home Page)", file: "showroomService.web.js + Home.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Showroom Section (S4)", impl: `<h4>🏪 Implementation — Home Page Showroom Section (S4)</h4>
+<p><strong>CF-6cxf S4</strong>: Dedicated showroom section on the Home page with hours, address, booking CTA, and map link.</p>
+<ul>
+  <li><strong>#showroomSection</strong>: Section container — hidden by default, shown after <code>getShowroomSectionData()</code> succeeds.</li>
+  <li><strong>#showroomAddress</strong>: Text — multi-line: name, street, city/state/zip, phone (from SHOWROOM_INFO constant).</li>
+  <li><strong>#showroomHours</strong>: Text — formatted hours (Wed–Fri 10–5, Sat 10–4, Sun–Tue Closed) via <code>formatShowroomHours()</code>.</li>
+  <li><strong>#showroomBookingCTA</strong>: Button — label "Book a Visit", onClick navigates to Wix Bookings service URL.</li>
+  <li><strong>#showroomMapEmbed</strong>: Link/Button — <code>.url</code> set to Google Maps search URL for the showroom address.</li>
+  <li>Loaded as deferred section — fails silently if elements absent.</li>
+</ul>`, elements: [
+        ["showroomSection","Section","Showroom info container (hidden by default)"],
+        ["showroomAddress","Text","Address: name, street, city/state/zip, phone"],
+        ["showroomHours","Text","Formatted hours (Wed–Fri/Sat/closed)"],
+        ["showroomBookingCTA","Button","Book a Visit → Wix Bookings"],
+        ["showroomMapEmbed","Button","Google Maps link (url property set)"]
       ]}
     ]
   }
