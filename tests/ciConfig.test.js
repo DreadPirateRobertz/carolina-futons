@@ -18,32 +18,24 @@ const ciYaml = yaml.load(readFileSync(ciPath, 'utf8'));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function getAllSteps(workflow) {
-  return Object.values(workflow.jobs).flatMap(job => job.steps || []);
-}
-
-function getCodecovSteps(workflow) {
-  return getAllSteps(workflow).filter(
-    step => typeof step.uses === 'string' && step.uses.startsWith('codecov/codecov-action')
-  );
-}
-
-function getSetupNodeSteps(workflow) {
-  return getAllSteps(workflow).filter(
-    step => typeof step.uses === 'string' && step.uses.startsWith('actions/setup-node')
-  );
+function getStepsByAction(workflow, actionPrefix) {
+  return Object.values(workflow.jobs)
+    .flatMap(job => job.steps || [])
+    .filter(step => typeof step.uses === 'string' && step.uses.startsWith(actionPrefix));
 }
 
 // ── CF-1d06: fail_ci_if_error: true ─────────────────────────────────────────
 
 describe('CF-1d06: Codecov fail_ci_if_error', () => {
+  // Existence check matters: the for...of assertion below silently passes on empty arrays,
+  // so this guard ensures a missing step doesn't produce a false green.
   it('ci.yml has at least one codecov upload step', () => {
-    const steps = getCodecovSteps(ciYaml);
+    const steps = getStepsByAction(ciYaml, 'codecov/codecov-action');
     expect(steps.length).toBeGreaterThan(0);
   });
 
   it('all codecov upload steps have fail_ci_if_error: true', () => {
-    const codecovSteps = getCodecovSteps(ciYaml);
+    const codecovSteps = getStepsByAction(ciYaml, 'codecov/codecov-action');
     for (const step of codecovSteps) {
       expect(
         step.with?.fail_ci_if_error,
@@ -56,13 +48,14 @@ describe('CF-1d06: Codecov fail_ci_if_error', () => {
 // ── CF-7d6k: cache-dependency-path ──────────────────────────────────────────
 
 describe('CF-7d6k: setup-node cache-dependency-path', () => {
+  // Existence check guards against the for...of loop passing vacuously on an empty array.
   it('ci.yml has at least one setup-node step', () => {
-    const steps = getSetupNodeSteps(ciYaml);
+    const steps = getStepsByAction(ciYaml, 'actions/setup-node');
     expect(steps.length).toBeGreaterThan(0);
   });
 
   it('all setup-node steps with cache: npm have cache-dependency-path set', () => {
-    const setupNodeSteps = getSetupNodeSteps(ciYaml);
+    const setupNodeSteps = getStepsByAction(ciYaml, 'actions/setup-node');
     for (const step of setupNodeSteps) {
       if (step.with?.cache === 'npm') {
         expect(
