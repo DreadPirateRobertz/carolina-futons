@@ -24,7 +24,7 @@ import {
 const MEMBER = { _id: 'mem-123', loginEmail: 'alice@example.com', profile: { nickname: 'Alice' } };
 
 const BASE_URL = 'https://www.carolinafutons.com';
-const SHARE_PATH = '/shared-wishlist';
+const SHARE_PATH = '/wishlist-share';
 
 // ── Helpers ─────────────────────────────────────────────────────────
 

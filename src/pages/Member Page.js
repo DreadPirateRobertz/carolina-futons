@@ -683,6 +683,10 @@ async function initWishlist() {
           }, 3000);
         } catch (err) {
           console.error('[MemberPage] #shareWishlistBtn error:', err);
+          try {
+            $w('#shareWishlistBtn').label = 'Share Failed';
+            setTimeout(() => { $w('#shareWishlistBtn').label = 'Share Wishlist'; }, 3000);
+          } catch (e) {}
         }
       });
     } catch (e) {}

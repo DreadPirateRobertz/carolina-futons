@@ -23,7 +23,7 @@ import { currentMember } from 'wix-members-backend';
 // ── addShareToken ─────────────────────────────────────────────────────────────
 
 const BASE_URL = 'https://www.carolinafutons.com';
-const SHARE_PATH = '/shared-wishlist';
+const SHARE_PATH = '/wishlist-share';
 const DEFAULT_EXPIRY_DAYS = 30;
 const MIN_EXPIRY_DAYS = 1;
 const MAX_EXPIRY_DAYS = 365;
