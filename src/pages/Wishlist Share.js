@@ -122,7 +122,9 @@ function _applyNoindex() {
   try {
     seo.setTitle(buildWishlistTitle(null));
     seo.setMetaTag({ name: 'robots', content: 'noindex' });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[WishlistShare] Failed to apply noindex — page may be indexed:', e);
+  }
 }
 
 // ── State helpers ─────────────────────────────────────────────────────────────

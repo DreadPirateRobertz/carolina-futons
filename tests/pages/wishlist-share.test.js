@@ -140,6 +140,13 @@ describe('buildWishlistDescription', () => {
     expect(typeof desc).toBe('string');
     expect(desc.length).toBeGreaterThan(0);
   });
+
+  it('handles null ownerName without emitting literal "null"', () => {
+    const desc = buildWishlistDescription(null, 2);
+    expect(desc).not.toContain('null');
+    expect(typeof desc).toBe('string');
+    expect(desc.length).toBeGreaterThan(0);
+  });
 });
 
 // ── S5: buildWishlistOgTags ───────────────────────────────────────────────────

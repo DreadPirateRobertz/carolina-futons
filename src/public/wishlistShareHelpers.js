@@ -58,15 +58,16 @@ export function buildWishlistTitle(ownerName) {
  * @returns {string}
  */
 export function buildWishlistDescription(ownerName, itemCount) {
+  const name = ownerName || 'Someone';
   const items = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
-  const raw = `${ownerName} has ${items} saved on ${BRAND}. Browse their wishlist and shop futons, frames, and more.`;
+  const raw = `${name} has ${items} saved on ${BRAND}. Browse their wishlist and shop futons, frames, and more.`;
   return raw.length <= 160 ? raw : raw.slice(0, 157) + '…';
 }
 
 /**
  * Build Open Graph meta tag objects for the share page.
- * @param {string} title - Pre-built page title
- * @param {string} description - Pre-built description
+ * @param {string} ownerName - Wishlist owner's display name
+ * @param {string} description - Pre-built meta description string
  * @param {Object[]} items - Wishlist items (uses first item's productImage for og:image)
  * @returns {{ property: string, content: string }[]}
  */
