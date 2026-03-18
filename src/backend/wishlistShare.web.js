@@ -76,11 +76,18 @@ export const addShareToken = webMethod(
     const expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
     const shareUrl = `${BASE_URL}${SHARE_PATH}?share=${token}`;
 
+    // Resolve display name for resolveShareToken (S1) compatibility
+    const memberName = member.profile?.nickname ||
+      member.contactDetails?.firstName ||
+      member.loginEmail ||
+      '';
+
     // Persist to CMS
     try {
       await wixData.insert('WishlistShareTokens', {
         token,
         memberId: member._id,
+        memberName,
         expiresAt,
         createdAt: now,
       });

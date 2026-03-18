@@ -108,6 +108,12 @@ describe('addShareToken — happy path', () => {
     expect(record.createdAt).toBeInstanceOf(Date);
   });
 
+  it('stored record includes memberName from profile nickname', async () => {
+    await addShareToken();
+    const record = __getInserted('WishlistShareTokens')[0];
+    expect(record.memberName).toBe('Alice'); // MEMBER.profile.nickname
+  });
+
   it('stored token matches returned token', async () => {
     const result = await addShareToken();
     const record = __getInserted('WishlistShareTokens')[0];
