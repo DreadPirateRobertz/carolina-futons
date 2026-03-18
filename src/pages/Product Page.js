@@ -170,6 +170,10 @@ async function initProductPage() {
       }, critical: false },
       // Full swatch request form flow (name, email, address, swatch selection)
       { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
+      // CF-ac80 (S1) / CF-1792 (S3): Showroom CTA + QR mode banner
+      { name: 'showroomCTA', init: async () => { const m = await import('backend/showroomService.web.js'); await initShowroomCTA($w, state, m); }, critical: false },
+      // CF-9fv2: Gift product button — isolated, only touches #giftProductBtn
+      { name: 'giftProductButton', init: () => initGiftProductButton($w), critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
@@ -389,3 +393,65 @@ async function loadAlsoBought() {
   } catch (err) { console.error('Error loading also bought:', err); }
 }
 
+
+// ── Gift Product Button (CF-9fv2) ─────────────────────────────────────
+// Isolated — only touches #giftProductBtn on Product Page.
+
+/**
+ * Initialize the Give as a Gift button on Product Page.
+ * Targets: #giftProductBtn
+ * @param {Function} $wFn - Wix selector function
+ */
+export function initGiftProductButton($wFn) {
+  try {
+    const btn = $wFn('#giftProductBtn');
+    btn.text = 'Give as a Gift';
+    try { btn.accessibility.ariaLabel = 'Give this as a gift — shop Carolina Futons gift cards'; } catch (e) {}
+    btn.onClick(() => {
+      import('wix-location-frontend').then(loc => {
+        const navFn = loc.default?.to ?? loc.to;
+        navFn('/gift-cards');
+      }).catch(() => {});
+    });
+  } catch (e) {
+    // Element may not exist on all product page layouts
+  }
+}
+
+// ── Showroom CTA / QR Mode (CF-ac80 S1, CF-1792 S3) ──────────────────
+// S1: #showroomCTA button → Wix Bookings "Book a Showroom Visit"
+// S3: ?qr=1 → #storeModeBar staff-facing banner
+
+/**
+ * @param {Function} $wFn - Wix $w selector
+ * @param {object} _state - page state (reserved for product context)
+ * @param {object} svc - pre-imported showroomService.web.js module
+ */
+async function initShowroomCTA($wFn, _state, svc) {
+  // S3: QR mode — detect ?qr=1, show #storeModeBar staff banner
+  try {
+    const wixLoc = await import('wix-location-frontend');
+    const query = wixLoc.default?.query ?? wixLoc.query ?? {};
+    if (svc.isQrMode(query)) {
+      const bar = $wFn('#storeModeBar');
+      bar.text = svc.buildStoreModeText();
+      bar.show();
+    }
+  } catch (e) { /* #storeModeBar optional */ }
+
+  // S1: Showroom CTA button → Wix Bookings
+  try {
+    const btn = $wFn('#showroomCTA');
+    btn.label = 'Book a Showroom Visit';
+    try { btn.accessibility.ariaLabel = 'Book a showroom visit at Carolina Futons in Hendersonville NC'; } catch (e) {}
+    btn.onClick(async () => {
+      try {
+        const result = await svc.getShowroomBookingUrl();
+        if (result.url) {
+          const loc = await import('wix-location-frontend');
+          (loc.default?.to ?? loc.to)(result.url);
+        }
+      } catch (err) { console.error('[ProductPage] Showroom booking nav failed:', err); }
+    });
+  } catch (e) { /* #showroomCTA optional */ }
+}
