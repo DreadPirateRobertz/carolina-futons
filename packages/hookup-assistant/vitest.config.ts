@@ -10,7 +10,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/main.tsx'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/main.tsx', // entry-point boilerplate: ReactDOM.createRoot render call only
+      ],
       thresholds: {
         statements: 80,
         branches: 75,

@@ -1,8 +1,6 @@
 {
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^4.0.18",
     "@wix/cli": "^1.0.0",
     "@wix/eslint-plugin-cli": "^1.0.0",
@@ -10,7 +8,6 @@
     "jsdom": "^29.0.0",
     "puppeteer": "^24.37.5",
     "react": "16.14.0",
-    "react-dom": "^19.2.4",
     "vitest": "^4.0.18"
   },
   "engines": {
