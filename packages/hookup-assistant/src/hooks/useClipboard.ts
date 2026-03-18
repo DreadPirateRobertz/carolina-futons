@@ -9,8 +9,10 @@ export function useClipboard() {
 
   const copy = useCallback(async (text: string) => {
     try {
+      let success = false;
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
+        success = true;
       } else {
         // Fallback for environments without Clipboard API (older Wix iframes)
         const ta = document.createElement('textarea');
@@ -20,13 +22,16 @@ export function useClipboard() {
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        document.execCommand('copy');
+        success = document.execCommand('copy');
         document.body.removeChild(ta);
       }
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-      return true;
-    } catch {
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }
+      return success;
+    } catch (err) {
+      console.warn('[useClipboard] copy failed:', err);
       return false;
     }
   }, []);
