@@ -3,7 +3,7 @@
  * Tests: dynamic title, OG tags, noindex for invalid/private wishlists
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { __getTitle, __getMetaTags, __reset as __resetSeo } from './__mocks__/wix-seo.js';
+import { __getTitle, __getMetaTags, __reset as __resetSeo, seo } from './__mocks__/wix-seo.js';
 
 // ── $w mock ───────────────────────────────────────────────────────────────────
 
@@ -96,6 +96,13 @@ describe('Wishlist Share S5 — SEO wiring', () => {
     expect(ogTitle.content).toContain('Alice');
   });
 
+  it('sets name=description meta tag', async () => {
+    await onReadyHandler();
+    const desc = __getMetaTags().find(t => t.name === 'description');
+    expect(desc).toBeTruthy();
+    expect(desc.content).toContain('Alice');
+  });
+
   it('sets og:description meta tag', async () => {
     await onReadyHandler();
     const ogDesc = __getMetaTags().find(t => t.property === 'og:description');
@@ -168,6 +175,18 @@ describe('Wishlist Share S5 — SEO wiring', () => {
     const title = __getTitle();
     expect(title).toContain('Carolina Futons');
     expect(title.length).toBeGreaterThan(0);
+  });
+
+  // ── SEO API error resilience ──────────────────────────────────────────────
+
+  it('page does not throw when seo.setTitle throws during _applySeo', async () => {
+    const original = seo.setTitle;
+    seo.setTitle = vi.fn(() => { throw new Error('Wix SEO API unavailable'); });
+    try {
+      await expect(onReadyHandler()).resolves.not.toThrow();
+    } finally {
+      seo.setTitle = original;
+    }
   });
 
   // ── Empty valid wishlist ─────────────────────────────────────────────────
