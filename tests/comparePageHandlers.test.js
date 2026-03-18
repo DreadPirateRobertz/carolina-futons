@@ -198,7 +198,7 @@ describe('Compare Page — $onReady handler', () => {
 
   it('populates compareAttrRepeater', async () => {
     await onReadyHandler();
-    expect(getEl('#compareAttrRepeater').data).toHaveLength(9); // 9 COMPARE_ATTRIBUTES
+    expect(getEl('#compareAttrRepeater').data).toHaveLength(10); // 10 COMPARE_ATTRIBUTES
   });
 
   it('registers onItemReady on compareAttrRepeater', async () => {

@@ -127,6 +127,9 @@ function _renderColumns(prods) {
         console.error('[ComparePage] Add to cart failed:', err);
         $item('#compareColAddCart').label = 'Error — Try Again';
         $item('#compareColAddCart').enable();
+        setTimeout(() => {
+          _safe(() => { $item('#compareColAddCart').label = 'Add to Cart'; });
+        }, 2000);
       }
     });
 

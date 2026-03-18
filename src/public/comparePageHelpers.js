@@ -79,6 +79,7 @@ export const COMPARE_ATTRIBUTES = [
   { key: 'price',            label: 'Price' },
   { key: 'rating',           label: 'Rating' },
   { key: 'inStock',          label: 'In Stock' },
+  { key: 'availableFabrics', label: 'Available Fabrics' },
 ];
 
 /**
@@ -144,13 +145,13 @@ export function buildAttributeRows(products) {
 export function buildMobileSnapCss() {
   return `
 <style>
-  .compare-grid-scroll {
+  #compareGridBox {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
   }
-  .compare-col {
+  #compareColRepeater > * {
     flex: 0 0 100%;
     scroll-snap-align: start;
   }

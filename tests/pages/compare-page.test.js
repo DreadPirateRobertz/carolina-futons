@@ -237,8 +237,8 @@ describe('S3 — getProductAttribute', () => {
 });
 
 describe('S3 — COMPARE_ATTRIBUTES', () => {
-  it('contains exactly 9 attributes', () => {
-    expect(COMPARE_ATTRIBUTES).toHaveLength(9);
+  it('contains exactly 10 attributes', () => {
+    expect(COMPARE_ATTRIBUTES).toHaveLength(10);
   });
 
   it('includes all required attribute names', () => {
@@ -252,6 +252,7 @@ describe('S3 — COMPARE_ATTRIBUTES', () => {
     expect(names).toContain('Price');
     expect(names).toContain('Rating');
     expect(names).toContain('In Stock');
+    expect(names).toContain('Available Fabrics');
   });
 
   it('each attribute has a label and key', () => {

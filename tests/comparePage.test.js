@@ -33,12 +33,6 @@ function getEl2(sel) {
   return elements2.get(sel);
 }
 
-let handler2 = null;
-
-// Note: globalThis.$w is already set by comparePageHandlers.test.js import.
-// We reuse the same global but track our own onReady capture.
-const _origOnReady = globalThis.$w?.onReady;
-
 // ── Product fixtures ─────────────────────────────────────────────────────────
 
 const prodSale = {
@@ -76,22 +70,6 @@ vi.mock('public/cartService', () => ({
 // ── Test suite ────────────────────────────────────────────────────────────────
 
 describe('Compare Page — edge cases', () => {
-  let onReady2;
-
-  beforeAll(async () => {
-    // Capture the handler by temporarily replacing $w.onReady
-    const origW = globalThis.$w;
-    globalThis.$w = Object.assign(
-      (sel) => getEl2(sel),
-      {
-        onReady: (fn) => { onReady2 = fn; },
-      }
-    );
-    // Re-import (cached module — handler was already captured; use vi.importActual workaround)
-    // Since the page module is already loaded, we access the handler via the original capture
-    // and just reset $w back. Tests use onReady from comparePageHandlers.test.js capture.
-    globalThis.$w = origW;
-  });
 
   beforeEach(() => {
     elements2.clear();
