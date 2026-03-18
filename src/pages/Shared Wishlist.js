@@ -1,5 +1,5 @@
 // Shared Wishlist.js - Public read-only view of a member's shared wishlist
-// URL: /wishlist/{shareToken} (dynamic page with router)
+// URL: /wishlist/{shareToken} — configured in Wix Router; path[1] reads the token segment
 // Spec: cf-complete-product-spec.md § Spec 03 — Wishlist Share View
 // Stories: S1 (token resolution + fetch), S2 (rendering)
 
@@ -12,11 +12,8 @@ import {
 
 $w.onReady(async () => {
   try {
-    // Collapse all state sections on load
-    const stateSections = [
-      '#sharedWishNotFound', '#sharedWishPrivate', '#sharedWishEmpty', '#sharedWishSection',
-    ];
-    stateSections.forEach(sel => { try { $w(sel).hide(); } catch (e) {} });
+    // Hide main content section on load (state sections handled by showState)
+    try { $w('#sharedWishSection').hide(); } catch (e) {}
 
     // S1: Resolve token from URL path /wishlist/{shareToken}
     const path = wixLocationFrontend.path;
@@ -31,6 +28,12 @@ $w.onReady(async () => {
 
     if (status === 'private') {
       await showState($w, 'private');
+      return;
+    }
+
+    if (status === 'error') {
+      // DB error — show not_found as closest available fallback
+      await showState($w, 'not_found');
       return;
     }
 

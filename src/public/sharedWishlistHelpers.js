@@ -1,8 +1,10 @@
 // sharedWishlistHelpers.js - Pure helpers for Shared Wishlist page
-// Extracted for unit testability. All functions are side-effect free
-// except renderWishlist and populateCard (which take $w/$item as params).
+// Extracted for unit testability (same pattern as comparePageHelpers).
+// Pure helpers: itemCount, ownerName.
+// Side-effecting: fetchWishlistByToken (wixData), showState/$w, renderWishlist/$w, populateCard/$item.
 
 import wixData from 'wix-data';
+import wixLocationFrontend from 'wix-location-frontend';
 
 // ── Pure string helpers ───────────────────────────────────────────
 
@@ -12,13 +14,13 @@ import wixData from 'wix-data';
  * @returns {string}
  */
 export function itemCount(items) {
-  const n = items.length;
+  const n = (items || []).length;
   return n === 1 ? '1 item' : `${n} items`;
 }
 
 /**
  * Returns "[Name]'s Wishlist" or "A Curated Wishlist" fallback.
- * @param {{ memberName: string|null }} wishlist
+ * @param {{ memberName: string|null|undefined }} wishlist
  * @returns {string}
  */
 export function ownerName(wishlist) {
@@ -28,15 +30,19 @@ export function ownerName(wishlist) {
 }
 
 // ── S1: Token resolution and wishlist fetch ───────────────────────
-// Interface radahn (CF-y24r) will own. Stubbed here so S2 rendering
-// can be built and tested independently.
+// Interface owned by radahn (CF-y24r). This implementation queries
+// MemberWishlists directly — radahn's S1 may replace the data source
+// or add token expiry logic. Coordinate before merging S1.
 
 /**
  * Fetches wishlist record by share token.
  * @param {string} token
- * @returns {Promise<{status: 'ok'|'not_found'|'private', wishlist?: object}>}
+ * @returns {Promise<{status: 'ok'|'not_found'|'private'|'error', wishlist?: object}>}
  */
 export async function fetchWishlistByToken(token) {
+  if (!token || typeof token !== 'string') {
+    return { status: 'not_found' };
+  }
   try {
     const result = await wixData
       .query('MemberWishlists')
@@ -56,7 +62,7 @@ export async function fetchWishlistByToken(token) {
     return { status: 'ok', wishlist: record };
   } catch (err) {
     console.error('[SharedWishlist] fetchWishlistByToken error:', err);
-    return { status: 'not_found' };
+    return { status: 'error' };
   }
 }
 
@@ -64,11 +70,14 @@ export async function fetchWishlistByToken(token) {
 
 /**
  * Shows the appropriate error/state section and hides others.
- * @param {Function} $w
+ * Also hides the main content section (#sharedWishSection).
+ * @param {(selector: string) => {show: Function, hide: Function}} $w
  * @param {'not_found'|'private'|'empty'} state
  */
 export async function showState($w, state) {
-  const sections = ['#sharedWishNotFound', '#sharedWishPrivate', '#sharedWishEmpty'];
+  const sections = [
+    '#sharedWishNotFound', '#sharedWishPrivate', '#sharedWishEmpty', '#sharedWishSection',
+  ];
 
   await Promise.all(sections.map(sel => {
     try { return $w(sel).hide(); } catch (e) { return Promise.resolve(); }
@@ -82,7 +91,9 @@ export async function showState($w, state) {
 
   const target = targetMap[state];
   if (target) {
-    try { await $w(target).show(); } catch (e) {}
+    try { await $w(target).show(); } catch (e) {
+      console.error('[SharedWishlist] showState: could not show', target, e);
+    }
   }
 }
 
@@ -91,7 +102,9 @@ export async function showState($w, state) {
 /**
  * Populates a single repeater card with product data.
  * @param {Function} $item - scoped $w for repeater item
- * @param {object} itemData - wishlist item data
+ * @param {{ name: string, slug: string, mainMedia: string, formattedPrice: string,
+ *           price: number, comparePrice: number|null, ribbon: string|null,
+ *           callForPrice: boolean, productId: string, _id: string }} itemData
  */
 export function populateCard($item, itemData) {
   // Image
@@ -105,8 +118,9 @@ export function populateCard($item, itemData) {
   // Sale price — show only when comparePrice > price
   try {
     const origEl = $item('#sharedWishOrigPrice');
-    if (itemData.comparePrice && itemData.comparePrice > itemData.price) {
-      origEl.text = `Was $${Number(itemData.comparePrice).toFixed(2)}`;
+    const compare = Number(itemData.comparePrice);
+    if (compare && compare > itemData.price) {
+      origEl.text = `Was $${compare.toFixed(2)}`;
       origEl.show();
     } else {
       origEl.hide();
@@ -126,15 +140,18 @@ export function populateCard($item, itemData) {
 
   // Navigation — image, name, view button all navigate to product page
   const navigateToProduct = () => {
-    import('wix-location-frontend').then(m => {
-      const loc = m.default || m;
-      try { loc.to(`/product-page/${itemData.slug}`); } catch (e) {}
-    }).catch(() => {});
+    if (!itemData.slug) {
+      console.error('[SharedWishlist] navigateToProduct: missing slug for item', itemData._id);
+      return;
+    }
+    try { wixLocationFrontend.to(`/product-page/${itemData.slug}`); } catch (e) {
+      console.error('[SharedWishlist] navigateToProduct failed:', e);
+    }
   };
 
-  try { $item('#sharedWishImage').onClick(navigateToProduct); } catch (e) {}
-  try { $item('#sharedWishName').onClick(navigateToProduct); } catch (e) {}
-  try { $item('#sharedWishViewBtn').onClick(navigateToProduct); } catch (e) {}
+  ['#sharedWishImage', '#sharedWishName', '#sharedWishViewBtn'].forEach(sel => {
+    try { $item(sel).onClick(navigateToProduct); } catch (e) {}
+  });
 
   // Add to Cart button
   try {
@@ -156,19 +173,21 @@ export function populateCard($item, itemData) {
           }, 2000);
         } catch (err) {
           console.error('[SharedWishlist] Add to cart error:', err);
-          cartBtn.label = 'Add to Cart';
+          cartBtn.label = 'Error \u2014 Try Again';
           try { cartBtn.enable(); } catch (e) {}
         }
       });
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('[SharedWishlist] populateCard: failed to wire add-to-cart button', e);
+  }
 }
 
 // ── S2: Wishlist rendering ────────────────────────────────────────
 
 /**
  * Renders the full wishlist view.
- * @param {object} wishlist - wishlist record with items[]
+ * @param {{ memberName: string|null, memberAvatar: string|null, items: object[] }} wishlist
  * @param {Function} $w
  */
 export async function renderWishlist(wishlist, $w) {
@@ -176,14 +195,15 @@ export async function renderWishlist(wishlist, $w) {
   try { $w('#sharedWishTitle').text = ownerName(wishlist); } catch (e) {}
   try { $w('#sharedWishSubtitle').text = itemCount(wishlist.items); } catch (e) {}
 
-  // Avatar (hide on load — show if available)
-  try { $w('#sharedWishMemberAvatar').hide(); } catch (e) {}
-  if (wishlist.memberAvatar) {
-    try {
-      $w('#sharedWishMemberAvatar').src = wishlist.memberAvatar;
-      $w('#sharedWishMemberAvatar').show();
-    } catch (e) {}
-  }
+  // Avatar — hidden on load, shown only when available
+  try {
+    const avatar = $w('#sharedWishMemberAvatar');
+    avatar.hide();
+    if (wishlist.memberAvatar) {
+      avatar.src = wishlist.memberAvatar;
+      avatar.show();
+    }
+  } catch (e) {}
 
   if (!wishlist.items || wishlist.items.length === 0) {
     try { $w('#sharedWishSection').hide(); } catch (e) {}
@@ -197,7 +217,9 @@ export async function renderWishlist(wishlist, $w) {
       populateCard($item, itemData);
     });
     $w('#sharedWishRepeater').data = wishlist.items;
-  } catch (e) {}
+  } catch (e) {
+    console.error('[SharedWishlist] renderWishlist: failed to populate repeater', e);
+  }
 
   try { $w('#sharedWishSection').show(); } catch (e) {}
   try { $w('#sharedWishEmpty').hide(); } catch (e) {}
