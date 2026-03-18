@@ -3270,6 +3270,253 @@ SHARING:
         ["calendarStatus","Text","Status badge"]
       ]}
     ]
+  },
+  {
+    name: "Compare Page", file: "Compare Page.js", priority: "P1", est: "35 min",
+    sections: [
+      { name: "URL Params / Fetch", impl: `<h4>🔗 Implementation — URL Params &amp; Fetch (Compare Page)</h4>
+<p><strong>Route</strong>: <code>/compare?ids=&lt;id1&gt;,&lt;id2&gt;,...</code> (up to 4 products)</p>
+<ul>
+  <li><strong>#compareGridSection</strong>: Main content section. Code sets <code>opacity=0.4</code> as skeleton while products load, restores to <code>1</code> on success.</li>
+  <li><strong>#compareEmptySection</strong>: Shown when no valid IDs in query string. Has <code>#compareEmptyShopBtn</code> → navigates to <code>/shop-main</code>.</li>
+  <li><strong>#compareErrorSection</strong>: Shown on fetch failure. Contains <code>#compareErrorText</code> with error message.</li>
+  <li><strong>#compareAttrSection</strong>: Attributes table section — hidden in empty/error states.</li>
+  <li>Products fetched in parallel via <code>products.getProduct(id)</code> from <code>wix-stores-frontend</code>.</li>
+</ul>`, elements: [
+        ["compareGridSection","Section","Main content — skeleton opacity on load"],
+        ["compareEmptySection","Section","Shown when no products to compare"],
+        ["compareErrorSection","Section","Shown on fetch failure"],
+        ["compareAttrSection","Section","Attributes table section"],
+        ["compareEmptyShopBtn","Button","→ /shop-main (empty state)"],
+        ["compareErrorText","Text","Error message"]
+      ]},
+      { name: "Column Rendering", repeater: "compareColRepeater", impl: `<h4>📊 Implementation — Column Rendering (Compare Page)</h4>
+<p><strong>Layout</strong>: One column per product, side-by-side with image, name, price, add-to-cart, and remove controls.</p>
+<ul>
+  <li><strong>#compareSubtitle</strong>: Text — "Comparing N product(s)".</li>
+  <li><strong>#compareColRepeater</strong>: Repeater — one item per product column.</li>
+  <li><strong>#compareColImage</strong>: Product image (repeater child).</li>
+  <li><strong>#compareColName</strong>: Product name — clickable → product page.</li>
+  <li><strong>#compareColPrice</strong>: Current or sale price.</li>
+  <li><strong>#compareColOrigPrice</strong>: Original price with strikethrough — <span class="impl-warn">hidden if no sale</span>.</li>
+  <li><strong>#compareColBadge</strong>: Sale/ribbon badge — <span class="impl-warn">hidden by default</span>.</li>
+  <li><strong>#compareColAddCart</strong>: Add to Cart button. States: "Add to Cart" → "Adding..." → "Added!" → reset (2s delay).</li>
+  <li><strong>#compareColViewBtn</strong>: View product button — navigates to product page.</li>
+  <li><strong>#compareColRemoveBtn</strong>: Remove from compare — updates URL params without full navigation.</li>
+</ul>`, elements: [
+        ["compareSubtitle","Text","Comparing N products count"],
+        ["compareColRepeater","Repeater","One column per product"]
+      ], children: [
+        ["compareColImage","Image","Product image"],
+        ["compareColName","Text","Product name"],
+        ["compareColPrice","Text","Current/sale price"],
+        ["compareColOrigPrice","Text","Original price strikethrough"],
+        ["compareColBadge","Text","Sale/ribbon badge"],
+        ["compareColAddCart","Button","Add to cart"],
+        ["compareColViewBtn","Button","View product page"],
+        ["compareColRemoveBtn","Button","Remove from compare"]
+      ]},
+      { name: "Attributes Table", repeater: "compareAttrRepeater", impl: `<h4>📋 Implementation — Attributes Table (Compare Page)</h4>
+<p><strong>Layout</strong>: Row-per-attribute repeater — label on left, one cell per product. Differing values highlighted.</p>
+<ul>
+  <li><strong>#compareAttrRepeater</strong>: Repeater — one row per attribute (material, dimensions, weight, etc.).</li>
+  <li><strong>#compareAttrLabel</strong>: Attribute name (repeater child).</li>
+  <li><strong>#compareAttrRow</strong>: HtmlComponent — renders inline-block cells with optional diff highlight background (<code>rgba(168,204,216,0.15)</code>). Falls back to <code>.text</code> with pipe separator if html property unavailable.</li>
+  <li>Rows where all products share the same value show no highlight; differing rows get blue-tinted background.</li>
+</ul>`, elements: [
+        ["compareAttrRepeater","Repeater","Attribute rows"]
+      ], children: [
+        ["compareAttrLabel","Text","Attribute name"],
+        ["compareAttrRow","HtmlComponent","Attribute value cells"]
+      ]},
+      { name: "Mobile &amp; Reset", impl: `<h4>📱 Implementation — Mobile &amp; Reset (Compare Page)</h4>
+<ul>
+  <li><strong>#compareMobileSnapHtml</strong>: HtmlComponent — receives <code>postMessage()</code> with CSS for horizontal snap-scroll on mobile. Only wired when <code>isMobile()</code> returns true.</li>
+  <li><strong>#compareResetBtn</strong>: Start Over button — navigates to <code>/shop-main</code>.</li>
+</ul>`, elements: [
+        ["compareMobileSnapHtml","HtmlComponent","Mobile snap-scroll CSS injection"],
+        ["compareResetBtn","Button","Start Over → /shop-main"]
+      ]},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Compare Page)</h4>
+<ul>
+  <li>Static defaults applied via <code>initPageSeo('compareProducts')</code> before products load.</li>
+  <li>Dynamic title: "Compare [Product A] vs [Product B]" set via <code>seo.setTitle()</code> after fetch.</li>
+  <li>Meta description: dynamically built from product names.</li>
+  <li>Canonical link: <code>/compare</code>.</li>
+  <li><strong>#compareSchemaHtml</strong>: HtmlComponent — receives <code>postMessage()</code> with <code>ItemList</code> JSON-LD schema for all compared products.</li>
+</ul>`, elements: [
+        ["compareSchemaHtml","HtmlComponent","ItemList JSON-LD schema"]
+      ]}
+    ]
+  },
+  {
+    name: "Fabric Swatches", file: "Fabric Swatches.js", priority: "P1", est: "40 min",
+    sections: [
+      { name: "Filter Controls", impl: `<h4>🎛️ Implementation — Filter Controls (Fabric Swatches)</h4>
+<p><strong>Route</strong>: <code>/swatches</code> — optional <code>?product=&lt;slug&gt;</code> pre-filters by product referral.</p>
+<ul>
+  <li><strong>#swatchDataset</strong>: CMS Dataset connected to FabricSwatches collection — filters applied via <code>setFilter()</code>.</li>
+  <li><strong>#swatchSearchInput</strong>: Text input — debounced 250ms search on swatch name and color family.</li>
+  <li><strong>#swatchColorFilter</strong>: Dropdown — filter by color family (CMS field).</li>
+  <li><strong>#swatchMaterialFilter</strong>: Dropdown — filter by material.</li>
+  <li><strong>#swatchBrandFilter</strong>: Dropdown — client-side brand filter applied after dataset filter.</li>
+  <li><strong>#swatchClearFilters</strong>: Button — resets all 4 filter controls and re-applies.</li>
+  <li><strong>#swatchResultCount</strong>: Text — "N swatches" (ARIA live="polite").</li>
+  <li><strong>#swatchEmptyState</strong>: Collapsed by default — expanded when filtered results count is 0.</li>
+</ul>`, elements: [
+        ["swatchDataset","Dataset","FabricSwatches CMS collection"],
+        ["swatchSearchInput","Input","Debounced name/color search"],
+        ["swatchColorFilter","Dropdown","Color family filter"],
+        ["swatchMaterialFilter","Dropdown","Material filter"],
+        ["swatchBrandFilter","Dropdown","Brand client-side filter"],
+        ["swatchClearFilters","Button","Reset all filters"],
+        ["swatchResultCount","Text","N swatches count (aria-live)"],
+        ["swatchEmptyState","Box","No results state"]
+      ]},
+      { name: "Swatch Grid", repeater: "swatchGridRepeater", impl: `<h4>🎨 Implementation — Swatch Grid (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: CMS-driven repeater grid — up to 5 swatches selectable per request.</p>
+<ul>
+  <li><strong>#swatchGridRepeater</strong>: Repeater connected to #swatchDataset — one card per fabric swatch.</li>
+  <li><strong>#swatchCard</strong>: Box — border color set to mountainBlue (#5B8FA8) when selected.</li>
+  <li><strong>#swatchColorDot</strong>: Box — background set to swatch hexColor.</li>
+  <li><strong>#swatchImage</strong>: Image — alt text set to "{name} fabric swatch by {brand}".</li>
+  <li><strong>#swatchName</strong>: Text — swatch name.</li>
+  <li><strong>#swatchMaterial</strong>: Text — material type.</li>
+  <li><strong>#swatchBrand</strong>: Text — brand name.</li>
+  <li><strong>#swatchOutOfStock</strong>: Expanded when <code>inStock=false</code>. Select button disabled.</li>
+  <li><strong>#swatchSelectedBadge</strong>: Expanded when swatch is in current selection.</li>
+  <li><strong>#swatchSelectBtn</strong>: Button — label toggles "Add" / "Remove". Disabled for unselected swatches when max-5 limit reached.</li>
+</ul>`, elements: [
+        ["swatchGridRepeater","Repeater","CMS swatch grid"]
+      ], children: [
+        ["swatchCard","Box","Card container (border on select)"],
+        ["swatchColorDot","Box","Color preview dot"],
+        ["swatchImage","Image","Swatch fabric image"],
+        ["swatchName","Text","Swatch name"],
+        ["swatchMaterial","Text","Material type"],
+        ["swatchBrand","Text","Brand name"],
+        ["swatchOutOfStock","Box","Out of stock overlay"],
+        ["swatchSelectedBadge","Box","Selected checkmark badge"],
+        ["swatchSelectBtn","Button","Add / Remove toggle"]
+      ]},
+      { name: "Selection Tray", repeater: "swatchSelectionRepeater", impl: `<h4>🛒 Implementation — Selection Tray (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: Collapsed tray that expands when selections &gt; 0. Shows mini cards for each selected swatch with remove buttons.</p>
+<ul>
+  <li><strong>#swatchTraySection</strong>: Collapsed when 0 selections, expanded otherwise.</li>
+  <li><strong>#swatchTrayTitle</strong>: Text — "Your Selections (N / 5)".</li>
+  <li><strong>#swatchSelectionRepeater</strong>: Mini repeater — one item per selected swatch.</li>
+  <li><strong>#swatchTrayDot</strong>: Box — color dot (repeater child), background set to hexColor.</li>
+  <li><strong>#swatchTrayName</strong>: Text — swatch name (repeater child).</li>
+  <li><strong>#swatchTrayRemove</strong>: Button — remove this swatch from selection (repeater child).</li>
+  <li><strong>#swatchTrayProceedBtn</strong>: Opens the request form overlay.</li>
+  <li><strong>#swatchTrayClearBtn</strong>: Clears all selections.</li>
+</ul>`, elements: [
+        ["swatchTraySection","Section","Collapsed tray (expands on selection)"],
+        ["swatchTrayTitle","Text","Your Selections (N / 5)"],
+        ["swatchSelectionRepeater","Repeater","Selected swatch mini-cards"],
+        ["swatchTrayProceedBtn","Button","Open request form"],
+        ["swatchTrayClearBtn","Button","Clear all selections"]
+      ], children: [
+        ["swatchTrayDot","Box","Color preview dot"],
+        ["swatchTrayName","Text","Swatch name"],
+        ["swatchTrayRemove","Button","Remove swatch"]
+      ]},
+      { name: "Request Form", impl: `<h4>📋 Implementation — Request Form (Fabric Swatches)</h4>
+<p><strong>Layout</strong>: Modal overlay with shipping address form — collapsed until Proceed is clicked.</p>
+<ul>
+  <li><strong>#swatchFormOverlay</strong>: Collapsible overlay — expanded by <code>openForm()</code>.</li>
+  <li><strong>#swatchFormModal</strong>: Inner modal container — accessible dialog via <code>setupAccessibleDialog()</code>.</li>
+  <li><strong>#swatchFormClose</strong>: X button — collapses overlay.</li>
+  <li><strong>#swatchFirstName</strong>, <strong>#swatchLastName</strong>: Required name fields.</li>
+  <li><strong>#swatchEmail</strong>: Required email field (regex validated).</li>
+  <li><strong>#swatchAddress1</strong>: Required street address.</li>
+  <li><strong>#swatchAddress2</strong>: Optional address line 2.</li>
+  <li><strong>#swatchCity</strong>, <strong>#swatchState</strong>: Required city/state.</li>
+  <li><strong>#swatchZip</strong>: Required 5-digit ZIP (regex validated).</li>
+  <li><strong>#swatchPhone</strong>: Optional phone.</li>
+  <li><strong>#swatchSubmitBtn</strong>: Submit button — label cycles "Send My Swatches" → "Sending..." → reset.</li>
+  <li><strong>#swatchFormError</strong>: Validation/API error text — collapsed until error occurs.</li>
+  <li><strong>#swatchFormSuccess</strong>: Success state — collapsed until submission succeeds.</li>
+  <li><strong>#swatchSuccessShopBtn</strong>: Post-success "Continue Shopping" button — collapses overlay.</li>
+  <li>Calls <code>submitSwatchRequest()</code> backend function → triggers 4-email nurture sequence.</li>
+</ul>`, elements: [
+        ["swatchFormOverlay","Box","Form modal overlay"],
+        ["swatchFormModal","Box","Accessible dialog container"],
+        ["swatchFormClose","Button","Close form (X)"],
+        ["swatchFirstName","Input","First name (required)"],
+        ["swatchLastName","Input","Last name (required)"],
+        ["swatchEmail","Input","Email (required, validated)"],
+        ["swatchAddress1","Input","Street address (required)"],
+        ["swatchAddress2","Input","Address line 2 (optional)"],
+        ["swatchCity","Input","City (required)"],
+        ["swatchState","Input","State (required)"],
+        ["swatchZip","Input","ZIP 5-digit (required)"],
+        ["swatchPhone","Input","Phone (optional)"],
+        ["swatchSubmitBtn","Button","Submit — label cycles on submit"],
+        ["swatchFormError","Text","Validation/API error"],
+        ["swatchFormSuccess","Box","Success state"],
+        ["swatchSuccessShopBtn","Button","Continue shopping post-success"]
+      ]},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Fabric Swatches)</h4>
+<ul>
+  <li><strong>#swatchSchemaHtml</strong>: HtmlComponent — receives Service JSON-LD schema for free fabric swatch program. Code sets via <code>.html</code> or <code>.value</code> property (whichever available).</li>
+  <li>Schema type: <code>Service</code> — Free Fabric Swatch Program, price: $0, provider: Carolina Futons.</li>
+</ul>`, elements: [
+        ["swatchSchemaHtml","HtmlComponent","Service JSON-LD schema"]
+      ]}
+    ]
+  },
+  {
+    name: "Wishlist Share", file: "Wishlist Share.js", priority: "P1", est: "25 min",
+    sections: [
+      { name: "Token Resolution", impl: `<h4>🔑 Implementation — Token Resolution (Wishlist Share)</h4>
+<p><strong>Route</strong>: <code>/wishlist-share?token=&lt;token&gt;</code> — public shareable wishlist page.</p>
+<ul>
+  <li><strong>#wishlistShareContentSection</strong>: Main content section. Code sets <code>opacity=0.4</code> as skeleton while token resolves, restores on success.</li>
+  <li><strong>#wishlistShareInvalidSection</strong>: Shown when token is missing, expired, or invalid.</li>
+  <li><strong>#wishlistShareInvalidText</strong>: Text — human-readable error (invalid/expired/missing token message).</li>
+  <li><strong>#wishlistShareShopBtn</strong>: "Shop Now" button — navigates to <code>/shop-main</code>. Wired in all states.</li>
+  <li>Token resolved via <code>resolveShareToken()</code> backend function. If <code>result.valid=false</code>, noindex applied and invalid state shown.</li>
+  <li><strong>#wishlistShareTitle</strong>: Text — "{ownerName}'s Wishlist".</li>
+  <li><strong>#wishlistShareSubtitle</strong>: Text — "N item(s)".</li>
+  <li><strong>#wishlistShareEmptySection</strong>: Shown when wishlist has 0 items.</li>
+</ul>`, elements: [
+        ["wishlistShareContentSection","Section","Main content (opacity skeleton)"],
+        ["wishlistShareInvalidSection","Section","Invalid/expired token state"],
+        ["wishlistShareInvalidText","Text","Error message for invalid token"],
+        ["wishlistShareShopBtn","Button","→ /shop-main (all states)"],
+        ["wishlistShareTitle","Text","'{ownerName}'s Wishlist'"],
+        ["wishlistShareSubtitle","Text","N item(s) count"],
+        ["wishlistShareEmptySection","Section","Empty wishlist state"]
+      ]},
+      { name: "Product Cards", repeater: "wishlistShareRepeater", impl: `<h4>🛍️ Implementation — Product Cards (Wishlist Share)</h4>
+<p><strong>Layout</strong>: Repeater of shared wishlist product cards — image, name, add-to-cart.</p>
+<ul>
+  <li><strong>#wishlistShareRepeater</strong>: Repeater — one card per wishlist item.</li>
+  <li><strong>#shareImage</strong>: Product image (repeater child) — src and alt set via <code>populateShareCard()</code>.</li>
+  <li><strong>#shareName</strong>: Product name text (repeater child) — set via <code>populateShareCard()</code>.</li>
+  <li>onItemReady registered BEFORE .data is set (Velo requirement).</li>
+  <li>Item data shape: <code>{ _id, productId, productName, productImage }</code>.</li>
+</ul>`, elements: [
+        ["wishlistShareRepeater","Repeater","Shared wishlist product cards"]
+      ], children: [
+        ["shareImage","Image","Product image"],
+        ["shareName","Text","Product name"],
+        ["shareAddCart","Button","Add to cart"]
+      ]},
+      { name: "Add to Cart", impl: `<h4>🛒 Implementation — Add to Cart (Wishlist Share)</h4>
+<ul>
+  <li><strong>#shareAddCart</strong>: Add to Cart button per card (repeater child). States: "Add to Cart" → "Adding..." → "Added!" → reset (2s delay).</li>
+  <li>On error: label shows "Error — Try Again", re-enables after 2s.</li>
+  <li>Calls <code>addToCart(itemData.productId)</code> from <code>public/cartService</code> (dynamic import).</li>
+</ul>`, elements: []},
+      { name: "SEO", impl: `<h4>🔍 Implementation — SEO (Wishlist Share)</h4>
+<ul>
+  <li>Valid wishlist: dynamic title "Share {ownerName}'s Wishlist", meta description "N items chosen by {ownerName}", OG tags with first product image.</li>
+  <li>Invalid/missing token: noindex applied via <code>seo.setMetaTag({ name: 'robots', content: 'noindex' })</code>.</li>
+  <li>All SEO set via <code>wix-seo</code> API — no HTML component needed.</li>
+</ul>`, elements: []}
+    ]
   }
 ];
 
