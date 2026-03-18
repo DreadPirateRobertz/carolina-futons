@@ -52,9 +52,10 @@ export default defineConfig({
       include: ['src/**/*.js'],
       exclude: ['src/**/__mocks__/**'],
       thresholds: {
-        lines: 70,
-        branches: 60,
-        functions: 70,
+        statements: 90,
+        branches: 85,
+        functions: 88,
+        lines: 91,
       },
     },
   },
