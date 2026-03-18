@@ -1,5 +1,5 @@
 // Wishlist Share.js — /wishlist-share
-// CF-y24r: S1 Token resolution + wishlist fetch
+// CF-y24r S1 + CF-o779 S3
 // Stories: S1 token/fetch, S2 product cards, S3 add-to-cart,
 //          S4 member share generation, S5 SEO
 
@@ -59,13 +59,37 @@ $w.onReady(async () => {
     return;
   }
 
-  // S2 will wire onItemReady — for S1 we just populate the data
   $w('#wishlistShareRepeater').data = result.items.map(item => ({
     _id: item._id || item.productId,
     productId: item.productId,
     productName: item.productName,
     productImage: item.productImage,
   }));
+
+  // S3: Wire add-to-cart button per item
+  $w('#wishlistShareRepeater').onItemReady(($item, itemData) => {
+    // Add to cart cycle: Add to Cart → Adding... → Added! → (2s) → Add to Cart
+    $item('#shareAddCart').onClick(async () => {
+      try {
+        $item('#shareAddCart').disable();
+        $item('#shareAddCart').label = 'Adding...';
+        const { addToCart } = await import('public/cartService');
+        await addToCart(itemData.productId);
+        $item('#shareAddCart').label = 'Added!';
+        setTimeout(() => {
+          _safe(() => { $item('#shareAddCart').label = 'Add to Cart'; });
+          _safe(() => $item('#shareAddCart').enable());
+        }, 2000);
+      } catch (err) {
+        console.error('[WishlistShare] Add to cart failed:', err);
+        $item('#shareAddCart').label = 'Error — Try Again';
+        $item('#shareAddCart').enable();
+        setTimeout(() => {
+          _safe(() => { $item('#shareAddCart').label = 'Add to Cart'; });
+        }, 2000);
+      }
+    });
+  });
 });
 
 // ── State helpers ─────────────────────────────────────────────────────────────
