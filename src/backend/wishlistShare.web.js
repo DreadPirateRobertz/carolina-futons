@@ -35,8 +35,9 @@ export const resolveShareToken = webMethod(
   Permissions.Anyone,
   async (token) => {
     // Validate input
-    const clean = typeof token === 'string' ? token.trim() : '';
-    if (!clean) return { valid: false, reason: 'missing_token' };
+    const raw = typeof token === 'string' ? token.trim() : '';
+    if (!raw) return { valid: false, reason: 'missing_token' };
+    const clean = raw.slice(0, 200); // guard against oversized tokens
 
     try {
       // Look up token record
@@ -60,6 +61,7 @@ export const resolveShareToken = webMethod(
       try {
         const wishlistResult = await wixData.query('Wishlist')
           .eq('memberId', record.memberId)
+          .limit(100)
           .find();
         items = wishlistResult.items.map(i => ({
           _id: i._id,

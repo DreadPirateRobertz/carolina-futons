@@ -172,4 +172,35 @@ describe('resolveShareToken', () => {
     expect(result.valid).toBe(true);
     expect(result.items).toEqual([]);
   });
+
+  // ── Token max-length guard ───────────────────────────────────────────────────
+
+  it('truncates oversized token to 200 chars before lookup (not_found expected)', async () => {
+    __seed('WishlistShareTokens', []);
+    const longToken = 'a'.repeat(500);
+    const result = await resolveShareToken(longToken);
+    // Won't find a match but must not throw or hang
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe('not_found');
+  });
+
+  it('resolves valid token exactly 200 chars long', async () => {
+    const tok200 = 'x'.repeat(200);
+    __seed('WishlistShareTokens', [makeToken({ token: tok200 })]);
+    __seed('Wishlist', []);
+    const result = await resolveShareToken(tok200);
+    expect(result.valid).toBe(true);
+  });
+
+  // ── Wishlist item limit ───────────────────────────────────────────────────────
+
+  it('returns all items when member has exactly 100 wishlist items', async () => {
+    __seed('WishlistShareTokens', [makeToken()]);
+    const items = Array.from({ length: 100 }, (_, i) =>
+      makeWishlistItem({ _id: `w-${i}`, productId: `p-${i}` })
+    );
+    __seed('Wishlist', items);
+    const result = await resolveShareToken('share-abc123');
+    expect(result.items).toHaveLength(100);
+  });
 });
