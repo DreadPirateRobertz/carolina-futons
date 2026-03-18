@@ -65,14 +65,14 @@ describe('.husky/pre-commit hook', () => {
   });
 });
 
-// ── .lintstagedrc.js ──────────────────────────────────────────────────────────
+// ── .lintstagedrc.cjs ─────────────────────────────────────────────────────────
 
-describe('.lintstagedrc.js — staged file pipeline', () => {
+describe('.lintstagedrc.cjs — staged file pipeline', () => {
   let src = '';
-  try { src = read('.lintstagedrc.js'); } catch { src = ''; }
+  try { src = read('.lintstagedrc.cjs'); } catch { src = ''; }
 
-  it('.lintstagedrc.js exists', () => {
-    expect(exists('.lintstagedrc.js')).toBe(true);
+  it('.lintstagedrc.cjs exists', () => {
+    expect(exists('.lintstagedrc.cjs')).toBe(true);
   });
 
   it('has a glob entry covering JS and/or TS files', () => {

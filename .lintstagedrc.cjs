@@ -1,5 +1,5 @@
 /** @type {import('lint-staged').Config} */
-export default {
+module.exports = {
   '*.{js,ts}': [
     'eslint --fix',
     // Function form prevents lint-staged from appending staged filenames
