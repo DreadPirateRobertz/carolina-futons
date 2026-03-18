@@ -18,13 +18,17 @@ import {
   removeProductFromCompare,
   buildCompareUrl,
 } from 'public/comparePageHelpers.js';
-import { colors } from 'public/designTokens.js';
 import { business } from 'public/sharedTokens.js';
 import { isMobile } from 'public/mobileHelpers';
 import { initPageSeo } from 'public/pageSeo.js';
 
+/** Safe $w wrapper — swallows DOM errors for optional elements. */
+function _safe(fn) {
+  try { fn(); } catch (e) {}
+}
+
 $w.onReady(async () => {
-  // S5: static SEO defaults (overridden with dynamic values after products load)
+  // S5: static SEO defaults (dynamic values overridden after products load)
   initPageSeo('compareProducts').catch(() => {});
 
   // S1: Parse URL params
@@ -55,7 +59,7 @@ $w.onReady(async () => {
     return;
   }
 
-  // S5: SEO
+  // S5: Dynamic SEO overrides
   _applySeo(validProducts);
 
   // S2: Render columns
@@ -64,37 +68,29 @@ $w.onReady(async () => {
   // S3: Render attributes table
   _renderAttributeRows(validProducts);
 
-  // S4: Mobile snap CSS (only inject when on mobile)
+  // S4: Mobile snap CSS
   if (isMobile()) {
-    try {
-      $w('#compareMobileSnapHtml').postMessage(buildMobileSnapCss());
-    } catch (e) {}
+    _safe(() => $w('#compareMobileSnapHtml').postMessage(buildMobileSnapCss()));
   }
 
   // S6: Reset / Start Over
-  $w('#compareResetBtn').onClick(() => {
-    wixLocation.to('/shop-main');
-  });
-
-  $w('#compareEmptyShopBtn').onClick(() => {
-    wixLocation.to('/shop-main');
-  });
+  $w('#compareResetBtn').onClick(() => wixLocation.to('/shop-main'));
+  $w('#compareEmptyShopBtn').onClick(() => wixLocation.to('/shop-main'));
 });
 
 // ── S2: Column rendering ─────────────────────────────────────────────────────
 
 function _renderColumns(prods) {
-  const colData = buildColumnData(prods);
-
   $w('#compareSubtitle').text = `Comparing ${prods.length} product${prods.length > 1 ? 's' : ''}`;
+  $w('#compareColRepeater').data = buildColumnData(prods);
 
-  $w('#compareColRepeater').data = colData;
   $w('#compareColRepeater').onItemReady(($item, itemData) => {
     $item('#compareColImage').src = itemData.image;
     $item('#compareColName').text = itemData.name;
-    $item('#compareColName').onClick(() => {
-      wixLocation.to(itemData.productUrl);
-    });
+
+    for (const sel of ['#compareColName', '#compareColViewBtn']) {
+      $item(sel).onClick(() => wixLocation.to(itemData.productUrl));
+    }
 
     $item('#compareColPrice').text = itemData.showOrigPrice
       ? itemData.salePrice
@@ -102,17 +98,17 @@ function _renderColumns(prods) {
 
     if (itemData.showOrigPrice) {
       $item('#compareColOrigPrice').text = itemData.origPrice;
-      try { $item('#compareColOrigPrice').style.textDecoration = 'line-through'; } catch (e) {}
-      try { $item('#compareColOrigPrice').show(); } catch (e) {}
+      _safe(() => { $item('#compareColOrigPrice').style.textDecoration = 'line-through'; });
+      _safe(() => $item('#compareColOrigPrice').show());
     } else {
-      try { $item('#compareColOrigPrice').hide(); } catch (e) {}
+      _safe(() => $item('#compareColOrigPrice').hide());
     }
 
     if (itemData.showBadge) {
       $item('#compareColBadge').text = itemData.badge;
-      try { $item('#compareColBadge').show(); } catch (e) {}
+      _safe(() => $item('#compareColBadge').show());
     } else {
-      try { $item('#compareColBadge').hide(); } catch (e) {}
+      _safe(() => $item('#compareColBadge').hide());
     }
 
     // Add to cart cycle: Add → Adding… → Added! → (2s) → Add to Cart
@@ -124,10 +120,8 @@ function _renderColumns(prods) {
         await addToCart(itemData._id);
         $item('#compareColAddCart').label = 'Added!';
         setTimeout(() => {
-          try {
-            $item('#compareColAddCart').label = 'Add to Cart';
-            $item('#compareColAddCart').enable();
-          } catch (e) {}
+          _safe(() => { $item('#compareColAddCart').label = 'Add to Cart'; });
+          _safe(() => $item('#compareColAddCart').enable());
         }, 2000);
       } catch (err) {
         console.error('[ComparePage] Add to cart failed:', err);
@@ -136,14 +130,9 @@ function _renderColumns(prods) {
       }
     });
 
-    $item('#compareColViewBtn').onClick(() => {
-      wixLocation.to(itemData.productUrl);
-    });
-
-    // Remove from compare — updates URL params, no full navigation
+    // Remove from compare — updates URL params without full navigation
     $item('#compareColRemoveBtn').onClick(() => {
-      const currentIds = parseProductIds(wixLocation.query);
-      const newIds = removeProductFromCompare(currentIds, itemData._id);
+      const newIds = removeProductFromCompare(parseProductIds(wixLocation.query), itemData._id);
       wixLocation.to(buildCompareUrl(newIds));
     });
   });
@@ -152,27 +141,21 @@ function _renderColumns(prods) {
 // ── S3: Attributes table ─────────────────────────────────────────────────────
 
 function _renderAttributeRows(prods) {
-  const rows = buildAttributeRows(prods);
-  $w('#compareAttrRepeater').data = rows;
+  $w('#compareAttrRepeater').data = buildAttributeRows(prods);
 
   $w('#compareAttrRepeater').onItemReady(($item, itemData) => {
     $item('#compareAttrLabel').text = itemData.label;
 
     const cellWidth = Math.floor(100 / itemData.values.length);
-    const diffBg = itemData.hasDiff
-      ? `background-color:rgba(168,204,216,0.15);`
-      : '';
-
+    const diffBg = itemData.hasDiff ? 'background-color:rgba(168,204,216,0.15);' : '';
     const cellsHtml = itemData.values
-      .map(val =>
-        `<div style="display:inline-block;width:${cellWidth}%;${diffBg}padding:4px 8px;box-sizing:border-box;">${val}</div>`
-      )
+      .map(val => `<div style="display:inline-block;width:${cellWidth}%;${diffBg}padding:4px 8px;box-sizing:border-box;">${val}</div>`)
       .join('');
 
     try {
       $item('#compareAttrRow').html = cellsHtml;
     } catch (e) {
-      try { $item('#compareAttrRow').text = itemData.values.join(' | '); } catch (_) {}
+      _safe(() => { $item('#compareAttrRow').text = itemData.values.join(' | '); });
     }
   });
 }
@@ -184,13 +167,10 @@ function _applySeo(prods) {
     seo.setTitle(buildCompareTitle(prods));
     seo.setMetaTag({ name: 'description', content: buildCompareDescription(prods) });
     seo.setLinks([{ rel: 'canonical', href: `${business.baseUrl}/compare` }]);
-
     const schema = buildItemListSchema(prods, business.baseUrl);
-    try {
-      $w('#compareSchemaHtml').postMessage(
-        `<script type="application/ld+json">${JSON.stringify(schema)}<\/script>`
-      );
-    } catch (e) {}
+    _safe(() => $w('#compareSchemaHtml').postMessage(
+      `<script type="application/ld+json">${JSON.stringify(schema)}<\/script>`
+    ));
   } catch (e) {
     console.warn('[ComparePage] SEO setup failed:', e);
   }
@@ -199,17 +179,17 @@ function _applySeo(prods) {
 // ── State helpers ─────────────────────────────────────────────────────────────
 
 function _showEmptyState() {
-  try { $w('#compareEmptySection').show(); } catch (e) {}
-  try { $w('#compareGridSection').hide(); } catch (e) {}
-  try { $w('#compareAttrSection').hide(); } catch (e) {}
-  try { $w('#compareErrorSection').hide(); } catch (e) {}
+  _safe(() => $w('#compareEmptySection').show());
+  _safe(() => $w('#compareGridSection').hide());
+  _safe(() => $w('#compareAttrSection').hide());
+  _safe(() => $w('#compareErrorSection').hide());
 }
 
 function _showErrorState(msg) {
-  try { $w('#compareErrorSection').show(); } catch (e) {}
-  try { $w('#compareErrorText').text = msg; } catch (e) {}
-  try { $w('#compareGridSection').hide(); } catch (e) {}
-  try { $w('#compareAttrSection').hide(); } catch (e) {}
-  try { $w('#compareEmptySection').hide(); } catch (e) {}
-  try { $w('#compareGridSection').style.opacity = '1'; } catch (e) {}
+  _safe(() => $w('#compareErrorSection').show());
+  _safe(() => { $w('#compareErrorText').text = msg; });
+  _safe(() => $w('#compareGridSection').hide());
+  _safe(() => $w('#compareAttrSection').hide());
+  _safe(() => $w('#compareEmptySection').hide());
+  _safe(() => { $w('#compareGridSection').style.opacity = '1'; });
 }

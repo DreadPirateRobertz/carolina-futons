@@ -60,7 +60,7 @@ export function buildColumnData(products) {
 }
 
 function _formatPrice(amount) {
-  return `$${Number(amount).toFixed(2).replace(/\.00$/, '.00')}`;
+  return `$${Number(amount).toFixed(2)}`;
 }
 
 // ── S3: Attributes table ──────────────────────────────────────────────────────
@@ -76,19 +76,10 @@ export const COMPARE_ATTRIBUTES = [
   { key: 'weightCapacity',   label: 'Weight Capacity' },
   { key: 'mattressSize',     label: 'Mattress Size' },
   { key: 'seatHeight',       label: 'Seat Height' },
-  { key: 'availableFabrics', label: 'Available Fabrics' },
   { key: 'price',            label: 'Price' },
   { key: 'rating',           label: 'Rating' },
   { key: 'inStock',          label: 'In Stock' },
-].filter((_, i, arr) => {
-  // spec lists 9 attributes — keep only the 9 the spec calls for
-  const specLabels = new Set([
-    'Frame Material', 'Closed Dimensions', 'Open Dimensions',
-    'Weight Capacity', 'Mattress Size', 'Seat Height',
-    'Price', 'Rating', 'In Stock',
-  ]);
-  return specLabels.has(arr[i].label);
-});
+];
 
 /**
  * Extract a named attribute value from a product.
