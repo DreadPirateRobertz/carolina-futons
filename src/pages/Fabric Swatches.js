@@ -43,7 +43,8 @@ function _loadFromSession() {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (err) {
+    console.warn('[swatchPage] Failed to parse sessionStorage selections:', err);
     return [];
   }
 }
@@ -220,8 +221,6 @@ async function _handleSubmit() {
     if (result.success) {
       clearAll();
       $w('#swatchFormSuccess').expand();
-      $w('#swatchSubmitBtn').label = 'Send My Swatches';
-      $w('#swatchSubmitBtn').enable();
       announce('Your swatch request has been submitted successfully.');
     } else {
       throw new Error(result.error || 'Submission failed. Please try again.');
@@ -229,6 +228,7 @@ async function _handleSubmit() {
   } catch (err) {
     $w('#swatchFormError').text = err.message || 'Something went wrong. Please try again.';
     $w('#swatchFormError').expand();
+  } finally {
     $w('#swatchSubmitBtn').label = 'Send My Swatches';
     $w('#swatchSubmitBtn').enable();
   }

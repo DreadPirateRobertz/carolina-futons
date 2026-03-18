@@ -69,30 +69,38 @@ function validateContact(raw) {
 }
 
 /**
- * Validate swatchIds array: array of 1–5 unique non-empty strings.
+ * Validate and normalize swatchIds: 1–5 unique non-empty trimmed strings.
+ * Returns { cleanIds } on success or { error } on failure.
  */
 function validateSwatchIds(ids) {
   if (!Array.isArray(ids)) return { error: 'Swatch IDs must be provided as an array.' };
   if (ids.length === 0) return { error: 'At least one swatch must be selected.' };
   if (ids.length > 5) return { error: 'Maximum 5 swatches may be requested at once.' };
+  const cleanIds = [];
   for (const id of ids) {
     if (typeof id !== 'string' || !id.trim()) {
       return { error: 'Invalid swatch ID in selection.' };
     }
+    cleanIds.push(id.trim());
   }
-  const unique = new Set(ids);
-  if (unique.size < ids.length) return { error: 'Duplicate swatch IDs are not allowed.' };
-  return {};
+  const unique = new Set(cleanIds);
+  if (unique.size < cleanIds.length) return { error: 'Duplicate swatch IDs are not allowed.' };
+  return { cleanIds };
 }
 
 /**
  * Resolve swatch names from FabricSwatches collection.
+ * Falls back to the ID string if a swatch is not found — logs a warning.
  */
 async function resolveSwatchNames(swatchIds) {
   const results = await Promise.all(
     swatchIds.map(id =>
       wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
-        .then(r => r.items[0]?.name || id)
+        .then(r => {
+          const name = r.items[0]?.name;
+          if (!name) console.warn(`[swatchRequest] Swatch not found in CMS: ${id}`);
+          return name || id;
+        })
     )
   );
   return results;
@@ -161,16 +169,20 @@ export const submitSwatchRequest = webMethod(
   Permissions.Anyone,
   async (params) => {
     try {
-      const { swatchIds, contactInfo, productSlug } = params || {};
+      const { swatchIds, contactInfo, productSlug: rawSlug } = params || {};
       // Validate inputs
       const idValidation = validateSwatchIds(swatchIds);
       if (idValidation.error) return { success: false, error: idValidation.error };
+      const cleanIds = idValidation.cleanIds;
 
       const contact = validateContact(contactInfo);
       if (contact.error) return { success: false, error: contact.error };
 
+      // Sanitize optional product slug
+      const cleanSlug = rawSlug ? sanitize(String(rawSlug), 200).trim() || undefined : undefined;
+
       // Resolve swatch names
-      const swatchNames = await resolveSwatchNames(swatchIds);
+      const swatchNames = await resolveSwatchNames(cleanIds);
 
       // Upsert CRM contact
       const contactId = await upsertContact(contact);
@@ -180,7 +192,7 @@ export const submitSwatchRequest = webMethod(
         contactEmail:    contact.email,
         contactName:     `${contact.firstName} ${contact.lastName}`,
         contactId:       contactId || '',
-        swatchIds,
+        swatchIds:       cleanIds,
         swatchNames,
         shippingAddress: {
           address1: contact.address1,
@@ -191,18 +203,23 @@ export const submitSwatchRequest = webMethod(
         },
         requestedAt: new Date(),
         status:      'pending',
-        ...(productSlug ? { productSlug } : {}),
+        ...(cleanSlug ? { productSlug: cleanSlug } : {}),
       };
 
       const inserted = await wixData.insert('SwatchRequests', record);
 
-      // Enqueue nurture emails
-      await enqueueSwatch({
-        contactId: contactId || '',
-        email: contact.email,
-        swatchNames,
-        productSlug: productSlug || null,
-      });
+      // Enqueue nurture emails — log failure but don't fail the request
+      // (CMS record is already saved; email can be retried independently)
+      try {
+        await enqueueSwatch({
+          contactId: contactId || '',
+          email: contact.email,
+          swatchNames,
+          productSlug: cleanSlug || null,
+        });
+      } catch (emailErr) {
+        console.error('[swatchRequest] Failed to enqueue nurture emails:', emailErr);
+      }
 
       return { success: true, requestId: inserted._id };
     } catch (err) {
