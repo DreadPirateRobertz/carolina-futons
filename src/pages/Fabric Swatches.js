@@ -9,10 +9,15 @@
  * CMS collections:
  * - FabricSwatches (read) — connected to #swatchDataset
  * - SwatchRequests (write) — via swatchRequest.web.js
+ *
+ * URL params:
+ * - ?product=<slug> — pre-filter swatches for a specific product referral
  */
 import { submitSwatchRequest } from 'backend/swatchRequest.web';
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers';
 import { colors } from 'public/sharedTokens';
+import wixLocationFrontend from 'wix-location-frontend';
+import wixData from 'wix-data';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -20,11 +25,13 @@ const MAX_SWATCHES = 5;
 const SESSION_KEY  = 'swatchSelections';
 const ZIP_RE       = /^\d{5}$/;
 const EMAIL_RE     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEBOUNCE_MS  = 250;
 
 // ── Module state ─────────────────────────────────────────────────────
 
 let _selections = []; // [{ _id, name, hexColor }]
 let _dialog = null;
+let _debounceTimer = null;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -39,6 +46,11 @@ function _loadFromSession() {
   } catch {
     return [];
   }
+}
+
+function _debounce(fn) {
+  clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(fn, DEBOUNCE_MS);
 }
 
 function _updateTray() {
@@ -59,42 +71,88 @@ function _updateTray() {
   }));
 }
 
-// ── Test hooks (exported for test access only) ───────────────────────
+function _refreshGrid() {
+  try {
+    $w('#swatchGridRepeater').refresh();
+  } catch {
+    // Refresh may not be available in all contexts
+  }
+}
 
-export function __test_addSwatch(swatch) {
+// ── Selection logic ──────────────────────────────────────────────────
+
+export function addSwatch(swatch) {
   if (_selections.length >= MAX_SWATCHES) return false;
-  if (_selections.some(s => s._id === swatch._id)) return true; // dup, ignore
+  if (_selections.some(s => s._id === swatch._id)) return true; // dup — ignore
   _selections.push(swatch);
   _saveToSession();
   _updateTray();
   return true;
 }
 
-export function __test_removeSwatch(id) {
+export function removeSwatch(id) {
   _selections = _selections.filter(s => s._id !== id);
   _saveToSession();
   _updateTray();
 }
 
-export function __test_clearAll() {
+export function clearAll() {
   _selections = [];
   _saveToSession();
   _updateTray();
 }
 
-export function __test_getSelections() {
+export function getSelections() {
   return _selections;
 }
 
-export function __test_openForm() {
+export function openForm() {
   $w('#swatchFormOverlay').expand();
   $w('#swatchFormError').collapse();
   $w('#swatchFormSuccess').collapse();
   if (_dialog?.open) _dialog.open();
 }
 
-export async function __test_submitForm() {
+export async function submitForm() {
   await _handleSubmit();
+}
+
+// ── Filter / dataset ─────────────────────────────────────────────────
+
+function _applyFilters() {
+  const search   = ($w('#swatchSearchInput').value || '').toLowerCase().trim();
+  const color    = $w('#swatchColorFilter').value || '';
+  const material = $w('#swatchMaterialFilter').value || '';
+  const brand    = $w('#swatchBrandFilter').value || '';
+
+  let filter = wixData.filter().eq('inStock', true);
+  if (color)    filter = filter.eq('colorFamily', color);
+  if (material) filter = filter.eq('material', material);
+
+  $w('#swatchDataset').setFilter(filter).then(() => {
+    // Count shown items (best effort — repeater data may not be updated yet)
+    const allItems = $w('#swatchGridRepeater').data || [];
+    let visible = allItems;
+
+    if (search) {
+      visible = visible.filter(item =>
+        (item.name || '').toLowerCase().includes(search) ||
+        (item.colorFamily || '').toLowerCase().includes(search)
+      );
+    }
+    if (brand) {
+      visible = visible.filter(item => item.brand === brand);
+    }
+
+    const count = visible.length;
+    $w('#swatchResultCount').text = `${count} swatch${count !== 1 ? 'es' : ''}`;
+
+    if (count === 0) {
+      $w('#swatchEmptyState').expand();
+    } else {
+      $w('#swatchEmptyState').collapse();
+    }
+  });
 }
 
 // ── Form validation ──────────────────────────────────────────────────
@@ -139,6 +197,9 @@ async function _handleSubmit() {
   $w('#swatchSubmitBtn').disable();
   $w('#swatchFormError').collapse();
 
+  // Read product slug from URL query param
+  const productSlug = wixLocationFrontend.query?.product || undefined;
+
   try {
     const result = await submitSwatchRequest({
       swatchIds:   _selections.map(s => s._id),
@@ -153,10 +214,11 @@ async function _handleSubmit() {
         zip:       form.zip,
         ...(form.phone ? { phone: form.phone } : {}),
       },
+      ...(productSlug ? { productSlug } : {}),
     });
 
     if (result.success) {
-      __test_clearAll();
+      clearAll();
       $w('#swatchFormSuccess').expand();
       $w('#swatchSubmitBtn').label = 'Send My Swatches';
       $w('#swatchSubmitBtn').enable();
@@ -219,23 +281,30 @@ $w.onReady(async function () {
 
   // ── Filter controls ──
 
+  $w('#swatchSearchInput').onInput(() => {
+    _debounce(() => _applyFilters());
+  });
+
+  $w('#swatchColorFilter').onChange(() => _applyFilters());
+  $w('#swatchMaterialFilter').onChange(() => _applyFilters());
+  $w('#swatchBrandFilter').onChange(() => _applyFilters());
+
   $w('#swatchClearFilters').onClick(() => {
     $w('#swatchSearchInput').value  = '';
     $w('#swatchColorFilter').value  = '';
     $w('#swatchMaterialFilter').value = '';
     $w('#swatchBrandFilter').value  = '';
-    $w('#swatchDataset').setFilter(null);
-    $w('#swatchResultCount').text = '';
+    _applyFilters();
   });
 
   // ── Tray controls ──
 
   $w('#swatchTrayProceedBtn').onClick(() => {
-    __test_openForm();
+    openForm();
   });
 
   $w('#swatchTrayClearBtn').onClick(() => {
-    __test_clearAll();
+    clearAll();
   });
 
   // ── Selection repeater remove buttons ──
@@ -243,7 +312,10 @@ $w.onReady(async function () {
   $w('#swatchSelectionRepeater').onItemReady(($item, itemData) => {
     $item('#swatchTrayDot').style.backgroundColor = itemData.hexColor || '#ccc';
     $item('#swatchTrayName').text = itemData.swatchTrayName;
-    $item('#swatchTrayRemove').onClick(() => __test_removeSwatch(itemData._id));
+    $item('#swatchTrayRemove').onClick(() => {
+      removeSwatch(itemData._id);
+      _refreshGrid();
+    });
   });
 
   // ── Swatch grid repeater ──
@@ -264,7 +336,15 @@ $w.onReady(async function () {
     }
 
     const isSelected = _selections.some(s => s._id === itemData._id);
+    const atMax = _selections.length >= MAX_SWATCHES;
+
     $item('#swatchSelectBtn').label = isSelected ? 'Remove' : 'Add';
+
+    // Enforce max-5: disable "Add" for unselected cards when limit reached
+    if (!isSelected && atMax && !outOfStock) {
+      $item('#swatchSelectBtn').disable();
+    }
+
     if (isSelected) {
       $item('#swatchSelectedBadge').expand();
       $item('#swatchCard').style.borderColor = colors.mountainBlue;
@@ -276,11 +356,11 @@ $w.onReady(async function () {
     $item('#swatchSelectBtn').onClick(() => {
       const alreadySelected = _selections.some(s => s._id === itemData._id);
       if (alreadySelected) {
-        __test_removeSwatch(itemData._id);
+        removeSwatch(itemData._id);
       } else {
-        __test_addSwatch({ _id: itemData._id, name: itemData.name, hexColor: itemData.hexColor });
+        addSwatch({ _id: itemData._id, name: itemData.name, hexColor: itemData.hexColor });
       }
-      $w('#swatchGridRepeater').refresh();
+      _refreshGrid();
     });
   });
 
