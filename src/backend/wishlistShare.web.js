@@ -18,6 +18,80 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
+
+// ── addShareToken ─────────────────────────────────────────────────────────────
+
+const BASE_URL = 'https://www.carolinafutons.com';
+const SHARE_PATH = '/shared-wishlist';
+const DEFAULT_EXPIRY_DAYS = 30;
+const MIN_EXPIRY_DAYS = 1;
+const MAX_EXPIRY_DAYS = 365;
+
+function generateUrlSafeToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+function clampExpiryDays(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || isNaN(n)) return DEFAULT_EXPIRY_DAYS;
+  return Math.min(MAX_EXPIRY_DAYS, Math.max(MIN_EXPIRY_DAYS, Math.round(n)));
+}
+
+/**
+ * Generate a share token for the current member's wishlist.
+ * Stores the token in WishlistShareTokens CMS and returns a shareable URL.
+ *
+ * @param {{ expiryDays?: number }} [options]
+ * @returns {Promise<
+ *   { token: string, shareUrl: string, expiresAt: Date } |
+ *   { error: string }
+ * >}
+ */
+export const addShareToken = webMethod(
+  Permissions.Member,
+  async ({ expiryDays } = {}) => {
+    // Authenticate
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      console.error('[wishlistShare] getMember error:', err);
+      return { error: 'auth_failed' };
+    }
+
+    if (!member || !member._id) {
+      return { error: 'unauthenticated' };
+    }
+
+    // Build token + expiry
+    const token = generateUrlSafeToken();
+    const days = clampExpiryDays(expiryDays);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const shareUrl = `${BASE_URL}${SHARE_PATH}?share=${token}`;
+
+    // Persist to CMS
+    try {
+      await wixData.insert('WishlistShareTokens', {
+        token,
+        memberId: member._id,
+        expiresAt,
+        createdAt: now,
+      });
+    } catch (err) {
+      console.error('[wishlistShare] insert error:', err);
+      return { error: 'db_failed' };
+    }
+
+    return { token, shareUrl, expiresAt };
+  }
+);
 
 // ── resolveShareToken ─────────────────────────────────────────────────────────
 
