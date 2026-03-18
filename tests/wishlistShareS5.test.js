@@ -3,7 +3,7 @@
  * Tests: dynamic title, OG tags, noindex for invalid/private wishlists
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
-import { __getTitle, __getMetaTags, __getLinks } from './__mocks__/wix-seo.js';
+import { __getTitle, __getMetaTags, __reset as __resetSeo } from './__mocks__/wix-seo.js';
 
 // ── $w mock ───────────────────────────────────────────────────────────────────
 
@@ -73,6 +73,7 @@ describe('Wishlist Share S5 — SEO wiring', () => {
   beforeEach(() => {
     elements.clear();
     vi.clearAllMocks();
+    __resetSeo();
     mockResolveShareToken.mockResolvedValue(validResult);
   });
 
@@ -119,11 +120,8 @@ describe('Wishlist Share S5 — SEO wiring', () => {
   it('does NOT add noindex for valid public wishlist', async () => {
     await onReadyHandler();
     const robots = __getMetaTags().find(t => t.name === 'robots');
-    // Either no robots tag at all, or one that does not say noindex
     if (robots) {
       expect(robots.content).not.toContain('noindex');
-    } else {
-      expect(robots).toBeUndefined();
     }
   });
 
@@ -145,12 +143,16 @@ describe('Wishlist Share S5 — SEO wiring', () => {
 
   it('adds noindex when no share token in URL', async () => {
     const { default: wixLoc } = await import('wix-location-frontend');
-    wixLoc.query = {};
-    mockResolveShareToken.mockResolvedValue({ valid: false, reason: 'missing_token' });
-    await onReadyHandler();
-    const robots = __getMetaTags().find(t => t.name === 'robots');
-    expect(robots?.content).toContain('noindex');
-    wixLoc.query = { share: 'share-abc123' };
+    const originalQuery = wixLoc.query;
+    try {
+      wixLoc.query = {};
+      mockResolveShareToken.mockResolvedValue({ valid: false, reason: 'missing_token' });
+      await onReadyHandler();
+      const robots = __getMetaTags().find(t => t.name === 'robots');
+      expect(robots?.content).toContain('noindex');
+    } finally {
+      wixLoc.query = originalQuery;
+    }
   });
 
   it('adds noindex on fetch error', async () => {

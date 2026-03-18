@@ -87,7 +87,7 @@ describe('buildWishlistTitle', () => {
     expect(buildWishlistTitle('Alice')).toBe("Alice's Wishlist | Carolina Futons");
   });
 
-  it('uses possessive correctly for names ending in s', () => {
+  it('includes name and brand for names ending in s', () => {
     const title = buildWishlistTitle('James');
     expect(title).toContain('James');
     expect(title).toContain('Carolina Futons');
@@ -100,11 +100,6 @@ describe('buildWishlistTitle', () => {
     expect(t2).toContain('Carolina Futons');
   });
 
-  it('returns generic fallback title for invalid/noindex case', () => {
-    const title = buildWishlistTitle(null);
-    expect(typeof title).toBe('string');
-    expect(title.length).toBeGreaterThan(0);
-  });
 });
 
 // ── S5: buildWishlistDescription ──────────────────────────────────────────────

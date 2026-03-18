@@ -1,5 +1,5 @@
 // Wishlist Share.js — /wishlist-share
-// CF-y24r S1 + CF-o779 S3
+// CF-y24r S1 + CF-o779 S3 + CF-muzy S5
 // Stories: S1 token/fetch, S2 product cards, S3 add-to-cart,
 //          S4 member share generation, S5 SEO
 
