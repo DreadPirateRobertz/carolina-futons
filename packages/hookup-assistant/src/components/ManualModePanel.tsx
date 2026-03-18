@@ -25,6 +25,7 @@ interface ManualModePanelProps {
   selectedType: WixElementType | null;
   onMarkDone: () => void;
   onSkip: () => void;
+  onApplyDefaultState?: (element: ElementDef) => void;
 }
 
 export function ManualModePanel({
@@ -36,21 +37,40 @@ export function ManualModePanel({
   selectedType,
   onMarkDone,
   onSkip,
+  onApplyDefaultState,
 }: ManualModePanelProps) {
   const { copy, copied } = useClipboard();
   const markDoneRef = useRef<HTMLButtonElement>(null);
 
-  // Tab key advances to next element (Mark Done)
+  const typeMismatch = selectedType !== null && currentElement !== null && selectedType !== currentElement.type;
+
+  function handleMarkDone() {
+    if (typeMismatch) return;
+    onMarkDone();
+    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
+      onApplyDefaultState?.(currentElement);
+    }
+  }
+
+  function handleOverride() {
+    onMarkDone();
+    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
+      onApplyDefaultState?.(currentElement);
+    }
+  }
+
+  // Tab key advances to next element (Mark Done) — disabled on type mismatch
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Tab' && !e.shiftKey && document.activeElement?.tagName !== 'INPUT') {
+        if (typeMismatch) return;
         e.preventDefault();
-        onMarkDone();
+        handleMarkDone();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onMarkDone]);
+  }, [onMarkDone, typeMismatch, currentElement, onApplyDefaultState]);
 
   if (!currentElement) {
     return (
@@ -61,7 +81,6 @@ export function ManualModePanel({
   }
 
   const pct = totalCount > 0 ? Math.round((hookedCount / totalCount) * 100) : 0;
-  const typeMismatch = selectedType !== null && selectedType !== currentElement.type;
 
   return (
     <div style={s.root}>
@@ -116,9 +135,10 @@ export function ManualModePanel({
       <div style={s.actionRow}>
         <button
           ref={markDoneRef}
-          style={{ ...s.btn, ...s.btnSuccess }}
-          onClick={onMarkDone}
-          aria-label="Mark this element as done and advance to next"
+          style={{ ...s.btn, ...s.btnSuccess, ...(typeMismatch ? s.btnDisabled : {}) }}
+          onClick={handleMarkDone}
+          disabled={typeMismatch}
+          aria-label="Mark Done — advance to next element"
         >
           Mark Done [Tab]
         </button>
@@ -130,6 +150,17 @@ export function ManualModePanel({
           Skip
         </button>
       </div>
+
+      {/* Override type check */}
+      {typeMismatch && (
+        <button
+          style={s.overrideLink}
+          onClick={handleOverride}
+          aria-label="Override type check"
+        >
+          Override type check
+        </button>
+      )}
 
       {/* Flags */}
       {(currentElement.defaultHidden || currentElement.defaultCollapsed || currentElement.cssOnly) && (
@@ -320,6 +351,20 @@ const s: Record<string, React.CSSProperties> = {
   flagCss: {
     backgroundColor: '#e6f4ea',
     color: '#1e7e34',
+  },
+  btnDisabled: {
+    opacity: 0.4,
+    cursor: 'not-allowed',
+  },
+  overrideLink: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '11px',
+    color: '#856404',
+    textDecoration: 'underline',
+    padding: '0',
+    alignSelf: 'center',
   },
   complete: {
     textAlign: 'center',
