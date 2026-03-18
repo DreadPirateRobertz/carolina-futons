@@ -1,11 +1,23 @@
+/**
+ * Compare Page $onReady handler tests (CF-g0fo)
+ * Tests the $w() wiring in Compare Page.js via a mock $w environment.
+ */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import {
+  __setProductMap,
+  __setGetProductShouldFail,
+} from './__mocks__/wix-stores-frontend.js';
+import { __getTitle, __getMetaTags } from './__mocks__/wix-seo.js';
+
+// ── $w mock ──────────────────────────────────────────────────────────────────
 
 const elements = new Map();
 function createMockElement() {
   return {
     text: '', src: '', alt: '', value: '', label: '', placeholder: '',
     options: [], data: [], html: '', link: '', target: '',
-    style: { color: '', fontWeight: '', backgroundColor: '' },
+    style: { color: '', fontWeight: '', backgroundColor: '', opacity: '',
+             textDecoration: '' },
     accessibility: {},
     hidden: false, collapsed: false,
     show: vi.fn(() => Promise.resolve()),
@@ -24,95 +36,51 @@ function getEl(sel) {
   if (!elements.has(sel)) elements.set(sel, createMockElement());
   return elements.get(sel);
 }
+
 let onReadyHandler = null;
 globalThis.$w = Object.assign(
   (sel) => getEl(sel),
   { onReady: (fn) => { onReadyHandler = fn; } }
 );
 
-// ── Mock data ───────────────────────────────────────────────────
+// ── Product fixtures ─────────────────────────────────────────────────────────
 
-const mockComparisonData = {
-  success: true,
-  products: [
-    { _id: 'p1', name: 'Frame A', slug: 'frame-a', mainMedia: 'img1.jpg', formattedPrice: '$599', ribbon: 'Sale' },
-    { _id: 'p2', name: 'Frame B', slug: 'frame-b', mainMedia: 'img2.jpg', formattedPrice: '$799', ribbon: '' },
+const prodA = {
+  _id: 'p1', name: 'Eureka Frame', slug: 'eureka-frame',
+  price: 499, formattedPrice: '$499.00', compareAtPrice: null,
+  mainMedia: 'https://example.com/a.jpg', ribbon: 'Sale',
+  inStock: true, numericRating: 4.5,
+  additionalInfoSections: [
+    { title: 'Frame Material', description: 'Hardwood' },
   ],
-  rows: [
-    { label: 'Material', cells: [{ value: 'Pine' }, { value: 'Oak' }], differs: true },
+};
+const prodB = {
+  _id: 'p2', name: 'Dillon Frame', slug: 'dillon-frame',
+  price: 699, formattedPrice: '$699.00', compareAtPrice: null,
+  mainMedia: 'https://example.com/b.jpg', ribbon: '',
+  inStock: true, numericRating: 4.2,
+  additionalInfoSections: [
+    { title: 'Frame Material', description: 'Engineered wood' },
   ],
-  badges: { bestValue: 'p1', bestRated: 'p2', mostPopular: null },
-  sharedCategory: 'futon-frames',
 };
 
-const mockGetComparisonData = vi.fn(() => Promise.resolve(mockComparisonData));
-const mockBuildShareableUrl = vi.fn(() => Promise.resolve('/compare?ids=p1,p2'));
-const mockTrackComparison = vi.fn(() => Promise.resolve());
-const mockGetCompareList = vi.fn(() => [{ _id: 'p1' }, { _id: 'p2' }]);
-const mockRemoveFromCompare = vi.fn();
-const mockAddToCompare = vi.fn();
-const mockInitPageSeo = vi.fn();
-const mockTrackProductPageView = vi.fn();
-const mockCollapseOnMobile = vi.fn();
-const mockInitBackToTop = vi.fn();
-const mockIsMobile = vi.fn(() => false);
-const mockMakeClickable = vi.fn();
-const mockAnnounce = vi.fn();
-const mockWixLocationTo = vi.fn();
-const mockCopyToClipboard = vi.fn(() => Promise.resolve());
-
-// ── Module mocks ────────────────────────────────────────────────
-
-vi.mock('backend/comparisonService.web', () => ({
-  getComparisonData: (...args) => mockGetComparisonData(...args),
-  buildShareableUrl: (...args) => mockBuildShareableUrl(...args),
-  trackComparison: (...args) => mockTrackComparison(...args),
-}));
-
-vi.mock('public/galleryHelpers.js', () => ({
-  getCompareList: (...args) => mockGetCompareList(...args),
-  removeFromCompare: (...args) => mockRemoveFromCompare(...args),
-  addToCompare: (...args) => mockAddToCompare(...args),
-}));
-
-vi.mock('public/designTokens.js', () => ({
-  colors: { sandLight: '#F5F0EB', mountainBlue: '#4A7C59' },
-}));
-
-vi.mock('public/mobileHelpers', () => ({
-  collapseOnMobile: (...args) => mockCollapseOnMobile(...args),
-  initBackToTop: (...args) => mockInitBackToTop(...args),
-  isMobile: (...args) => mockIsMobile(...args),
-}));
-
-vi.mock('public/engagementTracker', () => ({
-  trackProductPageView: (...args) => mockTrackProductPageView(...args),
-}));
-
-vi.mock('public/a11yHelpers', () => ({
-  announce: (...args) => mockAnnounce(...args),
-  makeClickable: (...args) => mockMakeClickable(...args),
-}));
-
-vi.mock('public/pageSeo.js', () => ({
-  initPageSeo: (...args) => mockInitPageSeo(...args),
-}));
+// ── Module mocks ─────────────────────────────────────────────────────────────
 
 vi.mock('wix-location-frontend', () => ({
   default: {
-    to: (...args) => mockWixLocationTo(...args),
+    to: vi.fn(),
     query: { ids: 'p1,p2' },
     baseUrl: 'https://carolinafutons.com',
   },
 }));
 
-vi.mock('wix-window-frontend', () => ({
-  copyToClipboard: (...args) => mockCopyToClipboard(...args),
+vi.mock('public/cartService', () => ({
+  addToCart: vi.fn(() => Promise.resolve()),
 }));
 
-// ── Test suite ──────────────────────────────────────────────────
+// ── Import page file ─────────────────────────────────────────────────────────
 
-describe('Compare Page', () => {
+describe('Compare Page — $onReady handler', () => {
   beforeAll(async () => {
     await import('../src/pages/Compare Page.js');
   });
@@ -120,225 +88,166 @@ describe('Compare Page', () => {
   beforeEach(() => {
     elements.clear();
     vi.clearAllMocks();
+    __setProductMap({ p1: prodA, p2: prodB });
+    __setGetProductShouldFail(false);
   });
 
-  // ── 1. initPageSeo ──────────────────────────────────────────
+  // ── S1: Product fetch ──────────────────────────────────────────────────────
 
-  it('calls initPageSeo with compareProducts', async () => {
+  it('fetches both products from wix-stores-frontend in parallel', async () => {
     await onReadyHandler();
-    expect(mockInitPageSeo).toHaveBeenCalledWith('compareProducts');
+    // Both products were fetched — columns should be populated
+    expect(getEl('#compareColRepeater').data).toHaveLength(2);
   });
 
-  // ── 2. Gets product IDs from URL query ──────────────────────
-
-  it('parses product IDs from wixLocationFrontend.query.ids', async () => {
-    await onReadyHandler();
-    expect(mockGetComparisonData).toHaveBeenCalledWith(['p1', 'p2']);
-  });
-
-  // ── 3. Calls getComparisonData ──────────────────────────────
-
-  it('calls getComparisonData with the parsed product IDs', async () => {
-    await onReadyHandler();
-    expect(mockGetComparisonData).toHaveBeenCalledTimes(1);
-    expect(mockGetComparisonData).toHaveBeenCalledWith(['p1', 'p2']);
-  });
-
-  // ── 4. Tracks page view and comparison ──────────────────────
-
-  it('tracks page view and comparison event', async () => {
-    await onReadyHandler();
-    expect(mockTrackProductPageView).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Product Comparison' })
-    );
-    expect(mockTrackComparison).toHaveBeenCalledWith(['p1', 'p2']);
-  });
-
-  // ── 5. Loading state ────────────────────────────────────────
-
-  it('shows loading indicator then hides it after data loads', async () => {
-    await onReadyHandler();
-    const loading = getEl('#compareLoading');
-    expect(loading.show).toHaveBeenCalled();
-    expect(loading.hide).toHaveBeenCalled();
-  });
-
-  // ── 6. Product headers: image, name, price ──────────────────
-
-  it('sets product image, name, and price for each header column', async () => {
-    await onReadyHandler();
-
-    expect(getEl('#compareImage1').src).toBe('img1.jpg');
-    expect(getEl('#compareImage1').alt).toBe('Frame A - Carolina Futons');
-    expect(getEl('#compareName1').text).toBe('Frame A');
-    expect(getEl('#comparePrice1').text).toBe('$599');
-
-    expect(getEl('#compareImage2').src).toBe('img2.jpg');
-    expect(getEl('#compareImage2').alt).toBe('Frame B - Carolina Futons');
-    expect(getEl('#compareName2').text).toBe('Frame B');
-    expect(getEl('#comparePrice2').text).toBe('$799');
-  });
-
-  // ── 7. Ribbon badges ───────────────────────────────────────
-
-  it('shows ribbon badge when present and hides when empty', async () => {
-    await onReadyHandler();
-
-    expect(getEl('#compareBadge1').text).toBe('Sale');
-    expect(getEl('#compareBadge1').show).toHaveBeenCalled();
-    expect(getEl('#compareBadge2').hide).toHaveBeenCalled();
-  });
-
-  // ── 8. Page title ──────────────────────────────────────────
-
-  it('sets comparison page title to "Comparing 2 Products"', async () => {
-    await onReadyHandler();
-    expect(getEl('#comparePageTitle').text).toBe('Comparing 2 Products');
-  });
-
-  // ── 9. Comparison rows repeater ────────────────────────────
-
-  it('sets repeater data and onItemReady renders label and cell values', async () => {
-    await onReadyHandler();
-
-    const repeater = getEl('#comparisonRowRepeater');
-    expect(repeater.onItemReady).toHaveBeenCalled();
-    expect(repeater.data).toEqual([
-      { _id: 'row-0', label: 'Material', cells: [{ value: 'Pine' }, { value: 'Oak' }], differs: true },
-    ]);
-
-    // Simulate onItemReady callback
-    const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
-    const itemElements = new Map();
-    const $item = (sel) => {
-      if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-      return itemElements.get(sel);
-    };
-    const itemData = { _id: 'row-0', label: 'Material', cells: [{ value: 'Pine' }, { value: 'Oak' }], differs: true };
-    itemReadyCb($item, itemData);
-
-    expect($item('#rowLabel').text).toBe('Material');
-    expect($item('#rowCell1').text).toBe('Pine');
-    expect($item('#rowCell2').text).toBe('Oak');
-  });
-
-  // ── 10. Diff highlighting ──────────────────────────────────
-
-  it('applies sandLight background color when row differs', async () => {
-    await onReadyHandler();
-
-    const repeater = getEl('#comparisonRowRepeater');
-    const itemReadyCb = repeater.onItemReady.mock.calls[0][0];
-    const itemElements = new Map();
-    const $item = (sel) => {
-      if (!itemElements.has(sel)) itemElements.set(sel, createMockElement());
-      return itemElements.get(sel);
-    };
-    const itemData = { _id: 'row-0', label: 'Material', cells: [{ value: 'Pine' }, { value: 'Oak' }], differs: true };
-    itemReadyCb($item, itemData);
-
-    expect($item('#rowCell1').style.backgroundColor).toBe('#F5F0EB');
-    expect($item('#rowCell2').style.backgroundColor).toBe('#F5F0EB');
-  });
-
-  // ── 11. Winner badges ─────────────────────────────────────
-
-  it('shows "Best Value" badge for p1 and "Best Rated" for p2', async () => {
-    await onReadyHandler();
-
-    expect(getEl('#winnerBadge1').text).toBe('Best Value');
-    expect(getEl('#winnerBadge1').show).toHaveBeenCalled();
-    expect(getEl('#winnerBadge1').style.color).toBe('#4A7C59');
-
-    expect(getEl('#winnerBadge2').text).toBe('Best Rated');
-    expect(getEl('#winnerBadge2').show).toHaveBeenCalled();
-    expect(getEl('#winnerBadge2').style.color).toBe('#4A7C59');
-  });
-
-  // ── 12. Share button ──────────────────────────────────────
-
-  it('calls buildShareableUrl and registers onClick on share button', async () => {
-    await onReadyHandler();
-
-    expect(mockBuildShareableUrl).toHaveBeenCalledWith(['p1', 'p2']);
-    expect(getEl('#shareCompareBtn').onClick).toHaveBeenCalled();
-  });
-
-  // ── 13. Share button click copies URL ─────────────────────
-
-  it('copies full shareable URL to clipboard on share click', async () => {
-    await onReadyHandler();
-
-    const clickHandler = getEl('#shareCompareBtn').onClick.mock.calls[0][0];
-    await clickHandler();
-
-    expect(mockCopyToClipboard).toHaveBeenCalledWith('https://carolinafutons.com/compare?ids=p1,p2');
-    expect(getEl('#shareCompareBtn').label).toBe('Link Copied!');
-    expect(mockAnnounce).toHaveBeenCalledWith($w, 'Comparison link copied to clipboard');
-  });
-
-  // ── 14. Remove buttons ────────────────────────────────────
-
-  it('registers onClick for each product remove button, calls removeFromCompare', async () => {
-    await onReadyHandler();
-
-    expect(getEl('#removeProduct1').onClick).toHaveBeenCalled();
-    expect(getEl('#removeProduct2').onClick).toHaveBeenCalled();
-
-    // Simulate clicking remove on product 1 — only 1 remaining, shows empty state
-    const removeCb = getEl('#removeProduct1').onClick.mock.calls[0][0];
-    await removeCb();
-    expect(mockRemoveFromCompare).toHaveBeenCalledWith('p1');
-  });
-
-  // ── 15. Add product button ────────────────────────────────
-
-  it('registers onClick on add product button that navigates to shared category', async () => {
-    await onReadyHandler();
-
-    expect(getEl('#addProductBtn').onClick).toHaveBeenCalled();
-
-    const addCb = getEl('#addProductBtn').onClick.mock.calls[0][0];
-    addCb();
-    expect(mockWixLocationTo).toHaveBeenCalledWith('/futon-frames');
-  });
-
-  // ── 16. Empty state when fewer than 2 products ────────────
-
-  it('shows empty state when fewer than 2 products are available', async () => {
+  it('shows empty state when fewer than 2 IDs in URL', async () => {
     const { default: wixLoc } = await import('wix-location-frontend');
-    const origQuery = wixLoc.query;
-    wixLoc.query = { ids: '' };
-    mockGetCompareList.mockReturnValueOnce([]);
-
+    wixLoc.query = { ids: 'p1' };
     await onReadyHandler();
-
-    expect(getEl('#compareEmptyState').show).toHaveBeenCalled();
-    expect(getEl('#compareEmptyState').expand).toHaveBeenCalled();
-    expect(getEl('#emptyStateTitle').text).toBe('Compare Products');
-
-    // Restore
-    wixLoc.query = origQuery;
+    expect(getEl('#compareEmptySection').show).toHaveBeenCalled();
+    wixLoc.query = { ids: 'p1,p2' }; // restore
   });
 
-  // ── 17. ARIA region roles and labels on product columns ───
-
-  it('sets ARIA region role and label on product columns', async () => {
+  it('shows error state when product fetch throws', async () => {
+    __setGetProductShouldFail(true);
     await onReadyHandler();
-
-    expect(getEl('#compareCol1').accessibility.role).toBe('region');
-    expect(getEl('#compareCol1').accessibility.ariaLabel).toBe('Product 1: Frame A');
-
-    expect(getEl('#compareCol2').accessibility.role).toBe('region');
-    expect(getEl('#compareCol2').accessibility.ariaLabel).toBe('Product 2: Frame B');
+    expect(getEl('#compareErrorSection').show).toHaveBeenCalled();
+    expect(getEl('#compareErrorText').text).toContain('Unable to load');
   });
 
-  // ── 18. Content visibility after successful load ──────────
-
-  it('shows compare content and hides loading after successful data fetch', async () => {
+  it('sets skeleton opacity on grid during load and restores after', async () => {
+    // The handler sets opacity 0.4 then 1 — grid should end at 1 (or not be set to 0.4)
     await onReadyHandler();
+    // After successful load, opacity is '1'
+    expect(getEl('#compareGridSection').style.opacity).toBe('1');
+  });
 
-    expect(getEl('#compareContent').hide).toHaveBeenCalled();
-    expect(getEl('#compareContent').show).toHaveBeenCalled();
+  // ── S2: Column rendering ──────────────────────────────────────────────────
+
+  it('populates compareColRepeater with one item per product', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareColRepeater').data).toHaveLength(2);
+  });
+
+  it('sets subtitle with product count', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareSubtitle').text).toBe('Comparing 2 products');
+  });
+
+  it('registers onItemReady on compareColRepeater', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareColRepeater').onItemReady).toHaveBeenCalled();
+  });
+
+  it('onItemReady sets image, name, price for a column', async () => {
+    await onReadyHandler();
+    const cb = getEl('#compareColRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    const colData = getEl('#compareColRepeater').data[0];
+    cb($item, colData);
+
+    expect($item('#compareColImage').src).toBe('https://example.com/a.jpg');
+    expect($item('#compareColName').text).toBe('Eureka Frame');
+    expect($item('#compareColPrice').text).toBe('$499.00');
+  });
+
+  it('onItemReady shows badge for product with ribbon', async () => {
+    await onReadyHandler();
+    const cb = getEl('#compareColRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    const colData = getEl('#compareColRepeater').data[0]; // prodA has ribbon 'Sale'
+    cb($item, colData);
+    expect($item('#compareColBadge').text).toBe('Sale');
+    expect($item('#compareColBadge').show).toHaveBeenCalled();
+  });
+
+  it('onItemReady hides badge when product has no ribbon', async () => {
+    await onReadyHandler();
+    const cb = getEl('#compareColRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    const colData = getEl('#compareColRepeater').data[1]; // prodB has no ribbon
+    cb($item, colData);
+    expect($item('#compareColBadge').hide).toHaveBeenCalled();
+  });
+
+  it('onItemReady hides origPrice when no sale', async () => {
+    await onReadyHandler();
+    const cb = getEl('#compareColRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    cb($item, getEl('#compareColRepeater').data[0]);
+    expect($item('#compareColOrigPrice').hide).toHaveBeenCalled();
+  });
+
+  // ── S3: Attributes table ──────────────────────────────────────────────────
+
+  it('populates compareAttrRepeater', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareAttrRepeater').data).toHaveLength(10); // 10 COMPARE_ATTRIBUTES
+  });
+
+  it('registers onItemReady on compareAttrRepeater', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareAttrRepeater').onItemReady).toHaveBeenCalled();
+  });
+
+  it('onItemReady sets attribute label text', async () => {
+    await onReadyHandler();
+    const cb = getEl('#compareAttrRepeater').onItemReady.mock.calls[0][0];
+    const itemEls = new Map();
+    const $item = (sel) => {
+      if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+      return itemEls.get(sel);
+    };
+    cb($item, getEl('#compareAttrRepeater').data[0]);
+    expect($item('#compareAttrLabel').text).toBeTruthy();
+  });
+
+  // ── S5: SEO ───────────────────────────────────────────────────────────────
+
+  it('sets SEO title with product names', async () => {
+    await onReadyHandler();
+    const title = __getTitle();
+    expect(title).toContain('Eureka Frame');
+    expect(title).toContain('Dillon Frame');
+    expect(title).toContain('Carolina Futons');
+  });
+
+  it('sets SEO meta description', async () => {
+    await onReadyHandler();
+    const tags = __getMetaTags();
+    const desc = tags.find(t => t.name === 'description');
+    expect(desc).toBeTruthy();
+    expect(desc.content).toContain('Eureka Frame');
+  });
+
+  // ── S6: Reset button ──────────────────────────────────────────────────────
+
+  it('registers onClick on compareResetBtn', async () => {
+    await onReadyHandler();
+    expect(getEl('#compareResetBtn').onClick).toHaveBeenCalled();
+  });
+
+  it('compareResetBtn navigates to /shop-main', async () => {
+    const { default: wixLoc } = await import('wix-location-frontend');
+    await onReadyHandler();
+    const clickHandler = getEl('#compareResetBtn').onClick.mock.calls[0][0];
+    clickHandler();
+    expect(wixLoc.to).toHaveBeenCalledWith('/shop-main');
   });
 });

@@ -1,13 +1,25 @@
 // Mock for wix-stores-frontend
-// Provides product variant lookup and cart events
+// Provides product variant lookup, cart events, and product fetch
 
 let _variantsResponse = [];
 let _cartChangedCb = null;
+let _productMap = {};
+let _getProductShouldFail = false;
 
 export function __reset() {
   _variantsResponse = [];
   _cartChangedCb = null;
   _updateShouldFail = false;
+  _productMap = {};
+  _getProductShouldFail = false;
+}
+
+export function __setProductMap(map) {
+  _productMap = map;
+}
+
+export function __setGetProductShouldFail(val) {
+  _getProductShouldFail = val;
 }
 
 export function __setVariantsResponse(variants) {
@@ -24,10 +36,18 @@ export function __setUpdateShouldFail(val) {
   _updateShouldFail = val;
 }
 
+export const products = {
+  async getProduct(id) {
+    if (_getProductShouldFail) throw new Error('Stores API error');
+    return _productMap[id] ?? null;
+  },
+};
+
 const wixStoresFrontend = {
   async getProductVariants(productId, options) {
     return _variantsResponse;
   },
+  products,
   onCartChanged(cb) {
     _cartChangedCb = cb;
   },
