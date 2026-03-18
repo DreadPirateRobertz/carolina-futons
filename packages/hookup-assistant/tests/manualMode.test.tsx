@@ -329,6 +329,20 @@ describe('ManualModePanel — S6 default state setter', () => {
     expect(onApplyDefaultState).toHaveBeenCalledWith(heroTitle);
   });
 
+  it('does NOT call onApplyDefaultState for cssOnly element even when defaultHidden is also set', () => {
+    const cssHidden: ElementDef = { id: 'cssHiddenEl', type: 'Box', notes: '', cssOnly: true, defaultHidden: true };
+    const onApplyDefaultState = vi.fn();
+    render(
+      <ManualModePanel
+        {...baseProps}
+        currentElement={cssHidden}
+        onApplyDefaultState={onApplyDefaultState}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Mark Done/i }));
+    expect(onApplyDefaultState).not.toHaveBeenCalled();
+  });
+
   it('works correctly when onApplyDefaultState is not provided (no crash)', () => {
     render(
       <ManualModePanel

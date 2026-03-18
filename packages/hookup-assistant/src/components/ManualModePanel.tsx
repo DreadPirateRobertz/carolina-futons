@@ -53,7 +53,7 @@ export function ManualModePanel({
   const typeMismatch = selectedType !== null && currentElement !== null && selectedType !== currentElement.type;
 
   const applyDefaultStateIfNeeded = useCallback(() => {
-    if (currentElement && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
+    if (currentElement && !currentElement.cssOnly && (currentElement.defaultHidden || currentElement.defaultCollapsed)) {
       onApplyDefaultState?.(currentElement);
     }
   }, [currentElement, onApplyDefaultState]);
