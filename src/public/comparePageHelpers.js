@@ -122,6 +122,7 @@ export function getProductAttribute(product, attrName) {
   const section = sections.find(
     s => s.title?.toLowerCase() === attrName.toLowerCase()
   );
+  // user-editable CMS content — must escape to prevent XSS in .html contexts
   return htmlEscape(section?.description || '—');
 }
 
