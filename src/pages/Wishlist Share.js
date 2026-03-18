@@ -1,5 +1,5 @@
 // Wishlist Share.js — /wishlist-share
-// CF-y24r S1 + CF-o779 S3 + CF-muzy S5
+// CF-y24r S1 + CF-4qll S2 + CF-o779 S3 + CF-muzy S5
 // Stories: S1 token/fetch, S2 product cards, S3 add-to-cart,
 //          S4 member share generation, S5 SEO
 
@@ -12,6 +12,7 @@ import {
   buildWishlistTitle,
   buildWishlistDescription,
   buildWishlistOgTags,
+  populateShareCard,
 } from 'public/wishlistShareHelpers.js';
 import { isMobile } from 'public/mobileHelpers';
 
@@ -69,16 +70,12 @@ $w.onReady(async () => {
     return;
   }
 
-  $w('#wishlistShareRepeater').data = result.items.map(item => ({
-    _id: item._id || item.productId,
-    productId: item.productId,
-    productName: item.productName,
-    productImage: item.productImage,
-  }));
-
-  // S3: Wire add-to-cart button per item
+  // S2+S3: Register onItemReady BEFORE setting .data (Velo requirement)
   $w('#wishlistShareRepeater').onItemReady(($item, itemData) => {
-    // Add to cart cycle: Add to Cart → Adding... → Added! → (2s) → Add to Cart
+    // S2: Product card — image and name
+    populateShareCard($item, itemData);
+
+    // S3: Add to cart cycle: Add to Cart → Adding... → Added! → (2s) → Add to Cart
     $item('#shareAddCart').onClick(async () => {
       try {
         $item('#shareAddCart').disable();
@@ -100,6 +97,13 @@ $w.onReady(async () => {
       }
     });
   });
+
+  $w('#wishlistShareRepeater').data = result.items.map(item => ({
+    _id: item._id || item.productId,
+    productId: item.productId,
+    productName: item.productName,
+    productImage: item.productImage,
+  }));
 });
 
 // ── S5: SEO ───────────────────────────────────────────────────────────────────

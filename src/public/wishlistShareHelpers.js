@@ -1,6 +1,6 @@
 /**
  * @module wishlistShareHelpers
- * Wishlist Share Page — pure helper functions for CF-y24r + CF-muzy S5
+ * Wishlist Share Page — pure helper functions for CF-y24r + CF-4qll S2 + CF-muzy S5
  * All $w() wiring is in 'Wishlist Share.js'; this module is pure functions only.
  */
 
@@ -34,6 +34,21 @@ const INVALID_MESSAGES = {
  */
 export function buildInvalidMessage(reason) {
   return INVALID_MESSAGES[reason] || INVALID_MESSAGES.error;
+}
+
+// ── S2: Product card population ───────────────────────────────────────────────
+
+/**
+ * Populate a repeater card with wishlist item data from S1.
+ * Called inside onItemReady — registered BEFORE .data= assignment.
+ * Item shape: { _id, productId, productName, productImage }
+ * @param {Function} $item - scoped $w for the repeater item
+ * @param {{ productName: string, productImage: string }} itemData
+ */
+export function populateShareCard($item, itemData) {
+  try { $item('#shareImage').src = itemData.productImage || ''; } catch (e) {}
+  try { $item('#shareImage').alt = `${itemData.productName || 'Product'} - wishlist item`; } catch (e) {}
+  try { $item('#shareName').text = itemData.productName || ''; } catch (e) {}
 }
 
 // ── S5: SEO helpers ───────────────────────────────────────────────────────────
