@@ -65,38 +65,35 @@ describe('.husky/pre-commit hook', () => {
   });
 });
 
-// ── .lintstagedrc ─────────────────────────────────────────────────────────────
+// ── .lintstagedrc.js ──────────────────────────────────────────────────────────
 
-describe('.lintstagedrc — staged file pipeline', () => {
-  let cfg;
-  try {
-    cfg = JSON.parse(read('.lintstagedrc'));
-  } catch {
-    cfg = null;
-  }
+describe('.lintstagedrc.js — staged file pipeline', () => {
+  let src = '';
+  try { src = read('.lintstagedrc.js'); } catch { src = ''; }
 
-  it('.lintstagedrc exists', () => {
-    expect(exists('.lintstagedrc')).toBe(true);
-  });
-
-  it('is valid JSON', () => {
-    expect(cfg).not.toBeNull();
+  it('.lintstagedrc.js exists', () => {
+    expect(exists('.lintstagedrc.js')).toBe(true);
   });
 
   it('has a glob entry covering JS and/or TS files', () => {
-    const keys = Object.keys(cfg ?? {});
-    const hasJsOrTs = keys.some(k => /\.(js|ts)\b|\{[^}]*(?:js|ts)[^}]*\}/.test(k));
-    expect(hasJsOrTs).toBe(true);
+    expect(src).toMatch(/\*\..*\{.*(?:js|ts).*\}|\.js|\.ts/);
   });
 
   it('runs eslint on staged JS/TS files', () => {
-    const commands = Object.values(cfg ?? {}).flat().join(' ');
-    expect(commands).toMatch(/eslint/);
+    expect(src).toMatch(/eslint/);
   });
 
-  it('runs vitest with --changed on staged JS/TS files', () => {
-    const commands = Object.values(cfg ?? {}).flat().join(' ');
-    expect(commands).toMatch(/vitest/);
-    expect(commands).toMatch(/--changed/);
+  it('runs vitest with --changed', () => {
+    expect(src).toMatch(/vitest/);
+    expect(src).toMatch(/--changed/);
+  });
+
+  it('uses function form to prevent lint-staged filename injection', () => {
+    // Function form: () => '...' ensures vitest is not given staged filenames
+    expect(src).toMatch(/=>\s*['"`]vitest/);
+  });
+
+  it('passes --passWithNoTests to avoid blocking commits with no test coverage', () => {
+    expect(src).toMatch(/--passWithNoTests/);
   });
 });
