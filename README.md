@@ -8,15 +8,18 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)
 
 ## Current Status
 
-**v0.10.0** — Running on My Site 3 (Wix Studio Furniture Store #3563 template).
+**v1.0.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 25,200+ tests passing across 590+ test files (Vitest)
-- 204 backend modules, 41 pages, 258 public utilities (503 source files)
-- 25 PRs merged in the latest development cycle (#435–#459)
-- 28+ bugs fixed including a codebase-wide falsy-zero audit (35 sites)
+- 26,942 tests passing across 638 test files (Vitest)
+- 44 pages, 570+ source files (backend + pages + public)
+- 18 PRs merged in the latest development cycle (#481–#494)
+- 3 new pages: Compare Page, Fabric Swatches, Wishlist Share
+- Hookup Assistant Wix Studio add-on: Phase 1 complete (S1/S2/S3/S5/S6/S10)
+- Pre-commit hooks (husky + lint-staged), coverage thresholds enforced
 - Stage3 velo repo: `DreadPirateRobertz/carolina-futons-stage3-velo`
 - ID mapping JSONs: `scripts/category-page-mapping.json`, `scripts/masterpage-home-id-mapping.json`
 - Template element audit: `docs/TEMPLATE-ELEMENT-AUDIT.md`
+- Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## Architecture
 
