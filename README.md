@@ -4,7 +4,7 @@
 
 E-commerce website for Carolina Futons, built on the Wix Velo platform. Handcrafted mountain furniture with a Blue Ridge aesthetic — futons, sofas, mattresses, and accessories.
 
-Live site: [carolinafutons.com](https://www.carolinafutons.com)
+Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site is STAGING but the current static site is at this URL this will be a significant update when it goes live having fun with wix velo at the moment)
 
 ## Current Status
 
