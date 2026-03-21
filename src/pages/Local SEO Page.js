@@ -1,6 +1,6 @@
 // Local SEO Page.js — City landing page at /near/[city]
-// Renders city-specific headline, local product grid, map embed,
-// directions, and nearby area links for local SEO targeting.
+// Renders city-specific headline, local product grid, Google Maps embed,
+// directions text, directions CTA, and nearby area links for local SEO targeting.
 import { getLocalPage } from 'backend/localSeoService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixSeo from 'wix-seo';
@@ -69,15 +69,26 @@ function initDirections(page) {
   try {
     try { $w('#directionsText').text = page.directions || ''; } catch (e) {}
 
-    const directionsBtn = $w('#directionsBtn');
-    if (directionsBtn && page.mapEmbedUrl) {
-      try {
-        directionsBtn.onClick(() => {
-          wixLocationFrontend.to(page.mapEmbedUrl);
-        });
-      } catch (e) {}
+    // Map embed — sets src on the existing #mapEmbed HtmlComponent
+    if (page.mapEmbedUrl) {
+      try { $w('#mapEmbed').src = page.mapEmbedUrl; } catch (e) {
+        console.warn('Local SEO Page: failed to set #mapEmbed src:', e);
+      }
     }
-  } catch (e) {}
+
+    // Directions CTA — opens Google Maps directions to the store
+    if (page.directionsUrl) {
+      try {
+        $w('#directionsBtn').onClick(() => {
+          wixLocationFrontend.to(page.directionsUrl);
+        });
+      } catch (e) {
+        console.warn('Local SEO Page: failed to wire #directionsBtn:', e);
+      }
+    }
+  } catch (e) {
+    console.warn('Local SEO Page: initDirections error:', e);
+  }
 }
 
 // ── Nearby Areas ───────────────────────────────────────────────────────

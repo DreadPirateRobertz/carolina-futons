@@ -16,6 +16,7 @@ import {
   STORE_ADDRESS,
   STORE_GEO,
   STORE_HOURS,
+  STORE_DIRECTIONS_URL,
 } from 'backend/utils/localSeoData';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ export const getLocalPage = webMethod(
           jsonLd: _buildJsonLd(cityData, canonicalUrl),
           featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
           mapEmbedUrl: cityData.mapEmbedUrl || '',
+          directionsUrl: STORE_DIRECTIONS_URL,
           directions: cityData.directions || '',
           nearbyAreas: Array.isArray(cityData.nearbyAreas)
             ? cityData.nearbyAreas
