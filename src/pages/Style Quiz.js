@@ -223,6 +223,9 @@ async function submitQuiz() {
 function renderResults(results) {
   try { $w('#quizResults').expand(); } catch (e) {}
 
+  // Style profile header (S4)
+  renderStyleProfileHeader(state.answers);
+
   // Results header
   try {
     $w('#resultsTitle').text = `Your Top ${results.length} Match${results.length !== 1 ? 'es' : ''}`;
@@ -234,50 +237,147 @@ function renderResults(results) {
   // Results repeater
   try {
     const repeater = $w('#resultsRepeater');
-    if (!repeater) return;
+    if (repeater) {
+      repeater.onItemReady(($item, itemData) => {
+        const { product, score, reason } = itemData;
 
-    repeater.onItemReady(($item, itemData) => {
-      const { product, score, reason } = itemData;
+        try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
+        try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
+        try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
 
-      try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
-      try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
-      try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
+        // Match score badge
+        try {
+          const matchLabel = score >= 80 ? 'Top Pick' : score >= 60 ? 'Great Match' : 'Good Option';
+          $item('#resultMatchBadge').text = matchLabel;
+        } catch (e) {}
 
-      // Match score badge
-      try {
-        const matchLabel = score >= 80 ? 'Top Pick' : score >= 60 ? 'Great Match' : 'Good Option';
-        $item('#resultMatchBadge').text = matchLabel;
-      } catch (e) {}
+        // Product image
+        try {
+          if (product.mainMedia) {
+            $item('#resultProductImage').src = product.mainMedia;
+            $item('#resultProductImage').alt = buildGridAlt(product);
+          }
+        } catch (e) {}
 
-      // Product image
-      try {
-        if (product.mainMedia) {
-          $item('#resultProductImage').src = product.mainMedia;
-          $item('#resultProductImage').alt = buildGridAlt(product);
-        }
-      } catch (e) {}
+        // View product link
+        try {
+          $item('#resultViewBtn').onClick(() => {
+            trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
+            const slug = product.slug || product._id;
+            import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
+          });
+        } catch (e) {}
 
-      // View product link
-      try {
-        $item('#resultViewBtn').onClick(() => {
-          trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
-          const slug = product.slug || product._id;
-          import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
-        });
-      } catch (e) {}
+        // ARIA
+        try { $item('#resultProductName').accessibility.role = 'heading'; } catch (e) {}
+      });
 
-      // ARIA
-      try { $item('#resultProductName').accessibility.role = 'heading'; } catch (e) {}
-    });
+      repeater.data = results.map((r, i) => ({ ...r, _id: `result-${i}` }));
+    }
+  } catch (e) {}
 
-    repeater.data = results.map((r, i) => ({
-      ...r,
-      _id: `result-${i}`,
-    }));
+  // S4: quizProductsRepeater — editor-wired product recommendations repeater
+  try {
+    const quizProductsRepeater = $w('#quizProductsRepeater');
+    if (quizProductsRepeater) {
+      quizProductsRepeater.onItemReady(($item, itemData) => {
+        const { product, score, reason } = itemData;
+
+        try { $item('#resultProductName').text = product.name || 'Futon'; } catch (e) {}
+        try { $item('#resultProductPrice').text = product.formattedPrice || `$${(product.price || 0).toFixed(2)}`; } catch (e) {}
+        try { $item('#resultMatchReason').text = reason || ''; } catch (e) {}
+
+        // Match score badge
+        try {
+          const matchLabel = score >= 80 ? 'Top Pick' : score >= 60 ? 'Great Match' : 'Good Option';
+          $item('#resultMatchBadge').text = matchLabel;
+        } catch (e) {}
+
+        // Product image
+        try {
+          if (product.mainMedia) {
+            $item('#resultProductImage').src = product.mainMedia;
+            $item('#resultProductImage').alt = buildGridAlt(product);
+          }
+        } catch (e) {}
+
+        // View product link
+        try {
+          $item('#resultViewBtn').onClick(() => {
+            trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
+            const slug = product.slug || product._id;
+            import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
+          });
+        } catch (e) {}
+
+        // ARIA
+        try { $item('#resultProductName').accessibility.role = 'heading'; } catch (e) {}
+      });
+
+      quizProductsRepeater.data = results.map((r, i) => ({ ...r, _id: `result-${i}` }));
+    }
   } catch (e) {}
 
   announce($w, `Found ${results.length} personalized recommendations`);
   trackEvent('quiz_results_shown', { count: results.length });
+}
+
+// ── Style Profile Header (S4) ───────────────────────────────────────
+
+/**
+ * Build a human-readable style profile from quiz answers.
+ * Returns { title, description, tags } for display in the results header.
+ */
+export function buildStyleProfile(answers) {
+  const roomLabels = {
+    'living-room': 'Living Room',
+    'guest-room': 'Guest Room',
+    'dorm': 'Dorm / Small Space',
+    'office': 'Home Office',
+    'bedroom': 'Bedroom',
+  };
+  const useLabels = {
+    'sitting': 'Sitting',
+    'sleeping': 'Sleeping',
+    'both': 'Sitting & Sleeping',
+  };
+  const styleLabels = {
+    'modern': 'Modern',
+    'rustic': 'Rustic',
+    'classic': 'Classic',
+  };
+  const budgetLabels = {
+    'under-500': 'Under $500',
+    '500-1000': '$500–$1,000',
+    '1000-2000': '$1,000–$2,000',
+    'over-2000': 'Over $2,000',
+  };
+
+  const style = styleLabels[answers.stylePreference] || '';
+  const room = roomLabels[answers.roomType] || '';
+  const use = useLabels[answers.primaryUse] || '';
+  const budget = budgetLabels[answers.budgetRange] || '';
+
+  const title = style && room ? `Your ${style} ${room} Style` : 'Your Style Profile';
+  const descParts = [];
+  if (style) descParts.push(`${style} aesthetic`);
+  if (room) descParts.push(`${room.toLowerCase()}`);
+  if (use) descParts.push(`${use.toLowerCase()}`);
+  if (budget) descParts.push(`budget: ${budget}`);
+
+  const description = descParts.length > 0
+    ? descParts.join(' \u2022 ')
+    : 'Personalized to your preferences';
+
+  return { title, description, tags: [style, room, use, budget].filter(Boolean) };
+}
+
+function renderStyleProfileHeader(answers) {
+  if (!answers || Object.keys(answers).length === 0) return;
+  const profile = buildStyleProfile(answers);
+  try { $w('#styleProfileTitle').text = profile.title; } catch (e) {}
+  try { $w('#styleProfileDescription').text = profile.description; } catch (e) {}
+  try { $w('#styleProfileSection').expand(); } catch (e) {}
 }
 
 function renderNoResults() {
