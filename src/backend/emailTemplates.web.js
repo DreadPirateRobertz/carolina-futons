@@ -705,6 +705,139 @@ export const generateBackInStockEmail = makeEmailGenerator(
   'Back in Stock at Carolina Futons', _getBackInStockSection
 );
 
+// ── Welcome Series Template Generators ──────────────────────────────
+// Returns { subject, previewText, html } for each step of the welcome series.
+
+/**
+ * Day 0 welcome email: brand story + 10% discount code.
+ * @param {string} firstName
+ * @param {string} [discountCode]
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getWelcomeDay0Template = webMethod(
+  Permissions.Anyone,
+  (firstName, discountCode) => {
+    const name = sanitize(firstName || '', 200);
+    const code = sanitize(discountCode || '', 50);
+    const meta = TEMPLATE_REGISTRY.welcome_series_1;
+
+    const discountBlock = code
+      ? `<tr><td style="padding:16px;background-color:#F0F4F8;border-radius:4px;text-align:center;margin:16px 0;">
+          <p style="font-family:Arial,sans-serif;font-size:14px;color:#1E3A5F;margin:0 0 8px;">Your exclusive welcome discount:</p>
+          <p style="font-family:Georgia,serif;font-size:24px;font-weight:bold;color:#8B4513;margin:0 0 8px;letter-spacing:2px;">${code}</p>
+          <p style="font-family:Arial,sans-serif;font-size:12px;color:#666;margin:0;">10% off your first order. No minimum purchase required.</p>
+        </td></tr>`
+      : '';
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `Welcome, ${name}!` : 'Welcome to Carolina Futons!'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Thank you for joining us. Carolina Futons has been family-owned and operated in Hendersonville, NC since 1991 — and we're proud to bring you quality futons, sofa beds, and murphy beds direct from our showroom.</p>
+        <p>Whether you're furnishing a first apartment, a guest room, or looking to maximize space, our team is here to help you find the perfect fit.</p>
+      </td></tr>
+      ${discountBlock}
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${SITE_URL}/shop" style="display:inline-block;padding:14px 32px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Shop Now</a>
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+        <p>Questions? Call us at ${SUPPORT_PHONE} — we're happy to help.</p>
+      </td></tr>`;
+
+    return {
+      subject: meta.subjectLine,
+      previewText: meta.previewText,
+      html: wrapEmailHtml('Welcome to Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+/**
+ * Day 3 welcome email: futon buying guide.
+ * @param {string} firstName
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getWelcomeDay3Template = webMethod(
+  Permissions.Anyone,
+  (firstName) => {
+    const name = sanitize(firstName || '', 200);
+    const meta = TEMPLATE_REGISTRY.welcome_series_2;
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `${name}, ready to find your perfect futon?` : 'Ready to find your perfect futon?'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Choosing a futon can feel overwhelming — frame styles, mattress types, cover fabrics, and size options all matter. We've put together a simple buying guide to help you decide.</p>
+      </td></tr>
+      <tr><td style="padding:8px 0;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td style="padding:8px;width:50%;vertical-align:top;font-family:Arial,sans-serif;font-size:14px;color:#333;">
+              <strong style="color:#1E3A5F;">Frame Styles</strong><br/>
+              Bi-fold, tri-fold, loveseat, and full-size. Wood or metal construction.
+            </td>
+            <td style="padding:8px;width:50%;vertical-align:top;font-family:Arial,sans-serif;font-size:14px;color:#333;">
+              <strong style="color:#1E3A5F;">Mattress Types</strong><br/>
+              Cotton, foam, innerspring, and hybrid — each suited for different uses.
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${SITE_URL}/guides/futon-buying-guide" style="display:inline-block;padding:14px 32px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Read the Buying Guide</a>
+      </td></tr>`;
+
+    return {
+      subject: meta.subjectLine,
+      previewText: meta.previewText,
+      html: wrapEmailHtml('Futon Buying Guide — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+/**
+ * Day 7 welcome email: social proof and customer reviews.
+ * @param {string} firstName
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getWelcomeDay7Template = webMethod(
+  Permissions.Anyone,
+  (firstName) => {
+    const name = sanitize(firstName || '', 200);
+    const meta = TEMPLATE_REGISTRY.welcome_series_3;
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `${name}, see what customers are saying` : 'See what our customers are saying'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Don't just take our word for it — here's what customers have shared about their Carolina Futons experience.</p>
+      </td></tr>
+      <tr><td style="padding:8px 0;background-color:#F0F4F8;border-radius:4px;margin-bottom:12px;">
+        <table cellpadding="16" cellspacing="0" border="0" width="100%">
+          <tr><td style="font-family:Georgia,serif;font-size:15px;color:#333;font-style:italic;">
+            "Excellent quality and the staff was incredibly helpful. My futon has held up perfectly for 3 years."
+          </td></tr>
+          <tr><td style="font-family:Arial,sans-serif;font-size:13px;color:#666;">— Sarah M., Asheville NC</td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${SITE_URL}/reviews" style="display:inline-block;padding:14px 32px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Read More Reviews</a>
+      </td></tr>
+      <tr><td style="padding:8px 0;text-align:center;">
+        <a href="${SITE_URL}/shop" style="font-family:Arial,sans-serif;font-size:14px;color:#5B8FA8;text-decoration:underline;">Browse Our Collection</a>
+      </td></tr>`;
+
+    return {
+      subject: meta.subjectLine,
+      previewText: meta.previewText,
+      html: wrapEmailHtml('Customer Reviews — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
 // Export for testing
 export const _TEMPLATE_REGISTRY = TEMPLATE_REGISTRY;
 export const _CATEGORY_LABELS = CATEGORY_LABELS;

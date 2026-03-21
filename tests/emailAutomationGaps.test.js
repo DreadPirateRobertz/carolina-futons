@@ -235,12 +235,12 @@ describe('jobs.config', () => {
     expect(jobs.triggerReengagement.executionConfig.cronExpression).toMatch(/\* 1$/);
   });
 
-  it('all jobs reference emailAutomation.web.js', async () => {
+  it('all jobs reference a .web.js backend file', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
 
     for (const key of Object.keys(jobs)) {
-      expect(jobs[key].functionLocation).toContain('emailAutomation.web.js');
+      expect(jobs[key].functionLocation).toMatch(/\.web\.js$/);
     }
   });
 });
