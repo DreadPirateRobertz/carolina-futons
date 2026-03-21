@@ -249,3 +249,32 @@ jobs:
       - name: Check element ID sync
         run: node scripts/check-element-id-sync.js
         continue-on-error: true
+
+  # ── E2E Smoke Tests ───────────────────────────────────────────────────────
+  # Puppeteer smoke tests against the staging site.
+  # Validates: HTTP 200, CF branding, category pages load, no 404s.
+  # Runs nightly + on-demand — avoids blocking PRs on external-network flakiness.
+  e2e-smoke:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install Puppeteer browser
+        run: npx puppeteer browsers install chrome
+
+      - name: Run E2E smoke tests
+        run: npm run test:e2e
+        env:
+          E2E_BASE_URL: https://halworker85.wixstudio.com/my-site
