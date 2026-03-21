@@ -342,20 +342,29 @@ export const triggerWelcomeSeries = webMethod(
         console.warn('[emailAutomation] Welcome discount unavailable:', e.message);
       }
 
+      const abVariant = selectABVariant(cleanEmail);
+      const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
       const now = new Date();
       let queued = 0;
 
       for (const step of SEQUENCES.welcome.steps) {
         const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        const variables = { firstName: cleanName, discountCode, discountAvailable, email: cleanEmail };
+
+        // Apply A/B subject line override for the test step
+        if (step.step === SEQUENCES.welcome.abTestStep) {
+          variables.subjectLine = (abData.subjectLine || '').replace('{firstName}', cleanName);
+        }
+
         await queueEmail({
           templateId: step.templateId,
           recipientEmail: cleanEmail,
           recipientContactId: '',
-          variables: { firstName: cleanName, discountCode, discountAvailable, email: cleanEmail },
+          variables,
           sequenceType: 'welcome',
           sequenceStep: step.step,
           scheduledFor,
-          abVariant: null,
+          abVariant: step.step === SEQUENCES.welcome.abTestStep ? abVariant : null,
         });
         queued++;
       }
