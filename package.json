@@ -1,13 +1,13 @@
 {
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.18",
-    "@wix/cli": "^1.0.0",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@wix/cli": "^1.1.170",
     "@wix/eslint-plugin-cli": "^1.0.0",
     "eslint": "^8.25.0",
     "husky": "^9.1.7",
     "js-yaml": "^4.1.1",
     "lint-staged": "^16.4.0",
-    "puppeteer": "^24.37.5",
+    "puppeteer": "^24.40.0",
     "react": "16.14.0",
     "vitest": "^4.0.18"
   },
