@@ -8,17 +8,15 @@ Live site: [carolinafutons.com](https://www.carolinafutons.com)  (This repo/site
 
 ## Current Status
 
-**v1.0.0** — Running on My Site (Wix Studio Furniture Store #3563 template).
+**v1.0.1** — Running on My Site (Wix Studio Furniture Store #3563 template).
 
-- 26,942 tests passing across 638 test files (Vitest)
-- 44 pages, 570+ source files (backend + pages + public)
-- 18 PRs merged in the latest development cycle (#481–#494)
-- 3 new pages: Compare Page, Fabric Swatches, Wishlist Share
+- 29,403 tests passing across 714 test files (Vitest)
+- 89 src files synced to production in latest release
+- Sprint 4: Room Planner S1–S8, Gift Cards S1–S2, Style Quiz S4+S6, Klarna HTTP, Video Content, Fabric Sample Request, UGC full-stack, Local SEO S2, Cart Recovery, Referral, Topic Clusters, Social/Email automation
+- Security hardening: 7 IDOR/XSS/SSRF fixes (CF-env4, CF-a68a, CF-7q7a, CF-dzyl, CF-rr8d, CF-5s2o, CF-rza0)
 - Hookup Assistant Wix Studio add-on: Phase 1 complete (S1/S2/S3/S5/S6/S10)
 - Pre-commit hooks (husky + lint-staged), coverage thresholds enforced
-- Stage3 velo repo: `DreadPirateRobertz/carolina-futons-stage3-velo`
-- ID mapping JSONs: `scripts/category-page-mapping.json`, `scripts/masterpage-home-id-mapping.json`
-- Template element audit: `docs/TEMPLATE-ELEMENT-AUDIT.md`
+- Production repo: [DreadPirateRobertz/carolina-futons-stage3-velo](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo)
 - Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## Architecture
@@ -140,10 +138,10 @@ Tests use **Vitest** with comprehensive Wix platform mocks in `tests/__mocks__/`
 
 ## Deployment
 
-This repo is the **development** codebase. Code deploys to Wix through a production repo using [wix-velo-mcp](https://github.com/DreadPirateRobertz/wix-velo-mcp):
+This repo is the **development** codebase. Tagged releases are synced to the [production Wix Velo repo](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo), which is connected to Wix Studio via GitHub integration:
 
 ```
-carolina-futons (dev) → git tag → velo_sync → carolina_futons_velO (prod) → Wix → carolinafutons.com
+carolina-futons (dev) → git tag → release sync → carolina-futons-stage3-velo (prod) → Wix → carolinafutons.com
 ```
 
 Only tagged releases can be synced to production.

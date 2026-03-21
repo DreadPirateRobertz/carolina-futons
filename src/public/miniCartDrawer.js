@@ -65,7 +65,8 @@ export function clearAll() {
 
 /**
  * Returns true if the mini-cart drawer is currently open.
- * Used by masterPage to guard Escape-key close calls.
+ * Exported for external consumers (e.g. conditional UI updates).
+ * Note: closeMiniCart already guards internally via _isOpen.
  *
  * @returns {boolean}
  */
@@ -118,6 +119,7 @@ export function initMiniCartDrawer($w) {
     const checkoutBtn = $w('#miniCartCheckoutBtn');
     checkoutBtn.accessibility.ariaLabel = 'Proceed to checkout';
     checkoutBtn.onClick(() => {
+      closeMiniCart($w);
       try { wixLocationFrontend.to('/checkout'); } catch (e) {}
     });
   } catch (e) {}
@@ -125,6 +127,7 @@ export function initMiniCartDrawer($w) {
   // View Cart button
   try {
     $w('#miniCartViewBtn').onClick(() => {
+      closeMiniCart($w);
       try { wixLocationFrontend.to('/cart'); } catch (e) {}
     });
   } catch (e) {}

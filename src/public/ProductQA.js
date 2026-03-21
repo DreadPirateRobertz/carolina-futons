@@ -320,6 +320,18 @@ function initSubmitForm($w, state, productId) {
 
 // ── FAQ Schema Injection ─────────────────────────────────────────────
 
+/**
+ * Serialize an object to JSON safe for inline <script> injection.
+ * Escapes </ sequences to prevent early script tag termination (XSS sink).
+ * Exported for testing.
+ *
+ * @param {*} obj
+ * @returns {string}
+ */
+export function safeJsonLd(obj) {
+  return JSON.stringify(obj).replace(/<\//g, '<\\/');
+}
+
 function injectSchema($w, schemaResult) {
   try {
     if (!schemaResult?.success || !schemaResult.data?.schema) return;
@@ -327,7 +339,7 @@ function injectSchema($w, schemaResult) {
     // Inject JSON-LD via Wix SEO API if available
     if (typeof $w('#qaSchemaScript') !== 'undefined') {
       try {
-        $w('#qaSchemaScript').html = `<script type="application/ld+json">${JSON.stringify(schemaResult.data.schema)}</script>`;
+        $w('#qaSchemaScript').html = `<script type="application/ld+json">${safeJsonLd(schemaResult.data.schema)}</script>`;
       } catch (e) {}
     }
   } catch (e) {}

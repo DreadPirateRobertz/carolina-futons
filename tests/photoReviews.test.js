@@ -38,7 +38,7 @@ describe('submitPhotoReview', () => {
       productId: '',
       reviewText: 'Great product, love it!',
       rating: 5,
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
     });
 
     expect(result.success).toBe(false);
@@ -50,7 +50,7 @@ describe('submitPhotoReview', () => {
       productId: 'prod-1',
       reviewText: 'Great!',
       rating: 5,
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
     });
 
     expect(result.success).toBe(false);
@@ -74,7 +74,7 @@ describe('submitPhotoReview', () => {
       productId: 'prod-1',
       reviewText: 'This is a great product with excellent quality.',
       rating: 99,
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
     });
 
     expect(result.success).toBe(true);
@@ -85,7 +85,7 @@ describe('submitPhotoReview', () => {
       productId: 'prod-1',
       reviewText: '<script>alert(1)</script>Great frame, solid quality build!',
       rating: 5,
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
     });
 
     expect(result.success).toBe(true);
@@ -97,7 +97,7 @@ describe('submitPhotoReview', () => {
       productId: 'prod-1',
       reviewText: 'This should fail because not logged in.',
       rating: 5,
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
     });
 
     expect(result.success).toBe(false);

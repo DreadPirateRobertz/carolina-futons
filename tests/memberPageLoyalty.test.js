@@ -85,7 +85,8 @@ vi.mock('public/designTokens.js', () => ({
 vi.mock('public/mobileHelpers', () => ({ collapseOnMobile: vi.fn(), initBackToTop: vi.fn() }));
 vi.mock('public/ReturnsPortal.js', () => ({ initReturnsSection: vi.fn() }));
 vi.mock('public/storeCreditHelpers.js', () => ({ initStoreCreditDashboard: vi.fn() }));
-vi.mock('public/giftCardHelpers.js', () => ({ initGiftCardDashboard: vi.fn() }));
+vi.mock('public/giftCardHelpers.js', () => ({
+  GIFT_CARD_DENOMINATIONS: [{ amount: 25, label: '' }, { amount: 50, label: '' }, { amount: 100, label: '' }, { amount: 150, label: '' }, { amount: 200, label: '' }, { amount: 500, label: '' }], initGiftCardDashboard: vi.fn() }));
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 vi.mock('public/cartService', () => ({ addToCart: vi.fn() }));
 

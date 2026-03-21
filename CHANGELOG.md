@@ -4,6 +4,47 @@ All notable changes to the Carolina Futons Wix Velo codebase.
 
 ---
 
+## [v1.0.1] — 2026-03-21
+
+29,403 tests | 714 test files | 89 src files synced | Sprint 4 — 20+ PRs merged (#505–#595)
+
+Production: [carolina-futons-stage3-velo v1.0.1](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.0.1)
+
+### New Pages & Features
+
+- **Room Planner** S1–S8: Canvas scaffolding, product picker, item controls, undo/history, save/share (localStorage + PNG + shareable URL), Product Page CTA, mobile touch/pinch, catalog integration ([#520](https://github.com/DreadPirateRobertz/carolina-futons/pull/520)–[#527](https://github.com/DreadPirateRobertz/carolina-futons/pull/527), [#594](https://github.com/DreadPirateRobertz/carolina-futons/pull/594))
+- **Style Quiz** S4+S6: Persistent state + result sharing, SEO entry points, email gate, sizeNeeds scoring ([#517](https://github.com/DreadPirateRobertz/carolina-futons/pull/517), [#578](https://github.com/DreadPirateRobertz/carolina-futons/pull/578))
+- **Gift Cards** S1: PDP 'Gift This Product' CTA, navigation + footer links, Gift Cards backend ([#583](https://github.com/DreadPirateRobertz/carolina-futons/pull/583))
+- **Gift Cards** S2: My Gift Cards member dashboard — IDOR-guarded, maskEmail PII protection ([#595](https://github.com/DreadPirateRobertz/carolina-futons/pull/595))
+- **Loyalty Tier Display**: Tier badge on member dashboard ([#514](https://github.com/DreadPirateRobertz/carolina-futons/pull/514))
+- **Local SEO** S2: Rich content, schema markup, FAQ section, LocalBusiness JSON-LD on /near/[city] ([#509](https://github.com/DreadPirateRobertz/carolina-futons/pull/509), [#513](https://github.com/DreadPirateRobertz/carolina-futons/pull/513))
+- **Klarna HTTP Functions**: POST /_functions/klarna/checkout + confirm with SSRF hardening ([#588](https://github.com/DreadPirateRobertz/carolina-futons/pull/588))
+- **Video Content** S1: YouTube iframe embed on PDP ([#585](https://github.com/DreadPirateRobertz/carolina-futons/pull/585))
+- **Fabric Sample Request**: Backend service — mailing form, rate limiting, Wix automation ([#590](https://github.com/DreadPirateRobertz/carolina-futons/pull/590))
+- **Cart Recovery**: per-cart coupons + sendRecoveryEmail + generateRecoveryCoupon idempotency ([#508](https://github.com/DreadPirateRobertz/carolina-futons/pull/508), [#512](https://github.com/DreadPirateRobertz/carolina-futons/pull/512))
+- **Referral Endpoints**: share link, anti-hijack guard, credit award ([#515](https://github.com/DreadPirateRobertz/carolina-futons/pull/515))
+- **Browse Abandonment + Exit Intent Capture**: email capture overlays ([#510](https://github.com/DreadPirateRobertz/carolina-futons/pull/510))
+- **Topic Clusters**: CMS + /guides/{slug} pages + HTTP endpoint ([#509](https://github.com/DreadPirateRobertz/carolina-futons/pull/509), [#513](https://github.com/DreadPirateRobertz/carolina-futons/pull/513))
+- **Social + Email Automation**: Facebook catalog cron ([#511](https://github.com/DreadPirateRobertz/carolina-futons/pull/511)), TikTok/Pinterest pixels ([#505](https://github.com/DreadPirateRobertz/carolina-futons/pull/505)), Social Story Cron ([#507](https://github.com/DreadPirateRobertz/carolina-futons/pull/507))
+- **Transactional Email Audit**: order confirmation, shipped, delivery — 62 tests ([#518](https://github.com/DreadPirateRobertz/carolina-futons/pull/518))
+- **UGC Photo Reviews**: full-stack (backend service, moderation, gallery, stats)
+
+### Security Fixes
+
+- **IDOR — couponsService** (CF-env4 P0): DB-level member scoping via `wixData.query('MemberCoupons').eq('memberEmail', email)` ([#580](https://github.com/DreadPirateRobertz/carolina-futons/pull/580))
+- **IDOR — customizationService** (CF-a68a P2): 3 SiteMember ownership checks
+- **IDOR — referralService** (CF-7q7a P0): verifies refereeEmail matches session member ([#515](https://github.com/DreadPirateRobertz/carolina-futons/pull/515))
+- **XSS — JSON-LD injection** (CF-dzyl): `safeJsonLd()` escapes `</script>` sequences ([#587](https://github.com/DreadPirateRobertz/carolina-futons/pull/587))
+- **UGC upload hardening** (CF-rr8d): Wix media URL validation, UUID filenames, 50 security tests ([#591](https://github.com/DreadPirateRobertz/carolina-futons/pull/591))
+- **SSRF hardening — visualSearch** (CF-5s2o): expanded blocklist, decimal/hex/IPv6 bypass coverage, https-only ([#592](https://github.com/DreadPirateRobertz/carolina-futons/pull/592))
+- **Unbounded query audit** (CF-rza0): `.limit(1000)` on all cron queries
+
+### Infrastructure
+
+- **GitHub Bots** (CF-jyrq): Dependabot, CodeQL, Codecov, PR Labeler ([#586](https://github.com/DreadPirateRobertz/carolina-futons/pull/586))
+
+---
+
 ## [v1.0.0] — 2026-03-17
 
 26,942 tests | 638 test files | 65 src files changed | 18 PRs merged (#481–#494) since v0.10.0

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
-import { getQuizRecommendations, getQuizOptions } from '../src/backend/styleQuiz.web.js';
+import { getQuizRecommendations, getQuizOptions, getPersonalizedCopy } from '../src/backend/styleQuiz.web.js';
 
 // Seed products that match various quiz criteria
 const quizProducts = [
@@ -593,5 +593,164 @@ describe('getQuizOptions', () => {
       expect(use.value).toBeTruthy();
       expect(use.description).toBeTruthy();
     }
+  });
+});
+
+// ── getPersonalizedCopy ──────────────────────────────────────────────
+
+describe('getPersonalizedCopy — profile types', () => {
+  it('returns copy and profileType for valid answers', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(result).toHaveProperty('copy');
+    expect(result).toHaveProperty('profileType');
+    expect(typeof result.copy).toBe('string');
+    expect(result.copy.length).toBeGreaterThan(0);
+  });
+
+  it('dorm room returns compact profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+
+  it('office room returns compact profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'office',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+
+  it('sleeping primary use returns comfort profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('comfort');
+  });
+
+  it('both primary use (non-dorm/office) returns versatile profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('versatile');
+  });
+
+  it('living room + sitting returns style profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('style');
+  });
+
+  it('dorm + sleeping yields compact (roomType takes priority over primaryUse)', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'sleeping',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+});
+
+describe('getPersonalizedCopy — copy content', () => {
+  it('compact copy mentions space efficiency', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.copy).toMatch(/space|small space|square foot/i);
+  });
+
+  it('comfort copy mentions sleep', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/sleep/i);
+  });
+
+  it('versatile copy mentions day-to-night or sitting and sleeping', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/day.to.night|sitting and sleeping|both modes/i);
+  });
+
+  it('copy references the style preference tone', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/natural|rustic|warm/i);
+  });
+
+  it('copy references the room type', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/guest room/i);
+  });
+
+  it('three distinct copy variants produce different text', async () => {
+    const [compact, comfort, versatile] = await Promise.all([
+      getPersonalizedCopy({ roomType: 'dorm',        primaryUse: 'both',     stylePreference: 'modern', budgetRange: 'under-500' }),
+      getPersonalizedCopy({ roomType: 'guest-room',  primaryUse: 'sleeping', stylePreference: 'modern', budgetRange: '500-1000' }),
+      getPersonalizedCopy({ roomType: 'living-room', primaryUse: 'both',     stylePreference: 'modern', budgetRange: '500-1000' }),
+    ]);
+    expect(compact.copy).not.toBe(comfort.copy);
+    expect(comfort.copy).not.toBe(versatile.copy);
+    expect(compact.copy).not.toBe(versatile.copy);
+  });
+});
+
+describe('getPersonalizedCopy — null/edge cases', () => {
+  it('returns empty copy and default profileType for null answers', async () => {
+    const result = await getPersonalizedCopy(null);
+    expect(result.copy).toBe('');
+    expect(result.profileType).toBe('style');
+  });
+
+  it('handles unknown roomType gracefully', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'spaceship',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(typeof result.copy).toBe('string');
+    expect(result.copy.length).toBeGreaterThan(0);
   });
 });

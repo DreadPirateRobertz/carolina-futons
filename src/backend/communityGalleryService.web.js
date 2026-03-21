@@ -19,7 +19,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { sanitize } from 'backend/utils/sanitize';
+import { sanitize, generateUUIDFilename } from 'backend/utils/sanitize';
 
 export const GALLERY_ROOM_TYPES = ['living-room', 'bedroom', 'studio', 'office', 'dorm'];
 const GALLERY_PAGE_SIZE = 12;
@@ -83,6 +83,22 @@ export function sanitizeGalleryFilename(filename) {
   }
 
   return { safe: true, filename: stripped };
+}
+
+/**
+ * Replace a user-supplied filename with a UUID-based filename.
+ * CF-rr8d: ClickFix hardening — prevents filename-based injection,
+ * information leakage (original filenames can reveal device/app metadata),
+ * and path traversal via crafted filenames.
+ *
+ * @param {string} originalFilename - Raw filename from upload.
+ * @returns {{ safe: boolean, filename: string }} UUID-based filename or rejection.
+ */
+export function toUUIDFilename(originalFilename) {
+  const validation = sanitizeGalleryFilename(originalFilename);
+  if (!validation.safe) return validation;
+  const ext = validation.filename.split('.').pop();
+  return { safe: true, filename: generateUUIDFilename(ext) };
 }
 
 // ── Security: caption URL stripping ──────────────────────────────────
