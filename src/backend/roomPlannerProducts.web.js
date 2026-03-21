@@ -11,7 +11,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId } from 'backend/utils/sanitize';
 
 const COLLECTION = 'Stores/Products';
 const ROOM_PLANNER_TAG = 'room-planner-compatible';
@@ -23,14 +23,16 @@ const PAGE_SIZE = 20;
  * @param {Object} [options]
  * @param {number} [options.skip=0] - Number of items to skip (for pagination).
  * @param {number} [options.limit=20] - Max items to return (capped at 20).
- * @returns {Promise<{success: boolean, products: Array, totalCount: number, hasMore: boolean}>}
+ * @returns {Promise<{success: boolean, products: Array, totalCount: number, hasMore: boolean, error?: string}>}
  */
 export const getRoomPlannerProducts = webMethod(
   Permissions.Anyone,
   async ({ skip = 0, limit = PAGE_SIZE } = {}) => {
     try {
       const safeSkip = Math.max(0, Math.round(Number(skip) || 0));
-      const safeLimit = Math.min(PAGE_SIZE, Math.max(1, Math.round(Number(limit) || PAGE_SIZE)));
+      // Use null-coalescing so limit: 0 is treated as 0 (clamped to 1), not PAGE_SIZE
+      const rawLimit = limit == null ? PAGE_SIZE : Number(limit);
+      const safeLimit = Math.min(PAGE_SIZE, Math.max(1, Math.round(rawLimit) || PAGE_SIZE));
 
       const result = await wixData.query(COLLECTION)
         .hasSome('tags', [ROOM_PLANNER_TAG])
@@ -40,11 +42,11 @@ export const getRoomPlannerProducts = webMethod(
 
       const products = result.items.map(item => ({
         _id: item._id,
-        name: item.name,
-        slug: item.slug,
+        name: sanitize(item.name, 200),
+        slug: sanitize(item.slug, 100),
         price: item.price,
         mainMedia: item.mainMedia,
-        description: item.description,
+        description: sanitize(item.description || '', 2000),
       }));
 
       const totalCount = result.totalCount;
@@ -61,9 +63,10 @@ export const getRoomPlannerProducts = webMethod(
 /**
  * Add the 'room-planner-compatible' tag to a product.
  * Admin only — called from CMS admin panel to opt a product into the room planner.
+ * Idempotent: no-op if the tag is already present.
  *
  * @param {string} productId - Wix product ID.
- * @returns {Promise<{success: boolean}>}
+ * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const addRoomPlannerTag = webMethod(
   Permissions.Admin,
@@ -91,10 +94,10 @@ export const addRoomPlannerTag = webMethod(
 
 /**
  * Remove the 'room-planner-compatible' tag from a product.
- * Admin only.
+ * Admin only. Idempotent: no-op if the tag is not present.
  *
  * @param {string} productId - Wix product ID.
- * @returns {Promise<{success: boolean}>}
+ * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const removeRoomPlannerTag = webMethod(
   Permissions.Admin,

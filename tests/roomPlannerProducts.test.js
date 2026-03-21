@@ -163,14 +163,12 @@ describe('addRoomPlannerTag', () => {
     expect(result.error).toMatch(/not found/i);
   });
 
-  it('does not duplicate the tag if already present', async () => {
+  it('does not write if tag already present (idempotent — no wixData.update call)', async () => {
     __seed('Stores/Products', [makeProduct('p1', { tags: [TAG] })]);
     await addRoomPlannerTag('p1');
     const updated = __getUpdated('Stores/Products');
-    if (updated.length > 0) {
-      const tagCount = updated[0].tags.filter(t => t === TAG).length;
-      expect(tagCount).toBe(1);
-    }
+    // Correct behavior: no write occurs when tag is already present
+    expect(updated).toHaveLength(0);
   });
 
   it('adds the room-planner-compatible tag to the product', async () => {
@@ -212,9 +210,60 @@ describe('removeRoomPlannerTag', () => {
     expect(updated[0].tags).toContain('keep-this');
   });
 
-  it('is a no-op if tag was not present', async () => {
+  it('is a no-op if tag was not present (idempotent — no wixData.update call)', async () => {
     __seed('Stores/Products', [makeProduct('p1', { tags: ['other'] })]);
+    await removeRoomPlannerTag('p1');
+    const updated = __getUpdated('Stores/Products');
+    expect(updated).toHaveLength(0);
+  });
+
+  it('handles null tags array gracefully', async () => {
+    __seed('Stores/Products', [makeProduct('p1', { tags: null })]);
     const result = await removeRoomPlannerTag('p1');
     expect(result.success).toBe(true);
+  });
+});
+
+// ── input validation ──────────────────────────────────────────────────────────
+
+describe('addRoomPlannerTag — input validation', () => {
+  it('returns error for null productId', async () => {
+    const result = await addRoomPlannerTag(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for empty string productId', async () => {
+    const result = await addRoomPlannerTag('');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('removeRoomPlannerTag — input validation', () => {
+  it('returns error for null productId', async () => {
+    const result = await removeRoomPlannerTag(null);
+    expect(result.success).toBe(false);
+  });
+
+  it('returns error for empty string productId', async () => {
+    const result = await removeRoomPlannerTag('');
+    expect(result.success).toBe(false);
+  });
+});
+
+// ── pagination edge cases ────────────────────────────────────────────────────
+
+describe('getRoomPlannerProducts — pagination edge cases', () => {
+  it('hasMore is false when exactly PAGE_SIZE products returned (fencepost)', async () => {
+    const products = Array.from({ length: 20 }, (_, i) => makeProduct(`p${i}`));
+    __seed('Stores/Products', products);
+    const result = await getRoomPlannerProducts({ skip: 0, limit: 20 });
+    expect(result.products).toHaveLength(20);
+    expect(result.hasMore).toBe(false);
+  });
+
+  it('products include description field', async () => {
+    __seed('Stores/Products', [makeProduct('p1')]);
+    const result = await getRoomPlannerProducts({});
+    expect(result.products[0]).toHaveProperty('description');
   });
 });
