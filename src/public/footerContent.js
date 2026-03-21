@@ -36,6 +36,7 @@ export function getFooterServiceLinks() {
     { label: 'FAQ', path: '/faq' },
     { label: 'Order Tracking', path: '/order-tracking' },
     { label: 'Assembly Guides', path: '/assembly-guides' },
+    { label: 'Gift Cards', path: '/gift-cards' },
   ];
 }
 
