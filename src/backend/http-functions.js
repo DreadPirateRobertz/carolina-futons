@@ -1373,6 +1373,19 @@ export async function post_trackReferral(request) {
       });
     }
 
+    // Prevent referral hijacking — member cannot apply a second referral code
+    const existingAttribution = await wixData.query('Referrals')
+      .eq('refereeMemberId', newMemberId)
+      .ne('status', 'pending')
+      .find();
+    if (existingAttribution.items.length > 0) {
+      return response({
+        status: 409,
+        body: JSON.stringify({ error: 'Member already has a referral attribution' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // Prevent overwriting an already-claimed referral (any member)
     if (referral.status !== 'pending') {
       return response({

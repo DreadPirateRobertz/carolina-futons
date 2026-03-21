@@ -214,6 +214,32 @@ describe('post_trackReferral', () => {
     expect(response.status).toBe(409);
   });
 
+  it('returns 409 when member already has a referral attribution (hijack guard)', async () => {
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
+    // member-new already attributed via a different referral code
+    __seed('Referrals', [
+      {
+        _id: 'ref-existing',
+        referrerMemberId: 'member-xyz',
+        referralCode: 'OLDCODE1',
+        status: 'signed_up',
+        refereeMemberId: 'member-new',
+      },
+      {
+        _id: 'ref-2',
+        referrerMemberId: 'member-abc',
+        referralCode: 'CODE1234',
+        status: 'pending',
+        refereeMemberId: '',
+      },
+    ]);
+
+    const req = makeRequest({ referralCode: 'CODE1234' });
+    const response = await post_trackReferral(req);
+
+    expect(response.status).toBe(409);
+  });
+
   it('returns 400 for invalid/nonexistent referral code', async () => {
     __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __seed('Referrals', []);
