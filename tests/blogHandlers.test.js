@@ -89,6 +89,11 @@ vi.mock('public/designTokens.js', () => ({
 vi.mock('public/blogHelpers', () => ({
   getCategories: vi.fn(() => ['Guides', 'News']),
   filterPostsByCategory: vi.fn((posts) => posts),
+  getPaginatedPosts: vi.fn((posts, page, perPage) => {
+    const p = perPage || 9;
+    const items = (posts || []).slice(0, p);
+    return { items, currentPage: 1, totalPages: 1, totalCount: (posts || []).length };
+  }),
   getFeaturedPost: vi.fn(() => ({
     title: 'Featured',
     slug: 'featured',
@@ -275,22 +280,22 @@ describe('Blog page handlers', () => {
     });
   });
 
-  // ── Blog Card Grid ────────────────────────────────────────────────
+  // ── Blog List (paginated) ─────────────────────────────────────────
 
-  describe('renderBlogGrid', () => {
-    it('sets data on #blogGridRepeater', async () => {
+  describe('renderBlogList', () => {
+    it('sets data on #blogListRepeater', async () => {
       await onReadyHandler();
-      expect(getEl('#blogGridRepeater').data.length).toBeGreaterThan(0);
+      expect(getEl('#blogListRepeater').data.length).toBeGreaterThan(0);
     });
 
-    it('registers onItemReady on #blogGridRepeater', async () => {
+    it('registers onItemReady on #blogListRepeater', async () => {
       await onReadyHandler();
-      expect(getEl('#blogGridRepeater').onItemReady).toHaveBeenCalled();
+      expect(getEl('#blogListRepeater').onItemReady).toHaveBeenCalled();
     });
 
     it('onItemReady sets #cardTitle text', async () => {
       await onReadyHandler();
-      const repeater = getEl('#blogGridRepeater');
+      const repeater = getEl('#blogListRepeater');
       const cb = repeater.onItemReady.mock.calls[0][0];
       const itemEls = new Map();
       const $item = (sel) => {
@@ -303,7 +308,7 @@ describe('Blog page handlers', () => {
 
     it('onItemReady sets #cardExcerpt text', async () => {
       await onReadyHandler();
-      const repeater = getEl('#blogGridRepeater');
+      const repeater = getEl('#blogListRepeater');
       const cb = repeater.onItemReady.mock.calls[0][0];
       const itemEls = new Map();
       const $item = (sel) => {
@@ -316,7 +321,7 @@ describe('Blog page handlers', () => {
 
     it('onItemReady sets #cardCategory text', async () => {
       await onReadyHandler();
-      const repeater = getEl('#blogGridRepeater');
+      const repeater = getEl('#blogListRepeater');
       const cb = repeater.onItemReady.mock.calls[0][0];
       const itemEls = new Map();
       const $item = (sel) => {
@@ -329,7 +334,7 @@ describe('Blog page handlers', () => {
 
     it('onItemReady sets #cardReadTime with min read suffix', async () => {
       await onReadyHandler();
-      const repeater = getEl('#blogGridRepeater');
+      const repeater = getEl('#blogListRepeater');
       const cb = repeater.onItemReady.mock.calls[0][0];
       const itemEls = new Map();
       const $item = (sel) => {
@@ -342,7 +347,7 @@ describe('Blog page handlers', () => {
 
     it('onItemReady calls makeClickable on #blogCardLink', async () => {
       await onReadyHandler();
-      const repeater = getEl('#blogGridRepeater');
+      const repeater = getEl('#blogListRepeater');
       const cb = repeater.onItemReady.mock.calls[0][0];
       const itemEls = new Map();
       const $item = (sel) => {
@@ -361,7 +366,7 @@ describe('Blog page handlers', () => {
       getAllBlogPosts.mockReturnValueOnce([]);
       await onReadyHandler();
       expect(getEl('#blogEmptyState').expand).toHaveBeenCalled();
-      expect(getEl('#blogGridRepeater').collapse).toHaveBeenCalled();
+      expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
     });
   });
 
