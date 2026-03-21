@@ -172,6 +172,17 @@ describe('_checkEmailRateLimit', () => {
     expect(result.allowed).toBe(true);
   });
 
+  it('still blocks at exact window boundary (strict >)', async () => {
+    const now = Date.now();
+    for (let i = 0; i < 3; i++) {
+      await _checkEmailRateLimit('user@example.com', { now });
+    }
+    // At exactly the window boundary (not past it) — should still be blocked
+    const atBoundary = now + EMAIL_RATE_LIMIT_WINDOW_MS;
+    const result = await _checkEmailRateLimit('user@example.com', { now: atBoundary });
+    expect(result.allowed).toBe(false);
+  });
+
   it('tracks different keys independently', async () => {
     const now = Date.now();
     // Fill up limit for user A

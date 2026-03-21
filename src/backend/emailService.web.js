@@ -332,7 +332,7 @@ export const sendSwatchConfirmationEmail = webMethod(
       return { success: true };
     } catch (err) {
       console.error('Error sending swatch confirmation email:', err);
-      return { success: false };
+      return { success: false, message: 'Failed to send confirmation email.' };
     }
   }
 );
