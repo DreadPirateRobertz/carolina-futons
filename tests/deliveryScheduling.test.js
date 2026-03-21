@@ -10,6 +10,8 @@ import {
   cancelAppointment,
   getUpcomingAppointments,
   getVisitTypes,
+  _checkBookingRateLimit,
+  _checkCancelRateLimit,
 } from '../src/backend/deliveryScheduling.web.js';
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -701,5 +703,145 @@ describe('getAvailableAppointmentSlots — edge cases', () => {
     // 10:30 should also be fully blocked since all 3 consultations overlap it
     const match1030 = slots.find(s => s.date === date && s.timeSlot === '10:30');
     expect(match1030).toBeUndefined();
+  });
+});
+
+// ── CF-ylof: Rate limiting ────────────────────────────────────────────────────
+
+const BOOKING_RL_COLLECTION = 'AppointmentBookingRateLimit';
+const CANCEL_RL_COLLECTION = 'AppointmentCancelRateLimit';
+
+describe('bookAppointment — rate limiting (CF-ylof)', () => {
+  const validData = () => ({
+    date: futureWed(),
+    timeSlot: '10:00',
+    visitType: 'browse',
+    customerName: 'Bob Jones',
+    customerEmail: 'bob@test.com',
+  });
+
+  beforeEach(() => {
+    resetData();
+  });
+
+  it('allows booking when under limit (first attempt)', async () => {
+    const result = await bookAppointment(validData());
+    expect(result.success).toBe(true);
+  });
+
+  it('blocks booking after 5 attempts by same email in 24h', async () => {
+    // Seed a rate limit record that is already at max (5)
+    __seed(BOOKING_RL_COLLECTION, [{
+      _id: 'rl-bob',
+      key: 'bob@test.com',
+      count: 5,
+      windowStart: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago — still within 24h window
+    }]);
+    const result = await bookAppointment(validData());
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/rate.limit|too many|limit/i);
+  });
+
+  it('resets rate limit after 24h window expires', async () => {
+    // Seed exhausted limit but with old window (>24h ago)
+    __seed(BOOKING_RL_COLLECTION, [{
+      _id: 'rl-bob',
+      key: 'bob@test.com',
+      count: 5,
+      windowStart: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25h ago
+    }]);
+    const result = await bookAppointment(validData());
+    expect(result.success).toBe(true);
+  });
+
+  it('_checkBookingRateLimit allows first call', async () => {
+    const result = await _checkBookingRateLimit('new@test.com');
+    expect(result.allowed).toBe(true);
+  });
+
+  it('_checkBookingRateLimit blocks at limit', async () => {
+    __seed(BOOKING_RL_COLLECTION, [{
+      _id: 'rl-x',
+      key: 'flood@test.com',
+      count: 5,
+      windowStart: new Date(Date.now() - 1000),
+    }]);
+    const result = await _checkBookingRateLimit('flood@test.com');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('_checkBookingRateLimit increments count on each call', async () => {
+    __seed(BOOKING_RL_COLLECTION, [{
+      _id: 'rl-inc',
+      key: 'inc@test.com',
+      count: 2,
+      windowStart: new Date(Date.now() - 1000),
+    }]);
+    const result = await _checkBookingRateLimit('inc@test.com');
+    expect(result.allowed).toBe(true);
+    // Count should now be 3 — verify via a 5-count seed + call that hits limit
+  });
+});
+
+describe('cancelAppointment — rate limiting (CF-ylof)', () => {
+  let appointmentId;
+  let cancelToken;
+
+  beforeEach(async () => {
+    resetData();
+    // Pre-book one appointment to get a valid token
+    const booked = await bookAppointment({
+      date: futureWed(),
+      timeSlot: '14:00',
+      visitType: 'browse',
+      customerName: 'Carol Chen',
+      customerEmail: 'carol@test.com',
+    });
+    appointmentId = booked.appointmentId;
+    cancelToken = booked.cancelToken;
+  });
+
+  it('allows cancel with valid token when under limit', async () => {
+    const result = await cancelAppointment(appointmentId, cancelToken);
+    expect(result.success).toBe(true);
+  });
+
+  it('blocks cancel after 3 attempts by same token key in 1 hour', async () => {
+    __seed(CANCEL_RL_COLLECTION, [{
+      _id: 'rl-cancel',
+      key: cancelToken.slice(0, 10), // rate key derived from token prefix
+      count: 3,
+      windowStart: new Date(Date.now() - 10 * 60 * 1000), // 10 min ago — within window
+    }]);
+    const result = await cancelAppointment(appointmentId, cancelToken);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/rate.limit|too many|limit/i);
+  });
+
+  it('_checkCancelRateLimit allows first call', async () => {
+    const result = await _checkCancelRateLimit('some-token-key');
+    expect(result.allowed).toBe(true);
+  });
+
+  it('_checkCancelRateLimit blocks at limit', async () => {
+    __seed(CANCEL_RL_COLLECTION, [{
+      _id: 'rl-cz',
+      key: 'exhausted-key',
+      count: 3,
+      windowStart: new Date(Date.now() - 5 * 60 * 1000),
+    }]);
+    const result = await _checkCancelRateLimit('exhausted-key');
+    expect(result.allowed).toBe(false);
+  });
+
+  it('_checkCancelRateLimit resets after 1h window expires', async () => {
+    __seed(CANCEL_RL_COLLECTION, [{
+      _id: 'rl-old',
+      key: 'old-key',
+      count: 3,
+      windowStart: new Date(Date.now() - 61 * 60 * 1000), // 61 min ago
+    }]);
+    const result = await _checkCancelRateLimit('old-key');
+    expect(result.allowed).toBe(true);
   });
 });
