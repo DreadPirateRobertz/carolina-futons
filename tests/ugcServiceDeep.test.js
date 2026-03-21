@@ -15,15 +15,8 @@ vi.mock('backend/utils/sanitize', () => ({
     const clean = id.replace(/<[^>]*>/g, '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
     return clean || null;
   },
-  isWixMediaUrl: (url) => {
-    if (typeof url !== 'string') return false;
-    const trimmed = url.trim();
-    if (trimmed.startsWith('wix:image://')) return true;
-    if (trimmed.startsWith('wix:video://')) return true;
-    if (/^https:\/\/static\.wixstatic\.com\/media\//i.test(trimmed)) return true;
-    if (/^https:\/\/.*\.wixmp\.com\//i.test(trimmed)) return true;
-    return false;
-  },
+  // Stub — real isWixMediaUrl is exhaustively tested in ugcUploadHardening.test.js
+  isWixMediaUrl: vi.fn(() => true),
 }));
 
 let _mockMember = { _id: 'member1', contactDetails: { firstName: 'TestUser' } };
