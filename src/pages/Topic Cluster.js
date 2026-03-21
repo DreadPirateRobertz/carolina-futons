@@ -152,7 +152,9 @@ function initRelatedNav(relatedClusters) {
   } catch (e) {}
 }
 
-// ── Internal Links Sidebar ──────────────────────────────────────────────
+// ── Internal Links Section ─────────────────────────────────────────────
+// Renders inline-context (pillar-to-spoke) links. Cross-cluster sidebar
+// links (context:'sidebar') are shown via initRelatedNav above.
 
 function initInternalLinksSidebar(links) {
   try {
