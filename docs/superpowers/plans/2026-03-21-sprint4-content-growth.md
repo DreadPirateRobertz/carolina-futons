@@ -423,7 +423,7 @@ export async function post_submitPhotoReview(request) {
     return response({ status: 400, body: JSON.stringify({ error: 'imageUrl and productId required' }) });
   }
   const review = await submitPhotoReview({ imageUrl, productId, memberId });
-  return ok(JSON.stringify(review));
+  return response({ status: 200, body: JSON.stringify(review) });
 }
 
 export async function get_adminReviews(request) {
@@ -433,7 +433,7 @@ export async function get_adminReviews(request) {
   }
   const status = request.query?.status || 'pending';
   const reviews = status === 'approved' ? await getApprovedReviews() : await getPendingReviews();
-  return ok(JSON.stringify({ reviews }));
+  return response({ status: 200, body: JSON.stringify({ reviews }) });
 }
 ```
 
