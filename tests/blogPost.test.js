@@ -249,6 +249,16 @@ describe('Blog Post page — share buttons', () => {
       { ariaLabel: 'Share via email' }
     );
   });
+
+  it('sets up copy link button with aria label', async () => {
+    await loadPage();
+    const { makeClickable } = await import('public/a11yHelpers');
+    expect(makeClickable).toHaveBeenCalledWith(
+      getEl('#postShareCopyLink'),
+      expect.any(Function),
+      { ariaLabel: 'Copy post link to clipboard' }
+    );
+  });
 });
 
 describe('Blog Post page — related posts', () => {

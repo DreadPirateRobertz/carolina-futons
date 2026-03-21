@@ -201,10 +201,10 @@ describe('Blog Post page handlers', () => {
 
   // ── Share Buttons ───────────────────────────────────────────────
 
-  it('calls makeClickable for all four share buttons', async () => {
+  it('calls makeClickable for all five share buttons including copy link', async () => {
     await onReadyHandler();
     const selectors = makeClickable.mock.calls.map(c => c[0]);
-    const shareIds = ['#postShareFacebook', '#postSharePinterest', '#postShareTwitter', '#postShareEmail'];
+    const shareIds = ['#postShareFacebook', '#postSharePinterest', '#postShareTwitter', '#postShareEmail', '#postShareCopyLink'];
     for (const id of shareIds) {
       expect(selectors).toContain(getEl(id));
     }

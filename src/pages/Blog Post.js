@@ -147,6 +147,20 @@ function initPostShareButtons(post) {
         });
       }, { ariaLabel: 'Share via email' });
     } catch (e) {}
+
+    try {
+      makeClickable($w('#postShareCopyLink'), () => {
+        try {
+          navigator.clipboard.writeText(postUrl).then(() => {
+            try { $w('#postShareCopyLink').label = 'Copied!'; } catch (e) {}
+            announce('Link copied to clipboard');
+            setTimeout(() => {
+              try { $w('#postShareCopyLink').label = 'Copy Link'; } catch (e) {}
+            }, 2000);
+          }).catch(() => {});
+        } catch (e) {}
+      }, { ariaLabel: 'Copy post link to clipboard' });
+    } catch (e) {}
   } catch (err) {
     console.error('Share buttons error:', err);
   }
