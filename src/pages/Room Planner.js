@@ -15,6 +15,7 @@ import {
   formatPlacementLabel,
 } from 'public/roomPlannerHelpers.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { initMobileRoomPlanner } from 'public/roomPlannerMobile.js';
 
 /** @type {string|null} */
 let currentLayoutId = null;
@@ -22,6 +23,8 @@ let currentLayoutId = null;
 $w.onReady(async function () {
   initBackToTop($w);
   initPageSeo('roomPlanner');
+  // CF-7f32: apply mobile layout (collapse desktop panels, enable touch mode on canvas)
+  initMobileRoomPlanner($w, { viewportWidth: globalThis.innerWidth });
   initHero();
   initInstructions();
   initRoomDimensionInputs();
