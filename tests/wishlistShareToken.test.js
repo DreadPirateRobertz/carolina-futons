@@ -279,4 +279,54 @@ describe('addShareToken — error resilience', () => {
 
     wixData.default.insert = realInsert;
   });
+
+  it('returns auth_failed when getMember throws', async () => {
+    const membersMod = await import('./__mocks__/wix-members-backend.js');
+    const realGetMember = membersMod.currentMember.getMember;
+    membersMod.currentMember.getMember = async () => { throw new Error('auth error'); };
+
+    const result = await addShareToken();
+    expect(result.error).toBe('auth_failed');
+    expect(result.token).toBeUndefined();
+
+    membersMod.currentMember.getMember = realGetMember;
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// addShareToken — memberName fallback logic
+// ═══════════════════════════════════════════════════════════════════
+describe('addShareToken — memberName fallbacks', () => {
+  beforeEach(() => {
+    __reset();
+    resetMembers();
+  });
+
+  it('uses profile.nickname as memberName when available', async () => {
+    __setMember({ _id: 'mem-1', profile: { nickname: 'Alice' }, loginEmail: 'alice@example.com' });
+    await addShareToken();
+    const record = __getInserted('WishlistShareTokens')[0];
+    expect(record.memberName).toBe('Alice');
+  });
+
+  it('falls back to contactDetails.firstName when no nickname', async () => {
+    __setMember({ _id: 'mem-2', profile: {}, contactDetails: { firstName: 'Bob' }, loginEmail: 'bob@example.com' });
+    await addShareToken();
+    const record = __getInserted('WishlistShareTokens')[0];
+    expect(record.memberName).toBe('Bob');
+  });
+
+  it('falls back to loginEmail when no nickname or firstName', async () => {
+    __setMember({ _id: 'mem-3', profile: {}, contactDetails: {}, loginEmail: 'carol@example.com' });
+    await addShareToken();
+    const record = __getInserted('WishlistShareTokens')[0];
+    expect(record.memberName).toBe('carol@example.com');
+  });
+
+  it('stores empty string when no name data is available', async () => {
+    __setMember({ _id: 'mem-4' });
+    await addShareToken();
+    const record = __getInserted('WishlistShareTokens')[0];
+    expect(record.memberName).toBe('');
+  });
 });
