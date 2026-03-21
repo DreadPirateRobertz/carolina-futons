@@ -39,7 +39,6 @@ export function clearSwatchSelections() {
 
 /**
  * Programmatically select a swatch by ID.
- * Used in tests and can be called by the repeater item handler.
  * Returns true if selected, false if limit reached or already selected.
  * Exported for testing.
  */
@@ -71,9 +70,13 @@ export async function initFabricSampleRequest($w, productId) {
       $w('#swatchSelectRepeater').onItemReady(($item, itemData) => {
         _setupSwatchItem($item, itemData, $w);
       });
+    } else if (!result.success) {
+      try { $w('#swatchRequestBtn').disable(); } catch (e2) {}
+      console.error('[FabricSampleRequest] Swatches unavailable:', result.error);
     }
   } catch (e) {
     console.error('[FabricSampleRequest] Failed to load swatches:', e);
+    try { $w('#swatchRequestBtn').disable(); } catch (e2) {}
   }
 
   // Open modal button
@@ -81,14 +84,18 @@ export async function initFabricSampleRequest($w, productId) {
     $w('#swatchRequestBtn').onClick(() => {
       _openModal($w);
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[FabricSampleRequest] Failed to bind swatchRequestBtn:', e);
+  }
 
   // Submit button
   try {
     $w('#swatchSubmitBtn').onClick(async () => {
       await _handleSubmit($w);
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[FabricSampleRequest] Failed to bind swatchSubmitBtn:', e);
+  }
 }
 
 function _openModal($w) {
@@ -178,6 +185,7 @@ async function _handleSubmit($w) {
       try { $w('#swatchError').show(); } catch (e) {}
     }
   } catch (err) {
+    console.error('[FabricSampleRequest] submitFabricSample threw:', err);
     try { $w('#swatchError').text = 'Something went wrong. Please try again.'; } catch (e) {}
     try { $w('#swatchError').show(); } catch (e) {}
   }

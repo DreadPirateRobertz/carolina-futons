@@ -1,7 +1,8 @@
 /**
  * @module fabricSampleService
  * @description Handles fabric sample request submissions from PDP and Fabric Customizer.
- * Validates up to 3 swatch selections, enforces 30-day per-email rate limit,
+ * Validates up to 3 swatch selections, enforces 30-day per-email rate limit
+ * (exclusive boundary — requests exactly 30 days old are permitted),
  * persists to FabricSampleRequests CMS, and triggers confirmation + admin emails.
  *
  * CMS collections:
@@ -11,11 +12,13 @@
  * @requires wix-web-module
  * @requires wix-crm-backend
  * @requires wix-data
+ * @requires wix-secrets-backend
  * @requires backend/utils/sanitize
  */
 import { webMethod, Permissions } from 'wix-web-module';
-import { triggeredEmails } from 'wix-crm-backend';
+import { contacts, triggeredEmails } from 'wix-crm-backend';
 import wixData from 'wix-data';
+import { getSecret } from 'wix-secrets-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 const MAX_SWATCHES = 3;
@@ -78,7 +81,11 @@ async function resolveSwatchNames(swatchIds) {
   const names = await Promise.all(
     swatchIds.map(id =>
       wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
-        .then(r => r.items[0]?.swatchName || id)
+        .then(r => {
+          const name = r.items[0]?.swatchName;
+          if (!name) console.error('[fabricSampleService] Swatch ID not found in FabricSwatches:', id);
+          return name || id;
+        })
     )
   );
   return names;
@@ -88,6 +95,8 @@ async function resolveSwatchNames(swatchIds) {
 
 /**
  * Get all in-stock swatches available for sampling.
+ *
+ * @returns {Promise<{success: boolean, data?: {swatches: Array<{_id: string, swatchName: string, colorFamily: string, swatchImage: string|null}>}, error?: string}>}
  */
 export const getAvailableSwatches = webMethod(
   Permissions.Anyone,
@@ -111,7 +120,7 @@ export const getAvailableSwatches = webMethod(
       };
     } catch (err) {
       console.error('[fabricSampleService] getAvailableSwatches error:', err);
-      return { success: false, error: err.message || 'Failed to load swatches.' };
+      return { success: false, error: 'Failed to load swatches.' };
     }
   }
 );
@@ -122,7 +131,8 @@ export const getAvailableSwatches = webMethod(
  * @param {Object} params
  * @param {string[]} params.swatchIds    — 1–3 swatch IDs
  * @param {Object}  params.contactInfo  — { name, email, address }
- * @param {string}  [params.productId]  — optional referring product ID
+ * @param {string}  [params.productId]  — optional product ID where the request originated;
+ *                                        stored in the CMS record and included in the admin email
  * @returns {Promise<{success: boolean, requestId?: string, error?: string}>}
  */
 export const submitFabricSample = webMethod(
@@ -147,8 +157,12 @@ export const submitFabricSample = webMethod(
         return { success: false, error: 'You have already requested swatches within the last 30 days.' };
       }
 
-      // Resolve swatch names
-      const swatchNames = await resolveSwatchNames(cleanIds);
+      // Resolve swatch names and upsert CRM contact in parallel
+      const [swatchNames, contactResult] = await Promise.all([
+        resolveSwatchNames(cleanIds),
+        contacts.appendOrCreateContact({ emails: [{ email }], name: { first: name } }),
+      ]);
+      const contactId = contactResult?.contactId || null;
 
       // Sanitize optional productId
       const productId = rawProductId ? sanitize(String(rawProductId), 200).trim() || undefined : undefined;
@@ -162,35 +176,35 @@ export const submitFabricSample = webMethod(
         swatchNames,
         requestedAt:     new Date(),
         status:          'pending',
-        ...(productId ? { productId } : {}),
+        ...(contactId  ? { contactId }  : {}),
+        ...(productId  ? { productId }  : {}),
       };
 
       const inserted = await wixData.insert('FabricSampleRequests', record);
 
-      // Send confirmation email to customer (non-blocking on failure)
+      // Send confirmation email to customer (non-blocking — CMS record already saved)
       try {
-        await triggeredEmails.emailContact('fabric_sample_confirmation', null, {
+        await triggeredEmails.emailContact('fabric_sample_confirmation', contactId, {
           variables: { name, swatchNames: swatchNames.join(', '), address },
-          toEmail: email,
         });
       } catch (emailErr) {
-        console.error('[fabricSampleService] Confirmation email failed:', emailErr);
+        console.error('[fabricSampleService] Confirmation email failed for request', inserted._id, '/ email', email, ':', emailErr);
       }
 
-      // Send admin notification email for fulfillment (non-blocking on failure)
+      // Send admin notification for fulfillment (non-blocking — CMS record already saved)
       try {
-        await triggeredEmails.emailContact('fabric_sample_admin_notify', null, {
+        const adminContactId = await getSecret('SITE_OWNER_CONTACT_ID');
+        await triggeredEmails.emailContact('fabric_sample_admin_notify', adminContactId, {
           variables: { name, email, swatchNames: swatchNames.join(', '), address, productId: productId || '' },
-          toEmail: 'carolinafutons@gmail.com',
         });
       } catch (emailErr) {
-        console.error('[fabricSampleService] Admin notification email failed:', emailErr);
+        console.error('[fabricSampleService] Admin notification email failed for request', inserted._id, ':', emailErr);
       }
 
       return { success: true, requestId: inserted._id };
     } catch (err) {
       console.error('[fabricSampleService] submitFabricSample error:', err);
-      return { success: false, error: err.message || 'Failed to submit sample request.' };
+      return { success: false, error: 'Failed to submit sample request. Please try again.' };
     }
   }
 );

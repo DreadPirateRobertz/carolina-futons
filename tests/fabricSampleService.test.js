@@ -3,9 +3,10 @@
  * Tests for src/backend/fabricSampleService.web.js
  * TDD: written before implementation.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted, __setQueryError } from 'wix-data';
-import { __reset as __resetCrm, __getEmailLog } from 'wix-crm-backend';
+import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
+import { __reset as __resetSecrets, __setSecrets } from 'wix-secrets-backend';
 
 import {
   submitFabricSample,
@@ -38,6 +39,8 @@ function daysAgo(n) {
 beforeEach(() => {
   __reset();
   __resetCrm();
+  __resetSecrets();
+  __setSecrets({ SITE_OWNER_CONTACT_ID: 'admin-contact-1' });
   seedSwatches();
 });
 
@@ -288,16 +291,88 @@ describe('submitFabricSample — rate limiting', () => {
   });
 });
 
+// ── submitFabricSample — rate limit boundary ─────────────────────────
+
+describe('submitFabricSample — rate limit boundary', () => {
+  it('allows same email when prior request is exactly 30 days old', async () => {
+    __seed('FabricSampleRequests', [{
+      _id: 'req-1',
+      contactEmail: 'jane@example.com',
+      requestedAt: daysAgo(30), // exactly 30 days — gt() excludes boundary, so allowed
+      status: 'pending',
+    }]);
+    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+  });
+});
+
+// ── submitFabricSample — email content ───────────────────────────────
+
+describe('submitFabricSample — email content', () => {
+  it('confirmation email goes to customer contactId (not null)', async () => {
+    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const log = __getEmailLog();
+    const confirmation = log.find(e => e.templateId === 'fabric_sample_confirmation');
+    expect(confirmation).toBeDefined();
+    expect(confirmation.contactId).not.toBeNull();
+    expect(confirmation.contactId).toBeTruthy();
+  });
+
+  it('admin email goes to site owner contactId from secrets', async () => {
+    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const log = __getEmailLog();
+    const admin = log.find(e => e.templateId === 'fabric_sample_admin_notify');
+    expect(admin).toBeDefined();
+    expect(admin.contactId).toBe('admin-contact-1');
+  });
+
+  it('confirmation email variables include swatchNames', async () => {
+    await submitFabricSample({ swatchIds: ['sw-1', 'sw-2'], contactInfo: validContact });
+    const log = __getEmailLog();
+    const confirmation = log.find(e => e.templateId === 'fabric_sample_confirmation');
+    expect(confirmation.options.variables.swatchNames).toContain('Natural Oatmeal');
+    expect(confirmation.options.variables.swatchNames).toContain('Espresso Brown');
+  });
+
+  it('admin email variables include customer email and address', async () => {
+    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const log = __getEmailLog();
+    const admin = log.find(e => e.templateId === 'fabric_sample_admin_notify');
+    expect(admin.options.variables.email).toBe('jane@example.com');
+    expect(admin.options.variables.address).toBe('123 Main St, Charlotte, NC 28201');
+  });
+});
+
+// ── submitFabricSample — email resilience ────────────────────────────
+
+describe('submitFabricSample — email resilience', () => {
+  it('still returns success when confirmation email throws', async () => {
+    __failNextEmail();
+    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+    expect(result.requestId).toBeDefined();
+  });
+
+  it('still inserts CMS record when email throws', async () => {
+    __failNextEmail();
+    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(__getInserted('FabricSampleRequests').length).toBe(1);
+  });
+});
+
 // ── submitFabricSample — error resilience ────────────────────────────
 
 describe('submitFabricSample — error resilience', () => {
-  it('returns error (not throw) when DB insert fails', async () => {
+  it('returns error object (not throw) when rate limit query fails', async () => {
     __setQueryError('FabricSampleRequests', new Error('DB unavailable'));
-    // Note: __setQueryError affects queries; insert is a separate path.
-    // Test that an unexpected error is caught gracefully.
     const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    // May succeed or fail cleanly — must not throw
-    expect(typeof result).toBe('object');
-    expect(typeof result.success).toBe('boolean');
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('does not expose internal error message to client', async () => {
+    __setQueryError('FabricSampleRequests', new Error('internal db schema hint'));
+    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.error).not.toContain('internal db schema hint');
   });
 });
