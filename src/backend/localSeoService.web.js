@@ -13,12 +13,14 @@ import { validateSlug } from 'backend/utils/sanitize';
 import {
   LOCAL_PAGES,
   SITE_URL,
+  STORE_HOURS,
   STORE_DIRECTIONS_URL,
   FEATURED_PRODUCT_CATALOG,
   HOME_CITY_FEATURED_CATEGORIES,
   NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
 import { generateLocalBusinessSchema } from 'backend/localSeo.web';
+import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
 
@@ -47,6 +49,9 @@ export const getLocalPage = webMethod(
 
       const canonicalUrl = `${SITE_URL}/near/${cityData.slug}`;
 
+      const faqs = Array.isArray(cityData.faqs) ? cityData.faqs : [];
+      const breadcrumbs = buildBreadcrumbList(cityData, SITE_URL);
+
       return {
         success: true,
         page: {
@@ -55,10 +60,18 @@ export const getLocalPage = webMethod(
           state: cityData.state,
           isHomeCity: cityData.isHomeCity,
           headline: cityData.headline,
+          heroDescription: cityData.heroDescription || '',
+          neighborhoodContext: cityData.neighborhoodContext || '',
           metaTitle: _buildMetaTitle(cityData),
           metaDescription: _buildMetaDescription(cityData),
           canonicalUrl,
+          storeHours: STORE_HOURS,
+          categoryRecommendations: Array.isArray(cityData.categoryRecommendations) ? cityData.categoryRecommendations : [],
+          faqs,
+          breadcrumbs,
           jsonLd: generateLocalBusinessSchema(cityData),
+          breadcrumbSchema: buildBreadcrumbSchema(cityData, SITE_URL),
+          faqSchema: buildFaqSchema(faqs),
           featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
           mapEmbedUrl: cityData.mapEmbedUrl || '',
           directionsUrl: STORE_DIRECTIONS_URL,
