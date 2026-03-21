@@ -193,18 +193,18 @@ describe('validatePromoCode — deep edge cases', () => {
 
 describe('applyPromoCode — deep edge cases', () => {
   it('rejects empty cart', async () => {
-    const result = await applyPromoCode('SAVE10', []);
+    const result = await applyPromoCode('SAVE10', [], { rateLimitKey: 'test-user' });
     expect(result.success).toBe(false);
     expect(result.error).toContain('Cart items');
   });
 
   it('rejects null cart', async () => {
-    const result = await applyPromoCode('SAVE10', null);
+    const result = await applyPromoCode('SAVE10', null, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(false);
   });
 
   it('rejects non-array cart', async () => {
-    const result = await applyPromoCode('SAVE10', 'not-array');
+    const result = await applyPromoCode('SAVE10', 'not-array', { rateLimitKey: 'test-user' });
     expect(result.success).toBe(false);
   });
 
@@ -212,7 +212,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 20 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 2 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.valid).toBe(true);
     expect(result.discount).toBe(40); // 200 * 20%
     expect(result.subtotalAfterDiscount).toBe(160);
@@ -222,7 +222,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'fixed', value: 25 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.discount).toBe(25);
     expect(result.subtotalAfterDiscount).toBe(75);
   });
@@ -231,7 +231,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'fixed', value: 500 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 50, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.discount).toBe(50);
     expect(result.subtotalAfterDiscount).toBe(0);
   });
@@ -240,7 +240,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'freeShipping', value: 0 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.discount).toBe(0);
     expect(result.freeShipping).toBe(true);
     expect(result.discountType).toBe('freeShipping');
@@ -251,7 +251,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ minSubtotal: 100 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 50, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Minimum order');
   });
@@ -259,7 +259,7 @@ describe('applyPromoCode — deep edge cases', () => {
   it('limits cart items to 50', async () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 10 })]);
     const items = Array.from({ length: 60 }, (_, i) => ({ _id: `p${i}`, price: 1, quantity: 1 }));
-    const result = await applyPromoCode('SAVE10', items);
+    const result = await applyPromoCode('SAVE10', items, { rateLimitKey: 'test-user' });
     // Only first 50 items should count: subtotal = 50
     expect(result.discount).toBe(5); // 50 * 10%
   });
@@ -268,7 +268,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 10 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 0, quantity: 5 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.discount).toBe(0);
   });
 
@@ -276,7 +276,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 10 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: -50, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     // Math.max(0, -50) = 0
     expect(result.discount).toBe(0);
   });
@@ -285,7 +285,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 10 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 200 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     // qty clamped to 99: subtotal = 100*99 = 9900, discount = 990
     expect(result.discount).toBe(990);
   });
@@ -294,7 +294,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 10 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: NaN },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     // Number(NaN) || 1 = 1, Math.max(1, 1) = 1
     expect(result.discount).toBe(10); // 100 * 10%
   });
@@ -304,7 +304,7 @@ describe('applyPromoCode — deep edge cases', () => {
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 1, category: 'futons' },
       { _id: 'p2', price: 200, quantity: 1, category: 'beds' },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     // Only futons eligible: 100 * 50% = 50
     expect(result.discount).toBe(50);
     // Subtotal is 300, after discount = 250
@@ -316,7 +316,7 @@ describe('applyPromoCode — deep edge cases', () => {
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 100, quantity: 1 },
       { _id: 'p2', price: 200, quantity: 1 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     // Fixed discount is min(subtotal, 30) = 30
     expect(result.discount).toBe(30);
   });
@@ -325,7 +325,7 @@ describe('applyPromoCode — deep edge cases', () => {
     __seed('PromoCodes', [makePromo({ type: 'percentage', value: 100 })]);
     const result = await applyPromoCode('SAVE10', [
       { _id: 'p1', price: 75, quantity: 2 },
-    ]);
+    ], { rateLimitKey: 'test-user' });
     expect(result.discount).toBe(150);
     expect(result.subtotalAfterDiscount).toBe(0);
   });
@@ -335,7 +335,7 @@ describe('applyPromoCode — deep edge cases', () => {
     let updated = null;
     __onUpdate((col, data) => { if (col === 'PromoCodes') updated = data; });
 
-    await applyPromoCode('SAVE10', [{ _id: 'p1', price: 100, quantity: 1 }]);
+    await applyPromoCode('SAVE10', [{ _id: 'p1', price: 100, quantity: 1 }], { rateLimitKey: 'test-user' });
     expect(updated.usesCount).toBe(4);
   });
 });

@@ -164,7 +164,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('SAVE10', cartItems);
+    const result = await applyPromoCode('SAVE10', cartItems, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     // subtotal: 499 + (299*2) = 1097, 10% off = 109.70
     expect(result.discount).toBe(109.7);
@@ -181,7 +181,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('FLAT50', cartItems);
+    const result = await applyPromoCode('FLAT50', cartItems, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     expect(result.discount).toBe(50);
     expect(result.subtotalAfterDiscount).toBe(1047);
@@ -196,7 +196,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('FREESHIP', cartItems);
+    const result = await applyPromoCode('FREESHIP', cartItems, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     expect(result.discount).toBe(0);
     expect(result.freeShipping).toBe(true);
@@ -211,7 +211,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('BIG', [{ _id: 'x', price: 100, quantity: 1 }]);
+    const result = await applyPromoCode('BIG', [{ _id: 'x', price: 100, quantity: 1 }], { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     expect(result.valid).toBe(false);
     expect(result.reason).toMatch(/minimum/i);
@@ -226,7 +226,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('HUGE', [{ _id: 'x', price: 50, quantity: 1 }]);
+    const result = await applyPromoCode('HUGE', [{ _id: 'x', price: 50, quantity: 1 }], { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     expect(result.discount).toBe(50);
     expect(result.subtotalAfterDiscount).toBe(0);
@@ -241,7 +241,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('FRAMES15', cartItems);
+    const result = await applyPromoCode('FRAMES15', cartItems, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(true);
     // Only frame (499) gets 15% off = 74.85
     expect(result.discount).toBe(74.85);
@@ -259,20 +259,20 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    await applyPromoCode('TRACK', cartItems);
+    await applyPromoCode('TRACK', cartItems, { rateLimitKey: 'test-user' });
     expect(updated).not.toBeNull();
     expect(updated.col).toBe('PromoCodes');
     expect(updated.item.usesCount).toBe(6);
   });
 
   it('rejects empty cart', async () => {
-    const result = await applyPromoCode('ANY', []);
+    const result = await applyPromoCode('ANY', [], { rateLimitKey: 'test-user' });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/cart/i);
   });
 
   it('rejects null cart', async () => {
-    const result = await applyPromoCode('ANY', null);
+    const result = await applyPromoCode('ANY', null, { rateLimitKey: 'test-user' });
     expect(result.success).toBe(false);
   });
 
@@ -285,7 +285,7 @@ describe('applyPromoCode', () => {
       applicableProducts: '',
     }]);
 
-    const result = await applyPromoCode('ALL', cartItems);
+    const result = await applyPromoCode('ALL', cartItems, { rateLimitKey: 'test-user' });
     expect(result.discount).toBeLessThanOrEqual(1097);
     expect(result.subtotalAfterDiscount).toBe(0);
   });
