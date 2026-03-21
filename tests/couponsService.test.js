@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createWelcomeCoupon,
   getActiveCoupons,
@@ -6,6 +6,7 @@ import {
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
 import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -190,9 +191,14 @@ describe('createTierUpgradeCoupon', () => {
 // ── getActiveCoupons ─────────────────────────────────────────────────
 
 describe('getActiveCoupons', () => {
+  beforeEach(() => {
+    __resetMember();
+    __setMember({ _id: 'member-123', loginEmail: 'member@test.com' });
+  });
+
   it('returns active coupons with percent-off formatting', async () => {
     __setCoupons([
-      { _id: 'c-1', code: 'WELCOME-ABC123', name: 'Welcome 10%', percentOffRate: 10, active: true },
+      { _id: 'c-1', code: 'WELCOME-ABC123', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -202,7 +208,7 @@ describe('getActiveCoupons', () => {
 
   it('formats money-off coupons correctly', async () => {
     __setCoupons([
-      { _id: 'c-2', code: 'SAVE25', name: '$25 Off', moneyOffAmount: 25, active: true },
+      { _id: 'c-2', code: 'SAVE25', name: '$25 Off - member@test.com', moneyOffAmount: 25, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
@@ -210,7 +216,7 @@ describe('getActiveCoupons', () => {
 
   it('defaults moneyOffAmount to 0 when missing', async () => {
     __setCoupons([
-      { _id: 'c-3', code: 'NOAMT', name: 'No Amount', active: true },
+      { _id: 'c-3', code: 'NOAMT', name: 'No Amount - member@test.com', active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$0 off');
@@ -220,7 +226,7 @@ describe('getActiveCoupons', () => {
     __setCoupons([{
       _id: 'c-4',
       code: 'FIELDS',
-      name: 'Test',
+      name: 'Test - member@test.com',
       percentOffRate: 5,
       active: true,
       minimumSubtotal: 50,
@@ -243,5 +249,66 @@ describe('getActiveCoupons', () => {
     __setCoupons([]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
+  });
+
+  it('returns empty array when member has no email', async () => {
+    __setMember({ _id: 'member-no-email' });
+    __setCoupons([
+      { _id: 'c-1', code: 'WELCOME-ABC', name: 'Welcome 10%', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toEqual([]);
+  });
+
+  it('does not return coupons belonging to other members', async () => {
+    __setCoupons([
+      { _id: 'c-victim', code: 'BDAY-VICTIM1', name: 'Happy Birthday Victim! 15% Off - victim@other.com', percentOffRate: 15, active: true },
+      { _id: 'c-mine', code: 'WELCOME-MINE1', name: 'Welcome 10% Off - member@test.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('WELCOME-MINE1');
+    expect(result.find(c => c.code === 'BDAY-VICTIM1')).toBeUndefined();
+  });
+});
+
+// ── IDOR ownership enforcement (CF-fug9 P0) ──────────────────────────
+
+describe('IDOR ownership enforcement (CF-fug9 P0)', () => {
+  beforeEach(() => {
+    __resetMember();
+  });
+
+  it('getActiveCoupons returns empty when session has no member', async () => {
+    __setCoupons([
+      { _id: 'c-1', code: 'WELCOME-XYZ', name: 'Welcome 10%', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toEqual([]);
+  });
+
+  it('getActiveCoupons prevents attacker harvesting victim coupon codes', async () => {
+    __setMember({ _id: 'attacker', loginEmail: 'attacker@evil.com' });
+    __setCoupons([
+      { _id: 'c-v1', code: 'BDAY-V12345', name: 'Happy Birthday Victim! 15% Off - victim@example.com', percentOffRate: 15, active: true },
+      { _id: 'c-v2', code: 'WELCOME-V678', name: 'Welcome 10% Off - victim@example.com', percentOffRate: 10, active: true },
+      { _id: 'c-a',  code: 'WELCOME-A123', name: 'Welcome 10% Off - attacker@evil.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('WELCOME-A123');
+    const codes = result.map(c => c.code);
+    expect(codes).not.toContain('BDAY-V12345');
+    expect(codes).not.toContain('WELCOME-V678');
+  });
+
+  it('getActiveCoupons allows member to see their own coupons', async () => {
+    __setMember({ _id: 'member-ok', loginEmail: 'mine@example.com' });
+    __setCoupons([
+      { _id: 'c-mine', code: 'RECOVER-MYCODE', name: 'Cart Recovery 10% Off - mine@example.com', percentOffRate: 10, active: true },
+    ]);
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('RECOVER-MYCODE');
   });
 });
