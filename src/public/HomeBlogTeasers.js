@@ -140,4 +140,102 @@ export async function initHomeBlogTeasers($w, state) {
   }
 }
 
+/**
+ * Initialize the blog teasers section using a native Wix repeater.
+ * Fetches the 3 most recent posts and populates #blogTeaserRepeater.
+ * Falls back to HTML container injection if the repeater element is absent.
+ *
+ * Editor elements required:
+ *   Section container: #blogTeaserSection
+ *   Repeater:          #blogTeaserRepeater
+ *   Per-repeater-item: #blogTeaserTitle, #blogTeaserExcerpt,
+ *                      #blogTeaserImage, #blogTeaserCategory,
+ *                      #blogTeaserReadTime, #blogTeaserLink
+ *   CTA button:        #blogSeeAllPosts
+ *
+ * CF-jb52: Blog S7 — home page blog teasers
+ *
+ * @param {Function} $w - Wix selector function
+ * @param {Object} [state] - Shared page state (reserved for future use)
+ */
+export async function initBlogTeaserRepeater($w, state) {
+  const section = $w('#blogTeaserSection');
+  if (!section) return;
+
+  try {
+    const { fetchAllBlogPosts } = await import('backend/blogService.web');
+    const posts = await fetchAllBlogPosts();
+
+    if (!posts || posts.length === 0) {
+      try { section.collapse(); } catch (_) {}
+      return;
+    }
+
+    const sorted = [...posts].sort((a, b) =>
+      (b.publishDate || '').localeCompare(a.publishDate || ''));
+    const teasers = sorted.slice(0, MAX_TEASERS).map(buildTeaserData).filter(Boolean);
+
+    if (teasers.length === 0) {
+      try { section.collapse(); } catch (_) {}
+      return;
+    }
+
+    const repeater = $w('#blogTeaserRepeater');
+    if (repeater) {
+      repeater.data = teasers.map((t, i) => ({ ...t, _id: t.slug || String(i) }));
+      repeater.onItemReady(($item, itemData) => {
+        try { $item('#blogTeaserTitle').text = itemData.title; } catch (_) {}
+        try { $item('#blogTeaserExcerpt').text = itemData.excerpt; } catch (_) {}
+        try {
+          const catEl = $item('#blogTeaserCategory');
+          if (catEl) {
+            catEl.text = itemData.category || '';
+            try { itemData.category ? catEl.show() : catEl.hide(); } catch (_) {}
+          }
+        } catch (_) {}
+        try {
+          const readEl = $item('#blogTeaserReadTime');
+          if (readEl) readEl.text = `${itemData.readingTime} min read`;
+        } catch (_) {}
+        try {
+          const imgEl = $item('#blogTeaserImage');
+          if (imgEl) {
+            if (itemData.image) {
+              imgEl.src = itemData.image;
+              imgEl.alt = itemData.title;
+              try { imgEl.show(); } catch (_) {}
+            } else {
+              try { imgEl.hide(); } catch (_) {}
+            }
+          }
+        } catch (_) {}
+        try {
+          const linkEl = $item('#blogTeaserLink');
+          if (linkEl && itemData.slug) {
+            linkEl.link = `/blog/${itemData.slug}`;
+            try { linkEl.accessibility = { ariaLabel: `Read ${itemData.title}` }; } catch (_) {}
+          }
+        } catch (_) {}
+      });
+    } else {
+      // Fallback: render via HTML container
+      try { section.html = buildBlogTeaserSection(posts); } catch (_) {}
+    }
+
+    // Wire up "See All Posts" CTA → /blog
+    try {
+      const ctaBtn = $w('#blogSeeAllPosts');
+      if (ctaBtn) {
+        ctaBtn.link = '/blog';
+        try { ctaBtn.accessibility = { ariaLabel: 'See all blog posts' }; } catch (_) {}
+      }
+    } catch (_) {}
+
+    try { section.accessibility = { ariaLabel: 'Recent blog posts', role: 'region' }; } catch (_) {}
+    trackEvent('blog_teasers_loaded', { count: teasers.length, location: 'homepage' });
+  } catch (e) {
+    try { $w('#blogTeaserSection').collapse(); } catch (_) {}
+  }
+}
+
 export { MAX_TEASERS, EXCERPT_MAX_LENGTH, truncateExcerpt };

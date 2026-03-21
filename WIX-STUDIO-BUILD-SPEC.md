@@ -307,6 +307,21 @@ Code uses a repeater for the 8 category cards:
 | Subtitle | Text | `#swatchPromoSubtitle` | Supporting text |
 | CTA Button | Button | `#swatchPromoCTA` | "Request Free Fabric Swatches" → /request-swatches |
 
+### Blog Teasers Section (CF-jb52)
+Latest 3 blog posts as teaser cards with a "See All Posts" CTA. Code: `public/HomeBlogTeasers.js` → `initBlogTeaserRepeater`.
+
+| Element | Type | ID | Notes |
+|---------|------|----|-------|
+| Section Container | Section | `#blogTeaserSection` | Collapsible if no posts |
+| Blog Teaser Repeater | Repeater | `#blogTeaserRepeater` | 3-col grid, latest 3 posts |
+| → Post Image | Image | `#blogTeaserImage` | Cover image, hidden if none |
+| → Post Title | Text | `#blogTeaserTitle` | Post headline |
+| → Post Excerpt | Text | `#blogTeaserExcerpt` | Truncated to 120 chars |
+| → Category Badge | Text | `#blogTeaserCategory` | Category name, hidden if none |
+| → Reading Time | Text | `#blogTeaserReadTime` | "X min read" |
+| → Read More Link | Button/Link | `#blogTeaserLink` | → /blog/[slug] |
+| See All Posts CTA | Button | `#blogSeeAllPosts` | "See All Posts" → /blog |
+
 ### Newsletter Section
 | Element | Type | ID | Notes |
 |---------|------|----|-------|

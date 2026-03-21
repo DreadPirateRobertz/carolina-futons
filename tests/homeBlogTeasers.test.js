@@ -32,6 +32,7 @@ import {
   buildTeaserCardHtml,
   buildBlogTeaserSection,
   initHomeBlogTeasers,
+  initBlogTeaserRepeater,
   MAX_TEASERS,
   EXCERPT_MAX_LENGTH,
   truncateExcerpt,
@@ -355,6 +356,336 @@ describe('HomeBlogTeasers', () => {
 
     it('EXCERPT_MAX_LENGTH is 120', () => {
       expect(EXCERPT_MAX_LENGTH).toBe(120);
+    });
+  });
+
+  // ── initBlogTeaserRepeater ───────────────────────────────────────
+  describe('initBlogTeaserRepeater', () => {
+    function mockSection(id) {
+      return {
+        _id: id,
+        html: '',
+        accessibility: {},
+        collapsed: false,
+        collapse: vi.fn(function () { this.collapsed = true; }),
+      };
+    }
+
+    function mockRepeater() {
+      const rep = {
+        data: null,
+        _itemReadyCb: null,
+        onItemReady: vi.fn(function (cb) { rep._itemReadyCb = cb; }),
+      };
+      return rep;
+    }
+
+    function mockItemEl() {
+      return {
+        text: '',
+        src: '',
+        alt: '',
+        link: '',
+        accessibility: {},
+        show: vi.fn(),
+        hide: vi.fn(),
+      };
+    }
+
+    function createItemSelector(elements) {
+      return (id) => elements[id] || null;
+    }
+
+    it('does nothing when #blogTeaserSection is missing', async () => {
+      const $w = create$w({});
+      await expect(initBlogTeaserRepeater($w)).resolves.toBeUndefined();
+    });
+
+    it('collapses section when no posts returned', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const $w = create$w({ '#blogTeaserSection': section });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(section.collapse).toHaveBeenCalled();
+    });
+
+    it('collapses section on fetch error', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockRejectedValue(new Error('CMS offline')),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const $w = create$w({ '#blogTeaserSection': section });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(section.collapse).toHaveBeenCalled();
+    });
+
+    it('sets repeater data with at most MAX_TEASERS items', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(repeater.data).toHaveLength(3);
+      expect(repeater.onItemReady).toHaveBeenCalled();
+    });
+
+    it('sorts repeater data newest-first by publishDate', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(repeater.data[0].slug).toBe('best-futons-everyday-sleeping');
+      expect(repeater.data[1].slug).toBe('futon-vs-sofa-bed');
+      expect(repeater.data[2].slug).toBe('small-space-furniture');
+    });
+
+    it('adds _id field to each repeater item', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      for (const item of repeater.data) {
+        expect(item._id).toBeDefined();
+        expect(typeof item._id).toBe('string');
+      }
+    });
+
+    it('onItemReady sets title and excerpt', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const titleEl = mockItemEl();
+      const excerptEl = mockItemEl();
+      const catEl = mockItemEl();
+      const readEl = mockItemEl();
+      const imgEl = mockItemEl();
+      const linkEl = mockItemEl();
+      const $item = createItemSelector({
+        '#blogTeaserTitle': titleEl,
+        '#blogTeaserExcerpt': excerptEl,
+        '#blogTeaserCategory': catEl,
+        '#blogTeaserReadTime': readEl,
+        '#blogTeaserImage': imgEl,
+        '#blogTeaserLink': linkEl,
+      });
+
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(titleEl.text).toBe('Best Futons for Everyday Sleeping');
+      expect(excerptEl.text).toContain('sleep on a futon');
+    });
+
+    it('onItemReady sets cover image src and alt', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const imgEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserImage': imgEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(imgEl.src).toBe('https://example.com/image1.jpg');
+      expect(imgEl.alt).toBe('Best Futons for Everyday Sleeping');
+      expect(imgEl.show).toHaveBeenCalled();
+    });
+
+    it('onItemReady hides image element when no cover image', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[2]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const imgEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserImage': imgEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(imgEl.hide).toHaveBeenCalled();
+    });
+
+    it('onItemReady shows category when present', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const catEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserCategory': catEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(catEl.text).toBe('Buying Guides');
+      expect(catEl.show).toHaveBeenCalled();
+    });
+
+    it('onItemReady hides category when absent', async () => {
+      const noCategory = { ...MOCK_POSTS[0], category: '' };
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([noCategory]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const catEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserCategory': catEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(catEl.hide).toHaveBeenCalled();
+    });
+
+    it('onItemReady sets reading time text', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const readEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserReadTime': readEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(readEl.text).toMatch(/\d+ min read/);
+    });
+
+    it('onItemReady sets blog link on the link element', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue([MOCK_POSTS[0]]),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      const linkEl = mockItemEl();
+      const $item = createItemSelector({ '#blogTeaserLink': linkEl });
+      repeater._itemReadyCb($item, repeater.data[0]);
+
+      expect(linkEl.link).toBe('/blog/best-futons-everyday-sleeping');
+    });
+
+    it('wires up See All Posts CTA to /blog', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const ctaBtn = mockItemEl();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+        '#blogSeeAllPosts': ctaBtn,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(ctaBtn.link).toBe('/blog');
+    });
+
+    it('fires blog_teasers_loaded tracking event', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const repeater = mockRepeater();
+      const $w = create$w({
+        '#blogTeaserSection': section,
+        '#blogTeaserRepeater': repeater,
+      });
+
+      await initBlogTeaserRepeater($w);
+
+      expect(trackEvent).toHaveBeenCalledWith(
+        'blog_teasers_loaded',
+        expect.objectContaining({ location: 'homepage' }),
+      );
+    });
+
+    it('falls back to HTML container when repeater element is absent', async () => {
+      vi.doMock('backend/blogService.web', () => ({
+        fetchAllBlogPosts: vi.fn().mockResolvedValue(MOCK_POSTS),
+      }));
+      const section = mockSection('blogTeaserSection');
+      const $w = create$w({ '#blogTeaserSection': section });
+
+      await initBlogTeaserRepeater($w);
+
+      // No repeater → falls back to html injection
+      expect(typeof section.html).toBe('string');
+      expect(section.html).toContain('From Our Blog');
     });
   });
 });
