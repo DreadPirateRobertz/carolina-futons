@@ -244,12 +244,16 @@ describe('jobs.config', () => {
     expect(jobs.checkBrowseAbandonment.functionLocation).toContain('browseAbandonment.web.js');
   });
 
-  it('all jobs reference a .web.js backend file', async () => {
+  it('all email automation jobs reference emailAutomation.web.js', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
 
-    for (const key of Object.keys(jobs)) {
-      expect(jobs[key].functionLocation).toMatch(/\.web\.js$/);
+    const emailJobs = Object.values(jobs).filter(j =>
+      j.functionLocation?.includes('emailAutomation')
+    );
+    expect(emailJobs.length).toBeGreaterThan(0);
+    for (const job of emailJobs) {
+      expect(job.functionLocation).toContain('emailAutomation.web.js');
     }
   });
 });

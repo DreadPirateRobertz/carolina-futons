@@ -298,18 +298,18 @@ describe('runDailySocialStories — error handling', () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe('jobs.config cron registration', () => {
-  it('jobs.config includes runDailySocialStories cron entry', async () => {
+  it('jobs.config includes dailySocialStories cron entry', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
-    expect(jobs).toHaveProperty('runDailySocialStories');
-    expect(jobs.runDailySocialStories.functionLocation).toBe('/socialStoryScheduler.web.js');
-    expect(jobs.runDailySocialStories.executionConfig.cronExpression).toMatch(/\d+ \d+ \* \* \*/);
+    expect(jobs).toHaveProperty('dailySocialStories');
+    expect(jobs.dailySocialStories.functionLocation).toBe('/socialStoryScheduler.web.js');
+    expect(jobs.dailySocialStories.executionConfig.cronExpression).toMatch(/\d+ \d+ \* \* \*/);
   });
 
   it('jobs.config cron fires once daily (not multiple times per day)', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
-    const cron = jobs.runDailySocialStories.executionConfig.cronExpression;
+    const cron = jobs.dailySocialStories.executionConfig.cronExpression;
     // A daily cron has the form "M H * * *" — verify it's not "*/N" (minutely/hourly)
     expect(cron).not.toMatch(/^\*/);
     const parts = cron.split(' ');
