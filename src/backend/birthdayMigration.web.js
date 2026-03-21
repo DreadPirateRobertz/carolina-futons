@@ -32,14 +32,19 @@ export const backfillBirthdayFields = webMethod(
     let updated = 0;
     let skipped = 0;
     let errors = 0;
-    let skip = 0;
+    // Cursor-based pagination: wixData.query().skip() hits a hard Wix limit
+    // of 1000 items. Instead, advance by filtering _id > lastSeenId ascending.
+    let lastSeenId = '';
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const page = await wixData.query(MEMBERS_COLLECTION)
-        .limit(PAGE_SIZE)
-        .skip(skip)
-        .find();
+      let q = wixData.query(MEMBERS_COLLECTION)
+        .ascending('_id')
+        .limit(PAGE_SIZE);
+      if (lastSeenId) {
+        q = q.gt('_id', lastSeenId);
+      }
+      const page = await q.find();
 
       if (page.items.length === 0) break;
 
@@ -79,7 +84,7 @@ export const backfillBirthdayFields = webMethod(
       }
 
       if (page.items.length < PAGE_SIZE) break;
-      skip += PAGE_SIZE;
+      lastSeenId = page.items[page.items.length - 1]._id;
     }
 
     console.log(`[birthdayMigration] Complete — processed:${processed} updated:${updated} skipped:${skipped} errors:${errors}`);

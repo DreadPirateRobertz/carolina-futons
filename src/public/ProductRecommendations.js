@@ -7,7 +7,7 @@
  *   #recommendationsTitle (Text) — "Customers Also Love"
  *   #recommendationsRepeater (Repeater) — product cards
  *     ↳ #recProductImage (Image), #recProductName (Text), #recProductPrice (Text)
- *     ↳ #recAddToCartBtn (Button), #recViewBtn (Button)
+ *     ↳ #recViewBtn (Button)
  *
  * CF-8bbu: AI product recommendations carousel
  */
@@ -53,15 +53,8 @@ function _collapseSection($w) {
 
 function _populateCarousel($w, products) {
   try {
-    $w('#recommendationsRepeater').data = products.map(p => ({
-      _id: p._id,
-      name: p.name,
-      slug: p.slug,
-      price: p.price,
-      formattedPrice: p.formattedPrice,
-      mainMedia: p.mainMedia,
-    }));
-
+    // onItemReady must be registered BEFORE .data is set — Wix fires the callback
+    // for each item at the moment .data is assigned.
     $w('#recommendationsRepeater').onItemReady(($item, itemData) => {
       try { $item('#recProductName').text = itemData.name || ''; } catch (e) {
         console.warn('[ProductRecommendations] recProductName set failed:', e?.message ?? e);
@@ -101,6 +94,15 @@ function _populateCarousel($w, products) {
         console.warn('[ProductRecommendations] recViewBtn wiring failed:', e?.message ?? e);
       }
     });
+
+    $w('#recommendationsRepeater').data = products.map(p => ({
+      _id: p._id,
+      name: p.name,
+      slug: p.slug,
+      price: p.price,
+      formattedPrice: p.formattedPrice,
+      mainMedia: p.mainMedia,
+    }));
   } catch (e) {
     console.warn('[ProductRecommendations] populateCarousel failed:', e?.message ?? e);
     _collapseSection($w);
