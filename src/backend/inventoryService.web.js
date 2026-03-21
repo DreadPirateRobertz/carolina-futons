@@ -509,7 +509,7 @@ const JUST_RESTOCKED_HOURS = 48;
  *
  * @param {string} productId
  * @returns {Promise<{level: string, count: number, message: string}>}
- * level: 'low' | 'out' | 'just_restocked' | 'none'
+ * level: 'out' | 'just_restocked' | 'low' | 'none' (evaluated in this precedence order)
  */
 export const getInventoryUrgency = webMethod(
   Permissions.Anyone,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
+import { __seed, __onInsert, __onUpdate, __setQueryError } from './__mocks__/wix-data.js';
 import {
   getStockStatus,
   getInventoryDashboard,
@@ -640,5 +640,22 @@ describe('getInventoryUrgency', () => {
     ]);
     const result = await getInventoryUrgency('prod-1');
     expect(result.level).toBe('out');
+  });
+
+  it('returns none on database error (catch path)', async () => {
+    __setQueryError('InventoryLevels', new Error('DB unavailable'));
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('none');
+    expect(result.count).toBe(0);
+    expect(result.message).toBe('');
+  });
+
+  it('boundary: lastRestocked exactly at 48h is excluded (> not >=)', async () => {
+    const exactly48h = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 20, lastRestocked: exactly48h },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('none');
   });
 });

@@ -2,7 +2,7 @@
  * Frontend urgency badge tests — showUrgencyBadge + initUrgencyBanner.
  * CF-cf77: Live inventory urgency badges
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('backend/inventoryService.web', () => ({
   getInventoryUrgency: vi.fn(),
@@ -29,10 +29,16 @@ function make$w() {
 
 describe('showUrgencyBadge', () => {
   let $w;
+  let warnSpy;
 
   beforeEach(() => {
     vi.clearAllMocks();
     $w = make$w();
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
   });
 
   it('returns early for missing productId', async () => {
@@ -72,17 +78,40 @@ describe('showUrgencyBadge', () => {
     await showUrgencyBadge($w, 'prod-1');
     expect($w('#inventoryBadge').hide).toHaveBeenCalled();
   });
+
+  it('logs warning on API error', async () => {
+    getInventoryUrgency.mockRejectedValue(new Error('timeout'));
+    await showUrgencyBadge($w, 'prod-1');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[inventoryUrgency]'), expect.anything());
+  });
+
+  it('sets aria-label on badge for low level', async () => {
+    getInventoryUrgency.mockResolvedValue({ level: 'low', count: 3, message: 'Only 3 left!' });
+    await showUrgencyBadge($w, 'prod-1');
+    expect($w('#inventoryBadge').accessibility.ariaLabel).toBe('Only 3 left!');
+  });
+
+  it('sets aria-label on badge for just_restocked', async () => {
+    getInventoryUrgency.mockResolvedValue({ level: 'just_restocked', count: 20, message: 'Just restocked!' });
+    await showUrgencyBadge($w, 'prod-1');
+    expect($w('#inventoryBadge').accessibility.ariaLabel).toBe('Just restocked!');
+  });
 });
 
 // ── initUrgencyBanner ───────────────────────────────────────────────
 
 describe('initUrgencyBanner', () => {
-  let $w, state;
+  let $w, state, warnSpy;
 
   beforeEach(() => {
     vi.clearAllMocks();
     $w = make$w();
     state = { product: { _id: 'prod-1' } };
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
   });
 
   it('returns early when state has no product', async () => {
@@ -134,9 +163,32 @@ describe('initUrgencyBanner', () => {
     expect($w('#inventoryUrgencyBanner').hide).toHaveBeenCalled();
   });
 
+  it('logs warning on API error', async () => {
+    getInventoryUrgency.mockRejectedValue(new Error('timeout'));
+    await initUrgencyBanner($w, state);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[inventoryUrgency]'), expect.anything());
+  });
+
   it('calls getInventoryUrgency with product id', async () => {
     getInventoryUrgency.mockResolvedValue({ level: 'none', count: 10, message: '' });
     await initUrgencyBanner($w, state);
     expect(getInventoryUrgency).toHaveBeenCalledWith('prod-1');
+  });
+
+  it('uses urgency.message for out level (not hardcoded string)', async () => {
+    getInventoryUrgency.mockResolvedValue({ level: 'out', count: 0, message: 'Out of stock' });
+    await initUrgencyBanner($w, state);
+    expect($w('#urgencyText').text).toBe('Out of stock');
+    expect($w('#inventoryUrgencyBanner').show).toHaveBeenCalled();
+  });
+
+  it('returns early for null state', async () => {
+    await initUrgencyBanner($w, null);
+    expect(getInventoryUrgency).not.toHaveBeenCalled();
+  });
+
+  it('returns early for undefined state', async () => {
+    await initUrgencyBanner($w, undefined);
+    expect(getInventoryUrgency).not.toHaveBeenCalled();
   });
 });
