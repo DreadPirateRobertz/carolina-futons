@@ -59,7 +59,8 @@ export async function checkRateLimit(collection, key, opts = {}) {
       return { allowed: true };
     }
 
-    if (record.count >= RATE_LIMIT_MAX) {
+    const max = (opts && opts.max != null) ? opts.max : RATE_LIMIT_MAX;
+    if (record.count >= max) {
       return { allowed: false, reason: 'rate_limited' };
     }
 
