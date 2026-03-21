@@ -72,8 +72,12 @@ export function resizeSelected(canvasState, newWidth, newHeight) {
   const idx = products.findIndex(p => p._id === selectedProductId);
   if (idx === -1) return canvasState;
 
-  const clampedW = Math.max(MIN_PRODUCT_SIZE, Math.min(MAX_PRODUCT_SIZE, Math.round(newWidth)));
-  const clampedH = Math.max(MIN_PRODUCT_SIZE, Math.min(MAX_PRODUCT_SIZE, Math.round(newHeight)));
+  const w = Number(newWidth);
+  const h = Number(newHeight);
+  if (!isFinite(w) || !isFinite(h)) return canvasState;
+
+  const clampedW = Math.max(MIN_PRODUCT_SIZE, Math.min(MAX_PRODUCT_SIZE, Math.round(w)));
+  const clampedH = Math.max(MIN_PRODUCT_SIZE, Math.min(MAX_PRODUCT_SIZE, Math.round(h)));
 
   const newProducts = [...products];
   newProducts[idx] = { ...products[idx], width: clampedW, depth: clampedH };

@@ -205,6 +205,21 @@ describe('resizeSelected', () => {
     const next = resizeSelected(state, 72, 48);
     expect(next.products[0]).toMatchObject({ x: 100, y: 200, rotation: 90 });
   });
+
+  it('returns same state when newWidth is NaN', () => {
+    const state = makeState({ products: [makeProduct('p1')], selectedProductId: 'p1' });
+    expect(resizeSelected(state, NaN, 48)).toBe(state);
+  });
+
+  it('returns same state when newHeight is NaN', () => {
+    const state = makeState({ products: [makeProduct('p1')], selectedProductId: 'p1' });
+    expect(resizeSelected(state, 72, NaN)).toBe(state);
+  });
+
+  it('returns same state when dimensions are Infinity', () => {
+    const state = makeState({ products: [makeProduct('p1')], selectedProductId: 'p1' });
+    expect(resizeSelected(state, Infinity, 48)).toBe(state);
+  });
 });
 
 // ── rotateSelected ────────────────────────────────────────────────
