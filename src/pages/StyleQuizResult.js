@@ -2,6 +2,7 @@
 // Displays a shared Style Quiz result publicly. Sets OG meta tags for social sharing.
 import { getSharedResult } from 'backend/styleQuizService.web';
 import { initPageSeo } from 'public/pageSeo.js';
+import wixLocationFrontend from 'wix-location-frontend';
 
 const OG_IMAGE_BY_STYLE = {
   'modern':  'https://static.wixstatic.com/media/quiz-og-modern.jpg',
@@ -44,8 +45,8 @@ $w.onReady(async function () {
 
 function getShareIdFromUrl() {
   try {
-    // Wix dynamic page: share ID is the last path segment
-    const path = window.location.pathname;
+    // wixLocationFrontend.path is SSR-safe; window.location is not
+    const path = wixLocationFrontend.path;
     const parts = path.split('/').filter(Boolean);
     return parts[parts.length - 1] || null;
   } catch {

@@ -26,10 +26,12 @@ globalThis.$w = Object.assign(
   { onReady: (fn) => { onReadyHandler = fn; } }
 );
 
-// ── Window.location mock ───────────────────────────────────────────────────────
+// ── wix-location-frontend mock ────────────────────────────────────────────────
+
+const mockLocation = { path: '/', to: vi.fn() };
 
 function setPath(path) {
-  globalThis.window = { location: { pathname: path } };
+  mockLocation.path = path;
 }
 
 // ── Backend mocks ──────────────────────────────────────────────────────────────
@@ -43,7 +45,7 @@ vi.mock('backend/styleQuizService.web', () => ({
 }));
 
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
-vi.mock('wix-location-frontend', () => ({ to: vi.fn() }));
+vi.mock('wix-location-frontend', () => ({ default: mockLocation, ...mockLocation }));
 
 // Import page to register onReadyHandler
 await import('../src/pages/StyleQuizResult.js');
