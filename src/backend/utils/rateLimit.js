@@ -28,7 +28,7 @@ export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function checkRateLimit(collection, key, opts = {}) {
-  const now = (opts && opts.now != null) ? opts.now : Date.now();
+  const now = opts.now ?? Date.now();
   try {
     const cleanKey = sanitize(key, 254).toLowerCase();
 
@@ -59,7 +59,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
       return { allowed: true };
     }
 
-    const max = (opts && opts.max != null) ? opts.max : RATE_LIMIT_MAX;
+    const max = opts.max ?? RATE_LIMIT_MAX;
     if (record.count >= max) {
       return { allowed: false, reason: 'rate_limited' };
     }

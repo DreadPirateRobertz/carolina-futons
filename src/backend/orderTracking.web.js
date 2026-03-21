@@ -171,7 +171,7 @@ export const lookupOrder = webMethod(
 
 export const subscribeToNotifications = webMethod(
   Permissions.Anyone,
-  async (orderNumber, email, _opts) => {
+  async (orderNumber, email, opts) => {
     try {
       const cleanOrderNumber = sanitize(orderNumber, 50).replace(/[^a-zA-Z0-9-]/g, '');
       const cleanEmail = (email || '').trim().toLowerCase();
@@ -180,7 +180,7 @@ export const subscribeToNotifications = webMethod(
         return { success: false, error: 'Valid order number and email required' };
       }
 
-      const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { ..._opts, max: 5 });
+      const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { ...opts, max: 5 });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again later.' };
       }
