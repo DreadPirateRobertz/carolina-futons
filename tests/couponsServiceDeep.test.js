@@ -17,7 +17,6 @@ vi.mock('backend/utils/sanitize', () => ({
 }));
 
 let _createdCoupons = [];
-let _activeCoupons = [];
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
     createCoupon: vi.fn(async (data) => {
@@ -27,7 +26,7 @@ vi.mock('wix-marketing-backend', () => ({
     }),
     queryAllCoupons: () => ({
       eq: () => ({
-        find: async () => ({ items: _activeCoupons }),
+        find: async () => ({ items: [] }),
       }),
     }),
     queryV2: () => ({
@@ -51,7 +50,6 @@ let mod;
 let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
-  _activeCoupons = [];
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
   wixDataMock = await import('wix-data');

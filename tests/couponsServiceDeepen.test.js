@@ -19,7 +19,6 @@ vi.mock('backend/utils/sanitize', () => ({
 let _queryV2Items = [];
 let _queryV2Error = null;
 let _createdCoupons = [];
-let _activeCoupons = [];
 
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
@@ -30,10 +29,7 @@ vi.mock('wix-marketing-backend', () => ({
     }),
     queryAllCoupons: () => ({
       eq: () => ({
-        find: async () => {
-          if (_activeCoupons === 'ERROR') throw new Error('API down');
-          return { items: Array.isArray(_activeCoupons) ? _activeCoupons : [] };
-        },
+        find: async () => ({ items: [] }),
       }),
     }),
     queryV2: () => ({
@@ -60,7 +56,6 @@ let mod;
 let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
-  _activeCoupons = [];
   _queryV2Items = [];
   _queryV2Error = null;
   vi.resetModules();
@@ -158,15 +153,14 @@ describe('generateCode collision handling', () => {
 // ── getActiveCoupons error handling ─────────────────────────────────
 
 describe('getActiveCoupons error handling', () => {
-  it('returns empty array on API error', async () => {
-    _activeCoupons = 'ERROR';
+  it('returns empty array on wixData query error', async () => {
+    wixDataMock.__setQueryError('Members/MemberCoupons', new Error('API down'));
     const r = await mod.getActiveCoupons();
     expect(r).toEqual([]);
   });
 
-  it('returns empty array when result.items is undefined', async () => {
-    // queryAllCoupons returns { items: undefined }
-    _activeCoupons = [];
+  it('returns empty array when no CMS records exist', async () => {
+    // No seed — wixData returns empty items array
     const r = await mod.getActiveCoupons();
     expect(r).toEqual([]);
   });
