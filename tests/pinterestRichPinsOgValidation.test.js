@@ -32,8 +32,20 @@ const VALID_PRODUCT = {
   sku: 'NDF-MONTEREY-001',
 };
 
-const OUT_OF_STOCK_PRODUCT = { ...VALID_PRODUCT, name: 'Austin Futon Frame', slug: 'austin-futon-frame', inStock: false };
-const SALE_PRODUCT = { ...VALID_PRODUCT, name: 'Osaka Futon Frame', slug: 'osaka-futon-frame', price: 699, salePrice: 499 };
+const OUT_OF_STOCK_PRODUCT = {
+  ...VALID_PRODUCT,
+  name: 'Austin Futon Frame',
+  slug: 'austin-futon-frame',
+  inStock: false,
+};
+
+const SALE_PRODUCT = {
+  ...VALID_PRODUCT,
+  name: 'Osaka Futon Frame',
+  slug: 'osaka-futon-frame',
+  price: 699,
+  salePrice: 499,
+};
 
 // ── og:type = "product" ─────────────────────────────────────────────────────
 
@@ -67,18 +79,13 @@ describe('Pinterest Rich Pins — product:price:amount', () => {
   it('price is a numeric string (parseable as float)', async () => {
     const { meta } = await getProductPinData(VALID_PRODUCT);
     const parsed = parseFloat(meta['product:price:amount']);
-    expect(isNaN(parsed)).toBe(false);
+    expect(parsed).not.toBeNaN();
     expect(parsed).toBeGreaterThan(0);
   });
 
   it('sets product:price:currency to USD', async () => {
     const { meta } = await getProductPinData(VALID_PRODUCT);
     expect(meta['product:price:currency']).toBe('USD');
-  });
-
-  it('currency is a 3-character ISO code', async () => {
-    const { meta } = await getProductPinData(VALID_PRODUCT);
-    expect(meta['product:price:currency']).toMatch(/^[A-Z]{3}$/);
   });
 
   it('sets sale price when product is on sale', async () => {
@@ -112,13 +119,6 @@ describe('Pinterest Rich Pins — product:availability', () => {
     expect(meta['product:availability']).toBe('oos');
   });
 
-  it('availability value contains no spaces', async () => {
-    const { meta: inStockMeta } = await getProductPinData(VALID_PRODUCT);
-    const { meta: oosMeta } = await getProductPinData(OUT_OF_STOCK_PRODUCT);
-    expect(inStockMeta['product:availability']).not.toContain(' ');
-    expect(oosMeta['product:availability']).not.toContain(' ');
-  });
-
   it('defaults to instock when inStock field is undefined', async () => {
     const { name, slug, price, image } = VALID_PRODUCT;
     const { meta } = await getProductPinData({ name, slug, price, image });
@@ -136,7 +136,7 @@ describe('Pinterest Rich Pins — full compliance validation', () => {
     pinMeta = result.meta;
   });
 
-  it('has all 6 required Pinterest product pin fields', () => {
+  it('has all 8 required Pinterest product pin fields', () => {
     const required = [
       'og:type',
       'og:title',
