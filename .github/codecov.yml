@@ -1,5 +1,5 @@
 # Codecov configuration
-# Docs: https://docs.codecov.io/docs/codecov-yaml
+# Docs: https://docs.codecov.com/docs/codecov-yaml
 codecov:
   require_ci_to_pass: true
 

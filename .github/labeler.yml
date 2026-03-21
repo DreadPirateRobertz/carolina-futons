@@ -1,6 +1,5 @@
-# PR size auto-labeling
-# Used by actions/labeler — labels PRs by lines changed
-# Requires .github/workflows/labeler.yml workflow (see below)
+# PR labeling — path-based labels applied by actions/labeler
+# Size labels (XS/S/M/L/XL) are handled separately in .github/workflows/labeler.yml
 
 # This file defines path-based labels.
 # Size labels (XS/S/M/L/XL) are handled by the size-label workflow.
