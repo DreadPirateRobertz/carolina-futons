@@ -249,17 +249,19 @@ describe('completeReferral — reward fires only on first purchase', () => {
   });
 
   it('first call on signed_up referral succeeds and issues credits', async () => {
+    // completeReferral (line 216) verifies member.loginEmail === referral.refereeEmail
     __seed('Referrals', [
       {
         _id: 'ref-first-purchase',
         referralCode: 'FIRST001',
         status: 'signed_up',
         referrerMemberId: REFERRER_ID,
+        refereeEmail: 'new@example.com',
         orderNumber: '',
       },
     ]);
     __seed('ReferralCredits', []);
-    __setMember({ _id: NEW_MEMBER_ID });
+    __setMember({ _id: NEW_MEMBER_ID, loginEmail: 'new@example.com' });
 
     const firstResult = await completeReferral('FIRST001', 'ORD-1111');
     expect(firstResult.success).toBe(true);
@@ -269,17 +271,19 @@ describe('completeReferral — reward fires only on first purchase', () => {
   });
 
   it('second call (after first credited the referral) issues no additional credits', async () => {
+    // completeReferral (line 216) verifies member.loginEmail === referral.refereeEmail
     __seed('Referrals', [
       {
         _id: 'ref-first-purchase',
         referralCode: 'FIRST001',
         status: 'signed_up',
         referrerMemberId: REFERRER_ID,
+        refereeEmail: 'new@example.com',
         orderNumber: '',
       },
     ]);
     __seed('ReferralCredits', []);
-    __setMember({ _id: NEW_MEMBER_ID });
+    __setMember({ _id: NEW_MEMBER_ID, loginEmail: 'new@example.com' });
 
     // First purchase — credits issued, referral transitions to 'credited'
     await completeReferral('FIRST001', 'ORD-1111');
