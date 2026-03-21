@@ -29,6 +29,11 @@ const mockAnnounce = vi.fn();
 const mockIsMobile = vi.fn(() => false);
 const mockWixTo = vi.fn();
 
+// Mock dialog returned by setupAccessibleDialog
+const mockDialogOpen = vi.fn();
+const mockDialogClose = vi.fn();
+const mockSetupAccessibleDialog = vi.fn(() => ({ open: mockDialogOpen, close: mockDialogClose }));
+
 vi.mock('public/cartService', () => ({
   getCurrentCart: (...args) => mockGetCurrentCart(...args),
   updateCartItemQuantity: (...args) => mockUpdateCartItemQuantity(...args),
@@ -41,6 +46,7 @@ vi.mock('public/cartService', () => ({
 vi.mock('public/a11yHelpers.js', () => ({
   announce: (...args) => mockAnnounce(...args),
   makeClickable: vi.fn((el, fn) => { el.onClick(fn); }),
+  setupAccessibleDialog: (...args) => mockSetupAccessibleDialog(...args),
 }));
 
 vi.mock('public/mobileHelpers', () => ({
@@ -107,6 +113,9 @@ beforeEach(() => {
   mockAnnounce.mockReset();
   mockWixTo.mockReset();
   mockIsMobile.mockReturnValue(false);
+  mockSetupAccessibleDialog.mockReturnValue({ open: mockDialogOpen, close: mockDialogClose });
+  mockDialogOpen.mockReset();
+  mockDialogClose.mockReset();
 });
 
 // ── initMiniCartDrawer ───────────────────────────────────────────────
@@ -163,6 +172,15 @@ describe('initMiniCartDrawer', () => {
   it('registers onItemReady on the repeater exactly once', () => {
     initMiniCartDrawer($w);
     expect($w('#miniCartRepeater').onItemReady).toHaveBeenCalledTimes(1);
+  });
+
+  it('sets up accessible dialog with focus trap for WCAG compliance', () => {
+    initMiniCartDrawer($w);
+    expect(mockSetupAccessibleDialog).toHaveBeenCalledWith($w, expect.objectContaining({
+      panelId: '#miniCartDrawer',
+      closeId: '#miniCartClose',
+      focusableIds: expect.arrayContaining(['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn']),
+    }));
   });
 
   // Close handler behavior
@@ -247,6 +265,13 @@ describe('openMiniCart', () => {
   it('handles undefined cart gracefully', () => {
     expect(() => openMiniCart($w, undefined)).not.toThrow();
   });
+
+  it('activates focus trap via dialog.open() after slide show', () => {
+    initMiniCartDrawer($w); // required to set _dialog
+    mockDialogOpen.mockClear();
+    openMiniCart($w, makeCart());
+    expect(mockDialogOpen).toHaveBeenCalled();
+  });
 });
 
 // ── closeMiniCart ────────────────────────────────────────────────────
@@ -276,6 +301,14 @@ describe('closeMiniCart', () => {
     const [effect, opts] = $w('#miniCartDrawer').hide.mock.calls[0];
     expect(effect).toBe('slide');
     expect(opts?.direction).toBe('bottom');
+  });
+
+  it('releases focus trap and restores focus via dialog.close()', () => {
+    initMiniCartDrawer($w); // required to set _dialog
+    openMiniCart($w, makeCart());
+    mockDialogClose.mockClear();
+    closeMiniCart($w);
+    expect(mockDialogClose).toHaveBeenCalled();
   });
 });
 

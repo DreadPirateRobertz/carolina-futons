@@ -31,7 +31,7 @@
  */
 
 import { getCurrentCart, updateCartItemQuantity, removeCartItem, safeMultiply, clampQuantity } from 'public/cartService';
-import { announce } from 'public/a11yHelpers.js';
+import { announce, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { isMobile } from 'public/mobileHelpers';
 import wixLocationFrontend from 'wix-location-frontend';
 
@@ -41,11 +41,16 @@ import wixLocationFrontend from 'wix-location-frontend';
 // can reach the page scope after init.
 let _$w = null;
 
+// Accessible dialog handle from setupAccessibleDialog — manages focus trap,
+// Escape key handler, and focus restoration on close.
+let _dialog = null;
+
 /**
  * Reset all internal state. Called in tests via clearAll() before each case.
  */
 export function clearAll() {
   _$w = null;
+  _dialog = null;
 }
 
 // ── Public API ───────────────────────────────────────────────────────
@@ -111,6 +116,17 @@ export function initMiniCartDrawer($w) {
       _bindRepeaterItem($item, itemData);
     });
   } catch (e) {}
+
+  // Focus trap, Escape key, and focus-restore on close (WCAG 2.1 AA).
+  // setupAccessibleDialog also wires the close button — our onClick above
+  // remains for the slide animation; both handlers are safe to coexist.
+  try {
+    _dialog = setupAccessibleDialog($w, {
+      panelId: '#miniCartDrawer',
+      closeId: '#miniCartClose',
+      focusableIds: ['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn'],
+    });
+  } catch (e) {}
 }
 
 /**
@@ -141,6 +157,8 @@ export function openMiniCart($w, cart) {
 
   announce($w, `Cart opened with ${totalQty} item${totalQty !== 1 ? 's' : ''}`);
   try { $w('#miniCartClose').focus(); } catch (e) {}
+  // Open accessible dialog: saves focus, creates focus trap, focuses first focusable element.
+  if (_dialog) try { _dialog.open(); } catch (e) {}
 }
 
 /**
@@ -159,6 +177,8 @@ export function closeMiniCart($w) {
   try { $w('#miniCartOverlay').hide(); } catch (e) {}
 
   announce($w, 'Cart closed');
+  // Release focus trap and restore focus to previously focused element.
+  if (_dialog) try { _dialog.close(); } catch (e) {}
 }
 
 /**

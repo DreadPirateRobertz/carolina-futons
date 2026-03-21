@@ -1248,6 +1248,50 @@ describe('masterPage.js', () => {
     });
   });
 
+  // ── Mini-Cart Escape Key ───────────────────────────────────────────
+
+  describe('mini-cart Escape key', () => {
+    let origDoc;
+    let keydownHandlers;
+
+    beforeEach(() => {
+      origDoc = globalThis.document;
+      keydownHandlers = [];
+      globalThis.document = {
+        body: { style: { overflow: '' } },
+        addEventListener: vi.fn((event, handler) => {
+          if (event === 'keydown') keydownHandlers.push(handler);
+        }),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(() => {
+      globalThis.document = origDoc;
+    });
+
+    it('closes mini-cart drawer when Escape is pressed', async () => {
+      elements.clear();
+      mockCloseMiniCart.mockClear();
+      await onReadyHandler();
+
+      keydownHandlers.forEach(h => h({ key: 'Escape' }));
+
+      expect(mockCloseMiniCart).toHaveBeenCalled();
+    });
+
+    it('does not close mini-cart on non-Escape keys', async () => {
+      elements.clear();
+      mockCloseMiniCart.mockClear();
+      await onReadyHandler();
+
+      keydownHandlers.forEach(h => h({ key: 'Enter' }));
+
+      expect(mockCloseMiniCart).not.toHaveBeenCalled();
+    });
+  });
+
   // ── Header Shipping Progress ───────────────────────────────────────
 
   describe('header shipping progress', () => {
