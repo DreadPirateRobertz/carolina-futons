@@ -48,6 +48,15 @@ vi.mock('backend/styleQuiz.web', () => ({
   captureQuizLead: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
+vi.mock('backend/seoHelpers.web', () => ({
+  getStyleQuizSchema: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('backend/styleQuizService.web', () => ({
+  saveQuizResult: vi.fn().mockResolvedValue({ shareId: 'test-id', shareUrl: 'https://test.com/test-id' }),
+  getMyResult: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock('public/engagementTracker', () => ({ trackEvent: vi.fn() }));
 vi.mock('public/mobileHelpers', () => ({ initBackToTop: vi.fn() }));
 vi.mock('public/a11yHelpers', () => ({

@@ -3,6 +3,7 @@
 // Email gate appears after Q3 (stylePreference) with optional skip; lead captured to CRM.
 import { getQuizRecommendations, getQuizOptions, captureQuizLead } from 'backend/styleQuiz.web';
 import { getStyleQuizSchema } from 'backend/seoHelpers.web';
+import { saveQuizResult, getMyResult } from 'backend/styleQuizService.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -20,6 +21,8 @@ const state = {
   options: null,
   results: null,
   emailCaptured: false, // true once email submitted or skipped
+  priorResult: null,   // S4: persisted result from a previous visit
+  shareUrl: null,      // S4: share URL after saving
 };
 
 const STEPS = [
@@ -41,6 +44,18 @@ $w.onReady(async function () {
     state.options = await getQuizOptions();
   } catch (e) {
     state.options = null;
+  }
+
+  // S4: Check for a prior result and show retake UI if found
+  try {
+    const prior = await getMyResult();
+    if (prior && !prior.error) {
+      state.priorResult = prior;
+      renderPriorResultBanner(prior);
+      return; // show banner; initQuiz() called only if member chooses to retake
+    }
+  } catch (e) {
+    // Not a member or lookup failed — show the quiz normally
   }
 
   initQuiz();
@@ -319,6 +334,10 @@ async function submitQuiz() {
       renderNoResults();
     } else {
       renderResults(results);
+
+      // S4: Persist result and surface share URL for members
+      const profile = buildStyleProfile(state.answers);
+      saveAndShowShareUrl(state.answers, profile.title);
     }
   } catch (err) {
     console.error('Quiz recommendation error:', err);
@@ -485,6 +504,67 @@ function renderStyleProfileHeader(answers) {
   try { $w('#styleProfileTitle').text = profile.title; } catch (e) {}
   try { $w('#styleProfileDescription').text = profile.description; } catch (e) {}
   try { $w('#styleProfileSection').expand(); } catch (e) {}
+}
+
+// ── S4: Prior Result Banner ─────────────────────────────────────────
+
+/**
+ * Show the "Your Style: [tag]" banner when a member has a prior result.
+ * Wires the retake button to dismiss the banner and start the quiz fresh.
+ */
+function renderPriorResultBanner(prior) {
+  try { $w('#quizSection').collapse(); } catch (e) {}
+  try { $w('#priorResultBanner').expand(); } catch (e) {}
+  try { $w('#priorResultTag').text = prior.resultTag || 'Your Style Profile'; } catch (e) {}
+
+  if (prior.shareUrl) {
+    try {
+      $w('#priorShareUrl').text = prior.shareUrl;
+      $w('#priorCopyLinkBtn').onClick(() => {
+        try { navigator.clipboard?.writeText(prior.shareUrl); } catch (e) {}
+        try { $w('#priorCopyConfirm').expand(); } catch (e) {}
+        trackEvent('quiz_share_copy', { source: 'prior_banner' });
+      });
+    } catch (e) {}
+  }
+
+  try {
+    $w('#priorRetakeBtn').onClick(() => {
+      try { $w('#priorResultBanner').collapse(); } catch (e) {}
+      state.priorResult = null;
+      initQuiz();
+      trackEvent('quiz_retake');
+    });
+  } catch (e) {}
+
+  announce($w, `Your style: ${prior.resultTag || 'profile found'}. Take the quiz again to update it.`);
+  trackEvent('quiz_prior_result_shown', { resultTag: prior.resultTag });
+}
+
+// ── S4: Share URL ───────────────────────────────────────────────────
+
+/**
+ * Persist the quiz result and show the shareable URL in the results section.
+ */
+async function saveAndShowShareUrl(answers, resultTag) {
+  try {
+    const saved = await saveQuizResult(answers, resultTag);
+    if (saved && saved.shareUrl) {
+      state.shareUrl = saved.shareUrl;
+      try { $w('#shareUrlText').text = saved.shareUrl; } catch (e) {}
+      try { $w('#shareSection').expand(); } catch (e) {}
+      try {
+        $w('#copyShareLinkBtn').onClick(() => {
+          try { navigator.clipboard?.writeText(saved.shareUrl); } catch (e) {}
+          try { $w('#copyConfirm').expand(); } catch (e) {}
+          trackEvent('quiz_share_copy', { source: 'results' });
+        });
+      } catch (e) {}
+      trackEvent('quiz_result_saved', { resultTag });
+    }
+  } catch (e) {
+    // Not a member or save failed — sharing not available, quiz still works
+  }
 }
 
 function renderNoResults() {
