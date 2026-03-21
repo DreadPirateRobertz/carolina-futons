@@ -29,10 +29,10 @@ const mockAnnounce = vi.fn();
 const mockIsMobile = vi.fn(() => false);
 const mockWixTo = vi.fn();
 
-// Mock dialog returned by setupAccessibleDialog
-const mockDialogOpen = vi.fn();
-const mockDialogClose = vi.fn();
-const mockSetupAccessibleDialog = vi.fn(() => ({ open: mockDialogOpen, close: mockDialogClose }));
+// Mock trap returned by createFocusTrap
+const mockTrapRelease = vi.fn();
+const mockTrapIsActive = vi.fn(() => true);
+const mockCreateFocusTrap = vi.fn(() => ({ release: mockTrapRelease, isActive: mockTrapIsActive }));
 
 vi.mock('public/cartService', () => ({
   getCurrentCart: (...args) => mockGetCurrentCart(...args),
@@ -46,7 +46,7 @@ vi.mock('public/cartService', () => ({
 vi.mock('public/a11yHelpers.js', () => ({
   announce: (...args) => mockAnnounce(...args),
   makeClickable: vi.fn((el, fn) => { el.onClick(fn); }),
-  setupAccessibleDialog: (...args) => mockSetupAccessibleDialog(...args),
+  createFocusTrap: (...args) => mockCreateFocusTrap(...args),
 }));
 
 vi.mock('public/mobileHelpers', () => ({
@@ -113,9 +113,9 @@ beforeEach(() => {
   mockAnnounce.mockReset();
   mockWixTo.mockReset();
   mockIsMobile.mockReturnValue(false);
-  mockSetupAccessibleDialog.mockReturnValue({ open: mockDialogOpen, close: mockDialogClose });
-  mockDialogOpen.mockReset();
-  mockDialogClose.mockReset();
+  mockCreateFocusTrap.mockReturnValue({ release: mockTrapRelease, isActive: mockTrapIsActive });
+  mockTrapRelease.mockReset();
+  mockTrapIsActive.mockReset();
 });
 
 // ── initMiniCartDrawer ───────────────────────────────────────────────
@@ -174,13 +174,9 @@ describe('initMiniCartDrawer', () => {
     expect($w('#miniCartRepeater').onItemReady).toHaveBeenCalledTimes(1);
   });
 
-  it('sets up accessible dialog with focus trap for WCAG compliance', () => {
+  it('does not create a focus trap on init (trap is created on open)', () => {
     initMiniCartDrawer($w);
-    expect(mockSetupAccessibleDialog).toHaveBeenCalledWith($w, expect.objectContaining({
-      panelId: '#miniCartDrawer',
-      closeId: '#miniCartClose',
-      focusableIds: expect.arrayContaining(['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn']),
-    }));
+    expect(mockCreateFocusTrap).not.toHaveBeenCalled();
   });
 
   // Close handler behavior
@@ -266,11 +262,13 @@ describe('openMiniCart', () => {
     expect(() => openMiniCart($w, undefined)).not.toThrow();
   });
 
-  it('activates focus trap via dialog.open() after slide show', () => {
-    initMiniCartDrawer($w); // required to set _dialog
-    mockDialogOpen.mockClear();
+  it('creates a focus trap with WCAG-required focusable elements on open', () => {
     openMiniCart($w, makeCart());
-    expect(mockDialogOpen).toHaveBeenCalled();
+    expect(mockCreateFocusTrap).toHaveBeenCalledWith(
+      $w,
+      '#miniCartDrawer',
+      expect.arrayContaining(['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn']),
+    );
   });
 });
 
@@ -303,12 +301,11 @@ describe('closeMiniCart', () => {
     expect(opts?.direction).toBe('bottom');
   });
 
-  it('releases focus trap and restores focus via dialog.close()', () => {
-    initMiniCartDrawer($w); // required to set _dialog
-    openMiniCart($w, makeCart());
-    mockDialogClose.mockClear();
+  it('releases focus trap on close (WCAG focus management)', () => {
+    openMiniCart($w, makeCart()); // creates the trap
+    mockTrapRelease.mockClear();
     closeMiniCart($w);
-    expect(mockDialogClose).toHaveBeenCalled();
+    expect(mockTrapRelease).toHaveBeenCalled();
   });
 });
 
