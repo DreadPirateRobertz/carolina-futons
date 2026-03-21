@@ -15,7 +15,9 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { triggeredEmails, contacts } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { generateRecoveryCoupon } from 'backend/couponsService.web';
 
 /**
  * Event handler: Abandoned checkout created.
@@ -159,6 +161,88 @@ export const markRecoveryEmailSent = webMethod(
     } catch (err) {
       console.error('Error marking recovery email sent:', err);
       return { success: false };
+    }
+  }
+);
+
+/**
+ * Send the first recovery email for an abandoned cart.
+ * Generates an idempotent recovery coupon (via generateRecoveryCoupon) and
+ * sends the cart_recovery_1 triggered email. Degrades gracefully if coupon
+ * generation fails — email still sends without a discount code.
+ *
+ * Note: This function is NOT itself idempotent. Callers must check
+ * `recoveryEmailSent` on the cart record before invoking to prevent
+ * duplicate sends. Only coupon generation is idempotent.
+ *
+ * The coupon idempotency key used internally is `cart.checkoutId`,
+ * not the AbandonedCarts `_id`.
+ *
+ * @function sendRecoveryEmail
+ * @param {string} cartId - The _id of the AbandonedCarts record
+ * @returns {Promise<Object>}
+ *   On success: `{ success: true, discountCode: string }`.
+ *   On failure: `{ success: false, message: string }`.
+ * @permission Admin
+ */
+export const sendRecoveryEmail = webMethod(
+  Permissions.Admin,
+  async (cartId) => {
+    try {
+      if (!cartId) return { success: false, message: 'Cart ID required' };
+      const cleanId = sanitize(cartId, 50);
+
+      const cart = await wixData.get('AbandonedCarts', cleanId);
+      if (!cart) return { success: false, message: 'Cart not found' };
+
+      const cartEmail = (cart.buyerEmail || '').toLowerCase().trim();
+      if (!cartEmail) return { success: false, message: 'Cart has no email' };
+
+      const couponResult = await generateRecoveryCoupon({ cartId: cart.checkoutId, email: cartEmail });
+      const discountCode = couponResult.success ? couponResult.code : '';
+      if (!couponResult.success) {
+        console.warn('[cartRecovery] Coupon generation failed for cartId:', cartId, '— sending email without discount:', couponResult.message);
+      }
+
+      let contactId;
+      try {
+        const contactResult = await contacts.appendOrCreateContact({ emails: [{ email: cartEmail }] });
+        contactId = contactResult?.contactId;
+      } catch (crmErr) {
+        console.error('[cartRecovery] CRM appendOrCreateContact failed for cartId:', cartId, '— error:', crmErr.message);
+        return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
+      }
+      if (!contactId) {
+        console.error('[cartRecovery] appendOrCreateContact returned no contactId for cartId:', cartId);
+        return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
+      }
+
+      await triggeredEmails.emailContact('cart_recovery_1', contactId, {
+        variables: {
+          buyerName: cart.buyerName || '',
+          cartTotal: String(cart.cartTotal || 0),
+          discountCode,
+          discountAvailable: String(couponResult.success),
+          checkoutId: cart.checkoutId,
+          email: cartEmail,
+        },
+      });
+
+      try {
+        await wixData.update('AbandonedCarts', {
+          ...cart,
+          recoveryEmailSent: true,
+          recoveryEmailSentAt: new Date().toISOString(),
+        });
+      } catch (updateErr) {
+        console.error('[cartRecovery] Failed to mark recoveryEmailSent for cartId:', cartId, '— error:', updateErr.message);
+        return { success: false, message: 'Failed to update cart status after email send' };
+      }
+
+      return { success: true, discountCode };
+    } catch (err) {
+      console.error('[cartRecovery] sendRecoveryEmail failed for cartId:', cartId, '— error:', err.message);
+      return { success: false, message: 'Failed to send recovery email' };
     }
   }
 );
