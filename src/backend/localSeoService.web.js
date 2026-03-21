@@ -85,6 +85,8 @@ function _buildMetaTitle(cityData) {
   if (cityData.isHomeCity) {
     return `${cityData.city} Futons & Furniture — Carolina Futons`;
   }
+  // City name appears twice intentionally: once as the primary keyword, once with
+  // state in the "near" phrase — geo keyword repetition improves local search ranking.
   return `${cityData.city} Futons & Furniture — Carolina Futons near ${cityData.city}, ${cityData.state}`;
 }
 
@@ -96,6 +98,9 @@ function _buildMetaDescription(cityData) {
   return `Shop futons, murphy beds & mattresses near ${cityData.city}, ${cityData.state}. Visit Carolina Futons in Hendersonville NC${distancePart}.`;
 }
 
+// cityData.city and cityData.state are sourced from the static LOCAL_PAGES
+// constant — not from user input or CMS — so interpolation is safe without
+// runtime sanitization. If this data source ever becomes dynamic, apply sanitize().
 function _buildJsonLd(cityData, canonicalUrl) {
   return {
     '@context': 'https://schema.org',
@@ -103,19 +108,8 @@ function _buildJsonLd(cityData, canonicalUrl) {
     name: 'Carolina Futons',
     url: canonicalUrl,
     telephone: STORE_PHONE,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: STORE_ADDRESS.streetAddress,
-      addressLocality: STORE_ADDRESS.addressLocality,
-      addressRegion: STORE_ADDRESS.addressRegion,
-      postalCode: STORE_ADDRESS.postalCode,
-      addressCountry: STORE_ADDRESS.addressCountry,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: STORE_GEO.latitude,
-      longitude: STORE_GEO.longitude,
-    },
+    address: { '@type': 'PostalAddress', ...STORE_ADDRESS },
+    geo: { '@type': 'GeoCoordinates', ...STORE_GEO },
     openingHours: STORE_HOURS,
     areaServed: `${cityData.city}, ${cityData.state}`,
   };

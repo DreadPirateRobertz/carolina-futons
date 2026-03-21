@@ -11,7 +11,7 @@ vi.mock('wix-web-module', () => ({
   webMethod: vi.fn((_, fn) => fn),
 }));
 
-import { getLocalPage } from '../src/backend/localSeoService.web.js';
+import { getLocalPage, getAllLocalSlugs } from '../src/backend/localSeoService.web.js';
 
 // ── Shared page data (fetched once for all describe blocks) ────────────
 
@@ -181,5 +181,91 @@ describe('getLocalPage — jsonLd', () => {
 
   it('url is present and contains the canonical path', () => {
     expect(asheville.jsonLd.url).toContain('carolinafutons.com');
+  });
+
+  it('url matches the canonical URL exactly', () => {
+    expect(asheville.jsonLd.url).toBe('https://www.carolinafutons.com/near/asheville-nc');
+  });
+});
+
+// ── slug validation edge cases ─────────────────────────────────────────
+
+describe('getLocalPage — invalid / unknown slugs', () => {
+  it('empty slug returns success: false', async () => {
+    const result = await getLocalPage('');
+    expect(result.success).toBe(false);
+    expect(result.page).toBeNull();
+  });
+
+  it('path-traversal slug returns success: false', async () => {
+    const result = await getLocalPage('../admin');
+    expect(result.success).toBe(false);
+    expect(result.page).toBeNull();
+  });
+
+  it('valid format but unknown city returns success: true, page: null', async () => {
+    const result = await getLocalPage('portland-or');
+    expect(result.success).toBe(true);
+    expect(result.page).toBeNull();
+  });
+});
+
+// ── home city metaDescription does not interpolate null distance ───────
+
+describe('getLocalPage — home city metaDescription null distance guard', () => {
+  it('home city description does not contain "null"', () => {
+    expect(hendersonville.metaDescription).not.toContain('null');
+  });
+
+  it('home city description does not contain "undefined"', () => {
+    expect(hendersonville.metaDescription).not.toContain('undefined');
+  });
+});
+
+// ── nearbyAreas filtering ──────────────────────────────────────────────
+
+describe('getLocalPage — nearbyAreas output', () => {
+  it('nearbyAreas is an array', () => {
+    expect(Array.isArray(asheville.nearbyAreas)).toBe(true);
+  });
+
+  it('nearbyAreas items have slug, city, state, and url', () => {
+    for (const area of asheville.nearbyAreas) {
+      expect(area.slug).toBeTruthy();
+      expect(area.city).toBeTruthy();
+      expect(area.state).toBeTruthy();
+      expect(area.url).toContain('/near/');
+    }
+  });
+
+  it('nearbyAreas only includes slugs that exist in LOCAL_PAGES (unknown refs filtered out)', () => {
+    // asheville.nearbyAreas references 'weaverville-nc' and 'black-mountain-nc'
+    // which are not in LOCAL_PAGES — they should be filtered out, leaving only
+    // 'hendersonville-nc' which is defined
+    const slugs = asheville.nearbyAreas.map(a => a.slug);
+    expect(slugs).toContain('hendersonville-nc');
+    expect(slugs).not.toContain('weaverville-nc');
+    expect(slugs).not.toContain('black-mountain-nc');
+  });
+});
+
+// ── getAllLocalSlugs ───────────────────────────────────────────────────
+
+describe('getAllLocalSlugs', () => {
+  it('returns success: true', async () => {
+    const result = await getAllLocalSlugs();
+    expect(result.success).toBe(true);
+  });
+
+  it('returns a non-empty array of slugs', async () => {
+    const { slugs } = await getAllLocalSlugs();
+    expect(Array.isArray(slugs)).toBe(true);
+    expect(slugs.length).toBeGreaterThan(0);
+  });
+
+  it('includes known city slugs', async () => {
+    const { slugs } = await getAllLocalSlugs();
+    expect(slugs).toContain('hendersonville-nc');
+    expect(slugs).toContain('asheville-nc');
   });
 });
