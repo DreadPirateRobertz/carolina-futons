@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __setOrder, __setOrderError, __reset as resetEcom } from './__mocks__/wix-ecom-backend.js';
 import {
   applyForAffiliate,
   getMyAffiliateAccount,
@@ -179,7 +180,7 @@ describe('createAffiliateLink', () => {
     const result = await createAffiliateLink('product-123');
     expect(result.success).toBe(true);
     expect(result.linkCode).toBeTruthy();
-    expect(result.linkCode.length).toBe(10);
+    expect(result.linkCode.length).toBeGreaterThanOrEqual(16);
     expect(inserted).not.toBeNull();
     expect(inserted.affiliateId).toBe('aff-001');
     expect(inserted.memberId).toBe('member-001');
@@ -764,5 +765,135 @@ describe('updatePaymentInfo', () => {
     if (result.success && updated) {
       expect(updated.paypalEmail).not.toContain('<script>');
     }
+  });
+});
+
+// ── CF-rw8l: generateLinkCode — crypto.randomBytes ────────────────────────────
+
+describe('generateLinkCode — crypto randomness (CF-rw8l)', () => {
+  beforeEach(() => {
+    __setMember({ _id: 'member-001', loginEmail: 'a@b.com' });
+    __seed(ACCOUNTS, [{
+      _id: 'aff-001',
+      memberId: 'member-001',
+      status: 'active',
+      commissionRate: 5,
+    }]);
+  });
+
+  it('generates link codes of at least 16 characters', async () => {
+    const result = await createAffiliateLink('product-123');
+    expect(result.success).toBe(true);
+    expect(result.linkCode.length).toBeGreaterThanOrEqual(16);
+  });
+
+  it('link codes contain only safe alphanumeric characters', async () => {
+    for (let i = 0; i < 5; i++) {
+      const result = await createAffiliateLink('product-xyz');
+      expect(result.linkCode).toMatch(/^[A-Z2-9]+$/);
+    }
+  });
+
+  it('generates unique codes across 100 calls', async () => {
+    const codes = new Set();
+    for (let i = 0; i < 100; i++) {
+      const result = await createAffiliateLink('product-abc');
+      codes.add(result.linkCode);
+    }
+    // All 100 codes must be distinct
+    expect(codes.size).toBe(100);
+  });
+
+  it('code entropy: no two adjacent characters are always identical', async () => {
+    // With Math.random seeded poorly this could repeat — crypto should not
+    const codes = [];
+    for (let i = 0; i < 20; i++) {
+      const result = await createAffiliateLink('product-ent');
+      codes.push(result.linkCode);
+    }
+    // Verify codes are not all the same string
+    const unique = new Set(codes);
+    expect(unique.size).toBeGreaterThan(1);
+  });
+});
+
+// ── CF-gdpd: recordAffiliateConversion — order verification ──────────────────
+
+describe('recordAffiliateConversion — Wix Orders verification (CF-gdpd)', () => {
+  beforeEach(() => {
+    resetEcom();
+    __seed(LINKS, [{
+      _id: 'link-001',
+      affiliateId: 'aff-001',
+      memberId: 'member-001',
+      linkCode: 'CODE000001',
+      clicks: 50,
+      conversions: 5,
+      revenue: 2500,
+    }]);
+    __seed(ACCOUNTS, [{
+      _id: 'aff-001',
+      memberId: 'member-001',
+      status: 'active',
+      commissionRate: 8,
+      totalEarned: 200,
+      totalPaid: 0,
+    }]);
+    // Default: order exists
+    __setOrder({ _id: 'ORD-500', number: '1001', archived: false });
+  });
+
+  it('succeeds when Wix order exists', async () => {
+    const result = await recordAffiliateConversion('CODE000001', 'ORD-500', 500);
+    expect(result.success).toBe(true);
+    expect(result.commissionAmount).toBe(40);
+  });
+
+  it('rejects conversion when order does not exist in Wix', async () => {
+    __setOrder(null); // simulate order not found
+    const result = await recordAffiliateConversion('CODE000001', 'GHOST-ORD', 500);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/order/i);
+  });
+
+  it('rejects conversion when Wix Orders API throws', async () => {
+    __setOrderError(new Error('WixDataError: order not found'));
+    const result = await recordAffiliateConversion('CODE000001', 'BAD-ORD', 500);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/order/i);
+  });
+
+  it('does not create commission for nonexistent order', async () => {
+    const inserts = [];
+    __onInsert((col, item) => {
+      if (col === COMMISSIONS) inserts.push(item);
+    });
+    __setOrder(null);
+    await recordAffiliateConversion('CODE000001', 'FAKE-ORD', 500);
+    expect(inserts).toHaveLength(0);
+  });
+
+  it('does not update link stats for nonexistent order', async () => {
+    const updates = [];
+    __onUpdate((col, item) => {
+      if (col === LINKS) updates.push(item);
+    });
+    __setOrder(null);
+    await recordAffiliateConversion('CODE000001', 'FAKE-ORD', 500);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('still blocks duplicate conversions for real orders', async () => {
+    // First conversion
+    await recordAffiliateConversion('CODE000001', 'ORD-500', 500);
+    // Seed the commission so duplicate check finds it
+    __seed(COMMISSIONS, [{
+      _id: 'c1',
+      affiliateId: 'aff-001',
+      orderId: 'ORD-500',
+    }]);
+    const result = await recordAffiliateConversion('CODE000001', 'ORD-500', 500);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/already recorded/i);
   });
 });

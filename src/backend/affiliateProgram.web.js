@@ -60,13 +60,15 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { orders } from 'wix-ecom-backend';
+import crypto from 'crypto';
 
 const ACCOUNTS_COLLECTION = 'AffiliateAccounts';
 const LINKS_COLLECTION = 'AffiliateLinks';
 const COMMISSIONS_COLLECTION = 'AffiliateCommissions';
 const PAYOUTS_COLLECTION = 'AffiliatePayouts';
 
-const LINK_CODE_LENGTH = 10;
+const LINK_CODE_LENGTH = 16;
 const MIN_PAYOUT_AMOUNT = 25;
 
 const TIERS = {
@@ -79,9 +81,10 @@ const TIERS = {
 
 function generateLinkCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.randomBytes(LINK_CODE_LENGTH);
   let code = '';
   for (let i = 0; i < LINK_CODE_LENGTH; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars[bytes[i] % chars.length];
   }
   return code;
 }
@@ -386,6 +389,17 @@ export const recordAffiliateConversion = webMethod(
 
       if (!orderTotal || orderTotal <= 0) {
         return { success: false, error: 'A positive order total is required' };
+      }
+
+      // Verify order exists in Wix
+      let order;
+      try {
+        order = await orders.getOrder(cleanOrderId);
+      } catch (_) {
+        return { success: false, error: 'Order not found or inaccessible' };
+      }
+      if (!order) {
+        return { success: false, error: 'Order not found' };
       }
 
       // Find the affiliate link

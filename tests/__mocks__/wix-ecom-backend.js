@@ -12,10 +12,28 @@ export const cart = {
   }),
 };
 
+let _order = { _id: 'mock-order', number: '1001' };
+let _orderError = null;
+
 export const orders = {
-  getOrder: async () => ({ _id: 'mock-order', number: '1001' }),
+  getOrder: async (orderId) => {
+    if (_orderError) throw _orderError;
+    if (!_order) throw Object.assign(new Error('Order not found'), { code: 404 });
+    return { ..._order, _id: orderId };
+  },
   listOrders: async () => ({ orders: [] }),
 };
+
+/** Set the order returned by getOrder. Pass null to simulate not found. */
+export function __setOrder(order) {
+  _order = order;
+  _orderError = null;
+}
+
+/** Make the next getOrder call throw. */
+export function __setOrderError(err) {
+  _orderError = err;
+}
 
 /** Preset cart state (e.g. to simulate an already-applied coupon). */
 export function __setCart(c) {
@@ -39,6 +57,8 @@ export function __setApplyCouponError(err) {
 }
 
 export function __reset() {
+  _order = { _id: 'mock-order', number: '1001' };
+  _orderError = null;
   _cart = { lineItems: [], appliedCoupon: null };
   cart.getCurrentCart.mockReset();
   cart.addProducts.mockReset();
