@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-16 (v0.9.0+ — added PDP Options, Financing, Reviews, Size Guide, Promo Banner, Collection Cards, Empty States)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-21 (S0 Recon — documentServices direct API confirmed, all page IDs captured, bulk rename script added)
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -42,6 +42,105 @@ All required dashboard/API configurations are now in place for editor hookup:
 - **New PDP modules**: ProductOptions (variant swatches), ProductFinancing (BNPL), ProductReviews (full review system), ProductSizeGuide (dimensions + room fit checker)
 - **New Homepage modules (v0.10.0)**: SocialFeedEmbed (Instagram/TikTok/Pinterest), HomeBlogTeasers (3 recent posts)
 - **New backend (v0.10.0)**: blogService.web.js (web module wrapper for blog content)
+
+---
+
+## 🚀 NEW: Bulk Rename via Browser Console (2026-03-21)
+
+**S0 Recon confirmed**: `documentServices` is directly accessible from the Wix Studio `preview-frame`. No Hookup Assistant add-on needed for bulk renaming — you can do it from the browser console right now.
+
+### How to Use
+
+1. Open Wix Studio editor
+2. Open Chrome DevTools (`F12` or `Cmd+Option+I`)
+3. In the DevTools top bar, click the **frame selector dropdown** (shows current frame URL) → select `preview-frame`
+4. Paste the script below into the console, add your rename map, hit Enter
+
+### Core API (from preview-frame console)
+
+```javascript
+const ds = window.documentServices;
+
+// Get all components on a page
+const all = ds.components.getAllComponents({ id: 'c1dmp', type: 'Page' });
+
+// Read nickname
+const nick = ds.components.code.getNickname(compRef);
+
+// Validate before setting (returns VALID | ALREADY_EXISTS | TOO_SHORT | TOO_LONG | INVALID_NAME)
+const valid = ds.components.code.validateNickname(compRef, 'heroTitle');
+
+// Set nickname (allow 200ms before reading back)
+ds.components.code.setNickname(compRef, 'heroTitle');
+await new Promise(r => setTimeout(r, 200));
+```
+
+### Nickname Rules
+- **camelCase alphanumeric only** — `heroTitle`, `footerEmailSubmit`, `box1` ✅
+- **No underscores** — `hero_title` ❌ (INVALID_NAME)
+- **No duplicates site-wide** — each nickname must be unique
+- **Case sensitive** — `heroTitle` ≠ `HeroTitle`
+
+### Bulk Rename Script Template
+
+```javascript
+(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // Change per page — see Page ID table below
+  const RENAME_MAP = {
+    // 'currentNickname': 'targetNickname'
+    // Example: 'vectorImage8': 'heroSkyline',
+  };
+
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const results = [];
+  for (const compRef of all) {
+    const current = ds.components.code.getNickname(compRef);
+    const target = RENAME_MAP[current];
+    if (!target) continue;
+    const v = ds.components.code.validateNickname(compRef, target);
+    if (v !== 'VALID') { results.push({ from: current, to: target, status: 'SKIP:' + v }); continue; }
+    ds.components.code.setNickname(compRef, target);
+    await new Promise(r => setTimeout(r, 150));
+    const confirmed = ds.components.code.getNickname(compRef);
+    results.push({ from: current, to: target, status: confirmed === target ? '✅' : '❌', id: compRef.id });
+  }
+  console.table(results);
+})();
+```
+
+### All Page IDs (confirmed 2026-03-21)
+
+| Page | Wix ID | URI |
+|------|--------|-----|
+| **Home** | **c1dmp** | /home |
+| **Product Page** | **ve2z7** | /product-page |
+| **Category Page** | **u0gn0** | /category-page |
+| **Cart Page** | **mqi5m** | /cart-page |
+| **Checkout** | **psuom** | /checkout |
+| **Search Results** | **evr2j** | /search |
+| **FAQ** | **s2c5g** | /faq |
+| **About** | **gar3e** | /about |
+| **Contact** | **k14wx** | /contact |
+| **Shipping Policy** | **ype8c** | /shipping-policy |
+| Blog | kkbdq | /blog |
+| Post | naud5 | /post |
+| Style Quiz | nwjfa | /blank-1 |
+| Admin Returns | qoc25 | /blank |
+| Member Page | f00pg | /members-area |
+| Members | ws9sh | /members |
+| Thank You | msuhj | /thank-you |
+| Thank You Page | dk9x8 | /thank-you-page |
+| Plans & Pricing | aggpq | /plans-pricing |
+| Paywall | w6yh4 | /paywall |
+| Privacy Policy | pcvmd | /privacy-policy |
+| Refund Policy | jmwgj | /refund-policy |
+| Terms & Conditions | z0xvf | /terms-and-conditions |
+| Accessibility | di5bl | /accessibility-statement |
+| Checkout | psuom | /checkout |
+| Book Online | u3ysd | /book-online |
+| Booking Form | xr7ty | /booking-form |
+| Service Page | n31or | /service-page |
 
 ---
 

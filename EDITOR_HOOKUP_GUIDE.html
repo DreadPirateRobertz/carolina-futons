@@ -365,7 +365,7 @@ body.focus-mode .page-section.focus-visible { display: block; }
   <div class="header-top">
     <div>
       <h1>Carolina Futons — Editor Hookup Guide</h1>
-      <div class="header-subtitle">Wix Studio element placement reference · v2.0</div>
+      <div class="header-subtitle">Wix Studio element placement reference · v2.1 · Updated 2026-03-21 — Direct documentServices API confirmed, bulk rename script added</div>
     </div>
     <div class="header-stats" id="headerStats">
       <span class="stat-chip" id="statTotal">0 total</span>
@@ -3115,7 +3115,7 @@ Action buttons (right):
   {
     name: "Admin Analytics Dashboard", file: "analyticsDashboard.web.js", priority: "P2", est: "40 min",
     sections: [
-      { name: "KPI Summary Cards", impl: `<h4>📊 Implementation — Analytics KPI Dashboard</h4>
+      { name: "KPI Summary Cards", repeater: "dashKpiRepeater", impl: `<h4>📊 Implementation — Analytics KPI Dashboard</h4>
 <p><strong>Backend</strong>: <code>analyticsDashboard.web.js</code> → <code>getDashboardSummary(days)</code> returns conversion funnel rates, views, cart adds, purchases, email metrics, revenue.</p>
 <div class="layer-diagram">DATA FLOW:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3149,7 +3149,7 @@ analyticsDashboard.web.js
         ["dashProductConv","Text","Conversion rate"],
         ["dashProductRev","Text","Revenue"]
       ]},
-      { name: "Category & Email Performance", impl: `<h4>📊 Implementation — Category & Email Metrics</h4>
+      { name: "Category & Email Performance", repeater: "dashCategoryRepeater", impl: `<h4>📊 Implementation — Category & Email Metrics</h4>
 <ul>
   <li><strong>#dashCategoryRepeater</strong>: Category performance breakdown — each row shows category name, views, add-to-cart rate, purchase rate.</li>
   <li><strong>#dashEmailSection</strong>: Email funnel metrics from <code>getEmailFunnelMetrics()</code> — sent, opened, clicked, converted by sequence type (welcome, cart recovery, browse abandonment).</li>
@@ -3203,7 +3203,7 @@ Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
         ["orchTriggerBtn","Button","Manual trigger"],
         ["orchStatusText","Text","Last trigger result"]
       ]},
-      { name: "Schedule Queue", impl: `<h4>📅 Implementation — Content Schedule Queue</h4>
+      { name: "Schedule Queue", repeater: "schedQueueRepeater", impl: `<h4>📅 Implementation — Content Schedule Queue</h4>
 <p><strong>Backend</strong>: <code>contentScheduler.web.js</code> — queue-based scheduler with dedup, rate limits, and priority ordering.</p>
 <ul>
   <li><strong>#schedQueueRepeater</strong>: Pending/sent/failed items from <code>getScheduleQueue({status})</code>. Shows content type, platform, product, scheduled time, status.</li>
@@ -3231,7 +3231,7 @@ Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
   {
     name: "Bundle Analytics (on Product Page)", file: "bundleAnalytics.web.js", priority: "P2", est: "15 min",
     sections: [
-      { name: "Bundle Performance", impl: `<h4>📦 Implementation — Bundle Analytics</h4>
+      { name: "Bundle Performance", repeater: "bundlePerformanceRepeater", impl: `<h4>📦 Implementation — Bundle Analytics</h4>
 <p><strong>Backend</strong>: <code>bundleAnalytics.web.js</code> — tracks bundle impressions, clicks, add-to-cart, and purchases.</p>
 <ul>
   <li><strong>#bundleAnalyticsSection</strong>: Admin-only panel showing bundle performance metrics.</li>
@@ -3253,7 +3253,7 @@ Catalog Event (new_arrival | price_drop | back_in_stock | seasonal)
   {
     name: "Core Web Vitals Monitor", file: "coreWebVitals.web.js", priority: "P2", est: "15 min",
     sections: [
-      { name: "Performance Dashboard", impl: `<h4>⚡ Implementation — Core Web Vitals</h4>
+      { name: "Performance Dashboard", repeater: "cwvMetricsRepeater", impl: `<h4>⚡ Implementation — Core Web Vitals</h4>
 <p><strong>Backend</strong>: <code>coreWebVitals.web.js</code> — reports and monitors LCP, FID, INP, CLS, TTFB, FCP.</p>
 <div class="layer-diagram">METRICS TRACKED:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3286,7 +3286,7 @@ FCP  (First Contentful Paint)   — target < 1.8s</div>
   {
     name: "Error Monitoring Admin", file: "errorMonitoring.web.js", priority: "P2", est: "15 min",
     sections: [
-      { name: "Error Dashboard", impl: `<h4>🚨 Implementation — Error Monitoring</h4>
+      { name: "Error Dashboard", repeater: "errorRepeater", impl: `<h4>🚨 Implementation — Error Monitoring</h4>
 <p><strong>Backend</strong>: <code>errorMonitoring.web.js</code> — collects runtime errors from critical user flows.</p>
 <ul>
   <li><strong>#errorDashboard</strong>: Admin panel showing recent errors grouped by flow (checkout, cart, product page, search).</li>
@@ -3362,7 +3362,7 @@ SHARING:
         ["tiktokEmbed","HtmlComponent","TikTok video embed"],
         ["pinterestBoard","HtmlComponent","Pinterest board embed"]
       ]},
-      { name: "Social Catalog Sync Status", impl: `<h4>🔄 Implementation — Catalog Sync Admin</h4>
+      { name: "Social Catalog Sync Status", repeater: "catalogAuditResults", impl: `<h4>🔄 Implementation — Catalog Sync Admin</h4>
 <p><strong>Admin-only</strong>: Status panels for Facebook + Pinterest catalog sync health.</p>
 <ul>
   <li><strong>#catalogSyncStatus</strong>: Admin panel showing sync status for FB and Pinterest feeds.</li>
@@ -3389,7 +3389,7 @@ SHARING:
   {
     name: "Social Media Content Calendar", file: "contentScheduler.web.js + socialStoryHelpers.js", priority: "P2", est: "20 min",
     sections: [
-      { name: "Content Calendar View", impl: `<h4>📅 Implementation — Social Content Calendar</h4>
+      { name: "Content Calendar View", repeater: "calendarRepeater", impl: `<h4>📅 Implementation — Social Content Calendar</h4>
 <p><strong>Content pipeline</strong>: Automated content generation tied to catalog events. The orchestrator creates content, the scheduler queues it with rate limiting and dedup.</p>
 <div class="layer-diagram">CONTENT TYPES GENERATED:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3871,9 +3871,44 @@ function render() {
   howto.className = 'howto';
   howto.innerHTML = `
     <h2>How to Use This Guide</h2>
+    <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
+      <strong style="color:#2e7d32;">🚀 NEW 2026-03-21: Bulk Rename via Browser Console</strong><br>
+      <span style="font-size:0.9em;color:#333;">You can rename ALL elements on a page programmatically — no manual clicking needed.</span>
+      <ol style="margin:8px 0 0 0;padding-left:20px;font-size:0.88em;">
+        <li>Open Wix Studio editor → Chrome DevTools (F12)</li>
+        <li>In DevTools top-left, click the <strong>frame dropdown</strong> → select <strong>preview-frame</strong></li>
+        <li>Paste this script into the console (fill in your RENAME_MAP from the element tables below):</li>
+      </ol>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:0.8em;overflow-x:auto;margin:8px 0 0 0;">(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // see Page IDs table below
+  const RENAME_MAP = {
+    // 'currentNickname': 'targetNickname'
+    // e.g. 'vectorImage8': 'heroSkyline',
+  };
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const results = [];
+  for (const c of all) {
+    const cur = ds.components.code.getNickname(c);
+    const tgt = RENAME_MAP[cur];
+    if (!tgt) continue;
+    const v = ds.components.code.validateNickname(c, tgt);
+    if (v !== 'VALID') { results.push({ from: cur, to: tgt, status: 'SKIP:'+v }); continue; }
+    ds.components.code.setNickname(c, tgt);
+    await new Promise(r => setTimeout(r, 150));
+    const ok = ds.components.code.getNickname(c) === tgt;
+    results.push({ from: cur, to: tgt, status: ok ? '✅' : '❌', id: c.id });
+  }
+  console.table(results);
+})();</pre>
+      <p style="font-size:0.85em;margin:6px 0 0;color:#555;">
+        <strong>Nickname rules</strong>: camelCase alphanumeric only (no underscores/spaces) · returns VALID | ALREADY_EXISTS | TOO_SHORT | TOO_LONG | INVALID_NAME<br>
+        <strong>Page IDs</strong>: home=c1dmp · product=ve2z7 · category=u0gn0 · cart=mqi5m · checkout=psuom · search=evr2j · faq=s2c5g · about=gar3e · contact=k14wx · shipping=ype8c
+      </p>
+    </div>
     <ol>
       <li>Open Wix Studio editor on the page listed. Add the required element type from the left panel.</li>
-      <li>Select the element → open <strong>Properties &amp; Events</strong> (bottom panel) → set the <strong>ID field</strong> to the exact value shown (without the # prefix).</li>
+      <li>Select the element → open <strong>Properties &amp; Events</strong> (bottom panel) → set the <strong>ID field</strong> to the exact value shown (without the # prefix). Or use the bulk rename console script above.</li>
       <li>Rough-size the element. <strong>Do not set colors or fonts</strong> on elements marked <span style="background:#f3faf3;border:1px solid #4caf50;border-radius:3px;padding:1px 5px;font-size:0.85em;color:#2e7d32;font-weight:600;">CSS only</span> — Wix Studio theme handles those.</li>
       <li>For <span style="background:#c62828;color:white;padding:1px 6px;border-radius:4px;font-size:0.8em;font-weight:700;">Repeater</span> elements: child elements must be placed <em>inside</em> the repeater's item template, not outside it.</li>
       <li>Elements hidden by default: set them to <strong>Hidden on load</strong> in the editor. Velo will show/hide them at runtime.</li>
@@ -4120,7 +4155,11 @@ function render() {
         if (isChildren) {
           const note = document.createElement('div');
           note.className = 'repeater-note';
-          note.innerHTML = '↑ Place these <strong>inside</strong> the <code>' + s.repeater + '</code> item template:';
+          if (s.repeater) {
+            note.innerHTML = '↑ Place these <strong>inside</strong> the <code>' + s.repeater + '</code> item template:';
+          } else {
+            note.textContent = '↑ Place these inside the repeater item template (see repeater ID in elements list above):';
+          }
           group.appendChild(note);
         }
 
