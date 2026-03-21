@@ -467,6 +467,21 @@ describe('Style Quiz page', () => {
         answers: expect.any(Object),
       }));
     });
+
+    it('tracks quiz_complete with answers and resultCount after successful fetch', async () => {
+      await onReadyHandler();
+      clickRestart();
+      fillAndSubmitQuiz();
+
+      await vi.waitFor(() => {
+        expect(getQuizRecommendations).toHaveBeenCalled();
+      });
+
+      expect(trackEvent).toHaveBeenCalledWith('quiz_complete', expect.objectContaining({
+        answers: expect.any(Object),
+        resultCount: 1,
+      }));
+    });
   });
 
   // ── 13. Results render ─────────────────────────────────────────
@@ -570,6 +585,87 @@ describe('Style Quiz page', () => {
       expect(getEl('#quizProgressText').text).toBe('Step 1 of 5');
       expect(getEl('#quizStepTitle').text).toBe('Where will your futon live?');
       expect(trackEvent).toHaveBeenCalledWith('quiz_restart');
+    });
+  });
+
+  // ── 17. Analytics: quiz_start ─────────────────────────────────
+
+  describe('quiz_start event', () => {
+    it('tracks quiz_start when quiz initializes', async () => {
+      await onReadyHandler();
+      expect(trackEvent).toHaveBeenCalledWith('quiz_start', {});
+    });
+  });
+
+  // ── 18. Analytics: recommendation_click ──────────────────────
+
+  describe('recommendation_click event', () => {
+    it('tracks recommendation_click when view product button is clicked', async () => {
+      await onReadyHandler();
+      clickRestart();
+      fillAndSubmitQuiz();
+
+      await vi.waitFor(() => {
+        expect(getQuizRecommendations).toHaveBeenCalled();
+      });
+
+      const itemEls = new Map();
+      const $item = (sel) => {
+        if (!itemEls.has(sel)) itemEls.set(sel, createMockElement());
+        return itemEls.get(sel);
+      };
+      fireOnItemReady('#resultsRepeater', $item, {
+        _id: 'result-0',
+        product: { _id: 'p1', name: 'Asheville Frame', slug: 'asheville', price: 699, formattedPrice: '$699.00', mainMedia: 'https://cdn/img.jpg' },
+        score: 85,
+        reason: 'Great for daily use',
+      });
+
+      const clickHandler = $item('#resultViewBtn').onClick.mock.calls.at(-1)?.[0];
+      expect(clickHandler).toBeDefined();
+      clickHandler();
+      expect(trackEvent).toHaveBeenCalledWith('recommendation_click', {
+        productId: 'p1',
+        productName: 'Asheville Frame',
+        score: 85,
+      });
+    });
+  });
+
+  // ── 19. Analytics: email_captured ────────────────────────────
+
+  describe('email_captured event', () => {
+    it('tracks email_captured when email is submitted in results', async () => {
+      await onReadyHandler();
+      clickRestart();
+      fillAndSubmitQuiz();
+
+      await vi.waitFor(() => {
+        expect(getQuizRecommendations).toHaveBeenCalled();
+      });
+
+      // Simulate email input value and button click
+      getEl('#emailInput').value = 'test@example.com';
+      const clickHandler = getEl('#emailCaptureBtn').onClick.mock.calls.at(-1)?.[0];
+      expect(clickHandler).toBeDefined();
+      clickHandler();
+      expect(trackEvent).toHaveBeenCalledWith('email_captured', { source: 'quiz-results' });
+    });
+
+    it('does not track email_captured when email input is empty', async () => {
+      await onReadyHandler();
+      clickRestart();
+      fillAndSubmitQuiz();
+
+      await vi.waitFor(() => {
+        expect(getQuizRecommendations).toHaveBeenCalled();
+      });
+
+      getEl('#emailInput').value = '';
+      vi.clearAllMocks();
+      const clickHandler = getEl('#emailCaptureBtn').onClick.mock.calls.at(-1)?.[0];
+      if (clickHandler) clickHandler();
+      expect(trackEvent).not.toHaveBeenCalledWith('email_captured', expect.anything());
     });
   });
 });

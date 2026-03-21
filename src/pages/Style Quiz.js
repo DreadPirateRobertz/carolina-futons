@@ -86,6 +86,8 @@ function initQuiz() {
   // Show quiz section
   try { $w('#quizSection').expand(); } catch (e) {}
 
+  trackEvent('quiz_start', {});
+
   // Wire navigation buttons with keyboard accessibility
   try { makeClickable($w('#quizNextBtn'), () => goNext(), { ariaLabel: 'Next step' }); } catch (e) {}
   try { makeClickable($w('#quizBackBtn'), () => goBack(), { ariaLabel: 'Previous step' }); } catch (e) {}
@@ -327,6 +329,7 @@ async function submitQuiz() {
   try {
     const results = await getQuizRecommendations(state.answers);
     state.results = results;
+    trackEvent('quiz_complete', { answers: state.answers, resultCount: results ? results.length : 0 });
 
     try { $w('#quizLoadingState').collapse(); } catch (e) {}
 
@@ -389,6 +392,7 @@ function renderResults(results) {
         try {
           $item('#resultViewBtn').onClick(() => {
             trackEvent('quiz_result_click', { productId: product._id, productName: product.name, score });
+            trackEvent('recommendation_click', { productId: product._id, productName: product.name, score });
             const slug = product.slug || product._id;
             import('wix-location-frontend').then(loc => loc.to(`/product-page/${slug}`));
           });
@@ -446,6 +450,16 @@ function renderResults(results) {
 
   announce($w, `Found ${results.length} personalized recommendations`);
   trackEvent('quiz_results_shown', { count: results.length });
+
+  // Email capture — wire tracking for the results section email form
+  try {
+    $w('#emailCaptureBtn').onClick(() => {
+      const email = ($w('#emailInput').value || '').trim();
+      if (email) {
+        trackEvent('email_captured', { source: 'quiz-results' });
+      }
+    });
+  } catch (e) {}
 }
 
 // ── Style Profile Header (S4) ───────────────────────────────────────
