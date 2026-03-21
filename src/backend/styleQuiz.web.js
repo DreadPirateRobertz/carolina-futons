@@ -211,7 +211,8 @@ export const getQuizOptions = webMethod(
  *   compact     — dorm/office room types; space efficiency is paramount
  *   comfort     — primary use is sleeping; sleep quality drives selection
  *   versatile   — both uses; day-to-night flexibility is the priority
- *   style       — living room / bedroom + sitting; aesthetic comes first
+ *   style       — default/fallback; covers all other room/use combinations
+ *                 (living room, guest room, bedroom, unrecognized values, etc.)
  *
  * @param {Object} answers - Quiz answers
  * @returns {string} Profile key: 'compact' | 'comfort' | 'versatile' | 'style'
@@ -240,6 +241,7 @@ const ROOM_LABEL = {
 
 /**
  * Build a personalized recommendation blurb from quiz answers and profile type.
+ * Missing or unrecognized roomType/stylePreference fall back to 'space' / 'your unique style'.
  *
  * @param {Object} answers - Quiz answers
  * @param {string} profileType - From deriveProfileType()
@@ -278,7 +280,7 @@ function buildPersonalizedCopy(answers, profileType) {
  */
 export const getPersonalizedCopy = webMethod(
   Permissions.Anyone,
-  async (answers) => {
+  (answers) => {
     if (!answers) return { copy: '', profileType: 'style' };
     const profileType = deriveProfileType(answers);
     const copy = buildPersonalizedCopy(answers, profileType);
@@ -300,13 +302,10 @@ function formatQuizProduct(item) {
 }
 
 function buildReason(item, answers, isStrongMatch) {
-  const parts = [];
-
-  if (isStrongMatch) {
-    parts.push(`Perfect for your ${formatRoomType(answers.roomType)}`);
-  } else {
-    parts.push(`A great option for ${formatRoomType(answers.roomType)}`);
-  }
+  const room = formatRoomType(answers.roomType);
+  const parts = [
+    isStrongMatch ? `Perfect for your ${room}` : `A great option for ${room}`,
+  ];
 
   if (answers.primaryUse === 'both') {
     parts.push('versatile for sitting and sleeping');

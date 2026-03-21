@@ -10,13 +10,18 @@
  *   #quizLoadingIndicator  — Shown while fetching results
  *   #quizErrorMsg          — Shown on fetch failure
  *
- * Quiz answers are passed via query params (?answers=<base64-encoded-json>)
- * or retrieved from session storage via wix-storage.
+ * Quiz answers are stored by the quiz page via storeQuizAnswers() and retrieved
+ * here from session storage (key: 'styleQuizAnswers').
  */
 import { getQuizRecommendations, getPersonalizedCopy } from 'backend/styleQuiz.web';
 import { session } from 'wix-storage';
 
 const ANSWERS_KEY = 'styleQuizAnswers';
+
+/** Safely run a Wix element operation, swallowing missing-element errors. */
+function safeEl($w, selector, fn) {
+  try { fn($w(selector)); } catch (_) {}
+}
 
 /**
  * Initialize the Style Quiz result page.
@@ -27,9 +32,9 @@ const ANSWERS_KEY = 'styleQuizAnswers';
  */
 export async function initStyleQuizResult($w) {
   // Show loading state
-  try { $w('#quizLoadingIndicator').show(); } catch (e) {}
-  try { $w('#quizResultsSection').collapse(); } catch (e) {}
-  try { $w('#quizErrorMsg').hide(); } catch (e) {}
+  safeEl($w, '#quizLoadingIndicator', el => el.show());
+  safeEl($w, '#quizResultsSection', el => el.collapse());
+  safeEl($w, '#quizErrorMsg', el => el.hide());
 
   // Retrieve stored answers
   const rawAnswers = session.getItem(ANSWERS_KEY);
@@ -59,7 +64,7 @@ export async function initStyleQuizResult($w) {
   }
 
   // Hide loading, show results
-  try { $w('#quizLoadingIndicator').hide(); } catch (e) {}
+  safeEl($w, '#quizLoadingIndicator', el => el.hide());
 
   if (!recommendations || recommendations.length === 0) {
     _showError($w, 'No matching products found. Try adjusting your quiz answers.');
@@ -67,11 +72,11 @@ export async function initStyleQuizResult($w) {
   }
 
   // Populate personalized copy
-  try { $w('#quizPersonalizedCopy').text = personalizedCopy; } catch (e) {}
+  safeEl($w, '#quizPersonalizedCopy', el => { el.text = personalizedCopy; });
 
   // Populate recommendations repeater
-  try {
-    $w('#quizRepeater').data = recommendations.map(r => ({
+  safeEl($w, '#quizRepeater', el => {
+    el.data = recommendations.map(r => ({
       _id: r.product._id,
       name: r.product.name,
       price: r.product.formattedPrice,
@@ -80,10 +85,10 @@ export async function initStyleQuizResult($w) {
       reason: r.reason,
       score: r.score,
     }));
-  } catch (e) {}
+  });
 
   // Show results section
-  try { $w('#quizResultsSection').expand(); } catch (e) {}
+  safeEl($w, '#quizResultsSection', el => el.expand());
 }
 
 /**
@@ -104,7 +109,7 @@ export function clearQuizAnswers() {
 }
 
 function _showError($w, message) {
-  try { $w('#quizLoadingIndicator').hide(); } catch (e) {}
-  try { $w('#quizErrorMsg').text = message; } catch (e) {}
-  try { $w('#quizErrorMsg').show(); } catch (e) {}
+  safeEl($w, '#quizLoadingIndicator', el => el.hide());
+  safeEl($w, '#quizErrorMsg', el => { el.text = message; });
+  safeEl($w, '#quizErrorMsg', el => el.show());
 }
