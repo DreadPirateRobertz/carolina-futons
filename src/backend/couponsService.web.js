@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { coupons } from 'wix-marketing-backend';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
@@ -69,19 +70,31 @@ export const getActiveCoupons = webMethod(
   Permissions.SiteMember,
   async () => {
     try {
+      const member = await currentMember.getMember();
+      if (!member) return [];
+
+      const memberEmail = (
+        member.loginEmail ||
+        member.contactDetails?.emails?.[0]?.address ||
+        ''
+      ).toLowerCase();
+      if (!memberEmail) return [];
+
       const result = await coupons.queryAllCoupons()
         .eq('active', true)
         .find();
 
-      return (result.items || []).map(c => ({
-        _id: c._id,
-        code: c.code,
-        name: c.name,
-        discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
-        minimumSubtotal: c.minimumSubtotal || 0,
-        expirationTime: c.expirationTime,
-        active: c.active,
-      }));
+      return (result.items || [])
+        .filter(c => c.name?.toLowerCase().includes(memberEmail))
+        .map(c => ({
+          _id: c._id,
+          code: c.code,
+          name: c.name,
+          discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
+          minimumSubtotal: c.minimumSubtotal || 0,
+          expirationTime: c.expirationTime,
+          active: c.active,
+        }));
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];
