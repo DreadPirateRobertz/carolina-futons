@@ -45,6 +45,7 @@ const mockGetQuizRecommendations = vi.fn();
 vi.mock('backend/styleQuiz.web', () => ({
   getQuizRecommendations: mockGetQuizRecommendations,
   getQuizOptions: mockGetQuizOptions,
+  captureQuizLead: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
 vi.mock('public/engagementTracker', () => ({ trackEvent: vi.fn() }));
@@ -142,7 +143,16 @@ function clickRestart() {
   if (restartCall) restartCall[1]();
 }
 
-/** Advance through all 5 steps and trigger quiz submission */
+/** Skip the email gate that appears after Q3 */
+function clickSkipEmail() {
+  const call = makeClickable.mock.calls.find(
+    (c) => c[2]?.ariaLabel === 'Skip and continue'
+  );
+  if (call) call[1]();
+}
+
+/** Advance through all 5 steps and trigger quiz submission.
+ *  Automatically skips the email gate that appears after Q3. */
 function fillAndSubmitQuiz() {
   // Reset module state so we always start from step 0
   clickRestart();
@@ -155,6 +165,8 @@ function fillAndSubmitQuiz() {
     { value: '500-1000', label: '$500 - $1,000', description: 'Our sweet spot' },
   ];
 
+  const EMAIL_GATE_AFTER = 2; // email gate shown after step index 2 (Q3)
+
   // Find the next button handler wired via makeClickable (onClick)
   const nextBtn = getEl('#quizNextBtn');
 
@@ -163,6 +175,8 @@ function fillAndSubmitQuiz() {
     // Trigger the next button — it was wired via onClick in makeClickable mock
     const handler = nextBtn.onClick.mock.calls.at(-1)?.[0];
     if (handler) handler();
+    // Skip email gate that intercepts after Q3
+    if (i === EMAIL_GATE_AFTER) clickSkipEmail();
   }
 }
 

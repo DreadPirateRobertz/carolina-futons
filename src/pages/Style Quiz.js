@@ -1,6 +1,7 @@
 // Style Quiz.js - "Find Your Perfect Futon" interactive style quiz
 // 5-step quiz flow with progress indicator, personalized product recommendations
-import { getQuizRecommendations, getQuizOptions } from 'backend/styleQuiz.web';
+// Email gate appears after Q3 (stylePreference) with optional skip; lead captured to CRM.
+import { getQuizRecommendations, getQuizOptions, captureQuizLead } from 'backend/styleQuiz.web';
 import { getStyleQuizSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
@@ -9,12 +10,16 @@ import { colors } from 'public/designTokens.js';
 import { initPageSeo } from 'public/pageSeo.js';
 import { buildGridAlt } from 'public/productPageUtils.js';
 
+// Email gate shown after this step index (0-based). Step 2 = Q3 stylePreference.
+const EMAIL_GATE_AFTER_STEP = 2;
+
 const state = {
   step: 0,
   totalSteps: 5,
   answers: {},
   options: null,
   results: null,
+  emailCaptured: false, // true once email submitted or skipped
 };
 
 const STEPS = [
@@ -61,6 +66,7 @@ function initQuiz() {
   // Hide results section initially
   try { $w('#quizResults').collapse(); } catch (e) {}
   try { $w('#quizLoadingState').collapse(); } catch (e) {}
+  try { $w('#quizEmailSection').collapse(); } catch (e) {}
 
   // Show quiz section
   try { $w('#quizSection').expand(); } catch (e) {}
@@ -69,6 +75,10 @@ function initQuiz() {
   try { makeClickable($w('#quizNextBtn'), () => goNext(), { ariaLabel: 'Next step' }); } catch (e) {}
   try { makeClickable($w('#quizBackBtn'), () => goBack(), { ariaLabel: 'Previous step' }); } catch (e) {}
   try { makeClickable($w('#quizRestartBtn'), () => restartQuiz(), { ariaLabel: 'Restart quiz' }); } catch (e) {}
+
+  // Wire email gate buttons
+  try { makeClickable($w('#quizEmailSubmitBtn'), () => submitEmailGate(), { ariaLabel: 'Submit email and continue' }); } catch (e) {}
+  try { makeClickable($w('#quizEmailSkipBtn'), () => skipEmailGate(), { ariaLabel: 'Skip and continue' }); } catch (e) {}
 
   renderStep();
 }
@@ -193,6 +203,12 @@ function goNext() {
   }
   try { $w('#quizValidation').collapse(); } catch (e) {}
 
+  // Show email gate after Q3 (step index EMAIL_GATE_AFTER_STEP), once per session
+  if (state.step === EMAIL_GATE_AFTER_STEP && !state.emailCaptured) {
+    showEmailGate();
+    return;
+  }
+
   if (state.step < state.totalSteps - 1) {
     state.step++;
     renderStep();
@@ -212,10 +228,74 @@ function restartQuiz() {
   state.step = 0;
   state.answers = {};
   state.results = null;
+  state.emailCaptured = false;
   try { $w('#quizResults').collapse(); } catch (e) {}
+  try { $w('#quizEmailSection').collapse(); } catch (e) {}
   try { $w('#quizSection').expand(); } catch (e) {}
   renderStep();
   trackEvent('quiz_restart');
+}
+
+// ── Email Gate ─────────────────────────────────────────────────────
+
+function showEmailGate() {
+  try { $w('#quizSection').collapse(); } catch (e) {}
+  try { $w('#quizEmailSection').expand(); } catch (e) {}
+  try { $w('#quizEmailInput').value = ''; } catch (e) {}
+  try { $w('#quizEmailError').collapse(); } catch (e) {}
+  announce($w, 'Almost there! Enter your email to see your personalized recommendations.');
+  trackEvent('quiz_email_gate_shown', { step: state.step });
+}
+
+async function submitEmailGate() {
+  const email = (() => {
+    try { return ($w('#quizEmailInput').value || '').trim(); } catch (e) { return ''; }
+  })();
+
+  if (!email) {
+    try { $w('#quizEmailError').text = 'Please enter your email'; } catch (e) {}
+    try { $w('#quizEmailError').expand(); } catch (e) {}
+    announce($w, 'Please enter your email address');
+    return;
+  }
+
+  // Basic client-side format check before hitting the backend
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    try { $w('#quizEmailError').text = 'Please enter a valid email address'; } catch (e) {}
+    try { $w('#quizEmailError').expand(); } catch (e) {}
+    announce($w, 'Please enter a valid email address');
+    return;
+  }
+
+  try { $w('#quizEmailError').collapse(); } catch (e) {}
+  try { $w('#quizEmailSubmitBtn').disable(); } catch (e) {}
+
+  // Non-blocking CRM capture — quiz continues regardless of outcome
+  captureQuizLead(email, {
+    roomType: state.answers.roomType,
+    primaryUse: state.answers.primaryUse,
+    stylePreference: state.answers.stylePreference,
+  }).catch(() => {});
+
+  trackEvent('email_captured', { source: 'style_quiz', step: state.step });
+
+  state.emailCaptured = true;
+  try { $w('#quizEmailSubmitBtn').enable(); } catch (e) {}
+  advanceFromEmailGate();
+}
+
+function skipEmailGate() {
+  state.emailCaptured = true;
+  trackEvent('quiz_email_gate_skipped', { step: state.step });
+  advanceFromEmailGate();
+}
+
+function advanceFromEmailGate() {
+  try { $w('#quizEmailSection').collapse(); } catch (e) {}
+  try { $w('#quizSection').expand(); } catch (e) {}
+  state.step++;
+  renderStep();
 }
 
 // ── Submit & Results ───────────────────────────────────────────────

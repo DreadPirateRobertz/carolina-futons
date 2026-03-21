@@ -2,13 +2,15 @@
  * @module styleQuiz
  * @description Backend web module for the "Find Your Perfect Futon" style quiz.
  * Takes quiz answers and returns personalized product recommendations
- * with match scores and explanations.
+ * with match scores and explanations. Also provides email lead capture
+ * after Q3 with CRM sync via Klaviyo.
  *
  * @requires wix-web-module
  * @requires wix-data
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 // Map quiz answers to product collection queries and scoring criteria
 const ROOM_CATEGORY_MAP = {
@@ -198,6 +200,65 @@ export const getQuizOptions = webMethod(
         { value: 'over-2000', label: 'Over $2,000', description: 'Top of the line' },
       ],
     };
+  }
+);
+
+/**
+ * Capture a quiz lead email after Q3 and sync to CRM (Klaviyo).
+ * Persists to NewsletterSubscribers with source='style_quiz' and stores
+ * partial quiz answers (roomType, primaryUse, stylePreference) for
+ * segmentation. Silent dedup — returns success for existing subscribers.
+ *
+ * @function captureQuizLead
+ * @param {string} email - Visitor email from quiz email gate.
+ * @param {Object} [partialAnswers] - Answers collected so far (Q1–Q3).
+ * @param {string} [partialAnswers.roomType]
+ * @param {string} [partialAnswers.primaryUse]
+ * @param {string} [partialAnswers.stylePreference]
+ * @returns {Promise<{success: boolean, message?: string}>}
+ * @permission Anyone — captures from anonymous quiz visitors.
+ */
+export const captureQuizLead = webMethod(
+  Permissions.Anyone,
+  async (email, partialAnswers = {}) => {
+    try {
+      if (!email || typeof email !== 'string' || !email.trim()) {
+        return { success: false, message: 'Email is required' };
+      }
+
+      const cleaned = sanitize(email, 254).toLowerCase().trim();
+      if (!validateEmail(cleaned)) {
+        return { success: false, message: 'Invalid email format' };
+      }
+
+      // Delegate to newsletterService for CMS insert + Klaviyo sync.
+      // subscribeToNewsletter deduplicates silently and triggers the welcome flow.
+      const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+      await subscribeToNewsletter(cleaned, { source: 'style_quiz' });
+
+      // Enrich the subscriber record with partial quiz answers for segmentation.
+      const existing = await wixData.query('NewsletterSubscribers')
+        .eq('email', cleaned)
+        .find();
+
+      if (existing.items.length > 0) {
+        const record = existing.items[0];
+        // Only write quiz fields if not already set (don't overwrite on repeat visits)
+        if (!record.quizRoomType) {
+          await wixData.update('NewsletterSubscribers', {
+            ...record,
+            quizRoomType: sanitize(partialAnswers.roomType || '', 50),
+            quizPrimaryUse: sanitize(partialAnswers.primaryUse || '', 50),
+            quizStylePreference: sanitize(partialAnswers.stylePreference || '', 50),
+          });
+        }
+      }
+
+      return { success: true };
+    } catch (err) {
+      console.error('Quiz lead capture error:', err);
+      return { success: false, message: 'Capture failed. Please try again.' };
+    }
   }
 );
 
