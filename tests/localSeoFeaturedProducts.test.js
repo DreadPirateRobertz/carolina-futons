@@ -57,32 +57,29 @@ const TEST_PRODUCTS = {
   },
 };
 
-function seedAllProducts() {
-  __seed('Stores/Products', Object.values(TEST_PRODUCTS));
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
   __reset();
+  __seed('Stores/Products', Object.values(TEST_PRODUCTS));
 });
 
 // ── Happy path — known cities ────────────────────────────────────────────
 
 describe('getFeaturedProductsForCity — known city', () => {
   it('returns success: true for a known city slug', async () => {
-    seedAllProducts();
+
     const result = await getFeaturedProductsForCity('asheville-nc');
     expect(result.success).toBe(true);
   });
 
   it('returns an array of products', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     expect(Array.isArray(products)).toBe(true);
   });
 
   it('each product has productId', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(p.productId).toBeTruthy();
@@ -90,7 +87,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('each product has name', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(typeof p.name).toBe('string');
@@ -99,7 +96,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('each product has price', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(typeof p.price).toBe('number');
@@ -108,7 +105,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('each product has formattedPrice', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(typeof p.formattedPrice).toBe('string');
@@ -117,7 +114,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('each product has imageUrl', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(typeof p.imageUrl).toBe('string');
@@ -125,7 +122,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('each product has productPageUrl containing /product-page/', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(p.productPageUrl).toContain('/product-page/');
@@ -133,7 +130,7 @@ describe('getFeaturedProductsForCity — known city', () => {
   });
 
   it('productPageUrl starts with site domain', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     for (const p of products) {
       expect(p.productPageUrl).toMatch(/^https:\/\/www\.carolinafutons\.com/);
@@ -145,40 +142,40 @@ describe('getFeaturedProductsForCity — known city', () => {
 
 describe('getFeaturedProductsForCity — home city', () => {
   it('Hendersonville returns 4 products', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     expect(products).toHaveLength(4);
   });
 
   it('home city product count matches HOME_CITY_FEATURED_CATEGORIES length', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     expect(products.length).toBe(HOME_CITY_FEATURED_CATEGORIES.length);
   });
 
   it('Hendersonville includes a futon frame product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     const frameProductId = FEATURED_PRODUCT_CATALOG['futon-frames'].productId;
     expect(products.some(p => p.productId === frameProductId)).toBe(true);
   });
 
   it('Hendersonville includes a mattress product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     const mattressProductId = FEATURED_PRODUCT_CATALOG['mattresses'].productId;
     expect(products.some(p => p.productId === mattressProductId)).toBe(true);
   });
 
   it('Hendersonville includes a cover product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     const coverProductId = FEATURED_PRODUCT_CATALOG['covers'].productId;
     expect(products.some(p => p.productId === coverProductId)).toBe(true);
   });
 
   it('Hendersonville includes an accessories product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('hendersonville-nc');
     const accessoryProductId = FEATURED_PRODUCT_CATALOG['accessories'].productId;
     expect(products.some(p => p.productId === accessoryProductId)).toBe(true);
@@ -189,19 +186,19 @@ describe('getFeaturedProductsForCity — home city', () => {
 
 describe('getFeaturedProductsForCity — nearby cities', () => {
   it('asheville-nc returns 2 products', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     expect(products).toHaveLength(2);
   });
 
   it('nearby city product count matches NEARBY_CITY_FEATURED_CATEGORIES length', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     expect(products.length).toBe(NEARBY_CITY_FEATURED_CATEGORIES.length);
   });
 
   it('all 5 non-home cities return 2 products each', async () => {
-    seedAllProducts();
+
     const nearbySlugs = ['asheville-nc', 'charlotte-nc', 'greenville-sc', 'spartanburg-sc', 'boone-nc'];
     for (const slug of nearbySlugs) {
       const { products } = await getFeaturedProductsForCity(slug);
@@ -210,28 +207,28 @@ describe('getFeaturedProductsForCity — nearby cities', () => {
   });
 
   it('nearby cities include futon-frames product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('greenville-sc');
     const frameProductId = FEATURED_PRODUCT_CATALOG['futon-frames'].productId;
     expect(products.some(p => p.productId === frameProductId)).toBe(true);
   });
 
   it('nearby cities include mattresses product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('greenville-sc');
     const mattressProductId = FEATURED_PRODUCT_CATALOG['mattresses'].productId;
     expect(products.some(p => p.productId === mattressProductId)).toBe(true);
   });
 
   it('nearby cities do not include covers product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     const coverProductId = FEATURED_PRODUCT_CATALOG['covers'].productId;
     expect(products.some(p => p.productId === coverProductId)).toBe(false);
   });
 
   it('nearby cities do not include accessories product', async () => {
-    seedAllProducts();
+
     const { products } = await getFeaturedProductsForCity('asheville-nc');
     const accessoryProductId = FEATURED_PRODUCT_CATALOG['accessories'].productId;
     expect(products.some(p => p.productId === accessoryProductId)).toBe(false);
@@ -252,6 +249,41 @@ describe('getFeaturedProductsForCity — unknown city', () => {
     expect(result.success).toBe(true);
     expect(Array.isArray(result.products)).toBe(true);
     expect(result.products.length).toBe(0);
+  });
+});
+
+// ── Product field fallbacks ───────────────────────────────────────────────
+
+describe('getFeaturedProductsForCity — product field fallbacks', () => {
+  it('uses formattedPrice fallback when product has no formattedPrice', async () => {
+    const productWithoutFormattedPrice = {
+      _id: 'cf-seo-frame-001',
+      name: 'Classic Futon Frame',
+      slug: 'classic-futon-frame',
+      price: 499,
+      // no formattedPrice field
+      mainMedia: 'https://example.com/frame.jpg',
+    };
+    __seed('Stores/Products', [productWithoutFormattedPrice]);
+    const { products } = await getFeaturedProductsForCity('asheville-nc');
+    expect(products.length).toBeGreaterThan(0);
+    const frame = products.find(p => p.productId === 'cf-seo-frame-001');
+    expect(frame.formattedPrice).toBe('$499');
+  });
+
+  it('sets imageUrl to empty string when mainMedia is missing', async () => {
+    const productWithoutMedia = {
+      _id: 'cf-seo-frame-001',
+      name: 'Classic Futon Frame',
+      slug: 'classic-futon-frame',
+      price: 499,
+      formattedPrice: '$499.00',
+      // no mainMedia field
+    };
+    __seed('Stores/Products', [productWithoutMedia]);
+    const { products } = await getFeaturedProductsForCity('asheville-nc');
+    const frame = products.find(p => p.productId === 'cf-seo-frame-001');
+    expect(frame.imageUrl).toBe('');
   });
 });
 
@@ -300,9 +332,18 @@ describe('getFeaturedProductsForCity — missing product in catalog', () => {
   });
 
   it('returns success: true even if all products are missing', async () => {
-    // Empty store
+    __seed('Stores/Products', []); // override beforeEach seed — empty store
     const result = await getFeaturedProductsForCity('asheville-nc');
     expect(result.success).toBe(true);
     expect(result.products).toHaveLength(0);
+  });
+
+  it('skips a product when wixData.get throws, still returns others', async () => {
+    // Seed only mattress — frame fetch will return null (not found) → skipped
+    __seed('Stores/Products', [TEST_PRODUCTS['cf-seo-mattress-001']]);
+    const result = await getFeaturedProductsForCity('asheville-nc');
+    expect(result.success).toBe(true);
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0].productId).toBe('cf-seo-mattress-001');
   });
 });
