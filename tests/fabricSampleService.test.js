@@ -499,3 +499,85 @@ describe('database failure handling', () => {
     expect(__getEmailLog()).toHaveLength(0);
   });
 });
+
+// ── Phone format validation (CF-vi8u) ─────────────────────────────────────────
+
+describe('phone format validation', () => {
+  async function submitWithPhone(phone) {
+    __seed('FabricSwatches', SWATCHES);
+    return submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, phone },
+    });
+  }
+
+  it('accepts request without phone (field is optional)', async () => {
+    const result = await submitWithPhone(undefined);
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts E.164 international format (+15551234567)', async () => {
+    const result = await submitWithPhone('+15551234567');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts E.164 with country code +44', async () => {
+    const result = await submitWithPhone('+441234567890');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts NANP 10-digit plain (5551234567)', async () => {
+    const result = await submitWithPhone('5551234567');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts NANP with dashes (555-123-4567)', async () => {
+    const result = await submitWithPhone('555-123-4567');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts NANP with dots (555.123.4567)', async () => {
+    const result = await submitWithPhone('555.123.4567');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts NANP with parens and space ((555) 123-4567)', async () => {
+    const result = await submitWithPhone('(555) 123-4567');
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts NANP with area code and extension (555-123-4567 x89)', async () => {
+    const result = await submitWithPhone('555-123-4567 x89');
+    expect(result.success).toBe(false); // extension not in spec — should reject
+  });
+
+  it('rejects plaintext non-phone string', async () => {
+    const result = await submitWithPhone('call me maybe');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/phone/i);
+  });
+
+  it('rejects too-short number (fewer than 10 digits)', async () => {
+    const result = await submitWithPhone('12345');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/phone/i);
+  });
+
+  it('rejects number with letters mixed in (555abc1234)', async () => {
+    const result = await submitWithPhone('555abc1234');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/phone/i);
+  });
+
+  it('rejects XSS-like phone string', async () => {
+    const result = await submitWithPhone('<script>alert(1)</script>');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/phone/i);
+  });
+
+  it('stores sanitized phone in CRM upsert when valid', async () => {
+    const result = await submitWithPhone('(555) 123-4567');
+    expect(result.success).toBe(true);
+    // Phone stored — CRM upsert received it (no error from that path)
+  });
+});

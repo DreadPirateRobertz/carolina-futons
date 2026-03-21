@@ -25,6 +25,11 @@ const MAX_SWATCHES = 3;
 const RATE_LIMIT_DAYS = 30;
 const ZIP_RE = /^\d{5}$/;
 
+// Accepts E.164 (+15551234567, +441234567890, etc.) or NANP
+// (5551234567, 555-123-4567, (555) 123-4567, 555.123.4567).
+// Phone is optional — validated only when present.
+const PHONE_RE = /^(\+\d{7,15}|(\+?1[\s.-]?)?(\(?\d{3}\)?[\s.\-]?)\d{3}[\s.\-]?\d{4})$/;
+
 // ── Validators ───────────────────────────────────────────────────────────────
 
 function validateSwatchIds(ids) {
@@ -63,6 +68,11 @@ function validateContact(raw) {
   const zip = (raw.zip || '').trim();
   if (!ZIP_RE.test(zip)) return { error: 'ZIP code must be 5 digits.' };
 
+  const phone = raw.phone ? sanitize(raw.phone, 30).trim() : undefined;
+  if (phone && !PHONE_RE.test(phone)) {
+    return { error: 'Phone number format is invalid. Use a 10-digit US number or E.164 format (e.g. +15551234567).' };
+  }
+
   return {
     firstName,
     lastName,
@@ -72,7 +82,7 @@ function validateContact(raw) {
     city,
     state,
     zip,
-    phone: raw.phone ? sanitize(raw.phone, 30).trim() : undefined,
+    phone,
   };
 }
 
@@ -81,6 +91,11 @@ function validateContact(raw) {
 /**
  * Returns true if there is a FabricSampleRequests record for this email
  * (lowercase-normalized, stored in `contactEmail`) within the last RATE_LIMIT_DAYS days.
+ *
+ * TOCTOU note: wix-data provides no atomic conditional insert, so a small
+ * race window exists between this check and the subsequent wixData.insert().
+ * Duplicate requests within milliseconds could both pass. Acceptable given
+ * the low-volume, low-stakes nature of fabric sample requests.
  */
 async function isRateLimited(email) {
   try {
