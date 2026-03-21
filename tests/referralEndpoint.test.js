@@ -110,7 +110,16 @@ describe('post_trackReferral', () => {
     __resetMembers();
   });
 
-  it('returns 200 with tracked=true for valid code and new member', async () => {
+  it('returns 401 when not authenticated', async () => {
+    // no member set
+    const req = makeRequest({ referralCode: 'CODE1234' });
+    const response = await post_trackReferral(req);
+
+    expect(response.status).toBe(401);
+  });
+
+  it('returns 200 with tracked=true for valid code and authenticated new member', async () => {
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __seed('Referrals', [
       {
         _id: 'ref-1',
@@ -121,7 +130,7 @@ describe('post_trackReferral', () => {
       },
     ]);
 
-    const req = makeRequest({ referralCode: 'CODE1234', newMemberId: 'member-new' });
+    const req = makeRequest({ referralCode: 'CODE1234' });
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(200);
@@ -131,6 +140,7 @@ describe('post_trackReferral', () => {
   });
 
   it('stores referral attribution after successful tracking', async () => {
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __seed('Referrals', [
       {
         _id: 'ref-1',
@@ -141,7 +151,7 @@ describe('post_trackReferral', () => {
       },
     ]);
 
-    const req = makeRequest({ referralCode: 'CODE1234', newMemberId: 'member-new' });
+    const req = makeRequest({ referralCode: 'CODE1234' });
     await post_trackReferral(req);
 
     const stored = __getInserted('Referrals');
@@ -150,7 +160,8 @@ describe('post_trackReferral', () => {
     expect(updated.status).toBe('signed_up');
   });
 
-  it('returns 400 for self-referral', async () => {
+  it('returns 400 for self-referral (authenticated member is the referrer)', async () => {
+    __setMember({ _id: 'member-abc', loginEmail: 'alice@example.com' });
     __seed('Referrals', [
       {
         _id: 'ref-1',
@@ -161,13 +172,14 @@ describe('post_trackReferral', () => {
       },
     ]);
 
-    const req = makeRequest({ referralCode: 'CODE1234', newMemberId: 'member-abc' });
+    const req = makeRequest({ referralCode: 'CODE1234' });
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(400);
   });
 
-  it('returns 409 for duplicate attribution (same newMemberId already tracked)', async () => {
+  it('returns 409 for duplicate attribution (member already attributed to this code)', async () => {
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __seed('Referrals', [
       {
         _id: 'ref-1',
@@ -178,30 +190,26 @@ describe('post_trackReferral', () => {
       },
     ]);
 
-    const req = makeRequest({ referralCode: 'CODE1234', newMemberId: 'member-new' });
+    const req = makeRequest({ referralCode: 'CODE1234' });
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(409);
   });
 
   it('returns 400 for invalid/nonexistent referral code', async () => {
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __seed('Referrals', []);
 
-    const req = makeRequest({ referralCode: 'NOTEXIST', newMemberId: 'member-new' });
+    const req = makeRequest({ referralCode: 'NOTEXIST' });
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(400);
   });
 
   it('returns 400 when referralCode is missing', async () => {
-    const req = makeRequest({ newMemberId: 'member-new' });
-    const response = await post_trackReferral(req);
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
 
-    expect(response.status).toBe(400);
-  });
-
-  it('returns 400 when newMemberId is missing', async () => {
-    const req = makeRequest({ referralCode: 'CODE1234' });
+    const req = makeRequest({});
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(400);
@@ -209,9 +217,10 @@ describe('post_trackReferral', () => {
 
   it('returns 500 on unexpected error', async () => {
     const { __setQueryError } = await import('./__mocks__/wix-data.js');
+    __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
     __setQueryError('Referrals', new Error('DB down'));
 
-    const req = makeRequest({ referralCode: 'CODE1234', newMemberId: 'member-new' });
+    const req = makeRequest({ referralCode: 'CODE1234' });
     const response = await post_trackReferral(req);
 
     expect(response.status).toBe(500);
