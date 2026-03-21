@@ -31,6 +31,18 @@ describe('initPinterestTag — basic guards', () => {
     expect(globalThis.window?.pintrk).toBeUndefined();
   });
 
+  it('does not throw when document is undefined', () => {
+    const origDoc = globalThis.document;
+    try {
+      delete globalThis.document;
+      setPinterestTagId('TAG_DOC_GUARD');
+      expect(() => initPinterestTag()).not.toThrow();
+    } finally {
+      globalThis.document = origDoc;
+      setPinterestTagId('');
+    }
+  });
+
   it('does not reinitialize when pintrk already exists on window', () => {
     const existingPintrk = vi.fn();
     existingPintrk.queue = [];

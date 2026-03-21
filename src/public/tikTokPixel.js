@@ -37,6 +37,7 @@ export function initTikTokPixel() {
     /* eslint-enable */
   } catch (e) {
     // TikTok Pixel is non-critical — never break the page
+    console.warn('[tikTokPixel] init failed:', e?.message ?? e);
   }
 }
 
@@ -50,6 +51,7 @@ export function fireTikTokEvent(eventName, params = {}) {
     if (typeof window === 'undefined' || !window.ttq) return;
     window.ttq.track(eventName, params);
   } catch (e) {
-    // Non-critical
+    // Non-critical — log for observability
+    console.warn('[tikTokPixel] fireTikTokEvent failed:', eventName, e?.message ?? e);
   }
 }

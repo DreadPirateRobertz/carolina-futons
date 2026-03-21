@@ -1,7 +1,7 @@
 // pinterestTag.js - Pinterest Tag (Conversion Tag) initialization
 // Loads the Pinterest tracking tag for conversion tracking and audience building.
-// Fires a page view on initialization. Additional events (viewcategory,
-// addtocart, checkout, purchase) can be fired via firePinterestEvent().
+// Fires a page view (`window.pintrk('page')`) on initialization. Additional events
+// (viewcategory, addtocart, checkout, purchase) can be fired via firePinterestEvent().
 //
 // Setup: Set your Pinterest Tag ID in the TAG_ID constant below, or
 // configure it via Wix Dashboard > Marketing Integrations.
@@ -48,6 +48,7 @@ export function initPinterestTag() {
     window.pintrk('page');
   } catch (e) {
     // Pinterest Tag is non-critical — never break the page
+    console.warn('[pinterestTag] init failed:', e?.message ?? e);
   }
 }
 
@@ -61,6 +62,7 @@ export function firePinterestEvent(eventName, params = {}) {
     if (typeof window === 'undefined' || !window.pintrk) return;
     window.pintrk('track', eventName, params);
   } catch (e) {
-    // Non-critical
+    // Non-critical — log for observability
+    console.warn('[pinterestTag] firePinterestEvent failed:', eventName, e?.message ?? e);
   }
 }
