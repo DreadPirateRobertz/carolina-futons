@@ -130,8 +130,14 @@ export async function initGiftCardUpsell($wFn, orderTotal, opts = {}) {
       } else {
         import('wix-location-frontend').then(loc => {
           const navFn = loc.default?.to ?? loc.to;
-          navFn(url);
-        }).catch(() => {});
+          if (typeof navFn === 'function') {
+            navFn(url);
+          } else {
+            console.warn('[giftCardUpsell] wix-location-frontend.to not found');
+          }
+        }).catch(err => {
+          console.warn('[giftCardUpsell] wix-location-frontend unavailable:', err);
+        });
       }
     });
   } catch (e) {

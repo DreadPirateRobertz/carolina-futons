@@ -366,6 +366,17 @@ describe('initGiftCardUpsell — wix-location-frontend fallback', () => {
     expect(navigate).toHaveBeenCalledWith('/gift-cards?amount=100');
     expect(toFn).not.toHaveBeenCalled();
   });
+
+  it('does not throw when wix-location-frontend resolves without a to function', async () => {
+    // Temporarily override mock to return an empty module (navFn undefined guard)
+    vi.doMock('wix-location-frontend', () => ({ default: {}, to: undefined }));
+    const $w = make$w();
+    await initGiftCardUpsell($w, 80, { storage: makeStorage() });
+    // Should not throw even if navFn is undefined
+    await expect(Promise.resolve().then(() => { $w._btn._fire(); })).resolves.not.toThrow();
+    await new Promise(r => setTimeout(r, 0));
+    vi.doMock('wix-location-frontend', () => ({ default: { to: vi.fn() }, to: vi.fn() }));
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════
