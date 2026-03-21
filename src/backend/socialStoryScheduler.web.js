@@ -543,9 +543,9 @@ export const getEngagementWindows = webMethod(
  * Cron-callable: query catalog for new arrivals (past 24h) and price drops (past 24h),
  * then schedule social stories across all platforms.
  *
- * Called daily by jobs.config. No authentication required (cron context).
+ * Called daily by jobs.config. Runs in Wix cron/system context with Admin permissions.
  *
- * @returns {Promise<{success: boolean, newArrivals: Object, priceDrops: Object, errors: string[]}>}
+ * @returns {Promise<{success: boolean, newArrivals: {scheduled:number, skipped:number, rateLimited:number, errors:string[]}, priceDrops: {scheduled:number, skipped:number, rateLimited:number, errors:string[]}, errors: string[]}>}
  */
 export const runDailySocialStories = webMethod(
   Permissions.Admin,
@@ -601,8 +601,9 @@ export const runDailySocialStories = webMethod(
       errors.push(msg);
     }
 
+    const hasInsertErrors = newArrivalResult.errors.length > 0 || priceDropResult.errors.length > 0;
     const summary = {
-      success: errors.length === 0,
+      success: errors.length === 0 && !hasInsertErrors,
       newArrivals: newArrivalResult,
       priceDrops: priceDropResult,
       errors,
@@ -615,17 +616,16 @@ export const runDailySocialStories = webMethod(
 // Internal (non-authenticated) versions for use within cron context
 async function scheduleNewArrivalStoriesInternal(product) {
   if (!product || !product.name) {
-    return { success: false, scheduled: 0, skipped: 0, rateLimited: 0, errors: ['Product with name is required'] };
+    return { scheduled: 0, skipped: 0, rateLimited: 0, errors: ['Product with name is required'] };
   }
 
-  const platforms = PLATFORMS;
   const productId = product._id || product.slug || sanitize(product.name, 50);
   let scheduled = 0;
   let skipped = 0;
   let rateLimited = 0;
   const errors = [];
 
-  for (const platform of platforms) {
+  for (const platform of PLATFORMS) {
     if (await isProductDuplicate(productId, platform)) { skipped++; continue; }
     if (!(await isWithinRateLimit(platform))) {
       rateLimited++;
@@ -656,18 +656,18 @@ async function schedulePriceDropStoriesInternal(product) {
   if (!product || !product.name || product.price == null || product.previousPrice == null) {
     return { scheduled: 0, skipped: 0, rateLimited: 0, errors: ['Incomplete product data'] };
   }
+  // Defensive guard — outer caller pre-filters, but this ensures correctness if called directly
   if (Number(product.price) >= Number(product.previousPrice)) {
     return { scheduled: 0, skipped: 0, rateLimited: 0, errors: [] };
   }
 
-  const platforms = PLATFORMS;
   const productId = product._id || product.slug || sanitize(product.name, 50);
   let scheduled = 0;
   let skipped = 0;
   let rateLimited = 0;
   const errors = [];
 
-  for (const platform of platforms) {
+  for (const platform of PLATFORMS) {
     if (await isProductDuplicate(productId, platform)) { skipped++; continue; }
     if (!(await isWithinRateLimit(platform))) {
       rateLimited++;

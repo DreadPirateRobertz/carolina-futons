@@ -189,6 +189,45 @@ describe('runDailySocialStories — price drops', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
+// Cross-type scenarios
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('runDailySocialStories — cross-type scenarios', () => {
+  it('reports success: false when all inserts fail (query succeeds)', async () => {
+    __seed('Stores/Products', [mockProduct({ _createdDate: YESTERDAY })]);
+    // Make every insert throw
+    __onInsert(() => { throw new Error('DB write unavailable'); });
+
+    const result = await runDailySocialStories();
+    expect(result.success).toBe(false);
+    expect(result.newArrivals.errors.length).toBeGreaterThan(0);
+  });
+
+  it('deduplicates price drops when new arrivals already queued for same product', async () => {
+    // Product created today AND has comparePrice > price — new arrivals run first,
+    // then dedup guard prevents price drop from re-queuing the same product+platform.
+    const dualProduct = mockProduct({
+      _id: 'prod-dual',
+      _createdDate: YESTERDAY,
+      _updatedDate: YESTERDAY,
+      price: 399,
+      comparePrice: 549,
+    });
+    __seed('Stores/Products', [dualProduct]);
+
+    const inserts = [];
+    __onInsert((collection, item) => inserts.push({ collection, item }));
+
+    const result = await runDailySocialStories();
+    const socialInserts = inserts.filter(i => i.collection === 'ContentSchedule');
+    // New arrivals schedules 3 (one per platform), then price drop is deduped against them
+    expect(socialInserts).toHaveLength(3);
+    expect(result.newArrivals.scheduled).toBe(3);
+    expect(result.priceDrops.skipped).toBe(3); // deduped, not double-scheduled
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // Rate limits
 // ═══════════════════════════════════════════════════════════════════════
 
