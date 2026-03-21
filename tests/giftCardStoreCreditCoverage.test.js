@@ -1,7 +1,7 @@
 /**
  * Tests for giftCards.web.js and storeCreditService.web.js
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import wixData, {
   __reset as resetData,
   __seed as seed,
@@ -15,6 +15,14 @@ import {
   __failNextEmail,
   __seedContacts,
 } from 'wix-crm-backend';
+import { currentMember } from 'wix-members-backend';
+
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'member1' })),
+  },
+}));
+
 
 // ── giftCards ──────────────────────────────────────────────────────────
 import {
@@ -37,6 +45,7 @@ import {
 } from 'backend/storeCreditService.web';
 
 beforeEach(() => {
+  vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'member1' });
   resetData();
   resetCrm();
 });
@@ -700,6 +709,7 @@ describe('storeCreditService — getMyStoreCredit', () => {
   });
 
   it('returns empty for member with no credits', async () => {
+    vi.mocked(currentMember.getMember).mockResolvedValueOnce({ _id: 'member-nobody' });
     const r = await getMyStoreCredit('member-nobody');
     expect(r.success).toBe(true);
     expect(r.totalBalance).toBe(0);
@@ -883,6 +893,7 @@ describe('storeCreditService — getStoreCreditHistory', () => {
   });
 
   it('returns empty for unknown member', async () => {
+    vi.mocked(currentMember.getMember).mockResolvedValueOnce({ _id: 'nobody' });
     const r = await getStoreCreditHistory('nobody');
     expect(r.success).toBe(true);
     expect(r.credits).toHaveLength(0);
@@ -891,6 +902,7 @@ describe('storeCreditService — getStoreCreditHistory', () => {
 
 describe('storeCreditService — giftStoreCredit', () => {
   beforeEach(() => {
+    vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'giver1' });
     seed('StoreCredits', [{
       _id: 'sc-gift-src',
       memberId: 'giver1',
