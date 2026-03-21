@@ -69,9 +69,11 @@ function initDirections(page) {
   try {
     try { $w('#directionsText').text = page.directions || ''; } catch (e) {}
 
-    // Map embed — HtmlComponent renders the Google Maps iframe
+    // Map embed — sets src on the existing #mapEmbed HtmlComponent
     if (page.mapEmbedUrl) {
-      try { $w('#mapEmbed').src = page.mapEmbedUrl; } catch (e) {}
+      try { $w('#mapEmbed').src = page.mapEmbedUrl; } catch (e) {
+        console.warn('Local SEO Page: failed to set #mapEmbed src:', e);
+      }
     }
 
     // Directions CTA — opens Google Maps directions to the store
@@ -80,9 +82,13 @@ function initDirections(page) {
         $w('#directionsBtn').onClick(() => {
           wixLocationFrontend.to(page.directionsUrl);
         });
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Local SEO Page: failed to wire #directionsBtn:', e);
+      }
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initDirections error:', e);
+  }
 }
 
 // ── Nearby Areas ───────────────────────────────────────────────────────
