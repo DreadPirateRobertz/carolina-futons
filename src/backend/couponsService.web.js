@@ -176,6 +176,9 @@ export const createTierUpgradeCoupon = webMethod(
       if (!email) return { success: false, message: 'Email required' };
 
       const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, message: 'Invalid email' };
+      }
       const tier = sanitize(newTier || '', 20);
       const discountMap = { Silver: 10, Gold: 20 };
       const discount = discountMap[tier] || 10;
