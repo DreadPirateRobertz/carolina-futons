@@ -1373,8 +1373,8 @@ export async function post_trackReferral(request) {
       });
     }
 
-    // Prevent duplicate attribution
-    if (referral.refereeMemberId === newMemberId) {
+    // Prevent overwriting an already-claimed referral (any member)
+    if (referral.status !== 'pending') {
       return response({
         status: 409,
         body: JSON.stringify({ error: 'Referral already attributed' }),

@@ -178,8 +178,26 @@ describe('post_trackReferral', () => {
     expect(response.status).toBe(400);
   });
 
-  it('returns 409 for duplicate attribution (member already attributed to this code)', async () => {
+  it('returns 409 when same member retries an already-attributed code', async () => {
     __setMember({ _id: 'member-new', loginEmail: 'new@example.com' });
+    __seed('Referrals', [
+      {
+        _id: 'ref-1',
+        referrerMemberId: 'member-abc',
+        referralCode: 'CODE1234',
+        status: 'signed_up',
+        refereeMemberId: 'member-new',
+      },
+    ]);
+
+    const req = makeRequest({ referralCode: 'CODE1234' });
+    const response = await post_trackReferral(req);
+
+    expect(response.status).toBe(409);
+  });
+
+  it('returns 409 when a different member tries to overwrite an already-claimed code', async () => {
+    __setMember({ _id: 'member-other', loginEmail: 'other@example.com' });
     __seed('Referrals', [
       {
         _id: 'ref-1',
