@@ -215,20 +215,33 @@ describe('purchase content_ids — catalogItemId vs sku precedence', () => {
 // ── Cross-platform schema consistency ─────────────────────────────────
 
 describe('Cross-platform field alignment — checkout/purchase ID consistency', () => {
-  it('checkout and purchase payload content_ids both include the same product IDs', async () => {
+  let checkoutPayload;
+  let purchasePayload;
+  const cartValue = futonFrame.price + futonMattress.price; // 499 + 349 = 848
+
+  beforeAll(async () => {
     const cartItems = [
-      { productId: futonFrame._id, quantity: 1 },
-      { productId: futonMattress._id, quantity: 1 },
+      { productId: futonFrame._id, price: futonFrame.price, quantity: 1 },
+      { productId: futonMattress._id, price: futonMattress.price, quantity: 1 },
     ];
-    const [checkoutPayload, purchasePayload] = await Promise.all([
-      buildCheckoutEvent(cartItems, 848),
+    [checkoutPayload, purchasePayload] = await Promise.all([
+      buildCheckoutEvent(cartItems, cartValue),
       buildPurchaseEvent({
-        ...sampleOrder,
+        _id: 'order-xp',
         lineItems: cartItems.map(i => ({ catalogItemId: i.productId, quantity: i.quantity })),
+        totals: { total: cartValue },
       }),
     ]);
+  });
+
+  it('checkout and purchase content_ids both include the same product IDs', () => {
     expect(checkoutPayload.content_ids).toContain(futonFrame._id);
     expect(purchasePayload.content_ids).toContain(futonFrame._id);
+  });
+
+  it('checkout and purchase value are equal for the same cart', () => {
+    expect(checkoutPayload.value).toBe(cartValue);
+    expect(purchasePayload.value).toBe(cartValue);
   });
 });
 
