@@ -139,6 +139,19 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
 // ── Member + Order Lifecycle Handlers ────────────────────────────────
 
 /**
+ * Extract UTC month (1-12) and day (1-31) from a birthday Date value.
+ * Uses UTC to avoid timezone shift on bare date strings (e.g. "1990-05-15").
+ * Returns null if the value is absent or unparseable.
+ * @internal Exported for unit testing only. Not part of the public module API.
+ */
+export function _parseBirthdayMonthDay(birthdayValue) {
+  if (!birthdayValue) return null;
+  const d = new Date(birthdayValue);
+  if (isNaN(d.getTime())) return null;
+  return { month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+}
+
+/**
  * Fired when a new site member is created.
  * Delegates to emailAutomation to queue the welcome email series.
  */
@@ -374,6 +387,59 @@ export async function wixStores_onInventoryVariantUpdated(event) {
       error: err.message,
       severity: 'HIGH',
       impact: 'Back-in-stock subscribers not notified — trust erosion',
+    });
+  }
+}
+
+// ── Member Birthday Field Sync ────────────────────────────────────────
+
+/**
+ * Fired when a site member's profile is updated.
+ * Derives and writes `birthday_month` (1-12) and `birthday_day` (1-31) as
+ * searchable int fields so the daily birthday cron can query by today's
+ * month/day without a full-table scan.
+ *
+ * No-op if birthday is absent, unparseable, or unchanged from previousEntity.
+ * Only writes when birthday value actually changes, preventing redundant
+ * get+update on every profile save (name, avatar, etc.).
+ */
+export async function wixMembers_onMemberUpdated(event) {
+  const member = event.entity || event;
+  const memberId = member._id || '';
+  const birthday = member.contactDetails?.birthdate ?? member.birthdate ?? null;
+  const prevMember = event.previousEntity || {};
+  const prevBirthday = prevMember.contactDetails?.birthdate ?? prevMember.birthdate ?? null;
+
+  if (!memberId) return; // no member ID — cannot write
+  if (!birthday) return; // no birthday set — nothing to derive
+  if (birthday === prevBirthday) return; // birthday unchanged — skip redundant write
+
+  const parsed = _parseBirthdayMonthDay(birthday);
+  if (!parsed) {
+    console.warn('[events] wixMembers_onMemberUpdated: unparseable birthday for member', memberId, ':', birthday);
+    return;
+  }
+
+  try {
+    // get() before update() — wixData.update replaces the entire item,
+    // so we must spread the existing record to avoid destroying other fields.
+    const existing = await wixData.get('Members/PrivateMembersData', memberId);
+    if (!existing) {
+      console.warn('[events] wixMembers_onMemberUpdated: no PrivateMembersData record for member', memberId);
+      return;
+    }
+    await wixData.update('Members/PrivateMembersData', {
+      ...existing,
+      birthday_month: parsed.month,
+      birthday_day: parsed.day,
+    });
+  } catch (err) {
+    console.error(`[events] Failed to sync birthday fields for member ${memberId}:`, err?.message ?? err);
+    await logFailedEvent({
+      handler: 'wixMembers_onMemberUpdated',
+      error: err.message,
+      severity: 'LOW',
+      impact: `Birthday fields not synced for member ${memberId} — birthday cron may skip this member`,
     });
   }
 }
