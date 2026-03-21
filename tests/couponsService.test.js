@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   createWelcomeCoupon,
   getActiveCoupons,
@@ -6,6 +6,7 @@ import {
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
 import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -190,9 +191,15 @@ describe('createTierUpgradeCoupon', () => {
 // ── getActiveCoupons ─────────────────────────────────────────────────
 
 describe('getActiveCoupons', () => {
+  const TEST_EMAIL = 'test@example.com';
+
+  beforeEach(() => {
+    __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
+  });
+
   it('returns active coupons with percent-off formatting', async () => {
     __setCoupons([
-      { _id: 'c-1', code: 'WELCOME-ABC123', name: 'Welcome 10%', percentOffRate: 10, active: true },
+      { _id: 'c-1', code: 'WELCOME-ABC123', name: `Welcome 10% - ${TEST_EMAIL}`, percentOffRate: 10, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
@@ -202,7 +209,7 @@ describe('getActiveCoupons', () => {
 
   it('formats money-off coupons correctly', async () => {
     __setCoupons([
-      { _id: 'c-2', code: 'SAVE25', name: '$25 Off', moneyOffAmount: 25, active: true },
+      { _id: 'c-2', code: 'SAVE25', name: `$25 Off - ${TEST_EMAIL}`, moneyOffAmount: 25, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
@@ -210,7 +217,7 @@ describe('getActiveCoupons', () => {
 
   it('defaults moneyOffAmount to 0 when missing', async () => {
     __setCoupons([
-      { _id: 'c-3', code: 'NOAMT', name: 'No Amount', active: true },
+      { _id: 'c-3', code: 'NOAMT', name: `No Amount - ${TEST_EMAIL}`, active: true },
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$0 off');
@@ -220,7 +227,7 @@ describe('getActiveCoupons', () => {
     __setCoupons([{
       _id: 'c-4',
       code: 'FIELDS',
-      name: 'Test',
+      name: `Test - ${TEST_EMAIL}`,
       percentOffRate: 5,
       active: true,
       minimumSubtotal: 50,
