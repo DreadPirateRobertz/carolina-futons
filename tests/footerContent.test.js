@@ -202,3 +202,25 @@ describe('getFooterSocialLinks', () => {
     expect(platforms).toContain('instagram');
   });
 });
+
+// ── Gift Cards footer link (CF-t6b8) ────────────────────────────────
+
+describe('getFooterShopLinks — Gift Cards entry', () => {
+  it('includes Gift Cards link', () => {
+    const links = getFooterShopLinks();
+    const giftCard = links.find(l => l.path === '/gift-cards');
+    expect(giftCard).toBeDefined();
+  });
+
+  it('Gift Cards link has correct label', () => {
+    const links = getFooterShopLinks();
+    const giftCard = links.find(l => l.path === '/gift-cards');
+    expect(giftCard.label).toBe('Gift Cards');
+  });
+
+  it('Gift Cards path starts with /', () => {
+    const links = getFooterShopLinks();
+    const giftCard = links.find(l => l.path === '/gift-cards');
+    expect(giftCard.path.startsWith('/')).toBe(true);
+  });
+});
