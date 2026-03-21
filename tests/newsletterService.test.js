@@ -5,6 +5,7 @@ import { __reset as resetMarketing, coupons } from './__mocks__/wix-marketing-ba
 import { subscribeToNewsletter, syncToESP, unsubscribeFromESP, getESPStatus, captureExitIntentEmail } from '../src/backend/newsletterService.web.js';
 import { __setSecrets, __reset as resetSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler, __reset as resetFetch } from './__mocks__/wix-fetch.js';
+import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 
 beforeEach(() => {
   resetData();
@@ -12,6 +13,8 @@ beforeEach(() => {
   resetMarketing();
   resetSecrets();
   resetFetch();
+  resetMember();
+  __setMember({ loginEmail: 'user@example.com' });
 });
 
 // ── subscribeToNewsletter ────────────────────────────────────────
@@ -251,6 +254,7 @@ describe('subscribeToNewsletter — ESP sync integration', () => {
 
 describe('syncToESP', () => {
   it('returns skipped when no ESP config is set', async () => {
+    __setMember({ loginEmail: 'test@example.com' });
     const result = await syncToESP('test@example.com', 'exit_intent_popup');
     expect(result.synced).toBe(false);
     expect(result.reason).toBe('no_esp_configured');
@@ -305,6 +309,7 @@ describe('syncToESP', () => {
   });
 
   it('sends profile creation to Klaviyo profiles endpoint', async () => {
+    __setMember({ loginEmail: 'test@example.com' });
     __setSecrets({ ESP_API_KEY: 'pk_test_key' });
     const calls = [];
     __setHandler((url, options) => {
@@ -320,6 +325,7 @@ describe('syncToESP', () => {
   });
 
   it('subscribes to list when listId is configured', async () => {
+    __setMember({ loginEmail: 'test@example.com' });
     __setSecrets({ ESP_API_KEY: 'pk_test_key', ESP_LIST_ID: 'LIST_abc' });
     const calls = [];
     __setHandler((url, options) => {
@@ -334,6 +340,7 @@ describe('syncToESP', () => {
   });
 
   it('skips list subscription when no listId', async () => {
+    __setMember({ loginEmail: 'test@example.com' });
     __setSecrets({ ESP_API_KEY: 'pk_test_key' });
     const calls = [];
     __setHandler((url) => {
@@ -419,6 +426,19 @@ describe('syncToESP', () => {
     expect(result.synced).toBe(false);
     expect(result.reason).toBe('sync_failed');
   });
+
+  it('rejects when caller email does not match member', async () => {
+    const result = await syncToESP('other@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('unauthorized');
+  });
+
+  it('rejects when no member session', async () => {
+    __setMember(null);
+    const result = await syncToESP('user@example.com', 'footer');
+    expect(result.synced).toBe(false);
+    expect(result.reason).toBe('unauthorized');
+  });
 });
 
 // ── unsubscribeFromESP ──────────────────────────────────────────────
@@ -488,6 +508,7 @@ describe('unsubscribeFromESP', () => {
   });
 
   it('succeeds even when no CMS record exists', async () => {
+    __setMember({ loginEmail: 'nonexistent@example.com' });
     __setSecrets({ ESP_API_KEY: 'pk_test_key' });
     __setHandler(() => ({ ok: true, status: 200, async json() { return {}; } }));
 
@@ -524,6 +545,19 @@ describe('unsubscribeFromESP', () => {
     const result = await unsubscribeFromESP('user@example.com');
     expect(result.unsubscribed).toBe(false);
     expect(result.reason).toBe('unsubscribe_failed');
+  });
+
+  it('rejects when caller email does not match member', async () => {
+    const result = await unsubscribeFromESP('other@example.com');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('unauthorized');
+  });
+
+  it('rejects when no member session', async () => {
+    __setMember(null);
+    const result = await unsubscribeFromESP('user@example.com');
+    expect(result.unsubscribed).toBe(false);
+    expect(result.reason).toBe('unauthorized');
   });
 });
 
