@@ -46,12 +46,12 @@ const TEMPLATE_REGISTRY = {
   },
   welcome_series_3: {
     id: 'welcome_series_3',
-    name: 'Welcome — Social Proof',
+    name: 'Welcome — First Purchase Nudge',
     sequence: 'welcome',
     step: 3,
-    subjectLine: 'See why customers love Carolina Futons',
-    previewText: 'Real reviews and photos from happy customers.',
-    variables: ['firstName', 'email'],
+    subjectLine: 'Your 10% off expires soon — shop Carolina Futons now',
+    previewText: 'Your welcome discount is still active. Don\'t miss out.',
+    variables: ['firstName', 'discountCode', 'email'],
     category: 'onboarding',
   },
 
@@ -798,42 +798,55 @@ export const getWelcomeDay3Template = webMethod(
 );
 
 /**
- * Day 7 welcome email: social proof and customer reviews.
+ * Day 7 welcome email: first purchase nudge with urgency framing and discount CTA.
  * @param {string} firstName
+ * @param {string} [discountCode]
  * @returns {{ subject: string, previewText: string, html: string }}
  */
 export const getWelcomeDay7Template = webMethod(
   Permissions.Anyone,
-  (firstName) => {
+  (firstName, discountCode) => {
     const name = sanitize(firstName || '', 200);
+    const code = sanitize(discountCode || '', 50);
     const meta = TEMPLATE_REGISTRY.welcome_series_3;
+
+    const discountBlock = code
+      ? `<tr><td style="padding:16px;background-color:#FFF3CD;border-radius:4px;text-align:center;margin:16px 0;border:1px solid #F0C040;">
+          <p style="font-family:Arial,sans-serif;font-size:13px;color:#8B6914;margin:0 0 6px;font-weight:bold;">⏰ YOUR WELCOME DISCOUNT EXPIRES SOON</p>
+          <p style="font-family:Georgia,serif;font-size:24px;font-weight:bold;color:#8B4513;margin:0 0 6px;letter-spacing:2px;">${code}</p>
+          <p style="font-family:Arial,sans-serif;font-size:12px;color:#666;margin:0;">10% off your first order — use it before it expires.</p>
+        </td></tr>`
+      : `<tr><td style="padding:12px 0;font-family:Arial,sans-serif;font-size:14px;color:#8B4513;">
+          <strong>Don't wait — great futons at great prices are waiting for you.</strong>
+        </td></tr>`;
 
     const body = `
       <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
-        ${name ? `${name}, see what customers are saying` : 'See what our customers are saying'}
+        ${name ? `${name}, your discount won't last forever` : "Your welcome discount won't last forever"}
       </td></tr>
       <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
-        <p>Don't just take our word for it — here's what customers have shared about their Carolina Futons experience.</p>
+        <p>You've explored the buying guide and you know what to look for. Now is the best time to pick your futon — your welcome discount is still active.</p>
       </td></tr>
-      <tr><td style="padding:8px 0;background-color:#F0F4F8;border-radius:4px;margin-bottom:12px;">
-        <table cellpadding="16" cellspacing="0" border="0" width="100%">
-          <tr><td style="font-family:Georgia,serif;font-size:15px;color:#333;font-style:italic;">
+      ${discountBlock}
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${SITE_URL}/shop" style="display:inline-block;padding:14px 32px;background-color:#8B4513;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Shop Now &amp; Save 10%</a>
+      </td></tr>
+      <tr><td style="padding:8px 0;background-color:#F0F4F8;border-radius:4px;">
+        <table cellpadding="12" cellspacing="0" border="0" width="100%">
+          <tr><td style="font-family:Georgia,serif;font-size:14px;color:#333;font-style:italic;">
             "Excellent quality and the staff was incredibly helpful. My futon has held up perfectly for 3 years."
           </td></tr>
-          <tr><td style="font-family:Arial,sans-serif;font-size:13px;color:#666;">— Sarah M., Asheville NC</td></tr>
+          <tr><td style="font-family:Arial,sans-serif;font-size:12px;color:#666;">— Sarah M., Asheville NC</td></tr>
         </table>
       </td></tr>
-      <tr><td style="padding:16px 0;text-align:center;">
-        <a href="${SITE_URL}/reviews" style="display:inline-block;padding:14px 32px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;text-decoration:none;border-radius:4px;">Read More Reviews</a>
-      </td></tr>
-      <tr><td style="padding:8px 0;text-align:center;">
-        <a href="${SITE_URL}/shop" style="font-family:Arial,sans-serif;font-size:14px;color:#5B8FA8;text-decoration:underline;">Browse Our Collection</a>
+      <tr><td style="padding:12px 0;font-family:Arial,sans-serif;font-size:13px;color:#666;">
+        <p>Questions? Call us at ${SUPPORT_PHONE} — we're happy to help you find the right fit.</p>
       </td></tr>`;
 
     return {
       subject: meta.subjectLine,
       previewText: meta.previewText,
-      html: wrapEmailHtml('Customer Reviews — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+      html: wrapEmailHtml('Your Welcome Discount — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
     };
   }
 );

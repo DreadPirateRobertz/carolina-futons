@@ -162,49 +162,51 @@ describe('getWelcomeDay3Template', () => {
 
 describe('getWelcomeDay7Template', () => {
   it('returns subject, previewText, and html', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.subject).toBeTruthy();
     expect(result.previewText).toBeTruthy();
     expect(result.html).toBeTruthy();
   });
 
   it('subject matches welcome_series_3 registry entry', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.subject).toBe(_TEMPLATE_REGISTRY.welcome_series_3.subjectLine);
   });
 
   it('previewText matches welcome_series_3 registry entry', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.previewText).toBe(_TEMPLATE_REGISTRY.welcome_series_3.previewText);
   });
 
   it('html includes first name when provided', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.html).toContain('Carol');
   });
 
-  it('html contains social proof / reviews content', async () => {
-    const result = await getWelcomeDay7Template('Carol');
-    expect(result.html.toLowerCase()).toMatch(/review|customer|saying/);
+  it('html has urgency / purchase nudge framing', async () => {
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
+    expect(result.html.toLowerCase()).toMatch(/expire|discount|save|off/);
   });
 
-  it('html contains a Read More Reviews CTA', async () => {
-    const result = await getWelcomeDay7Template('Carol');
-    expect(result.html).toContain('Read More Reviews');
+  it('html contains a Shop Now CTA linking to /shop', async () => {
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
+    expect(result.html).toContain('carolinafutons.com/shop');
+    expect(result.html.toLowerCase()).toContain('shop');
   });
 
-  it('html links to /reviews page', async () => {
-    const result = await getWelcomeDay7Template('Carol');
-    expect(result.html).toContain('carolinafutons.com/reviews');
+  it('html includes discount code when provided', async () => {
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
+    expect(result.html).toContain('WELCOME10');
   });
 
-  it('html contains a Browse Our Collection link', async () => {
-    const result = await getWelcomeDay7Template('Carol');
-    expect(result.html).toContain('Browse Our Collection');
+  it('html omits discount urgency block when code is empty', async () => {
+    const result = await getWelcomeDay7Template('Carol', '');
+    // No discount code, but CTA and nudge framing still present
+    expect(result.html).toContain('carolinafutons.com/shop');
   });
 
   it('html is a complete HTML document', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.html).toContain('<!DOCTYPE html>');
     expect(result.html).toContain('</html>');
   });
@@ -216,12 +218,17 @@ describe('getWelcomeDay7Template', () => {
   });
 
   it('sanitizes firstName against XSS', async () => {
-    const result = await getWelcomeDay7Template('<b>injection</b>');
+    const result = await getWelcomeDay7Template('<b>injection</b>', 'CODE');
     expect(result.html).not.toContain('<b>injection</b>');
   });
 
+  it('sanitizes discountCode against XSS', async () => {
+    const result = await getWelcomeDay7Template('Carol', '<script>bad()</script>');
+    expect(result.html).not.toContain('<script>');
+  });
+
   it('html contains unsubscribe link', async () => {
-    const result = await getWelcomeDay7Template('Carol');
+    const result = await getWelcomeDay7Template('Carol', 'WELCOME10');
     expect(result.html).toContain('unsubscribe');
   });
 });

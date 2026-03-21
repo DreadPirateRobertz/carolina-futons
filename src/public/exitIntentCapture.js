@@ -106,11 +106,6 @@ export function detectScrollExit(velocityPxPerMs) {
 }
 
 /**
- * Submit exit-intent email capture: validate, subscribe, queue welcome series.
- * @param {string} email - Email from the popup form
- * @returns {Promise<{success: boolean, discountCode?: string, error?: string, message?: string}>}
- */
-/**
  * Open the exit-intent lightbox element.
  * Requires Stilgar to add one Lightbox element named `exitIntentLightbox` in the editor.
  * Uses dynamic import so this module remains testable in vitest (no Wix DOM dependency).
@@ -127,6 +122,11 @@ export async function openExitIntentLightbox(data) {
   }
 }
 
+/**
+ * Submit exit-intent email capture: validate, subscribe, queue welcome series.
+ * @param {string} email - Email from the popup form
+ * @returns {Promise<{success: boolean, discountCode?: string, error?: string, message?: string}>}
+ */
 export async function submitExitCapture(email) {
   if (!validateCaptureEmail(email)) {
     return { success: false, error: 'invalid_email' };

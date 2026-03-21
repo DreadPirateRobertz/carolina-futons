@@ -45,7 +45,7 @@ const SEQUENCES = {
     steps: [
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
       { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'Social proof + UGC' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
     ],
     abTestStep: 1,
     abVariants: {
