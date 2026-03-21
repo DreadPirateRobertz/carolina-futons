@@ -17,6 +17,7 @@ import {
   buildShareUrls,
   getRelatedPosts,
 } from 'public/blogHelpers';
+import { renderBreadcrumbs } from 'public/navigationHelpers';
 import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
@@ -31,6 +32,12 @@ $w.onReady(async function () {
 
     const post = getBlogPost(slug);
     if (!post) return; // Not a pillar post — no custom enhancements
+
+    // ── Post Header (title, body, author, date) ───────────────────────
+    initPostHeader(post);
+
+    // ── Breadcrumbs ────────────────────────────────────────────────────
+    initPostBreadcrumbs(post);
 
     // ── Reading Time Badge ────────────────────────────────────────────
     initReadingTime(post);
@@ -82,6 +89,36 @@ $w.onReady(async function () {
     console.error('Blog post page init error:', err);
   }
 });
+
+// ── Post Header ───────────────────────────────────────────────────────
+// Sets the post title, excerpt body, author byline, and date near the top of the page
+
+function initPostHeader(post) {
+  try {
+    try { $w('#blogTitle').text = post.title || ''; } catch (e) {}
+    try { $w('#blogBody').text = post.excerpt || ''; } catch (e) {}
+    const bio = buildAuthorBio();
+    try { $w('#blogAuthor').text = bio.name; } catch (e) {}
+    try { $w('#blogDate').text = formatPublishDate(post.publishDate); } catch (e) {}
+  } catch (err) {
+    console.error('Post header error:', err);
+  }
+}
+
+// ── Breadcrumbs ────────────────────────────────────────────────────────
+// Home > Blog > [Post Title] — uses #breadcrumb1/2/3 + #breadcrumbSchemaHtml
+
+function initPostBreadcrumbs(post) {
+  try {
+    renderBreadcrumbs($w, [
+      { label: 'Home', path: '/' },
+      { label: 'Blog', path: '/blog' },
+      { label: post.title || 'Post', path: `/blog/${post.slug}` },
+    ]);
+  } catch (err) {
+    console.error('Breadcrumbs error:', err);
+  }
+}
 
 // ── Reading Time Badge ────────────────────────────────────────────────
 

@@ -116,6 +116,10 @@ vi.mock('public/pageSeo.js', () => ({
   initPageSeo: vi.fn(),
 }));
 
+vi.mock('public/navigationHelpers', () => ({
+  renderBreadcrumbs: vi.fn(),
+}));
+
 vi.mock('wix-window-frontend', () => ({
   openUrl: vi.fn(),
 }));
@@ -130,6 +134,7 @@ const { makeClickable } = await import('public/a11yHelpers');
 const { estimateReadingTime, buildAuthorBio, getRelatedPosts } = await import('public/blogHelpers');
 const { getBlogArticleSchema } = await import('backend/seoHelpers.web');
 const { initPageSeo } = await import('public/pageSeo.js');
+const { renderBreadcrumbs } = await import('public/navigationHelpers');
 
 // ── Import Page ─────────────────────────────────────────────────────
 
@@ -288,6 +293,43 @@ describe('Blog Post Page', () => {
       const linkCall = makeClickable.mock.calls.find(c => c[0] === $item('#relatedPostLink'));
       expect(linkCall).toBeDefined();
       expect(linkCall[2].ariaLabel).toBe('Read related: Choosing the Right Mattress');
+    });
+  });
+
+  // ── Post Header ─────────────────────────────────────────────────
+
+  describe('post header', () => {
+    it('sets blogTitle from post.title', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogTitle').text).toBe('How to Care for Your Futon');
+    });
+
+    it('sets blogBody from post.excerpt', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogBody').text).toBe(mockPost.excerpt);
+    });
+
+    it('sets blogAuthor from author bio name', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogAuthor').text).toBe('Carolina Futons');
+    });
+
+    it('sets blogDate to formatted publish date', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogDate').text).toBe('January 15, 2026');
+    });
+  });
+
+  // ── Breadcrumbs ──────────────────────────────────────────────────
+
+  describe('breadcrumbs', () => {
+    it('calls renderBreadcrumbs with Home > Blog > post title trail', async () => {
+      await onReadyHandler();
+      expect(renderBreadcrumbs).toHaveBeenCalledWith($w, [
+        { label: 'Home', path: '/' },
+        { label: 'Blog', path: '/blog' },
+        { label: 'How to Care for Your Futon', path: '/blog/futon-care-guide' },
+      ]);
     });
   });
 

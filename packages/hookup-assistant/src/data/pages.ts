@@ -1451,6 +1451,24 @@ export const PAGES: PageDef[] = [
     est: '35 min',
     sections: [
       {
+        name: 'Post Header',
+        elements: [
+          { id: 'blogTitle', type: 'Text', notes: 'Post title heading' },
+          { id: 'blogBody', type: 'Text', notes: 'Post excerpt / intro copy' },
+          { id: 'blogAuthor', type: 'Text', notes: 'Author byline — Carolina Futons' },
+          { id: 'blogDate', type: 'Text', notes: 'Formatted publish date' },
+        ],
+      },
+      {
+        name: 'Breadcrumbs',
+        elements: [
+          { id: 'breadcrumb1', type: 'Text', notes: 'Home link' },
+          { id: 'breadcrumb2', type: 'Text', notes: 'Blog link' },
+          { id: 'breadcrumb3', type: 'Text', notes: 'Current post title (aria-current=page)' },
+          { id: 'breadcrumbSchemaHtml', type: 'HtmlComponent', notes: 'Breadcrumb JSON-LD schema' },
+        ],
+      },
+      {
         name: 'Post Metadata',
         elements: [
           { id: 'postReadTime', type: 'Text', notes: "Reading time — e.g. '5 min read'" },
