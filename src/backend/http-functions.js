@@ -1,6 +1,6 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, notFound, serverError, forbidden, badRequest, unauthorized } from 'wix-http-functions';
+import { ok, notFound, serverError, forbidden, badRequest, unauthorized, response } from 'wix-http-functions';
 import { currentMember } from 'wix-members-backend';
 import { accounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
 import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
@@ -1226,6 +1226,189 @@ export function get_topicCluster(request) {
     console.error('HTTP function error (topicCluster):', err.name, err.message, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'Failed to load topic cluster.' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+// ── Referral Program Endpoints ────────────────────────────────────────
+// GET  /_functions/generateReferralLink — requires auth
+// POST /_functions/trackReferral — requires auth (prevents fraud)
+
+const REFERRAL_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/**
+ * @function get_generateReferralLink
+ * @returns {Promise<Object>} { referralCode, shareUrl, stats }
+ */
+export async function get_generateReferralLink() {
+  try {
+    const member = await currentMember.getMember();
+    if (!member) {
+      return response({
+        status: 401,
+        body: JSON.stringify({ error: 'Authentication required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const memberId = member._id;
+
+    // Reuse existing referral code if present
+    const existing = await wixData.query('Referrals')
+      .eq('referrerMemberId', memberId)
+      .find();
+
+    let referralCode;
+    if (existing.items.length > 0) {
+      referralCode = existing.items[0].referralCode;
+    } else {
+      referralCode = Array.from({ length: 8 }, () =>
+        REFERRAL_CHARSET[Math.floor(Math.random() * REFERRAL_CHARSET.length)]
+      ).join('');
+      await wixData.insert('Referrals', {
+        referrerMemberId: memberId,
+        referralCode,
+        status: 'pending',
+        refereeMemberId: '',
+      });
+    }
+
+    // Compute stats
+    const allReferrals = await wixData.query('Referrals')
+      .eq('referrerMemberId', memberId)
+      .ne('status', 'pending')
+      .find();
+
+    const pendingCredits = await wixData.query('ReferralCredits')
+      .eq('memberId', memberId)
+      .eq('status', 'pending')
+      .find();
+
+    const availableCredits = await wixData.query('ReferralCredits')
+      .eq('memberId', memberId)
+      .eq('status', 'available')
+      .find();
+
+    const pendingRewards = pendingCredits.items.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const earnedRewards = availableCredits.items.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const shareUrl = `https://carolinafutons.com/?ref=${referralCode}`;
+
+    return ok({
+      body: JSON.stringify({
+        referralCode,
+        shareUrl,
+        stats: { totalReferrals: allReferrals.totalCount, pendingRewards, earnedRewards },
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('HTTP function error (generateReferralLink):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+/**
+ * @function post_trackReferral
+ * @param {Object} request - Wix HTTP request object. Body: { referralCode }
+ * @returns {Promise<Object>} { tracked, referrerId }
+ *
+ * Requires authentication. newMemberId is taken from the authenticated member
+ * to prevent referral fraud (users cannot claim referrals on behalf of others).
+ */
+export async function post_trackReferral(request) {
+  try {
+    // Auth required — prevents unauthenticated users from forging newMemberId
+    const member = await currentMember.getMember();
+    if (!member) {
+      return response({
+        status: 401,
+        body: JSON.stringify({ error: 'Authentication required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const newMemberId = member._id;
+
+    // Parse body
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { referralCode } = body;
+    if (!referralCode || typeof referralCode !== 'string') {
+      return badRequest({
+        body: JSON.stringify({ error: 'referralCode is required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cleanCode = sanitize(String(referralCode), 20);
+
+    // Find referral by code
+    const result = await wixData.query('Referrals')
+      .eq('referralCode', cleanCode)
+      .find();
+
+    if (!result.items.length) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid referral code' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const referral = result.items[0];
+
+    // Prevent self-referral
+    if (referral.referrerMemberId === newMemberId) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Self-referral not allowed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prevent referral hijacking — member cannot apply a second referral code
+    const existingAttribution = await wixData.query('Referrals')
+      .eq('refereeMemberId', newMemberId)
+      .ne('status', 'pending')
+      .find();
+    if (existingAttribution.items.length > 0) {
+      return response({
+        status: 409,
+        body: JSON.stringify({ error: 'Member already has a referral attribution' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prevent overwriting an already-claimed referral (any member)
+    if (referral.status !== 'pending') {
+      return response({
+        status: 409,
+        body: JSON.stringify({ error: 'Referral already attributed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    await wixData.update('Referrals', {
+      ...referral,
+      refereeMemberId: newMemberId,
+      status: 'signed_up',
+    });
+
+    return ok({
+      body: JSON.stringify({ tracked: true, referrerId: referral.referrerMemberId }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('HTTP function error (trackReferral):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
     });
   }
