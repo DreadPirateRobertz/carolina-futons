@@ -264,6 +264,138 @@ export const getPhotoGallery = webMethod(
   }
 );
 
+// ── UGC engagement helpers ──────────────────────────────────────────────────
+
+// Closed set prevents arbitrary strings reaching the DB and enables future UI localization.
+const VALID_REPORT_REASONS = ['inappropriate', 'spam', 'fake', 'offensive', 'other'];
+// Number of reports required to automatically demote a review back to pending for re-moderation.
+const REPORT_ESCALATION_THRESHOLD = 5;
+
+/**
+ * Mark a photo review as helpful. Requires authentication; cannot vote on own review.
+ * Only approved/featured reviews are eligible.
+ *
+ * @param {string} reviewId - Review ID.
+ * @returns {Promise<{success: boolean, helpfulCount?: number, error?: string}>}
+ */
+export const markHelpful = webMethod(
+  Permissions.SiteMember,
+  async (reviewId) => {
+    try {
+      const memberId = await requireMember();
+
+      const cleanId = validateId(reviewId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid review ID is required.' };
+      }
+
+      const review = await wixData.get('PhotoReviews', cleanId);
+      if (!review) {
+        return { success: false, error: 'Review not found.' };
+      }
+
+      if (review.memberId === memberId) {
+        return { success: false, error: 'Cannot mark own review as helpful.' };
+      }
+
+      if (!['approved', 'featured'].includes(review.status)) {
+        return { success: false, error: 'Review not available for helpful votes.' };
+      }
+
+      const helpfulCount = (review.helpfulCount || 0) + 1;
+      await wixData.update('PhotoReviews', { ...review, helpfulCount });
+      return { success: true, helpfulCount };
+    } catch (err) {
+      console.error('[photoReviews] Error marking review helpful:', err);
+      return { success: false, error: 'Failed to mark review helpful.' };
+    }
+  }
+);
+
+/**
+ * Report a photo review for moderation. Escalates to pending when report threshold is reached.
+ *
+ * @param {string} reviewId - Review ID.
+ * @param {string} reason - Report reason: inappropriate|spam|fake|offensive|other
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export const reportPhotoReview = webMethod(
+  Permissions.SiteMember,
+  async (reviewId, reason) => {
+    try {
+      await requireMember();
+
+      const cleanId = validateId(reviewId);
+      if (!cleanId) {
+        return { success: false, error: 'Valid review ID is required.' };
+      }
+
+      const cleanReason = typeof reason === 'string' ? reason.trim() : '';
+      if (!VALID_REPORT_REASONS.includes(cleanReason)) {
+        return { success: false, error: `Invalid reason. Must be one of: ${VALID_REPORT_REASONS.join(', ')}.` };
+      }
+
+      const review = await wixData.get('PhotoReviews', cleanId);
+      if (!review) {
+        return { success: false, error: 'Review not found.' };
+      }
+
+      const reportCount = (review.reportCount || 0) + 1;
+      const update = { ...review, reportCount };
+
+      if (reportCount >= REPORT_ESCALATION_THRESHOLD) {
+        update.status = 'pending';
+      }
+
+      await wixData.update('PhotoReviews', update);
+      return { success: true };
+    } catch (err) {
+      console.error('[photoReviews] Error reporting review:', err);
+      return { success: false, error: 'Failed to report review.' };
+    }
+  }
+);
+
+/**
+ * Get pending photo reviews for admin moderation queue.
+ * Returns oldest first (submittedAt ascending) so oldest reviews get attention first.
+ * Access is enforced by Permissions.Admin at the Wix platform level.
+ *
+ * @param {number} [limit=50] - Max reviews to return (clamped 1–200).
+ * @returns {Promise<{success: boolean, reviews: Array, totalCount: number, error?: string}>}
+ */
+export const getPendingReviews = webMethod(
+  Permissions.Admin,
+  async (limit = 50) => {
+    try {
+      const maxResults = Math.max(1, Math.min(200, Math.round(Number(limit) || 50)));
+
+      const result = await wixData.query('PhotoReviews')
+        .eq('status', 'pending')
+        .ascending('submittedAt')
+        .limit(maxResults)
+        .find();
+
+      const reviews = result.items.map(item => ({
+        _id: item._id,
+        productId: item.productId,
+        productName: item.productName,
+        reviewText: item.reviewText,
+        rating: item.rating,
+        photoUrl: item.photoUrl,
+        status: item.status,
+        submittedAt: item.submittedAt,
+        reportCount: item.reportCount || 0,
+      }));
+
+      return { success: true, reviews, totalCount: result.totalCount };
+    } catch (err) {
+      console.error('[photoReviews] Error getting pending reviews:', err);
+      return { success: false, error: 'Failed to load pending reviews.', reviews: [], totalCount: 0 };
+    }
+  }
+);
+
 /**
  * Get review statistics for a product (average rating, count by star, photo count).
  *
