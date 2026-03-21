@@ -368,6 +368,37 @@ describe('Blog page handlers', () => {
       expect(getEl('#blogEmptyState').expand).toHaveBeenCalled();
       expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
     });
+
+    it('expands #blogPagination and shows page indicator when totalPages > 1', async () => {
+      const { getPaginatedPosts } = await import('public/blogHelpers');
+      getPaginatedPosts.mockReturnValueOnce({
+        items: [{ title: 'Post 1', slug: 'post-1', excerpt: 'Exc', category: 'Guides', publishDate: '2026-01-15' }],
+        currentPage: 1,
+        totalPages: 3,
+        totalCount: 25,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogPagination').expand).toHaveBeenCalled();
+      expect(getEl('#pageIndicator').text).toBe('Page 1 of 3');
+    });
+
+    it('enables #nextPageBtn and disables #prevPageBtn on first page', async () => {
+      const { getPaginatedPosts } = await import('public/blogHelpers');
+      getPaginatedPosts.mockReturnValueOnce({
+        items: [{ title: 'Post 1', slug: 'post-1', excerpt: 'Exc', category: 'Guides', publishDate: '2026-01-15' }],
+        currentPage: 1,
+        totalPages: 2,
+        totalCount: 15,
+      });
+      await onReadyHandler();
+      expect(getEl('#prevPageBtn').disable).toHaveBeenCalled();
+      expect(getEl('#nextPageBtn').enable).toHaveBeenCalled();
+    });
+
+    it('shows post count label', async () => {
+      await onReadyHandler();
+      expect(getEl('#postCount').text).toMatch(/\d.* posts/);
+    });
   });
 
   // ── Related Products Sidebar ──────────────────────────────────────

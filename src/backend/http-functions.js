@@ -239,7 +239,7 @@ export function get_blogRssFeed() {
     xml += `    <atom:link href="${escapeXml(SITE_URL + '/_functions/blogRssFeed')}" rel="self" type="application/rss+xml" />\n`;
 
     for (const post of sorted) {
-      const postUrl = `${SITE_URL}/blog/${post.slug}`;
+      const postUrl = `${SITE_URL}/blog/${encodeURIComponent(post.slug || '')}`;
       xml += '    <item>\n';
       xml += `      <title>${escapeXml(post.title || '')}</title>\n`;
       xml += `      <link>${escapeXml(postUrl)}</link>\n`;

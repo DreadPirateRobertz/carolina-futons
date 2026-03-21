@@ -1,5 +1,5 @@
 // Blog.js - Blog Page
-// Card grid layout with featured post hero, category filters,
+// Paginated list layout with featured post hero, category filters,
 // reading time badges, SEO schema, social sharing, and related products sidebar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';

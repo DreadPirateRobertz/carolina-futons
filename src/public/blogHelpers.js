@@ -121,8 +121,9 @@ export function buildAuthorBio() {
  * Paginate an array of posts.
  * @param {Array} posts - Full filtered post list
  * @param {number} page - 1-based page number
- * @param {number} perPage - Items per page (default 9)
+ * @param {number} [perPage=9] - Items per page; falsy or ≤0 falls back to 9
  * @returns {{ items: Array, currentPage: number, totalPages: number, totalCount: number }}
+ *   totalPages is always ≥ 1 (even for empty posts) so currentPage ≤ totalPages always holds.
  */
 export function getPaginatedPosts(posts, page, perPage) {
   const safePosts = Array.isArray(posts) ? posts : [];
