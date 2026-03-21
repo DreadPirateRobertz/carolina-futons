@@ -1,6 +1,6 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, serverError, forbidden, badRequest } from 'wix-http-functions';
+import { ok, notFound, serverError, forbidden, badRequest } from 'wix-http-functions';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -13,9 +13,10 @@ import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/se
 import { generateBlogRssFeed } from 'backend/blogRssFeed.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
+import { CLUSTERS, SITE_URL as CLUSTER_SITE_URL } from 'backend/utils/topicClusterData';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1056,6 +1057,64 @@ export function get_robotsTxt() {
     return serverError({
       body: 'Error generating robots.txt',
       headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+}
+
+// ── Topic Cluster ─────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/topicCluster/{slug}
+//
+// Note: topicClusters.web.js wraps its exports in webMethod(), which cannot
+// be resolved from http-functions.js context (same restriction as blogRssFeed).
+// Cluster data is sourced from the shared backend/utils/topicClusterData module.
+export function get_topicCluster(request) {
+  try {
+    const rawSlug = (request && Array.isArray(request.path) && request.path[0]) || '';
+    const slug = validateSlug(rawSlug) || sanitize(rawSlug, 100);
+
+    if (!slug) {
+      return badRequest({
+        body: JSON.stringify({ success: false, error: 'Slug is required.' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cluster = CLUSTERS[slug];
+    if (!cluster) {
+      return notFound({
+        body: JSON.stringify({ success: false, error: 'Topic cluster not found.', cluster: null }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const data = {
+      success: true,
+      cluster: {
+        pillarSlug: cluster.pillarSlug,
+        pillarTitle: cluster.pillarTitle,
+        pillarUrl: `${CLUSTER_SITE_URL}/buying-guides/${cluster.pillarSlug}`,
+        topic: cluster.topic,
+        keywords: cluster.keywords,
+        spokePages: cluster.spokePages.map(sp => ({
+          ...sp,
+          url: `${CLUSTER_SITE_URL}/buying-guides/${sp.slug}`,
+        })),
+        spokeCount: cluster.spokePages.length,
+      },
+    };
+
+    return ok({
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (topicCluster):', err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'Failed to load topic cluster.' }),
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
