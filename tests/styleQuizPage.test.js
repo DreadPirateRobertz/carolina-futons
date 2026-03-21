@@ -328,7 +328,7 @@ describe('Style Quiz Page', () => {
     });
   });
 
-  describe('S2 — option card selection and next button enable', () => {
+  describe('S2 — option card selection: next button enable/disable', () => {
     it('disables next button when a new step renders (no selection yet)', async () => {
       await onReadyHandler();
       expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
@@ -429,6 +429,54 @@ describe('Style Quiz Page', () => {
       nextCall[1]();
 
       expect(getEl('#quizValidation').expand).not.toHaveBeenCalled();
+    });
+
+    it('enables next button when an option is activated via keyboard Enter', async () => {
+      await onReadyHandler();
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+
+      // Simulate keyboard Enter on option container
+      const keyPressHandler = getEl('item:#optionContainer').onKeyPress.mock.calls[0][0];
+      keyPressHandler({ key: 'Enter' });
+
+      expect(getEl('#quizNextBtn').enable).toHaveBeenCalled();
+    });
+
+    it('disables next button after quiz is restarted', async () => {
+      await onReadyHandler();
+      // Select an option to enable the button
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Restart the quiz
+      const { makeClickable } = await import('public/a11yHelpers');
+      const restartHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Restart quiz')[1];
+      getEl('#quizNextBtn').disable.mockClear();
+      restartHandler();
+
+      expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
+    });
+
+    it('disables next button on the new step after navigating forward', async () => {
+      await onReadyHandler();
+      // Select option on step 0
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Advance to step 1 (no answer yet for primaryUse)
+      const { makeClickable } = await import('public/a11yHelpers');
+      const nextHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Next step')[1];
+      getEl('#quizNextBtn').disable.mockClear();
+      nextHandler();
+
+      // Step 1 has no answer yet — next button should be disabled again
+      expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
     });
   });
 });
