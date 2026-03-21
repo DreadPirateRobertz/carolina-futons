@@ -142,7 +142,7 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
  * Extract UTC month (1-12) and day (1-31) from a birthday Date value.
  * Uses UTC to avoid timezone shift on bare date strings (e.g. "1990-05-15").
  * Returns null if the value is absent or unparseable.
- * @private
+ * @internal Exported for unit testing only. Not part of the public module API.
  */
 export function _parseBirthdayMonthDay(birthdayValue) {
   if (!birthdayValue) return null;
@@ -395,12 +395,13 @@ export async function wixStores_onInventoryVariantUpdated(event) {
 
 /**
  * Fired when a site member's profile is updated.
- * If the `birthday` Date field changed, derives and writes `birthday_month`
- * (1-12) and `birthday_day` (1-31) as searchable int fields so the daily
- * birthday cron can query by today's month/day without a full-table scan.
+ * Derives and writes `birthday_month` (1-12) and `birthday_day` (1-31) as
+ * searchable int fields so the daily birthday cron can query by today's
+ * month/day without a full-table scan.
  *
- * No-op if birthday is absent or unchanged, so normal profile updates
- * (name changes, avatar updates, etc.) complete without any extra writes.
+ * No-op if birthday is absent or unparseable. Writes on every update where
+ * birthday is present — Wix does not expose previousEntity for member events,
+ * so unchanged-detection is not possible here.
  */
 export async function wixMembers_onMemberUpdated(event) {
   const member = event.entity || event;
