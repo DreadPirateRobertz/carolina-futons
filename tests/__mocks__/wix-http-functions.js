@@ -25,4 +25,9 @@ export function badRequest({ body, headers }) {
   return { status: 400, body, headers: headers || {} };
 }
 
+// Generic response for status codes not covered by named helpers (e.g. 401, 409)
+export function response({ status, body, headers }) {
+  return { status, body, headers: headers || {} };
+}
+
 export function __reset() {}
