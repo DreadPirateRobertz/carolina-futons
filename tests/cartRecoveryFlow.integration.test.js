@@ -249,7 +249,8 @@ describe('Recovery Email Queuing', () => {
     expect(queued[0].variables.discountCode).toBe('');
     expect(queued[0].variables.discountAvailable).toBe(false);
     expect(queued[1].variables.discountCode).toBe('');
-    expect(queued[2].variables.discountCode).toBe('COMEBACK15');
+    // Step 3 now uses a single-use coupon (RECOVER- prefix) instead of static secret
+    expect(queued[2].variables.discountCode).toMatch(/^RECOVER-/);
     expect(queued[2].variables.discountAvailable).toBe(true);
   });
 

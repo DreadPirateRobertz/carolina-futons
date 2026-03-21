@@ -35,6 +35,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -398,14 +399,6 @@ export const triggerAbandonedCartRecovery = webMethod(
         .find();
 
       let cartsProcessed = 0;
-      let discountCode = '';
-      let discountAvailable = false;
-      try {
-        discountCode = await getSecret('RECOVERY_DISCOUNT_CODE');
-        discountAvailable = !!discountCode;
-      } catch (e) {
-        console.warn('[emailAutomation] Cart recovery discount unavailable, emails will omit discount:', e.message);
-      }
 
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -448,6 +441,19 @@ export const triggerAbandonedCartRecovery = webMethod(
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
+        // Step 3 gets a unique single-use coupon via couponsService
+        let recoveryCouponCode = '';
+        let recoveryCouponAvailable = false;
+        try {
+          const couponResult = await createCartRecoveryCoupon(cartEmail);
+          if (couponResult.success) {
+            recoveryCouponCode = couponResult.code;
+            recoveryCouponAvailable = true;
+          }
+        } catch (e) {
+          console.warn('[emailAutomation] Cart recovery coupon unavailable for', cartEmail, ':', e.message);
+        }
+
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
 
@@ -459,8 +465,8 @@ export const triggerAbandonedCartRecovery = webMethod(
               buyerName: cart.buyerName || '',
               cartTotal: String(cart.cartTotal || 0),
               itemSummary,
-              discountCode: step.step === 3 ? discountCode : '',
-              discountAvailable: step.step === 3 ? discountAvailable : false,
+              discountCode: step.step === 3 ? recoveryCouponCode : '',
+              discountAvailable: step.step === 3 ? recoveryCouponAvailable : false,
               checkoutId: cart.checkoutId,
               email: cartEmail,
             },

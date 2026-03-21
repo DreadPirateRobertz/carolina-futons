@@ -268,6 +268,51 @@ export const generateRecoveryCoupon = webMethod(
   }
 );
 
+/**
+ * Create a single-use cart recovery coupon (10% off, valid 7 days).
+ *
+ * @function createCartRecoveryCoupon
+ * @param {string} email - Buyer's email (used for coupon name and validation)
+ * @returns {Promise<Object>} { success, code, discount, expiresIn }
+ * @permission Admin — called by emailAutomation during cart recovery sequencing
+ */
+export const createCartRecoveryCoupon = webMethod(
+  Permissions.Admin,
+  async (email) => {
+    try {
+      if (!email) return { success: false, message: 'Email required' };
+
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, message: 'Invalid email' };
+      }
+
+      const coupon = await coupons.createCoupon({
+        name: `Cart Recovery 10% Off - ${cleanEmail}`,
+        code: await generateCode('RECOVER'),
+        percentOffRate: 10,
+        scope: { namespace: 'stores' },
+        minimumSubtotal: 0,
+        limitPerCustomer: 1,
+        limitedToOneItem: false,
+        active: true,
+        startTime: new Date(),
+        expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      });
+
+      return {
+        success: true,
+        code: coupon.code,
+        discount: '10%',
+        expiresIn: '7 days',
+      };
+    } catch (err) {
+      console.error('Error creating cart recovery coupon:', err);
+      return { success: false, message: 'Failed to create coupon' };
+    }
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 async function generateCode(prefix) {
