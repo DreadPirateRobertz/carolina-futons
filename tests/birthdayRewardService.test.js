@@ -10,7 +10,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset, __seed, __getInserted } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
-import { __reset as __resetSecrets, __setSecrets } from 'wix-secrets-backend';
 
 // ── Mock couponsService.web (already-built helpers) ───────────────────
 
@@ -60,9 +59,7 @@ function makeProfile(overrides = {}) {
 beforeEach(() => {
   __reset();
   __resetCrm();
-  __resetSecrets();
   vi.clearAllMocks();
-  __setSecrets({ SITE_OWNER_CONTACT_ID: 'admin-contact-1' });
   couponMocks.createBirthdayCoupon.mockResolvedValue({ success: true, code: 'BDAY15', discount: 15 });
   couponMocks.createTierUpgradeCoupon.mockResolvedValue({ success: true, code: 'ANNIV10', discount: 10 });
 });
@@ -193,6 +190,21 @@ describe('checkAndSendBirthdayRewards — resilience', () => {
     expect(result).toHaveProperty('sent');
     expect(result).toHaveProperty('skipped');
     expect(result).toHaveProperty('failed');
+  });
+
+  it('does not insert dedup record when email fails', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    __failNextEmail();
+    await checkAndSendBirthdayRewards();
+    expect(__getInserted('BirthdayRewards').length).toBe(0);
+  });
+
+  it('increments failed (not sent) when email fails', async () => {
+    __seed('MemberProfiles', [makeProfile()]);
+    __failNextEmail();
+    const result = await checkAndSendBirthdayRewards();
+    expect(result.sent).toBe(0);
+    expect(result.failed).toBe(1);
   });
 });
 

@@ -14,11 +14,13 @@
  * @requires wix-crm-backend
  * @requires wix-data
  * @requires backend/couponsService.web
+ * @requires backend/utils/errorHandler
  */
 import { webMethod, Permissions } from 'wix-web-module';
 import { triggeredEmails } from 'wix-crm-backend';
 import wixData from 'wix-data';
 import { createBirthdayCoupon, createTierUpgradeCoupon } from 'backend/couponsService.web';
+import { logError } from 'backend/utils/errorHandler';
 
 const ANNIVERSARY_MILESTONES = {
   1: { rewardType: 'anniversary_1yr', discountPercent: 10, emailTemplate: 'anniversary_1yr' },
@@ -51,34 +53,66 @@ export const checkAndSendBirthdayRewards = webMethod(
     const day = today.getDate();
     const year = today.getFullYear();
 
-    const profilesResult = await wixData
-      .query('MemberProfiles')
-      .eq('birthdayMonth', month)
-      .eq('birthdayDay', day)
-      .find();
+    let profilesResult;
+    try {
+      profilesResult = await wixData
+        .query('MemberProfiles')
+        .eq('birthdayMonth', month)
+        .eq('birthdayDay', day)
+        .limit(1000)
+        .find();
+    } catch (e) {
+      logError('birthdayRewardService.checkAndSendBirthdayRewards.queryProfiles', e);
+      return { sent: 0, skipped: 0, failed: 0 };
+    }
 
     let sent = 0, skipped = 0, failed = 0;
 
     for (const profile of profilesResult.items) {
-      const already = await isAlreadySent(profile.memberId, 'birthday', year);
+      let already;
+      try {
+        already = await isAlreadySent(profile.memberId, 'birthday', year);
+      } catch (e) {
+        logError('birthdayRewardService.checkAndSendBirthdayRewards.isAlreadySent', e);
+        failed++;
+        continue;
+      }
       if (already) { skipped++; continue; }
 
-      const couponResult = await createBirthdayCoupon(profile.email, profile.memberName);
-      if (!couponResult.success) { failed++; continue; }
+      let couponResult;
+      try {
+        couponResult = await createBirthdayCoupon(profile.email, profile.memberName);
+      } catch (e) {
+        logError('birthdayRewardService.checkAndSendBirthdayRewards.createCoupon', e);
+        failed++;
+        continue;
+      }
+      if (!couponResult.success) {
+        logError('birthdayRewardService.checkAndSendBirthdayRewards.createCoupon', couponResult.message || 'Coupon creation failed', { silent: true });
+        failed++;
+        continue;
+      }
 
       try {
         await triggeredEmails.emailContact('birthday_reward', profile.contactId, {
           variables: { couponCode: couponResult.code },
         });
       } catch (e) {
-        console.error('[birthdayRewardService] Birthday email failed for member', profile.memberId, ':', e);
+        logError('birthdayRewardService.checkAndSendBirthdayRewards.email', e);
+        failed++;
+        continue; // do not insert dedup — allow retry on next cron run
       }
 
-      await wixData.insert('BirthdayRewards', {
-        memberId: profile.memberId,
-        rewardType: 'birthday',
-        year,
-      });
+      try {
+        await wixData.insert('BirthdayRewards', {
+          memberId: profile.memberId,
+          rewardType: 'birthday',
+          year,
+        });
+      } catch (e) {
+        // Email was sent but dedup failed — member may receive duplicate next run.
+        logError('birthdayRewardService.checkAndSendBirthdayRewards.dedupInsert', e);
+      }
 
       sent++;
     }
@@ -101,7 +135,13 @@ export const checkAndSendAnniversaryRewards = webMethod(
     const todayDay = today.getDate();
     const year = today.getFullYear();
 
-    const profilesResult = await wixData.query('MemberProfiles').find();
+    let profilesResult;
+    try {
+      profilesResult = await wixData.query('MemberProfiles').limit(1000).find();
+    } catch (e) {
+      logError('birthdayRewardService.checkAndSendAnniversaryRewards.queryProfiles', e);
+      return { sent: 0, skipped: 0, failed: 0 };
+    }
 
     let sent = 0, skipped = 0, failed = 0;
 
@@ -113,26 +153,51 @@ export const checkAndSendAnniversaryRewards = webMethod(
       const milestone = ANNIVERSARY_MILESTONES[yearsElapsed];
       if (!milestone) { skipped++; continue; }
 
-      const already = await isAlreadySent(profile.memberId, milestone.rewardType, year);
+      let already;
+      try {
+        already = await isAlreadySent(profile.memberId, milestone.rewardType, year);
+      } catch (e) {
+        logError('birthdayRewardService.checkAndSendAnniversaryRewards.isAlreadySent', e);
+        failed++;
+        continue;
+      }
       if (already) { skipped++; continue; }
 
-      const couponResult = await createTierUpgradeCoupon(profile.email, profile.memberName, milestone.discountPercent);
-      if (!couponResult.success) { failed++; continue; }
+      let couponResult;
+      try {
+        couponResult = await createTierUpgradeCoupon(profile.email, profile.memberName, milestone.discountPercent);
+      } catch (e) {
+        logError('birthdayRewardService.checkAndSendAnniversaryRewards.createCoupon', e);
+        failed++;
+        continue;
+      }
+      if (!couponResult.success) {
+        logError('birthdayRewardService.checkAndSendAnniversaryRewards.createCoupon', couponResult.message || 'Coupon creation failed', { silent: true });
+        failed++;
+        continue;
+      }
 
       try {
         const variables = { couponCode: couponResult.code };
         if (milestone.vipBadge) variables.vipBadge = true;
         await triggeredEmails.emailContact(milestone.emailTemplate, profile.contactId, { variables });
       } catch (e) {
-        console.error('[birthdayRewardService] Anniversary email failed for member', profile.memberId, ':', e);
+        logError('birthdayRewardService.checkAndSendAnniversaryRewards.email', e);
+        failed++;
+        continue; // do not insert dedup — allow retry on next cron run
       }
 
-      await wixData.insert('BirthdayRewards', {
-        memberId: profile.memberId,
-        rewardType: milestone.rewardType,
-        year,
-        discountPercent: milestone.discountPercent,
-      });
+      try {
+        await wixData.insert('BirthdayRewards', {
+          memberId: profile.memberId,
+          rewardType: milestone.rewardType,
+          year,
+          discountPercent: milestone.discountPercent,
+        });
+      } catch (e) {
+        // Email was sent but dedup failed — member may receive duplicate next run.
+        logError('birthdayRewardService.checkAndSendAnniversaryRewards.dedupInsert', e);
+      }
 
       sent++;
     }
