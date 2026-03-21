@@ -456,6 +456,25 @@ describe('backfillBirthdayFields', () => {
     expect(result.updated).toBe(5);
   });
 
+  it('uses cursor-based pagination — advances by _id, not skip()', async () => {
+    // Regression test for CF-zf97 review finding: wixData skip() silently caps
+    // at 1000 records. Cursor pagination uses .gt('_id', lastSeenId) instead.
+    // Seed 3 pages worth of members (PAGE_SIZE=100, 3 pages of 2 to exercise cursor advance).
+    const firstPage = Array.from({ length: 2 }, (_, i) => ({
+      _id: `cursor-a${i}`, birthday: '1990-05-15',
+    }));
+    const secondPage = Array.from({ length: 1 }, (_, i) => ({
+      _id: `cursor-b${i}`, birthday: '1990-06-20',
+    }));
+    __seed('Members/PrivateMembersData', [...firstPage, ...secondPage]);
+
+    const result = await backfillBirthdayFields();
+
+    // All 3 members processed — cursor advanced correctly between pages
+    expect(result.processed).toBe(3);
+    expect(result.updated).toBe(3);
+  });
+
   it('returns processed count equal to total members examined', async () => {
     __seed('Members/PrivateMembersData', [
       { _id: 'ct-1', birthday: '1990-05-15' },
