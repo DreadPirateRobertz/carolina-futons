@@ -239,7 +239,7 @@ export const calculateBundlePrice = webMethod(
       for (const tpl of templateMatch.items) {
         const tplIds = new Set(tpl.productIds || []);
         const matchCount = cleanIds.filter(id => tplIds.has(id)).length;
-        if (matchCount >= Math.min(tplIds.size, cleanIds.length) && tpl.discountPercent > discountPercent) {
+        if (matchCount >= tplIds.size && tpl.discountPercent > discountPercent) {
           discountPercent = tpl.discountPercent;
         }
       }

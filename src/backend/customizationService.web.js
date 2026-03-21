@@ -12,6 +12,7 @@
  * Dependencies: wix-web-module, wix-data, backend/utils/sanitize.
  */
 import { Permissions, webMethod } from 'wix-web-module';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 
@@ -114,6 +115,11 @@ export const saveConfiguration = webMethod(
         return { error: 'Missing required fields' };
       }
 
+      const member = await currentMember.getMember();
+      if (!member || validateId(config.memberId) !== member._id) {
+        return { error: 'Unauthorized' };
+      }
+
       const record = {
         productId: validateId(config.productId),
         memberId: validateId(config.memberId),
@@ -148,6 +154,9 @@ export const getSavedConfigurations = webMethod(
       const cleanProductId = validateId(productId);
       const cleanMemberId = validateId(memberId);
       if (!cleanProductId || !cleanMemberId) return [];
+
+      const member = await currentMember.getMember();
+      if (!member || cleanMemberId !== member._id) return [];
 
       const result = await wixData.query('SavedCustomizations')
         .eq('productId', cleanProductId)
@@ -186,7 +195,12 @@ export const getConfigurationById = webMethod(
       if (!cleanId) return null;
 
       const result = await wixData.get('SavedCustomizations', cleanId);
-      return result || null;
+      if (!result) return null;
+
+      const member = await currentMember.getMember();
+      if (!member || result.memberId !== member._id) return null;
+
+      return result;
     } catch (err) {
       console.error('Error fetching configuration:', err);
       return null;
