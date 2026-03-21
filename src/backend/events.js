@@ -408,6 +408,7 @@ export async function wixMembers_onMemberUpdated(event) {
   const memberId = member._id || '';
   const birthday = member.contactDetails?.birthdate ?? member.birthdate ?? null;
 
+  if (!memberId) return; // no member ID — cannot write
   if (!birthday) return; // no birthday set — nothing to derive
 
   const parsed = _parseBirthdayMonthDay(birthday);
@@ -417,12 +418,25 @@ export async function wixMembers_onMemberUpdated(event) {
   }
 
   try {
+    // get() before update() — wixData.update replaces the entire item,
+    // so we must spread the existing record to avoid destroying other fields.
+    const existing = await wixData.get('Members/PrivateMembersData', memberId);
+    if (!existing) {
+      console.warn('[events] wixMembers_onMemberUpdated: no PrivateMembersData record for member', memberId);
+      return;
+    }
     await wixData.update('Members/PrivateMembersData', {
-      _id: memberId,
+      ...existing,
       birthday_month: parsed.month,
       birthday_day: parsed.day,
     });
   } catch (err) {
     console.error(`[events] Failed to sync birthday fields for member ${memberId}:`, err?.message ?? err);
+    await logFailedEvent({
+      handler: 'wixMembers_onMemberUpdated',
+      error: err.message,
+      severity: 'LOW',
+      impact: `Birthday fields not synced for member ${memberId} — birthday cron may skip this member`,
+    });
   }
 }
