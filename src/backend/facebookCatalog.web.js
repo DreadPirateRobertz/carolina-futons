@@ -18,6 +18,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
+import { notifyOwner } from 'backend/notificationService.web';
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -526,6 +527,70 @@ export function getMetaRateLimits() {
  * Returns normalized fields per Meta's audience upload format.
  * @returns {Promise<Object>} { success, customers: Array }
  */
+/**
+ * Cron-callable: refresh the Facebook/Meta product catalog.
+ * Queries all products, validates + processes each through buildCatalogBatch,
+ * and sends an owner alert via notificationService if any products fail.
+ *
+ * Called every 6 hours by jobs.config. Runs in Wix cron/system context with Admin permissions.
+ *
+ * @returns {Promise<{success: boolean, processed: number, failed: number, errors: Array}>}
+ */
+export const refreshFacebookCatalog = webMethod(
+  Permissions.Admin,
+  async () => {
+    const PAGE_SIZE = 100;
+    let processed = 0;
+    let failed = 0;
+    const errors = [];
+
+    try {
+      let skip = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const products = await wixData.query('Stores/Products')
+          .limit(PAGE_SIZE)
+          .skip(skip)
+          .find();
+
+        if (products.items.length === 0) { hasMore = false; break; }
+
+        const batch = buildCatalogBatch(products.items);
+        processed += batch.processed;
+        failed += batch.failed;
+        if (batch.errors.length) errors.push(...batch.errors);
+
+        skip += PAGE_SIZE;
+        hasMore = products.items.length === PAGE_SIZE;
+      }
+
+      if (failed > 0) {
+        const msg = `${failed} product(s) failed catalog validation. Errors: ${JSON.stringify(errors.slice(0, 5))}`;
+        console.warn('[facebookCatalog] refreshFacebookCatalog failures:', msg);
+        try {
+          await notifyOwner('facebook catalog sync — validation failures', msg);
+        } catch (notifyErr) {
+          console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
+        }
+      }
+
+      const summary = { success: failed === 0, processed, failed, errors };
+      console.log('[facebookCatalog] refreshFacebookCatalog complete:', JSON.stringify({ processed, failed }));
+      return summary;
+    } catch (err) {
+      const msg = `catalog refresh failed: ${err.message}`;
+      console.error('[facebookCatalog] refreshFacebookCatalog error:', msg);
+      try {
+        await notifyOwner('facebook catalog sync — cron error', msg);
+      } catch (notifyErr) {
+        console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
+      }
+      return { success: false, processed, failed, errors: [msg] };
+    }
+  }
+);
+
 export const exportCustomerAudienceData = webMethod(
   Permissions.Admin,
   async () => {
@@ -588,3 +653,4 @@ export const exportCustomerAudienceData = webMethod(
     }
   }
 );
+

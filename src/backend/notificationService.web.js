@@ -336,6 +336,39 @@ export const toggleProductAlerts = webMethod(
  * @param {number} [limit=10] - Max results.
  * @returns {Promise<{items: Array, success: boolean}>}
  */
+/**
+ * Send an operational alert to the site owner via triggered email or console fallback.
+ * Used by cron jobs and backend services to surface critical failures.
+ *
+ * @param {string} subject - Short alert subject (e.g. 'catalog sync failed')
+ * @param {string} message - Detailed message body
+ * @returns {Promise<{success: boolean, method?: string, error?: string}>}
+ */
+export const notifyOwner = webMethod(
+  Permissions.Admin,
+  async (subject, message) => {
+    const safeSubject = sanitize(String(subject || ''), 200);
+    const safeMessage = sanitize(String(message || ''), 2000);
+
+    try {
+      const ownerId = await getSecret('SITE_OWNER_CONTACT_ID');
+      if (ownerId) {
+        await triggeredEmails.emailContact('owner_alert', ownerId, {
+          variables: { subject: safeSubject, message: safeMessage },
+        });
+        return { success: true, method: 'triggered_email' };
+      }
+    } catch (emailErr) {
+      // Fall through to console fallback if email delivery fails
+      console.warn('[notificationService] notifyOwner email failed, falling back to console:', emailErr?.message);
+    }
+
+    // Console fallback — ensures the alert surfaces in Wix logs even without email config
+    console.error(`[notificationService] OWNER ALERT — ${safeSubject}: ${safeMessage}`);
+    return { success: true, method: 'console' };
+  }
+);
+
 export const getNotificationHistory = webMethod(
   Permissions.SiteMember,
   async (limit = 10) => {
