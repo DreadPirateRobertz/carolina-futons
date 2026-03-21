@@ -1499,3 +1499,135 @@ export async function post_addBundleToCart(request) {
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
+
+// ── Product Q&A HTTP Endpoints ───────────────────────────────────────
+
+/**
+ * @function get_productQA
+ * @route GET /_functions/productQA?productId=X[&page=1][&pageSize=10]
+ * Returns approved Q&A pairs for a product. Public, no auth required.
+ */
+export async function get_productQA(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    const productId = request.query?.productId;
+    if (!productId || typeof productId !== 'string') {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required query param: productId' }), headers: JSON_HEADERS });
+    }
+
+    const page = Number(request.query?.page) || 1;
+    const pageSize = Number(request.query?.pageSize) || 10;
+
+    const { getProductQuestions } = await import('backend/productQA.web');
+    const result = await getProductQuestions(productId, { page, pageSize, answeredOnly: true });
+
+    if (!result.success) {
+      return serverError({ body: JSON.stringify({ error: result.error || 'Failed to load questions' }), headers: JSON_HEADERS });
+    }
+
+    return ok({ body: JSON.stringify(result.data), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (get_productQA):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+/**
+ * @function post_submitQuestion
+ * @route POST /_functions/submitQuestion
+ * Body: { productId: string, question: string, name?: string }
+ * Saves question as pending and notifies site owner.
+ * Public — no member auth required (uses name from body, not session).
+ */
+export async function post_submitQuestion(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const productId = sanitize(String(body?.productId || ''), 50);
+    const questionText = sanitize(String(body?.question || ''), 500);
+    const memberName = sanitize(String(body?.name || 'Customer'), 50) || 'Customer';
+
+    if (!productId) {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: productId' }), headers: JSON_HEADERS });
+    }
+    if (!questionText || questionText.length < 10) {
+      return badRequest({ body: JSON.stringify({ error: 'Question must be at least 10 characters' }), headers: JSON_HEADERS });
+    }
+
+    const { insertGuestQuestion } = await import('backend/productQA.web');
+    const result = await insertGuestQuestion({ productId, question: questionText, memberName });
+
+    if (!result.success) {
+      return badRequest({ body: JSON.stringify({ error: result.error || 'Failed to submit question' }), headers: JSON_HEADERS });
+    }
+
+    return ok({ body: JSON.stringify({ success: true, data: result.data }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (post_submitQuestion):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+/**
+ * @function post_answerQuestion
+ * @route POST /_functions/answerQuestion
+ * Header: x-admin-key — must match QA_ADMIN_KEY secret.
+ * Body: { questionId: string, answer: string }
+ * Sets answer and marks question as approved.
+ */
+export async function post_answerQuestion(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    // Admin key authentication
+    let adminKey;
+    try {
+      const { getSecret } = await import('wix-secrets-backend');
+      adminKey = await getSecret('QA_ADMIN_KEY');
+    } catch (_) {
+      // Secret not configured — deny
+    }
+
+    const requestKey = request.headers?.['x-admin-key'];
+    if (!adminKey || !requestKey || !timingSafeEqual(requestKey, adminKey)) {
+      return forbidden({ body: JSON.stringify({ error: 'Unauthorized' }), headers: JSON_HEADERS });
+    }
+
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    const questionId = String(body?.questionId || '');
+    const answerText = String(body?.answer || '');
+
+    if (!questionId) {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: questionId' }), headers: JSON_HEADERS });
+    }
+    if (!answerText || answerText.length < 5) {
+      return badRequest({ body: JSON.stringify({ error: 'Answer must be at least 5 characters' }), headers: JSON_HEADERS });
+    }
+
+    const { answerQuestion } = await import('backend/productQA.web');
+    const result = await answerQuestion(questionId, answerText);
+
+    if (!result.success) {
+      if (result.error === 'Question not found') {
+        return notFound({ body: JSON.stringify({ error: 'Question not found' }), headers: JSON_HEADERS });
+      }
+      return badRequest({ body: JSON.stringify({ error: result.error || 'Failed to answer question' }), headers: JSON_HEADERS });
+    }
+
+    return ok({ body: JSON.stringify({ success: true }), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (post_answerQuestion):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
