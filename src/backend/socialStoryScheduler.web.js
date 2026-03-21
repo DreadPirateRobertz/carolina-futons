@@ -539,6 +539,163 @@ export const getEngagementWindows = webMethod(
   }
 );
 
+/**
+ * Cron-callable: query catalog for new arrivals (past 24h) and price drops (past 24h),
+ * then schedule social stories across all platforms.
+ *
+ * Called daily by jobs.config. No authentication required (cron context).
+ *
+ * @returns {Promise<{success: boolean, newArrivals: Object, priceDrops: Object, errors: string[]}>}
+ */
+export const runDailySocialStories = webMethod(
+  Permissions.Admin,
+  async () => {
+    const errors = [];
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // --- New arrivals ---
+    let newArrivalResult = { scheduled: 0, skipped: 0, rateLimited: 0, errors: [] };
+    try {
+      const newProducts = await wixData.query('Stores/Products')
+        .ge('_createdDate', since)
+        .limit(100)
+        .find();
+
+      for (const product of newProducts.items) {
+        const result = await scheduleNewArrivalStoriesInternal(product);
+        newArrivalResult.scheduled += result.scheduled;
+        newArrivalResult.skipped += result.skipped;
+        newArrivalResult.rateLimited += result.rateLimited;
+        if (result.errors.length) newArrivalResult.errors.push(...result.errors);
+      }
+    } catch (err) {
+      const msg = `new_arrivals query failed: ${err.message}`;
+      console.error('[socialStoryScheduler] runDailySocialStories', msg);
+      errors.push(msg);
+    }
+
+    // --- Price drops (products updated in last 24h where price decreased) ---
+    let priceDropResult = { scheduled: 0, skipped: 0, rateLimited: 0, errors: [] };
+    try {
+      const updatedProducts = await wixData.query('Stores/Products')
+        .ge('_updatedDate', since)
+        .limit(100)
+        .find();
+
+      for (const product of updatedProducts.items) {
+        if (product.comparePrice != null && Number(product.comparePrice) > Number(product.price)) {
+          const productWithDrop = {
+            ...product,
+            previousPrice: product.comparePrice,
+          };
+          const result = await schedulePriceDropStoriesInternal(productWithDrop);
+          priceDropResult.scheduled += result.scheduled;
+          priceDropResult.skipped += result.skipped;
+          priceDropResult.rateLimited += result.rateLimited;
+          if (result.errors.length) priceDropResult.errors.push(...result.errors);
+        }
+      }
+    } catch (err) {
+      const msg = `price_drops query failed: ${err.message}`;
+      console.error('[socialStoryScheduler] runDailySocialStories', msg);
+      errors.push(msg);
+    }
+
+    const summary = {
+      success: errors.length === 0,
+      newArrivals: newArrivalResult,
+      priceDrops: priceDropResult,
+      errors,
+    };
+    console.log('[socialStoryScheduler] runDailySocialStories complete:', JSON.stringify(summary));
+    return summary;
+  }
+);
+
+// Internal (non-authenticated) versions for use within cron context
+async function scheduleNewArrivalStoriesInternal(product) {
+  if (!product || !product.name) {
+    return { success: false, scheduled: 0, skipped: 0, rateLimited: 0, errors: ['Product with name is required'] };
+  }
+
+  const platforms = PLATFORMS;
+  const productId = product._id || product.slug || sanitize(product.name, 50);
+  let scheduled = 0;
+  let skipped = 0;
+  let rateLimited = 0;
+  const errors = [];
+
+  for (const platform of platforms) {
+    if (await isProductDuplicate(productId, platform)) { skipped++; continue; }
+    if (!(await isWithinRateLimit(platform))) {
+      rateLimited++;
+      errors.push(`${platform}: daily rate limit reached`);
+      continue;
+    }
+    const content = buildPlatformContent(product, platform, 'new_arrival');
+    if (!content) { errors.push(`${platform}: failed to build content`); continue; }
+    const scheduledAt = getNextEngagementWindow(platform) || new Date();
+    try {
+      await wixData.insert('ContentSchedule', {
+        contentType: 'social_story', platform, productId,
+        productName: sanitize(product.name, 200), eventType: 'new_arrival',
+        priority: 3, status: 'pending', scheduledAt,
+        payload: JSON.stringify(content),
+        createdBy: `new_arrival-${productId}-${new Date().toISOString().slice(0, 10)}`,
+        processedAt: null, error: '',
+      });
+      scheduled++;
+    } catch (insertErr) {
+      errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+    }
+  }
+  return { scheduled, skipped, rateLimited, errors };
+}
+
+async function schedulePriceDropStoriesInternal(product) {
+  if (!product || !product.name || product.price == null || product.previousPrice == null) {
+    return { scheduled: 0, skipped: 0, rateLimited: 0, errors: ['Incomplete product data'] };
+  }
+  if (Number(product.price) >= Number(product.previousPrice)) {
+    return { scheduled: 0, skipped: 0, rateLimited: 0, errors: [] };
+  }
+
+  const platforms = PLATFORMS;
+  const productId = product._id || product.slug || sanitize(product.name, 50);
+  let scheduled = 0;
+  let skipped = 0;
+  let rateLimited = 0;
+  const errors = [];
+
+  for (const platform of platforms) {
+    if (await isProductDuplicate(productId, platform)) { skipped++; continue; }
+    if (!(await isWithinRateLimit(platform))) {
+      rateLimited++;
+      errors.push(`${platform}: daily rate limit reached`);
+      continue;
+    }
+    const content = buildPlatformContent(product, platform, 'price_drop');
+    if (!content) { errors.push(`${platform}: failed to build content`); continue; }
+    content.previousPrice = `$${Number(product.previousPrice).toFixed(2)}`;
+    content.savings = `$${(Number(product.previousPrice) - Number(product.price)).toFixed(2)}`;
+    const scheduledAt = getNextEngagementWindow(platform) || new Date();
+    try {
+      await wixData.insert('ContentSchedule', {
+        contentType: 'social_story', platform, productId,
+        productName: sanitize(product.name, 200), eventType: 'price_drop',
+        priority: 2, status: 'pending', scheduledAt,
+        payload: JSON.stringify(content),
+        createdBy: `price_drop-${productId}-${new Date().toISOString().slice(0, 10)}`,
+        processedAt: null, error: '',
+      });
+      scheduled++;
+    } catch (insertErr) {
+      errors.push(`${platform}: failed to queue — ${insertErr.message}`);
+    }
+  }
+  return { scheduled, skipped, rateLimited, errors };
+}
+
 // Export internals for testing
 export const _DEDUP_WINDOW_MS = DEDUP_WINDOW_MS;
 export const _PLATFORMS = PLATFORMS;
