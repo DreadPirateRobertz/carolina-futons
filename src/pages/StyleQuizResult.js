@@ -15,13 +15,13 @@
  */
 import { getQuizRecommendations, getPersonalizedCopy } from 'backend/styleQuiz.web';
 import { session } from 'wix-storage';
+import { safeCall, safeCollapse, safeExpand, safeText } from 'public/safeInit';
 
 const ANSWERS_KEY = 'styleQuizAnswers';
 
-/** Safely run a Wix element operation, swallowing missing-element errors. */
-function safeEl($w, selector, fn) {
-  try { fn($w(selector)); } catch (_) {}
-}
+$w.onReady(async function () {
+  await initStyleQuizResult($w);
+});
 
 /**
  * Initialize the Style Quiz result page.
@@ -32,9 +32,9 @@ function safeEl($w, selector, fn) {
  */
 export async function initStyleQuizResult($w) {
   // Show loading state
-  safeEl($w, '#quizLoadingIndicator', el => el.show());
-  safeEl($w, '#quizResultsSection', el => el.collapse());
-  safeEl($w, '#quizErrorMsg', el => el.hide());
+  safeCall(() => $w('#quizLoadingIndicator').show());
+  safeCollapse($w, '#quizResultsSection');
+  safeCall(() => $w('#quizErrorMsg').hide());
 
   // Retrieve stored answers
   const rawAnswers = session.getItem(ANSWERS_KEY);
@@ -47,24 +47,33 @@ export async function initStyleQuizResult($w) {
   try {
     answers = JSON.parse(rawAnswers);
   } catch (e) {
+    console.error('[StyleQuizResult] Failed to parse stored quiz answers:', e, '| Raw value length:', rawAnswers?.length);
     _showError($w, 'Could not load your quiz answers. Please retake the quiz.');
     return;
   }
 
-  // Fetch recommendations and personalized copy in parallel
-  let recommendations, personalizedCopy;
-  try {
-    [recommendations, { copy: personalizedCopy }] = await Promise.all([
-      getQuizRecommendations(answers),
-      getPersonalizedCopy(answers),
-    ]);
-  } catch (e) {
+  // Fetch recommendations and personalized copy in parallel.
+  // Use allSettled so a copy failure degrades gracefully without blocking recommendations.
+  const [recResult, copyResult] = await Promise.allSettled([
+    getQuizRecommendations(answers),
+    getPersonalizedCopy(answers),
+  ]);
+
+  if (recResult.status === 'rejected') {
+    console.error('[StyleQuizResult] getQuizRecommendations failed:', recResult.reason);
     _showError($w, 'Could not load your recommendations. Please try again.');
     return;
   }
 
-  // Hide loading, show results
-  safeEl($w, '#quizLoadingIndicator', el => el.hide());
+  const recommendations = recResult.value;
+  const personalizedCopy = copyResult.status === 'fulfilled' ? copyResult.value?.copy : '';
+
+  if (copyResult.status === 'rejected') {
+    console.error('[StyleQuizResult] getPersonalizedCopy failed:', copyResult.reason);
+  }
+
+  // Hide loading
+  safeCall(() => $w('#quizLoadingIndicator').hide());
 
   if (!recommendations || recommendations.length === 0) {
     _showError($w, 'No matching products found. Try adjusting your quiz answers.');
@@ -72,11 +81,11 @@ export async function initStyleQuizResult($w) {
   }
 
   // Populate personalized copy
-  safeEl($w, '#quizPersonalizedCopy', el => { el.text = personalizedCopy; });
+  safeText($w, '#quizPersonalizedCopy', personalizedCopy || '');
 
   // Populate recommendations repeater
-  safeEl($w, '#quizRepeater', el => {
-    el.data = recommendations.map(r => ({
+  try {
+    $w('#quizRepeater').data = recommendations.map(r => ({
       _id: r.product._id,
       name: r.product.name,
       price: r.product.formattedPrice,
@@ -85,10 +94,14 @@ export async function initStyleQuizResult($w) {
       reason: r.reason,
       score: r.score,
     }));
-  });
+  } catch (e) {
+    console.error('[StyleQuizResult] Failed to populate repeater:', e);
+    _showError($w, 'Could not display recommendations. Please try refreshing the page.');
+    return;
+  }
 
   // Show results section
-  safeEl($w, '#quizResultsSection', el => el.expand());
+  safeExpand($w, '#quizResultsSection');
 }
 
 /**
@@ -109,7 +122,11 @@ export function clearQuizAnswers() {
 }
 
 function _showError($w, message) {
-  safeEl($w, '#quizLoadingIndicator', el => el.hide());
-  safeEl($w, '#quizErrorMsg', el => { el.text = message; });
-  safeEl($w, '#quizErrorMsg', el => el.show());
+  safeCall(() => $w('#quizLoadingIndicator').hide());
+  try {
+    $w('#quizErrorMsg').text = message;
+    $w('#quizErrorMsg').show();
+  } catch (e) {
+    console.error('[StyleQuizResult] Could not display error message to user:', e, '| Message was:', message);
+  }
 }

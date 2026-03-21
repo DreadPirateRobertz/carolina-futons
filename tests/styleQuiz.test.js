@@ -661,6 +661,16 @@ describe('getPersonalizedCopy — profile types', () => {
     });
     expect(result.profileType).toBe('style');
   });
+
+  it('dorm + sleeping yields compact (roomType takes priority over primaryUse)', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'sleeping',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
 });
 
 describe('getPersonalizedCopy — copy content', () => {

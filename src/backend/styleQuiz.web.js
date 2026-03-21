@@ -248,8 +248,8 @@ const ROOM_LABEL = {
  * @returns {string} Personalized copy string
  */
 function buildPersonalizedCopy(answers, profileType) {
-  const room   = ROOM_LABEL[answers.roomType]  || 'space';
-  const style  = STYLE_TONE[answers.stylePreference] || 'your unique style';
+  const room   = ROOM_LABEL[answers?.roomType]  || 'space';
+  const style  = STYLE_TONE[answers?.stylePreference] || 'your unique style';
 
   switch (profileType) {
     case 'compact':
