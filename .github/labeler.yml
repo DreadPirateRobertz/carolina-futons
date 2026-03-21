@@ -1,0 +1,27 @@
+# PR size auto-labeling
+# Used by actions/labeler — labels PRs by lines changed
+# Requires .github/workflows/labeler.yml workflow (see below)
+
+# This file defines path-based labels.
+# Size labels (XS/S/M/L/XL) are handled by the size-label workflow.
+
+# Path-based labels
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ['package.json', 'package-lock.json']
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**']
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ['tests/**']
+
+source:
+  - changed-files:
+      - any-glob-to-any-file: ['src/**']
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: ['*.md', 'docs/**']
