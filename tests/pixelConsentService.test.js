@@ -253,6 +253,42 @@ describe('queue size cap — prevents unbounded memory growth', () => {
   });
 });
 
+// ── consent revocation (GDPR flow) ────────────────────────────────────
+
+describe('consent revocation — events re-queue after consent withdrawn', () => {
+  it('events fire immediately after grant then re-queue after revocation', () => {
+    grantConsent();
+    fireTrackedTikTokEvent('Purchase', { value: 499 });
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+
+    // Revoke consent
+    _currentPolicy = { analytics: false, advertising: false };
+    vi.clearAllMocks();
+
+    fireTrackedTikTokEvent('ViewContent', { value: 100 });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+});
+
+// ── privacy API error handling ─────────────────────────────────────────
+
+describe('_hasConsent() — privacy API exception handling', () => {
+  it('queues events when wixPrivacy.getCurrentConsentPolicy throws', async () => {
+    const { default: wixPrivacy } = await import('wix-privacy-frontend');
+    wixPrivacy.getCurrentConsentPolicy.mockImplementation(() => {
+      throw new Error('Privacy API unavailable');
+    });
+
+    fireTrackedTikTokEvent('ViewContent', {});
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+
+    // Restore
+    wixPrivacy.getCurrentConsentPolicy.mockReturnValue({ policy: _currentPolicy });
+  });
+});
+
 // ── initConsentGate idempotency ────────────────────────────────────────
 
 describe('initConsentGate — setup', () => {

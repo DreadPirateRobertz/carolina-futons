@@ -66,12 +66,15 @@ function _flushQueue() {
 /**
  * Initialize the consent gate.
  * Registers a one-time listener for consent policy changes.
- * Safe to call multiple times — listener is registered only once.
+ * Safe to call multiple times — listener is registered only once per successful
+ * registration. If the Wix Privacy API throws on registration, the flag is
+ * reset so the next call can retry. In that failure mode, queued events will
+ * not be flushed automatically until registration succeeds.
  * Call this in $w.onReady() on pages that fire pixel events.
  */
 export function initConsentGate() {
   if (_listenerRegistered) return;
-  _listenerRegistered = true;
+  _listenerRegistered = true; // optimistic lock — reset on failure below
 
   try {
     wixPrivacy.onCurrentConsentPolicyChanged((event) => {
@@ -81,6 +84,7 @@ export function initConsentGate() {
       }
     });
   } catch (e) {
+    _listenerRegistered = false; // allow retry on next call
     console.warn('[pixelConsentService] failed to register consent listener:', e);
   }
 }
@@ -122,7 +126,11 @@ export function getQueueLength() {
   return _queue.length;
 }
 
-/** Clear the queue and reset listener registration (test use only) */
+/**
+ * Clear the queue AND reset listener registration flag.
+ * Resets the module to its initial state. For test use only —
+ * call in beforeEach before re-calling initConsentGate().
+ */
 export function clearQueue() {
   _queue = [];
   _listenerRegistered = false;
