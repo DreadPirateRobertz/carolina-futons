@@ -16,6 +16,7 @@ import { usePageProgress } from '../hooks/usePageProgress.js';
 import { useIdApply } from '../hooks/useIdApply.js';
 import { useRepeaterGuard } from '../hooks/useRepeaterGuard.js';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
+import { detectConflict, useConflictDetector } from '../hooks/useConflictDetector.js';
 import { ManualModePanel } from './ManualModePanel.js';
 import { HelpOverlay } from './HelpOverlay.js';
 import type { PageDef } from '../types/index.js';
@@ -33,6 +34,7 @@ export function HookupPanel() {
   const { hookedIds, skippedIds, markHooked, markSkipped, undoLast, resetPage } = usePageProgress(selectedPageName);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
+  const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
 
   // S14: Reset repeater guard whenever the user switches pages
   useEffect(() => {
@@ -74,18 +76,43 @@ export function HookupPanel() {
     resetApplyStatus();
   }, [currentElement, markSkipped, resetApplyStatus]);
 
-  // S4: apply the target ID directly via the editor SDK (postMessage to P&E panel)
+  // S4 + S11: apply the target ID via editor SDK, with conflict detection.
+  // Checks the element's existing nickname before calling setNickname():
+  //   'none'        → proceed directly
+  //   'already-set' → auto-advance (no SDK call needed)
+  //   'conflict'    → open conflict banner; wait for override/cancel
   const handleApplyId = useCallback(async () => {
     if (!currentElement || !selected) {
       console.warn('[HookupPanel] handleApplyId called with no current element or selection — ignoring');
       return;
     }
-    resetApplyStatus(); // ensure clean state before each apply attempt
-    const ok = await applyId(currentElement, selected.compRef);
-    if (ok) {
+    const conflict = detectConflict(selected.currentNickname, currentElement.id);
+    if (conflict.type === 'already-set') {
       markHooked(currentElement.id);
+      return;
     }
-  }, [currentElement, selected, applyId, markHooked, resetApplyStatus]);
+    if (conflict.type === 'conflict') {
+      openConflict(conflict.existingNickname!);
+      return;
+    }
+    resetApplyStatus();
+    const ok = await applyId(currentElement, selected.compRef);
+    if (ok) markHooked(currentElement.id);
+  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, openConflict]);
+
+  // S11: user chose to override — proceed with setNickname despite conflict
+  const handleOverride = useCallback(async () => {
+    if (!currentElement || !selected) return;
+    clearConflict();
+    resetApplyStatus();
+    const ok = await applyId(currentElement, selected.compRef);
+    if (ok) markHooked(currentElement.id);
+  }, [currentElement, selected, applyId, markHooked, resetApplyStatus, clearConflict]);
+
+  // S11: user cancelled — dismiss conflict banner without applying
+  const handleCancelConflict = useCallback(() => {
+    clearConflict();
+  }, [clearConflict]);
 
   // S13: page navigation helpers
   const pageIndex = PAGES.findIndex((p) => p.name === selectedPageName);
@@ -213,6 +240,25 @@ export function HookupPanel() {
               </span>
             : <span style={s.noSelection}>Select an element on the canvas</span>
           }
+        </div>
+      )}
+
+      {/* S11: Conflict banner — shown when existing nickname differs from target */}
+      {pendingConflict !== null && currentElement && (
+        <div style={s.conflictBanner}>
+          <div style={s.conflictTitle}>⚠ ID Conflict</div>
+          <div style={s.conflictText}>
+            Element already has <code style={s.conflictCode}>#{pendingConflict}</code>.
+            Override with <code style={s.conflictCode}>#{currentElement.id}</code>?
+          </div>
+          <div style={s.conflictActions}>
+            <button style={s.overrideBtn} onClick={handleOverride}>
+              Override
+            </button>
+            <button style={s.cancelConflictBtn} onClick={handleCancelConflict}>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
@@ -419,4 +465,54 @@ const s: Record<string, React.CSSProperties> = {
     backgroundColor: '#f0f4f7',
   },
   footerText: { fontSize: '10px', color: '#7a92a5' },
+  // S11: conflict banner
+  conflictBanner: {
+    backgroundColor: '#fff3cd',
+    borderBottom: '1px solid #ffc107',
+    padding: '8px 12px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '5px',
+  },
+  conflictTitle: {
+    fontWeight: 700,
+    fontSize: '12px',
+    color: '#856404',
+  },
+  conflictText: {
+    fontSize: '11px',
+    color: '#4e6579',
+    lineHeight: 1.4,
+  },
+  conflictCode: {
+    fontFamily: 'monospace',
+    fontSize: '11px',
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderRadius: '3px',
+    padding: '0 3px',
+  },
+  conflictActions: {
+    display: 'flex',
+    gap: '6px',
+    marginTop: '2px',
+  },
+  overrideBtn: {
+    fontSize: '11px',
+    fontWeight: 600,
+    color: '#fff',
+    backgroundColor: '#e07b39',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '3px 10px',
+    cursor: 'pointer',
+  },
+  cancelConflictBtn: {
+    fontSize: '11px',
+    color: '#4e6579',
+    backgroundColor: 'transparent',
+    border: '1px solid #adb5bd',
+    borderRadius: '4px',
+    padding: '3px 10px',
+    cursor: 'pointer',
+  },
 };
