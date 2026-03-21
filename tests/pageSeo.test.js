@@ -161,6 +161,15 @@ describe('initPageSeo', () => {
     expect(ogType.content).toBe('website');
   });
 
+  it('sets og:type to article for blog post pages', async () => {
+    await initPageSeo('blogPost', { name: 'Test Post', slug: 'test-post' });
+
+    const calls = mockHead.setMetaTags.mock.calls;
+    const allTags = calls.flatMap(c => c[0]);
+    const ogType = allTags.find(t => t.property === 'og:type');
+    expect(ogType.content).toBe('article');
+  });
+
   it('sets og:url from getCanonicalUrl', async () => {
     await initPageSeo('home');
 

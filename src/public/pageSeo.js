@@ -31,7 +31,7 @@ export async function initPageSeo(pageType, data = {}) {
     head.setMetaTags([
       { name: 'description', content: description },
       // Open Graph
-      { property: 'og:type', content: pageType === 'product' ? 'product' : 'website' },
+      { property: 'og:type', content: pageType === 'product' ? 'product' : pageType === 'blogPost' ? 'article' : 'website' },
       { property: 'og:title', content: title },
       { property: 'og:description', content: description },
       { property: 'og:url', content: url },

@@ -200,7 +200,7 @@ describe('getAllBlogPosts', () => {
   });
 
   it('every post has all required fields', () => {
-    const requiredFields = ['slug', 'title', 'metaDescription', 'keywords', 'excerpt', 'category', 'tags', 'publishDate', 'faqs'];
+    const requiredFields = ['slug', 'title', 'metaDescription', 'keywords', 'excerpt', 'category', 'tags', 'publishDate', 'faqs', 'coverImage'];
     const posts = getAllBlogPosts();
     for (const post of posts) {
       for (const field of requiredFields) {
@@ -208,6 +208,13 @@ describe('getAllBlogPosts', () => {
         expect(post[field]).not.toBeNull();
         expect(post[field]).not.toBeUndefined();
       }
+    }
+  });
+
+  it('every post coverImage is a valid https URL', () => {
+    const posts = getAllBlogPosts();
+    for (const post of posts) {
+      expect(post.coverImage).toMatch(/^https:\/\/.+\.(jpg|jpeg|png|webp)$/i);
     }
   });
 });
@@ -223,13 +230,13 @@ describe('getBlogArticleSchema', () => {
     expect(getBlogArticleSchema({})).toBeNull();
   });
 
-  it('generates valid Article JSON-LD', () => {
+  it('generates valid BlogPosting JSON-LD', () => {
     const post = getBlogPost('best-futons-for-everyday-sleeping');
     const json = getBlogArticleSchema(post);
     expect(json).toBeTruthy();
     const schema = JSON.parse(json);
     expect(schema['@context']).toBe('https://schema.org');
-    expect(schema['@type']).toBe('Article');
+    expect(schema['@type']).toBe('BlogPosting');
     expect(schema.headline).toBe(post.title);
     expect(schema.description).toBe(post.metaDescription);
   });
@@ -269,14 +276,14 @@ describe('getBlogArticleSchema', () => {
     expect(schema.dateModified).toBe('2026-02-20');
   });
 
-  it.each(EXPECTED_SLUGS)('generates parseable JSON-LD for every post %s', (slug) => {
+  it.each(EXPECTED_SLUGS)('generates parseable BlogPosting JSON-LD for every post %s', (slug) => {
     const post = getBlogPost(slug);
     const json = getBlogArticleSchema(post);
     expect(json).toBeTruthy();
     expect(() => JSON.parse(json)).not.toThrow();
     const schema = JSON.parse(json);
     expect(schema['@context']).toBe('https://schema.org');
-    expect(schema['@type']).toBe('Article');
+    expect(schema['@type']).toBe('BlogPosting');
     expect(schema.headline).toBe(post.title);
   });
 
