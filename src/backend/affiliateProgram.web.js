@@ -8,6 +8,8 @@
  * @requires wix-web-module
  * @requires wix-data
  * @requires wix-members-backend
+ * @requires wix-ecom-backend
+ * @requires crypto
  *
  * @setup
  * Create CMS collection "AffiliateAccounts" with fields:
@@ -28,7 +30,7 @@
  * - affiliateId (Text) - Reference to AffiliateAccounts
  * - memberId (Text) - Wix member ID
  * - productId (Text) - Target product ID or "_store" for general
- * - linkCode (Text) - Unique 10-char tracking code
+ * - linkCode (Text) - Unique 16-char tracking code (crypto.randomBytes)
  * - customSlug (Text) - Optional custom URL slug
  * - clicks (Number) - Total click count
  * - conversions (Number) - Completed purchase count
@@ -391,15 +393,14 @@ export const recordAffiliateConversion = webMethod(
         return { success: false, error: 'A positive order total is required' };
       }
 
-      // Verify order exists in Wix
-      let order;
+      // Verify order exists in Wix and extract the authoritative total
+      let verifiedOrderTotal;
       try {
-        order = await orders.getOrder(cleanOrderId);
-      } catch (_) {
+        const order = await orders.getOrder(cleanOrderId);
+        verifiedOrderTotal = order?.priceSummary?.total?.amount ?? order?.totals?.total ?? orderTotal;
+      } catch (err) {
+        console.error('[affiliateProgram] recordAffiliateConversion — getOrder failed:', err?.message ?? err);
         return { success: false, error: 'Order not found or inaccessible' };
-      }
-      if (!order) {
-        return { success: false, error: 'Order not found' };
       }
 
       // Find the affiliate link
@@ -430,8 +431,8 @@ export const recordAffiliateConversion = webMethod(
         return { success: false, error: 'Conversion already recorded for this order' };
       }
 
-      // Calculate commission
-      const commissionAmount = Math.round(orderTotal * (account.commissionRate / 100) * 100) / 100;
+      // Calculate commission using the Wix-verified total (falls back to caller value if API omits it)
+      const commissionAmount = Math.round(verifiedOrderTotal * (account.commissionRate / 100) * 100) / 100;
 
       // Create commission record
       await wixData.insert(COMMISSIONS_COLLECTION, {
@@ -439,7 +440,7 @@ export const recordAffiliateConversion = webMethod(
         memberId: account.memberId,
         linkId: link._id,
         orderId: cleanOrderId,
-        orderTotal,
+        orderTotal: verifiedOrderTotal,
         commissionRate: account.commissionRate,
         commissionAmount,
         status: 'pending',
@@ -447,7 +448,7 @@ export const recordAffiliateConversion = webMethod(
 
       // Update link stats
       link.conversions = (link.conversions || 0) + 1;
-      link.revenue = (link.revenue || 0) + orderTotal;
+      link.revenue = (link.revenue || 0) + verifiedOrderTotal;
       await wixData.update(LINKS_COLLECTION, link);
 
       // Update affiliate total earned

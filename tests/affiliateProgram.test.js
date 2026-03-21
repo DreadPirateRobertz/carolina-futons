@@ -180,7 +180,7 @@ describe('createAffiliateLink', () => {
     const result = await createAffiliateLink('product-123');
     expect(result.success).toBe(true);
     expect(result.linkCode).toBeTruthy();
-    expect(result.linkCode.length).toBeGreaterThanOrEqual(16);
+    expect(result.linkCode.length).toBe(16);
     expect(inserted).not.toBeNull();
     expect(inserted.affiliateId).toBe('aff-001');
     expect(inserted.memberId).toBe('member-001');
@@ -781,10 +781,10 @@ describe('generateLinkCode — crypto randomness (CF-rw8l)', () => {
     }]);
   });
 
-  it('generates link codes of at least 16 characters', async () => {
+  it('generates link codes of exactly 16 characters', async () => {
     const result = await createAffiliateLink('product-123');
     expect(result.success).toBe(true);
-    expect(result.linkCode.length).toBeGreaterThanOrEqual(16);
+    expect(result.linkCode.length).toBe(16);
   });
 
   it('link codes contain only safe alphanumeric characters', async () => {
@@ -804,17 +804,7 @@ describe('generateLinkCode — crypto randomness (CF-rw8l)', () => {
     expect(codes.size).toBe(100);
   });
 
-  it('code entropy: no two adjacent characters are always identical', async () => {
-    // With Math.random seeded poorly this could repeat — crypto should not
-    const codes = [];
-    for (let i = 0; i < 20; i++) {
-      const result = await createAffiliateLink('product-ent');
-      codes.push(result.linkCode);
-    }
-    // Verify codes are not all the same string
-    const unique = new Set(codes);
-    expect(unique.size).toBeGreaterThan(1);
-  });
+
 });
 
 // ── CF-gdpd: recordAffiliateConversion — order verification ──────────────────
@@ -881,6 +871,19 @@ describe('recordAffiliateConversion — Wix Orders verification (CF-gdpd)', () =
     __setOrder(null);
     await recordAffiliateConversion('CODE000001', 'FAKE-ORD', 500);
     expect(updates).toHaveLength(0);
+  });
+
+  it('uses Wix order total when priceSummary is present', async () => {
+    __setOrder({ _id: 'ORD-600', number: '1002', priceSummary: { total: { amount: 300 } } });
+    const inserts = [];
+    __onInsert((col, item) => {
+      if (col === COMMISSIONS) inserts.push(item);
+    });
+    const result = await recordAffiliateConversion('CODE000001', 'ORD-600', 9999);
+    expect(result.success).toBe(true);
+    // Commission uses Wix-verified 300, not caller-supplied 9999
+    expect(result.commissionAmount).toBe(24); // 8% of 300
+    expect(inserts[0].orderTotal).toBe(300);
   });
 
   it('still blocks duplicate conversions for real orders', async () => {

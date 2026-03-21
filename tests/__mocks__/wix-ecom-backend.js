@@ -24,13 +24,19 @@ export const orders = {
   listOrders: async () => ({ orders: [] }),
 };
 
-/** Set the order returned by getOrder. Pass null to simulate not found. */
+/**
+ * Set the order returned by getOrder. Pass null to simulate not found.
+ * Also clears any error set by __setOrderError.
+ */
 export function __setOrder(order) {
   _order = order;
   _orderError = null;
 }
 
-/** Make the next getOrder call throw. */
+/**
+ * Make ALL subsequent getOrder calls throw until __reset() or __setOrder() is called.
+ * (Persistent, not one-shot — unlike the cart mock helpers.)
+ */
 export function __setOrderError(err) {
   _orderError = err;
 }
