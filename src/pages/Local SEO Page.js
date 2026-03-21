@@ -45,6 +45,8 @@ function initSeo(page) {
     wixSeo.setLinks([{ rel: 'canonical', href: page.canonicalUrl }]);
     if (page.jsonLd) {
       wixSeo.setStructuredData([page.jsonLd]);
+    } else {
+      console.error('Local SEO Page: jsonLd missing — structured data not injected for', page.slug);
     }
   } catch (e) {
     console.error('Local SEO Page SEO init error:', e);
