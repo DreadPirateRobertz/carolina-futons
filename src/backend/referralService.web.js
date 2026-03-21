@@ -36,6 +36,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import crypto from 'crypto';
 
 const REFERRALS_COLLECTION = 'Referrals';
 const CREDITS_COLLECTION = 'ReferralCredits';
@@ -48,9 +49,11 @@ const REFERRAL_CODE_LENGTH = 8;
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars (0/O, 1/I/L)
+  // chars.length === 32; 256 / 32 === 8 exactly — no modulo bias.
+  const bytes = crypto.randomBytes(REFERRAL_CODE_LENGTH);
   let code = '';
   for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars[bytes[i] % chars.length];
   }
   return code;
 }
@@ -124,7 +127,7 @@ export const getReferralLink = webMethod(
 // ── redeemReferralCode ──────────────────────────────────────────────
 
 export const redeemReferralCode = webMethod(
-  Permissions.Anyone,
+  Permissions.SiteMember,
   async (code, refereeData = {}) => {
     try {
       const cleanCode = sanitize(code, 20).toUpperCase().replace(/[^A-Z0-9]/g, '');
