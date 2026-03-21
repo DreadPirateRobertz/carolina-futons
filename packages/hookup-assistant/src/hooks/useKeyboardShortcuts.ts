@@ -14,7 +14,7 @@
  * Shortcuts are suppressed when the focused element is an INPUT or TEXTAREA.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface ShortcutHandlers {
   onApplyOrDone: () => void;   // Enter / Space
@@ -33,14 +33,20 @@ function isEditing(): boolean {
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
+  // Ref pattern: keep latest handlers without re-attaching the listener on every render.
+  const ref = useRef(handlers);
+  ref.current = handlers;
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (isEditing()) return;
 
+      const h = ref.current;
+
       // Cmd/Ctrl+Z → undo
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault();
-        handlers.onUndo();
+        h.onUndo();
         return;
       }
 
@@ -51,36 +57,36 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
         case 'Enter':
         case ' ':
           e.preventDefault();
-          handlers.onApplyOrDone();
+          h.onApplyOrDone();
           break;
         case 's':
         case 'S':
           e.preventDefault();
-          handlers.onSkip();
+          h.onSkip();
           break;
         case 'd':
         case 'D':
           e.preventDefault();
-          handlers.onDone();
+          h.onDone();
           break;
         case 'n':
         case 'N':
           e.preventDefault();
-          handlers.onNextPage();
+          h.onNextPage();
           break;
         case 'p':
         case 'P':
           e.preventDefault();
-          handlers.onPrevPage();
+          h.onPrevPage();
           break;
         case 'm':
         case 'M':
           e.preventDefault();
-          handlers.onToggleManual();
+          h.onToggleManual();
           break;
         case '?':
           e.preventDefault();
-          handlers.onToggleHelp();
+          h.onToggleHelp();
           break;
         default:
           break;
@@ -89,5 +95,5 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlers]);
+  }, []); // stable — listener attached once, reads latest handlers via ref
 }

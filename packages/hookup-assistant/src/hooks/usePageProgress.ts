@@ -44,6 +44,8 @@ export function usePageProgress(pageName: string) {
       if (prev.includes(elementId)) return prev;
       const next = [...prev, elementId];
       saveIds(pageName, 'hooked', next);
+      // Push history only when the element is actually added
+      setHistory((h) => [...h, { type: 'hooked', elementId }]);
       return next;
     });
     // Remove from skipped if it was there
@@ -52,7 +54,6 @@ export function usePageProgress(pageName: string) {
       saveIds(pageName, 'skipped', next);
       return next;
     });
-    setHistory((prev) => [...prev, { type: 'hooked', elementId }]);
   }, [pageName]);
 
   const markSkipped = useCallback((elementId: string) => {
@@ -60,9 +61,10 @@ export function usePageProgress(pageName: string) {
       if (prev.includes(elementId)) return prev;
       const next = [...prev, elementId];
       saveIds(pageName, 'skipped', next);
+      // Push history only when the element is actually added
+      setHistory((h) => [...h, { type: 'skipped', elementId }]);
       return next;
     });
-    setHistory((prev) => [...prev, { type: 'skipped', elementId }]);
   }, [pageName]);
 
   const undoLast = useCallback(() => {

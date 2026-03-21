@@ -98,22 +98,26 @@ export function HookupPanel() {
     setSelectedPageName(PAGES[(pageIndex - 1 + PAGES.length) % PAGES.length].name);
   }, [pageIndex]);
 
-  // S13: keyboard shortcuts
+  // S13: keyboard shortcuts — extract each handler to avoid recreating the object on every render
+  const handleApplyOrDone = useCallback(() => {
+    if (editorAvailable && selected && currentElement) {
+      void handleApplyId();
+    } else {
+      handleMarkDone();
+    }
+  }, [editorAvailable, selected, currentElement, handleApplyId, handleMarkDone]);
+  const handleToggleManual = useCallback(() => setManualMode((v) => !v), []);
+  const handleToggleHelp = useCallback(() => setShowHelp((v) => !v), []);
+
   useKeyboardShortcuts({
-    onApplyOrDone: useCallback(() => {
-      if (editorAvailable && selected && currentElement) {
-        void handleApplyId();
-      } else {
-        handleMarkDone();
-      }
-    }, [editorAvailable, selected, currentElement, handleApplyId, handleMarkDone]),
+    onApplyOrDone: handleApplyOrDone,
     onSkip: handleSkip,
     onDone: handleMarkDone,
     onNextPage: goNextPage,
     onPrevPage: goPrevPage,
-    onToggleManual: useCallback(() => setManualMode((v) => !v), []),
+    onToggleManual: handleToggleManual,
     onUndo: undoLast,
-    onToggleHelp: useCallback(() => setShowHelp((v) => !v), []),
+    onToggleHelp: handleToggleHelp,
   });
 
   const page = PAGES.find((p) => p.name === selectedPageName);

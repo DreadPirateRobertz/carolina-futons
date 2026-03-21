@@ -181,3 +181,24 @@ describe('usePageProgress — undoLast', () => {
     expect(result.current.canUndo).toBe(false);
   });
 });
+
+describe('usePageProgress — undoLast duplicate guard', () => {
+  it('does not push history when markHooked is called with an already-hooked ID', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.markHooked('heroTitle')); // duplicate — no-op
+    expect(result.current.canUndo).toBe(true);
+    // Only one history entry — undo removes it and canUndo goes false
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+
+  it('does not push history when markSkipped is called with an already-skipped ID', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.markSkipped('heroTitle')); // duplicate — no-op
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+  });
+});
