@@ -24,17 +24,17 @@ const VALID_TYPES: WixElementType[] = [
 // ── Data integrity ─────────────────────────────────────────────────────────
 
 describe('PAGES — data integrity', () => {
-  it('has exactly 28 pages', () => {
-    expect(PAGES).toHaveLength(28);
+  it('has exactly 37 pages', () => {
+    expect(PAGES).toHaveLength(37);
   });
 
-  it('has exactly 1093 total elements', () => {
+  it('has exactly 1276 total elements', () => {
     const total = PAGES.reduce(
       (sum, p) => sum + p.sections.reduce(
         (s2, sec) => s2 + sec.elements.length + (sec.children?.length ?? 0), 0,
       ), 0,
     );
-    expect(total).toBe(1093);
+    expect(total).toBe(1276);
   });
 
   it('every element has a non-empty id', () => {
