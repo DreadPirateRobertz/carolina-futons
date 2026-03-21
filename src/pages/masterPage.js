@@ -61,7 +61,13 @@ $w.onReady(async function () {
   injectCanonicalUrl();
   initScrollDepthTracking();
   initConsentGate();
-  deferInit(() => fireTrackedTikTokEvent('PageView', {}));
+  // Load TikTok SDK (library only — no PageView) then gate PageView through consent.
+  // initTikTokPixel populates window.ttq; fireTrackedTikTokEvent fires immediately
+  // if consent already granted, or queues for when onCurrentConsentPolicyChanged fires.
+  deferInit(() => import('public/tikTokPixel').then(m => {
+    m.initTikTokPixel();
+    fireTrackedTikTokEvent('PageView', {});
+  }));
   injectBusinessSchema().catch(e => console.warn('[masterPage] Schema injection failed:', e.message));
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed

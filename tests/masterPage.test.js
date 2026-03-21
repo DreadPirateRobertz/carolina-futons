@@ -2411,16 +2411,22 @@ describe('masterPage.js', () => {
       expect(initConsentGate).toHaveBeenCalled();
     });
 
-    it('fires PageView through consent gate, not directly', async () => {
+    it('fires PageView through consent gate, not directly via ttq.page()', async () => {
       await onReadyHandler();
       expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
     });
 
-    it('does not call initTikTokPixel directly (would bypass consent)', async () => {
+    it('loads TikTok SDK (initTikTokPixel) before firing consent-gated PageView', async () => {
       const { initTikTokPixel } = await import('public/tikTokPixel');
       initTikTokPixel.mockClear();
+      fireTrackedTikTokEvent.mockClear();
+      vi.useFakeTimers();
       await onReadyHandler();
-      expect(initTikTokPixel).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(10); // allow deferInit setTimeout(fn,1) to fire
+      vi.useRealTimers();
+      // SDK must be loaded (to populate window.ttq) before the consent-gated PageView
+      expect(initTikTokPixel).toHaveBeenCalled();
+      expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
     });
   });
 });
