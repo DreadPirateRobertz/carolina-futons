@@ -7,7 +7,7 @@ import { getGuidePinData } from 'backend/pinterestRichPins.web';
 import { getBlogPost, getAllBlogPosts } from 'backend/blogContent';
 import wixLocationFrontend from 'wix-location-frontend';
 import { initBackToTop } from 'public/mobileHelpers';
-import { trackEvent } from 'public/engagementTracker';
+import { trackEvent, trackNewsletterSignup } from 'public/engagementTracker';
 import { fireCustomEvent } from 'public/ga4Tracking';
 import { announce, makeClickable } from 'public/a11yHelpers';
 import {
@@ -67,6 +67,9 @@ $w.onReady(async function () {
       ]);
       try { $w('#postMetaHtml').postMessage(JSON.stringify({ title, description, canonical })); } catch (e) {}
     } catch (e) {}
+
+    // ── Newsletter Subscription Form ──────────────────────────────────
+    initBlogNewsletterForm(post);
 
     // ── Pinterest Article Pin Meta ────────────────────────────────────
     injectPinterestArticleMeta(post);
@@ -204,6 +207,74 @@ function initRelatedPosts(currentPost) {
     try { $w('#relatedPostsSection').expand(); } catch (e) {}
   } catch (err) {
     console.error('Related posts error:', err);
+  }
+}
+
+// ── Newsletter Subscription Form ──────────────────────────────────────────
+// Inline email capture on the blog post page. Subscribers are persisted to
+// NewsletterSubscribers and synced to Klaviyo via newsletterService.
+
+function initBlogNewsletterForm(post) {
+  try {
+    const emailInput = $w('#blogNewsletterInput');
+    const submitBtn = $w('#blogNewsletterSubmit');
+    if (!emailInput || !submitBtn) return;
+
+    try { emailInput.placeholder = 'your@email.com'; } catch (e) {}
+    try { emailInput.accessibility.ariaLabel = 'Your email address for newsletter'; } catch (e) {}
+    try { emailInput.accessibility.ariaRequired = true; } catch (e) {}
+    try { submitBtn.accessibility.ariaLabel = 'Subscribe to newsletter'; } catch (e) {}
+    try { $w('#blogNewsletterSuccess').hide(); } catch (e) {}
+    try { $w('#blogNewsletterError').hide(); } catch (e) {}
+
+    submitBtn.onClick(async () => {
+      const email = (emailInput.value || '').trim();
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        try {
+          $w('#blogNewsletterError').text = 'Please enter a valid email address.';
+          $w('#blogNewsletterError').show();
+        } catch (e) {}
+        announce($w, 'Please enter a valid email address');
+        return;
+      }
+
+      try { $w('#blogNewsletterError').hide(); } catch (e) {}
+      submitBtn.disable();
+
+      try {
+        const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+        const result = await subscribeToNewsletter(email, { source: 'blog_post' });
+
+        if (result.success) {
+          try { emailInput.hide(); } catch (e) {}
+          submitBtn.hide();
+          try { $w('#blogNewsletterSuccess').show('fade', { duration: 300 }); } catch (e) {}
+
+          trackNewsletterSignup('blog_post');
+          fireCustomEvent('newsletter_signup', {
+            source: 'blog_post',
+            slug: post ? post.slug : '',
+          });
+          announce($w, 'Successfully subscribed to newsletter');
+        } else {
+          try {
+            $w('#blogNewsletterError').text = result.message || 'Something went wrong. Please try again.';
+            $w('#blogNewsletterError').show();
+          } catch (e) {}
+          submitBtn.enable();
+        }
+      } catch (err) {
+        console.error('Blog post newsletter signup error:', err);
+        try {
+          $w('#blogNewsletterError').text = 'Something went wrong. Please try again.';
+          $w('#blogNewsletterError').show();
+        } catch (e) {}
+        submitBtn.enable();
+      }
+    });
+  } catch (err) {
+    console.error('Blog newsletter form init error:', err);
   }
 }
 
