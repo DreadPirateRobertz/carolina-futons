@@ -71,7 +71,10 @@ describe('deliveryScheduling — error catch paths', () => {
   });
 
   it('bookAppointment returns failure on unexpected error', async () => {
-    vi.spyOn(wixData, 'insert').mockRejectedValueOnce(new Error('DB down'));
+    // First insert is the rate limit record (fails open), second is the appointment itself
+    vi.spyOn(wixData, 'insert')
+      .mockRejectedValueOnce(new Error('DB down')) // rate limit insert — fails open
+      .mockRejectedValueOnce(new Error('DB down')); // appointment insert — caught by outer try/catch
     const result = await bookAppointment({
       date: futureWed(),
       timeSlot: '10:00',
