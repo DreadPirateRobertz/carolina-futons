@@ -19,6 +19,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 const DISCOUNT_CODE = 'WELCOME10';
@@ -204,7 +205,17 @@ async function _syncToESPInternal(email, source) {
  */
 export const syncToESP = webMethod(
   Permissions.SiteMember,
-  (email, source) => _syncToESPInternal(email, source)
+  async (email, source) => {
+    if (!email || typeof email !== 'string' || !validateEmail(email.trim())) {
+      return { synced: false, reason: 'invalid_email' };
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const member = await currentMember.getMember();
+    if (!member?.loginEmail || member.loginEmail.toLowerCase() !== cleanEmail) {
+      return { synced: false, reason: 'unauthorized' };
+    }
+    return _syncToESPInternal(cleanEmail, source);
+  }
 );
 
 /**
@@ -224,6 +235,11 @@ export const unsubscribeFromESP = webMethod(
       }
 
       const cleanEmail = email.trim().toLowerCase();
+
+      const member = await currentMember.getMember();
+      if (!member?.loginEmail || member.loginEmail.toLowerCase() !== cleanEmail) {
+        return { unsubscribed: false, reason: 'unauthorized' };
+      }
 
       const { espKey, listId } = await loadESPSecrets();
       if (!espKey) {

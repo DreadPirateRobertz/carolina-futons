@@ -188,19 +188,7 @@ export async function submitExitIntentEmail(email) {
       return { success: false, error: subResult.message || 'subscription_failed' };
     }
 
-    // Generate single-use 10% coupon — failure is non-blocking
-    let couponCode = null;
-    try {
-      const { createWelcomeCoupon } = await import('backend/couponsService.web');
-      const couponResult = await createWelcomeCoupon(email);
-      if (couponResult.success) {
-        couponCode = couponResult.code;
-      }
-    } catch (couponErr) {
-      console.warn('[exitIntentCapture] Coupon generation failed (non-blocking):', couponErr.message);
-    }
-
-    return { success: true, couponCode };
+    return { success: true };
   } catch (err) {
     console.error('[exitIntentCapture] submitExitIntentEmail failed:', err);
     return { success: false, error: 'submission_failed' };
