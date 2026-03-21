@@ -13,6 +13,7 @@ import React, { useState, useCallback } from 'react';
 import { PAGES, getUnhookedElements, getAllElements } from '../data/pages.js';
 import { useElementDetection } from '../hooks/useElementDetection.js';
 import { usePageProgress } from '../hooks/usePageProgress.js';
+import { useIdApply } from '../hooks/useIdApply.js';
 import { ManualModePanel } from './ManualModePanel.js';
 import type { PageDef } from '../types/index.js';
 
@@ -26,6 +27,7 @@ export function HookupPanel() {
 
   const { selected, editorAvailable } = useElementDetection();
   const { hookedIds, skippedIds, markHooked, markSkipped, resetPage } = usePageProgress(selectedPageName);
+  const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
 
   const allElements = getAllElements(selectedPageName);
   const unhooked = getUnhookedElements(selectedPageName, hookedIds);
@@ -38,7 +40,17 @@ export function HookupPanel() {
 
   const handleSkip = useCallback(() => {
     if (currentElement) markSkipped(currentElement.id);
-  }, [currentElement, markSkipped]);
+    resetApplyStatus();
+  }, [currentElement, markSkipped, resetApplyStatus]);
+
+  // S4: apply the target ID directly via the editor SDK (postMessage to P&E panel)
+  const handleApplyId = useCallback(async () => {
+    if (!currentElement || !selected) return;
+    const ok = await applyId(currentElement, selected.compRef);
+    if (ok) {
+      markHooked(currentElement.id);
+    }
+  }, [currentElement, selected, applyId, markHooked]);
 
   const page = PAGES.find((p) => p.name === selectedPageName);
 
@@ -148,6 +160,8 @@ export function HookupPanel() {
             selectedType={selected?.elementType ?? null}
             onMarkDone={handleMarkDone}
             onSkip={handleSkip}
+            onApplyId={editorAvailable && selected ? handleApplyId : undefined}
+            applyStatus={applyStatus}
           />
         ) : (
           <div style={s.autoPlaceholder}>
