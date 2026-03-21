@@ -1,0 +1,28 @@
+# Dependabot — automated dependency updates
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/New_York
+    labels:
+      - dependencies
+    open-pull-requests-limit: 10
+    groups:
+      # Group dev-dependency bumps into a single PR
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      # Security patches always get their own PR (ungrouped)
+    # Ignore major bumps — those need manual review
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
