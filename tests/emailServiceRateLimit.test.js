@@ -266,6 +266,16 @@ describe('sendSwatchConfirmationEmail rate limiting', () => {
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/too many|rate|try again/i);
   });
+
+  it('uses contactId as rate limit key when email is absent', async () => {
+    const noEmailParams = { contactId: 'contact-xyz', name: 'Test', swatchNames: ['Navy'], productName: 'Futon' };
+    for (let i = 0; i < 3; i++) {
+      await sendSwatchConfirmationEmail(noEmailParams);
+    }
+    const result = await sendSwatchConfirmationEmail(noEmailParams);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too many|rate|try again/i);
+  });
 });
 
 // ── Cross-method rate limiting ───────────────────────────────────────
@@ -279,6 +289,17 @@ describe('cross-method rate limiting', () => {
 
     // 4th call (any method) should be blocked
     const result = await sendEmail(validContactForm);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/too many|rate|try again/i);
+  });
+
+  it('shares rate limit across all 3 methods for same email', async () => {
+    await sendEmail(validContactForm);
+    await submitSwatchRequest(validSwatchRequest);
+    await sendSwatchConfirmationEmail(validSwatchConfirmation);
+
+    // 4th call via any method should be blocked
+    const result = await submitSwatchRequest(validSwatchRequest);
     expect(result.success).toBe(false);
     expect(result.message).toMatch(/too many|rate|try again/i);
   });

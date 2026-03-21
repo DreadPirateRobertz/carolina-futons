@@ -38,6 +38,10 @@ export const EMAIL_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
  * Allows up to EMAIL_RATE_LIMIT_MAX calls per EMAIL_RATE_LIMIT_WINDOW_MS per key.
  * Fails open on DB errors.
  *
+ * Known gap: query-check-update is not atomic (Wix Data lacks conditional updates).
+ * Concurrent requests may exceed the limit by 1-2 under high concurrency.
+ * Acceptable for email spam prevention — not a billing or auth boundary.
+ *
  * @param {string} key - Normalized identifier (email).
  * @param {Object} [opts]
  * @param {number} [opts.now] - Timestamp override for testing.
@@ -295,7 +299,8 @@ export const sendSwatchConfirmationEmail = webMethod(
       }
 
       // CF-rw9g: Rate limit per email or contactId — 3 calls/hour
-      const rateLimitKey = email ? sanitize(email, 254).toLowerCase() : sanitize(contactId, 254);
+      // Pass raw values — _checkEmailRateLimit handles sanitization internally
+      const rateLimitKey = email || contactId;
       const rateCheck = await _checkEmailRateLimit(rateLimitKey);
       if (!rateCheck.allowed) {
         return { success: false, message: RATE_LIMIT_MESSAGE };
