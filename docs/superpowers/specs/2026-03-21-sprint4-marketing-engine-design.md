@@ -1,7 +1,8 @@
 # Sprint 4 Design: Full Marketing Engine
 
 **Date**: 2026-03-21
-**Status**: PENDING STILGAR APPROVAL — proceeding with Option C (activate + build)
+**Status**: SPEC REVIEW COMPLETE — fixes applied, pending Stilgar approval
+**Spec Reviewer**: Passed (v2, 2026-03-21) — 6 issues fixed, 2 items deferred per Stilgar decision
 **Scope**: Social commerce, lifecycle marketing, content/SEO, and net-new growth features
 **Theme**: We have a powerful marketing backend (115 files). This sprint makes it ACTUALLY work for the business.
 
@@ -32,7 +33,9 @@ Install TikTok Pixel + Pinterest Tag via Wix CLI embeddedScript extension.
 - Fires on all pages automatically (no page-by-page wiring needed)
 - Events: pageview, product_view, add_to_cart, purchase, search
 - Validation: TikTok Pixel Helper + Pinterest Tag Helper browser extensions
-- Tests: pixel install, event dispatch, event deduplication (15+ tests)
+- **Cookie consent**: Integrate with Wix cookieManager — pixels only fire after consent granted (GDPR/CCPA compliance)
+- **Premium gate**: Requires site upgrade to Premium before pixels activate on live site. Owner: Stilgar.
+- Tests: pixel install, event dispatch, event deduplication, consent-gate (15+ tests)
 
 ### 1B: Pinterest Rich Pins Verification
 pinterestRichPins.web.js exists — needs Pinterest Validator sign-off.
@@ -40,11 +43,12 @@ pinterestRichPins.web.js exists — needs Pinterest Validator sign-off.
 - Submit domain to Pinterest for Rich Pins approval
 - Tests: og tag output validation per product page template
 
-### 1C: Facebook Catalog Sync Health
+### 1C: Facebook Catalog Sync Health (godfrey, P2 — new bead)
 facebookCatalog.web.js is built. Run smoke test against prod catalog, verify scheduled refresh.
 - Confirm 88 CF products syncing to Meta Business Manager
 - Verify cron schedule (every 6h) is active via jobs.config
-- Alert if sync failure (Wix automations hook)
+- Alert on sync failure via notificationService
+- Tests: catalog format validation, cron registration, failure alert dispatch (10+ tests)
 
 ### 1D: Social Story Automation
 socialStoryScheduler.web.js + socialStoryService.web.js built + tested.
@@ -67,10 +71,11 @@ socialStoryScheduler.web.js + socialStoryService.web.js built + tested.
 
 ### 2B: Cart Recovery Activation (miquella, P1)
 cartRecovery.web.js is built and tested — needs activation wiring.
-- Wix Automations: trigger on checkout abandonment (1hr delay) → emailService
+- **Approach**: Cron job (every 1hr) queries checkouts abandoned > 1hr ago — NOT Wix Automations (trigger reliability unconfirmed on current plan). Cron → cartRecovery.web.js → emailService.
 - Template: abandoned items with images, price, CTA to cart
 - Discount code optional (10% off, single-use, 48hr expiry via couponsService)
-- Tests: trigger conditions, email content, discount generation
+- **Wix Automations note**: When Premium lands, revisit migrating trigger to native Automations for lower latency. Cron approach works on any plan.
+- Tests: trigger conditions, deduplication (don't resend), email content, discount generation (15+ tests)
 
 ### 2C: Browse Abandonment Flow (rennala, P2)
 browseAbandonment.web.js exists — needs trigger wiring.
@@ -133,11 +138,13 @@ photoReviews.web.js handles backend — need full-stack workflow.
 
 ### 4B: Exit Intent Capture (rennala, P2)
 Not built yet. High-conversion, low-effort.
-- Trigger: cursor moves toward browser chrome after 30s on site
-- Overlay: "Wait! Here's 10% off your first order" + email input
-- emailService.web.js integration: add to newsletter + send coupon
-- couponsService.web.js: generate single-use 10% code
-- Tests: trigger logic (not repeated), email capture, coupon delivery
+- **Implementation**: Wix Lightbox (single lightbox element — Stilgar adds one lightbox to site, no full hookup needed). Velo opens it via `wixWindow.openLightbox('exitIntentLightbox', data)` on cursor-leave event.
+- **Dependency on Stilgar**: Add one Lightbox element named `exitIntentLightbox` to the site in the editor. Single-element add, not a full hookup session.
+- Trigger: cursor moves toward browser chrome after 30s (mouseleave on document), once per session
+- Content: "Wait! Here's 10% off your first order" + email input field
+- emailService.web.js: add to newsletter list + send coupon code email
+- couponsService.web.js: generate single-use 10% code on submit
+- Tests: trigger logic (not repeated per session), email capture, coupon delivery, lightbox open/close (15+ tests)
 
 ### 4C: Affiliate Program Dashboard (P3)
 affiliateProgram.web.js built — needs UI portal.
@@ -157,13 +164,15 @@ smsService.web.js exists.
 
 ## Crew Assignments
 
-| Worker | Priority | Bead(s) | Track |
-|--------|----------|---------|-------|
-| **godfrey** | P1 → P2 | CF-qg7d (marketing pixels) → 1C (Facebook catalog) → 1D (social story cron) | Track 1 |
-| **radahn** | P1 → P2 | CF-26cr + blog stories → 3B topic clusters | Track 3 |
-| **miquella** | P1 → P2 | CF-q4zm → CF-g5fa (Style Quiz) → 2B cart recovery → 2E referral | Tracks 2+4 |
-| **rennala** | P1 → P2 | CF-mwpw → 2A welcome email → 2C browse abandonment → 4B exit intent | Tracks 2+4 |
-| **polecats** | P1 | CF-267m (S7), CF-7zri (S9), CF-h7eh (S8), CF-kbsg (S12), CF-yixo (S15), CF-g5fa, CF-av74, CF-avez, CF-yz54 | Hookup Assist + Style Quiz |
+| Worker | Current | Queue (in order) | Tracks |
+|--------|---------|-----------------|--------|
+| **godfrey** | CF-qg7d (TikTok+Pinterest pixels) | 1B Pinterest Rich Pins → 1C Facebook catalog smoke test → 1D social story cron → 2D loyalty endpoint | Track 1 → 2 |
+| **radahn** | CF-26cr (Blog S1) + CF-9mx0 (related products) | blog RSS fix → 3B topic clusters | Track 3 |
+| **miquella** | CF-q4zm (Style Quiz S1) | CF-g5fa (Style Quiz S2) → 2B cart recovery → 2E referral program UI | Style Quiz → Tracks 2+4 |
+| **rennala** | CF-mwpw (Gift Cards S1) | 2A welcome email series → 2C browse abandonment → 4B exit intent capture | Tracks 2+4 |
+| **polecats (9)** | Unassigned | CF-267m (HA S7), CF-7zri (HA S9), CF-h7eh (HA S8), CF-kbsg (HA S12), CF-yixo (HA S15), CF-av74 (SQ S3), CF-avez (SQ S4), CF-yz54 (SQ S5), CF-75d1 (SQ S6) | Hookup Assist + Style Quiz (miquella owns S1+S2; polecats own S3-S6) |
+
+**Boundary note**: miquella owns Style Quiz S1 (CF-q4zm) and S2 (CF-g5fa). Polecats own S3–S6 (CF-av74, CF-avez, CF-yz54, CF-75d1). All Style Quiz polecat work feeds back to miquella for review before merge.
 
 ---
 
@@ -172,17 +181,21 @@ smsService.web.js exists.
 | ID | Title | Priority | Assignee |
 |----|-------|----------|----------|
 | TBD | Social story automation cron activation | P1 | godfrey |
-| TBD | Welcome email series (3-part) | P1 | rennala |
-| TBD | Cart recovery email activation | P1 | miquella |
-| TBD | Pinterest Rich Pins verification | P2 | godfrey |
+| TBD | Welcome email series (3-part: welcome/style-guide/first-purchase) | P1 | rennala |
+| TBD | Cart recovery — cron-based (1hr poll, not Wix Automations) | P1 | miquella |
+| TBD | Pinterest Rich Pins verification — og tags + Pinterest Validator | P2 | godfrey |
+| TBD | Facebook catalog smoke test + cron health check | P2 | godfrey |
 | TBD | Browse abandonment email flow | P2 | rennala |
-| TBD | Referral program public UI | P2 | miquella |
-| TBD | UGC photo review workflow | P2 | miquella |
-| TBD | Exit intent capture overlay | P2 | rennala |
-| TBD | Loyalty tier HTTP endpoint | P2 | godfrey |
-| TBD | Blog RSS feed fix (404 → 200) | P2 | radahn |
-| TBD | Topic cluster CMS + dynamic pages | P2 | radahn |
-| TBD | SMS campaign sequences | P3 | TBD |
+| TBD | Referral program public UI — link gen + share + reward trigger | P2 | miquella |
+| TBD | UGC photo review workflow — submit + moderation + display | P2 | miquella |
+| TBD | Exit intent capture — Wix Lightbox + email capture + coupon | P2 | rennala |
+| TBD | Loyalty tier HTTP endpoint /_functions/loyalty/{memberId} | P2 | godfrey |
+| TBD | Blog RSS feed fix (endpoint returns 404) | P2 | radahn |
+| TBD | Topic cluster CMS collection + dynamic pages /guides/[topic] | P2 | radahn |
+| TBD | Transactional email audit (order confirm, ship, delivery) | P2 | rennala |
+| TBD | Email A/B testing — welcome series variants (infra exists in abTesting.web.js) | P2 | rennala |
+| TBD | GA4 + pixel attribution validation — verify event schema alignment | P2 | godfrey |
+| TBD | SMS campaign sequences (requires Twilio key — verify in secrets.env first) | P3 | TBD |
 | TBD | Affiliate portal dashboard | P3 | TBD |
 
 ---
@@ -200,10 +213,14 @@ smsService.web.js exists.
 
 ## Dependencies & Blockers
 
-- **Premium upgrade**: Required for TikTok/Pinterest pixel activation on live site. Staging can be tested without it.
-- **Editor hookup**: Loyalty display + social proof widgets blocked until Stilgar wires nicknames. Backend can be built now.
-- **Wix Automations**: Cart recovery + browse abandonment triggers require Wix Automations access (available on Premium).
-- **TikTok/Pinterest API keys**: In secrets.env — godfrey should verify at start of CF-qg7d.
+- **Premium upgrade** (OWNER: Stilgar — decision needed): Required for TikTok/Pinterest pixel activation on live site. Pixels can be built + tested on staging without it. All activation work proceeds; flip the switch at upgrade.
+- **Editor hookup (most features)**: Loyalty display, social proof widgets, UGC display section, product gallery blocked until Stilgar wires element nicknames. All backend work can be built now; frontend wiring follows hookup.
+- **Exit intent lightbox** (OWNER: Stilgar — single action): Stilgar adds ONE Lightbox element named `exitIntentLightbox` in editor. ~5 min task, not a full hookup session.
+- **Wix Automations uncertainty**: Trigger reliability for cart recovery/browse abandonment is unconfirmed on current plan. Using cron-based fallback for both (works on any plan). Revisit with native Automations post-Premium.
+- **TikTok/Pinterest/Twilio API keys**: TikTok + Pinterest in secrets.env — godfrey verifies at start of CF-qg7d. Twilio SMS key: check secrets.env before starting 4D — if absent, 4D stays P3-deferred.
+- **Cookie consent (GDPR/CCPA)**: Pixels must respect Wix cookieManager consent status. Built into 1A spec. No separate work needed.
+- **Facebook catalog**: Must confirm Meta Business Manager access + catalog ID in secrets.env before 1C.
+- **UGC admin dashboard**: `/admin-reviews` page cannot be a Wix page until editor hookup lands. Interim: implement as HTTP-only admin endpoint (/_functions/adminReviews with API key auth) until dashboard page is wired.
 
 ---
 
