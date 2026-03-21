@@ -46,6 +46,9 @@ export const createWelcomeCoupon = webMethod(
         expirationTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
       });
 
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Welcome', '10%', expiresAt);
+
       return {
         success: true,
         code: coupon.code,
@@ -61,6 +64,8 @@ export const createWelcomeCoupon = webMethod(
 
 /**
  * Get active coupons for the current member.
+ * Queries Members/MemberCoupons by memberEmail — no other members' coupon
+ * records transit the app layer (fixes IDOR: CVE/CF-env4).
  *
  * @function getActiveCoupons
  * @returns {Promise<Array>} List of active coupons with code, discount, expiry
@@ -80,21 +85,21 @@ export const getActiveCoupons = webMethod(
       ).toLowerCase();
       if (!memberEmail) return [];
 
-      const result = await coupons.queryAllCoupons()
+      // Member-scoped DB query — only this member's coupons are returned.
+      const result = await wixData.query('Members/MemberCoupons')
+        .eq('memberEmail', memberEmail)
         .eq('active', true)
         .find();
 
-      return (result.items || [])
-        .filter(c => c.name?.toLowerCase().includes(memberEmail))
-        .map(c => ({
-          _id: c._id,
-          code: c.code,
-          name: c.name,
-          discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
-          minimumSubtotal: c.minimumSubtotal || 0,
-          expirationTime: c.expirationTime,
-          active: c.active,
-        }));
+      return (result.items || []).map(c => ({
+        _id: c._id,
+        code: c.couponCode,
+        name: c.couponType,
+        discount: c.discount,
+        minimumSubtotal: c.minimumSubtotal || 0,
+        expirationTime: c.expiresAt,
+        active: c.active,
+      }));
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];
@@ -136,6 +141,9 @@ export const createBirthdayCoupon = webMethod(
         startTime: new Date(),
         expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       });
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Birthday', '15%', expiresAt);
 
       return {
         success: true,
@@ -181,6 +189,9 @@ export const createTierUpgradeCoupon = webMethod(
         startTime: new Date(),
         expirationTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
       });
+
+      const tierExpiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, `${tier} Tier`, `${discount}%`, tierExpiresAt);
 
       return {
         success: true,
@@ -268,6 +279,8 @@ export const generateRecoveryCoupon = webMethod(
           '— idempotency not guaranteed on retry:', insertErr.message);
       }
 
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', expiresAtISO);
+
       return {
         success: true,
         code: coupon.code,
@@ -314,6 +327,9 @@ export const createCartRecoveryCoupon = webMethod(
         expirationTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
       });
 
+      const recoveryExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', recoveryExpiresAt);
+
       return {
         success: true,
         code: coupon.code,
@@ -328,6 +344,31 @@ export const createCartRecoveryCoupon = webMethod(
 );
 
 // ── Internal helpers ──────────────────────────────────────────────────
+
+/**
+ * Write a coupon record to Members/MemberCoupons so getActiveCoupons can do
+ * a member-scoped DB query instead of fetching all coupons (IDOR fix CF-env4).
+ * Best-effort — never throws; logs a warning on failure.
+ * @param {string} memberEmail
+ * @param {string} couponCode
+ * @param {string} couponType  - Human-readable type label (e.g. 'Welcome', 'Birthday')
+ * @param {string} discount    - Display string, e.g. '10%'
+ * @param {string} expiresAt   - ISO 8601 string
+ */
+async function _insertMemberCouponRecord(memberEmail, couponCode, couponType, discount, expiresAt) {
+  try {
+    await wixData.insert('Members/MemberCoupons', {
+      memberEmail,
+      couponCode,
+      couponType,
+      discount,
+      expiresAt,
+      active: true,
+    });
+  } catch (err) {
+    console.warn('[couponsService] MemberCoupons insert failed for', couponCode, ':', err.message);
+  }
+}
 
 async function generateCode(prefix) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I/O/0/1 for clarity
