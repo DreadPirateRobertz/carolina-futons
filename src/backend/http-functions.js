@@ -16,7 +16,7 @@ import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
-import { CLUSTERS, SITE_URL as CLUSTER_SITE_URL } from 'backend/utils/topicClusterData';
+import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1070,7 +1070,7 @@ export function get_robotsTxt() {
 export function get_topicCluster(request) {
   try {
     const rawSlug = (request && Array.isArray(request.path) && request.path[0]) || '';
-    const slug = validateSlug(rawSlug) || sanitize(rawSlug, 100);
+    const slug = validateSlug(rawSlug);
 
     if (!slug) {
       return badRequest({
@@ -1092,12 +1092,12 @@ export function get_topicCluster(request) {
       cluster: {
         pillarSlug: cluster.pillarSlug,
         pillarTitle: cluster.pillarTitle,
-        pillarUrl: `${CLUSTER_SITE_URL}/buying-guides/${cluster.pillarSlug}`,
+        pillarUrl: `${SITE_URL}/buying-guides/${cluster.pillarSlug}`,
         topic: cluster.topic,
         keywords: cluster.keywords,
         spokePages: cluster.spokePages.map(sp => ({
           ...sp,
-          url: `${CLUSTER_SITE_URL}/buying-guides/${sp.slug}`,
+          url: `${SITE_URL}/buying-guides/${sp.slug}`,
         })),
         spokeCount: cluster.spokePages.length,
       },
