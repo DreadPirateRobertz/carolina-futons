@@ -241,7 +241,7 @@ describe('redeemReferralCode', () => {
 describe('completeReferral', () => {
   it('completes a signed-up referral and issues credits', async () => {
     __seed('Referrals', [
-      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1', orderNumber: '' },
+      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1', refereeEmail: 'user@example.com', orderNumber: '' },
     ]);
     __seed('ReferralCredits', []);
     const result = await completeReferral('ABCD1234', 'ORD-001');
@@ -254,7 +254,7 @@ describe('completeReferral', () => {
 
   it('issues referrer_bonus and referee_bonus credits', async () => {
     __seed('Referrals', [
-      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1' },
+      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1', refereeEmail: 'user@example.com' },
     ]);
     __seed('ReferralCredits', []);
     await completeReferral('ABCD1234', 'ORD-001');
@@ -286,7 +286,7 @@ describe('completeReferral', () => {
 
   it('skips duplicate credit issuance (idempotent)', async () => {
     __seed('Referrals', [
-      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1' },
+      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1', refereeEmail: 'user@example.com' },
     ]);
     __seed('ReferralCredits', [
       { _id: 'c1', referralId: 'r1', source: 'referrer_bonus', memberId: 'referrer-1', amount: 50 },
@@ -299,7 +299,7 @@ describe('completeReferral', () => {
 
   it('sets credit expiry 90 days from now', async () => {
     __seed('Referrals', [
-      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1' },
+      { _id: 'r1', referralCode: 'ABCD1234', status: 'signed_up', referrerMemberId: 'referrer-1', refereeEmail: 'user@example.com' },
     ]);
     __seed('ReferralCredits', []);
     const before = Date.now();

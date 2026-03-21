@@ -25,7 +25,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { triggeredEmails } from 'wix-crm-backend';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize } from 'backend/utils/sanitize';
 
 const PRICE_DROP_THRESHOLD = 0.10; // 10%
 const PRICE_DROP_LOOKBACK_DAYS = 30;
@@ -126,9 +126,10 @@ export const checkPriceDrops = webMethod(
       const since = new Date(Date.now() - PRICE_DROP_LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
       const cooldownSince = new Date(Date.now() - ALERT_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
 
-      // Get all price history in lookback window
+      // Get all price history in lookback window (limit 1000 — sufficient for store scale)
       const historyResult = await wixData.query('PriceHistory')
         .ge('date', since)
+        .limit(1000)
         .find();
 
       // Group by productId, find 30-day high and current price
@@ -229,9 +230,10 @@ export const checkBackInStock = webMethod(
   Permissions.Admin,
   async () => {
     try {
-      // Find wishlist items marked as out-of-stock
+      // Find wishlist items marked as out-of-stock (limit 1000 — sufficient for store scale)
       const wishlistResult = await wixData.query('Wishlist')
         .eq('inStock', false)
+        .limit(1000)
         .find();
 
       if (wishlistResult.items.length === 0) {

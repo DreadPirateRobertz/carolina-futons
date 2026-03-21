@@ -19,6 +19,7 @@ import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
+import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1417,5 +1418,84 @@ export async function post_trackReferral(request) {
       body: JSON.stringify({ error: 'Internal server error' }),
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+}
+
+// ── Bundle Deals API ─────────────────────────────────────────────────
+//
+// GET  /_functions/bundles          → list all active bundles
+// GET  /_functions/bundles/{slug}   → single bundle detail
+// POST /_functions/addBundleToCart  → add bundle to cart + auto-apply coupon
+
+/**
+ * GET /_functions/bundles
+ *   Lists all active bundles.
+ *
+ * GET /_functions/bundles?slug=<slug>
+ *   Returns a single bundle by slug (via query param — Wix does not support
+ *   path-segment routing for named HTTP functions).
+ */
+export async function get_bundles(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    const slug = request.path && request.path[0];
+    if (slug) {
+      const result = await getBundleBySlug(slug);
+      if (!result.success) {
+        return serverError({ body: JSON.stringify({ error: result.error || 'Server error' }), headers: JSON_HEADERS });
+      }
+      if (!result.bundle) {
+        return notFound({ body: JSON.stringify({ error: 'Bundle not found' }), headers: JSON_HEADERS });
+      }
+      return ok({ body: JSON.stringify(result.bundle), headers: JSON_HEADERS });
+    }
+
+    const result = await listBundles();
+    if (!result.success) {
+      return serverError({ body: JSON.stringify({ error: 'Failed to load bundles' }), headers: JSON_HEADERS });
+    }
+    return ok({ body: JSON.stringify(result.bundles), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (get_bundles):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+/**
+ * POST /_functions/addBundleToCart
+ *
+ * Body: { "slug": "complete-futon-set" }
+ *
+ * Adds all bundle products to the visitor's cart and auto-applies the
+ * bundle coupon code. All pricing is derived from CMS — no client values used.
+ */
+export async function post_addBundleToCart(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    if (!body.slug || typeof body.slug !== 'string') {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: slug' }), headers: JSON_HEADERS });
+    }
+
+    const result = await addBundleToCart(body.slug);
+
+    if (!result.success) {
+      if (result.errorCode === 'BUNDLE_NOT_FOUND') {
+        return notFound({ body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
+      return badRequest({ body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
+
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (addBundleToCart):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }
