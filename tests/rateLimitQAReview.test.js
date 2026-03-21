@@ -89,6 +89,8 @@ describe('checkRateLimit', () => {
 });
 
 // ── insertGuestQuestion rate limiting ─────────────────────────────────────────
+// Note: _opts is intentionally absent from the webMethod to prevent clock
+// injection by anonymous callers. Tests drive state via __seed() instead.
 
 describe('insertGuestQuestion — rate limiting', () => {
   const validParams = {
@@ -97,6 +99,22 @@ describe('insertGuestQuestion — rate limiting', () => {
     memberName: 'Guest User',
     email: 'guest@example.com',
   };
+
+  // Seed a rate-limit record with windowStart in the recent past (within window)
+  function seedMaxed(collection, email) {
+    __seed(collection, [{
+      _id: 'rl-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      windowStart: new Date(Date.now() - 1000), // 1s ago — well within 1-hour window
+    }]);
+  }
+
+  // Seed an expired rate-limit record (window has passed)
+  function seedExpired(collection, email) {
+    __seed(collection, [{
+      _id: 'rl-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      windowStart: new Date(Date.now() - RATE_LIMIT_WINDOW_MS - 5000), // expired
+    }]);
+  }
 
   it('requires a valid email', async () => {
     const result = await insertGuestQuestion({ ...validParams, email: '' });
@@ -111,28 +129,28 @@ describe('insertGuestQuestion — rate limiting', () => {
   });
 
   it('allows submission when under rate limit', async () => {
-    const result = await insertGuestQuestion({ ...validParams, _opts: { now: NOW } });
+    const result = await insertGuestQuestion(validParams);
     expect(result.success).toBe(true);
     expect(result.data).toHaveProperty('_id');
   });
 
   it('blocks submission when rate limit is exceeded', async () => {
-    __seed(COLLECTION_QA, [makeRateLimitRecord(COLLECTION_QA, validParams.email, RATE_LIMIT_MAX, NOW)]);
-    const result = await insertGuestQuestion({ ...validParams, _opts: { now: NOW + 1000 } });
+    seedMaxed(COLLECTION_QA, validParams.email);
+    const result = await insertGuestQuestion(validParams);
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many/i);
   });
 
   it('treats email case-insensitively for rate limit key', async () => {
-    __seed(COLLECTION_QA, [makeRateLimitRecord(COLLECTION_QA, 'guest@example.com', RATE_LIMIT_MAX, NOW)]);
-    const result = await insertGuestQuestion({ ...validParams, email: 'GUEST@EXAMPLE.COM', _opts: { now: NOW + 1 } });
+    seedMaxed(COLLECTION_QA, 'guest@example.com');
+    const result = await insertGuestQuestion({ ...validParams, email: 'GUEST@EXAMPLE.COM' });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many/i);
   });
 
   it('allows submission again after rate limit window resets', async () => {
-    __seed(COLLECTION_QA, [makeRateLimitRecord(COLLECTION_QA, validParams.email, RATE_LIMIT_MAX, NOW - RATE_LIMIT_WINDOW_MS - 1)]);
-    const result = await insertGuestQuestion({ ...validParams, _opts: { now: NOW } });
+    seedExpired(COLLECTION_QA, validParams.email);
+    const result = await insertGuestQuestion(validParams);
     expect(result.success).toBe(true);
   });
 
@@ -150,36 +168,50 @@ describe('insertGuestQuestion — rate limiting', () => {
 });
 
 // ── submitReview rate limiting ────────────────────────────────────────────────
+// Note: _opts removed from webMethod. Tests seed ReviewRateLimit state directly.
 
 describe('submitReview — rate limiting', () => {
   beforeEach(() => {
     __seed('ReviewRequests', reviewRequests);
   });
 
+  function seedMaxed(email) {
+    __seed(COLLECTION_REVIEW, [{
+      _id: 'rl-rev-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      windowStart: new Date(Date.now() - 1000),
+    }]);
+  }
+
+  function seedExpired(email) {
+    __seed(COLLECTION_REVIEW, [{
+      _id: 'rl-rev-1', key: email.toLowerCase(), count: RATE_LIMIT_MAX,
+      windowStart: new Date(Date.now() - RATE_LIMIT_WINDOW_MS - 5000),
+    }]);
+  }
+
   it('allows submission when under rate limit', async () => {
-    const result = await submitReview('rev-001', 4, 'Great futon!', { now: NOW });
+    const result = await submitReview('rev-001', 4, 'Great futon!');
     expect(result.success).toBe(true);
   });
 
   it('blocks submission when rate limit exceeded for customer email', async () => {
     // rev-001 has customerEmail 'jane@example.com'
-    __seed(COLLECTION_REVIEW, [makeRateLimitRecord(COLLECTION_REVIEW, 'jane@example.com', RATE_LIMIT_MAX, NOW)]);
-    const result = await submitReview('rev-001', 4, 'Great futon!', { now: NOW + 1000 });
+    seedMaxed('jane@example.com');
+    const result = await submitReview('rev-001', 4, 'Great futon!');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many/i);
   });
 
   it('allows submission after rate limit window resets', async () => {
-    __seed(COLLECTION_REVIEW, [makeRateLimitRecord(COLLECTION_REVIEW, 'jane@example.com', RATE_LIMIT_MAX, NOW - RATE_LIMIT_WINDOW_MS - 1)]);
-    const result = await submitReview('rev-001', 4, 'Great futon!', { now: NOW });
+    seedExpired('jane@example.com');
+    const result = await submitReview('rev-001', 4, 'Great futon!');
     expect(result.success).toBe(true);
   });
 
   it('independent customers have independent rate limit buckets', async () => {
-    // Block jane but allow bob
-    __seed(COLLECTION_REVIEW, [makeRateLimitRecord(COLLECTION_REVIEW, 'jane@example.com', RATE_LIMIT_MAX, NOW)]);
-    // rev-002 has customerEmail 'bob@example.com' — should still pass
-    const result = await submitReview('rev-002', 5, 'Very comfy!', { now: NOW + 1000 });
+    // Block jane but allow bob (rev-002 has customerEmail 'bob@example.com')
+    seedMaxed('jane@example.com');
+    const result = await submitReview('rev-002', 5, 'Very comfy!');
     expect(result.success).toBe(true);
   });
 });

@@ -290,7 +290,7 @@ export const getPendingReviewRequests = webMethod(
  */
 export const submitReview = webMethod(
   Permissions.Anyone,
-  async (requestId, rating, reviewText, _opts) => {
+  async (requestId, rating, reviewText) => {
     try {
       if (!requestId) throw new Error('requestId is required.');
 
@@ -305,8 +305,10 @@ export const submitReview = webMethod(
       const record = await wixData.get('ReviewRequests', cleanId);
       if (!record) throw new Error('Review request not found.');
 
+      if (!record.customerEmail) throw new Error('Review request has no customer email.');
+
       // Rate-limit by the customer email on the review request record
-      const { allowed } = await checkRateLimit('ReviewRateLimit', record.customerEmail, _opts);
+      const { allowed } = await checkRateLimit('ReviewRateLimit', record.customerEmail);
       if (!allowed) return { success: false, error: 'Too many submissions. Please try again later.' };
 
       record.status = 'completed';
