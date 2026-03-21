@@ -104,11 +104,23 @@ cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/blogRssFeedFix.tes
 
 - [ ] **Step 4: Add get_blogRssFeed to http-functions.js**
 
+> **CRITICAL — Wix architecture note (confirmed 2026-03-21 by radahn):** You CANNOT import `webMethod`-wrapped functions from `backend/*.web.js` inside `http-functions.js`. They run in different Wix execution contexts. Imports will silently fail or throw. Inline the data fetch logic directly.
+
 ```js
-import { generateRssFeed } from 'backend/blogRssFeed.web';
+// Do NOT: import { generateRssFeed } from 'backend/blogRssFeed.web';
+// The webMethod context is incompatible with http-functions. Inline instead:
+import wixData from 'wix-data';
 
 export async function get_blogRssFeed(request) {
-  const xml = await generateRssFeed();
+  const result = await wixData.query('BlogPosts')
+    .eq('published', true)
+    .descending('_createdDate')
+    .limit(20)
+    .find();
+  const items = result.items.map(p =>
+    `<item><title>${p.title || ''}</title><link>https://carolinafutons.com/post/${p.slug || ''}</link><pubDate>${new Date(p._createdDate).toUTCString()}</pubDate></item>`
+  ).join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Carolina Futons Blog</title><link>https://carolinafutons.com/blog</link><description>Futon tips, guides, and news</description>\n${items}\n</channel></rss>`;
   return response({
     status: 200,
     headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' },
@@ -117,11 +129,10 @@ export async function get_blogRssFeed(request) {
 }
 ```
 
-If `generateRssFeed` doesn't exist in blogRssFeed.web.js, check the actual export name:
+Check actual BlogPosts collection name if unsure:
 ```bash
-grep "^export" /Users/hal/gt/cfutons/refinery/rig/src/backend/blogRssFeed.web.js
+grep -r "BlogPosts\|blogPosts" /Users/hal/gt/cfutons/refinery/rig/src/backend/ | head -5
 ```
-Use the actual exported function name.
 
 - [ ] **Step 5: Run tests — all pass**
 
