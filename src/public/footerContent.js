@@ -21,6 +21,7 @@ export function getFooterShopLinks() {
     { label: 'Wall Hugger Frames', path: '/wall-huggers' },
     { label: 'Casegoods & Accessories', path: '/casegoods-accessories' },
     { label: 'Sale & Clearance', path: '/sales' },
+    { label: 'Gift Cards', path: '/gift-cards' },
   ];
 }
 
