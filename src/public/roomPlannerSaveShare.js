@@ -78,6 +78,9 @@ export function saveLayout(canvasState, name, storage = globalThis.localStorage)
  */
 export function loadLayout(name, storage = globalThis.localStorage) {
   try {
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return { ok: false, error: 'Layout name is required.' };
+    }
     const key = STORAGE_KEY_PREFIX + name.trim();
     const raw = storage.getItem(key);
     if (!raw) return { ok: false, error: 'Layout not found.' };
@@ -97,6 +100,9 @@ export function loadLayout(name, storage = globalThis.localStorage) {
  */
 export function deleteLayout(name, storage = globalThis.localStorage) {
   try {
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return { ok: false };
+    }
     const safeName = name.trim();
     const key = STORAGE_KEY_PREFIX + safeName;
     storage.removeItem(key);
@@ -155,7 +161,8 @@ export function encodeShareUrl(canvasState, baseUrl = '') {
     })),
   };
 
-  const encoded = btoa(JSON.stringify(payload));
+  // encodeURIComponent handles Unicode/emoji safely; atob/btoa only support Latin-1
+  const encoded = encodeURIComponent(JSON.stringify(payload));
   const sep = baseUrl.includes('?') ? '&' : '?';
   return `${baseUrl}${sep}${SHARE_PARAM}=${encoded}`;
 }
@@ -168,7 +175,7 @@ export function encodeShareUrl(canvasState, baseUrl = '') {
 export function decodeShareUrl(encodedParam) {
   try {
     if (!encodedParam) return { ok: false, error: 'No layout param.' };
-    const json = atob(encodedParam);
+    const json = decodeURIComponent(encodedParam);
     const payload = JSON.parse(json);
     if (!payload.room || !Array.isArray(payload.products)) {
       return { ok: false, error: 'Invalid layout data.' };
@@ -240,6 +247,6 @@ export function exportToPng(canvasEl, filename = 'room-layout.png', dom = global
  */
 export function buildExportFilename(room) {
   if (!room || !room.width || !room.depth) return 'room-layout.png';
-  const ft = (in_) => Math.round(in_ / 12);
+  const ft = (inches) => Math.round(inches / 12);
   return `room-${ft(room.width)}x${ft(room.depth)}ft.png`;
 }

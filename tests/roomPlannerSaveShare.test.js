@@ -215,14 +215,14 @@ describe('encodeShareUrl', () => {
     const state = makeState({ selectedProductId: 'p1' });
     const url = encodeShareUrl(state, '');
     const param = url.split(`${SHARE_PARAM}=`)[1];
-    const decoded = JSON.parse(atob(param));
+    const decoded = JSON.parse(decodeURIComponent(param));
     expect(decoded.selectedProductId).toBeUndefined();
   });
 
   it('includes room dimensions in encoded payload', () => {
     const url = encodeShareUrl(makeState(), '');
     const param = url.split(`${SHARE_PARAM}=`)[1];
-    const decoded = JSON.parse(atob(param));
+    const decoded = JSON.parse(decodeURIComponent(param));
     expect(decoded.room.width).toBe(180);
   });
 
@@ -243,12 +243,12 @@ describe('decodeShareUrl', () => {
     expect(decodeShareUrl('').ok).toBe(false);
   });
 
-  it('returns ok:false for invalid base64', () => {
-    expect(decodeShareUrl('not-base64!!!').ok).toBe(false);
+  it('returns ok:false for invalid JSON (not a layout)', () => {
+    expect(decodeShareUrl('not-valid-json').ok).toBe(false);
   });
 
-  it('returns ok:false for valid base64 but missing room', () => {
-    const bad = btoa(JSON.stringify({ products: [] }));
+  it('returns ok:false for valid JSON but missing room', () => {
+    const bad = encodeURIComponent(JSON.stringify({ products: [] }));
     expect(decodeShareUrl(bad).ok).toBe(false);
   });
 
