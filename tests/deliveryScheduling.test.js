@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import wixData, { __seed, __reset as resetData } from 'wix-data';
 import { __setMember, __reset as resetMembers } from './__mocks__/wix-members-backend.js';
 import {
   getAvailableDeliverySlots,
@@ -770,16 +770,17 @@ describe('bookAppointment — rate limiting (CF-ylof)', () => {
     expect(result.allowed).toBe(false);
   });
 
-  it('_checkBookingRateLimit increments count on each call', async () => {
+  it('allows the 5th call but blocks the 6th (fencepost)', async () => {
     __seed(BOOKING_RL_COLLECTION, [{
       _id: 'rl-inc',
       key: 'inc@test.com',
-      count: 2,
+      count: 4, // 4 used — one more allowed
       windowStart: new Date(Date.now() - 1000),
     }]);
-    const result = await _checkBookingRateLimit('inc@test.com');
-    expect(result.allowed).toBe(true);
-    // Count should now be 3 — verify via a 5-count seed + call that hits limit
+    const fifth = await _checkBookingRateLimit('inc@test.com');
+    expect(fifth.allowed).toBe(true);
+    const sixth = await _checkBookingRateLimit('inc@test.com');
+    expect(sixth.allowed).toBe(false);
   });
 });
 
@@ -806,10 +807,10 @@ describe('cancelAppointment — rate limiting (CF-ylof)', () => {
     expect(result.success).toBe(true);
   });
 
-  it('blocks cancel after 3 attempts by same token key in 1 hour', async () => {
+  it('blocks cancel after 3 attempts by same appointmentId in 1 hour', async () => {
     __seed(CANCEL_RL_COLLECTION, [{
       _id: 'rl-cancel',
-      key: cancelToken.slice(0, 10), // rate key derived from token prefix
+      key: appointmentId.toLowerCase(), // rate key is appointmentId (server-assigned)
       count: 3,
       windowStart: new Date(Date.now() - 10 * 60 * 1000), // 10 min ago — within window
     }]);
@@ -842,6 +843,37 @@ describe('cancelAppointment — rate limiting (CF-ylof)', () => {
       windowStart: new Date(Date.now() - 61 * 60 * 1000), // 61 min ago
     }]);
     const result = await _checkCancelRateLimit('old-key');
+    expect(result.allowed).toBe(true);
+  });
+
+  it('allows the 3rd cancel but blocks the 4th (fencepost)', async () => {
+    __seed(CANCEL_RL_COLLECTION, [{
+      _id: 'rl-fp',
+      key: appointmentId.toLowerCase(),
+      count: 2, // 2 used — one more allowed
+      windowStart: new Date(Date.now() - 1000),
+    }]);
+    const third = await _checkCancelRateLimit(appointmentId);
+    expect(third.allowed).toBe(true);
+    const fourth = await _checkCancelRateLimit(appointmentId);
+    expect(fourth.allowed).toBe(false);
+  });
+});
+
+// ── Rate limit fail-open (CF-ylof) ──────────────────────────────────────────
+
+describe('rate limit — fail-open on DB error (CF-ylof)', () => {
+  afterEach(() => { vi.restoreAllMocks(); });
+
+  it('_checkBookingRateLimit fails open when query throws', async () => {
+    vi.spyOn(wixData, 'query').mockImplementationOnce(() => { throw new Error('DB down'); });
+    const result = await _checkBookingRateLimit('error@test.com');
+    expect(result.allowed).toBe(true);
+  });
+
+  it('_checkCancelRateLimit fails open when query throws', async () => {
+    vi.spyOn(wixData, 'query').mockImplementationOnce(() => { throw new Error('DB down'); });
+    const result = await _checkCancelRateLimit('apt-error-id');
     expect(result.allowed).toBe(true);
   });
 });

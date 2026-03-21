@@ -8,13 +8,12 @@
  * @requires wix-data
  * @requires backend/utils/sanitize
  *
- * @setup (rate limiting)
+ * @setup
  * Create 'AppointmentBookingRateLimit' CMS collection:
  *   key (Text), count (Number), windowStart (DateTime)
  * Create 'AppointmentCancelRateLimit' CMS collection:
  *   key (Text), count (Number), windowStart (DateTime)
  *
- * @setup
  * Create 'DeliverySchedule' CMS collection with fields:
  *   orderId (Text), date (Date), timeWindow (Text: 'morning'|'afternoon'),
  *   type (Text: 'standard'|'white_glove'), status (Text), customerEmail (Text),
@@ -255,90 +254,71 @@ export const getMyDeliverySchedule = webMethod(
 );
 
 // ── Appointment Rate Limiting ────────────────────────────────────────
-// CMS-based, keyed by normalized email (bookings) or token prefix (cancels).
-// Wix webMethods do not expose caller IP — email/token is the available key.
+// CMS-based, keyed by normalized email (bookings) or appointmentId (cancels).
+// Wix webMethods do not expose caller IP — these are the available fixed keys.
 
-const BOOKING_RL_COLLECTION = 'AppointmentBookingRateLimit';
-const BOOKING_RL_MAX = 5;
-const BOOKING_RL_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-const CANCEL_RL_COLLECTION = 'AppointmentCancelRateLimit';
-const CANCEL_RL_MAX = 3;
-const CANCEL_RL_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const BOOKING_RL = { collection: 'AppointmentBookingRateLimit', max: 5, windowMs: 24 * 60 * 60 * 1000 };
+const CANCEL_RL = { collection: 'AppointmentCancelRateLimit', max: 3, windowMs: 60 * 60 * 1000 };
 
 /**
- * Check and record a rate-limit attempt for appointment bookings.
- * Allows up to BOOKING_RL_MAX bookings per 24h per email.
- * Fails open on DB error to avoid blocking legitimate users.
+ * Generic CMS-backed rate limiter — shared by booking and cancel checks.
+ * Fails open on DB error (no legitimate users blocked by infra issues).
  *
- * @param {string} email - Normalized customer email (rate limit key)
+ * @param {string} rawKey - Rate limit key (email or token prefix)
+ * @param {{ collection: string, max: number, windowMs: number }} config
  * @param {Object} [opts] - { now: number } override for testing
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
-export async function _checkBookingRateLimit(email, opts = {}) {
+async function _checkRateLimit(rawKey, config, opts = {}) {
   const now = opts.now != null ? opts.now : Date.now();
+  const { collection, max, windowMs } = config;
+  const cleanKey = sanitize(rawKey, 254).toLowerCase();
   try {
-    const cleanKey = sanitize(email, 254).toLowerCase();
-    const existing = await wixData.query(BOOKING_RL_COLLECTION)
-      .eq('key', cleanKey).limit(1).find();
+    const existing = await wixData.query(collection).eq('key', cleanKey).limit(1).find();
 
     if (existing.items.length === 0) {
-      await wixData.insert(BOOKING_RL_COLLECTION, { key: cleanKey, count: 1, windowStart: new Date(now) });
+      await wixData.insert(collection, { key: cleanKey, count: 1, windowStart: new Date(now) });
       return { allowed: true };
     }
 
     const record = existing.items[0];
-    if (now - new Date(record.windowStart).getTime() > BOOKING_RL_WINDOW_MS) {
-      await wixData.update(BOOKING_RL_COLLECTION, { ...record, count: 1, windowStart: new Date(now) });
+    if (now - new Date(record.windowStart).getTime() > windowMs) {
+      await wixData.update(collection, { ...record, count: 1, windowStart: new Date(now) });
       return { allowed: true };
     }
 
-    if (record.count >= BOOKING_RL_MAX) return { allowed: false, reason: 'rate_limited' };
+    if (record.count >= max) return { allowed: false, reason: 'rate_limited' };
 
-    await wixData.update(BOOKING_RL_COLLECTION, { ...record, count: record.count + 1 });
+    await wixData.update(collection, { ...record, count: record.count + 1 });
     return { allowed: true };
   } catch (err) {
-    console.warn('[deliveryScheduling] Booking rate limit check failed, allowing:', err?.message);
+    console.error(`[deliveryScheduling] Rate limit check (${collection}) failed, allowing:`, err?.message);
     return { allowed: true };
   }
 }
 
 /**
- * Check and record a rate-limit attempt for appointment cancellations.
- * Allows up to CANCEL_RL_MAX cancels per 1h per rate key.
- * Rate key is the first 10 chars of the cancel token — opaque but consistent.
- * Fails open on DB error.
+ * Check and record a rate-limit attempt for appointment bookings.
+ * Allows up to 5 bookings per email per 24h.
  *
- * @param {string} key - Rate limit key (cancel token prefix)
+ * @param {string} email - Customer email (rate limit key)
+ * @param {Object} [opts] - { now: number } override for testing
+ * @returns {Promise<{allowed: boolean, reason?: string}>}
+ */
+export async function _checkBookingRateLimit(email, opts = {}) {
+  return _checkRateLimit(email, BOOKING_RL, opts);
+}
+
+/**
+ * Check and record a rate-limit attempt for appointment cancellations.
+ * Allows up to 3 cancels per appointmentId per 1h.
+ *
+ * @param {string} key - Rate limit key (appointmentId — server-assigned, not attacker-controlled)
  * @param {Object} [opts] - { now: number } override for testing
  * @returns {Promise<{allowed: boolean, reason?: string}>}
  */
 export async function _checkCancelRateLimit(key, opts = {}) {
-  const now = opts.now != null ? opts.now : Date.now();
-  try {
-    const cleanKey = sanitize(key, 50);
-    const existing = await wixData.query(CANCEL_RL_COLLECTION)
-      .eq('key', cleanKey).limit(1).find();
-
-    if (existing.items.length === 0) {
-      await wixData.insert(CANCEL_RL_COLLECTION, { key: cleanKey, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    const record = existing.items[0];
-    if (now - new Date(record.windowStart).getTime() > CANCEL_RL_WINDOW_MS) {
-      await wixData.update(CANCEL_RL_COLLECTION, { ...record, count: 1, windowStart: new Date(now) });
-      return { allowed: true };
-    }
-
-    if (record.count >= CANCEL_RL_MAX) return { allowed: false, reason: 'rate_limited' };
-
-    await wixData.update(CANCEL_RL_COLLECTION, { ...record, count: record.count + 1 });
-    return { allowed: true };
-  } catch (err) {
-    console.warn('[deliveryScheduling] Cancel rate limit check failed, allowing:', err?.message);
-    return { allowed: true };
-  }
+  return _checkRateLimit(key, CANCEL_RL, opts);
 }
 
 // ── Showroom Appointment Booking ─────────────────────────────────────
@@ -441,11 +421,6 @@ export const bookAppointment = webMethod(
         return { success: false, message: 'Date, time, visit type, name, and email are required' };
       }
 
-      const rlCheck = await _checkBookingRateLimit(data.customerEmail || '');
-      if (!rlCheck.allowed) {
-        return { success: false, message: 'Too many booking attempts. Please try again later.' };
-      }
-
       const date = sanitize(data.date, 10);
       const timeSlot = sanitize(data.timeSlot, 5);
       const visitType = sanitize(data.visitType, 20);
@@ -479,6 +454,12 @@ export const bookAppointment = webMethod(
       today.setHours(0, 0, 0, 0);
       if (dateObj <= today) {
         return { success: false, message: 'Appointment date must be in the future' };
+      }
+
+      // Rate limit after validation — typos don't burn quota
+      const rlCheck = await _checkBookingRateLimit(customerEmail);
+      if (!rlCheck.allowed) {
+        return { success: false, message: 'Too many booking attempts. Please try again later.' };
       }
 
       const duration = VISIT_TYPES[visitType].duration;
@@ -563,9 +544,8 @@ export const cancelAppointment = webMethod(
       const id = sanitize(appointmentId, 50);
       const token = sanitize(cancelToken, 50);
 
-      // Rate limit by the first 10 chars of the token — opaque but caller-consistent
-      const rlKey = token.slice(0, 10);
-      const rlCheck = await _checkCancelRateLimit(rlKey);
+      // Rate limit by appointmentId — server-assigned, not attacker-controlled
+      const rlCheck = await _checkCancelRateLimit(id);
       if (!rlCheck.allowed) {
         return { success: false, message: 'Too many cancellation attempts. Please try again later.' };
       }
