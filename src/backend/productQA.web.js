@@ -28,7 +28,12 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { triggeredEmails } from 'wix-crm-backend';
+import { getSecret } from 'wix-secrets-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
+
+const OWNER_EMAIL_TEMPLATE = 'new_product_question';
+const SITE_OWNER_SECRET = 'SITE_OWNER_CONTACT_ID';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -101,11 +106,41 @@ export const submitQuestion = webMethod(Permissions.SiteMember, async (productId
       flaggedBy: '[]',
     });
 
+    // Notify owner — best-effort, never blocks submission
+    notifyOwnerOfQuestion(productId, question, memberName).catch(() => {});
+
     return { success: true, data: { _id: inserted._id, question } };
   } catch (err) {
     return { success: false, error: 'Failed to submit question' };
   }
 });
+
+/**
+ * Send a triggered email to the site owner when a new question is submitted.
+ * Best-effort — never throws.
+ * @param {string} productId
+ * @param {string} question
+ * @param {string} memberName
+ */
+async function notifyOwnerOfQuestion(productId, question, memberName) {
+  try {
+    const ownerContactId = await getSecret(SITE_OWNER_SECRET);
+    await triggeredEmails.emailContact(OWNER_EMAIL_TEMPLATE, ownerContactId, {
+      variables: {
+        productId,
+        question,
+        memberName,
+        submittedAt: new Date().toLocaleString('en-US', {
+          timeZone: 'America/New_York',
+          dateStyle: 'full',
+          timeStyle: 'short',
+        }),
+      },
+    });
+  } catch (err) {
+    console.warn('[productQA] Owner notification failed:', err.message);
+  }
+}
 
 // ── answerQuestion ───────────────────────────────────────────────────
 
@@ -357,5 +392,51 @@ export const getQASchema = webMethod(Permissions.Anyone, async (productId) => {
     return { success: true, data: { schema, questionCount: result.items.length } };
   } catch (err) {
     return { success: false, error: 'Failed to generate schema' };
+  }
+});
+
+// ── insertGuestQuestion ───────────────────────────────────────────────
+
+/**
+ * Inserts a question from a guest (unauthenticated) user.
+ * Called by the HTTP function post_submitQuestion.
+ * @param {Object} params
+ * @param {string} params.productId
+ * @param {string} params.question
+ * @param {string} params.memberName
+ * @returns {Promise<{success: boolean, data?: {_id: string, question: string}, error?: string}>}
+ */
+export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ productId, question, memberName }) => {
+  try {
+    const cleanProductId = sanitize(String(productId || ''), 50);
+    const cleanQuestion = sanitize(String(question || ''), MAX_QUESTION_LENGTH);
+    const cleanName = sanitize(String(memberName || 'Customer'), 50) || 'Customer';
+
+    if (!validateId(cleanProductId)) return { success: false, error: 'Invalid product ID' };
+    if (!cleanQuestion || cleanQuestion.length < 10) {
+      return { success: false, error: 'Question must be at least 10 characters' };
+    }
+
+    const inserted = await wixData.insert('ProductQuestions', {
+      productId: cleanProductId,
+      memberId: null,
+      memberName: cleanName,
+      question: cleanQuestion,
+      answer: null,
+      answeredBy: null,
+      answeredAt: null,
+      helpfulVotes: 0,
+      voters: '[]',
+      status: 'pending',
+      flagCount: 0,
+      flaggedBy: '[]',
+    });
+
+    // Notify owner — best-effort
+    notifyOwnerOfQuestion(cleanProductId, cleanQuestion, cleanName).catch(() => {});
+
+    return { success: true, data: { _id: inserted._id, question: cleanQuestion } };
+  } catch (err) {
+    return { success: false, error: 'Failed to submit question' };
   }
 });

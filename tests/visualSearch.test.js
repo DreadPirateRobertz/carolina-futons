@@ -43,8 +43,8 @@ beforeEach(() => {
 // ── isValidImageUrl ──────────────────────────────────────────────
 
 describe('isValidImageUrl', () => {
-  it('accepts http URL', () => {
-    expect(isValidImageUrl('http://example.com/photo.jpg')).toBe(true);
+  it('rejects http:// URL (https only)', () => {
+    expect(isValidImageUrl('http://example.com/photo.jpg')).toBe(false);
   });
 
   it('accepts https URL', () => {
@@ -74,31 +74,39 @@ describe('isValidImageUrl', () => {
   });
 
   it('rejects localhost URL (SSRF)', () => {
-    expect(isValidImageUrl('http://localhost/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://localhost/photo.jpg')).toBe(false);
   });
 
   it('rejects 127.0.0.1 loopback (SSRF)', () => {
-    expect(isValidImageUrl('http://127.0.0.1/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://127.0.0.1/photo.jpg')).toBe(false);
   });
 
   it('rejects 127.0.0.2 loopback range (SSRF)', () => {
-    expect(isValidImageUrl('http://127.0.0.2/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://127.0.0.2/photo.jpg')).toBe(false);
   });
 
   it('rejects 10.x.x.x private range (SSRF)', () => {
-    expect(isValidImageUrl('http://10.0.0.1/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://10.0.0.1/photo.jpg')).toBe(false);
   });
 
   it('rejects 172.16.x.x private range (SSRF)', () => {
-    expect(isValidImageUrl('http://172.16.0.1/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://172.16.0.1/photo.jpg')).toBe(false);
   });
 
   it('rejects 192.168.x.x private range (SSRF)', () => {
-    expect(isValidImageUrl('http://192.168.1.1/photo.jpg')).toBe(false);
+    expect(isValidImageUrl('https://192.168.1.1/photo.jpg')).toBe(false);
   });
 
-  it('accepts a real public IP (not private)', () => {
-    expect(isValidImageUrl('http://8.8.8.8/photo.jpg')).toBe(true);
+  it('rejects 169.254.x.x link-local / AWS metadata (SSRF)', () => {
+    expect(isValidImageUrl('https://169.254.169.254/latest/meta-data/')).toBe(false);
+  });
+
+  it('rejects 0.x.x.x current-network range (SSRF)', () => {
+    expect(isValidImageUrl('https://0.0.0.0/photo.jpg')).toBe(false);
+  });
+
+  it('accepts a real public IP over https (not private)', () => {
+    expect(isValidImageUrl('https://8.8.8.8/photo.jpg')).toBe(true);
   });
 });
 

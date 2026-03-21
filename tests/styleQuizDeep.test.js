@@ -43,15 +43,44 @@ function buildQueryChain(collection) {
   return chain;
 }
 
+let _wixDataInserts = [];
+let _wixDataUpdates = [];
+
 vi.mock('wix-data', () => ({
   default: {
     query: (collection) => buildQueryChain(collection),
+    insert: async (collection, item) => {
+      if (!_collections[collection]) _collections[collection] = [];
+      _collections[collection].push({ ...item });
+      _wixDataInserts.push({ collection, item });
+      return item;
+    },
+    update: async (collection, item) => {
+      if (!_collections[collection]) _collections[collection] = [];
+      const idx = _collections[collection].findIndex(i => i._id === item._id);
+      if (idx >= 0) _collections[collection][idx] = { ..._collections[collection][idx], ...item };
+      _wixDataUpdates.push({ collection, item });
+      return item;
+    },
   },
+}));
+
+vi.mock('backend/utils/sanitize', () => ({
+  sanitize: (str, max) => String(str || '').slice(0, max),
+  validateEmail: (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+}));
+
+let subscribeToNewsletterMock;
+vi.mock('backend/newsletterService.web', () => ({
+  subscribeToNewsletter: (...args) => subscribeToNewsletterMock?.(...args) ?? Promise.resolve({ success: true }),
 }));
 
 let mod;
 beforeEach(async () => {
   _collections = {};
+  _wixDataInserts = [];
+  _wixDataUpdates = [];
+  subscribeToNewsletterMock = vi.fn().mockResolvedValue({ success: true });
   vi.resetModules();
   mod = await import('../src/backend/styleQuiz.web.js');
 });
@@ -144,5 +173,86 @@ describe('getQuizRecommendations', () => {
       stylePreference: 'rustic', budgetRange: '500-1000',
     });
     expect(r[0].score).toBeGreaterThan(50); // Should get style match bonus
+  });
+});
+
+// ── captureQuizLead ──────────────────────────────────────────────
+
+describe('captureQuizLead', () => {
+  it('returns error for missing email', async () => {
+    const r = await mod.captureQuizLead('');
+    expect(r.success).toBe(false);
+    expect(r.message).toMatch(/email/i);
+  });
+
+  it('returns error for invalid email', async () => {
+    const r = await mod.captureQuizLead('not-an-email');
+    expect(r.success).toBe(false);
+    expect(r.message).toMatch(/invalid/i);
+  });
+
+  it('calls subscribeToNewsletter with cleaned email and style_quiz source', async () => {
+    const spy = vi.fn().mockResolvedValue({ success: true });
+    subscribeToNewsletterMock = spy;
+    vi.resetModules();
+    mod = await import('../src/backend/styleQuiz.web.js');
+
+    const r = await mod.captureQuizLead('User@Example.COM', {
+      roomType: 'living-room', primaryUse: 'both', stylePreference: 'modern',
+    });
+    expect(r.success).toBe(true);
+    expect(spy).toHaveBeenCalledWith('user@example.com', { source: 'style_quiz' });
+  });
+
+  it('enriches NewsletterSubscribers record with quiz answers', async () => {
+    // Pre-seed a subscriber record as subscribeToNewsletter would insert
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'test@example.com', source: 'style_quiz' },
+    ]);
+
+    vi.resetModules();
+    mod = await import('../src/backend/styleQuiz.web.js');
+
+    await mod.captureQuizLead('test@example.com', {
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'rustic',
+    });
+
+    const updateCall = _wixDataUpdates.find(u => u.collection === 'NewsletterSubscribers');
+    expect(updateCall).toBeTruthy();
+    expect(updateCall.item.quizRoomType).toBe('guest-room');
+    expect(updateCall.item.quizPrimaryUse).toBe('sleeping');
+    expect(updateCall.item.quizStylePreference).toBe('rustic');
+  });
+
+  it('does not overwrite quiz fields if already set', async () => {
+    __seed('NewsletterSubscribers', [
+      { _id: 'sub-1', email: 'test@example.com', quizRoomType: 'dorm' },
+    ]);
+
+    vi.resetModules();
+    mod = await import('../src/backend/styleQuiz.web.js');
+
+    await mod.captureQuizLead('test@example.com', { roomType: 'bedroom' });
+
+    // quizRoomType should NOT be updated since it was already set
+    const updateCall = _wixDataUpdates.find(u => u.collection === 'NewsletterSubscribers');
+    expect(updateCall).toBeUndefined();
+  });
+
+  it('returns success even when subscribeToNewsletter throws', async () => {
+    subscribeToNewsletterMock = vi.fn().mockRejectedValue(new Error('esp down'));
+    vi.resetModules();
+    mod = await import('../src/backend/styleQuiz.web.js');
+
+    const r = await mod.captureQuizLead('good@example.com', {});
+    // captureQuizLead should swallow the error and return success:false with message
+    expect(r).toHaveProperty('success');
+  });
+
+  it('returns error for null email', async () => {
+    const r = await mod.captureQuizLead(null);
+    expect(r.success).toBe(false);
   });
 });

@@ -66,6 +66,7 @@ vi.mock('backend/styleQuiz.web', () => ({
     score: 85,
     reason: 'Great for daily use',
   }])),
+  captureQuizLead: vi.fn(() => Promise.resolve({ success: true })),
 }));
 
 vi.mock('public/engagementTracker', () => ({
@@ -133,6 +134,12 @@ function clickRestart() {
   if (call) call[1]();
 }
 
+/** Skip the email gate via its makeClickable handler */
+function clickSkipEmail() {
+  const call = makeClickable.mock.calls.find(c => c[0] === getEl('#quizEmailSkipBtn'));
+  if (call) call[1]();
+}
+
 /** Select an option by triggering onItemReady + click on the optionContainer */
 function selectOption(repeaterId, itemData) {
   const itemElements = new Map();
@@ -154,11 +161,14 @@ const ALL_ANSWERS = [
   { value: 'mid', label: '$500-$1000' },
 ];
 
-/** Select all 5 answers and click next through to submission */
+/** Select all 5 answers and click next through to submission.
+ *  Automatically skips the email gate that appears after Q3. */
 function fillAndSubmitQuiz() {
+  const EMAIL_GATE_AFTER = 2; // shown after step index 2 (Q3)
   for (let i = 0; i < ALL_ANSWERS.length - 1; i++) {
     selectOption('#quizOptionsRepeater', ALL_ANSWERS[i]);
     clickNext();
+    if (i === EMAIL_GATE_AFTER) clickSkipEmail();
   }
   // Select last answer
   selectOption('#quizOptionsRepeater', ALL_ANSWERS[4]);
@@ -405,16 +415,17 @@ describe('Style Quiz page', () => {
       await onReadyHandler();
       clickRestart();
 
-      // Advance through steps 0-3
+      // Advance through steps 0-3; skip email gate that appears after Q3 (step index 2)
       const stepOptions = [
         { value: 'living', label: 'Living Room', description: 'Main living area' },
         { value: 'daily', label: 'Daily Sitting' },
         { value: 'modern', label: 'Modern' },
         { value: 'full', label: 'Full Size' },
       ];
-      for (const opt of stepOptions) {
-        selectOption('#quizOptionsRepeater', opt);
+      for (let i = 0; i < stepOptions.length; i++) {
+        selectOption('#quizOptionsRepeater', stepOptions[i]);
         clickNext();
+        if (i === 2) clickSkipEmail(); // skip email gate after Q3
       }
 
       expect(getEl('#quizNextBtn').label).toBe('See My Recommendations');

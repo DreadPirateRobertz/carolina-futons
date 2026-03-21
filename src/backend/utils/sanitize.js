@@ -97,6 +97,54 @@ export function formatPhoneE164(phone) {
   return `+1${digits}`;
 }
 
+/**
+ * Validate that a URL is a Wix Media Manager URL.
+ * Accepted patterns:
+ *   wix:image://v1/...
+ *   wix:video://v1/...
+ *   https://static.wixstatic.com/media/...
+ *   https://*.wixmp.com/...
+ * Rejects arbitrary external URLs that could serve malicious content or leak EXIF data.
+ * CF-rr8d: ClickFix hardening — prevent attacker-supplied external image URLs.
+ *
+ * @param {string} url - URL to validate.
+ * @returns {boolean} True if the URL is a recognized Wix media URL.
+ */
+export function isWixMediaUrl(url) {
+  if (typeof url !== 'string' || !url.trim()) return false;
+  const trimmed = url.trim();
+  // Wix internal media protocol
+  if (trimmed.startsWith('wix:image://')) return true;
+  if (trimmed.startsWith('wix:video://')) return true;
+  // Wix CDN static media
+  if (/^https:\/\/static\.wixstatic\.com\/media\//i.test(trimmed)) return true;
+  // Wix user uploads CDN — [^/]* prevents path-injection bypass (e.g. attacker.com/.wixmp.com/)
+  if (/^https:\/\/[^/]*\.wixmp\.com\//i.test(trimmed)) return true;
+  return false;
+}
+
+/**
+ * Generate a UUID v4-format filename with the original file extension.
+ * Uses Math.random() — sufficient for filename uniqueness but NOT cryptographically secure.
+ * CF-rr8d: ClickFix hardening — replace user-supplied filenames with UUIDs
+ * to prevent filename-based injection and information leakage.
+ *
+ * @param {string} [extension='jpg'] - File extension (without dot).
+ * @returns {string} UUID filename like "a1b2c3d4-e5f6-7890-abcd-ef1234567890.jpg"
+ */
+export function generateUUIDFilename(extension = 'jpg') {
+  const ext = (typeof extension === 'string' ? extension : 'jpg')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase()
+    .slice(0, 10) || 'jpg';
+  // Simple UUID v4 generation (crypto not available in Wix Velo backend)
+  const hex = () => Math.floor(Math.random() * 16).toString(16);
+  const seg = (n) => Array.from({ length: n }, hex).join('');
+  const variant = ['8', '9', 'a', 'b'][Math.floor(Math.random() * 4)];
+  const uuid = `${seg(8)}-${seg(4)}-4${seg(3)}-${variant}${seg(3)}-${seg(12)}`;
+  return `${uuid}.${ext}`;
+}
+
 export function validateSlug(slug) {
   if (typeof slug !== 'string') return '';
   const cleaned = slug.trim().toLowerCase().slice(0, 100);

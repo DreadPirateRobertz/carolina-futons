@@ -2,12 +2,15 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __onInsert, __reset as resetData, __onUpdate } from './__mocks__/wix-data.js';
 import { __reset as resetSecrets, __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __reset as resetFetch, __setHandler } from './__mocks__/wix-fetch.js';
+import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 import { syncToESP, unsubscribeFromESP, getESPStatus } from '../src/backend/newsletterService.web.js';
 
 beforeEach(() => {
   resetData();
   resetSecrets();
   resetFetch();
+  resetMember();
+  __setMember({ loginEmail: 'test@example.com' });
 });
 
 // ── syncToESP with Klaviyo ─────────────────────────────────────────
@@ -39,6 +42,7 @@ describe('syncToESP — Klaviyo wired', () => {
   });
 
   it('includes email and source in Klaviyo payload', async () => {
+    __setMember({ loginEmail: 'user@test.com' });
     const capturedBodies = [];
     __setHandler((url, options) => {
       capturedBodies.push(JSON.parse(options.body));
@@ -54,6 +58,7 @@ describe('syncToESP — Klaviyo wired', () => {
   });
 
   it('subscribes profile to the configured list', async () => {
+    __setMember({ loginEmail: 'user@test.com' });
     const calls = [];
     __setHandler((url, options) => {
       calls.push({ url, method: options.method, body: options.body ? JSON.parse(options.body) : null });
@@ -165,6 +170,7 @@ describe('unsubscribeFromESP', () => {
       ESP_API_KEY: 'pk_test_abc123',
       ESP_LIST_ID: 'LIST_test_xyz',
     });
+    __setMember({ loginEmail: 'unsub@test.com' });
   });
 
   it('calls Klaviyo unsubscribe endpoint', async () => {
@@ -205,6 +211,7 @@ describe('unsubscribeFromESP', () => {
   });
 
   it('returns success even if email not in CMS (idempotent)', async () => {
+    __setMember({ loginEmail: 'unknown@test.com' });
     __setHandler(() => ({
       ok: true, status: 200, async json() { return {}; },
     }));
@@ -241,6 +248,7 @@ describe('unsubscribeFromESP', () => {
   });
 
   it('returns no_esp_configured when secrets missing', async () => {
+    __setMember({ loginEmail: 'test@test.com' });
     resetSecrets();
     const result = await unsubscribeFromESP('test@test.com');
     expect(result.unsubscribed).toBe(false);

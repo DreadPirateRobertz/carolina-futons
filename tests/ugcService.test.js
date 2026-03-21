@@ -267,9 +267,40 @@ describe('submitUGCPhoto', () => {
     expect(result.success).toBe(false);
   });
 
+  // CF-rr8d: Integration tests — external URL rejection through full submit path
+  it('rejects external URL — attacker domain', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'https://evil.com/malware.jpg',
+      caption: 'Legit photo',
+      roomType: 'living-room',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
+  it('rejects external URL — data: URI XSS vector', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'data:image/svg+xml,<svg onload="alert(1)">',
+      caption: 'XSS attempt',
+      roomType: 'bedroom',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
+  it('rejects external URL — javascript: URI', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'javascript:alert(document.cookie)',
+      caption: 'Cookie steal',
+      roomType: 'office',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
   it('sanitizes caption — HTML stripped', async () => {
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: '<script>alert("xss")</script>Beautiful futon!',
       roomType: 'living-room',
     });
@@ -282,7 +313,7 @@ describe('submitUGCPhoto', () => {
   it('truncates caption to max 300 characters', async () => {
     const longCaption = 'A'.repeat(500);
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: longCaption,
       roomType: 'living-room',
     });
@@ -293,7 +324,7 @@ describe('submitUGCPhoto', () => {
 
   it('validates roomType against allowed values', async () => {
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: 'My garage setup',
       roomType: 'garage',
     });
@@ -309,7 +340,7 @@ describe('submitUGCPhoto', () => {
       __setMember(MEMBER_1);
       __seed('UGCPhotos', []);
       const result = await submitUGCPhoto({
-        photoUrl: 'https://example.com/photo.jpg',
+        photoUrl: 'wix:image://v1/test/photo.jpg',
         caption: `Room: ${roomType}`,
         roomType,
       });
@@ -320,7 +351,7 @@ describe('submitUGCPhoto', () => {
   it('fails when not authenticated', async () => {
     __setMember(null);
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: 'Unauthorized submission',
       roomType: 'living-room',
     });
@@ -330,7 +361,7 @@ describe('submitUGCPhoto', () => {
 
   it('handles XSS in caption', async () => {
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: '<img src=x onerror=alert(1)>Nice futon',
       roomType: 'bedroom',
     });
@@ -348,7 +379,7 @@ describe('submitUGCPhoto', () => {
     });
 
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: 'Normal caption',
       roomType: 'office',
     });
@@ -359,7 +390,7 @@ describe('submitUGCPhoto', () => {
 
   it('handles missing optional fields — productId, productName, tags, socialSource', async () => {
     const result = await submitUGCPhoto({
-      photoUrl: 'https://example.com/photo.jpg',
+      photoUrl: 'wix:image://v1/test/photo.jpg',
       caption: 'Just a photo, no product link',
       roomType: 'living-room',
     });

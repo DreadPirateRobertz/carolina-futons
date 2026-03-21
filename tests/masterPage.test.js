@@ -154,6 +154,17 @@ vi.mock('wix-window-frontend', () => ({
   scrollTo: vi.fn(),
 }));
 
+const mockOpenMiniCart = vi.fn();
+const mockCloseMiniCart = vi.fn();
+const mockUpdateCartCount = vi.fn();
+const mockInitMiniCartDrawer = vi.fn();
+vi.mock('public/miniCartDrawer', () => ({
+  initMiniCartDrawer: (...args) => mockInitMiniCartDrawer(...args),
+  openMiniCart: (...args) => mockOpenMiniCart(...args),
+  closeMiniCart: (...args) => mockCloseMiniCart(...args),
+  updateCartCount: (...args) => mockUpdateCartCount(...args),
+}));
+
 vi.mock('public/footerContent', () => ({
   getFooterShopLinks: vi.fn(() => [
     { label: 'Futon Frames', path: '/futon-frames' },
@@ -983,9 +994,10 @@ describe('masterPage.js', () => {
 
     it('sets announcement text to first message', async () => {
       await onReadyHandler();
-      // initAnnouncementBar is async (fetches flash sales) — wait for it
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').text).toBeTruthy();
+      // initAnnouncementBar is async (fetches flash sales) — poll until settled
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
     });
   });
 
@@ -1083,20 +1095,23 @@ describe('masterPage.js', () => {
 
     it('sets initial announcement message text', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').text).toBeTruthy();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
     });
 
     it('sets aria-live=polite on announcement text', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
+      });
     });
 
     it('wires dismiss button with click handler', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+      });
     });
   });
 
@@ -1113,46 +1128,43 @@ describe('masterPage.js', () => {
       expect(getEl('#cartIcon').accessibility.ariaLabel).toBe('Shopping cart');
     });
 
-    it('click opens side cart panel', async () => {
+    it('click opens mini-cart drawer', async () => {
+      getCurrentCart.mockResolvedValue({ lineItems: [] });
       await onReadyHandler();
       const clickHandler = getEl('#cartIcon').onClick.mock.calls[0][0];
-      clickHandler();
-      expect(getEl('#sideCartPanel').show).toHaveBeenCalledWith(
-        'slide',
-        expect.objectContaining({ direction: 'right' })
-      );
+      await clickHandler();
+      expect(mockOpenMiniCart).toHaveBeenCalled();
     });
   });
 
-  describe('cart badge', () => {
-    it('hides #cartBadge when cart is empty', async () => {
-      getCurrentCart.mockResolvedValueOnce({ lineItems: [] });
+  describe('cart count badge', () => {
+    it('calls updateCartCount with 0 when cart is empty', async () => {
+      getCurrentCart.mockResolvedValue({ lineItems: [] });
+      mockUpdateCartCount.mockClear();
       elements.clear();
       await onReadyHandler();
-      // Allow async cart fetch to resolve
       await vi.waitFor(() => {
-        expect(getEl('#cartBadge').hide).toHaveBeenCalled();
+        expect(mockUpdateCartCount).toHaveBeenCalledWith(expect.anything(), 0);
       });
     });
 
-    it('shows #cartBadge with count when cart has items', async () => {
-      getCurrentCart.mockResolvedValueOnce({
+    it('calls updateCartCount with item total when cart has items', async () => {
+      getCurrentCart.mockResolvedValue({
         lineItems: [
           { _id: '1', quantity: 2 },
           { _id: '2', quantity: 1 },
         ],
       });
+      mockUpdateCartCount.mockClear();
       elements.clear();
       await onReadyHandler();
       await vi.waitFor(() => {
-        expect(getEl('#cartBadge').text).toBe('3');
-        expect(getEl('#cartBadge').show).toHaveBeenCalled();
+        expect(mockUpdateCartCount).toHaveBeenCalledWith(expect.anything(), 3);
       });
     });
 
-    it('updates badge on cart change via onCartChanged callback', async () => {
+    it('registers onCartChanged callback for badge updates', async () => {
       await onReadyHandler();
-      // onCartChanged should have been called with a handler
       expect(onCartChanged).toHaveBeenCalled();
     });
   });
@@ -1178,54 +1190,45 @@ describe('masterPage.js', () => {
     });
   });
 
-  // ── Side Cart Auto-Open ────────────────────────────────────────────
+  // ── Mini-Cart Auto-Open ────────────────────────────────────────────
 
-  describe('side cart auto-open', () => {
+  describe('mini-cart auto-open', () => {
     it('registers onCartChanged callback', async () => {
       await onReadyHandler();
       expect(onCartChanged).toHaveBeenCalled();
     });
 
-    it('opens side cart when cart item count increases', async () => {
-      // Clear accumulated mock calls from prior tests to isolate this test
+    it('calls openMiniCart when cart item count increases', async () => {
       onCartChanged.mockClear();
       getCurrentCart.mockClear();
+      mockOpenMiniCart.mockClear();
 
-      // All initial calls (badge, shipping, initSideCartAutoOpen) see 1 item
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 1 }],
       });
       elements.clear();
       await onReadyHandler();
-
-      // Wait for all initial async calls to resolve (badge, shipping, initial count)
       await new Promise(r => setTimeout(r, 100));
 
-      // Get only THIS test's onCartChanged callbacks (mock was cleared above)
       const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
 
-      // Now cart has 2 items (count increased from 1 to 2)
+      // Cart increases from 1 to 2 items
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 1 }, { _id: '2', quantity: 1 }],
       });
 
-      // Call all onCartChanged callbacks (simulates cart change event)
       for (const cb of allCallbacks) {
         await cb();
       }
 
-      expect(getEl('#sideCartPanel').show).toHaveBeenCalledWith(
-        'slide',
-        expect.objectContaining({ direction: 'right' })
-      );
+      expect(mockOpenMiniCart).toHaveBeenCalled();
     });
 
-    it('does not open side cart when item count decreases', async () => {
-      // Clear accumulated mock calls to isolate this test
+    it('does not call openMiniCart when item count decreases', async () => {
       onCartChanged.mockClear();
       getCurrentCart.mockClear();
+      mockOpenMiniCart.mockClear();
 
-      // Initial calls see 3 items total
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 2 }, { _id: '2', quantity: 1 }],
       });
@@ -1233,22 +1236,65 @@ describe('masterPage.js', () => {
       await onReadyHandler();
       await new Promise(r => setTimeout(r, 100));
 
-      // Get only THIS test's callbacks
       const allCallbacks = onCartChanged.mock.calls.map(c => c[0]);
 
-      // Cart now has fewer items (3 → 1)
+      // Cart decreases from 3 to 1 item
       getCurrentCart.mockResolvedValue({
         lineItems: [{ _id: '1', quantity: 1 }],
       });
 
-      // Clear show mock to only track calls during the callback
-      getEl('#sideCartPanel').show.mockClear();
-
+      mockOpenMiniCart.mockClear();
       for (const cb of allCallbacks) {
         await cb();
       }
 
-      expect(getEl('#sideCartPanel').show).not.toHaveBeenCalled();
+      expect(mockOpenMiniCart).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Mini-Cart Escape Key ───────────────────────────────────────────
+
+  describe('mini-cart Escape key', () => {
+    let origDoc;
+    let keydownHandlers;
+
+    beforeEach(() => {
+      origDoc = globalThis.document;
+      keydownHandlers = [];
+      globalThis.document = {
+        body: { style: { overflow: '' } },
+        addEventListener: vi.fn((event, handler) => {
+          if (event === 'keydown') keydownHandlers.push(handler);
+        }),
+        removeEventListener: vi.fn(),
+        activeElement: null,
+      };
+    });
+
+    afterEach(() => {
+      globalThis.document = origDoc;
+    });
+
+    it('closes mini-cart drawer when Escape is pressed', async () => {
+      elements.clear();
+      mockCloseMiniCart.mockClear();
+      await onReadyHandler();
+
+      expect(keydownHandlers.length).toBeGreaterThan(0); // guard: verify handler was registered
+      keydownHandlers.forEach(h => h({ key: 'Escape' }));
+
+      expect(mockCloseMiniCart).toHaveBeenCalled();
+    });
+
+    it('does not close mini-cart on non-Escape keys', async () => {
+      elements.clear();
+      mockCloseMiniCart.mockClear();
+      await onReadyHandler();
+
+      expect(keydownHandlers.length).toBeGreaterThan(0); // guard: verify handler was registered
+      keydownHandlers.forEach(h => h({ key: 'Enter' }));
+
+      expect(mockCloseMiniCart).not.toHaveBeenCalled();
     });
   });
 
