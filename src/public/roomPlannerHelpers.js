@@ -99,6 +99,41 @@ export function calculateScale(roomW, roomH, containerW, containerH) {
 }
 
 /**
+ * Get all products as a flat list for the individual product picker.
+ * @returns {Array<{ productType: string, label: string, category: string, categoryLabel: string, width: number, depth: number, depthBed: number }>}
+ */
+export function getProductList() {
+  return Object.entries(PRODUCT_CATALOG).map(([productType, dims]) => {
+    const categoryLabel = dims.category === 'futon-frames' ? 'Futon Frames'
+      : dims.category === 'storage' ? 'Storage'
+      : 'Accessories';
+    return {
+      productType,
+      label: dims.label,
+      category: dims.category,
+      categoryLabel,
+      width: dims.width,
+      depth: dims.depth,
+      depthBed: dims.depthBed,
+    };
+  });
+}
+
+/**
+ * Format product dimensions for display in the product picker.
+ * Shows sofa and bed depths separately when they differ.
+ * @param {{ width: number, depth: number, depthBed: number }} product
+ * @returns {string} e.g. '82" × 38" (sofa) / 54" (bed)' or '20" × 20"'
+ */
+export function formatProductDims(product) {
+  const sofaDims = `${product.width}" × ${product.depth}"`;
+  if (product.depthBed && product.depthBed !== product.depth) {
+    return `${sofaDims} (sofa) / ${product.depthBed}" (bed)`;
+  }
+  return sofaDims;
+}
+
+/**
  * Get products grouped by category for the drag-and-drop palette.
  * @returns {Array<{ category: string, items: Array }>}
  */
