@@ -349,9 +349,9 @@ describe('submitExitCapture', () => {
   });
 
   it('handles backend import failure gracefully', async () => {
-    vi.doMock('backend/newsletterService.web', () => {
-      throw new Error('Module not found');
-    });
+    // vi.doMock mid-suite can't intercept cached modules on Node 20.
+    // Simulate any backend failure by making the first call throw — same catch path.
+    mockSubscribe.mockImplementationOnce(() => { throw new Error('Module not found'); });
     const result = await submitExitCapture('user@test.com');
     expect(result.success).toBe(false);
     expect(result.error).toBe('submission_failed');
