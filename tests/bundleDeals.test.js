@@ -15,7 +15,7 @@ vi.mock('wix-web-module', () => ({
 }));
 
 import { listBundles, getBundleBySlug, addBundleToCart } from '../src/backend/bundleDeals.web.js';
-import { __seed, __reset as __resetData } from './__mocks__/wix-data.js';
+import { __seed, __reset as __resetData, __setQueryError } from './__mocks__/wix-data.js';
 import { cart, __setCart, __setAddProductsError, __setApplyCouponError, __reset as __resetCart } from './__mocks__/wix-ecom-backend.js';
 
 // ── Test fixtures ────────────────────────────────────────────────────────
@@ -391,6 +391,82 @@ describe('addBundleToCart — error cases', () => {
   it('does not call addProducts for an invalid slug', async () => {
     await addBundleToCart('');
     expect(cart.addProducts).not.toHaveBeenCalled();
+  });
+});
+
+// ── Error / wixData failure paths ────────────────────────────────────────
+
+describe('listBundles — wixData failure', () => {
+  it('returns success: false when query throws', async () => {
+    __setQueryError('ProductBundle', new Error('CMS unavailable'));
+    const result = await listBundles();
+    expect(result.success).toBe(false);
+    expect(result.bundles).toHaveLength(0);
+  });
+});
+
+describe('getBundleBySlug — wixData failure', () => {
+  it('returns success: false when query throws', async () => {
+    __setQueryError('ProductBundle', new Error('CMS unavailable'));
+    const result = await getBundleBySlug('complete-futon-set');
+    expect(result.success).toBe(false);
+    expect(result.bundle).toBeNull();
+  });
+});
+
+// ── parseProducts edge cases ──────────────────────────────────────────────
+
+describe('addBundleToCart — products field parsing', () => {
+  it('handles products stored as a raw array (not JSON string)', async () => {
+    __resetData();
+    __seed('ProductBundle', [{
+      _id: 'bundle-arr',
+      name: 'Array Bundle',
+      slug: 'array-bundle',
+      products: [{ productId: 'frame-001', qty: 1 }], // raw array, not JSON string
+      bundlePrice: 300,
+      savings: 30,
+      isActive: true,
+      couponCode: null,
+    }]);
+    const result = await addBundleToCart('array-bundle');
+    expect(result.success).toBe(true);
+    expect(result.productsAdded).toBe(1);
+  });
+
+  it('handles malformed JSON in products field gracefully', async () => {
+    __resetData();
+    __seed('ProductBundle', [{
+      _id: 'bundle-bad',
+      name: 'Bad JSON Bundle',
+      slug: 'bad-json-bundle',
+      products: '{not valid json',
+      bundlePrice: 300,
+      savings: 30,
+      isActive: true,
+      couponCode: null,
+    }]);
+    const result = await addBundleToCart('bad-json-bundle');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Bundle has no products.');
+  });
+
+  it('treats qty:0 products as qty:1 (enforces minimum quantity)', async () => {
+    __resetData();
+    __seed('ProductBundle', [{
+      _id: 'bundle-qty0',
+      name: 'Zero Qty Bundle',
+      slug: 'zero-qty-bundle',
+      products: JSON.stringify([{ productId: 'frame-001', qty: 0 }]),
+      bundlePrice: 300,
+      savings: 30,
+      isActive: true,
+      couponCode: null,
+    }]);
+    const result = await addBundleToCart('zero-qty-bundle');
+    expect(result.success).toBe(true);
+    const [lineItems] = cart.addProducts.mock.calls[0];
+    expect(lineItems[0].quantity).toBe(1); // Math.max(1, 0) = 1
   });
 });
 
