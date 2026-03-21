@@ -20,7 +20,7 @@ const __dir = fileURLToPath(new URL('.', import.meta.url));
 const BACKEND_DIR = resolve(__dir, '../src/backend');
 
 // Parameter names that indicate a memberId-like value
-const MEMBER_ID_PARAMS = /\b(memberId|userId|contactId|memberParam|ownerId)\b/;
+const MEMBER_ID_PARAMS = /\b(memberId|userId|contactId|memberParam|ownerId)\b|fromMemberId|toMemberId|targetMemberId/;
 
 // Query patterns that use the param in a data query
 const QUERY_PATTERN = /\.eq\s*\(/;

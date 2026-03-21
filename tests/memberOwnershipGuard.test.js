@@ -163,6 +163,24 @@ describe('checkMethodForIDOR', () => {
     expect(checkMethodForIDOR(method).violation).toBe(true);
   });
 
+  it('flags fromMemberId compound param as IDOR risk', () => {
+    const method = {
+      name: 'transferCredit',
+      params: 'fromMemberId, toMemberId, amount',
+      body: `{ return await wixData.query('Credits').eq('memberId', fromMemberId).find(); }`,
+    };
+    expect(checkMethodForIDOR(method).violation).toBe(true);
+  });
+
+  it('flags toMemberId compound param as IDOR risk', () => {
+    const method = {
+      name: 'transferCredit',
+      params: 'toMemberId',
+      body: `{ return await wixData.query('Credits').eq('memberId', toMemberId).find(); }`,
+    };
+    expect(checkMethodForIDOR(method).violation).toBe(true);
+  });
+
   it('violation reason references the method name', () => {
     const method = {
       name: 'myDangerousMethod',
