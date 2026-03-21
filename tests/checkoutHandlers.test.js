@@ -129,6 +129,7 @@ vi.mock('public/storeCreditHelpers.js', () => ({
 }));
 
 vi.mock('public/giftCardHelpers.js', () => ({
+  GIFT_CARD_DENOMINATIONS: [{ amount: 25, label: '' }, { amount: 50, label: '' }, { amount: 100, label: '' }, { amount: 150, label: '' }, { amount: 200, label: '' }, { amount: 500, label: '' }],
   initCheckoutGiftCard: vi.fn(() => Promise.resolve()),
   finalizeGiftCardRedemption: vi.fn(),
   resetCheckoutGiftCard: vi.fn(),
