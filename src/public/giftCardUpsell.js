@@ -63,9 +63,21 @@ function markUpsellShown(opts = {}) {
 }
 
 /**
+ * Resolve the session storage object from opts or global.
+ * @param {Object} opts
+ * @returns {Object|null}
+ */
+function _resolveStorage(opts) {
+  return 'storage' in opts
+    ? opts.storage
+    : (typeof sessionStorage !== 'undefined' ? sessionStorage : null);
+}
+
+/**
  * Initialize the gift card upsell section on the Thank You page.
- * Shows the next denomination above orderTotal; collapses if none available
- * or already shown this session.
+ * Calls selectUpsellDenomination once and threads the result through
+ * to avoid recomputation. Collapses the section if no denomination is
+ * available or the upsell was already shown this session.
  *
  * @param {Function} $wFn - Wix selector function
  * @param {number} orderTotal - Confirmed order total in dollars
@@ -75,12 +87,24 @@ function markUpsellShown(opts = {}) {
  * @returns {Promise<void>}
  */
 export async function initGiftCardUpsell($wFn, orderTotal, opts = {}) {
-  if (!shouldShowGiftCardUpsell(orderTotal, opts)) {
-    try { $wFn('#giftCardUpsellSection').collapse(); } catch (_) {}
+  // Compute denomination once — threads through instead of calling selectUpsellDenomination twice
+  const denomination = selectUpsellDenomination(orderTotal);
+
+  let alreadyShown = false;
+  try {
+    const storage = _resolveStorage(opts);
+    alreadyShown = Boolean(storage?.getItem(UPSELL_SESSION_KEY));
+  } catch (e) {
+    console.warn('[giftCardUpsell] Could not read session storage:', e);
+  }
+
+  if (!denomination || alreadyShown) {
+    try { $wFn('#giftCardUpsellSection').collapse(); } catch (e) {
+      console.warn('[giftCardUpsell] Could not collapse upsell section:', e);
+    }
     return;
   }
 
-  const denomination = selectUpsellDenomination(orderTotal);
   markUpsellShown(opts);
 
   try {
@@ -110,7 +134,7 @@ export async function initGiftCardUpsell($wFn, orderTotal, opts = {}) {
         }).catch(() => {});
       }
     });
-  } catch (_) {
-    // Elements may not exist in all page layouts — graceful no-op
+  } catch (e) {
+    console.warn('[giftCardUpsell] Could not initialize upsell elements:', e);
   }
 }

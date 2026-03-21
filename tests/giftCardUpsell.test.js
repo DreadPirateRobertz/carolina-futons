@@ -17,6 +17,12 @@ import {
   UPSELL_SESSION_KEY,
 } from '../src/public/giftCardUpsell.js';
 
+// Top-level mock for wix-location-frontend dynamic import path
+vi.mock('wix-location-frontend', () => ({
+  default: { to: vi.fn() },
+  to: vi.fn(),
+}));
+
 // ── helpers ───────────────────────────────────────────────────────────
 
 function makeStorage() {
@@ -277,6 +283,88 @@ describe('initGiftCardUpsell — robustness', () => {
     await expect(
       initGiftCardUpsell($w, 500, { storage: makeStorage() })
     ).resolves.not.toThrow();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// shouldShowGiftCardUpsell — storage exception path
+// ═══════════════════════════════════════════════════════════════════
+
+describe('shouldShowGiftCardUpsell — storage throws', () => {
+  it('returns true (fails open) when storage.getItem throws and denomination exists', () => {
+    const throwingStorage = { getItem: () => { throw new Error('QuotaExceededError'); } };
+    expect(shouldShowGiftCardUpsell(80, { storage: throwingStorage })).toBe(true);
+  });
+
+  it('returns false when denomination is null even if storage throws', () => {
+    const throwingStorage = { getItem: () => { throw new Error('QuotaExceededError'); } };
+    expect(shouldShowGiftCardUpsell(500, { storage: throwingStorage })).toBe(false);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// initGiftCardUpsell — storage exception path
+// ═══════════════════════════════════════════════════════════════════
+
+describe('initGiftCardUpsell — storage throws', () => {
+  it('does not throw when storage.getItem throws', async () => {
+    const $w = make$w();
+    const throwingStorage = { getItem: () => { throw new Error('QuotaExceededError'); }, setItem: vi.fn() };
+    await expect(
+      initGiftCardUpsell($w, 80, { storage: throwingStorage, navigate: vi.fn() })
+    ).resolves.not.toThrow();
+  });
+
+  it('still shows upsell (fails open) when storage.getItem throws and denomination exists', async () => {
+    const $w = make$w();
+    const throwingStorage = { getItem: () => { throw new Error('QuotaExceededError'); }, setItem: vi.fn() };
+    await initGiftCardUpsell($w, 80, { storage: throwingStorage, navigate: vi.fn() });
+    expect($w._section.collapse).not.toHaveBeenCalled();
+    expect($w._btn.text).toContain('100');
+  });
+
+  it('collapses when storage throws but denomination is null', async () => {
+    const $w = make$w();
+    const throwingStorage = { getItem: () => { throw new Error('QuotaExceededError'); }, setItem: vi.fn() };
+    await initGiftCardUpsell($w, 500, { storage: throwingStorage });
+    expect($w._section.collapse).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// initGiftCardUpsell — dynamic import fallback navigation
+// ═══════════════════════════════════════════════════════════════════
+
+describe('initGiftCardUpsell — wix-location-frontend fallback', () => {
+  it('calls wix-location-frontend.to when opts.navigate is not provided', async () => {
+    // wix-location-frontend is mocked at the top level — get the spy reference
+    const wixLoc = await import('wix-location-frontend');
+    const toFn = wixLoc.default.to;
+    vi.clearAllMocks();
+
+    const $w = make$w();
+    // No navigate in opts — should fall back to dynamic import
+    await initGiftCardUpsell($w, 80, { storage: makeStorage() });
+    $w._btn._fire();
+
+    // Allow the dynamic import microtask to resolve
+    await new Promise(r => setTimeout(r, 0));
+    expect(toFn).toHaveBeenCalledWith('/gift-cards?amount=100');
+  });
+
+  it('does not call wix-location-frontend when opts.navigate is provided', async () => {
+    const wixLoc = await import('wix-location-frontend');
+    const toFn = wixLoc.default.to;
+    vi.clearAllMocks();
+
+    const navigate = vi.fn();
+    const $w = make$w();
+    await initGiftCardUpsell($w, 80, { storage: makeStorage(), navigate });
+    $w._btn._fire();
+
+    await new Promise(r => setTimeout(r, 0));
+    expect(navigate).toHaveBeenCalledWith('/gift-cards?amount=100');
+    expect(toFn).not.toHaveBeenCalled();
   });
 });
 
