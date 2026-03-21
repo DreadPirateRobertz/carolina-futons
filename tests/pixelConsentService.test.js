@@ -51,6 +51,20 @@ function grantConsent() {
   }
 }
 
+function grantAnalyticsOnly() {
+  _currentPolicy = { analytics: true, advertising: false };
+  if (_policyChangedCallback) {
+    _policyChangedCallback({ policy: _currentPolicy });
+  }
+}
+
+function grantAdvertisingOnly() {
+  _currentPolicy = { analytics: false, advertising: true };
+  if (_policyChangedCallback) {
+    _policyChangedCallback({ policy: _currentPolicy });
+  }
+}
+
 
 // ── Setup ───────────────────────────────────────────────────────────────
 
@@ -191,6 +205,51 @@ describe('event parameters preserved through queue', () => {
     grantConsent();
     fireTrackedTikTokEvent('PageView', {});
     expect(fireTikTokEvent).toHaveBeenCalledWith('PageView', {});
+  });
+});
+
+// ── partial consent does NOT flush queue (GDPR) ───────────────────────
+
+describe('partial consent — queue not flushed (GDPR requirement)', () => {
+  it('analytics-only consent does not fire TikTok events', () => {
+    fireTrackedTikTokEvent('ViewContent', {});
+    grantAnalyticsOnly();
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('advertising-only consent does not fire Pinterest events', () => {
+    fireTrackedPinterestEvent('viewcategory', {});
+    grantAdvertisingOnly();
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('both consents required to flush queue', () => {
+    fireTrackedTikTokEvent('AddToCart', {});
+    grantAnalyticsOnly();
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    grantConsent(); // now both
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── queue size cap ─────────────────────────────────────────────────────
+
+describe('queue size cap — prevents unbounded memory growth', () => {
+  it('queue does not exceed 50 events', () => {
+    for (let i = 0; i < 60; i++) {
+      fireTrackedTikTokEvent('ViewContent', { i });
+    }
+    expect(getQueueLength()).toBe(50);
+  });
+
+  it('events beyond cap are silently dropped', () => {
+    for (let i = 0; i < 60; i++) {
+      fireTrackedTikTokEvent('ViewContent', { i });
+    }
+    grantConsent();
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(50);
   });
 });
 

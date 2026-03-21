@@ -25,12 +25,19 @@ import { firePinterestEvent } from 'public/pinterestTag';
 let _queue = [];
 let _listenerRegistered = false;
 
+// Maximum queued events to prevent unbounded memory growth on pages where
+// consent is never granted (e.g., EU users who decline all cookies).
+const MAX_QUEUE_SIZE = 50;
+
 // ── Consent check ─────────────────────────────────────────────────────
 
 function _hasConsent() {
   try {
     const { policy } = wixPrivacy.getCurrentConsentPolicy();
-    return policy.analytics === true || policy.advertising === true;
+    // Require BOTH analytics AND advertising consent. TikTok and Pinterest
+    // are used for both analytics and ad retargeting — partial consent is
+    // insufficient and would violate the user's stated preferences.
+    return policy.analytics === true && policy.advertising === true;
   } catch (e) {
     // If the privacy API is unavailable, default to not firing
     return false;
@@ -69,7 +76,7 @@ export function initConsentGate() {
   try {
     wixPrivacy.onCurrentConsentPolicyChanged((event) => {
       const policy = event?.policy ?? {};
-      if (policy.analytics === true || policy.advertising === true) {
+      if (policy.analytics === true && policy.advertising === true) {
         _flushQueue();
       }
     });
@@ -88,7 +95,7 @@ export function initConsentGate() {
 export function fireTrackedTikTokEvent(eventName, params = {}) {
   if (_hasConsent()) {
     fireTikTokEvent(eventName, params);
-  } else {
+  } else if (_queue.length < MAX_QUEUE_SIZE) {
     _queue.push({ platform: 'tiktok', eventName, params });
   }
 }
@@ -103,7 +110,7 @@ export function fireTrackedTikTokEvent(eventName, params = {}) {
 export function fireTrackedPinterestEvent(eventName, params = {}) {
   if (_hasConsent()) {
     firePinterestEvent(eventName, params);
-  } else {
+  } else if (_queue.length < MAX_QUEUE_SIZE) {
     _queue.push({ platform: 'pinterest', eventName, params });
   }
 }
