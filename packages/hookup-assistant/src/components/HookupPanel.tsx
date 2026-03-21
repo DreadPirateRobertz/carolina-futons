@@ -90,18 +90,18 @@ export function HookupPanel() {
   // S13: page navigation helpers
   const pageIndex = PAGES.findIndex((p) => p.name === selectedPageName);
   const goNextPage = useCallback(() => {
-    if (PAGES.length === 0) return;
     setSelectedPageName(PAGES[(pageIndex + 1) % PAGES.length].name);
   }, [pageIndex]);
   const goPrevPage = useCallback(() => {
-    if (PAGES.length === 0) return;
     setSelectedPageName(PAGES[(pageIndex - 1 + PAGES.length) % PAGES.length].name);
   }, [pageIndex]);
 
-  // S13: keyboard shortcuts — extract each handler to avoid recreating the object on every render
+  // S13: keyboard shortcuts — each handler extracted to named variable (stable refs)
   const handleApplyOrDone = useCallback(() => {
     if (editorAvailable && selected && currentElement) {
-      void handleApplyId();
+      handleApplyId().catch((err: unknown) => {
+        console.error('[HookupPanel] handleApplyId rejected unexpectedly:', err);
+      });
     } else {
       handleMarkDone();
     }
@@ -123,7 +123,7 @@ export function HookupPanel() {
   const page = PAGES.find((p) => p.name === selectedPageName);
 
   return (
-    <div style={{ ...s.root, position: 'relative' }}>
+    <div style={s.root}>
       {/* Header */}
       <header style={s.header}>
         <div style={s.headerLeft}>
@@ -293,6 +293,7 @@ const s: Record<string, React.CSSProperties> = {
     backgroundColor: '#fff',
     boxSizing: 'border-box',
     overflow: 'hidden',
+    position: 'relative', // needed for HelpOverlay's position:absolute backdrop
   },
   header: {
     display: 'flex',

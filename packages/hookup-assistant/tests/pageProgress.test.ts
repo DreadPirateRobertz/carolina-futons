@@ -202,3 +202,24 @@ describe('usePageProgress — undoLast duplicate guard', () => {
     expect(result.current.canUndo).toBe(false);
   });
 });
+
+describe('usePageProgress — undoLast wasSkipped restoration', () => {
+  it('restores element to skippedIds when undoing a markHooked that displaced it', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.markHooked('heroTitle')); // displaces from skipped
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+    act(() => result.current.undoLast());
+    // Element should be back in skipped, not in hooked
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+    expect(result.current.skippedIds).toContain('heroTitle');
+  });
+
+  it('does NOT restore to skippedIds when element was not previously skipped', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle')); // never skipped
+    act(() => result.current.undoLast());
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+});

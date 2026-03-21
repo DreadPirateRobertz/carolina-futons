@@ -242,3 +242,38 @@ describe('useKeyboardShortcuts — cleanup on unmount', () => {
     expect(h.onSkip).not.toHaveBeenCalled();
   });
 });
+
+describe('useKeyboardShortcuts — SELECT suppression', () => {
+  it('does not fire when a SELECT is focused', () => {
+    const h = makeHandlers();
+    renderHook(() => useKeyboardShortcuts(h));
+
+    const sel = document.createElement('select');
+    document.body.appendChild(sel);
+    sel.focus();
+
+    fire('s');
+    fire('d');
+
+    expect(h.onSkip).not.toHaveBeenCalled();
+    expect(h.onDone).not.toHaveBeenCalled();
+
+    document.body.removeChild(sel);
+  });
+});
+
+describe('useKeyboardShortcuts — Cmd+Z suppressed in input', () => {
+  it('does not call onUndo when Cmd+Z is pressed inside an INPUT', () => {
+    const h = makeHandlers();
+    renderHook(() => useKeyboardShortcuts(h));
+
+    const input = document.createElement('input');
+    document.body.appendChild(input);
+    input.focus();
+
+    fire('z', { metaKey: true });
+    expect(h.onUndo).not.toHaveBeenCalled();
+
+    document.body.removeChild(input);
+  });
+});

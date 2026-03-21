@@ -11,13 +11,14 @@
  *   Cmd/Ctrl+Z     → undo last action
  *   ?              → toggle help overlay
  *
- * Shortcuts are suppressed when the focused element is an INPUT or TEXTAREA.
+ * Shortcuts are suppressed when the focused element is an INPUT, TEXTAREA,
+ * SELECT, or contenteditable element.
  */
 
 import { useEffect, useRef } from 'react';
 
 export interface ShortcutHandlers {
-  onApplyOrDone: () => void;   // Enter / Space
+  onApplyOrDone: () => void;   // Enter / Space — apply ID when editor+element ready, else mark done
   onSkip: () => void;          // S
   onDone: () => void;          // D
   onNextPage: () => void;      // N
@@ -28,8 +29,10 @@ export interface ShortcutHandlers {
 }
 
 function isEditing(): boolean {
-  const tag = (document.activeElement as HTMLElement | null)?.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
