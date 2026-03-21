@@ -6,7 +6,7 @@ import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
-import { sharePromise, deferInit } from 'public/performanceHelpers';
+import { sharePromise } from 'public/performanceHelpers';
 import { isMobile, getViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
 import { fireCustomEvent, initScrollDepthTracking } from 'public/ga4Tracking';
@@ -14,6 +14,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
+import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
 import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
 import {
@@ -59,7 +60,8 @@ $w.onReady(async function () {
   initInstallBanner();
   injectCanonicalUrl();
   initScrollDepthTracking();
-  deferInit(() => import('public/tikTokPixel').then(m => m.initTikTokPixel()));
+  initConsentGate();
+  fireTrackedTikTokEvent('PageView', {});
   injectBusinessSchema().catch(e => console.warn('[masterPage] Schema injection failed:', e.message));
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
