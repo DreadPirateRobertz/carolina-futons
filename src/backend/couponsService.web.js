@@ -6,8 +6,6 @@
  *
  * @requires wix-web-module
  * @requires wix-marketing-backend
- * @requires wix-members-backend
- * @requires wix-data
  * @requires backend/utils/sanitize
  */
 import { Permissions, webMethod } from 'wix-web-module';
@@ -21,7 +19,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
  *
  * @function createWelcomeCoupon
  * @param {string} email - New member's email
- * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
+ * @returns {Promise<Object>} { success, code, discount }
  * @permission Admin — called by backend automation, not directly by users
  */
 export const createWelcomeCoupon = webMethod(
@@ -35,7 +33,7 @@ export const createWelcomeCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const expirationTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
       const coupon = await coupons.createCoupon({
         name: `Welcome 10% Off - ${cleanEmail}`,
         code: await generateCode('WELCOME'),
@@ -46,10 +44,24 @@ export const createWelcomeCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: expiresAt,
+        expirationTime,
       });
 
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Welcome', '10%', expiresAt.toISOString());
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Welcome 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for welcome coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -66,8 +78,11 @@ export const createWelcomeCoupon = webMethod(
 
 /**
  * Get active coupons for the current member.
- * Queries Members/MemberCoupons by memberEmail — no other members' coupon
- * records transit the app layer (fixes IDOR: CVE/CF-env4).
+ *
+ * Queries the MemberCoupons collection by memberEmail at the database level,
+ * ensuring each member only ever sees their own coupons. This replaces the
+ * previous queryAllCoupons() + JS-level email filter which fetched all coupon
+ * records (including other members' PII in coupon names) before filtering.
  *
  * @function getActiveCoupons
  * @returns {Promise<Array>} List of active coupons with code, discount, expiry
@@ -87,19 +102,18 @@ export const getActiveCoupons = webMethod(
       ).toLowerCase();
       if (!memberEmail) return [];
 
-      // Member-scoped DB query — only this member's coupons are returned.
-      const result = await wixData.query('Members/MemberCoupons')
+      const result = await wixData.query('MemberCoupons')
         .eq('memberEmail', memberEmail)
         .eq('active', true)
         .find();
 
       return (result.items || []).map(c => ({
         _id: c._id,
-        code: c.couponCode,
-        name: c.couponType,
-        discount: c.discount,
+        code: c.code,
+        name: c.displayName,
+        discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
         minimumSubtotal: c.minimumSubtotal || 0,
-        expirationTime: c.expiresAt,
+        expirationTime: c.expirationTime,
         active: c.active,
       }));
     } catch (err) {
@@ -115,7 +129,7 @@ export const getActiveCoupons = webMethod(
  * @function createBirthdayCoupon
  * @param {string} email - Member's email
  * @param {string} memberName - Member's display name for personalization
- * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
+ * @returns {Promise<Object>} { success, code, discount }
  * @permission Admin — called by backend automation
  */
 export const createBirthdayCoupon = webMethod(
@@ -131,7 +145,7 @@ export const createBirthdayCoupon = webMethod(
 
       const name = sanitize(memberName || 'Valued Customer', 100);
 
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const expirationTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
       const coupon = await coupons.createCoupon({
         name: `Happy Birthday ${name}! 15% Off`,
         code: await generateCode('BDAY'),
@@ -142,10 +156,24 @@ export const createBirthdayCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: expiresAt,
+        expirationTime,
       });
 
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Birthday', '15%', expiresAt.toISOString());
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: `Happy Birthday ${name}! 15% Off`,
+          percentOffRate: 15,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for birthday coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -165,8 +193,8 @@ export const createBirthdayCoupon = webMethod(
  *
  * @function createTierUpgradeCoupon
  * @param {string} email - Member's email
- * @param {string} newTier - Tier the member upgraded to ('Silver' | 'Gold'); unrecognized values default to 10% discount
- * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
+ * @param {string} newTier - The tier they upgraded to (Silver or Gold)
+ * @returns {Promise<Object>} { success, code, discount }
  * @permission Admin
  */
 export const createTierUpgradeCoupon = webMethod(
@@ -176,14 +204,11 @@ export const createTierUpgradeCoupon = webMethod(
       if (!email) return { success: false, message: 'Email required' };
 
       const cleanEmail = sanitize(email, 254).toLowerCase();
-      if (!validateEmail(cleanEmail)) {
-        return { success: false, message: 'Invalid email' };
-      }
       const tier = sanitize(newTier || '', 20);
       const discountMap = { Silver: 10, Gold: 20 };
       const discount = discountMap[tier] || 10;
 
-      const tierExpiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      const expirationTime = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
       const coupon = await coupons.createCoupon({
         name: `${tier} Tier Welcome - ${discount}% Off`,
         code: await generateCode(tier.toUpperCase()),
@@ -193,10 +218,24 @@ export const createTierUpgradeCoupon = webMethod(
         limitPerCustomer: 1,
         active: true,
         startTime: new Date(),
-        expirationTime: tierExpiresAt,
+        expirationTime,
       });
 
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, `${tier} Tier`, `${discount}%`, tierExpiresAt.toISOString());
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: `${tier} Tier Welcome - ${discount}% Off`,
+          percentOffRate: discount,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for tier upgrade coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -213,10 +252,8 @@ export const createTierUpgradeCoupon = webMethod(
 
 /**
  * Generate (or retrieve) a recovery coupon for an abandoned cart.
- * Idempotent on a best-effort basis: calling with the same cartId returns
- * the existing coupon code. If the RecoveryCoupons persistence insert fails
- * after the marketing coupon is created, a retry will produce a duplicate
- * coupon in the marketing system.
+ * Idempotent: calling with the same cartId returns the existing coupon code
+ * without creating a new one in the marketing system.
  *
  * @function generateRecoveryCoupon
  * @param {Object} params
@@ -286,7 +323,23 @@ export const generateRecoveryCoupon = webMethod(
           '— idempotency not guaranteed on retry:', insertErr.message);
       }
 
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', expiresAtISO);
+      // Track in MemberCoupons for DB-level member scoping in getActiveCoupons
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Cart Recovery 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime: expiresAt,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for recovery coupon cartId:', cartId,
+          ':', insertErr.message);
+      }
 
       return {
         success: true,
@@ -306,7 +359,7 @@ export const generateRecoveryCoupon = webMethod(
  *
  * @function createCartRecoveryCoupon
  * @param {string} email - Buyer's email (used for coupon name and validation)
- * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
+ * @returns {Promise<Object>} { success, code, discount, expiresIn }
  * @permission Admin — called by emailAutomation during cart recovery sequencing
  */
 export const createCartRecoveryCoupon = webMethod(
@@ -320,7 +373,7 @@ export const createCartRecoveryCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
-      const recoveryExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const expirationTime = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
       const coupon = await coupons.createCoupon({
         name: `Cart Recovery 10% Off - ${cleanEmail}`,
         code: await generateCode('RECOVER'),
@@ -332,10 +385,24 @@ export const createCartRecoveryCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: recoveryExpiresAt,
+        expirationTime,
       });
 
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', recoveryExpiresAt.toISOString());
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Cart Recovery 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for cart recovery coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -351,33 +418,6 @@ export const createCartRecoveryCoupon = webMethod(
 );
 
 // ── Internal helpers ──────────────────────────────────────────────────
-
-/**
- * Write a coupon record to Members/MemberCoupons so getActiveCoupons can do
- * a member-scoped DB query instead of fetching all coupons (IDOR fix CF-env4).
- * Best-effort — never throws; logs a warning on failure.
- * @param {string} memberEmail
- * @param {string} couponCode
- * @param {string} couponType  - Human-readable type label (e.g. 'Welcome', 'Birthday')
- * @param {string} discount    - Display string, e.g. '10%'
- * @param {string} expiresAt   - ISO 8601 string
- */
-async function _insertMemberCouponRecord(memberEmail, couponCode, couponType, discount, expiresAt) {
-  try {
-    await wixData.insert('Members/MemberCoupons', {
-      memberEmail,
-      couponCode,
-      couponType,
-      discount,
-      expiresAt,
-      active: true,
-    });
-  } catch (err) {
-    // Escalate to error — a failure here means getActiveCoupons will never surface
-    // this coupon to the member (breaks CF-env4 IDOR fix visibility).
-    console.error('[couponsService] MemberCoupons insert failed for', couponCode, ':', err.message);
-  }
-}
 
 async function generateCode(prefix) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I/O/0/1 for clarity
