@@ -46,7 +46,7 @@ const BUDGET_RANGES = {
  * @param {string} answers.roomType - living-room, guest-room, dorm, office, bedroom
  * @param {string} answers.primaryUse - sitting, sleeping, both
  * @param {string} answers.stylePreference - modern, rustic, classic
- * @param {string} answers.sizeNeeds - twin, full, queen
+ * @param {string} [answers.sizeNeeds] - twin, full, queen — omit to skip size scoring (20 pts)
  * @param {string} answers.budgetRange - under-500, 500-1000, 1000-2000, over-2000
  * @returns {Promise<Array<{product: Object, score: number, reason: string}>>}
  *   Sorted by score descending, up to 5 results.
@@ -120,6 +120,13 @@ export const getQuizRecommendations = webMethod(
         if (styleMatch) {
           score += 20;
           matchReasons.push('style');
+        }
+
+        // Size compatibility (20 points)
+        const availableSizes = Array.isArray(item.availableSizes) ? item.availableSizes : [];
+        const sizeNeed = answers.sizeNeeds ? answers.sizeNeeds.toLowerCase() : null;
+        if (sizeNeed && availableSizes.some(s => s.toLowerCase() === sizeNeed)) {
+          score += 20;
         }
 
         // Budget fit (10 points) — closer to budget midpoint scores higher
