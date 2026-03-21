@@ -1351,6 +1351,30 @@ Anchors: `termsAcceptance`, `termsProducts`, `termsOrders`, `termsShipping`, `te
 
 ---
 
+## STYLE QUIZ (`Style Quiz.nwjfa.js`) — rename page to `/style-quiz`
+
+### Quiz Flow
+`quizSection` (Section), `quizProgressBar` (ProgressBar), `quizProgressText` (Text), `quizStepTitle` (Text), `quizStepSubtitle` (Text), `quizValidation` (Text), `quizLoadingState` (Box), `quizLoadingText` (Text)
+
+### Quiz Options ⚠️ REPEATER
+`quizOptionsRepeater` (Repeater)
+**↳ Inside:** `optionContainer` (Box), `optionLabel` (Text), `optionDescription` (Text)
+
+### Navigation
+`quizNextBtn` (Button), `quizBackBtn` (Button), `quizRestartBtn` (Button)
+
+### Style Profile (after quiz)
+`styleProfileSection` (Section), `styleProfileTitle` (Text), `styleProfileDescription` (Text)
+
+### Results ⚠️ REPEATER
+`quizResults` (Section), `resultsTitle` (Text), `resultsSubtitle` (Text), `resultsRepeater` (Repeater), `resultsBrowseBtn` (Button)
+**↳ Inside:** `resultProductName` (Text), `resultProductImage` (Image), `resultProductPrice` (Text), `resultMatchBadge` (Text), `resultMatchReason` (Text), `resultViewBtn` (Button)
+
+### Single Product Result (legacy single-result view)
+`quizProductsRepeater` (Repeater)
+
+---
+
 ## SEARCH SUGGESTIONS BOX (`Search Suggestions Box.gg5mx.js`)
 
 `searchInput` (Input), `suggestionsBox` (Box), `suggestionsRepeater` (Repeater)
@@ -1476,6 +1500,37 @@ Add these elements to the **Product Page** in the editor:
 
 ### SEO
 `swatchSchemaHtml` (HtmlComponent — Service JSON-LD: Free Fabric Swatch Program)
+
+---
+
+## MINI-CART DRAWER (masterPage — sprint 5+)
+
+Lives on `masterPage.js`. Opens as slide-in drawer on add-to-cart or cart icon click.
+
+### Drawer Shell
+`miniCartDrawer` (Box), `miniCartOverlay` (Box), `miniCartClose` (Button), `miniCartEmpty` (Box)
+
+### Cart Items ⚠️ REPEATER
+`miniCartRepeater` (Repeater)
+**↳ Inside:** `cartItemImage` (Image), `cartItemName` (Text), `cartItemPrice` (Text), `cartItemQty` (NumberInput), `cartItemRemove` (Button)
+
+### Footer
+`miniCartSubtotal` (Text), `miniCartCheckoutBtn` (Button), `miniCartViewBtn` (Button)
+
+---
+
+## COMMUNITY GALLERY (`Gallery.js` — new page `/gallery`, sprint 5+)
+
+### Header + Filters
+`gallerySection` (Section), `galleryHeroTitle` (Text), `galleryHeroSubtitle` (Text)
+`galleryFilterRepeater` (Repeater) → `filterTab` (Box), `filterLabel` (Text)
+
+### Photo Grid ⚠️ REPEATER
+`galleryMasonryRepeater` (Repeater), `galleryLoadMoreBtn` (Button), `galleryEmpty` (Box)
+**↳ Inside:** `galleryPhoto` (Image), `galleryCustomerName` (Text), `galleryRoomBadge` (Text), `galleryProductLink` (Button)
+
+### Lightbox
+`galleryLightbox` (Lightbox), `lightboxPhoto` (Image), `lightboxCaption` (Text), `lightboxProductCTA` (Button), `lightboxClose` (Button)
 
 ---
 

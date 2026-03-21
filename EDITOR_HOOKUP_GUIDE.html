@@ -2983,6 +2983,53 @@ Action buttons (right):
     ]
   },
   {
+    name: "Style Quiz", file: "Style Quiz.nwjfa.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "Quiz Flow", impl: `<h4>🧩 Implementation — Style Quiz</h4>
+<ul>
+  <li><strong>#quizSection</strong>: Main container section. Visible during quiz, hidden after results load.</li>
+  <li><strong>#quizProgressBar</strong>: ProgressBar. Set <code>value</code> to <code>(currentStep / totalSteps) * 100</code> as user advances.</li>
+  <li><strong>#quizProgressText</strong>: Text showing "Question X of Y".</li>
+  <li><strong>#quizStepTitle</strong>: Current question title text.</li>
+  <li><strong>#quizStepSubtitle</strong>: Optional subtitle / helper text per question.</li>
+  <li><strong>#quizValidation</strong>: Error text — shown when user tries to advance without selecting an option.</li>
+  <li><strong>#quizLoadingState</strong>: Box shown while AI recommendations are computing. Contains <strong>#quizLoadingText</strong>.</li>
+</ul>`, repeater: "quizOptionsRepeater", elements: [
+        ["quizSection","Section","Quiz container"],["quizProgressBar","ProgressBar","Progress"],
+        ["quizProgressText","Text","Step counter"],["quizStepTitle","Text","Question title"],
+        ["quizStepSubtitle","Text","Subtitle"],["quizValidation","Text","Error"],
+        ["quizLoadingState","Box","Loading overlay"],["quizLoadingText","Text","Loading message"]
+      ], children: [
+        ["optionContainer","Box","Option card"],["optionLabel","Text","Option label"],["optionDescription","Text","Option description"]
+      ]},
+      { name: "Navigation", impl: `<h4>⬅️ Navigation Buttons</h4>
+<ul>
+  <li><strong>#quizNextBtn</strong>: Advances to next step. Disabled until an option is selected. On final step, triggers recommendation call.</li>
+  <li><strong>#quizBackBtn</strong>: Goes back one step. Hidden on step 1.</li>
+  <li><strong>#quizRestartBtn</strong>: Shown on results screen — resets quiz state and scrolls back to top.</li>
+</ul>`, elements: [
+        ["quizNextBtn","Button","Next"],["quizBackBtn","Button","Back"],["quizRestartBtn","Button","Restart"]
+      ]},
+      { name: "Results", impl: `<h4>🎯 Results Screen</h4>
+<ul>
+  <li><strong>#quizResults</strong>: Section shown after AI recommendations return. Hidden during quiz.</li>
+  <li><strong>#styleProfileSection</strong>: Shows the customer's style profile (e.g. "Urban Minimalist"). Contains <strong>#styleProfileTitle</strong> and <strong>#styleProfileDescription</strong>.</li>
+  <li><strong>#resultsTitle</strong> / <strong>#resultsSubtitle</strong>: Headline and subheadline for the results section.</li>
+  <li><strong>#resultsRepeater</strong>: Product cards — set <code>#resultProductName</code>, <code>#resultProductImage</code>, <code>#resultProductPrice</code>, <code>#resultMatchBadge</code> (e.g. "92% Match"), <code>#resultMatchReason</code>. <code>#resultViewBtn</code> navigates to product page.</li>
+  <li><strong>#resultsBrowseBtn</strong>: "Browse All Products" CTA below results.</li>
+</ul>`, repeater: "resultsRepeater", elements: [
+        ["quizResults","Section","Results container"],["styleProfileSection","Section","Profile section"],
+        ["styleProfileTitle","Text","Profile title"],["styleProfileDescription","Text","Profile description"],
+        ["resultsTitle","Text","Results headline"],["resultsSubtitle","Text","Results subtitle"],
+        ["resultsRepeater","Repeater","Product cards"],["resultsBrowseBtn","Button","Browse CTA"]
+      ], children: [
+        ["resultProductName","Text","Product name"],["resultProductImage","Image","Product image"],
+        ["resultProductPrice","Text","Price"],["resultMatchBadge","Text","Match %"],
+        ["resultMatchReason","Text","Why it matches"],["resultViewBtn","Button","View product"]
+      ]}
+    ]
+  },
+  {
     name: "Search Suggestions Box", file: "Search Suggestions Box.gg5mx.js", priority: "P3", est: "5 min",
     sections: [
       { name: "Suggestions", impl: `<h4>🔍 Implementation — Search Suggestions</h4>
@@ -2996,6 +3043,116 @@ Action buttons (right):
         ["suggestionsRepeater","Repeater","Suggestions"]
       ], children: [
         ["sugImage","Image","Image"],["sugName","Text","Name"],["sugPrice","Text","Price"]
+      ]}
+    ]
+  },
+  {
+    name: "Mini-Cart Drawer (masterPage)", file: "masterPage.js", priority: "P2", est: "30 min",
+    sections: [
+      { name: "Drawer Shell", impl: `<h4>🛒 Implementation — Mini-Cart Drawer</h4>
+<ul>
+  <li><strong>#miniCartDrawer</strong>: Main slide-in Box. Collapsed by default, expanded via <code>expand()</code> on add-to-cart event or cart icon click. On desktop: fixed right-side panel. On mobile: bottom sheet.</li>
+  <li><strong>#miniCartOverlay</strong>: Semi-transparent background overlay. Click closes drawer.</li>
+  <li><strong>#miniCartClose</strong>: X button — collapses drawer.</li>
+  <li><strong>#miniCartEmpty</strong>: Box shown when cart has 0 items. Contains Browse CTA.</li>
+</ul>`, elements: [
+        ["miniCartDrawer","Box","Slide-in drawer"],["miniCartOverlay","Box","Background overlay"],
+        ["miniCartClose","Button","Close X"],["miniCartEmpty","Box","Empty state"]
+      ]},
+      { name: "Cart Items", impl: `<h4>📦 Cart Items Repeater</h4>
+<ul>
+  <li><strong>#miniCartRepeater</strong>: One row per cart line item. Set <code>#cartItemImage</code> src, <code>#cartItemName</code>, <code>#cartItemPrice</code>.</li>
+  <li><strong>#cartItemQty</strong>: NumberInput — <code>onChange</code> calls Wix cart <code>updateLineItemQuantity()</code>. Min value 1.</li>
+  <li><strong>#cartItemRemove</strong>: Button — calls <code>removeLineItems()</code>, refreshes repeater.</li>
+</ul>`, repeater: "miniCartRepeater", elements: [
+        ["miniCartRepeater","Repeater","Cart items"]
+      ], children: [
+        ["cartItemImage","Image","Product image"],["cartItemName","Text","Product name"],
+        ["cartItemPrice","Text","Line price"],["cartItemQty","NumberInput","Qty stepper"],
+        ["cartItemRemove","Button","Remove"]
+      ]},
+      { name: "Footer", impl: `<h4>💳 Cart Footer</h4>
+<ul>
+  <li><strong>#miniCartSubtotal</strong>: Shows formatted subtotal (sum of line prices). Recalculate on any qty/remove event.</li>
+  <li><strong>#miniCartCheckoutBtn</strong>: Calls <code>wixStoresFrontend.navigate.toCheckout()</code>.</li>
+  <li><strong>#miniCartViewBtn</strong>: Navigates to full /cart page.</li>
+</ul>`, elements: [
+        ["miniCartSubtotal","Text","Subtotal"],["miniCartCheckoutBtn","Button","Checkout"],
+        ["miniCartViewBtn","Button","View cart"]
+      ]}
+    ]
+  },
+  {
+    name: "Community Gallery", file: "Gallery.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Header + Filters", impl: `<h4>🖼️ Implementation — Community Gallery</h4>
+<ul>
+  <li><strong>#gallerySection</strong>: Main page section. Page slug: <code>/gallery</code>.</li>
+  <li><strong>#galleryHeroTitle</strong> / <strong>#galleryHeroSubtitle</strong>: "Real Rooms, Real Customers" / subtitle.</li>
+  <li><strong>#galleryFilterRepeater</strong>: Room type filter tabs (All, Living Room, Bedroom, Studio, Office, Dorm). Active tab: set <code>#filterTab</code> background to accent color. Clicking tab sets active filter + re-queries gallery.</li>
+</ul>`, repeater: "galleryFilterRepeater", elements: [
+        ["gallerySection","Section","Main section"],["galleryHeroTitle","Text","Hero title"],
+        ["galleryHeroSubtitle","Text","Hero subtitle"],["galleryFilterRepeater","Repeater","Filter tabs"],
+        ["galleryEmpty","Box","Empty state"],["galleryLoadMoreBtn","Button","Load more"]
+      ], children: [
+        ["filterTab","Box","Tab container"],["filterLabel","Text","Tab label"]
+      ]},
+      { name: "Photo Grid", impl: `<h4>📸 Photo Grid Repeater</h4>
+<ul>
+  <li><strong>#galleryMasonryRepeater</strong>: Photo cards. Set <code>#galleryPhoto</code> src + alt, <code>#galleryCustomerName</code>, <code>#galleryRoomBadge</code> text (room type), <code>#galleryProductLink</code> text (linked product name).</li>
+  <li>Click on any card: expand <code>#galleryLightbox</code> with full-size photo + product CTA.</li>
+  <li><strong>#galleryLoadMoreBtn</strong>: Loads next page of 12 photos (cursor-based pagination).</li>
+</ul>`, repeater: "galleryMasonryRepeater", elements: [
+        ["galleryMasonryRepeater","Repeater","Photo grid"]
+      ], children: [
+        ["galleryPhoto","Image","Customer photo"],["galleryCustomerName","Text","Customer name"],
+        ["galleryRoomBadge","Text","Room type badge"],["galleryProductLink","Button","Linked product"]
+      ]},
+      { name: "Lightbox", impl: `<h4>🔍 Photo Lightbox</h4>
+<ul>
+  <li><strong>#galleryLightbox</strong>: Wix Lightbox — opened programmatically on card click via <code>wixWindow.openLightbox('galleryLightbox', data)</code>.</li>
+  <li><strong>#lightboxPhoto</strong>: Full-size image. <strong>#lightboxCaption</strong>: Customer name + room type. <strong>#lightboxProductCTA</strong>: "Shop [Product Name]" — navigates to product page.</li>
+  <li><strong>#lightboxClose</strong>: Closes lightbox.</li>
+</ul>`, elements: [
+        ["galleryLightbox","Lightbox","Photo viewer"],["lightboxPhoto","Image","Full photo"],
+        ["lightboxCaption","Text","Caption"],["lightboxProductCTA","Button","Product CTA"],
+        ["lightboxClose","Button","Close"]
+      ]}
+    ]
+  },
+  {
+    name: "AI Recommendations Carousel (PDP)", file: "productPage.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Carousel", impl: `<h4>🤖 Implementation — AI Recommendations</h4>
+<ul>
+  <li><strong>#recommendationsSection</strong>: Section below product description. Lazy-loaded — only fetch on scroll-into-view using <code>IntersectionObserver</code> pattern.</li>
+  <li><strong>#recommendationsTitle</strong>: "Customers Also Love" heading.</li>
+  <li><strong>#recommendationsRepeater</strong>: 3–6 product cards. Horizontal scroll on mobile, 3-col grid on desktop.</li>
+  <li>Data source: <code>recommendationsService.getRecommendations(productId)</code> — tag/collection/price-band matching.</li>
+</ul>`, repeater: "recommendationsRepeater", elements: [
+        ["recommendationsSection","Section","Section container"],
+        ["recommendationsTitle","Text","Section title"],
+        ["recommendationsRepeater","Repeater","Product cards"]
+      ], children: [
+        ["recProductImage","Image","Product image"],["recProductName","Text","Product name"],
+        ["recProductPrice","Text","Price"],["recAddToCartBtn","Button","Add to cart"],
+        ["recViewBtn","Button","View product"]
+      ]}
+    ]
+  },
+  {
+    name: "Inventory Urgency Badges (Product Cards)", file: "productCard.js", priority: "P2", est: "15 min",
+    sections: [
+      { name: "Badges", impl: `<h4>⚡ Implementation — Inventory Urgency Badges</h4>
+<ul>
+  <li><strong>#inventoryBadge</strong>: Text/Box on product cards and category grids. Show when <code>inventoryService.getInventoryUrgency(productId).level === 'low'</code> → "Only X left!". Hide when stock is normal.</li>
+  <li><strong>#inventoryUrgencyBanner</strong>: Box on PDP — shown below Add to Cart. More prominent treatment: "Hurry — only X left in stock".</li>
+  <li><strong>#urgencyText</strong>: Text inside banner. <strong>#urgencyIcon</strong>: Optional icon image (fire/clock emoji or SVG).</li>
+  <li>Just-restocked variant: text = "Just restocked!" with different color treatment.</li>
+  <li><span class="impl-warn">Cache: 15 min per productId — batch fetch for category pages to avoid N+1 calls.</span></li>
+</ul>`, elements: [
+        ["inventoryBadge","Text","Card badge"],["inventoryUrgencyBanner","Box","PDP banner"],
+        ["urgencyText","Text","Urgency message"],["urgencyIcon","Image","Icon"]
       ]}
     ]
   },
