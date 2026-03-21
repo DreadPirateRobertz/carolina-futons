@@ -246,22 +246,117 @@ describe('createCartRecoveryCoupon — writes MemberCoupons record', () => {
 
 describe('MemberCoupons insert failure is non-blocking', () => {
   it('createWelcomeCoupon still returns success when MemberCoupons insert fails', async () => {
-    // Override insert to throw for MemberCoupons
     __onInsert((col) => {
       if (col === 'Members/MemberCoupons') throw new Error('DB down');
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await createWelcomeCoupon('fail@example.com');
 
     expect(result.success).toBe(true);
     expect(result.code).toBe('TEST-ABCDEF');
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('MemberCoupons insert failed'),
       expect.anything(),
       expect.stringContaining(':'),
       expect.stringContaining('DB down'),
     );
-    warnSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// generateRecoveryCoupon — idempotency path
+// ─────────────────────────────────────────────────────────────────────
+
+describe('generateRecoveryCoupon — idempotency', () => {
+  it('returns existing code without calling createCoupon when cartId already exists', async () => {
+    // Seed an existing RecoveryCoupons record for this cart
+    __seed('RecoveryCoupons', [{
+      _id: 'rc-1',
+      cartId: 'cart-existing',
+      email: 'recover@example.com',
+      code: 'RECOVER-EXISTING',
+      discountPercent: 10,
+      expiresAt: '2099-01-01T00:00:00.000Z',
+    }]);
+
+    const result = await generateRecoveryCoupon({ cartId: 'cart-existing', email: 'recover@example.com' });
+
+    expect(result.success).toBe(true);
+    expect(result.code).toBe('RECOVER-EXISTING');
+    expect(mockCreateCoupon).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// Input validation guards on creation functions
+// ─────────────────────────────────────────────────────────────────────
+
+describe('createWelcomeCoupon — input validation', () => {
+  it('rejects missing email', async () => {
+    const result = await createWelcomeCoupon('');
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/email/i);
+  });
+
+  it('rejects invalid email', async () => {
+    const result = await createWelcomeCoupon('not-an-email');
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/invalid/i);
+  });
+});
+
+describe('createBirthdayCoupon — input validation', () => {
+  it('rejects missing email', async () => {
+    const result = await createBirthdayCoupon('');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects invalid email', async () => {
+    const result = await createBirthdayCoupon('bad-email');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('createTierUpgradeCoupon — edge cases', () => {
+  it('rejects missing email', async () => {
+    const result = await createTierUpgradeCoupon('', 'Gold');
+    expect(result.success).toBe(false);
+  });
+
+  it('defaults to 10% for unrecognized tier', async () => {
+    const inserted = [];
+    __onInsert((col, item) => inserted.push({ col, item }));
+    const result = await createTierUpgradeCoupon('test@example.com', 'Platinum');
+    expect(result.success).toBe(true);
+    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    expect(cms[0].item.discount).toBe('10%');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// getActiveCoupons — contactDetails.emails fallback
+// ─────────────────────────────────────────────────────────────────────
+
+describe('getActiveCoupons — email fallback', () => {
+  it('uses contactDetails.emails[0].address when loginEmail is absent', async () => {
+    mockGetMember.mockResolvedValue({
+      loginEmail: '',
+      contactDetails: { emails: [{ address: 'contact@example.com' }] },
+    });
+    __seed('Members/MemberCoupons', [{
+      _id: 'c-contact',
+      memberEmail: 'contact@example.com',
+      couponCode: 'BDAY-CONTACT',
+      couponType: 'Birthday',
+      discount: '15%',
+      active: true,
+      expiresAt: '2099-01-01T00:00:00.000Z',
+    }]);
+
+    const result = await getActiveCoupons();
+    expect(result).toHaveLength(1);
+    expect(result[0].code).toBe('BDAY-CONTACT');
   });
 });

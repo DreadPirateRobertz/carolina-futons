@@ -35,6 +35,7 @@ export const createWelcomeCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
       const coupon = await coupons.createCoupon({
         name: `Welcome 10% Off - ${cleanEmail}`,
         code: await generateCode('WELCOME'),
@@ -45,11 +46,10 @@ export const createWelcomeCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expirationTime: expiresAt,
       });
 
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Welcome', '10%', expiresAt);
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Welcome', '10%', expiresAt.toISOString());
 
       return {
         success: true,
@@ -131,6 +131,7 @@ export const createBirthdayCoupon = webMethod(
 
       const name = sanitize(memberName || 'Valued Customer', 100);
 
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       const coupon = await coupons.createCoupon({
         name: `Happy Birthday ${name}! 15% Off`,
         code: await generateCode('BDAY'),
@@ -141,11 +142,10 @@ export const createBirthdayCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expirationTime: expiresAt,
       });
 
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Birthday', '15%', expiresAt);
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Birthday', '15%', expiresAt.toISOString());
 
       return {
         success: true,
@@ -180,6 +180,7 @@ export const createTierUpgradeCoupon = webMethod(
       const discountMap = { Silver: 10, Gold: 20 };
       const discount = discountMap[tier] || 10;
 
+      const tierExpiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       const coupon = await coupons.createCoupon({
         name: `${tier} Tier Welcome - ${discount}% Off`,
         code: await generateCode(tier.toUpperCase()),
@@ -189,11 +190,10 @@ export const createTierUpgradeCoupon = webMethod(
         limitPerCustomer: 1,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+        expirationTime: tierExpiresAt,
       });
 
-      const tierExpiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, `${tier} Tier`, `${discount}%`, tierExpiresAt);
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, `${tier} Tier`, `${discount}%`, tierExpiresAt.toISOString());
 
       return {
         success: true,
@@ -317,6 +317,7 @@ export const createCartRecoveryCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
+      const recoveryExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
       const coupon = await coupons.createCoupon({
         name: `Cart Recovery 10% Off - ${cleanEmail}`,
         code: await generateCode('RECOVER'),
@@ -328,11 +329,10 @@ export const createCartRecoveryCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+        expirationTime: recoveryExpiresAt,
       });
 
-      const recoveryExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', recoveryExpiresAt);
+      await _insertMemberCouponRecord(cleanEmail, coupon.code, 'Cart Recovery', '10%', recoveryExpiresAt.toISOString());
 
       return {
         success: true,
@@ -370,7 +370,9 @@ async function _insertMemberCouponRecord(memberEmail, couponCode, couponType, di
       active: true,
     });
   } catch (err) {
-    console.warn('[couponsService] MemberCoupons insert failed for', couponCode, ':', err.message);
+    // Escalate to error — a failure here means getActiveCoupons will never surface
+    // this coupon to the member (breaks CF-env4 IDOR fix visibility).
+    console.error('[couponsService] MemberCoupons insert failed for', couponCode, ':', err.message);
   }
 }
 
