@@ -187,7 +187,7 @@ export const validatePromoCode = webMethod(
  * @param {string} code - The promo code
  * @param {Array<{_id: string, name?: string, price: number, quantity: number, category?: string}>} cartItems
  * @param {Object} [opts] - Injectable overrides (for testability)
- * @param {string} [opts.rateLimitKey] - Rate limit bucket key (e.g. visitor IP from frontend)
+ * @param {string} opts.rateLimitKey - Caller's memberId or email; required for rate limiting (fail-close if missing)
  * @param {number} [opts.rateLimitNow] - Timestamp override for rate limit testing
  * @returns {Promise<Object>}
  */
