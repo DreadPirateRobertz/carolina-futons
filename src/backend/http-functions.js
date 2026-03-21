@@ -16,6 +16,9 @@ import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
+import { accounts as loyaltyAccounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
+import { currentMember } from 'wix-members-backend';
+import { validateId } from 'backend/utils/sanitize';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1158,4 +1161,101 @@ export function get_topicCluster(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+}
+
+// Loyalty tier + rewards endpoint
+// URL: GET https://www.carolinafutons.com/_functions/loyalty/{memberId}
+// Returns tier, points, and available rewards for the authenticated member.
+// IDOR guard: authenticated session must own the requested memberId.
+export async function get_loyalty(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+  try {
+    const memberId = validateId(request?.pathParams?.memberId || '');
+    if (!memberId) {
+      return forbidden({
+        body: JSON.stringify({ success: false, error: 'Forbidden.' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    // Authentication check
+    let session;
+    try {
+      session = await currentMember.getMember();
+    } catch (_) {
+      session = null;
+    }
+    if (!session?._id) {
+      return { status: 401, body: JSON.stringify({ success: false, error: 'Authentication required.' }), headers: JSON_HEADERS };
+    }
+
+    // IDOR guard: authenticated member must own the requested memberId
+    if (session._id !== memberId) {
+      return forbidden({
+        body: JSON.stringify({ success: false, error: 'Forbidden.' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    // Fetch loyalty account by memberId
+    const account = await loyaltyAccounts.getAccount(memberId);
+    if (!account) {
+      return notFound({
+        body: JSON.stringify({ success: false, error: 'Loyalty account not found.' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const points = account.points?.balance ?? 0;
+    const tier = _loyaltyTierFor(points);
+    const nextTier = _nextLoyaltyTier(tier.label);
+    const pointsToNext = nextTier ? Math.max(0, nextTier.min - points) : 0;
+    const progress = nextTier ? Math.min(100, Math.round((points / nextTier.min) * 100)) : 100;
+
+    // Fetch available rewards (active only, sorted by cost ascending)
+    const rewardResult = await loyaltyRewards.listRewards();
+    const rewards = (rewardResult.rewards || [])
+      .filter(r => r.active !== false)
+      .sort((a, b) => (a.pointsCost || 0) - (b.pointsCost || 0));
+
+    return ok({
+      body: JSON.stringify({
+        success: true,
+        memberId,
+        points,
+        tier: tier.label,
+        tierDiscount: tier.discount,
+        nextTier: nextTier ? nextTier.label : null,
+        pointsToNext,
+        progress,
+        rewards,
+      }),
+      headers: JSON_HEADERS,
+    });
+  } catch (err) {
+    console.error('[loyalty] get_loyalty error:', err?.message ?? String(err));
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'Failed to load loyalty data.' }),
+      headers: JSON_HEADERS,
+    });
+  }
+}
+
+const _LOYALTY_TIERS = [
+  { label: 'Bronze', min: 0, discount: 0 },
+  { label: 'Silver', min: 500, discount: 5 },
+  { label: 'Gold', min: 1500, discount: 10 },
+];
+
+function _loyaltyTierFor(points) {
+  for (let i = _LOYALTY_TIERS.length - 1; i >= 0; i--) {
+    if (points >= _LOYALTY_TIERS[i].min) return _LOYALTY_TIERS[i];
+  }
+  return _LOYALTY_TIERS[0];
+}
+
+function _nextLoyaltyTier(currentLabel) {
+  const idx = _LOYALTY_TIERS.findIndex(t => t.label === currentLabel);
+  return idx >= 0 && idx < _LOYALTY_TIERS.length - 1 ? _LOYALTY_TIERS[idx + 1] : null;
 }

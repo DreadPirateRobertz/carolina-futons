@@ -6,6 +6,7 @@ let mockRewards = [];
 
 export const accounts = {
   getMyAccount: vi.fn(() => Promise.resolve(mockAccount)),
+  getAccount: vi.fn((_memberId) => Promise.resolve(mockAccount)),
   earnPoints: vi.fn((accountId, options) => Promise.resolve({ account: mockAccount })),
   adjustPoints: vi.fn((accountId, options) => Promise.resolve({ account: mockAccount })),
 };
@@ -26,6 +27,7 @@ export function __reset() {
   mockAccount = null;
   mockRewards = [];
   accounts.getMyAccount.mockClear();
+  accounts.getAccount.mockClear();
   accounts.earnPoints.mockClear();
   accounts.adjustPoints.mockClear();
   rewards.listRewards.mockClear();
