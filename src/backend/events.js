@@ -139,6 +139,19 @@ export async function wixEcom_onAbandonedCheckoutRecovered(event) {
 // ── Member + Order Lifecycle Handlers ────────────────────────────────
 
 /**
+ * Extract UTC month (1-12) and day (1-31) from a birthday Date value.
+ * Uses UTC to avoid timezone shift on bare date strings (e.g. "1990-05-15").
+ * Returns null if the value is absent or unparseable.
+ * @private
+ */
+export function _parseBirthdayMonthDay(birthdayValue) {
+  if (!birthdayValue) return null;
+  const d = new Date(birthdayValue);
+  if (isNaN(d.getTime())) return null;
+  return { month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+}
+
+/**
  * Fired when a new site member is created.
  * Delegates to emailAutomation to queue the welcome email series.
  */
@@ -375,5 +388,40 @@ export async function wixStores_onInventoryVariantUpdated(event) {
       severity: 'HIGH',
       impact: 'Back-in-stock subscribers not notified — trust erosion',
     });
+  }
+}
+
+// ── Member Birthday Field Sync ────────────────────────────────────────
+
+/**
+ * Fired when a site member's profile is updated.
+ * If the `birthday` Date field changed, derives and writes `birthday_month`
+ * (1-12) and `birthday_day` (1-31) as searchable int fields so the daily
+ * birthday cron can query by today's month/day without a full-table scan.
+ *
+ * No-op if birthday is absent or unchanged, so normal profile updates
+ * (name changes, avatar updates, etc.) complete without any extra writes.
+ */
+export async function wixMembers_onMemberUpdated(event) {
+  const member = event.entity || event;
+  const memberId = member._id || '';
+  const birthday = member.contactDetails?.birthdate ?? member.birthdate ?? null;
+
+  if (!birthday) return; // no birthday set — nothing to derive
+
+  const parsed = _parseBirthdayMonthDay(birthday);
+  if (!parsed) {
+    console.warn('[events] wixMembers_onMemberUpdated: unparseable birthday for member', memberId, ':', birthday);
+    return;
+  }
+
+  try {
+    await wixData.update('Members/PrivateMembersData', {
+      _id: memberId,
+      birthday_month: parsed.month,
+      birthday_day: parsed.day,
+    });
+  } catch (err) {
+    console.error(`[events] Failed to sync birthday fields for member ${memberId}:`, err?.message ?? err);
   }
 }
