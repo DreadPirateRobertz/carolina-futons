@@ -378,7 +378,7 @@ describe('getPendingReviewRequests', () => {
 describe('submitReview', () => {
   it('submits a valid review', async () => {
     __seed('ReviewRequests', [
-      { _id: 'rr1', status: 'pending', rating: null, reviewText: null },
+      { _id: 'rr1', customerEmail: 'user@example.com', status: 'pending', rating: null, reviewText: null },
     ]);
     const result = await submitReview('rr1', 5, 'Great product!');
     expect(result.success).toBe(true);
@@ -393,14 +393,14 @@ describe('submitReview', () => {
   });
 
   it('requires rating between 1 and 5', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending' }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending' }]);
     expect((await submitReview('rr1', 0, 'text')).success).toBe(false);
     expect((await submitReview('rr1', 6, 'text')).success).toBe(false);
     expect((await submitReview('rr1', -1, 'text')).success).toBe(false);
   });
 
   it('rejects non-number rating', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending' }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending' }]);
     expect((await submitReview('rr1', 'five', 'text')).success).toBe(false);
   });
 
@@ -411,7 +411,7 @@ describe('submitReview', () => {
   });
 
   it('sanitizes requestId — strips special chars', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending' }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending' }]);
     // ID with special chars gets cleaned to 'rr1'
     const result = await submitReview('rr1!!!', 5, 'text');
     // After cleaning "rr1!!!" becomes "rr1" which exists
@@ -419,7 +419,7 @@ describe('submitReview', () => {
   });
 
   it('sanitizes reviewText to 5000 chars', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending', rating: null, reviewText: null }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending', rating: null, reviewText: null }]);
     const longText = 'x'.repeat(6000);
     await submitReview('rr1', 4, longText);
     const updated = _collections.ReviewRequests.find(r => r._id === 'rr1');
@@ -427,26 +427,26 @@ describe('submitReview', () => {
   });
 
   it('NaN rating bypasses guard — typeof number, not < 1, not > 5 (known gap)', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending', rating: null, reviewText: null }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending', rating: null, reviewText: null }]);
     const result = await submitReview('rr1', NaN, 'text');
     // NaN passes: typeof NaN === 'number' && !(NaN < 1) && !(NaN > 5)
     expect(result.success).toBe(true);
   });
 
   it('Infinity rating is rejected (> 5)', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending' }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending' }]);
     const result = await submitReview('rr1', Infinity, 'text');
     expect(result.success).toBe(false);
   });
 
   it('rating 1 is minimum valid', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending', rating: null, reviewText: null }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending', rating: null, reviewText: null }]);
     const result = await submitReview('rr1', 1, 'ok');
     expect(result.success).toBe(true);
   });
 
   it('rating 5 is maximum valid', async () => {
-    __seed('ReviewRequests', [{ _id: 'rr1', status: 'pending', rating: null, reviewText: null }]);
+    __seed('ReviewRequests', [{ _id: 'rr1', customerEmail: 'user@example.com', status: 'pending', rating: null, reviewText: null }]);
     const result = await submitReview('rr1', 5, 'great');
     expect(result.success).toBe(true);
   });

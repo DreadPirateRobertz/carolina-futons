@@ -406,10 +406,9 @@ export const getQASchema = webMethod(Permissions.Anyone, async (productId) => {
  * @param {string} params.question
  * @param {string} params.memberName
  * @param {string} params.email - Guest email, used as rate-limit key (3/hour).
- * @param {Object} [params._opts] - Internal test overrides (e.g. { now: timestamp }).
  * @returns {Promise<{success: boolean, data?: {_id: string, question: string}, error?: string}>}
  */
-export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ productId, question, memberName, email, _opts }) => {
+export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ productId, question, memberName, email }) => {
   try {
     const cleanProductId = sanitize(String(productId || ''), 50);
     const cleanQuestion = sanitize(String(question || ''), MAX_QUESTION_LENGTH);
@@ -423,7 +422,7 @@ export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ produc
     const cleanEmail = sanitize(String(email || ''), 254).toLowerCase();
     if (!validateEmail(cleanEmail)) return { success: false, error: 'Valid email is required' };
 
-    const { allowed } = await checkRateLimit('QARateLimit', cleanEmail, _opts);
+    const { allowed } = await checkRateLimit('QARateLimit', cleanEmail);
     if (!allowed) return { success: false, error: 'Too many submissions. Please try again later.' };
 
     const inserted = await wixData.insert('ProductQuestions', {
