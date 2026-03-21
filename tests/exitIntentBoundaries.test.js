@@ -1,9 +1,9 @@
 /**
  * Boundary tests for exitIntentCapture.js — CF-jgbd.
  * Focuses on exact thresholds: timing (29999ms vs 30000ms),
- * cursor position (clientY 10 vs 11), and dismiss-prevents-retrigger integration.
+ * cursor position (clientY 10 vs 11 vs null), and dismiss-prevents-retrigger integration.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   initCursorLeaveDetection,
   markExitIntentDismissed,
@@ -50,10 +50,15 @@ describe('initCursorLeaveDetection — timing boundary at 29999ms', () => {
   let openLightbox;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
     doc = makeDoc();
     globalThis.sessionStorage.clear();
     openLightbox = await getOpenLightboxMock();
     openLightbox.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('does NOT fire at 29999ms (one ms short of 30s threshold)', async () => {
@@ -62,7 +67,7 @@ describe('initCursorLeaveDetection — timing boundary at 29999ms', () => {
 
     now = MIN_TIME_ON_PAGE_MS - 1; // 29999ms
     doc.fire('mouseleave', { clientY: 0 });
-    await new Promise(r => setTimeout(r, 0));
+    await vi.runAllTimersAsync();
 
     expect(openLightbox).not.toHaveBeenCalled();
   });
@@ -73,7 +78,7 @@ describe('initCursorLeaveDetection — timing boundary at 29999ms', () => {
 
     now = MIN_TIME_ON_PAGE_MS; // exactly 30000ms
     doc.fire('mouseleave', { clientY: 0 });
-    await new Promise(r => setTimeout(r, 0));
+    await vi.runAllTimersAsync();
 
     expect(openLightbox).toHaveBeenCalledTimes(1);
   });
@@ -86,10 +91,15 @@ describe('initCursorLeaveDetection — clientY boundary at 10', () => {
   let openLightbox;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
     doc = makeDoc();
     globalThis.sessionStorage.clear();
     openLightbox = await getOpenLightboxMock();
     openLightbox.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('fires when clientY is exactly 10 (at threshold, not above)', async () => {
@@ -97,7 +107,7 @@ describe('initCursorLeaveDetection — clientY boundary at 10', () => {
     initCursorLeaveDetection('/', { doc, now: () => now });
     now = MIN_TIME_ON_PAGE_MS;
     doc.fire('mouseleave', { clientY: 10 });
-    await new Promise(r => setTimeout(r, 0));
+    await vi.runAllTimersAsync();
 
     expect(openLightbox).toHaveBeenCalledTimes(1);
   });
@@ -107,7 +117,17 @@ describe('initCursorLeaveDetection — clientY boundary at 10', () => {
     initCursorLeaveDetection('/', { doc, now: () => now });
     now = MIN_TIME_ON_PAGE_MS;
     doc.fire('mouseleave', { clientY: 11 });
-    await new Promise(r => setTimeout(r, 0));
+    await vi.runAllTimersAsync();
+
+    expect(openLightbox).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fire when clientY is null (unknown direction)', async () => {
+    let now = 0;
+    initCursorLeaveDetection('/', { doc, now: () => now });
+    now = MIN_TIME_ON_PAGE_MS;
+    doc.fire('mouseleave', { clientY: null });
+    await vi.runAllTimersAsync();
 
     expect(openLightbox).not.toHaveBeenCalled();
   });
@@ -120,10 +140,15 @@ describe('markExitIntentDismissed — prevents cursor-leave from re-triggering',
   let openLightbox;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
     doc = makeDoc();
     globalThis.sessionStorage.clear();
     openLightbox = await getOpenLightboxMock();
     openLightbox.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('user dismissing lightbox without submitting prevents future cursor-leave trigger', async () => {
@@ -136,7 +161,7 @@ describe('markExitIntentDismissed — prevents cursor-leave from re-triggering',
     // Cursor leaves the page again — should NOT re-open lightbox
     now = MIN_TIME_ON_PAGE_MS;
     doc.fire('mouseleave', { clientY: 0 });
-    await new Promise(r => setTimeout(r, 0));
+    await vi.runAllTimersAsync();
 
     expect(openLightbox).not.toHaveBeenCalled();
     expect(shouldShowExitIntent('/')).toBe(false);
