@@ -15,8 +15,6 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/labeler@v5
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   # Size labels based on lines changed
   size-label:

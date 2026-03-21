@@ -9,6 +9,7 @@ on:
     - cron: '30 7 * * 1'  # Weekly Monday 7:30 UTC
 
 permissions:
+  actions: read
   contents: read
   security-events: write
 
