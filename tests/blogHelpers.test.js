@@ -7,6 +7,7 @@ import {
   getCategories,
   filterPostsByCategory,
   getFeaturedPost,
+  getPaginatedPosts,
   getRelatedPosts,
   formatPublishDate,
   buildAuthorBio,
@@ -238,5 +239,105 @@ describe('buildShareUrls', () => {
 
   it('returns empty object when title is null', () => {
     expect(buildShareUrls('https://example.com', null)).toEqual({});
+  });
+});
+
+// ── getPaginatedPosts ─────────────────────────────────────────────────
+
+const makePosts = (n) =>
+  Array.from({ length: n }, (_, i) => ({ slug: `post-${i}`, title: `Post ${i}` }));
+
+describe('getPaginatedPosts — empty / null input', () => {
+  it('returns empty items for null posts', () => {
+    const r = getPaginatedPosts(null, 1, 9);
+    expect(r.items).toEqual([]);
+    expect(r.totalCount).toBe(0);
+    expect(r.totalPages).toBe(1);
+    expect(r.currentPage).toBe(1);
+  });
+
+  it('returns empty items for empty array', () => {
+    const r = getPaginatedPosts([], 1, 9);
+    expect(r.items).toHaveLength(0);
+    expect(r.totalPages).toBe(1);
+  });
+});
+
+describe('getPaginatedPosts — single page', () => {
+  it('returns all posts when count < perPage', () => {
+    const posts = makePosts(5);
+    const r = getPaginatedPosts(posts, 1, 9);
+    expect(r.items).toHaveLength(5);
+    expect(r.totalPages).toBe(1);
+    expect(r.totalCount).toBe(5);
+    expect(r.currentPage).toBe(1);
+  });
+
+  it('returns exactly perPage items when count === perPage', () => {
+    const posts = makePosts(9);
+    const r = getPaginatedPosts(posts, 1, 9);
+    expect(r.items).toHaveLength(9);
+    expect(r.totalPages).toBe(1);
+  });
+});
+
+describe('getPaginatedPosts — multiple pages', () => {
+  it('returns first page items', () => {
+    const posts = makePosts(25);
+    const r = getPaginatedPosts(posts, 1, 9);
+    expect(r.items).toHaveLength(9);
+    expect(r.items[0].slug).toBe('post-0');
+    expect(r.currentPage).toBe(1);
+    expect(r.totalPages).toBe(3);
+    expect(r.totalCount).toBe(25);
+  });
+
+  it('returns second page items', () => {
+    const posts = makePosts(25);
+    const r = getPaginatedPosts(posts, 2, 9);
+    expect(r.items).toHaveLength(9);
+    expect(r.items[0].slug).toBe('post-9');
+    expect(r.currentPage).toBe(2);
+  });
+
+  it('returns partial last page', () => {
+    const posts = makePosts(25);
+    const r = getPaginatedPosts(posts, 3, 9);
+    expect(r.items).toHaveLength(7); // 25 - 18 = 7
+    expect(r.currentPage).toBe(3);
+  });
+
+  it('clamps page to totalPages when out of range (too high)', () => {
+    const posts = makePosts(10);
+    const r = getPaginatedPosts(posts, 99, 9);
+    expect(r.currentPage).toBe(2); // clamped to last page
+    expect(r.items).toHaveLength(1);
+  });
+
+  it('clamps page to 1 when page < 1', () => {
+    const posts = makePosts(10);
+    const r = getPaginatedPosts(posts, 0, 9);
+    expect(r.currentPage).toBe(1);
+    expect(r.items).toHaveLength(9);
+  });
+
+  it('clamps page to 1 when page is undefined', () => {
+    const posts = makePosts(5);
+    const r = getPaginatedPosts(posts, undefined, 9);
+    expect(r.currentPage).toBe(1);
+  });
+});
+
+describe('getPaginatedPosts — perPage defaults', () => {
+  it('defaults to 9 when perPage is 0', () => {
+    const posts = makePosts(15);
+    const r = getPaginatedPosts(posts, 1, 0);
+    expect(r.items).toHaveLength(9);
+  });
+
+  it('defaults to 9 when perPage is undefined', () => {
+    const posts = makePosts(15);
+    const r = getPaginatedPosts(posts, 1, undefined);
+    expect(r.items).toHaveLength(9);
   });
 });

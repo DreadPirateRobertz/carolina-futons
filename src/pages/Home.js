@@ -18,6 +18,7 @@ import { isCallForPrice, CALL_FOR_PRICE_TEXT } from 'public/productPageUtils.js'
 import { getImageDimensions } from 'public/galleryConfig.js';
 import { initSocialFeeds } from 'public/SocialFeedEmbed.js';
 import { initBlogTeaserRepeater } from 'public/HomeBlogTeasers.js';
+import { initGiftCardSection } from 'public/giftCardSection.js';
 import wixData from 'wix-data';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,6 +74,7 @@ $w.onReady(async function () {
     { name: 'swatchPromo', init: initSwatchPromo, critical: false },
     { name: 'blogTeasers', init: () => initBlogTeaserRepeater($w, {}), critical: false },
     { name: 'socialFeeds', init: () => initSocialFeeds($w, {}), critical: false },
+    { name: 'giftCardSection', init: () => initGiftCardSection($w), critical: false },
     { name: 'newsletter', init: initNewsletterSection, critical: false },
     { name: 'ridgeline', init: initRidgelineHeader, critical: false },
     { name: 'homeSchemas', init: injectHomeSchemas, critical: false },

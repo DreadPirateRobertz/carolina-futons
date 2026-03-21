@@ -186,6 +186,29 @@ export async function wixEcom_onOrderCreated(event) {
 }
 
 /**
+ * Fired when an order is fulfilled (all items shipped).
+ * Delegates to notificationOrchestrator to send "order shipped" SMS.
+ */
+export async function wixEcom_onOrderFulfilled(event) {
+  const order = event.entity || event;
+  const memberId = order.buyerInfo?.memberId || '';
+  const orderNumber = order.number || '';
+  // Extract tracking number from first fulfillment, if present
+  const trackingNumber = order.fulfillmentStatus?.trackingInfo?.trackingNumber
+    || order.trackingInfo?.trackingNumber
+    || '';
+
+  if (!memberId) return;
+
+  try {
+    const { handleOrderFulfilled } = await import('backend/notificationOrchestrator.web');
+    await handleOrderFulfilled({ memberId, orderNumber, trackingNumber });
+  } catch (err) {
+    console.error('[events] Error handling order fulfilled SMS:', err);
+  }
+}
+
+/**
  * Fired when an order is cancelled.
  * Delegates to emailAutomation to cancel pending post-purchase care emails.
  */

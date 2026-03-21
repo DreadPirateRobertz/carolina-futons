@@ -3685,6 +3685,181 @@ SHARING:
     ]
   },
   {
+    name: "Sustainability", file: "Sustainability.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Hero", impl: `<h4>🌿 Implementation — Hero (Sustainability)</h4>
+<ul>
+  <li><strong>#sustainHeroHeading</strong>: Text — main hero headline (e.g. "Built to Last. Made Responsibly.").</li>
+  <li><strong>#sustainHeroSubheading</strong>: Text — secondary heading.</li>
+  <li><strong>#sustainHeroIntro</strong>: RichText — intro paragraph set from CMS or static content.</li>
+</ul>`, elements: [
+        ["sustainHeroHeading","Text","Hero headline"],
+        ["sustainHeroSubheading","Text","Secondary heading"],
+        ["sustainHeroIntro","RichText","Intro paragraph"]
+      ]},
+      { name: "Commitment Badges", repeater: "badgesRepeater", impl: `<h4>🏅 Implementation — Commitment Badges (Sustainability)</h4>
+<ul>
+  <li><strong>#badgesRepeater</strong>: Repeater — one badge per commitment (e.g. "FSC Certified", "Carbon Neutral").</li>
+  <li><strong>#badgeLabel</strong>: Text — badge title.</li>
+  <li><strong>#badgeDesc</strong>: Text — short description.</li>
+</ul>`, elements: [
+        ["badgesRepeater","Repeater","Commitment badges"],
+        ["badgeLabel","Text","Badge title (repeater child)"],
+        ["badgeDesc","Text","Badge description (repeater child)"]
+      ]},
+      { name: "Certifications", repeater: "certificationsRepeater", impl: `<h4>📋 Implementation — Certifications (Sustainability)</h4>
+<ul>
+  <li><strong>#certificationsHeading</strong>: Text — section heading.</li>
+  <li><strong>#certificationsRepeater</strong>: Repeater — one card per certification.</li>
+  <li><strong>#certName</strong>: Text — certification name.</li>
+  <li><strong>#certDesc</strong>: RichText — certification description.</li>
+</ul>`, elements: [
+        ["certificationsHeading","Text","Section heading"],
+        ["certificationsRepeater","Repeater","Certification cards"],
+        ["certName","Text","Cert name (repeater child)"],
+        ["certDesc","RichText","Cert description (repeater child)"]
+      ]},
+      { name: "Materials", repeater: "materialsRepeater", impl: `<h4>🪵 Implementation — Materials (Sustainability)</h4>
+<ul>
+  <li><strong>#materialsHeading</strong>: Text — section heading.</li>
+  <li><strong>#materialsDescription</strong>: Text — intro text.</li>
+  <li><strong>#materialsRepeater</strong>: Repeater — one entry per material.</li>
+  <li><strong>#materialTitle</strong>: Text — material name.</li>
+  <li><strong>#materialDesc</strong>: Text — material sourcing/sustainability note.</li>
+</ul>`, elements: [
+        ["materialsHeading","Text","Section heading"],
+        ["materialsDescription","Text","Intro text"],
+        ["materialsRepeater","Repeater","Material entries"],
+        ["materialTitle","Text","Material name (repeater child)"],
+        ["materialDesc","Text","Material note (repeater child)"]
+      ]},
+      { name: "Carbon Offset", impl: `<h4>🌍 Implementation — Carbon Offset (Sustainability)</h4>
+<ul>
+  <li><strong>#carbonOffsetSection</strong>: Box — shown/hidden based on CMS config or static.</li>
+  <li><strong>#carbonHeading</strong>: Text — section heading.</li>
+  <li><strong>#carbonDescription</strong>: Text — description of carbon offset program.</li>
+</ul>`, elements: [
+        ["carbonOffsetSection","Box","Carbon offset section container"],
+        ["carbonHeading","Text","Section heading"],
+        ["carbonDescription","Text","Program description"]
+      ]},
+      { name: "Trade-In Program", repeater: "tradeInStepsRepeater", impl: `<h4>♻️ Implementation — Trade-In Program (Sustainability)</h4>
+<ul>
+  <li><strong>#tradeInHeading</strong>: Text — section heading.</li>
+  <li><strong>#tradeInDescription</strong>: Text — program description.</li>
+  <li><strong>#tradeInEstimate</strong>: Text — estimated trade-in value range.</li>
+  <li><strong>#tradeInCondition</strong>: Dropdown or Text — furniture condition selector.</li>
+  <li><strong>#tradeInStepsRepeater</strong>: Repeater — numbered step cards.</li>
+  <li><strong>#stepNumber</strong>: Text — "1", "2", "3" etc.</li>
+  <li><strong>#stepTitle</strong>: Text — step title.</li>
+  <li><strong>#stepDesc</strong>: Text — step description.</li>
+</ul>`, elements: [
+        ["tradeInHeading","Text","Trade-in section heading"],
+        ["tradeInDescription","Text","Program description"],
+        ["tradeInEstimate","Text","Estimated value range"],
+        ["tradeInCondition","Dropdown","Furniture condition selector"],
+        ["tradeInStepsRepeater","Repeater","Numbered step cards"],
+        ["stepNumber","Text","Step number (repeater child)"],
+        ["stepTitle","Text","Step title (repeater child)"],
+        ["stepDesc","Text","Step description (repeater child)"]
+      ]},
+      { name: "SEO Schema", impl: `<h4>🔍 Implementation — SEO Schema (Sustainability)</h4>
+<ul>
+  <li><strong>#sustainSchemaHtml</strong>: HtmlComponent — JSON-LD FAQPage/Organization schema for sustainability claims and certifications.</li>
+</ul>`, elements: [
+        ["sustainSchemaHtml","HtmlComponent","JSON-LD schema for sustainability"]
+      ]}
+    ]
+  },
+  {
+    name: "Price Match Guarantee", file: "Price Match Guarantee.js", priority: "P2", est: "40 min",
+    sections: [
+      { name: "Page Header", impl: `<h4>💰 Implementation — Page Header (Price Match)</h4>
+<ul>
+  <li><strong>#priceMatchTitle</strong>: Text — page headline (e.g. "We'll Match Any Price").</li>
+  <li><strong>#priceMatchDescription</strong>: RichText — policy intro paragraph.</li>
+</ul>`, elements: [
+        ["priceMatchTitle","Text","Page headline"],
+        ["priceMatchDescription","RichText","Policy intro paragraph"]
+      ]},
+      { name: "Request Form", impl: `<h4>📝 Implementation — Request Form (Price Match)</h4>
+<ul>
+  <li><strong>#pmFormSection</strong>: Box — form container, shown when submitting a new request.</li>
+  <li><strong>#pmProductName</strong>: Input — product name (user-entered).</li>
+  <li><strong>#pmProductId</strong>: Input (hidden) — product ID resolved from name lookup.</li>
+  <li><strong>#pmCompetitorSelect</strong>: Dropdown — competitor name selection.</li>
+  <li><strong>#pmCompetitorUrl</strong>: Input — competitor product URL.</li>
+  <li><strong>#pmOurPrice</strong>: Input — our current price (auto-filled or user-entered).</li>
+  <li><strong>#pmCompetitorPrice</strong>: Input — competitor price.</li>
+  <li><strong>#pmNotes</strong>: TextBox — additional notes.</li>
+  <li><strong>#pmSubmitBtn</strong>: Button — submit request.</li>
+  <li>Error fields: <strong>#pmFormError</strong>, <strong>#pmProductNameError</strong>, <strong>#pmCompetitorUrlError</strong>, <strong>#pmOurPriceError</strong>, <strong>#pmCompetitorPriceError</strong>, <strong>#pmCompetitorError</strong> — per-field validation messages.</li>
+</ul>`, elements: [
+        ["pmFormSection","Box","Form container"],
+        ["pmProductName","Input","Product name"],
+        ["pmProductId","Input","Product ID (hidden)"],
+        ["pmCompetitorSelect","Dropdown","Competitor name"],
+        ["pmCompetitorUrl","Input","Competitor URL"],
+        ["pmOurPrice","Input","Our price"],
+        ["pmCompetitorPrice","Input","Competitor price"],
+        ["pmNotes","TextBox","Additional notes"],
+        ["pmSubmitBtn","Button","Submit request"],
+        ["pmFormError","Text","Form-level error"],
+        ["pmProductNameError","Text","Product name error"],
+        ["pmCompetitorUrlError","Text","URL error"],
+        ["pmOurPriceError","Text","Our price error"],
+        ["pmCompetitorPriceError","Text","Competitor price error"],
+        ["pmCompetitorError","Text","Competitor select error"]
+      ]},
+      { name: "Savings Preview", impl: `<h4>💡 Implementation — Savings Preview (Price Match)</h4>
+<ul>
+  <li><strong>#pmSavingsPreview</strong>: Box — shows calculated savings amount before submission. Updates live as prices are entered.</li>
+</ul>`, elements: [
+        ["pmSavingsPreview","Box","Live savings calculation preview"]
+      ]},
+      { name: "Success State", impl: `<h4>✅ Implementation — Success State (Price Match)</h4>
+<ul>
+  <li><strong>#pmSuccessSection</strong>: Box — shown after successful submission (form hidden).</li>
+  <li><strong>#pmSuccessMessage</strong>: Text — confirmation message with claim number.</li>
+</ul>`, elements: [
+        ["pmSuccessSection","Box","Post-submit success state"],
+        ["pmSuccessMessage","Text","Confirmation message"]
+      ]},
+      { name: "My Requests", repeater: "pmRequestsRepeater", impl: `<h4>📋 Implementation — My Requests (Price Match)</h4>
+<ul>
+  <li><strong>#pmRequestsSection</strong>: Box — container for request history (SiteMember only).</li>
+  <li><strong>#pmNewRequestBtn</strong>: Button — "Submit New Request", toggles form visibility.</li>
+  <li><strong>#pmRequestsRepeater</strong>: Repeater — one row per submitted request.</li>
+  <li>Repeater children: <strong>#pmReqDate</strong>, <strong>#pmReqProductName</strong>, <strong>#pmReqCompetitorName</strong>, <strong>#pmReqCompetitorPrice</strong>, <strong>#pmReqOurPrice</strong>, <strong>#pmReqSavings</strong>, <strong>#pmReqStatus</strong> (Pending/Approved/Denied), <strong>#pmReqCreditAmount</strong>, <strong>#pmReqClaimNumber</strong>, <strong>#pmReqAdminNotes</strong>.</li>
+</ul>`, elements: [
+        ["pmRequestsSection","Box","Request history container"],
+        ["pmNewRequestBtn","Button","Submit New Request toggle"],
+        ["pmRequestsRepeater","Repeater","Request history rows"],
+        ["pmReqDate","Text","Request date (repeater child)"],
+        ["pmReqProductName","Text","Product name (repeater child)"],
+        ["pmReqCompetitorName","Text","Competitor name (repeater child)"],
+        ["pmReqCompetitorPrice","Text","Competitor price (repeater child)"],
+        ["pmReqOurPrice","Text","Our price (repeater child)"],
+        ["pmReqSavings","Text","Savings amount (repeater child)"],
+        ["pmReqStatus","Text","Status: Pending/Approved/Denied (repeater child)"],
+        ["pmReqCreditAmount","Text","Store credit issued (repeater child)"],
+        ["pmReqClaimNumber","Text","Claim number (repeater child)"],
+        ["pmReqAdminNotes","Text","Admin notes (repeater child)"]
+      ]},
+      { name: "Policy Display", impl: `<h4>📖 Implementation — Policy Display (Price Match)</h4>
+<ul>
+  <li><strong>#policyRulesRepeater</strong>: Repeater — one item per policy rule. Child: <strong>#policyRuleText</strong> (Text).</li>
+  <li><strong>#policyExclusionsRepeater</strong>: Repeater — one item per exclusion. Child: <strong>#exclusionText</strong> (Text).</li>
+  <li>Both populated from CMS collection or hardcoded array in page JS.</li>
+</ul>`, elements: [
+        ["policyRulesRepeater","Repeater","Policy rules list"],
+        ["policyRuleText","Text","Rule text (repeater child)"],
+        ["policyExclusionsRepeater","Repeater","Policy exclusions list"],
+        ["exclusionText","Text","Exclusion text (repeater child)"]
+      ]}
+    ]
+  },
+  {
     name: "Showroom (Product Page)", file: "showroomService.web.js + Product Page.js", priority: "P2", est: "20 min",
     sections: [
       { name: "Showroom CTA (S1)", impl: `<h4>🏪 Implementation — Showroom CTA (Product Page)</h4>
@@ -3872,19 +4047,79 @@ function render() {
   howto.innerHTML = `
     <h2>How to Use This Guide</h2>
     <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
-      <strong style="color:#2e7d32;">🚀 NEW 2026-03-21: Bulk Rename via Browser Console</strong><br>
-      <span style="font-size:0.9em;color:#333;">You can rename ALL elements on a page programmatically — no manual clicking needed.</span>
-      <ol style="margin:8px 0 0 0;padding-left:20px;font-size:0.88em;">
+      <strong style="color:#2e7d32;font-size:1.05em;">🚀 Browser Console Rename — Complete 3-Step Workflow</strong><br>
+      <span style="font-size:0.88em;color:#555;display:block;margin:4px 0 8px;">S0 Recon confirmed: documentServices is directly writable from preview-frame. No add-on needed.</span>
+
+      <div style="background:#fff3cd;border:1px solid #e0a800;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:0.85em;">
+        <strong>⚠️ Most elements have NO nickname yet</strong> — <code>getNickname()</code> returns <code>""</code> for unnamed elements. The RENAME_MAP script only works for elements that already have an old auto-generated name.<br>
+        <strong>For unnamed elements (the majority): use Step 2 (ID-based)</strong>. For auto-named elements: use Step 3 (nick-based).
+      </div>
+
+      <strong style="color:#1a237e;">SETUP (once per session)</strong>
+      <ol style="margin:4px 0 10px 0;padding-left:20px;font-size:0.88em;">
         <li>Open Wix Studio editor → Chrome DevTools (F12)</li>
-        <li>In DevTools top-left, click the <strong>frame dropdown</strong> → select <strong>preview-frame</strong></li>
-        <li>Paste this script into the console (fill in your RENAME_MAP from the element tables below):</li>
+        <li>Click the <strong>frame dropdown</strong> in DevTools top bar → select <strong>preview-frame</strong></li>
+        <li>Verify: type <code>window.documentServices</code> → should return an object (not undefined)</li>
       </ol>
-      <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:0.8em;overflow-x:auto;margin:8px 0 0 0;">(async () => {
+
+      <strong style="color:#1a237e;">STEP 1: DISCOVERY — run this first on every page</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Shows all component IDs + current nicknames. Unnamed elements need Step 2.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
   const ds = window.documentServices;
-  const pageId = 'c1dmp'; // see Page IDs table below
+  const pageId = 'c1dmp'; // ← change to current page ID (see table below)
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const data = all.map(ref => ({
+    compId: ref.id,
+    currentNick: ds.components.code.getNickname(ref) || '(none — needs ID)',
+  }));
+  const unnamed = data.filter(d => d.currentNick === '(none — needs ID)');
+  const named   = data.filter(d => d.currentNick !== '(none — needs ID)');
+  console.log(`PAGE: ${pageId} | Total: ${data.length} | Unnamed: ${unnamed.length} | Named: ${named.length}`);
+  console.log('=== UNNAMED (click each in editor → Properties panel → Element ID):');
+  console.table(unnamed);
+  console.log('=== ALREADY NAMED:');
+  console.table(named);
+})();</pre>
+
+      <strong style="color:#1a237e;">STEP 2: RENAME UNNAMED ELEMENTS (by Component ID) — main tool</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Click element in editor → Properties &amp; Events panel → <strong>Element ID</strong> shows <code>comp-abc123</code>. Add that to COMP_ID_MAP with its target nickname from the element tables below.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // ← must match current page
+
+  // Click element in editor → Properties panel → Element ID → add here
+  // Target nicknames come from the element tables in this guide
+  const COMP_ID_MAP = {
+    // 'comp-abc123': 'heroTitle',
+    // 'comp-def456': 'heroSubtitle',
+    // 'comp-ghi789': 'heroCta',
+  };
+
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const results = [];
+  for (const compRef of all) {
+    const target = COMP_ID_MAP[compRef.id];
+    if (!target) continue;
+    const v = ds.components.code.validateNickname(compRef, target);
+    if (v !== 'VALID') { results.push({ id: compRef.id, to: target, status: 'SKIP:'+v }); continue; }
+    ds.components.code.setNickname(compRef, target);
+    await new Promise(r => setTimeout(r, 150));
+    const ok = ds.components.code.getNickname(compRef) === target;
+    results.push({ id: compRef.id, to: target, status: ok ? '✅ OK' : '❌ FAIL' });
+  }
+  console.table(results);
+  console.log('Re-run Step 1 to verify all names set correctly.');
+})();</pre>
+
+      <strong style="color:#1a237e;">STEP 3: RENAME ALREADY-NAMED ELEMENTS (by current nickname) — for auto-generated names</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Use only for elements that already have auto-generated names like <code>text19</code>, <code>box30</code>. Check Step 1 output to find these.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp';
   const RENAME_MAP = {
-    // 'currentNickname': 'targetNickname'
-    // e.g. 'vectorImage8': 'heroSkyline',
+    // 'text19':         'heroTitle',     // ← auto-generated name → target nickname
+    // 'vectorImage8':   'heroSkyline',
+    // 'expandableMenu1':'navMenu',
   };
   const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
   const results = [];
@@ -3901,8 +4136,10 @@ function render() {
   }
   console.table(results);
 })();</pre>
-      <p style="font-size:0.85em;margin:6px 0 0;color:#555;">
-        <strong>Nickname rules</strong>: camelCase alphanumeric only (no underscores/spaces) · returns VALID | ALREADY_EXISTS | TOO_SHORT | TOO_LONG | INVALID_NAME<br>
+
+      <p style="font-size:0.82em;margin:6px 0 0;color:#555;">
+        <strong>Nickname rules</strong>: camelCase alphanumeric only · no underscores/spaces/dashes · site-wide unique · allow 150ms after set before reading back<br>
+        <strong>Already named (skip these)</strong>: footerContactInfo ✅ · footerEmailSubmit ✅ · footerNewsletterTitle ✅ · footerNewsletterSubtitle ✅<br>
         <strong>Page IDs</strong>: home=c1dmp · product=ve2z7 · category=u0gn0 · cart=mqi5m · checkout=psuom · search=evr2j · faq=s2c5g · about=gar3e · contact=k14wx · shipping=ype8c
       </p>
     </div>

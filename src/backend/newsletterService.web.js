@@ -25,6 +25,71 @@ const DISCOUNT_CODE = 'WELCOME10';
 const KLAVIYO_API_BASE = 'https://a.klaviyo.com/api';
 const KLAVIYO_API_REVISION = '2024-10-15';
 
+// ── Rate limiting ──────────────────────────────────────────────────
+// Keyed by normalized email (Wix webMethods do not expose caller IP).
+// CMS collection `NewsletterRateLimit`: key (Text), count (Number), windowStart (DateTime).
+
+export const RATE_LIMIT_MAX = 3;
+export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Check and record a rate-limit attempt for a given key.
+ * Allows up to RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per key.
+ * Fails open (allows) if the DB check itself errors, to avoid blocking
+ * legitimate users on infrastructure issues.
+ *
+ * @param {string} key - Normalized identifier (email).
+ * @param {Object} [opts]
+ * @param {number} [opts.now] - Timestamp override for testing.
+ * @returns {Promise<{allowed: boolean, reason?: string}>}
+ */
+export async function _checkRateLimit(key, opts = {}) {
+  const now = (opts && opts.now != null) ? opts.now : Date.now();
+  try {
+    const cleanKey = sanitize(key, 254).toLowerCase();
+
+    const existing = await wixData.query('NewsletterRateLimit')
+      .eq('key', cleanKey)
+      .limit(1)
+      .find();
+
+    if (existing.items.length === 0) {
+      await wixData.insert('NewsletterRateLimit', {
+        key: cleanKey,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    const record = existing.items[0];
+    const windowAge = now - new Date(record.windowStart).getTime();
+
+    if (windowAge > RATE_LIMIT_WINDOW_MS) {
+      // Window expired — reset counter
+      await wixData.update('NewsletterRateLimit', {
+        ...record,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    if (record.count >= RATE_LIMIT_MAX) {
+      return { allowed: false, reason: 'rate_limited' };
+    }
+
+    await wixData.update('NewsletterRateLimit', {
+      ...record,
+      count: record.count + 1,
+    });
+    return { allowed: true };
+  } catch (err) {
+    console.warn('[newsletterService] Rate limit check failed, allowing request:', err.message);
+    return { allowed: true }; // Fail open — don't block on DB errors
+  }
+}
+
 /**
  * Load ESP secrets. Returns { espKey, listId } or nulls.
  * @returns {Promise<{espKey: string|null, listId: string|null}>}
@@ -256,18 +321,30 @@ export const subscribeToNewsletter = webMethod(
         return { success: false, message: 'Email is required' };
       }
 
+      // Honeypot — bots fill hidden fields; humans leave them empty
+      if (options && options.honeypot) {
+        return { success: true, discountCode: DISCOUNT_CODE };
+      }
+
       const cleaned = sanitize(email, 254).toLowerCase().trim();
       if (!validateEmail(cleaned)) {
         return { success: false, message: 'Invalid email format' };
       }
 
-      // Deduplicate — silent success for existing subscribers
+      // Deduplicate — silent success for existing subscribers (checked before rate limit
+      // so repeat submissions from known subscribers don't consume rate limit quota)
       const existing = await wixData.query('NewsletterSubscribers')
         .eq('email', cleaned)
         .find();
 
       if (existing.items.length > 0) {
         return { success: true, discountCode: DISCOUNT_CODE };
+      }
+
+      // Rate limit: max 3 submissions per email per hour
+      const rateCheck = await _checkRateLimit(cleaned, options);
+      if (!rateCheck.allowed) {
+        return { success: false, message: 'Too many requests. Please try again later.' };
       }
 
       const source = sanitize((options && options.source) || 'exit_intent_popup', 50);
@@ -310,10 +387,15 @@ const WELCOME_STEPS = [
  */
 export const captureExitIntentEmail = webMethod(
   Permissions.Anyone,
-  async (email) => {
+  async (email, options = {}) => {
     try {
       if (!email || typeof email !== 'string' || !email.trim()) {
         return { success: false, message: 'Email is required' };
+      }
+
+      // Honeypot — silent success for bots
+      if (options && options.honeypot) {
+        return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
       }
 
       const cleaned = sanitize(email, 254).toLowerCase().trim();
@@ -322,7 +404,9 @@ export const captureExitIntentEmail = webMethod(
       }
 
       // Dedup against EmailQueue (not NewsletterSubscribers, since subscribeToNewsletter
-      // inserts there first in the submitExitCapture flow)
+      // inserts there first in the submitExitCapture flow).
+      // Checked before rate limit so repeat submissions from already-queued emails
+      // don't consume rate limit quota.
       const alreadyQueued = await wixData.query('EmailQueue')
         .eq('recipientEmail', cleaned)
         .eq('sequenceType', 'welcome')
@@ -331,6 +415,12 @@ export const captureExitIntentEmail = webMethod(
 
       if (alreadyQueued.items.length > 0) {
         return { success: true, discountCode: DISCOUNT_CODE, queued: 0 };
+      }
+
+      // Rate limit: max 3 submissions per email per hour
+      const rateCheck = await _checkRateLimit(cleaned, options);
+      if (!rateCheck.allowed) {
+        return { success: false, message: 'Too many requests. Please try again later.' };
       }
 
       // Queue all 3 welcome series steps into EmailQueue

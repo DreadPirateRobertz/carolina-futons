@@ -603,9 +603,10 @@ describe('post-purchase full flow', () => {
     expect(processed.sent).toBe(1);
 
     const emails = __getEmailLog();
-    expect(emails).toHaveLength(1);
-    expect(emails[0].templateId).toBe('post_purchase_1');
-    expect(emails[0].options.variables.orderNumber).toBe('ORD-FLOW');
+    // order_confirmation sent during onOrderCreated + post_purchase_1 from queue
+    const ppEmail = emails.find(e => e.templateId === 'post_purchase_1');
+    expect(ppEmail).toBeTruthy();
+    expect(ppEmail.options.variables.orderNumber).toBe('ORD-FLOW');
   });
 });
 

@@ -665,6 +665,49 @@ describe('Member Page — Wishlist element hookup', () => {
     expect(getEl('#wishShareFacebook').accessibility.ariaLabel).toBe('Share wishlist on Facebook');
   });
 
+  it('registers #shareWishlistBtn onClick with ARIA label "Share your wishlist"', async () => {
+    await loadPage();
+    expect(getEl('#shareWishlistBtn').onClick).toHaveBeenCalled();
+    expect(getEl('#shareWishlistBtn').accessibility.ariaLabel).toBe('Share your wishlist');
+  });
+
+  it('#shareWishlistBtn click shows "Link Copied!" on success', async () => {
+    await loadPage();
+    const handler = getEl('#shareWishlistBtn').onClick.mock.calls[0]?.[0];
+    expect(handler).toBeTruthy();
+    await handler();
+    expect(getEl('#shareWishlistBtn').label).toBe('Link Copied!');
+  });
+
+  it('#shareWishlistBtn click fires wishlist_share trackEvent on success', async () => {
+    await loadPage();
+    const handler = getEl('#shareWishlistBtn').onClick.mock.calls[0]?.[0];
+    await handler();
+    const { trackEvent } = await import('public/engagementTracker');
+    expect(vi.mocked(trackEvent)).toHaveBeenCalledWith(
+      'wishlist_share',
+      expect.objectContaining({ method: 'copy_link', context: 'shareWishlistBtn' })
+    );
+  });
+
+  it('#shareWishlistBtn click shows "Share Failed" when copyToClipboard throws', async () => {
+    await loadPage();
+    const wixWindowMod = await import('wix-window-frontend');
+    vi.mocked(wixWindowMod.copyToClipboard).mockRejectedValueOnce(new Error('Clipboard denied'));
+    const handler = getEl('#shareWishlistBtn').onClick.mock.calls[0]?.[0];
+    await handler();
+    expect(getEl('#shareWishlistBtn').label).toBe('Share Failed');
+  });
+
+  it('#shareWishlistBtn click shows "Share Failed" when addShareToken returns error', async () => {
+    await loadPage();
+    const shareMod = await import('backend/wishlistShare.web.js');
+    vi.mocked(shareMod.addShareToken).mockResolvedValueOnce({ error: 'db_failed' });
+    const handler = getEl('#shareWishlistBtn').onClick.mock.calls[0]?.[0];
+    await handler();
+    expect(getEl('#shareWishlistBtn').label).toBe('Share Failed');
+  });
+
   it('populates alert history repeater with onItemReady', async () => {
     await loadPage();
     const repeater = getEl('#wishAlertHistoryRepeater');

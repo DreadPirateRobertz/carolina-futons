@@ -94,6 +94,7 @@ import { getActivePromotion } from 'backend/promotions.web';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
+import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -112,6 +113,11 @@ vi.mock('public/ga4Tracking', () => ({
 }));
 vi.mock('public/tikTokPixel', () => ({
   initTikTokPixel: vi.fn(),
+}));
+vi.mock('public/pixelConsentService', () => ({
+  initConsentGate: vi.fn(),
+  fireTrackedTikTokEvent: vi.fn(),
+  fireTrackedPinterestEvent: vi.fn(),
 }));
 vi.mock('public/pwaHelpers', () => ({
   captureInstallPrompt: vi.fn(),
@@ -2394,6 +2400,33 @@ describe('masterPage.js', () => {
       await vi.advanceTimersByTimeAsync(50);
 
       expect(getEl('#exitIntentPopup').hide).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── GDPR: TikTok PageView consent gate ──────────────────────────────
+
+  describe('TikTok PageView — consent gate (GDPR P0)', () => {
+    it('registers consent gate on page load', async () => {
+      await onReadyHandler();
+      expect(initConsentGate).toHaveBeenCalled();
+    });
+
+    it('fires PageView through consent gate, not directly via ttq.page()', async () => {
+      await onReadyHandler();
+      expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
+    });
+
+    it('loads TikTok SDK (initTikTokPixel) before firing consent-gated PageView', async () => {
+      const { initTikTokPixel } = await import('public/tikTokPixel');
+      initTikTokPixel.mockClear();
+      fireTrackedTikTokEvent.mockClear();
+      vi.useFakeTimers();
+      await onReadyHandler();
+      await vi.advanceTimersByTimeAsync(10); // allow deferInit setTimeout(fn,1) to fire
+      vi.useRealTimers();
+      // SDK must be loaded (to populate window.ttq) before the consent-gated PageView
+      expect(initTikTokPixel).toHaveBeenCalled();
+      expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
     });
   });
 });

@@ -37,6 +37,27 @@ const TEMPLATE_MANIFEST = [
     priority: 0,
     description: 'Notifies store owner of new orders.',
   },
+  {
+    templateId: 'order_confirmation',
+    subject: 'Order #{orderNumber} confirmed — thank you for your purchase!',
+    variables: ['firstName', 'orderNumber', 'total', 'itemSummary', 'estimatedDays', 'email'],
+    priority: 0,
+    description: 'Customer-facing order confirmation sent to buyer on purchase.',
+  },
+  {
+    templateId: 'order_shipped',
+    subject: 'Your order #{orderNumber} is on its way!',
+    variables: ['firstName', 'orderNumber', 'trackingNumber', 'trackingUrl', 'carrier', 'estimatedDays', 'email'],
+    priority: 0,
+    description: 'Shipping notification with tracking info sent when order is fulfilled.',
+  },
+  {
+    templateId: 'delivery_confirmation',
+    subject: 'Your order #{orderNumber} has been delivered!',
+    variables: ['firstName', 'orderNumber', 'email'],
+    priority: 0,
+    description: 'Delivery confirmation sent when order is marked delivered.',
+  },
 
   // P1 — Welcome series (fires on member signup)
   {
@@ -55,10 +76,10 @@ const TEMPLATE_MANIFEST = [
   },
   {
     templateId: 'welcome_series_3',
-    subject: 'See why customers love Carolina Futons',
-    variables: ['firstName', 'email'],
+    subject: 'Your 10% off expires soon — shop Carolina Futons now',
+    variables: ['firstName', 'discountCode', 'email'],
     priority: 1,
-    description: 'Social proof email sent 7 days after signup.',
+    description: 'First purchase nudge email sent 7 days after signup.',
   },
 
   // P2 — Post-purchase and swatch confirmation

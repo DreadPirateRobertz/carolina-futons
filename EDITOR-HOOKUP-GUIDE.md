@@ -45,69 +45,166 @@ All required dashboard/API configurations are now in place for editor hookup:
 
 ---
 
-## 🚀 NEW: Bulk Rename via Browser Console (2026-03-21)
+## 🚀 Browser Console Rename — Complete Workflow (2026-03-21)
 
-**S0 Recon confirmed**: `documentServices` is directly accessible from the Wix Studio `preview-frame`. No Hookup Assistant add-on needed for bulk renaming — you can do it from the browser console right now.
+**S0 Recon confirmed**: `documentServices` is directly accessible from the Wix Studio `preview-frame`. No Hookup Assistant needed — rename everything from the browser console right now.
 
-### How to Use
+### ⚠️ IMPORTANT: Two Types of Elements
 
-1. Open Wix Studio editor
+Most elements have **no nickname yet** — `getNickname()` returns `""`. The RENAME_MAP script only works for elements that *already have* an old auto-generated nickname (like `text19`, `box30`).
+
+**For unnamed elements** (the majority): use the **ID-based workflow** (Step 2 below).
+**For already-named elements**: use the **RENAME_MAP workflow** (Step 3 below).
+
+---
+
+### Setup — Do This Once
+
+1. Open Wix Studio editor (editor.wix.com)
 2. Open Chrome DevTools (`F12` or `Cmd+Option+I`)
-3. In the DevTools top bar, click the **frame selector dropdown** (shows current frame URL) → select `preview-frame`
-4. Paste the script below into the console, add your rename map, hit Enter
+3. Click the **frame selector dropdown** in the DevTools top bar (shows the current frame URL) → select `preview-frame`
+4. You're now in the documentServices context. Run `window.documentServices` to confirm — should return an object, not undefined.
 
-### Core API (from preview-frame console)
+---
 
-```javascript
-const ds = window.documentServices;
+### STEP 1: Discovery — Run First on Every Page
 
-// Get all components on a page
-const all = ds.components.getAllComponents({ id: 'c1dmp', type: 'Page' });
-
-// Read nickname
-const nick = ds.components.code.getNickname(compRef);
-
-// Validate before setting (returns VALID | ALREADY_EXISTS | TOO_SHORT | TOO_LONG | INVALID_NAME)
-const valid = ds.components.code.validateNickname(compRef, 'heroTitle');
-
-// Set nickname (allow 200ms before reading back)
-ds.components.code.setNickname(compRef, 'heroTitle');
-await new Promise(r => setTimeout(r, 200));
-```
-
-### Nickname Rules
-- **camelCase alphanumeric only** — `heroTitle`, `footerEmailSubmit`, `box1` ✅
-- **No underscores** — `hero_title` ❌ (INVALID_NAME)
-- **No duplicates site-wide** — each nickname must be unique
-- **Case sensitive** — `heroTitle` ≠ `HeroTitle`
-
-### Bulk Rename Script Template
+Paste this into the preview-frame console to see **all elements and their current state**:
 
 ```javascript
 (async () => {
   const ds = window.documentServices;
-  const pageId = 'c1dmp'; // Change per page — see Page ID table below
-  const RENAME_MAP = {
-    // 'currentNickname': 'targetNickname'
-    // Example: 'vectorImage8': 'heroSkyline',
+  const pageId = 'c1dmp'; // ← change to your current page ID (see table below)
+
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const data = all.map(ref => ({
+    compId: ref.id,
+    currentNick: ds.components.code.getNickname(ref) || '(none — needs ID)',
+  }));
+
+  const unnamed = data.filter(d => d.currentNick === '(none — needs ID)');
+  const named   = data.filter(d => d.currentNick !== '(none — needs ID)');
+
+  console.log(`📋 PAGE: ${pageId} | Total: ${data.length} | Unnamed: ${unnamed.length} | Already named: ${named.length}`);
+  console.log('=== UNNAMED (need IDs — click each in editor to see compId):');
+  console.table(unnamed);
+  console.log('=== ALREADY NAMED:');
+  console.table(named);
+})();
+```
+
+**Reading the output**: The `compId` column is the Wix component ID (e.g. `comp-abc123`). To identify *which element* each ID belongs to: click the element in the editor → Properties & Events panel → **Element ID** field shows the same `comp-abc123`.
+
+---
+
+### STEP 2: Rename Unnamed Elements (by Component ID)
+
+After clicking elements in the editor to identify them, build your map and run:
+
+```javascript
+(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // ← must match the page you're on
+
+  // Build this map: click element in editor → Properties panel → Element ID → add here
+  // Target nicknames come from EDITOR_HOOKUP_GUIDE.html for each section
+  const COMP_ID_MAP = {
+    // 'comp-abc123': 'heroTitle',
+    // 'comp-def456': 'heroSubtitle',
+    // 'comp-ghi789': 'heroCta',
+    // ... add all elements for this page
   };
 
   const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
   const results = [];
+
+  for (const compRef of all) {
+    const target = COMP_ID_MAP[compRef.id];
+    if (!target) continue;
+
+    const v = ds.components.code.validateNickname(compRef, target);
+    if (v !== 'VALID') {
+      results.push({ id: compRef.id, to: target, status: 'SKIP:' + v });
+      continue;
+    }
+
+    ds.components.code.setNickname(compRef, target);
+    await new Promise(r => setTimeout(r, 150));
+    const confirmed = ds.components.code.getNickname(compRef);
+    results.push({ id: compRef.id, to: target, status: confirmed === target ? '✅ OK' : '❌ FAIL' });
+  }
+
+  console.table(results);
+  console.log('Done. Re-run Step 1 to verify.');
+})();
+```
+
+---
+
+### STEP 3: Rename Already-Named Elements (by Current Nickname)
+
+For elements that already have auto-generated nicknames (e.g. `text19 → heroTitle`, `box30 → trustBar`):
+
+```javascript
+(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // ← change per page
+
+  // Map auto-generated nickname → target nickname
+  // Run Step 1 first to see what names already exist
+  const RENAME_MAP = {
+    // 'text19':        'heroTitle',
+    // 'vectorImage8':  'heroSkyline',
+    // 'expandableMenu1': 'navMenu',
+  };
+
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const results = [];
+
   for (const compRef of all) {
     const current = ds.components.code.getNickname(compRef);
     const target = RENAME_MAP[current];
     if (!target) continue;
+
     const v = ds.components.code.validateNickname(compRef, target);
     if (v !== 'VALID') { results.push({ from: current, to: target, status: 'SKIP:' + v }); continue; }
+
     ds.components.code.setNickname(compRef, target);
     await new Promise(r => setTimeout(r, 150));
     const confirmed = ds.components.code.getNickname(compRef);
     results.push({ from: current, to: target, status: confirmed === target ? '✅' : '❌', id: compRef.id });
   }
+
   console.table(results);
 })();
 ```
+
+---
+
+### Core API Reference
+
+```javascript
+const ds = window.documentServices;
+
+ds.components.getAllComponents({ id: 'c1dmp', type: 'Page' }) // → compRef[]
+ds.components.code.getNickname(compRef)                        // → string ('' if none)
+ds.components.code.setNickname(compRef, 'heroTitle')          // no return — wait 150ms
+ds.components.code.validateNickname(compRef, 'heroTitle')     // → 'VALID' | 'ALREADY_EXISTS' | 'TOO_SHORT' | 'TOO_LONG' | 'INVALID_NAME'
+```
+
+### Nickname Rules
+- **camelCase alphanumeric only** — `heroTitle`, `footerEmailSubmit`, `box1` ✅
+- **No underscores, spaces, or dashes** — `hero_title` ❌ `hero title` ❌
+- **No duplicates site-wide** — each nickname must be unique across all pages
+- **Case sensitive** — `heroTitle` ≠ `HeroTitle`
+- **Allow 150–200ms** after `setNickname` before calling `getNickname` to verify
+
+### Already Named (confirmed working from S0 recon)
+These 4 footer elements are already correctly named — skip them:
+- `footerContactInfo` ✅
+- `footerEmailSubmit` ✅
+- `footerNewsletterTitle` ✅
+- `footerNewsletterSubtitle` ✅
 
 ### All Page IDs (confirmed 2026-03-21)
 
@@ -1394,6 +1491,59 @@ Add these elements to the **Product Page** in the editor:
 
 ### SEO
 Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + title. Invalid: noindex.
+
+---
+
+## SUSTAINABILITY (`Sustainability.js`)
+
+### Hero
+`sustainHeroHeading` (Text), `sustainHeroSubheading` (Text), `sustainHeroIntro` (RichText)
+
+### Commitment Badges ⚠️ REPEATER
+`badgesRepeater` (Repeater)
+**↳ Inside:** `badgeLabel` (Text), `badgeDesc` (Text)
+
+### Certifications ⚠️ REPEATER
+`certificationsHeading` (Text), `certificationsRepeater` (Repeater)
+**↳ Inside:** `certName` (Text), `certDesc` (RichText)
+
+### Materials ⚠️ REPEATER
+`materialsHeading` (Text), `materialsDescription` (Text), `materialsRepeater` (Repeater)
+**↳ Inside:** `materialTitle` (Text), `materialDesc` (Text)
+
+### Carbon Offset
+`carbonOffsetSection` (Box), `carbonHeading` (Text), `carbonDescription` (Text)
+
+### Trade-In Program ⚠️ REPEATER
+`tradeInHeading` (Text), `tradeInDescription` (Text), `tradeInEstimate` (Text), `tradeInCondition` (Dropdown or Text), `tradeInStepsRepeater` (Repeater)
+**↳ Inside:** `stepNumber` (Text), `stepTitle` (Text), `stepDesc` (Text)
+
+### SEO Schema
+`sustainSchemaHtml` (HtmlComponent) — JSON-LD FAQPage/Organization schema
+
+---
+
+## PRICE MATCH GUARANTEE (`Price Match Guarantee.js`)
+
+### Page Header
+`priceMatchTitle` (Text), `priceMatchDescription` (RichText)
+
+### Request Form
+`pmFormSection` (Box), `pmProductName` (Input), `pmProductId` (Input — hidden), `pmCompetitorSelect` (Dropdown), `pmCompetitorUrl` (Input), `pmOurPrice` (Input), `pmCompetitorPrice` (Input), `pmNotes` (TextBox), `pmSubmitBtn` (Button), `pmFormError` (Text), `pmProductNameError` (Text), `pmCompetitorUrlError` (Text), `pmOurPriceError` (Text), `pmCompetitorPriceError` (Text), `pmCompetitorError` (Text)
+
+### Savings Preview
+`pmSavingsPreview` (Box) — shows calculated savings before submit
+
+### Success State
+`pmSuccessSection` (Box), `pmSuccessMessage` (Text)
+
+### My Requests ⚠️ REPEATER
+`pmRequestsSection` (Box), `pmNewRequestBtn` (Button), `pmRequestsRepeater` (Repeater)
+**↳ Inside:** `pmReqDate` (Text), `pmReqProductName` (Text), `pmReqCompetitorName` (Text), `pmReqCompetitorPrice` (Text), `pmReqOurPrice` (Text), `pmReqSavings` (Text), `pmReqStatus` (Text), `pmReqCreditAmount` (Text), `pmReqClaimNumber` (Text), `pmReqAdminNotes` (Text)
+
+### Policy Display ⚠️ REPEATERS
+`policyRulesRepeater` (Repeater) → `policyRuleText` (Text)
+`policyExclusionsRepeater` (Repeater) → `exclusionText` (Text)
 
 ---
 

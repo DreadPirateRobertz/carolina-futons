@@ -108,7 +108,6 @@ beforeEach(() => {
   __setSecrets({
     SITE_OWNER_CONTACT_ID: 'owner-contact-123',
     WELCOME_DISCOUNT_CODE: 'WELCOME10',
-    RECOVERY_DISCOUNT_CODE: 'COMEBACK15',
   });
   __seed('AbandonedCarts', []);
   __seed('EmailQueue', []);
@@ -249,7 +248,8 @@ describe('Recovery Email Queuing', () => {
     expect(queued[0].variables.discountCode).toBe('');
     expect(queued[0].variables.discountAvailable).toBe(false);
     expect(queued[1].variables.discountCode).toBe('');
-    expect(queued[2].variables.discountCode).toBe('COMEBACK15');
+    // Step 3 now uses a single-use coupon (RECOVER- prefix) instead of static secret
+    expect(queued[2].variables.discountCode).toMatch(/^RECOVER-/);
     expect(queued[2].variables.discountAvailable).toBe(true);
   });
 

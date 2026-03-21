@@ -64,6 +64,14 @@ vi.mock('backend/reviewsService.web', () => ({
 
 vi.mock('public/giftCardHelpers.js', () => ({
   finalizeGiftCardRedemption: vi.fn(() => Promise.resolve({ success: true, amountApplied: 0 })),
+  GIFT_CARD_DENOMINATIONS: [
+    { amount: 25, label: '$25' },
+    { amount: 50, label: '$50' },
+    { amount: 100, label: '$100' },
+    { amount: 150, label: '$150' },
+    { amount: 200, label: '$200' },
+    { amount: 500, label: '$500' },
+  ],
 }));
 
 vi.mock('public/pageSeo.js', () => ({

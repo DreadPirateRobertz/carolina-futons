@@ -1,6 +1,9 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, serverError, forbidden, badRequest } from 'wix-http-functions';
+import { ok, notFound, serverError, forbidden, badRequest, unauthorized, response } from 'wix-http-functions';
+import { currentMember } from 'wix-members-backend';
+import { accounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
+import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -10,12 +13,13 @@ import { processContentSchedule } from 'backend/contentScheduler.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
-import { generateBlogRssFeed } from 'backend/blogRssFeed.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
+import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
+import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -209,20 +213,62 @@ export async function get_blogSitemap() {
 // Blog RSS 2.0 Feed
 // URL: GET https://www.carolinafutons.com/_functions/blogRssFeed
 // Add <link rel="alternate" type="application/rss+xml" href="/_functions/blogRssFeed"> in site header
-export async function get_blogRssFeed() {
+// Note: inlined (not delegated to webMethod) — webMethod wrapper does not resolve correctly
+// from an http-functions.js context on the Wix platform, causing a 404.
+export function get_blogRssFeed() {
   try {
-    const result = await generateBlogRssFeed();
+    const SITE_URL = 'https://www.carolinafutons.com';
+    const posts = getAllBlogPosts();
 
-    if (!result.success) {
-      console.error('HTTP function error (blogRssFeed):', result.error);
-      return serverError({
-        body: 'Error generating RSS feed',
-        headers: { 'Content-Type': 'text/plain' },
-      });
+    const sorted = Array.isArray(posts) && posts.length > 0
+      ? [...posts].sort((a, b) => {
+          const da = a.publishDate ? new Date(a.publishDate).getTime() : 0;
+          const db = b.publishDate ? new Date(b.publishDate).getTime() : 0;
+          return db - da;
+        })
+      : [];
+
+    const lastBuildDate = sorted.length > 0 && sorted[0].publishDate
+      ? new Date(sorted[0].publishDate).toUTCString()
+      : new Date().toUTCString();
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n';
+    xml += '  <channel>\n';
+    xml += `    <title>${escapeXml('Carolina Futons Blog')}</title>\n`;
+    xml += `    <link>${escapeXml(SITE_URL + '/blog')}</link>\n`;
+    xml += `    <description>${escapeXml('Guides, tips, and inspiration for futon frames, mattresses, Murphy beds, and small-space furniture.')}</description>\n`;
+    xml += '    <language>en-us</language>\n';
+    xml += `    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>\n`;
+    xml += '    <ttl>1440</ttl>\n';
+    xml += `    <atom:link href="${escapeXml(SITE_URL + '/_functions/blogRssFeed')}" rel="self" type="application/rss+xml" />\n`;
+
+    for (const post of sorted) {
+      const postUrl = `${SITE_URL}/blog/${encodeURIComponent(post.slug || '')}`;
+      xml += '    <item>\n';
+      xml += `      <title>${escapeXml(post.title || '')}</title>\n`;
+      xml += `      <link>${escapeXml(postUrl)}</link>\n`;
+      xml += `      <guid isPermaLink="true">${escapeXml(postUrl)}</guid>\n`;
+      xml += `      <description>${escapeXml(post.excerpt || post.metaDescription || '')}</description>\n`;
+      if (post.publishDate) {
+        xml += `      <pubDate>${escapeXml(new Date(post.publishDate).toUTCString())}</pubDate>\n`;
+      }
+      if (post.category) {
+        xml += `      <category>${escapeXml(post.category)}</category>\n`;
+      }
+      if (Array.isArray(post.tags)) {
+        for (const tag of post.tags) {
+          xml += `      <category>${escapeXml(tag)}</category>\n`;
+        }
+      }
+      xml += '    </item>\n';
     }
 
+    xml += '  </channel>\n';
+    xml += '</rss>';
+
     return ok({
-      body: result.xml,
+      body: xml,
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
@@ -1039,6 +1085,74 @@ export async function get_sitemapXml() {
   }
 }
 
+// ── Loyalty Member Endpoint ──────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/loyalty/{memberId}
+// Returns loyalty account info for the authenticated member.
+// IDOR guard: authenticated member must own the requested memberId.
+// Tier logic: shared via backend/utils/loyaltyData (plain module, no webMethod).
+
+export async function get_loyalty(request) {
+  const json = (obj) => JSON.stringify(obj);
+  const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const memberId = request.path && request.path[0];
+
+  try {
+    if (!memberId) {
+      return badRequest({ body: json({ error: 'memberId is required' }), headers: jsonHeaders });
+    }
+
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): getMember() failed for memberId=${memberId}:`, err);
+      return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
+    }
+    if (!member) {
+      return unauthorized({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
+    }
+    if (member._id !== memberId) {
+      return forbidden({ body: json({ error: 'Access denied' }), headers: jsonHeaders });
+    }
+
+    const account = await accounts.getMyAccount();
+    if (!account) {
+      console.error(`HTTP function error (loyalty): no loyalty account for memberId=${memberId}`);
+      return notFound({ body: json({ error: 'Loyalty account not found' }), headers: jsonHeaders });
+    }
+
+    const points = account.points ? account.points.balance : 0;
+    const tier = resolveTierFromPoints(points);
+
+    let rewards = [];
+    try {
+      const { rewards: rewardList } = await loyaltyRewards.listRewards();
+      rewards = (rewardList || []).map((r) => ({
+        _id: r._id,
+        name: r.name,
+        pointCost: r.pointCost,
+      }));
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): listRewards() failed for memberId=${memberId}:`, err);
+      // Degrade gracefully — return account data with empty rewards
+    }
+
+    return ok({
+      body: json({
+        memberId,
+        points,
+        tier: tier.name,
+        nextTierAt: tier.next,
+        rewards,
+      }),
+      headers: jsonHeaders,
+    });
+  } catch (err) {
+    console.error(`HTTP function error (loyalty): memberId=${memberId || 'unknown'}:`, err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
+  }
+}
+
 // ── robots.txt ───────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/robotsTxt
 export function get_robotsTxt() {
@@ -1057,5 +1171,331 @@ export function get_robotsTxt() {
       body: 'Error generating robots.txt',
       headers: { 'Content-Type': 'text/plain' },
     });
+  }
+}
+
+// ── Topic Cluster ─────────────────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/topicCluster/{slug}
+//
+// Note: topicClusters.web.js exports are wrapped in webMethod() — Wix does not
+// allow HTTP function handlers to invoke webMethods at runtime (same platform
+// constraint as blogRssFeed). Cluster data is sourced from the shared
+// backend/utils/topicClusterData module instead.
+export function get_topicCluster(request) {
+  try {
+    const rawSlug = (request && Array.isArray(request.path) && request.path[0]) || '';
+    const slug = validateSlug(rawSlug);
+
+    if (!slug) {
+      return badRequest({
+        body: JSON.stringify({ success: false, error: 'Slug is required.' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cluster = CLUSTERS[slug];
+    if (!cluster) {
+      return notFound({
+        body: JSON.stringify({ success: false, error: 'Topic cluster not found.', cluster: null }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const spokePages = Array.isArray(cluster.spokePages)
+      ? cluster.spokePages.map(sp => ({ ...sp, url: `${SITE_URL}/buying-guides/${sp.slug}` }))
+      : [];
+    const data = {
+      success: true,
+      slug,
+      topic: cluster.topic,
+      pillarContent: cluster.pillarContent || '',
+      internalLinks: Array.isArray(cluster.internalLinks) ? cluster.internalLinks : [],
+      spokePages,
+      cluster: {
+        pillarSlug: cluster.pillarSlug,
+        pillarTitle: cluster.pillarTitle,
+        pillarUrl: `${SITE_URL}/buying-guides/${cluster.pillarSlug}`,
+        topic: cluster.topic,
+        keywords: cluster.keywords,
+        spokePages,
+        spokeCount: spokePages.length,
+      },
+    };
+
+    return ok({
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (err) {
+    console.error('HTTP function error (topicCluster):', err.name, err.message, err);
+    return serverError({
+      body: JSON.stringify({ success: false, error: 'Failed to load topic cluster.' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+// ── Referral Program Endpoints ────────────────────────────────────────
+// GET  /_functions/generateReferralLink — requires auth
+// POST /_functions/trackReferral — requires auth (prevents fraud)
+
+const REFERRAL_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/**
+ * @function get_generateReferralLink
+ * @returns {Promise<Object>} { referralCode, shareUrl, stats }
+ */
+export async function get_generateReferralLink() {
+  try {
+    const member = await currentMember.getMember();
+    if (!member) {
+      return response({
+        status: 401,
+        body: JSON.stringify({ error: 'Authentication required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const memberId = member._id;
+
+    // Reuse existing referral code if present
+    const existing = await wixData.query('Referrals')
+      .eq('referrerMemberId', memberId)
+      .find();
+
+    let referralCode;
+    if (existing.items.length > 0) {
+      referralCode = existing.items[0].referralCode;
+    } else {
+      referralCode = Array.from({ length: 8 }, () =>
+        REFERRAL_CHARSET[Math.floor(Math.random() * REFERRAL_CHARSET.length)]
+      ).join('');
+      await wixData.insert('Referrals', {
+        referrerMemberId: memberId,
+        referralCode,
+        status: 'pending',
+        refereeMemberId: '',
+      });
+    }
+
+    // Compute stats
+    const allReferrals = await wixData.query('Referrals')
+      .eq('referrerMemberId', memberId)
+      .ne('status', 'pending')
+      .find();
+
+    const pendingCredits = await wixData.query('ReferralCredits')
+      .eq('memberId', memberId)
+      .eq('status', 'pending')
+      .find();
+
+    const availableCredits = await wixData.query('ReferralCredits')
+      .eq('memberId', memberId)
+      .eq('status', 'available')
+      .find();
+
+    const pendingRewards = pendingCredits.items.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const earnedRewards = availableCredits.items.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const shareUrl = `https://carolinafutons.com/?ref=${referralCode}`;
+
+    return ok({
+      body: JSON.stringify({
+        referralCode,
+        shareUrl,
+        stats: { totalReferrals: allReferrals.totalCount, pendingRewards, earnedRewards },
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('HTTP function error (generateReferralLink):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+/**
+ * @function post_trackReferral
+ * @param {Object} request - Wix HTTP request object. Body: { referralCode }
+ * @returns {Promise<Object>} { tracked, referrerId }
+ *
+ * Requires authentication. newMemberId is taken from the authenticated member
+ * to prevent referral fraud (users cannot claim referrals on behalf of others).
+ */
+export async function post_trackReferral(request) {
+  try {
+    // Auth required — prevents unauthenticated users from forging newMemberId
+    const member = await currentMember.getMember();
+    if (!member) {
+      return response({
+        status: 401,
+        body: JSON.stringify({ error: 'Authentication required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const newMemberId = member._id;
+
+    // Parse body
+    let body;
+    try {
+      body = await request.body.json();
+    } catch (_) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { referralCode } = body;
+    if (!referralCode || typeof referralCode !== 'string') {
+      return badRequest({
+        body: JSON.stringify({ error: 'referralCode is required' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const cleanCode = sanitize(String(referralCode), 20);
+
+    // Find referral by code
+    const result = await wixData.query('Referrals')
+      .eq('referralCode', cleanCode)
+      .find();
+
+    if (!result.items.length) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Invalid referral code' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const referral = result.items[0];
+
+    // Prevent self-referral
+    if (referral.referrerMemberId === newMemberId) {
+      return badRequest({
+        body: JSON.stringify({ error: 'Self-referral not allowed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prevent referral hijacking — member cannot apply a second referral code
+    const existingAttribution = await wixData.query('Referrals')
+      .eq('refereeMemberId', newMemberId)
+      .ne('status', 'pending')
+      .find();
+    if (existingAttribution.items.length > 0) {
+      return response({
+        status: 409,
+        body: JSON.stringify({ error: 'Member already has a referral attribution' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Prevent overwriting an already-claimed referral (any member)
+    if (referral.status !== 'pending') {
+      return response({
+        status: 409,
+        body: JSON.stringify({ error: 'Referral already attributed' }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    await wixData.update('Referrals', {
+      ...referral,
+      refereeMemberId: newMemberId,
+      status: 'signed_up',
+    });
+
+    return ok({
+      body: JSON.stringify({ tracked: true, referrerId: referral.referrerMemberId }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('HTTP function error (trackReferral):', err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// ── Bundle Deals API ─────────────────────────────────────────────────
+//
+// GET  /_functions/bundles          → list all active bundles
+// GET  /_functions/bundles/{slug}   → single bundle detail
+// POST /_functions/addBundleToCart  → add bundle to cart + auto-apply coupon
+
+/**
+ * GET /_functions/bundles
+ *   Lists all active bundles.
+ *
+ * GET /_functions/bundles?slug=<slug>
+ *   Returns a single bundle by slug (via query param — Wix does not support
+ *   path-segment routing for named HTTP functions).
+ */
+export async function get_bundles(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    const slug = request.path && request.path[0];
+    if (slug) {
+      const result = await getBundleBySlug(slug);
+      if (!result.success) {
+        return serverError({ body: JSON.stringify({ error: result.error || 'Server error' }), headers: JSON_HEADERS });
+      }
+      if (!result.bundle) {
+        return notFound({ body: JSON.stringify({ error: 'Bundle not found' }), headers: JSON_HEADERS });
+      }
+      return ok({ body: JSON.stringify(result.bundle), headers: JSON_HEADERS });
+    }
+
+    const result = await listBundles();
+    if (!result.success) {
+      return serverError({ body: JSON.stringify({ error: 'Failed to load bundles' }), headers: JSON_HEADERS });
+    }
+    return ok({ body: JSON.stringify(result.bundles), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (get_bundles):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+/**
+ * POST /_functions/addBundleToCart
+ *
+ * Body: { "slug": "complete-futon-set" }
+ *
+ * Adds all bundle products to the visitor's cart and auto-applies the
+ * bundle coupon code. All pricing is derived from CMS — no client values used.
+ */
+export async function post_addBundleToCart(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json' };
+  try {
+    let body;
+    try {
+      const bodyText = await request.body.text();
+      body = JSON.parse(bodyText);
+    } catch (_) {
+      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: JSON_HEADERS });
+    }
+
+    if (!body.slug || typeof body.slug !== 'string') {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: slug' }), headers: JSON_HEADERS });
+    }
+
+    const result = await addBundleToCart(body.slug);
+
+    if (!result.success) {
+      if (result.errorCode === 'BUNDLE_NOT_FOUND') {
+        return notFound({ body: JSON.stringify(result), headers: JSON_HEADERS });
+      }
+      return badRequest({ body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
+
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error('HTTP function error (addBundleToCart):', err);
+    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
   }
 }

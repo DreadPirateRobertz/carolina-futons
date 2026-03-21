@@ -1,5 +1,5 @@
 // Blog.js - Blog Page
-// Card grid layout with featured post hero, category filters,
+// Paginated list layout with featured post hero, category filters,
 // reading time badges, SEO schema, social sharing, and related products sidebar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
@@ -15,14 +15,18 @@ import {
   getCategories,
   filterPostsByCategory,
   getFeaturedPost,
+  getPaginatedPosts,
   estimateReadingTime,
   formatPublishDate,
   buildAuthorBio,
 } from 'public/blogHelpers';
 import { initPageSeo } from 'public/pageSeo.js';
 
+const ITEMS_PER_PAGE = 9;
 let _allPosts = [];
+let _filteredPosts = [];
 let _activeCategory = null;
+let _currentPage = 1;
 
 $w.onReady(async function () {
   initBackToTop($w);
@@ -38,12 +42,14 @@ $w.onReady(async function () {
     // ── Category Filters ────────────────────────────────────────────
     initCategoryFilters(_allPosts);
 
-    // ── Blog Card Grid ──────────────────────────────────────────────
-    renderBlogGrid(_allPosts);
+    // ── Blog List (paginated) ───────────────────────────────────────
+    _filteredPosts = [..._allPosts];
+    initBlogListRepeater();
+    renderBlogList(1);
 
-    // Re-render grid when viewport changes (e.g. device rotation)
+    // Re-render on viewport changes (e.g. device rotation)
     onViewportChange(() => {
-      try { renderBlogGrid(_allPosts); } catch (e) {}
+      try { renderBlogList(_currentPage); } catch (e) {}
     });
 
     // ── SEO Schema Injection ────────────────────────────────────────
@@ -141,11 +147,11 @@ function initCategoryFilters(posts) {
 
         makeClickable($item('#filterChip'), () => {
           _activeCategory = itemData.value;
-          const filtered = filterPostsByCategory(_allPosts, _activeCategory);
-          renderBlogGrid(filtered);
+          _filteredPosts = filterPostsByCategory(_allPosts, _activeCategory);
           filterRepeater.data = [...filterData];
           fireCustomEvent('blog_filter', { category: itemData.label });
           announce($w, `Showing ${itemData.label} posts`);
+          renderBlogList(1);
         }, { ariaLabel: `Filter by ${itemData.label}` });
       } catch (e) {}
     });
@@ -154,49 +160,90 @@ function initCategoryFilters(posts) {
   }
 }
 
-// ── Blog Card Grid ────────────────────────────────────────────────────
-// Responsive card grid with title, excerpt, category, date, reading time
+// ── Blog List (paginated) ─────────────────────────────────────────────
+// Shows ITEMS_PER_PAGE cards per page with prev/next navigation
 
-function renderBlogGrid(posts) {
+function renderBlogList(page) {
   try {
-    const gridRepeater = $w('#blogGridRepeater');
-    if (!gridRepeater) return;
+    _currentPage = page;
+    const listRepeater = $w('#blogListRepeater');
+    if (!listRepeater) return;
 
-    if (!posts || posts.length === 0) {
+    const { items, currentPage, totalPages, totalCount } =
+      getPaginatedPosts(_filteredPosts, page, ITEMS_PER_PAGE);
+
+    if (totalCount === 0) {
       try { $w('#blogEmptyState').expand(); } catch (e) {}
-      try { $w('#blogGridRepeater').collapse(); } catch (e) {}
+      try { listRepeater.collapse(); } catch (e) {}
+      try { $w('#blogPagination').collapse(); } catch (e) {}
+      try { $w('#postCount').text = '0 posts'; } catch (e) {}
       return;
     }
 
     try { $w('#blogEmptyState').collapse(); } catch (e) {}
-    try { $w('#blogGridRepeater').expand(); } catch (e) {}
+    try { listRepeater.expand(); } catch (e) {}
 
-    const visiblePosts = limitForViewport(posts, { mobile: 4, tablet: 6, desktop: 9 });
-    gridRepeater.data = visiblePosts.map((p, i) => ({
+    // Post count label
+    const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const end = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
+    try { $w('#postCount').text = `${start}–${end} of ${totalCount} posts`; } catch (e) {}
+
+    // Pagination controls
+    if (totalPages > 1) {
+      try { $w('#blogPagination').expand(); } catch (e) {}
+      try { $w('#prevPageBtn').disable(); } catch (e) {}
+      try { $w('#nextPageBtn').disable(); } catch (e) {}
+      if (currentPage > 1) {
+        try {
+          $w('#prevPageBtn').enable();
+          makeClickable($w('#prevPageBtn'), () => renderBlogList(currentPage - 1), { ariaLabel: 'Previous page' });
+        } catch (e) {}
+      }
+      if (currentPage < totalPages) {
+        try {
+          $w('#nextPageBtn').enable();
+          makeClickable($w('#nextPageBtn'), () => renderBlogList(currentPage + 1), { ariaLabel: 'Next page' });
+        } catch (e) {}
+      }
+      try { $w('#pageIndicator').text = `Page ${currentPage} of ${totalPages}`; } catch (e) {}
+    } else {
+      try { $w('#blogPagination').collapse(); } catch (e) {}
+    }
+
+    listRepeater.data = items.map((p, i) => ({
       ...p,
       _id: p.slug || `post-${i}`,
     }));
+  } catch (err) {
+    console.error('Blog list error:', err);
+  }
+}
 
-    gridRepeater.onItemReady(($item, itemData) => {
+// ── Blog List Repeater Setup ──────────────────────────────────────────
+// Registers onItemReady once at init — Wix Velo onItemReady is additive,
+// so registering inside renderBlogList would stack handlers on each page change.
+
+function initBlogListRepeater() {
+  try {
+    const listRepeater = $w('#blogListRepeater');
+    if (!listRepeater) return;
+    listRepeater.onItemReady(($item, itemData) => {
       try {
         try { $item('#cardTitle').text = itemData.title || ''; } catch (e) {}
         try { $item('#cardExcerpt').text = itemData.excerpt || ''; } catch (e) {}
         try { $item('#cardCategory').text = itemData.category || ''; } catch (e) {}
-        try {
-          $item('#cardDate').text = formatPublishDate(itemData.publishDate);
-        } catch (e) {}
+        try { $item('#cardDate').text = formatPublishDate(itemData.publishDate); } catch (e) {}
         try {
           const readTime = estimateReadingTime(itemData.excerpt);
           $item('#cardReadTime').text = `${readTime} min read`;
         } catch (e) {}
-
         makeClickable($item('#blogCardLink'), () => {
           wixLocationFrontend.to(`/blog/${itemData.slug}`);
         }, { ariaLabel: `Read: ${itemData.title}` });
       } catch (e) {}
     });
   } catch (err) {
-    console.error('Blog grid error:', err);
+    console.error('Blog list repeater init error:', err);
   }
 }
 

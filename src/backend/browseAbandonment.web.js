@@ -467,6 +467,13 @@ export const markSessionConverted = webMethod(
   }
 );
 
+/**
+ * Cron job entry point for browse abandonment processing.
+ * Alias for triggerBrowseRecovery — called by jobs.config every 2 hours.
+ * The job key in jobs.config must match the exported function name.
+ */
+export const checkBrowseAbandonment = triggerBrowseRecovery;
+
 // Exported for testing
 export {
   HIGH_INTENT_THRESHOLD_MS,

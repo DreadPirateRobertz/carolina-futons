@@ -14,6 +14,7 @@ import { colors, typography, spacing } from 'public/designTokens.js';
 import { captureInstallPrompt, canShowInstallPrompt, showInstallPrompt, isInstalledPWA } from 'public/pwaHelpers';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { initFooter } from 'public/FooterSection';
+import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 import { getLogoImageUrl } from 'public/carolinaFutonsLogo';
 import { initSkipNav, setupAccessibleDialog, announce, makeClickable } from 'public/a11yHelpers';
 import {
@@ -59,7 +60,14 @@ $w.onReady(async function () {
   initInstallBanner();
   injectCanonicalUrl();
   initScrollDepthTracking();
-  deferInit(() => import('public/tikTokPixel').then(m => m.initTikTokPixel()));
+  initConsentGate();
+  // Load TikTok SDK (library only — no PageView) then gate PageView through consent.
+  // initTikTokPixel populates window.ttq; fireTrackedTikTokEvent fires immediately
+  // if consent already granted, or queues for when onCurrentConsentPolicyChanged fires.
+  deferInit(() => import('public/tikTokPixel').then(m => {
+    m.initTikTokPixel();
+    fireTrackedTikTokEvent('PageView', {});
+  }));
   injectBusinessSchema().catch(e => console.warn('[masterPage] Schema injection failed:', e.message));
 
   // Live chat widget — async loaded, 2s delay to avoid impacting page speed
