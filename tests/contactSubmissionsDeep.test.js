@@ -93,15 +93,18 @@ describe('submitContactForm', () => {
     expect(_collections['ContactSubmissions'][0].source).toBe('exit_intent_popup');
   });
 
-  it('silently succeeds for duplicate within 60s', async () => {
-    __seed('ContactSubmissions', [{
-      email: 'jane@test.com',
-      submittedAt: new Date(),
+  it('silently succeeds when 3/hour rate limit is reached', async () => {
+    __seed('ContactRateLimits', [{
+      _id: 'rl-1',
+      key: 'jane@test.com',
+      count: 3,
+      windowStart: new Date(Date.now() - 1000),
     }]);
+    __seed('ContactSubmissions', []);
     const r = await mod.submitContactForm({ email: 'jane@test.com' });
     expect(r.success).toBe(true);
-    // Should NOT have inserted another record
-    expect(_collections['ContactSubmissions']).toHaveLength(1);
+    // Should NOT have inserted to ContactSubmissions when rate limited
+    expect((_collections['ContactSubmissions'] || [])).toHaveLength(0);
   });
 
   it('lowercases email', async () => {

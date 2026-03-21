@@ -53,6 +53,68 @@ import { sanitize } from 'backend/utils/sanitize';
 const VALID_PROMO_TYPES = ['percentage', 'fixed', 'freeShipping'];
 const MAX_CODE_LENGTH = 50;
 
+// Rate limiting for applyPromoCode — blocks brute-force code enumeration.
+// CMS collection `PromoRateLimits`: key (Text), count (Number), windowStart (DateTime).
+const PROMO_RATE_LIMIT_MAX = 10;
+const PROMO_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const PROMO_RATE_LIMIT_COLLECTION = 'PromoRateLimits';
+
+/**
+ * Check and increment the per-key rate limit for promo code attempts.
+ * Returns { allowed: true } or { allowed: false, reason: 'rate_limited' }.
+ * Fails open on DB error (prefer availability over false rejections for promo codes).
+ *
+ * @param {string} key - Rate limit bucket key (IP or injectable token for tests)
+ * @param {Object} [opts]
+ * @param {number} [opts.now] - Timestamp override for testing
+ * @returns {Promise<{allowed: boolean, reason?: string}>}
+ */
+export async function _checkPromoRateLimit(key, opts = {}) {
+  const now = (opts && opts.now != null) ? opts.now : Date.now();
+  try {
+    const cleanKey = sanitize(String(key || ''), 100);
+
+    const existing = await wixData.query(PROMO_RATE_LIMIT_COLLECTION)
+      .eq('key', cleanKey)
+      .limit(1)
+      .find();
+
+    if (existing.items.length === 0) {
+      await wixData.insert(PROMO_RATE_LIMIT_COLLECTION, {
+        key: cleanKey,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    const record = existing.items[0];
+    const windowAge = now - new Date(record.windowStart).getTime();
+
+    if (windowAge > PROMO_RATE_LIMIT_WINDOW_MS) {
+      await wixData.update(PROMO_RATE_LIMIT_COLLECTION, {
+        ...record,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    if (record.count >= PROMO_RATE_LIMIT_MAX) {
+      return { allowed: false, reason: 'rate_limited' };
+    }
+
+    await wixData.update(PROMO_RATE_LIMIT_COLLECTION, {
+      ...record,
+      count: record.count + 1,
+    });
+    return { allowed: true };
+  } catch (err) {
+    console.warn('[promotionsEngine] Promo rate limit check failed, allowing request:', err?.message ?? err);
+    return { allowed: true }; // Fail open — don't block on DB errors
+  }
+}
+
 // ── Public API ─────────────────────────────────────────────────────
 
 /**
@@ -124,14 +186,24 @@ export const validatePromoCode = webMethod(
  * Apply a promo code to a cart and calculate the discount.
  * @param {string} code - The promo code
  * @param {Array<{_id: string, name?: string, price: number, quantity: number, category?: string}>} cartItems
+ * @param {Object} [opts] - Injectable overrides (for testability)
+ * @param {string} [opts.rateLimitKey] - Rate limit bucket key (e.g. visitor IP from frontend)
+ * @param {number} [opts.rateLimitNow] - Timestamp override for rate limit testing
  * @returns {Promise<Object>}
  */
 export const applyPromoCode = webMethod(
   Permissions.Anyone,
-  async (code, cartItems) => {
+  async (code, cartItems, opts = {}) => {
     try {
       if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
         return { success: false, error: 'Cart items are required' };
+      }
+
+      // Rate limit: 10 attempts/hour per key (IP in production) to block enumeration
+      const rateLimitKey = (opts && opts.rateLimitKey) ? String(opts.rateLimitKey) : 'anonymous';
+      const rateCheck = await _checkPromoRateLimit(rateLimitKey, { now: opts && opts.rateLimitNow });
+      if (!rateCheck.allowed) {
+        return { success: false, error: 'Too many promo code attempts. Please try again later.' };
       }
 
       const validation = await validatePromoCode(code);

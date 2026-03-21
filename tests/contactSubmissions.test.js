@@ -62,21 +62,22 @@ describe('submitContactForm', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rate-limits duplicate submissions within 60 seconds', async () => {
-    // Seed a recent submission
-    __seed('ContactSubmissions', [{
-      _id: 'cs-1',
-      email: 'repeat@test.com',
-      submittedAt: new Date(), // just now
+  it('rate-limits duplicate submissions when 3/hour limit is reached', async () => {
+    // Seed rate limit record at max (3) within window
+    __seed('ContactRateLimits', [{
+      _id: 'rl-1',
+      key: 'repeat@test.com',
+      count: 3,
+      windowStart: new Date(Date.now() - 1000), // 1 second ago (within window)
     }]);
 
-    let inserted = null;
-    __onInsert((collection, item) => { inserted = { collection, item }; });
+    const insertedCols = [];
+    __onInsert((collection) => insertedCols.push(collection));
 
     const result = await submitContactForm({ email: 'repeat@test.com' });
-    // Should return silent success but NOT insert
+    // Should return silent success but NOT insert to ContactSubmissions
     expect(result.success).toBe(true);
-    expect(inserted).toBeNull();
+    expect(insertedCols).not.toContain('ContactSubmissions');
   });
 
   it('includes optional fields when provided', async () => {

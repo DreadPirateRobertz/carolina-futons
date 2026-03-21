@@ -21,6 +21,68 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
+// Rate limiting for submitContactForm — prevents contact form spam flood.
+// CMS collection `ContactRateLimits`: key (Text), count (Number), windowStart (DateTime).
+const CONTACT_RATE_LIMIT_MAX = 3;
+const CONTACT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const CONTACT_RATE_LIMIT_COLLECTION = 'ContactRateLimits';
+
+/**
+ * Check and increment the per-email rate limit for contact form submissions.
+ * Returns { allowed: true } or { allowed: false, reason: 'rate_limited' }.
+ * Fails open on DB error to avoid blocking legitimate submissions.
+ *
+ * @param {string} key - Normalized email address
+ * @param {Object} [opts]
+ * @param {number} [opts.now] - Timestamp override for testing
+ * @returns {Promise<{allowed: boolean, reason?: string}>}
+ */
+export async function _checkContactRateLimit(key, opts = {}) {
+  const now = (opts && opts.now != null) ? opts.now : Date.now();
+  try {
+    const cleanKey = sanitize(key, 254).toLowerCase();
+
+    const existing = await wixData.query(CONTACT_RATE_LIMIT_COLLECTION)
+      .eq('key', cleanKey)
+      .limit(1)
+      .find();
+
+    if (existing.items.length === 0) {
+      await wixData.insert(CONTACT_RATE_LIMIT_COLLECTION, {
+        key: cleanKey,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    const record = existing.items[0];
+    const windowAge = now - new Date(record.windowStart).getTime();
+
+    if (windowAge > CONTACT_RATE_LIMIT_WINDOW_MS) {
+      await wixData.update(CONTACT_RATE_LIMIT_COLLECTION, {
+        ...record,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    if (record.count >= CONTACT_RATE_LIMIT_MAX) {
+      return { allowed: false, reason: 'rate_limited' };
+    }
+
+    await wixData.update(CONTACT_RATE_LIMIT_COLLECTION, {
+      ...record,
+      count: record.count + 1,
+    });
+    return { allowed: true };
+  } catch (err) {
+    console.warn('[contactSubmissions] Rate limit check failed, allowing request:', err?.message ?? err);
+    return { allowed: true }; // Fail open — don't block on DB errors
+  }
+}
+
 /**
  * Submit a lightweight contact/lead capture form.
  * Used by exit-intent popups, back-in-stock alerts, and browse abandonment.
@@ -43,7 +105,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
  */
 export const submitContactForm = webMethod(
   Permissions.Anyone,
-  async (data) => {
+  async (data, opts = {}) => {
     try {
       if (!data || !data.email) {
         return { success: false, message: 'Email is required' };
@@ -54,14 +116,9 @@ export const submitContactForm = webMethod(
         return { success: false, message: 'Invalid email format' };
       }
 
-      // Rate limit: reject if same email submitted within 60 seconds
-      const oneMinuteAgo = new Date(Date.now() - 60000);
-      const recent = await wixData.query('ContactSubmissions')
-        .eq('email', email)
-        .ge('submittedAt', oneMinuteAgo)
-        .find();
-
-      if (recent.items.length > 0) {
+      // Rate limit: 3 submissions/hour per email to prevent spam flood
+      const rateCheck = await _checkContactRateLimit(email, { now: opts && opts.rateLimitNow });
+      if (!rateCheck.allowed) {
         return { success: true }; // Silent success to avoid leaking info
       }
 
