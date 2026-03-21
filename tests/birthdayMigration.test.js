@@ -322,3 +322,151 @@ describe('wixMembers_onMemberUpdated', () => {
     expect(updated[0].item.birthday_day).toBe(1);
   });
 });
+
+// ── backfillBirthdayFields (CF-zf97 migration) ──────────────────────────────
+
+import { backfillBirthdayFields } from '../src/backend/birthdayMigration.web.js';
+
+describe('backfillBirthdayFields', () => {
+  beforeEach(() => {
+    __resetData();
+    vi.clearAllMocks();
+  });
+
+  it('returns { processed, updated, skipped, errors } shape', async () => {
+    __seed('Members/PrivateMembersData', []);
+    const result = await backfillBirthdayFields();
+    expect(result).toMatchObject({
+      processed: expect.any(Number),
+      updated: expect.any(Number),
+      skipped: expect.any(Number),
+      errors: expect.any(Number),
+    });
+  });
+
+  it('writes birthday_month and birthday_day for members with birthday set', async () => {
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-1', birthday: '1990-05-15' },
+      { _id: 'mb-2', birthday: '1985-12-25' },
+    ]);
+    const updates = [];
+    __onUpdate((col, item) => updates.push(item));
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.updated).toBe(2);
+    expect(result.skipped).toBe(0);
+
+    const mb1 = updates.find(u => u._id === 'mb-1');
+    expect(mb1.birthday_month).toBe(5);
+    expect(mb1.birthday_day).toBe(15);
+
+    const mb2 = updates.find(u => u._id === 'mb-2');
+    expect(mb2.birthday_month).toBe(12);
+    expect(mb2.birthday_day).toBe(25);
+  });
+
+  it('skips members with no birthday field', async () => {
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-3' },
+      { _id: 'mb-4', birthday: null },
+    ]);
+    const updates = [];
+    __onUpdate((col, item) => updates.push(item));
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.updated).toBe(0);
+    expect(result.skipped).toBe(2);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('skips members whose birthday_month and birthday_day already match', async () => {
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-5', birthday: '1990-05-15', birthday_month: 5, birthday_day: 15 },
+    ]);
+    const updates = [];
+    __onUpdate((col, item) => updates.push(item));
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.updated).toBe(0);
+    expect(result.skipped).toBe(1);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('updates member whose birthday_month/day are wrong (stale data)', async () => {
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-6', birthday: '1990-05-15', birthday_month: 3, birthday_day: 1 },
+    ]);
+    const updates = [];
+    __onUpdate((col, item) => updates.push(item));
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.updated).toBe(1);
+    const upd = updates.find(u => u._id === 'mb-6');
+    expect(upd.birthday_month).toBe(5);
+    expect(upd.birthday_day).toBe(15);
+  });
+
+  it('skips members with unparseable birthday and counts as skipped', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-7', birthday: 'not-a-date' },
+    ]);
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.skipped).toBe(1);
+    expect(result.updated).toBe(0);
+    warnSpy.mockRestore();
+  });
+
+  it('counts error and continues when wixData.update fails for one member', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    __seed('Members/PrivateMembersData', [
+      { _id: 'mb-8', birthday: '1990-05-15' },
+      { _id: 'mb-9', birthday: '2000-01-01' },
+    ]);
+    let callCount = 0;
+    __onUpdate((col, item) => {
+      callCount++;
+      if (item._id === 'mb-8') throw new Error('update failed');
+    });
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.errors).toBe(1);
+    expect(result.updated).toBe(1); // mb-9 still updated
+    errorSpy.mockRestore();
+  });
+
+  it('processes all members when multiple pages exist (pagination)', async () => {
+    // Seed 5 members — migration must process them all
+    const members = Array.from({ length: 5 }, (_, i) => ({
+      _id: `page-${i}`,
+      birthday: `1990-0${(i % 9) + 1}-15`,
+    }));
+    __seed('Members/PrivateMembersData', members);
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.processed).toBe(5);
+    expect(result.updated).toBe(5);
+  });
+
+  it('returns processed count equal to total members examined', async () => {
+    __seed('Members/PrivateMembersData', [
+      { _id: 'ct-1', birthday: '1990-05-15' },
+      { _id: 'ct-2' }, // no birthday
+      { _id: 'ct-3', birthday: '2000-01-01', birthday_month: 1, birthday_day: 1 }, // already correct
+    ]);
+
+    const result = await backfillBirthdayFields();
+
+    expect(result.processed).toBe(3);
+    expect(result.updated).toBe(1);
+    expect(result.skipped).toBe(2);
+  });
+});
