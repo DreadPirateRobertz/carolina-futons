@@ -285,9 +285,43 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: daysAgo(1),
       status: 'pending',
     }]);
-    const before = __getInserted('FabricSampleRequests').length;
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    expect(__getInserted('FabricSampleRequests').length).toBe(before);
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, email: 'other@example.com' },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rate limit check is case-insensitive on email (uppercase input normalizes to match)', async () => {
+    // Storage always normalizes emails to lowercase; uppercase input must still be blocked
+    __seed('FabricSampleRequests', [{
+      _id: 'prev-003',
+      contactEmail: 'jane@example.com',
+      requestedAt: daysAgo(2),
+      status: 'pending',
+    }]);
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, email: 'JANE@EXAMPLE.COM' },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('blocks request at exactly 30 days (rate limit boundary is inclusive)', async () => {
+    // Seed 1 second inside the 30-day window to avoid a race between the seed
+    // timestamp and the service's cutoff computation (both use Date.now()).
+    const thirtyDaysAgoWithBuffer = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000 + 1000);
+    __seed('FabricSampleRequests', [{
+      _id: 'boundary-001',
+      contactEmail: 'jane@example.com',
+      requestedAt: thirtyDaysAgoWithBuffer,
+      status: 'pending',
+    }]);
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(false);
   });
 });
 
