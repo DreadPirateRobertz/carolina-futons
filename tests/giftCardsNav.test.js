@@ -48,6 +48,7 @@ vi.mock('wix-window-frontend', () => ({
 
 import {
   NAV_LINKS,
+  MEGA_MENU_CATEGORIES,
   getActiveNavId,
   breadcrumbsFromPath,
 } from '../src/public/navigationHelpers.js';
@@ -81,6 +82,22 @@ describe('NAV_LINKS — Gift Cards entry', () => {
     const paths = Object.values(NAV_LINKS).map(v => v.path);
     const giftCardPaths = paths.filter(p => p === '/gift-cards');
     expect(giftCardPaths).toHaveLength(1);
+  });
+});
+
+// ── MEGA_MENU_CATEGORIES ───────────────────────────────────────────────────────
+
+describe('MEGA_MENU_CATEGORIES — Gift Cards entry', () => {
+  it('contains a Gift Cards entry in one of the groups', () => {
+    const allItems = MEGA_MENU_CATEGORIES.flatMap(group => group.items);
+    const giftItem = allItems.find(item => item.id === '#navGiftCards');
+    expect(giftItem).toBeDefined();
+  });
+
+  it('Gift Cards mega menu entry has correct path and label', () => {
+    const allItems = MEGA_MENU_CATEGORIES.flatMap(group => group.items);
+    const giftItem = allItems.find(item => item.id === '#navGiftCards');
+    expect(giftItem).toMatchObject({ id: '#navGiftCards', label: 'Gift Cards', path: '/gift-cards' });
   });
 });
 
@@ -167,6 +184,12 @@ describe('getFooterServiceLinks — Gift Cards link', () => {
     const links = getFooterServiceLinks();
     const giftLinks = links.filter(l => l.path === '/gift-cards');
     expect(giftLinks).toHaveLength(1);
+  });
+
+  it('Gift Cards link matches exact expected shape', () => {
+    const links = getFooterServiceLinks();
+    const giftLink = links.find(l => l.path === '/gift-cards');
+    expect(giftLink).toEqual({ label: 'Gift Cards', path: '/gift-cards' });
   });
 });
 

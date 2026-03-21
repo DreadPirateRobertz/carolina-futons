@@ -68,6 +68,7 @@ export const MEGA_MENU_CATEGORIES = [
       { id: '#navProductVideos', label: 'Product Videos', path: '/product-videos' },
       { id: '#navGettingItHome', label: 'Getting It Home', path: '/getting-it-home' },
       { id: '#navFreeSwatches', label: 'Free Swatches', path: '/free-swatches' },
+      { id: '#navGiftCards', label: 'Gift Cards', path: '/gift-cards' },
     ],
   },
 ];
