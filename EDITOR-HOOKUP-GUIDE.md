@@ -1494,6 +1494,59 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
+## SUSTAINABILITY (`Sustainability.js`)
+
+### Hero
+`sustainHeroHeading` (Text), `sustainHeroSubheading` (Text), `sustainHeroIntro` (RichText)
+
+### Commitment Badges ⚠️ REPEATER
+`badgesRepeater` (Repeater)
+**↳ Inside:** `badgeLabel` (Text), `badgeDesc` (Text)
+
+### Certifications ⚠️ REPEATER
+`certificationsHeading` (Text), `certificationsRepeater` (Repeater)
+**↳ Inside:** `certName` (Text), `certDesc` (RichText)
+
+### Materials ⚠️ REPEATER
+`materialsHeading` (Text), `materialsDescription` (Text), `materialsRepeater` (Repeater)
+**↳ Inside:** `materialTitle` (Text), `materialDesc` (Text)
+
+### Carbon Offset
+`carbonOffsetSection` (Box), `carbonHeading` (Text), `carbonDescription` (Text)
+
+### Trade-In Program ⚠️ REPEATER
+`tradeInHeading` (Text), `tradeInDescription` (Text), `tradeInEstimate` (Text), `tradeInCondition` (Dropdown or Text), `tradeInStepsRepeater` (Repeater)
+**↳ Inside:** `stepNumber` (Text), `stepTitle` (Text), `stepDesc` (Text)
+
+### SEO Schema
+`sustainSchemaHtml` (HtmlComponent) — JSON-LD FAQPage/Organization schema
+
+---
+
+## PRICE MATCH GUARANTEE (`Price Match Guarantee.js`)
+
+### Page Header
+`priceMatchTitle` (Text), `priceMatchDescription` (RichText)
+
+### Request Form
+`pmFormSection` (Box), `pmProductName` (Input), `pmProductId` (Input — hidden), `pmCompetitorSelect` (Dropdown), `pmCompetitorUrl` (Input), `pmOurPrice` (Input), `pmCompetitorPrice` (Input), `pmNotes` (TextBox), `pmSubmitBtn` (Button), `pmFormError` (Text), `pmProductNameError` (Text), `pmCompetitorUrlError` (Text), `pmOurPriceError` (Text), `pmCompetitorPriceError` (Text), `pmCompetitorError` (Text)
+
+### Savings Preview
+`pmSavingsPreview` (Box) — shows calculated savings before submit
+
+### Success State
+`pmSuccessSection` (Box), `pmSuccessMessage` (Text)
+
+### My Requests ⚠️ REPEATER
+`pmRequestsSection` (Box), `pmNewRequestBtn` (Button), `pmRequestsRepeater` (Repeater)
+**↳ Inside:** `pmReqDate` (Text), `pmReqProductName` (Text), `pmReqCompetitorName` (Text), `pmReqCompetitorPrice` (Text), `pmReqOurPrice` (Text), `pmReqSavings` (Text), `pmReqStatus` (Text), `pmReqCreditAmount` (Text), `pmReqClaimNumber` (Text), `pmReqAdminNotes` (Text)
+
+### Policy Display ⚠️ REPEATERS
+`policyRulesRepeater` (Repeater) → `policyRuleText` (Text)
+`policyExclusionsRepeater` (Repeater) → `exclusionText` (Text)
+
+---
+
 ## PAGES THAT NEED CREATING (no frontend code yet)
 
 These have **backend code only** — frontend pages must be built from scratch:
