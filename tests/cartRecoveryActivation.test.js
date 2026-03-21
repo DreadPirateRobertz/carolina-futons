@@ -85,6 +85,21 @@ describe('triggerAbandonedCartRecovery — single-use coupon per cart', () => {
     expect(mockCreateCoupon).toHaveBeenCalledWith('buyer@example.com');
   });
 
+  it('generates coupon only for step 3, not steps 1 or 2', async () => {
+    // With 3 steps per cart, coupon must be created exactly once (step 3 only)
+    seedAbandonedCart();
+    await triggerAbandonedCartRecovery();
+    expect(mockCreateCoupon).toHaveBeenCalledTimes(1);
+    const inserted = __getInserted('EmailQueue');
+    const cartSteps = inserted.filter(q => q.sequenceType === 'cart_recovery');
+    expect(cartSteps).toHaveLength(3);
+    // Steps 1 and 2 must not have a discount code
+    const step1 = cartSteps.find(q => q.sequenceStep === 1);
+    const step2 = cartSteps.find(q => q.sequenceStep === 2);
+    expect(step1.variables.discountCode).toBe('');
+    expect(step2.variables.discountCode).toBe('');
+  });
+
   it('creates one coupon per cart, not one per step', async () => {
     __seed('AbandonedCarts', [
       {
