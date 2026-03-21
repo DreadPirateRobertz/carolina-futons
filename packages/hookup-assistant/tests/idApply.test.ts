@@ -277,6 +277,76 @@ describe('useIdApply — applying state', () => {
   });
 });
 
+// ── S12: clearId ──────────────────────────────────────────────────────────────
+
+describe('useIdApply — clearId success', () => {
+  it('calls setNickname with compRef and empty string', async () => {
+    mockSetNickname.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.clearId(dummyCompRef);
+    });
+    expect(mockSetNickname).toHaveBeenCalledWith(dummyCompRef, '');
+  });
+
+  it('returns true on success', async () => {
+    mockSetNickname.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useIdApply('Home'));
+    let returnVal: boolean | undefined;
+    await act(async () => {
+      returnVal = await result.current.clearId(dummyCompRef);
+    });
+    expect(returnVal).toBe(true);
+  });
+});
+
+describe('useIdApply — clearId error', () => {
+  it('returns false when setNickname rejects', async () => {
+    mockSetNickname.mockRejectedValue(new Error('SDK error'));
+    const { result } = renderHook(() => useIdApply('Home'));
+    let returnVal: boolean | undefined;
+    await act(async () => {
+      returnVal = await result.current.clearId(dummyCompRef);
+    });
+    expect(returnVal).toBe(false);
+  });
+
+  it('logs error when setNickname rejects', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSetNickname.mockRejectedValue(new Error('SDK error'));
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.clearId(dummyCompRef);
+    });
+    expect(consoleSpy).toHaveBeenCalled();
+    const [msg] = consoleSpy.mock.calls[0];
+    expect(msg).toContain('[useIdApply]');
+    consoleSpy.mockRestore();
+  });
+
+  it('returns false on timeout', async () => {
+    mockSetNickname.mockImplementation(() => new Promise((res) => setTimeout(res, 1000)));
+    const { result } = renderHook(() => useIdApply('Home'));
+    let returnVal: boolean | undefined;
+    await act(async () => {
+      returnVal = await result.current.clearId(dummyCompRef);
+    });
+    expect(returnVal).toBe(false);
+  }, 2000);
+
+  it('log message contains "timed out" on timeout', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSetNickname.mockImplementation(() => new Promise((res) => setTimeout(res, 1000)));
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.clearId(dummyCompRef);
+    });
+    const [msg] = consoleSpy.mock.calls[0];
+    expect(msg).toContain('timed out');
+    consoleSpy.mockRestore();
+  }, 2000);
+});
+
 // ── Page isolation ────────────────────────────────────────────────────────────
 
 describe('useIdApply — page isolation', () => {

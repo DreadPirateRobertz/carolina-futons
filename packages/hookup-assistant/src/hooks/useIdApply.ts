@@ -1,10 +1,12 @@
 /**
- * useIdApply — S4: auto-apply a Velo ID to a selected editor element.
+ * useIdApply — S4/S12: auto-apply and clear Velo IDs on selected editor elements.
  *
- * Calls editor.components.setNickname() (postMessage to P&E panel under the
- * hood) with a 300ms timeout. On success, persists the element ID to
- * localStorage under cf-hookup-{page}-applied and returns true so the caller
- * can advance to the next element.
+ * applyId: calls editor.components.setNickname(compRef, elementId) — postMessage
+ * to P&E panel under the hood — with a 300ms timeout. On success, persists the
+ * element ID to localStorage under cf-hookup-{page}-applied and returns true.
+ *
+ * clearId (S12): calls editor.components.setNickname(compRef, '') to remove a
+ * previously applied ID from the editor (undo support). Returns true on success.
  *
  * Status machine: idle → applying → success | error
  *
@@ -110,7 +112,42 @@ export function useIdApply(pageName: string) {
     }
   }, [pageName]);
 
+  // S12: clear a previously-applied ID from the editor by calling setNickname with ''.
+  const clearId = useCallback(async (compRef: unknown): Promise<boolean> => {
+    try {
+      const editor = await getEditorModule();
+      if (!editor) {
+        throw new Error(`${TAG} @wix/editor module unavailable — cannot clear ID`);
+      }
+
+      let timeoutId: ReturnType<typeof setTimeout>;
+      try {
+        await Promise.race([
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (editor.components as any).setNickname(compRef, ''),
+          new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(
+              () => reject(new Error('setNickname timeout')),
+              APPLY_TIMEOUT_MS
+            );
+          }),
+        ]);
+      } finally {
+        clearTimeout(timeoutId!);
+      }
+
+      return true;
+    } catch (err) {
+      const isTimeout = err instanceof Error && err.message === 'setNickname timeout';
+      console.error(
+        `${TAG} ${isTimeout ? `clearId timed out after ${APPLY_TIMEOUT_MS}ms` : 'clearId rejected'} for compRef:`,
+        err,
+      );
+      return false;
+    }
+  }, []);
+
   const resetStatus = useCallback(() => setStatus('idle'), []);
 
-  return { applyId, status, resetStatus };
+  return { applyId, clearId, status, resetStatus };
 }

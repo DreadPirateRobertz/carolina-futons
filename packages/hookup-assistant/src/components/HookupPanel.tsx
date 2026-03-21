@@ -52,7 +52,7 @@ export function HookupPanel() {
     // Run only when detection fires — not on every selectedPageName change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detectedPageName]);
-  const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
+  const { applyId, clearId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
   const { elapsed, paused, pace, recordApply } = useSessionTimer();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
@@ -100,9 +100,9 @@ export function HookupPanel() {
     resetApplyStatus();
   }, [currentElement, markSkipped, resetApplyStatus]);
 
-  // S4 + S11: apply the target ID via editor SDK, with conflict detection.
+  // S4 + S11 + S12: apply the target ID via editor SDK, with conflict detection.
   // Checks the element's existing nickname before calling setNickname():
-  //   'none'        → proceed directly
+  //   'none'        → proceed directly (stores compRef in history for S12 undo)
   //   'already-set' → auto-advance (no SDK call needed)
   //   'conflict'    → open conflict banner; wait for override/cancel
   const handleApplyId = useCallback(async () => {
@@ -138,7 +138,7 @@ export function HookupPanel() {
     const ok = await applyId(currentElement, selected.compRef);
     if (ok) {
       clearConflict();
-      markHooked(currentElement.id);
+      markHooked(currentElement.id, selected.compRef);
       recordApply();
     }
     // if !ok: leave banner visible so user can retry or cancel
@@ -171,6 +171,18 @@ export function HookupPanel() {
   const handleToggleManual = useCallback(() => setManualMode((v) => !v), []);
   const handleToggleHelp = useCallback(() => setShowHelp((v) => !v), []);
 
+  // S12: undo — reverses last progress action; if it was an auto-applied ID,
+  // clears the editor nickname via postMessage (setNickname(compRef, '')).
+  const handleUndo = useCallback(() => {
+    const compRef = undoLast();
+    if (compRef !== undefined) {
+      clearId(compRef).catch((err: unknown) => {
+        console.error('[HookupPanel] clearId rejected during undo:', err);
+      });
+    }
+    resetApplyStatus();
+  }, [undoLast, clearId, resetApplyStatus]);
+
   useKeyboardShortcuts({
     onApplyOrDone: handleApplyOrDone,
     onSkip: handleSkip,
@@ -178,7 +190,7 @@ export function HookupPanel() {
     onNextPage: goNextPage,
     onPrevPage: goPrevPage,
     onToggleManual: handleToggleManual,
-    onUndo: undoLast,
+    onUndo: handleUndo,
     onToggleHelp: handleToggleHelp,
   });
 

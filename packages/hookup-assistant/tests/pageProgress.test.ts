@@ -203,6 +203,89 @@ describe('usePageProgress — undoLast duplicate guard', () => {
   });
 });
 
+// ── S12: 10-step history cap ──────────────────────────────────────────────────
+
+describe('usePageProgress — 10-step history cap', () => {
+  it('caps canUndo at 10 actions (11th action drops the oldest)', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => {
+      for (let i = 0; i < 11; i++) {
+        result.current.markHooked(`elem${i}`);
+      }
+    });
+    // After 11 actions, only 10 remain in history
+    // Undo 10 times should succeed; the 11th is gone
+    for (let i = 0; i < 10; i++) {
+      act(() => result.current.undoLast());
+    }
+    expect(result.current.canUndo).toBe(false);
+    // elem0 was dropped from history — it remains in hookedIds
+    expect(result.current.hookedIds).toContain('elem0');
+  });
+
+  it('never exceeds 10 entries — canUndo remains true after 10 undos of 15 actions', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => {
+      for (let i = 0; i < 15; i++) {
+        result.current.markHooked(`item${i}`);
+      }
+    });
+    for (let i = 0; i < 10; i++) {
+      act(() => result.current.undoLast());
+    }
+    expect(result.current.canUndo).toBe(false);
+  });
+});
+
+// ── S12: compRef round-trip ───────────────────────────────────────────────────
+
+describe('usePageProgress — compRef round-trip', () => {
+  it('undoLast returns compRef stored by markHooked (auto-apply)', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    const compRef = { id: 'comp-abc' };
+    act(() => result.current.markHooked('heroTitle', compRef));
+    let returned: unknown;
+    act(() => { returned = result.current.undoLast(); });
+    expect(returned).toBe(compRef);
+  });
+
+  it('undoLast returns undefined when markHooked called without compRef (manual)', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    let returned: unknown;
+    act(() => { returned = result.current.undoLast(); });
+    expect(returned).toBeUndefined();
+  });
+
+  it('undoLast returns undefined for skipped actions', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    let returned: unknown;
+    act(() => { returned = result.current.undoLast(); });
+    expect(returned).toBeUndefined();
+  });
+
+  it('returns undefined when history is empty', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    let returned: unknown;
+    act(() => { returned = result.current.undoLast(); });
+    expect(returned).toBeUndefined();
+  });
+
+  it('returns the correct compRef in LIFO order for mixed actions', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    const compRef1 = { id: 'comp-1' };
+    const compRef2 = { id: 'comp-2' };
+    act(() => result.current.markHooked('elem1', compRef1));
+    act(() => result.current.markHooked('elem2', compRef2));
+    let returned: unknown;
+    act(() => { returned = result.current.undoLast(); }); // last = elem2 with compRef2
+    expect(returned).toBe(compRef2);
+    act(() => { returned = result.current.undoLast(); }); // last = elem1 with compRef1
+    expect(returned).toBe(compRef1);
+  });
+});
+
 describe('usePageProgress — undoLast wasSkipped restoration', () => {
   it('restores element to skippedIds when undoing a markHooked that displaced it', () => {
     const { result } = renderHook(() => usePageProgress('Home'));
