@@ -271,7 +271,7 @@ export const buildViewContentEvent = webMethod(
       content_name: sanitize(product.name || '', 200),
       content_ids: [product._id || ''],
       content_type: 'product',
-      value: product.price || 0,
+      value: product.price ?? 0,
       currency: 'USD',
       content_category: (product.collections || [])[0] || '',
     };
@@ -295,7 +295,7 @@ export const buildAddToCartEvent = webMethod(
       content_name: sanitize(product.name || '', 200),
       content_ids: [product._id || ''],
       content_type: 'product',
-      value: (product.price || 0) * quantity,
+      value: (product.price ?? 0) * quantity,
       currency: 'USD',
       num_items: quantity,
     };
@@ -317,7 +317,7 @@ export const buildCheckoutEvent = webMethod(
     return {
       content_ids: (cartItems || []).map(item => item.productId || item._id || ''),
       content_type: 'product',
-      value: cartTotal || 0,
+      value: cartTotal ?? 0,
       currency: 'USD',
       num_items: (cartItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0),
     };
@@ -339,7 +339,7 @@ export const buildPurchaseEvent = webMethod(
     return {
       content_ids: (order.lineItems || []).map(item => item.catalogItemId || item.sku || ''),
       content_type: 'product',
-      value: order.totals?.total || 0,
+      value: order.totals?.total ?? 0,
       currency: 'USD',
       num_items: (order.lineItems || []).reduce((sum, item) => sum + (item.quantity || 1), 0),
       order_id: order._id || '',
@@ -409,7 +409,7 @@ export const buildSearchEvent = webMethod(
   async (query, resultCount) => {
     return {
       search_term: sanitize(query || '', 200),
-      results_count: resultCount || 0,
+      results_count: resultCount ?? 0,
     };
   }
 );
