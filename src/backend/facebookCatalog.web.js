@@ -522,12 +522,6 @@ export function getMetaRateLimits() {
 }
 
 /**
- * Export customer audience data for Meta Custom Audiences / Lookalike Audiences.
- * Queries orders and aggregates customer data (deduplicated by email).
- * Returns normalized fields per Meta's audience upload format.
- * @returns {Promise<Object>} { success, customers: Array }
- */
-/**
  * Cron-callable: refresh the Facebook/Meta product catalog.
  * Queries all products, validates + processes each through buildCatalogBatch,
  * and sends an owner alert via notificationService if any products fail.
@@ -579,7 +573,7 @@ export const refreshFacebookCatalog = webMethod(
       console.log('[facebookCatalog] refreshFacebookCatalog complete:', JSON.stringify({ processed, failed }));
       return summary;
     } catch (err) {
-      const msg = `catalog refresh failed: ${err.message}`;
+      const msg = `catalog refresh failed: ${err?.message ?? String(err)}`;
       console.error('[facebookCatalog] refreshFacebookCatalog error:', msg);
       try {
         await notifyOwner('facebook catalog sync — cron error', msg);
@@ -591,6 +585,12 @@ export const refreshFacebookCatalog = webMethod(
   }
 );
 
+/**
+ * Export customer audience data for Meta Custom Audiences / Lookalike Audiences.
+ * Queries orders and aggregates customer data (deduplicated by email).
+ * Returns normalized fields per Meta's audience upload format.
+ * @returns {Promise<Object>} { success, customers: Array }
+ */
 export const exportCustomerAudienceData = webMethod(
   Permissions.Admin,
   async () => {

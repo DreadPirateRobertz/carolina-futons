@@ -330,13 +330,6 @@ export const toggleProductAlerts = webMethod(
 );
 
 /**
- * Get notification history for the current member's wishlist.
- * Used on Member Page to show recent alerts sent.
- *
- * @param {number} [limit=10] - Max results.
- * @returns {Promise<{items: Array, success: boolean}>}
- */
-/**
  * Send an operational alert to the site owner via triggered email or console fallback.
  * Used by cron jobs and backend services to surface critical failures.
  *
@@ -369,6 +362,13 @@ export const notifyOwner = webMethod(
   }
 );
 
+/**
+ * Get notification history for the current member's wishlist.
+ * Used on Member Page to show recent alerts sent.
+ *
+ * @param {number} [limit=10] - Max results.
+ * @returns {Promise<{items: Array, success: boolean}>}
+ */
 export const getNotificationHistory = webMethod(
   Permissions.SiteMember,
   async (limit = 10) => {

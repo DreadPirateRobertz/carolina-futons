@@ -74,13 +74,13 @@ describe('refreshFacebookCatalog — success path', () => {
 
   it('processes valid products and returns processed count', async () => {
     __seed('Stores/Products', [
-      { _id: 'p1', name: 'Monterey Futon Frame', price: 549, slug: 'monterey', media: { mainMedia: { image: { url: 'https://static.wixstatic.com/p1.jpg' } } } },
-      { _id: 'p2', name: 'Austin Futon Frame', price: 399, slug: 'austin', media: { mainMedia: { image: { url: 'https://static.wixstatic.com/p2.jpg' } } } },
+      { _id: 'p1', name: 'Monterey Futon Frame', price: 549, slug: 'monterey', mainMedia: { url: 'https://static.wixstatic.com/p1.jpg' } },
+      { _id: 'p2', name: 'Austin Futon Frame', price: 399, slug: 'austin', mainMedia: { url: 'https://static.wixstatic.com/p2.jpg' } },
     ]);
     const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
-    expect(result.processed).toBeGreaterThanOrEqual(0);
-    expect(typeof result.failed).toBe('number');
+    expect(result.processed).toBe(2);
+    expect(result.failed).toBe(0);
   });
 });
 
