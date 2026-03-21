@@ -68,11 +68,19 @@ function grantAdvertisingOnly() {
 
 // ── Setup ───────────────────────────────────────────────────────────────
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
   _currentPolicy = { analytics: false, advertising: false };
   _policyChangedCallback = null;
   clearQueue();
+
+  // Re-apply mock implementations after clearAllMocks — some tests override
+  // these with mockImplementation/mockReturnValue; re-applying ensures each
+  // test starts with a live-closure implementation that tracks _currentPolicy.
+  const { default: wixPrivacy } = await import('wix-privacy-frontend');
+  wixPrivacy.getCurrentConsentPolicy.mockImplementation(() => ({ policy: _currentPolicy }));
+  wixPrivacy.onCurrentConsentPolicyChanged.mockImplementation((cb) => { _policyChangedCallback = cb; });
+
   initConsentGate();
 });
 
@@ -284,8 +292,8 @@ describe('_hasConsent() — privacy API exception handling', () => {
     expect(fireTikTokEvent).not.toHaveBeenCalled();
     expect(getQueueLength()).toBe(1);
 
-    // Restore
-    wixPrivacy.getCurrentConsentPolicy.mockReturnValue({ policy: _currentPolicy });
+    // Restore — use live closure so subsequent tests pick up _currentPolicy changes
+    wixPrivacy.getCurrentConsentPolicy.mockImplementation(() => ({ policy: _currentPolicy }));
   });
 });
 
@@ -302,5 +310,237 @@ describe('initConsentGate — setup', () => {
     initConsentGate(); // second call — should not re-register duplicate listener
     grantConsent();
     expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ── listener deregistration on failure ────────────────────────────────
+
+describe('initConsentGate — listener deregistration on failure', () => {
+  it('resets _listenerRegistered to false when onCurrentConsentPolicyChanged throws', async () => {
+    const { default: wixPrivacy } = await import('wix-privacy-frontend');
+
+    // Simulate registration failure
+    wixPrivacy.onCurrentConsentPolicyChanged.mockImplementationOnce(() => {
+      throw new Error('Privacy API error');
+    });
+
+    clearQueue(); // Reset state (also resets _listenerRegistered)
+    initConsentGate(); // Should fail, reset flag
+
+    // Since the listener failed to register, calling initConsentGate() again
+    // should successfully re-register (now that the mock is restored to normal)
+    initConsentGate();
+
+    // After recovery, the listener should work: queue should flush on consent
+    fireTrackedTikTokEvent('ViewContent', {});
+    grantConsent();
+    expect(fireTikTokEvent).toHaveBeenCalledWith('ViewContent', {});
+  });
+
+  it('does not flush queue if listener registration fails (no callback registered)', async () => {
+    const { default: wixPrivacy } = await import('wix-privacy-frontend');
+
+    wixPrivacy.onCurrentConsentPolicyChanged.mockImplementationOnce(() => {
+      throw new Error('Privacy API error');
+    });
+
+    clearQueue();
+    initConsentGate(); // Listener registration fails — _listenerRegistered reset to false
+
+    fireTrackedTikTokEvent('ViewContent', {});
+    // Manually triggering the old callback should not work (it was never set)
+    // Consent granted via mock but no callback was registered this round
+    _currentPolicy = { analytics: true, advertising: true };
+    // No flush because callback was never registered
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+});
+
+// ── all event types fire through consent gate ──────────────────────────
+
+describe('TikTok — all standard event types fire with correct payload', () => {
+  beforeEach(() => {
+    grantConsent();
+  });
+
+  it('PageView fires with correct payload', () => {
+    fireTrackedTikTokEvent('PageView', { page: '/products' });
+    expect(fireTikTokEvent).toHaveBeenCalledWith('PageView', { page: '/products' });
+  });
+
+  it('ViewContent fires with correct payload', () => {
+    const params = { content_id: 'sku-001', content_type: 'product', value: 299, currency: 'USD' };
+    fireTrackedTikTokEvent('ViewContent', params);
+    expect(fireTikTokEvent).toHaveBeenCalledWith('ViewContent', params);
+  });
+
+  it('AddToCart fires with correct payload', () => {
+    const params = { content_id: 'sku-002', quantity: 2, value: 598, currency: 'USD' };
+    fireTrackedTikTokEvent('AddToCart', params);
+    expect(fireTikTokEvent).toHaveBeenCalledWith('AddToCart', params);
+  });
+
+  it('Purchase fires with correct payload', () => {
+    const params = { order_id: 'order-9001', value: 499, currency: 'USD', num_items: 1 };
+    fireTrackedTikTokEvent('Purchase', params);
+    expect(fireTikTokEvent).toHaveBeenCalledWith('Purchase', params);
+  });
+
+  it('Search fires with correct payload', () => {
+    const params = { query: 'futon couch', num_results: 12 };
+    fireTrackedTikTokEvent('Search', params);
+    expect(fireTikTokEvent).toHaveBeenCalledWith('Search', params);
+  });
+});
+
+describe('TikTok — all event types queue correctly without consent', () => {
+  it('PageView is queued when no consent', () => {
+    fireTrackedTikTokEvent('PageView', { page: '/' });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('ViewContent is queued when no consent', () => {
+    fireTrackedTikTokEvent('ViewContent', { content_id: 'sku-x' });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+  });
+
+  it('AddToCart is queued when no consent', () => {
+    fireTrackedTikTokEvent('AddToCart', { content_id: 'sku-y', value: 100 });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+  });
+
+  it('Purchase is queued when no consent', () => {
+    fireTrackedTikTokEvent('Purchase', { order_id: 'ord-42', value: 299 });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+  });
+
+  it('Search is queued when no consent', () => {
+    fireTrackedTikTokEvent('Search', { query: 'sofa' });
+    expect(fireTikTokEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe('Pinterest — all standard event types fire with correct payload', () => {
+  beforeEach(() => {
+    grantConsent();
+  });
+
+  it('pagevisit fires with correct payload', () => {
+    fireTrackedPinterestEvent('pagevisit', { page_name: 'home' });
+    expect(firePinterestEvent).toHaveBeenCalledWith('pagevisit', { page_name: 'home' });
+  });
+
+  it('viewcategory fires with correct payload', () => {
+    const params = { product_id: 'sku-003', product_name: 'Futon Frame', value: 349, currency: 'USD' };
+    fireTrackedPinterestEvent('viewcategory', params);
+    expect(firePinterestEvent).toHaveBeenCalledWith('viewcategory', params);
+  });
+
+  it('addtocart fires with correct payload', () => {
+    const params = { product_id: 'sku-004', order_quantity: 1, value: 249, currency: 'USD' };
+    fireTrackedPinterestEvent('addtocart', params);
+    expect(firePinterestEvent).toHaveBeenCalledWith('addtocart', params);
+  });
+
+  it('purchase fires with correct payload', () => {
+    const params = { order_id: 'order-8001', value: 599, currency: 'USD', line_items: [{ product_id: 'sku-001', quantity: 1 }] };
+    fireTrackedPinterestEvent('purchase', params);
+    expect(firePinterestEvent).toHaveBeenCalledWith('purchase', params);
+  });
+
+  it('search fires with correct payload', () => {
+    const params = { search_query: 'convertible sofa' };
+    fireTrackedPinterestEvent('search', params);
+    expect(firePinterestEvent).toHaveBeenCalledWith('search', params);
+  });
+});
+
+describe('Pinterest — all event types queue correctly without consent', () => {
+  it('pagevisit is queued when no consent', () => {
+    fireTrackedPinterestEvent('pagevisit', {});
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+    expect(getQueueLength()).toBe(1);
+  });
+
+  it('viewcategory is queued when no consent', () => {
+    fireTrackedPinterestEvent('viewcategory', { product_id: 'sku-a' });
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+  });
+
+  it('addtocart is queued when no consent', () => {
+    fireTrackedPinterestEvent('addtocart', { product_id: 'sku-b', value: 99 });
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+  });
+
+  it('purchase is queued when no consent', () => {
+    fireTrackedPinterestEvent('purchase', { order_id: 'ord-77', value: 199 });
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+  });
+
+  it('search is queued when no consent', () => {
+    fireTrackedPinterestEvent('search', { search_query: 'loveseat' });
+    expect(firePinterestEvent).not.toHaveBeenCalled();
+  });
+});
+
+// ── purchase deduplication ─────────────────────────────────────────────
+
+describe('purchase deduplication — same order_id fires only once', () => {
+  beforeEach(() => {
+    grantConsent();
+  });
+
+  it('TikTok Purchase with same order_id fires only once', () => {
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-dup-1', value: 299 });
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-dup-1', value: 299 });
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('Pinterest purchase with same order_id fires only once', () => {
+    fireTrackedPinterestEvent('purchase', { order_id: 'order-dup-2', value: 399 });
+    fireTrackedPinterestEvent('purchase', { order_id: 'order-dup-2', value: 399 });
+    expect(firePinterestEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('TikTok Purchase with different order_ids both fire', () => {
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-a', value: 100 });
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-b', value: 200 });
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('Pinterest purchase with different order_ids both fire', () => {
+    fireTrackedPinterestEvent('purchase', { order_id: 'order-c', value: 150 });
+    fireTrackedPinterestEvent('purchase', { order_id: 'order-d', value: 250 });
+    expect(firePinterestEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('TikTok Purchase without order_id always fires (no dedup key)', () => {
+    fireTrackedTikTokEvent('Purchase', { value: 99 });
+    fireTrackedTikTokEvent('Purchase', { value: 99 });
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it('deduplication survives queue flush — queued purchase with same order_id fires only once', () => {
+    // Fire without consent → queued
+    _currentPolicy = { analytics: false, advertising: false };
+    vi.clearAllMocks();
+    clearQueue();
+    initConsentGate();
+
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-flush-1', value: 499 });
+    fireTrackedTikTokEvent('Purchase', { order_id: 'order-flush-1', value: 499 }); // dup — dropped at queue time
+
+    grantConsent(); // flush
+
+    // The dedup check happens at fire time, so the duplicate is dropped before queuing
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('non-purchase events are never deduplicated', () => {
+    fireTrackedTikTokEvent('ViewContent', { content_id: 'sku-x' });
+    fireTrackedTikTokEvent('ViewContent', { content_id: 'sku-x' });
+    expect(fireTikTokEvent).toHaveBeenCalledTimes(2);
   });
 });

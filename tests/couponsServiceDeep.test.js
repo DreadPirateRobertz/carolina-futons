@@ -40,6 +40,13 @@ vi.mock('wix-marketing-backend', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'member-1', loginEmail: 'test@example.com' })),
+  },
+}));
+
+
 let mod;
 beforeEach(async () => {
   _createdCoupons = [];
@@ -123,8 +130,8 @@ describe('getActiveCoupons', () => {
 
   it('returns formatted active coupons', async () => {
     _activeCoupons = [
-      { _id: 'c1', code: 'WELCOME-ABC', name: 'Welcome 10%', percentOffRate: 10, active: true },
-      { _id: 'c2', code: 'BDAY-XYZ', name: 'Birthday 15%', percentOffRate: 15, active: true },
+      { _id: 'c1', code: 'WELCOME-ABC', name: 'Welcome 10% - test@example.com', percentOffRate: 10, active: true },
+      { _id: 'c2', code: 'BDAY-XYZ', name: 'Birthday 15% - test@example.com', percentOffRate: 15, active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(2);
@@ -133,7 +140,7 @@ describe('getActiveCoupons', () => {
   });
 
   it('formats money-off coupons', async () => {
-    _activeCoupons = [{ _id: 'c1', code: 'FLAT50', name: '$50 Off', moneyOffAmount: 50, active: true }];
+    _activeCoupons = [{ _id: 'c1', code: 'FLAT50', name: '$50 Off - test@example.com', moneyOffAmount: 50, active: true }];
     const r = await mod.getActiveCoupons();
     expect(r[0].discount).toBe('$50 off');
   });
