@@ -39,7 +39,9 @@ function _hasConsent() {
     // insufficient and would violate the user's stated preferences.
     return policy.analytics === true && policy.advertising === true;
   } catch (e) {
-    // If the privacy API is unavailable, default to not firing
+    // Privacy API unavailable — default to not firing. Log so developers
+    // can detect misconfiguration; symptom is otherwise identical to user denial.
+    console.warn('[pixelConsentService] getCurrentConsentPolicy failed:', e?.message ?? e);
     return false;
   }
 }
@@ -56,7 +58,8 @@ function _flushQueue() {
         firePinterestEvent(entry.eventName, entry.params);
       }
     } catch (e) {
-      console.warn('[pixelConsentService] flush error for', entry.platform, entry.eventName, e);
+      // Flush error — event permanently lost since queue was already spliced.
+      console.error('[pixelConsentService] flush error for', entry.platform, entry.eventName, e);
     }
   }
 }
@@ -98,7 +101,11 @@ export function initConsentGate() {
  */
 export function fireTrackedTikTokEvent(eventName, params = {}) {
   if (_hasConsent()) {
-    fireTikTokEvent(eventName, params);
+    try {
+      fireTikTokEvent(eventName, params);
+    } catch (e) {
+      console.error('[pixelConsentService] TikTok direct-fire error for', eventName, e);
+    }
   } else if (_queue.length < MAX_QUEUE_SIZE) {
     _queue.push({ platform: 'tiktok', eventName, params });
   }
@@ -113,7 +120,11 @@ export function fireTrackedTikTokEvent(eventName, params = {}) {
  */
 export function fireTrackedPinterestEvent(eventName, params = {}) {
   if (_hasConsent()) {
-    firePinterestEvent(eventName, params);
+    try {
+      firePinterestEvent(eventName, params);
+    } catch (e) {
+      console.error('[pixelConsentService] Pinterest direct-fire error for', eventName, e);
+    }
   } else if (_queue.length < MAX_QUEUE_SIZE) {
     _queue.push({ platform: 'pinterest', eventName, params });
   }
