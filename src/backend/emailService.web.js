@@ -284,3 +284,131 @@ export const sendOrderNotification = webMethod(
     }
   }
 );
+
+/**
+ * Send an order confirmation email to the buyer.
+ *
+ * @function sendOrderConfirmation
+ * @param {Object} orderDetails
+ * @param {string} orderDetails.contactId - Buyer's Wix contact ID
+ * @param {string} orderDetails.email - Buyer's email
+ * @param {string} orderDetails.firstName - Buyer's first name
+ * @param {string} orderDetails.orderNumber - Order number
+ * @param {string} orderDetails.total - Formatted order total
+ * @param {string} [orderDetails.itemSummary] - Human-readable item list
+ * @param {number} [orderDetails.estimatedDays] - Estimated delivery days
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin — called from wixEcom_onOrderCreated event handler
+ */
+export const sendOrderConfirmation = webMethod(
+  Permissions.Admin,
+  async (orderDetails) => {
+    try {
+      const { contactId, email, firstName, orderNumber, total, itemSummary, estimatedDays } = orderDetails || {};
+      if (!contactId || !email) return { success: false };
+
+      await triggeredEmails.emailContact(
+        'order_confirmation',
+        contactId,
+        {
+          variables: {
+            firstName: sanitize(firstName || '', 200),
+            orderNumber: sanitize(orderNumber || '', 50),
+            total: sanitize(total || '', 50),
+            itemSummary: sanitize(itemSummary || '', 500),
+            estimatedDays: String(estimatedDays || ''),
+            email: sanitize(email, 254),
+          },
+        }
+      );
+      return { success: true };
+    } catch (err) {
+      console.error('[emailService] Error sending order confirmation:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
+ * Send a shipping notification email to the buyer when order is fulfilled.
+ *
+ * @function sendShippingNotification
+ * @param {Object} orderDetails
+ * @param {string} orderDetails.contactId - Buyer's Wix contact ID
+ * @param {string} orderDetails.email - Buyer's email
+ * @param {string} orderDetails.firstName - Buyer's first name
+ * @param {string} orderDetails.orderNumber - Order number
+ * @param {string} [orderDetails.trackingNumber] - Carrier tracking number
+ * @param {string} [orderDetails.trackingUrl] - Carrier tracking URL
+ * @param {string} [orderDetails.carrier] - Carrier name (e.g., "UPS")
+ * @param {number} [orderDetails.estimatedDays] - Estimated days remaining
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin — called from wixEcom_onFulfillmentCreated event handler
+ */
+export const sendShippingNotification = webMethod(
+  Permissions.Admin,
+  async (orderDetails) => {
+    try {
+      const { contactId, email, firstName, orderNumber, trackingNumber, trackingUrl, carrier, estimatedDays } = orderDetails || {};
+      if (!contactId || !email) return { success: false };
+
+      await triggeredEmails.emailContact(
+        'order_shipped',
+        contactId,
+        {
+          variables: {
+            firstName: sanitize(firstName || '', 200),
+            orderNumber: sanitize(orderNumber || '', 50),
+            trackingNumber: sanitize(trackingNumber || '', 100),
+            trackingUrl: sanitize(trackingUrl || '', 500),
+            carrier: sanitize(carrier || '', 100),
+            estimatedDays: String(estimatedDays || ''),
+            email: sanitize(email, 254),
+          },
+        }
+      );
+      return { success: true };
+    } catch (err) {
+      console.error('[emailService] Error sending shipping notification:', err);
+      return { success: false };
+    }
+  }
+);
+
+/**
+ * Send a delivery confirmation email to the buyer.
+ *
+ * @function sendDeliveryConfirmation
+ * @param {Object} orderDetails
+ * @param {string} orderDetails.contactId - Buyer's Wix contact ID
+ * @param {string} orderDetails.email - Buyer's email
+ * @param {string} orderDetails.firstName - Buyer's first name
+ * @param {string} orderDetails.orderNumber - Order number
+ * @returns {Promise<{success: boolean}>}
+ * @permission Admin — called from wixEcom_onOrderDelivered event handler
+ */
+export const sendDeliveryConfirmation = webMethod(
+  Permissions.Admin,
+  async (orderDetails) => {
+    try {
+      const { contactId, email, firstName, orderNumber } = orderDetails || {};
+      if (!contactId || !email) return { success: false };
+
+      await triggeredEmails.emailContact(
+        'delivery_confirmation',
+        contactId,
+        {
+          variables: {
+            firstName: sanitize(firstName || '', 200),
+            orderNumber: sanitize(orderNumber || '', 50),
+            email: sanitize(email, 254),
+          },
+        }
+      );
+      return { success: true };
+    } catch (err) {
+      console.error('[emailService] Error sending delivery confirmation:', err);
+      return { success: false };
+    }
+  }
+);

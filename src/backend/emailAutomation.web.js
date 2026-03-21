@@ -35,6 +35,7 @@ import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { createCartRecoveryCoupon } from 'backend/couponsService.web';
 
 // ── Sequence Definitions ──────────────────────────────────────────────
 // Each sequence defines steps with template IDs, delay, and variables.
@@ -45,7 +46,7 @@ const SEQUENCES = {
     steps: [
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
       { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'Social proof + UGC' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -128,8 +129,72 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
+  // Send customer-facing order confirmation
+  import('backend/emailService.web')
+    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    }))
+    .catch(err => console.error('Error sending order confirmation:', err));
+
+  // Queue post-purchase care sequence
   triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
     .catch(err => console.error('Error triggering post-purchase sequence:', err));
+}
+
+/**
+ * Triggered when an order fulfillment is created (shipped).
+ * Sends a shipping notification with tracking info to the buyer.
+ */
+export function wixEcom_onFulfillmentCreated(event) {
+  const fulfillment = event.entity || event;
+  const order = fulfillment.order || {};
+  const email = order.buyerInfo?.email || fulfillment.buyerInfo?.email || '';
+  const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+  const contactId = order.buyerInfo?.contactId || fulfillment.buyerInfo?.contactId || '';
+  const orderNumber = order.number || fulfillment.orderNumber || '';
+  const tracking = fulfillment.trackingInfo || {};
+
+  if (!email) return;
+
+  import('backend/emailService.web')
+    .then(({ sendShippingNotification }) => sendShippingNotification({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      trackingNumber: tracking.trackingNumber || '',
+      trackingUrl: tracking.trackingLink || '',
+      carrier: tracking.shippingProvider || '',
+    }))
+    .catch(err => console.error('Error sending shipping notification:', err));
+}
+
+/**
+ * Triggered when an order is marked as delivered.
+ * Sends a delivery confirmation email to the buyer.
+ */
+export function wixEcom_onOrderDelivered(event) {
+  const order = event.entity || event;
+  const email = order.buyerInfo?.email || '';
+  const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+  const contactId = order.buyerInfo?.contactId || '';
+  const orderNumber = order.number || '';
+
+  if (!email) return;
+
+  import('backend/emailService.web')
+    .then(({ sendDeliveryConfirmation }) => sendDeliveryConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+    }))
+    .catch(err => console.error('Error sending delivery confirmation:', err));
 }
 
 /**
@@ -235,6 +300,84 @@ export const triggerWelcomeSequence = webMethod(
 );
 
 /**
+ * Trigger the welcome email series for the currently logged-in member.
+ * Member-accessible entry point — no contactId required.
+ * Uses EmailQueue dedup guard: does not re-queue if welcome step 1 already exists.
+ *
+ * @function triggerWelcomeSeries
+ * @param {string} email - Member email
+ * @param {string} [firstName] - Member first name (optional)
+ * @returns {Promise<{success: boolean, queued: number}>}
+ * @permission Member
+ */
+export const triggerWelcomeSeries = webMethod(
+  Permissions.SiteMember,
+  async (email, firstName) => {
+    try {
+      if (!email) return { success: false, queued: 0 };
+
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanName = sanitize(firstName || '', 200);
+
+      if (await isUnsubscribed(cleanEmail, 'welcome')) {
+        return { success: false, queued: 0 };
+      }
+
+      const existing = await wixData.query('EmailQueue')
+        .eq('recipientEmail', cleanEmail)
+        .eq('sequenceType', 'welcome')
+        .eq('sequenceStep', 1)
+        .find();
+
+      if (existing.items.length > 0) return { success: false, queued: 0 };
+
+      let discountCode = '';
+      let discountAvailable = false;
+      try {
+        discountCode = await getSecret('WELCOME_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
+      } catch (e) {
+        console.warn('[emailAutomation] Welcome discount unavailable:', e.message);
+      }
+
+      const abVariant = selectABVariant(cleanEmail);
+      const abData = SEQUENCES.welcome.abVariants[abVariant] || {};
+      const now = new Date();
+      let queued = 0;
+
+      for (const step of SEQUENCES.welcome.steps) {
+        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        const variables = { firstName: cleanName, discountCode, discountAvailable, email: cleanEmail };
+
+        // Apply A/B subject line override for the test step
+        if (step.step === SEQUENCES.welcome.abTestStep) {
+          variables.subjectLine = (abData.subjectLine || '').replace('{firstName}', cleanName);
+        }
+
+        await queueEmail({
+          templateId: step.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: '',
+          variables,
+          sequenceType: 'welcome',
+          sequenceStep: step.step,
+          scheduledFor,
+          abVariant: step.step === SEQUENCES.welcome.abTestStep ? abVariant : null,
+        });
+        queued++;
+      }
+
+      return { success: true, queued };
+    } catch (err) {
+      console.error('Error queuing welcome series:', err);
+      return { success: false, queued: 0 };
+    }
+  }
+);
+
+/**
  * Queue a post-purchase care sequence for a completed order.
  *
  * @function triggerPostPurchaseSequence
@@ -329,14 +472,6 @@ export const triggerAbandonedCartRecovery = webMethod(
         .find();
 
       let cartsProcessed = 0;
-      let discountCode = '';
-      let discountAvailable = false;
-      try {
-        discountCode = await getSecret('RECOVERY_DISCOUNT_CODE');
-        discountAvailable = !!discountCode;
-      } catch (e) {
-        console.warn('[emailAutomation] Cart recovery discount unavailable, emails will omit discount:', e.message);
-      }
 
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -382,6 +517,22 @@ export const triggerAbandonedCartRecovery = webMethod(
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
 
+          // Step 3 only: create a unique single-use coupon — do not burn a coupon for steps 1 or 2
+          let discountCode = '';
+          let discountAvailable = false;
+          if (step.step === 3) {
+            try {
+              const couponResult = await createCartRecoveryCoupon(cartEmail);
+              if (couponResult.success) {
+                discountCode = couponResult.code;
+                discountAvailable = true;
+              }
+            } catch (e) {
+              console.error('[emailAutomation] createCartRecoveryCoupon failed for cart', cart.checkoutId,
+                '— email:', cartEmail, '— step 3 will send without discount. Error:', e.message);
+            }
+          }
+
           await queueEmail({
             templateId: step.templateId,
             recipientEmail: cartEmail,
@@ -390,8 +541,8 @@ export const triggerAbandonedCartRecovery = webMethod(
               buyerName: cart.buyerName || '',
               cartTotal: String(cart.cartTotal || 0),
               itemSummary,
-              discountCode: step.step === 3 ? discountCode : '',
-              discountAvailable: step.step === 3 ? discountAvailable : false,
+              discountCode,
+              discountAvailable,
               checkoutId: cart.checkoutId,
               email: cartEmail,
             },

@@ -393,12 +393,14 @@ describe('triggerAbandonedCartRecovery', () => {
     const step3 = insertedItems.find(i => i.sequenceStep === 3);
     expect(step1.variables.discountCode).toBe('');
     expect(step1.variables.discountAvailable).toBe(false);
-    expect(step3.variables.discountCode).toBe('COMEBACK15');
+    // Step 3 now uses a single-use coupon (RECOVER- prefix) instead of static secret
+    expect(step3.variables.discountCode).toMatch(/^RECOVER-/);
     expect(step3.variables.discountAvailable).toBe(true);
   });
 
-  it('sets discountAvailable false on all cart steps when secret missing', async () => {
-    __resetSecrets();
+  it('sets discountAvailable false on all cart steps when coupon creation fails', async () => {
+    const { coupons } = await import('./__mocks__/wix-marketing-backend.js');
+    coupons.createCoupon.mockRejectedValueOnce(new Error('API unavailable'));
     __seed('AbandonedCarts', [{
       _id: 'ac-1',
       checkoutId: 'ck-1',

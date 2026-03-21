@@ -1,129 +1,24 @@
 /**
  * @module topicClusters
  * @description SEO topic cluster engine: organizes content into pillar/spoke
- * clusters, auto-generates internal links between related content, provides
- * comprehensive schema markup (Article, FAQ, HowTo, BreadcrumbList), and
- * calculates SEO readiness scores per page.
+ * clusters, auto-generates internal links between related content, and provides
+ * all data needed for /guides/{slug} cluster overview pages.
+ *
+ * All cluster data is sourced from backend/utils/topicClusterData — no CMS
+ * collections are queried. The wix-data import is retained for future migration.
  *
  * @requires wix-web-module
- * @requires wix-data
- *
- * @setup
- * Create CMS collection `TopicClusters` with fields:
- *   pillarSlug (Text, indexed) - Pillar page slug
- *   pillarTitle (Text) - Pillar page title
- *   topic (Text, indexed) - Cluster topic keyword
- *   spokePages (Text) - JSON array of spoke page slugs
- *   keywords (Text) - JSON array of target keywords
- *   active (Boolean)
- *
- * Create CMS collection `InternalLinks` with fields:
- *   sourceSlug (Text, indexed) - Page the link appears on
- *   targetSlug (Text, indexed) - Page being linked to
- *   anchorText (Text) - Anchor text for the link
- *   context (Text) - 'inline'|'sidebar'|'footer'|'related'
- *   weight (Number) - Link importance (higher = more prominent)
- *   active (Boolean)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
-
-const SITE_URL = 'https://www.carolinafutons.com';
+import { CLUSTERS, PILLAR_CONTENT, GUIDES_URL, SITE_URL } from 'backend/utils/topicClusterData';
 const PUBLISHER_NAME = 'Carolina Futons';
 
 // ── Topic Cluster Definitions ─────────────────────────────────────────
-// Inline cluster data for the 8 product categories. Each pillar page
-// has spoke pages (buying guide sections, related blog posts, product pages)
-// and a keyword target list.
-
-const CLUSTERS = {
-  'futon-frames': {
-    pillarSlug: 'futon-frames',
-    pillarTitle: 'The Complete Futon Frame Buying Guide',
-    topic: 'futon frames',
-    keywords: ['futon frame', 'best futon frame', 'wood futon frame', 'metal futon frame', 'wall hugger futon', 'futon frame sizes', 'Night & Day futon'],
-    spokePages: [
-      { slug: 'wood-vs-metal-frames', title: 'Wood vs Metal Futon Frames', type: 'comparison' },
-      { slug: 'wall-hugger-guide', title: 'Wall Hugger Futon Guide', type: 'guide' },
-      { slug: 'futon-frame-assembly', title: 'How to Assemble a Futon Frame', type: 'howto' },
-      { slug: 'futon-frame-sizes', title: 'Futon Frame Size Guide', type: 'reference' },
-    ],
-  },
-  'mattresses': {
-    pillarSlug: 'mattresses',
-    pillarTitle: 'Futon Mattress Buying Guide',
-    topic: 'futon mattresses',
-    keywords: ['futon mattress', 'best futon mattress', 'innerspring futon mattress', 'memory foam futon', 'futon mattress thickness', 'Otis Bed mattress'],
-    spokePages: [
-      { slug: 'mattress-fill-types', title: 'Futon Mattress Fill Types Compared', type: 'comparison' },
-      { slug: 'mattress-thickness-guide', title: 'Futon Mattress Thickness Guide', type: 'guide' },
-      { slug: 'mattress-care-tips', title: 'How to Care for Your Futon Mattress', type: 'howto' },
-      { slug: 'mattress-firmness-guide', title: 'Futon Mattress Firmness Guide', type: 'reference' },
-    ],
-  },
-  'covers': {
-    pillarSlug: 'covers',
-    pillarTitle: 'Futon Cover Guide: Fabrics, Fits & Style',
-    topic: 'futon covers',
-    keywords: ['futon cover', 'futon slipcover', 'futon cover fabric', 'microfiber futon cover', 'cotton futon cover', 'futon cover sizing'],
-    spokePages: [
-      { slug: 'cover-fabric-comparison', title: 'Futon Cover Fabrics Compared', type: 'comparison' },
-      { slug: 'cover-sizing-guide', title: 'How to Measure for a Futon Cover', type: 'howto' },
-      { slug: 'cover-care-instructions', title: 'Futon Cover Care & Washing Guide', type: 'howto' },
-    ],
-  },
-  'pillows': {
-    pillarSlug: 'pillows',
-    pillarTitle: 'Futon Pillow & Bolster Guide',
-    topic: 'futon pillows',
-    keywords: ['futon pillows', 'futon bolsters', 'decorative futon pillows', 'futon back pillows'],
-    spokePages: [
-      { slug: 'pillow-styles-guide', title: 'Futon Pillow Styles & Uses', type: 'guide' },
-      { slug: 'bolster-placement-tips', title: 'How to Arrange Futon Bolsters', type: 'howto' },
-    ],
-  },
-  'storage': {
-    pillarSlug: 'storage',
-    pillarTitle: 'Futon Storage Solutions Guide',
-    topic: 'futon storage',
-    keywords: ['futon storage', 'under futon storage', 'futon drawers', 'storage ottoman futon'],
-    spokePages: [
-      { slug: 'drawer-options-guide', title: 'Futon Drawer Storage Options', type: 'guide' },
-      { slug: 'small-space-storage', title: 'Storage Solutions for Small Spaces', type: 'guide' },
-    ],
-  },
-  'outdoor': {
-    pillarSlug: 'outdoor',
-    pillarTitle: 'Outdoor Futon Guide',
-    topic: 'outdoor futons',
-    keywords: ['outdoor futon', 'patio futon', 'weather resistant futon', 'outdoor futon cover'],
-    spokePages: [
-      { slug: 'outdoor-material-guide', title: 'Weather-Resistant Futon Materials', type: 'guide' },
-      { slug: 'outdoor-futon-care', title: 'How to Protect Your Outdoor Futon', type: 'howto' },
-    ],
-  },
-  'accessories': {
-    pillarSlug: 'accessories',
-    pillarTitle: 'Futon Accessories Guide',
-    topic: 'futon accessories',
-    keywords: ['futon accessories', 'futon grip strips', 'futon arm covers', 'futon hardware'],
-    spokePages: [
-      { slug: 'essential-accessories', title: 'Essential Futon Accessories', type: 'guide' },
-      { slug: 'grip-strip-installation', title: 'How to Install Futon Grip Strips', type: 'howto' },
-    ],
-  },
-  'bundle-deals': {
-    pillarSlug: 'bundle-deals',
-    pillarTitle: 'Futon Bundle Deals Guide',
-    topic: 'futon bundles',
-    keywords: ['futon bundle', 'futon set deal', 'complete futon package', 'futon frame mattress bundle'],
-    spokePages: [
-      { slug: 'bundle-value-comparison', title: 'Futon Bundle vs Individual Purchase', type: 'comparison' },
-      { slug: 'how-to-choose-bundle', title: 'How to Choose the Right Futon Bundle', type: 'guide' },
-    ],
-  },
-};
+// Cluster data is sourced from the shared backend/utils/topicClusterData module
+// so that both this webMethod layer and http-functions.js stay in sync.
+// DO NOT add inline cluster data here — edit topicClusterData.js instead.
 
 // ── getTopicCluster ───────────────────────────────────────────────────
 
@@ -165,6 +60,93 @@ export const getTopicCluster = webMethod(
     } catch (err) {
       console.error('[topicClusters] Error getting topic cluster:', err);
       return { success: false, error: 'Failed to load topic cluster.', cluster: null };
+    }
+  }
+);
+
+// ── getTopicClusterPage ───────────────────────────────────────────────
+
+/**
+ * Get all data needed to render a /guides/{slug} topic cluster page.
+ * Returns cluster metadata, rich pillar content, internal links, and SEO fields.
+ *
+ * @param {string} pillarSlug - Cluster slug (e.g. 'futon-frames').
+ * @returns {Promise<{success: boolean, page: Object|null}>}
+ *   - success: false — invalid slug (empty, path-traversal, etc.)
+ *   - success: true, page: null — slug is valid but matches no defined cluster
+ *   - success: true, page: Object — full page data ready to render
+ */
+export const getTopicClusterPage = webMethod(
+  Permissions.Anyone,
+  async (pillarSlug) => {
+    try {
+      const slug = validateSlug(pillarSlug);
+      if (!slug) {
+        return { success: false, error: 'Slug is required.', page: null };
+      }
+
+      const cluster = CLUSTERS[slug];
+      if (!cluster) {
+        return { success: true, page: null };
+      }
+
+      const content = PILLAR_CONTENT[slug] || null;
+      const spokePages = Array.isArray(cluster.spokePages) ? cluster.spokePages : [];
+
+      // Pillar → spoke internal links
+      const internalLinks = spokePages.slice(0, 6).map(sp => ({
+        targetSlug: sp.slug,
+        targetUrl: `${SITE_URL}/buying-guides/${sp.slug}`,
+        anchorText: sp.title,
+        context: 'inline',
+        relationship: 'pillar-to-spoke',
+      }));
+
+      // Cross-cluster sidebar links (up to 3 other clusters)
+      const relatedSlugs = Object.keys(CLUSTERS).filter(k => k !== slug).slice(0, 3);
+      for (const rSlug of relatedSlugs) {
+        internalLinks.push({
+          targetSlug: rSlug,
+          targetUrl: `${GUIDES_URL}/${rSlug}`,
+          anchorText: CLUSTERS[rSlug].pillarTitle,
+          context: 'sidebar',
+          relationship: 'cross-cluster',
+        });
+      }
+
+      const metaDescription = content
+        ? content.metaDescription
+        : `Everything about ${cluster.topic} — compare options, find the right fit, and shop Carolina Futons' complete selection.`;
+
+      return {
+        success: true,
+        page: {
+          slug,
+          title: cluster.pillarTitle,
+          metaTitle: `${cluster.pillarTitle} | Carolina Futons`,
+          metaDescription,
+          canonicalUrl: `${GUIDES_URL}/${slug}`,
+          cluster: {
+            pillarSlug: cluster.pillarSlug,
+            pillarTitle: cluster.pillarTitle,
+            topic: cluster.topic,
+            keywords: cluster.keywords,
+            spokePages: spokePages.map(sp => ({
+              ...sp,
+              url: `${SITE_URL}/buying-guides/${sp.slug}`,
+            })),
+            spokeCount: spokePages.length,
+          },
+          pillarContent: content,
+          internalLinks,
+          relatedClusters: Object.entries(CLUSTERS)
+            .filter(([k]) => k !== slug)
+            .map(([k, c]) => ({ slug: k, title: c.pillarTitle, url: `${GUIDES_URL}/${k}` })),
+        },
+      };
+    } catch (err) {
+      console.error('[topicClusters] Error loading cluster page:', pillarSlug, err.name, err.message, err);
+      return { success: false, error: 'Failed to load cluster page.', page: null };
     }
   }
 );

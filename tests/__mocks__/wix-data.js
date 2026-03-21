@@ -2,6 +2,7 @@
 // Provides a chainable query builder that returns controlled results
 
 let _store = {};     // collection -> items[]
+let _updated = {};   // collection -> items[] (all items passed to update())
 let _insertSpy = null;
 let _updateSpy = null;
 let _removeSpy = null;
@@ -11,6 +12,7 @@ let _insertErrors = {}; // collection -> Error to throw on insert
 // Reset all mock state between tests
 export function __reset() {
   _store = {};
+  _updated = {};
   _insertSpy = null;
   _updateSpy = null;
   _removeSpy = null;
@@ -43,6 +45,11 @@ export function __onRemove(fn) { _removeSpy = fn; }
 // Use __seed() then call this after the action under test.
 export function __getInserted(collection) {
   return _store[collection] || [];
+}
+
+// Return all items passed to wixData.update() for a collection
+export function __getUpdated(collection) {
+  return _updated[collection] || [];
 }
 
 // Resolve dot-notation field paths (e.g. "variables.checkoutId")
@@ -204,6 +211,8 @@ const wixData = {
     if (!_store[collection]) _store[collection] = [];
     const idx = _store[collection].findIndex(i => i._id === item._id);
     if (idx >= 0) _store[collection][idx] = { ...item };
+    if (!_updated[collection]) _updated[collection] = [];
+    _updated[collection].push({ ...item });
     if (_updateSpy) _updateSpy(collection, item);
     return item;
   },

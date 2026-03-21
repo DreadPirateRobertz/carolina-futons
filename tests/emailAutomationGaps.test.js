@@ -235,12 +235,25 @@ describe('jobs.config', () => {
     expect(jobs.triggerReengagement.executionConfig.cronExpression).toMatch(/\* 1$/);
   });
 
-  it('all jobs reference emailAutomation.web.js', async () => {
+  it('checkBrowseAbandonment runs every 2 hours', async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
 
-    for (const key of Object.keys(jobs)) {
-      expect(jobs[key].functionLocation).toContain('emailAutomation.web.js');
+    expect(jobs.checkBrowseAbandonment).toBeDefined();
+    expect(jobs.checkBrowseAbandonment.executionConfig.cronExpression).toBe('0 */2 * * *');
+    expect(jobs.checkBrowseAbandonment.functionLocation).toContain('browseAbandonment.web.js');
+  });
+
+  it('all email automation jobs reference emailAutomation.web.js', async () => {
+    const { config } = await import('../src/backend/jobs.config');
+    const jobs = config();
+
+    const emailJobs = Object.values(jobs).filter(j =>
+      j.functionLocation?.includes('emailAutomation')
+    );
+    expect(emailJobs.length).toBeGreaterThan(0);
+    for (const job of emailJobs) {
+      expect(job.functionLocation).toContain('emailAutomation.web.js');
     }
   });
 });

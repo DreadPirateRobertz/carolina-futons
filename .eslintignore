@@ -1,0 +1,2 @@
+# packages/ uses React + Wix SDK types incompatible with root ESLint config
+packages/
