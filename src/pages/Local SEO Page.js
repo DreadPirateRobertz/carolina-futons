@@ -43,6 +43,9 @@ function initSeo(page) {
     wixSeo.setTitle(page.metaTitle);
     wixSeo.setDescription(page.metaDescription);
     wixSeo.setLinks([{ rel: 'canonical', href: page.canonicalUrl }]);
+    if (page.jsonLd) {
+      wixSeo.setStructuredData([page.jsonLd]);
+    }
   } catch (e) {
     console.error('Local SEO Page SEO init error:', e);
   }

@@ -9,7 +9,14 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { validateSlug } from 'backend/utils/sanitize';
-import { LOCAL_PAGES, SITE_URL } from 'backend/utils/localSeoData';
+import {
+  LOCAL_PAGES,
+  SITE_URL,
+  STORE_PHONE,
+  STORE_ADDRESS,
+  STORE_GEO,
+  STORE_HOURS,
+} from 'backend/utils/localSeoData';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
 
@@ -36,6 +43,8 @@ export const getLocalPage = webMethod(
         return { success: true, page: null };
       }
 
+      const canonicalUrl = `${SITE_URL}/near/${cityData.slug}`;
+
       return {
         success: true,
         page: {
@@ -44,9 +53,10 @@ export const getLocalPage = webMethod(
           state: cityData.state,
           isHomeCity: cityData.isHomeCity,
           headline: cityData.headline,
-          metaTitle: cityData.metaTitle,
-          metaDescription: cityData.metaDescription,
-          canonicalUrl: `${SITE_URL}/near/${cityData.slug}`,
+          metaTitle: _buildMetaTitle(cityData),
+          metaDescription: _buildMetaDescription(cityData),
+          canonicalUrl,
+          jsonLd: _buildJsonLd(cityData, canonicalUrl),
           featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
           mapEmbedUrl: cityData.mapEmbedUrl || '',
           directions: cityData.directions || '',
@@ -68,6 +78,48 @@ export const getLocalPage = webMethod(
     }
   }
 );
+
+// ── SEO helpers ───────────────────────────────────────────────────────
+
+function _buildMetaTitle(cityData) {
+  if (cityData.isHomeCity) {
+    return `${cityData.city} Futons & Furniture — Carolina Futons`;
+  }
+  return `${cityData.city} Futons & Furniture — Carolina Futons near ${cityData.city}, ${cityData.state}`;
+}
+
+function _buildMetaDescription(cityData) {
+  if (cityData.isHomeCity) {
+    return `Shop futons, murphy beds & mattresses in ${cityData.city}, ${cityData.state}. Carolina Futons — located in Hendersonville, NC. Family-owned since 1991. Special savings for local customers.`;
+  }
+  const distancePart = cityData.distance ? ` — ${cityData.distance} from ${cityData.city}` : '';
+  return `Shop futons, murphy beds & mattresses near ${cityData.city}, ${cityData.state}. Visit Carolina Futons in Hendersonville NC${distancePart}.`;
+}
+
+function _buildJsonLd(cityData, canonicalUrl) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'Carolina Futons',
+    url: canonicalUrl,
+    telephone: STORE_PHONE,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: STORE_ADDRESS.streetAddress,
+      addressLocality: STORE_ADDRESS.addressLocality,
+      addressRegion: STORE_ADDRESS.addressRegion,
+      postalCode: STORE_ADDRESS.postalCode,
+      addressCountry: STORE_ADDRESS.addressCountry,
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: STORE_GEO.latitude,
+      longitude: STORE_GEO.longitude,
+    },
+    openingHours: STORE_HOURS,
+    areaServed: `${cityData.city}, ${cityData.state}`,
+  };
+}
 
 // ── getAllLocalSlugs ──────────────────────────────────────────────────
 
