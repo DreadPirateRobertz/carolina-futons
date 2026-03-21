@@ -18,6 +18,8 @@ function createMockElement() {
     hide: vi.fn(() => Promise.resolve()),
     collapse: vi.fn(),
     expand: vi.fn(),
+    disable: vi.fn(),
+    enable: vi.fn(),
     onClick: vi.fn(),
     onItemReady: vi.fn(),
     onKeyPress: vi.fn(),
@@ -323,6 +325,158 @@ describe('Style Quiz Page', () => {
       await onReadyHandler();
       // renderStep should still be called (sets title, progress)
       expect(getEl('#quizStepTitle').text).toBe('Where will your futon live?');
+    });
+  });
+
+  describe('S2 — option card selection: next button enable/disable', () => {
+    it('disables next button when a new step renders (no selection yet)', async () => {
+      await onReadyHandler();
+      expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
+    });
+
+    it('enables next button when an option is selected', async () => {
+      await onReadyHandler();
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+
+      // Simulate option click
+      const clickHandler = getEl('item:#optionContainer').onClick.mock.calls[0][0];
+      clickHandler();
+
+      expect(getEl('#quizNextBtn').enable).toHaveBeenCalled();
+    });
+
+    it('enables next button immediately if step already has an answer (navigating back)', async () => {
+      await onReadyHandler();
+      const { makeClickable } = await import('public/a11yHelpers');
+      const nextHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Next step')[1];
+      const backHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Previous step')[1];
+
+      // Step 1: select option on current step (roomType)
+      const $item = (sel) => getEl(`item:${sel}`);
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0](); // sets state.answers[key]
+
+      // Step 2: advance to next step (renderStep will call disable for unanswered step)
+      nextHandler();
+
+      // Step 3: isolate — clear mock call counts before navigating back
+      getEl('#quizNextBtn').enable.mockClear();
+      getEl('#quizNextBtn').disable.mockClear();
+
+      // Step 4: navigate back — renderStep re-renders the answered step, should call enable
+      backHandler();
+
+      expect(getEl('#quizNextBtn').enable).toHaveBeenCalled();
+      expect(getEl('#quizNextBtn').disable).not.toHaveBeenCalled();
+    });
+
+    it('applies highlight color to selected option container', async () => {
+      await onReadyHandler();
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      // First render with unselected state
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+
+      // Trigger selection and re-render
+      const clickHandler = getEl('item:#optionContainer').onClick.mock.calls[0][0];
+      clickHandler();
+
+      // After selection re-render, the selected item should get mountainBlue
+      const itemReadyFn2 = getEl('#quizOptionsRepeater').onItemReady.mock.calls.at(-1)[0];
+      itemReadyFn2($item, { label: 'Living Room', value: 'living-room' });
+      expect(getEl('item:#optionContainer').style.backgroundColor).toBe('#5B8FA8');
+    });
+
+    it('sets ariaChecked=true for the selected option', async () => {
+      await onReadyHandler();
+      // Select an option first to populate state
+      const firstItemReady = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      firstItemReady($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Re-render with the selected value
+      const latestItemReady = getEl('#quizOptionsRepeater').onItemReady.mock.calls.at(-1)[0];
+      latestItemReady($item, { label: 'Living Room', value: 'living-room' });
+      expect(getEl('item:#optionContainer').accessibility.ariaChecked).toBe(true);
+    });
+
+    it('tracks quiz_answer event when option is selected', async () => {
+      await onReadyHandler();
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      const { trackEvent: te } = await import('public/engagementTracker');
+      expect(te).toHaveBeenCalledWith('quiz_answer', { step: 'roomType', answer: 'living-room' });
+    });
+
+    it('does not show validation message when next is clicked after selecting an option', async () => {
+      await onReadyHandler();
+      // Select an option
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Click next
+      const { makeClickable } = await import('public/a11yHelpers');
+      const nextCall = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Next step');
+      nextCall[1]();
+
+      expect(getEl('#quizValidation').expand).not.toHaveBeenCalled();
+    });
+
+    it('enables next button when an option is activated via keyboard Enter', async () => {
+      await onReadyHandler();
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+
+      // Simulate keyboard Enter on option container
+      const keyPressHandler = getEl('item:#optionContainer').onKeyPress.mock.calls[0][0];
+      keyPressHandler({ key: 'Enter' });
+
+      expect(getEl('#quizNextBtn').enable).toHaveBeenCalled();
+    });
+
+    it('disables next button after quiz is restarted', async () => {
+      await onReadyHandler();
+      // Select an option to enable the button
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Restart the quiz
+      const { makeClickable } = await import('public/a11yHelpers');
+      const restartHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Restart quiz')[1];
+      getEl('#quizNextBtn').disable.mockClear();
+      restartHandler();
+
+      expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
+    });
+
+    it('disables next button on the new step after navigating forward', async () => {
+      await onReadyHandler();
+      // Select option on step 0
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      const $item = (sel) => getEl(`item:${sel}`);
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+
+      // Advance to step 1 (no answer yet for primaryUse)
+      const { makeClickable } = await import('public/a11yHelpers');
+      const nextHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Next step')[1];
+      getEl('#quizNextBtn').disable.mockClear();
+      nextHandler();
+
+      // Step 1 has no answer yet — next button should be disabled again
+      expect(getEl('#quizNextBtn').disable).toHaveBeenCalled();
     });
   });
 });

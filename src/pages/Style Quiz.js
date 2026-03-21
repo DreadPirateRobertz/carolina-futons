@@ -88,6 +88,16 @@ function renderStep() {
       : 'Next';
   } catch (e) {}
 
+  // S2: disable next button until an option is selected for this step;
+  // re-enable immediately if step already has an answer (e.g. navigating back to a completed step).
+  // State access is outside the try-catch so a state corruption error surfaces rather than vanishing.
+  // Must run before renderOptions() so the initial button state is settled before item-ready handlers fire.
+  if (state.answers[stepInfo.key]) {
+    try { $w('#quizNextBtn').enable(); } catch (e) {}
+  } else {
+    try { $w('#quizNextBtn').disable(); } catch (e) {}
+  }
+
   // Render options for this step
   renderOptions(stepInfo.key);
 
@@ -135,6 +145,7 @@ function renderOptions(key) {
       const selectOption = () => {
         state.answers[key] = itemData.value;
         trackEvent('quiz_answer', { step: key, answer: itemData.value });
+        try { $w('#quizNextBtn').enable(); } catch (e) {} // S2: answer recorded, allow advancing
         renderOptions(key); // re-render to update selection highlight
       };
       $item('#optionContainer').onClick(selectOption);
