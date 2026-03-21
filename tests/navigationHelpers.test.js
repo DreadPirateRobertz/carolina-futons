@@ -637,6 +637,15 @@ describe('initStickyNav', () => {
 
 // ── Gift Cards nav entry (CF-t6b8) ────────────────────────────────────
 
+describe('breadcrumbsFromPath — Gift Cards', () => {
+  it('generates Gift Cards crumb for /gift-cards', () => {
+    const crumbs = breadcrumbsFromPath('/gift-cards');
+    expect(crumbs).toHaveLength(2);
+    expect(crumbs[1].label).toBe('Gift Cards');
+    expect(crumbs[1].path).toBe('/gift-cards');
+  });
+});
+
 describe('NAV_LINKS — Gift Cards entry', () => {
   it('contains #navGiftCards', () => {
     expect(NAV_LINKS['#navGiftCards']).toBeDefined();
