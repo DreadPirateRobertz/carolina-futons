@@ -1,8 +1,8 @@
 /**
- * manualMode.test.tsx — S10: ManualModePanel component tests.
+ * manualMode.test.tsx — S10 + S4: ManualModePanel component tests.
  *
  * Tests Copy ID, Mark Done, Skip, Tab navigation, type mismatch,
- * flags display, and completion state.
+ * flags display, completion state, and S4 Apply ID button.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -390,5 +390,65 @@ describe('ManualModePanel — S6 edge cases', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Mark Done/i }));
     expect(onApplyDefaultState).toHaveBeenCalledWith(bothFlags);
+  });
+});
+
+// ── S4: Apply ID button ────────────────────────────────────────────────────
+
+describe('ManualModePanel — S4 Apply ID button', () => {
+  it('does NOT render Apply ID button when onApplyId is undefined (editor unavailable)', () => {
+    render(<ManualModePanel {...baseProps} />);
+    expect(screen.queryByRole('button', { name: /Apply element ID/i })).toBeNull();
+  });
+
+  it('renders Apply ID button when onApplyId is provided', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Apply element ID/i })).toBeInTheDocument();
+  });
+
+  it('shows "Apply ID" label in idle state', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} applyStatus="idle" />);
+    expect(screen.getByRole('button', { name: /Apply element ID/i })).toHaveTextContent('⚡ Apply ID');
+  });
+
+  it('shows "Applying…" label in applying state and is disabled', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} applyStatus="applying" />);
+    const btn = screen.getByRole('button', { name: /Apply element ID/i });
+    expect(btn).toHaveTextContent('Applying…');
+    expect(btn).toBeDisabled();
+  });
+
+  it('shows "Applied!" label in success state', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} applyStatus="success" />);
+    expect(screen.getByRole('button', { name: /Apply element ID/i })).toHaveTextContent('✓ Applied!');
+  });
+
+  it('shows "Retry Apply ID" label in error state', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} applyStatus="error" />);
+    expect(screen.getByRole('button', { name: /Apply element ID/i })).toHaveTextContent('✗ Retry Apply ID');
+  });
+
+  it('calls onApplyId when Apply ID button is clicked', () => {
+    const onApplyId = vi.fn();
+    render(<ManualModePanel {...baseProps} onApplyId={onApplyId} />);
+    fireEvent.click(screen.getByRole('button', { name: /Apply element ID/i }));
+    expect(onApplyId).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT call onApplyId when button is in applying state (disabled)', () => {
+    const onApplyId = vi.fn();
+    render(<ManualModePanel {...baseProps} onApplyId={onApplyId} applyStatus="applying" />);
+    fireEvent.click(screen.getByRole('button', { name: /Apply element ID/i }));
+    expect(onApplyId).not.toHaveBeenCalled();
+  });
+
+  it('does NOT show Apply ID button in completion state (currentElement null)', () => {
+    render(<ManualModePanel {...baseProps} currentElement={null} onApplyId={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /Apply element ID/i })).toBeNull();
+  });
+
+  it('Apply ID button label includes the element ID in aria-label', () => {
+    render(<ManualModePanel {...baseProps} onApplyId={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Apply element ID: heroTitle/i })).toBeInTheDocument();
   });
 });

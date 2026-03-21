@@ -1,7 +1,8 @@
 /**
  * ManualModePanel — Manual Mode UI for element ID hookup.
  *
- * Covers S10 (baseline), S5 (type validator), and S6 (default state setter).
+ * Covers S10 (baseline), S5 (type validator), S6 (default state setter),
+ * and S4 (ID auto-apply).
  *
  * S10 — Fallback manual mode:
  *   - Shows target Velo ID in large monospace font
@@ -18,10 +19,17 @@
  *   - Calls onApplyDefaultState(element) after Mark Done / Override
  *     when element has defaultHidden or defaultCollapsed set
  *   - cssOnly elements do not trigger onApplyDefaultState
+ *
+ * S4 — ID auto-apply:
+ *   - "Apply ID ⚡" button triggers postMessage to P&E panel via editor SDK
+ *   - Shows applying/success/error feedback
+ *   - Auto-advances to next element on success
+ *   - Hidden when editor is not available (falls back to manual copy-paste)
  */
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { ElementDef, WixElementType } from '../types/index.js';
+import type { ApplyStatus } from '../hooks/useIdApply.js';
 import { useClipboard } from '../hooks/useClipboard.js';
 
 interface ManualModePanelProps {
@@ -34,7 +42,50 @@ interface ManualModePanelProps {
   onMarkDone: () => void;
   onSkip: () => void;
   onApplyDefaultState?: (element: ElementDef) => void;
+  /** S4: undefined = editor unavailable (button hidden), fn = button shown */
+  onApplyId?: () => void;
+  /** S4: current apply status for feedback display */
+  applyStatus?: ApplyStatus;
 }
+
+// ---------------------------------------------------------------------------
+// S4: Apply ID button
+
+interface ApplyIdButtonProps {
+  onApplyId: () => void;
+  status: ApplyStatus;
+  elementId: string;
+}
+
+function ApplyIdButton({ onApplyId, status, elementId }: ApplyIdButtonProps) {
+  const isApplying = status === 'applying';
+
+  const label =
+    status === 'applying' ? 'Applying…' :
+    status === 'success'  ? '✓ Applied!' :
+    status === 'error'    ? '✗ Retry Apply ID' :
+                            '⚡ Apply ID';
+
+  return (
+    <button
+      style={{
+        ...s.btn,
+        ...s.btnApply,
+        ...(isApplying ? s.btnDisabled : {}),
+        ...(status === 'success' ? s.btnApplySuccess : {}),
+        ...(status === 'error' ? s.btnApplyError : {}),
+      }}
+      onClick={onApplyId}
+      disabled={isApplying}
+      aria-label={`Apply element ID: ${elementId}`}
+      aria-busy={isApplying}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 export function ManualModePanel({
   pageName,
@@ -46,6 +97,8 @@ export function ManualModePanel({
   onMarkDone,
   onSkip,
   onApplyDefaultState,
+  onApplyId,
+  applyStatus = 'idle',
 }: ManualModePanelProps) {
   const { copy, copied } = useClipboard();
   const markDoneRef = useRef<HTMLButtonElement>(null);
@@ -131,6 +184,15 @@ export function ManualModePanel({
         <div style={s.step}>2. Open <strong>Properties &amp; Events</strong></div>
         <div style={s.step}>3. Paste the ID below in the Velo ID field</div>
       </div>
+
+      {/* S4: Apply ID button — shown only when editor is available */}
+      {onApplyId !== undefined && (
+        <ApplyIdButton
+          onApplyId={onApplyId}
+          status={applyStatus}
+          elementId={currentElement.id}
+        />
+      )}
 
       {/* Copy ID button */}
       <button
@@ -365,6 +427,19 @@ const s: Record<string, React.CSSProperties> = {
   btnDisabled: {
     opacity: 0.4,
     cursor: 'not-allowed',
+  },
+  // S4: Apply ID button states
+  btnApply: {
+    backgroundColor: '#6c5ce7',
+    color: '#fff',
+  },
+  btnApplySuccess: {
+    backgroundColor: '#1e7e34',
+    color: '#fff',
+  },
+  btnApplyError: {
+    backgroundColor: '#c94b4b',
+    color: '#fff',
   },
   overrideLink: {
     background: 'none',
