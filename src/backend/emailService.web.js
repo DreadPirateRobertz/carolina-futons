@@ -412,3 +412,57 @@ export const sendDeliveryConfirmation = webMethod(
     }
   }
 );
+
+// ── sendABEmail ───────────────────────────────────────────────────────
+
+/**
+ * Send a transactional email via A/B testing — deterministically assigns
+ * variant A or B based on memberId+campaignId hash, sends the matched
+ * triggered email, and logs the send to the EmailABLog collection.
+ *
+ * @function sendABEmail
+ * @param {string} memberId - Wix member ID (used as contactId for triggeredEmails).
+ * @param {string} campaignId - Campaign identifier (e.g. 'welcome_step1').
+ * @param {string} recipientEmail - Recipient email address (for logging).
+ * @param {Array<{variant: 'A'|'B', templateId: string, variables: Object}>} variants
+ *   - Per-variant template + variable overrides (must include both A and B).
+ * @returns {Promise<{sent: boolean, variant?: 'A'|'B', reason?: string}>}
+ */
+export const sendABEmail = webMethod(
+  Permissions.SiteMember,
+  async (memberId, campaignId, recipientEmail, variants) => {
+    if (
+      !memberId || typeof memberId !== 'string' ||
+      !campaignId || typeof campaignId !== 'string' ||
+      !recipientEmail || typeof recipientEmail !== 'string' ||
+      !Array.isArray(variants) || variants.length === 0
+    ) {
+      return { sent: false, reason: 'invalid_params' };
+    }
+
+    const cleanEmail = recipientEmail.trim().toLowerCase();
+    if (!validateEmail(cleanEmail)) {
+      return { sent: false, reason: 'invalid_email' };
+    }
+
+    try {
+      const { assignVariant, logABSend } = await import('backend/emailABService.web');
+      const variant = assignVariant(memberId, campaignId);
+      const chosen = variants.find(v => v.variant === variant) || variants[0];
+      const effectiveVariant = chosen.variant;
+
+      await triggeredEmails.emailContact(
+        chosen.templateId,
+        memberId,
+        { variables: chosen.variables || {} }
+      );
+
+      await logABSend(memberId, cleanEmail, campaignId, effectiveVariant);
+
+      return { sent: true, variant: effectiveVariant };
+    } catch (err) {
+      console.error('[emailService] sendABEmail error:', err);
+      return { sent: false, reason: 'send_failed' };
+    }
+  }
+);

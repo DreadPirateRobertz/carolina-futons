@@ -1042,6 +1042,9 @@ export async function post_klaviyoWebhook(request) {
           unsubscribedAt: new Date(),
         });
       }
+    } else if (payload.type === 'email_clicked' && payload.campaignId && typeof payload.campaignId === 'string') {
+      const { markABConversion } = await import('backend/emailABService.web');
+      await markABConversion(cleanEmail, payload.campaignId);
     }
     // Unknown event types are acknowledged without action
 
