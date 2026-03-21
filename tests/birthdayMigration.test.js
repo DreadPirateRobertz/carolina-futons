@@ -177,6 +177,33 @@ describe('wixMembers_onMemberUpdated', () => {
     expect(updated[0].item.birthday_day).toBe(4);
   });
 
+  it('is a no-op when birthday is unchanged from previousEntity', async () => {
+    const updated = [];
+    __onUpdate((col, item) => updated.push({ col, item }));
+
+    await wixMembers_onMemberUpdated({
+      entity: { _id: 'member-nc', contactDetails: { birthdate: '1990-05-15' } },
+      previousEntity: { contactDetails: { birthdate: '1990-05-15' } },
+    });
+
+    expect(updated).toHaveLength(0);
+  });
+
+  it('writes when birthday changed from previousEntity', async () => {
+    __seed('Members/PrivateMembersData', [{ _id: 'member-changed' }]);
+    const updated = [];
+    __onUpdate((col, item) => updated.push({ col, item }));
+
+    await wixMembers_onMemberUpdated({
+      entity: { _id: 'member-changed', contactDetails: { birthdate: '1990-06-20' } },
+      previousEntity: { contactDetails: { birthdate: '1990-05-15' } },
+    });
+
+    expect(updated).toHaveLength(1);
+    expect(updated[0].item.birthday_month).toBe(6);
+    expect(updated[0].item.birthday_day).toBe(20);
+  });
+
   it('is a no-op when memberId is absent', async () => {
     const updated = [];
     __onUpdate((col, item) => updated.push({ col, item }));

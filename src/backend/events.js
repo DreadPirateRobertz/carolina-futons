@@ -399,17 +399,20 @@ export async function wixStores_onInventoryVariantUpdated(event) {
  * searchable int fields so the daily birthday cron can query by today's
  * month/day without a full-table scan.
  *
- * No-op if birthday is absent or unparseable. Writes on every update where
- * birthday is present — Wix does not expose previousEntity for member events,
- * so unchanged-detection is not possible here.
+ * No-op if birthday is absent, unparseable, or unchanged from previousEntity.
+ * Only writes when birthday value actually changes, preventing redundant
+ * get+update on every profile save (name, avatar, etc.).
  */
 export async function wixMembers_onMemberUpdated(event) {
   const member = event.entity || event;
   const memberId = member._id || '';
   const birthday = member.contactDetails?.birthdate ?? member.birthdate ?? null;
+  const prevMember = event.previousEntity || {};
+  const prevBirthday = prevMember.contactDetails?.birthdate ?? prevMember.birthdate ?? null;
 
   if (!memberId) return; // no member ID — cannot write
   if (!birthday) return; // no birthday set — nothing to derive
+  if (birthday === prevBirthday) return; // birthday unchanged — skip redundant write
 
   const parsed = _parseBirthdayMonthDay(birthday);
   if (!parsed) {
