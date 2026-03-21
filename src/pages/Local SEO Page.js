@@ -31,8 +31,12 @@ $w.onReady(async function () {
     const products = productsResult.success ? productsResult.products : [];
 
     initSeo(page);
+    initBreadcrumbs(page.breadcrumbs);
     initHero(page);
+    initStoreHours(page.storeHours);
+    initCategoryRecommendations(page.categoryRecommendations);
     initFeaturedProducts(products);
+    initFaq(page.faqs);
     initDirections(page);
     initNearbyAreas(page.nearbyAreas);
     initCrossLinks(crossLinksResult.success ? crossLinksResult.links : []);
@@ -50,11 +54,40 @@ function initSeo(page) {
     wixSeo.setTitle(page.metaTitle);
     wixSeo.setDescription(page.metaDescription);
     wixSeo.setLinks([{ rel: 'canonical', href: page.canonicalUrl }]);
-    if (page.jsonLd) {
-      wixSeo.setStructuredData([page.jsonLd]);
+    const schemas = [page.jsonLd, page.breadcrumbSchema, page.faqSchema].filter(Boolean);
+    if (schemas.length > 0) {
+      wixSeo.setStructuredData(schemas);
     }
   } catch (e) {
     console.error('Local SEO Page SEO init error:', e);
+  }
+}
+
+// ── Breadcrumbs ─────────────────────────────────────────────────────────
+
+function initBreadcrumbs(breadcrumbs) {
+  try {
+    const items = Array.isArray(breadcrumbs) ? breadcrumbs : [];
+    if (items.length === 0) return;
+
+    const repeater = $w('#breadcrumbsRepeater');
+    if (!repeater) return;
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#breadcrumbLabel').text = itemData.label; } catch (e) {}
+      if (!itemData.isCurrentPage) {
+        try {
+          $item('#breadcrumbLink').onClick(() => {
+            wixLocationFrontend.to(itemData.url);
+          });
+        } catch (e) {}
+      } else {
+        try { $item('#breadcrumbLink').disable(); } catch (e) {}
+      }
+    });
+    repeater.data = items.map((item, i) => ({ ...item, _id: `bc-${i}` }));
+  } catch (e) {
+    console.warn('Local SEO Page: initBreadcrumbs error:', e);
   }
 }
 
@@ -64,10 +97,51 @@ function initHero(page) {
   try {
     try { $w('#cityTitle').text = `${page.city}, ${page.state}`; } catch (e) {}
     try { $w('#cityHeadline').text = page.headline; } catch (e) {}
+    if (page.heroDescription) {
+      try { $w('#cityHeroDescription').text = page.heroDescription; } catch (e) {}
+    }
+    if (page.neighborhoodContext) {
+      try { $w('#neighborhoodContext').text = page.neighborhoodContext; } catch (e) {}
+    }
     if (page.isHomeCity) {
       try { $w('#homeCityBadge').show(); } catch (e) {}
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initHero error:', e);
+  }
+}
+
+// ── Store Hours ─────────────────────────────────────────────────────────
+
+function initStoreHours(storeHoursDisplay) {
+  try {
+    const hours = Array.isArray(storeHoursDisplay) ? storeHoursDisplay : [];
+    if (hours.length === 0) return;
+    try { $w('#storeHoursText').text = hours.join('\n'); } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initStoreHours error:', e);
+  }
+}
+
+// ── Category Recommendations ────────────────────────────────────────────
+
+function initCategoryRecommendations(categoryRecommendations) {
+  try {
+    const items = Array.isArray(categoryRecommendations) ? categoryRecommendations : [];
+    const repeater = $w('#categoryRecsRepeater');
+    if (!repeater || items.length === 0) {
+      try { $w('#categoryRecsSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#catRecLabel').text = itemData.label; } catch (e) {}
+      try { $item('#catRecReason').text = itemData.reason; } catch (e) {}
+    });
+    repeater.data = items.map((item, i) => ({ ...item, _id: `cat-${i}` }));
+  } catch (e) {
+    console.warn('Local SEO Page: initCategoryRecommendations error:', e);
+  }
 }
 
 // ── Featured Products ───────────────────────────────────────────────────
@@ -168,6 +242,27 @@ function initCrossLinks(links) {
     });
     repeater.data = items.map((item, i) => ({ ...item, _id: `cl-${i}` }));
   } catch (e) {}
+}
+
+// ── FAQ Section ─────────────────────────────────────────────────────────
+
+function initFaq(faqs) {
+  try {
+    const items = Array.isArray(faqs) ? faqs : [];
+    const repeater = $w('#faqRepeater');
+    if (!repeater || items.length === 0) {
+      try { $w('#faqSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#faqQuestion').text = itemData.question; } catch (e) {}
+      try { $item('#faqAnswer').text = itemData.answer; } catch (e) {}
+    });
+    repeater.data = items.map((item, i) => ({ ...item, _id: `faq-${i}` }));
+  } catch (e) {
+    console.warn('Local SEO Page: initFaq error:', e);
+  }
 }
 
 // ── Not Found ───────────────────────────────────────────────────────────

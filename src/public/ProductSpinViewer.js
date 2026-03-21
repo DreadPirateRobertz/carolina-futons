@@ -79,12 +79,21 @@ export function initProductSpinViewer($w, state, opts = {}) {
   let currentFrame = 0;
   let dragStartX = null;
   let frameAtDragStart = 0;
+  // Deactivates all event handlers from this init when cleanup() is called.
+  // Prevents stale handlers from firing if initProductSpinViewer is called
+  // again on the same element (Wix Velo provides no removeEventListener).
+  let destroyed = false;
 
-  function cleanup() {
+  function cancelAutoSpin() {
     if (autoSpinTimer !== null) {
       _clearInterval(autoSpinTimer);
       autoSpinTimer = null;
     }
+  }
+
+  function cleanup() {
+    destroyed = true;
+    cancelAutoSpin();
   }
 
   try {
@@ -112,7 +121,7 @@ export function initProductSpinViewer($w, state, opts = {}) {
 
     autoSpinTimer = _setInterval(() => {
       if (spinStep >= spinSequence.length) {
-        cleanup();
+        cancelAutoSpin();
         try { $w('#spinDragHint').show(); } catch (_) {}
         return;
       }
@@ -123,7 +132,8 @@ export function initProductSpinViewer($w, state, opts = {}) {
     // ── Mouse drag handler ────────────────────────────────────────
     try {
       $w('#productSpinCanvas').onMouseDown((event) => {
-        cleanup(); // Cancel auto-spin on manual interaction
+        if (destroyed) return;
+        cancelAutoSpin(); // Cancel auto-spin on manual interaction
         dragStartX = event.clientX ?? event.pageX ?? 0;
         frameAtDragStart = currentFrame;
       });
@@ -131,7 +141,7 @@ export function initProductSpinViewer($w, state, opts = {}) {
 
     try {
       $w('#productSpinCanvas').onMouseMove((event) => {
-        if (dragStartX === null) return;
+        if (destroyed || dragStartX === null) return;
         const delta = (event.clientX ?? event.pageX ?? 0) - dragStartX;
         currentFrame = computeFrameIndex(frameAtDragStart, delta, totalFrames);
         _setFrame($w, spinImages, currentFrame);
@@ -139,7 +149,12 @@ export function initProductSpinViewer($w, state, opts = {}) {
     } catch (_) {}
 
     try {
-      $w('#productSpinCanvas').onMouseUp(() => { dragStartX = null; });
+      $w('#productSpinCanvas').onMouseUp(() => { if (!destroyed) dragStartX = null; });
+    } catch (_) {}
+
+    // Clears stuck drag state if user drags off the canvas edge without releasing.
+    try {
+      $w('#productSpinCanvas').onMouseLeave(() => { if (!destroyed) dragStartX = null; });
     } catch (_) {}
 
     // ── Touch handler ─────────────────────────────────────────────
@@ -153,7 +168,10 @@ export function initProductSpinViewer($w, state, opts = {}) {
 
     try {
       $w('#productSpinCanvas').onTouchMove((event) => {
-        if (dragStartX === null) return;
+        if (destroyed || dragStartX === null) return;
+        // Prevent page scroll while spinning. Wix Velo event objects may not
+        // expose preventDefault — the call is defensive (no-op if unsupported).
+        event.preventDefault?.();
         const delta = (event.touches?.[0]?.clientX ?? 0) - dragStartX;
         currentFrame = computeFrameIndex(frameAtDragStart, delta, totalFrames);
         _setFrame($w, spinImages, currentFrame);
@@ -161,7 +179,7 @@ export function initProductSpinViewer($w, state, opts = {}) {
     } catch (_) {}
 
     try {
-      $w('#productSpinCanvas').onTouchEnd(() => { dragStartX = null; });
+      $w('#productSpinCanvas').onTouchEnd(() => { if (!destroyed) dragStartX = null; });
     } catch (_) {}
 
   } catch (err) {
@@ -182,4 +200,5 @@ function _setFrame($w, spinImages, frameIndex) {
 function _collapseSpinViewer($w) {
   try { $w('#productSpinContainer').collapse(); } catch (_) {}
   try { $w('#spin360Badge').hide(); } catch (_) {}
+  try { $w('#spinDragHint').hide(); } catch (_) {}
 }

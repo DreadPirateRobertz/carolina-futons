@@ -3915,6 +3915,636 @@ SHARING:
         ["showroomMapEmbed","Button","Google Maps link (url property set)"]
       ]}
     ]
+  },
+  {
+    name: "Style Quiz", file: "Style Quiz.js", priority: "P1", est: "30 min",
+    sections: [
+      { name: "Quiz Steps", impl: `<h4>🎯 Implementation — Quiz Steps (Style Quiz)</h4>
+<p><strong>Layout: Multi-step quiz with progress bar and validation</strong></p>
+<ul>
+  <li><strong>#quizSection</strong>: Box — main quiz container.</li>
+  <li><strong>#quizStepTitle</strong>: Text — current step title.</li>
+  <li><strong>#quizStepSubtitle</strong>: Text — current step subtitle.</li>
+  <li><strong>#quizProgressBar</strong>: ProgressBar — advances per step.</li>
+  <li><strong>#quizProgressText</strong>: Text — "Step X of Y".</li>
+  <li><strong>#quizNextBtn</strong>: Button — advance to next step. Disabled if no option selected.</li>
+  <li><strong>#quizBackBtn</strong>: Button — go back. Hidden on step 1.</li>
+  <li><strong>#quizValidation</strong>: Text — shown when user taps Next without selecting.</li>
+  <li><strong>#quizLoadingState</strong>: Box — shown while computing results.</li>
+  <li><strong>#quizLoadingText</strong>: Text — loading message.</li>
+</ul>`, elements: [
+        ["quizSection","Box","Main quiz container"],
+        ["quizStepTitle","Text","Current step title"],
+        ["quizStepSubtitle","Text","Step subtitle"],
+        ["quizProgressBar","ProgressBar","Step progress indicator"],
+        ["quizProgressText","Text","Step X of Y"],
+        ["quizNextBtn","Button","Next step"],
+        ["quizBackBtn","Button","Previous step"],
+        ["quizValidation","Text","Validation message"],
+        ["quizLoadingState","Box","Loading overlay"],
+        ["quizLoadingText","Text","Loading message"]
+      ]},
+      { name: "Options", repeater: "quizOptionsRepeater", impl: `<h4>🔘 Implementation — Options Repeater (Style Quiz)</h4>
+<ul>
+  <li><strong>#quizOptionsRepeater</strong>: Repeater — answer options for current step. Each item toggles selected state on click.</li>
+  <li><strong>#optionContainer</strong>: Box — card per option. Gets selected CSS class on click.</li>
+  <li><strong>#optionLabel</strong>: Text — option label.</li>
+  <li><strong>#optionDescription</strong>: Text — short description.</li>
+</ul>`, elements: [
+        ["quizOptionsRepeater","Repeater","Answer options for current step"]
+      ], children: [
+        ["optionContainer","Box","Option card (selected state toggled)"],
+        ["optionLabel","Text","Option label"],
+        ["optionDescription","Text","Option description"]
+      ]},
+      { name: "Results", impl: `<h4>✨ Implementation — Results (Style Quiz)</h4>
+<ul>
+  <li><strong>#quizResults</strong>: Box — results container, shown after quiz completes.</li>
+  <li><strong>#resultsTitle</strong>: Text — "Your Style: [profile name]".</li>
+  <li><strong>#resultsSubtitle</strong>: Text — subtitle.</li>
+  <li><strong>#styleProfileSection</strong>: Box — profile card.</li>
+  <li><strong>#styleProfileTitle</strong>: Text — profile title.</li>
+  <li><strong>#styleProfileDescription</strong>: Text — profile description.</li>
+  <li><strong>#resultMatchBadge</strong>: Text — "X% Match".</li>
+  <li><strong>#resultMatchReason</strong>: Text — reason for match.</li>
+  <li><strong>#resultsBrowseBtn</strong>: Button — "Browse Recommendations".</li>
+  <li><strong>#quizRestartBtn</strong>: Button — "Retake Quiz".</li>
+</ul>`, elements: [
+        ["quizResults","Box","Results container"],
+        ["resultsTitle","Text","Your Style: [profile]"],
+        ["resultsSubtitle","Text","Results subtitle"],
+        ["styleProfileSection","Box","Style profile card"],
+        ["styleProfileTitle","Text","Profile title"],
+        ["styleProfileDescription","Text","Profile description"],
+        ["resultMatchBadge","Text","X% Match badge"],
+        ["resultMatchReason","Text","Match reason"],
+        ["resultsBrowseBtn","Button","Browse Recommendations"],
+        ["quizRestartBtn","Button","Retake Quiz"]
+      ]},
+      { name: "Product Results", repeater: "quizProductsRepeater", impl: `<h4>🛍️ Implementation — Product Results (Style Quiz)</h4>
+<ul>
+  <li><strong>#quizProductsRepeater</strong>: Repeater — recommended products.</li>
+  <li><strong>#resultsRepeater</strong>: Repeater — style profile cards.</li>
+  <li>Each product item: image, name, price, View button.</li>
+</ul>`, elements: [
+        ["quizProductsRepeater","Repeater","Recommended products"],
+        ["resultsRepeater","Repeater","Style profile cards"]
+      ], children: [
+        ["resultProductImage","Image","Product image"],
+        ["resultProductName","Text","Product name"],
+        ["resultProductPrice","Text","Product price"],
+        ["resultViewBtn","Button","View product"]
+      ]}
+    ]
+  },
+  {
+    name: "Room Planner", file: "Room Planner.js", priority: "P1", est: "50 min",
+    sections: [
+      { name: "Hero", impl: `<h4>🏠 Implementation — Hero (Room Planner)</h4>
+<ul>
+  <li><strong>#plannerHeroHeading</strong>: Text — page headline.</li>
+  <li><strong>#plannerHeroSubheading</strong>: Text — subtitle.</li>
+</ul>`, elements: [
+        ["plannerHeroHeading","Text","Page headline"],
+        ["plannerHeroSubheading","Text","Subtitle"]
+      ]},
+      { name: "How-To Steps", repeater: "plannerStepsRepeater", impl: `<h4>📋 Implementation — How-To Steps (Room Planner)</h4>
+<ul>
+  <li><strong>#plannerStepsRepeater</strong>: Repeater — numbered how-to steps.</li>
+  <li><strong>#stepNumber</strong>: Text — "1", "2", "3".</li>
+  <li><strong>#stepTitle</strong>: Text — step title.</li>
+  <li><strong>#stepDesc</strong>: Text — step description.</li>
+</ul>`, elements: [
+        ["plannerStepsRepeater","Repeater","How-to steps"]
+      ], children: [
+        ["stepNumber","Text","Step number"],
+        ["stepTitle","Text","Step title"],
+        ["stepDesc","Text","Step description"]
+      ]},
+      { name: "Room Setup", impl: `<h4>📐 Implementation — Room Setup (Room Planner)</h4>
+<ul>
+  <li><strong>#roomShapeDropdown</strong>: Dropdown — room shape (rectangle, L-shape, etc.).</li>
+  <li><strong>#roomLengthInput</strong>: Input — room length in feet.</li>
+  <li><strong>#roomWidthInput</strong>: Input — room width in feet.</li>
+  <li><strong>#roomDimensionDisplay</strong>: Text — formatted dimensions summary.</li>
+  <li><strong>#plannerStatusText</strong>: Text — status messages (e.g. "Canvas ready").</li>
+</ul>`, elements: [
+        ["roomShapeDropdown","Dropdown","Room shape"],
+        ["roomLengthInput","Input","Room length (ft)"],
+        ["roomWidthInput","Input","Room width (ft)"],
+        ["roomDimensionDisplay","Text","Dimension summary"],
+        ["plannerStatusText","Text","Canvas status messages"]
+      ]},
+      { name: "Room Presets", repeater: "roomPresetsRepeater", impl: `<h4>📦 Implementation — Room Presets (Room Planner)</h4>
+<ul>
+  <li><strong>#roomPresetsRepeater</strong>: Repeater — preset room size cards.</li>
+  <li><strong>#presetName</strong>: Text — preset name (e.g. "Small Living Room").</li>
+  <li><strong>#presetDims</strong>: Text — dimensions (e.g. "10×12 ft").</li>
+</ul>`, elements: [
+        ["roomPresetsRepeater","Repeater","Preset room sizes"]
+      ], children: [
+        ["presetName","Text","Preset name"],
+        ["presetDims","Text","Preset dimensions"]
+      ]},
+      { name: "Product Palette", repeater: "plannerProductRepeater", impl: `<h4>🛋️ Implementation — Product Palette (Room Planner)</h4>
+<ul>
+  <li><strong>#plannerProductRepeater</strong>: Repeater — products available to add to canvas.</li>
+  <li><strong>#productPaletteRepeater</strong>: Repeater — palette grouped by category.</li>
+  <li><strong>#plannerProductName</strong>: Text — product name.</li>
+  <li><strong>#plannerProductDims</strong>: Text — dimensions (W×D×H).</li>
+  <li><strong>#plannerProductCategory</strong>: Text — category label.</li>
+  <li><strong>#plannerProductImage</strong>: Image — product thumbnail.</li>
+  <li><strong>#plannerAddBtn</strong>: Button — "Add to Room".</li>
+</ul>`, elements: [
+        ["plannerProductRepeater","Repeater","Products available for canvas"],
+        ["productPaletteRepeater","Repeater","Palette by category"]
+      ], children: [
+        ["plannerProductName","Text","Product name"],
+        ["plannerProductDims","Text","W×D×H dimensions"],
+        ["plannerProductCategory","Text","Category label"],
+        ["plannerProductImage","Image","Product thumbnail"],
+        ["plannerAddBtn","Button","Add to Room"]
+      ]},
+      { name: "Palette Category", repeater: "paletteCategoryRepeater", impl: `<h4>🏷️ Implementation — Palette Category Filter (Room Planner)</h4>
+<ul>
+  <li><strong>#paletteCategoryRepeater</strong>: Repeater — category filter tabs.</li>
+  <li><strong>#paletteCategoryName</strong>: Text — category name.</li>
+</ul>`, elements: [
+        ["paletteCategoryRepeater","Repeater","Category filter tabs"]
+      ], children: [
+        ["paletteCategoryName","Text","Category name"]
+      ]},
+      { name: "Canvas", impl: `<h4>🖼️ Implementation — Canvas (Room Planner)</h4>
+<ul>
+  <li><strong>#plannerCanvas</strong>: HtmlComponent — the interactive room canvas. Receives product data via <code>postMessage({ type: 'addProduct', product: {...} })</code>.</li>
+</ul>`, elements: [
+        ["plannerCanvas","HtmlComponent","Interactive room canvas (postMessage API)"]
+      ]},
+      { name: "Save/Share", impl: `<h4>💾 Implementation — Save/Share (Room Planner)</h4>
+<ul>
+  <li><strong>#layoutNameInput</strong>: Input — name for saved layout.</li>
+  <li><strong>#saveLayoutBtn</strong>: Button — saves layout to member account.</li>
+  <li><strong>#shareLayoutBtn</strong>: Button — generates shareable URL.</li>
+  <li><strong>#shareUrlText</strong>: Text — displayed shareable URL after generation.</li>
+</ul>`, elements: [
+        ["layoutNameInput","Input","Layout name for save"],
+        ["saveLayoutBtn","Button","Save layout"],
+        ["shareLayoutBtn","Button","Generate share URL"],
+        ["shareUrlText","Text","Shareable URL display"]
+      ]}
+    ]
+  },
+  {
+    name: "Local SEO Page", file: "Local SEO Page.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Hero", impl: `<h4>📍 Implementation — Hero (Local SEO Page)</h4>
+<ul>
+  <li><strong>#cityTitle</strong>: Text — city name heading (e.g. "Futons in Asheville, NC").</li>
+  <li><strong>#cityHeadline</strong>: Text — subheadline.</li>
+  <li><strong>#homeCityBadge</strong>: Text — "Home City" badge for Hendersonville.</li>
+  <li><strong>#localPageContent</strong>: Box — main content container (shown on valid city).</li>
+  <li><strong>#notFoundMessage</strong>: Text — shown when city not found in dataset.</li>
+</ul>`, elements: [
+        ["cityTitle","Text","City name heading"],
+        ["cityHeadline","Text","Sub-headline"],
+        ["homeCityBadge","Text","Home City badge (Hendersonville only)"],
+        ["localPageContent","Box","Main content container"],
+        ["notFoundMessage","Text","City not found fallback"]
+      ]},
+      { name: "Store Info", impl: `<h4>🏪 Implementation — Store Info (Local SEO Page)</h4>
+<ul>
+  <li><strong>#directionsText</strong>: Text — driving directions summary.</li>
+  <li><strong>#directionsBtn</strong>: Button — opens Google Maps directions.</li>
+  <li><strong>#mapEmbed</strong>: HtmlComponent — embedded Google Maps iframe via postMessage.</li>
+</ul>`, elements: [
+        ["directionsText","Text","Driving directions"],
+        ["directionsBtn","Button","Open Google Maps"],
+        ["mapEmbed","HtmlComponent","Google Maps embed"]
+      ]},
+      { name: "Nearby Areas", repeater: "nearbyAreasRepeater", impl: `<h4>🗺️ Implementation — Nearby Areas (Local SEO Page)</h4>
+<ul>
+  <li><strong>#nearbyAreasRepeater</strong>: Repeater — links to nearby city SEO pages.</li>
+  <li><strong>#nearbyAreaLabel</strong>: Text — nearby city name.</li>
+  <li><strong>#nearbyAreaLink</strong>: Button — navigates to /near/[city-slug].</li>
+</ul>`, elements: [
+        ["nearbyAreasRepeater","Repeater","Nearby city links"]
+      ], children: [
+        ["nearbyAreaLabel","Text","City name"],
+        ["nearbyAreaLink","Button","Link to /near/[city]"]
+      ]},
+      { name: "Featured Products", repeater: "featuredProductsRepeater", impl: `<h4>🛋️ Implementation — Featured Products (Local SEO Page)</h4>
+<ul>
+  <li><strong>#featuredProductsRepeater</strong>: Repeater — products relevant to city/region.</li>
+  <li>Children: #productName, #productPrice, #productImage, #viewProductBtn.</li>
+</ul>`, elements: [
+        ["featuredProductsRepeater","Repeater","Featured products for city"]
+      ], children: [
+        ["productName","Text","Product name"],
+        ["productPrice","Text","Product price"],
+        ["productImage","Image","Product image"],
+        ["viewProductBtn","Button","View product"]
+      ]},
+      { name: "Cross-Links", repeater: "crossLinksRepeater", impl: `<h4>🔗 Implementation — Cross-Links (Local SEO Page)</h4>
+<ul>
+  <li><strong>#crossLinksSection</strong>: Box — container for cross-link section.</li>
+  <li><strong>#crossLinksHeading</strong>: Text — section heading.</li>
+  <li><strong>#crossLinksRepeater</strong>: Repeater — internal cross-links to related pages.</li>
+  <li><strong>#crossLinkLabel</strong>: Text — link text.</li>
+  <li><strong>#crossLinkBtn</strong>: Button — navigates to target page.</li>
+</ul>`, elements: [
+        ["crossLinksSection","Box","Cross-links container"],
+        ["crossLinksHeading","Text","Section heading"],
+        ["crossLinksRepeater","Repeater","Cross-links"]
+      ], children: [
+        ["crossLinkLabel","Text","Link text"],
+        ["crossLinkBtn","Button","Target page link"]
+      ]}
+    ]
+  },
+  {
+    name: "Community Gallery", file: "Community Gallery.js", priority: "P2", est: "40 min",
+    sections: [
+      { name: "Gallery Grid", repeater: "galleryMasonryRepeater", impl: `<h4>📷 Implementation — Gallery Grid (Community Gallery)</h4>
+<ul>
+  <li><strong>#galleryMasonryRepeater</strong>: Repeater — masonry-style photo grid.</li>
+  <li><strong>#galleryPhotoCard</strong>: Box — card container per photo.</li>
+  <li><strong>#galleryPhotoImg</strong>: Image — customer photo.</li>
+  <li><strong>#galleryCustomerName</strong>: Text — customer first name.</li>
+  <li><strong>#galleryFeaturedBadge</strong>: Box — shown on staff-featured photos.</li>
+  <li><strong>#galleryRoomTypeBadge</strong>: Text — room type tag (e.g. "Living Room").</li>
+  <li><strong>#galleryProductLink</strong>: Button — links to product used in photo.</li>
+</ul>`, elements: [
+        ["galleryMasonryRepeater","Repeater","Photo grid"]
+      ], children: [
+        ["galleryPhotoCard","Box","Photo card container"],
+        ["galleryPhotoImg","Image","Customer photo"],
+        ["galleryCustomerName","Text","Customer first name"],
+        ["galleryFeaturedBadge","Box","Featured badge (staff picks)"],
+        ["galleryRoomTypeBadge","Text","Room type tag"],
+        ["galleryProductLink","Button","Link to product used"]
+      ]},
+      { name: "Filters", repeater: "galleryFilterRepeater", impl: `<h4>🏷️ Implementation — Filters (Community Gallery)</h4>
+<ul>
+  <li><strong>#galleryFilterRepeater</strong>: Repeater — filter tab chips (All, Living Room, etc.).</li>
+  <li><strong>#filterTab</strong>: Box — tab container, gets active state on click.</li>
+  <li><strong>#filterTabLabel</strong>: Text — filter label.</li>
+</ul>`, elements: [
+        ["galleryFilterRepeater","Repeater","Filter tab chips"]
+      ], children: [
+        ["filterTab","Box","Tab (active state toggled)"],
+        ["filterTabLabel","Text","Filter label"]
+      ]},
+      { name: "State", impl: `<h4>⏳ Implementation — State (Community Gallery)</h4>
+<ul>
+  <li><strong>#galleryLoadMoreBtn</strong>: Button — "Load More Photos".</li>
+  <li><strong>#galleryLoadingSpinner</strong>: Box — shown while fetching.</li>
+  <li><strong>#galleryEmptyState</strong>: Box — shown when no photos match filter.</li>
+  <li><strong>#galleryEmptyStateText</strong>: Text — empty state message.</li>
+  <li><strong>#galleryPhotoCount</strong>: Text — "Showing X of Y photos".</li>
+</ul>`, elements: [
+        ["galleryLoadMoreBtn","Button","Load More Photos"],
+        ["galleryLoadingSpinner","Box","Loading spinner"],
+        ["galleryEmptyState","Box","Empty state container"],
+        ["galleryEmptyStateText","Text","Empty state message"],
+        ["galleryPhotoCount","Text","Showing X of Y"]
+      ]},
+      { name: "Lightbox", impl: `<h4>🔍 Implementation — Lightbox (Community Gallery)</h4>
+<ul>
+  <li><strong>#galleryLightbox</strong>: Box — lightbox overlay container.</li>
+  <li><strong>#galleryLightboxOverlay</strong>: Box — dark backdrop (click to close).</li>
+  <li><strong>#galleryLightboxImage</strong>: Image — full-size photo.</li>
+  <li><strong>#galleryLightboxClose</strong>: Button — X close button.</li>
+  <li><strong>#galleryLightboxCaption</strong>: Text — caption / room type.</li>
+  <li><strong>#galleryLightboxCustomer</strong>: Text — customer name.</li>
+  <li><strong>#galleryLightboxProductLink</strong>: Button — "Shop This Product".</li>
+</ul>`, elements: [
+        ["galleryLightbox","Box","Lightbox container"],
+        ["galleryLightboxOverlay","Box","Dark backdrop"],
+        ["galleryLightboxImage","Image","Full-size photo"],
+        ["galleryLightboxClose","Button","Close button"],
+        ["galleryLightboxCaption","Text","Caption/room type"],
+        ["galleryLightboxCustomer","Text","Customer name"],
+        ["galleryLightboxProductLink","Button","Shop This Product"]
+      ]}
+    ]
+  },
+  {
+    name: "Referral Page", file: "Referral Page.js", priority: "P2", est: "35 min",
+    sections: [
+      { name: "Auth State", impl: `<h4>🔐 Implementation — Auth State (Referral Page)</h4>
+<ul>
+  <li><strong>#referralLoggedOutBox</strong>: Box — shown when not logged in.</li>
+  <li><strong>#referralLoginBtn</strong>: Button — "Sign In to See Your Referral Code".</li>
+  <li><strong>#referralMainContent</strong>: Box — main content (shown when logged in).</li>
+  <li><strong>#referralErrorFallback</strong>: Box — shown on load error.</li>
+  <li><strong>#referralErrorText</strong>: Text — error message.</li>
+</ul>`, elements: [
+        ["referralLoggedOutBox","Box","Logged-out state"],
+        ["referralLoginBtn","Button","Sign In CTA"],
+        ["referralMainContent","Box","Main content (logged in)"],
+        ["referralErrorFallback","Box","Error state container"],
+        ["referralErrorText","Text","Error message"]
+      ]},
+      { name: "Your Code/Link", impl: `<h4>🔗 Implementation — Your Code/Link (Referral Page)</h4>
+<ul>
+  <li><strong>#referralCodeText</strong>: Text — referral code (e.g. "JANE-3F9A").</li>
+  <li><strong>#copyCodeBtn</strong>: Button — copies code to clipboard.</li>
+  <li><strong>#referralLinkText</strong>: Text — full referral URL.</li>
+  <li><strong>#copyLinkBtn</strong>: Button — copies link to clipboard.</li>
+  <li><strong>#referralLinkError</strong>: Text — error if link generation fails.</li>
+</ul>`, elements: [
+        ["referralCodeText","Text","Referral code"],
+        ["copyCodeBtn","Button","Copy code to clipboard"],
+        ["referralLinkText","Text","Full referral URL"],
+        ["copyLinkBtn","Button","Copy link to clipboard"],
+        ["referralLinkError","Text","Link error message"]
+      ]},
+      { name: "Share Buttons", impl: `<h4>📤 Implementation — Share Buttons (Referral Page)</h4>
+<ul>
+  <li><strong>#shareFacebookBtn</strong>: Button — shares referral link via Facebook.</li>
+  <li><strong>#shareEmailBtn</strong>: Button — opens mailto: with referral link.</li>
+  <li><strong>#shareSmsBtn</strong>: Button — opens sms: with referral link.</li>
+</ul>`, elements: [
+        ["shareFacebookBtn","Button","Share via Facebook"],
+        ["shareEmailBtn","Button","Share via Email (mailto)"],
+        ["shareSmsBtn","Button","Share via SMS"]
+      ]},
+      { name: "Stats", impl: `<h4>📊 Implementation — Stats (Referral Page)</h4>
+<ul>
+  <li><strong>#referralStatsSection</strong>: Box — container shown when stats available.</li>
+  <li><strong>#referralStatsEmpty</strong>: Box — shown when no referrals yet.</li>
+  <li><strong>#referralStatsCards</strong>: Box — stat cards container.</li>
+  <li><strong>#statTotalFriends</strong>: Text — total friends referred.</li>
+  <li><strong>#statSuccessRate</strong>: Text — conversion rate %.</li>
+  <li><strong>#statTotalEarned</strong>: Text — total store credit earned.</li>
+  <li><strong>#statAvailableCredit</strong>: Text — available credit balance.</li>
+</ul>`, elements: [
+        ["referralStatsSection","Box","Stats container"],
+        ["referralStatsEmpty","Box","Empty state (no referrals yet)"],
+        ["referralStatsCards","Box","Stat cards"],
+        ["statTotalFriends","Text","Total friends referred"],
+        ["statSuccessRate","Text","Conversion rate %"],
+        ["statTotalEarned","Text","Total credit earned"],
+        ["statAvailableCredit","Text","Available credit balance"]
+      ]},
+      { name: "How It Works", repeater: "howItWorksRepeater", impl: `<h4>📖 Implementation — How It Works (Referral Page)</h4>
+<ul>
+  <li><strong>#howItWorksRepeater</strong>: Repeater — numbered steps explaining the program.</li>
+  <li><strong>#stepIcon</strong>: Image — step icon.</li>
+  <li><strong>#stepDescription</strong>: Text — step description.</li>
+</ul>`, elements: [
+        ["howItWorksRepeater","Repeater","How-it-works steps"]
+      ], children: [
+        ["stepIcon","Image","Step icon"],
+        ["stepDescription","Text","Step description"]
+      ]},
+      { name: "History", repeater: "referralHistoryRepeater", impl: `<h4>📋 Implementation — History (Referral Page)</h4>
+<ul>
+  <li><strong>#referralHistorySection</strong>: Box — history container (shown when entries exist).</li>
+  <li><strong>#referralHistoryEmpty</strong>: Text — "No referrals yet."</li>
+  <li><strong>#referralHistoryRepeater</strong>: Repeater — one row per referral.</li>
+  <li>Children: #historyFriendName, #historyDate, #historyStatus, #historyCredit.</li>
+</ul>`, elements: [
+        ["referralHistorySection","Box","History container"],
+        ["referralHistoryEmpty","Text","No referrals yet message"],
+        ["referralHistoryRepeater","Repeater","Referral history rows"]
+      ], children: [
+        ["historyFriendName","Text","Friend's name"],
+        ["historyDate","Text","Referral date"],
+        ["historyStatus","Text","Status (Pending/Rewarded)"],
+        ["historyCredit","Text","Credit awarded"]
+      ]}
+    ]
+  },
+  {
+    name: "UGC Gallery", file: "UGC Gallery.js", priority: "P2", est: "25 min",
+    sections: [
+      { name: "Stats", impl: `<h4>📊 Implementation — Stats (UGC Gallery)</h4>
+<ul>
+  <li><strong>#ugcTotalCount</strong>: Text — total approved photos.</li>
+  <li><strong>#ugcFeaturedCount</strong>: Text — staff-featured photo count.</li>
+</ul>`, elements: [
+        ["ugcTotalCount","Text","Total approved photos"],
+        ["ugcFeaturedCount","Text","Staff-featured count"]
+      ]},
+      { name: "Submit", impl: `<h4>📤 Implementation — Submit (UGC Gallery)</h4>
+<ul>
+  <li><strong>#ugcSubmitSection</strong>: Box — submit CTA section.</li>
+  <li><strong>#ugcSubmitPhotoBtn</strong>: Button — "Share Your Photo" — opens modal.</li>
+  <li><strong>#ugcSubmitModal</strong>: Box — submit photo modal.</li>
+  <li><strong>#ugcSubmitModalTitle</strong>: Text — modal title.</li>
+  <li><strong>#ugcSubmitModalClose</strong>: Button — close modal.</li>
+</ul>`, elements: [
+        ["ugcSubmitSection","Box","Submit CTA section"],
+        ["ugcSubmitPhotoBtn","Button","Share Your Photo (opens modal)"],
+        ["ugcSubmitModal","Box","Submit photo modal"],
+        ["ugcSubmitModalTitle","Text","Modal title"],
+        ["ugcSubmitModalClose","Button","Close modal"]
+      ]},
+      { name: "State", impl: `<h4>⏳ Implementation — State (UGC Gallery)</h4>
+<ul>
+  <li><strong>#ugcBeforeAfterSection</strong>: Box — before/after comparison section.</li>
+  <li><strong>#ugcEmptyState</strong>: Box — shown when gallery is empty.</li>
+  <li><strong>#ugcGallerySkeleton</strong>: Box — skeleton loader shown while fetching.</li>
+</ul>`, elements: [
+        ["ugcBeforeAfterSection","Box","Before/after section"],
+        ["ugcEmptyState","Box","Empty state"],
+        ["ugcGallerySkeleton","Box","Skeleton loader"]
+      ]}
+    ]
+  },
+  {
+    name: "Submit Photo Review", file: "Submit Photo Review.js", priority: "P2", est: "20 min",
+    sections: [
+      { name: "Form", impl: `<h4>📸 Implementation — Form (Submit Photo Review)</h4>
+<ul>
+  <li><strong>#submitFormSection</strong>: Box — form container.</li>
+  <li><strong>#productNameDisplay</strong>: Text — product name (pre-populated from query param).</li>
+  <li><strong>#ratingInput</strong>: Box — star rating input (1–5 stars, click to select).</li>
+  <li><strong>#photoUploadButton</strong>: Button — triggers Wix media upload dialog.</li>
+  <li><strong>#photoPreview</strong>: Image — preview of selected photo.</li>
+  <li><strong>#captionInput</strong>: TextBox — photo caption.</li>
+  <li><strong>#reviewTextInput</strong>: TextBox — written review (optional).</li>
+  <li><strong>#submitBtn</strong>: Button — "Submit Review".</li>
+  <li><strong>#validationMessage</strong>: Text — validation error display.</li>
+</ul>`, elements: [
+        ["submitFormSection","Box","Form container"],
+        ["productNameDisplay","Text","Product name"],
+        ["ratingInput","Box","Star rating (1–5)"],
+        ["photoUploadButton","Button","Upload photo"],
+        ["photoPreview","Image","Photo preview"],
+        ["captionInput","TextBox","Photo caption"],
+        ["reviewTextInput","TextBox","Written review"],
+        ["submitBtn","Button","Submit Review"],
+        ["validationMessage","Text","Validation errors"]
+      ]},
+      { name: "Success", impl: `<h4>✅ Implementation — Success (Submit Photo Review)</h4>
+<ul>
+  <li><strong>#successSection</strong>: Box — shown after successful submit (form hidden).</li>
+  <li><strong>#successMessage</strong>: Text — "Thank you! Your photo is under review."</li>
+</ul>`, elements: [
+        ["successSection","Box","Success state (shown after submit)"],
+        ["successMessage","Text","Thank you message"]
+      ]}
+    ]
+  },
+  {
+    name: "Topic Cluster", file: "Topic Cluster.js", priority: "P2", est: "40 min",
+    sections: [
+      { name: "Breadcrumb", repeater: "breadcrumbRepeater", impl: `<h4>🔗 Implementation — Breadcrumb (Topic Cluster)</h4>
+<ul>
+  <li><strong>#breadcrumbRepeater</strong>: Repeater — breadcrumb trail (Home > Guides > Topic).</li>
+  <li><strong>#breadcrumbLabel</strong>: Text — breadcrumb item label.</li>
+</ul>`, elements: [
+        ["breadcrumbRepeater","Repeater","Breadcrumb trail"]
+      ], children: [
+        ["breadcrumbLabel","Text","Breadcrumb label"]
+      ]},
+      { name: "Content", impl: `<h4>📄 Implementation — Content (Topic Cluster)</h4>
+<ul>
+  <li><strong>#clusterContent</strong>: Box — main content container (shown on valid slug).</li>
+  <li><strong>#pillarIntro</strong>: Text — pillar page intro paragraph.</li>
+  <li><strong>#notFoundMessage</strong>: Text — shown when slug not found.</li>
+</ul>`, elements: [
+        ["clusterContent","Box","Main content container"],
+        ["pillarIntro","Text","Pillar intro paragraph"],
+        ["notFoundMessage","Text","Not found fallback"]
+      ]},
+      { name: "Content Sections", repeater: "contentSectionRepeater", impl: `<h4>📝 Implementation — Content Sections (Topic Cluster)</h4>
+<ul>
+  <li><strong>#contentSectionRepeater</strong>: Repeater — H2 content sections.</li>
+  <li><strong>#sectionHeading</strong>: Text — section heading.</li>
+  <li><strong>#sectionBody</strong>: RichText — section body content.</li>
+</ul>`, elements: [
+        ["contentSectionRepeater","Repeater","H2 content sections"]
+      ], children: [
+        ["sectionHeading","Text","Section heading"],
+        ["sectionBody","RichText","Section body"]
+      ]},
+      { name: "FAQ", repeater: "faqRepeater", impl: `<h4>❓ Implementation — FAQ (Topic Cluster)</h4>
+<ul>
+  <li><strong>#faqRepeater</strong>: Repeater — FAQ items (accordion or expanded).</li>
+  <li><strong>#faqQuestion</strong>: Text — question text.</li>
+  <li><strong>#faqAnswer</strong>: Text — answer text.</li>
+</ul>`, elements: [
+        ["faqRepeater","Repeater","FAQ items"]
+      ], children: [
+        ["faqQuestion","Text","Question"],
+        ["faqAnswer","Text","Answer"]
+      ]},
+      { name: "Spoke Cards", repeater: "spokeCardRepeater", impl: `<h4>🕸️ Implementation — Spoke Cards (Topic Cluster)</h4>
+<ul>
+  <li><strong>#spokeCardRepeater</strong>: Repeater — related spoke page cards.</li>
+  <li><strong>#spokeTitle</strong>: Text — spoke title.</li>
+  <li><strong>#spokeTypeLabel</strong>: Text — type label (e.g. "Guide", "Product").</li>
+  <li><strong>#spokeCardLink</strong>: Box — clickable card (navigates to spoke URL).</li>
+</ul>`, elements: [
+        ["spokeCardRepeater","Repeater","Related spoke cards"]
+      ], children: [
+        ["spokeTitle","Text","Spoke title"],
+        ["spokeTypeLabel","Text","Type label"],
+        ["spokeCardLink","Box","Clickable card link"]
+      ]},
+      { name: "Internal Links", repeater: "internalLinksRepeater", impl: `<h4>🔗 Implementation — Internal Links (Topic Cluster)</h4>
+<ul>
+  <li><strong>#internalLinksRepeater</strong>: Repeater — related internal links.</li>
+  <li><strong>#linkItem</strong>: Box — link container.</li>
+  <li><strong>#linkAnchorText</strong>: Text — anchor text.</li>
+</ul>`, elements: [
+        ["internalLinksRepeater","Repeater","Internal links"]
+      ], children: [
+        ["linkItem","Box","Link container"],
+        ["linkAnchorText","Text","Anchor text"]
+      ]},
+      { name: "Related Clusters", repeater: "relatedClusterRepeater", impl: `<h4>🗂️ Implementation — Related Clusters (Topic Cluster)</h4>
+<ul>
+  <li><strong>#relatedClusterRepeater</strong>: Repeater — related topic cluster cards.</li>
+  <li><strong>#relatedClusterTitle</strong>: Text — cluster title.</li>
+  <li><strong>#relatedClusterLink</strong>: Box — clickable cluster link.</li>
+</ul>`, elements: [
+        ["relatedClusterRepeater","Repeater","Related cluster cards"]
+      ], children: [
+        ["relatedClusterTitle","Text","Cluster title"],
+        ["relatedClusterLink","Box","Cluster link"]
+      ]}
+    ]
+  },
+  {
+    name: "Gift Cards", file: "Gift Cards.js", priority: "P2", est: "30 min",
+    sections: [
+      { name: "Purchase Form", impl: `<h4>🎁 Implementation — Purchase Form (Gift Cards)</h4>
+<ul>
+  <li><strong>#gcPurchaseForm</strong>: Box — purchase form container.</li>
+  <li><strong>#gcDenomRepeater</strong>: Repeater — denomination selector buttons.</li>
+  <li><strong>#gcPurchaserEmail</strong>: Input — purchaser email.</li>
+  <li><strong>#gcRecipientName</strong>: Input — recipient name.</li>
+  <li><strong>#gcRecipientEmail</strong>: Input — recipient email.</li>
+  <li><strong>#gcMessage</strong>: TextBox — optional gift message.</li>
+  <li><strong>#gcPurchaseBtn</strong>: Button — "Buy Gift Card".</li>
+  <li><strong>#gcPurchaseError</strong>: Text — error message.</li>
+  <li><strong>#gcPurchaseSuccess</strong>: Box — success state (form hidden after purchase).</li>
+</ul>`, elements: [
+        ["gcPurchaseForm","Box","Purchase form container"],
+        ["gcPurchaserEmail","Input","Purchaser email"],
+        ["gcRecipientName","Input","Recipient name"],
+        ["gcRecipientEmail","Input","Recipient email"],
+        ["gcMessage","TextBox","Gift message (optional)"],
+        ["gcPurchaseBtn","Button","Buy Gift Card"],
+        ["gcPurchaseError","Text","Purchase error"],
+        ["gcPurchaseSuccess","Box","Success state"]
+      ]},
+      { name: "Denominations", repeater: "gcDenomRepeater", impl: `<h4>💵 Implementation — Denominations (Gift Cards)</h4>
+<ul>
+  <li><strong>#gcDenomRepeater</strong>: Repeater — denomination selection cards ($25, $50, $100, $200).</li>
+  <li><strong>#gcDenomLabel</strong>: Text — denomination label (e.g. "$50").</li>
+</ul>`, elements: [
+        ["gcDenomRepeater","Repeater","Denomination cards"]
+      ], children: [
+        ["gcDenomLabel","Text","Denomination label"]
+      ]},
+      { name: "Balance Check", impl: `<h4>🔍 Implementation — Balance Check (Gift Cards)</h4>
+<ul>
+  <li><strong>#gcCodeInput</strong>: Input — gift card code entry.</li>
+  <li><strong>#gcCheckBalanceBtn</strong>: Button — "Check Balance".</li>
+  <li><strong>#gcBalanceResult</strong>: Box — shown on successful lookup.</li>
+  <li><strong>#gcBalanceAmount</strong>: Text — current balance (e.g. "$47.50 remaining").</li>
+  <li><strong>#gcBalanceStatus</strong>: Text — "Active" / "Expired" / "Used".</li>
+  <li><strong>#gcBalanceExpiry</strong>: Text — expiration date.</li>
+  <li><strong>#gcBalanceUsage</strong>: Text — usage history summary.</li>
+  <li><strong>#gcBalanceError</strong>: Text — error (e.g. "Code not found").</li>
+</ul>`, elements: [
+        ["gcCodeInput","Input","Gift card code input"],
+        ["gcCheckBalanceBtn","Button","Check Balance"],
+        ["gcBalanceResult","Box","Balance result container"],
+        ["gcBalanceAmount","Text","Current balance"],
+        ["gcBalanceStatus","Text","Active/Expired/Used"],
+        ["gcBalanceExpiry","Text","Expiration date"],
+        ["gcBalanceUsage","Text","Usage history"],
+        ["gcBalanceError","Text","Error message"]
+      ]}
+    ]
+  },
+  {
+    name: "360° Spin Viewer", file: "Product360Viewer.js (on Product Page)", priority: "P2", est: "15 min",
+    sections: [
+      { name: "Viewer Elements (Product Page)", impl: `<h4>🔄 Implementation — 360° Spin Viewer (Product Page)</h4>
+<p><strong>Note: These elements live on the Product Page, not a separate page. Added via <code>initProduct360Viewer()</code>.</strong></p>
+<ul>
+  <li><strong>#viewer360Section</strong>: Box — container section for the viewer. Hidden by default; shown when 360 images available.</li>
+  <li><strong>#viewer360Container</strong>: Box — inner container for the iframe.</li>
+  <li><strong>#viewer360Embed</strong>: HtmlComponent — the interactive 360° viewer. Receives image URLs via postMessage.</li>
+  <li><strong>#view360Btn</strong>: Button — "View 360°" trigger button on product image gallery.</li>
+  <li><strong>#viewer360Title</strong>: Text — section heading (e.g. "360° View").</li>
+  <li><strong>#viewer360Hint</strong>: Text — "Drag to rotate" hint text.</li>
+</ul>`, elements: [
+        ["viewer360Section","Box","360° section container (hidden by default)"],
+        ["viewer360Container","Box","Inner iframe container"],
+        ["viewer360Embed","HtmlComponent","Interactive 360° viewer (postMessage API)"],
+        ["view360Btn","Button","View 360° trigger on gallery"],
+        ["viewer360Title","Text","Section heading"],
+        ["viewer360Hint","Text","Drag to rotate hint"]
+      ]}
+    ]
   }
 ];
 

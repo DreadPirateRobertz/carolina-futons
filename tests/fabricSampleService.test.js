@@ -1,36 +1,36 @@
 /**
- * fabricSampleService.test.js — CF-gkbx: Fabric Sample Request backend
- * Tests for src/backend/fabricSampleService.web.js
- * TDD: written before implementation.
+ * Tests for CF-gkbx: fabricSampleService.web.js
+ *   - submitFabricSampleRequest: validate, rate-limit, store, trigger automation
+ *   - Rate limit: 1 request per email per 30 days
+ *   - Max 3 swatches per request
+ *   - XSS/injection protection in address fields
+ *   - Wix Automation: customer confirmation + fulfillment notification
+ *   - Duplicate prevention within rate-limit window
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted, __setQueryError } from 'wix-data';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { __reset, __seed, __getInserted, __setInsertError } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
-import { __reset as __resetSecrets, __setSecrets } from 'wix-secrets-backend';
+import { submitFabricSampleRequest } from '../src/backend/fabricSampleService.web.js';
 
-import {
-  submitFabricSample,
-  getAvailableSwatches,
-} from '../src/backend/fabricSampleService.web.js';
-
-// ── Fixtures ─────────────────────────────────────────────────────────
+// ── Fixtures ────────────────────────────────────────────────────────────────
 
 const validContact = {
-  name: 'Jane Doe',
+  firstName: 'Jane',
+  lastName: 'Doe',
   email: 'jane@example.com',
-  address: '123 Main St, Charlotte, NC 28201',
+  address1: '123 Main St',
+  city: 'Charlotte',
+  state: 'NC',
+  zip: '28201',
 };
 
 const validSwatchIds = ['sw-1', 'sw-2'];
 
-function seedSwatches() {
-  __seed('FabricSwatches', [
-    { _id: 'sw-1', swatchName: 'Natural Oatmeal', colorFamily: 'Neutral', inStock: true },
-    { _id: 'sw-2', swatchName: 'Espresso Brown', colorFamily: 'Brown',   inStock: true },
-    { _id: 'sw-3', swatchName: 'Slate Blue',      colorFamily: 'Blue',    inStock: true },
-    { _id: 'sw-4', swatchName: 'Forest Green',    colorFamily: 'Green',   inStock: false },
-  ]);
-}
+const SWATCHES = [
+  { _id: 'sw-1', name: 'Natural Oatmeal', inStock: true },
+  { _id: 'sw-2', name: 'Espresso Brown', inStock: true },
+  { _id: 'sw-3', name: 'Slate Blue', inStock: true },
+];
 
 function daysAgo(n) {
   return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
@@ -39,253 +39,238 @@ function daysAgo(n) {
 beforeEach(() => {
   __reset();
   __resetCrm();
-  __resetSecrets();
-  __setSecrets({ SITE_OWNER_CONTACT_ID: 'admin-contact-1' });
-  seedSwatches();
+  __seed('FabricSwatches', SWATCHES);
 });
 
-// ── getAvailableSwatches ──────────────────────────────────────────────
+// ── Input validation ─────────────────────────────────────────────────────────
 
-describe('getAvailableSwatches', () => {
-  it('returns all in-stock swatches', async () => {
-    const result = await getAvailableSwatches();
-    expect(result.success).toBe(true);
-    expect(result.data.swatches.length).toBe(3); // 3 inStock, not 4
-  });
-
-  it('each swatch has _id, swatchName, colorFamily', async () => {
-    const result = await getAvailableSwatches();
-    const first = result.data.swatches[0];
-    expect(first).toHaveProperty('_id');
-    expect(first).toHaveProperty('swatchName');
-    expect(first).toHaveProperty('colorFamily');
-  });
-
-  it('returns empty array when no swatches seeded', async () => {
-    __reset();
-    const result = await getAvailableSwatches();
-    expect(result.success).toBe(true);
-    expect(result.data.swatches).toEqual([]);
-  });
-
-  it('returns error on database failure', async () => {
-    __reset();
-    __setQueryError('FabricSwatches', new Error('DB error'));
-    const result = await getAvailableSwatches();
-    expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
-  });
-});
-
-// ── submitFabricSample — success ──────────────────────────────────────
-
-describe('submitFabricSample — success', () => {
-  it('returns success with requestId', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    expect(result.success).toBe(true);
-    expect(typeof result.requestId).toBe('string');
-    expect(result.requestId.length).toBeGreaterThan(0);
-  });
-
-  it('inserts a FabricSampleRequests record', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const records = __getInserted('FabricSampleRequests');
-    expect(records.length).toBe(1);
-  });
-
-  it('stores contactEmail on the record', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.contactEmail).toBe('jane@example.com');
-  });
-
-  it('stores contactName on the record', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.contactName).toBe('Jane Doe');
-  });
-
-  it('stores swatchIds on the record', async () => {
-    await submitFabricSample({ swatchIds: ['sw-1', 'sw-3'], contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.swatchIds).toEqual(['sw-1', 'sw-3']);
-  });
-
-  it('resolves and stores swatchNames from FabricSwatches CMS', async () => {
-    await submitFabricSample({ swatchIds: ['sw-1', 'sw-2'], contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.swatchNames).toContain('Natural Oatmeal');
-    expect(record.swatchNames).toContain('Espresso Brown');
-  });
-
-  it('stores shippingAddress on the record', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.shippingAddress).toBe('123 Main St, Charlotte, NC 28201');
-  });
-
-  it('sets status to "pending"', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.status).toBe('pending');
-  });
-
-  it('sets requestedAt to a Date', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.requestedAt).toBeInstanceOf(Date);
-  });
-
-  it('sends customer confirmation email', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const log = __getEmailLog();
-    const confirmation = log.find(e => e.templateId === 'fabric_sample_confirmation');
-    expect(confirmation).toBeDefined();
-  });
-
-  it('sends admin notification email', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const log = __getEmailLog();
-    const admin = log.find(e => e.templateId === 'fabric_sample_admin_notify');
-    expect(admin).toBeDefined();
-  });
-
-  it('stores optional productId when provided', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact, productId: 'prod-123' });
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.productId).toBe('prod-123');
-  });
-});
-
-// ── submitFabricSample — validation ──────────────────────────────────
-
-describe('submitFabricSample — validation', () => {
-  it('rejects missing swatchIds', async () => {
-    const result = await submitFabricSample({ swatchIds: null, contactInfo: validContact });
+describe('input validation', () => {
+  it('rejects missing params object', async () => {
+    const result = await submitFabricSampleRequest(undefined);
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
   });
 
   it('rejects empty swatchIds array', async () => {
-    const result = await submitFabricSample({ swatchIds: [], contactInfo: validContact });
+    const result = await submitFabricSampleRequest({ swatchIds: [], contactInfo: validContact });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/swatch/i);
   });
 
-  it('rejects more than 3 swatches', async () => {
-    const result = await submitFabricSample({ swatchIds: ['sw-1', 'sw-2', 'sw-3', 'sw-4'], contactInfo: validContact });
+  it('rejects more than 3 swatchIds', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-1', 'sw-2', 'sw-3', 'extra-4'],
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(false);
-    expect(result.error).toMatch(/3/);
+    expect(result.error).toMatch(/3|maximum/i);
   });
 
-  it('allows exactly 3 swatches', async () => {
-    const result = await submitFabricSample({ swatchIds: ['sw-1', 'sw-2', 'sw-3'], contactInfo: validContact });
+  it('accepts exactly 3 swatchIds', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-1', 'sw-2', 'sw-3'],
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(true);
   });
 
-  it('rejects duplicate swatch IDs', async () => {
-    const result = await submitFabricSample({ swatchIds: ['sw-1', 'sw-1'], contactInfo: validContact });
+  it('rejects duplicate swatchIds', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-1', 'sw-1'],
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/duplicate/i);
   });
 
-  it('rejects missing name', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: { ...validContact, name: '' } });
+  it('rejects invalid swatch ID (empty string)', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-1', ''],
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-array swatchIds', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: 'sw-1',
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects missing contactInfo', async () => {
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/contact|required/i);
+  });
+
+  it('rejects missing firstName', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, firstName: '' },
+    });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/name/i);
   });
 
-  it('rejects missing email', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: { ...validContact, email: '' } });
+  it('rejects missing lastName', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, lastName: '' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/name/i);
+  });
+
+  it('rejects invalid email', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, email: 'not-an-email' },
+    });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/email/i);
   });
 
-  it('rejects malformed email', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: { ...validContact, email: 'not-an-email' } });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/email/i);
-  });
-
-  it('rejects missing address', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: { ...validContact, address: '' } });
+  it('rejects missing address1', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, address1: '' },
+    });
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/address/i);
   });
 
-  it('rejects null contactInfo', async () => {
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: null });
+  it('rejects missing city', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, city: '' },
+    });
     expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.error).toMatch(/city/i);
+  });
+
+  it('rejects missing state', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, state: '' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/state/i);
+  });
+
+  it('rejects invalid ZIP (non-numeric)', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, zip: 'ABCDE' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/zip/i);
+  });
+
+  it('rejects ZIP with fewer than 5 digits', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, zip: '1234' },
+    });
+    expect(result.success).toBe(false);
   });
 });
 
-// ── submitFabricSample — XSS sanitization ────────────────────────────
+// ── XSS / injection protection ───────────────────────────────────────────────
 
-describe('submitFabricSample — XSS sanitization', () => {
-  it('strips script tags from address field', async () => {
-    const malicious = { ...validContact, address: '<script>alert(1)</script>123 Main St' };
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: malicious });
+describe('XSS and injection protection', () => {
+  it('strips HTML tags from address1', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, address1: '<script>bad</script>123 Main St' },
+    });
     expect(result.success).toBe(true);
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.shippingAddress).not.toContain('<script>');
+    const inserted = __getInserted('FabricSampleRequests')[0];
+    // sanitize() strips tags but preserves text content — ensure no HTML tags remain
+    expect(inserted.shippingAddress.address1).not.toContain('<script>');
+    expect(inserted.shippingAddress.address1).not.toContain('</script>');
+    expect(inserted.shippingAddress.address1).toContain('123 Main St');
   });
 
-  it('strips script tags from name field', async () => {
-    const malicious = { ...validContact, name: '<img src=x onerror=alert(1)>Jane' };
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: malicious });
+  it('strips HTML from firstName', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, firstName: '<b>Jane</b>' },
+    });
     expect(result.success).toBe(true);
-    const [record] = __getInserted('FabricSampleRequests');
-    expect(record.contactName).not.toContain('<img');
+    const inserted = __getInserted('FabricSampleRequests')[0];
+    expect(inserted.contactName).not.toContain('<b>');
+  });
+
+  it('strips HTML from city', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, city: 'Charlotte<img src=x onerror=alert(1)>' },
+    });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('FabricSampleRequests')[0];
+    expect(inserted.shippingAddress.city).not.toContain('<img');
+  });
+
+  it('rejects address that becomes empty after stripping', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, address1: '<b></b>' },
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/address/i);
   });
 });
 
-// ── submitFabricSample — rate limiting ───────────────────────────────
+// ── Rate limiting ─────────────────────────────────────────────────────────────
 
-describe('submitFabricSample — rate limiting', () => {
-  it('rejects same email within 30 days', async () => {
-    // Seed a recent request from jane@example.com
-    __seed('FabricSampleRequests', [{
-      _id: 'req-1',
-      contactEmail: 'jane@example.com',
-      requestedAt: daysAgo(10), // 10 days ago — within window
-      status: 'pending',
-    }]);
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/30 days/i);
-  });
-
-  it('allows same email after 30+ days', async () => {
-    __seed('FabricSampleRequests', [{
-      _id: 'req-1',
-      contactEmail: 'jane@example.com',
-      requestedAt: daysAgo(31), // 31 days ago — outside window
-      status: 'pending',
-    }]);
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+describe('rate limiting (1 per email per 30 days)', () => {
+  it('accepts first request from an email', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(true);
   });
 
-  it('allows different email regardless of recent requests', async () => {
+  it('rejects second request from same email within 30 days', async () => {
     __seed('FabricSampleRequests', [{
-      _id: 'req-1',
-      contactEmail: 'other@example.com',
+      _id: 'prev-001',
+      contactEmail: 'jane@example.com',
       requestedAt: daysAgo(5),
       status: 'pending',
     }]);
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/30 days|recently|rate/i);
+  });
+
+  it('allows request from same email after 30 days', async () => {
+    __seed('FabricSampleRequests', [{
+      _id: 'old-001',
+      contactEmail: 'jane@example.com',
+      requestedAt: daysAgo(31),
+      status: 'fulfilled',
+    }]);
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(true);
   });
 
-  it('does not insert a record when rate limited', async () => {
+  it('allows request from a different email even if another was just submitted', async () => {
     __seed('FabricSampleRequests', [{
-      _id: 'req-1',
+      _id: 'prev-002',
       contactEmail: 'jane@example.com',
       requestedAt: daysAgo(1),
       status: 'pending',
     }]);
-    const result = await submitFabricSample({
+    const result = await submitFabricSampleRequest({
       swatchIds: validSwatchIds,
       contactInfo: { ...validContact, email: 'other@example.com' },
     });
@@ -300,7 +285,7 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: daysAgo(2),
       status: 'pending',
     }]);
-    const result = await submitFabricSample({
+    const result = await submitFabricSampleRequest({
       swatchIds: validSwatchIds,
       contactInfo: { ...validContact, email: 'JANE@EXAMPLE.COM' },
     });
@@ -317,7 +302,7 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: thirtyDaysAgoWithBuffer,
       status: 'pending',
     }]);
-    const result = await submitFabricSample({
+    const result = await submitFabricSampleRequest({
       swatchIds: validSwatchIds,
       contactInfo: validContact,
     });
@@ -325,88 +310,192 @@ describe('submitFabricSample — rate limiting', () => {
   });
 });
 
-// ── submitFabricSample — rate limit boundary ─────────────────────────
+// ── Persistence ───────────────────────────────────────────────────────────────
 
-describe('submitFabricSample — rate limit boundary', () => {
-  it('allows same email when prior request is exactly 30 days old', async () => {
+describe('persistence', () => {
+  it('inserts a record into FabricSampleRequests', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const inserted = __getInserted('FabricSampleRequests');
+    expect(inserted).toHaveLength(1);
+  });
+
+  it('returns requestId matching inserted record _id', async () => {
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+    expect(result.requestId).toBeTruthy();
+    const inserted = __getInserted('FabricSampleRequests')[0];
+    expect(result.requestId).toBe(inserted._id);
+  });
+
+  it('stores contactEmail, contactName, swatchIds, shippingAddress, status=pending', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.contactEmail).toBe('jane@example.com');
+    expect(record.contactName).toBe('Jane Doe');
+    expect(record.swatchIds).toEqual(validSwatchIds);
+    expect(record.status).toBe('pending');
+    expect(record.shippingAddress.address1).toBe('123 Main St');
+    expect(record.shippingAddress.city).toBe('Charlotte');
+    expect(record.shippingAddress.state).toBe('NC');
+    expect(record.shippingAddress.zip).toBe('28201');
+  });
+
+  it('stores resolved swatch names in the record', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.swatchNames).toEqual(['Natural Oatmeal', 'Espresso Brown']);
+  });
+
+  it('stores requestedAt as a Date', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.requestedAt).toBeInstanceOf(Date);
+  });
+
+  it('stores optional productSlug when provided', async () => {
+    await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
+      productSlug: 'eureka-futon-frame',
+    });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.productSlug).toBe('eureka-futon-frame');
+  });
+
+  it('does not store productSlug field when not provided', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record).not.toHaveProperty('productSlug');
+  });
+});
+
+// ── Wix Automation (triggered emails) ────────────────────────────────────────
+
+describe('Wix Automation email triggers', () => {
+  it('triggers customer confirmation email after successful submit', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const emailLog = __getEmailLog();
+    const confirmEmail = emailLog.find(e => e.templateId === 'fabric_sample_confirmation');
+    expect(confirmEmail).toBeTruthy();
+  });
+
+  it('triggers fulfillment notification email after successful submit', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const emailLog = __getEmailLog();
+    const fulfillmentEmail = emailLog.find(e => e.templateId === 'fabric_sample_fulfillment');
+    expect(fulfillmentEmail).toBeTruthy();
+  });
+
+  it('passes swatchNames and address in fulfillment email options', async () => {
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    const emailLog = __getEmailLog();
+    const fulfillmentEmail = emailLog.find(e => e.templateId === 'fabric_sample_fulfillment');
+    expect(fulfillmentEmail.options?.variables?.swatchNames).toEqual(['Natural Oatmeal', 'Espresso Brown']);
+    expect(fulfillmentEmail.options?.variables?.shippingAddress).toBeTruthy();
+  });
+
+  it('still saves the record even if automation email fails', async () => {
+    __failNextEmail();
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+    const inserted = __getInserted('FabricSampleRequests');
+    expect(inserted).toHaveLength(1);
+  });
+
+  it('fulfillment email still fires when confirmation email fails', async () => {
+    __failNextEmail(); // fails the FIRST email (confirmation)
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    // Drain microtasks so the fire-and-forget completes before asserting
+    await Promise.resolve();
+    const emailLog = __getEmailLog();
+    const fulfillmentEmail = emailLog.find(e => e.templateId === 'fabric_sample_fulfillment');
+    expect(fulfillmentEmail).toBeTruthy();
+  });
+
+  it('does not trigger emails when validation fails', async () => {
+    await submitFabricSampleRequest({ swatchIds: [], contactInfo: validContact });
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+
+  it('does not trigger emails when rate-limited', async () => {
     __seed('FabricSampleRequests', [{
-      _id: 'req-1',
+      _id: 'prev',
       contactEmail: 'jane@example.com',
-      requestedAt: daysAgo(30), // exactly 30 days — gt() excludes boundary, so allowed
+      requestedAt: daysAgo(3),
       status: 'pending',
     }]);
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(__getEmailLog()).toHaveLength(0);
+  });
+});
+
+// ── Happy path ────────────────────────────────────────────────────────────────
+
+describe('happy path', () => {
+  it('returns success:true and a requestId on valid submission', async () => {
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(true);
+    expect(result.requestId).toBeTruthy();
+  });
+
+  it('normalizes email to lowercase before storing', async () => {
+    await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: { ...validContact, email: 'JANE@EXAMPLE.COM' },
+    });
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.contactEmail).toBe('jane@example.com');
+  });
+
+  it('single swatch submission works', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-1'],
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(true);
   });
-});
 
-// ── submitFabricSample — email content ───────────────────────────────
-
-describe('submitFabricSample — email content', () => {
-  it('confirmation email goes to customer contactId (not null)', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const log = __getEmailLog();
-    const confirmation = log.find(e => e.templateId === 'fabric_sample_confirmation');
-    expect(confirmation).toBeDefined();
-    expect(confirmation.contactId).not.toBeNull();
-    expect(confirmation.contactId).toBeTruthy();
-  });
-
-  it('admin email goes to site owner contactId from secrets', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const log = __getEmailLog();
-    const admin = log.find(e => e.templateId === 'fabric_sample_admin_notify');
-    expect(admin).toBeDefined();
-    expect(admin.contactId).toBe('admin-contact-1');
-  });
-
-  it('confirmation email variables include swatchNames', async () => {
-    await submitFabricSample({ swatchIds: ['sw-1', 'sw-2'], contactInfo: validContact });
-    const log = __getEmailLog();
-    const confirmation = log.find(e => e.templateId === 'fabric_sample_confirmation');
-    expect(confirmation.options.variables.swatchNames).toContain('Natural Oatmeal');
-    expect(confirmation.options.variables.swatchNames).toContain('Espresso Brown');
-  });
-
-  it('admin email variables include customer email and address', async () => {
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    const log = __getEmailLog();
-    const admin = log.find(e => e.templateId === 'fabric_sample_admin_notify');
-    expect(admin.options.variables.email).toBe('jane@example.com');
-    expect(admin.options.variables.address).toBe('123 Main St, Charlotte, NC 28201');
-  });
-});
-
-// ── submitFabricSample — email resilience ────────────────────────────
-
-describe('submitFabricSample — email resilience', () => {
-  it('still returns success when confirmation email throws', async () => {
-    __failNextEmail();
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+  it('falls back to swatch ID when swatch not found in CMS', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: ['sw-unknown'],
+      contactInfo: validContact,
+    });
     expect(result.success).toBe(true);
-    expect(result.requestId).toBeDefined();
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.swatchNames[0]).toBe('sw-unknown');
   });
 
-  it('still inserts CMS record when email throws', async () => {
-    __failNextEmail();
-    await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    expect(__getInserted('FabricSampleRequests').length).toBe(1);
+  it('strips leading/trailing whitespace from swatchIds', async () => {
+    const result = await submitFabricSampleRequest({
+      swatchIds: [' sw-1 ', ' sw-2 '],
+      contactInfo: validContact,
+    });
+    expect(result.success).toBe(true);
+    const record = __getInserted('FabricSampleRequests')[0];
+    expect(record.swatchIds).toEqual(['sw-1', 'sw-2']);
   });
 });
 
-// ── submitFabricSample — error resilience ────────────────────────────
+// ── DB failure ────────────────────────────────────────────────────────────────
 
-describe('submitFabricSample — error resilience', () => {
-  it('returns error object (not throw) when rate limit query fails', async () => {
-    __setQueryError('FabricSampleRequests', new Error('DB unavailable'));
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
+describe('database failure handling', () => {
+  it('returns success:false when FabricSampleRequests insert fails', async () => {
+    __setInsertError('FabricSampleRequests', new Error('DB write failed'));
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
     expect(result.success).toBe(false);
-    expect(result.error).toBeTruthy();
+    expect(result.requestId).toBeUndefined();
   });
 
-  it('does not expose internal error message to client', async () => {
-    __setQueryError('FabricSampleRequests', new Error('internal db schema hint'));
-    const result = await submitFabricSample({ swatchIds: validSwatchIds, contactInfo: validContact });
-    expect(result.error).not.toContain('internal db schema hint');
+  it('does not expose raw DB error message to client on insert failure', async () => {
+    __setInsertError('FabricSampleRequests', new Error('Internal Wix CMS error: schema mismatch'));
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.error).not.toContain('Internal Wix CMS error');
+  });
+
+  it('does not trigger emails when DB insert fails', async () => {
+    __setInsertError('FabricSampleRequests', new Error('DB write failed'));
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    await Promise.resolve();
+    expect(__getEmailLog()).toHaveLength(0);
   });
 });

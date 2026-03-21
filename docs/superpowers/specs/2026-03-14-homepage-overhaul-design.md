@@ -220,7 +220,7 @@ Since Phase 1 uses Option A (rename template elements to match our code IDs), mo
 3. Run dry-run: `node scripts/remap-element-ids.js scripts/masterpage-remap-flat.json`
 4. Run dry-run: `node scripts/remap-element-ids.js scripts/home-remap-flat.json`
 5. If changes look correct: `--apply` flag on both
-6. Run full test suite: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run`
+6. Run full test suite: `cd <repo-root> && npx vitest run`
 7. Deploy via `velo_sync` to stage3-velo repo
 
 **Note:** If all editor renames succeeded (all our code IDs now match template IDs), the flat remap JSONs will be empty `{}` and this step is a no-op. That's the ideal outcome.

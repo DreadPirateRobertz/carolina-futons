@@ -186,3 +186,67 @@ describe('post_klaviyoWebhook — security', () => {
     expect([200, 400]).toContain(response.status);
   });
 });
+
+// ── email_clicked — A/B conversion tracking ───────────────────────────
+
+describe('post_klaviyoWebhook — email_clicked', () => {
+  function makeClickRequest(payload) {
+    return {
+      headers: { 'x-klaviyo-webhook-secret': 'whsec_test_secret_123' },
+      body: { text: async () => JSON.stringify(payload) },
+    };
+  }
+
+  it('returns 200 for valid email_clicked event with campaignId', async () => {
+    const response = await post_klaviyoWebhook(makeClickRequest({
+      type: 'email_clicked',
+      email: 'clicker@test.com',
+      campaignId: 'welcome_step1',
+    }));
+    expect(response.status).toBe(200);
+  });
+
+  it('marks conversion in EmailABLog for email_clicked with campaignId', async () => {
+    __seed('EmailABLog', [
+      { _id: 'ab-1', recipientEmail: 'clicker@test.com', campaignId: 'welcome_step1', converted: false, variant: 'A' },
+    ]);
+
+    let updatedRecord = null;
+    __onUpdate((_col, item) => { updatedRecord = item; });
+
+    await post_klaviyoWebhook(makeClickRequest({
+      type: 'email_clicked',
+      email: 'clicker@test.com',
+      campaignId: 'welcome_step1',
+    }));
+
+    expect(updatedRecord).not.toBeNull();
+    expect(updatedRecord.converted).toBe(true);
+  });
+
+  it('does NOT mark conversion when campaignId is missing from payload', async () => {
+    __seed('EmailABLog', [
+      { _id: 'ab-2', recipientEmail: 'clicker@test.com', campaignId: 'welcome_step1', converted: false, variant: 'B' },
+    ]);
+
+    let updatedRecord = null;
+    __onUpdate((_col, item) => { updatedRecord = item; });
+
+    // No campaignId in payload
+    await post_klaviyoWebhook(makeClickRequest({
+      type: 'email_clicked',
+      email: 'clicker@test.com',
+    }));
+
+    expect(updatedRecord).toBeNull();
+  });
+
+  it('returns 200 for email_clicked even when no EmailABLog record exists', async () => {
+    const response = await post_klaviyoWebhook(makeClickRequest({
+      type: 'email_clicked',
+      email: 'unknown@test.com',
+      campaignId: 'welcome_step1',
+    }));
+    expect(response.status).toBe(200);
+  });
+});

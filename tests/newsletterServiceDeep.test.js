@@ -65,6 +65,14 @@ function buildQueryChain(collection) {
   return chain;
 }
 
+let _memberLoginEmail = 'test@example.com';
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: async () =>
+      _memberLoginEmail ? { loginEmail: _memberLoginEmail } : null,
+  },
+}));
+
 vi.mock('wix-data', () => ({
   default: {
     query: (collection) => buildQueryChain(collection),
@@ -90,6 +98,7 @@ beforeEach(async () => {
   _listId = 'list_123';
   _fetchResponses = [];
   _fetchCallCount = 0;
+  _memberLoginEmail = 'test@example.com';
   vi.resetModules();
   mod = await import('../src/backend/newsletterService.web.js');
 });
@@ -193,6 +202,20 @@ describe('syncToESP', () => {
     expect(r.synced).toBe(false);
     expect(r.reason).toBe('esp_api_error');
   });
+
+  it('rejects when caller email does not match', async () => {
+    _memberLoginEmail = 'other@example.com';
+    const r = await mod.syncToESP('test@example.com', 'footer');
+    expect(r.synced).toBe(false);
+    expect(r.reason).toBe('unauthorized');
+  });
+
+  it('rejects when no member session', async () => {
+    _memberLoginEmail = null;
+    const r = await mod.syncToESP('test@example.com', 'footer');
+    expect(r.synced).toBe(false);
+    expect(r.reason).toBe('unauthorized');
+  });
 });
 
 // ── unsubscribeFromESP ─────────────────────────────────────────────
@@ -230,6 +253,20 @@ describe('unsubscribeFromESP', () => {
     const r = await mod.unsubscribeFromESP('test@example.com');
     expect(r.unsubscribed).toBe(false);
     expect(r.reason).toBe('esp_api_error');
+  });
+
+  it('rejects when caller email does not match', async () => {
+    _memberLoginEmail = 'other@example.com';
+    const r = await mod.unsubscribeFromESP('test@example.com');
+    expect(r.unsubscribed).toBe(false);
+    expect(r.reason).toBe('unauthorized');
+  });
+
+  it('rejects when no member session', async () => {
+    _memberLoginEmail = null;
+    const r = await mod.unsubscribeFromESP('test@example.com');
+    expect(r.unsubscribed).toBe(false);
+    expect(r.reason).toBe('unauthorized');
   });
 });
 

@@ -130,10 +130,10 @@ const { handler } = await import('../src/pages/Product Page.js');
 const { webFn } = await import('../src/backend/service.web.js');
 
 // WRONG — references sibling repo (DOES NOT EXIST IN CI)
-const { fn } = await import('../carolina-futons-stage3-velo/src/public/myModule.js');
+const { fn } = await import('src/public/myModule.js');
 ```
 
-The `../carolina-futons-stage3-velo/` path works locally when both repos are cloned side by side. **It does not exist in CI.** The CI guard grep will reject your PR if you use it.
+The `` path works locally when both repos are cloned side by side. **It does not exist in CI.** The CI guard grep will reject your PR if you use it.
 
 ### Bare specifiers (mocked dependencies)
 
@@ -220,7 +220,7 @@ Every PR must pass ALL of these before merge:
 | `test (22)` | All tests pass on Node 22 |
 | `lint` | ESLint passes with zero errors |
 | `codecov/patch` | New code meets coverage thresholds |
-| Import guard | No `../carolina-futons-stage3-velo/` paths in test files |
+| Import guard | No `` paths in test files |
 
 ### Coverage Thresholds
 
@@ -280,7 +280,7 @@ Before creating the PR:
 
 - [ ] All tests pass locally: `npm test`
 - [ ] Lint passes: `npm run lint`
-- [ ] No `../carolina-futons-stage3-velo/` import paths
+- [ ] No `` import paths
 - [ ] New vitest aliases added for any new bare specifiers
 - [ ] PR title format: `test(<bead-id>): <description>`
 
