@@ -6,6 +6,7 @@ let _insertSpy = null;
 let _updateSpy = null;
 let _removeSpy = null;
 let _queryErrors = {};  // collection -> Error to throw on query
+let _insertErrors = {}; // collection -> Error to throw on insert
 
 // Reset all mock state between tests
 export function __reset() {
@@ -14,6 +15,12 @@ export function __reset() {
   _updateSpy = null;
   _removeSpy = null;
   _queryErrors = {};
+  _insertErrors = {};
+}
+
+// Force the next insert on a collection to throw
+export function __setInsertError(collection, error) {
+  _insertErrors[collection] = error;
 }
 
 // Force a query error for a specific collection
@@ -181,6 +188,11 @@ const wixData = {
   },
 
   async insert(collection, item) {
+    if (_insertErrors[collection]) {
+      const err = _insertErrors[collection];
+      delete _insertErrors[collection];
+      throw err;
+    }
     if (!_store[collection]) _store[collection] = [];
     const inserted = { ...item, _id: item._id || `mock-${Date.now()}` };
     _store[collection].push(inserted);

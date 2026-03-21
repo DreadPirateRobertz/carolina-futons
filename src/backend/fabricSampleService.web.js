@@ -3,13 +3,14 @@
  * @description Fabric sample (free swatch mailer) request handler.
  *
  * Flow:
- *  1. Validate swatchIds (1–3 unique non-empty strings) and contactInfo
- *  2. Rate-limit: 1 request per email address per 30 days
- *  3. Resolve swatch names from FabricSwatches CMS
- *  4. Persist to FabricSampleRequests collection
- *  5. Trigger Wix Automation emails:
- *     - Customer confirmation (fabric_sample_confirmation)
- *     - Fulfillment notification to carolinafutons@gmail.com (fabric_sample_fulfillment)
+ *  1. Validate swatchIds (1–3 unique, alphanumeric IDs) and contactInfo
+ *  2. Rate-limit: 1 request per email address per 30 days (queries contactEmail field, lowercase)
+ *  3. Resolve swatch names from FabricSwatches CMS (single bulk query, fallback to ID)
+ *  4. Upsert CRM contact via wix-crm-backend
+ *  5. Persist to FabricSampleRequests collection (status: pending)
+ *  6. Trigger Wix Automation emails (fire-and-forget — intentional; record is saved first):
+ *     - fabric_sample_confirmation (customer confirmation)
+ *     - fabric_sample_fulfillment (fulfillment notification to internal team via CRM contact)
  *
  * CMS collections:
  *  - FabricSwatches (read) — available swatch catalog
@@ -18,7 +19,7 @@
 import { webMethod, Permissions } from 'wix-web-module';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
 import wixData from 'wix-data';
-import { sanitize, validateEmail } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateId } from 'backend/utils/sanitize';
 
 const MAX_SWATCHES = 3;
 const RATE_LIMIT_DAYS = 30;
@@ -32,8 +33,9 @@ function validateSwatchIds(ids) {
   if (ids.length > MAX_SWATCHES) return { error: `Maximum ${MAX_SWATCHES} swatches may be requested at once.` };
   const cleanIds = [];
   for (const id of ids) {
-    if (typeof id !== 'string' || !id.trim()) return { error: 'Invalid swatch ID in selection.' };
-    cleanIds.push(id.trim());
+    const clean = typeof id === 'string' ? validateId(id.trim()) : null;
+    if (!clean) return { error: 'Invalid swatch ID in selection.' };
+    cleanIds.push(clean);
   }
   if (new Set(cleanIds).size < cleanIds.length) return { error: 'Duplicate swatch IDs are not allowed.' };
   return { cleanIds };
@@ -77,38 +79,49 @@ function validateContact(raw) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Returns true if there is an existing FabricSampleRequests record for this
- * email within the last RATE_LIMIT_DAYS days.
+ * Returns true if there is a FabricSampleRequests record for this email
+ * (lowercase-normalized, stored in `contactEmail`) within the last RATE_LIMIT_DAYS days.
  */
 async function isRateLimited(email) {
-  const cutoff = new Date(Date.now() - RATE_LIMIT_DAYS * 24 * 60 * 60 * 1000);
-  const result = await wixData.query('FabricSampleRequests')
-    .eq('contactEmail', email.toLowerCase())
-    .ge('requestedAt', cutoff)
-    .limit(1)
-    .find();
-  return result.items.length > 0;
+  try {
+    const cutoff = new Date(Date.now() - RATE_LIMIT_DAYS * 24 * 60 * 60 * 1000);
+    const result = await wixData.query('FabricSampleRequests')
+      .eq('contactEmail', email)
+      .ge('requestedAt', cutoff)
+      .limit(1)
+      .find();
+    return result.items.length > 0;
+  } catch (err) {
+    console.error('[fabricSampleService] Rate limit check failed:', err);
+    throw err; // propagate so the caller can return a distinct error
+  }
 }
 
 /**
- * Resolve human-readable swatch names from FabricSwatches CMS.
- * Falls back to the raw ID when a swatch is not found.
+ * Resolve human-readable swatch names via a single bulk query on FabricSwatches.
+ * Falls back to the raw ID when a swatch is not found — logs a warning.
  */
 async function resolveSwatchNames(swatchIds) {
-  return Promise.all(
-    swatchIds.map(id =>
-      wixData.query('FabricSwatches').eq('_id', id).limit(1).find()
-        .then(r => {
-          const name = r.items[0]?.name;
-          if (!name) console.warn(`[fabricSampleService] Swatch not found in CMS: ${id}`);
-          return name || id;
-        })
-    )
-  );
+  try {
+    const result = await wixData.query('FabricSwatches')
+      .hasSome('_id', swatchIds)
+      .limit(MAX_SWATCHES)
+      .find();
+    const nameMap = new Map(result.items.map(item => [item._id, item.name]));
+    return swatchIds.map(id => {
+      const name = nameMap.get(id);
+      if (!name) console.warn(`[fabricSampleService] Swatch not found in CMS: ${id}`);
+      return name || id;
+    });
+  } catch (err) {
+    console.error('[fabricSampleService] FabricSwatches query failed — using IDs as fallback:', err);
+    return swatchIds; // fallback: use raw IDs so the request is not lost
+  }
 }
 
 /**
- * Upsert a CRM contact and return contactId (may be undefined on failure).
+ * Upsert a CRM contact and return contactId, or undefined on failure.
+ * When undefined, automation emails will be skipped and crmSyncFailed set on the record.
  */
 async function upsertContact(contact) {
   try {
@@ -132,18 +145,19 @@ async function upsertContact(contact) {
 }
 
 /**
- * Trigger both confirmation + fulfillment emails.
- * Failures are logged but do not fail the request (record is already saved).
+ * Trigger confirmation + fulfillment emails for a successful request.
+ * Each email is wrapped in its own try-catch so one failure does not prevent the other.
+ * Called without await — email failures must not roll back the persisted record.
  */
 async function triggerAutomationEmails({ contactId, swatchNames, shippingAddress }) {
   const variables = { swatchNames, swatchCount: swatchNames.length, shippingAddress };
   try {
-    await triggeredEmails.emailContact('fabric_sample_confirmation', contactId || '', { variables });
+    await triggeredEmails.emailContact('fabric_sample_confirmation', contactId, { variables });
   } catch (err) {
     console.error('[fabricSampleService] Confirmation email failed:', err);
   }
   try {
-    await triggeredEmails.emailContact('fabric_sample_fulfillment', contactId || '', { variables });
+    await triggeredEmails.emailContact('fabric_sample_fulfillment', contactId, { variables });
   } catch (err) {
     console.error('[fabricSampleService] Fulfillment email failed:', err);
   }
@@ -166,60 +180,62 @@ export const submitFabricSampleRequest = webMethod(
     try {
       const { swatchIds, contactInfo, productSlug: rawSlug } = params || {};
 
-      // Validate swatches
-      const swatchValidation = validateSwatchIds(swatchIds);
-      if (swatchValidation.error) return { success: false, error: swatchValidation.error };
-      const cleanIds = swatchValidation.cleanIds;
+      const { error: swatchError, cleanIds } = validateSwatchIds(swatchIds);
+      if (swatchError) return { success: false, error: swatchError };
 
-      // Validate contact
       const contact = validateContact(contactInfo);
       if (contact.error) return { success: false, error: contact.error };
 
-      // Rate limit
-      const limited = await isRateLimited(contact.email);
+      let limited;
+      try {
+        limited = await isRateLimited(contact.email);
+      } catch (_err) {
+        return { success: false, error: 'Unable to process your request right now. Please try again.' };
+      }
       if (limited) {
         return { success: false, error: 'You may only request samples once every 30 days.' };
       }
 
-      // Sanitize optional product slug
-      const cleanSlug = rawSlug ? sanitize(String(rawSlug), 200).trim() || undefined : undefined;
+      const cleanSlug = rawSlug ? sanitize(String(rawSlug), 200).trim() : undefined;
 
-      // Resolve swatch names
       const swatchNames = await resolveSwatchNames(cleanIds);
-
-      // Upsert CRM contact
       const contactId = await upsertContact(contact);
 
       const shippingAddress = {
         address1: contact.address1,
-        ...(contact.address2 ? { address2: contact.address2 } : {}),
-        city:  contact.city,
-        state: contact.state,
-        zip:   contact.zip,
+        address2: contact.address2,
+        city:     contact.city,
+        state:    contact.state,
+        zip:      contact.zip,
       };
 
-      // Persist request
       const record = {
-        contactEmail: contact.email,
-        contactName:  `${contact.firstName} ${contact.lastName}`,
-        contactId:    contactId || '',
-        swatchIds:    cleanIds,
+        contactEmail:  contact.email,
+        contactName:   `${contact.firstName} ${contact.lastName}`,
+        contactId:     contactId || '',
+        swatchIds:     cleanIds,
         swatchNames,
         shippingAddress,
-        requestedAt: new Date(),
-        status: 'pending',
-        ...(cleanSlug ? { productSlug: cleanSlug } : {}),
+        requestedAt:   new Date(),
+        status:        'pending',
+        ...(cleanSlug    ? { productSlug:   cleanSlug } : {}),
+        ...(contactId    ? {} : { crmSyncFailed: true }),
       };
+
       const inserted = await wixData.insert('FabricSampleRequests', record);
 
-      // Trigger Wix Automation emails (non-blocking — failure doesn't fail the request)
-      triggerAutomationEmails({ contactId, swatchNames, shippingAddress })
-        .catch(err => console.error('[fabricSampleService] Automation trigger error:', err));
+      if (contactId) {
+        // Fire-and-forget — email failures must not roll back the persisted record
+        triggerAutomationEmails({ contactId, swatchNames, shippingAddress })
+          .catch(err => console.error('[fabricSampleService] Automation trigger error:', err));
+      } else {
+        console.error('[fabricSampleService] No contactId — skipping automation emails. Manual fulfillment required for:', contact.email);
+      }
 
       return { success: true, requestId: inserted._id };
     } catch (err) {
       console.error('[fabricSampleService] submitFabricSampleRequest error:', err);
-      return { success: false, error: err.message || 'Failed to submit fabric sample request.' };
+      return { success: false, error: 'Failed to submit fabric sample request. Please try again.' };
     }
   }
 );

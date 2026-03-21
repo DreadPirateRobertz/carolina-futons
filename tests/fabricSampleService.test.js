@@ -8,7 +8,7 @@
  *   - Duplicate prevention within rate-limit window
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __reset, __seed, __getInserted } from 'wix-data';
+import { __reset, __seed, __getInserted, __setInsertError } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
 import { submitFabricSampleRequest } from '../src/backend/fabricSampleService.web.js';
 
@@ -277,8 +277,8 @@ describe('rate limiting (1 per email per 30 days)', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rate limit check is case-insensitive on email', async () => {
-    // Storage always normalizes to lowercase; rate limit check must match
+  it('rate limit check is case-insensitive on email (uppercase input normalizes to match)', async () => {
+    // Storage always normalizes emails to lowercase; uppercase input must still be blocked
     __seed('FabricSampleRequests', [{
       _id: 'prev-003',
       contactEmail: 'jane@example.com',
@@ -287,7 +287,21 @@ describe('rate limiting (1 per email per 30 days)', () => {
     }]);
     const result = await submitFabricSampleRequest({
       swatchIds: validSwatchIds,
-      contactInfo: { ...validContact, email: 'jane@example.com' },
+      contactInfo: { ...validContact, email: 'JANE@EXAMPLE.COM' },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('blocks request at exactly 30 days (rate limit boundary is inclusive)', async () => {
+    __seed('FabricSampleRequests', [{
+      _id: 'boundary-001',
+      contactEmail: 'jane@example.com',
+      requestedAt: daysAgo(30),
+      status: 'pending',
+    }]);
+    const result = await submitFabricSampleRequest({
+      swatchIds: validSwatchIds,
+      contactInfo: validContact,
     });
     expect(result.success).toBe(false);
   });
@@ -385,6 +399,16 @@ describe('Wix Automation email triggers', () => {
     expect(inserted).toHaveLength(1);
   });
 
+  it('fulfillment email still fires when confirmation email fails', async () => {
+    __failNextEmail(); // fails the FIRST email (confirmation)
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    // Drain microtasks so the fire-and-forget completes before asserting
+    await Promise.resolve();
+    const emailLog = __getEmailLog();
+    const fulfillmentEmail = emailLog.find(e => e.templateId === 'fabric_sample_fulfillment');
+    expect(fulfillmentEmail).toBeTruthy();
+  });
+
   it('does not trigger emails when validation fails', async () => {
     await submitFabricSampleRequest({ swatchIds: [], contactInfo: validContact });
     expect(__getEmailLog()).toHaveLength(0);
@@ -446,5 +470,29 @@ describe('happy path', () => {
     expect(result.success).toBe(true);
     const record = __getInserted('FabricSampleRequests')[0];
     expect(record.swatchIds).toEqual(['sw-1', 'sw-2']);
+  });
+});
+
+// ── DB failure ────────────────────────────────────────────────────────────────
+
+describe('database failure handling', () => {
+  it('returns success:false when FabricSampleRequests insert fails', async () => {
+    __setInsertError('FabricSampleRequests', new Error('DB write failed'));
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.success).toBe(false);
+    expect(result.requestId).toBeUndefined();
+  });
+
+  it('does not expose raw DB error message to client on insert failure', async () => {
+    __setInsertError('FabricSampleRequests', new Error('Internal Wix CMS error: schema mismatch'));
+    const result = await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    expect(result.error).not.toContain('Internal Wix CMS error');
+  });
+
+  it('does not trigger emails when DB insert fails', async () => {
+    __setInsertError('FabricSampleRequests', new Error('DB write failed'));
+    await submitFabricSampleRequest({ swatchIds: validSwatchIds, contactInfo: validContact });
+    await Promise.resolve();
+    expect(__getEmailLog()).toHaveLength(0);
   });
 });
