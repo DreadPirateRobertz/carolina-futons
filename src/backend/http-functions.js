@@ -1,8 +1,9 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, notFound, serverError, forbidden, badRequest } from 'wix-http-functions';
+import { ok, notFound, serverError, forbidden, badRequest, unauthorized } from 'wix-http-functions';
 import { currentMember } from 'wix-members-backend';
-import { accounts, transactions } from 'wix-loyalty.v2';
+import { accounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
+import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -1087,20 +1088,7 @@ export async function get_sitemapXml() {
 // URL: GET https://www.carolinafutons.com/_functions/loyalty/{memberId}
 // Returns loyalty account info for the authenticated member.
 // IDOR guard: authenticated member must own the requested memberId.
-
-const LOYALTY_TIERS = [
-  { name: 'Bronze', min: 0, next: 500 },
-  { name: 'Silver', min: 500, next: 1500 },
-  { name: 'Gold', min: 1500, next: null },
-];
-
-function resolveLoyaltyTier(points) {
-  const sorted = [...LOYALTY_TIERS].sort((a, b) => b.min - a.min);
-  for (const tier of sorted) {
-    if (points >= tier.min) return tier;
-  }
-  return LOYALTY_TIERS[0];
-}
+// Tier logic: shared via backend/utils/loyaltyData (plain module, no webMethod).
 
 export async function get_loyalty(request) {
   const json = (obj) => JSON.stringify(obj);
@@ -1120,7 +1108,7 @@ export async function get_loyalty(request) {
       return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
     }
     if (!member) {
-      return forbidden({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
+      return unauthorized({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
     }
     if (member._id !== memberId) {
       return forbidden({ body: json({ error: 'Access denied' }), headers: jsonHeaders });
@@ -1133,19 +1121,19 @@ export async function get_loyalty(request) {
     }
 
     const points = account.points ? account.points.balance : 0;
-    const tier = resolveLoyaltyTier(points);
+    const tier = resolveTierFromPoints(points);
 
-    let recentActivity = [];
+    let rewards = [];
     try {
-      const { transactions: txList } = await transactions.listTransactions({ filter: { accountId: account._id } });
-      recentActivity = (txList || []).map((tx) => ({
-        points: tx.points,
-        description: tx.description,
-        date: tx._createdDate,
+      const { rewards: rewardList } = await loyaltyRewards.listRewards();
+      rewards = (rewardList || []).map((r) => ({
+        _id: r._id,
+        name: r.name,
+        pointCost: r.pointCost,
       }));
     } catch (err) {
-      console.error(`HTTP function error (loyalty): listTransactions() failed for memberId=${memberId}:`, err);
-      // Degrade gracefully — return account data with empty activity
+      console.error(`HTTP function error (loyalty): listRewards() failed for memberId=${memberId}:`, err);
+      // Degrade gracefully — return account data with empty rewards
     }
 
     return ok({
@@ -1154,7 +1142,7 @@ export async function get_loyalty(request) {
         points,
         tier: tier.name,
         nextTierAt: tier.next,
-        recentActivity,
+        rewards,
       }),
       headers: jsonHeaders,
     });

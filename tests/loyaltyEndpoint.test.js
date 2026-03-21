@@ -6,8 +6,9 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
 import {
   __setAccount,
+  __setRewards,
   __reset as __resetLoyalty,
-  transactions,
+  rewards as loyaltyRewardsMock,
 } from './__mocks__/wix-loyalty.v2.js';
 import { get_loyalty } from '../src/backend/http-functions.js';
 
@@ -25,9 +26,9 @@ const mockAccount = {
   points: { balance: 750 },
 };
 
-const mockTransactions = [
-  { _id: 'tx-1', points: 50, description: 'Purchase', _createdDate: new Date('2026-03-01') },
-  { _id: 'tx-2', points: 100, description: 'Bonus', _createdDate: new Date('2026-03-10') },
+const mockRewards = [
+  { _id: 'rw-1', name: '5% Off', pointCost: 200 },
+  { _id: 'rw-2', name: 'Free Shipping', pointCost: 500 },
 ];
 
 beforeEach(() => {
@@ -41,7 +42,7 @@ describe('GET /loyalty/{memberId} — 200 success', () => {
   beforeEach(() => {
     __setMember({ _id: MEMBER_ID });
     __setAccount(mockAccount);
-    transactions.listTransactions.mockResolvedValue({ transactions: mockTransactions });
+    __setRewards(mockRewards);
   });
 
   it('returns 200', async () => {
@@ -73,20 +74,20 @@ describe('GET /loyalty/{memberId} — 200 success', () => {
     expect(body.nextTierAt).toBe(1500);
   });
 
-  it('response body includes recentActivity array', async () => {
+  it('response body includes rewards array', async () => {
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     const body = JSON.parse(result.body);
-    expect(Array.isArray(body.recentActivity)).toBe(true);
-    expect(body.recentActivity).toHaveLength(2);
+    expect(Array.isArray(body.rewards)).toBe(true);
+    expect(body.rewards).toHaveLength(2);
   });
 
-  it('recentActivity entries have expected shape', async () => {
+  it('reward entries have expected shape', async () => {
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     const body = JSON.parse(result.body);
-    const [first] = body.recentActivity;
-    expect(first).toHaveProperty('points');
-    expect(first).toHaveProperty('description');
-    expect(first).toHaveProperty('date');
+    const [first] = body.rewards;
+    expect(first).toHaveProperty('_id');
+    expect(first).toHaveProperty('name');
+    expect(first).toHaveProperty('pointCost');
   });
 
   it('returns JSON content-type header', async () => {
@@ -115,21 +116,21 @@ describe('GET /loyalty/{memberId} — 200 success', () => {
     expect(body.nextTierAt).toBe(500);
   });
 
-  it('returns empty recentActivity array when no transactions exist', async () => {
-    transactions.listTransactions.mockResolvedValue({ transactions: [] });
+  it('returns empty rewards array when no rewards exist', async () => {
+    __setRewards([]);
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     const body = JSON.parse(result.body);
-    expect(body.recentActivity).toEqual([]);
+    expect(body.rewards).toEqual([]);
   });
 });
 
-// ── 403 — Not authenticated ───────────────────────────────────────────
+// ── 401 — Not authenticated ───────────────────────────────────────────
 
-describe('GET /loyalty/{memberId} — 403 not authenticated', () => {
-  it('returns 403 when no member is authenticated', async () => {
+describe('GET /loyalty/{memberId} — 401 not authenticated', () => {
+  it('returns 401 when no member is authenticated', async () => {
     // __setMember not called — currentMember.getMember() returns null
     const result = await get_loyalty(makeRequest(MEMBER_ID));
-    expect(result.status).toBe(403);
+    expect(result.status).toBe(401);
   });
 
   it('returns JSON error body for unauthenticated', async () => {
@@ -161,7 +162,6 @@ describe('GET /loyalty/{memberId} — 403 IDOR guard', () => {
 
 describe('GET /loyalty/{memberId} — 400 bad request', () => {
   it('returns 400 when memberId path param is missing', async () => {
-    __setMember({ _id: MEMBER_ID });
     const result = await get_loyalty(makeRequest(null));
     expect(result.status).toBe(400);
   });
@@ -173,7 +173,6 @@ describe('GET /loyalty/{memberId} — 400 bad request', () => {
   });
 
   it('returns 400 for empty-string memberId', async () => {
-    __setMember({ _id: MEMBER_ID });
     const result = await get_loyalty(makeRequest(''));
     expect(result.status).toBe(400);
   });
@@ -233,29 +232,29 @@ describe('GET /loyalty/{memberId} — 500 internal error', () => {
   });
 });
 
-// ── Graceful degradation — listTransactions failure ───────────────────
+// ── Graceful degradation — listRewards failure ────────────────────────
 
-describe('GET /loyalty/{memberId} — listTransactions failure degrades gracefully', () => {
+describe('GET /loyalty/{memberId} — listRewards failure degrades gracefully', () => {
   beforeEach(() => {
     __setMember({ _id: MEMBER_ID });
     __setAccount(mockAccount);
   });
 
-  it('returns 200 (not 500) when listTransactions throws', async () => {
-    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+  it('returns 200 (not 500) when listRewards throws', async () => {
+    loyaltyRewardsMock.listRewards.mockRejectedValueOnce(new Error('rewards service down'));
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     expect(result.status).toBe(200);
   });
 
-  it('returns empty recentActivity when listTransactions throws', async () => {
-    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+  it('returns empty rewards when listRewards throws', async () => {
+    loyaltyRewardsMock.listRewards.mockRejectedValueOnce(new Error('rewards service down'));
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     const body = JSON.parse(result.body);
-    expect(body.recentActivity).toEqual([]);
+    expect(body.rewards).toEqual([]);
   });
 
-  it('still returns correct points and tier when listTransactions throws', async () => {
-    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+  it('still returns correct points and tier when listRewards throws', async () => {
+    loyaltyRewardsMock.listRewards.mockRejectedValueOnce(new Error('rewards service down'));
     const result = await get_loyalty(makeRequest(MEMBER_ID));
     const body = JSON.parse(result.body);
     expect(body.points).toBe(750);
@@ -268,7 +267,7 @@ describe('GET /loyalty/{memberId} — listTransactions failure degrades graceful
 describe('GET /loyalty/{memberId} — tier boundary conditions', () => {
   beforeEach(() => {
     __setMember({ _id: MEMBER_ID });
-    transactions.listTransactions.mockResolvedValue({ transactions: [] });
+    __setRewards([]);
   });
 
   it('499 points → Bronze with nextTierAt=500', async () => {
@@ -293,11 +292,5 @@ describe('GET /loyalty/{memberId} — tier boundary conditions', () => {
     const body = JSON.parse(result.body);
     expect(body.tier).toBe('Silver');
     expect(body.nextTierAt).toBe(1500);
-  });
-
-  it('listTransactions is called with filter scoped to the account', async () => {
-    __setAccount({ _id: 'acc-42', contactId: MEMBER_ID, points: { balance: 100 } });
-    await get_loyalty(makeRequest(MEMBER_ID));
-    expect(transactions.listTransactions).toHaveBeenCalledWith({ filter: { accountId: 'acc-42' } });
   });
 });
