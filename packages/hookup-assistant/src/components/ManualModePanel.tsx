@@ -213,7 +213,7 @@ export function ManualModePanel({
       <RepeaterGuard
         repeaterId={repeaterGuard.repeaterId}
         sectionName={repeaterGuard.sectionName}
-        onEnter={onEnterRepeaterTemplate ?? (() => undefined)}
+        onEnter={onEnterRepeaterTemplate ?? (() => {})}
       />
     );
   }

@@ -28,7 +28,11 @@ export function useRepeaterGuard(): RepeaterGuardHook {
   );
 
   const confirmEntered = useCallback((repeaterId: string) => {
-    setEnteredRepeaters((prev: ReadonlySet<string>) => new Set([...prev, repeaterId]));
+    setEnteredRepeaters((prev: ReadonlySet<string>) => {
+      const next = new Set(prev);
+      next.add(repeaterId);
+      return next;
+    });
   }, []);
 
   const resetAll = useCallback(() => {
