@@ -29,6 +29,7 @@ import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
+import { buildYouTubeEmbed } from 'public/videoHelpers.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -152,6 +153,9 @@ async function initProductPage() {
       { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
       { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
+      // CF-m55f: Direct YouTube embed from product.videoUrl CMS field
+      // Requires: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent) in Studio
+      { name: 'productYouTubeVideo', init: () => initProductYouTubeVideo($w, state), critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
       // Assembly guide link (fetches by SKU, shows PDF/video)
       { name: 'assemblyGuide', init: async () => {
@@ -446,6 +450,41 @@ async function initShowroomCTA($wFn, _state, svc) {
       } catch (err) { console.error('[ProductPage] Showroom booking nav failed:', err); }
     });
   } catch (e) { /* #showroomCTA optional */ }
+}
+
+// ── YouTube Video Embed (CF-m55f S1) ─────────────────────────────────
+// Shows a product walkthrough YouTube video when product.videoUrl is set.
+// Editor elements: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent)
+
+/**
+ * Show a YouTube embed for product.videoUrl if present.
+ * Collapses #productVideoSection when no video URL or URL is unrecognised.
+ * @param {Function} $wFn - Wix $w selector
+ * @param {Object} pageState - Product page state (needs pageState.product.videoUrl)
+ */
+function initProductYouTubeVideo($wFn, pageState) {
+  try {
+    const videoUrl = pageState?.product?.videoUrl;
+    if (!videoUrl) {
+      try { $wFn('#productVideoSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const iframeHtml = buildYouTubeEmbed(videoUrl);
+    if (!iframeHtml) {
+      try { $wFn('#productVideoSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $wFn('#productVideoEmbed').src = iframeHtml; } catch (e) {}
+    try {
+      $wFn('#productVideoSection').accessibility.role = 'region';
+      $wFn('#productVideoSection').accessibility.ariaLabel = 'Product video';
+    } catch (e) {}
+    try { $wFn('#productVideoSection').expand(); } catch (e) {}
+  } catch (e) {
+    try { $wFn('#productVideoSection').collapse(); } catch (e2) {}
+  }
 }
 
 // ── Style Quiz CTA (CF-75d1 S6) ────────────────────────────────────
