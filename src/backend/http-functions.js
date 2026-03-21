@@ -1064,9 +1064,10 @@ export function get_robotsTxt() {
 // ── Topic Cluster ─────────────────────────────────────────────────────
 // URL: GET https://www.carolinafutons.com/_functions/topicCluster/{slug}
 //
-// Note: topicClusters.web.js wraps its exports in webMethod(), which cannot
-// be resolved from http-functions.js context (same restriction as blogRssFeed).
-// Cluster data is sourced from the shared backend/utils/topicClusterData module.
+// Note: topicClusters.web.js exports are wrapped in webMethod() — Wix does not
+// allow HTTP function handlers to invoke webMethods at runtime (same platform
+// constraint as blogRssFeed). Cluster data is sourced from the shared
+// backend/utils/topicClusterData module instead.
 export function get_topicCluster(request) {
   try {
     const rawSlug = (request && Array.isArray(request.path) && request.path[0]) || '';
@@ -1095,11 +1096,10 @@ export function get_topicCluster(request) {
         pillarUrl: `${SITE_URL}/buying-guides/${cluster.pillarSlug}`,
         topic: cluster.topic,
         keywords: cluster.keywords,
-        spokePages: cluster.spokePages.map(sp => ({
-          ...sp,
-          url: `${SITE_URL}/buying-guides/${sp.slug}`,
-        })),
-        spokeCount: cluster.spokePages.length,
+        spokePages: Array.isArray(cluster.spokePages)
+          ? cluster.spokePages.map(sp => ({ ...sp, url: `${SITE_URL}/buying-guides/${sp.slug}` }))
+          : [],
+        spokeCount: Array.isArray(cluster.spokePages) ? cluster.spokePages.length : 0,
       },
     };
 
@@ -1111,7 +1111,7 @@ export function get_topicCluster(request) {
       },
     });
   } catch (err) {
-    console.error('HTTP function error (topicCluster):', err);
+    console.error('HTTP function error (topicCluster):', err.name, err.message, err);
     return serverError({
       body: JSON.stringify({ success: false, error: 'Failed to load topic cluster.' }),
       headers: { 'Content-Type': 'application/json' },

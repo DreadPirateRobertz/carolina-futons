@@ -1,7 +1,8 @@
 /**
  * Static topic cluster definitions for the Carolina Futons buying guide hub.
  * Shared between topicClusters.web.js (webMethod layer) and http-functions.js
- * (HTTP endpoint layer — cannot call webMethods directly).
+ * (HTTP endpoint layer). http-functions.js cannot call webMethods at runtime,
+ * so both layers import from this module as a single source of truth.
  *
  * Each key is a pillar slug. spokePages describe related sub-guide articles.
  */

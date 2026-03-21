@@ -52,6 +52,7 @@ vi.mock('backend/utils/httpHelpers', () => ({
 }));
 
 import { get_topicCluster } from '../src/backend/http-functions.js';
+import { ok } from 'wix-http-functions';
 
 /** Build a minimal Wix-style request object with a path segment */
 function makeRequest(slug) {
@@ -180,5 +181,49 @@ describe('get_topicCluster — response format', () => {
     const { cluster } = JSON.parse(result.body);
     expect(cluster.spokeCount).toBe(4);
     expect(cluster.spokePages).toHaveLength(4);
+  });
+
+  it('spokeCount matches spokePages.length for all 8 clusters', () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const { cluster } = JSON.parse(get_topicCluster(makeRequest(slug)).body);
+      expect(cluster.spokeCount).toBe(cluster.spokePages.length);
+    }
+  });
+});
+
+// ── Security / injection ────────────────────────────────────────────────
+// validateSlug enforces ^[a-z0-9-]+$ — invalid chars → empty string → 400.
+// Uppercase is normalized to lowercase, so mixed-case known slugs still match.
+
+describe('get_topicCluster — slug injection', () => {
+  it('returns 400 for path-traversal slug (invalid chars fail validateSlug)', () => {
+    const result = get_topicCluster(makeRequest('../etc/passwd'));
+    expect(result.status).toBe(400);
+  });
+
+  it('returns 400 for HTML-injected slug (invalid chars fail validateSlug)', () => {
+    const result = get_topicCluster(makeRequest('<script>alert(1)</script>'));
+    expect(result.status).toBe(400);
+  });
+
+  it('returns 200 for uppercase slug (validateSlug normalizes to lowercase)', () => {
+    expect(get_topicCluster(makeRequest('Futon-Frames')).status).toBe(200);
+  });
+
+  it('returns 400 for slug with only whitespace', () => {
+    expect(get_topicCluster(makeRequest('   ')).status).toBe(400);
+  });
+});
+
+// ── 500 error path ──────────────────────────────────────────────────────
+
+describe('get_topicCluster — server error', () => {
+  it('returns status 500 when ok() throws unexpectedly', () => {
+    ok.mockImplementationOnce(() => { throw new Error('forced'); });
+    const result = get_topicCluster(makeRequest('futon-frames'));
+    expect(result.status).toBe(500);
+    const body = JSON.parse(result.body);
+    expect(body.success).toBe(false);
   });
 });
