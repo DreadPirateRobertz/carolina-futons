@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initProductQA } from '../src/public/ProductQA.js';
+import { initProductQA, safeJsonLd } from '../src/public/ProductQA.js';
 import { futonFrame } from './fixtures/products.js';
 
 // Mock backend
@@ -627,5 +627,57 @@ describe('ProductQA — initProductQA', () => {
     onItemReady($item, mockQuestions.data.questions[0]);
 
     expect($item('#qaFlagBtn').accessibility.ariaLabel).toBeTruthy();
+  });
+});
+
+// ── safeJsonLd — CF-dzyl ──────────────────────────────────────────
+
+describe('safeJsonLd — JSON-LD script injection safety', () => {
+  it('serializes a plain object correctly', () => {
+    const result = safeJsonLd({ '@type': 'FAQPage', name: 'Test' });
+    expect(JSON.parse(result)).toEqual({ '@type': 'FAQPage', name: 'Test' });
+  });
+
+  it('escapes </ to prevent </script> early termination', () => {
+    const schema = { question: 'Is </script> safe?' };
+    expect(safeJsonLd(schema)).not.toContain('</script>');
+    expect(safeJsonLd(schema)).toContain('<\\/script>');
+  });
+
+  it('escapes </ appearing anywhere in a string value', () => {
+    const schema = { text: 'click </a> here' };
+    expect(safeJsonLd(schema)).not.toContain('</');
+  });
+
+  it('handles nested objects with </ in values', () => {
+    const schema = {
+      '@type': 'FAQPage',
+      mainEntity: [{ '@type': 'Question', text: 'Is </script> safe?', answer: 'No </script> allowed' }],
+    };
+    const result = safeJsonLd(schema);
+    expect(result).not.toContain('</');
+    expect(JSON.parse(result.replace(/<\\\//g, '</'))).toEqual(schema);
+  });
+
+  it('handles a string value with no special characters unchanged', () => {
+    const schema = { name: 'Carolina Futons FAQ' };
+    expect(safeJsonLd(schema)).toBe('{"name":"Carolina Futons FAQ"}');
+  });
+
+  it('handles empty object', () => {
+    expect(safeJsonLd({})).toBe('{}');
+  });
+
+  it('handles arrays at root', () => {
+    const result = safeJsonLd([{ text: '</div>' }]);
+    expect(result).not.toContain('</');
+  });
+
+  it('multiple </ occurrences are all escaped', () => {
+    const schema = { a: '</a>', b: '</b>', c: '</c>' };
+    const result = safeJsonLd(schema);
+    expect(result).not.toContain('</');
+    const occurrences = (result.match(/<\\\//g) || []).length;
+    expect(occurrences).toBe(3);
   });
 });
