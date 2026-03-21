@@ -1,6 +1,9 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
-import { ok, notFound, serverError, forbidden, badRequest } from 'wix-http-functions';
+import { ok, notFound, serverError, forbidden, badRequest, unauthorized } from 'wix-http-functions';
+import { currentMember } from 'wix-members-backend';
+import { accounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
+import { resolveTierFromPoints } from 'backend/utils/loyaltyData';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -1078,6 +1081,74 @@ export async function get_sitemapXml() {
       body: 'Error generating sitemap',
       headers: { 'Content-Type': 'text/plain' },
     });
+  }
+}
+
+// ── Loyalty Member Endpoint ──────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/loyalty/{memberId}
+// Returns loyalty account info for the authenticated member.
+// IDOR guard: authenticated member must own the requested memberId.
+// Tier logic: shared via backend/utils/loyaltyData (plain module, no webMethod).
+
+export async function get_loyalty(request) {
+  const json = (obj) => JSON.stringify(obj);
+  const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const memberId = request.path && request.path[0];
+
+  try {
+    if (!memberId) {
+      return badRequest({ body: json({ error: 'memberId is required' }), headers: jsonHeaders });
+    }
+
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): getMember() failed for memberId=${memberId}:`, err);
+      return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
+    }
+    if (!member) {
+      return unauthorized({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
+    }
+    if (member._id !== memberId) {
+      return forbidden({ body: json({ error: 'Access denied' }), headers: jsonHeaders });
+    }
+
+    const account = await accounts.getMyAccount();
+    if (!account) {
+      console.error(`HTTP function error (loyalty): no loyalty account for memberId=${memberId}`);
+      return notFound({ body: json({ error: 'Loyalty account not found' }), headers: jsonHeaders });
+    }
+
+    const points = account.points ? account.points.balance : 0;
+    const tier = resolveTierFromPoints(points);
+
+    let rewards = [];
+    try {
+      const { rewards: rewardList } = await loyaltyRewards.listRewards();
+      rewards = (rewardList || []).map((r) => ({
+        _id: r._id,
+        name: r.name,
+        pointCost: r.pointCost,
+      }));
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): listRewards() failed for memberId=${memberId}:`, err);
+      // Degrade gracefully — return account data with empty rewards
+    }
+
+    return ok({
+      body: json({
+        memberId,
+        points,
+        tier: tier.name,
+        nextTierAt: tier.next,
+        rewards,
+      }),
+      headers: jsonHeaders,
+    });
+  } catch (err) {
+    console.error(`HTTP function error (loyalty): memberId=${memberId || 'unknown'}:`, err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }
 
