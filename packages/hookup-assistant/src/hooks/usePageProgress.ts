@@ -51,6 +51,23 @@ function saveIds(pageName: string, kind: 'hooked' | 'skipped', ids: string[]) {
   }
 }
 
+/**
+ * Reads the hooked element count for a page directly from localStorage.
+ * Synchronous — safe to call during render for progress display in the dropdown.
+ * Returns 0 if the key is absent or the stored value is malformed.
+ */
+export function readPageHookedCount(pageName: string): number {
+  const key = storageKey(pageName, 'hooked');
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export function usePageProgress(pageName: string) {
   const [hookedIds, setHookedIds] = useState<string[]>(() => loadIds(pageName, 'hooked'));
   const [skippedIds, setSkippedIds] = useState<string[]>(() => loadIds(pageName, 'skipped'));
