@@ -107,7 +107,7 @@
 
 - [ ] **Step 10: Run full test suite**
   ```bash
-  cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run
+  cd <repo-root> && npx vitest run
   ```
   Expected: 12,000+ tests green. Any failures → fix before proceeding.
 
@@ -223,7 +223,7 @@
 
 - [ ] **Step 11: Run tests**
   ```bash
-  cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run
+  cd <repo-root> && npx vitest run
   ```
 
 - [ ] **Step 12: Deploy and verify with real data**

@@ -8,7 +8,7 @@
 
 **Tech Stack:** Wix Velo (JS), Wix HTTP Functions, Wix Data (CMS collections), Wix Media Manager, existing modules (photoReviews.web.js, topicClusters.web.js, blogRssFeed.web.js)
 
-**Test command:** `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run`
+**Test command:** `cd <repo-root> && npx vitest run`
 
 **Spec:** `docs/superpowers/specs/2026-03-21-sprint4-marketing-engine-design.md`
 
@@ -43,10 +43,10 @@
 
 ```bash
 # Check what blogRssFeed exports
-grep -n "export" /Users/hal/gt/cfutons/refinery/rig/src/backend/blogRssFeed.web.js | head -20
+grep -n "export" src/backend/blogRssFeed.web.js | head -20
 
 # Check if http-functions.js has an RSS endpoint
-grep -n "rss\|RSS\|feed\|Feed" /Users/hal/gt/cfutons/refinery/rig/src/backend/http-functions.js | head -10
+grep -n "rss\|RSS\|feed\|Feed" src/backend/http-functions.js | head -10
 ```
 
 Common causes:
@@ -99,7 +99,7 @@ describe('Blog RSS Feed — HTTP Endpoint Registration', () => {
 - [ ] **Step 3: Run — confirm http-functions test fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/blogRssFeedFix.test.js
+cd <repo-root> && npx vitest run tests/blogRssFeedFix.test.js
 ```
 
 - [ ] **Step 4: Add get_blogRssFeed to http-functions.js**
@@ -131,13 +131,13 @@ export async function get_blogRssFeed(request) {
 
 Check actual BlogPosts collection name if unsure:
 ```bash
-grep -r "BlogPosts\|blogPosts" /Users/hal/gt/cfutons/refinery/rig/src/backend/ | head -5
+grep -r "BlogPosts\|blogPosts" src/backend/ | head -5
 ```
 
 - [ ] **Step 5: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/blogRssFeedFix.test.js
+cd <repo-root> && npx vitest run tests/blogRssFeedFix.test.js
 ```
 
 - [ ] **Step 6: Commit**
@@ -161,7 +161,7 @@ git commit -m "fix: blog RSS feed 404 — register get_blogRssFeed in http-funct
 - [ ] **Step 1: Check topicClusters exports**
 
 ```bash
-grep -n "export\|function\|getCluster\|getTopic\|cluster" /Users/hal/gt/cfutons/refinery/rig/src/backend/topicClusters.web.js | head -30
+grep -n "export\|function\|getCluster\|getTopic\|cluster" src/backend/topicClusters.web.js | head -30
 ```
 
 Note the function that returns cluster data given a topic slug.
@@ -234,14 +234,14 @@ describe('Topic Cluster Endpoint', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/topicClusterEndpoint.test.js
+cd <repo-root> && npx vitest run tests/topicClusterEndpoint.test.js
 ```
 
 - [ ] **Step 4: Add HTTP endpoint to http-functions.js**
 
 First check what response helper(s) are already used in http-functions.js:
 ```bash
-grep -n "^import\|return ok\|return response\|okJson\|forbidden\|notFound" /Users/hal/gt/cfutons/refinery/rig/src/backend/http-functions.js | head -15
+grep -n "^import\|return ok\|return response\|okJson\|forbidden\|notFound" src/backend/http-functions.js | head -15
 ```
 
 Then add (using the same `response()` helper already in the file — do NOT use `ok()` unless it's already imported):
@@ -270,7 +270,7 @@ If `getTopicCluster` or `getAllTopicClusters` don't exist with those names, chec
 - [ ] **Step 6: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/topicClusterEndpoint.test.js
+cd <repo-root> && npx vitest run tests/topicClusterEndpoint.test.js
 ```
 
 - [ ] **Step 7: Add initial topic cluster data note**
@@ -305,7 +305,7 @@ Full-stack: photo submission → moderation queue → approved display. Backend 
 - [ ] **Step 1: Check photoReviews exports**
 
 ```bash
-grep -n "^export\|export async\|export function\|export const" /Users/hal/gt/cfutons/refinery/rig/src/backend/photoReviews.web.js | head -30
+grep -n "^export\|export async\|export function\|export const" src/backend/photoReviews.web.js | head -30
 ```
 
 Note: what functions exist for submit, approve, reject, getApproved.
@@ -400,7 +400,7 @@ describe('UGC Photo Review — Display Filter', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/photoReviewWorkflow.test.js
+cd <repo-root> && npx vitest run tests/photoReviewWorkflow.test.js
 ```
 
 - [ ] **Step 4: Add photoReviews functions if missing**
@@ -451,13 +451,13 @@ export async function get_adminReviews(request) {
 - [ ] **Step 6: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/photoReviewWorkflow.test.js
+cd <repo-root> && npx vitest run tests/photoReviewWorkflow.test.js
 ```
 
 - [ ] **Step 7: Run full suite — no regressions**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run 2>&1 | tail -5
+cd <repo-root> && npx vitest run 2>&1 | tail -5
 ```
 
 - [ ] **Step 8: Commit**
@@ -474,13 +474,13 @@ git commit -m "feat: UGC photo review workflow — submit + admin moderation end
 - [ ] **Run full test suite**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run 2>&1 | tail -10
+cd <repo-root> && npx vitest run 2>&1 | tail -10
 ```
 
 - [ ] **Verify all new HTTP endpoints registered**
 
 ```bash
-grep "^export async function get_\|^export async function post_" /Users/hal/gt/cfutons/refinery/rig/src/backend/http-functions.js
+grep "^export async function get_\|^export async function post_" src/backend/http-functions.js
 ```
 
 Expected to see: `get_loyalty`, `get_generateReferralLink`, `get_blogRssFeed`, `get_topicCluster`, `get_adminReviews`, `post_submitPhotoReview`

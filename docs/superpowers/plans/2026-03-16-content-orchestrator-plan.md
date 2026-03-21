@@ -200,7 +200,7 @@ describe('getOrchestrationConfig / updateOrchestrationConfig', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/hal/gt/cfutons && npx vitest run tests/contentOrchestrator.test.js`
+Run: `cd cfutons && npx vitest run tests/contentOrchestrator.test.js`
 Expected: FAIL — module not found
 
 - [ ] **Step 3: Write contentOrchestrator.web.js implementation**
@@ -454,7 +454,7 @@ function getPlatformForAction(action) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/hal/gt/cfutons && npx vitest run tests/contentOrchestrator.test.js`
+Run: `cd cfutons && npx vitest run tests/contentOrchestrator.test.js`
 Expected: ALL PASS
 
 - [ ] **Step 5: Commit orchestrator module + tests**
@@ -655,7 +655,7 @@ describe('getScheduleStats', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `cd /Users/hal/gt/cfutons && npx vitest run tests/contentScheduler.test.js`
+Run: `cd cfutons && npx vitest run tests/contentScheduler.test.js`
 Expected: FAIL — module not found
 
 - [ ] **Step 3: Write contentScheduler.web.js implementation**
@@ -933,7 +933,7 @@ export const getScheduleStats = webMethod(
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `cd /Users/hal/gt/cfutons && npx vitest run tests/contentScheduler.test.js`
+Run: `cd cfutons && npx vitest run tests/contentScheduler.test.js`
 Expected: ALL PASS
 
 - [ ] **Step 5: Commit scheduler module + tests**
@@ -1030,7 +1030,7 @@ git commit -m "feat(CF-483q): wire content orchestration to inventory restock ev
 
 - [ ] **Step 3: Run full test suite to verify no regressions**
 
-Run: `cd /Users/hal/gt/cfutons && npx vitest run tests/contentOrchestrator.test.js tests/contentScheduler.test.js`
+Run: `cd cfutons && npx vitest run tests/contentOrchestrator.test.js tests/contentScheduler.test.js`
 Expected: ALL PASS
 
 - [ ] **Step 4: Final commit if any fixes needed, then push**
