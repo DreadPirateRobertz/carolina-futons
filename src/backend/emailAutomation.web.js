@@ -60,6 +60,11 @@ const SEQUENCES = {
       { step: 2, templateId: 'cart_recovery_2', delayHours: 24, description: 'Social proof + reviews' },
       { step: 3, templateId: 'cart_recovery_3', delayHours: 72, description: 'Discount incentive' },
     ],
+    abTestStep: 1,
+    abVariants: {
+      A: { subjectLine: 'You left something behind — your cart is waiting' },
+      B: { subjectLine: 'Still thinking it over? Your futon is almost gone' },
+    },
   },
   post_purchase: {
     steps: [
