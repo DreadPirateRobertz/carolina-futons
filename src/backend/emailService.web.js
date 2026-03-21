@@ -26,6 +26,75 @@ import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
+// ── Rate Limiting (CF-rw9g) ──────────────────────────────────────────
+// CMS collection: EmailRateLimit (key, count, windowStart)
+// Pattern: same as newsletterService._checkRateLimit
+
+export const EMAIL_RATE_LIMIT_MAX = 3;
+export const EMAIL_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Check and record a rate-limit attempt for email operations.
+ * Allows up to EMAIL_RATE_LIMIT_MAX calls per EMAIL_RATE_LIMIT_WINDOW_MS per key.
+ * Fails open on DB errors.
+ *
+ * Known gap: query-check-update is not atomic (Wix Data lacks conditional updates).
+ * Concurrent requests may exceed the limit by 1-2 under high concurrency.
+ * Acceptable for email spam prevention — not a billing or auth boundary.
+ *
+ * @param {string} key - Normalized identifier (email).
+ * @param {Object} [opts]
+ * @param {number} [opts.now] - Timestamp override for testing.
+ * @returns {Promise<{allowed: boolean, reason?: string}>}
+ */
+export async function _checkEmailRateLimit(key, opts = {}) {
+  const now = (opts && opts.now != null) ? opts.now : Date.now();
+  try {
+    const cleanKey = sanitize(key, 254).toLowerCase();
+
+    const existing = await wixData.query('EmailRateLimit')
+      .eq('key', cleanKey)
+      .limit(1)
+      .find();
+
+    if (existing.items.length === 0) {
+      await wixData.insert('EmailRateLimit', {
+        key: cleanKey,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    const record = existing.items[0];
+    const windowAge = now - new Date(record.windowStart).getTime();
+
+    if (windowAge > EMAIL_RATE_LIMIT_WINDOW_MS) {
+      await wixData.update('EmailRateLimit', {
+        ...record,
+        count: 1,
+        windowStart: new Date(now),
+      });
+      return { allowed: true };
+    }
+
+    if (record.count >= EMAIL_RATE_LIMIT_MAX) {
+      return { allowed: false, reason: 'rate_limited' };
+    }
+
+    await wixData.update('EmailRateLimit', {
+      ...record,
+      count: record.count + 1,
+    });
+    return { allowed: true };
+  } catch (err) {
+    console.warn('[emailService] Rate limit check failed, allowing request:', err?.message);
+    return { allowed: true };
+  }
+}
+
+const RATE_LIMIT_MESSAGE = 'Too many requests. Please try again later.';
+
 /**
  * Send a contact form submission to the store owner via triggered email.
  * Also saves the submission to the `ContactSubmissions` CMS collection.
@@ -54,6 +123,12 @@ export const sendEmail = webMethod(
 
       if (!validateEmail(cleanEmail)) {
         return { success: false, message: 'Invalid email address.' };
+      }
+
+      // CF-rw9g: Rate limit per email — 3 calls/hour
+      const rateCheck = await _checkEmailRateLimit(cleanEmail);
+      if (!rateCheck.allowed) {
+        return { success: false, message: RATE_LIMIT_MESSAGE };
       }
 
       // Retrieve the site owner's Wix contact ID from Secrets Manager.
@@ -128,6 +203,12 @@ export const submitSwatchRequest = webMethod(
 
       if (!validateEmail(cleanEmail)) {
         return { success: false, message: 'Invalid email address.' };
+      }
+
+      // CF-rw9g: Rate limit per email — 3 calls/hour (shared with sendEmail)
+      const rateCheck = await _checkEmailRateLimit(cleanEmail);
+      if (!rateCheck.allowed) {
+        return { success: false, message: RATE_LIMIT_MESSAGE };
       }
 
       const siteOwnerContactId = await getSecret('SITE_OWNER_CONTACT_ID');
@@ -217,6 +298,14 @@ export const sendSwatchConfirmationEmail = webMethod(
         return { success: false, message: 'Customer contact ID is required.' };
       }
 
+      // CF-rw9g: Rate limit per email or contactId — 3 calls/hour
+      // Pass raw values — _checkEmailRateLimit handles sanitization internally
+      const rateLimitKey = email || contactId;
+      const rateCheck = await _checkEmailRateLimit(rateLimitKey);
+      if (!rateCheck.allowed) {
+        return { success: false, message: RATE_LIMIT_MESSAGE };
+      }
+
       const cleanName = sanitize(name, 200);
       const cleanProductName = sanitize(productName, 200);
       const cleanSwatches = Array.isArray(swatchNames)
@@ -243,7 +332,7 @@ export const sendSwatchConfirmationEmail = webMethod(
       return { success: true };
     } catch (err) {
       console.error('Error sending swatch confirmation email:', err);
-      return { success: false };
+      return { success: false, message: 'Failed to send confirmation email.' };
     }
   }
 );

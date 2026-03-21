@@ -84,9 +84,10 @@ describe('sendEmail', () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
     await sendEmail(validForm);
-    expect(inserted).toHaveLength(1);
-    expect(inserted[0].col).toBe('ContactSubmissions');
-    expect(inserted[0].item).toMatchObject({
+    // CF-rw9g: rate limit also inserts to EmailRateLimit, so filter for ContactSubmissions
+    const contactInserts = inserted.filter(i => i.col === 'ContactSubmissions');
+    expect(contactInserts).toHaveLength(1);
+    expect(contactInserts[0].item).toMatchObject({
       name: 'Jane Doe',
       email: 'jane@example.com',
       phone: '828-555-1234',
@@ -94,7 +95,7 @@ describe('sendEmail', () => {
       message: 'Do you ship to Alaska?',
       status: 'new',
     });
-    expect(inserted[0].item.submittedAt).toBeInstanceOf(Date);
+    expect(contactInserts[0].item.submittedAt).toBeInstanceOf(Date);
   });
 
   it('rejects invalid email with { success: false }', async () => {
@@ -346,7 +347,7 @@ describe('sendSwatchConfirmationEmail', () => {
       swatchNames: ['Velvet'],
       productName: 'Monterey',
     });
-    expect(res).toEqual({ success: false });
+    expect(res).toEqual({ success: false, message: 'Failed to send confirmation email.' });
   });
 });
 
