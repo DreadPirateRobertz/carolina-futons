@@ -11,7 +11,8 @@
  * Pinterest Rich Pins validator: https://developers.pinterest.com/tools/url-debugger/
  * Supported availability values: instock, oos, preorder (not "in stock" / "out of stock")
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { __reset as resetData } from './__mocks__/wix-data.js';
 import {
   getProductPinData,
   validatePinMarkup,
@@ -46,6 +47,10 @@ const SALE_PRODUCT = {
   price: 699,
   salePrice: 499,
 };
+
+beforeEach(() => {
+  resetData();
+});
 
 // ── og:type = "product" ─────────────────────────────────────────────────────
 
@@ -106,7 +111,8 @@ describe('Pinterest Rich Pins — product:price:amount', () => {
 });
 
 // ── product:availability ───────────────────────────────────────────────────
-// Pinterest requires no-space values: "instock" / "oos" — NOT "in stock" / "out of stock"
+// Pinterest requires no-space values: "instock" / "oos" / "preorder"
+// NOT "in stock" / "out of stock" / "pre order"
 
 describe('Pinterest Rich Pins — product:availability', () => {
   it('sets availability to "instock" (no space) for in-stock products', async () => {
@@ -117,6 +123,11 @@ describe('Pinterest Rich Pins — product:availability', () => {
   it('sets availability to "oos" (not "out of stock") for out-of-stock products', async () => {
     const { meta } = await getProductPinData(OUT_OF_STOCK_PRODUCT);
     expect(meta['product:availability']).toBe('oos');
+  });
+
+  it('sets availability to "preorder" (no space) for preorder products', async () => {
+    const { meta } = await getProductPinData({ ...VALID_PRODUCT, preorder: true, inStock: false });
+    expect(meta['product:availability']).toBe('preorder');
   });
 
   it('defaults to instock when inStock field is undefined', async () => {
@@ -133,6 +144,7 @@ describe('Pinterest Rich Pins — full compliance validation', () => {
 
   beforeAll(async () => {
     const result = await getProductPinData(VALID_PRODUCT);
+    expect(result.meta, 'fixture setup: getProductPinData returned null meta').toBeTruthy();
     pinMeta = result.meta;
   });
 
@@ -163,6 +175,13 @@ describe('Pinterest Rich Pins — full compliance validation', () => {
     const { valid, errors } = await validatePinMarkup(metaWithout, 'product');
     expect(valid).toBe(false);
     expect(errors.some(e => e.includes('og:type'))).toBe(true);
+  });
+
+  it('validatePinMarkup catches missing product:price:currency', async () => {
+    const { 'product:price:currency': _removed, ...metaWithout } = pinMeta;
+    const { valid, errors } = await validatePinMarkup(metaWithout, 'product');
+    expect(valid).toBe(false);
+    expect(errors.some(e => e.includes('currency'))).toBe(true);
   });
 
   it('validatePinMarkup catches invalid availability value', async () => {
@@ -227,9 +246,17 @@ describe('Pinterest Rich Pins — meta tag HTML output', () => {
     expect(tagString).toContain('&amp;');
   });
 
-  it('skips tags with null or empty content', async () => {
-    const { meta } = await getProductPinData({ name: 'Minimal Frame', slug: 'minimal', price: 299 });
-    const { tags } = await getPinterestMetaTags(meta);
+  it('includes sale price tags in HTML output for sale products', async () => {
+    const { meta } = await getProductPinData(SALE_PRODUCT);
+    const { success, tagString } = await getPinterestMetaTags(meta);
+    expect(success).toBe(true);
+    expect(tagString).toContain('<meta property="product:sale_price:amount"');
+    expect(tagString).toContain('content="499.00"');
+  });
+
+  it('skips tags where content is explicitly empty string', async () => {
+    const metaWithEmpty = { 'og:type': 'product', 'og:title': '', 'product:price:amount': '299.00' };
+    const { tags } = await getPinterestMetaTags(metaWithEmpty);
     for (const tag of tags) {
       expect(tag).not.toContain('content=""');
     }

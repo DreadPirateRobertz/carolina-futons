@@ -53,6 +53,7 @@ export const getProductPinData = webMethod(
       const salePrice = product.salePrice ? Math.max(0, Number(product.salePrice)) : null;
       const currency = sanitize(product.currency || CURRENCY, 3).toUpperCase() || CURRENCY;
       const inStock = product.inStock !== false;
+      const preorder = product.preorder === true;
       const brand = sanitize(product.brand || SITE_NAME, 100);
       const category = sanitize(product.category || '', 100);
       const sku = sanitize(product.sku || '', 50);
@@ -71,7 +72,7 @@ export const getProductPinData = webMethod(
         // Product-specific OG
         'product:price:amount': price.toFixed(2),
         'product:price:currency': currency,
-        'product:availability': inStock ? 'instock' : 'oos',
+        'product:availability': preorder ? 'preorder' : (inStock ? 'instock' : 'oos'),
         'product:brand': brand,
         'product:retailer_item_id': sku,
 
