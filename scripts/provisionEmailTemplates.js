@@ -37,6 +37,27 @@ const TEMPLATE_MANIFEST = [
     priority: 0,
     description: 'Notifies store owner of new orders.',
   },
+  {
+    templateId: 'order_confirmation',
+    subject: 'Order #{orderNumber} confirmed — thank you for your purchase!',
+    variables: ['firstName', 'orderNumber', 'total', 'itemSummary', 'estimatedDays', 'email'],
+    priority: 0,
+    description: 'Customer-facing order confirmation sent to buyer on purchase.',
+  },
+  {
+    templateId: 'order_shipped',
+    subject: 'Your order #{orderNumber} is on its way!',
+    variables: ['firstName', 'orderNumber', 'trackingNumber', 'trackingUrl', 'carrier', 'estimatedDays', 'email'],
+    priority: 0,
+    description: 'Shipping notification with tracking info sent when order is fulfilled.',
+  },
+  {
+    templateId: 'delivery_confirmation',
+    subject: 'Your order #{orderNumber} has been delivered!',
+    variables: ['firstName', 'orderNumber', 'email'],
+    priority: 0,
+    description: 'Delivery confirmation sent when order is marked delivered.',
+  },
 
   // P1 — Welcome series (fires on member signup)
   {

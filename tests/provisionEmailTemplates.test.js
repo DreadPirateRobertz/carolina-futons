@@ -19,8 +19,8 @@ import { _TEMPLATE_REGISTRY } from '../src/backend/emailTemplates.web.js';
 // ── TEMPLATE_MANIFEST ────────────────────────────────────────────────
 
 describe('TEMPLATE_MANIFEST', () => {
-  it('contains all 18 templates (12 Step 8 + 6 additional backend templates)', () => {
-    expect(TEMPLATE_MANIFEST).toHaveLength(18);
+  it('contains all 21 templates (12 Step 8 + 9 additional backend templates)', () => {
+    expect(TEMPLATE_MANIFEST).toHaveLength(21);
   });
 
   it('has all P0 templates (contact_form_submission, new_order_notification)', () => {
@@ -326,7 +326,7 @@ describe('getTemplateStatus', () => {
       siteId: 'test-site',
     });
 
-    expect(status).toHaveLength(18);
+    expect(status).toHaveLength(21);
     expect(status.every((s) => s.exists === false)).toBe(true);
   });
 
@@ -399,13 +399,13 @@ describe('provisionTemplates', () => {
     vi.stubGlobal('fetch', vi.fn());
   });
 
-  it('creates all 18 templates when none exist', async () => {
+  it('creates all 21 templates when none exist', async () => {
     // List returns empty
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 21; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -413,10 +413,10 @@ describe('provisionTemplates', () => {
     }
 
     const { results } = await provisionTemplates(opts);
-    expect(results).toHaveLength(18);
+    expect(results).toHaveLength(21);
     expect(results.every((r) => r.status === 'CREATED')).toBe(true);
-    // 1 list + 18 creates = 19 calls
-    expect(fetch).toHaveBeenCalledTimes(19);
+    // 1 list + 21 creates = 22 calls
+    expect(fetch).toHaveBeenCalledTimes(22);
   });
 
   it('skips existing templates', async () => {
@@ -431,8 +431,8 @@ describe('provisionTemplates', () => {
         ],
       }),
     });
-    // 15 create calls for the rest
-    for (let i = 0; i < 15; i++) {
+    // 18 create calls for the rest
+    for (let i = 0; i < 18; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -442,7 +442,7 @@ describe('provisionTemplates', () => {
     const { results } = await provisionTemplates(opts);
     const created = results.filter((r) => r.status === 'CREATED');
     const skipped = results.filter((r) => r.status === 'EXISTS');
-    expect(created).toHaveLength(15);
+    expect(created).toHaveLength(18);
     expect(skipped).toHaveLength(3);
   });
 
@@ -453,7 +453,7 @@ describe('provisionTemplates', () => {
     });
 
     const { results } = await provisionTemplates({ ...opts, dryRun: true });
-    expect(results).toHaveLength(18);
+    expect(results).toHaveLength(21);
     expect(results.every((r) => r.status === 'WOULD_CREATE')).toBe(true);
     // Only the list call
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -471,7 +471,7 @@ describe('provisionTemplates', () => {
       text: async () => 'Forbidden',
     });
     // Rest succeed
-    for (let i = 1; i < 18; i++) {
+    for (let i = 1; i < 21; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -483,7 +483,7 @@ describe('provisionTemplates', () => {
     const created = results.filter((r) => r.status === 'CREATED');
     expect(errors).toHaveLength(1);
     expect(errors[0].detail).toContain('403');
-    expect(created).toHaveLength(17);
+    expect(created).toHaveLength(20);
   });
 
   it('throws if listing templates fails', async () => {
@@ -501,7 +501,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 21; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -526,7 +526,7 @@ describe('provisionTemplates', () => {
       json: async () => ({ templates: [] }),
     });
     fetch.mockRejectedValueOnce(new Error('Connection reset'));
-    for (let i = 1; i < 18; i++) {
+    for (let i = 1; i < 21; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
@@ -544,7 +544,7 @@ describe('provisionTemplates', () => {
       ok: true,
       json: async () => ({ templates: [] }),
     });
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 21; i++) {
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ template: { id: `new-${i}` } }),
