@@ -168,6 +168,27 @@ describe('sendRecoveryEmail — email service failure', () => {
   });
 });
 
+// ── CRM contact resolution failure ───────────────────────────────────────────
+
+describe('sendRecoveryEmail — CRM contact resolution failure', () => {
+  it('returns failure when appendOrCreateContact throws', async () => {
+    const { contacts } = await import('./__mocks__/wix-crm-backend.js');
+    vi.spyOn(contacts, 'appendOrCreateContact').mockRejectedValueOnce(new Error('CRM unavailable'));
+    const result = await sendRecoveryEmail(CART_ID);
+    expect(result.success).toBe(false);
+    expect(result.message).toMatch(/CRM contact/i);
+    vi.restoreAllMocks();
+  });
+
+  it('does not send email when appendOrCreateContact throws', async () => {
+    const { contacts } = await import('./__mocks__/wix-crm-backend.js');
+    vi.spyOn(contacts, 'appendOrCreateContact').mockRejectedValueOnce(new Error('CRM unavailable'));
+    await sendRecoveryEmail(CART_ID);
+    expect(__getEmailLog().length).toBe(0);
+    vi.restoreAllMocks();
+  });
+});
+
 // ── Cart update failure ──────────────────────────────────────────────────────
 
 describe('sendRecoveryEmail — cart status update failure', () => {

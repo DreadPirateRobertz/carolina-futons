@@ -204,7 +204,18 @@ export const sendRecoveryEmail = webMethod(
         console.warn('[cartRecovery] Coupon generation failed for cartId:', cartId, '— sending email without discount:', couponResult.message);
       }
 
-      const { contactId } = await contacts.appendOrCreateContact({ emails: [{ email: cartEmail }] });
+      let contactId;
+      try {
+        const contactResult = await contacts.appendOrCreateContact({ emails: [{ email: cartEmail }] });
+        contactId = contactResult?.contactId;
+      } catch (crmErr) {
+        console.error('[cartRecovery] CRM appendOrCreateContact failed for cartId:', cartId, '— error:', crmErr.message);
+        return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
+      }
+      if (!contactId) {
+        console.error('[cartRecovery] appendOrCreateContact returned no contactId for cartId:', cartId);
+        return { success: false, message: 'Failed to resolve CRM contact for recovery email' };
+      }
 
       await triggeredEmails.emailContact('cart_recovery_1', contactId, {
         variables: {
