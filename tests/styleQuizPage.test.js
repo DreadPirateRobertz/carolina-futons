@@ -349,14 +349,28 @@ describe('Style Quiz Page', () => {
 
     it('enables next button immediately if step already has an answer (navigating back)', async () => {
       await onReadyHandler();
-      // Select an option to populate state.answers
-      const itemReadyFn1 = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
-      const $item = (sel) => getEl(`item:${sel}`);
-      itemReadyFn1($item, { label: 'Living Room', value: 'living-room' });
-      getEl('item:#optionContainer').onClick.mock.calls[0][0]();
+      const { makeClickable } = await import('public/a11yHelpers');
+      const nextHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Next step')[1];
+      const backHandler = makeClickable.mock.calls.find(c => c[2]?.ariaLabel === 'Previous step')[1];
 
-      // Confirm enable was called at least once (state is module-scoped; prior runs may add calls)
+      // Step 1: select option on current step (roomType)
+      const $item = (sel) => getEl(`item:${sel}`);
+      const itemReadyFn = getEl('#quizOptionsRepeater').onItemReady.mock.calls[0][0];
+      itemReadyFn($item, { label: 'Living Room', value: 'living-room' });
+      getEl('item:#optionContainer').onClick.mock.calls[0][0](); // sets state.answers[key]
+
+      // Step 2: advance to next step (renderStep will call disable for unanswered step)
+      nextHandler();
+
+      // Step 3: isolate — clear mock call counts before navigating back
+      getEl('#quizNextBtn').enable.mockClear();
+      getEl('#quizNextBtn').disable.mockClear();
+
+      // Step 4: navigate back — renderStep re-renders the answered step, should call enable
+      backHandler();
+
       expect(getEl('#quizNextBtn').enable).toHaveBeenCalled();
+      expect(getEl('#quizNextBtn').disable).not.toHaveBeenCalled();
     });
 
     it('applies highlight color to selected option container', async () => {
