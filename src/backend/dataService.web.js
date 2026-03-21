@@ -21,6 +21,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 // ─── Input Sanitization ────────────────────────────────────────────
 
@@ -289,7 +290,7 @@ export const getPendingReviewRequests = webMethod(
  */
 export const submitReview = webMethod(
   Permissions.Anyone,
-  async (requestId, rating, reviewText) => {
+  async (requestId, rating, reviewText, _opts) => {
     try {
       if (!requestId) throw new Error('requestId is required.');
 
@@ -303,6 +304,10 @@ export const submitReview = webMethod(
 
       const record = await wixData.get('ReviewRequests', cleanId);
       if (!record) throw new Error('Review request not found.');
+
+      // Rate-limit by the customer email on the review request record
+      const { allowed } = await checkRateLimit('ReviewRateLimit', record.customerEmail, _opts);
+      if (!allowed) return { success: false, error: 'Too many submissions. Please try again later.' };
 
       record.status = 'completed';
       record.rating = rating;

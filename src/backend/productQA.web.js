@@ -30,7 +30,8 @@ import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
 import { triggeredEmails } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, validateEmail } from 'backend/utils/sanitize';
+import { checkRateLimit } from 'backend/utils/rateLimit';
 
 const OWNER_EMAIL_TEMPLATE = 'new_product_question';
 const SITE_OWNER_SECRET = 'SITE_OWNER_CONTACT_ID';
@@ -404,9 +405,11 @@ export const getQASchema = webMethod(Permissions.Anyone, async (productId) => {
  * @param {string} params.productId
  * @param {string} params.question
  * @param {string} params.memberName
+ * @param {string} params.email - Guest email, used as rate-limit key (3/hour).
+ * @param {Object} [params._opts] - Internal test overrides (e.g. { now: timestamp }).
  * @returns {Promise<{success: boolean, data?: {_id: string, question: string}, error?: string}>}
  */
-export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ productId, question, memberName }) => {
+export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ productId, question, memberName, email, _opts }) => {
   try {
     const cleanProductId = sanitize(String(productId || ''), 50);
     const cleanQuestion = sanitize(String(question || ''), MAX_QUESTION_LENGTH);
@@ -416,6 +419,12 @@ export const insertGuestQuestion = webMethod(Permissions.Anyone, async ({ produc
     if (!cleanQuestion || cleanQuestion.length < 10) {
       return { success: false, error: 'Question must be at least 10 characters' };
     }
+
+    const cleanEmail = sanitize(String(email || ''), 254).toLowerCase();
+    if (!validateEmail(cleanEmail)) return { success: false, error: 'Valid email is required' };
+
+    const { allowed } = await checkRateLimit('QARateLimit', cleanEmail, _opts);
+    if (!allowed) return { success: false, error: 'Too many submissions. Please try again later.' };
 
     const inserted = await wixData.insert('ProductQuestions', {
       productId: cleanProductId,

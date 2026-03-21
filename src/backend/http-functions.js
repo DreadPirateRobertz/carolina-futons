@@ -1555,6 +1555,7 @@ export async function post_submitQuestion(request) {
     const productId = sanitize(String(body?.productId || ''), 50);
     const questionText = sanitize(String(body?.question || ''), 500);
     const memberName = sanitize(String(body?.name || 'Customer'), 50) || 'Customer';
+    const email = sanitize(String(body?.email || ''), 254);
 
     if (!productId) {
       return badRequest({ body: JSON.stringify({ error: 'Missing required field: productId' }), headers: JSON_HEADERS });
@@ -1562,9 +1563,12 @@ export async function post_submitQuestion(request) {
     if (!questionText || questionText.length < 10) {
       return badRequest({ body: JSON.stringify({ error: 'Question must be at least 10 characters' }), headers: JSON_HEADERS });
     }
+    if (!email) {
+      return badRequest({ body: JSON.stringify({ error: 'Missing required field: email' }), headers: JSON_HEADERS });
+    }
 
     const { insertGuestQuestion } = await import('backend/productQA.web');
-    const result = await insertGuestQuestion({ productId, question: questionText, memberName });
+    const result = await insertGuestQuestion({ productId, question: questionText, memberName, email });
 
     if (!result.success) {
       return badRequest({ body: JSON.stringify({ error: result.error || 'Failed to submit question' }), headers: JSON_HEADERS });

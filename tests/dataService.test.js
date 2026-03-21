@@ -377,7 +377,8 @@ describe('submitReview', () => {
 
   it('accepts all valid ratings (1-5)', async () => {
     for (let rating = 1; rating <= 5; rating++) {
-      __seed('ReviewRequests', reviewRequests); // reset state
+      __seed('ReviewRequests', reviewRequests); // reset CMS state
+      __seed('ReviewRateLimit', []); // reset rate limit state between iterations
       const result = await submitReview('rev-001', rating, `Rating ${rating}`);
       expect(result.success).toBe(true);
     }

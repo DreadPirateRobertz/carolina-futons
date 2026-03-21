@@ -131,6 +131,7 @@ describe('insertGuestQuestion', () => {
       productId: 'product-1',
       question: 'Does this futon fold flat for storage?',
       memberName: 'Jane',
+      email: 'jane@example.com',
     });
 
     expect(result.success).toBe(true);
@@ -147,19 +148,20 @@ describe('insertGuestQuestion', () => {
     await insertGuestQuestion({
       productId: 'product-1',
       question: 'What is the weight capacity of this futon?',
+      email: 'guest@example.com',
     });
 
     expect(inserted.memberName).toBe('Customer');
   });
 
   it('rejects question shorter than 10 characters', async () => {
-    const result = await insertGuestQuestion({ productId: 'product-1', question: 'Short?' });
+    const result = await insertGuestQuestion({ productId: 'product-1', question: 'Short?', email: 'guest@example.com' });
     expect(result.success).toBe(false);
     expect(result.error).toContain('10 characters');
   });
 
   it('rejects empty product ID', async () => {
-    const result = await insertGuestQuestion({ productId: '', question: 'Valid question about this product?' });
+    const result = await insertGuestQuestion({ productId: '', question: 'Valid question about this product?', email: 'guest@example.com' });
     expect(result.success).toBe(false);
   });
 
@@ -168,6 +170,7 @@ describe('insertGuestQuestion', () => {
       productId: 'product-1',
       question: 'What type of wood is used in the frame?',
       memberName: 'Bob',
+      email: 'bob@example.com',
     });
     await new Promise(r => setTimeout(r, 0));
 
@@ -230,7 +233,7 @@ describe('HTTP post_submitQuestion', () => {
     __onInsert((_col, item) => { inserted = item; });
 
     const req = makeRequest({
-      body: { productId: 'product-1', question: 'Can this futon be used as a permanent bed?', name: 'Tom' },
+      body: { productId: 'product-1', question: 'Can this futon be used as a permanent bed?', name: 'Tom', email: 'tom@example.com' },
     });
     const res = await post_submitQuestion(req);
 
