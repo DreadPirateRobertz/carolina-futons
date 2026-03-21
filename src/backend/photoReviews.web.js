@@ -28,7 +28,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 
 async function requireMember() {
   const member = await currentMember.getMember();
@@ -68,6 +68,12 @@ export const submitPhotoReview = webMethod(
       const photoUrl = sanitize(data.photoUrl || '', 500);
       if (!photoUrl) {
         return { success: false, error: 'Photo is required for photo reviews.' };
+      }
+
+      // CF-rr8d: Only accept Wix Media Manager URLs — reject external URLs
+      // that could serve malicious content or leak EXIF metadata.
+      if (!isWixMediaUrl(photoUrl)) {
+        return { success: false, error: 'Photo must be uploaded through the site upload form.' };
       }
 
       const rating = Math.min(5, Math.max(1, Math.round(Number(data.rating) || 5)));

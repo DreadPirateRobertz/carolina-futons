@@ -37,7 +37,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 
 const VALID_ROOM_TYPES = ['living-room', 'bedroom', 'office', 'dorm', 'porch'];
 const VALID_MODERATION_ACTIONS = ['approve', 'reject', 'feature'];
@@ -75,6 +75,12 @@ export const submitUGCPhoto = webMethod(
       const photoUrl = sanitize(data.photoUrl || '', 500);
       if (!photoUrl) {
         return { success: false, error: 'Photo URL is required.' };
+      }
+
+      // CF-rr8d: Only accept Wix Media Manager URLs — reject external URLs
+      // that could serve malicious content or leak EXIF metadata.
+      if (!isWixMediaUrl(photoUrl)) {
+        return { success: false, error: 'Photo must be uploaded through the site upload form.' };
       }
 
       const roomType = sanitize(data.roomType || '', 50);
