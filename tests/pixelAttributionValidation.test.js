@@ -12,7 +12,7 @@
  *   product_view | ViewContent                | viewcategory     | ViewContent
  *   add_to_cart  | AddToCart                  | addtocart        | AddToCart
  *   purchase     | Purchase                   | purchase         | CompletePayment
- *   search       | CustomEvent {event:search} | (no standard)    | Search
+ *   search       | CustomEvent + event:'search'| (no standard)   | Search
  *
  * TikTok Pixel is loaded via Wix CLI embedded-script extension (CF-qg7d) —
  * no local JS file. Standard TikTok params: content_id (string), content_type,
@@ -120,8 +120,8 @@ describe('purchase (Purchase) — required attribution fields', () => {
     expect(payload.content_ids.length).toBeGreaterThan(0);
   });
 
-  it('includes order_id for deduplication', () => {
-    expect(payload.order_id).toBeTruthy();
+  it('includes order_id matching the order _id', () => {
+    expect(payload.order_id).toBe(sampleOrder._id);
   });
 
   it('includes num_items', () => {
@@ -145,6 +145,11 @@ describe('search — required attribution fields', () => {
   it('handles zero results without omitting results_count', async () => {
     const empty = await buildSearchEvent('nonexistent product xyz', 0);
     expect(empty.results_count).toBe(0);
+  });
+
+  it('defaults results_count to 0 when second argument is omitted', async () => {
+    const noCount = await buildSearchEvent('futon frame');
+    expect(noCount.results_count).toBe(0);
   });
 });
 
@@ -183,6 +188,30 @@ describe('Pinterest Tag — event naming conventions', () => {
   });
 });
 
+// ── Purchase content_ids field mapping ────────────────────────────────
+// buildPurchaseEvent maps: item.catalogItemId || item.sku
+// GA4/TikTok best practice: send catalogItemId (UUID) not SKU.
+
+describe('purchase content_ids — catalogItemId vs sku precedence', () => {
+  it('uses catalogItemId when present (UUID, not SKU)', async () => {
+    const order = {
+      _id: 'order-002',
+      lineItems: [{ catalogItemId: futonFrame._id, sku: futonFrame.sku, quantity: 1 }],
+      totals: { total: futonFrame.price },
+    };
+    const payload = await buildPurchaseEvent(order);
+    expect(payload.content_ids).toContain(futonFrame._id);
+    expect(payload.content_ids).not.toContain(futonFrame.sku);
+  });
+
+  it('falls back to sku when catalogItemId is absent', async () => {
+    // sampleOrder lineItems only have sku — this is the actual fixture shape
+    const payload = await buildPurchaseEvent(sampleOrder);
+    expect(payload.content_ids).toContain('EUR-FRM-001'); // sku fallback
+    expect(payload.content_ids).not.toContain(futonFrame._id); // UUID not present
+  });
+});
+
 // ── Cross-platform schema consistency ─────────────────────────────────
 
 describe('Cross-platform field alignment — checkout/purchase ID consistency', () => {
@@ -216,6 +245,12 @@ describe('Null/empty product guards — attribution payload stability', () => {
 
   it('buildPurchaseEvent returns empty object for null order', async () => {
     expect(await buildPurchaseEvent(null)).toEqual({});
+  });
+
+  it('buildCheckoutEvent handles null cartItems gracefully', async () => {
+    const payload = await buildCheckoutEvent(null, 0);
+    expect(payload.content_ids).toEqual([]);
+    expect(payload.value).toBe(0);
   });
 
   it('buildViewContentEvent value is 0 for zero-price product', async () => {
