@@ -15,7 +15,9 @@ import { useElementDetection } from '../hooks/useElementDetection.js';
 import { usePageProgress } from '../hooks/usePageProgress.js';
 import { useIdApply } from '../hooks/useIdApply.js';
 import { useRepeaterGuard } from '../hooks/useRepeaterGuard.js';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
 import { ManualModePanel } from './ManualModePanel.js';
+import { HelpOverlay } from './HelpOverlay.js';
 import type { PageDef } from '../types/index.js';
 
 const APP_VERSION = '0.1.0';
@@ -25,9 +27,10 @@ export function HookupPanel() {
   const [selectedPageName, setSelectedPageName] = useState(DEFAULT_PAGE);
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { selected, editorAvailable } = useElementDetection();
-  const { hookedIds, skippedIds, markHooked, markSkipped, resetPage } = usePageProgress(selectedPageName);
+  const { hookedIds, skippedIds, markHooked, markSkipped, undoLast, resetPage } = usePageProgress(selectedPageName);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
 
@@ -84,10 +87,39 @@ export function HookupPanel() {
     }
   }, [currentElement, selected, applyId, markHooked, resetApplyStatus]);
 
+  // S13: page navigation helpers
+  const pageIndex = PAGES.findIndex((p) => p.name === selectedPageName);
+  const goNextPage = useCallback(() => {
+    if (PAGES.length === 0) return;
+    setSelectedPageName(PAGES[(pageIndex + 1) % PAGES.length].name);
+  }, [pageIndex]);
+  const goPrevPage = useCallback(() => {
+    if (PAGES.length === 0) return;
+    setSelectedPageName(PAGES[(pageIndex - 1 + PAGES.length) % PAGES.length].name);
+  }, [pageIndex]);
+
+  // S13: keyboard shortcuts
+  useKeyboardShortcuts({
+    onApplyOrDone: useCallback(() => {
+      if (editorAvailable && selected && currentElement) {
+        void handleApplyId();
+      } else {
+        handleMarkDone();
+      }
+    }, [editorAvailable, selected, currentElement, handleApplyId, handleMarkDone]),
+    onSkip: handleSkip,
+    onDone: handleMarkDone,
+    onNextPage: goNextPage,
+    onPrevPage: goPrevPage,
+    onToggleManual: useCallback(() => setManualMode((v) => !v), []),
+    onUndo: undoLast,
+    onToggleHelp: useCallback(() => setShowHelp((v) => !v), []),
+  });
+
   const page = PAGES.find((p) => p.name === selectedPageName);
 
   return (
-    <div style={s.root}>
+    <div style={{ ...s.root, position: 'relative' }}>
       {/* Header */}
       <header style={s.header}>
         <div style={s.headerLeft}>
@@ -207,6 +239,9 @@ export function HookupPanel() {
           </div>
         )}
       </main>
+
+      {/* S13: Help overlay */}
+      {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
 
       {/* Footer */}
       <footer style={s.footer}>

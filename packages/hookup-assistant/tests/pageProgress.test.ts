@@ -108,3 +108,76 @@ describe('usePageProgress — page isolation', () => {
     expect(product.current.hookedIds).not.toContain('heroTitle');
   });
 });
+
+// ── S13: undoLast ────────────────────────────────────────────────────────────
+
+describe('usePageProgress — undoLast', () => {
+  it('canUndo is false initially', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('canUndo is true after markHooked', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    expect(result.current.canUndo).toBe(true);
+  });
+
+  it('canUndo is true after markSkipped', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    expect(result.current.canUndo).toBe(true);
+  });
+
+  it('undoes markHooked — removes from hookedIds', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+
+  it('undoes markSkipped — removes from skippedIds', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+  });
+
+  it('canUndo becomes false after undoing the only action', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('persists undo to localStorage', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    const saved = localStorageMock.getItem('cf-hookup-home-hooked');
+    expect(JSON.parse(saved!)).toEqual([]);
+  });
+
+  it('undoes actions in LIFO order', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.markHooked('heroCTA'));
+    act(() => result.current.undoLast());
+    expect(result.current.hookedIds).toContain('heroTitle');
+    expect(result.current.hookedIds).not.toContain('heroCTA');
+  });
+
+  it('does nothing when history is empty', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.undoLast()); // should not throw
+    expect(result.current.hookedIds).toEqual([]);
+    expect(result.current.skippedIds).toEqual([]);
+  });
+
+  it('resetPage clears canUndo', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.resetPage());
+    expect(result.current.canUndo).toBe(false);
+  });
+});
