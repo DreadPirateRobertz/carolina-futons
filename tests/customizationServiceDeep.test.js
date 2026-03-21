@@ -58,6 +58,13 @@ vi.mock('wix-data', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'mem-456' })),
+  },
+}));
+
+
 let mod;
 beforeEach(async () => {
   _collections = {};
@@ -166,7 +173,7 @@ describe('getConfigurationById', () => {
 
   it('returns config by ID', async () => {
     __seed('SavedCustomizations', [
-      { _id: 'c1', productId: 'prod-123', configName: 'My Config' },
+      { _id: 'c1', productId: 'prod-123', memberId: 'mem-456', configName: 'My Config' },
     ]);
     const r = await mod.getConfigurationById('c1');
     expect(r).not.toBeNull();

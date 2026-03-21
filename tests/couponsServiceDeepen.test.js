@@ -49,6 +49,13 @@ vi.mock('wix-marketing-backend', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'member-1', loginEmail: 'test@example.com' })),
+  },
+}));
+
+
 let mod;
 beforeEach(async () => {
   _createdCoupons = [];
@@ -164,9 +171,9 @@ describe('getActiveCoupons error handling', () => {
 
   it('formats mixed percentOff and moneyOff in same list', async () => {
     _activeCoupons = [
-      { _id: 'c1', code: 'PCT10', name: '10%', percentOffRate: 10, active: true },
-      { _id: 'c2', code: 'FLAT25', name: '$25', moneyOffAmount: 25, active: true },
-      { _id: 'c3', code: 'PCT20', name: '20%', percentOffRate: 20, active: true },
+      { _id: 'c1', code: 'PCT10', name: '10% - test@example.com', percentOffRate: 10, active: true },
+      { _id: 'c2', code: 'FLAT25', name: '$25 - test@example.com', moneyOffAmount: 25, active: true },
+      { _id: 'c3', code: 'PCT20', name: '20% - test@example.com', percentOffRate: 20, active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(3);
@@ -177,7 +184,7 @@ describe('getActiveCoupons error handling', () => {
 
   it('defaults moneyOffAmount to 0 when neither percentOff nor moneyOff', async () => {
     _activeCoupons = [
-      { _id: 'c1', code: 'NONE', name: 'No discount', active: true },
+      { _id: 'c1', code: 'NONE', name: 'No discount - test@example.com', active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].discount).toBe('$0 off');
@@ -185,7 +192,7 @@ describe('getActiveCoupons error handling', () => {
 
   it('includes minimumSubtotal defaulting to 0', async () => {
     _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test', percentOffRate: 5, active: true },
+      { _id: 'c1', code: 'X', name: 'Test - test@example.com', percentOffRate: 5, active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(0);
@@ -193,7 +200,7 @@ describe('getActiveCoupons error handling', () => {
 
   it('preserves minimumSubtotal when present', async () => {
     _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test', percentOffRate: 5, active: true, minimumSubtotal: 50 },
+      { _id: 'c1', code: 'X', name: 'Test - test@example.com', percentOffRate: 5, active: true, minimumSubtotal: 50 },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(50);

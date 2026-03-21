@@ -1,0 +1,79 @@
+/**
+ * @module localSeo
+ * @description Schema markup utilities for /near/[city] local SEO landing pages.
+ * Generates LocalBusiness + FurnitureStore JSON-LD for Google rich results.
+ *
+ * @requires backend/utils/localSeoData
+ */
+
+import { SITE_URL, STORE_PHONE, STORE_GEO } from 'backend/utils/localSeoData';
+
+const SCHEMA_ADDRESS = {
+  '@type': 'PostalAddress',
+  streetAddress: '824 Locust St',
+  addressLocality: 'Hendersonville',
+  addressRegion: 'NC',
+  postalCode: '28792',
+  addressCountry: 'US',
+};
+
+// Wed-Fri 10am-5pm, Sat 10am-4pm — schema.org openingHours format
+const SCHEMA_OPENING_HOURS = ['We-Fr 10:00-17:00', 'Sa 10:00-16:00'];
+
+/**
+ * Generate a LocalBusiness + FurnitureStore JSON-LD schema for a city page.
+ *
+ * Safe to call with null/undefined city — returns a valid fallback schema
+ * rather than throwing, so callers never get a 500 from missing params.
+ *
+ * @param {Object|null} city - City data: { city, state, slug } or null/undefined.
+ * @param {Array} [products=[]] - Optional featured products; included as hasOfferCatalog.
+ * @returns {Object} Valid JSON-LD schema object (always returns, never throws).
+ */
+export function generateLocalBusinessSchema(city, products = []) {
+  const hasCity = city != null && typeof city === 'object' && city.city;
+
+  const name = hasCity
+    ? `Carolina Futons - ${city.city} Area`
+    : 'Carolina Futons';
+
+  const url = hasCity && city.slug
+    ? `${SITE_URL}/near/${city.slug}`
+    : SITE_URL;
+
+  const areaServed = hasCity
+    ? `${city.city}, ${city.state || 'NC'}`
+    : 'Hendersonville, NC';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': ['LocalBusiness', 'FurnitureStore'],
+    name,
+    url,
+    telephone: STORE_PHONE,
+    address: SCHEMA_ADDRESS,
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: STORE_GEO.latitude,
+      longitude: STORE_GEO.longitude,
+    },
+    openingHours: SCHEMA_OPENING_HOURS,
+    areaServed,
+  };
+
+  if (Array.isArray(products) && products.length > 0) {
+    schema.hasOfferCatalog = {
+      '@type': 'OfferCatalog',
+      name: 'Futon Products',
+      itemListElement: products.map(p => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Product',
+          name: p && p.name ? String(p.name) : String(p),
+        },
+      })),
+    };
+  }
+
+  return schema;
+}
