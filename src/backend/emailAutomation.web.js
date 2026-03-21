@@ -45,7 +45,7 @@ const SEQUENCES = {
     steps: [
       { step: 1, templateId: 'welcome_series_1', delayHours: 0, description: 'Brand story + 10% discount' },
       { step: 2, templateId: 'welcome_series_2', delayHours: 72, description: 'Buying guide' },
-      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'Social proof + UGC' },
+      { step: 3, templateId: 'welcome_series_3', delayHours: 168, description: 'First purchase nudge + discount urgency' },
     ],
     abTestStep: 1,
     abVariants: {
@@ -229,6 +229,75 @@ export const triggerWelcomeSequence = webMethod(
       return { success: true, queued };
     } catch (err) {
       console.error('Error queuing welcome sequence:', err);
+      return { success: false, queued: 0 };
+    }
+  }
+);
+
+/**
+ * Trigger the welcome email series for the currently logged-in member.
+ * Member-accessible entry point — no contactId required.
+ * Uses EmailQueue dedup guard: does not re-queue if welcome step 1 already exists.
+ *
+ * @function triggerWelcomeSeries
+ * @param {string} email - Member email
+ * @param {string} [firstName] - Member first name (optional)
+ * @returns {Promise<{success: boolean, queued: number}>}
+ * @permission Member
+ */
+export const triggerWelcomeSeries = webMethod(
+  Permissions.SiteMember,
+  async (email, firstName) => {
+    try {
+      if (!email) return { success: false, queued: 0 };
+
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) return { success: false, queued: 0 };
+
+      const cleanName = sanitize(firstName || '', 200);
+
+      if (await isUnsubscribed(cleanEmail, 'welcome')) {
+        return { success: false, queued: 0 };
+      }
+
+      const existing = await wixData.query('EmailQueue')
+        .eq('recipientEmail', cleanEmail)
+        .eq('sequenceType', 'welcome')
+        .eq('sequenceStep', 1)
+        .find();
+
+      if (existing.items.length > 0) return { success: false, queued: 0 };
+
+      let discountCode = '';
+      let discountAvailable = false;
+      try {
+        discountCode = await getSecret('WELCOME_DISCOUNT_CODE');
+        discountAvailable = !!discountCode;
+      } catch (e) {
+        console.warn('[emailAutomation] Welcome discount unavailable:', e.message);
+      }
+
+      const now = new Date();
+      let queued = 0;
+
+      for (const step of SEQUENCES.welcome.steps) {
+        const scheduledFor = new Date(now.getTime() + step.delayHours * 60 * 60 * 1000);
+        await queueEmail({
+          templateId: step.templateId,
+          recipientEmail: cleanEmail,
+          recipientContactId: '',
+          variables: { firstName: cleanName, discountCode, discountAvailable, email: cleanEmail },
+          sequenceType: 'welcome',
+          sequenceStep: step.step,
+          scheduledFor,
+          abVariant: null,
+        });
+        queued++;
+      }
+
+      return { success: true, queued };
+    } catch (err) {
+      console.error('Error queuing welcome series:', err);
       return { success: false, queued: 0 };
     }
   }

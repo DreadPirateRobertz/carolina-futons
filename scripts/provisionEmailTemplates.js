@@ -55,10 +55,10 @@ const TEMPLATE_MANIFEST = [
   },
   {
     templateId: 'welcome_series_3',
-    subject: 'See why customers love Carolina Futons',
-    variables: ['firstName', 'email'],
+    subject: 'Your 10% off expires soon — shop Carolina Futons now',
+    variables: ['firstName', 'discountCode', 'email'],
     priority: 1,
-    description: 'Social proof email sent 7 days after signup.',
+    description: 'First purchase nudge email sent 7 days after signup.',
   },
 
   // P2 — Post-purchase and swatch confirmation
