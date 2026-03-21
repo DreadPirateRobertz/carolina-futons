@@ -22,6 +22,12 @@
  *     productSlugs (Text) - JSON array of product slugs this video matches
  *     duration (Number) - Video duration in seconds
  *     sortOrder (Number) - Display priority
+ *
+ * @see public/videoHelpers.js for direct YouTube embed from product.videoUrl
+ * @setup Products CMS (Wix Stores built-in) — optional field:
+ *   videoUrl (Text) - YouTube URL for the product walkthrough video;
+ *   used by initProductYouTubeVideo in Product Page.js to populate
+ *   #productVideoSection + #productVideoEmbed on the PDP
  */
 
 import { Permissions, webMethod } from 'wix-web-module';

@@ -129,8 +129,8 @@ describe('buildSitemapXml', () => {
     const xml = buildSitemapXml(data);
     // Should have entries for static + category + product pages
     const locCount = (xml.match(/<loc>/g) || []).length;
-    // 8 static + 11 category + 1 product + 14 blog = 34
-    expect(locCount).toBe(34);
+    // 9 static + 11 category + 1 product + 14 blog = 35
+    expect(locCount).toBe(35);
   });
 
   it('includes lastmod when present', () => {
@@ -255,7 +255,7 @@ describe('sitemap pipeline integration', () => {
     const data = getSitemapData(products);
     const xml = buildSitemapXml(data);
     const urlCount = (xml.match(/<url>/g) || []).length;
-    // 8 static + 11 categories + 5 products + 14 blog = 38
-    expect(urlCount).toBe(38);
+    // 9 static + 11 categories + 5 products + 14 blog = 39
+    expect(urlCount).toBe(39);
   });
 });

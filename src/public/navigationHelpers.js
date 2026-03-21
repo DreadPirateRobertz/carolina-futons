@@ -39,6 +39,7 @@ export const NAV_LINKS = {
   '#navAbout': { path: '/about', label: 'About' },
   '#navBlog': { path: '/blog', label: 'Blog' },
   '#navFreeSwatches': { path: '/free-swatches', label: 'Free Swatches' },
+  '#navGiftCards': { path: '/gift-cards', label: 'Gift Cards' },
 };
 
 /**
@@ -67,6 +68,7 @@ export const MEGA_MENU_CATEGORIES = [
       { id: '#navProductVideos', label: 'Product Videos', path: '/product-videos' },
       { id: '#navGettingItHome', label: 'Getting It Home', path: '/getting-it-home' },
       { id: '#navFreeSwatches', label: 'Free Swatches', path: '/free-swatches' },
+      { id: '#navGiftCards', label: 'Gift Cards', path: '/gift-cards' },
     ],
   },
 ];
@@ -107,12 +109,12 @@ export function applyActiveNavState($w, currentPath) {
       if (id === activeId) {
         el.style.fontWeight = '700';
         el.style.color = colors.mountainBlue;
-        try { el.accessibility.ariaCurrent = 'page'; } catch (e) {}
+        try { el.accessibility.ariaCurrent = 'page'; } catch (e) { console.warn('[navigationHelpers] accessibility ariaCurrent:', e); }
       } else {
         el.style.fontWeight = '400';
         el.style.color = colors.espresso;
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] applyActiveNavState:', e); }
   });
 }
 
@@ -135,9 +137,9 @@ export function initMegaMenu($w) {
     isOpen = true;
     try {
       $w('#megaMenuPanel').show('fade', { duration: transitions.fast });
-      try { $w('#navShop').accessibility.ariaExpanded = true; } catch (e) {}
+      try { $w('#navShop').accessibility.ariaExpanded = true; } catch (e) { console.warn('[navigationHelpers] megaMenu ariaExpanded open:', e); }
       announce($w, 'Shop menu expanded');
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] megaMenu open:', e); }
   }
 
   function close() {
@@ -145,8 +147,8 @@ export function initMegaMenu($w) {
       isOpen = false;
       try {
         $w('#megaMenuPanel').hide('fade', { duration: transitions.fast });
-        try { $w('#navShop').accessibility.ariaExpanded = false; } catch (e) {}
-      } catch (e) {}
+        try { $w('#navShop').accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] megaMenu ariaExpanded close:', e); }
+      } catch (e) { console.error('[navigationHelpers] megaMenu close:', e); }
     }, 150);
   }
 
@@ -158,21 +160,21 @@ export function initMegaMenu($w) {
   try {
     const shopLink = $w('#navShop');
     if (shopLink) {
-      try { shopLink.accessibility.ariaHasPopup = 'true'; } catch (e) {}
-      try { shopLink.accessibility.ariaExpanded = false; } catch (e) {}
+      try { shopLink.accessibility.ariaHasPopup = 'true'; } catch (e) { console.warn('[navigationHelpers] megaMenu ariaHasPopup:', e); }
+      try { shopLink.accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] megaMenu ariaExpanded init:', e); }
       shopLink.onMouseIn(() => open());
       shopLink.onMouseOut(() => close());
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] megaMenu shopLink setup:', e); }
 
   try {
     const panel = $w('#megaMenuPanel');
     if (panel) {
       panel.onMouseIn(() => cancelClose());
       panel.onMouseOut(() => close());
-      try { panel.accessibility.role = 'menu'; } catch (e) {}
+      try { panel.accessibility.role = 'menu'; } catch (e) { console.warn('[navigationHelpers] megaMenu panel role:', e); }
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] megaMenu panel setup:', e); }
 
   // Keyboard: Enter/Space on #navShop toggles menu
   try {
@@ -182,7 +184,7 @@ export function initMegaMenu($w) {
         else open();
       }
     });
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] megaMenu keyPress:', e); }
 
   return { open, close };
 }
@@ -224,7 +226,7 @@ export function initMobileDrawer($w, currentPath) {
       if (typeof document !== 'undefined' && document.body) {
         document.body.style.overflow = 'hidden';
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] lockScroll:', e); }
   }
 
   function unlockScroll() {
@@ -232,7 +234,7 @@ export function initMobileDrawer($w, currentPath) {
       if (typeof document !== 'undefined' && document.body) {
         document.body.style.overflow = '';
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] unlockScroll:', e); }
   }
 
   function open() {
@@ -240,7 +242,7 @@ export function initMobileDrawer($w, currentPath) {
     isOpen = true;
     try {
       $w('#mobileMenuOverlay').show('fade', { duration: transitions.medium });
-      try { $w('#mobileMenuButton').accessibility.ariaExpanded = true; } catch (e) {}
+      try { $w('#mobileMenuButton').accessibility.ariaExpanded = true; } catch (e) { console.warn('[navigationHelpers] mobileDrawer ariaExpanded open:', e); }
       lockScroll();
       addEscHandler();
 
@@ -251,9 +253,9 @@ export function initMobileDrawer($w, currentPath) {
         ...MOBILE_NAV_MAP.map(m => m.mobileId),
       ]);
 
-      try { $w('#mobileMenuClose').focus(); } catch (e) {}
+      try { $w('#mobileMenuClose').focus(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer focus mobileMenuClose:', e); }
       announce($w, 'Navigation menu opened');
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] mobileDrawer open:', e); }
   }
 
   function addEscHandler() {
@@ -264,7 +266,7 @@ export function initMobileDrawer($w, currentPath) {
         };
         document.addEventListener('keydown', escHandler);
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] addEscHandler:', e); }
   }
 
   function removeEscHandler() {
@@ -273,7 +275,7 @@ export function initMobileDrawer($w, currentPath) {
         document.removeEventListener('keydown', escHandler);
         escHandler = null;
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] removeEscHandler:', e); }
   }
 
   function close() {
@@ -281,33 +283,33 @@ export function initMobileDrawer($w, currentPath) {
     isOpen = false;
     try {
       $w('#mobileMenuOverlay').hide('slide', { direction: 'left', duration: transitions.medium });
-      try { $w('#mobileMenuButton').accessibility.ariaExpanded = false; } catch (e) {}
+      try { $w('#mobileMenuButton').accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] mobileDrawer ariaExpanded close:', e); }
       unlockScroll();
       removeEscHandler();
       if (focusTrap) {
         focusTrap.release();
         focusTrap = null;
       }
-      try { $w('#mobileMenuButton').focus(); } catch (e) {}
+      try { $w('#mobileMenuButton').focus(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer focus mobileMenuButton:', e); }
       announce($w, 'Navigation menu closed');
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] mobileDrawer close:', e); }
   }
 
   // Responsive: show/hide nav elements based on viewport
   try {
     if (isMobile()) {
       $w('#mobileMenuButton').show();
-      try { $w('#desktopNavBar').hide(); } catch (e) {}
+      try { $w('#desktopNavBar').hide(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer desktopNavBar hide:', e); }
     } else {
       $w('#mobileMenuButton').hide();
-      try { $w('#desktopNavBar').show(); } catch (e) {}
+      try { $w('#desktopNavBar').show(); } catch (e) { console.warn('[navigationHelpers] mobileDrawer desktopNavBar show:', e); }
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] mobileDrawer responsive setup:', e); }
 
   // Style overlay with design tokens
   try {
     $w('#mobileMenuOverlay').style.backgroundColor = colors.sandLight;
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] mobileDrawer overlay style:', e); }
 
   // Populate nav links with labels, colors, and click handlers
   const activeNavId = currentPath ? getActiveNavId(currentPath) : null;
@@ -323,21 +325,21 @@ export function initMobileDrawer($w, currentPath) {
       el.onClick(() => {
         import('wix-location-frontend').then(({ to }) => {
           to(config.path);
-        }).catch(() => {});
+        }).catch((e) => console.error('[navigationHelpers] mobileDrawer navigate to', config.path, e));
         close();
       });
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] mobileDrawer navLink', mobileId, ':', e); }
   });
 
   // Wire menu button
   try {
     const btn = $w('#mobileMenuButton');
     if (btn) {
-      try { btn.accessibility.ariaLabel = 'Open navigation menu'; } catch (e) {}
-      try { btn.accessibility.ariaExpanded = false; } catch (e) {}
+      try { btn.accessibility.ariaLabel = 'Open navigation menu'; } catch (e) { console.warn('[navigationHelpers] mobileMenuButton ariaLabel:', e); }
+      try { btn.accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] mobileMenuButton ariaExpanded:', e); }
       makeClickable(btn, () => open(), { ariaLabel: 'Open navigation menu' });
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] mobileDrawer menuButton setup:', e); }
 
   // Wire close button
   try {
@@ -345,12 +347,12 @@ export function initMobileDrawer($w, currentPath) {
     if (closeBtn) {
       makeClickable(closeBtn, () => close(), { ariaLabel: 'Close navigation menu' });
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] mobileDrawer closeButton setup:', e); }
 
   // Wire overlay backdrop click to close
   try {
     $w('#mobileMenuOverlay').onClick(() => close());
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] mobileDrawer overlayClick:', e); }
 
   return { open, close };
 }
@@ -374,25 +376,25 @@ export function initMobileAccordions($w, sections) {
       if (!header || !panel) return;
 
       let expanded = false;
-      try { panel.collapse(); } catch (e) {}
-      try { header.accessibility.ariaExpanded = false; } catch (e) {}
-      try { header.accessibility.role = 'button'; } catch (e) {}
+      try { panel.collapse(); } catch (e) { console.warn('[navigationHelpers] accordion panel collapse:', e); }
+      try { header.accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] accordion ariaExpanded init:', e); }
+      try { header.accessibility.role = 'button'; } catch (e) { console.warn('[navigationHelpers] accordion role:', e); }
 
       function toggle() {
         expanded = !expanded;
         if (expanded) {
-          try { panel.expand(); } catch (e) {}
-          try { header.accessibility.ariaExpanded = true; } catch (e) {}
+          try { panel.expand(); } catch (e) { console.warn('[navigationHelpers] accordion panel expand:', e); }
+          try { header.accessibility.ariaExpanded = true; } catch (e) { console.warn('[navigationHelpers] accordion ariaExpanded true:', e); }
           announce($w, `${label} expanded`);
         } else {
-          try { panel.collapse(); } catch (e) {}
-          try { header.accessibility.ariaExpanded = false; } catch (e) {}
+          try { panel.collapse(); } catch (e) { console.warn('[navigationHelpers] accordion panel collapse toggle:', e); }
+          try { header.accessibility.ariaExpanded = false; } catch (e) { console.warn('[navigationHelpers] accordion ariaExpanded false:', e); }
           announce($w, `${label} collapsed`);
         }
       }
 
       makeClickable(header, toggle, { ariaLabel: `Toggle ${label}` });
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] accordion', headerId, ':', e); }
   });
 }
 
@@ -454,21 +456,21 @@ export function renderBreadcrumbs($w, crumbs) {
               to(items[i].path);
             });
           });
-          try { el.accessibility.role = 'link'; } catch (e) {}
+          try { el.accessibility.role = 'link'; } catch (e) { console.warn('[navigationHelpers] breadcrumb role:', e); }
         } else {
-          try { el.accessibility.ariaCurrent = 'page'; } catch (e) {}
+          try { el.accessibility.ariaCurrent = 'page'; } catch (e) { console.warn('[navigationHelpers] breadcrumb ariaCurrent:', e); }
         }
-        try { el.show(); } catch (e) {}
+        try { el.show(); } catch (e) { console.warn('[navigationHelpers] breadcrumb show:', e); }
       } else {
-        try { el.hide(); } catch (e) {}
+        try { el.hide(); } catch (e) { console.warn('[navigationHelpers] breadcrumb hide:', e); }
       }
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] renderBreadcrumbs', id, ':', e); }
   });
 
   // Inject schema
   try {
     $w('#breadcrumbSchemaHtml').postMessage(JSON.stringify(schema));
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] breadcrumbSchema:', e); }
 }
 
 /**
@@ -555,7 +557,7 @@ export function initAnnouncementBar($w, messages, opts = {}) {
         el.text = messages[currentIndex];
         el.show('fade', { duration: 200 });
       });
-    } catch (e) {}
+    } catch (e) { console.error('[navigationHelpers] announcementBar updateMessage:', e); }
   }
 
   function rotate() {
@@ -582,35 +584,35 @@ export function initAnnouncementBar($w, messages, opts = {}) {
   function dismiss() {
     pause();
     dismissed = true;
-    try { $w('#announcementBar').hide('slide', { direction: 'top', duration: transitions.medium }); } catch (e) {}
+    try { $w('#announcementBar').hide('slide', { direction: 'top', duration: transitions.medium }); } catch (e) { console.error('[navigationHelpers] announcementBar dismiss hide:', e); }
     try {
       if (typeof sessionStorage !== 'undefined') {
         sessionStorage.setItem('cf_announcement_dismissed', '1');
       }
-    } catch (e) {}
+    } catch (e) { console.warn('[navigationHelpers] announcementBar sessionStorage set:', e); }
   }
 
   // Check if already dismissed this session
   try {
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('cf_announcement_dismissed')) {
-      try { $w('#announcementBar').hide(); } catch (e) {}
+      try { $w('#announcementBar').hide(); } catch (e) { console.warn('[navigationHelpers] announcementBar hide on dismissed:', e); }
       return { dismiss, pause, resume };
     }
-  } catch (e) {}
+  } catch (e) { console.warn('[navigationHelpers] announcementBar sessionStorage check:', e); }
 
   // Set initial message
   try {
     if (messages && messages.length > 0) {
       $w('#announcementText').text = messages[0];
-      try { $w('#announcementText').accessibility.ariaLive = 'polite'; } catch (e) {}
-      try { $w('#announcementText').accessibility.role = 'status'; } catch (e) {}
+      try { $w('#announcementText').accessibility.ariaLive = 'polite'; } catch (e) { console.warn('[navigationHelpers] announcementBar ariaLive:', e); }
+      try { $w('#announcementText').accessibility.role = 'status'; } catch (e) { console.warn('[navigationHelpers] announcementBar role:', e); }
     }
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] announcementBar init message:', e); }
 
   // Wire dismiss button
   try {
     makeClickable($w('#announcementDismiss'), dismiss, { ariaLabel: 'Dismiss announcement' });
-  } catch (e) {}
+  } catch (e) { console.error('[navigationHelpers] announcementBar dismissButton:', e); }
 
   startRotation();
 
@@ -631,13 +633,13 @@ export function initBackToTop($w, buttonId = '#backToTop', threshold = 600) {
     const btn = $w(buttonId);
     if (!btn) return;
 
-    try { btn.hide(); } catch (e) {}
-    try { btn.accessibility.ariaLabel = 'Back to top'; } catch (e) {}
+    try { btn.hide(); } catch (e) { console.warn('[navigationHelpers] backToTop hide init:', e); }
+    try { btn.accessibility.ariaLabel = 'Back to top'; } catch (e) { console.warn('[navigationHelpers] backToTop ariaLabel:', e); }
 
     makeClickable(btn, () => {
       import('wix-window-frontend').then(({ scrollTo }) => {
         if (scrollTo) scrollTo(0, 0, { scrollAnimation: true });
-      }).catch(() => {});
+      }).catch((e) => console.error('[navigationHelpers] backToTop scrollTo:', e));
       announce($w, 'Scrolled to top');
     }, { ariaLabel: 'Back to top' });
 
@@ -645,14 +647,14 @@ export function initBackToTop($w, buttonId = '#backToTop', threshold = 600) {
       if (onScroll) {
         onScroll((event) => {
           if (event.scrollY > threshold) {
-            try { btn.show('fade', { duration: 200 }); } catch (e) {}
+            try { btn.show('fade', { duration: 200 }); } catch (e) { console.warn('[navigationHelpers] backToTop show:', e); }
           } else {
-            try { btn.hide('fade', { duration: 200 }); } catch (e) {}
+            try { btn.hide('fade', { duration: 200 }); } catch (e) { console.warn('[navigationHelpers] backToTop hide:', e); }
           }
         });
       }
-    }).catch(() => {});
-  } catch (e) {}
+    }).catch((e) => console.error('[navigationHelpers] backToTop onScroll:', e));
+  } catch (e) { console.error('[navigationHelpers] initBackToTop:', e); }
 }
 
 // ── Footer Mobile Accordions ─────────────────────────────────────────
@@ -693,12 +695,12 @@ export function initStickyNav($w, headerId = '#headerStrip') {
           if (!header) return;
           if (event.scrollY > 50) {
             // Wix Studio handles CSS sticky; we add a visual shadow class
-            try { header.style.boxShadow = shadows.nav; } catch (e) {}
+            try { header.style.boxShadow = shadows.nav; } catch (e) { console.warn('[navigationHelpers] stickyNav boxShadow set:', e); }
           } else {
-            try { header.style.boxShadow = 'none'; } catch (e) {}
+            try { header.style.boxShadow = 'none'; } catch (e) { console.warn('[navigationHelpers] stickyNav boxShadow clear:', e); }
           }
-        } catch (e) {}
+        } catch (e) { console.error('[navigationHelpers] stickyNav scroll handler:', e); }
       });
-    }).catch(() => {});
-  } catch (e) {}
+    }).catch((e) => console.error('[navigationHelpers] stickyNav onScroll import:', e));
+  } catch (e) { console.error('[navigationHelpers] initStickyNav:', e); }
 }

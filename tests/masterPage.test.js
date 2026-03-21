@@ -994,9 +994,10 @@ describe('masterPage.js', () => {
 
     it('sets announcement text to first message', async () => {
       await onReadyHandler();
-      // initAnnouncementBar is async (fetches flash sales) — wait for it
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').text).toBeTruthy();
+      // initAnnouncementBar is async (fetches flash sales) — poll until settled
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
     });
   });
 
@@ -1094,20 +1095,23 @@ describe('masterPage.js', () => {
 
     it('sets initial announcement message text', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').text).toBeTruthy();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
     });
 
     it('sets aria-live=polite on announcement text', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').accessibility.ariaLive).toBe('polite');
+      });
     });
 
     it('wires dismiss button with click handler', async () => {
       await onReadyHandler();
-      await new Promise(r => setTimeout(r, 50));
-      expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementDismiss').onClick).toHaveBeenCalled();
+      });
     });
   });
 

@@ -131,6 +131,7 @@ function makeEl() {
     onMouseDown: vi.fn(),
     onMouseMove: vi.fn(),
     onMouseUp: vi.fn(),
+    onMouseLeave: vi.fn(),
     onTouchStart: vi.fn(),
     onTouchMove: vi.fn(),
     onTouchEnd: vi.fn(),
@@ -223,6 +224,7 @@ describe('initProductSpinViewer', () => {
     expect($w('#productSpinCanvas').onMouseDown).toHaveBeenCalled();
     expect($w('#productSpinCanvas').onMouseMove).toHaveBeenCalled();
     expect($w('#productSpinCanvas').onMouseUp).toHaveBeenCalled();
+    expect($w('#productSpinCanvas').onMouseLeave).toHaveBeenCalled();
   });
 
   it('registers touch event handlers on spinCanvas', () => {
@@ -267,5 +269,35 @@ describe('initProductSpinViewer', () => {
   it('returns cleanup function', () => {
     const result = initProductSpinViewer($w, { product: makeProduct() }, timers);
     expect(typeof result.cleanup).toBe('function');
+  });
+
+  it('onMouseLeave clears dragStartX so subsequent mousemove is a no-op (drag-abandon)', () => {
+    const product = makeProduct();
+    initProductSpinViewer($w, { product }, timers);
+    const mouseDownCb = $w('#productSpinCanvas').onMouseDown.mock.calls[0][0];
+    const mouseMoveCb = $w('#productSpinCanvas').onMouseMove.mock.calls[0][0];
+    const mouseLeaveCb = $w('#productSpinCanvas').onMouseLeave.mock.calls[0][0];
+    mouseDownCb({ clientX: 0 }); // start drag
+    mouseLeaveCb(); // user drags off canvas without releasing
+    const srcAfterLeave = $w('#productSpinCanvas').src;
+    mouseMoveCb({ clientX: 8 }); // subsequent move should be ignored
+    expect($w('#productSpinCanvas').src).toBe(srcAfterLeave); // frame unchanged
+  });
+
+  it('cleanup() deactivates handlers so subsequent events are no-ops', () => {
+    const product = makeProduct();
+    const { cleanup } = initProductSpinViewer($w, { product }, timers);
+    const mouseDownCb = $w('#productSpinCanvas').onMouseDown.mock.calls[0][0];
+    const mouseMoveCb = $w('#productSpinCanvas').onMouseMove.mock.calls[0][0];
+    mouseDownCb({ clientX: 0 }); // start drag
+    cleanup(); // deactivate this init's handlers
+    const srcAfterCleanup = $w('#productSpinCanvas').src;
+    mouseMoveCb({ clientX: 8 }); // should be no-op after cleanup
+    expect($w('#productSpinCanvas').src).toBe(srcAfterCleanup);
+  });
+
+  it('collapses spinDragHint when product has no spinImages', () => {
+    initProductSpinViewer($w, { product: { _id: 'p1' } }, timers);
+    expect($w('#spinDragHint').hide).toHaveBeenCalled();
   });
 });

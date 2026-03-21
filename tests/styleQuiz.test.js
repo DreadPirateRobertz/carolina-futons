@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed } from './__mocks__/wix-data.js';
-import { getQuizRecommendations, getQuizOptions } from '../src/backend/styleQuiz.web.js';
+import { getQuizRecommendations, getQuizOptions, getPersonalizedCopy } from '../src/backend/styleQuiz.web.js';
 
 // Seed products that match various quiz criteria
 const quizProducts = [
@@ -267,6 +267,291 @@ describe('getQuizRecommendations', () => {
   });
 });
 
+// ── sizeNeeds scoring ───────────────────────────────────────────────
+
+describe('sizeNeeds scoring', () => {
+  // Products identical in all criteria except availableSizes
+  const sizeProducts = [
+    {
+      _id: 'sz-twin',
+      name: 'Classic Futon Frame',
+      slug: 'classic-twin',
+      price: 700,
+      formattedPrice: '$700.00',
+      mainMedia: 'https://example.com/twin.jpg',
+      collections: ['futon-frames'],
+      description: 'Classic futon frame.',
+      inStock: true,
+      numericRating: 4.0,
+      availableSizes: ['twin'],
+    },
+    {
+      _id: 'sz-full',
+      name: 'Classic Futon Frame Full',
+      slug: 'classic-full',
+      price: 700,
+      formattedPrice: '$700.00',
+      mainMedia: 'https://example.com/full.jpg',
+      collections: ['futon-frames'],
+      description: 'Classic futon frame.',
+      inStock: true,
+      numericRating: 4.0,
+      availableSizes: ['full'],
+    },
+    {
+      _id: 'sz-queen',
+      name: 'Classic Futon Frame Queen',
+      slug: 'classic-queen',
+      price: 700,
+      formattedPrice: '$700.00',
+      mainMedia: 'https://example.com/queen.jpg',
+      collections: ['futon-frames'],
+      description: 'Classic futon frame.',
+      inStock: true,
+      numericRating: 4.0,
+      availableSizes: ['queen'],
+    },
+    {
+      _id: 'sz-multi',
+      name: 'Versatile Futon Frame',
+      slug: 'versatile-multi',
+      price: 700,
+      formattedPrice: '$700.00',
+      mainMedia: 'https://example.com/multi.jpg',
+      collections: ['futon-frames'],
+      description: 'Classic futon frame.',
+      inStock: true,
+      numericRating: 4.0,
+      availableSizes: ['twin', 'full', 'queen'],
+    },
+  ];
+
+  it('queen answer returns different ranked results than twin answer', async () => {
+    __seed('Stores/Products', sizeProducts);
+
+    const queenResults = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+    const twinResults = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'twin',
+    });
+
+    expect(queenResults.length).toBeGreaterThan(0);
+    expect(twinResults.length).toBeGreaterThan(0);
+    const queenTopId = queenResults[0].product._id;
+    const twinTopId = twinResults[0].product._id;
+    expect(queenTopId).not.toEqual(twinTopId);
+  });
+
+  it('size match adds 20 points to score', async () => {
+    __seed('Stores/Products', [
+      sizeProducts.find(p => p._id === 'sz-twin'),
+      sizeProducts.find(p => p._id === 'sz-queen'),
+    ]);
+
+    const twinResults = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'twin',
+    });
+
+    const twinProduct = twinResults.find(r => r.product._id === 'sz-twin');
+    const queenProduct = twinResults.find(r => r.product._id === 'sz-queen');
+    expect(twinProduct).toBeDefined();
+    expect(queenProduct).toBeDefined();
+    // twin gets +20 for size match, queen does not
+    expect(twinProduct.score).toBe(queenProduct.score + 20);
+  });
+
+  it('products without availableSizes are not penalized', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'no-size',
+        name: 'No Size Frame',
+        slug: 'no-size',
+        price: 700,
+        collections: ['futon-frames'],
+        description: 'Classic futon.',
+        inStock: true,
+      },
+      sizeProducts.find(p => p._id === 'sz-queen'),
+    ]);
+
+    const results = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+
+    expect(results.length).toBe(2);
+    const noSizeResult = results.find(r => r.product._id === 'no-size');
+    const queenResult = results.find(r => r.product._id === 'sz-queen');
+    expect(noSizeResult).toBeDefined();
+    expect(queenResult).toBeDefined();
+    // queen gets size bonus, no-size does not — but no-size still appears
+    expect(queenResult.score).toBe(noSizeResult.score + 20);
+  });
+
+  it('missing sizeNeeds does not affect existing scoring', async () => {
+    __seed('Stores/Products', sizeProducts.slice(0, 2));
+
+    const withSize = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'twin',
+    });
+    const withoutSize = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+
+    // Both should return results
+    expect(withSize.length).toBeGreaterThan(0);
+    expect(withoutSize).toHaveLength(2);
+    // Without sizeNeeds, no size bonus — scores should be equal for both products
+    expect(withoutSize[0].score).toEqual(withoutSize[1].score);
+  });
+
+  it('multi-size product matches any requested size', async () => {
+    __seed('Stores/Products', [
+      sizeProducts.find(p => p._id === 'sz-multi'),
+      sizeProducts.find(p => p._id === 'sz-twin'),
+    ]);
+
+    const queenResults = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+
+    const multiResult = queenResults.find(r => r.product._id === 'sz-multi');
+    const twinResult = queenResults.find(r => r.product._id === 'sz-twin');
+    expect(multiResult).toBeDefined();
+    expect(twinResult).toBeDefined();
+    // multi includes queen so gets size bonus; twin does not
+    expect(multiResult.score).toBe(twinResult.score + 20);
+  });
+
+  it('unrecognized sizeNeeds value applies no size bonus', async () => {
+    __seed('Stores/Products', [
+      sizeProducts.find(p => p._id === 'sz-twin'),
+      sizeProducts.find(p => p._id === 'sz-queen'),
+    ]);
+
+    const results = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'king',
+    });
+
+    // Neither product matches 'king' — both get same score
+    expect(results).toHaveLength(2);
+    expect(results[0].score).toEqual(results[1].score);
+  });
+
+  it('size matching is case-insensitive', async () => {
+    __seed('Stores/Products', [
+      { ...sizeProducts.find(p => p._id === 'sz-queen'), availableSizes: ['Queen'] },
+      sizeProducts.find(p => p._id === 'sz-twin'),
+    ]);
+
+    const results = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+
+    const queenResult = results.find(r => r.product._id === 'sz-queen');
+    const twinResult = results.find(r => r.product._id === 'sz-twin');
+    expect(queenResult).toBeDefined();
+    expect(twinResult).toBeDefined();
+    // 'Queen' (capital Q) should still match 'queen' answer
+    expect(queenResult.score).toBe(twinResult.score + 20);
+  });
+
+  it('null availableSizes is treated as no sizes (no bonus)', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'null-sizes',
+        name: 'Null Sizes Frame',
+        slug: 'null-sizes',
+        price: 700,
+        collections: ['futon-frames'],
+        description: 'Classic futon.',
+        inStock: true,
+        availableSizes: null,
+      },
+      sizeProducts.find(p => p._id === 'sz-queen'),
+    ]);
+
+    const results = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+
+    const nullResult = results.find(r => r.product._id === 'null-sizes');
+    const queenResult = results.find(r => r.product._id === 'sz-queen');
+    expect(nullResult).toBeDefined();
+    expect(queenResult).toBeDefined();
+    expect(queenResult.score).toBe(nullResult.score + 20);
+  });
+
+  it('empty availableSizes array is treated same as missing', async () => {
+    __seed('Stores/Products', [
+      {
+        _id: 'empty-sizes',
+        name: 'Empty Sizes Frame',
+        slug: 'empty-sizes',
+        price: 700,
+        collections: ['futon-frames'],
+        description: 'Classic futon.',
+        inStock: true,
+        availableSizes: [],
+      },
+      sizeProducts.find(p => p._id === 'sz-queen'),
+    ]);
+
+    const results = await getQuizRecommendations({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+      sizeNeeds: 'queen',
+    });
+
+    const emptyResult = results.find(r => r.product._id === 'empty-sizes');
+    const queenResult = results.find(r => r.product._id === 'sz-queen');
+    expect(emptyResult).toBeDefined();
+    expect(queenResult).toBeDefined();
+    expect(queenResult.score).toBe(emptyResult.score + 20);
+  });
+});
+
 // ── getQuizOptions ──────────────────────────────────────────────────
 
 describe('getQuizOptions', () => {
@@ -308,5 +593,164 @@ describe('getQuizOptions', () => {
       expect(use.value).toBeTruthy();
       expect(use.description).toBeTruthy();
     }
+  });
+});
+
+// ── getPersonalizedCopy ──────────────────────────────────────────────
+
+describe('getPersonalizedCopy — profile types', () => {
+  it('returns copy and profileType for valid answers', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(result).toHaveProperty('copy');
+    expect(result).toHaveProperty('profileType');
+    expect(typeof result.copy).toBe('string');
+    expect(result.copy.length).toBeGreaterThan(0);
+  });
+
+  it('dorm room returns compact profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+
+  it('office room returns compact profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'office',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+
+  it('sleeping primary use returns comfort profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('comfort');
+  });
+
+  it('both primary use (non-dorm/office) returns versatile profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('versatile');
+  });
+
+  it('living room + sitting returns style profile', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(result.profileType).toBe('style');
+  });
+
+  it('dorm + sleeping yields compact (roomType takes priority over primaryUse)', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'sleeping',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.profileType).toBe('compact');
+  });
+});
+
+describe('getPersonalizedCopy — copy content', () => {
+  it('compact copy mentions space efficiency', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'dorm',
+      primaryUse: 'both',
+      stylePreference: 'modern',
+      budgetRange: 'under-500',
+    });
+    expect(result.copy).toMatch(/space|small space|square foot/i);
+  });
+
+  it('comfort copy mentions sleep', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/sleep/i);
+  });
+
+  it('versatile copy mentions day-to-night or sitting and sleeping', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'both',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/day.to.night|sitting and sleeping|both modes/i);
+  });
+
+  it('copy references the style preference tone', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'living-room',
+      primaryUse: 'sitting',
+      stylePreference: 'rustic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/natural|rustic|warm/i);
+  });
+
+  it('copy references the room type', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'guest-room',
+      primaryUse: 'sleeping',
+      stylePreference: 'classic',
+      budgetRange: '500-1000',
+    });
+    expect(result.copy).toMatch(/guest room/i);
+  });
+
+  it('three distinct copy variants produce different text', async () => {
+    const [compact, comfort, versatile] = await Promise.all([
+      getPersonalizedCopy({ roomType: 'dorm',        primaryUse: 'both',     stylePreference: 'modern', budgetRange: 'under-500' }),
+      getPersonalizedCopy({ roomType: 'guest-room',  primaryUse: 'sleeping', stylePreference: 'modern', budgetRange: '500-1000' }),
+      getPersonalizedCopy({ roomType: 'living-room', primaryUse: 'both',     stylePreference: 'modern', budgetRange: '500-1000' }),
+    ]);
+    expect(compact.copy).not.toBe(comfort.copy);
+    expect(comfort.copy).not.toBe(versatile.copy);
+    expect(compact.copy).not.toBe(versatile.copy);
+  });
+});
+
+describe('getPersonalizedCopy — null/edge cases', () => {
+  it('returns empty copy and default profileType for null answers', async () => {
+    const result = await getPersonalizedCopy(null);
+    expect(result.copy).toBe('');
+    expect(result.profileType).toBe('style');
+  });
+
+  it('handles unknown roomType gracefully', async () => {
+    const result = await getPersonalizedCopy({
+      roomType: 'spaceship',
+      primaryUse: 'sitting',
+      stylePreference: 'modern',
+      budgetRange: '500-1000',
+    });
+    expect(typeof result.copy).toBe('string');
+    expect(result.copy.length).toBeGreaterThan(0);
   });
 });

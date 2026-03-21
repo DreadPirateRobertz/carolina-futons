@@ -7,12 +7,15 @@
  *  - Element detection (S3) shows selected element's type
  *  - ManualModePanel (S10) shows target ID, Copy, Mark Done, Skip, Tab-advance
  *  - Manual mode toggle in settings
+ *
+ * S7: Page Navigator — priority optgroups, progress per page, auto-detection.
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { PAGES, getUnhookedElements, getAllElements, getRepeaterSection } from '../data/pages.js';
 import { useElementDetection } from '../hooks/useElementDetection.js';
-import { usePageProgress } from '../hooks/usePageProgress.js';
+import { usePageProgress, readPageHookedCount } from '../hooks/usePageProgress.js';
+import { usePageNavigator } from '../hooks/usePageNavigator.js';
 import { useIdApply } from '../hooks/useIdApply.js';
 import { useRepeaterGuard } from '../hooks/useRepeaterGuard.js';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
@@ -20,6 +23,8 @@ import { detectConflict, useConflictDetector } from '../hooks/useConflictDetecto
 import { ManualModePanel } from './ManualModePanel.js';
 import { HelpOverlay } from './HelpOverlay.js';
 import type { PageDef } from '../types/index.js';
+import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
+import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
 
 const APP_VERSION = '0.1.0';
 const DEFAULT_PAGE = PAGES[0]?.name ?? '';
@@ -29,9 +34,22 @@ export function HookupPanel() {
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  // S15: import status feedback ('idle' | 'success' | 'error')
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { selected, editorAvailable } = useElementDetection();
+  const { detectedPageName } = usePageNavigator();
   const { hookedIds, skippedIds, markHooked, markSkipped, undoLast, resetPage } = usePageProgress(selectedPageName);
+
+  // S7: When the editor navigates to a new page, auto-switch the panel to match.
+  useEffect(() => {
+    if (detectedPageName && detectedPageName !== selectedPageName) {
+      setSelectedPageName(detectedPageName);
+    }
+    // Run only when detection fires — not on every selectedPageName change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detectedPageName]);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
@@ -153,6 +171,44 @@ export function HookupPanel() {
     onToggleHelp: handleToggleHelp,
   });
 
+  // S15: Export handlers
+  const handleExportJson = useCallback(() => {
+    triggerJsonDownload(buildExportPayload());
+  }, []);
+
+  const handleExportText = useCallback(() => {
+    triggerTextDownload(buildExportPayload());
+  }, []);
+
+  // S15: Import handler — reads file, applies to localStorage, reloads to sync state
+  const handleImportFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result;
+        if (typeof text !== 'string') {
+          setImportStatus('error');
+          return;
+        }
+        const payload = parseImportPayload(text);
+        if (!payload) {
+          setImportStatus('error');
+          return;
+        }
+        applyImportPayload(payload);
+        setImportStatus('success');
+        // Reload to re-initialise all usePageProgress hooks from fresh localStorage
+        window.location.reload();
+      };
+      reader.readAsText(file);
+      // Reset the input so the same file can be re-imported if needed
+      e.target.value = '';
+    },
+    [],
+  );
+
   const page = PAGES.find((p) => p.name === selectedPageName);
 
   return (
@@ -197,11 +253,48 @@ export function HookupPanel() {
           }}>
             Reset page progress
           </button>
+          {/* S15: Export / Import */}
+          <div style={s.exportRow}>
+            <button style={s.exportBtn} onClick={handleExportJson} title="Export all page progress as JSON">
+              📤 Export JSON
+            </button>
+            <button style={s.exportBtn} onClick={handleExportText} title="Export progress summary as text">
+              📋 Export Text
+            </button>
+          </div>
+          <div style={s.importRow}>
+            <button
+              style={s.importBtn}
+              onClick={() => fileInputRef.current?.click()}
+              title="Import a previously exported JSON file to restore progress"
+            >
+              📥 Import…
+            </button>
+            {importStatus === 'error' && (
+              <span style={s.importError}>Invalid file</span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleImportFile}
+            />
+          </div>
         </div>
       )}
 
-      {/* Page selector */}
+      {/* S7: Page selector — priority groups, progress per page */}
       <div style={s.pageSelector}>
+        {detectedPageName && (
+          <span
+            style={s.autoDetectBadge}
+            title={`Auto-detected: ${detectedPageName}`}
+            aria-label={`Auto-detected page: ${detectedPageName}`}
+          >
+            ⬤
+          </span>
+        )}
         <select
           style={s.pageSelect}
           value={selectedPageName}
@@ -215,9 +308,13 @@ export function HookupPanel() {
               <optgroup key={pri} label={`${pri} — ${priorityLabel(pri)}`}>
                 {group.map((p: PageDef) => {
                   const total = getAllElements(p.name).length;
+                  const hooked =
+                    p.name === selectedPageName
+                      ? hookedIds.length
+                      : readPageHookedCount(p.name);
                   return (
                     <option key={p.name} value={p.name}>
-                      {p.name} ({total})
+                      {p.name} ({hooked}/{total})
                     </option>
                   );
                 })}
@@ -420,6 +517,12 @@ const s: Record<string, React.CSSProperties> = {
     gap: '6px',
     padding: '6px 12px',
   },
+  autoDetectBadge: {
+    fontSize: '8px',
+    color: '#28a745',
+    lineHeight: 1,
+    flexShrink: 0,
+  },
   pageSelect: {
     flex: 1,
     fontSize: '12px',
@@ -520,5 +623,38 @@ const s: Record<string, React.CSSProperties> = {
     borderRadius: '4px',
     padding: '3px 10px',
     cursor: 'pointer',
+  },
+  // S15: export/import controls
+  exportRow: {
+    display: 'flex',
+    gap: '6px',
+  },
+  exportBtn: {
+    flex: 1,
+    fontSize: '11px',
+    color: '#0c5460',
+    background: 'none',
+    border: '1px solid #bee5eb',
+    borderRadius: '4px',
+    padding: '3px 6px',
+    cursor: 'pointer',
+  },
+  importRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  importBtn: {
+    fontSize: '11px',
+    color: '#4e6579',
+    background: 'none',
+    border: '1px solid #dfe5eb',
+    borderRadius: '4px',
+    padding: '3px 8px',
+    cursor: 'pointer',
+  },
+  importError: {
+    fontSize: '11px',
+    color: '#c94b4b',
   },
 };

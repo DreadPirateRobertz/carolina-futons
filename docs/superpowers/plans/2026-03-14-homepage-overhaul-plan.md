@@ -14,8 +14,8 @@
 - Template element IDs: `scripts/home-page-template-ids.json` (in refinery/rig)
 - masterPage ID mapping: `scripts/masterpage-remap.json` (in crew/melania)
 - Integration plan: `docs/superpowers/plans/2026-03-13-stage3-frontend-integration.md`
-- Stage3 Velo repo: `/Users/hal/gt/cfutons/carolina-futons-stage3-velo/`
-- Dev repo (tests): `/Users/hal/gt/cfutons/refinery/rig/`
+- Stage3 Velo repo: `carolina-futons-stage3-velo/`
+- Dev repo (tests): ``
 
 **Constraint:** Only Melania drives the browser. Crew does code-only work.
 
@@ -479,7 +479,7 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
 - Create: `scripts/home-remap-flat.json` (in refinery/rig)
 - Modify: `src/pages/masterPage.js` (if remap needed)
 - Modify: `src/pages/Home.c1dmp.js` (if remap needed)
-- Test: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run`
+- Test: `cd <repo-root> && npx vitest run`
 
 - [ ] **Step 1: Inventory remaining gaps**
   After editor renames (Task 3-4), check which of our code's `$w('#id')` references still don't match template elements. The renames in Tasks 3-4 should have covered:
@@ -487,7 +487,7 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
   - `footerNewsletterTitle` ✓, `footerNewsletterSubtitle` ✓, `footerEmailSubmit` ✓, `footerAddress` ✓
   - `heroSection` ✓, `heroTitle` ✓, `heroSubtitle` ✓, `heroCTA` ✓, `heroImage` ✓
 
-  Remaining gaps (from `/Users/hal/gt/cfutons/crew/melania/scripts/masterpage-remap.json` notes):
+  Remaining gaps (from `crew/melania/scripts/masterpage-remap.json` notes):
   - `cartBadge` — template cart is TPAWidget with built-in badge. Code references `#cartBadge` separately. **Gap.**
   - `footerEmailInput` — template uses `form2` TPAWidget. **Known gap, acceptable.**
   - `footerPhone`, `footerHours` — depends on Task 4 Step 4 outcome. **May be gap.**
@@ -505,7 +505,7 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
 
 - [ ] **Step 3: Run remap script (dry-run)**
   ```bash
-  cd /Users/hal/gt/cfutons/refinery/rig
+  cd <repo-root>
   node scripts/remap-element-ids.js scripts/masterpage-remap-flat.json
   ```
   Review output — which files would change, which IDs remapped.
@@ -517,7 +517,7 @@ From `home-page-template-ids.json`, the category cards are in `section10` (Store
 
 - [ ] **Step 5: Run full test suite**
   ```bash
-  cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run
+  cd <repo-root> && npx vitest run
   ```
   Expected: 12,000+ tests pass. Any failures → investigate and fix.
 
@@ -572,7 +572,7 @@ These run in parallel with Chunks 1-4. The crew should start immediately.
 
 - [ ] **Step 6: Sync code to stage3-velo**
   After PRs merged, GitHub integration should auto-sync to `carolina-futons-stage3-velo` repo.
-  Verify: `cd /Users/hal/gt/cfutons/carolina-futons-stage3-velo && git pull`
+  Verify: `cd carolina-futons-stage3-velo && git pull`
   Check: `placeholderImages.js` has CDN URLs (no Unsplash), `carolinaFutonsLogo.js` exists.
 
 ---
@@ -635,7 +635,7 @@ These run in parallel with Chunks 1-4. The crew should start immediately.
 
 - [ ] **Step 5: Run test suite & deploy**
   ```bash
-  cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run
+  cd <repo-root> && npx vitest run
   ```
 
 - [ ] **Step 6: Publish & verify product pages**

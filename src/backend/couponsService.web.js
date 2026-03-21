@@ -33,6 +33,7 @@ export const createWelcomeCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
+      const expirationTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
       const coupon = await coupons.createCoupon({
         name: `Welcome 10% Off - ${cleanEmail}`,
         code: await generateCode('WELCOME'),
@@ -43,8 +44,24 @@ export const createWelcomeCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expirationTime,
       });
+
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Welcome 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for welcome coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -61,6 +78,11 @@ export const createWelcomeCoupon = webMethod(
 
 /**
  * Get active coupons for the current member.
+ *
+ * Queries the MemberCoupons collection by memberEmail at the database level,
+ * ensuring each member only ever sees their own coupons. This replaces the
+ * previous queryAllCoupons() + JS-level email filter which fetched all coupon
+ * records (including other members' PII in coupon names) before filtering.
  *
  * @function getActiveCoupons
  * @returns {Promise<Array>} List of active coupons with code, discount, expiry
@@ -80,21 +102,20 @@ export const getActiveCoupons = webMethod(
       ).toLowerCase();
       if (!memberEmail) return [];
 
-      const result = await coupons.queryAllCoupons()
+      const result = await wixData.query('MemberCoupons')
+        .eq('memberEmail', memberEmail)
         .eq('active', true)
         .find();
 
-      return (result.items || [])
-        .filter(c => c.name?.toLowerCase().includes(memberEmail))
-        .map(c => ({
-          _id: c._id,
-          code: c.code,
-          name: c.name,
-          discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
-          minimumSubtotal: c.minimumSubtotal || 0,
-          expirationTime: c.expirationTime,
-          active: c.active,
-        }));
+      return (result.items || []).map(c => ({
+        _id: c._id,
+        code: c.code,
+        name: c.displayName,
+        discount: c.percentOffRate ? `${c.percentOffRate}% off` : `$${c.moneyOffAmount || 0} off`,
+        minimumSubtotal: c.minimumSubtotal || 0,
+        expirationTime: c.expirationTime,
+        active: c.active,
+      }));
     } catch (err) {
       console.error('Error getting coupons:', err);
       return [];
@@ -124,6 +145,7 @@ export const createBirthdayCoupon = webMethod(
 
       const name = sanitize(memberName || 'Valued Customer', 100);
 
+      const expirationTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
       const coupon = await coupons.createCoupon({
         name: `Happy Birthday ${name}! 15% Off`,
         code: await generateCode('BDAY'),
@@ -134,8 +156,24 @@ export const createBirthdayCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expirationTime,
       });
+
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: `Happy Birthday ${name}! 15% Off`,
+          percentOffRate: 15,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for birthday coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -170,6 +208,7 @@ export const createTierUpgradeCoupon = webMethod(
       const discountMap = { Silver: 10, Gold: 20 };
       const discount = discountMap[tier] || 10;
 
+      const expirationTime = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
       const coupon = await coupons.createCoupon({
         name: `${tier} Tier Welcome - ${discount}% Off`,
         code: await generateCode(tier.toUpperCase()),
@@ -179,8 +218,24 @@ export const createTierUpgradeCoupon = webMethod(
         limitPerCustomer: 1,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
+        expirationTime,
       });
+
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: `${tier} Tier Welcome - ${discount}% Off`,
+          percentOffRate: discount,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for tier upgrade coupon:', insertErr.message);
+      }
 
       return {
         success: true,
@@ -268,6 +323,24 @@ export const generateRecoveryCoupon = webMethod(
           '— idempotency not guaranteed on retry:', insertErr.message);
       }
 
+      // Track in MemberCoupons for DB-level member scoping in getActiveCoupons
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Cart Recovery 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime: expiresAt,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for recovery coupon cartId:', cartId,
+          ':', insertErr.message);
+      }
+
       return {
         success: true,
         code: coupon.code,
@@ -300,6 +373,7 @@ export const createCartRecoveryCoupon = webMethod(
         return { success: false, message: 'Invalid email' };
       }
 
+      const expirationTime = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours
       const coupon = await coupons.createCoupon({
         name: `Cart Recovery 10% Off - ${cleanEmail}`,
         code: await generateCode('RECOVER'),
@@ -311,8 +385,24 @@ export const createCartRecoveryCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
+        expirationTime,
       });
+
+      try {
+        await wixData.insert('MemberCoupons', {
+          memberEmail: cleanEmail,
+          code: coupon.code,
+          couponId: coupon._id,
+          displayName: 'Cart Recovery 10% Off',
+          percentOffRate: 10,
+          moneyOffAmount: 0,
+          minimumSubtotal: 0,
+          expirationTime,
+          active: true,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] MemberCoupons insert failed for cart recovery coupon:', insertErr.message);
+      }
 
       return {
         success: true,

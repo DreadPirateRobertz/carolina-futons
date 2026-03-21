@@ -958,6 +958,41 @@ function escapeAttr(str) {
   return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ── Style Quiz Schema ────────────────────────────────────────────────
+
+/**
+ * Generate a JSON-LD WebPage schema for the Style Quiz page.
+ * Includes breadcrumb list and describes the quiz as an interactive tool
+ * for personalized furniture recommendations.
+ * @returns {string} Stringified JSON-LD schema
+ * @permission Anyone
+ */
+export const getStyleQuizSchema = webMethod(
+  Permissions.Anyone,
+  () => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Style Quiz — Find Your Perfect Furniture | Carolina Futons',
+      description: 'Take our style quiz to find the perfect futon, Murphy bed, or platform bed for your space. Personalized furniture recommendations from Carolina Futons.',
+      url: `${BASE_URL}/style-quiz`,
+      isPartOf: {
+        '@type': 'WebSite',
+        name: BUSINESS_INFO.name,
+        url: BUSINESS_INFO.url,
+      },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BUSINESS_INFO.url },
+          { '@type': 'ListItem', position: 2, name: 'Style Quiz', item: `${BASE_URL}/style-quiz` },
+        ],
+      },
+    };
+    return JSON.stringify(schema);
+  }
+);
+
 // ── Page Title Generation ───────────────────────────────────────────
 
 const SITE_NAME = 'Carolina Futons';
@@ -1090,6 +1125,8 @@ export const getCanonicalUrl = webMethod(
         return `${BASE_URL}/contact`;
       case 'about':
         return `${BASE_URL}/about`;
+      case 'styleQuiz':
+        return `${BASE_URL}/style-quiz`;
       default:
         return BASE_URL;
     }
@@ -1187,6 +1224,7 @@ const STATIC_PAGES = [
   { path: '/sale', priority: '0.8', changefreq: 'weekly' },
   { path: '/referral', priority: '0.4', changefreq: 'monthly' },
   { path: '/financing', priority: '0.4', changefreq: 'monthly' },
+  { path: '/style-quiz', priority: '0.7', changefreq: 'monthly' },
 ];
 
 /**

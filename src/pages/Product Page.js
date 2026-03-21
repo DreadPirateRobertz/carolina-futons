@@ -29,6 +29,7 @@ import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
 import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
+import { buildYouTubeEmbed } from 'public/videoHelpers.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -152,6 +153,9 @@ async function initProductPage() {
       { name: 'comfortCards', init: async () => { const m = await import('public/ComfortStoryCards.js'); m.initComfortCards($w, state); }, critical: false },
       { name: 'lifestyleGallery', init: async () => { const m = await import('public/LifestyleGallery.js'); m.initLifestyleGallery($w, state); }, critical: false },
       { name: 'videoSection', init: async () => { const m = await import('public/ProductVideoSection.js'); m.initProductVideoSection($w, state); }, critical: false },
+      // CF-m55f: Direct YouTube embed from product.videoUrl CMS field
+      // Requires: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent) in Studio
+      { name: 'productYouTubeVideo', init: () => initProductYouTubeVideo($w, state), critical: false },
       { name: 'viewer360', init: async () => { const m = await import('public/Product360Viewer.js'); m.initProduct360Viewer($w, state); }, critical: false },
       // Assembly guide link (fetches by SKU, shows PDF/video)
       { name: 'assemblyGuide', init: async () => {
@@ -171,6 +175,8 @@ async function initProductPage() {
       }, critical: false },
       // Full swatch request form flow (name, email, address, swatch selection)
       { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
+      // CF-uits: Room Planner CTA — links to /room-planner with product preloaded
+      { name: 'roomPlannerCTA', init: async () => { const m = await import('public/roomPlannerCTA.js'); m.initRoomPlannerCTA($w, state); }, critical: false },
       // CF-ac80 (S1) / CF-1792 (S3): Showroom CTA + QR mode banner
       { name: 'showroomCTA', init: async () => { const m = await import('backend/showroomService.web.js'); await initShowroomCTA($w, state, m); }, critical: false },
       // CF-9fv2: Gift product button — adds gift card to cart for current product
@@ -182,6 +188,8 @@ async function initProductPage() {
         const navigate = (navModule?.default?.to ?? navModule?.to) ? (url => (navModule?.default?.to ?? navModule?.to)(url)) : undefined;
         _initGiftProductBtnModule($w, product, { addToCart, navigate });
       }, critical: false },
+      // CF-75d1: Style Quiz CTA — nudges shoppers to the quiz when browsing products
+      { name: 'quizCTA', init: () => initProductPageQuizCTA($w), critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
@@ -442,4 +450,62 @@ async function initShowroomCTA($wFn, _state, svc) {
       } catch (err) { console.error('[ProductPage] Showroom booking nav failed:', err); }
     });
   } catch (e) { /* #showroomCTA optional */ }
+}
+
+// ── YouTube Video Embed (CF-m55f S1) ─────────────────────────────────
+// Shows a product walkthrough YouTube video when product.videoUrl is set.
+// Editor elements: #productVideoSection (Box) + #productVideoEmbed (HtmlComponent)
+
+/**
+ * Show a YouTube embed for product.videoUrl if present.
+ * Collapses #productVideoSection when no video URL or URL is unrecognised.
+ * @param {Function} $wFn - Wix $w selector
+ * @param {Object} pageState - Product page state (needs pageState.product.videoUrl)
+ */
+function initProductYouTubeVideo($wFn, pageState) {
+  try {
+    const videoUrl = pageState?.product?.videoUrl;
+    if (!videoUrl) {
+      try { $wFn('#productVideoSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    const iframeHtml = buildYouTubeEmbed(videoUrl);
+    if (!iframeHtml) {
+      try { $wFn('#productVideoSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $wFn('#productVideoEmbed').src = iframeHtml; } catch (e) {}
+    try {
+      $wFn('#productVideoSection').accessibility.role = 'region';
+      $wFn('#productVideoSection').accessibility.ariaLabel = 'Product video';
+    } catch (e) {}
+    try { $wFn('#productVideoSection').expand(); } catch (e) {}
+  } catch (e) {
+    try { $wFn('#productVideoSection').collapse(); } catch (e2) {}
+  }
+}
+
+// ── Style Quiz CTA (CF-75d1 S6) ────────────────────────────────────
+// Nudges shoppers to the personalized recommendation quiz from the product page.
+
+/**
+ * Initialize the style quiz CTA on the product page.
+ * Wires #productQuizCTAButton to navigate to /style-quiz.
+ * @param {Function} $wFn - Wix $w selector
+ */
+function initProductPageQuizCTA($wFn) {
+  try {
+    const btn = $wFn('#productQuizCTAButton');
+    if (!btn) return;
+    try { btn.accessibility.ariaLabel = 'Take the style quiz to find your perfect furniture'; } catch (e) {}
+    btn.onClick(() => {
+      import('wix-location-frontend').then(({ to }) => {
+        to('/style-quiz');
+      });
+    });
+  } catch (e) {
+    // #productQuizCTAButton is optional — collapses gracefully if not in editor
+  }
 }

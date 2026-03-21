@@ -37,7 +37,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
-import { sanitize, validateId } from 'backend/utils/sanitize';
+import { sanitize, validateId, isWixMediaUrl } from 'backend/utils/sanitize';
 
 const VALID_ROOM_TYPES = ['living-room', 'bedroom', 'office', 'dorm', 'porch'];
 const VALID_MODERATION_ACTIONS = ['approve', 'reject', 'feature'];
@@ -72,10 +72,18 @@ export const submitUGCPhoto = webMethod(
         return { success: false, error: 'Authentication required.' };
       }
 
-      const photoUrl = sanitize(data.photoUrl || '', 500);
-      if (!photoUrl) {
+      const rawPhotoUrl = (data.photoUrl || '').trim();
+      if (!rawPhotoUrl) {
         return { success: false, error: 'Photo URL is required.' };
       }
+
+      // CF-rr8d: Validate BEFORE sanitize — sanitize() strips HTML tags which
+      // could transform a crafted URL into one that passes validation.
+      if (!isWixMediaUrl(rawPhotoUrl)) {
+        return { success: false, error: 'Photo must be uploaded through the site upload form.' };
+      }
+
+      const photoUrl = sanitize(rawPhotoUrl, 500);
 
       const roomType = sanitize(data.roomType || '', 50);
       if (!VALID_ROOM_TYPES.includes(roomType)) {

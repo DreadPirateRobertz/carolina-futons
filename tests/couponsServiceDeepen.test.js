@@ -49,12 +49,48 @@ vi.mock('wix-marketing-backend', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'member-1', loginEmail: 'test@example.com' })),
+  },
+}));
+
+let _wixDataStore = {};
+let _wixDataQueryError = null;
+vi.mock('wix-data', () => {
+  const wixData = {
+    query: (collection) => {
+      const filters = [];
+      const builder = {
+        eq(field, value) { filters.push(item => item[field] === value); return builder; },
+        find: async () => {
+          if (_wixDataQueryError) throw _wixDataQueryError;
+          const items = (_wixDataStore[collection] || []).filter(
+            item => filters.every(f => f(item))
+          );
+          return { items, totalCount: items.length };
+        },
+      };
+      return builder;
+    },
+    insert: vi.fn(async (collection, item) => {
+      if (!_wixDataStore[collection]) _wixDataStore[collection] = [];
+      const inserted = { ...item, _id: item._id || `mock-${Date.now()}` };
+      _wixDataStore[collection].push(inserted);
+      return inserted;
+    }),
+  };
+  return { default: wixData, ...wixData };
+});
+
 let mod;
 beforeEach(async () => {
   _createdCoupons = [];
   _activeCoupons = [];
   _queryV2Items = [];
   _queryV2Error = null;
+  _wixDataStore = {};
+  _wixDataQueryError = null;
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
 });
@@ -149,24 +185,23 @@ describe('generateCode collision handling', () => {
 // ── getActiveCoupons error handling ─────────────────────────────────
 
 describe('getActiveCoupons error handling', () => {
-  it('returns empty array on API error', async () => {
-    _activeCoupons = 'ERROR';
+  it('returns empty array on wixData query error', async () => {
+    _wixDataQueryError = new Error('DB down');
     const r = await mod.getActiveCoupons();
     expect(r).toEqual([]);
   });
 
-  it('returns empty array when result.items is undefined', async () => {
-    // queryAllCoupons returns { items: undefined }
-    _activeCoupons = [];
+  it('returns empty array when MemberCoupons has no records', async () => {
+    _wixDataStore['MemberCoupons'] = [];
     const r = await mod.getActiveCoupons();
     expect(r).toEqual([]);
   });
 
   it('formats mixed percentOff and moneyOff in same list', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'PCT10', name: '10%', percentOffRate: 10, active: true },
-      { _id: 'c2', code: 'FLAT25', name: '$25', moneyOffAmount: 25, active: true },
-      { _id: 'c3', code: 'PCT20', name: '20%', percentOffRate: 20, active: true },
+    _wixDataStore['MemberCoupons'] = [
+      { _id: 'mc1', memberEmail: 'test@example.com', code: 'PCT10', displayName: '10% Off', percentOffRate: 10, active: true },
+      { _id: 'mc2', memberEmail: 'test@example.com', code: 'FLAT25', displayName: '$25 Off', moneyOffAmount: 25, active: true },
+      { _id: 'mc3', memberEmail: 'test@example.com', code: 'PCT20', displayName: '20% Off', percentOffRate: 20, active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(3);
@@ -176,24 +211,24 @@ describe('getActiveCoupons error handling', () => {
   });
 
   it('defaults moneyOffAmount to 0 when neither percentOff nor moneyOff', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'NONE', name: 'No discount', active: true },
+    _wixDataStore['MemberCoupons'] = [
+      { _id: 'mc4', memberEmail: 'test@example.com', code: 'NONE', displayName: 'No Discount', active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].discount).toBe('$0 off');
   });
 
   it('includes minimumSubtotal defaulting to 0', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test', percentOffRate: 5, active: true },
+    _wixDataStore['MemberCoupons'] = [
+      { _id: 'mc5', memberEmail: 'test@example.com', code: 'X', displayName: 'Test', percentOffRate: 5, active: true },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(0);
   });
 
   it('preserves minimumSubtotal when present', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test', percentOffRate: 5, active: true, minimumSubtotal: 50 },
+    _wixDataStore['MemberCoupons'] = [
+      { _id: 'mc6', memberEmail: 'test@example.com', code: 'X', displayName: 'Test', percentOffRate: 5, active: true, minimumSubtotal: 50 },
     ];
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(50);

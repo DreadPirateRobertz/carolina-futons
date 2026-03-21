@@ -33,6 +33,17 @@ vi.mock('wix-fetch', () => ({
   fetch: vi.fn(async () => _fetchResponse),
 }));
 
+let _memberLoginEmail = 'sync@test.com';
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(() =>
+      _memberLoginEmail
+        ? Promise.resolve({ loginEmail: _memberLoginEmail })
+        : Promise.resolve(null)
+    ),
+  },
+}));
+
 import { __seed, __reset, __onInsert } from './__mocks__/wix-data.js';
 import {
   subscribeToNewsletter,
@@ -48,6 +59,7 @@ beforeEach(() => {
   __seed('EmailQueue', []);
   _secretOverrides = {};
   _fetchResponse = { ok: true, status: 200, json: async () => ({ data: { id: 'profile-123' } }) };
+  _memberLoginEmail = 'sync@test.com';
   vi.clearAllMocks();
 });
 
@@ -263,18 +275,21 @@ describe('unsubscribeFromESP', () => {
   });
 
   it('no ESP key returns no_esp_configured', async () => {
+    _memberLoginEmail = 'test@test.com';
     _secretOverrides.ESP_API_KEY = '';
     const res = await unsubscribeFromESP('test@test.com');
     expect(res).toEqual({ unsubscribed: false, reason: 'no_esp_configured' });
   });
 
   it('suppress API error returns esp_api_error', async () => {
+    _memberLoginEmail = 'test@test.com';
     _fetchResponse = { ok: false, status: 500, json: async () => ({}) };
     const res = await unsubscribeFromESP('test@test.com');
     expect(res).toEqual({ unsubscribed: false, reason: 'esp_api_error' });
   });
 
   it('updates CMS record status to unsubscribed', async () => {
+    _memberLoginEmail = 'unsub@test.com';
     __seed('NewsletterSubscribers', [
       { _id: 'ns1', email: 'unsub@test.com', status: 'active' },
     ]);
@@ -292,12 +307,14 @@ describe('unsubscribeFromESP', () => {
   });
 
   it('handles no existing CMS record gracefully', async () => {
+    _memberLoginEmail = 'nobody@test.com';
     // No records seeded — suppress succeeds, no update needed
     const res = await unsubscribeFromESP('nobody@test.com');
     expect(res).toEqual({ unsubscribed: true });
   });
 
   it('lowercases and trims email before suppress', async () => {
+    _memberLoginEmail = 'upper@test.com';
     const { fetch } = await import('wix-fetch');
 
     await unsubscribeFromESP('  UPPER@Test.COM  ');
@@ -355,6 +372,7 @@ describe('syncToESP', () => {
   });
 
   it('makes profile create call with correct headers', async () => {
+    _memberLoginEmail = 'headers@test.com';
     const { fetch } = await import('wix-fetch');
 
     await syncToESP('headers@test.com', 'footer');

@@ -1547,15 +1547,254 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 
 ---
 
+## STYLE QUIZ (`Style Quiz.js`)
+
+### Quiz Steps
+`quizSection` (Box), `quizStepTitle` (Text), `quizStepSubtitle` (Text), `quizProgressBar` (ProgressBar), `quizProgressText` (Text), `quizOptionsRepeater` (Repeater), `quizNextBtn` (Button), `quizBackBtn` (Button), `quizValidation` (Text), `quizLoadingState` (Box), `quizLoadingText` (Text)
+
+### Options ⚠️ REPEATER
+`quizOptionsRepeater` (Repeater)
+**↳ Inside:** `optionContainer` (Box), `optionLabel` (Text), `optionDescription` (Text)
+
+### Results
+`quizResults` (Box), `resultsTitle` (Text), `resultsSubtitle` (Text), `styleProfileSection` (Box), `styleProfileTitle` (Text), `styleProfileDescription` (Text), `resultMatchBadge` (Text), `resultMatchReason` (Text), `resultsBrowseBtn` (Button), `quizRestartBtn` (Button)
+
+### Results ⚠️ REPEATER
+`quizProductsRepeater` (Repeater), `resultsRepeater` (Repeater)
+**↳ Inside:** `resultProductImage` (Image), `resultProductName` (Text), `resultProductPrice` (Text), `resultViewBtn` (Button)
+
+---
+
+## BLOG (`Blog.js`)
+
+### Header + Filter
+`categoryFilterRepeater` (Repeater), `postCount` (Text), `blogPagination` (Box), `nextPageBtn` (Button), `pageIndicator` (Text), `blogEmptyState` (Box)
+
+### Filter Chips ⚠️ REPEATER
+`categoryFilterRepeater` (Repeater)
+**↳ Inside:** `filterChip` (Box), `filterLabel` (Text)
+
+### Featured Post
+`featuredHeroSection` (Box), `featuredHeroLink` (Box), `featuredTitle` (Text), `featuredExcerpt` (Text), `featuredCategory` (Text), `featuredDate` (Text), `featuredReadTime` (Text), `featuredAuthor` (Text)
+
+### Post List ⚠️ REPEATER
+`blogListRepeater` (Repeater)
+**↳ Inside:** `cardTitle` (Text), `cardExcerpt` (Text), `cardCategory` (Text), `cardDate` (Text), `cardReadTime` (Text), `blogCardLink` (Box)
+
+### Related Products ⚠️ REPEATER
+`blogProductsSection` (Box), `blogProductsRepeater` (Repeater)
+
+### Newsletter Capture
+`blogNewsletterEmail` (Input), `blogNewsletterSubmit` (Button), `blogNewsletterSuccess` (Text), `blogNewsletterError` (Text)
+
+### SEO
+`blogSeoSchema` (HtmlComponent)
+
+---
+
+## BLOG POST (`Blog Post.js`)
+
+### Content
+`blogTitle` (Text), `blogBody` (RichText), `blogAuthor` (Text), `blogDate` (Text), `postCategory` (Text), `postDate` (Text), `postReadTime` (Text), `postMetaHtml` (HtmlComponent), `postSeoSchema` (HtmlComponent)
+
+### Author Bio
+`authorBioSection` (Box), `authorName` (Text), `authorDescription` (Text), `authorLocation` (Text), `authorEstablished` (Text)
+
+### Share Buttons
+`postShareFacebook` (Button), `postShareTwitter` (Button), `postSharePinterest` (Button), `postShareEmail` (Button), `postShareCopyLink` (Button)
+
+### Related Posts ⚠️ REPEATER
+`relatedPostsSection` (Box), `relatedPostsRepeater` (Repeater)
+**↳ Inside:** `relatedTitle` (Text), `relatedCategory` (Text), `relatedReadTime` (Text), `relatedPostLink` (Box)
+
+### Newsletter Capture
+`blogNewsletterInput` (Input), `blogNewsletterSubmit` (Button), `blogNewsletterSuccess` (Text), `blogNewsletterError` (Text)
+
+---
+
+## ROOM PLANNER (`Room Planner.js`)
+
+### Hero
+`plannerHeroHeading` (Text), `plannerHeroSubheading` (Text)
+
+### How-To Steps ⚠️ REPEATER
+`plannerStepsRepeater` (Repeater)
+**↳ Inside:** `stepNumber` (Text), `stepTitle` (Text), `stepDesc` (Text)
+
+### Room Setup
+`roomShapeDropdown` (Dropdown), `roomLengthInput` (Input), `roomWidthInput` (Input), `roomDimensionDisplay` (Text), `plannerStatusText` (Text)
+
+### Room Presets ⚠️ REPEATER
+`roomPresetsRepeater` (Repeater)
+**↳ Inside:** `presetName` (Text), `presetDims` (Text)
+
+### Product Palette ⚠️ REPEATER
+`productPaletteRepeater` (Repeater), `plannerProductRepeater` (Repeater)
+**↳ Inside:** `plannerProductName` (Text), `plannerProductDims` (Text), `plannerProductCategory` (Text), `plannerProductImage` (Image), `plannerAddBtn` (Button)
+
+### Palette Category ⚠️ REPEATER
+`paletteCategoryRepeater` (Repeater)
+**↳ Inside:** `paletteCategoryName` (Text)
+
+### Canvas
+`plannerCanvas` (HtmlComponent)
+
+### Save/Share
+`layoutNameInput` (Input), `saveLayoutBtn` (Button), `shareLayoutBtn` (Button), `shareUrlText` (Text)
+
+---
+
+## LOCAL SEO PAGE (`Local SEO Page.js`)
+
+### Hero
+`cityTitle` (Text), `cityHeadline` (Text), `homeCityBadge` (Text), `localPageContent` (Box), `notFoundMessage` (Text)
+
+### Store Info
+`directionsText` (Text), `directionsBtn` (Button), `mapEmbed` (HtmlComponent)
+
+### Nearby Areas ⚠️ REPEATER
+`nearbyAreasRepeater` (Repeater)
+**↳ Inside:** `nearbyAreaLabel` (Text), `nearbyAreaLink` (Button)
+
+### Featured Products ⚠️ REPEATER
+`featuredProductsRepeater` (Repeater)
+**↳ Inside:** `productName` (Text), `productPrice` (Text), `productImage` (Image), `viewProductBtn` (Button)
+
+### Cross-Links ⚠️ REPEATER
+`crossLinksSection` (Box), `crossLinksHeading` (Text), `crossLinksRepeater` (Repeater)
+**↳ Inside:** `crossLinkLabel` (Text), `crossLinkBtn` (Button)
+
+---
+
+## COMMUNITY GALLERY (`Community Gallery.js`)
+
+### Gallery Grid ⚠️ REPEATER
+`galleryMasonryRepeater` (Repeater)
+**↳ Inside:** `galleryPhotoCard` (Box), `galleryPhotoImg` (Image), `galleryCustomerName` (Text), `galleryFeaturedBadge` (Box), `galleryRoomTypeBadge` (Text), `galleryProductLink` (Button)
+
+### Filters ⚠️ REPEATER
+`galleryFilterRepeater` (Repeater)
+**↳ Inside:** `filterTab` (Box), `filterTabLabel` (Text)
+
+### State
+`galleryLoadMoreBtn` (Button), `galleryLoadingSpinner` (Box), `galleryEmptyState` (Box), `galleryEmptyStateText` (Text), `galleryPhotoCount` (Text)
+
+### Lightbox
+`galleryLightbox` (Box), `galleryLightboxOverlay` (Box), `galleryLightboxImage` (Image), `galleryLightboxClose` (Button), `galleryLightboxCaption` (Text), `galleryLightboxCustomer` (Text), `galleryLightboxProductLink` (Button)
+
+---
+
+## REFERRAL PAGE (`Referral Page.js`)
+
+### Auth State
+`referralLoggedOutBox` (Box), `referralLoginBtn` (Button), `referralMainContent` (Box), `referralErrorFallback` (Box), `referralErrorText` (Text)
+
+### Your Code/Link
+`referralCodeText` (Text), `copyCodeBtn` (Button), `referralLinkText` (Text), `copyLinkBtn` (Button), `referralLinkError` (Text)
+
+### Share Buttons
+`shareFacebookBtn` (Button), `shareEmailBtn` (Button), `shareSmsBtn` (Button)
+
+### Stats
+`referralStatsSection` (Box), `referralStatsEmpty` (Box), `referralStatsCards` (Box), `statTotalFriends` (Text), `statSuccessRate` (Text), `statTotalEarned` (Text), `statAvailableCredit` (Text)
+
+### How It Works ⚠️ REPEATER
+`howItWorksRepeater` (Repeater)
+**↳ Inside:** `stepIcon` (Image), `stepDescription` (Text)
+
+### History ⚠️ REPEATER
+`referralHistorySection` (Box), `referralHistoryEmpty` (Text), `referralHistoryRepeater` (Repeater)
+**↳ Inside:** `historyFriendName` (Text), `historyDate` (Text), `historyStatus` (Text), `historyCredit` (Text)
+
+---
+
+## UGC GALLERY (`UGC Gallery.js`)
+
+### Stats
+`ugcTotalCount` (Text), `ugcFeaturedCount` (Text)
+
+### Submit
+`ugcSubmitSection` (Box), `ugcSubmitPhotoBtn` (Button), `ugcSubmitModal` (Box), `ugcSubmitModalTitle` (Text), `ugcSubmitModalClose` (Button)
+
+### State
+`ugcBeforeAfterSection` (Box), `ugcEmptyState` (Box), `ugcGallerySkeleton` (Box)
+
+---
+
+## SUBMIT PHOTO REVIEW (`Submit Photo Review.js`)
+
+### Form
+`submitFormSection` (Box), `productNameDisplay` (Text), `ratingInput` (Box), `photoUploadButton` (Button), `photoPreview` (Image), `captionInput` (TextBox), `reviewTextInput` (TextBox), `submitBtn` (Button), `validationMessage` (Text)
+
+### Success
+`successSection` (Box), `successMessage` (Text)
+
+---
+
+## TOPIC CLUSTER (`Topic Cluster.js`)
+
+### Breadcrumb ⚠️ REPEATER
+`breadcrumbRepeater` (Repeater)
+**↳ Inside:** `breadcrumbLabel` (Text)
+
+### Content
+`clusterContent` (Box), `pillarIntro` (Text), `notFoundMessage` (Text)
+
+### Content Sections ⚠️ REPEATER
+`contentSectionRepeater` (Repeater)
+**↳ Inside:** `sectionHeading` (Text), `sectionBody` (RichText)
+
+### FAQ ⚠️ REPEATER
+`faqRepeater` (Repeater)
+**↳ Inside:** `faqQuestion` (Text), `faqAnswer` (Text)
+
+### Spoke Cards ⚠️ REPEATER
+`spokeCardRepeater` (Repeater)
+**↳ Inside:** `spokeTitle` (Text), `spokeTypeLabel` (Text), `spokeCardLink` (Box)
+
+### Internal Links ⚠️ REPEATER
+`internalLinksRepeater` (Repeater)
+**↳ Inside:** `linkItem` (Box), `linkAnchorText` (Text)
+
+### Related Clusters ⚠️ REPEATER
+`relatedClusterRepeater` (Repeater)
+**↳ Inside:** `relatedClusterTitle` (Text), `relatedClusterLink` (Box)
+
+---
+
+## GIFT CARDS (`Gift Cards.js`)
+
+### Purchase Form
+`gcPurchaseForm` (Box), `gcDenomRepeater` (Repeater), `gcPurchaserEmail` (Input), `gcRecipientName` (Input), `gcRecipientEmail` (Input), `gcMessage` (TextBox), `gcPurchaseBtn` (Button), `gcPurchaseError` (Text), `gcPurchaseSuccess` (Box)
+
+### Denominations ⚠️ REPEATER
+`gcDenomRepeater` (Repeater)
+**↳ Inside:** `gcDenomLabel` (Text)
+
+### Balance Check
+`gcCodeInput` (Input), `gcCheckBalanceBtn` (Button), `gcBalanceResult` (Box), `gcBalanceAmount` (Text), `gcBalanceStatus` (Text), `gcBalanceExpiry` (Text), `gcBalanceUsage` (Text), `gcBalanceError` (Text)
+
+---
+
+## 360° SPIN VIEWER (Product Page — `Product360Viewer.js`)
+
+Added to product page via `initProduct360Viewer`. Elements live on **Product Page**:
+
+`viewer360Section` (Box), `viewer360Container` (Box), `viewer360Embed` (HtmlComponent), `view360Btn` (Button), `viewer360Title` (Text), `viewer360Hint` (Text)
+
+---
+
 ## PAGES THAT NEED CREATING (no frontend code yet)
 
-These have **backend code only** — frontend pages must be built from scratch:
+All major pages now have both backend and frontend code. The following are in development or planned:
 
-| Page | Backend File | What It Does | Clone Candidate |
-|---|---|---|---|
-| Style Quiz | `styleQuiz.web.js` | 60-second product recommendation quiz | FAQ page (repeater + progress) |
-| Blog | `blogContent.js` | 8 SEO pillar posts, FAQ schema | Privacy/Terms (repeater + TOC) |
-| Room Planner | `roomPlanner.web.js` | Virtual room layout tool | New page (unique UI) |
+| Page | Status | Notes |
+|---|---|---|
+| Style Quiz | ✅ Frontend + backend complete | S4 (state persistence + share) in progress |
+| Blog | ✅ Frontend + backend complete | — |
+| Room Planner | ✅ Frontend + backend complete (S1–S7) | — |
+| Gift Cards | ✅ Frontend + backend complete | — |
+| Local SEO | ✅ Frontend + backend complete | S2 (schema + FAQ) in progress |
 
 ---
 
