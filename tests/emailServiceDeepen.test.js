@@ -347,7 +347,7 @@ describe('sendSwatchConfirmationEmail', () => {
       swatchNames: ['Velvet'],
       productName: 'Monterey',
     });
-    expect(res).toEqual({ success: false });
+    expect(res).toEqual({ success: false, message: 'Failed to send confirmation email.' });
   });
 });
 
