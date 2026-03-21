@@ -394,6 +394,101 @@ export const updateSMSPreferences = webMethod(
   }
 );
 
+// ── Order Shipped / Delivery Confirmed (CF-an2c) ─────────────────────────────
+
+/**
+ * Send "order shipped" SMS with UPS tracking URL.
+ * Triggered by wixEcom_onOrderFulfilled via notificationOrchestrator.
+ *
+ * @param {Object} params
+ * @param {string} params.memberId - Wix member ID.
+ * @param {string} params.orderNumber - Order number.
+ * @param {string} [params.trackingUrl] - Full UPS tracking URL.
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendOrderShippedSMS = webMethod(
+  Permissions.Admin,
+  async ({ memberId, orderNumber, trackingUrl } = {}) => {
+    try {
+      if (!memberId) return { success: false, reason: 'invalid_input' };
+
+      const check = await checkPreferences(memberId, 'shippingUpdates');
+      if (!check.allowed) return { success: false, reason: check.reason };
+
+      const cleanOrder = sanitize(String(orderNumber || ''), 50);
+      const cleanUrl = sanitize(String(trackingUrl || ''), 300);
+
+      let body = `Your Carolina Futons order is on the way!`;
+      if (cleanUrl) {
+        body += ` Track: ${cleanUrl}`;
+      }
+
+      const result = await sendViaTwilio(check.phone, body);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId,
+        phone: check.phone,
+        messageType: 'order_shipped',
+        messageBody: body,
+        twilioSid: result.sid || '',
+        orderNumber: cleanOrder,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendOrderShippedSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
+/**
+ * Send "delivery confirmed" SMS when UPS marks a package delivered.
+ * Triggered by notificationOrchestrator on UPS delivered event/polling.
+ *
+ * @param {Object} params
+ * @param {string} params.memberId - Wix member ID.
+ * @param {string} params.orderNumber - Order number.
+ * @returns {Promise<{success: boolean, reason?: string}>}
+ */
+export const sendDeliveryConfirmedSMS = webMethod(
+  Permissions.Admin,
+  async ({ memberId, orderNumber } = {}) => {
+    try {
+      if (!memberId) return { success: false, reason: 'invalid_input' };
+
+      const check = await checkPreferences(memberId, 'shippingUpdates');
+      if (!check.allowed) return { success: false, reason: check.reason };
+
+      // Cooldown: don't send delivery confirmed more than once per order
+      const cleanOrder = sanitize(String(orderNumber || ''), 50);
+      if (await isWithinCooldown(memberId, 'delivery_confirmed', cleanOrder)) {
+        return { success: false, reason: 'cooldown' };
+      }
+
+      const body = `Your order has been delivered! Questions? Reply to this message or call (828) 252-9449`;
+
+      const result = await sendViaTwilio(check.phone, body);
+      if (!result.success) return { success: false, reason: 'send_failed' };
+
+      await logSMS({
+        memberId,
+        phone: check.phone,
+        messageType: 'delivery_confirmed',
+        messageBody: body,
+        twilioSid: result.sid || '',
+        orderNumber: cleanOrder,
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error('[smsService] Error in sendDeliveryConfirmedSMS:', err);
+      return { success: false, reason: 'error' };
+    }
+  }
+);
+
 /**
  * Get SMS notification preferences for the current member.
  *
