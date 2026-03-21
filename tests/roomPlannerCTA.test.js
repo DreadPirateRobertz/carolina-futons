@@ -124,6 +124,16 @@ describe('parsePlannerParams', () => {
     const result = parsePlannerParams('not-a-search');
     expect(result.productId).toBeNull();
   });
+
+  it('returns null width when width param is non-numeric', () => {
+    const result = parsePlannerParams('?productId=p1&width=abc&depth=38');
+    expect(result.width).toBeNull();
+  });
+
+  it('returns null depth when depth param is non-numeric', () => {
+    const result = parsePlannerParams('?productId=p1&width=82&depth=xyz');
+    expect(result.depth).toBeNull();
+  });
 });
 
 // ── shouldShowPlannerCTA ───────────────────────────────────────────────
@@ -159,6 +169,14 @@ describe('shouldShowPlannerCTA', () => {
 
   it('returns false when depth is zero', () => {
     expect(shouldShowPlannerCTA({ _id: 'p1', width: 82, depth: 0 })).toBe(false);
+  });
+
+  it('returns false when width is negative', () => {
+    expect(shouldShowPlannerCTA({ _id: 'p1', width: -5, depth: 38 })).toBe(false);
+  });
+
+  it('returns false when depth is negative', () => {
+    expect(shouldShowPlannerCTA({ _id: 'p1', width: 82, depth: -10 })).toBe(false);
   });
 });
 

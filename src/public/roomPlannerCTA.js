@@ -50,13 +50,17 @@ export function parsePlannerParams(search) {
     const params = new URLSearchParams(search);
     const widthRaw = params.get('width');
     const depthRaw = params.get('depth');
+    const width = widthRaw != null ? Number(widthRaw) : null;
+    const depth = depthRaw != null ? Number(depthRaw) : null;
     return {
       productId: params.get('productId') ?? null,
       productName: params.get('productName') ?? null,
-      width: widthRaw != null ? Number(widthRaw) : null,
-      depth: depthRaw != null ? Number(depthRaw) : null,
+      // Coerce NaN (e.g. from '?width=abc') to null — downstream guards expect number|null
+      width: width !== null && isFinite(width) ? width : null,
+      depth: depth !== null && isFinite(depth) ? depth : null,
     };
-  } catch (_) {
+  } catch (e) {
+    console.error('[roomPlannerCTA] parsePlannerParams:', e);
     return { productId: null, productName: null, width: null, depth: null };
   }
 }
