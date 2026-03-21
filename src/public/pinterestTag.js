@@ -1,6 +1,6 @@
 // pinterestTag.js - Pinterest Tag (Conversion Tag) initialization
 // Loads the Pinterest tracking tag for conversion tracking and audience building.
-// Fires a pagevisit event on initialization. Additional events (viewcategory,
+// Fires a page view on initialization. Additional events (viewcategory,
 // addtocart, checkout, purchase) can be fired via firePinterestEvent().
 //
 // Setup: Set your Pinterest Tag ID in the TAG_ID constant below, or

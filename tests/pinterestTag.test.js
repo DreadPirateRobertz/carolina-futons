@@ -8,6 +8,7 @@ import { initPinterestTag, firePinterestEvent, setPinterestTagId } from '../src/
 
 describe('initPinterestTag — basic guards', () => {
   beforeEach(() => {
+    setPinterestTagId('');
     delete globalThis.window?.pintrk;
   });
 
@@ -156,18 +157,16 @@ describe('initPinterestTag — IIFE loader path', () => {
     setPinterestTagId('TAG_LOAD_TEST');
     initPinterestTag();
 
-    // pintrk is now a function that pushes to queue
-    // First call should be 'load' with tagId
     const firstCall = globalThis.window.pintrk.queue[0];
     expect(firstCall[0]).toBe('load');
     expect(firstCall[1]).toBe('TAG_LOAD_TEST');
+    expect(firstCall[2]).toEqual({ np: 'wix' });
   });
 
   it('calls pintrk with page after load', () => {
     setPinterestTagId('TAG_PAGE_TEST');
     initPinterestTag();
 
-    // Second call should be 'page'
     const secondCall = globalThis.window.pintrk.queue[1];
     expect(secondCall[0]).toBe('page');
   });
