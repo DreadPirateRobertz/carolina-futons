@@ -13,15 +13,12 @@ import { validateSlug } from 'backend/utils/sanitize';
 import {
   LOCAL_PAGES,
   SITE_URL,
-  STORE_PHONE,
-  STORE_ADDRESS,
-  STORE_GEO,
-  STORE_HOURS,
   STORE_DIRECTIONS_URL,
   FEATURED_PRODUCT_CATALOG,
   HOME_CITY_FEATURED_CATEGORIES,
   NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
+import { generateLocalBusinessSchema } from 'backend/localSeo.web';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
 
@@ -61,7 +58,7 @@ export const getLocalPage = webMethod(
           metaTitle: _buildMetaTitle(cityData),
           metaDescription: _buildMetaDescription(cityData),
           canonicalUrl,
-          jsonLd: _buildJsonLd(cityData, canonicalUrl),
+          jsonLd: generateLocalBusinessSchema(cityData),
           featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
           mapEmbedUrl: cityData.mapEmbedUrl || '',
           directionsUrl: STORE_DIRECTIONS_URL,
@@ -100,31 +97,6 @@ function _buildMetaDescription(cityData) {
   }
   const distancePart = cityData.distance ? ` — ${cityData.distance} from ${cityData.city}` : '';
   return `Shop futons, murphy beds & mattresses near ${cityData.city}, ${cityData.state}. Visit Carolina Futons in Hendersonville NC${distancePart}.`;
-}
-
-function _buildJsonLd(cityData, canonicalUrl) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'Carolina Futons',
-    url: canonicalUrl,
-    telephone: STORE_PHONE,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: STORE_ADDRESS.streetAddress,
-      addressLocality: STORE_ADDRESS.addressLocality,
-      addressRegion: STORE_ADDRESS.addressRegion,
-      postalCode: STORE_ADDRESS.postalCode,
-      addressCountry: STORE_ADDRESS.addressCountry,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: STORE_GEO.latitude,
-      longitude: STORE_GEO.longitude,
-    },
-    openingHours: STORE_HOURS,
-    areaServed: `${cityData.city}, ${cityData.state}`,
-  };
 }
 
 // ── getFeaturedProductsForCity ────────────────────────────────────────

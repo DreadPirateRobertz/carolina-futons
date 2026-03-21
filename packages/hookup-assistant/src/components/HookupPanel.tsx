@@ -7,12 +7,15 @@
  *  - Element detection (S3) shows selected element's type
  *  - ManualModePanel (S10) shows target ID, Copy, Mark Done, Skip, Tab-advance
  *  - Manual mode toggle in settings
+ *
+ * S7: Page Navigator — priority optgroups, progress per page, auto-detection.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { PAGES, getUnhookedElements, getAllElements, getRepeaterSection } from '../data/pages.js';
 import { useElementDetection } from '../hooks/useElementDetection.js';
-import { usePageProgress } from '../hooks/usePageProgress.js';
+import { usePageProgress, readPageHookedCount } from '../hooks/usePageProgress.js';
+import { usePageNavigator } from '../hooks/usePageNavigator.js';
 import { useIdApply } from '../hooks/useIdApply.js';
 import { useRepeaterGuard } from '../hooks/useRepeaterGuard.js';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
@@ -31,7 +34,17 @@ export function HookupPanel() {
   const [showHelp, setShowHelp] = useState(false);
 
   const { selected, editorAvailable } = useElementDetection();
+  const { detectedPageName } = usePageNavigator();
   const { hookedIds, skippedIds, markHooked, markSkipped, undoLast, resetPage } = usePageProgress(selectedPageName);
+
+  // S7: When the editor navigates to a new page, auto-switch the panel to match.
+  useEffect(() => {
+    if (detectedPageName && detectedPageName !== selectedPageName) {
+      setSelectedPageName(detectedPageName);
+    }
+    // Run only when detection fires — not on every selectedPageName change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detectedPageName]);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
   const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
   const { pendingConflict, openConflict, clearConflict } = useConflictDetector();
@@ -200,8 +213,17 @@ export function HookupPanel() {
         </div>
       )}
 
-      {/* Page selector */}
+      {/* S7: Page selector — priority groups, progress per page */}
       <div style={s.pageSelector}>
+        {detectedPageName && (
+          <span
+            style={s.autoDetectBadge}
+            title={`Auto-detected: ${detectedPageName}`}
+            aria-label={`Auto-detected page: ${detectedPageName}`}
+          >
+            ⬤
+          </span>
+        )}
         <select
           style={s.pageSelect}
           value={selectedPageName}
@@ -215,9 +237,13 @@ export function HookupPanel() {
               <optgroup key={pri} label={`${pri} — ${priorityLabel(pri)}`}>
                 {group.map((p: PageDef) => {
                   const total = getAllElements(p.name).length;
+                  const hooked =
+                    p.name === selectedPageName
+                      ? hookedIds.length
+                      : readPageHookedCount(p.name);
                   return (
                     <option key={p.name} value={p.name}>
-                      {p.name} ({total})
+                      {p.name} ({hooked}/{total})
                     </option>
                   );
                 })}
@@ -419,6 +445,12 @@ const s: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '6px',
     padding: '6px 12px',
+  },
+  autoDetectBadge: {
+    fontSize: '8px',
+    color: '#28a745',
+    lineHeight: 1,
+    flexShrink: 0,
   },
   pageSelect: {
     flex: 1,

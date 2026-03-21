@@ -37,6 +37,7 @@ import {
   getSavedConfigurations,
   getConfigurationById,
 } from '../src/backend/customizationService.web.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 
 // ── Test Data ────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ const mockSavedConfig = {
 describe('customizationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    __setMember({ _id: 'member-1' });
   });
 
   // ── getCustomizationOptions ──

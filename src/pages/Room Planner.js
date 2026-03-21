@@ -10,6 +10,8 @@ import {
   getDefaultRoomPresets,
   getRoomShapeOptions,
   getProductPalette,
+  getProductList,
+  formatProductDims,
   formatDimensions,
   calculateScale,
   formatPlacementLabel,
@@ -31,6 +33,7 @@ $w.onReady(async function () {
   initRoomPresets();
   initRoomShape();
   initProductPalette();
+  initPlannerProductRepeater();
   initCanvas();
   initSaveButton();
   initShareButton();
@@ -174,6 +177,47 @@ function initProductPalette() {
       } catch (e) {}
     });
     repeater.data = palette.map((g, i) => ({ ...g, _id: `palette-${i}` }));
+  } catch (e) {}
+}
+
+// ── Planner Product Repeater ─────────────────────────────────────────
+
+function initPlannerProductRepeater() {
+  try {
+    const repeater = $w('#plannerProductRepeater');
+    if (!repeater) return;
+
+    const products = getProductList();
+    try { repeater.accessibility.ariaLabel = 'Products to add to your room'; } catch (e) {}
+
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#plannerProductName').text = itemData.label; } catch (e) {}
+      try { $item('#plannerProductDims').text = formatProductDims(itemData); } catch (e) {}
+      try { $item('#plannerProductCategory').text = itemData.categoryLabel; } catch (e) {}
+
+      try {
+        $item('#plannerAddBtn').onClick(() => {
+          try {
+            $w('#plannerCanvas').postMessage({
+              type: 'addProduct',
+              product: {
+                id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                productType: itemData.productType,
+                label: itemData.label,
+                x: 10,
+                y: 10,
+                width: itemData.width,
+                depth: itemData.depth,
+                depthBed: itemData.depthBed,
+              },
+            });
+            trackEvent('room_planner_add_product', { productType: itemData.productType });
+          } catch (e) {}
+        });
+      } catch (e) {}
+    });
+
+    repeater.data = products.map((p, i) => ({ ...p, _id: `product-${i}` }));
   } catch (e) {}
 }
 
