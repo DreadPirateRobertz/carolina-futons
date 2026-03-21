@@ -57,6 +57,7 @@ vi.mock('wix-members-backend', () => ({
 
 
 let mod;
+let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
   _activeCoupons = [];
@@ -64,6 +65,7 @@ beforeEach(async () => {
   _queryV2Error = null;
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
+  wixDataMock = await import('wix-data');
 });
 
 // ── generateCode collision retry ────────────────────────────────────
@@ -169,39 +171,39 @@ describe('getActiveCoupons error handling', () => {
     expect(r).toEqual([]);
   });
 
-  it('formats mixed percentOff and moneyOff in same list', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'PCT10', name: '10% - test@example.com', percentOffRate: 10, active: true },
-      { _id: 'c2', code: 'FLAT25', name: '$25 - test@example.com', moneyOffAmount: 25, active: true },
-      { _id: 'c3', code: 'PCT20', name: '20% - test@example.com', percentOffRate: 20, active: true },
-    ];
+  it('returns mixed coupon discounts as stored in CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'PCT10', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      { _id: 'c2', memberEmail: 'test@example.com', couponCode: 'FLAT25', couponType: 'Cart Recovery', discount: '$25 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      { _id: 'c3', memberEmail: 'test@example.com', couponCode: 'PCT20', couponType: 'Birthday', discount: '20%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(3);
-    expect(r[0].discount).toBe('10% off');
+    expect(r[0].discount).toBe('10%');
     expect(r[1].discount).toBe('$25 off');
-    expect(r[2].discount).toBe('20% off');
+    expect(r[2].discount).toBe('20%');
   });
 
-  it('defaults moneyOffAmount to 0 when neither percentOff nor moneyOff', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'NONE', name: 'No discount - test@example.com', active: true },
-    ];
+  it('returns discount as stored in CMS (no computed default)', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'NONE', couponType: 'Welcome', discount: '0%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
-    expect(r[0].discount).toBe('$0 off');
+    expect(r[0].discount).toBe('0%');
   });
 
-  it('includes minimumSubtotal defaulting to 0', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test - test@example.com', percentOffRate: 5, active: true },
-    ];
+  it('includes minimumSubtotal defaulting to 0 when absent from CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'X', couponType: 'Welcome', discount: '5%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(0);
   });
 
-  it('preserves minimumSubtotal when present', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'X', name: 'Test - test@example.com', percentOffRate: 5, active: true, minimumSubtotal: 50 },
-    ];
+  it('preserves minimumSubtotal when present in CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'X', couponType: 'Welcome', discount: '5%', active: true, minimumSubtotal: 50, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
     expect(r[0].minimumSubtotal).toBe(50);
   });

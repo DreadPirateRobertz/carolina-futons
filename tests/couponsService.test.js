@@ -5,8 +5,9 @@ import {
   createBirthdayCoupon,
   createTierUpgradeCoupon,
 } from '../src/backend/couponsService.web.js';
-import { __setCoupons, coupons } from './__mocks__/wix-marketing-backend.js';
+import { coupons } from './__mocks__/wix-marketing-backend.js';
 import { __setMember } from './__mocks__/wix-members-backend.js';
+import { __reset as __resetData, __seed } from './__mocks__/wix-data.js';
 
 // ── createWelcomeCoupon ──────────────────────────────────────────────
 
@@ -194,44 +195,46 @@ describe('getActiveCoupons', () => {
   const TEST_EMAIL = 'test@example.com';
 
   beforeEach(() => {
+    __resetData();
     __setMember({ _id: 'member-1', loginEmail: TEST_EMAIL });
   });
 
-  it('returns active coupons with percent-off formatting', async () => {
-    __setCoupons([
-      { _id: 'c-1', code: 'WELCOME-ABC123', name: `Welcome 10% - ${TEST_EMAIL}`, percentOffRate: 10, active: true },
+  it('returns active coupons with percent-off discount', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-1', memberEmail: TEST_EMAIL, couponCode: 'WELCOME-ABC123', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
     ]);
     const result = await getActiveCoupons();
     expect(result).toHaveLength(1);
     expect(result[0].code).toBe('WELCOME-ABC123');
-    expect(result[0].discount).toBe('10% off');
+    expect(result[0].discount).toBe('10%');
   });
 
-  it('formats money-off coupons correctly', async () => {
-    __setCoupons([
-      { _id: 'c-2', code: 'SAVE25', name: `$25 Off - ${TEST_EMAIL}`, moneyOffAmount: 25, active: true },
+  it('returns discount string as stored in CMS', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-2', memberEmail: TEST_EMAIL, couponCode: 'SAVE25', couponType: 'Cart Recovery', discount: '$25 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
     ]);
     const result = await getActiveCoupons();
     expect(result[0].discount).toBe('$25 off');
   });
 
-  it('defaults moneyOffAmount to 0 when missing', async () => {
-    __setCoupons([
-      { _id: 'c-3', code: 'NOAMT', name: `No Amount - ${TEST_EMAIL}`, active: true },
+  it('returns coupon with any discount string stored at creation time', async () => {
+    __seed('Members/MemberCoupons', [
+      { _id: 'c-3', memberEmail: TEST_EMAIL, couponCode: 'SPECIAL', couponType: 'Welcome', discount: '0%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
     ]);
     const result = await getActiveCoupons();
-    expect(result[0].discount).toBe('$0 off');
+    expect(result[0].discount).toBe('0%');
   });
 
   it('returns only specified fields (no internal data leak)', async () => {
-    __setCoupons([{
+    __seed('Members/MemberCoupons', [{
       _id: 'c-4',
-      code: 'FIELDS',
-      name: `Test - ${TEST_EMAIL}`,
-      percentOffRate: 5,
+      memberEmail: TEST_EMAIL,
+      couponCode: 'FIELDS',
+      couponType: 'Welcome',
+      discount: '5%',
       active: true,
       minimumSubtotal: 50,
-      expirationTime: new Date().toISOString(),
+      expiresAt: new Date().toISOString(),
       internalSecret: 'should-not-appear',
     }]);
 
@@ -247,7 +250,6 @@ describe('getActiveCoupons', () => {
   });
 
   it('returns empty array when no coupons', async () => {
-    __setCoupons([]);
     const result = await getActiveCoupons();
     expect(result).toEqual([]);
   });

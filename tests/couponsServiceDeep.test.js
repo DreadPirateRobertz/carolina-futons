@@ -48,11 +48,13 @@ vi.mock('wix-members-backend', () => ({
 
 
 let mod;
+let wixDataMock;
 beforeEach(async () => {
   _createdCoupons = [];
   _activeCoupons = [];
   vi.resetModules();
   mod = await import('../src/backend/couponsService.web.js');
+  wixDataMock = await import('wix-data');
 });
 
 // ── createWelcomeCoupon ──────────────────────────────────────────
@@ -128,19 +130,21 @@ describe('getActiveCoupons', () => {
     expect(r).toEqual([]);
   });
 
-  it('returns formatted active coupons', async () => {
-    _activeCoupons = [
-      { _id: 'c1', code: 'WELCOME-ABC', name: 'Welcome 10% - test@example.com', percentOffRate: 10, active: true },
-      { _id: 'c2', code: 'BDAY-XYZ', name: 'Birthday 15% - test@example.com', percentOffRate: 15, active: true },
-    ];
+  it('returns active coupons with discount from CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'WELCOME-ABC', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+      { _id: 'c2', memberEmail: 'test@example.com', couponCode: 'BDAY-XYZ', couponType: 'Birthday', discount: '15%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
     expect(r).toHaveLength(2);
-    expect(r[0].discount).toBe('10% off');
-    expect(r[1].discount).toBe('15% off');
+    expect(r[0].discount).toBe('10%');
+    expect(r[1].discount).toBe('15%');
   });
 
-  it('formats money-off coupons', async () => {
-    _activeCoupons = [{ _id: 'c1', code: 'FLAT50', name: '$50 Off - test@example.com', moneyOffAmount: 50, active: true }];
+  it('returns money-off discount as stored in CMS', async () => {
+    wixDataMock.__seed('Members/MemberCoupons', [
+      { _id: 'c1', memberEmail: 'test@example.com', couponCode: 'FLAT50', couponType: 'Cart Recovery', discount: '$50 off', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    ]);
     const r = await mod.getActiveCoupons();
     expect(r[0].discount).toBe('$50 off');
   });
