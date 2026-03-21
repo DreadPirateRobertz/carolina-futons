@@ -1,32 +1,37 @@
 // Local SEO Page.js — City landing page at /near/[city]
 // Renders city-specific headline, local product grid, Google Maps embed,
 // directions text, directions CTA, and nearby area links for local SEO targeting.
-import { getLocalPage } from 'backend/localSeoService.web';
+import { getLocalPage, getFeaturedProductsForCity } from 'backend/localSeoService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixSeo from 'wix-seo';
 import { announce } from 'public/a11yHelpers';
 
 $w.onReady(async function () {
   try {
-    const routerData = $w('#routerData');
-    const slug = routerData && routerData.slug ? routerData.slug : null;
+    const path = wixLocationFrontend.path;
+    const slug = path && path.length > 0 ? path[path.length - 1] : null;
 
     if (!slug) {
       showNotFound();
       return;
     }
 
-    const result = await getLocalPage(slug);
+    const [pageResult, productsResult] = await Promise.all([
+      getLocalPage(slug),
+      getFeaturedProductsForCity(slug),
+    ]);
 
-    if (!result.success || !result.page) {
+    if (!pageResult.success || !pageResult.page) {
       showNotFound();
       return;
     }
 
-    const { page } = result;
+    const { page } = pageResult;
+    const products = productsResult.success ? productsResult.products : [];
 
     initSeo(page);
     initHero(page);
+    initFeaturedProducts(products);
     initDirections(page);
     initNearbyAreas(page.nearbyAreas);
     announce(`Loaded ${page.city}, ${page.state}`);
@@ -60,6 +65,29 @@ function initHero(page) {
     if (page.isHomeCity) {
       try { $w('#homeCityBadge').show(); } catch (e) {}
     }
+  } catch (e) {}
+}
+
+// ── Featured Products ───────────────────────────────────────────────────
+
+function initFeaturedProducts(products) {
+  try {
+    const items = Array.isArray(products) ? products : [];
+    const repeater = $w('#featuredProductsRepeater');
+    if (!repeater || items.length === 0) return;
+
+    // onItemReady must be registered before .data to avoid the Wix race condition
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#productImage').src = itemData.imageUrl; } catch (e) {}
+      try { $item('#productName').text = itemData.name; } catch (e) {}
+      try { $item('#productPrice').text = itemData.formattedPrice || `$${itemData.price}`; } catch (e) {}
+      try {
+        $item('#viewProductBtn').onClick(() => {
+          wixLocationFrontend.to(itemData.productPageUrl);
+        });
+      } catch (e) {}
+    });
+    repeater.data = items.map((item, i) => ({ ...item, _id: `product-${i}` }));
   } catch (e) {}
 }
 
@@ -99,6 +127,7 @@ function initNearbyAreas(nearbyAreas) {
     const repeater = $w('#nearbyAreasRepeater');
     if (!repeater || items.length === 0) return;
 
+    // onItemReady must be registered before .data to avoid the Wix race condition
     repeater.onItemReady(($item, itemData) => {
       try { $item('#nearbyAreaLabel').text = `${itemData.city}, ${itemData.state}`; } catch (e) {}
       try {
