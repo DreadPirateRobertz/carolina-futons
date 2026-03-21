@@ -660,3 +660,77 @@ describe('subtotal calculation', () => {
     expect($w('#miniCartSubtotal').text).toContain('0.00');
   });
 });
+
+// ── _refreshDrawer post-action verification (pr-test-analyzer critical gap) ──
+
+describe('qty update refreshes drawer with updated cart data', () => {
+  function getItemReadyHandler() {
+    initMiniCartDrawer($w);
+    return $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
+  }
+
+  it('re-renders drawer with fresh cart data after qty change', async () => {
+    const updatedCart = makeCart({ lineItems: [
+      { _id: 'item-1', quantity: 5, product: { name: 'Futon Frame', mediaItems: [{ src: '' }] }, priceData: { price: 199.99 } },
+    ]});
+    mockUpdateCartItemQuantity.mockResolvedValue({});
+    mockGetCurrentCart.mockResolvedValue(updatedCart);
+
+    const handler = getItemReadyHandler();
+    const { $item } = createItemScope();
+    const itemData = { _id: 'item-1', quantity: 2, product: { name: 'Futon Frame', mediaItems: [{ src: '' }] }, priceData: { price: 199.99 } };
+    handler($item, itemData);
+
+    const qtyChangeHandler = $item('#cartItemQty').onChange.mock.calls[0][0];
+    $item('#cartItemQty').value = 5;
+    await qtyChangeHandler({ target: { value: 5 } });
+
+    // _refreshDrawer should call getCurrentCart to get fresh data
+    expect(mockGetCurrentCart).toHaveBeenCalled();
+  });
+
+  it('re-renders drawer with fresh cart data after item removal', async () => {
+    mockRemoveCartItem.mockResolvedValue({});
+    mockGetCurrentCart.mockResolvedValue(emptyCart());
+
+    const handler = getItemReadyHandler();
+    const { $item } = createItemScope();
+    const itemData = { _id: 'item-1', quantity: 1, product: { name: 'Futon Frame', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
+    handler($item, itemData);
+
+    const removeHandler = $item('#cartItemRemove').onClick.mock.calls[0][0];
+    await removeHandler();
+
+    // After removal, _refreshDrawer fetches fresh cart and re-renders
+    expect(mockGetCurrentCart).toHaveBeenCalled();
+    // Empty cart should trigger empty state
+    expect($w('#miniCartEmpty').show).toHaveBeenCalled();
+  });
+});
+
+// ── createFocusTrap failure graceful degradation (pr-test-analyzer critical gap) ──
+
+describe('createFocusTrap failure graceful degradation', () => {
+  it('drawer still opens when createFocusTrap throws', () => {
+    mockCreateFocusTrap.mockImplementation(() => { throw new Error('trap init failed'); });
+
+    initMiniCartDrawer($w);
+    openMiniCart($w, makeCart());
+
+    // Drawer should still be visible and open despite trap failure
+    expect($w('#miniCartDrawer').show).toHaveBeenCalled();
+    expect(isMiniCartOpen()).toBe(true);
+  });
+
+  it('close still works when no trap was created', () => {
+    mockCreateFocusTrap.mockImplementation(() => { throw new Error('trap init failed'); });
+
+    initMiniCartDrawer($w);
+    openMiniCart($w, makeCart());
+    closeMiniCart($w);
+
+    // Should close cleanly without error from missing trap
+    expect($w('#miniCartDrawer').hide).toHaveBeenCalled();
+    expect(isMiniCartOpen()).toBe(false);
+  });
+});
