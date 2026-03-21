@@ -4,7 +4,7 @@
  *   - File upload: validates type (jpg/png/webp) and size (<= 5MB)
  *   - Form validation: required fields (photo, reviewText, rating)
  *   - Submit flow: calls submitPhotoReview, shows success state
- *   - Error states: submit failure, missing fields, unauthenticated
+ *   - Error states: submit failure, missing fields
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
@@ -237,6 +237,24 @@ describe('form validation on submit', () => {
     expect(mockSubmitPhotoReview).not.toHaveBeenCalled();
   });
 
+  it('accepts reviewText exactly 10 characters (boundary)', async () => {
+    await setup();
+    getEl('#reviewTextInput').value = '1234567890'; // exactly 10 chars
+    getEl('#ratingInput').value = 4;
+    await clickSubmit();
+    expect(mockSubmitPhotoReview).toHaveBeenCalled();
+  });
+
+  it('shows validation error when no photo is uploaded', async () => {
+    await onReadyHandler(); // no upload — _uploadedFile stays null
+    getEl('#reviewTextInput').value = 'Great futon, love the quality!';
+    getEl('#ratingInput').value = 5;
+    const submitHandler = getEl('#submitBtn').onClick.mock.calls[0]?.[0];
+    if (submitHandler) await submitHandler();
+    expect(getEl('#validationMessage').text).toMatch(/photo|upload/i);
+    expect(mockSubmitPhotoReview).not.toHaveBeenCalled();
+  });
+
   it('shows validation error when rating is missing', async () => {
     await setup();
     getEl('#reviewTextInput').value = 'This futon is absolutely amazing quality!';
@@ -297,16 +315,9 @@ describe('submit flow', () => {
     expect(getEl('#successMessage').text).toMatch(/thanks.*photo.*review|photo.*in review/i);
   });
 
-  it('shows loading state during submit', async () => {
-    let resolveSubmit;
-    mockSubmitPhotoReview.mockReturnValueOnce(new Promise(res => { resolveSubmit = res; }));
-    const setupPromise = setupAndSubmit();
-    // By the time setupAndSubmit fires onClick, loading should be shown
-    // (we check the submit button is disabled during flight)
-    resolveSubmit({ success: true, id: 'rev-xyz' });
-    await setupPromise;
-    // After resolution, button state has changed — verify submit was called
-    expect(mockSubmitPhotoReview).toHaveBeenCalled();
+  it('calls submitPhotoReview once per submit', async () => {
+    await setupAndSubmit();
+    expect(mockSubmitPhotoReview).toHaveBeenCalledTimes(1);
   });
 
   it('disables submit button during inflight request', async () => {
@@ -323,7 +334,7 @@ describe('submit flow', () => {
     resolveSubmit({ success: true, id: 'rev-xyz' });
   });
 
-  it('tracks quiz_photo_review_submit event on success', async () => {
+  it('tracks photo_review_submit event on success', async () => {
     const { trackEvent } = await import('public/engagementTracker');
     await setupAndSubmit();
     expect(trackEvent).toHaveBeenCalledWith('photo_review_submit', expect.objectContaining({ productId: 'prod-abc' }));
