@@ -8,7 +8,7 @@
  *   BirthdayRewards — dedup ledger (memberId + rewardType + year)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { __reset, __seed, __getInserted } from 'wix-data';
+import { __reset, __seed, __getInserted, __setQueryError } from 'wix-data';
 import { __reset as __resetCrm, __getEmailLog, __failNextEmail } from 'wix-crm-backend';
 
 // ── Mock couponsService.web (already-built helpers) ───────────────────
@@ -206,6 +206,13 @@ describe('checkAndSendBirthdayRewards — resilience', () => {
     expect(result.sent).toBe(0);
     expect(result.failed).toBe(1);
   });
+
+  it('returns zero counts and does not call coupon service when MemberProfiles query throws', async () => {
+    __setQueryError('MemberProfiles', new Error('CMS unavailable'));
+    const result = await checkAndSendBirthdayRewards();
+    expect(result).toEqual({ sent: 0, skipped: 0, failed: 0 });
+    expect(couponMocks.createBirthdayCoupon).not.toHaveBeenCalled();
+  });
 });
 
 // ── checkAndSendAnniversaryRewards ────────────────────────────────────
@@ -286,6 +293,22 @@ describe('checkAndSendAnniversaryRewards — email templates', () => {
     await checkAndSendAnniversaryRewards();
     const log = __getEmailLog();
     expect(log.find(e => e.templateId === 'anniversary_3yr')).toBeDefined();
+  });
+
+  it('5yr uses anniversary_5yr email template', async () => {
+    __seed('MemberProfiles', [makeProfile({ joinDate: yearsAgo(5) })]);
+    await checkAndSendAnniversaryRewards();
+    const log = __getEmailLog();
+    expect(log.find(e => e.templateId === 'anniversary_5yr')).toBeDefined();
+  });
+});
+
+describe('checkAndSendAnniversaryRewards — resilience', () => {
+  it('returns zero counts when MemberProfiles query throws', async () => {
+    __setQueryError('MemberProfiles', new Error('CMS unavailable'));
+    const result = await checkAndSendAnniversaryRewards();
+    expect(result).toEqual({ sent: 0, skipped: 0, failed: 0 });
+    expect(couponMocks.createTierUpgradeCoupon).not.toHaveBeenCalled();
   });
 });
 
