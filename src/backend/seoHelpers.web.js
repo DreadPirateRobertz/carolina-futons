@@ -888,7 +888,7 @@ export const getBlogArticleSchema = webMethod(
 
     const schema = {
       '@context': 'https://schema.org',
-      '@type': 'Article',
+      '@type': 'BlogPosting',
       headline: post.title,
       description: post.metaDescription || post.excerpt || '',
       author: {
@@ -1150,6 +1150,7 @@ export const getPageMetaDescription = webMethod(
       case 'category':
         return getCategoryMetaDescriptionSync(data.slug);
       case 'blogPost':
+        if (data.metaDescription) return data.metaDescription;
         return data.excerpt
           ? stripHtml(data.excerpt).substring(0, 155) + '...'
           : `Read ${data.title || 'this article'} on the Carolina Futons blog.`;

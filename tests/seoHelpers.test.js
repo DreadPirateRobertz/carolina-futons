@@ -710,6 +710,16 @@ describe('getPageMetaDescription', () => {
     expect(desc).toContain('Tips for choosing');
   });
 
+  it('prefers metaDescription over excerpt for blog post', () => {
+    const desc = getPageMetaDescription('blogPost', {
+      metaDescription: 'Crafted meta description for this post.',
+      excerpt: 'This excerpt should not be used.',
+      title: 'Guide',
+    });
+    expect(desc).toBe('Crafted meta description for this post.');
+    expect(desc).not.toContain('excerpt should not be used');
+  });
+
   it('truncates long product descriptions', () => {
     const longDesc = 'A'.repeat(200);
     const desc = getPageMetaDescription('product', { description: longDesc });

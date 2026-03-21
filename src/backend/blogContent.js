@@ -13,6 +13,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['futon frames', 'futon mattresses', 'sleeping', 'buying guide'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/best-futons-for-everyday-sleeping.jpg',
     faqs: [
       {
         question: 'Can you sleep on a futon every night?',
@@ -46,6 +47,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['futon frames', 'buying guide', 'Night & Day', 'KD Frames'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-frame-buying-guide.jpg',
     faqs: [
       {
         question: 'Is a wood or metal futon frame better?',
@@ -79,6 +81,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['futon mattresses', 'Otis Bed', 'buying guide', 'mattress comparison'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/how-to-choose-futon-mattress.jpg',
     faqs: [
       {
         question: 'What is the best fill type for a futon mattress?',
@@ -112,6 +115,7 @@ const BLOG_POSTS = {
     category: 'Comparisons',
     tags: ['murphy beds', 'futon frames', 'small spaces', 'comparison'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/murphy-bed-vs-futon.jpg',
     faqs: [
       {
         question: 'Is a Murphy bed or futon better for a small apartment?',
@@ -141,6 +145,7 @@ const BLOG_POSTS = {
     category: 'Care & Maintenance',
     tags: ['futon care', 'maintenance', 'cleaning', 'tips'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-care-guide.jpg',
     faqs: [
       {
         question: 'How do you clean a futon mattress?',
@@ -174,6 +179,7 @@ const BLOG_POSTS = {
     category: 'Comparisons',
     tags: ['futon frames', 'comparison', 'sofa beds', 'buying guide'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/futon-vs-sofa-bed.jpg',
     faqs: [
       {
         question: 'Is a futon or sofa bed more comfortable for sleeping?',
@@ -203,6 +209,7 @@ const BLOG_POSTS = {
     category: 'Lifestyle',
     tags: ['small spaces', 'apartments', 'murphy beds', 'futon frames', 'platform beds'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/small-space-furniture-guide.jpg',
     faqs: [
       {
         question: 'What is the best bed for a studio apartment?',
@@ -232,6 +239,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['platform beds', 'buying guide', 'bedroom furniture', 'Night & Day'],
     publishDate: '2026-02-20',
+    coverImage: 'https://www.carolinafutons.com/blog-og/platform-bed-guide.jpg',
     faqs: [
       {
         question: 'Do you need a box spring with a platform bed?',
@@ -265,6 +273,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['murphy beds', 'small spaces', 'Night & Day', 'buying guide'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/top-murphy-cabinet-beds.jpg',
     faqs: [
       {
         question: 'How much do Murphy cabinet beds cost?',
@@ -298,6 +307,7 @@ const BLOG_POSTS = {
     category: 'Comparisons',
     tags: ['platform beds', 'KD Frames', 'Night & Day', 'comparison', 'buying guide'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/platform-bed-buyers-guide.jpg',
     faqs: [
       {
         question: 'Are KD Frames platform beds made in the USA?',
@@ -331,6 +341,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['futon covers', 'buying guide', 'home decor', 'fabric guide'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/choosing-futon-cover.jpg',
     faqs: [
       {
         question: 'What is the best fabric for a futon cover?',
@@ -364,6 +375,7 @@ const BLOG_POSTS = {
     category: 'Care & Maintenance',
     tags: ['furniture care', 'maintenance', 'Night & Day', 'KD Frames', 'wood care'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/wood-frame-care-guide.jpg',
     faqs: [
       {
         question: 'How do you clean a solid wood futon frame?',
@@ -397,6 +409,7 @@ const BLOG_POSTS = {
     category: 'Room Design',
     tags: ['small spaces', 'studio apartment', 'futon frames', 'murphy beds', 'room design'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/studio-apartment-furniture.jpg',
     faqs: [
       {
         question: 'Is a futon or Murphy bed better for a studio apartment?',
@@ -430,6 +443,7 @@ const BLOG_POSTS = {
     category: 'Buying Guides',
     tags: ['sustainability', 'eco-friendly', 'materials', 'buying guide'],
     publishDate: '2026-03-17',
+    coverImage: 'https://www.carolinafutons.com/blog-og/eco-friendly-furniture-guide.jpg',
     faqs: [
       {
         question: 'What is plantation-grown rubberwood?',
