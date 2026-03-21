@@ -3872,19 +3872,79 @@ function render() {
   howto.innerHTML = `
     <h2>How to Use This Guide</h2>
     <div style="background:#e8f5e9;border:2px solid #4caf50;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
-      <strong style="color:#2e7d32;">🚀 NEW 2026-03-21: Bulk Rename via Browser Console</strong><br>
-      <span style="font-size:0.9em;color:#333;">You can rename ALL elements on a page programmatically — no manual clicking needed.</span>
-      <ol style="margin:8px 0 0 0;padding-left:20px;font-size:0.88em;">
+      <strong style="color:#2e7d32;font-size:1.05em;">🚀 Browser Console Rename — Complete 3-Step Workflow</strong><br>
+      <span style="font-size:0.88em;color:#555;display:block;margin:4px 0 8px;">S0 Recon confirmed: documentServices is directly writable from preview-frame. No add-on needed.</span>
+
+      <div style="background:#fff3cd;border:1px solid #e0a800;border-radius:5px;padding:8px 12px;margin-bottom:10px;font-size:0.85em;">
+        <strong>⚠️ Most elements have NO nickname yet</strong> — <code>getNickname()</code> returns <code>""</code> for unnamed elements. The RENAME_MAP script only works for elements that already have an old auto-generated name.<br>
+        <strong>For unnamed elements (the majority): use Step 2 (ID-based)</strong>. For auto-named elements: use Step 3 (nick-based).
+      </div>
+
+      <strong style="color:#1a237e;">SETUP (once per session)</strong>
+      <ol style="margin:4px 0 10px 0;padding-left:20px;font-size:0.88em;">
         <li>Open Wix Studio editor → Chrome DevTools (F12)</li>
-        <li>In DevTools top-left, click the <strong>frame dropdown</strong> → select <strong>preview-frame</strong></li>
-        <li>Paste this script into the console (fill in your RENAME_MAP from the element tables below):</li>
+        <li>Click the <strong>frame dropdown</strong> in DevTools top bar → select <strong>preview-frame</strong></li>
+        <li>Verify: type <code>window.documentServices</code> → should return an object (not undefined)</li>
       </ol>
-      <pre style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:6px;font-size:0.8em;overflow-x:auto;margin:8px 0 0 0;">(async () => {
+
+      <strong style="color:#1a237e;">STEP 1: DISCOVERY — run this first on every page</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Shows all component IDs + current nicknames. Unnamed elements need Step 2.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
   const ds = window.documentServices;
-  const pageId = 'c1dmp'; // see Page IDs table below
+  const pageId = 'c1dmp'; // ← change to current page ID (see table below)
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const data = all.map(ref => ({
+    compId: ref.id,
+    currentNick: ds.components.code.getNickname(ref) || '(none — needs ID)',
+  }));
+  const unnamed = data.filter(d => d.currentNick === '(none — needs ID)');
+  const named   = data.filter(d => d.currentNick !== '(none — needs ID)');
+  console.log(`PAGE: ${pageId} | Total: ${data.length} | Unnamed: ${unnamed.length} | Named: ${named.length}`);
+  console.log('=== UNNAMED (click each in editor → Properties panel → Element ID):');
+  console.table(unnamed);
+  console.log('=== ALREADY NAMED:');
+  console.table(named);
+})();</pre>
+
+      <strong style="color:#1a237e;">STEP 2: RENAME UNNAMED ELEMENTS (by Component ID) — main tool</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Click element in editor → Properties &amp; Events panel → <strong>Element ID</strong> shows <code>comp-abc123</code>. Add that to COMP_ID_MAP with its target nickname from the element tables below.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp'; // ← must match current page
+
+  // Click element in editor → Properties panel → Element ID → add here
+  // Target nicknames come from the element tables in this guide
+  const COMP_ID_MAP = {
+    // 'comp-abc123': 'heroTitle',
+    // 'comp-def456': 'heroSubtitle',
+    // 'comp-ghi789': 'heroCta',
+  };
+
+  const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
+  const results = [];
+  for (const compRef of all) {
+    const target = COMP_ID_MAP[compRef.id];
+    if (!target) continue;
+    const v = ds.components.code.validateNickname(compRef, target);
+    if (v !== 'VALID') { results.push({ id: compRef.id, to: target, status: 'SKIP:'+v }); continue; }
+    ds.components.code.setNickname(compRef, target);
+    await new Promise(r => setTimeout(r, 150));
+    const ok = ds.components.code.getNickname(compRef) === target;
+    results.push({ id: compRef.id, to: target, status: ok ? '✅ OK' : '❌ FAIL' });
+  }
+  console.table(results);
+  console.log('Re-run Step 1 to verify all names set correctly.');
+})();</pre>
+
+      <strong style="color:#1a237e;">STEP 3: RENAME ALREADY-NAMED ELEMENTS (by current nickname) — for auto-generated names</strong>
+      <p style="font-size:0.82em;margin:3px 0 5px;color:#444;">Use only for elements that already have auto-generated names like <code>text19</code>, <code>box30</code>. Check Step 1 output to find these.</p>
+      <pre style="background:#1e1e1e;color:#d4d4d4;padding:11px;border-radius:6px;font-size:0.78em;overflow-x:auto;margin:0 0 10px 0;">(async () => {
+  const ds = window.documentServices;
+  const pageId = 'c1dmp';
   const RENAME_MAP = {
-    // 'currentNickname': 'targetNickname'
-    // e.g. 'vectorImage8': 'heroSkyline',
+    // 'text19':         'heroTitle',     // ← auto-generated name → target nickname
+    // 'vectorImage8':   'heroSkyline',
+    // 'expandableMenu1':'navMenu',
   };
   const all = ds.components.getAllComponents({ id: pageId, type: 'Page' });
   const results = [];
@@ -3901,8 +3961,10 @@ function render() {
   }
   console.table(results);
 })();</pre>
-      <p style="font-size:0.85em;margin:6px 0 0;color:#555;">
-        <strong>Nickname rules</strong>: camelCase alphanumeric only (no underscores/spaces) · returns VALID | ALREADY_EXISTS | TOO_SHORT | TOO_LONG | INVALID_NAME<br>
+
+      <p style="font-size:0.82em;margin:6px 0 0;color:#555;">
+        <strong>Nickname rules</strong>: camelCase alphanumeric only · no underscores/spaces/dashes · site-wide unique · allow 150ms after set before reading back<br>
+        <strong>Already named (skip these)</strong>: footerContactInfo ✅ · footerEmailSubmit ✅ · footerNewsletterTitle ✅ · footerNewsletterSubtitle ✅<br>
         <strong>Page IDs</strong>: home=c1dmp · product=ve2z7 · category=u0gn0 · cart=mqi5m · checkout=psuom · search=evr2j · faq=s2c5g · about=gar3e · contact=k14wx · shipping=ype8c
       </p>
     </div>
