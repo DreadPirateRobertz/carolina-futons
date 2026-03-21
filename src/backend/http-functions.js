@@ -1,6 +1,8 @@
 // Wix HTTP Functions - Public API endpoints
 // Accessible at: https://www.carolinafutons.com/_functions/<functionName>
 import { ok, notFound, serverError, forbidden, badRequest } from 'wix-http-functions';
+import { currentMember } from 'wix-members-backend';
+import { accounts, transactions } from 'wix-loyalty.v2';
 import { generateFeed } from 'backend/googleMerchantFeed.web';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
 import { recordPriceSnapshots, checkWishlistAlerts } from 'backend/notificationService.web';
@@ -1078,6 +1080,79 @@ export async function get_sitemapXml() {
       body: 'Error generating sitemap',
       headers: { 'Content-Type': 'text/plain' },
     });
+  }
+}
+
+// ── Loyalty Member Endpoint ──────────────────────────────────────────
+// URL: GET https://www.carolinafutons.com/_functions/loyalty/{memberId}
+// Returns loyalty account info for the authenticated member.
+// IDOR guard: authenticated member must own the requested memberId.
+
+const LOYALTY_TIERS = [
+  { name: 'Bronze', min: 0, next: 500 },
+  { name: 'Silver', min: 500, next: 1500 },
+  { name: 'Gold', min: 1500, next: null },
+];
+
+function resolveLoyaltyTier(points) {
+  const sorted = [...LOYALTY_TIERS].sort((a, b) => b.min - a.min);
+  for (const tier of sorted) {
+    if (points >= tier.min) return tier;
+  }
+  return LOYALTY_TIERS[0];
+}
+
+export async function get_loyalty(request) {
+  const json = (obj) => JSON.stringify(obj);
+  const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+
+  try {
+    const memberId = request.path && request.path[0];
+    if (!memberId) {
+      return badRequest({ body: json({ error: 'memberId is required' }), headers: jsonHeaders });
+    }
+
+    let member;
+    try {
+      member = await currentMember.getMember();
+    } catch {
+      member = null;
+    }
+    if (!member) {
+      return forbidden({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
+    }
+    if (member._id !== memberId) {
+      return forbidden({ body: json({ error: 'Access denied' }), headers: jsonHeaders });
+    }
+
+    const account = await accounts.getMyAccount();
+    if (!account) {
+      return notFound({ body: json({ error: 'Loyalty account not found' }), headers: jsonHeaders });
+    }
+
+    const points = account.points ? account.points.balance : 0;
+    const tier = resolveLoyaltyTier(points);
+
+    const { transactions: txList } = await transactions.listTransactions();
+    const recentActivity = (txList || []).map((tx) => ({
+      points: tx.points,
+      description: tx.description,
+      date: tx._createdDate,
+    }));
+
+    return ok({
+      body: json({
+        memberId,
+        points,
+        tier: tier.name,
+        nextTierAt: tier.next,
+        recentActivity,
+      }),
+      headers: jsonHeaders,
+    });
+  } catch (err) {
+    console.error('HTTP function error (loyalty):', err);
+    return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }
 
