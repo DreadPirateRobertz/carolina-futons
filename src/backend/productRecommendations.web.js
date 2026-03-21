@@ -692,3 +692,87 @@ function formatProduct(item) {
     productOptions: item.productOptions || [],
   };
 }
+
+// ── getRecommendations ─────────────────────────────────────────────
+// In-memory cache: key=productId → {products, expires}. 30-min TTL.
+// Per-instance (serverless cold starts reset cache — acceptable trade-off).
+const _recCache = new Map();
+const REC_CACHE_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * Get "Customers Also Love" recommendations for a product.
+ * Scores candidates by collection overlap (2pts each) + price band ±20% (1pt).
+ * Results ranked by overlap score, cached 30min per productId.
+ *
+ * @param {string} productId - Source product ID
+ * @param {number} [limit=6] - Max recommendations to return
+ * @returns {Promise<{success: boolean, products: Array}>}
+ * @permission Anyone
+ */
+export const getRecommendations = webMethod(
+  Permissions.Anyone,
+  async (productId, limit = 6) => {
+    try {
+      const pid = validateId(productId);
+      if (!pid) return { success: false, products: [] };
+
+      const safeLimit = Math.max(1, Math.min(12, Math.round(limit)));
+
+      // Return cached result if still fresh
+      const cached = _recCache.get(pid);
+      if (cached && cached.expires > Date.now()) {
+        return { success: true, products: cached.products.slice(0, safeLimit) };
+      }
+
+      // Load source product
+      const source = await wixData.get('Stores/Products', pid);
+      if (!source) return { success: false, products: [] };
+
+      const sourceCollections = Array.isArray(source.collections)
+        ? source.collections
+        : source.collections ? [source.collections] : [];
+
+      const sourcePrice = source.price || 0;
+      const minPrice = sourcePrice * 0.8;
+      const maxPrice = sourcePrice * 1.2;
+
+      // Fetch candidates: products sharing ≥1 collection, exclude source + call-for-price
+      let candidates = [];
+      if (sourceCollections.length > 0) {
+        const collResult = await wixData.query('Stores/Products')
+          .hasSome('collections', sourceCollections)
+          .ne('_id', pid)
+          .gt('price', CALL_FOR_PRICE_THRESHOLD)
+          .limit(50)
+          .find();
+        candidates = collResult.items;
+      }
+
+      // Score each candidate: 2pts per shared collection, +1 if in price band
+      const scored = candidates.map(item => {
+        const itemColls = Array.isArray(item.collections)
+          ? item.collections
+          : item.collections ? [item.collections] : [];
+        const sharedColls = itemColls.filter(c => sourceCollections.includes(c)).length;
+        const inPriceBand = item.price >= minPrice && item.price <= maxPrice ? 1 : 0;
+        return { item, score: sharedColls * 2 + inPriceBand };
+      });
+
+      // Sort by score descending, format for return
+      const ranked = scored
+        .sort((a, b) => b.score - a.score)
+        .map(({ item }) => formatProduct(item));
+
+      // Cache full ranked list (up to 12) to serve different limit values
+      _recCache.set(pid, { products: ranked.slice(0, 12), expires: Date.now() + REC_CACHE_TTL_MS });
+
+      return { success: true, products: ranked.slice(0, safeLimit) };
+    } catch (err) {
+      console.error('[productRecommendations] getRecommendations error:', err);
+      return { success: false, products: [] };
+    }
+  }
+);
+
+/** @testing Clear the recommendations cache. */
+export function __resetRecCache() { _recCache.clear(); }
