@@ -13,6 +13,7 @@ vi.mock('backend/couponsService.web', () => ({
 }));
 
 import { sendRecoveryEmail } from '../src/backend/cartRecovery.web.js';
+import wixData from './__mocks__/wix-data.js';
 import { __reset, __seed, __getInserted, __onUpdate } from './__mocks__/wix-data.js';
 import { __reset as crmReset, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 
@@ -162,5 +163,21 @@ describe('sendRecoveryEmail — email service failure', () => {
       expect.anything(),
     );
     spy.mockRestore();
+  });
+});
+
+// ── Cart update failure ──────────────────────────────────────────────────────
+
+describe('sendRecoveryEmail — cart status update failure', () => {
+  it('returns failure when wixData.update throws, even though email was already sent', async () => {
+    // The email is sent before the update. If update fails, success: false is returned
+    // and the caller may retry — which would re-send the email. Callers should
+    // check recoveryEmailSent before invoking to prevent duplicates.
+    vi.spyOn(wixData, 'update').mockRejectedValueOnce(new Error('Update conflict'));
+    const result = await sendRecoveryEmail(CART_ID);
+    expect(result.success).toBe(false);
+    // Email was already sent before the failure
+    const log = __getEmailLog();
+    expect(log.length).toBe(1);
   });
 });

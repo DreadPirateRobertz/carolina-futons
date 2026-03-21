@@ -167,11 +167,22 @@ export const markRecoveryEmailSent = webMethod(
 
 /**
  * Send the first recovery email for an abandoned cart.
- * Generates an idempotent recovery coupon and sends via triggered email.
+ * Generates an idempotent recovery coupon (via generateRecoveryCoupon) and
+ * sends the cart_recovery_1 triggered email. Degrades gracefully if coupon
+ * generation fails — email still sends without a discount code.
+ *
+ * Note: This function is NOT itself idempotent. Callers must check
+ * `recoveryEmailSent` on the cart record before invoking to prevent
+ * duplicate sends. Only coupon generation is idempotent.
+ *
+ * The coupon idempotency key used internally is `cart.checkoutId`,
+ * not the AbandonedCarts `_id`.
  *
  * @function sendRecoveryEmail
  * @param {string} cartId - The _id of the AbandonedCarts record
- * @returns {Promise<Object>} { success, discountCode? }
+ * @returns {Promise<Object>}
+ *   On success: `{ success: true, discountCode: string }`.
+ *   On failure: `{ success: false, message: string }`.
  * @permission Admin
  */
 export const sendRecoveryEmail = webMethod(
@@ -189,14 +200,13 @@ export const sendRecoveryEmail = webMethod(
 
       const couponResult = await generateRecoveryCoupon({ cartId: cart.checkoutId, email: cartEmail });
       const discountCode = couponResult.success ? couponResult.code : '';
-      const discountAvailable = couponResult.success;
 
       await triggeredEmails.emailContact('cart_recovery_1', cartEmail, {
         variables: {
           buyerName: cart.buyerName || '',
           cartTotal: String(cart.cartTotal || 0),
           discountCode,
-          discountAvailable,
+          discountAvailable: couponResult.success,
           checkoutId: cart.checkoutId,
           email: cartEmail,
         },

@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { generateRecoveryCoupon } from '../src/backend/couponsService.web.js';
 import { coupons } from './__mocks__/wix-marketing-backend.js';
+import wixData from './__mocks__/wix-data.js';
 import { __reset, __seed, __getInserted } from './__mocks__/wix-data.js';
 
 beforeEach(() => {
@@ -253,5 +254,66 @@ describe('generateRecoveryCoupon — error handling', () => {
       expect.anything(),
     );
     errorSpy.mockRestore();
+  });
+});
+
+// ── Idempotency edge cases ───────────────────────────────────────────────────
+
+describe('generateRecoveryCoupon — expired cached coupon', () => {
+  it('returns expired coupon code as-is (no re-issue)', async () => {
+    // Current behavior: expiry is not checked on cache hit — expired codes are returned.
+    // Callers should validate expiresAt if freshness is required.
+    __seed('RecoveryCoupons', [{
+      _id: 'rc-expired',
+      cartId: 'cart-expired',
+      email: 'buyer@example.com',
+      code: 'RECOVER-EXPIRED',
+      discountPercent: 10,
+      expiresAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
+    }]);
+
+    const result = await generateRecoveryCoupon({ cartId: 'cart-expired', email: 'buyer@example.com' });
+    expect(result.success).toBe(true);
+    expect(result.code).toBe('RECOVER-EXPIRED');
+    expect(coupons.createCoupon).not.toHaveBeenCalled();
+  });
+
+  it('returns stored discountPercent from cached record', async () => {
+    __seed('RecoveryCoupons', [{
+      _id: 'rc-1',
+      cartId: 'cart-pct',
+      email: 'buyer@example.com',
+      code: 'RECOVER-PCT',
+      discountPercent: 10,
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+    }]);
+
+    const result = await generateRecoveryCoupon({ cartId: 'cart-pct', email: 'buyer@example.com' });
+    expect(result.discountPercent).toBe(10);
+  });
+});
+
+describe('generateRecoveryCoupon — RecoveryCoupons insert failure', () => {
+  it('still returns coupon when wixData.insert fails after createCoupon succeeds', async () => {
+    // If insert fails, the coupon was already created in the marketing system.
+    // We return it to the caller rather than failing — retry will create a second coupon (known limitation).
+    vi.spyOn(wixData, 'insert').mockRejectedValueOnce(new Error('Insert timeout'));
+    const result = await generateRecoveryCoupon({ cartId: 'cart-insert-fail', email: 'buyer@example.com' });
+    expect(result.success).toBe(true);
+    expect(result.code).toMatch(/^RECOVER-/);
+    expect(coupons.createCoupon).toHaveBeenCalledOnce();
+  });
+
+  it('logs a warning when RecoveryCoupons insert fails', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(wixData, 'insert').mockRejectedValueOnce(new Error('Insert timeout'));
+    await generateRecoveryCoupon({ cartId: 'cart-warn', email: 'buyer@example.com' });
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[couponsService]'),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    warnSpy.mockRestore();
   });
 });

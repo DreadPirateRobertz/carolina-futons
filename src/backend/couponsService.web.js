@@ -191,8 +191,10 @@ export const createTierUpgradeCoupon = webMethod(
  * @param {Object} params
  * @param {string} params.cartId - Unique checkout/cart ID for idempotency key
  * @param {string} params.email - Buyer's email address
- * @returns {Promise<Object>} { success, code, discountPercent, expiresAt }
- * @permission Admin — called by cart recovery automation
+ * @returns {Promise<Object>}
+ *   On success: `{ success: true, code: string, discountPercent: number, expiresAt: string }`.
+ *   On failure: `{ success: false, message: string }`.
+ * @permission Admin — called internally by sendRecoveryEmail; not intended for direct client use
  */
 export const generateRecoveryCoupon = webMethod(
   Permissions.Admin,
@@ -217,13 +219,14 @@ export const generateRecoveryCoupon = webMethod(
         return {
           success: true,
           code: record.code,
-          discountPercent: 10,
+          discountPercent: record.discountPercent || 10,
           expiresAt: record.expiresAt,
         };
       }
 
-      // Create new coupon — 10% off, 48-hour expiry
+      // Create new coupon — 10% off, no minimum subtotal, applies to entire cart
       const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const expiresAtISO = expiresAt.toISOString();
       const coupon = await coupons.createCoupon({
         name: `Cart Recovery 10% Off - ${cleanEmail}`,
         code: await generateCode('RECOVER'),
@@ -237,19 +240,26 @@ export const generateRecoveryCoupon = webMethod(
         expirationTime: expiresAt,
       });
 
-      // Persist for idempotency
-      await wixData.insert('RecoveryCoupons', {
-        cartId: cleanCartId,
-        email: cleanEmail,
-        code: coupon.code,
-        expiresAt: expiresAt.toISOString(),
-      });
+      // Persist for idempotency (best-effort: if insert fails, coupon is still usable
+      // but a retry will create a second coupon in the marketing system)
+      try {
+        await wixData.insert('RecoveryCoupons', {
+          cartId: cleanCartId,
+          email: cleanEmail,
+          code: coupon.code,
+          discountPercent: 10,
+          expiresAt: expiresAtISO,
+        });
+      } catch (insertErr) {
+        console.warn('[couponsService] RecoveryCoupons insert failed for cartId:', cartId,
+          '— idempotency not guaranteed on retry:', insertErr.message);
+      }
 
       return {
         success: true,
         code: coupon.code,
         discountPercent: 10,
-        expiresAt: expiresAt.toISOString(),
+        expiresAt: expiresAtISO,
       };
     } catch (err) {
       console.error('[couponsService] generateRecoveryCoupon failed for cartId:', cartId, '— error:', err.message);
