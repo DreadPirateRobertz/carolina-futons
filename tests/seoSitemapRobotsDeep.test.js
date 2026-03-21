@@ -200,7 +200,7 @@ describe('buildSitemapXml — edge cases', () => {
     const openTags = (xml.match(/<url>/g) || []).length;
     const closeTags = (xml.match(/<\/url>/g) || []).length;
     expect(openTags).toBe(closeTags);
-    expect(openTags).toBe(8 + 11 + 500 + 14); // static + category + products + blog
+    expect(openTags).toBe(9 + 11 + 500 + 14); // static + category + products + blog
 
     // Starts and ends correctly
     expect(xml).toMatch(/^<\?xml/);
@@ -318,7 +318,7 @@ describe('sitemap+robots integration — complete pipeline', () => {
     expect(xml).toContain('</urlset>');
 
     const urlCount = (xml.match(/<url>/g) || []).length;
-    expect(urlCount).toBe(33); // 8 static + 11 category + 14 blog
+    expect(urlCount).toBe(34); // 9 static + 11 category + 14 blog
   });
 
   it('getSitemapData result directly usable by buildSitemapXml', () => {

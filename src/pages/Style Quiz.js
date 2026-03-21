@@ -1,6 +1,7 @@
 // Style Quiz.js - "Find Your Perfect Futon" interactive style quiz
 // 5-step quiz flow with progress indicator, personalized product recommendations
 import { getQuizRecommendations, getQuizOptions } from 'backend/styleQuiz.web';
+import { getStyleQuizSchema } from 'backend/seoHelpers.web';
 import { trackEvent } from 'public/engagementTracker';
 import { initBackToTop } from 'public/mobileHelpers';
 import { announce, makeClickable } from 'public/a11yHelpers';
@@ -27,6 +28,7 @@ const STEPS = [
 $w.onReady(async function () {
   initBackToTop($w);
   initPageSeo('styleQuiz');
+  injectQuizSchema();
   trackEvent('page_view', { page: 'style-quiz' });
 
   // Load quiz options from backend
@@ -38,6 +40,20 @@ $w.onReady(async function () {
 
   initQuiz();
 });
+
+// ── SEO: JSON-LD Schema ────────────────────────────────────────────
+
+async function injectQuizSchema() {
+  try {
+    const { head } = await import('wix-seo-frontend');
+    const schemaJson = await getStyleQuizSchema();
+    if (schemaJson) {
+      head.setStructuredData([JSON.parse(schemaJson)]);
+    }
+  } catch (e) {
+    // Non-critical — page renders without schema
+  }
+}
 
 // ── Quiz Initialization ────────────────────────────────────────────
 

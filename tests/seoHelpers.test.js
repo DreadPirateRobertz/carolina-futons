@@ -17,6 +17,7 @@ import {
   getPageTitle,
   getCanonicalUrl,
   getPageMetaDescription,
+  getStyleQuizSchema,
 } from '../src/backend/seoHelpers.web.js';
 
 // ── getProductSchema ────────────────────────────────────────────────
@@ -1279,5 +1280,57 @@ describe('Google Rich Results: OG tags completeness', () => {
 
     const catTags = JSON.parse(getCategoryOgTags('futon-frames'));
     expect(catTags['twitter:card']).toBe('summary');
+  });
+});
+
+// ── getCanonicalUrl — styleQuiz ───────────────────────────────────────
+
+describe('getCanonicalUrl — styleQuiz', () => {
+  it('returns /style-quiz canonical URL', () => {
+    expect(getCanonicalUrl('styleQuiz'))
+      .toBe('https://www.carolinafutons.com/style-quiz');
+  });
+});
+
+// ── getStyleQuizSchema ────────────────────────────────────────────────
+
+describe('getStyleQuizSchema', () => {
+  it('returns a stringified JSON-LD schema', () => {
+    const json = getStyleQuizSchema();
+    expect(json).toBeTruthy();
+    expect(() => JSON.parse(json)).not.toThrow();
+  });
+
+  it('has correct @context and @type', () => {
+    const schema = JSON.parse(getStyleQuizSchema());
+    expect(schema['@context']).toBe('https://schema.org');
+    expect(schema['@type']).toBe('WebPage');
+  });
+
+  it('includes the /style-quiz URL', () => {
+    const schema = JSON.parse(getStyleQuizSchema());
+    expect(schema.url).toBe('https://www.carolinafutons.com/style-quiz');
+  });
+
+  it('includes breadcrumb with Home and Style Quiz entries', () => {
+    const schema = JSON.parse(getStyleQuizSchema());
+    expect(schema.breadcrumb['@type']).toBe('BreadcrumbList');
+    const items = schema.breadcrumb.itemListElement;
+    expect(items).toHaveLength(2);
+    expect(items[0].name).toBe('Home');
+    expect(items[1].name).toBe('Style Quiz');
+    expect(items[1].item).toBe('https://www.carolinafutons.com/style-quiz');
+  });
+
+  it('includes isPartOf WebSite reference', () => {
+    const schema = JSON.parse(getStyleQuizSchema());
+    expect(schema.isPartOf['@type']).toBe('WebSite');
+    expect(schema.isPartOf.name).toBe('Carolina Futons');
+  });
+
+  it('includes name and description', () => {
+    const schema = JSON.parse(getStyleQuizSchema());
+    expect(schema.name).toContain('Style Quiz');
+    expect(schema.description).toContain('style quiz');
   });
 });

@@ -184,6 +184,8 @@ async function initProductPage() {
         const navigate = (navModule?.default?.to ?? navModule?.to) ? (url => (navModule?.default?.to ?? navModule?.to)(url)) : undefined;
         _initGiftProductBtnModule($w, product, { addToCart, navigate });
       }, critical: false },
+      // CF-75d1: Style Quiz CTA — nudges shoppers to the quiz when browsing products
+      { name: 'quizCTA', init: () => initProductPageQuizCTA($w), critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
@@ -444,4 +446,27 @@ async function initShowroomCTA($wFn, _state, svc) {
       } catch (err) { console.error('[ProductPage] Showroom booking nav failed:', err); }
     });
   } catch (e) { /* #showroomCTA optional */ }
+}
+
+// ── Style Quiz CTA (CF-75d1 S6) ────────────────────────────────────
+// Nudges shoppers to the personalized recommendation quiz from the product page.
+
+/**
+ * Initialize the style quiz CTA on the product page.
+ * Wires #productQuizCTAButton to navigate to /style-quiz.
+ * @param {Function} $wFn - Wix $w selector
+ */
+function initProductPageQuizCTA($wFn) {
+  try {
+    const btn = $wFn('#productQuizCTAButton');
+    if (!btn) return;
+    try { btn.accessibility.ariaLabel = 'Take the style quiz to find your perfect furniture'; } catch (e) {}
+    btn.onClick(() => {
+      import('wix-location-frontend').then(({ to }) => {
+        to('/style-quiz');
+      });
+    });
+  } catch (e) {
+    // #productQuizCTAButton is optional — collapses gracefully if not in editor
+  }
 }

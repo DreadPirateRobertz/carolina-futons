@@ -165,6 +165,7 @@ function initNavigation() {
     '#navFAQ': '/faq',
     '#navAbout': '/about',
     '#navBlog': '/blog',
+    '#navStyleQuiz': '/style-quiz',
   };
 
   Object.entries(navLinks).forEach(([elementId, path]) => {
