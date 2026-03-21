@@ -28,6 +28,7 @@ import { initProductUrgencyBadge } from 'public/flashSaleHelpers';
 import { applyProductPageTokens } from 'public/ProductPagePolish.js';
 import { initInventoryDisplay } from 'public/InventoryDisplay.js';
 import { injectProductMeta as injectProductSeoMeta, injectPinterestMeta } from 'public/product/productSchema.js';
+import { initGiftProductButton as _initGiftProductBtnModule } from 'public/giftProductBtn.js';
 
 // Below-fold components: dynamically imported in deferred section inits
 // ProductARViewer, Product360Viewer, ProductVideoSection, CustomizationBuilder,
@@ -172,8 +173,15 @@ async function initProductPage() {
       { name: 'swatchRequestFlow', init: async () => { const m = await import('public/SwatchRequestFlow.js'); m.initSwatchRequestFlow($w, state); }, critical: false },
       // CF-ac80 (S1) / CF-1792 (S3): Showroom CTA + QR mode banner
       { name: 'showroomCTA', init: async () => { const m = await import('backend/showroomService.web.js'); await initShowroomCTA($w, state, m); }, critical: false },
-      // CF-9fv2: Gift product button — isolated, only touches #giftProductBtn
-      { name: 'giftProductButton', init: () => initGiftProductButton($w), critical: false },
+      // CF-9fv2: Gift product button — adds gift card to cart for current product
+      { name: 'giftProductButton', init: async () => {
+        const product = { productId: state.product?._id || '', productName: state.product?.name || '', price: state.product?.price || 0 };
+        const cartModule = await import('wix-stores-frontend').catch(() => null);
+        const addToCart = cartModule?.default?.cart?.addProducts?.bind(cartModule.default.cart);
+        const navModule = await import('wix-location-frontend').catch(() => null);
+        const navigate = (navModule?.default?.to ?? navModule?.to) ? (url => (navModule?.default?.to ?? navModule?.to)(url)) : undefined;
+        _initGiftProductBtnModule($w, product, { addToCart, navigate });
+      }, critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
@@ -395,28 +403,8 @@ async function loadAlsoBought() {
 
 
 // ── Gift Product Button (CF-9fv2) ─────────────────────────────────────
-// Isolated — only touches #giftProductBtn on Product Page.
-
-/**
- * Initialize the Give as a Gift button on Product Page.
- * Targets: #giftProductBtn
- * @param {Function} $wFn - Wix selector function
- */
-export function initGiftProductButton($wFn) {
-  try {
-    const btn = $wFn('#giftProductBtn');
-    btn.text = 'Give as a Gift';
-    try { btn.accessibility.ariaLabel = 'Give this as a gift — shop Carolina Futons gift cards'; } catch (e) {}
-    btn.onClick(() => {
-      import('wix-location-frontend').then(loc => {
-        const navFn = loc.default?.to ?? loc.to;
-        navFn('/gift-cards');
-      }).catch(() => {});
-    });
-  } catch (e) {
-    // Element may not exist on all product page layouts
-  }
-}
+// Re-exported from public/giftProductBtn.js for backward compatibility.
+export { initGiftProductButton as initGiftProductButton } from 'public/giftProductBtn.js';
 
 // ── Showroom CTA / QR Mode (CF-ac80 S1, CF-1792 S3) ──────────────────
 // S1: #showroomCTA button → Wix Bookings "Book a Showroom Visit"
