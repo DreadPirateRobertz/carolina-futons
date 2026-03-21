@@ -654,7 +654,7 @@ describe('NAV_LINKS — Gift Cards entry', () => {
     expect(getActiveNavId('/gift-cards')).toBe('#navGiftCards');
   });
 
-  it('getActiveNavId returns null for /gift-cards/ (trailing slash normalized)', () => {
+  it('getActiveNavId returns #navGiftCards for /gift-cards/ (trailing slash normalized)', () => {
     expect(getActiveNavId('/gift-cards/')).toBe('#navGiftCards');
   });
 });
