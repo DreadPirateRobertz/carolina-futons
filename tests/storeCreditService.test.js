@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { __seed, __reset } from './__mocks__/wix-data.js';
+import { __setMember } from './__mocks__/wix-members-backend.js';
 import {
   issueStoreCredit,
   getMyStoreCredit,
@@ -155,6 +156,7 @@ describe('issueStoreCredit', () => {
 
 describe('getMyStoreCredit', () => {
   beforeEach(() => {
+    __setMember({ _id: 'member-123' });
     __reset();
     __seed('StoreCredits', [
       {
@@ -236,6 +238,7 @@ describe('getMyStoreCredit', () => {
   });
 
   it('returns zero balance for member with no credits', async () => {
+    __setMember({ _id: 'member-no-credits' });
     const result = await getMyStoreCredit('member-no-credits');
     expect(result.success).toBe(true);
     expect(result.totalBalance).toBe(0);
@@ -253,6 +256,7 @@ describe('getMyStoreCredit', () => {
   });
 
   it('auto-expires credits past expiration date', async () => {
+    __setMember({ _id: 'member-exp' });
     __seed('StoreCredits', [
       {
         _id: 'sc-expired',
@@ -277,6 +281,7 @@ describe('getMyStoreCredit', () => {
 
 describe('applyStoreCredit', () => {
   beforeEach(() => {
+    __setMember({ _id: 'member-123' });
     __reset();
     __seed('StoreCredits', [
       {
@@ -364,6 +369,7 @@ describe('applyStoreCredit', () => {
   });
 
   it('returns zero applied when member has no credits', async () => {
+    __setMember({ _id: 'member-no-credits' });
     const result = await applyStoreCredit('member-no-credits', 50);
     expect(result.success).toBe(true);
     expect(result.amountApplied).toBe(0);
@@ -371,6 +377,7 @@ describe('applyStoreCredit', () => {
   });
 
   it('skips expired credits during application', async () => {
+    __setMember({ _id: 'member-exp' });
     __seed('StoreCredits', [
       {
         _id: 'sc-exp',
@@ -390,6 +397,7 @@ describe('applyStoreCredit', () => {
   });
 
   it('marks credit as used when fully depleted', async () => {
+    __setMember({ _id: 'member-full' });
     __seed('StoreCredits', [
       {
         _id: 'sc-full',
@@ -409,6 +417,7 @@ describe('applyStoreCredit', () => {
   });
 
   it('handles fractional amounts correctly', async () => {
+    __setMember({ _id: 'member-frac' });
     __seed('StoreCredits', [
       {
         _id: 'sc-frac',
@@ -433,6 +442,7 @@ describe('applyStoreCredit', () => {
 
 describe('getStoreCreditHistory', () => {
   beforeEach(() => {
+    __setMember({ _id: 'member-123' });
     __reset();
     __seed('StoreCredits', [
       {
@@ -480,6 +490,7 @@ describe('getStoreCreditHistory', () => {
   });
 
   it('returns empty for member with no history', async () => {
+    __setMember({ _id: 'member-new' });
     const result = await getStoreCreditHistory('member-new');
     expect(result.success).toBe(true);
     expect(result.credits).toHaveLength(0);
@@ -500,6 +511,7 @@ describe('getStoreCreditHistory', () => {
 
 describe('giftStoreCredit', () => {
   beforeEach(() => {
+    __setMember({ _id: 'member-123' });
     __reset();
     __seed('StoreCredits', [
       {
@@ -519,6 +531,7 @@ describe('giftStoreCredit', () => {
   });
 
   it('transfers credit from giver to recipient', async () => {
+    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -531,6 +544,7 @@ describe('giftStoreCredit', () => {
   });
 
   it('deducts from giver balance', async () => {
+    __setMember({ _id: 'member-giver' });
     await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -541,6 +555,7 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gift exceeding available balance', async () => {
+    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -551,6 +566,7 @@ describe('giftStoreCredit', () => {
   });
 
   it('rejects gifting to self', async () => {
+    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-giver',
@@ -595,6 +611,7 @@ describe('giftStoreCredit', () => {
   });
 
   it('sanitizes message input', async () => {
+    __setMember({ _id: 'member-giver' });
     const result = await giftStoreCredit({
       fromMemberId: 'member-giver',
       toMemberId: 'member-recipient',
@@ -614,6 +631,7 @@ describe('giftStoreCredit', () => {
 
 describe('getExpiringCredits', () => {
   beforeEach(() => {
+    __setMember({ _id: 'member-123' });
     __reset();
     __seed('StoreCredits', [
       {
