@@ -192,6 +192,36 @@ async function initLoyaltyDashboard() {
       getLoyaltyTiers(),
     ]);
 
+    // ── Loyalty Summary Elements (CF-yq80) ───────────────────────
+    // #loyaltyPointsDisplay, #loyaltyTierDisplay, #loyaltyProgressBar,
+    // #loyaltyNextTierText, #loyaltySection
+    try {
+      const pts = account.points || 0;
+      $w('#loyaltyPointsDisplay').text = `${pts.toLocaleString()} points`;
+    } catch (e) {}
+    try {
+      $w('#loyaltyTierDisplay').text = `${account.tier || 'Bronze'} Member`;
+    } catch (e) {}
+    try {
+      $w('#loyaltyProgressBar').value = account.progress ?? 0;
+    } catch (e) {}
+    try {
+      if (account.nextTier) {
+        const n = account.pointsToNext || 0;
+        const plural = n === 1 ? 'point' : 'points';
+        $w('#loyaltyNextTierText').text = `${n.toLocaleString()} more ${plural} to ${account.nextTier}`;
+      } else {
+        $w('#loyaltyNextTierText').text = "You've reached the top tier!";
+      }
+    } catch (e) {}
+    try {
+      if (account.accountId) {
+        $w('#loyaltySection').expand();
+      } else {
+        $w('#loyaltySection').collapse();
+      }
+    } catch (e) {}
+
     // ── Tier Progress Bar ──────────────────────────────────────────
     try {
       const progressBar = $w('#tierProgressBar');
