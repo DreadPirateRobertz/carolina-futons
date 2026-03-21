@@ -42,15 +42,27 @@ export function initTikTokPixel() {
   }
 }
 
+// PII fields that must never be sent to TikTok without explicit advanced-matching
+// consent. Defence-in-depth: stripped even if a caller accidentally passes them.
+const _PII_FIELDS = new Set([
+  'email', 'phone', 'phone_number',
+  'userId', 'user_id', 'external_id',
+  'sha256_email', 'sha256_phone',
+]);
+
 /**
  * Fire a TikTok Pixel event.
+ * PII fields (email, phone, userId, etc.) are stripped from params before firing.
  * @param {string} eventName - TikTok event name (e.g., 'ViewContent', 'AddToCart', 'Purchase')
  * @param {Object} [params={}] - Event parameters
  */
 export function fireTikTokEvent(eventName, params = {}) {
   try {
     if (typeof window === 'undefined' || !window.ttq) return;
-    window.ttq.track(eventName, params);
+    const safeParams = Object.fromEntries(
+      Object.entries(params).filter(([k]) => !_PII_FIELDS.has(k))
+    );
+    window.ttq.track(eventName, safeParams);
   } catch (e) {
     // Non-critical — log for observability
     console.warn('[tikTokPixel] fireTikTokEvent failed:', eventName, e?.message ?? e);
