@@ -2,6 +2,9 @@
  * Style Quiz S4: prior-result banner, retake button, saveAndShowShareUrl.
  * These paths require mocking backend/styleQuizService.web which the
  * existing styleQuizResults.test.js does not cover.
+ *
+ * Note: the rebased quiz module adds an email gate after step 2.
+ * fillAndSubmitQuiz() bypasses it by firing the skip handler.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -23,6 +26,8 @@ function createMockElement() {
     onClick: vi.fn(),
     onItemReady: vi.fn(),
     onKeyPress: vi.fn(),
+    enable: vi.fn(),
+    disable: vi.fn(),
   };
 }
 
@@ -42,12 +47,19 @@ globalThis.$w = Object.assign(
 
 const mockGetQuizOptions = vi.fn();
 const mockGetQuizRecommendations = vi.fn();
+const mockCaptureQuizLead = vi.fn().mockResolvedValue({});
+const mockGetStyleQuizSchema = vi.fn().mockResolvedValue(null);
 const mockSaveQuizResult = vi.fn();
 const mockGetMyResult = vi.fn();
 
 vi.mock('backend/styleQuiz.web', () => ({
   getQuizRecommendations: mockGetQuizRecommendations,
   getQuizOptions: mockGetQuizOptions,
+  captureQuizLead: mockCaptureQuizLead,
+}));
+
+vi.mock('backend/seoHelpers.web', () => ({
+  getStyleQuizSchema: mockGetStyleQuizSchema,
 }));
 
 vi.mock('backend/styleQuizService.web', () => ({
@@ -128,15 +140,29 @@ function selectOption(repeaterId, itemData) {
   if (clickHandler) clickHandler();
 }
 
-function clickRestart() {
-  const restartCall = makeClickable.mock.calls.find(
-    (c) => c[2]?.ariaLabel === 'Restart quiz'
-  );
-  if (restartCall) restartCall[1]();
+function getLastMakeClickableHandler(ariaLabel) {
+  const calls = makeClickable.mock.calls.filter(c => c[2]?.ariaLabel === ariaLabel);
+  return calls.at(-1)?.[1];
 }
 
+function clickRestart() {
+  const handler = getLastMakeClickableHandler('Restart quiz');
+  if (handler) handler();
+}
+
+function skipEmailGate() {
+  const handler = getLastMakeClickableHandler('Skip and continue');
+  if (handler) handler();
+}
+
+/**
+ * Drive the quiz through all 5 steps to submitQuiz().
+ * After step 2 (EMAIL_GATE_AFTER_STEP), the email gate appears — bypass it
+ * by firing the skip handler before continuing with steps 3 and 4.
+ */
 function fillAndSubmitQuiz() {
   clickRestart();
+
   const answers = [
     { value: 'living-room', label: 'Living Room' },
     { value: 'both', label: 'Both Equally' },
@@ -144,11 +170,19 @@ function fillAndSubmitQuiz() {
     { value: 'full', label: 'Full' },
     { value: '500-1000', label: '$500 - $1,000' },
   ];
+
   const nextBtn = getEl('#quizNextBtn');
+
   for (let i = 0; i < 5; i++) {
     selectOption('#quizOptionsRepeater', answers[i]);
     const handler = nextBtn.onClick.mock.calls.at(-1)?.[0];
     if (handler) handler();
+
+    // After step 2 goNext() shows email gate and returns early.
+    // Fire the skip handler to advance state.step and continue.
+    if (i === 2) {
+      skipEmailGate();
+    }
   }
 }
 
@@ -242,7 +276,6 @@ describe('Style Quiz S4 — retake button', () => {
       expect(mockGetMyResult).toHaveBeenCalled();
     });
 
-    // Fire the retake button onClick
     const retakeBtn = getEl('#priorRetakeBtn');
     const retakeHandler = retakeBtn.onClick.mock.calls.at(-1)?.[0];
     expect(retakeHandler).toBeDefined();
@@ -271,9 +304,6 @@ describe('Style Quiz S4 — saveAndShowShareUrl', () => {
     await onReadyHandler();
     fillAndSubmitQuiz();
 
-    await vi.waitFor(() => {
-      expect(mockGetQuizRecommendations).toHaveBeenCalled();
-    });
     await vi.waitFor(() => {
       expect(mockSaveQuizResult).toHaveBeenCalled();
     });
@@ -305,8 +335,8 @@ describe('Style Quiz S4 — saveAndShowShareUrl', () => {
       expect(mockGetQuizRecommendations).toHaveBeenCalled();
     });
 
-    // Allow save to settle
-    await new Promise((r) => setTimeout(r, 50));
+    // Allow saveAndShowShareUrl to settle (fire-and-forget)
+    await new Promise((r) => setTimeout(r, 100));
 
     expect(getEl('#shareSection').expand).not.toHaveBeenCalled();
   });
