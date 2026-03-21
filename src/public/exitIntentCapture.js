@@ -122,6 +122,91 @@ export async function openExitIntentLightbox(data) {
   }
 }
 
+// Minimum time on page (ms) before cursor-leave detection fires.
+export const MIN_TIME_ON_PAGE_MS = 30 * 1000;
+
+// clientY threshold: values at or below this indicate cursor reached browser chrome.
+const CURSOR_LEAVE_Y_THRESHOLD = 10;
+
+/**
+ * Initialize desktop cursor-leave exit-intent detection.
+ * Listens for `mouseleave` on document. Only fires after MIN_TIME_ON_PAGE_MS
+ * and only once per session (uses sessionStorage flag).
+ *
+ * @param {string} [currentPath] - Current page path (for page exclusion check)
+ * @param {Object} [opts] - Injectable overrides for testability
+ * @param {Object} [opts.doc] - document-like object (default: globalThis.document)
+ * @param {Function} [opts.now] - Returns current time in ms (default: Date.now)
+ * @returns {Function} Cleanup function — removes the event listener
+ */
+export function initCursorLeaveDetection(currentPath, opts = {}) {
+  const doc = opts.doc || (typeof document !== 'undefined' ? document : null);
+  if (!doc) return () => {};
+
+  if (!shouldShowExitIntent(currentPath)) return () => {};
+
+  const getNow = opts.now || Date.now;
+  const startTime = getNow();
+
+  function onMouseLeave(e) {
+    // Only fire when cursor exits through top edge (toward browser chrome)
+    // clientY must be present and within threshold (undefined/null → unknown direction, skip)
+    if (e.clientY == null || e.clientY > CURSOR_LEAVE_Y_THRESHOLD) return;
+
+    // Enforce minimum time on page
+    if (getNow() - startTime < MIN_TIME_ON_PAGE_MS) return;
+
+    // Re-check session flag in case another trigger already fired
+    if (!shouldShowExitIntent(currentPath)) return;
+
+    // Remove listener first to prevent any race, then mark + open
+    doc.removeEventListener('mouseleave', onMouseLeave);
+    markExitIntentShown();
+    openExitIntentLightbox({ discount: '10OFF', expiry: '48h' });
+  }
+
+  doc.addEventListener('mouseleave', onMouseLeave);
+  return () => doc.removeEventListener('mouseleave', onMouseLeave);
+}
+
+/**
+ * Submit exit-intent email capture via emailService + couponsService.
+ * Subscribes the email to the newsletter and generates a single-use 10% coupon.
+ *
+ * @param {string} email - Email from the popup form
+ * @returns {Promise<{success: boolean, couponCode?: string, error?: string}>}
+ */
+export async function submitExitIntentEmail(email) {
+  if (!validateCaptureEmail(email)) {
+    return { success: false, error: 'invalid_email' };
+  }
+
+  try {
+    const { subscribeToNewsletter } = await import('backend/newsletterService.web');
+    const subResult = await subscribeToNewsletter(email, { source: 'exit_intent_popup' });
+    if (!subResult.success) {
+      return { success: false, error: subResult.message || 'subscription_failed' };
+    }
+
+    // Generate single-use 10% coupon — failure is non-blocking
+    let couponCode = null;
+    try {
+      const { createWelcomeCoupon } = await import('backend/couponsService.web');
+      const couponResult = await createWelcomeCoupon(email);
+      if (couponResult.success) {
+        couponCode = couponResult.code;
+      }
+    } catch (couponErr) {
+      console.warn('[exitIntentCapture] Coupon generation failed (non-blocking):', couponErr.message);
+    }
+
+    return { success: true, couponCode };
+  } catch (err) {
+    console.error('[exitIntentCapture] submitExitIntentEmail failed:', err);
+    return { success: false, error: 'submission_failed' };
+  }
+}
+
 /**
  * Submit exit-intent email capture: validate, subscribe, queue welcome series.
  * @param {string} email - Email from the popup form
