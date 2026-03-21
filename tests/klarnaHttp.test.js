@@ -10,7 +10,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __reset as resetMembers, __setMember } from 'wix-members-backend';
 import { __reset as resetSecrets, __setSecrets } from 'wix-secrets-backend';
 import { __reset as resetFetch, __setHandler } from 'wix-fetch';
-import { __reset as resetData, __seed, __getInserted } from './__mocks__/wix-data.js';
+import { __reset as resetData, __seed, __getInserted, __setQueryError } from './__mocks__/wix-data.js';
+
+const RATE_LIMIT_COLLECTION = 'Klarna_RateLimit';
 import {
   post_klarna_checkout,
   post_klarna_confirm,
@@ -66,9 +68,9 @@ function klarnaCheckoutOkHandler(url, opts) {
   return { ok: false, status: 500, async json() { return {}; } };
 }
 
-/** Klarna API mock: returns a successful confirm response */
+/** Klarna API mock: returns a successful confirm response (requires /confirm suffix) */
 function klarnaConfirmOkHandler(url, opts) {
-  if (url.includes('/checkout/v3/orders') && (opts?.method === 'POST' || opts?.method === 'PATCH')) {
+  if (url.includes('/checkout/v3/orders') && url.endsWith('/confirm') && opts?.method === 'POST') {
     return {
       ok: true,
       status: 200,
@@ -226,6 +228,37 @@ describe('post_klarna_checkout — SSRF guard', () => {
     }));
     expect(result.status).toBe(400);
   });
+
+  it('rejects returnUrl with 172.16-31.x private class B range', async () => {
+    const result = await post_klarna_checkout(makeValidCheckoutReq({
+      returnUrl: 'https://172.20.0.1/checkout',
+    }));
+    expect(result.status).toBe(400);
+  });
+
+  it('does NOT reject 172.15.x (just outside class B block)', async () => {
+    // 172.15.x is a public IP — should fail whitelist, not SSRF blocklist
+    const result = await post_klarna_checkout(makeValidCheckoutReq({
+      returnUrl: 'https://172.15.0.1/checkout',
+    }));
+    // rejected by whitelist (not ssrf) — still 400, but error message differs
+    expect(result.status).toBe(400);
+    expect(JSON.parse(result.body).error).toMatch(/whitelisted/i);
+  });
+
+  it('rejects returnUrl with 0.x.x.x current-network range', async () => {
+    const result = await post_klarna_checkout(makeValidCheckoutReq({
+      returnUrl: 'https://0.0.0.0/checkout',
+    }));
+    expect(result.status).toBe(400);
+  });
+
+  it('rejects returnUrl with IPv6 loopback ::1', async () => {
+    const result = await post_klarna_checkout(makeValidCheckoutReq({
+      returnUrl: 'https://::1/checkout',
+    }));
+    expect(result.status).toBe(400);
+  });
 });
 
 // ── post_klarna_checkout — Rate limiting ──────────────────────────────────────
@@ -263,6 +296,12 @@ describe('post_klarna_checkout — rate limiting', () => {
     }]);
     const result = await post_klarna_checkout(makeValidCheckoutReq());
     expect(result.status).toBe(200);
+  });
+
+  it('returns 500 when wix-data rate limit query fails (fail closed)', async () => {
+    __setQueryError(RATE_LIMIT_COLLECTION, new Error('DB unavailable'));
+    const result = await post_klarna_checkout(makeValidCheckoutReq());
+    expect(result.status).toBe(500);
   });
 });
 
@@ -355,6 +394,20 @@ describe('post_klarna_confirm', () => {
       __setHandler(klarnaConfirmOkHandler);
       expect((await post_klarna_confirm(confirmReq())).status).toBe(403);
     });
+
+    it('returns 403 when cartId does not match the stored order cartId', async () => {
+      seedPendingOrder();
+      __setHandler(klarnaConfirmOkHandler);
+      const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'wrong-cart' }));
+      expect(result.status).toBe(403);
+    });
+
+    it('returns 500 when wix-data IDOR query fails (not 403)', async () => {
+      __setQueryError('Klarna_PendingOrders', new Error('DB unavailable'));
+      __setHandler(klarnaConfirmOkHandler);
+      const result = await post_klarna_confirm(confirmReq());
+      expect(result.status).toBe(500);
+    });
   });
 
   describe('success', () => {
@@ -374,6 +427,12 @@ describe('post_klarna_confirm', () => {
     it('Content-Type header is application/json', async () => {
       const result = await post_klarna_confirm(confirmReq());
       expect(result.headers['Content-Type']).toBe('application/json');
+    });
+
+    it('second confirm of same order returns 403 (replay prevention)', async () => {
+      await post_klarna_confirm(confirmReq());   // first confirm deletes record
+      const second = await post_klarna_confirm(confirmReq());
+      expect(second.status).toBe(403);
     });
   });
 
