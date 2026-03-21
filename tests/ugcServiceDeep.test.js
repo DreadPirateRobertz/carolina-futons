@@ -15,6 +15,8 @@ vi.mock('backend/utils/sanitize', () => ({
     const clean = id.replace(/<[^>]*>/g, '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
     return clean || null;
   },
+  // Stub — real isWixMediaUrl is exhaustively tested in ugcUploadHardening.test.js
+  isWixMediaUrl: vi.fn(() => true),
 }));
 
 let _mockMember = { _id: 'member1', contactDetails: { firstName: 'TestUser' } };
@@ -111,7 +113,7 @@ describe('submitUGCPhoto', () => {
 
   it('rejects unauthenticated user', async () => {
     _mockMember = null;
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom' });
     expect(r.success).toBe(false);
     expect(r.error).toContain('Authentication');
   });
@@ -123,7 +125,7 @@ describe('submitUGCPhoto', () => {
   });
 
   it('rejects invalid roomType', async () => {
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'garage' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'garage' });
     expect(r.success).toBe(false);
     expect(r.error).toContain('Invalid room type');
   });
@@ -131,13 +133,13 @@ describe('submitUGCPhoto', () => {
   it('accepts all valid room types', async () => {
     for (const rt of ['living-room', 'bedroom', 'office', 'dorm', 'porch']) {
       _collections = {};
-      const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: rt });
+      const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: rt });
       expect(r.success).toBe(true);
     }
   });
 
   it('inserts record with correct defaults', async () => {
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom', caption: 'Nice' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom', caption: 'Nice' });
     expect(r.success).toBe(true);
     expect(r.data.memberId).toBe('member1');
     expect(r.data.status).toBe('pending');
@@ -147,12 +149,12 @@ describe('submitUGCPhoto', () => {
   });
 
   it('sanitizes caption to 300 chars', async () => {
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom', caption: 'A'.repeat(500) });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom', caption: 'A'.repeat(500) });
     expect(r.data.caption.length).toBe(300);
   });
 
   it('sets optional fields to null when not provided', async () => {
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'office' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'office' });
     expect(r.data.productId).toBeNull();
     expect(r.data.productName).toBeNull();
     expect(r.data.socialSource).toBeNull();
@@ -163,7 +165,7 @@ describe('submitUGCPhoto', () => {
 
   it('sets optional fields when provided', async () => {
     const r = await mod.submitUGCPhoto({
-      photoUrl: 'img.jpg', roomType: 'dorm',
+      photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'dorm',
       productId: 'p1', productName: 'Futon', tags: ['cozy'],
       socialSource: 'instagram', socialPostUrl: 'https://ig.com/post',
       beforeAfterId: 'pair1', beforeAfterType: 'before',
@@ -176,19 +178,19 @@ describe('submitUGCPhoto', () => {
   });
 
   it('defaults tags to empty array when not an array', async () => {
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom', tags: 'not-array' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom', tags: 'not-array' });
     expect(r.data.tags).toEqual([]);
   });
 
   it('uses member firstName as displayName', async () => {
     _mockMember = { _id: 'm2', contactDetails: { firstName: 'Alice' } };
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom' });
     expect(r.data.memberDisplayName).toBe('Alice');
   });
 
   it('defaults displayName when contactDetails missing', async () => {
     _mockMember = { _id: 'm2' };
-    const r = await mod.submitUGCPhoto({ photoUrl: 'img.jpg', roomType: 'bedroom' });
+    const r = await mod.submitUGCPhoto({ photoUrl: 'wix:image://v1/test/img.jpg', roomType: 'bedroom' });
     expect(r.data.memberDisplayName).toBe('');
   });
 });
