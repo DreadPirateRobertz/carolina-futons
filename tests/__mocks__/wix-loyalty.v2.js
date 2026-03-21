@@ -30,4 +30,5 @@ export function __reset() {
   accounts.adjustPoints.mockClear();
   rewards.listRewards.mockClear();
   rewards.redeemReward.mockClear();
+  transactions.listTransactions.mockClear();
 }

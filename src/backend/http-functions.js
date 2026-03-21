@@ -1105,9 +1105,9 @@ function resolveLoyaltyTier(points) {
 export async function get_loyalty(request) {
   const json = (obj) => JSON.stringify(obj);
   const jsonHeaders = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const memberId = request.path && request.path[0];
 
   try {
-    const memberId = request.path && request.path[0];
     if (!memberId) {
       return badRequest({ body: json({ error: 'memberId is required' }), headers: jsonHeaders });
     }
@@ -1115,8 +1115,9 @@ export async function get_loyalty(request) {
     let member;
     try {
       member = await currentMember.getMember();
-    } catch {
-      member = null;
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): getMember() failed for memberId=${memberId}:`, err);
+      return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
     }
     if (!member) {
       return forbidden({ body: json({ error: 'Authentication required' }), headers: jsonHeaders });
@@ -1127,18 +1128,25 @@ export async function get_loyalty(request) {
 
     const account = await accounts.getMyAccount();
     if (!account) {
+      console.error(`HTTP function error (loyalty): no loyalty account for memberId=${memberId}`);
       return notFound({ body: json({ error: 'Loyalty account not found' }), headers: jsonHeaders });
     }
 
     const points = account.points ? account.points.balance : 0;
     const tier = resolveLoyaltyTier(points);
 
-    const { transactions: txList } = await transactions.listTransactions();
-    const recentActivity = (txList || []).map((tx) => ({
-      points: tx.points,
-      description: tx.description,
-      date: tx._createdDate,
-    }));
+    let recentActivity = [];
+    try {
+      const { transactions: txList } = await transactions.listTransactions({ filter: { accountId: account._id } });
+      recentActivity = (txList || []).map((tx) => ({
+        points: tx.points,
+        description: tx.description,
+        date: tx._createdDate,
+      }));
+    } catch (err) {
+      console.error(`HTTP function error (loyalty): listTransactions() failed for memberId=${memberId}:`, err);
+      // Degrade gracefully — return account data with empty activity
+    }
 
     return ok({
       body: json({
@@ -1151,7 +1159,7 @@ export async function get_loyalty(request) {
       headers: jsonHeaders,
     });
   } catch (err) {
-    console.error('HTTP function error (loyalty):', err);
+    console.error(`HTTP function error (loyalty): memberId=${memberId || 'unknown'}:`, err);
     return serverError({ body: json({ error: 'Internal server error' }), headers: jsonHeaders });
   }
 }

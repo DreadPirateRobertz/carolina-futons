@@ -216,4 +216,88 @@ describe('GET /loyalty/{memberId} — 500 internal error', () => {
     const body = JSON.parse(result.body);
     expect(body.error).toBeDefined();
   });
+
+  it('returns 500 when currentMember.getMember() throws', async () => {
+    const { currentMember } = await import('./__mocks__/wix-members-backend.js');
+    currentMember.getMember.mockRejectedValueOnce(new Error('Wix members SDK unavailable'));
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    expect(result.status).toBe(500);
+  });
+
+  it('returns JSON error body when getMember() throws', async () => {
+    const { currentMember } = await import('./__mocks__/wix-members-backend.js');
+    currentMember.getMember.mockRejectedValueOnce(new Error('Wix members SDK unavailable'));
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.error).toBeDefined();
+  });
+});
+
+// ── Graceful degradation — listTransactions failure ───────────────────
+
+describe('GET /loyalty/{memberId} — listTransactions failure degrades gracefully', () => {
+  beforeEach(() => {
+    __setMember({ _id: MEMBER_ID });
+    __setAccount(mockAccount);
+  });
+
+  it('returns 200 (not 500) when listTransactions throws', async () => {
+    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    expect(result.status).toBe(200);
+  });
+
+  it('returns empty recentActivity when listTransactions throws', async () => {
+    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.recentActivity).toEqual([]);
+  });
+
+  it('still returns correct points and tier when listTransactions throws', async () => {
+    transactions.listTransactions.mockRejectedValueOnce(new Error('transactions service down'));
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.points).toBe(750);
+    expect(body.tier).toBe('Silver');
+  });
+});
+
+// ── Tier boundary conditions ───────────────────────────────────────────
+
+describe('GET /loyalty/{memberId} — tier boundary conditions', () => {
+  beforeEach(() => {
+    __setMember({ _id: MEMBER_ID });
+    transactions.listTransactions.mockResolvedValue({ transactions: [] });
+  });
+
+  it('499 points → Bronze with nextTierAt=500', async () => {
+    __setAccount({ _id: 'acc-1', contactId: MEMBER_ID, points: { balance: 499 } });
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.tier).toBe('Bronze');
+    expect(body.nextTierAt).toBe(500);
+  });
+
+  it('exactly 500 points → Silver with nextTierAt=1500', async () => {
+    __setAccount({ _id: 'acc-1', contactId: MEMBER_ID, points: { balance: 500 } });
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.tier).toBe('Silver');
+    expect(body.nextTierAt).toBe(1500);
+  });
+
+  it('1499 points → Silver with nextTierAt=1500', async () => {
+    __setAccount({ _id: 'acc-1', contactId: MEMBER_ID, points: { balance: 1499 } });
+    const result = await get_loyalty(makeRequest(MEMBER_ID));
+    const body = JSON.parse(result.body);
+    expect(body.tier).toBe('Silver');
+    expect(body.nextTierAt).toBe(1500);
+  });
+
+  it('listTransactions is called with filter scoped to the account', async () => {
+    __setAccount({ _id: 'acc-42', contactId: MEMBER_ID, points: { balance: 100 } });
+    await get_loyalty(makeRequest(MEMBER_ID));
+    expect(transactions.listTransactions).toHaveBeenCalledWith({ filter: { accountId: 'acc-42' } });
+  });
 });
