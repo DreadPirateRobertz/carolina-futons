@@ -22,6 +22,20 @@ export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
 // Static Google Maps directions URL — store is always the destination.
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
+// ── Featured product catalog ──────────────────────────────────────────
+// Product IDs from Wix Stores catalog, looked up at runtime via wixData.
+// Home city shows all 4 categories; nearby cities show top 2 by demand.
+
+export const FEATURED_PRODUCT_CATALOG = {
+  'futon-frames': { categoryLabel: 'Futon Frames', productId: 'cf-seo-frame-001' },
+  'mattresses': { categoryLabel: 'Futon Mattresses', productId: 'cf-seo-mattress-001' },
+  'covers': { categoryLabel: 'Futon Covers', productId: 'cf-seo-cover-001' },
+  'accessories': { categoryLabel: 'Accessories', productId: 'cf-seo-accessory-001' },
+};
+
+export const HOME_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses', 'covers', 'accessories'];
+export const NEARBY_CITY_FEATURED_CATEGORIES = ['futon-frames', 'mattresses'];
+
 export const LOCAL_PAGES = {
   'hendersonville-nc': {
     slug: 'hendersonville-nc',

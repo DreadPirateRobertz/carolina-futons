@@ -8,6 +8,7 @@
  * @requires wix-web-module
  */
 import { Permissions, webMethod } from 'wix-web-module';
+import wixData from 'wix-data';
 import { validateSlug } from 'backend/utils/sanitize';
 import {
   LOCAL_PAGES,
@@ -17,6 +18,9 @@ import {
   STORE_GEO,
   STORE_HOURS,
   STORE_DIRECTIONS_URL,
+  FEATURED_PRODUCT_CATALOG,
+  HOME_CITY_FEATURED_CATEGORIES,
+  NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
@@ -122,6 +126,66 @@ function _buildJsonLd(cityData, canonicalUrl) {
     areaServed: `${cityData.city}, ${cityData.state}`,
   };
 }
+
+// ── getFeaturedProductsForCity ────────────────────────────────────────
+
+/**
+ * Get featured products for a /near/[slug] city landing page.
+ * Fetches live product data (name, price, image) from Wix Stores by
+ * hardcoded catalog IDs. Home city returns 4 categories; others return 2.
+ *
+ * @param {string} slug - City slug (e.g. 'asheville-nc').
+ * @returns {Promise<{success: boolean, products: Array, error?: string}>}
+ *   - success: false — invalid slug format
+ *   - success: true, products: [] — valid slug but city not defined
+ *   - success: true, products: Array — up to 4 product objects
+ */
+export const getFeaturedProductsForCity = webMethod(
+  Permissions.Anyone,
+  async (slug) => {
+    try {
+      const cleanSlug = validateSlug(slug);
+      if (!cleanSlug) {
+        return { success: false, error: 'Slug is required.', products: [] };
+      }
+
+      const cityData = LOCAL_PAGES[cleanSlug];
+      if (!cityData) {
+        return { success: true, products: [] };
+      }
+
+      const categories = cityData.isHomeCity
+        ? HOME_CITY_FEATURED_CATEGORIES
+        : NEARBY_CITY_FEATURED_CATEGORIES;
+
+      const products = [];
+      for (const category of categories) {
+        const catalog = FEATURED_PRODUCT_CATALOG[category];
+        if (!catalog) continue;
+        try {
+          const product = await wixData.get('Stores/Products', catalog.productId);
+          if (product) {
+            products.push({
+              productId: product._id,
+              name: product.name,
+              price: product.price,
+              formattedPrice: product.formattedPrice || `$${product.price}`,
+              imageUrl: product.mainMedia || '',
+              productPageUrl: `${SITE_URL}/product-page/${product.slug}`,
+            });
+          }
+        } catch (e) {
+          console.error('[localSeoService] Failed to fetch product:', catalog.productId, e.message);
+        }
+      }
+
+      return { success: true, products };
+    } catch (err) {
+      console.error('[localSeoService] Error loading featured products:', slug, err.name, err.message, err);
+      return { success: false, error: 'Failed to load featured products.', products: [] };
+    }
+  }
+);
 
 // ── getAllLocalSlugs ──────────────────────────────────────────────────
 
