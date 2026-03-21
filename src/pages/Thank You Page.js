@@ -14,6 +14,7 @@ import { markSessionConverted } from 'backend/browseAbandonment.web';
 import { getReferralLink } from 'backend/referralService.web';
 import { submitReview } from 'backend/reviewsService.web';
 import { finalizeGiftCardRedemption } from 'public/giftCardHelpers.js';
+import { initGiftCardUpsell } from 'public/giftCardUpsell.js';
 import { initPageSeo } from 'public/pageSeo.js';
 
 $w.onReady(async function () {
@@ -51,6 +52,7 @@ $w.onReady(async function () {
     { name: 'assemblyGuideLink', init: initAssemblyGuideLink },
     { name: 'testimonialPrompt', init: initTestimonialPrompt },
     { name: 'reviewRequest', init: () => initReviewRequest(orderCtx) },
+    { name: 'giftCardUpsell', init: () => initGiftCardUpsell($w, orderCtx?.total || 0) },
   ];
 
   const results = await Promise.allSettled(sections.map(s => s.init()));
