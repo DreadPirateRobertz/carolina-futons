@@ -13,6 +13,7 @@ import {
   getMockProducts,
   analyzeRoomPhoto,
   STYLE_TAGS,
+  _resetRateLimit,
 } from '../src/backend/visualSearch.web.js';
 
 const TEST_IMAGE_URL = 'https://example.com/room.jpg';
@@ -36,6 +37,7 @@ beforeEach(() => {
   resetFetch();
   resetSecrets();
   __setSecrets({ GOOGLE_VISION_API_KEY: TEST_API_KEY });
+  _resetRateLimit();
 });
 
 // ── isValidImageUrl ──────────────────────────────────────────────
@@ -69,6 +71,34 @@ describe('isValidImageUrl', () => {
 
   it('rejects URLs exceeding 2000 chars', () => {
     expect(isValidImageUrl('https://example.com/' + 'a'.repeat(2000))).toBe(false);
+  });
+
+  it('rejects localhost URL (SSRF)', () => {
+    expect(isValidImageUrl('http://localhost/photo.jpg')).toBe(false);
+  });
+
+  it('rejects 127.0.0.1 loopback (SSRF)', () => {
+    expect(isValidImageUrl('http://127.0.0.1/photo.jpg')).toBe(false);
+  });
+
+  it('rejects 127.0.0.2 loopback range (SSRF)', () => {
+    expect(isValidImageUrl('http://127.0.0.2/photo.jpg')).toBe(false);
+  });
+
+  it('rejects 10.x.x.x private range (SSRF)', () => {
+    expect(isValidImageUrl('http://10.0.0.1/photo.jpg')).toBe(false);
+  });
+
+  it('rejects 172.16.x.x private range (SSRF)', () => {
+    expect(isValidImageUrl('http://172.16.0.1/photo.jpg')).toBe(false);
+  });
+
+  it('rejects 192.168.x.x private range (SSRF)', () => {
+    expect(isValidImageUrl('http://192.168.1.1/photo.jpg')).toBe(false);
+  });
+
+  it('accepts a real public IP (not private)', () => {
+    expect(isValidImageUrl('http://8.8.8.8/photo.jpg')).toBe(true);
   });
 });
 
@@ -300,5 +330,48 @@ describe('analyzeRoomPhoto', () => {
     const result = await analyzeRoomPhoto(null);
     expect(result.success).toBe(false);
     expect(result.error).toBe('invalid_image_url');
+  });
+
+  it('rejects private IP imageUrl with invalid_image_url', async () => {
+    const result = await analyzeRoomPhoto('http://192.168.1.1/internal.jpg');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('invalid_image_url');
+  });
+});
+
+// ── analyzeRoomPhoto — rate limiting ─────────────────────────────
+
+describe('analyzeRoomPhoto — rate limiting', () => {
+  beforeEach(() => {
+    _resetRateLimit();
+    __setHandler(() => makeVisionResponse([makeLabel('modern')]));
+    __setSecrets({ GOOGLE_VISION_API_KEY: TEST_API_KEY });
+  });
+
+  it('returns rate_limit_exceeded after 20 calls in one window', async () => {
+    // Exhaust the limit (20 calls)
+    for (let i = 0; i < 20; i++) {
+      await analyzeRoomPhoto(TEST_IMAGE_URL);
+    }
+    const result = await analyzeRoomPhoto(TEST_IMAGE_URL);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('rate_limit_exceeded');
+  });
+
+  it('succeeds on the 20th call (limit is inclusive)', async () => {
+    for (let i = 0; i < 19; i++) {
+      await analyzeRoomPhoto(TEST_IMAGE_URL);
+    }
+    const result = await analyzeRoomPhoto(TEST_IMAGE_URL);
+    expect(result.success).toBe(true);
+  });
+
+  it('resets after _resetRateLimit, allowing calls again', async () => {
+    for (let i = 0; i < 20; i++) {
+      await analyzeRoomPhoto(TEST_IMAGE_URL);
+    }
+    _resetRateLimit();
+    const result = await analyzeRoomPhoto(TEST_IMAGE_URL);
+    expect(result.success).toBe(true);
   });
 });

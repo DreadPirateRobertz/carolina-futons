@@ -16,6 +16,38 @@ import { sanitize } from 'backend/utils/sanitize';
 const VISION_API_BASE = 'https://vision.googleapis.com/v1/images:annotate';
 const MAX_RESULTS = 20;
 
+// ── Rate limiting (in-memory, per server instance) ───────────────────
+// Limits analyzeRoomPhoto to RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS.
+// Resets automatically when the window expires. Not distributed — sufficient
+// for SSRF/abuse protection on a Wix backend function (single-instance).
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+
+let _rateLimitCount = 0;
+let _rateLimitResetAt = Date.now() + RATE_LIMIT_WINDOW_MS;
+
+// Exported for testing only.
+export function _resetRateLimit() {
+  _rateLimitCount = 0;
+  _rateLimitResetAt = Date.now() + RATE_LIMIT_WINDOW_MS;
+}
+
+function _checkRateLimit() {
+  const now = Date.now();
+  if (now >= _rateLimitResetAt) {
+    _rateLimitCount = 0;
+    _rateLimitResetAt = now + RATE_LIMIT_WINDOW_MS;
+  }
+  if (_rateLimitCount >= RATE_LIMIT_MAX) return false;
+  _rateLimitCount++;
+  return true;
+}
+
+// Private/loopback IP ranges that must never be forwarded to Vision API.
+// Prevents SSRF attacks where a crafted URL could reach internal services.
+// Covers: localhost, 127.x.x.x, 0.0.0.0, 10.x.x.x, 172.16-31.x.x, 192.168.x.x, ::1, fc/fd IPv6.
+const PRIVATE_IP_RE = /^https?:\/\/(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|\[?(?:::1|fc[\da-f]{2}:|fd[\da-f]{2}:))(?::\d+)?(?:\/|$)/i;
+
 // Style tags we extract and surface to the frontend
 export const STYLE_TAGS = ['modern', 'rustic', 'industrial', 'mid-century', 'coastal', 'traditional', 'minimalist', 'bohemian'];
 
@@ -100,6 +132,7 @@ export function isValidImageUrl(url) {
   const cleaned = url.trim();
   if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) return false;
   if (cleaned.length > 2000) return false;
+  if (PRIVATE_IP_RE.test(cleaned)) return false; // block SSRF via private/loopback IPs
   return true;
 }
 
@@ -191,6 +224,10 @@ export const analyzeRoomPhoto = webMethod(
   Permissions.Anyone,
   async (imageUrl) => {
     try {
+      if (!_checkRateLimit()) {
+        return { success: false, tags: [], products: [], error: 'rate_limit_exceeded' };
+      }
+
       const cleanUrl = sanitize(imageUrl || '', 2000);
       if (!isValidImageUrl(cleanUrl)) {
         return { success: false, tags: [], products: [], error: 'invalid_image_url' };
