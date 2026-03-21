@@ -154,7 +154,7 @@ export function openMiniCart($w, cart) {
 
   // WCAG 2.1 AA focus management: save active element, create Tab-cycle trap, focus close btn.
   // Release any prior trap before creating a new one (handles rapid re-open).
-  if (_trap) { try { _trap.release(); } catch (e) {} _trap = null; }
+  _releaseTrap();
   _savedFocus = (typeof document !== 'undefined') ? document.activeElement : null;
   try {
     _trap = createFocusTrap($w, '#miniCartDrawer', ['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn']);
@@ -183,12 +183,7 @@ export function closeMiniCart($w) {
   announce($w, 'Cart closed');
 
   // WCAG 2.1 AA: release Tab-cycle trap and restore focus to the element that triggered open.
-  if (_trap) {
-    try { _trap.release(); } catch (e) {
-      console.error('[miniCartDrawer] focus trap release failed:', e?.message);
-    }
-    _trap = null;
-  }
+  _releaseTrap();
   if (_savedFocus) {
     try { _savedFocus.focus(); } catch (e) {}
     _savedFocus = null;
@@ -249,6 +244,18 @@ export function updateCartCount($w, count) {
 }
 
 // ── Internal Helpers ─────────────────────────────────────────────────
+
+/**
+ * Release the active focus trap (if any) and null it out.
+ * @private
+ */
+function _releaseTrap() {
+  if (!_trap) return;
+  try { _trap.release(); } catch (e) {
+    console.error('[miniCartDrawer] focus trap release failed:', e?.message);
+  }
+  _trap = null;
+}
 
 /**
  * Re-fetch the cart and refresh all drawer state (repeater, subtotal, count).
