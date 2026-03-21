@@ -134,6 +134,13 @@ async function checkAndIncrementRateLimit(memberId) {
   return true;
 }
 
+// ── Response helper ───────────────────────────────────────────────────────────
+
+/** Convenience: build a JSON response body + Content-Type header pair */
+function jsonBody(obj) {
+  return { body: JSON.stringify(obj), headers: { 'Content-Type': 'application/json' } };
+}
+
 // ── Klarna API client ─────────────────────────────────────────────────────────
 
 async function getKlarnaAuth() {
@@ -158,7 +165,7 @@ export async function post_klarna_checkout(request) {
     // 1. Auth
     const member = await resolveCurrentMember();
     if (!member) {
-      return unauthorized({ body: JSON.stringify({ error: 'Authentication required' }), headers: { 'Content-Type': 'application/json' } });
+      return unauthorized(jsonBody({ error: 'Authentication required' }));
     }
 
     // 2. Parse body
@@ -166,33 +173,33 @@ export async function post_klarna_checkout(request) {
     try {
       body = JSON.parse(await request.body.text());
     } catch {
-      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'Invalid JSON body' }));
     }
 
-    const { cartId, lineItems, returnUrl, cancelUrl, customerId } = body;
+    const { cartId, lineItems, returnUrl, cancelUrl } = body;
 
     // 3. Validate required fields
     if (!cartId) {
-      return badRequest({ body: JSON.stringify({ error: 'cartId is required' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'cartId is required' }));
     }
     if (!lineItems || !Array.isArray(lineItems) || lineItems.length === 0) {
-      return badRequest({ body: JSON.stringify({ error: 'lineItems must be a non-empty array' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'lineItems must be a non-empty array' }));
     }
 
     // 4. Validate returnUrl / cancelUrl (whitelist + SSRF)
     const returnUrlError = validateCallbackUrl(returnUrl, 'returnUrl');
     if (returnUrlError) {
-      return badRequest({ body: JSON.stringify({ error: returnUrlError }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: returnUrlError }));
     }
     const cancelUrlError = validateCallbackUrl(cancelUrl, 'cancelUrl');
     if (cancelUrlError) {
-      return badRequest({ body: JSON.stringify({ error: cancelUrlError }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: cancelUrlError }));
     }
 
     // 5. Rate limit
     const allowed = await checkAndIncrementRateLimit(member._id);
     if (!allowed) {
-      return response({ status: 429, body: JSON.stringify({ error: 'Rate limit exceeded. Max 10 requests per minute.' }), headers: { 'Content-Type': 'application/json' } });
+      return response({ status: 429, ...jsonBody({ error: 'Rate limit exceeded. Max 10 requests per minute.' }) });
     }
 
     // 6. Call Klarna API
@@ -205,7 +212,7 @@ export async function post_klarna_checkout(request) {
         terms: 'https://www.carolinafutons.com/terms',
         checkout: returnUrl,
         confirmation: returnUrl,
-        push: `https://www.carolinafutons.com/_functions/klarna/confirm`,
+        push: 'https://www.carolinafutons.com/_functions/klarna/confirm',
       },
       order_lines: lineItems.map(item => ({
         type: 'physical',
@@ -219,16 +226,13 @@ export async function post_klarna_checkout(request) {
 
     const klarnaResp = await fetch(`${KLARNA_API_BASE}/checkout/v3/orders`, {
       method: 'POST',
-      headers: {
-        'Authorization': auth,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
       body: JSON.stringify(klarnaPayload),
     });
 
     if (!klarnaResp.ok) {
       console.error('[klarna-http] Klarna checkout API error:', klarnaResp.status);
-      return serverError({ body: JSON.stringify({ error: 'Klarna API error creating session' }), headers: { 'Content-Type': 'application/json' } });
+      return serverError(jsonBody({ error: 'Klarna API error creating session' }));
     }
 
     const klarnaData = await klarnaResp.json();
@@ -243,13 +247,10 @@ export async function post_klarna_checkout(request) {
       createdAt: new Date().toISOString(),
     });
 
-    return ok({
-      body: JSON.stringify({ klarnaOrderId, klarnaCheckoutUrl, expiresAt }),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok(jsonBody({ klarnaOrderId, klarnaCheckoutUrl, expiresAt }));
   } catch (err) {
     console.error('[klarna-http] checkout error:', err.message, err);
-    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: { 'Content-Type': 'application/json' } });
+    return serverError(jsonBody({ error: 'Internal server error' }));
   }
 }
 
@@ -267,7 +268,7 @@ export async function post_klarna_confirm(request) {
     // 1. Auth
     const member = await resolveCurrentMember();
     if (!member) {
-      return unauthorized({ body: JSON.stringify({ error: 'Authentication required' }), headers: { 'Content-Type': 'application/json' } });
+      return unauthorized(jsonBody({ error: 'Authentication required' }));
     }
 
     // 2. Parse body
@@ -275,17 +276,17 @@ export async function post_klarna_confirm(request) {
     try {
       body = JSON.parse(await request.body.text());
     } catch {
-      return badRequest({ body: JSON.stringify({ error: 'Invalid JSON body' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'Invalid JSON body' }));
     }
 
     const { klarnaOrderId, cartId } = body;
 
     // 3. Validate
     if (!klarnaOrderId) {
-      return badRequest({ body: JSON.stringify({ error: 'klarnaOrderId is required' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'klarnaOrderId is required' }));
     }
     if (!cartId) {
-      return badRequest({ body: JSON.stringify({ error: 'cartId is required' }), headers: { 'Content-Type': 'application/json' } });
+      return badRequest(jsonBody({ error: 'cartId is required' }));
     }
 
     // 4. IDOR guard — order must belong to current member
@@ -300,37 +301,28 @@ export async function post_klarna_confirm(request) {
       pendingOrder = null;
     }
 
-    if (!pendingOrder) {
-      return forbidden({ body: JSON.stringify({ error: 'Order not found or unauthorized' }), headers: { 'Content-Type': 'application/json' } });
-    }
-    if (pendingOrder.memberId !== member._id) {
-      return forbidden({ body: JSON.stringify({ error: 'Order not found or unauthorized' }), headers: { 'Content-Type': 'application/json' } });
+    if (!pendingOrder || pendingOrder.memberId !== member._id) {
+      return forbidden(jsonBody({ error: 'Order not found or unauthorized' }));
     }
 
     // 5. Call Klarna confirm API
     const auth = await getKlarnaAuth();
     const klarnaResp = await fetch(`${KLARNA_API_BASE}/checkout/v3/orders/${klarnaOrderId}`, {
       method: 'POST',
-      headers: {
-        'Authorization': auth,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
 
     if (!klarnaResp.ok) {
       console.error('[klarna-http] Klarna confirm API error:', klarnaResp.status);
-      return serverError({ body: JSON.stringify({ error: 'Klarna API error confirming order' }), headers: { 'Content-Type': 'application/json' } });
+      return serverError(jsonBody({ error: 'Klarna API error confirming order' }));
     }
 
     const klarnaData = await klarnaResp.json();
 
-    return ok({
-      body: JSON.stringify({ confirmed: true, orderId: klarnaData.order_id || klarnaOrderId }),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return ok(jsonBody({ confirmed: true, orderId: klarnaData.order_id || klarnaOrderId }));
   } catch (err) {
     console.error('[klarna-http] confirm error:', err.message, err);
-    return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: { 'Content-Type': 'application/json' } });
+    return serverError(jsonBody({ error: 'Internal server error' }));
   }
 }

@@ -311,91 +311,85 @@ describe('post_klarna_checkout — Klarna API error', () => {
   });
 });
 
-// ── post_klarna_confirm — Auth ────────────────────────────────────────────────
+// ── post_klarna_confirm ───────────────────────────────────────────────────────
+// Shared setup: most confirm tests need a seeded order + confirm handler.
 
-describe('post_klarna_confirm — auth', () => {
-  it('returns 401 when no member is logged in', async () => {
-    __setMember(null);
-    seedPendingOrder();
-    __setHandler(klarnaConfirmOkHandler);
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.status).toBe(401);
-  });
-});
+describe('post_klarna_confirm', () => {
+  const confirmReq = (overrides = {}) =>
+    makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123', ...overrides });
 
-// ── post_klarna_confirm — Validation ──────────────────────────────────────────
-
-describe('post_klarna_confirm — input validation', () => {
-  it('returns 400 when klarnaOrderId is missing', async () => {
-    seedPendingOrder();
-    const result = await post_klarna_confirm(makeRequest({ cartId: 'cart-123' }));
-    expect(result.status).toBe(400);
-    expect(JSON.parse(result.body).error).toMatch(/klarnaOrderId/i);
+  describe('auth', () => {
+    it('returns 401 when no member is logged in', async () => {
+      __setMember(null);
+      seedPendingOrder();
+      __setHandler(klarnaConfirmOkHandler);
+      expect((await post_klarna_confirm(confirmReq())).status).toBe(401);
+    });
   });
 
-  it('returns 400 when cartId is missing', async () => {
-    seedPendingOrder();
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc' }));
-    expect(result.status).toBe(400);
-    expect(JSON.parse(result.body).error).toMatch(/cartId/i);
-  });
-});
+  describe('input validation', () => {
+    it('returns 400 when klarnaOrderId is missing', async () => {
+      const result = await post_klarna_confirm(makeRequest({ cartId: 'cart-123' }));
+      expect(result.status).toBe(400);
+      expect(JSON.parse(result.body).error).toMatch(/klarnaOrderId/i);
+    });
 
-// ── post_klarna_confirm — IDOR guard ──────────────────────────────────────────
-
-describe('post_klarna_confirm — IDOR guard', () => {
-  it('returns 403 when klarnaOrderId not found in pending orders', async () => {
-    __seed('Klarna_PendingOrders', []);
-    __setHandler(klarnaConfirmOkHandler);
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'unknown-order', cartId: 'cart-123' }));
-    expect(result.status).toBe(403);
-    expect(JSON.parse(result.body).error).toMatch(/not found|unauthorized/i);
+    it('returns 400 when cartId is missing', async () => {
+      const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc' }));
+      expect(result.status).toBe(400);
+      expect(JSON.parse(result.body).error).toMatch(/cartId/i);
+    });
   });
 
-  it('returns 403 when klarnaOrderId belongs to a different member', async () => {
-    seedPendingOrder('klarna-order-abc', 'other-member-xyz');
-    __setHandler(klarnaConfirmOkHandler);
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.status).toBe(403);
-  });
-});
+  describe('IDOR guard', () => {
+    it('returns 403 when klarnaOrderId not found in pending orders', async () => {
+      __seed('Klarna_PendingOrders', []);
+      __setHandler(klarnaConfirmOkHandler);
+      const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'unknown-order', cartId: 'cart-123' }));
+      expect(result.status).toBe(403);
+      expect(JSON.parse(result.body).error).toMatch(/not found|unauthorized/i);
+    });
 
-// ── post_klarna_confirm — Success ─────────────────────────────────────────────
-
-describe('post_klarna_confirm — success', () => {
-  it('returns 200 with confirmed: true and orderId', async () => {
-    seedPendingOrder();
-    __setHandler(klarnaConfirmOkHandler);
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.status).toBe(200);
-    const body = JSON.parse(result.body);
-    expect(body.confirmed).toBe(true);
-    expect(body.orderId).toBeDefined();
+    it('returns 403 when order belongs to a different member', async () => {
+      seedPendingOrder('klarna-order-abc', 'other-member-xyz');
+      __setHandler(klarnaConfirmOkHandler);
+      expect((await post_klarna_confirm(confirmReq())).status).toBe(403);
+    });
   });
 
-  it('Content-Type header is application/json', async () => {
-    seedPendingOrder();
-    __setHandler(klarnaConfirmOkHandler);
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.headers['Content-Type']).toBe('application/json');
+  describe('success', () => {
+    beforeEach(() => {
+      seedPendingOrder();
+      __setHandler(klarnaConfirmOkHandler);
+    });
+
+    it('returns 200 with confirmed: true and orderId', async () => {
+      const result = await post_klarna_confirm(confirmReq());
+      expect(result.status).toBe(200);
+      const body = JSON.parse(result.body);
+      expect(body.confirmed).toBe(true);
+      expect(body.orderId).toBeDefined();
+    });
+
+    it('Content-Type header is application/json', async () => {
+      const result = await post_klarna_confirm(confirmReq());
+      expect(result.headers['Content-Type']).toBe('application/json');
+    });
   });
-});
 
-// ── post_klarna_confirm — Klarna API error ────────────────────────────────────
+  describe('Klarna API error', () => {
+    beforeEach(() => { seedPendingOrder(); });
 
-describe('post_klarna_confirm — Klarna API error', () => {
-  it('returns 500 when Klarna confirm API returns non-ok', async () => {
-    seedPendingOrder();
-    __setHandler(() => ({ ok: false, status: 500, async json() { return {}; } }));
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.status).toBe(500);
-    expect(JSON.parse(result.body).error).toMatch(/klarna/i);
-  });
+    it('returns 500 when Klarna confirm API returns non-ok', async () => {
+      __setHandler(() => ({ ok: false, status: 500, async json() { return {}; } }));
+      const result = await post_klarna_confirm(confirmReq());
+      expect(result.status).toBe(500);
+      expect(JSON.parse(result.body).error).toMatch(/klarna/i);
+    });
 
-  it('returns 500 when Klarna confirm API throws', async () => {
-    seedPendingOrder();
-    __setHandler(() => { throw new Error('Network timeout'); });
-    const result = await post_klarna_confirm(makeRequest({ klarnaOrderId: 'klarna-order-abc', cartId: 'cart-123' }));
-    expect(result.status).toBe(500);
+    it('returns 500 when Klarna confirm API throws', async () => {
+      __setHandler(() => { throw new Error('Network timeout'); });
+      expect((await post_klarna_confirm(confirmReq())).status).toBe(500);
+    });
   });
 });
