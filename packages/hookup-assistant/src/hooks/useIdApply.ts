@@ -61,13 +61,23 @@ export function useIdApply(pageName: string) {
 
       // postMessage to Properties & Events panel via the Wix editor SDK.
       // Race against 300ms timeout to ensure a fast response guarantee.
-      await Promise.race([
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (editor.components as any).setNickname(compRef, element.id),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('setNickname timeout')), APPLY_TIMEOUT_MS)
-        ),
-      ]);
+      // The timer is cleared on the success path to prevent a dangling
+      // rejection from firing after the race has already settled.
+      let timeoutId: ReturnType<typeof setTimeout>;
+      try {
+        await Promise.race([
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (editor.components as any).setNickname(compRef, element.id),
+          new Promise<never>((_, reject) => {
+            timeoutId = setTimeout(
+              () => reject(new Error('setNickname timeout')),
+              APPLY_TIMEOUT_MS
+            );
+          }),
+        ]);
+      } finally {
+        clearTimeout(timeoutId!);
+      }
 
       saveAppliedId(pageName, element.id);
       setStatus('success');

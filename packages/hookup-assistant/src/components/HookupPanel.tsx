@@ -36,7 +36,8 @@ export function HookupPanel() {
 
   const handleMarkDone = useCallback(() => {
     if (currentElement) markHooked(currentElement.id);
-  }, [currentElement, markHooked]);
+    resetApplyStatus();
+  }, [currentElement, markHooked, resetApplyStatus]);
 
   const handleSkip = useCallback(() => {
     if (currentElement) markSkipped(currentElement.id);
@@ -46,11 +47,12 @@ export function HookupPanel() {
   // S4: apply the target ID directly via the editor SDK (postMessage to P&E panel)
   const handleApplyId = useCallback(async () => {
     if (!currentElement || !selected) return;
+    resetApplyStatus(); // ensure clean state before each apply attempt
     const ok = await applyId(currentElement, selected.compRef);
     if (ok) {
       markHooked(currentElement.id);
     }
-  }, [currentElement, selected, applyId, markHooked]);
+  }, [currentElement, selected, applyId, markHooked, resetApplyStatus]);
 
   const page = PAGES.find((p) => p.name === selectedPageName);
 
