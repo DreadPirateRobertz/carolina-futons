@@ -9,11 +9,12 @@
  *  - Manual mode toggle in settings
  */
 
-import React, { useState, useCallback } from 'react';
-import { PAGES, getUnhookedElements, getAllElements } from '../data/pages.js';
+import React, { useState, useCallback, useEffect } from 'react';
+import { PAGES, getUnhookedElements, getAllElements, getRepeaterSection } from '../data/pages.js';
 import { useElementDetection } from '../hooks/useElementDetection.js';
 import { usePageProgress } from '../hooks/usePageProgress.js';
 import { useIdApply } from '../hooks/useIdApply.js';
+import { useRepeaterGuard } from '../hooks/useRepeaterGuard.js';
 import { ManualModePanel } from './ManualModePanel.js';
 import type { PageDef } from '../types/index.js';
 
@@ -28,11 +29,32 @@ export function HookupPanel() {
   const { selected, editorAvailable } = useElementDetection();
   const { hookedIds, skippedIds, markHooked, markSkipped, resetPage } = usePageProgress(selectedPageName);
   const { applyId, status: applyStatus, resetStatus: resetApplyStatus } = useIdApply(selectedPageName);
+  const { isGuardActive, confirmEntered, resetAll: resetGuard } = useRepeaterGuard();
+
+  // S14: Reset repeater guard whenever the user switches pages
+  useEffect(() => {
+    resetGuard();
+  }, [selectedPageName, resetGuard]);
 
   const allElements = getAllElements(selectedPageName);
   const unhooked = getUnhookedElements(selectedPageName, hookedIds);
   const currentElement = unhooked[0] ?? null;
   const nextElement = unhooked[1] ?? null;
+
+  // S14: Compute repeater guard for the current element
+  const repeaterSection = currentElement
+    ? getRepeaterSection(selectedPageName, currentElement.id)
+    : null;
+  const repeaterGuard =
+    repeaterSection?.repeater && isGuardActive(repeaterSection.repeater)
+      ? { repeaterId: repeaterSection.repeater, sectionName: repeaterSection.name }
+      : null;
+
+  const handleEnterRepeaterTemplate = useCallback(() => {
+    if (repeaterSection?.repeater) {
+      confirmEntered(repeaterSection.repeater);
+    }
+  }, [repeaterSection, confirmEntered]);
 
   const handleMarkDone = useCallback(() => {
     if (currentElement) markHooked(currentElement.id);
@@ -167,6 +189,8 @@ export function HookupPanel() {
             onSkip={handleSkip}
             onApplyId={editorAvailable && selected ? handleApplyId : undefined}
             applyStatus={applyStatus}
+            repeaterGuard={repeaterGuard}
+            onEnterRepeaterTemplate={handleEnterRepeaterTemplate}
           />
         ) : (
           <div style={s.autoPlaceholder}>

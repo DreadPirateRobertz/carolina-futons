@@ -3,7 +3,7 @@
  * Extracted from docs/EDITOR_HOOKUP_GUIDE.html.
  * 31 pages, 1093+ elements. DO NOT edit by hand — re-run extraction script.
  */
-import type { PageDef, ElementDef } from '../types/index.js';
+import type { PageDef, ElementDef, SectionDef } from '../types/index.js';
 
 export const PAGES: PageDef[] = [
   {
@@ -2767,4 +2767,20 @@ export function getAllElements(pageName: string): ElementDef[] {
 export function getUnhookedElements(pageName: string, hookedIds: string[]): ElementDef[] {
   const hookedSet = new Set(hookedIds);
   return getAllElements(pageName).filter((e) => !hookedSet.has(e.id));
+}
+
+/**
+ * S14: Return the section where elementId is a repeater child, or null.
+ * Used by the Repeater Guard to detect when the current element lives
+ * inside a repeater template and must be accessed via Edit Repeater.
+ */
+export function getRepeaterSection(pageName: string, elementId: string): SectionDef | null {
+  const page = PAGES.find((p) => p.name === pageName);
+  if (!page) return null;
+  for (const section of page.sections) {
+    if (section.children?.some((e) => e.id === elementId)) {
+      return section;
+    }
+  }
+  return null;
 }
