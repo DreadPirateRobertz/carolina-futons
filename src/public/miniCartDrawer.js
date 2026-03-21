@@ -185,7 +185,9 @@ export function closeMiniCart($w) {
   // WCAG 2.1 AA: release Tab-cycle trap and restore focus to the element that triggered open.
   _releaseTrap();
   if (_savedFocus) {
-    try { _savedFocus.focus(); } catch (e) {}
+    try { _savedFocus.focus(); } catch (e) {
+      console.warn('[miniCartDrawer] focus restore failed:', e?.message);
+    }
     _savedFocus = null;
   }
 }

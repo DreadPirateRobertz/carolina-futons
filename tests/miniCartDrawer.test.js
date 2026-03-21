@@ -113,6 +113,7 @@ beforeEach(() => {
   mockAnnounce.mockReset();
   mockWixTo.mockReset();
   mockIsMobile.mockReturnValue(false);
+  mockCreateFocusTrap.mockReset();
   mockCreateFocusTrap.mockReturnValue({ release: mockTrapRelease, isActive: mockTrapIsActive });
   mockTrapRelease.mockReset();
   mockTrapIsActive.mockReset();
@@ -279,6 +280,8 @@ describe('closeMiniCart', () => {
     closeMiniCart($w);
     expect($w('#miniCartDrawer').hide).toHaveBeenCalled();
     expect($w('#miniCartOverlay').hide).toHaveBeenCalled();
+    // Cold close (no prior open) — null guard must not call release
+    expect(mockTrapRelease).not.toHaveBeenCalled();
   });
 
   it('announces close to screen readers', () => {
@@ -306,6 +309,28 @@ describe('closeMiniCart', () => {
     mockTrapRelease.mockClear();
     closeMiniCart($w);
     expect(mockTrapRelease).toHaveBeenCalled();
+  });
+
+  it('restores focus to previously-focused element on close', () => {
+    const mockEl = { focus: vi.fn() };
+    const origDoc = globalThis.document;
+    globalThis.document = { activeElement: mockEl };
+    openMiniCart($w, makeCart()); // saves document.activeElement
+    globalThis.document = origDoc;
+    closeMiniCart($w);
+    expect(mockEl.focus).toHaveBeenCalled();
+  });
+});
+
+// ── openMiniCart — focus trap edge cases ─────────────────────────────
+
+describe('openMiniCart — focus trap edge cases', () => {
+  it('releases the prior trap when opened a second time (rapid re-open guard)', () => {
+    openMiniCart($w, makeCart()); // creates first trap
+    mockTrapRelease.mockClear();
+    openMiniCart($w, makeCart()); // should release first, create second
+    expect(mockTrapRelease).toHaveBeenCalledTimes(1);
+    expect(mockCreateFocusTrap).toHaveBeenCalledTimes(2);
   });
 });
 
