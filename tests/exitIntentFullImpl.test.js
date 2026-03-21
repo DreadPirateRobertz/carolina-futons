@@ -305,17 +305,12 @@ describe('submitExitIntentEmail — validation', () => {
 
 describe('submitExitIntentEmail — success flow', () => {
   let mockSubscribe;
-  let mockCreateCoupon;
 
   beforeEach(() => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true });
-    mockCreateCoupon = vi.fn().mockResolvedValue({ success: true, code: 'EXIT10-XYZ' });
 
     vi.doMock('backend/newsletterService.web', () => ({
       subscribeToNewsletter: mockSubscribe,
-    }));
-    vi.doMock('backend/couponsService.web', () => ({
-      createWelcomeCoupon: mockCreateCoupon,
     }));
   });
 
@@ -324,22 +319,9 @@ describe('submitExitIntentEmail — success flow', () => {
     expect(mockSubscribe).toHaveBeenCalledWith('user@test.com', { source: 'exit_intent_popup' });
   });
 
-  it('calls createWelcomeCoupon with the email', async () => {
-    await submitExitIntentEmail('user@test.com');
-    expect(mockCreateCoupon).toHaveBeenCalledWith('user@test.com');
-  });
-
-  it('returns success:true with couponCode', async () => {
+  it('returns success:true', async () => {
     const result = await submitExitIntentEmail('user@test.com');
     expect(result.success).toBe(true);
-    expect(result.couponCode).toBe('EXIT10-XYZ');
-  });
-
-  it('returns success:true even if couponCode is null when coupon fails', async () => {
-    mockCreateCoupon.mockResolvedValue({ success: false });
-    const result = await submitExitIntentEmail('user@test.com');
-    expect(result.success).toBe(true);
-    expect(result.couponCode).toBeNull();
   });
 });
 
@@ -349,17 +331,12 @@ describe('submitExitIntentEmail — success flow', () => {
 
 describe('submitExitIntentEmail — error paths', () => {
   let mockSubscribe;
-  let mockCreateCoupon;
 
   beforeEach(() => {
     mockSubscribe = vi.fn().mockResolvedValue({ success: true });
-    mockCreateCoupon = vi.fn().mockResolvedValue({ success: true, code: 'EXIT10-ABC' });
 
     vi.doMock('backend/newsletterService.web', () => ({
       subscribeToNewsletter: mockSubscribe,
-    }));
-    vi.doMock('backend/couponsService.web', () => ({
-      createWelcomeCoupon: mockCreateCoupon,
     }));
   });
 
@@ -368,13 +345,6 @@ describe('submitExitIntentEmail — error paths', () => {
     const result = await submitExitIntentEmail('user@test.com');
     expect(result.success).toBe(false);
     expect(result.error).toBe('Already subscribed');
-  });
-
-  it('coupon failure is non-blocking — returns success', async () => {
-    mockCreateCoupon.mockRejectedValue(new Error('Coupon API down'));
-    const result = await submitExitIntentEmail('user@test.com');
-    expect(result.success).toBe(true);
-    expect(result.couponCode).toBeNull();
   });
 
   it('handles newsletter module import failure gracefully', async () => {
