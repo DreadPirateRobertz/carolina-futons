@@ -205,6 +205,25 @@ describe('callVisionAPI', () => {
     __setHandler(() => ({ ok: false, status: 500 }));
     await expect(callVisionAPI(TEST_IMAGE_URL, TEST_API_KEY)).rejects.toThrow('vision_api_error_500');
   });
+
+  it('returns empty array when responses array is empty', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() { return { responses: [] }; },
+    }));
+    const labels = await callVisionAPI(TEST_IMAGE_URL, TEST_API_KEY);
+    expect(labels).toEqual([]);
+  });
+
+  it('propagates error when res.json() throws on malformed response', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async json() { throw new SyntaxError('Unexpected token < in JSON'); },
+    }));
+    await expect(callVisionAPI(TEST_IMAGE_URL, TEST_API_KEY)).rejects.toThrow('Unexpected token');
+  });
 });
 
 // ── getMockProducts ──────────────────────────────────────────────
