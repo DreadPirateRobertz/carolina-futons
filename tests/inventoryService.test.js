@@ -10,6 +10,7 @@ import {
   getLowStockAlerts,
   getBackInStockDashboard,
   markSignupsNotified,
+  getInventoryUrgency,
   _DEFAULT_LOW_STOCK_THRESHOLD,
   _getVariantStatus,
 } from '../src/backend/inventoryService.web.js';
@@ -513,5 +514,131 @@ describe('markSignupsNotified', () => {
     expect(result.success).toBe(false);
     expect(result.count).toBe(2); // 1st and 3rd succeeded
     expect(result.failed).toBe(1);
+  });
+});
+
+// ── getInventoryUrgency ─────────────────────────────────────────────
+
+describe('getInventoryUrgency', () => {
+  beforeEach(() => {
+    __seed('InventoryLevels', []);
+  });
+
+  it('returns none for empty productId', async () => {
+    const result = await getInventoryUrgency('');
+    expect(result.level).toBe('none');
+    expect(result.message).toBe('');
+  });
+
+  it('returns none for null productId', async () => {
+    const result = await getInventoryUrgency(null);
+    expect(result.level).toBe('none');
+  });
+
+  it('returns none when no inventory records', async () => {
+    const result = await getInventoryUrgency('prod-unknown');
+    expect(result.level).toBe('none');
+    expect(result.count).toBe(0);
+  });
+
+  it('returns out when total quantity is 0', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', variantId: 'v-1', quantity: 0 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('out');
+    expect(result.message).toBe('Out of stock');
+  });
+
+  it('returns out when all variants at 0', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 0 },
+      { _id: 'inv-2', productId: 'prod-1', quantity: 0 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('out');
+  });
+
+  it('returns low with Only X left message when total ≤ 5', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 3 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('low');
+    expect(result.message).toBe('Only 3 left!');
+    expect(result.count).toBe(3);
+  });
+
+  it('returns low when total is exactly 5 (boundary)', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 5 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('low');
+    expect(result.message).toBe('Only 5 left!');
+  });
+
+  it('returns none when total is 6 (above threshold — no false urgency)', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 6 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('none');
+    expect(result.message).toBe('');
+  });
+
+  it('returns none for well-stocked item', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 50 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('none');
+  });
+
+  it('returns just_restocked when variant restocked within 48h', async () => {
+    const recent = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 20, lastRestocked: recent },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('just_restocked');
+    expect(result.message).toBe('Just restocked!');
+  });
+
+  it('just_restocked takes precedence over low stock', async () => {
+    const recent = new Date(Date.now() - 10 * 60 * 1000);
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 2, lastRestocked: recent },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('just_restocked');
+  });
+
+  it('does not return just_restocked when restock was 49h ago', async () => {
+    const old = new Date(Date.now() - 49 * 60 * 60 * 1000);
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 20, lastRestocked: old },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('none');
+  });
+
+  it('aggregates total quantity across variants', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1', quantity: 2 },
+      { _id: 'inv-2', productId: 'prod-1', quantity: 2 },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.count).toBe(4);
+    expect(result.level).toBe('low');
+    expect(result.message).toBe('Only 4 left!');
+  });
+
+  it('handles missing quantity field (treats as 0)', async () => {
+    __seed('InventoryLevels', [
+      { _id: 'inv-1', productId: 'prod-1' },
+    ]);
+    const result = await getInventoryUrgency('prod-1');
+    expect(result.level).toBe('out');
   });
 });

@@ -499,6 +499,57 @@ export const markSignupsNotified = webMethod(
   }
 );
 
+// ── Inventory Urgency ───────────────────────────────────────────────
+
+const LOW_STOCK_URGENCY_THRESHOLD = 5;
+const JUST_RESTOCKED_HOURS = 48;
+
+/**
+ * Get urgency signal for a product — drives 'Only X left!' / 'Just restocked!' badges.
+ *
+ * @param {string} productId
+ * @returns {Promise<{level: string, count: number, message: string}>}
+ * level: 'low' | 'out' | 'just_restocked' | 'none'
+ */
+export const getInventoryUrgency = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    try {
+      if (!productId) return { level: 'none', count: 0, message: '' };
+
+      const result = await wixData.query('InventoryLevels')
+        .eq('productId', sanitize(productId, 50))
+        .find();
+
+      if (result.items.length === 0) return { level: 'none', count: 0, message: '' };
+
+      const totalQty = result.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+      if (totalQty <= 0) {
+        return { level: 'out', count: 0, message: 'Out of stock' };
+      }
+
+      // Check just restocked: any variant restocked in last 48h
+      const cutoff = new Date(Date.now() - JUST_RESTOCKED_HOURS * 60 * 60 * 1000);
+      const justRestocked = result.items.some(
+        item => item.lastRestocked && new Date(item.lastRestocked) > cutoff
+      );
+      if (justRestocked) {
+        return { level: 'just_restocked', count: totalQty, message: 'Just restocked!' };
+      }
+
+      if (totalQty <= LOW_STOCK_URGENCY_THRESHOLD) {
+        return { level: 'low', count: totalQty, message: `Only ${totalQty} left!` };
+      }
+
+      return { level: 'none', count: totalQty, message: '' };
+    } catch (err) {
+      console.error('[inventoryService] Error getting inventory urgency:', err);
+      return { level: 'none', count: 0, message: '' };
+    }
+  }
+);
+
 // ── Internal Helpers ────────────────────────────────────────────────
 
 function getVariantStatus(quantity, threshold) {
