@@ -6,6 +6,8 @@
  *
  * @requires wix-web-module
  * @requires wix-marketing-backend
+ * @requires wix-members-backend
+ * @requires wix-data
  * @requires backend/utils/sanitize
  */
 import { Permissions, webMethod } from 'wix-web-module';
@@ -19,7 +21,7 @@ import { sanitize, validateEmail } from 'backend/utils/sanitize';
  *
  * @function createWelcomeCoupon
  * @param {string} email - New member's email
- * @returns {Promise<Object>} { success, code, discount }
+ * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
  * @permission Admin — called by backend automation, not directly by users
  */
 export const createWelcomeCoupon = webMethod(
@@ -113,7 +115,7 @@ export const getActiveCoupons = webMethod(
  * @function createBirthdayCoupon
  * @param {string} email - Member's email
  * @param {string} memberName - Member's display name for personalization
- * @returns {Promise<Object>} { success, code, discount }
+ * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
  * @permission Admin — called by backend automation
  */
 export const createBirthdayCoupon = webMethod(
@@ -163,8 +165,8 @@ export const createBirthdayCoupon = webMethod(
  *
  * @function createTierUpgradeCoupon
  * @param {string} email - Member's email
- * @param {string} newTier - The tier they upgraded to (Silver or Gold)
- * @returns {Promise<Object>} { success, code, discount }
+ * @param {string} newTier - Tier the member upgraded to ('Silver' | 'Gold'); unrecognized values default to 10% discount
+ * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
  * @permission Admin
  */
 export const createTierUpgradeCoupon = webMethod(
@@ -208,8 +210,10 @@ export const createTierUpgradeCoupon = webMethod(
 
 /**
  * Generate (or retrieve) a recovery coupon for an abandoned cart.
- * Idempotent: calling with the same cartId returns the existing coupon code
- * without creating a new one in the marketing system.
+ * Idempotent on a best-effort basis: calling with the same cartId returns
+ * the existing coupon code. If the RecoveryCoupons persistence insert fails
+ * after the marketing coupon is created, a retry will produce a duplicate
+ * coupon in the marketing system.
  *
  * @function generateRecoveryCoupon
  * @param {Object} params
@@ -299,7 +303,7 @@ export const generateRecoveryCoupon = webMethod(
  *
  * @function createCartRecoveryCoupon
  * @param {string} email - Buyer's email (used for coupon name and validation)
- * @returns {Promise<Object>} { success, code, discount, expiresIn }
+ * @returns {Promise<{success: boolean, code?: string, discount?: string, expiresIn?: string, message?: string}>}
  * @permission Admin — called by emailAutomation during cart recovery sequencing
  */
 export const createCartRecoveryCoupon = webMethod(
