@@ -3,7 +3,7 @@
  *
  * Phase 1 scope (S1 + S2 + S3 + S10):
  *  - Renders app name + "Manual Mode" header indicator when active
- *  - Page selector to switch between the 28 pages
+ *  - Page selector to switch between all pages (see PAGES array for current count)
  *  - Element detection (S3) shows selected element's type
  *  - ManualModePanel (S10) shows target ID, Copy, Mark Done, Skip, Tab-advance
  *  - Manual mode toggle in settings
@@ -53,6 +53,11 @@ export function HookupPanel() {
   const handleEnterRepeaterTemplate = useCallback(() => {
     if (repeaterSection?.repeater) {
       confirmEntered(repeaterSection.repeater);
+    } else {
+      console.warn(
+        '[HookupPanel] handleEnterRepeaterTemplate called but repeaterSection has no repeater ID — ' +
+        'data bug: getRepeaterSection returned a section without a repeater field.',
+      );
     }
   }, [repeaterSection, confirmEntered]);
 

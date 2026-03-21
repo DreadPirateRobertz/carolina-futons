@@ -28,9 +28,13 @@
  *
  * S14 — Repeater Guard:
  *   - Detects when the current element is a repeater child (lives in a template)
- *   - Shows step-by-step "Enter Repeater Template" guidance before child IDs
- *   - "I'm in the template ✓" button unlocks child ID hookup for that repeater
- *   - Guard resets when the user switches pages (parent resets state)
+ *   - Shows step-by-step "Enter Repeater Template" guidance before child IDs;
+ *     this early-return suppresses all normal element UI until the guard is dismissed
+ *   - "✓ I'm in the template" button (aria-label: "Confirm entered repeater template: <id>")
+ *     unlocks child ID hookup for that repeater section
+ *   - handleMarkDone also blocks on repeaterGuard to prevent Tab-key from advancing
+ *     past the guard even though the Mark Done button is not rendered while guard is active
+ *   - Guard resets when the user switches pages (parent resets via useRepeaterGuard.resetAll)
  */
 
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -176,7 +180,7 @@ export function ManualModePanel({
   const handleMarkDone = useCallback(() => {
     if (!currentElement) return; // completion state — no element to advance past
     if (typeMismatch) return;
-    if (repeaterGuard) return; // S14: guard active — must enter template first
+    if (repeaterGuard) return; // S14: guard active — block Tab-key advance (Mark Done button not rendered)
     onMarkDone();
     applyDefaultStateIfNeeded();
   }, [currentElement, typeMismatch, repeaterGuard, onMarkDone, applyDefaultStateIfNeeded]);
@@ -208,7 +212,14 @@ export function ManualModePanel({
 
   // S14: Show repeater guard when the current element is a repeater child
   // and the user hasn't yet confirmed entering the template.
+  // This early return suppresses all normal element UI (ID block, Copy, Mark Done, etc.)
   if (repeaterGuard) {
+    if (!onEnterRepeaterTemplate) {
+      console.warn(
+        '[ManualModePanel] repeaterGuard is set but onEnterRepeaterTemplate is not provided — ' +
+        '"I\'m in the template" button will be a no-op. Pass onEnterRepeaterTemplate alongside repeaterGuard.',
+      );
+    }
     return (
       <RepeaterGuard
         repeaterId={repeaterGuard.repeaterId}

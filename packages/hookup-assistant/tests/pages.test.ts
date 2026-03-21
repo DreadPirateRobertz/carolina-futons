@@ -236,4 +236,16 @@ describe('getRepeaterSection — S14 Repeater Guard', () => {
     const section = getRepeaterSection('Home', 'featuredCard');
     expect(section?.name).toBe('Featured Products');
   });
+
+  it('returns null when a section exists but has an empty children array', () => {
+    // Sections with children: [] (or no children key) should not match any element
+    // This verifies the some() call on an empty/missing array returns null correctly
+    const page = PAGES.find((p) => p.name === 'Home');
+    // heroSection has no children array at all — heroTitle is in elements, not children
+    expect(getRepeaterSection('Home', 'heroTitle')).toBeNull();
+    // Also confirm a completely fictional ID is null even if a section exists
+    expect(getRepeaterSection('Home', 'nonExistentChildId')).toBeNull();
+    // Suppress unused var warning
+    expect(page).toBeDefined();
+  });
 });

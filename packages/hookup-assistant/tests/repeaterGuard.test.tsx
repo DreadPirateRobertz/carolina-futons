@@ -243,6 +243,19 @@ describe('ManualModePanel — S14 repeater guard interaction', () => {
     ).not.toThrow();
   });
 
+  it('logs a console.warn when repeaterGuard is set but onEnterRepeaterTemplate is omitted', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <ManualModePanel
+        {...baseProps}
+        repeaterGuard={{ repeaterId: 'featuredRepeater', sectionName: 'Featured Products' }}
+        // intentionally no onEnterRepeaterTemplate
+      />
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('onEnterRepeaterTemplate'));
+    warnSpy.mockRestore();
+  });
+
   it('guard is NOT shown when currentElement is null (completion state takes priority)', () => {
     render(
       <ManualModePanel
