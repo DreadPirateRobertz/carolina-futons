@@ -130,7 +130,7 @@ describe('getTemplateIndex', () => {
   it('returns correct structure with all known sequences', async () => {
     const index = await getTemplateIndex();
     const keys = Object.keys(index).sort();
-    expect(keys).toEqual(['cart_recovery', 'post_purchase', 'promotional', 'reengagement', 'welcome']);
+    expect(keys).toEqual(['cart_recovery', 'post_purchase', 'promotional', 'reengagement', 'transactional', 'welcome']);
   });
 });
 

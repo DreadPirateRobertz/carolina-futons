@@ -129,8 +129,72 @@ export function wixEcom_onOrderCreated(event) {
 
   if (!email) return;
 
+  // Send customer-facing order confirmation
+  import('backend/emailService.web')
+    .then(({ sendOrderConfirmation }) => sendOrderConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      total: typeof total === 'number' ? `$${total.toFixed(2)}` : String(total),
+      itemSummary: lineItems.map(i => `${i.quantity}× ${i.name}`).join(', '),
+    }))
+    .catch(err => console.error('Error sending order confirmation:', err));
+
+  // Queue post-purchase care sequence
   triggerPostPurchaseSequence(contactId, email, firstName, orderNumber, total, lineItems)
     .catch(err => console.error('Error triggering post-purchase sequence:', err));
+}
+
+/**
+ * Triggered when an order fulfillment is created (shipped).
+ * Sends a shipping notification with tracking info to the buyer.
+ */
+export function wixEcom_onFulfillmentCreated(event) {
+  const fulfillment = event.entity || event;
+  const order = fulfillment.order || {};
+  const email = order.buyerInfo?.email || fulfillment.buyerInfo?.email || '';
+  const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+  const contactId = order.buyerInfo?.contactId || fulfillment.buyerInfo?.contactId || '';
+  const orderNumber = order.number || fulfillment.orderNumber || '';
+  const tracking = fulfillment.trackingInfo || {};
+
+  if (!email) return;
+
+  import('backend/emailService.web')
+    .then(({ sendShippingNotification }) => sendShippingNotification({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+      trackingNumber: tracking.trackingNumber || '',
+      trackingUrl: tracking.trackingLink || '',
+      carrier: tracking.shippingProvider || '',
+    }))
+    .catch(err => console.error('Error sending shipping notification:', err));
+}
+
+/**
+ * Triggered when an order is marked as delivered.
+ * Sends a delivery confirmation email to the buyer.
+ */
+export function wixEcom_onOrderDelivered(event) {
+  const order = event.entity || event;
+  const email = order.buyerInfo?.email || '';
+  const firstName = order.billingInfo?.firstName || order.buyerInfo?.firstName || '';
+  const contactId = order.buyerInfo?.contactId || '';
+  const orderNumber = order.number || '';
+
+  if (!email) return;
+
+  import('backend/emailService.web')
+    .then(({ sendDeliveryConfirmation }) => sendDeliveryConfirmation({
+      contactId,
+      email,
+      firstName,
+      orderNumber: String(orderNumber),
+    }))
+    .catch(err => console.error('Error sending delivery confirmation:', err));
 }
 
 /**

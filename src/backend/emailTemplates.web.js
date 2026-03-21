@@ -87,6 +87,38 @@ const TEMPLATE_REGISTRY = {
     category: 'recovery',
   },
 
+  // Transactional — Order Lifecycle
+  order_confirmation: {
+    id: 'order_confirmation',
+    name: 'Order Confirmation',
+    sequence: 'transactional',
+    step: 1,
+    subjectLine: 'Order #{orderNumber} confirmed — thank you for your purchase!',
+    previewText: 'We\'ve received your order and are getting it ready.',
+    variables: ['firstName', 'orderNumber', 'total', 'itemSummary', 'estimatedDays', 'email'],
+    category: 'transactional',
+  },
+  order_shipped: {
+    id: 'order_shipped',
+    name: 'Order Shipped',
+    sequence: 'transactional',
+    step: 2,
+    subjectLine: 'Your order #{orderNumber} is on its way!',
+    previewText: 'Your Carolina Futons order has shipped. Track your delivery here.',
+    variables: ['firstName', 'orderNumber', 'trackingNumber', 'trackingUrl', 'carrier', 'estimatedDays', 'email'],
+    category: 'transactional',
+  },
+  delivery_confirmation: {
+    id: 'delivery_confirmation',
+    name: 'Delivery Confirmation',
+    sequence: 'transactional',
+    step: 3,
+    subjectLine: 'Your order #{orderNumber} has been delivered!',
+    previewText: 'Your furniture has arrived. Let us know if you need any help with setup.',
+    variables: ['firstName', 'orderNumber', 'email'],
+    category: 'transactional',
+  },
+
   // Post-Purchase Care Sequence (Day 3/7/30)
   post_purchase_1: {
     id: 'post_purchase_1',
@@ -847,6 +879,158 @@ export const getWelcomeDay7Template = webMethod(
       subject: meta.subjectLine,
       previewText: meta.previewText,
       html: wrapEmailHtml('Your Welcome Discount — Carolina Futons', `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+// ── Transactional Email Template Generators ─────────────────────────
+// Returns { subject, previewText, html } for order lifecycle emails.
+
+/**
+ * Order confirmation email sent to the buyer immediately after purchase.
+ * @param {Object} order
+ * @param {string} order.firstName
+ * @param {string} order.orderNumber
+ * @param {string} order.total
+ * @param {string} [order.itemSummary]
+ * @param {number} [order.estimatedDays]
+ * @param {string} order.email
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getOrderConfirmationTemplate = webMethod(
+  Permissions.Anyone,
+  ({ firstName, orderNumber, total, itemSummary, estimatedDays, email } = {}) => {
+    const name = sanitize(firstName || '', 200);
+    const num = sanitize(orderNumber || '', 50);
+    const tot = sanitize(total || '', 50);
+    const summary = sanitize(itemSummary || '', 500);
+    const days = Number.isFinite(Number(estimatedDays)) && Number(estimatedDays) > 0
+      ? Number(estimatedDays) : null;
+    const meta = TEMPLATE_REGISTRY.order_confirmation;
+
+    const subject = meta.subjectLine.replace('{orderNumber}', num);
+    const previewText = meta.previewText;
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `Thank you, ${name}!` : 'Thank you for your order!'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Your order has been confirmed. Here's a summary:</p>
+      </td></tr>
+      <tr><td style="padding:12px 16px;background-color:#F0F4F8;border-radius:4px;">
+        <table cellpadding="4" cellspacing="0" border="0" width="100%">
+          ${num ? `<tr><td style="font-family:Arial,sans-serif;font-size:14px;color:#666;">Order Number</td><td style="font-family:Arial,sans-serif;font-size:14px;color:#1E3A5F;font-weight:bold;">#${num}</td></tr>` : ''}
+          ${tot ? `<tr><td style="font-family:Arial,sans-serif;font-size:14px;color:#666;">Order Total</td><td style="font-family:Arial,sans-serif;font-size:14px;color:#1E3A5F;font-weight:bold;">${tot}</td></tr>` : ''}
+          ${days ? `<tr><td style="font-family:Arial,sans-serif;font-size:14px;color:#666;">Est. Delivery</td><td style="font-family:Arial,sans-serif;font-size:14px;color:#1E3A5F;">${days} business days</td></tr>` : ''}
+          ${summary ? `<tr><td colspan="2" style="font-family:Arial,sans-serif;font-size:13px;color:#555;padding-top:8px;">${summary}</td></tr>` : ''}
+        </table>
+      </td></tr>
+      <tr><td style="padding:16px 0;font-family:Arial,sans-serif;font-size:14px;color:#333;">
+        <p>We'll send you a shipping confirmation with tracking information once your order is on its way.</p>
+        <p>Questions? Call us at ${SUPPORT_PHONE} or reply to this email.</p>
+      </td></tr>
+      <tr><td style="padding:8px 0;text-align:center;">
+        <a href="${SITE_URL}/account/orders" style="display:inline-block;padding:12px 28px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;text-decoration:none;border-radius:4px;">View Your Order</a>
+      </td></tr>`;
+
+    return {
+      subject,
+      previewText,
+      html: wrapEmailHtml(`Order #${num} Confirmed — Carolina Futons`, `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+/**
+ * Shipping notification sent when the order fulfillment is created.
+ * @param {Object} order
+ * @param {string} order.firstName
+ * @param {string} order.orderNumber
+ * @param {string} [order.trackingNumber]
+ * @param {string} [order.trackingUrl]
+ * @param {string} [order.carrier]
+ * @param {number} [order.estimatedDays]
+ * @param {string} order.email
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getOrderShippedTemplate = webMethod(
+  Permissions.Anyone,
+  ({ firstName, orderNumber, trackingNumber, trackingUrl, carrier, estimatedDays, email } = {}) => {
+    const name = sanitize(firstName || '', 200);
+    const num = sanitize(orderNumber || '', 50);
+    const tracking = sanitize(trackingNumber || '', 100);
+    const trackUrl = sanitize(trackingUrl || '', 500);
+    const carr = sanitize(carrier || '', 100);
+    const days = Number.isFinite(Number(estimatedDays)) && Number(estimatedDays) > 0
+      ? Number(estimatedDays) : null;
+    const meta = TEMPLATE_REGISTRY.order_shipped;
+
+    const subject = meta.subjectLine.replace('{orderNumber}', num);
+
+    const trackingBlock = tracking
+      ? `<tr><td style="padding:12px 16px;background-color:#F0F4F8;border-radius:4px;text-align:center;">
+          <p style="font-family:Arial,sans-serif;font-size:13px;color:#666;margin:0 0 6px;">${carr ? `${carr} · ` : ''}Tracking #${tracking}</p>
+          ${trackUrl ? `<a href="${trackUrl}" style="display:inline-block;padding:10px 24px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;text-decoration:none;border-radius:4px;">Track Your Package</a>` : ''}
+        </td></tr>`
+      : '';
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `${name}, your order is on its way!` : 'Your order is on its way!'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Great news — order #${num} has shipped${days ? ` and is expected to arrive in ${days} business days` : ''}.</p>
+      </td></tr>
+      ${trackingBlock}
+      <tr><td style="padding:16px 0;font-family:Arial,sans-serif;font-size:14px;color:#333;">
+        <p>Need help with assembly or have questions when it arrives? Call us at ${SUPPORT_PHONE}.</p>
+      </td></tr>`;
+
+    return {
+      subject,
+      previewText: meta.previewText,
+      html: wrapEmailHtml(`Order #${num} Shipped — Carolina Futons`, `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
+    };
+  }
+);
+
+/**
+ * Delivery confirmation email sent when the order is marked delivered.
+ * @param {Object} order
+ * @param {string} order.firstName
+ * @param {string} order.orderNumber
+ * @param {string} order.email
+ * @returns {{ subject: string, previewText: string, html: string }}
+ */
+export const getDeliveryConfirmationTemplate = webMethod(
+  Permissions.Anyone,
+  ({ firstName, orderNumber, email } = {}) => {
+    const name = sanitize(firstName || '', 200);
+    const num = sanitize(orderNumber || '', 50);
+    const meta = TEMPLATE_REGISTRY.delivery_confirmation;
+
+    const subject = meta.subjectLine.replace('{orderNumber}', num);
+
+    const body = `
+      <tr><td style="padding:20px 0 8px;font-family:Georgia,serif;font-size:22px;color:#1E3A5F;">
+        ${name ? `${name}, your order has arrived!` : 'Your order has arrived!'}
+      </td></tr>
+      <tr><td style="padding:8px 0;font-family:Arial,sans-serif;font-size:15px;color:#333;line-height:1.6;">
+        <p>Order #${num} has been delivered. We hope you love your new furniture!</p>
+        <p>If anything arrived damaged or you need help with setup, please call us right away at ${SUPPORT_PHONE} — we'll make it right.</p>
+      </td></tr>
+      <tr><td style="padding:16px 0;text-align:center;">
+        <a href="${SITE_URL}/account/orders" style="display:inline-block;padding:12px 28px;background-color:#1E3A5F;color:#ffffff;font-family:Arial,sans-serif;font-size:14px;text-decoration:none;border-radius:4px;">View Your Order</a>
+      </td></tr>
+      <tr><td style="padding:8px 0;text-align:center;">
+        <a href="${SITE_URL}/reviews" style="font-family:Arial,sans-serif;font-size:14px;color:#5B8FA8;text-decoration:underline;">Leave a Review</a>
+      </td></tr>`;
+
+    return {
+      subject,
+      previewText: meta.previewText,
+      html: wrapEmailHtml(`Order #${num} Delivered — Carolina Futons`, `<table cellpadding="0" cellspacing="0" border="0" width="100%">${body}</table>`),
     };
   }
 );
