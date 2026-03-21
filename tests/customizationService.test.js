@@ -38,7 +38,6 @@ import {
   getSavedConfigurations,
   getConfigurationById,
 } from '../src/backend/customizationService.web.js';
-import { __setMember } from './__mocks__/wix-members-backend.js';
 
 // ── Test Data ────────────────────────────────────────────────────────
 
