@@ -187,7 +187,7 @@ export const validatePromoCode = webMethod(
  * @param {string} code - The promo code
  * @param {Array<{_id: string, name?: string, price: number, quantity: number, category?: string}>} cartItems
  * @param {Object} [opts] - Injectable overrides (for testability)
- * @param {string} [opts.rateLimitKey] - Rate limit bucket key (e.g. visitor IP from frontend)
+ * @param {string} opts.rateLimitKey - Caller's memberId or email; required for rate limiting (fail-close if missing)
  * @param {number} [opts.rateLimitNow] - Timestamp override for rate limit testing
  * @returns {Promise<Object>}
  */
@@ -199,8 +199,13 @@ export const applyPromoCode = webMethod(
         return { success: false, error: 'Cart items are required' };
       }
 
-      // Rate limit: 10 attempts/hour per key (IP in production) to block enumeration
-      const rateLimitKey = (opts && opts.rateLimitKey) ? String(opts.rateLimitKey) : 'anonymous';
+      // Rate limit: 10 attempts/hour per caller-supplied key (memberId or email).
+      // Fail-close on missing key — a shared 'anonymous' bucket would exhaust after
+      // 10 calls and block all unauthenticated users simultaneously.
+      const rateLimitKey = opts && opts.rateLimitKey ? String(opts.rateLimitKey).trim() : '';
+      if (!rateLimitKey) {
+        return { success: false, error: 'A valid session identifier is required to apply a promo code.' };
+      }
       const rateCheck = await _checkPromoRateLimit(rateLimitKey, { now: opts && opts.rateLimitNow });
       if (!rateCheck.allowed) {
         return { success: false, error: 'Too many promo code attempts. Please try again later.' };
