@@ -82,6 +82,12 @@ describe('getLocalPage — known city slugs', () => {
     expect(typeof page.directions).toBe('string');
   });
 
+  it('page has directionsUrl as non-empty string', async () => {
+    const { page } = await getLocalPage('asheville-nc');
+    expect(typeof page.directionsUrl).toBe('string');
+    expect(page.directionsUrl).toBeTruthy();
+  });
+
   it('page has nearbyAreas as array', async () => {
     const { page } = await getLocalPage('asheville-nc');
     expect(Array.isArray(page.nearbyAreas)).toBe(true);
