@@ -118,24 +118,17 @@ export const getABResult = webMethod(
       return { error: 'invalid_campaign_id' };
     }
 
-    const { items } = await wixData.query('EmailABLog')
-      .eq('campaignId', campaignId)
-      .limit(1000)
-      .find();
+    const [aSent, aConverted, bSent, bConverted] = await Promise.all([
+      wixData.query('EmailABLog').eq('campaignId', campaignId).eq('variant', 'A').count(),
+      wixData.query('EmailABLog').eq('campaignId', campaignId).eq('variant', 'A').eq('converted', true).count(),
+      wixData.query('EmailABLog').eq('campaignId', campaignId).eq('variant', 'B').count(),
+      wixData.query('EmailABLog').eq('campaignId', campaignId).eq('variant', 'B').eq('converted', true).count(),
+    ]);
 
-    const result = {
-      A: { sent: 0, converted: 0 },
-      B: { sent: 0, converted: 0 },
+    return {
+      campaignId,
+      A: { sent: aSent, converted: aConverted },
+      B: { sent: bSent, converted: bConverted },
     };
-
-    for (const item of items) {
-      const v = item.variant;
-      if (v === 'A' || v === 'B') {
-        result[v].sent++;
-        if (item.converted) result[v].converted++;
-      }
-    }
-
-    return { campaignId, ...result };
   }
 );

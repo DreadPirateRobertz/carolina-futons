@@ -22,6 +22,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import { triggeredEmails, contacts } from 'wix-crm-backend';
 import { getSecret } from 'wix-secrets-backend';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
@@ -446,6 +447,11 @@ export const sendABEmail = webMethod(
     }
 
     try {
+      const caller = await currentMember.getMember();
+      if (!caller || caller._id !== memberId) {
+        return { sent: false, reason: 'unauthorized' };
+      }
+
       const { assignVariant, logABSend } = await import('backend/emailABService.web');
       const variant = assignVariant(memberId, campaignId);
       const chosen = variants.find(v => v.variant === variant) || variants[0];

@@ -11,14 +11,17 @@
  *  - Logging: EmailABLog record inserted with correct fields after send
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
 import { __getInserted } from './__mocks__/wix-data.js';
+import { __setMember, __reset as __resetMember } from './__mocks__/wix-members-backend.js';
 
 vi.mock('wix-web-module', () => ({
   Permissions: { Anyone: 'Anyone', Admin: 'Admin', SiteMember: 'SiteMember' },
   webMethod: (_perm, fn) => fn,
 }));
+
+vi.mock('wix-members-backend', () => import('./__mocks__/wix-members-backend.js'));
 
 // Import sendABEmail directly from source — dynamic imports inside are resolved
 // via vitest alias (backend/emailABService.web → src/backend/emailABService.web.js).
@@ -46,6 +49,11 @@ const VARIANTS = [
 // ── sendABEmail — success ─────────────────────────────────────────────────────
 
 describe('sendABEmail — success path', () => {
+  beforeEach(() => {
+    __resetMember();
+    __setMember({ _id: MEMBER_ID });
+  });
+
   it('returns { sent: true, variant } on success', async () => {
     const result = await sendABEmail(MEMBER_ID, CAMPAIGN_ID, RECIPIENT, VARIANTS);
     expect(result.sent).toBe(true);
@@ -168,6 +176,11 @@ describe('sendABEmail — invalid inputs', () => {
 // ── sendABEmail — error handling ──────────────────────────────────────────────
 
 describe('sendABEmail — error handling', () => {
+  beforeEach(() => {
+    __resetMember();
+    __setMember({ _id: MEMBER_ID });
+  });
+
   it('returns { sent: false, reason: "send_failed" } when triggeredEmails throws', async () => {
     __failNextEmail();
     const r = await sendABEmail(MEMBER_ID, CAMPAIGN_ID, RECIPIENT, VARIANTS);
