@@ -1044,7 +1044,7 @@ export async function post_klaviyoWebhook(request) {
       }
     } else if (payload.type === 'email_clicked' && payload.campaignId && typeof payload.campaignId === 'string') {
       const { markABConversion } = await import('backend/emailABService.web');
-      await markABConversion(cleanEmail, payload.campaignId);
+      await markABConversion(cleanEmail, sanitize(payload.campaignId, 50));
     }
     // Unknown event types are acknowledged without action
 
