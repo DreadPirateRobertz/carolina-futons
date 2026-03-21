@@ -78,19 +78,24 @@ export function buildBreadcrumbList(cityData, siteUrl) {
 export function buildFaqSchema(faqs) {
   const items = Array.isArray(faqs) ? faqs : [];
 
+  const mainEntity = items
+    .filter(faq => faq && typeof faq.question === 'string' && typeof faq.answer === 'string')
+    .map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    }));
+
+  // Return null when empty so callers can filter(Boolean) to exclude from structured data
+  if (mainEntity.length === 0) return null;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: items
-      .filter(faq => faq && typeof faq.question === 'string' && typeof faq.answer === 'string')
-      .map(faq => ({
-        '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: faq.answer,
-        },
-      })),
+    mainEntity,
   };
 }
 

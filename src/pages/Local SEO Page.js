@@ -86,7 +86,9 @@ function initBreadcrumbs(breadcrumbs) {
       }
     });
     repeater.data = items.map((item, i) => ({ ...item, _id: `bc-${i}` }));
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initBreadcrumbs error:', e);
+  }
 }
 
 // ── Hero / City Header ──────────────────────────────────────────────────
@@ -104,17 +106,21 @@ function initHero(page) {
     if (page.isHomeCity) {
       try { $w('#homeCityBadge').show(); } catch (e) {}
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initHero error:', e);
+  }
 }
 
 // ── Store Hours ─────────────────────────────────────────────────────────
 
-function initStoreHours(storeHours) {
+function initStoreHours(storeHoursDisplay) {
   try {
-    const hours = Array.isArray(storeHours) ? storeHours : [];
+    const hours = Array.isArray(storeHoursDisplay) ? storeHoursDisplay : [];
     if (hours.length === 0) return;
     try { $w('#storeHoursText').text = hours.join('\n'); } catch (e) {}
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initStoreHours error:', e);
+  }
 }
 
 // ── Category Recommendations ────────────────────────────────────────────
@@ -133,7 +139,9 @@ function initCategoryRecommendations(categoryRecommendations) {
       try { $item('#catRecReason').text = itemData.reason; } catch (e) {}
     });
     repeater.data = items.map((item, i) => ({ ...item, _id: `cat-${i}` }));
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initCategoryRecommendations error:', e);
+  }
 }
 
 // ── Featured Products ───────────────────────────────────────────────────
@@ -252,7 +260,9 @@ function initFaq(faqs) {
       try { $item('#faqAnswer').text = itemData.answer; } catch (e) {}
     });
     repeater.data = items.map((item, i) => ({ ...item, _id: `faq-${i}` }));
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Local SEO Page: initFaq error:', e);
+  }
 }
 
 // ── Not Found ───────────────────────────────────────────────────────────

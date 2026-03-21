@@ -182,12 +182,12 @@ describe('buildFaqSchema — structure', () => {
     expect(items[0].acceptedAnswer.text).toBe('In Hendersonville, NC.');
   });
 
-  it('empty array: mainEntity is empty', () => {
-    expect(buildFaqSchema([]).mainEntity).toHaveLength(0);
+  it('empty array: returns null', () => {
+    expect(buildFaqSchema([])).toBeNull();
   });
 
-  it('null input: mainEntity is empty', () => {
-    expect(buildFaqSchema(null).mainEntity).toHaveLength(0);
+  it('null input: returns null', () => {
+    expect(buildFaqSchema(null)).toBeNull();
   });
 
   it('filters items missing question or answer', () => {

@@ -18,7 +18,9 @@ const SCHEMA_ADDRESS = {
 };
 
 // Wed-Fri 10am-5pm, Sat 10am-4pm — schema.org openingHours format
-const SCHEMA_OPENING_HOURS = ['We-Fr 10:00-17:00', 'Sa 10:00-16:00'];
+export const SCHEMA_OPENING_HOURS = ['We-Fr 10:00-17:00', 'Sa 10:00-16:00'];
+// Human-readable hours for display in UI (not schema.org format)
+export const STORE_HOURS_DISPLAY = ['Wed–Fri: 10am–5pm', 'Sat: 10am–4pm'];
 
 /**
  * Generate a LocalBusiness + FurnitureStore JSON-LD schema for a city page.

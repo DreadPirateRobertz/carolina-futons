@@ -13,13 +13,12 @@ import { validateSlug } from 'backend/utils/sanitize';
 import {
   LOCAL_PAGES,
   SITE_URL,
-  STORE_HOURS,
   STORE_DIRECTIONS_URL,
   FEATURED_PRODUCT_CATALOG,
   HOME_CITY_FEATURED_CATEGORIES,
   NEARBY_CITY_FEATURED_CATEGORIES,
 } from 'backend/utils/localSeoData';
-import { generateLocalBusinessSchema } from 'backend/localSeo.web';
+import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
 
 // ── getLocalPage ──────────────────────────────────────────────────────
@@ -65,7 +64,8 @@ export const getLocalPage = webMethod(
           metaTitle: _buildMetaTitle(cityData),
           metaDescription: _buildMetaDescription(cityData),
           canonicalUrl,
-          storeHours: STORE_HOURS,
+          storeHours: SCHEMA_OPENING_HOURS,
+          storeHoursDisplay: STORE_HOURS_DISPLAY,
           categoryRecommendations: Array.isArray(cityData.categoryRecommendations) ? cityData.categoryRecommendations : [],
           faqs,
           breadcrumbs,
