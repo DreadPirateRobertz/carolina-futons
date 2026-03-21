@@ -10,7 +10,6 @@ import { processContentSchedule } from 'backend/contentScheduler.web';
 import { getAssemblyFollowUpData } from 'backend/postPurchaseCare.web';
 import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
-import { generateBlogRssFeed } from 'backend/blogRssFeed.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
@@ -209,20 +208,62 @@ export async function get_blogSitemap() {
 // Blog RSS 2.0 Feed
 // URL: GET https://www.carolinafutons.com/_functions/blogRssFeed
 // Add <link rel="alternate" type="application/rss+xml" href="/_functions/blogRssFeed"> in site header
-export async function get_blogRssFeed() {
+// Note: inlined (not delegated to webMethod) — webMethod wrapper does not resolve correctly
+// from an http-functions.js context on the Wix platform, causing a 404.
+export function get_blogRssFeed() {
   try {
-    const result = await generateBlogRssFeed();
+    const SITE_URL = 'https://www.carolinafutons.com';
+    const posts = getAllBlogPosts();
 
-    if (!result.success) {
-      console.error('HTTP function error (blogRssFeed):', result.error);
-      return serverError({
-        body: 'Error generating RSS feed',
-        headers: { 'Content-Type': 'text/plain' },
-      });
+    const sorted = Array.isArray(posts) && posts.length > 0
+      ? [...posts].sort((a, b) => {
+          const da = a.publishDate ? new Date(a.publishDate).getTime() : 0;
+          const db = b.publishDate ? new Date(b.publishDate).getTime() : 0;
+          return db - da;
+        })
+      : [];
+
+    const lastBuildDate = sorted.length > 0 && sorted[0].publishDate
+      ? new Date(sorted[0].publishDate).toUTCString()
+      : new Date().toUTCString();
+
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n';
+    xml += '  <channel>\n';
+    xml += `    <title>${escapeXml('Carolina Futons Blog')}</title>\n`;
+    xml += `    <link>${escapeXml(SITE_URL + '/blog')}</link>\n`;
+    xml += `    <description>${escapeXml('Guides, tips, and inspiration for futon frames, mattresses, Murphy beds, and small-space furniture.')}</description>\n`;
+    xml += '    <language>en-us</language>\n';
+    xml += `    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>\n`;
+    xml += '    <ttl>1440</ttl>\n';
+    xml += `    <atom:link href="${escapeXml(SITE_URL + '/_functions/blogRssFeed')}" rel="self" type="application/rss+xml" />\n`;
+
+    for (const post of sorted) {
+      const postUrl = `${SITE_URL}/blog/${encodeURIComponent(post.slug || '')}`;
+      xml += '    <item>\n';
+      xml += `      <title>${escapeXml(post.title || '')}</title>\n`;
+      xml += `      <link>${escapeXml(postUrl)}</link>\n`;
+      xml += `      <guid isPermaLink="true">${escapeXml(postUrl)}</guid>\n`;
+      xml += `      <description>${escapeXml(post.excerpt || post.metaDescription || '')}</description>\n`;
+      if (post.publishDate) {
+        xml += `      <pubDate>${escapeXml(new Date(post.publishDate).toUTCString())}</pubDate>\n`;
+      }
+      if (post.category) {
+        xml += `      <category>${escapeXml(post.category)}</category>\n`;
+      }
+      if (Array.isArray(post.tags)) {
+        for (const tag of post.tags) {
+          xml += `      <category>${escapeXml(tag)}</category>\n`;
+        }
+      }
+      xml += '    </item>\n';
     }
 
+    xml += '  </channel>\n';
+    xml += '</rss>';
+
     return ok({
-      body: result.xml,
+      body: xml,
       headers: {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',

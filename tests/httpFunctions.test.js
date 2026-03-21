@@ -19,6 +19,7 @@ import {
   get_serviceWorker,
   get_robots,
   get_facebookCustomAudience,
+  get_blogRssFeed,
   post_klaviyoWebhook,
 } from '../src/backend/http-functions.js';
 
@@ -1459,5 +1460,74 @@ describe('get_robots completeness', () => {
   it('sitemap URLs use full canonical domain', () => {
     const result = get_robots();
     expect(result.body).toContain('https://www.carolinafutons.com/');
+  });
+});
+
+// ── get_blogRssFeed ──────────────────────────────────────────────────
+
+describe('get_blogRssFeed', () => {
+  it('returns status 200', () => {
+    const result = get_blogRssFeed();
+    expect(result.status).toBe(200);
+  });
+
+  it('returns application/rss+xml content type', () => {
+    const result = get_blogRssFeed();
+    expect(result.headers['Content-Type']).toContain('application/rss+xml');
+  });
+
+  it('body starts with XML declaration', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toMatch(/^<\?xml version="1\.0"/);
+  });
+
+  it('body contains rss version 2.0 element', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('<rss version="2.0"');
+  });
+
+  it('body contains channel element', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('<channel>');
+    expect(result.body).toContain('</channel>');
+  });
+
+  it('body contains feed title', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('Carolina Futons Blog');
+  });
+
+  it('body contains blog link', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('carolinafutons.com/blog');
+  });
+
+  it('body contains atom:link self-reference', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('rel="self"');
+    expect(result.body).toContain('_functions/blogRssFeed');
+  });
+
+  it('body contains at least one item (real blog data)', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('<item>');
+    expect(result.body).toContain('</item>');
+  });
+
+  it('items contain title, link, and guid', () => {
+    const result = get_blogRssFeed();
+    expect(result.body).toContain('<title>');
+    expect(result.body).toContain('<link>');
+    expect(result.body).toContain('<guid');
+  });
+
+  it('has Cache-Control header', () => {
+    const result = get_blogRssFeed();
+    expect(result.headers['Cache-Control']).toContain('max-age=3600');
+  });
+
+  it('closes with </rss>', () => {
+    const result = get_blogRssFeed();
+    expect(result.body.trimEnd()).toMatch(/<\/rss>$/);
   });
 });

@@ -118,6 +118,29 @@ export function buildAuthorBio() {
 }
 
 /**
+ * Paginate an array of posts.
+ * @param {Array} posts - Full filtered post list
+ * @param {number} page - 1-based page number
+ * @param {number} [perPage=9] - Items per page; falsy or ≤0 falls back to 9
+ * @returns {{ items: Array, currentPage: number, totalPages: number, totalCount: number }}
+ *   totalPages is always ≥ 1 (even for empty posts) so currentPage ≤ totalPages always holds.
+ */
+export function getPaginatedPosts(posts, page, perPage) {
+  const safePosts = Array.isArray(posts) ? posts : [];
+  const safePerPage = (perPage && perPage > 0) ? perPage : 9;
+  const totalCount = safePosts.length;
+  const totalPages = totalCount === 0 ? 1 : Math.ceil(totalCount / safePerPage);
+  const safePage = Math.max(1, Math.min(page || 1, totalPages));
+  const start = (safePage - 1) * safePerPage;
+  return {
+    items: safePosts.slice(start, start + safePerPage),
+    currentPage: safePage,
+    totalPages,
+    totalCount,
+  };
+}
+
+/**
  * Build social share URLs for a blog post.
  * @param {string|null} url - Full URL of the post
  * @param {string|null} title - Post title
