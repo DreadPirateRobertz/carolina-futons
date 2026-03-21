@@ -142,6 +142,7 @@ async function initProductPage() {
       { name: 'collectionProducts', init: loadCollectionProducts, critical: false },
       { name: 'recentlyViewed', init: loadRecentlyViewed, critical: false },
       { name: 'alsoBought', init: loadAlsoBought, critical: false },
+      { name: 'recommendations', init: async () => { const m = await import('public/ProductRecommendations.js'); m.initRecommendationsCarousel($w, state); }, critical: false },
       // Dynamically imported below-fold components
       { name: 'productReviews', init: async () => { const m = await import('public/ProductReviews.js'); m.initProductReviews($w, state); }, critical: false },
       { name: 'financingOptions', init: async () => { const m = await import('public/ProductFinancing.js'); m.initFinancingOptions($w, state); }, critical: false },
