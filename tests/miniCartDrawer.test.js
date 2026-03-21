@@ -159,6 +159,26 @@ describe('initMiniCartDrawer', () => {
     initMiniCartDrawer($w);
     expect($w('#miniCartCheckoutBtn').accessibility.ariaLabel).toBe('Proceed to checkout');
   });
+
+  it('registers onItemReady on the repeater exactly once', () => {
+    initMiniCartDrawer($w);
+    expect($w('#miniCartRepeater').onItemReady).toHaveBeenCalledTimes(1);
+  });
+
+  // Close handler behavior
+  it('close button handler invokes closeMiniCart (hides drawer)', () => {
+    initMiniCartDrawer($w);
+    const handler = $w('#miniCartClose').onClick.mock.calls[0][0];
+    handler();
+    expect($w('#miniCartDrawer').hide).toHaveBeenCalledTimes(2); // once on init + once on close
+  });
+
+  it('overlay click handler invokes closeMiniCart (hides overlay)', () => {
+    initMiniCartDrawer($w);
+    const handler = $w('#miniCartOverlay').onClick.mock.calls[0][0];
+    handler();
+    expect($w('#miniCartOverlay').hide).toHaveBeenCalledTimes(2); // init + close
+  });
 });
 
 // ── openMiniCart ─────────────────────────────────────────────────────
@@ -201,16 +221,31 @@ describe('openMiniCart', () => {
     expect($w('#cartItemCount').text).toBe('3');
   });
 
-  it('announces drawer open to screen readers', () => {
+  it('announces plural items to screen readers', () => {
     const cart = makeCart();
     openMiniCart($w, cart);
     expect(mockAnnounce).toHaveBeenCalledWith($w, 'Cart opened with 3 items');
+  });
+
+  it('announces singular item when count is 1', () => {
+    const cart = { lineItems: [{ _id: 'x', quantity: 1, product: { name: 'X', mediaItems: [{ src: '' }] }, priceData: { price: 10 } }] };
+    openMiniCart($w, cart);
+    expect(mockAnnounce).toHaveBeenCalledWith($w, 'Cart opened with 1 item');
   });
 
   it('focuses close button after opening', () => {
     const cart = makeCart();
     openMiniCart($w, cart);
     expect($w('#miniCartClose').focus).toHaveBeenCalled();
+  });
+
+  it('handles null cart gracefully', () => {
+    expect(() => openMiniCart($w, null)).not.toThrow();
+    expect($w('#miniCartSubtotal').text).toContain('0.00');
+  });
+
+  it('handles undefined cart gracefully', () => {
+    expect(() => openMiniCart($w, undefined)).not.toThrow();
   });
 });
 
@@ -234,6 +269,14 @@ describe('closeMiniCart', () => {
     const [effect] = $w('#miniCartDrawer').hide.mock.calls[0];
     expect(effect).toBe('slide');
   });
+
+  it('uses slide from bottom animation on mobile', () => {
+    mockIsMobile.mockReturnValue(true);
+    closeMiniCart($w);
+    const [effect, opts] = $w('#miniCartDrawer').hide.mock.calls[0];
+    expect(effect).toBe('slide');
+    expect(opts?.direction).toBe('bottom');
+  });
 });
 
 // ── renderCartItems ──────────────────────────────────────────────────
@@ -254,15 +297,33 @@ describe('renderCartItems — with items', () => {
     expect($w('#miniCartEmpty').hide).toHaveBeenCalled();
   });
 
-  it('registers onItemReady handler', () => {
+  it('does NOT re-register onItemReady (handler registered in init only)', () => {
     renderCartItems($w, makeCart().lineItems);
-    expect($w('#miniCartRepeater').onItemReady).toHaveBeenCalled();
+    // onItemReady should not have been called by renderCartItems
+    expect($w('#miniCartRepeater').onItemReady).not.toHaveBeenCalled();
   });
 
+  it('falls back to cartItemId when _id is missing', () => {
+    const items = [{
+      cartItemId: 'legacy-id',
+      quantity: 1,
+      product: { name: 'F', mediaItems: [{ src: '' }] },
+      priceData: { price: 10 },
+    }];
+    renderCartItems($w, items);
+    expect($w('#miniCartRepeater').data[0]._id).toBe('legacy-id');
+  });
+});
+
+describe('renderCartItems — onItemReady binding (via init)', () => {
+  function getItemReadyHandler() {
+    initMiniCartDrawer($w);
+    return $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
+  }
+
   it('onItemReady sets image src and alt', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'Futon Frame', mediaItems: [{ src: 'wix:image://v1/abc.jpg' }] }, priceData: { price: 199.99 } };
     handler($item, itemData);
     expect($item('#cartItemImage').src).toBe('wix:image://v1/abc.jpg');
@@ -270,18 +331,16 @@ describe('renderCartItems — with items', () => {
   });
 
   it('onItemReady sets name text', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'Futon Frame', mediaItems: [{ src: 'img.jpg' }] }, priceData: { price: 199.99 } };
     handler($item, itemData);
     expect($item('#cartItemName').text).toBe('Futon Frame');
   });
 
   it('onItemReady sets price × quantity', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'Futon Frame', mediaItems: [{ src: 'img.jpg' }] }, priceData: { price: 199.99 } };
     handler($item, itemData);
     // 199.99 * 2 = 399.98
@@ -289,36 +348,32 @@ describe('renderCartItems — with items', () => {
   });
 
   it('onItemReady sets qty input value', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 3, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
     expect($item('#cartItemQty').value).toBe(3);
   });
 
   it('onItemReady wires qty onChange', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
     expect($item('#cartItemQty').onChange).toHaveBeenCalled();
   });
 
   it('onItemReady wires remove button onClick', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-2', quantity: 1, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
     expect($item('#cartItemRemove').onClick).toHaveBeenCalled();
   });
 
   it('onItemReady sets remove ariaLabel with product name', () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 1, product: { name: 'Futon Frame', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
     expect($item('#cartItemRemove').accessibility.ariaLabel).toBe('Remove Futon Frame from cart');
@@ -348,13 +403,17 @@ describe('renderCartItems — empty cart', () => {
 // ── qty update via onChange ───────────────────────────────────────────
 
 describe('qty update via onChange', () => {
+  function getItemReadyHandler() {
+    initMiniCartDrawer($w);
+    return $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
+  }
+
   it('calls updateCartItemQuantity with clamped value', async () => {
-    mockUpdateCartItemQuantity.mockResolvedValue({ lineItems: [] });
+    mockUpdateCartItemQuantity.mockResolvedValue({});
     mockGetCurrentCart.mockResolvedValue(emptyCart());
 
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
 
@@ -366,9 +425,8 @@ describe('qty update via onChange', () => {
   });
 
   it('ignores qty change if same as current', async () => {
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
 
@@ -378,19 +436,36 @@ describe('qty update via onChange', () => {
 
     expect(mockUpdateCartItemQuantity).not.toHaveBeenCalled();
   });
+
+  it('handles updateCartItemQuantity rejection gracefully', async () => {
+    mockUpdateCartItemQuantity.mockRejectedValue(new Error('API down'));
+
+    const handler = getItemReadyHandler();
+    const { $item } = createItemScope();
+    const itemData = { _id: 'item-1', quantity: 2, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
+    handler($item, itemData);
+
+    const qtyChangeHandler = $item('#cartItemQty').onChange.mock.calls[0][0];
+    $item('#cartItemQty').value = 5;
+    // Should not throw even when API fails
+    await expect(qtyChangeHandler({ target: { value: 5 } })).resolves.not.toThrow();
+  });
 });
 
 // ── remove item ───────────────────────────────────────────────────────
 
 describe('remove item', () => {
-  it('calls removeCartItem and re-renders after removal', async () => {
-    const updatedCart = { lineItems: [makeCart().lineItems[1]] };
-    mockRemoveCartItem.mockResolvedValue(updatedCart);
-    mockGetCurrentCart.mockResolvedValue(updatedCart);
+  function getItemReadyHandler() {
+    initMiniCartDrawer($w);
+    return $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
+  }
 
-    renderCartItems($w, makeCart().lineItems);
+  it('calls removeCartItem with the correct item id', async () => {
+    mockRemoveCartItem.mockResolvedValue({});
+    mockGetCurrentCart.mockResolvedValue(emptyCart());
+
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
 
@@ -401,20 +476,30 @@ describe('remove item', () => {
   });
 
   it('announces removal to screen readers', async () => {
-    const updatedCart = emptyCart();
-    mockRemoveCartItem.mockResolvedValue(updatedCart);
-    mockGetCurrentCart.mockResolvedValue(updatedCart);
+    mockRemoveCartItem.mockResolvedValue({});
+    mockGetCurrentCart.mockResolvedValue(emptyCart());
 
-    renderCartItems($w, makeCart().lineItems);
+    const handler = getItemReadyHandler();
     const { $item } = createItemScope();
-    const handler = $w('#miniCartRepeater').onItemReady.mock.calls[0][0];
     const itemData = { _id: 'item-1', quantity: 2, product: { name: 'Futon Frame', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
     handler($item, itemData);
 
     const removeHandler = $item('#cartItemRemove').onClick.mock.calls[0][0];
     await removeHandler();
 
-    expect(mockAnnounce).toHaveBeenCalledWith($w, 'Futon Frame removed from cart');
+    expect(mockAnnounce).toHaveBeenCalledWith(expect.anything(), 'Futon Frame removed from cart');
+  });
+
+  it('handles removeCartItem rejection gracefully', async () => {
+    mockRemoveCartItem.mockRejectedValue(new Error('Network error'));
+
+    const handler = getItemReadyHandler();
+    const { $item } = createItemScope();
+    const itemData = { _id: 'item-1', quantity: 1, product: { name: 'F', mediaItems: [{ src: '' }] }, priceData: { price: 10 } };
+    handler($item, itemData);
+
+    const removeHandler = $item('#cartItemRemove').onClick.mock.calls[0][0];
+    await expect(removeHandler()).resolves.not.toThrow();
   });
 });
 

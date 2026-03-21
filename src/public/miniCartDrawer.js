@@ -4,19 +4,19 @@
  * on every page without a navigation event. On desktop it slides in from the
  * right; on mobile it rises as a bottom sheet.
  *
- * Triggers: cart icon click (wired in masterPage) and add-to-cart events
- * (via the exported openMiniCart function called from initSideCartAutoOpen).
+ * Triggers: cart icon click (wired in masterPage via initCartIconForMiniCart)
+ * and add-to-cart events (via openMiniCart called from initMiniCartAutoOpen).
  *
- * Required elements (masterPage editor):
- *   #miniCartDrawer   Box/LightBox — the drawer container
- *   #miniCartOverlay  Box — darkened backdrop
- *   #miniCartClose    Button — × close button
- *   #miniCartRepeater Repeater — one slot per line item
- *   #miniCartSubtotal Text — running subtotal
+ * Required elements (masterPage editor — all must be Box type, NOT LightBox):
+ *   #miniCartDrawer      Box — the drawer container
+ *   #miniCartOverlay     Box — darkened backdrop
+ *   #miniCartClose       Button — × close button
+ *   #miniCartRepeater    Repeater — one slot per line item
+ *   #miniCartSubtotal    Text — running subtotal
  *   #miniCartCheckoutBtn Button — 'Proceed to Checkout' CTA
- *   #miniCartViewBtn  Button — 'View Cart' link
- *   #miniCartEmpty    Box — empty-state message
- *   #cartItemCount    Text — item-count badge in header
+ *   #miniCartViewBtn     Button — 'View Cart' link
+ *   #miniCartEmpty       Box — empty-state message
+ *   #cartItemCount       Text — item-count badge in header
  *
  *   Inside each repeater slot:
  *   #cartItemImage  Image
@@ -25,8 +25,9 @@
  *   #cartItemQty    NumberInput
  *   #cartItemRemove Button
  *
- * Dependencies: public/cartService, public/a11yHelpers.js, public/mobileHelpers,
- *               wix-location-frontend.
+ * Dependencies: public/cartService (getCurrentCart, updateCartItemQuantity,
+ *   removeCartItem, safeMultiply, clampQuantity), public/a11yHelpers.js
+ *   (announce), public/mobileHelpers (isMobile), wix-location-frontend.
  */
 
 import { getCurrentCart, updateCartItemQuantity, removeCartItem, safeMultiply, clampQuantity } from 'public/cartService';
@@ -36,7 +37,8 @@ import wixLocationFrontend from 'wix-location-frontend';
 
 // ── Internal State ───────────────────────────────────────────────────
 
-// Cached $w reference so re-render helpers can reach the page scope
+// Cached $w reference so the onItemReady closure and async re-render helpers
+// can reach the page scope after init.
 let _$w = null;
 
 /**
@@ -50,7 +52,8 @@ export function clearAll() {
 
 /**
  * Wire up the mini-cart drawer. Call once from masterPage $w.onReady.
- * Sets ARIA attributes, hides drawer/overlay, and registers click handlers.
+ * Sets ARIA attributes, hides drawer/overlay, registers all click handlers,
+ * and registers the repeater's onItemReady handler exactly once.
  *
  * @param {Function} $w - Wix $w page selector
  */
@@ -100,13 +103,21 @@ export function initMiniCartDrawer($w) {
       try { wixLocationFrontend.to('/cart'); } catch (e) {}
     });
   } catch (e) {}
+
+  // Register onItemReady ONCE here so re-renders never stack duplicate handlers.
+  // The handler always binds to the itemData provided by the repeater at render time.
+  try {
+    $w('#miniCartRepeater').onItemReady(($item, itemData) => {
+      _bindRepeaterItem($item, itemData);
+    });
+  } catch (e) {}
 }
 
 /**
  * Open the mini-cart drawer and populate it from a cart object.
  *
  * @param {Function} $w - Wix $w page selector
- * @param {Object} cart - Cart object with lineItems array
+ * @param {Object} [cart] - Cart object with lineItems array; null/undefined treated as empty
  */
 export function openMiniCart($w, cart) {
   _$w = $w;
@@ -119,7 +130,7 @@ export function openMiniCart($w, cart) {
   const totalQty = lineItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   updateCartCount($w, totalQty);
 
-  // Show with animation
+  // Show with animation — desktop slides from right; mobile rises from bottom
   const mobile = isMobile();
   const openOpts = mobile
     ? { direction: 'bottom', duration: 300 }
@@ -128,7 +139,6 @@ export function openMiniCart($w, cart) {
   try { $w('#miniCartDrawer').show('slide', openOpts); } catch (e) {}
   try { $w('#miniCartOverlay').show(); } catch (e) {}
 
-  // Accessibility
   announce($w, `Cart opened with ${totalQty} item${totalQty !== 1 ? 's' : ''}`);
   try { $w('#miniCartClose').focus(); } catch (e) {}
 }
@@ -154,6 +164,7 @@ export function closeMiniCart($w) {
 /**
  * Populate the repeater from a line items array.
  * Shows empty state when array is empty; shows repeater + CTA buttons otherwise.
+ * Safe to call repeatedly — does NOT re-register onItemReady (registered once in init).
  *
  * @param {Function} $w - Wix $w page selector
  * @param {Array} lineItems - Cart line items
@@ -175,15 +186,14 @@ export function renderCartItems($w, lineItems) {
   try { $w('#miniCartCheckoutBtn').show(); } catch (e) {}
   try { $w('#miniCartViewBtn').show(); } catch (e) {}
 
-  // Build repeater data (each item needs a unique _id for Wix)
+  // Build repeater data — each entry needs a unique _id for Wix to track slots
   const repeaterData = lineItems.map(item => ({ ...item, _id: item._id || item.cartItemId }));
 
   try {
-    $w('#miniCartRepeater').onItemReady(($item, itemData) => {
-      _bindRepeaterItem($w, $item, itemData);
-    });
     $w('#miniCartRepeater').data = repeaterData;
-  } catch (e) {}
+  } catch (e) {
+    console.error('[miniCartDrawer] failed to set repeater data:', e?.message);
+  }
 }
 
 /**
@@ -207,10 +217,35 @@ export function updateCartCount($w, count) {
 // ── Internal Helpers ─────────────────────────────────────────────────
 
 /**
- * Bind a single repeater item's child elements.
+ * Re-fetch the cart and refresh all drawer state (repeater, subtotal, count).
+ * Shared by qty-change and remove handlers to avoid duplication.
  * @private
  */
-function _bindRepeaterItem($w, $item, itemData) {
+async function _refreshDrawer() {
+  if (!_$w) return;
+  try {
+    const updatedCart = await getCurrentCart();
+    const items = updatedCart?.lineItems || [];
+    renderCartItems(_$w, items);
+    _updateSubtotal(_$w, items);
+    const total = items.reduce((s, i) => s + (i.quantity || 0), 0);
+    updateCartCount(_$w, total);
+  } catch (err) {
+    console.error('[miniCartDrawer] drawer refresh failed:', err?.message);
+  }
+}
+
+/**
+ * Bind a single repeater item's child elements.
+ * Called by the onItemReady handler registered once in initMiniCartDrawer.
+ *
+ * @param {Function} $item - Wix scoped selector for the repeater slot
+ * @param {Object} itemData - Line item data: { _id, quantity, product, priceData }
+ *   product: { name: string, mediaItems: Array<{ src: string }> }
+ *   priceData: { price: number }
+ * @private
+ */
+function _bindRepeaterItem($item, itemData) {
   const { _id, quantity, product, priceData } = itemData;
   const name = product?.name || '';
   const imgSrc = product?.mediaItems?.[0]?.src || '';
@@ -226,28 +261,22 @@ function _bindRepeaterItem($w, $item, itemData) {
   // Name
   try { $item('#cartItemName').text = name; } catch (e) {}
 
-  // Price (line total)
+  // Price (line total: price × qty)
   try { $item('#cartItemPrice').text = `$${lineTotal.toFixed(2)}`; } catch (e) {}
 
   // Qty input
   try { $item('#cartItemQty').value = quantity; } catch (e) {}
 
-  // Qty change → update cart
+  // Qty change → update cart, then refresh drawer
   try {
     $item('#cartItemQty').onChange(async (event) => {
       const newQty = clampQuantity(event.target?.value ?? $item('#cartItemQty').value);
       if (newQty === quantity) return;
       try {
         await updateCartItemQuantity(_id, newQty);
-        const updatedCart = await getCurrentCart();
-        if (_$w) {
-          renderCartItems(_$w, updatedCart?.lineItems || []);
-          _updateSubtotal(_$w, updatedCart?.lineItems || []);
-          const newTotal = (updatedCart?.lineItems || []).reduce((s, i) => s + (i.quantity || 0), 0);
-          updateCartCount(_$w, newTotal);
-        }
+        await _refreshDrawer();
       } catch (err) {
-        console.error('[miniCartDrawer] qty update failed:', err.message);
+        console.error('[miniCartDrawer] qty update failed:', err?.message);
       }
     });
   } catch (e) {}
@@ -259,16 +288,10 @@ function _bindRepeaterItem($w, $item, itemData) {
     removeBtn.onClick(async () => {
       try {
         await removeCartItem(_id);
-        announce($w, `${name} removed from cart`);
-        const updatedCart = await getCurrentCart();
-        if (_$w) {
-          renderCartItems(_$w, updatedCart?.lineItems || []);
-          _updateSubtotal(_$w, updatedCart?.lineItems || []);
-          const newTotal = (updatedCart?.lineItems || []).reduce((s, i) => s + (i.quantity || 0), 0);
-          updateCartCount(_$w, newTotal);
-        }
+        if (_$w) announce(_$w, `${name} removed from cart`);
+        await _refreshDrawer();
       } catch (err) {
-        console.error('[miniCartDrawer] remove failed:', err.message);
+        console.error('[miniCartDrawer] remove failed:', err?.message);
       }
     });
   } catch (e) {}
