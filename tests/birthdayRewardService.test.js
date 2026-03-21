@@ -318,6 +318,51 @@ describe('checkAndSendBirthdayRewards', () => {
     expect(result.errors).toBeGreaterThan(0);
     expect(result.sent).toBe(0);
   });
+
+  it('counts error when sendEmail throws — no reward recorded', async () => {
+    __store['Members/PrivateMembersData'].push(makeMember());
+    mockEmail.mockRejectedValueOnce(new Error('SMTP failure'));
+
+    const result = await checkAndSendBirthdayRewards({
+      now: TODAY,
+      createCoupon: mockCoupon,
+      sendEmail: mockEmail,
+    });
+
+    expect(result.sent).toBe(0);
+    expect(result.errors).toBe(1);
+    // No dedup record written since email failed before recordReward
+    expect(__store['BirthdayRewards']).toHaveLength(0);
+  });
+
+  it('counts error when recordReward (wixData.insert) throws', async () => {
+    __store['Members/PrivateMembersData'].push(makeMember());
+    wixDataMock.default.insert.mockRejectedValueOnce(new Error('Insert timeout'));
+
+    const result = await checkAndSendBirthdayRewards({
+      now: TODAY,
+      createCoupon: mockCoupon,
+      sendEmail: mockEmail,
+    });
+
+    expect(result.sent).toBe(0);
+    expect(result.errors).toBe(1);
+  });
+
+  it('counts error when dedup query (BirthdayRewards) throws', async () => {
+    __store['Members/PrivateMembersData'].push(makeMember());
+    __queryErrors['BirthdayRewards'] = new Error('Dedup query failed');
+
+    const result = await checkAndSendBirthdayRewards({
+      now: TODAY,
+      createCoupon: mockCoupon,
+      sendEmail: mockEmail,
+    });
+
+    expect(result.sent).toBe(0);
+    expect(result.errors).toBe(1);
+    expect(mockCoupon).not.toHaveBeenCalled();
+  });
 });
 
 // ── checkAndSendAnniversaryRewards ────────────────────────────────
