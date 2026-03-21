@@ -43,8 +43,8 @@ beforeEach(() => {
 // ── isValidImageUrl ──────────────────────────────────────────────
 
 describe('isValidImageUrl', () => {
-  it('accepts http URL', () => {
-    expect(isValidImageUrl('http://example.com/photo.jpg')).toBe(true);
+  it('rejects http:// URL (https only)', () => {
+    expect(isValidImageUrl('http://example.com/photo.jpg')).toBe(false);
   });
 
   it('accepts https URL', () => {
@@ -97,8 +97,8 @@ describe('isValidImageUrl', () => {
     expect(isValidImageUrl('http://192.168.1.1/photo.jpg')).toBe(false);
   });
 
-  it('accepts a real public IP (not private)', () => {
-    expect(isValidImageUrl('http://8.8.8.8/photo.jpg')).toBe(true);
+  it('accepts a real public IP over https (not private)', () => {
+    expect(isValidImageUrl('https://8.8.8.8/photo.jpg')).toBe(true);
   });
 });
 

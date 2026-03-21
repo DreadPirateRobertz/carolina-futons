@@ -45,8 +45,9 @@ function _checkRateLimit() {
 
 // Private/loopback IP ranges that must never be forwarded to Vision API.
 // Prevents SSRF attacks where a crafted URL could reach internal services.
-// Covers: localhost, 127.x.x.x, 0.0.0.0, 10.x.x.x, 172.16-31.x.x, 192.168.x.x, ::1, fc/fd IPv6.
-const PRIVATE_IP_RE = /^https?:\/\/(localhost|127(?:\.\d{1,3}){3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|\[?(?:::1|fc[\da-f]{2}:|fd[\da-f]{2}:))(?::\d+)?(?:\/|$)/i;
+// Covers: localhost, 127.x.x.x, 0.x.x.x, 10.x.x.x, 169.254.x.x (link-local/AWS metadata),
+//         172.16-31.x.x, 192.168.x.x, ::1, fc/fd IPv6.
+const PRIVATE_IP_RE = /^https?:\/\/(localhost|127(?:\.\d{1,3}){3}|0(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|169\.254(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2}|\[?(?:::1|fc[\da-f]{2}:|fd[\da-f]{2}:))(?::\d+)?(?:\/|$)/i;
 
 // Style tags we extract and surface to the frontend
 export const STYLE_TAGS = ['modern', 'rustic', 'industrial', 'mid-century', 'coastal', 'traditional', 'minimalist', 'bohemian'];
@@ -130,7 +131,7 @@ async function loadVisionKey() {
 export function isValidImageUrl(url) {
   if (typeof url !== 'string') return false;
   const cleaned = url.trim();
-  if (!cleaned.startsWith('http://') && !cleaned.startsWith('https://')) return false;
+  if (!cleaned.startsWith('https://')) return false; // https only — no cleartext http://
   if (cleaned.length > 2000) return false;
   if (PRIVATE_IP_RE.test(cleaned)) return false; // block SSRF via private/loopback IPs
   return true;

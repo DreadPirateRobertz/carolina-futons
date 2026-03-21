@@ -318,7 +318,7 @@ export async function post_klarna_confirm(request) {
     // 5. Call Klarna confirm API.
     // Klarna v3: POST /checkout/v3/orders/{id}/confirm acknowledges the order.
     const { auth, apiBase } = await getKlarnaConfig();
-    const klarnaResp = await fetch(`${apiBase}/checkout/v3/orders/${klarnaOrderId}/confirm`, {
+    const klarnaResp = await fetch(`${apiBase}/checkout/v3/orders/${encodeURIComponent(klarnaOrderId)}/confirm`, {
       method: 'POST',
       headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
