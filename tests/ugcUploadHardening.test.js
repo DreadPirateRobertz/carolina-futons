@@ -68,6 +68,12 @@ describe('CF-rr8d Check 1: isWixMediaUrl — EXIF strip via Wix Media Manager en
   it('rejects URL with wix domain as substring of another domain', () => {
     expect(isWixMediaUrl('https://notwixstatic.com/media/photo.jpg')).toBe(false);
   });
+
+  it('rejects path-injection bypass with .wixmp.com in path', () => {
+    // Attacker crafts URL: https://attacker.com/.wixmp.com/evil.jpg
+    expect(isWixMediaUrl('https://attacker.com/.wixmp.com/evil.jpg')).toBe(false);
+    expect(isWixMediaUrl('https://evil.com/redirect/.wixmp.com/track.gif')).toBe(false);
+  });
 });
 
 // ── Check 2: UUID Filenames ──────────────────────────────────────────────

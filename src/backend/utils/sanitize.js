@@ -116,8 +116,8 @@ export function isWixMediaUrl(url) {
   if (trimmed.startsWith('wix:video://')) return true;
   // Wix CDN static media
   if (/^https:\/\/static\.wixstatic\.com\/media\//i.test(trimmed)) return true;
-  // Wix user uploads CDN
-  if (/^https:\/\/.*\.wixmp\.com\//i.test(trimmed)) return true;
+  // Wix user uploads CDN — [^/]* prevents path-injection bypass (e.g. attacker.com/.wixmp.com/)
+  if (/^https:\/\/[^/]*\.wixmp\.com\//i.test(trimmed)) return true;
   return false;
 }
 
@@ -137,7 +137,8 @@ export function generateUUIDFilename(extension = 'jpg') {
   // Simple UUID v4 generation (crypto not available in Wix Velo backend)
   const hex = () => Math.floor(Math.random() * 16).toString(16);
   const seg = (n) => Array.from({ length: n }, hex).join('');
-  const uuid = `${seg(8)}-${seg(4)}-4${seg(3)}-${hex().replace(/[^89ab]/, '8')}${seg(3)}-${seg(12)}`;
+  const variant = ['8', '9', 'a', 'b'][Math.floor(Math.random() * 4)];
+  const uuid = `${seg(8)}-${seg(4)}-4${seg(3)}-${variant}${seg(3)}-${seg(12)}`;
   return `${uuid}.${ext}`;
 }
 
