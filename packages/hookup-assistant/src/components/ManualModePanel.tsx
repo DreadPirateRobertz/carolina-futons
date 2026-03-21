@@ -2,7 +2,7 @@
  * ManualModePanel — Manual Mode UI for element ID hookup.
  *
  * Covers S10 (baseline), S5 (type validator), S6 (default state setter),
- * and S4 (ID auto-apply).
+ * S4 (ID auto-apply), and S14 (Repeater Guard).
  *
  * S10 — Fallback manual mode:
  *   - Shows target Velo ID in large monospace font
@@ -25,12 +25,30 @@
  *   - Shows applying/success/error feedback
  *   - Auto-advances to next element on success
  *   - Hidden when editor is not available (falls back to manual copy-paste)
+ *
+ * S14 — Repeater Guard:
+ *   - Detects when the current element is a repeater child (lives in a template)
+ *   - Shows step-by-step "Enter Repeater Template" guidance before child IDs;
+ *     this early-return suppresses all normal element UI until the guard is dismissed
+ *   - "✓ I'm in the template" button (aria-label: "Confirm entered repeater template: <id>")
+ *     unlocks child ID hookup for that repeater section
+ *   - handleMarkDone also blocks on repeaterGuard to prevent Tab-key from advancing
+ *     past the guard even though the Mark Done button is not rendered while guard is active
+ *   - Guard resets when the user switches pages (parent resets via useRepeaterGuard.resetAll)
  */
 
 import React, { useCallback, useEffect, useRef } from 'react';
 import type { ElementDef, WixElementType } from '../types/index.js';
 import type { ApplyStatus } from '../hooks/useIdApply.js';
 import { useClipboard } from '../hooks/useClipboard.js';
+
+/** S14: Repeater guard info — set when the current element is a repeater child. */
+export interface RepeaterGuardInfo {
+  /** The repeater element ID (e.g. "featuredRepeater") to instruct the user to enter. */
+  repeaterId: string;
+  /** The section name for display context. */
+  sectionName: string;
+}
 
 interface ManualModePanelProps {
   pageName: string;
@@ -46,6 +64,52 @@ interface ManualModePanelProps {
   onApplyId?: () => void;
   /** S4: current apply status for feedback display */
   applyStatus?: ApplyStatus;
+  /**
+   * S14: When non-null, the current element is a repeater child and the guard
+   * is active — show template-entry guidance instead of the element ID.
+   */
+  repeaterGuard?: RepeaterGuardInfo | null;
+  /** S14: Called when the user confirms they have entered the repeater template. */
+  onEnterRepeaterTemplate?: () => void;
+}
+
+// ---------------------------------------------------------------------------
+// S14: Repeater Guard
+
+interface RepeaterGuardProps {
+  repeaterId: string;
+  sectionName: string;
+  onEnter: () => void;
+}
+
+function RepeaterGuard({ repeaterId, sectionName, onEnter }: RepeaterGuardProps) {
+  return (
+    <div style={s.root}>
+      <div style={s.guardBanner}>
+        <div style={s.guardIcon}>📦</div>
+        <div style={s.guardTitle}>Repeater Template Required</div>
+        <div style={s.guardSubtitle}>
+          <strong>{sectionName}</strong> elements live inside{' '}
+          <span style={s.guardCode}>#{repeaterId}</span>.
+          You must enter the repeater template before assigning child IDs.
+        </div>
+      </div>
+
+      <div style={s.instructions}>
+        <div style={s.step}>1. Click <strong>#{repeaterId}</strong> on the canvas to select it</div>
+        <div style={s.step}>2. Click <strong>Edit Repeater</strong> (or double-click to enter template)</div>
+        <div style={s.step}>3. Work within the single template card shown</div>
+      </div>
+
+      <button
+        style={{ ...s.btn, ...s.btnEnterTemplate }}
+        onClick={onEnter}
+        aria-label={`Confirm entered repeater template: ${repeaterId}`}
+      >
+        ✓ I'm in the template
+      </button>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -99,6 +163,8 @@ export function ManualModePanel({
   onApplyDefaultState,
   onApplyId,
   applyStatus = 'idle',
+  repeaterGuard = null,
+  onEnterRepeaterTemplate,
 }: ManualModePanelProps) {
   const { copy, copied } = useClipboard();
   const markDoneRef = useRef<HTMLButtonElement>(null);
@@ -114,9 +180,10 @@ export function ManualModePanel({
   const handleMarkDone = useCallback(() => {
     if (!currentElement) return; // completion state — no element to advance past
     if (typeMismatch) return;
+    if (repeaterGuard) return; // S14: guard active — block Tab-key advance (Mark Done button not rendered)
     onMarkDone();
     applyDefaultStateIfNeeded();
-  }, [currentElement, typeMismatch, onMarkDone, applyDefaultStateIfNeeded]);
+  }, [currentElement, typeMismatch, repeaterGuard, onMarkDone, applyDefaultStateIfNeeded]);
 
   const handleOverride = useCallback(() => {
     onMarkDone();
@@ -140,6 +207,25 @@ export function ManualModePanel({
       <div style={s.root}>
         <CompletionState pageName={pageName} total={totalCount} />
       </div>
+    );
+  }
+
+  // S14: Show repeater guard when the current element is a repeater child
+  // and the user hasn't yet confirmed entering the template.
+  // This early return suppresses all normal element UI (ID block, Copy, Mark Done, etc.)
+  if (repeaterGuard) {
+    if (!onEnterRepeaterTemplate) {
+      console.warn(
+        '[ManualModePanel] repeaterGuard is set but onEnterRepeaterTemplate is not provided — ' +
+        '"I\'m in the template" button will be a no-op. Pass onEnterRepeaterTemplate alongside repeaterGuard.',
+      );
+    }
+    return (
+      <RepeaterGuard
+        repeaterId={repeaterGuard.repeaterId}
+        sectionName={repeaterGuard.sectionName}
+        onEnter={onEnterRepeaterTemplate ?? (() => {})}
+      />
     );
   }
 
@@ -450,6 +536,44 @@ const s: Record<string, React.CSSProperties> = {
     textDecoration: 'underline',
     padding: '0',
     alignSelf: 'center',
+  },
+  // S14: Repeater Guard styles
+  guardBanner: {
+    backgroundColor: '#eef2ff',
+    border: '1px solid #c7d2fe',
+    borderRadius: '6px',
+    padding: '12px 14px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
+  guardIcon: {
+    fontSize: '28px',
+    lineHeight: 1,
+    marginBottom: '2px',
+  },
+  guardTitle: {
+    fontWeight: 700,
+    fontSize: '13px',
+    color: '#312e81',
+  },
+  guardSubtitle: {
+    fontSize: '12px',
+    color: '#4338ca',
+    lineHeight: 1.5,
+  },
+  guardCode: {
+    fontFamily: 'monospace',
+    fontWeight: 700,
+    backgroundColor: '#e0e7ff',
+    padding: '1px 5px',
+    borderRadius: '3px',
+  },
+  btnEnterTemplate: {
+    backgroundColor: '#4338ca',
+    color: '#fff',
   },
   complete: {
     textAlign: 'center',

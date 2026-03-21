@@ -10,6 +10,7 @@ import {
   getElementDef,
   getAllElements,
   getUnhookedElements,
+  getRepeaterSection,
 } from '../src/data/pages.js';
 import type { WixElementType } from '../src/types/index.js';
 
@@ -188,5 +189,63 @@ describe('getUnhookedElements', () => {
 
   it('returns [] for unknown page', () => {
     expect(getUnhookedElements('Nonexistent', [])).toEqual([]);
+  });
+});
+
+// ── getRepeaterSection (S14) ───────────────────────────────────────────────
+
+describe('getRepeaterSection — S14 Repeater Guard', () => {
+  it('returns null for an element that is NOT a repeater child', () => {
+    // heroTitle is a direct section element, not a child
+    expect(getRepeaterSection('Home', 'heroTitle')).toBeNull();
+  });
+
+  it('returns the section for a known repeater child element', () => {
+    // featuredCard is a child of the Featured Products section (repeater: featuredRepeater)
+    const section = getRepeaterSection('Home', 'featuredCard');
+    expect(section).not.toBeNull();
+    expect(section?.repeater).toBe('featuredRepeater');
+  });
+
+  it('returned section has the children array containing the element', () => {
+    const section = getRepeaterSection('Home', 'featuredCard');
+    expect(section?.children?.some((e) => e.id === 'featuredCard')).toBe(true);
+  });
+
+  it('returns null for an unknown element ID', () => {
+    expect(getRepeaterSection('Home', 'doesNotExist')).toBeNull();
+  });
+
+  it('returns null for an unknown page', () => {
+    expect(getRepeaterSection('Nonexistent', 'featuredCard')).toBeNull();
+  });
+
+  it('returns null when the element ID is the repeater itself (not a child)', () => {
+    // featuredRepeater is in section.elements, not section.children
+    expect(getRepeaterSection('Home', 'featuredRepeater')).toBeNull();
+  });
+
+  it('works for repeater children on other pages', () => {
+    // Product Page has relatedImage as a child of a repeater section
+    const section = getRepeaterSection('Product Page', 'relatedImage');
+    expect(section).not.toBeNull();
+    expect(section?.repeater).toBe('relatedRepeater');
+  });
+
+  it('returns the correct section name', () => {
+    const section = getRepeaterSection('Home', 'featuredCard');
+    expect(section?.name).toBe('Featured Products');
+  });
+
+  it('returns null when a section exists but has an empty children array', () => {
+    // Sections with children: [] (or no children key) should not match any element
+    // This verifies the some() call on an empty/missing array returns null correctly
+    const page = PAGES.find((p) => p.name === 'Home');
+    // heroSection has no children array at all — heroTitle is in elements, not children
+    expect(getRepeaterSection('Home', 'heroTitle')).toBeNull();
+    // Also confirm a completely fictional ID is null even if a section exists
+    expect(getRepeaterSection('Home', 'nonExistentChildId')).toBeNull();
+    // Suppress unused var warning
+    expect(page).toBeDefined();
   });
 });
