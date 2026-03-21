@@ -44,6 +44,7 @@ $w.onReady(async function () {
 
     // ── Blog List (paginated) ───────────────────────────────────────
     _filteredPosts = [..._allPosts];
+    initBlogListRepeater();
     renderBlogList(1);
 
     // Re-render on viewport changes (e.g. device rotation)
@@ -213,7 +214,19 @@ function renderBlogList(page) {
       ...p,
       _id: p.slug || `post-${i}`,
     }));
+  } catch (err) {
+    console.error('Blog list error:', err);
+  }
+}
 
+// ── Blog List Repeater Setup ──────────────────────────────────────────
+// Registers onItemReady once at init — Wix Velo onItemReady is additive,
+// so registering inside renderBlogList would stack handlers on each page change.
+
+function initBlogListRepeater() {
+  try {
+    const listRepeater = $w('#blogListRepeater');
+    if (!listRepeater) return;
     listRepeater.onItemReady(($item, itemData) => {
       try {
         try { $item('#cardTitle').text = itemData.title || ''; } catch (e) {}
@@ -230,7 +243,7 @@ function renderBlogList(page) {
       } catch (e) {}
     });
   } catch (err) {
-    console.error('Blog list error:', err);
+    console.error('Blog list repeater init error:', err);
   }
 }
 
