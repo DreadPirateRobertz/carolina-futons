@@ -619,17 +619,27 @@ describe('updateCartCount', () => {
 // ── checkout/view-cart navigation ────────────────────────────────────
 
 describe('checkout navigation', () => {
-  it('checkout button navigates to /checkout', () => {
+  it('checkout button closes drawer then navigates to /checkout', () => {
     initMiniCartDrawer($w);
+    openMiniCart($w, makeCart());
+    expect(isMiniCartOpen()).toBe(true);
+
     const checkoutHandler = $w('#miniCartCheckoutBtn').onClick.mock.calls[0][0];
     checkoutHandler();
+
+    expect(isMiniCartOpen()).toBe(false);
     expect(mockWixTo).toHaveBeenCalledWith('/checkout');
   });
 
-  it('view-cart button navigates to /cart', () => {
+  it('view-cart button closes drawer then navigates to /cart', () => {
     initMiniCartDrawer($w);
+    openMiniCart($w, makeCart());
+    expect(isMiniCartOpen()).toBe(true);
+
     const viewHandler = $w('#miniCartViewBtn').onClick.mock.calls[0][0];
     viewHandler();
+
+    expect(isMiniCartOpen()).toBe(false);
     expect(mockWixTo).toHaveBeenCalledWith('/cart');
   });
 });
