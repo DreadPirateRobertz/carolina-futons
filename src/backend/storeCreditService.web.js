@@ -19,6 +19,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { currentMember } from 'wix-members-backend';
 import { sanitize, validateId } from 'backend/utils/sanitize';
 
 // ── Constants ──────────────────────────────────────────────────────
@@ -124,6 +125,11 @@ export const getMyStoreCredit = webMethod(
 
       const cleanId = sanitize(memberId, 50);
 
+      const member = await currentMember.getMember();
+      if (!member || cleanId !== member._id) {
+        return { success: false, message: 'Unauthorized' };
+      }
+
       const result = await wixData.query(COLLECTION)
         .eq('memberId', cleanId)
         .eq('status', 'active')
@@ -190,6 +196,11 @@ export const applyStoreCredit = webMethod(
       }
 
       const cleanId = sanitize(memberId, 50);
+
+      const member = await currentMember.getMember();
+      if (!member || cleanId !== member._id) {
+        return { success: false, message: 'Unauthorized' };
+      }
       const now = new Date();
 
       // Get active credits sorted by expiration (soonest first)
@@ -271,6 +282,11 @@ export const getStoreCreditHistory = webMethod(
 
       const cleanId = sanitize(memberId, 50);
 
+      const member = await currentMember.getMember();
+      if (!member || cleanId !== member._id) {
+        return { success: false, message: 'Unauthorized' };
+      }
+
       const result = await wixData.query(COLLECTION)
         .eq('memberId', cleanId)
         .descending('createdDate')
@@ -332,6 +348,12 @@ export const giftStoreCredit = webMethod(
       if (!toId) {
         return { success: false, message: 'Recipient member ID is required.' };
       }
+
+      const member = await currentMember.getMember();
+      if (!member || fromId !== member._id) {
+        return { success: false, message: 'Unauthorized' };
+      }
+
       if (fromId === toId) {
         return { success: false, message: 'You cannot gift store credit to yourself.' };
       }
@@ -443,6 +465,11 @@ export const getExpiringCredits = webMethod(
       }
 
       const cleanId = sanitize(memberId, 50);
+
+      const member = await currentMember.getMember();
+      if (!member || cleanId !== member._id) {
+        return { success: false, message: 'Unauthorized' };
+      }
       const days = Math.max(1, Math.min(365, Math.round(Number(withinDays) || 30)));
       const now = new Date();
       const cutoff = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
