@@ -524,7 +524,7 @@ export function getMetaRateLimits() {
 /**
  * Cron-callable: refresh the Facebook/Meta product catalog.
  * Queries all products, validates + processes each through buildCatalogBatch,
- * and sends an owner alert via notificationService if any products fail.
+ * and sends an owner alert via notificationService if any products fail validation.
  *
  * Called every 6 hours by jobs.config. Runs in Wix cron/system context with Admin permissions.
  *
@@ -534,15 +534,26 @@ export const refreshFacebookCatalog = webMethod(
   Permissions.Admin,
   async () => {
     const PAGE_SIZE = 100;
+    const MAX_PAGES = 50; // safety cap: 5000 products max per run
     let processed = 0;
     let failed = 0;
     const errors = [];
 
+    /** Fire-and-forget owner alert; swallows notifyOwner errors to avoid masking the real failure. */
+    async function safeNotify(subject, msg) {
+      try {
+        await notifyOwner(subject, msg);
+      } catch (notifyErr) {
+        console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
+      }
+    }
+
     try {
       let skip = 0;
+      let pagesFetched = 0;
       let hasMore = true;
 
-      while (hasMore) {
+      while (hasMore && pagesFetched < MAX_PAGES) {
         const products = await wixData.query('Stores/Products')
           .limit(PAGE_SIZE)
           .skip(skip)
@@ -556,17 +567,14 @@ export const refreshFacebookCatalog = webMethod(
         if (batch.errors.length) errors.push(...batch.errors);
 
         skip += PAGE_SIZE;
+        pagesFetched++;
         hasMore = products.items.length === PAGE_SIZE;
       }
 
       if (failed > 0) {
         const msg = `${failed} product(s) failed catalog validation. Errors: ${JSON.stringify(errors.slice(0, 5))}`;
         console.warn('[facebookCatalog] refreshFacebookCatalog failures:', msg);
-        try {
-          await notifyOwner('facebook catalog sync — validation failures', msg);
-        } catch (notifyErr) {
-          console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
-        }
+        await safeNotify('facebook catalog sync — validation failures', msg);
       }
 
       const summary = { success: failed === 0, processed, failed, errors };
@@ -575,11 +583,7 @@ export const refreshFacebookCatalog = webMethod(
     } catch (err) {
       const msg = `catalog refresh failed: ${err?.message ?? String(err)}`;
       console.error('[facebookCatalog] refreshFacebookCatalog error:', msg);
-      try {
-        await notifyOwner('facebook catalog sync — cron error', msg);
-      } catch (notifyErr) {
-        console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
-      }
+      await safeNotify('facebook catalog sync — cron error', msg);
       return { success: false, processed, failed, errors: [msg] };
     }
   }

@@ -2,38 +2,33 @@
  * Tests for Facebook Catalog cron + failure alert (CF-1C)
  * TDD: written before implementation.
  * Covers: cron registration in jobs.config, refreshFacebookCatalog function,
- * notifyOwner on sync failure, success path, partial failure path.
+ * notifyOwner on sync failure, success path, partial failure path, outer catch path.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { __seed, __reset } from './__mocks__/wix-data.js';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
+import { __seed, __reset, __setQueryError } from './__mocks__/wix-data.js';
 
 // ── jobs.config cron registration ─────────────────────────────────────────
 
 describe('Facebook Catalog — Cron Registration', () => {
-  it('jobs.config includes a catalog refresh cron entry for facebookCatalog', async () => {
+  let catalogJob;
+
+  beforeAll(async () => {
     const { config } = await import('../src/backend/jobs.config');
     const jobs = config();
-    const catalogJob = Object.values(jobs).find(j =>
+    catalogJob = Object.values(jobs).find(j =>
       j.functionLocation?.includes('facebookCatalog')
     );
+  });
+
+  it('jobs.config includes a catalog refresh cron entry for facebookCatalog', () => {
     expect(catalogJob).toBeDefined();
   });
 
-  it('catalog cron runs every 6 hours', async () => {
-    const { config } = await import('../src/backend/jobs.config');
-    const jobs = config();
-    const catalogJob = Object.values(jobs).find(j =>
-      j.functionLocation?.includes('facebookCatalog')
-    );
+  it('catalog cron runs every 6 hours', () => {
     expect(catalogJob?.executionConfig.cronExpression).toBe('0 */6 * * *');
   });
 
-  it('catalog cron entry has a description', async () => {
-    const { config } = await import('../src/backend/jobs.config');
-    const jobs = config();
-    const catalogJob = Object.values(jobs).find(j =>
-      j.functionLocation?.includes('facebookCatalog')
-    );
+  it('catalog cron entry has a description', () => {
     expect(typeof catalogJob?.description).toBe('string');
     expect(catalogJob?.description.length).toBeGreaterThan(10);
   });
@@ -42,14 +37,18 @@ describe('Facebook Catalog — Cron Registration', () => {
 // ── refreshFacebookCatalog function ───────────────────────────────────────
 
 describe('refreshFacebookCatalog — exports and shape', () => {
-  it('facebookCatalog.web.js exports a refreshFacebookCatalog function', async () => {
-    const mod = await import('../src/backend/facebookCatalog.web.js');
-    expect(typeof mod.refreshFacebookCatalog).toBe('function');
+  let refreshFacebookCatalog;
+
+  beforeAll(async () => {
+    ({ refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js'));
+  });
+
+  it('facebookCatalog.web.js exports a refreshFacebookCatalog function', () => {
+    expect(typeof refreshFacebookCatalog).toBe('function');
   });
 
   it('returns a result object with success, processed, failed, errors fields', async () => {
     __seed('Stores/Products', []);
-    const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
     expect(result).toHaveProperty('success');
     expect(result).toHaveProperty('processed');
@@ -59,13 +58,18 @@ describe('refreshFacebookCatalog — exports and shape', () => {
 });
 
 describe('refreshFacebookCatalog — success path', () => {
+  let refreshFacebookCatalog;
+
+  beforeAll(async () => {
+    ({ refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js'));
+  });
+
   beforeEach(() => {
     __reset();
   });
 
   it('returns success: true when catalog is empty (no products to process)', async () => {
     __seed('Stores/Products', []);
-    const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
     expect(result.success).toBe(true);
     expect(result.processed).toBe(0);
@@ -77,7 +81,6 @@ describe('refreshFacebookCatalog — success path', () => {
       { _id: 'p1', name: 'Monterey Futon Frame', price: 549, slug: 'monterey', mainMedia: { url: 'https://static.wixstatic.com/p1.jpg' } },
       { _id: 'p2', name: 'Austin Futon Frame', price: 399, slug: 'austin', mainMedia: { url: 'https://static.wixstatic.com/p2.jpg' } },
     ]);
-    const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
     expect(result.processed).toBe(2);
     expect(result.failed).toBe(0);
@@ -87,6 +90,12 @@ describe('refreshFacebookCatalog — success path', () => {
 // ── failure alert ──────────────────────────────────────────────────────────
 
 describe('refreshFacebookCatalog — failure alert', () => {
+  let refreshFacebookCatalog;
+
+  beforeAll(async () => {
+    ({ refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js'));
+  });
+
   beforeEach(() => {
     __reset();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -105,7 +114,6 @@ describe('refreshFacebookCatalog — failure alert', () => {
       { _id: 'bad-2', name: '', price: null, slug: '' },
     ]);
 
-    const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
 
     expect(result.failed).toBeGreaterThan(0);
@@ -124,25 +132,41 @@ describe('refreshFacebookCatalog — failure alert', () => {
         mainMedia: { url: 'https://static.wixstatic.com/p1.jpg' } },
     ]);
 
-    const { refreshFacebookCatalog } = await import('../src/backend/facebookCatalog.web.js');
     const result = await refreshFacebookCatalog();
 
     expect(result.failed).toBe(0);
     expect(result.success).toBe(true);
     expect(console.warn).not.toHaveBeenCalled();
   });
+
+  it('returns success: false and logs error when wixData.query throws', async () => {
+    __setQueryError('Stores/Products', new Error('DB connection timeout'));
+
+    const result = await refreshFacebookCatalog();
+
+    expect(result.success).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('[facebookCatalog]'),
+      expect.stringContaining('catalog refresh failed'),
+    );
+  });
 });
 
 // ── notificationService.notifyOwner ───────────────────────────────────────
 
 describe('notificationService — notifyOwner', () => {
-  it('notificationService.web.js exports a notifyOwner function', async () => {
-    const mod = await import('../src/backend/notificationService.web.js');
-    expect(typeof mod.notifyOwner).toBe('function');
+  let notifyOwner;
+
+  beforeAll(async () => {
+    ({ notifyOwner } = await import('../src/backend/notificationService.web.js'));
+  });
+
+  it('notificationService.web.js exports a notifyOwner function', () => {
+    expect(typeof notifyOwner).toBe('function');
   });
 
   it('notifyOwner accepts subject and message string parameters', async () => {
-    const { notifyOwner } = await import('../src/backend/notificationService.web.js');
     // Should not throw with valid string inputs
     const result = await notifyOwner('Test subject', 'Test message body');
     expect(result).toHaveProperty('success');

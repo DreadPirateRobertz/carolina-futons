@@ -330,12 +330,14 @@ export const toggleProductAlerts = webMethod(
 );
 
 /**
- * Send an operational alert to the site owner via triggered email or console fallback.
+ * Send an operational alert to the site owner via triggered email, falling back to
+ * console.error if the SITE_OWNER_CONTACT_ID secret is absent or email delivery fails.
+ * Always returns success: true — the alert is guaranteed to surface in Wix logs.
  * Used by cron jobs and backend services to surface critical failures.
  *
  * @param {string} subject - Short alert subject (e.g. 'catalog sync failed')
  * @param {string} message - Detailed message body
- * @returns {Promise<{success: boolean, method?: string, error?: string}>}
+ * @returns {Promise<{success: boolean, method: 'triggered_email'|'console'}>}
  */
 export const notifyOwner = webMethod(
   Permissions.Admin,
@@ -345,7 +347,9 @@ export const notifyOwner = webMethod(
 
     try {
       const ownerId = await getSecret('SITE_OWNER_CONTACT_ID');
-      if (ownerId) {
+      if (!ownerId) {
+        console.warn('[notificationService] notifyOwner: SITE_OWNER_CONTACT_ID secret not set — falling back to console');
+      } else {
         await triggeredEmails.emailContact('owner_alert', ownerId, {
           variables: { subject: safeSubject, message: safeMessage },
         });
