@@ -10,6 +10,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import { coupons } from 'wix-marketing-backend';
+import wixData from 'wix-data';
 import { sanitize, validateEmail } from 'backend/utils/sanitize';
 
 /**
@@ -177,6 +178,82 @@ export const createTierUpgradeCoupon = webMethod(
     } catch (err) {
       console.error('Error creating tier upgrade coupon:', err);
       return { success: false, message: 'Failed to create coupon' };
+    }
+  }
+);
+
+/**
+ * Generate (or retrieve) a recovery coupon for an abandoned cart.
+ * Idempotent: calling with the same cartId returns the existing coupon code
+ * without creating a new one in the marketing system.
+ *
+ * @function generateRecoveryCoupon
+ * @param {Object} params
+ * @param {string} params.cartId - Unique checkout/cart ID for idempotency key
+ * @param {string} params.email - Buyer's email address
+ * @returns {Promise<Object>} { success, code, discountPercent, expiresAt }
+ * @permission Admin — called by cart recovery automation
+ */
+export const generateRecoveryCoupon = webMethod(
+  Permissions.Admin,
+  async ({ cartId, email } = {}) => {
+    try {
+      if (!cartId) return { success: false, message: 'Cart ID required' };
+      if (!email) return { success: false, message: 'Email required' };
+
+      const cleanCartId = sanitize(cartId, 50);
+      const cleanEmail = sanitize(email, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, message: 'Invalid email' };
+      }
+
+      // Idempotency: return existing coupon if one was already created for this cart
+      const existing = await wixData.query('RecoveryCoupons')
+        .eq('cartId', cleanCartId)
+        .find();
+
+      if (existing.items.length > 0) {
+        const record = existing.items[0];
+        return {
+          success: true,
+          code: record.code,
+          discountPercent: 10,
+          expiresAt: record.expiresAt,
+        };
+      }
+
+      // Create new coupon — 10% off, 48-hour expiry
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const coupon = await coupons.createCoupon({
+        name: `Cart Recovery 10% Off - ${cleanEmail}`,
+        code: await generateCode('RECOVER'),
+        percentOffRate: 10,
+        scope: { namespace: 'stores' },
+        minimumSubtotal: 0,
+        limitPerCustomer: 1,
+        limitedToOneItem: false,
+        active: true,
+        startTime: new Date(),
+        expirationTime: expiresAt,
+      });
+
+      // Persist for idempotency
+      await wixData.insert('RecoveryCoupons', {
+        cartId: cleanCartId,
+        email: cleanEmail,
+        code: coupon.code,
+        expiresAt: expiresAt.toISOString(),
+      });
+
+      return {
+        success: true,
+        code: coupon.code,
+        discountPercent: 10,
+        expiresAt: expiresAt.toISOString(),
+      };
+    } catch (err) {
+      console.error('[couponsService] generateRecoveryCoupon failed for cartId:', cartId, '— error:', err.message);
+      return { success: false, message: 'Failed to generate recovery coupon' };
     }
   }
 );

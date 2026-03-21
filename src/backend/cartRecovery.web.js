@@ -15,7 +15,9 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
+import { triggeredEmails } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
+import { generateRecoveryCoupon } from 'backend/couponsService.web';
 
 /**
  * Event handler: Abandoned checkout created.
@@ -159,6 +161,57 @@ export const markRecoveryEmailSent = webMethod(
     } catch (err) {
       console.error('Error marking recovery email sent:', err);
       return { success: false };
+    }
+  }
+);
+
+/**
+ * Send the first recovery email for an abandoned cart.
+ * Generates an idempotent recovery coupon and sends via triggered email.
+ *
+ * @function sendRecoveryEmail
+ * @param {string} cartId - The _id of the AbandonedCarts record
+ * @returns {Promise<Object>} { success, discountCode? }
+ * @permission Admin
+ */
+export const sendRecoveryEmail = webMethod(
+  Permissions.Admin,
+  async (cartId) => {
+    try {
+      if (!cartId) return { success: false, message: 'Cart ID required' };
+      const cleanId = sanitize(cartId, 50);
+
+      const cart = await wixData.get('AbandonedCarts', cleanId);
+      if (!cart) return { success: false, message: 'Cart not found' };
+
+      const cartEmail = (cart.buyerEmail || '').toLowerCase().trim();
+      if (!cartEmail) return { success: false, message: 'Cart has no email' };
+
+      const couponResult = await generateRecoveryCoupon({ cartId: cart.checkoutId, email: cartEmail });
+      const discountCode = couponResult.success ? couponResult.code : '';
+      const discountAvailable = couponResult.success;
+
+      await triggeredEmails.emailContact('cart_recovery_1', cartEmail, {
+        variables: {
+          buyerName: cart.buyerName || '',
+          cartTotal: String(cart.cartTotal || 0),
+          discountCode,
+          discountAvailable,
+          checkoutId: cart.checkoutId,
+          email: cartEmail,
+        },
+      });
+
+      await wixData.update('AbandonedCarts', {
+        ...cart,
+        recoveryEmailSent: true,
+        recoveryEmailSentAt: new Date().toISOString(),
+      });
+
+      return { success: true, discountCode };
+    } catch (err) {
+      console.error('[cartRecovery] sendRecoveryEmail failed for cartId:', cartId, '— error:', err.message);
+      return { success: false, message: 'Failed to send recovery email' };
     }
   }
 );
