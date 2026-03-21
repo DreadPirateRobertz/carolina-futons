@@ -88,6 +88,16 @@ function renderStep() {
       : 'Next';
   } catch (e) {}
 
+  // S2: disable next button until an option is selected for this step;
+  // re-enable immediately if step already has an answer (e.g. navigating back)
+  try {
+    if (state.answers[stepInfo.key]) {
+      $w('#quizNextBtn').enable();
+    } else {
+      $w('#quizNextBtn').disable();
+    }
+  } catch (e) {}
+
   // Render options for this step
   renderOptions(stepInfo.key);
 
@@ -135,6 +145,7 @@ function renderOptions(key) {
       const selectOption = () => {
         state.answers[key] = itemData.value;
         trackEvent('quiz_answer', { step: key, answer: itemData.value });
+        try { $w('#quizNextBtn').enable(); } catch (e) {}
         renderOptions(key); // re-render to update selection highlight
       };
       $item('#optionContainer').onClick(selectOption);
