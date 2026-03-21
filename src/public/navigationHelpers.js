@@ -39,6 +39,7 @@ export const NAV_LINKS = {
   '#navAbout': { path: '/about', label: 'About' },
   '#navBlog': { path: '/blog', label: 'Blog' },
   '#navFreeSwatches': { path: '/free-swatches', label: 'Free Swatches' },
+  '#navGiftCards': { path: '/gift-cards', label: 'Gift Cards' },
 };
 
 /**
