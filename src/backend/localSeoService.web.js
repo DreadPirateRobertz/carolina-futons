@@ -187,6 +187,55 @@ export const getFeaturedProductsForCity = webMethod(
   }
 );
 
+// ── getRelatedCityLinks ───────────────────────────────────────────────
+
+/**
+ * Get internal cross-links to all other defined city pages.
+ * Nearby cities (listed in the current page's nearbyAreas) are flagged and
+ * sorted first; remaining cities are sorted alphabetically by city name.
+ *
+ * Filters to only defined slugs so no dead links are returned.
+ *
+ * @param {string} slug - Current city slug (excluded from results).
+ * @returns {Promise<{success: boolean, links: Array, error?: string}>}
+ *   Each link: { slug, city, state, url, isNearby: boolean }
+ */
+export const getRelatedCityLinks = webMethod(
+  Permissions.Anyone,
+  async (slug) => {
+    try {
+      const cleanSlug = validateSlug(slug);
+      if (!cleanSlug) {
+        return { success: false, error: 'Slug is required.', links: [] };
+      }
+
+      const currentCity = LOCAL_PAGES[cleanSlug];
+      const nearbySet = new Set(
+        Array.isArray(currentCity?.nearbyAreas) ? currentCity.nearbyAreas : []
+      );
+
+      const links = Object.values(LOCAL_PAGES)
+        .filter(city => city.slug !== cleanSlug)
+        .map(city => ({
+          slug: city.slug,
+          city: city.city,
+          state: city.state,
+          url: `${SITE_URL}/near/${city.slug}`,
+          isNearby: nearbySet.has(city.slug),
+        }))
+        .sort((a, b) => {
+          if (a.isNearby !== b.isNearby) return a.isNearby ? -1 : 1;
+          return a.city.localeCompare(b.city);
+        });
+
+      return { success: true, links };
+    } catch (err) {
+      console.error('[localSeoService] Error loading related city links:', slug, err.name, err.message, err);
+      return { success: false, error: 'Failed to load related city links.', links: [] };
+    }
+  }
+);
+
 // ── getAllLocalSlugs ──────────────────────────────────────────────────
 
 /**

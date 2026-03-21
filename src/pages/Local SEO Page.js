@@ -1,7 +1,7 @@
 // Local SEO Page.js — City landing page at /near/[city]
 // Renders city-specific headline, local product grid, Google Maps embed,
 // directions text, directions CTA, and nearby area links for local SEO targeting.
-import { getLocalPage, getFeaturedProductsForCity } from 'backend/localSeoService.web';
+import { getLocalPage, getFeaturedProductsForCity, getRelatedCityLinks } from 'backend/localSeoService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import wixSeo from 'wix-seo';
 import { announce } from 'public/a11yHelpers';
@@ -16,9 +16,10 @@ $w.onReady(async function () {
       return;
     }
 
-    const [pageResult, productsResult] = await Promise.all([
+    const [pageResult, productsResult, crossLinksResult] = await Promise.all([
       getLocalPage(slug),
       getFeaturedProductsForCity(slug),
+      getRelatedCityLinks(slug),
     ]);
 
     if (!pageResult.success || !pageResult.page) {
@@ -34,6 +35,7 @@ $w.onReady(async function () {
     initFeaturedProducts(products);
     initDirections(page);
     initNearbyAreas(page.nearbyAreas);
+    initCrossLinks(crossLinksResult.success ? crossLinksResult.links : []);
     announce(`Loaded ${page.city}, ${page.state}`);
   } catch (err) {
     console.error('Local SEO Page init error:', err);
@@ -137,6 +139,34 @@ function initNearbyAreas(nearbyAreas) {
       } catch (e) {}
     });
     repeater.data = items.map((item, i) => ({ ...item, _id: `area-${i}` }));
+  } catch (e) {}
+}
+
+// ── Cross-Links (All Other City Pages) ─────────────────────────────────
+// Provides internal SEO cross-links to every other defined city page.
+// Nearby cities appear first; remaining cities are sorted alphabetically.
+
+function initCrossLinks(links) {
+  try {
+    const items = Array.isArray(links) ? links : [];
+    if (items.length === 0) {
+      try { $w('#crossLinksSection').collapse(); } catch (e) {}
+      return;
+    }
+
+    try { $w('#crossLinksHeading').text = 'More Areas We Serve'; } catch (e) {}
+
+    const repeater = $w('#crossLinksRepeater');
+    // onItemReady must be registered before .data to avoid the Wix race condition
+    repeater.onItemReady(($item, itemData) => {
+      try { $item('#crossLinkLabel').text = `${itemData.city}, ${itemData.state}`; } catch (e) {}
+      try {
+        $item('#crossLinkBtn').onClick(() => {
+          wixLocationFrontend.to(itemData.url);
+        });
+      } catch (e) {}
+    });
+    repeater.data = items.map((item, i) => ({ ...item, _id: `cl-${i}` }));
   } catch (e) {}
 }
 
