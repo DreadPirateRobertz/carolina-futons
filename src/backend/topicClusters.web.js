@@ -28,9 +28,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
-import { CLUSTERS, PILLAR_CONTENT, GUIDES_URL } from 'backend/utils/topicClusterData';
-
-const SITE_URL = 'https://www.carolinafutons.com';
+import { CLUSTERS, PILLAR_CONTENT, GUIDES_URL, SITE_URL } from 'backend/utils/topicClusterData';
 const PUBLISHER_NAME = 'Carolina Futons';
 
 // ── Topic Cluster Definitions ─────────────────────────────────────────

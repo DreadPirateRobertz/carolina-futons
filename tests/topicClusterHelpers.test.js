@@ -5,8 +5,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildClusterBreadcrumbs,
-  buildClusterMetaTitle,
-  buildClusterMetaDescription,
   getSpokeTypeLabel,
   buildSpokeCards,
   getSpokesByType,
@@ -47,51 +45,6 @@ describe('buildClusterBreadcrumbs', () => {
   it('falls back gracefully when title is empty string', () => {
     const crumbs = buildClusterBreadcrumbs('');
     expect(crumbs.length).toBeGreaterThan(0);
-  });
-});
-
-// ── buildClusterMetaTitle ──────────────────────────────────────────────
-
-describe('buildClusterMetaTitle', () => {
-  it('appends "| Carolina Futons" to the pillar title', () => {
-    expect(buildClusterMetaTitle('The Complete Futon Frame Buying Guide'))
-      .toBe('The Complete Futon Frame Buying Guide | Carolina Futons');
-  });
-
-  it('returns default title for null input', () => {
-    expect(buildClusterMetaTitle(null)).toContain('Carolina Futons');
-  });
-
-  it('returns default title for empty string', () => {
-    expect(buildClusterMetaTitle('')).toContain('Carolina Futons');
-  });
-});
-
-// ── buildClusterMetaDescription ───────────────────────────────────────
-
-describe('buildClusterMetaDescription', () => {
-  it('uses content.metaDescription when provided', () => {
-    const cluster = { topic: 'futon frames' };
-    const content = { metaDescription: 'Custom description here.' };
-    expect(buildClusterMetaDescription(cluster, content)).toBe('Custom description here.');
-  });
-
-  it('falls back to topic-based description when content is null', () => {
-    const cluster = { topic: 'futon frames' };
-    const desc = buildClusterMetaDescription(cluster, null);
-    expect(desc).toContain('futon frames');
-  });
-
-  it('falls back to topic-based description when content has no metaDescription', () => {
-    const cluster = { topic: 'futon covers' };
-    const desc = buildClusterMetaDescription(cluster, {});
-    expect(desc).toContain('futon covers');
-  });
-
-  it('returns generic fallback when cluster is null', () => {
-    const desc = buildClusterMetaDescription(null, null);
-    expect(typeof desc).toBe('string');
-    expect(desc.length).toBeGreaterThan(0);
   });
 });
 

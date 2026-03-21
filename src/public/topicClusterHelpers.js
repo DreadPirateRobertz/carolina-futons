@@ -31,31 +31,6 @@ export function buildClusterBreadcrumbs(clusterTitle) {
 }
 
 /**
- * Build the meta title for a topic cluster page.
- * @param {string} pillarTitle
- * @returns {string}
- */
-export function buildClusterMetaTitle(pillarTitle) {
-  if (!pillarTitle || typeof pillarTitle !== 'string') return 'Buying Guides | Carolina Futons';
-  return `${pillarTitle} | Carolina Futons`;
-}
-
-/**
- * Build the meta description for a topic cluster page.
- * Falls back to a generic description if no content is provided.
- * @param {{ topic: string }} cluster
- * @param {{ metaDescription?: string }|null} content
- * @returns {string}
- */
-export function buildClusterMetaDescription(cluster, content) {
-  if (content && content.metaDescription) return content.metaDescription;
-  if (cluster && cluster.topic) {
-    return `Everything about ${cluster.topic} — compare options, find the right fit, and shop Carolina Futons' complete selection.`;
-  }
-  return 'Expert buying guides from Carolina Futons — family-owned since 1991.';
-}
-
-/**
  * Return the human-readable label for a spoke page type.
  * @param {string} type - 'comparison' | 'guide' | 'howto' | 'reference'
  * @returns {string}
