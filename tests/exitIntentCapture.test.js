@@ -349,9 +349,10 @@ describe('submitExitCapture', () => {
   });
 
   it('handles backend import failure gracefully', async () => {
-    vi.doMock('backend/newsletterService.web', () => {
-      throw new Error('Module not found');
-    });
+    // vi.doMock with a throwing factory is unreliable on Node 20 (cached module
+    // prevents re-evaluation). Simulate the same catch path by making the first
+    // backend call throw — submitExitCapture wraps everything in try/catch.
+    mockSubscribe.mockImplementationOnce(() => { throw new Error('Module not found'); });
     const result = await submitExitCapture('user@test.com');
     expect(result.success).toBe(false);
     expect(result.error).toBe('submission_failed');
