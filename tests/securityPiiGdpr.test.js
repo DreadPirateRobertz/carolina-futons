@@ -365,9 +365,10 @@ describe('Security: cron endpoint secret exposure', () => {
   });
 
   it('klaviyoWebhook correctly uses header (not query)', () => {
-    const klaviyoBlock = src.substring(
-      src.indexOf('post_klaviyoWebhook')
-    );
+    const start = src.indexOf('export async function post_klaviyoWebhook');
+    const rest = src.substring(start);
+    const nextExport = rest.indexOf('\nexport async function', 1);
+    const klaviyoBlock = nextExport > 0 ? rest.substring(0, nextExport) : rest;
     expect(klaviyoBlock).toContain("request.headers['x-klaviyo-webhook-secret']");
     expect(klaviyoBlock).not.toContain('request.query');
   });

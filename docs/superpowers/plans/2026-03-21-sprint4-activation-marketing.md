@@ -8,7 +8,7 @@
 
 **Tech Stack:** Wix Velo (JS), Wix Jobs Scheduler, Wix HTTP Functions, existing backend modules (emailService, emailAutomation, emailTemplates, cartRecovery, couponsService, loyaltyService, referralService, socialStoryScheduler, notificationService)
 
-**Test command:** `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run`
+**Test command:** `cd <repo-root> && npx vitest run`
 
 **Spec:** `docs/superpowers/specs/2026-03-21-sprint4-marketing-engine-design.md`
 
@@ -55,7 +55,7 @@ Wire `socialStoryScheduler.web.js` to run daily via Wix Jobs.
 - [ ] **Step 1: Confirm the scheduler's callable exports**
 
 ```bash
-grep -n "^export const\|^export function\|^export async" /Users/hal/gt/cfutons/refinery/rig/src/backend/socialStoryScheduler.web.js
+grep -n "^export const\|^export function\|^export async" src/backend/socialStoryScheduler.web.js
 ```
 
 **Known exports (verified 2026-03-21):**
@@ -96,7 +96,7 @@ describe('Social Story Cron Activation', () => {
 - [ ] **Step 3: Run test — confirm it fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/socialStorySchedulerActivation.test.js
+cd <repo-root> && npx vitest run tests/socialStorySchedulerActivation.test.js
 ```
 
 Expected: FAIL on all 3 assertions (entry doesn't exist yet)
@@ -119,7 +119,7 @@ dailySocialStories: {
 - [ ] **Step 5: Run test — confirm it passes**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/socialStorySchedulerActivation.test.js
+cd <repo-root> && npx vitest run tests/socialStorySchedulerActivation.test.js
 ```
 
 Expected: 3/3 PASS
@@ -146,7 +146,7 @@ Confirm 88 products sync and failure alerts fire via notificationService.
 
 Grep for failure notification in facebookCatalog:
 ```bash
-grep -n "notification\|alert\|notify\|error" /Users/hal/gt/cfutons/refinery/rig/src/backend/facebookCatalog.web.js | head -20
+grep -n "notification\|alert\|notify\|error" src/backend/facebookCatalog.web.js | head -20
 ```
 
 Note what's missing.
@@ -214,7 +214,7 @@ describe('Facebook Catalog — Failure Alert', () => {
 - [ ] **Step 3: Run test — confirm catalog cron fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/facebookCatalogAlert.test.js
+cd <repo-root> && npx vitest run tests/facebookCatalogAlert.test.js
 ```
 
 - [ ] **Step 4: Add Facebook catalog cron to jobs.config**
@@ -250,7 +250,7 @@ export async function notifyOwner({ subject, body }) {
 - [ ] **Step 6: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/facebookCatalogAlert.test.js
+cd <repo-root> && npx vitest run tests/facebookCatalogAlert.test.js
 ```
 
 - [ ] **Step 7: Commit**
@@ -274,7 +274,7 @@ git commit -m "feat(CF-1C): Facebook catalog cron (6hr) + failure alert via noti
 - [ ] **Step 1: Check existing template structure**
 
 ```bash
-grep -n "template\|export\|function" /Users/hal/gt/cfutons/refinery/rig/src/backend/emailTemplates.web.js | head -30
+grep -n "template\|export\|function" src/backend/emailTemplates.web.js | head -30
 ```
 
 Note the existing template function signature pattern to follow.
@@ -363,7 +363,7 @@ describe('Welcome Email Series — Automation', () => {
 - [ ] **Step 3: Run — confirm all fail**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/welcomeEmailSeries.test.js
+cd <repo-root> && npx vitest run tests/welcomeEmailSeries.test.js
 ```
 
 - [ ] **Step 4: Add templates to emailTemplates.web.js**
@@ -408,7 +408,7 @@ export function getWelcomeDay7Template({ name = 'there', discountCode = '' } = {
 
 First grep for the dedup pattern used elsewhere in emailAutomation.web.js:
 ```bash
-grep -n "already\|dedup\|skip\|welcomed" /Users/hal/gt/cfutons/refinery/rig/src/backend/emailAutomation.web.js | head -10
+grep -n "already\|dedup\|skip\|welcomed" src/backend/emailAutomation.web.js | head -10
 ```
 
 Then add (following existing patterns in the file):
@@ -442,13 +442,13 @@ export async function triggerWelcomeSeries({ email, name = 'there', memberId }) 
 - [ ] **Step 6: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/welcomeEmailSeries.test.js
+cd <repo-root> && npx vitest run tests/welcomeEmailSeries.test.js
 ```
 
 - [ ] **Step 7: Run full suite — no regressions**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run 2>&1 | tail -5
+cd <repo-root> && npx vitest run 2>&1 | tail -5
 ```
 
 - [ ] **Step 8: Commit**
@@ -472,7 +472,7 @@ The cron and event handler are already wired (jobs.config + cartRecovery.web.js)
 - [ ] **Step 1: Check couponsService for recovery-specific generator**
 
 ```bash
-grep -n "recover\|Recovery\|generateCoupon\|single.use\|singleUse" /Users/hal/gt/cfutons/refinery/rig/src/backend/couponsService.web.js | head -20
+grep -n "recover\|Recovery\|generateCoupon\|single.use\|singleUse" src/backend/couponsService.web.js | head -20
 ```
 
 - [ ] **Step 2: Write failing tests**
@@ -520,7 +520,7 @@ describe('Cart Recovery — Coupon Generation', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/cartRecoveryCoupon.test.js
+cd <repo-root> && npx vitest run tests/cartRecoveryCoupon.test.js
 ```
 
 - [ ] **Step 4: Add generateRecoveryCoupon to couponsService.web.js**
@@ -563,7 +563,7 @@ const coupon = await generateRecoveryCoupon({ cartId: cart.checkoutId, email: ca
 - [ ] **Step 6: Run tests — all pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/cartRecoveryCoupon.test.js
+cd <repo-root> && npx vitest run tests/cartRecoveryCoupon.test.js
 ```
 
 - [ ] **Step 7: Commit**
@@ -587,7 +587,7 @@ git commit -m "feat(CF-6hyd): cart recovery coupon — 10% single-use 48hr code 
 - [ ] **Step 1: Check browseAbandonment exports**
 
 ```bash
-grep -n "export\|function" /Users/hal/gt/cfutons/refinery/rig/src/backend/browseAbandonment.web.js | head -20
+grep -n "export\|function" src/backend/browseAbandonment.web.js | head -20
 ```
 
 Note the exported function name for the cron entry.
@@ -621,7 +621,7 @@ describe('Browse Abandonment Cron', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/browseAbandonmentCron.test.js
+cd <repo-root> && npx vitest run tests/browseAbandonmentCron.test.js
 ```
 
 - [ ] **Step 4: Add cron entry to jobs.config**
@@ -640,7 +640,7 @@ checkBrowseAbandonment: {
 - [ ] **Step 5: Run tests — pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/browseAbandonmentCron.test.js
+cd <repo-root> && npx vitest run tests/browseAbandonmentCron.test.js
 ```
 
 - [ ] **Step 6: Commit**
@@ -664,7 +664,7 @@ Add `GET /_functions/loyalty/{memberId}` → `{points, tier, nextTierAt}`.
 - [ ] **Step 1: Check loyaltyService exports**
 
 ```bash
-grep -n "export.*function\|export const\|getMember\|getPoints\|getTier" /Users/hal/gt/cfutons/refinery/rig/src/backend/loyaltyService.web.js | head -20
+grep -n "export.*function\|export const\|getMember\|getPoints\|getTier" src/backend/loyaltyService.web.js | head -20
 ```
 
 Note the function that returns `{points, tier, nextTierAt}` or equivalent.
@@ -672,7 +672,7 @@ Note the function that returns `{points, tier, nextTierAt}` or equivalent.
 - [ ] **Step 2: Check existing http-functions.js patterns**
 
 ```bash
-grep -n "export.*get_\|export.*post_\|okJson\|response\|getRouterData" /Users/hal/gt/cfutons/refinery/rig/src/backend/http-functions.js | head -20
+grep -n "export.*get_\|export.*post_\|okJson\|response\|getRouterData" src/backend/http-functions.js | head -20
 ```
 
 Note the existing endpoint naming convention.
@@ -720,14 +720,14 @@ describe('Loyalty HTTP Endpoint', () => {
 - [ ] **Step 4: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/loyaltyEndpoint.test.js
+cd <repo-root> && npx vitest run tests/loyaltyEndpoint.test.js
 ```
 
 - [ ] **Step 5: Add endpoint to http-functions.js**
 
 First check what response helpers are used in the file:
 ```bash
-grep -n "^import\|return ok\|return response\|createResponse" /Users/hal/gt/cfutons/refinery/rig/src/backend/http-functions.js | head -10
+grep -n "^import\|return ok\|return response\|createResponse" src/backend/http-functions.js | head -10
 ```
 
 Then add (use `response()` consistently — do NOT use `ok()` unless already imported):
@@ -752,7 +752,7 @@ export async function get_loyalty(request) {
 - [ ] **Step 6: Run tests — pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/loyaltyEndpoint.test.js
+cd <repo-root> && npx vitest run tests/loyaltyEndpoint.test.js
 ```
 
 - [ ] **Step 7: Commit**
@@ -776,7 +776,7 @@ Add `GET /_functions/generateReferralLink` + share UI wiring.
 - [ ] **Step 1: Check referralService for link generation**
 
 ```bash
-grep -n "export.*function\|generateLink\|referralLink\|createLink" /Users/hal/gt/cfutons/refinery/rig/src/backend/referralService.web.js | head -20
+grep -n "export.*function\|generateLink\|referralLink\|createLink" src/backend/referralService.web.js | head -20
 ```
 
 - [ ] **Step 2: Write failing tests**
@@ -831,7 +831,7 @@ describe('Referral Link Endpoint', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/referralLinkEndpoint.test.js
+cd <repo-root> && npx vitest run tests/referralLinkEndpoint.test.js
 ```
 
 - [ ] **Step 4: Add generateReferralLink to referralService if missing**
@@ -868,7 +868,7 @@ export async function get_generateReferralLink(request) {
 - [ ] **Step 6: Run tests — pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/referralLinkEndpoint.test.js
+cd <repo-root> && npx vitest run tests/referralLinkEndpoint.test.js
 ```
 
 - [ ] **Step 7: Commit**
@@ -893,7 +893,7 @@ Wire `wixWindow.openLightbox('exitIntentLightbox')` on cursor-leave. Requires St
 - [ ] **Step 1: Read current exitIntentCapture.js**
 
 ```bash
-cat /Users/hal/gt/cfutons/refinery/rig/src/public/exitIntentCapture.js
+cat src/public/exitIntentCapture.js
 ```
 
 Note what's implemented vs missing.
@@ -949,7 +949,7 @@ describe('Exit Intent Capture', () => {
 - [ ] **Step 3: Run — confirm fails**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/exitIntentLightbox.test.js
+cd <repo-root> && npx vitest run tests/exitIntentLightbox.test.js
 ```
 
 - [ ] **Step 4: Update exitIntentCapture.js**
@@ -981,13 +981,13 @@ export async function triggerExitIntent({ timeOnPage = 0 } = {}) {
 - [ ] **Step 5: Run tests — pass**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/exitIntentLightbox.test.js
+cd <repo-root> && npx vitest run tests/exitIntentLightbox.test.js
 ```
 
 - [ ] **Step 6: Run full suite — no regressions**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run 2>&1 | tail -5
+cd <repo-root> && npx vitest run 2>&1 | tail -5
 ```
 
 - [ ] **Step 7: Commit**
@@ -1006,7 +1006,7 @@ After all tasks are committed:
 - [ ] **Run full test suite**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run 2>&1 | tail -10
+cd <repo-root> && npx vitest run 2>&1 | tail -10
 ```
 
 Expected: all existing tests pass + new tests added.
@@ -1014,7 +1014,7 @@ Expected: all existing tests pass + new tests added.
 - [ ] **Verify jobs.config has 5 cron entries**
 
 ```bash
-grep "cronExpression" /Users/hal/gt/cfutons/refinery/rig/src/backend/jobs.config
+grep "cronExpression" src/backend/jobs.config
 ```
 
 Expected: processEmailQueue (15min), triggerAbandonedCartRecovery (1hr), triggerReengagement (Mon 9am), dailySocialStories (daily 9am), refreshFacebookCatalog (6hr), checkBrowseAbandonment (2hr)

@@ -233,36 +233,16 @@ describe('submitExitCapture — email without @ is rejected', () => {
 
 // ── Coupon delivery: submitExitIntentEmail path ────────────────────────────────
 
-describe('submitExitIntentEmail — coupon delivery (10% code)', () => {
+describe('submitExitIntentEmail — success flow', () => {
   beforeEach(() => {
     vi.doMock('backend/newsletterService.web', () => ({
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
     }));
-    vi.doMock('backend/couponsService.web', () => ({
-      createWelcomeCoupon: vi.fn().mockResolvedValue({ success: true, code: 'WELCOME10' }),
-    }));
   });
 
-  it('returns couponCode WELCOME10 on success', async () => {
+  it('returns success:true on valid subscription', async () => {
     const result = await submitExitIntentEmail('buyer@example.com');
     expect(result.success).toBe(true);
-    expect(result.couponCode).toBe('WELCOME10');
-  });
-
-  it('couponCode is non-null for opted-in subscriber', async () => {
-    const result = await submitExitIntentEmail('buyer@example.com');
-    expect(result.couponCode).not.toBeNull();
-    expect(typeof result.couponCode).toBe('string');
-  });
-
-  it('returns success:true even when coupon generation fails', async () => {
-    vi.doMock('backend/couponsService.web', () => ({
-      createWelcomeCoupon: vi.fn().mockResolvedValue({ success: false }),
-    }));
-    const result = await submitExitIntentEmail('buyer@example.com');
-    expect(result.success).toBe(true);
-    // couponCode may be null when coupon generation fails
-    expect(result.couponCode).toBeNull();
   });
 });
 

@@ -16,7 +16,14 @@ vi.mock('wix-members-backend', () => ({
 
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, max) => String(val || '').slice(0, max),
-  validateId: (id) => (/^[a-f0-9-]+$/i.test(id) ? id : null),
+  validateId: (id) => (/^[a-zA-Z0-9_-]+$/.test(String(id || '').trim()) ? String(id).trim() : null),
+  isWixMediaUrl: (url) => {
+    if (typeof url !== 'string' || !url.trim()) return false;
+    const u = url.trim();
+    return u.startsWith('wix:image://') || u.startsWith('wix:video://') ||
+      /^https:\/\/static\.wixstatic\.com\/media\//i.test(u) ||
+      /^https:\/\/[^/]*\.wixmp\.com\//i.test(u);
+  },
 }));
 
 const {
@@ -37,7 +44,7 @@ describe('submitPhotoReview — rating clamping', () => {
     productId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
     productName: 'Kodiak Frame',
     reviewText: 'Great futon frame, very sturdy and easy to assemble!',
-    photoUrl: 'https://example.com/photo.jpg',
+    photoUrl: 'https://static.wixstatic.com/media/test-photo.jpg',
   };
 
   it('treats rating 0 as default (Number(0)||5 = 5)', async () => {
@@ -89,7 +96,7 @@ describe('submitPhotoReview — validation', () => {
     const result = await submitPhotoReview({
       productId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
       reviewText: 'Too short',
-      photoUrl: 'https://example.com/p.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-p.jpg',
       rating: 5,
     });
     expect(result.success).toBe(false);
@@ -111,7 +118,7 @@ describe('submitPhotoReview — validation', () => {
     const result = await submitPhotoReview({
       productId: 'DROP TABLE;',
       reviewText: 'This is a perfectly valid review text.',
-      photoUrl: 'https://example.com/p.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-p.jpg',
       rating: 5,
     });
     expect(result.success).toBe(false);
@@ -124,7 +131,7 @@ describe('submitPhotoReview — validation', () => {
     await submitPhotoReview({
       productId: 'a0b1c2d3-e4f5-6789-abcd-ef0123456789',
       reviewText: 'This is a perfectly valid review text.',
-      photoUrl: 'https://example.com/p.jpg',
+      photoUrl: 'https://static.wixstatic.com/media/test-p.jpg',
       rating: 4,
     });
     expect(inserted.helpfulCount).toBe(0);

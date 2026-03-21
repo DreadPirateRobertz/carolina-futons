@@ -24,11 +24,11 @@
 - Test: `tests/assemblyGuides.test.js`, `tests/assemblyGuidesHandlers.test.js`, `tests/assemblyGuidesPage.test.js`
 - Create: `tests/assemblyGuidesPDP.integration.test.js`
 
-All paths relative to `/Users/hal/gt/cfutons/refinery/rig/`
+All paths relative to ``
 
 - [ ] **Step 1: Run existing assembly guide tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/assemblyGuides.test.js tests/assemblyGuidesHandlers.test.js tests/assemblyGuidesPage.test.js`
+Run: `cd <repo-root> && npx vitest run tests/assemblyGuides.test.js tests/assemblyGuidesHandlers.test.js tests/assemblyGuidesPage.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Write PDP integration test — guide lookup by SKU**
@@ -87,7 +87,7 @@ describe('Assembly Guide on PDP', () => {
 
 - [ ] **Step 3: Run PDP integration test to verify it fails**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/assemblyGuidesPDP.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/assemblyGuidesPDP.integration.test.js`
 Expected: FAIL (mock setup may need adjustment based on existing patterns)
 
 - [ ] **Step 4: Fix test mocks to match existing patterns**
@@ -96,13 +96,13 @@ Read `tests/assemblyGuides.test.js` to understand the mock setup pattern, then u
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/assemblyGuidesPDP.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/assemblyGuidesPDP.integration.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/assemblyGuidesPDP.integration.test.js
 git commit -m "test: add assembly guide PDP integration tests"
 ```
@@ -152,7 +152,7 @@ if (guide) {
 
 - [ ] **Step 1: Run all existing search tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/searchService.test.js tests/categorySearch.test.js tests/categoryFilterHelpers.test.js`
+Run: `cd <repo-root> && npx vitest run tests/searchService.test.js tests/categorySearch.test.js tests/categoryFilterHelpers.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Read search page controllers to understand wiring needs**
@@ -220,20 +220,20 @@ describe('Search Integration', () => {
 
 - [ ] **Step 4: Run integration test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/searchIntegration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/searchIntegration.test.js`
 Expected: FAIL initially, fix mocks to match existing patterns
 
 - [ ] **Step 5: Fix mocks and verify pass**
 
 Read existing `tests/searchService.test.js` for mock patterns. Update integration test accordingly.
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/searchIntegration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/searchIntegration.test.js`
 Expected: PASS
 
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/searchIntegration.test.js
 git commit -m "test: add search integration tests (full-text, autocomplete, pagination)"
 ```
@@ -272,7 +272,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Run existing delivery tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/deliveryExperience.test.js tests/deliveryScheduling.test.js tests/cartDeliveryEstimate.test.js`
+Run: `cd <repo-root> && npx vitest run tests/deliveryExperience.test.js tests/deliveryScheduling.test.js tests/cartDeliveryEstimate.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Read delivery modules to understand zip-to-zone mapping**
@@ -332,13 +332,13 @@ describe('Delivery Estimator Integration', () => {
 
 - [ ] **Step 4: Run and fix integration test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/deliveryEstimator.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/deliveryEstimator.integration.test.js`
 Fix mocks based on existing test patterns.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/deliveryEstimator.integration.test.js
 git commit -m "test: add delivery estimator integration tests"
 ```
@@ -375,7 +375,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Verify existing scheduling tests pass**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/deliveryScheduling.test.js`
+Run: `cd <repo-root> && npx vitest run tests/deliveryScheduling.test.js`
 Expected: PASS
 
 - [ ] **Step 2: Read scheduling module for slot booking logic**
@@ -455,12 +455,12 @@ describe('Delivery Scheduling Integration', () => {
 
 - [ ] **Step 4: Run and fix integration test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/deliveryScheduling.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/deliveryScheduling.integration.test.js`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/deliveryScheduling.integration.test.js
 git commit -m "test: add delivery scheduling integration tests (slots, booking, cancellation)"
 ```
@@ -497,7 +497,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Run all existing email/cart recovery tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/cartRecovery.test.js tests/browseAbandonment.test.js tests/emailAutomation.test.js tests/emailAutomation.integration.test.js tests/emailService.test.js`
+Run: `cd <repo-root> && npx vitest run tests/cartRecovery.test.js tests/browseAbandonment.test.js tests/emailAutomation.test.js tests/emailAutomation.integration.test.js tests/emailService.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Write cart recovery flow integration test**
@@ -578,12 +578,12 @@ describe('Cart Recovery Flow', () => {
 
 - [ ] **Step 3: Run and fix integration test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/cartRecoveryFlow.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/cartRecoveryFlow.integration.test.js`
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/cartRecoveryFlow.integration.test.js
 git commit -m "test: add cart recovery flow integration tests"
 ```
@@ -618,7 +618,7 @@ Prerequisite configuration (needs site owner access):
 
 - [ ] **Step 1: Run existing order tracking tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/orderTracking.test.js`
+Run: `cd <repo-root> && npx vitest run tests/orderTracking.test.js`
 Expected: PASS
 
 - [ ] **Step 2: Read page controller for element ID requirements**
@@ -686,12 +686,12 @@ describe('Order Tracking Flow', () => {
 
 - [ ] **Step 4: Run and fix test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/orderTrackingFlow.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/orderTrackingFlow.integration.test.js`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/orderTrackingFlow.integration.test.js
 git commit -m "test: add order tracking flow integration tests"
 ```
@@ -731,7 +731,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Run existing returns tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/returnsService.test.js tests/returnsServiceExtended.test.js`
+Run: `cd <repo-root> && npx vitest run tests/returnsService.test.js tests/returnsServiceExtended.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Read returns page controllers**
@@ -844,12 +844,12 @@ describe('Returns Flow', () => {
 
 - [ ] **Step 4: Run and fix test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/returnsFlow.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/returnsFlow.integration.test.js`
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/returnsFlow.integration.test.js
 git commit -m "test: add returns flow integration tests (customer, guest, admin)"
 ```
@@ -889,7 +889,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Run all existing review tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/productReviews.test.js tests/productReviewsBackend.test.js tests/reviewsService.test.js tests/photoReviews.test.js`
+Run: `cd <repo-root> && npx vitest run tests/productReviews.test.js tests/productReviewsBackend.test.js tests/reviewsService.test.js tests/photoReviews.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Write reviews flow integration test**
@@ -992,12 +992,12 @@ describe('Reviews Flow', () => {
 
 - [ ] **Step 3: Run and fix test**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/reviewsFlow.integration.test.js`
+Run: `cd <repo-root> && npx vitest run tests/reviewsFlow.integration.test.js`
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add tests/reviewsFlow.integration.test.js
 git commit -m "test: add reviews flow integration tests (display, submission, moderation)"
 ```
@@ -1054,7 +1054,7 @@ When editor access is restored:
 
 - [ ] **Step 1: Run all cross-cutting tests**
 
-Run: `cd /Users/hal/gt/cfutons/refinery/rig && npx vitest run tests/accessibility.test.js tests/accessibility.web.test.js tests/a11yHelpers.test.js tests/coreWebVitals.test.js tests/errorMonitoring.test.js`
+Run: `cd <repo-root> && npx vitest run tests/accessibility.test.js tests/accessibility.web.test.js tests/a11yHelpers.test.js tests/coreWebVitals.test.js tests/errorMonitoring.test.js`
 Expected: All PASS
 
 - [ ] **Step 2: Verify masterPage wires cross-cutting modules**
@@ -1066,7 +1066,7 @@ If not wired, add the initialization calls.
 - [ ] **Step 3: Commit any masterPage changes**
 
 ```bash
-cd /Users/hal/gt/cfutons/refinery/rig
+cd <repo-root>
 git add src/pages/masterPage.js
 git commit -m "feat: wire cross-cutting modules (error monitoring, web vitals, a11y) to masterPage"
 ```
