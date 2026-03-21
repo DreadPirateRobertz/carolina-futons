@@ -47,7 +47,7 @@ function getShareIdFromUrl() {
   try {
     // wixLocationFrontend.path is SSR-safe; window.location is not
     const path = wixLocationFrontend.path;
-    const parts = path.split('/').filter(Boolean);
+    const parts = path.filter(Boolean);
     return parts[parts.length - 1] || null;
   } catch {
     return null;

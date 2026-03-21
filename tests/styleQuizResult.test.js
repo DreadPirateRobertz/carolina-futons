@@ -28,10 +28,11 @@ globalThis.$w = Object.assign(
 
 // ── wix-location-frontend mock ────────────────────────────────────────────────
 
-const mockLocation = { path: '/', to: vi.fn() };
+// wixLocationFrontend.path returns string[] (array of segments), not a string.
+const mockLocation = { path: [], to: vi.fn() };
 
-function setPath(path) {
-  mockLocation.path = path;
+function setPath(pathString) {
+  mockLocation.path = pathString.split('/').filter(Boolean);
 }
 
 // ── Backend mocks ──────────────────────────────────────────────────────────────
