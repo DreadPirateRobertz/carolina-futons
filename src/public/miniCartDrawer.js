@@ -27,7 +27,8 @@
  *
  * Dependencies: public/cartService (getCurrentCart, updateCartItemQuantity,
  *   removeCartItem, safeMultiply, clampQuantity), public/a11yHelpers.js
- *   (announce), public/mobileHelpers (isMobile), wix-location-frontend.
+ *   (announce, setupAccessibleDialog), public/mobileHelpers (isMobile),
+ *   wix-location-frontend.
  */
 
 import { getCurrentCart, updateCartItemQuantity, removeCartItem, safeMultiply, clampQuantity } from 'public/cartService';
@@ -42,7 +43,8 @@ import wixLocationFrontend from 'wix-location-frontend';
 let _$w = null;
 
 // Accessible dialog handle from setupAccessibleDialog — manages focus trap,
-// Escape key handler, and focus restoration on close.
+// Escape key handler (registered immediately on init), and focus restoration
+// on close. Null if setupAccessibleDialog failed during init.
 let _dialog = null;
 
 /**
@@ -120,13 +122,16 @@ export function initMiniCartDrawer($w) {
   // Focus trap, Escape key, and focus-restore on close (WCAG 2.1 AA).
   // setupAccessibleDialog also wires the close button — our onClick above
   // remains for the slide animation; both handlers are safe to coexist.
+  // Note: Escape keydown listener is registered immediately here (not in open).
   try {
     _dialog = setupAccessibleDialog($w, {
       panelId: '#miniCartDrawer',
       closeId: '#miniCartClose',
       focusableIds: ['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn'],
     });
-  } catch (e) {}
+  } catch (e) {
+    console.error('[miniCartDrawer] focus trap init failed:', e?.message);
+  }
 }
 
 /**
@@ -156,9 +161,13 @@ export function openMiniCart($w, cart) {
   try { $w('#miniCartOverlay').show(); } catch (e) {}
 
   announce($w, `Cart opened with ${totalQty} item${totalQty !== 1 ? 's' : ''}`);
+  // Direct focus: fallback for when _dialog is null (init failed).
+  // When _dialog is set, _dialog.open() below re-focuses after creating the trap.
   try { $w('#miniCartClose').focus(); } catch (e) {}
-  // Open accessible dialog: saves focus, creates focus trap, focuses first focusable element.
-  if (_dialog) try { _dialog.open(); } catch (e) {}
+  // Open accessible dialog: saves active element, creates focus trap, focuses close btn.
+  if (_dialog) try { _dialog.open(); } catch (e) {
+    console.error('[miniCartDrawer] focus trap open failed:', e?.message);
+  }
 }
 
 /**
@@ -178,7 +187,9 @@ export function closeMiniCart($w) {
 
   announce($w, 'Cart closed');
   // Release focus trap and restore focus to previously focused element.
-  if (_dialog) try { _dialog.close(); } catch (e) {}
+  if (_dialog) try { _dialog.close(); } catch (e) {
+    console.error('[miniCartDrawer] focus trap close failed:', e?.message);
+  }
 }
 
 /**
