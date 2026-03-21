@@ -285,7 +285,7 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: daysAgo(1),
       status: 'pending',
     }]);
-    const result = await submitFabricSampleRequest({
+    const result = await submitFabricSample({
       swatchIds: validSwatchIds,
       contactInfo: { ...validContact, email: 'other@example.com' },
     });
@@ -300,7 +300,7 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: daysAgo(2),
       status: 'pending',
     }]);
-    const result = await submitFabricSampleRequest({
+    const result = await submitFabricSample({
       swatchIds: validSwatchIds,
       contactInfo: { ...validContact, email: 'JANE@EXAMPLE.COM' },
     });
@@ -317,7 +317,7 @@ describe('submitFabricSample — rate limiting', () => {
       requestedAt: thirtyDaysAgoWithBuffer,
       status: 'pending',
     }]);
-    const result = await submitFabricSampleRequest({
+    const result = await submitFabricSample({
       swatchIds: validSwatchIds,
       contactInfo: validContact,
     });
