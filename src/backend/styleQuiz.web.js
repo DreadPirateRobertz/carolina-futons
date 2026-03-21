@@ -201,6 +201,91 @@ export const getQuizOptions = webMethod(
   }
 );
 
+// ── Profile-based personalized copy ───────────────────────────────────
+
+/**
+ * Derive a profile type string from quiz answers.
+ * Used to select the tone variant for personalized copy.
+ *
+ * Profiles (3 base + style sub-variant):
+ *   compact     — dorm/office room types; space efficiency is paramount
+ *   comfort     — primary use is sleeping; sleep quality drives selection
+ *   versatile   — both uses; day-to-night flexibility is the priority
+ *   style       — living room / bedroom + sitting; aesthetic comes first
+ *
+ * @param {Object} answers - Quiz answers
+ * @returns {string} Profile key: 'compact' | 'comfort' | 'versatile' | 'style'
+ */
+function deriveProfileType(answers) {
+  if (!answers) return 'style';
+  if (answers.roomType === 'dorm' || answers.roomType === 'office') return 'compact';
+  if (answers.primaryUse === 'sleeping') return 'comfort';
+  if (answers.primaryUse === 'both') return 'versatile';
+  return 'style';
+}
+
+const STYLE_TONE = {
+  modern:  'clean, contemporary aesthetic',
+  rustic:  'warm, natural character',
+  classic: 'timeless, classic appeal',
+};
+
+const ROOM_LABEL = {
+  'living-room': 'living room',
+  'guest-room':  'guest room',
+  'dorm':        'small space',
+  'office':      'home office',
+  'bedroom':     'bedroom',
+};
+
+/**
+ * Build a personalized recommendation blurb from quiz answers and profile type.
+ *
+ * @param {Object} answers - Quiz answers
+ * @param {string} profileType - From deriveProfileType()
+ * @returns {string} Personalized copy string
+ */
+function buildPersonalizedCopy(answers, profileType) {
+  const room   = ROOM_LABEL[answers.roomType]  || 'space';
+  const style  = STYLE_TONE[answers.stylePreference] || 'your unique style';
+
+  switch (profileType) {
+    case 'compact':
+      return `Your ${room} deserves furniture that works harder without taking over. Based on your space efficiency needs and ${style}, we've selected pieces engineered to maximize every square foot.`;
+
+    case 'comfort':
+      return `A great night's sleep changes everything. Based on your priority for restful, dedicated sleep in your ${room} and love of ${style}, we've curated our top comfort-rated picks designed for serious sleepers.`;
+
+    case 'versatile':
+      return `Day-to-night flexibility is your superpower. Based on your need for seamless sitting and sleeping in your ${room} and appreciation for ${style}, these picks perform beautifully in both modes.`;
+
+    case 'style':
+    default:
+      return `Your ${room} is a reflection of who you are. Based on your preference for ${style} and your vision for the space, we've hand-picked options that make a statement while delivering lasting comfort.`;
+  }
+}
+
+/**
+ * Get personalized recommendation copy based on quiz answers.
+ * Intended to be called alongside getQuizRecommendations on the result page.
+ *
+ * @function getPersonalizedCopy
+ * @param {Object} answers - Quiz answer selections (same shape as getQuizRecommendations)
+ * @returns {Promise<{copy: string, profileType: string}>}
+ *   copy — personalized blurb to display above recommendations
+ *   profileType — 'compact' | 'comfort' | 'versatile' | 'style'
+ * @permission Anyone
+ */
+export const getPersonalizedCopy = webMethod(
+  Permissions.Anyone,
+  async (answers) => {
+    if (!answers) return { copy: '', profileType: 'style' };
+    const profileType = deriveProfileType(answers);
+    const copy = buildPersonalizedCopy(answers, profileType);
+    return { copy, profileType };
+  }
+);
+
 function formatQuizProduct(item) {
   return {
     _id: item._id,
