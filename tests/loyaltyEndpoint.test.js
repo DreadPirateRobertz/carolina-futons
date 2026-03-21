@@ -85,11 +85,14 @@ describe('get_loyalty — happy path', () => {
   });
 
   it('returns 200 with tier, points, and rewards for own account', async () => {
+    const { accounts } = await import('./__mocks__/wix-loyalty.v2.js');
     const result = await get_loyalty({ pathParams: { memberId: MEMBER_ID }, headers: {} });
     expect(result.status).toBe(200);
     const body = JSON.parse(result.body);
     expect(body.success).toBe(true);
     expect(body.memberId).toBe(MEMBER_ID);
+    // Verify getAccount was called with the correct memberId (guards against IDOR regression)
+    expect(accounts.getAccount).toHaveBeenCalledWith(MEMBER_ID);
   });
 
   it('returns Silver tier for 750 points', async () => {
@@ -199,10 +202,11 @@ describe('get_loyalty — error handling', () => {
     expect(body.success).toBe(false);
   });
 
-  it('returns 500 on missing pathParams', async () => {
+  it('returns 403 when pathParams is absent (no memberId to validate)', async () => {
     __setMember({ _id: MEMBER_ID });
     const result = await get_loyalty({ headers: {} }); // no pathParams
-    expect([400, 401, 403, 500]).toContain(result.status);
+    // validateId('') returns null → forbidden path
+    expect(result.status).toBe(403);
     const body = JSON.parse(result.body);
     expect(body.success).toBe(false);
   });

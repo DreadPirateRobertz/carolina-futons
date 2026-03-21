@@ -12,13 +12,12 @@ import { getAllBlogPosts } from 'backend/blogContent';
 import { getSitemapData, buildSitemapXml, getRobotsTxtContent } from 'backend/seoHelpers.web';
 import wixData from 'wix-data';
 import { colors } from 'public/sharedTokens';
-import { sanitize, validateEmail, validateSlug } from 'backend/utils/sanitize';
+import { sanitize, validateEmail, validateSlug, validateId } from 'backend/utils/sanitize';
 import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/facebookCatalog.web';
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { accounts as loyaltyAccounts, rewards as loyaltyRewards } from 'wix-loyalty.v2';
 import { currentMember } from 'wix-members-backend';
-import { validateId } from 'backend/utils/sanitize';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1187,6 +1186,7 @@ export async function get_loyalty(request) {
       session = null;
     }
     if (!session?._id) {
+      // wix-http-functions has no built-in 401 helper — raw object is intentional
       return { status: 401, body: JSON.stringify({ success: false, error: 'Authentication required.' }), headers: JSON_HEADERS };
     }
 
