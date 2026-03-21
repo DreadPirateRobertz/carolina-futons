@@ -137,6 +137,49 @@ describe('useIdApply — success', () => {
   });
 });
 
+// ── Logging ───────────────────────────────────────────────────────────────────
+
+describe('useIdApply — error logging', () => {
+  it('logs an error when setNickname rejects', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSetNickname.mockRejectedValue(new Error('SDK error'));
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.applyId(sampleElement, dummyCompRef);
+    });
+    expect(consoleSpy).toHaveBeenCalled();
+    const [msg] = consoleSpy.mock.calls[0];
+    expect(msg).toContain('[useIdApply]');
+    consoleSpy.mockRestore();
+  });
+
+  it('log message contains element ID and page name', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockSetNickname.mockRejectedValue(new Error('SDK error'));
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.applyId(sampleElement, dummyCompRef);
+    });
+    const [msg] = consoleSpy.mock.calls[0];
+    expect(msg).toContain('heroTitle');
+    expect(msg).toContain('Home');
+    consoleSpy.mockRestore();
+  });
+
+  it('log message distinguishes timeout from SDK rejection', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Use a slow mock so the 300ms timeout fires (real timers, 1s hang)
+    mockSetNickname.mockImplementation(() => new Promise((res) => setTimeout(res, 1000)));
+    const { result } = renderHook(() => useIdApply('Home'));
+    await act(async () => {
+      await result.current.applyId(sampleElement, dummyCompRef);
+    });
+    const [msg] = consoleSpy.mock.calls[0];
+    expect(msg).toContain('timed out');
+    consoleSpy.mockRestore();
+  }, 2000);
+});
+
 // ── Error path ───────────────────────────────────────────────────────────────
 
 describe('useIdApply — error', () => {

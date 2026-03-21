@@ -46,7 +46,10 @@ export function HookupPanel() {
 
   // S4: apply the target ID directly via the editor SDK (postMessage to P&E panel)
   const handleApplyId = useCallback(async () => {
-    if (!currentElement || !selected) return;
+    if (!currentElement || !selected) {
+      console.warn('[HookupPanel] handleApplyId called with no current element or selection — ignoring');
+      return;
+    }
     resetApplyStatus(); // ensure clean state before each apply attempt
     const ok = await applyId(currentElement, selected.compRef);
     if (ok) {
