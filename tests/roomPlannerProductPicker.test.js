@@ -124,6 +124,7 @@ vi.mock('backend/roomPlanner.web', () => ({
 
 vi.mock('public/engagementTracker', () => ({ trackEvent: vi.fn() }));
 vi.mock('public/mobileHelpers', () => ({ initBackToTop: vi.fn() }));
+vi.mock('public/roomPlannerMobile.js', () => ({ initMobileRoomPlanner: vi.fn() }));
 vi.mock('public/a11yHelpers.js', () => ({ makeClickable: vi.fn(), announce: vi.fn() }));
 vi.mock('public/pageSeo.js', () => ({ initPageSeo: vi.fn() }));
 vi.mock('public/roomPlannerHelpers.js', async () => {
