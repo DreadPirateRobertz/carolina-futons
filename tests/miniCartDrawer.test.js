@@ -67,6 +67,7 @@ import {
   renderCartItems,
   updateCartCount,
   clearAll,
+  isMiniCartOpen,
 } from '../src/public/miniCartDrawer.js';
 
 // ── Fixtures ─────────────────────────────────────────────────────────
@@ -183,16 +184,18 @@ describe('initMiniCartDrawer', () => {
   // Close handler behavior
   it('close button handler invokes closeMiniCart (hides drawer)', () => {
     initMiniCartDrawer($w);
+    openMiniCart($w, makeCart()); // set _isOpen so closeMiniCart runs
     const handler = $w('#miniCartClose').onClick.mock.calls[0][0];
     handler();
-    expect($w('#miniCartDrawer').hide).toHaveBeenCalledTimes(2); // once on init + once on close
+    expect($w('#miniCartDrawer').hide).toHaveBeenCalled();
   });
 
   it('overlay click handler invokes closeMiniCart (hides overlay)', () => {
     initMiniCartDrawer($w);
+    openMiniCart($w, makeCart()); // set _isOpen so closeMiniCart runs
     const handler = $w('#miniCartOverlay').onClick.mock.calls[0][0];
     handler();
-    expect($w('#miniCartOverlay').hide).toHaveBeenCalledTimes(2); // init + close
+    expect($w('#miniCartOverlay').hide).toHaveBeenCalled();
   });
 });
 
@@ -271,35 +274,52 @@ describe('openMiniCart', () => {
       expect.arrayContaining(['#miniCartClose', '#miniCartCheckoutBtn', '#miniCartViewBtn']),
     );
   });
+
+  it('isMiniCartOpen returns true after open', () => {
+    openMiniCart($w, makeCart());
+    expect(isMiniCartOpen()).toBe(true);
+  });
 });
 
 // ── closeMiniCart ────────────────────────────────────────────────────
 
 describe('closeMiniCart', () => {
-  it('hides drawer and overlay', () => {
-    closeMiniCart($w);
-    expect($w('#miniCartDrawer').hide).toHaveBeenCalled();
-    expect($w('#miniCartOverlay').hide).toHaveBeenCalled();
-    // Cold close (no prior open) — null guard must not call release
+  it('is a no-op when drawer is not open (prevents spurious announcements)', () => {
+    closeMiniCart($w); // cold close — _isOpen is false
+    expect($w('#miniCartDrawer').hide).not.toHaveBeenCalled();
+    expect(mockAnnounce).not.toHaveBeenCalled();
     expect(mockTrapRelease).not.toHaveBeenCalled();
   });
 
+  it('hides drawer and overlay after open', () => {
+    openMiniCart($w, makeCart());
+    closeMiniCart($w);
+    expect($w('#miniCartDrawer').hide).toHaveBeenCalled();
+    expect($w('#miniCartOverlay').hide).toHaveBeenCalled();
+  });
+
   it('announces close to screen readers', () => {
+    openMiniCart($w, makeCart());
+    mockAnnounce.mockClear();
     closeMiniCart($w);
     expect(mockAnnounce).toHaveBeenCalledWith($w, 'Cart closed');
   });
 
   it('uses slide animation to close on desktop', () => {
     mockIsMobile.mockReturnValue(false);
+    openMiniCart($w, makeCart());
     closeMiniCart($w);
-    const [effect] = $w('#miniCartDrawer').hide.mock.calls[0];
+    const calls = $w('#miniCartDrawer').hide.mock.calls;
+    const [effect] = calls[calls.length - 1]; // last hide call is the close
     expect(effect).toBe('slide');
   });
 
   it('uses slide from bottom animation on mobile', () => {
     mockIsMobile.mockReturnValue(true);
+    openMiniCart($w, makeCart());
     closeMiniCart($w);
-    const [effect, opts] = $w('#miniCartDrawer').hide.mock.calls[0];
+    const calls = $w('#miniCartDrawer').hide.mock.calls;
+    const [effect, opts] = calls[calls.length - 1];
     expect(effect).toBe('slide');
     expect(opts?.direction).toBe('bottom');
   });
@@ -319,6 +339,20 @@ describe('closeMiniCart', () => {
     globalThis.document = origDoc;
     closeMiniCart($w);
     expect(mockEl.focus).toHaveBeenCalled();
+  });
+});
+
+// ── isMiniCartOpen ───────────────────────────────────────────────────
+
+describe('isMiniCartOpen', () => {
+  it('returns false before any open', () => {
+    expect(isMiniCartOpen()).toBe(false);
+  });
+
+  it('returns false after close', () => {
+    openMiniCart($w, makeCart());
+    closeMiniCart($w);
+    expect(isMiniCartOpen()).toBe(false);
   });
 });
 

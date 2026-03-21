@@ -49,6 +49,10 @@ let _trap = null;
 // Previously focused element, saved on open and restored on close.
 let _savedFocus = null;
 
+// Drawer open state — guards closeMiniCart against spurious Escape-key calls
+// from masterPage when the cart is already closed (prevents stray announcements).
+let _isOpen = false;
+
 /**
  * Reset all internal state. Called in tests via clearAll() before each case.
  */
@@ -56,6 +60,17 @@ export function clearAll() {
   _$w = null;
   _trap = null;
   _savedFocus = null;
+  _isOpen = false;
+}
+
+/**
+ * Returns true if the mini-cart drawer is currently open.
+ * Used by masterPage to guard Escape-key close calls.
+ *
+ * @returns {boolean}
+ */
+export function isMiniCartOpen() {
+  return _isOpen;
 }
 
 // ── Public API ───────────────────────────────────────────────────────
@@ -163,6 +178,7 @@ export function openMiniCart($w, cart) {
   }
   // Focus the close button (first focusable element in the drawer).
   try { $w('#miniCartClose').focus(); } catch (e) {}
+  _isOpen = true;
 }
 
 /**
@@ -171,7 +187,9 @@ export function openMiniCart($w, cart) {
  * @param {Function} $w - Wix $w page selector
  */
 export function closeMiniCart($w) {
+  if (!_isOpen) return; // Guard: no-op when drawer is already closed (prevents spurious announcements)
   _$w = $w;
+  _isOpen = false;
   const mobile = isMobile();
   const closeOpts = mobile
     ? { direction: 'bottom', duration: 250 }

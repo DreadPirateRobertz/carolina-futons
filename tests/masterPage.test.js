@@ -1276,6 +1276,7 @@ describe('masterPage.js', () => {
       mockCloseMiniCart.mockClear();
       await onReadyHandler();
 
+      expect(keydownHandlers.length).toBeGreaterThan(0); // guard: verify handler was registered
       keydownHandlers.forEach(h => h({ key: 'Escape' }));
 
       expect(mockCloseMiniCart).toHaveBeenCalled();
@@ -1286,6 +1287,7 @@ describe('masterPage.js', () => {
       mockCloseMiniCart.mockClear();
       await onReadyHandler();
 
+      expect(keydownHandlers.length).toBeGreaterThan(0); // guard: verify handler was registered
       keydownHandlers.forEach(h => h({ key: 'Enter' }));
 
       expect(mockCloseMiniCart).not.toHaveBeenCalled();
