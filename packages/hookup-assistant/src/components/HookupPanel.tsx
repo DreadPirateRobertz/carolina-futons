@@ -102,11 +102,17 @@ export function HookupPanel() {
 
   // S11: user chose to override — proceed with setNickname despite conflict
   const handleOverride = useCallback(async () => {
-    if (!currentElement || !selected) return;
-    clearConflict();
+    if (!currentElement || !selected) {
+      clearConflict(); // dismiss banner even if state went stale
+      return;
+    }
     resetApplyStatus();
     const ok = await applyId(currentElement, selected.compRef);
-    if (ok) markHooked(currentElement.id);
+    if (ok) {
+      clearConflict();
+      markHooked(currentElement.id);
+    }
+    // if !ok: leave banner visible so user can retry or cancel
   }, [currentElement, selected, applyId, markHooked, resetApplyStatus, clearConflict]);
 
   // S11: user cancelled — dismiss conflict banner without applying
