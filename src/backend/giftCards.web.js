@@ -313,6 +313,88 @@ async function sendGiftCardEmails(data) {
 }
 
 /**
+ * Get gift cards this member purchased for others.
+ * Email derived from currentMember session — no caller-supplied param (IDOR guard).
+ *
+ * @function getMyPurchasedCards
+ * @returns {Promise<{success: boolean, cards?: Array, reason?: string}>}
+ * @permission SiteMember
+ */
+export const getMyPurchasedCards = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      const member = await currentMember.getMember();
+      if (!member?.loginEmail) {
+        return { success: false, reason: 'unauthorized' };
+      }
+      const cleanEmail = sanitize(member.loginEmail, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, reason: 'unauthorized' };
+      }
+
+      const result = await wixData.query('GiftCards')
+        .eq('purchaserEmail', cleanEmail)
+        .descending('createdDate')
+        .find();
+
+      return {
+        success: true,
+        cards: result.items.map(card => ({
+          ...sanitizeCardForFrontend(card),
+          recipientName: sanitize(card.recipientName || '', 200),
+          recipientEmail: card.recipientEmail
+            ? maskEmail(card.recipientEmail)
+            : '',
+        })),
+      };
+    } catch (err) {
+      console.error('[giftCards] getMyPurchasedCards error:', err);
+      return { success: false, reason: 'fetch_failed' };
+    }
+  }
+);
+
+/**
+ * Get gift cards received by this member.
+ * Email derived from currentMember session — no caller-supplied param (IDOR guard).
+ *
+ * @function getMyReceivedCards
+ * @returns {Promise<{success: boolean, cards?: Array, reason?: string}>}
+ * @permission SiteMember
+ */
+export const getMyReceivedCards = webMethod(
+  Permissions.SiteMember,
+  async () => {
+    try {
+      const { currentMember } = await import('wix-members-backend');
+      const member = await currentMember.getMember();
+      if (!member?.loginEmail) {
+        return { success: false, reason: 'unauthorized' };
+      }
+      const cleanEmail = sanitize(member.loginEmail, 254).toLowerCase();
+      if (!validateEmail(cleanEmail)) {
+        return { success: false, reason: 'unauthorized' };
+      }
+
+      const result = await wixData.query('GiftCards')
+        .eq('recipientEmail', cleanEmail)
+        .descending('createdDate')
+        .find();
+
+      return {
+        success: true,
+        cards: result.items.map(card => sanitizeCardForFrontend(card)),
+      };
+    } catch (err) {
+      console.error('[giftCards] getMyReceivedCards error:', err);
+      return { success: false, reason: 'fetch_failed' };
+    }
+  }
+);
+
+/**
  * Get gift cards associated with a member's email.
  * Returns both purchased and received cards.
  *
@@ -355,6 +437,18 @@ export const getMyGiftCards = webMethod(
 );
 
 // ── Internal helpers ──────────────────────────────────────────────────
+
+/**
+ * Mask an email address for display, e.g. "alice@example.com" → "a***@example.com".
+ * @param {string} email
+ * @returns {string}
+ */
+function maskEmail(email) {
+  if (!email || typeof email !== 'string') return '***';
+  const [local, domain] = email.split('@');
+  if (!domain) return '***';
+  return `${local.charAt(0)}***@${domain}`;
+}
 
 /**
  * Mask a gift card code, showing only prefix and last segment.
