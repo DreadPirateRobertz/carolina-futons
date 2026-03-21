@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { __reset as __resetMember, __setMember } from './__mocks__/wix-members-backend.js';
 
 vi.mock('wix-web-module', () => ({
   Permissions: { Anyone: 'Anyone', SiteMember: 'SiteMember' },
@@ -201,6 +202,11 @@ describe('customizationService', () => {
   // ── saveConfiguration ──
 
   describe('saveConfiguration', () => {
+    beforeEach(() => {
+      __resetMember();
+      __setMember({ _id: 'member-1' });
+    });
+
     it('saves a valid configuration', async () => {
       const wixData = (await import('wix-data')).default;
       wixData.insert.mockResolvedValue({ ...mockSavedConfig });
@@ -275,6 +281,11 @@ describe('customizationService', () => {
   // ── getSavedConfigurations ──
 
   describe('getSavedConfigurations', () => {
+    beforeEach(() => {
+      __resetMember();
+      __setMember({ _id: 'member-1' });
+    });
+
     it('returns saved configs for a member and product', async () => {
       const wixData = (await import('wix-data')).default;
       wixData.query.mockImplementation(() => ({
@@ -312,6 +323,11 @@ describe('customizationService', () => {
   // ── getConfigurationById ──
 
   describe('getConfigurationById', () => {
+    beforeEach(() => {
+      __resetMember();
+      __setMember({ _id: 'member-1' });
+    });
+
     it('returns a config by ID', async () => {
       const wixData = (await import('wix-data')).default;
       wixData.get.mockResolvedValue(mockSavedConfig);
@@ -344,6 +360,99 @@ describe('customizationService', () => {
 
       const result = await getConfigurationById('cfg-1');
       expect(result).toBeNull();
+    });
+  });
+
+  // ── IDOR ownership enforcement (CF-a68a P2) ──
+
+  describe('IDOR ownership enforcement (CF-a68a P2)', () => {
+    beforeEach(() => {
+      __resetMember();
+    });
+
+    it('saveConfiguration rejects attacker inserting record under victim memberId', async () => {
+      __setMember({ _id: 'attacker-id' });
+      const result = await saveConfiguration({
+        productId: 'prod-1',
+        memberId: 'victim-id',
+        fabricName: 'Cotton',
+        totalPrice: 499,
+      });
+      expect(result).toEqual({ error: 'Unauthorized' });
+    });
+
+    it('saveConfiguration rejects unauthenticated caller', async () => {
+      // no __setMember — member is null
+      const result = await saveConfiguration({
+        productId: 'prod-1',
+        memberId: 'member-1',
+        fabricName: 'Cotton',
+        totalPrice: 499,
+      });
+      expect(result).toEqual({ error: 'Unauthorized' });
+    });
+
+    it('saveConfiguration allows member to save their own config', async () => {
+      __setMember({ _id: 'member-ok' });
+      const wixData = (await import('wix-data')).default;
+      wixData.insert.mockResolvedValue({ _id: 'cfg-new', memberId: 'member-ok' });
+
+      const result = await saveConfiguration({
+        productId: 'prod-1',
+        memberId: 'member-ok',
+        fabricName: 'Cotton',
+        totalPrice: 499,
+      });
+      expect(result).toHaveProperty('_id');
+    });
+
+    it('getSavedConfigurations rejects attacker reading victim configs', async () => {
+      __setMember({ _id: 'attacker-id' });
+      const result = await getSavedConfigurations('prod-1', 'victim-id');
+      expect(result).toEqual([]);
+    });
+
+    it('getSavedConfigurations rejects unauthenticated caller', async () => {
+      const result = await getSavedConfigurations('prod-1', 'member-1');
+      expect(result).toEqual([]);
+    });
+
+    it('getSavedConfigurations allows member to read their own configs', async () => {
+      __setMember({ _id: 'member-ok' });
+      const wixData = (await import('wix-data')).default;
+      wixData.query.mockImplementation(() => ({
+        ...mockQuery,
+        find: vi.fn().mockResolvedValue({ items: [{ ...mockSavedConfig, memberId: 'member-ok' }] }),
+      }));
+
+      const result = await getSavedConfigurations('prod-1', 'member-ok');
+      expect(result).toHaveLength(1);
+    });
+
+    it('getConfigurationById rejects attacker reading victim config', async () => {
+      __setMember({ _id: 'attacker-id' });
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValue({ ...mockSavedConfig, memberId: 'victim-id' });
+
+      const result = await getConfigurationById('cfg-victim');
+      expect(result).toBeNull();
+    });
+
+    it('getConfigurationById rejects unauthenticated caller', async () => {
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValue({ ...mockSavedConfig, memberId: 'member-1' });
+
+      const result = await getConfigurationById('cfg-1');
+      expect(result).toBeNull();
+    });
+
+    it('getConfigurationById allows member to read their own config', async () => {
+      __setMember({ _id: 'member-1' });
+      const wixData = (await import('wix-data')).default;
+      wixData.get.mockResolvedValue({ ...mockSavedConfig, memberId: 'member-1' });
+
+      const result = await getConfigurationById('cfg-1');
+      expect(result).toHaveProperty('configName', 'My Living Room Setup');
     });
   });
 });
