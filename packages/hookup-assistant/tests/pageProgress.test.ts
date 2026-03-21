@@ -108,3 +108,118 @@ describe('usePageProgress — page isolation', () => {
     expect(product.current.hookedIds).not.toContain('heroTitle');
   });
 });
+
+// ── S13: undoLast ────────────────────────────────────────────────────────────
+
+describe('usePageProgress — undoLast', () => {
+  it('canUndo is false initially', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('canUndo is true after markHooked', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    expect(result.current.canUndo).toBe(true);
+  });
+
+  it('canUndo is true after markSkipped', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    expect(result.current.canUndo).toBe(true);
+  });
+
+  it('undoes markHooked — removes from hookedIds', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+
+  it('undoes markSkipped — removes from skippedIds', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+  });
+
+  it('canUndo becomes false after undoing the only action', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+  });
+
+  it('persists undo to localStorage', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.undoLast());
+    const saved = localStorageMock.getItem('cf-hookup-home-hooked');
+    expect(JSON.parse(saved!)).toEqual([]);
+  });
+
+  it('undoes actions in LIFO order', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.markHooked('heroCTA'));
+    act(() => result.current.undoLast());
+    expect(result.current.hookedIds).toContain('heroTitle');
+    expect(result.current.hookedIds).not.toContain('heroCTA');
+  });
+
+  it('does nothing when history is empty', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.undoLast()); // should not throw
+    expect(result.current.hookedIds).toEqual([]);
+    expect(result.current.skippedIds).toEqual([]);
+  });
+
+  it('resetPage clears canUndo', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.resetPage());
+    expect(result.current.canUndo).toBe(false);
+  });
+});
+
+describe('usePageProgress — undoLast duplicate guard', () => {
+  it('does not push history when markHooked is called with an already-hooked ID', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle'));
+    act(() => result.current.markHooked('heroTitle')); // duplicate — no-op
+    expect(result.current.canUndo).toBe(true);
+    // Only one history entry — undo removes it and canUndo goes false
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+
+  it('does not push history when markSkipped is called with an already-skipped ID', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.markSkipped('heroTitle')); // duplicate — no-op
+    act(() => result.current.undoLast());
+    expect(result.current.canUndo).toBe(false);
+  });
+});
+
+describe('usePageProgress — undoLast wasSkipped restoration', () => {
+  it('restores element to skippedIds when undoing a markHooked that displaced it', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markSkipped('heroTitle'));
+    act(() => result.current.markHooked('heroTitle')); // displaces from skipped
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+    act(() => result.current.undoLast());
+    // Element should be back in skipped, not in hooked
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+    expect(result.current.skippedIds).toContain('heroTitle');
+  });
+
+  it('does NOT restore to skippedIds when element was not previously skipped', () => {
+    const { result } = renderHook(() => usePageProgress('Home'));
+    act(() => result.current.markHooked('heroTitle')); // never skipped
+    act(() => result.current.undoLast());
+    expect(result.current.skippedIds).not.toContain('heroTitle');
+    expect(result.current.hookedIds).not.toContain('heroTitle');
+  });
+});
