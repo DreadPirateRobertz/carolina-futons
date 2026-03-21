@@ -266,7 +266,9 @@ export const getPhotoGallery = webMethod(
 
 // ── UGC engagement helpers ──────────────────────────────────────────────────
 
+// Closed set prevents arbitrary strings reaching the DB and enables future UI localization.
 const VALID_REPORT_REASONS = ['inappropriate', 'spam', 'fake', 'offensive', 'other'];
+// Number of reports required to automatically demote a review back to pending for re-moderation.
 const REPORT_ESCALATION_THRESHOLD = 5;
 
 /**
@@ -296,7 +298,7 @@ export const markHelpful = webMethod(
         return { success: false, error: 'Cannot mark own review as helpful.' };
       }
 
-      if (review.status !== 'approved' && review.status !== 'featured') {
+      if (!['approved', 'featured'].includes(review.status)) {
         return { success: false, error: 'Review not available for helpful votes.' };
       }
 
@@ -328,9 +330,9 @@ export const reportPhotoReview = webMethod(
         return { success: false, error: 'Valid review ID is required.' };
       }
 
-      const cleanReason = sanitize(reason || '', 50);
+      const cleanReason = typeof reason === 'string' ? reason.trim() : '';
       if (!VALID_REPORT_REASONS.includes(cleanReason)) {
-        return { success: false, error: 'Invalid reason. Must be one of: ' + VALID_REPORT_REASONS.join(', ') + '.' };
+        return { success: false, error: `Invalid reason. Must be one of: ${VALID_REPORT_REASONS.join(', ')}.` };
       }
 
       const review = await wixData.get('PhotoReviews', cleanId);
@@ -357,22 +359,15 @@ export const reportPhotoReview = webMethod(
 /**
  * Get pending photo reviews for admin moderation queue.
  * Returns oldest first (submittedAt ascending) so oldest reviews get attention first.
+ * Access is enforced by Permissions.Admin at the Wix platform level.
  *
- * @param {number} [limit=50] - Max reviews to return.
+ * @param {number} [limit=50] - Max reviews to return (clamped 1–200).
  * @returns {Promise<{success: boolean, reviews: Array, totalCount: number, error?: string}>}
  */
 export const getPendingReviews = webMethod(
   Permissions.Admin,
   async (limit = 50) => {
     try {
-      await requireMember();
-
-      const roles = await currentMember.getRoles();
-      const isAdmin = Array.isArray(roles) && roles.some(r => r._id === 'admin');
-      if (!isAdmin) {
-        return { success: false, error: 'Insufficient permission. Admin access required.' };
-      }
-
       const maxResults = Math.max(1, Math.min(200, Math.round(Number(limit) || 50)));
 
       const result = await wixData.query('PhotoReviews')
@@ -396,7 +391,7 @@ export const getPendingReviews = webMethod(
       return { success: true, reviews, totalCount: result.totalCount };
     } catch (err) {
       console.error('[photoReviews] Error getting pending reviews:', err);
-      return { success: false, error: 'Failed to load pending reviews.' };
+      return { success: false, error: 'Failed to load pending reviews.', reviews: [], totalCount: 0 };
     }
   }
 );

@@ -1,11 +1,11 @@
 /**
  * Tests for CF-zkdy UGC photo review additions:
- *   - markHelpful — increment helpfulCount on an approved review
+ *   - markHelpful — increment helpfulCount on an approved or featured review
  *   - reportPhotoReview — increment reportCount; escalate when threshold hit
  *   - getPendingReviews — admin moderation queue (pending status only)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData, __getInserted, __getUpdated } from './__mocks__/wix-data.js';
+import { __seed, __reset as resetData, __getUpdated } from './__mocks__/wix-data.js';
 import { __setMember, __setRoles } from './__mocks__/wix-members-backend.js';
 import {
   markHelpful,
@@ -50,6 +50,19 @@ const REVIEW_PENDING_2 = {
   helpfulCount: 0,
   reportCount: 0,
   submittedAt: new Date('2026-01-03'),
+};
+
+const REVIEW_FEATURED = {
+  _id: 'rev-004',
+  memberId: 'member-5',
+  productId: 'prod-abc',
+  reviewText: 'This futon is absolutely incredible!',
+  rating: 5,
+  photoUrl: 'wix:image://v1/jkl.jpg/jkl.jpg#originWidth=800&originHeight=600',
+  status: 'featured',
+  helpfulCount: 10,
+  reportCount: 0,
+  submittedAt: new Date('2026-01-04'),
 };
 
 beforeEach(() => {
@@ -102,6 +115,13 @@ describe('markHelpful', () => {
     const result = await markHelpful('rev-001');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/own review/i);
+  });
+
+  it('accepts helpful votes on featured reviews', async () => {
+    __seed('PhotoReviews', [REVIEW_FEATURED]);
+    const result = await markHelpful('rev-004');
+    expect(result.success).toBe(true);
+    expect(result.helpfulCount).toBe(11);
   });
 });
 
@@ -183,28 +203,20 @@ describe('getPendingReviews', () => {
     expect(dates[0]).toBeLessThanOrEqual(dates[1]);
   });
 
-  it('requires Admin permission', async () => {
-    __setRoles([]);
-    const result = await getPendingReviews();
-    expect(result.success).toBe(false);
-    expect(result.error).toMatch(/permission/i);
-  });
+  // Admin and auth enforcement is handled by Permissions.Admin at the Wix platform level;
+  // not testable via unit tests since the webMethod mock strips permission wrappers.
 
-  it('requires authentication', async () => {
-    __setMember(null);
-    const result = await getPendingReviews();
-    expect(result.success).toBe(false);
-  });
-
-  it('returns each review with id, productId, productName, reviewText, rating, photoUrl, submittedAt', async () => {
+  it('returns each review with expected fields', async () => {
     const result = await getPendingReviews();
     const review = result.reviews[0];
     expect(review).toHaveProperty('_id');
     expect(review).toHaveProperty('productId');
+    expect(review).toHaveProperty('productName');
     expect(review).toHaveProperty('reviewText');
     expect(review).toHaveProperty('rating');
     expect(review).toHaveProperty('photoUrl');
     expect(review).toHaveProperty('submittedAt');
+    expect(review).toHaveProperty('reportCount');
   });
 
   it('returns empty array when no pending reviews', async () => {
@@ -214,13 +226,14 @@ describe('getPendingReviews', () => {
     expect(result.reviews).toHaveLength(0);
   });
 
-  it('respects limit parameter', async () => {
+  it('respects limit parameter without reducing totalCount', async () => {
     const result = await getPendingReviews(1);
     expect(result.success).toBe(true);
     expect(result.reviews).toHaveLength(1);
+    expect(result.totalCount).toBe(2);
   });
 
-  it('includes totalCount', async () => {
+  it('includes totalCount matching the full pending set', async () => {
     const result = await getPendingReviews();
     expect(result).toHaveProperty('totalCount');
     expect(result.totalCount).toBeGreaterThanOrEqual(2);
