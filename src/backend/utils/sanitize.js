@@ -99,9 +99,11 @@ export function formatPhoneE164(phone) {
 
 /**
  * Validate that a URL is a Wix Media Manager URL.
- * Wix media URLs follow patterns like:
+ * Accepted patterns:
  *   wix:image://v1/...
+ *   wix:video://v1/...
  *   https://static.wixstatic.com/media/...
+ *   https://*.wixmp.com/...
  * Rejects arbitrary external URLs that could serve malicious content or leak EXIF data.
  * CF-rr8d: ClickFix hardening — prevent attacker-supplied external image URLs.
  *
@@ -123,6 +125,7 @@ export function isWixMediaUrl(url) {
 
 /**
  * Generate a UUID v4-format filename with the original file extension.
+ * Uses Math.random() — sufficient for filename uniqueness but NOT cryptographically secure.
  * CF-rr8d: ClickFix hardening — replace user-supplied filenames with UUIDs
  * to prevent filename-based injection and information leakage.
  *

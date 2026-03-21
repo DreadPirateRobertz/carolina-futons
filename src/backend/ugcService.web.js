@@ -72,16 +72,18 @@ export const submitUGCPhoto = webMethod(
         return { success: false, error: 'Authentication required.' };
       }
 
-      const photoUrl = sanitize(data.photoUrl || '', 500);
-      if (!photoUrl) {
+      const rawPhotoUrl = (data.photoUrl || '').trim();
+      if (!rawPhotoUrl) {
         return { success: false, error: 'Photo URL is required.' };
       }
 
-      // CF-rr8d: Only accept Wix Media Manager URLs — reject external URLs
-      // that could serve malicious content or leak EXIF metadata.
-      if (!isWixMediaUrl(photoUrl)) {
+      // CF-rr8d: Validate BEFORE sanitize — sanitize() strips HTML tags which
+      // could transform a crafted URL into one that passes validation.
+      if (!isWixMediaUrl(rawPhotoUrl)) {
         return { success: false, error: 'Photo must be uploaded through the site upload form.' };
       }
+
+      const photoUrl = sanitize(rawPhotoUrl, 500);
 
       const roomType = sanitize(data.roomType || '', 50);
       if (!VALID_ROOM_TYPES.includes(roomType)) {

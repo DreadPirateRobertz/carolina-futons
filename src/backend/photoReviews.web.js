@@ -65,16 +65,18 @@ export const submitPhotoReview = webMethod(
         return { success: false, error: 'Review must be at least 10 characters.' };
       }
 
-      const photoUrl = sanitize(data.photoUrl || '', 500);
-      if (!photoUrl) {
+      const rawPhotoUrl = (data.photoUrl || '').trim();
+      if (!rawPhotoUrl) {
         return { success: false, error: 'Photo is required for photo reviews.' };
       }
 
-      // CF-rr8d: Only accept Wix Media Manager URLs — reject external URLs
-      // that could serve malicious content or leak EXIF metadata.
-      if (!isWixMediaUrl(photoUrl)) {
+      // CF-rr8d: Validate BEFORE sanitize — sanitize() strips HTML tags which
+      // could transform a crafted URL into one that passes validation.
+      if (!isWixMediaUrl(rawPhotoUrl)) {
         return { success: false, error: 'Photo must be uploaded through the site upload form.' };
       }
+
+      const photoUrl = sanitize(rawPhotoUrl, 500);
 
       const rating = Math.min(5, Math.max(1, Math.round(Number(data.rating) || 5)));
 

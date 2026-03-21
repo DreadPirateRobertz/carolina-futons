@@ -267,6 +267,37 @@ describe('submitUGCPhoto', () => {
     expect(result.success).toBe(false);
   });
 
+  // CF-rr8d: Integration tests — external URL rejection through full submit path
+  it('rejects external URL — attacker domain', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'https://evil.com/malware.jpg',
+      caption: 'Legit photo',
+      roomType: 'living-room',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
+  it('rejects external URL — data: URI XSS vector', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'data:image/svg+xml,<svg onload="alert(1)">',
+      caption: 'XSS attempt',
+      roomType: 'bedroom',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
+  it('rejects external URL — javascript: URI', async () => {
+    const result = await submitUGCPhoto({
+      photoUrl: 'javascript:alert(document.cookie)',
+      caption: 'Cookie steal',
+      roomType: 'office',
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('upload form');
+  });
+
   it('sanitizes caption — HTML stripped', async () => {
     const result = await submitUGCPhoto({
       photoUrl: 'wix:image://v1/test/photo.jpg',
