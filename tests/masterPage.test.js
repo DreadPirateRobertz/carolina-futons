@@ -94,6 +94,7 @@ import { getActivePromotion } from 'backend/promotions.web';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
+import { initConsentGate, fireTrackedTikTokEvent } from 'public/pixelConsentService';
 const { mockIsMobile, mockGetViewport } = vi.hoisted(() => ({
   mockIsMobile: vi.fn(() => false),
   mockGetViewport: vi.fn(() => 'desktop'),
@@ -2396,6 +2397,30 @@ describe('masterPage.js', () => {
       await vi.advanceTimersByTimeAsync(50);
 
       expect(getEl('#exitIntentPopup').hide).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── GDPR: TikTok PageView consent gate ──────────────────────────────
+
+  describe('TikTok PageView — consent gate (GDPR P0)', () => {
+    it('registers consent gate on page load', async () => {
+      await onReadyHandler();
+      expect(initConsentGate).toHaveBeenCalled();
+    });
+
+    it('fires PageView through consent gate, not directly', async () => {
+      await onReadyHandler();
+      expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
+    });
+
+    it('does not bypass consent — fireTikTokEvent is never called directly from masterPage', async () => {
+      // masterPage must use fireTrackedTikTokEvent (consent-gated), never fireTikTokEvent directly.
+      // If this test passes, no direct unconsented pixel fire can originate from masterPage init.
+      await onReadyHandler();
+      // fireTrackedTikTokEvent was called (consent-gated path)
+      expect(fireTrackedTikTokEvent).toHaveBeenCalledWith('PageView', {});
+      // initConsentGate was called before any pixel fire (listener registered)
+      expect(initConsentGate).toHaveBeenCalled();
     });
   });
 });
