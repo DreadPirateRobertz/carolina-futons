@@ -8,11 +8,11 @@
  *  - Member with no email gets empty array
  *  - Member with no matching CMS records gets empty array
  *  - getActiveCoupons does NOT call coupons.queryAllCoupons / queryV2 (no cross-member data)
- *  - createWelcomeCoupon writes to Members/MemberCoupons
- *  - createBirthdayCoupon writes to Members/MemberCoupons
- *  - createTierUpgradeCoupon writes to Members/MemberCoupons
- *  - generateRecoveryCoupon writes to Members/MemberCoupons (new cart)
- *  - createCartRecoveryCoupon writes to Members/MemberCoupons
+ *  - createWelcomeCoupon writes to MemberCoupons
+ *  - createBirthdayCoupon writes to MemberCoupons
+ *  - createTierUpgradeCoupon writes to MemberCoupons
+ *  - generateRecoveryCoupon writes to MemberCoupons (new cart)
+ *  - createCartRecoveryCoupon writes to MemberCoupons
  *  - MemberCoupons insert failure is non-blocking (best-effort)
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -28,7 +28,7 @@ vi.mock('wix-members-backend', () => ({
 
 vi.mock('wix-marketing-backend', () => ({
   coupons: {
-    createCoupon: vi.fn().mockResolvedValue({ code: 'TEST-ABCDEF' }),
+    createCoupon: vi.fn().mockResolvedValue({ code: 'TEST-ABCDEF', _id: 'coupon-id-1' }),
     queryV2: vi.fn(() => ({
       eq: () => ({ limit: () => ({ find: async () => ({ items: [] }) }) }),
     })),
@@ -61,13 +61,14 @@ function makeMember(loginEmail) {
 }
 
 function seedCoupons(email, records) {
-  __seed('Members/MemberCoupons', records.map((r, i) => ({
+  __seed('MemberCoupons', records.map((r, i) => ({
     _id: `coupon-${i}`,
     memberEmail: email,
-    couponCode: r.code,
-    couponType: r.type,
-    discount: r.discount,
-    expiresAt: r.expiresAt || '2099-01-01T00:00:00.000Z',
+    code: r.code,
+    displayName: r.displayName || r.type,
+    percentOffRate: r.percentOffRate || 0,
+    moneyOffAmount: r.moneyOffAmount || 0,
+    expirationTime: r.expirationTime || r.expiresAt || '2099-01-01T00:00:00.000Z',
     active: true,
     ...r,
   })));
@@ -85,7 +86,7 @@ beforeEach(async () => {
 
   const mktMod = await import('wix-marketing-backend');
   mockCreateCoupon = mktMod.coupons.createCoupon;
-  mockCreateCoupon.mockResolvedValue({ code: 'TEST-ABCDEF' });
+  mockCreateCoupon.mockResolvedValue({ code: 'TEST-ABCDEF', _id: 'coupon-id-1' });
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -115,9 +116,9 @@ describe('getActiveCoupons — IDOR gate', () => {
   it('returns only the current member\'s coupons (IDOR: other member\'s records excluded at DB level)', async () => {
     mockGetMember.mockResolvedValue(makeMember('alice@example.com'));
     // Seed both members' coupons together — DB query must filter by memberEmail
-    __seed('Members/MemberCoupons', [
-      { _id: 'coupon-alice', memberEmail: 'alice@example.com', couponCode: 'WELCOME-ALICE', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
-      { _id: 'coupon-bob', memberEmail: 'bob@example.com', couponCode: 'WELCOME-BOB', couponType: 'Welcome', discount: '10%', active: true, expiresAt: '2099-01-01T00:00:00.000Z' },
+    __seed('MemberCoupons', [
+      { _id: 'coupon-alice', memberEmail: 'alice@example.com', code: 'WELCOME-ALICE', displayName: 'Welcome 10% Off', percentOffRate: 10, moneyOffAmount: 0, active: true, expirationTime: '2099-01-01T00:00:00.000Z' },
+      { _id: 'coupon-bob', memberEmail: 'bob@example.com', code: 'WELCOME-BOB', displayName: 'Welcome 10% Off', percentOffRate: 10, moneyOffAmount: 0, active: true, expirationTime: '2099-01-01T00:00:00.000Z' },
     ]);
 
     const result = await getActiveCoupons();
@@ -127,16 +128,16 @@ describe('getActiveCoupons — IDOR gate', () => {
     expect(codes).not.toContain('WELCOME-BOB');
   });
 
-  it('maps CMS fields correctly (couponCode → code, couponType → name)', async () => {
+  it('maps CMS fields correctly (code → code, displayName → name, percentOffRate → discount)', async () => {
     mockGetMember.mockResolvedValue(makeMember('alice@example.com'));
     seedCoupons('alice@example.com', [
-      { code: 'BDAY-XYZ', type: 'Birthday', discount: '15%', expiresAt: '2099-06-01T00:00:00.000Z' },
+      { code: 'BDAY-XYZ', displayName: 'Birthday 15% Off', percentOffRate: 15, expirationTime: '2099-06-01T00:00:00.000Z' },
     ]);
 
     const result = await getActiveCoupons();
     expect(result[0].code).toBe('BDAY-XYZ');
-    expect(result[0].name).toBe('Birthday');
-    expect(result[0].discount).toBe('15%');
+    expect(result[0].name).toBe('Birthday 15% Off');
+    expect(result[0].discount).toBe('15% off');
     expect(result[0].expirationTime).toBe('2099-06-01T00:00:00.000Z');
     expect(result[0].active).toBe(true);
   });
@@ -150,118 +151,116 @@ describe('getActiveCoupons — IDOR gate', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// Creation functions — write to Members/MemberCoupons
+// Creation functions — write to MemberCoupons
 // ─────────────────────────────────────────────────────────────────────
 
 describe('createWelcomeCoupon — writes MemberCoupons record', () => {
-  it('inserts a Members/MemberCoupons record for the email', async () => {
+  it('inserts a MemberCoupons record for the email', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await createWelcomeCoupon('welcome@example.com');
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('welcome@example.com');
-    expect(cms[0].item.couponCode).toBe('TEST-ABCDEF');
-    expect(cms[0].item.couponType).toBe('Welcome');
-    expect(cms[0].item.discount).toBe('10%');
+    expect(cms[0].item.code).toBe('TEST-ABCDEF');
+    expect(cms[0].item.displayName).toBe('Welcome 10% Off');
+    expect(cms[0].item.percentOffRate).toBe(10);
     expect(cms[0].item.active).toBe(true);
   });
 });
 
 describe('createBirthdayCoupon — writes MemberCoupons record', () => {
-  it('inserts a Members/MemberCoupons record for the email', async () => {
+  it('inserts a MemberCoupons record for the email', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await createBirthdayCoupon('bday@example.com', 'Alice');
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('bday@example.com');
-    expect(cms[0].item.couponType).toBe('Birthday');
-    expect(cms[0].item.discount).toBe('15%');
+    expect(cms[0].item.displayName).toBe('Happy Birthday Alice! 15% Off');
+    expect(cms[0].item.percentOffRate).toBe(15);
   });
 });
 
 describe('createTierUpgradeCoupon — writes MemberCoupons record', () => {
-  it('inserts a Members/MemberCoupons record for Silver tier', async () => {
+  it('inserts a MemberCoupons record for Silver tier', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await createTierUpgradeCoupon('silver@example.com', 'Silver');
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
-    expect(cms[0].item.couponType).toBe('Silver Tier');
-    expect(cms[0].item.discount).toBe('10%');
+    expect(cms[0].item.displayName).toBe('Silver Tier Welcome - 10% Off');
+    expect(cms[0].item.percentOffRate).toBe(10);
   });
 
-  it('inserts a Members/MemberCoupons record for Gold tier with 20% discount', async () => {
+  it('inserts a MemberCoupons record for Gold tier with 20% discount', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await createTierUpgradeCoupon('gold@example.com', 'Gold');
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
-    expect(cms[0].item.couponType).toBe('Gold Tier');
-    expect(cms[0].item.discount).toBe('20%');
+    expect(cms[0].item.displayName).toBe('Gold Tier Welcome - 20% Off');
+    expect(cms[0].item.percentOffRate).toBe(20);
   });
 });
 
 describe('generateRecoveryCoupon — writes MemberCoupons record', () => {
-  it('inserts a Members/MemberCoupons record for a new cart', async () => {
+  it('inserts a MemberCoupons record for a new cart', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await generateRecoveryCoupon({ cartId: 'cart-abc', email: 'recover@example.com' });
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('recover@example.com');
-    expect(cms[0].item.couponType).toBe('Cart Recovery');
-    expect(cms[0].item.discount).toBe('10%');
+    expect(cms[0].item.displayName).toBe('Cart Recovery 10% Off');
+    expect(cms[0].item.percentOffRate).toBe(10);
   });
 });
 
 describe('createCartRecoveryCoupon — writes MemberCoupons record', () => {
-  it('inserts a Members/MemberCoupons record', async () => {
+  it('inserts a MemberCoupons record', async () => {
     const inserted = [];
     __onInsert((col, item) => inserted.push({ col, item }));
 
     await createCartRecoveryCoupon('cartrec@example.com');
 
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
     expect(cms).toHaveLength(1);
     expect(cms[0].item.memberEmail).toBe('cartrec@example.com');
-    expect(cms[0].item.couponType).toBe('Cart Recovery');
+    expect(cms[0].item.displayName).toBe('Cart Recovery 10% Off');
   });
 });
 
 // ─────────────────────────────────────────────────────────────────────
-// _insertMemberCouponRecord failure is non-blocking
+// MemberCoupons insert failure is non-blocking
 // ─────────────────────────────────────────────────────────────────────
 
 describe('MemberCoupons insert failure is non-blocking', () => {
   it('createWelcomeCoupon still returns success when MemberCoupons insert fails', async () => {
     __onInsert((col) => {
-      if (col === 'Members/MemberCoupons') throw new Error('DB down');
+      if (col === 'MemberCoupons') throw new Error('DB down');
     });
 
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = await createWelcomeCoupon('fail@example.com');
 
     expect(result.success).toBe(true);
     expect(result.code).toBe('TEST-ABCDEF');
-    expect(errorSpy).toHaveBeenCalledWith(
+    expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('MemberCoupons insert failed'),
-      expect.anything(),
-      expect.stringContaining(':'),
       expect.stringContaining('DB down'),
     );
-    errorSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 });
 
@@ -330,8 +329,8 @@ describe('createTierUpgradeCoupon — edge cases', () => {
     __onInsert((col, item) => inserted.push({ col, item }));
     const result = await createTierUpgradeCoupon('test@example.com', 'Platinum');
     expect(result.success).toBe(true);
-    const cms = inserted.filter(i => i.col === 'Members/MemberCoupons');
-    expect(cms[0].item.discount).toBe('10%');
+    const cms = inserted.filter(i => i.col === 'MemberCoupons');
+    expect(cms[0].item.percentOffRate).toBe(10);
   });
 });
 
@@ -345,14 +344,15 @@ describe('getActiveCoupons — email fallback', () => {
       loginEmail: '',
       contactDetails: { emails: [{ address: 'contact@example.com' }] },
     });
-    __seed('Members/MemberCoupons', [{
+    __seed('MemberCoupons', [{
       _id: 'c-contact',
       memberEmail: 'contact@example.com',
-      couponCode: 'BDAY-CONTACT',
-      couponType: 'Birthday',
-      discount: '15%',
+      code: 'BDAY-CONTACT',
+      displayName: 'Birthday 15% Off',
+      percentOffRate: 15,
+      moneyOffAmount: 0,
       active: true,
-      expiresAt: '2099-01-01T00:00:00.000Z',
+      expirationTime: '2099-01-01T00:00:00.000Z',
     }]);
 
     const result = await getActiveCoupons();
