@@ -1200,18 +1200,24 @@ export function get_topicCluster(request) {
       });
     }
 
+    const spokePages = Array.isArray(cluster.spokePages)
+      ? cluster.spokePages.map(sp => ({ ...sp, url: `${SITE_URL}/buying-guides/${sp.slug}` }))
+      : [];
     const data = {
       success: true,
+      slug,
+      topic: cluster.topic,
+      pillarContent: cluster.pillarContent || '',
+      internalLinks: Array.isArray(cluster.internalLinks) ? cluster.internalLinks : [],
+      spokePages,
       cluster: {
         pillarSlug: cluster.pillarSlug,
         pillarTitle: cluster.pillarTitle,
         pillarUrl: `${SITE_URL}/buying-guides/${cluster.pillarSlug}`,
         topic: cluster.topic,
         keywords: cluster.keywords,
-        spokePages: Array.isArray(cluster.spokePages)
-          ? cluster.spokePages.map(sp => ({ ...sp, url: `${SITE_URL}/buying-guides/${sp.slug}` }))
-          : [],
-        spokeCount: Array.isArray(cluster.spokePages) ? cluster.spokePages.length : 0,
+        spokePages,
+        spokeCount: spokePages.length,
       },
     };
 

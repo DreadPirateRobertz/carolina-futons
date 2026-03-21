@@ -1,36 +1,18 @@
 /**
  * @module topicClusters
  * @description SEO topic cluster engine: organizes content into pillar/spoke
- * clusters, auto-generates internal links between related content, provides
- * comprehensive schema markup (Article, FAQ, HowTo, BreadcrumbList), and
- * calculates SEO readiness scores per page.
+ * clusters, auto-generates internal links between related content, and provides
+ * all data needed for /guides/{slug} cluster overview pages.
+ *
+ * All cluster data is sourced from backend/utils/topicClusterData — no CMS
+ * collections are queried. The wix-data import is retained for future migration.
  *
  * @requires wix-web-module
- * @requires wix-data
- *
- * @setup
- * Create CMS collection `TopicClusters` with fields:
- *   pillarSlug (Text, indexed) - Pillar page slug
- *   pillarTitle (Text) - Pillar page title
- *   topic (Text, indexed) - Cluster topic keyword
- *   spokePages (Text) - JSON array of spoke page slugs
- *   keywords (Text) - JSON array of target keywords
- *   active (Boolean)
- *
- * Create CMS collection `InternalLinks` with fields:
- *   sourceSlug (Text, indexed) - Page the link appears on
- *   targetSlug (Text, indexed) - Page being linked to
- *   anchorText (Text) - Anchor text for the link
- *   context (Text) - 'inline'|'sidebar'|'footer'|'related'
- *   weight (Number) - Link importance (higher = more prominent)
- *   active (Boolean)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize, validateSlug } from 'backend/utils/sanitize';
-import { CLUSTERS } from 'backend/utils/topicClusterData';
-
-const SITE_URL = 'https://www.carolinafutons.com';
+import { CLUSTERS, PILLAR_CONTENT, GUIDES_URL, SITE_URL } from 'backend/utils/topicClusterData';
 const PUBLISHER_NAME = 'Carolina Futons';
 
 // ── Topic Cluster Definitions ─────────────────────────────────────────
@@ -78,6 +60,93 @@ export const getTopicCluster = webMethod(
     } catch (err) {
       console.error('[topicClusters] Error getting topic cluster:', err);
       return { success: false, error: 'Failed to load topic cluster.', cluster: null };
+    }
+  }
+);
+
+// ── getTopicClusterPage ───────────────────────────────────────────────
+
+/**
+ * Get all data needed to render a /guides/{slug} topic cluster page.
+ * Returns cluster metadata, rich pillar content, internal links, and SEO fields.
+ *
+ * @param {string} pillarSlug - Cluster slug (e.g. 'futon-frames').
+ * @returns {Promise<{success: boolean, page: Object|null}>}
+ *   - success: false — invalid slug (empty, path-traversal, etc.)
+ *   - success: true, page: null — slug is valid but matches no defined cluster
+ *   - success: true, page: Object — full page data ready to render
+ */
+export const getTopicClusterPage = webMethod(
+  Permissions.Anyone,
+  async (pillarSlug) => {
+    try {
+      const slug = validateSlug(pillarSlug);
+      if (!slug) {
+        return { success: false, error: 'Slug is required.', page: null };
+      }
+
+      const cluster = CLUSTERS[slug];
+      if (!cluster) {
+        return { success: true, page: null };
+      }
+
+      const content = PILLAR_CONTENT[slug] || null;
+      const spokePages = Array.isArray(cluster.spokePages) ? cluster.spokePages : [];
+
+      // Pillar → spoke internal links
+      const internalLinks = spokePages.slice(0, 6).map(sp => ({
+        targetSlug: sp.slug,
+        targetUrl: `${SITE_URL}/buying-guides/${sp.slug}`,
+        anchorText: sp.title,
+        context: 'inline',
+        relationship: 'pillar-to-spoke',
+      }));
+
+      // Cross-cluster sidebar links (up to 3 other clusters)
+      const relatedSlugs = Object.keys(CLUSTERS).filter(k => k !== slug).slice(0, 3);
+      for (const rSlug of relatedSlugs) {
+        internalLinks.push({
+          targetSlug: rSlug,
+          targetUrl: `${GUIDES_URL}/${rSlug}`,
+          anchorText: CLUSTERS[rSlug].pillarTitle,
+          context: 'sidebar',
+          relationship: 'cross-cluster',
+        });
+      }
+
+      const metaDescription = content
+        ? content.metaDescription
+        : `Everything about ${cluster.topic} — compare options, find the right fit, and shop Carolina Futons' complete selection.`;
+
+      return {
+        success: true,
+        page: {
+          slug,
+          title: cluster.pillarTitle,
+          metaTitle: `${cluster.pillarTitle} | Carolina Futons`,
+          metaDescription,
+          canonicalUrl: `${GUIDES_URL}/${slug}`,
+          cluster: {
+            pillarSlug: cluster.pillarSlug,
+            pillarTitle: cluster.pillarTitle,
+            topic: cluster.topic,
+            keywords: cluster.keywords,
+            spokePages: spokePages.map(sp => ({
+              ...sp,
+              url: `${SITE_URL}/buying-guides/${sp.slug}`,
+            })),
+            spokeCount: spokePages.length,
+          },
+          pillarContent: content,
+          internalLinks,
+          relatedClusters: Object.entries(CLUSTERS)
+            .filter(([k]) => k !== slug)
+            .map(([k, c]) => ({ slug: k, title: c.pillarTitle, url: `${GUIDES_URL}/${k}` })),
+        },
+      };
+    } catch (err) {
+      console.error('[topicClusters] Error loading cluster page:', pillarSlug, err.name, err.message, err);
+      return { success: false, error: 'Failed to load cluster page.', page: null };
     }
   }
 );

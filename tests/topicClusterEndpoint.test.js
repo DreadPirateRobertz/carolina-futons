@@ -190,6 +190,53 @@ describe('get_topicCluster — response format', () => {
       expect(cluster.spokeCount).toBe(cluster.spokePages.length);
     }
   });
+
+  it('top-level slug matches requested slug', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    expect(body.slug).toBe('futon-frames');
+  });
+
+  it('top-level topic matches cluster topic', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    expect(body.topic).toBe('futon frames');
+  });
+
+  it('top-level pillarContent is a non-empty string', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    expect(typeof body.pillarContent).toBe('string');
+    expect(body.pillarContent.length).toBeGreaterThan(0);
+  });
+
+  it('top-level internalLinks is an array', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    expect(Array.isArray(body.internalLinks)).toBe(true);
+    expect(body.internalLinks.length).toBeGreaterThan(0);
+  });
+
+  it('each internalLink has anchor, url, targetSlug', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    for (const link of body.internalLinks) {
+      expect(typeof link.anchor).toBe('string');
+      expect(link.url).toContain('/guides/');
+      expect(typeof link.targetSlug).toBe('string');
+    }
+  });
+
+  it('top-level spokePages is an array matching cluster.spokePages', () => {
+    const body = JSON.parse(get_topicCluster(makeRequest('futon-frames')).body);
+    expect(Array.isArray(body.spokePages)).toBe(true);
+    expect(body.spokePages.length).toBe(body.cluster.spokePages.length);
+  });
+
+  it('all 8 clusters have pillarContent and internalLinks at top level', () => {
+    const slugs = ['futon-frames', 'mattresses', 'covers', 'pillows', 'storage', 'outdoor', 'accessories', 'bundle-deals'];
+    for (const slug of slugs) {
+      const body = JSON.parse(get_topicCluster(makeRequest(slug)).body);
+      expect(body.slug).toBe(slug);
+      expect(typeof body.pillarContent).toBe('string');
+      expect(Array.isArray(body.internalLinks)).toBe(true);
+    }
+  });
 });
 
 // ── Security / injection ────────────────────────────────────────────────
@@ -213,6 +260,14 @@ describe('get_topicCluster — slug injection', () => {
 
   it('returns 400 for slug with only whitespace', () => {
     expect(get_topicCluster(makeRequest('   ')).status).toBe(400);
+  });
+
+  it('returns 400 for slug with embedded space (invalid chars fail validateSlug)', () => {
+    expect(get_topicCluster(makeRequest('hello world')).status).toBe(400);
+  });
+
+  it('returns 400 for slug with dot-dot traversal variant (invalid chars fail validateSlug)', () => {
+    expect(get_topicCluster(makeRequest('../admin')).status).toBe(400);
   });
 });
 
