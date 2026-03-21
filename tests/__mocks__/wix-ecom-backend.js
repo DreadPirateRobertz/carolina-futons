@@ -23,6 +23,11 @@ export function __setCart(c) {
   cart.getCurrentCart.mockImplementation(async () => ({ ..._cart }));
 }
 
+/** Make getCurrentCart throw on the next call. */
+export function __setGetCurrentCartError(err) {
+  cart.getCurrentCart.mockRejectedValueOnce(err);
+}
+
 /** Make addProducts throw on the next call. */
 export function __setAddProductsError(err) {
   cart.addProducts.mockRejectedValueOnce(err);

@@ -1,6 +1,6 @@
 /**
  * @module bundleDeals
- * @description Bundle deals webMethod layer for /near/[city] and home-page product bundles.
+ * @description Bundle deals webMethod layer for home-page and site-wide product bundles.
  * Reads pre-configured bundles from the ProductBundle CMS collection and handles
  * adding all bundle products to the visitor's Wix cart with auto-coupon application.
  *
@@ -26,7 +26,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { cart as ecomCart } from 'wix-ecom-backend';
-import { sanitize, validateSlug } from 'backend/utils/sanitize';
+import { validateId, validateSlug } from 'backend/utils/sanitize';
 
 const COLLECTION = 'ProductBundle';
 
@@ -40,7 +40,10 @@ const COLLECTION = 'ProductBundle';
 function parseProducts(raw) {
   if (Array.isArray(raw)) return raw;
   if (typeof raw === 'string') {
-    try { return JSON.parse(raw); } catch (_) { return []; }
+    try { return JSON.parse(raw); } catch (e) {
+      console.error('[bundleDeals] parseProducts: malformed JSON in products field:', e.message);
+      return [];
+    }
   }
   return [];
 }
@@ -145,14 +148,15 @@ export const addBundleToCart = webMethod(
         return { success: false, error: 'Invalid bundle slug.' };
       }
 
-      // 1. Fetch bundle from CMS — server is the authoritative source for price/coupon
+      // 1. Fetch bundle from CMS — server is the authoritative source for coupon code;
+      //    line-item prices come from the Wix product catalog, not bundlePrice
       const result = await wixData.query(COLLECTION)
         .eq('slug', cleanSlug)
         .eq('isActive', true)
         .find();
 
       if (result.items.length === 0) {
-        return { success: false, error: 'Bundle not found.' };
+        return { success: false, error: 'Bundle not found.', errorCode: 'BUNDLE_NOT_FOUND' };
       }
 
       const bundle = result.items[0];
@@ -166,7 +170,7 @@ export const addBundleToCart = webMethod(
       const lineItems = products
         .filter(p => p && p.productId)
         .map(p => ({
-          productId: sanitize(String(p.productId), 50),
+          productId: validateId(String(p.productId), 50),
           quantity: Math.max(1, Math.floor(Number(p.qty) || 1)),
         }))
         .filter(p => p.productId);
@@ -181,16 +185,22 @@ export const addBundleToCart = webMethod(
       // 4. Auto-apply coupon from CMS (idempotent — skip if already applied)
       let couponApplied = false;
       if (bundle.couponCode) {
+        let alreadyApplied = false;
         try {
           const currentCart = await ecomCart.getCurrentCart();
-          const alreadyApplied = currentCart?.appliedCoupon?.code === bundle.couponCode;
-          if (!alreadyApplied) {
+          alreadyApplied = currentCart?.appliedCoupon?.code === bundle.couponCode;
+        } catch (cartErr) {
+          // Non-fatal: if we can't read cart state, attempt coupon apply anyway
+          console.warn('[bundleDeals] getCurrentCart failed (non-fatal):', cartErr.message);
+        }
+        if (!alreadyApplied) {
+          try {
             await ecomCart.applyCoupon(bundle.couponCode);
             couponApplied = true;
+          } catch (couponErr) {
+            // Non-fatal: products are already in cart; log and continue
+            console.warn('[bundleDeals] Coupon apply failed (non-fatal):', bundle.couponCode, couponErr.message);
           }
-        } catch (couponErr) {
-          // Non-fatal: products are already in cart; log and continue
-          console.warn('[bundleDeals] Coupon apply failed (non-fatal):', bundle.couponCode, couponErr.message);
         }
       }
 

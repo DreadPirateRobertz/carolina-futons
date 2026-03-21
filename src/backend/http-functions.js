@@ -1429,10 +1429,11 @@ export async function post_trackReferral(request) {
 
 /**
  * GET /_functions/bundles
- * GET /_functions/bundles/{slug}
+ *   Lists all active bundles.
  *
- * Lists all active bundles, or returns a single bundle when a slug path
- * segment is present (e.g. /_functions/bundles/complete-futon-set).
+ * GET /_functions/bundles?slug=<slug>
+ *   Returns a single bundle by slug (via query param — Wix does not support
+ *   path-segment routing for named HTTP functions).
  */
 export async function get_bundles(request) {
   const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -1486,7 +1487,7 @@ export async function post_addBundleToCart(request) {
     const result = await addBundleToCart(body.slug);
 
     if (!result.success) {
-      if (result.error === 'Bundle not found.') {
+      if (result.errorCode === 'BUNDLE_NOT_FOUND') {
         return notFound({ body: JSON.stringify(result), headers: JSON_HEADERS });
       }
       return badRequest({ body: JSON.stringify(result), headers: JSON_HEADERS });

@@ -16,7 +16,7 @@ vi.mock('wix-web-module', () => ({
 
 import { listBundles, getBundleBySlug, addBundleToCart } from '../src/backend/bundleDeals.web.js';
 import { __seed, __reset as __resetData, __setQueryError } from './__mocks__/wix-data.js';
-import { cart, __setCart, __setAddProductsError, __setApplyCouponError, __reset as __resetCart } from './__mocks__/wix-ecom-backend.js';
+import { cart, __setCart, __setGetCurrentCartError, __setAddProductsError, __setApplyCouponError, __reset as __resetCart } from './__mocks__/wix-ecom-backend.js';
 
 // ── Test fixtures ────────────────────────────────────────────────────────
 
@@ -316,6 +316,13 @@ describe('addBundleToCart — coupon handling', () => {
   it('products are added even if coupon application fails', async () => {
     __setApplyCouponError(new Error('Coupon limit reached'));
     await addBundleToCart('complete-futon-set');
+    expect(cart.addProducts).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns success: true when getCurrentCart fails (coupon attempted anyway)', async () => {
+    __setGetCurrentCartError(new Error('Cart service unavailable'));
+    const result = await addBundleToCart('complete-futon-set');
+    expect(result.success).toBe(true);
     expect(cart.addProducts).toHaveBeenCalledTimes(1);
   });
 
