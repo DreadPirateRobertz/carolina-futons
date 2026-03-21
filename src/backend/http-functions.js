@@ -20,6 +20,7 @@ import { getEnhancedCatalogFields, exportCustomerAudienceData } from 'backend/fa
 import { timingSafeEqual, decodeHtmlEntities, stripHtmlSafe, escapeXml } from 'backend/utils/httpHelpers';
 import { CLUSTERS, SITE_URL } from 'backend/utils/topicClusterData';
 import { listBundles, getBundleBySlug, addBundleToCart } from 'backend/bundleDeals.web';
+import { createKlarnaSession, readKlarnaOrder } from 'backend/klarnaService.web';
 
 /**
  * Fetch all products from the Stores/Products collection, paginating
@@ -1636,5 +1637,84 @@ export async function post_answerQuestion(request) {
   } catch (err) {
     console.error('HTTP function error (post_answerQuestion):', err);
     return serverError({ body: JSON.stringify({ error: 'Internal server error' }), headers: JSON_HEADERS });
+  }
+}
+
+// ── Klarna Checkout Proxy ─────────────────────────────────────────────
+//
+// POST /_functions/klarna/checkout — create a Klarna session; returns redirect URL
+// POST /_functions/klarna/confirm  — read a completed Klarna order
+//
+// Both paths are served by post_klarna; request.path[0] determines the action.
+// Mobile's WixClient calls these to drive the Klarna WebView redirect flow.
+export async function post_klarna(request) {
+  const JSON_HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  const sub = Array.isArray(request.path) && request.path[0];
+
+  if (sub !== 'checkout' && sub !== 'confirm') {
+    return badRequest({
+      body: JSON.stringify({ error: 'Invalid path: expected /checkout or /confirm' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  // Parse body
+  let body;
+  try {
+    const text = await request.body.text();
+    body = JSON.parse(text);
+  } catch (_) {
+    return badRequest({
+      body: JSON.stringify({ error: 'Invalid JSON body' }),
+      headers: JSON_HEADERS,
+    });
+  }
+
+  try {
+    if (sub === 'checkout') {
+      const { lineItems, totals } = body;
+
+      if (!Array.isArray(lineItems) || lineItems.length === 0) {
+        return badRequest({
+          body: JSON.stringify({ error: 'lineItems must be a non-empty array' }),
+          headers: JSON_HEADERS,
+        });
+      }
+      if (!totals || typeof totals.total !== 'number' || totals.total <= 0) {
+        return badRequest({
+          body: JSON.stringify({ error: 'totals.total must be a positive number' }),
+          headers: JSON_HEADERS,
+        });
+      }
+
+      const result = await createKlarnaSession(lineItems, totals);
+      return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+    }
+
+    // sub === 'confirm'
+    const { klarnaOrderId } = body;
+
+    if (typeof klarnaOrderId !== 'string' || !klarnaOrderId) {
+      return badRequest({
+        body: JSON.stringify({ error: 'klarnaOrderId must be a non-empty string' }),
+        headers: JSON_HEADERS,
+      });
+    }
+    // Reject IDs containing path traversal or control characters
+    if (/[^a-zA-Z0-9_\-]/.test(klarnaOrderId)) {
+      return badRequest({
+        body: JSON.stringify({ error: 'klarnaOrderId contains invalid characters' }),
+        headers: JSON_HEADERS,
+      });
+    }
+
+    const result = await readKlarnaOrder(klarnaOrderId);
+    return ok({ body: JSON.stringify(result), headers: JSON_HEADERS });
+  } catch (err) {
+    console.error(`HTTP function error (post_klarna/${sub}):`, err);
+    return serverError({
+      body: JSON.stringify({ error: 'Internal server error' }),
+      headers: JSON_HEADERS,
+    });
   }
 }
