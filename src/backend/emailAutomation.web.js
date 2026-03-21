@@ -451,7 +451,8 @@ export const triggerAbandonedCartRecovery = webMethod(
             recoveryCouponAvailable = true;
           }
         } catch (e) {
-          console.warn('[emailAutomation] Cart recovery coupon unavailable for', cartEmail, ':', e.message);
+          console.error('[emailAutomation] createCartRecoveryCoupon failed for cart', cart.checkoutId,
+            '— email:', cartEmail, '— step 3 will send without discount. Error:', e.message);
         }
 
         for (const step of SEQUENCES.cart_recovery.steps) {

@@ -113,7 +113,9 @@ describe('triggerAbandonedCartRecovery — coupon code passed to step 3', () => 
     await triggerAbandonedCartRecovery();
 
     const inserted = __getInserted('EmailQueue');
-    const step3 = inserted.find(q => q.sequenceType === 'cart_recovery' && q.sequenceStep === 3);
+    const cartSteps = inserted.filter(q => q.sequenceType === 'cart_recovery');
+    expect(cartSteps).toHaveLength(3);
+    const step3 = cartSteps.find(q => q.sequenceStep === 3);
     expect(step3).toBeDefined();
     expect(step3.variables.discountCode).toBe('RECOVER-XY7Z2W');
     expect(step3.variables.discountAvailable).toBe(true);
@@ -125,10 +127,9 @@ describe('triggerAbandonedCartRecovery — coupon code passed to step 3', () => 
 
     const inserted = __getInserted('EmailQueue');
     const step1 = inserted.find(q => q.sequenceType === 'cart_recovery' && q.sequenceStep === 1);
-    if (step1) {
-      expect(step1.variables.discountCode).toBe('');
-      expect(step1.variables.discountAvailable).toBe(false);
-    }
+    expect(step1).toBeDefined();
+    expect(step1.variables.discountCode).toBe('');
+    expect(step1.variables.discountAvailable).toBe(false);
   });
 
   it('step 2 does not include a discount code', async () => {
@@ -137,10 +138,9 @@ describe('triggerAbandonedCartRecovery — coupon code passed to step 3', () => 
 
     const inserted = __getInserted('EmailQueue');
     const step2 = inserted.find(q => q.sequenceType === 'cart_recovery' && q.sequenceStep === 2);
-    if (step2) {
-      expect(step2.variables.discountCode).toBe('');
-      expect(step2.variables.discountAvailable).toBe(false);
-    }
+    expect(step2).toBeDefined();
+    expect(step2.variables.discountCode).toBe('');
+    expect(step2.variables.discountAvailable).toBe(false);
   });
 });
 
@@ -199,6 +199,22 @@ describe('triggerAbandonedCartRecovery — coupon failure fallback', () => {
     const result = await triggerAbandonedCartRecovery();
     expect(result.success).toBe(true);
     expect(result.cartsProcessed).toBeGreaterThanOrEqual(1);
+  });
+
+  it('logs an error when createCartRecoveryCoupon throws', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockCreateCoupon.mockRejectedValueOnce(new Error('network timeout'));
+    seedAbandonedCart({ buyerEmail: 'test@example.com', checkoutId: 'co-test' });
+    await triggerAbandonedCartRecovery();
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[emailAutomation]'),
+      expect.stringContaining('co-test'),
+      expect.anything(),
+      expect.stringContaining('test@example.com'),
+      expect.anything(),
+      expect.anything()
+    );
+    errorSpy.mockRestore();
   });
 
   it('cart is still marked recoveryEmailSent when coupon fails', async () => {

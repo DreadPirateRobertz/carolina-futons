@@ -108,7 +108,6 @@ beforeEach(() => {
   __setSecrets({
     SITE_OWNER_CONTACT_ID: 'owner-contact-123',
     WELCOME_DISCOUNT_CODE: 'WELCOME10',
-    RECOVERY_DISCOUNT_CODE: 'COMEBACK15',
   });
   __seed('AbandonedCarts', []);
   __seed('EmailQueue', []);

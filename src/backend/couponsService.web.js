@@ -269,7 +269,7 @@ export const generateRecoveryCoupon = webMethod(
 );
 
 /**
- * Create a single-use cart recovery coupon (10% off, valid 7 days).
+ * Create a single-use cart recovery coupon (10% off, valid 48 hours).
  *
  * @function createCartRecoveryCoupon
  * @param {string} email - Buyer's email (used for coupon name and validation)
@@ -297,14 +297,14 @@ export const createCartRecoveryCoupon = webMethod(
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),
-        expirationTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expirationTime: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48 hours
       });
 
       return {
         success: true,
         code: coupon.code,
         discount: '10%',
-        expiresIn: '7 days',
+        expiresIn: '48 hours',
       };
     } catch (err) {
       console.error('Error creating cart recovery coupon:', err);
@@ -328,7 +328,9 @@ async function generateCode(prefix) {
       const existing = await coupons.queryV2().eq('code', code).limit(1).find();
       if (!existing.items || existing.items.length === 0) return code;
     } catch (e) {
-      // If query fails, return the code (collision is unlikely with 6 chars from 32-char alphabet)
+      // Collision check failed — returning unchecked code; collision is statistically unlikely
+      console.warn('[couponsService] generateCode collision check failed (attempt', attempt, '):', e.message,
+        '— returning unchecked code');
       return code;
     }
   }

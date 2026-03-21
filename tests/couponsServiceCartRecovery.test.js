@@ -28,9 +28,9 @@ describe('createCartRecoveryCoupon — happy path', () => {
     expect(result.discount).toBe('10%');
   });
 
-  it('returns expiresIn "7 days"', async () => {
+  it('returns expiresIn "48 hours"', async () => {
     const result = await createCartRecoveryCoupon('buyer@example.com');
-    expect(result.expiresIn).toBe('7 days');
+    expect(result.expiresIn).toBe('48 hours');
   });
 
   it('passes percentOffRate:10 to coupons API', async () => {
@@ -61,6 +61,13 @@ describe('createCartRecoveryCoupon — happy path', () => {
     );
   });
 
+  it('passes limitedToOneItem:false to coupons API', async () => {
+    await createCartRecoveryCoupon('buyer@example.com');
+    expect(coupons.createCoupon).toHaveBeenCalledWith(
+      expect.objectContaining({ limitedToOneItem: false })
+    );
+  });
+
   it('sets a 7-day expiration time (±5s tolerance)', async () => {
     const before = Date.now();
     await createCartRecoveryCoupon('buyer@example.com');
@@ -68,10 +75,10 @@ describe('createCartRecoveryCoupon — happy path', () => {
 
     const [[callArg]] = coupons.createCoupon.mock.calls;
     const expiry = callArg.expirationTime.getTime();
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    const fortyEightHoursMs = 48 * 60 * 60 * 1000;
 
-    expect(expiry).toBeGreaterThanOrEqual(before + sevenDaysMs - 5000);
-    expect(expiry).toBeLessThanOrEqual(after + sevenDaysMs + 5000);
+    expect(expiry).toBeGreaterThanOrEqual(before + fortyEightHoursMs - 5000);
+    expect(expiry).toBeLessThanOrEqual(after + fortyEightHoursMs + 5000);
   });
 
   it('includes buyer email in coupon name', async () => {
