@@ -6,6 +6,7 @@ import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
+import { initMiniCartDrawer, openMiniCart, closeMiniCart, updateCartCount } from 'public/miniCartDrawer';
 import { sharePromise, deferInit } from 'public/performanceHelpers';
 import { isMobile, getViewport } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -49,10 +50,10 @@ $w.onReady(async function () {
   initEnhancedNavigation();
   initAnnouncementBar();
   initSearch();
-  initCartIcon();
-  initCartBadge();
+  initMiniCartDrawer($w);
+  initCartIconForMiniCart();
   initSiteLogo();
-  initSideCartAutoOpen();
+  initMiniCartAutoOpen();
   initFooter($w);
   initMountainSkylineHeader();
   initHeaderShippingProgress();
@@ -123,8 +124,8 @@ function initAccessibility() {
     if (typeof document !== 'undefined') {
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          // Close side cart (not managed by setupAccessibleDialog)
-          try { $w('#sideCartPanel').hide('slide', { direction: 'right', duration: 200 }); } catch (e) {}
+          // Close mini-cart drawer
+          try { closeMiniCart($w); } catch (e) {}
           // Mobile menu Escape is handled by initMobileDrawer's own keydown handler
         }
       });
@@ -272,15 +273,17 @@ function initSearch() {
   }
 }
 
-// ── Side Cart Auto-Open ─────────────────────────────────────────────
-// Automatically opens the side cart when a new item is added to cart
+// ── Mini-Cart Auto-Open ──────────────────────────────────────────────
+// Automatically opens the mini-cart drawer when a new item is added to cart
 
-function initSideCartAutoOpen() {
-  // Capture initial cart count so we can detect additions
+function initMiniCartAutoOpen() {
+  // Capture initial cart count so we can detect additions vs. removals
   getSharedCart().then((cart) => {
     _previousCartItemCount = cart
       ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
       : 0;
+    // Seed the cart count badge on init
+    updateCartCount($w, _previousCartItemCount);
   }).catch(() => {
     _previousCartItemCount = 0;
   });
@@ -292,77 +295,35 @@ function initSideCartAutoOpen() {
         ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
         : 0;
 
-      // Only auto-open when item count increased (add, not remove)
+      // Only auto-open when item count increased (add event, not remove)
       if (_previousCartItemCount !== null && newCount > _previousCartItemCount) {
-        openSideCart(cart);
+        openMiniCart($w, cart);
+      } else {
+        // Update count badge on any cart change (remove, qty change)
+        updateCartCount($w, newCount);
       }
       _previousCartItemCount = newCount;
     } catch (e) {
-      // Non-critical — side cart just won't auto-open
+      // Non-critical — mini-cart just won't auto-open
     }
   });
 }
 
-function openSideCart(cart) {
-  try {
-    const panel = $w('#sideCartPanel');
-    if (panel) {
-      panel.show('slide', { direction: 'right', duration: 300 });
-    }
-  } catch (e) {}
+// ── Cart Icon → Mini-Cart ────────────────────────────────────────────
+// Wires cart icon click to open the mini-cart drawer
 
-  // Highlight the just-added item
-  try {
-    const highlight = $w('#justAddedHighlight');
-    if (highlight && cart && cart.lineItems.length > 0) {
-      const lastItem = cart.lineItems[cart.lineItems.length - 1];
-      highlight.show('fade', { duration: 200 });
-      // Auto-hide highlight after 3 seconds
-      setTimeout(() => {
-        try { highlight.hide('fade', { duration: 300 }); } catch (e) {}
-      }, 3000);
-    }
-  } catch (e) {}
-}
-
-// ── Cart Icon & Badge ────────────────────────────────────────────────
-// Wires cart icon click → open side cart, and badge with item count
-
-function initCartIcon() {
+function initCartIconForMiniCart() {
   try {
     const cartIcon = $w('#cartIcon');
     if (!cartIcon) return;
 
-    makeClickable(cartIcon, () => {
+    makeClickable(cartIcon, async () => {
       try {
-        $w('#sideCartPanel').show('slide', { direction: 'right', duration: 300 });
+        const cart = await getCurrentCart();
+        openMiniCart($w, cart || { lineItems: [] });
       } catch (e) {}
     }, { ariaLabel: 'Shopping cart' });
   } catch (e) {}
-}
-
-function initCartBadge() {
-  async function updateBadge() {
-    try {
-      const cart = await getSharedCart();
-      const count = cart
-        ? cart.lineItems.reduce((sum, item) => sum + item.quantity, 0)
-        : 0;
-
-      const badge = $w('#cartBadge');
-      if (!badge) return;
-
-      if (count > 0) {
-        badge.text = String(count);
-        badge.show();
-      } else {
-        badge.hide();
-      }
-    } catch (e) {}
-  }
-
-  updateBadge();
-  onCartChanged(() => updateBadge());
 }
 
 // ── Site Logo ───────────────────────────────────────────────────────
