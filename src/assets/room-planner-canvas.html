@@ -57,6 +57,9 @@
     dragOffsetY: 0,
   };
 
+  // Trusted parent origin — set on first verified message from window.parent.
+  var parentOrigin = null;
+
   function resize() {
     canvas.width = canvas.parentElement.clientWidth || 600;
     canvas.height = canvas.parentElement.clientHeight || 400;
@@ -312,11 +315,14 @@
           isBedMode: p.isBedMode, fits: checkFit(p),
         };
       }),
-    }, '*');
+    }, parentOrigin || window.location.origin);
   }
 
   window.addEventListener('message', function(event) {
+    // Only accept messages from our direct parent frame.
+    if (event.source !== window.parent) return;
     if (!event.data || !event.data.type) return;
+    if (!parentOrigin) parentOrigin = event.origin;
 
     switch (event.data.type) {
       case 'updateRoom':
