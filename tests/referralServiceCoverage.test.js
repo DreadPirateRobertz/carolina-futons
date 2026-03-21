@@ -265,13 +265,14 @@ describe('referralService — completeReferral', () => {
   });
 
   it('completes referral and creates credits', async () => {
-    __setMember({ _id: 'member-referee' });
+    __setMember({ _id: 'member-referee', loginEmail: 'referee@test.com' });
     __seed('Referrals', [{
       _id: 'ref-complete',
       referralCode: 'COMP1234',
       status: 'signed_up',
       referrerMemberId: 'member-referrer',
       referrerEmail: 'referrer@test.com',
+      refereeEmail: 'referee@test.com',
     }]);
     const inserts = [];
     __onInsert((collection, item) => inserts.push({ collection, item }));
@@ -299,12 +300,13 @@ describe('referralService — completeReferral', () => {
   });
 
   it('sets referral status to credited after completion', async () => {
-    __setMember({ _id: 'member-ref' });
+    __setMember({ _id: 'member-ref', loginEmail: 'ref@test.com' });
     __seed('Referrals', [{
       _id: 'ref-status',
       referralCode: 'STAT1234',
       status: 'signed_up',
       referrerMemberId: 'member-other',
+      refereeEmail: 'ref@test.com',
     }]);
     const updates = [];
     __onUpdate((collection, item) => updates.push({ collection, item }));
@@ -318,12 +320,13 @@ describe('referralService — completeReferral', () => {
   });
 
   it('sets order number on the referral', async () => {
-    __setMember({ _id: 'member-ord' });
+    __setMember({ _id: 'member-ord', loginEmail: 'ord@test.com' });
     __seed('Referrals', [{
       _id: 'ref-ord',
       referralCode: 'ORDR1234',
       status: 'signed_up',
       referrerMemberId: 'member-other',
+      refereeEmail: 'ord@test.com',
     }]);
     const updates = [];
     __onUpdate((collection, item) => updates.push({ collection, item }));
@@ -335,12 +338,13 @@ describe('referralService — completeReferral', () => {
   });
 
   it('credit expiry is approximately 90 days from now', async () => {
-    __setMember({ _id: 'member-exp' });
+    __setMember({ _id: 'member-exp', loginEmail: 'exp@test.com' });
     __seed('Referrals', [{
       _id: 'ref-exp',
       referralCode: 'EXPR1234',
       status: 'signed_up',
       referrerMemberId: 'member-other',
+      refereeEmail: 'exp@test.com',
     }]);
     const inserts = [];
     __onInsert((collection, item) => inserts.push({ collection, item }));

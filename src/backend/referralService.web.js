@@ -206,6 +206,14 @@ export const completeReferral = webMethod(
       }
 
       const referral = result.items[0];
+
+      // SECURITY: Verify the calling member's email matches the referral's refereeEmail.
+      // Without this check, any authenticated member who knows a referral code can steal
+      // the $25 referee credit (IDOR — CF-7q7a / CF-zamz finding 1).
+      if (member.loginEmail.toLowerCase() !== referral.refereeEmail.toLowerCase()) {
+        return { success: false, error: 'Unauthorized' };
+      }
+
       referral.refereeMemberId = member._id;
 
       // Idempotency: if already credited, return success without re-issuing

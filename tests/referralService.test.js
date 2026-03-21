@@ -253,6 +253,7 @@ describe('completeReferral', () => {
       referrerMemberId: 'member-001',
       referrerName: 'Alice',
       referralCode: 'ABCD1234',
+      refereeEmail: 'bob@example.com',
       status: 'signed_up',
       referrerCredit: 50,
       refereeCredit: 25,
@@ -349,6 +350,28 @@ describe('completeReferral', () => {
   it('fails for invalid referral code', async () => {
     const result = await completeReferral('XXXX9999', 'ORD-10042');
     expect(result.success).toBe(false);
+  });
+
+  // ── Security: email ownership check (CF-7q7a / CF-zamz finding 1) ──
+
+  it('rejects attacker whose email does not match refereeEmail', async () => {
+    // Attacker knows the code but is not the intended referee
+    __setMember({ _id: 'member-attacker', loginEmail: 'attacker@evil.com', name: 'Attacker' });
+    const result = await completeReferral('ABCD1234', 'ORD-10042');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Unauthorized');
+  });
+
+  it('allows the legitimate referee whose email matches refereeEmail', async () => {
+    __setMember({ _id: 'member-002', loginEmail: 'bob@example.com', name: 'Bob' });
+    const result = await completeReferral('ABCD1234', 'ORD-10042');
+    expect(result.success).toBe(true);
+  });
+
+  it('email match is case-insensitive', async () => {
+    __setMember({ _id: 'member-002', loginEmail: 'BOB@EXAMPLE.COM', name: 'Bob' });
+    const result = await completeReferral('ABCD1234', 'ORD-10042');
+    expect(result.success).toBe(true);
   });
 });
 
