@@ -2,7 +2,7 @@
  * couponsServiceCartRecovery.test.js — unit tests for createCartRecoveryCoupon.
  *
  * Tests the new webMethod added to couponsService for single-use cart-recovery
- * coupons (RECOVER prefix, 10% off, 7-day expiry). No module-level mock on
+ * coupons (RECOVER prefix, 10% off, 48-hour expiry). No module-level mock on
  * couponsService itself — tests the real function via wix-marketing-backend mock.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -54,6 +54,13 @@ describe('createCartRecoveryCoupon — happy path', () => {
     );
   });
 
+  it('passes usageLimit:1 to coupons API (globally single-use)', async () => {
+    await createCartRecoveryCoupon('buyer@example.com');
+    expect(coupons.createCoupon).toHaveBeenCalledWith(
+      expect.objectContaining({ usageLimit: 1 })
+    );
+  });
+
   it('passes active:true to coupons API', async () => {
     await createCartRecoveryCoupon('buyer@example.com');
     expect(coupons.createCoupon).toHaveBeenCalledWith(
@@ -68,7 +75,7 @@ describe('createCartRecoveryCoupon — happy path', () => {
     );
   });
 
-  it('sets a 7-day expiration time (±5s tolerance)', async () => {
+  it('sets a 48-hour expiration time (±5s tolerance)', async () => {
     const before = Date.now();
     await createCartRecoveryCoupon('buyer@example.com');
     const after = Date.now();

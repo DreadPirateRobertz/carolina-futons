@@ -294,6 +294,7 @@ export const createCartRecoveryCoupon = webMethod(
         scope: { namespace: 'stores' },
         minimumSubtotal: 0,
         limitPerCustomer: 1,
+        usageLimit: 1,
         limitedToOneItem: false,
         active: true,
         startTime: new Date(),

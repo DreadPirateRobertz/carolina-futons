@@ -441,22 +441,24 @@ export const triggerAbandonedCartRecovery = webMethod(
           .map(i => `${i.name} (x${i.quantity})`)
           .join(', ');
 
-        // Step 3 gets a unique single-use coupon via couponsService
-        let recoveryCouponCode = '';
-        let recoveryCouponAvailable = false;
-        try {
-          const couponResult = await createCartRecoveryCoupon(cartEmail);
-          if (couponResult.success) {
-            recoveryCouponCode = couponResult.code;
-            recoveryCouponAvailable = true;
-          }
-        } catch (e) {
-          console.error('[emailAutomation] createCartRecoveryCoupon failed for cart', cart.checkoutId,
-            '— email:', cartEmail, '— step 3 will send without discount. Error:', e.message);
-        }
-
         for (const step of SEQUENCES.cart_recovery.steps) {
           const scheduledFor = new Date(abandonedAt.getTime() + step.delayHours * 60 * 60 * 1000);
+
+          // Step 3 only: create a unique single-use coupon — do not burn a coupon for steps 1 or 2
+          let discountCode = '';
+          let discountAvailable = false;
+          if (step.step === 3) {
+            try {
+              const couponResult = await createCartRecoveryCoupon(cartEmail);
+              if (couponResult.success) {
+                discountCode = couponResult.code;
+                discountAvailable = true;
+              }
+            } catch (e) {
+              console.error('[emailAutomation] createCartRecoveryCoupon failed for cart', cart.checkoutId,
+                '— email:', cartEmail, '— step 3 will send without discount. Error:', e.message);
+            }
+          }
 
           await queueEmail({
             templateId: step.templateId,
@@ -466,8 +468,8 @@ export const triggerAbandonedCartRecovery = webMethod(
               buyerName: cart.buyerName || '',
               cartTotal: String(cart.cartTotal || 0),
               itemSummary,
-              discountCode: step.step === 3 ? recoveryCouponCode : '',
-              discountAvailable: step.step === 3 ? recoveryCouponAvailable : false,
+              discountCode,
+              discountAvailable,
               checkoutId: cart.checkoutId,
               email: cartEmail,
             },
