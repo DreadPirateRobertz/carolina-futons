@@ -19,6 +19,7 @@
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
+import { sanitize } from 'backend/utils/sanitize';
 
 const COLLECTION = 'Members/StyleQuizResults';
 const BASE_URL = 'https://www.carolinafutons.com';
@@ -70,6 +71,7 @@ export const saveQuizResult = webMethod(
 
     // Check for an existing result to upsert
     let existingId = null;
+    let existingShareId = null;
     try {
       const existing = await wixData.query(COLLECTION)
         .eq('memberId', memberId)
@@ -77,19 +79,18 @@ export const saveQuizResult = webMethod(
         .find();
       if (existing.items.length > 0) {
         existingId = existing.items[0]._id;
+        existingShareId = existing.items[0].shareId;
       }
     } catch (err) {
       console.error('[styleQuizService] query error on upsert check:', err);
     }
 
-    const shareId = existingId
-      ? (await wixData.query(COLLECTION).eq('_id', existingId).limit(1).find()).items[0]?.shareId || generateShareId()
-      : generateShareId();
+    const shareId = existingShareId || generateShareId();
 
     const record = {
       memberId,
       answers: JSON.stringify(answers),
-      resultTag: resultTag || '',
+      resultTag: sanitize(resultTag || '', 200),
       shareId,
       completedAt: new Date(),
     };
