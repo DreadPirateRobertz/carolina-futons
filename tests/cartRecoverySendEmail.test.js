@@ -15,7 +15,7 @@ vi.mock('backend/couponsService.web', () => ({
 import { sendRecoveryEmail } from '../src/backend/cartRecovery.web.js';
 import wixData from './__mocks__/wix-data.js';
 import { __reset, __seed, __getInserted, __onUpdate } from './__mocks__/wix-data.js';
-import { __reset as crmReset, __getEmailLog, __failNextEmail } from './__mocks__/wix-crm-backend.js';
+import { __reset as crmReset, __getEmailLog, __failNextEmail, __seedContacts } from './__mocks__/wix-crm-backend.js';
 
 const CART_ID = 'cart-doc-abc';
 const CART_RECORD = {
@@ -69,10 +69,12 @@ describe('sendRecoveryEmail — success', () => {
     expect(log[0].templateId).toBe('cart_recovery_1');
   });
 
-  it('sends triggered email to buyer email', async () => {
+  it('sends triggered email to resolved contactId (not raw email)', async () => {
     await sendRecoveryEmail(CART_ID);
     const log = __getEmailLog();
-    expect(log[0].contactId).toBe('shopper@example.com');
+    expect(log[0].contactId).toBeDefined();
+    expect(log[0].contactId).not.toBe('shopper@example.com');
+    expect(typeof log[0].contactId).toBe('string');
   });
 
   it('includes discountCode in email variables', async () => {
@@ -113,7 +115,7 @@ describe('sendRecoveryEmail — coupon failure degrades gracefully', () => {
     await sendRecoveryEmail(CART_ID);
     const log = __getEmailLog();
     expect(log[0].options.variables.discountCode).toBe('');
-    expect(log[0].options.variables.discountAvailable).toBe(false);
+    expect(log[0].options.variables.discountAvailable).toBe('false');
   });
 });
 

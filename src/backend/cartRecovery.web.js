@@ -15,7 +15,7 @@
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
-import { triggeredEmails } from 'wix-crm-backend';
+import { triggeredEmails, contacts } from 'wix-crm-backend';
 import { sanitize } from 'backend/utils/sanitize';
 import { generateRecoveryCoupon } from 'backend/couponsService.web';
 
@@ -200,23 +200,33 @@ export const sendRecoveryEmail = webMethod(
 
       const couponResult = await generateRecoveryCoupon({ cartId: cart.checkoutId, email: cartEmail });
       const discountCode = couponResult.success ? couponResult.code : '';
+      if (!couponResult.success) {
+        console.warn('[cartRecovery] Coupon generation failed for cartId:', cartId, '— sending email without discount:', couponResult.message);
+      }
 
-      await triggeredEmails.emailContact('cart_recovery_1', cartEmail, {
+      const { contactId } = await contacts.appendOrCreateContact({ emails: [{ email: cartEmail }] });
+
+      await triggeredEmails.emailContact('cart_recovery_1', contactId, {
         variables: {
           buyerName: cart.buyerName || '',
           cartTotal: String(cart.cartTotal || 0),
           discountCode,
-          discountAvailable: couponResult.success,
+          discountAvailable: String(couponResult.success),
           checkoutId: cart.checkoutId,
           email: cartEmail,
         },
       });
 
-      await wixData.update('AbandonedCarts', {
-        ...cart,
-        recoveryEmailSent: true,
-        recoveryEmailSentAt: new Date().toISOString(),
-      });
+      try {
+        await wixData.update('AbandonedCarts', {
+          ...cart,
+          recoveryEmailSent: true,
+          recoveryEmailSentAt: new Date().toISOString(),
+        });
+      } catch (updateErr) {
+        console.error('[cartRecovery] Failed to mark recoveryEmailSent for cartId:', cartId, '— error:', updateErr.message);
+        return { success: false, message: 'Failed to update cart status after email send' };
+      }
 
       return { success: true, discountCode };
     } catch (err) {
