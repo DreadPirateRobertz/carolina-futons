@@ -203,7 +203,6 @@ export const getQuizOptions = webMethod(
   }
 );
 
-<<<<<<< HEAD
 // ── Profile-based personalized copy ───────────────────────────────────
 
 /**
