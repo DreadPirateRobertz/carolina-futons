@@ -117,6 +117,12 @@ describe('buildSpokeCards', () => {
   it('returns empty array for non-array input', () => {
     expect(buildSpokeCards('foo')).toEqual([]);
   });
+
+  it('spoke with missing slug does not produce /buying-guides/undefined', () => {
+    const cards = buildSpokeCards([{ title: 'No Slug', type: 'guide' }]);
+    expect(cards[0].url).not.toContain('undefined');
+    expect(cards[0].slug).toBe('');
+  });
 });
 
 // ── getSpokesByType ───────────────────────────────────────────────────

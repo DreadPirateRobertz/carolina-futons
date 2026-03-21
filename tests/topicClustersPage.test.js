@@ -75,6 +75,18 @@ describe('getTopicClusterPage — known slugs', () => {
     expect(page.internalLinks.length).toBeGreaterThan(0);
   });
 
+  it('inline pillar-to-spoke links are capped at 6', async () => {
+    const { page } = await getTopicClusterPage('futon-frames');
+    const inlineLinks = page.internalLinks.filter(l => l.relationship === 'pillar-to-spoke');
+    expect(inlineLinks.length).toBeLessThanOrEqual(6);
+  });
+
+  it('cross-cluster sidebar links are capped at 3', async () => {
+    const { page } = await getTopicClusterPage('futon-frames');
+    const sidebarLinks = page.internalLinks.filter(l => l.relationship === 'cross-cluster');
+    expect(sidebarLinks.length).toBeLessThanOrEqual(3);
+  });
+
   it('pillar-to-spoke links point to /buying-guides/', async () => {
     const { page } = await getTopicClusterPage('futon-frames');
     const spokeLinks = page.internalLinks.filter(l => l.relationship === 'pillar-to-spoke');

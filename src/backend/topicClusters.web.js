@@ -1,29 +1,13 @@
 /**
  * @module topicClusters
  * @description SEO topic cluster engine: organizes content into pillar/spoke
- * clusters, auto-generates internal links between related content, provides
- * comprehensive schema markup (Article, FAQ, HowTo, BreadcrumbList), and
- * calculates SEO readiness scores per page.
+ * clusters, auto-generates internal links between related content, and provides
+ * all data needed for /guides/{slug} cluster overview pages.
+ *
+ * All cluster data is sourced from backend/utils/topicClusterData — no CMS
+ * collections are queried. The wix-data import is retained for future migration.
  *
  * @requires wix-web-module
- * @requires wix-data
- *
- * @setup
- * Create CMS collection `TopicClusters` with fields:
- *   pillarSlug (Text, indexed) - Pillar page slug
- *   pillarTitle (Text) - Pillar page title
- *   topic (Text, indexed) - Cluster topic keyword
- *   spokePages (Text) - JSON array of spoke page slugs
- *   keywords (Text) - JSON array of target keywords
- *   active (Boolean)
- *
- * Create CMS collection `InternalLinks` with fields:
- *   sourceSlug (Text, indexed) - Page the link appears on
- *   targetSlug (Text, indexed) - Page being linked to
- *   anchorText (Text) - Anchor text for the link
- *   context (Text) - 'inline'|'sidebar'|'footer'|'related'
- *   weight (Number) - Link importance (higher = more prominent)
- *   active (Boolean)
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -88,6 +72,9 @@ export const getTopicCluster = webMethod(
  *
  * @param {string} pillarSlug - Cluster slug (e.g. 'futon-frames').
  * @returns {Promise<{success: boolean, page: Object|null}>}
+ *   - success: false — invalid slug (empty, path-traversal, etc.)
+ *   - success: true, page: null — slug is valid but matches no defined cluster
+ *   - success: true, page: Object — full page data ready to render
  */
 export const getTopicClusterPage = webMethod(
   Permissions.Anyone,
@@ -158,7 +145,7 @@ export const getTopicClusterPage = webMethod(
         },
       };
     } catch (err) {
-      console.error('[topicClusters] Error loading cluster page:', err.name, err.message, err);
+      console.error('[topicClusters] Error loading cluster page:', pillarSlug, err.name, err.message, err);
       return { success: false, error: 'Failed to load cluster page.', page: null };
     }
   }

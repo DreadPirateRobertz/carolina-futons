@@ -52,7 +52,7 @@ export function buildSpokeCards(spokePages) {
     title: sp.title || '',
     type: sp.type || '',
     typeLabel: getSpokeTypeLabel(sp.type),
-    url: `${SITE_URL}/buying-guides/${sp.slug}`,
+    url: sp.slug ? `${SITE_URL}/buying-guides/${sp.slug}` : `${SITE_URL}/buying-guides`,
   }));
 }
 
