@@ -95,6 +95,12 @@ vi.mock('wix-data', () => ({
   },
 }));
 
+vi.mock('wix-members-backend', () => ({
+  currentMember: {
+    getMember: vi.fn(async () => ({ _id: 'mem-1' })),
+  },
+}));
+
 vi.mock('backend/utils/sanitize', () => ({
   sanitize: (val, maxLen) => {
     if (!val || typeof val !== 'string') return '';
@@ -114,9 +120,11 @@ import {
   giftStoreCredit,
   getExpiringCredits,
 } from '../src/backend/storeCreditService.web.js';
+import { currentMember } from 'wix-members-backend';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'mem-1' });
   _collections = {};
   _insertCbs = [];
   _updateCbs = [];
@@ -763,6 +771,7 @@ describe('getStoreCreditHistory — results', () => {
 // ── giftStoreCredit ─────────────────────────────────────────────────
 
 describe('giftStoreCredit — input validation', () => {
+  beforeEach(() => { vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'from-1' }); });
   it('rejects null data', async () => {
     const r = await giftStoreCredit(null);
     expect(r.success).toBe(false);
@@ -792,6 +801,7 @@ describe('giftStoreCredit — input validation', () => {
   });
 
   it('rejects self-gifting', async () => {
+    vi.mocked(currentMember.getMember).mockResolvedValueOnce({ _id: 'same' });
     const r = await giftStoreCredit({ fromMemberId: 'same', toMemberId: 'same', amount: 10 });
     expect(r.success).toBe(false);
     expect(r.message).toContain('yourself');
@@ -820,6 +830,7 @@ describe('giftStoreCredit — input validation', () => {
 });
 
 describe('giftStoreCredit — insufficient balance', () => {
+  beforeEach(() => { vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'from-1' }); });
   it('rejects when giver has no credits', async () => {
     const r = await giftStoreCredit({ fromMemberId: 'from-1', toMemberId: 'to-1', amount: 10 });
     expect(r.success).toBe(false);
@@ -846,6 +857,7 @@ describe('giftStoreCredit — insufficient balance', () => {
 });
 
 describe('giftStoreCredit — successful gift', () => {
+  beforeEach(() => { vi.mocked(currentMember.getMember).mockResolvedValue({ _id: 'from-1' }); });
   it('deducts from giver and creates credit for recipient', async () => {
     __seed('StoreCredits', [
       makeCredit({ _id: 'c1', memberId: 'from-1', balance: 100 }),
