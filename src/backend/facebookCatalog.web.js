@@ -18,6 +18,7 @@ import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
 import { sanitize } from 'backend/utils/sanitize';
 import { getImageUrl } from 'backend/utils/mediaHelpers';
+import { notifyOwner } from 'backend/notificationService.web';
 
 // ── Constants ───────────────────────────────────────────────────────
 
@@ -521,6 +522,74 @@ export function getMetaRateLimits() {
 }
 
 /**
+ * Cron-callable: refresh the Facebook/Meta product catalog.
+ * Queries all products, validates + processes each through buildCatalogBatch,
+ * and sends an owner alert via notificationService if any products fail validation.
+ *
+ * Called every 6 hours by jobs.config. Runs in Wix cron/system context with Admin permissions.
+ *
+ * @returns {Promise<{success: boolean, processed: number, failed: number, errors: Array}>}
+ */
+export const refreshFacebookCatalog = webMethod(
+  Permissions.Admin,
+  async () => {
+    const PAGE_SIZE = 100;
+    const MAX_PAGES = 50; // safety cap: 5000 products max per run
+    let processed = 0;
+    let failed = 0;
+    const errors = [];
+
+    /** Fire-and-forget owner alert; swallows notifyOwner errors to avoid masking the real failure. */
+    async function safeNotify(subject, msg) {
+      try {
+        await notifyOwner(subject, msg);
+      } catch (notifyErr) {
+        console.error('[facebookCatalog] notifyOwner failed:', notifyErr?.message);
+      }
+    }
+
+    try {
+      let skip = 0;
+      let pagesFetched = 0;
+      let hasMore = true;
+
+      while (hasMore && pagesFetched < MAX_PAGES) {
+        const products = await wixData.query('Stores/Products')
+          .limit(PAGE_SIZE)
+          .skip(skip)
+          .find();
+
+        if (products.items.length === 0) { hasMore = false; break; }
+
+        const batch = buildCatalogBatch(products.items);
+        processed += batch.processed;
+        failed += batch.failed;
+        if (batch.errors.length) errors.push(...batch.errors);
+
+        skip += PAGE_SIZE;
+        pagesFetched++;
+        hasMore = products.items.length === PAGE_SIZE;
+      }
+
+      if (failed > 0) {
+        const msg = `${failed} product(s) failed catalog validation. Errors: ${JSON.stringify(errors.slice(0, 5))}`;
+        console.warn('[facebookCatalog] refreshFacebookCatalog failures:', msg);
+        await safeNotify('facebook catalog sync — validation failures', msg);
+      }
+
+      const summary = { success: failed === 0, processed, failed, errors };
+      console.log('[facebookCatalog] refreshFacebookCatalog complete:', JSON.stringify({ processed, failed }));
+      return summary;
+    } catch (err) {
+      const msg = `catalog refresh failed: ${err?.message ?? String(err)}`;
+      console.error('[facebookCatalog] refreshFacebookCatalog error:', msg);
+      await safeNotify('facebook catalog sync — cron error', msg);
+      return { success: false, processed, failed, errors: [msg] };
+    }
+  }
+);
+
+/**
  * Export customer audience data for Meta Custom Audiences / Lookalike Audiences.
  * Queries orders and aggregates customer data (deduplicated by email).
  * Returns normalized fields per Meta's audience upload format.
@@ -588,3 +657,4 @@ export const exportCustomerAudienceData = webMethod(
     }
   }
 );
+
