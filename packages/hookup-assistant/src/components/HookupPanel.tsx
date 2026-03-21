@@ -9,7 +9,7 @@
  *  - Manual mode toggle in settings
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { PAGES, getUnhookedElements, getAllElements, getRepeaterSection } from '../data/pages.js';
 import { useElementDetection } from '../hooks/useElementDetection.js';
 import { usePageProgress } from '../hooks/usePageProgress.js';
@@ -19,6 +19,8 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
 import { ManualModePanel } from './ManualModePanel.js';
 import { HelpOverlay } from './HelpOverlay.js';
 import type { PageDef } from '../types/index.js';
+import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
+import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
 
 const APP_VERSION = '0.1.0';
 const DEFAULT_PAGE = PAGES[0]?.name ?? '';
@@ -28,6 +30,9 @@ export function HookupPanel() {
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  // S15: import status feedback ('idle' | 'success' | 'error')
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { selected, editorAvailable } = useElementDetection();
   const { hookedIds, skippedIds, markHooked, markSkipped, undoLast, resetPage } = usePageProgress(selectedPageName);
@@ -120,6 +125,44 @@ export function HookupPanel() {
     onToggleHelp: handleToggleHelp,
   });
 
+  // S15: Export handlers
+  const handleExportJson = useCallback(() => {
+    triggerJsonDownload(buildExportPayload());
+  }, []);
+
+  const handleExportText = useCallback(() => {
+    triggerTextDownload(buildExportPayload());
+  }, []);
+
+  // S15: Import handler — reads file, applies to localStorage, reloads to sync state
+  const handleImportFile = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result;
+        if (typeof text !== 'string') {
+          setImportStatus('error');
+          return;
+        }
+        const payload = parseImportPayload(text);
+        if (!payload) {
+          setImportStatus('error');
+          return;
+        }
+        applyImportPayload(payload);
+        setImportStatus('success');
+        // Reload to re-initialise all usePageProgress hooks from fresh localStorage
+        window.location.reload();
+      };
+      reader.readAsText(file);
+      // Reset the input so the same file can be re-imported if needed
+      e.target.value = '';
+    },
+    [],
+  );
+
   const page = PAGES.find((p) => p.name === selectedPageName);
 
   return (
@@ -164,6 +207,34 @@ export function HookupPanel() {
           }}>
             Reset page progress
           </button>
+          {/* S15: Export / Import */}
+          <div style={s.exportRow}>
+            <button style={s.exportBtn} onClick={handleExportJson} title="Export all page progress as JSON">
+              📤 Export JSON
+            </button>
+            <button style={s.exportBtn} onClick={handleExportText} title="Export progress summary as text">
+              📋 Export Text
+            </button>
+          </div>
+          <div style={s.importRow}>
+            <button
+              style={s.importBtn}
+              onClick={() => fileInputRef.current?.click()}
+              title="Import a previously exported JSON file to restore progress"
+            >
+              📥 Import…
+            </button>
+            {importStatus === 'error' && (
+              <span style={s.importError}>Invalid file</span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={handleImportFile}
+            />
+          </div>
         </div>
       )}
 
@@ -419,4 +490,37 @@ const s: Record<string, React.CSSProperties> = {
     backgroundColor: '#f0f4f7',
   },
   footerText: { fontSize: '10px', color: '#7a92a5' },
+  // S15: export/import controls
+  exportRow: {
+    display: 'flex',
+    gap: '6px',
+  },
+  exportBtn: {
+    flex: 1,
+    fontSize: '11px',
+    color: '#0c5460',
+    background: 'none',
+    border: '1px solid #bee5eb',
+    borderRadius: '4px',
+    padding: '3px 6px',
+    cursor: 'pointer',
+  },
+  importRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+  },
+  importBtn: {
+    fontSize: '11px',
+    color: '#4e6579',
+    background: 'none',
+    border: '1px solid #dfe5eb',
+    borderRadius: '4px',
+    padding: '3px 8px',
+    cursor: 'pointer',
+  },
+  importError: {
+    fontSize: '11px',
+    color: '#c94b4b',
+  },
 };

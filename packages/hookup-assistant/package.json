@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
     "@wix/design-system": "^1.260.0",
     "@wix/editor": "^1.451.0",
     "@wix/sdk": "^1.21.4",
@@ -25,11 +26,11 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
     "vite-plugin-mkcert": "^1.17.10",
-    "vitest": "^4.1.0",
-    "@vitest/coverage-v8": "^4.1.0",
-    "jsdom": "^26.1.0"
+    "vitest": "^4.1.0"
   }
 }
