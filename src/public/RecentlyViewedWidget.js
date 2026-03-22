@@ -130,6 +130,7 @@ export async function renderWidget($w, opts = {}) {
 
   // Wire clear button
   try {
+    $w('#recentlyViewedClear').accessibility.ariaLabel = 'Clear recently viewed items';
     $w('#recentlyViewedClear').onClick(() => clearHistory($w));
   } catch { /* noop */ }
 }

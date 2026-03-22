@@ -265,6 +265,12 @@ describe('RecentlyViewedWidget', () => {
       expect(data.map(p => p._id)).not.toContain('prod-1');
     });
 
+    it('sets aria-label on recentlyViewedClear button', async () => {
+      trackView('prod-1');
+      await renderWidget($w);
+      expect($w('#recentlyViewedClear').accessibility.ariaLabel).toBe('Clear recently viewed items');
+    });
+
     it('wires the clear button onClick', async () => {
       trackView('prod-1');
       await renderWidget($w);
