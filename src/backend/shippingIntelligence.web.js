@@ -123,7 +123,7 @@ export const getShippingEstimate = webMethod(
     }
 
     try {
-      const profile = await getProductShippingProfile(productId);
+      const profile = await _resolveProfile(productId);
       const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
       const packages = [{
@@ -191,7 +191,7 @@ export const calculateBundleQuote = webMethod(
         const price = Math.max(0, parseFloat(item.price) || 0);
         orderSubtotal += price * quantity;
 
-        const profile = await getProductShippingProfile(item.productId);
+        const profile = await _resolveProfile(item.productId);
         const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
         for (let i = 0; i < quantity; i++) {
@@ -233,12 +233,17 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     const ltlRates = ltlResult.success ? ltlResult.rates : getLTLFallbackRates(zip, packages);
 
     for (const rate of ltlRates) {
+      const delivery = rate.estimatedDays || '';
       options.push({
         code: rate.code,
         title: rate.title,
+        cost: rate.cost,
         price: rate.cost.toFixed(2),
         currency: rate.currency || 'USD',
-        deliveryTime: rate.estimatedDays,
+        estimatedDelivery: delivery,
+        deliveryTime: delivery,
+        carrier: rate.carrier || 'WWEX',
+        requiresLiftgate: rate.requiresLiftgate ?? true,
         badge: rate.badge || null,
         badgeStyle: 'freight',
         upsellMessage: rate.upsellMessage || null,
@@ -252,12 +257,17 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     // Standard items → UPS parcel
     const rates = await getUPSRates({ postalCode: zip, country: 'US' }, packages, orderSubtotal);
     for (const rate of rates) {
+      const delivery = rate.estimatedDelivery || '';
       options.push({
         code: rate.code,
         title: `📦 ${rate.title}`,
+        cost: rate.cost,
         price: rate.cost.toFixed(2),
         currency: rate.currency || 'USD',
-        deliveryTime: rate.estimatedDelivery || '',
+        estimatedDelivery: delivery,
+        deliveryTime: delivery,
+        carrier: 'UPS',
+        requiresLiftgate: false,
         badge: null,
         badgeStyle: null,
         upsellMessage: null,
@@ -276,17 +286,23 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
 
     // Local delivery
     const deliveryPrice = orderSubtotal >= freeThreshold ? 0 : zone.delivery;
+    const localDelivery = zone.deliveryDays || '';
     options.push({
       code: `local-delivery-${zone.code}`,
       title: `${zone.icon || '🚚'} ${zone.name} Delivery${deliveryPrice === 0 ? ' (Free)' : ''}`,
+      cost: deliveryPrice,
       price: deliveryPrice.toFixed(2),
       currency: 'USD',
-      deliveryTime: zone.deliveryDays,
+      estimatedDelivery: localDelivery,
+      deliveryTime: localDelivery,
+      carrier: 'Carolina Futons',
+      requiresLiftgate: false,
       badge: zone.badge || null,
       badgeStyle: zone.badgeStyle || null,
       upsellMessage: zone.upsellMessage || null,
       highlight: zone.highlight || false,
       icon: zone.icon || '🚚',
+      isEstimate: false,
     });
 
     // White glove
@@ -301,14 +317,19 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     const wgOption = {
       code: `white-glove-${zone.code}`,
       title: wgTitle,
+      cost: wgPrice,
       price: wgPrice.toFixed(2),
       currency: 'USD',
-      deliveryTime: zone.deliveryDays,
+      estimatedDelivery: localDelivery,
+      deliveryTime: localDelivery,
+      carrier: 'Carolina Futons',
+      requiresLiftgate: false,
       badge: zone.whiteGloveBadge || null,
       badgeStyle: 'premium',
       upsellMessage: zone.whiteGloveUpsell || null,
       highlight: zone.whiteGloveHighlight || false,
       icon: zone.whiteGloveIcon || '✨',
+      isEstimate: false,
     };
     if (terrainFee > 0) wgOption.terrainSurcharge = terrainFee;
     options.push(wgOption);
@@ -325,12 +346,12 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
  * Look up per-product shipping profile from ProductShippingProfiles CMS.
  * Returns null if product has no profile (use category defaults).
  *
- * CMS fields: productId, productName, category, weight, length, width, height,
- *             handlingFee_usd, carrierOverride, ltlRequired
+ * CMS fields: productId, weight_lbs, length_in, width_in, height_in,
+ *             handlingFee_usd, requiresPallet, requiresFreight, customItemFlag
  *
  * @private
  */
-async function getProductShippingProfile(productId) {
+export async function _resolveProfile(productId) {
   if (!productId) return null;
   try {
     const results = await wixData.query(SHIPPING_PROFILES_COLLECTION)
@@ -344,6 +365,23 @@ async function getProductShippingProfile(productId) {
     console.warn('ProductShippingProfiles lookup failed for', productId, err.message);
     return null;
   }
+}
+
+/**
+ * Determine carrier tier from total weight and profile flags.
+ * Routing logic (per spec):
+ *   - any profile has requiresPallet or requiresFreight → 'ltl'
+ *   - totalWeight > 150 lbs → 'ltl'  (UPS max chargeable weight per piece)
+ *   - otherwise → 'ups'
+ *
+ * @param {number} totalWeight - Sum of all package weights in lbs
+ * @param {Array<{requiresPallet?: boolean, requiresFreight?: boolean}>} profiles
+ * @returns {'ups' | 'ltl'}
+ */
+export function _routeToCarrier(totalWeight, profiles) {
+  const forceFreight = profiles.some(p => p?.requiresPallet || p?.requiresFreight);
+  if (forceFreight || totalWeight > 150) return 'ltl';
+  return 'ups';
 }
 
 /**
