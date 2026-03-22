@@ -1,0 +1,15 @@
+{
+  "collectionName": "TrendingSearches",
+  "description": "Single-record CMS config for editorially curated trending search term suggestions. Singleton pattern — only ever one document. Managed by site admin via Wix content editor. Consumed by Search Results page chips and cfutons_mobile SearchScreen (dallas/cm-c00).",
+  "singleton": true,
+  "fields": [
+    { "name": "terms", "type": "Array<Text>", "required": true, "description": "Ordered list of trending search term strings, e.g. ['futon frames', 'murphy beds', 'mattresses', 'platform beds']" },
+    { "name": "updatedAt", "type": "Date", "required": false, "auto": true, "description": "Auto-updated timestamp of last edit" }
+  ],
+  "notes": [
+    "Singleton: only one record should exist. getTrendingSearches() queries with limit(1) and returns first record's terms.",
+    "If collection is empty, getTrendingSearches() returns hardcoded DEFAULT_TERMS as fallback.",
+    "Field name 'terms' is the cross-rig contract with cfutons_mobile (dallas/cm-c00 useConfig hook).",
+    "Collection name 'TrendingSearches' is fixed — do not rename without coordinating with dallas."
+  ]
+}

@@ -7,7 +7,7 @@
  * See CF-n3px for original specification.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { __seed, __reset as resetData, __setQueryError, __setInsertError, __setUpdateError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
 import {
   getNotificationPreferences,
@@ -222,6 +222,49 @@ describe('unsubscribeAll', () => {
 
   it('returns success: false when not authenticated', async () => {
     __setMember(null);
+    const result = await unsubscribeAll();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+});
+
+// ── wixData error paths ───────────────────────────────────────────────
+
+describe('getNotificationPreferences — wixData error', () => {
+  it('returns success: false when wixData.query throws', async () => {
+    __setMember(MEMBER);
+    __setQueryError(COLLECTION, new Error('DB unavailable'));
+    const result = await getNotificationPreferences();
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+});
+
+describe('saveNotificationPreferences — wixData error', () => {
+  it('returns success: false when wixData.insert throws', async () => {
+    __setMember(MEMBER);
+    __seed(COLLECTION, []);
+    __setInsertError(COLLECTION, new Error('Insert failed'));
+    const result = await saveNotificationPreferences({ restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('returns success: false when wixData.update throws', async () => {
+    __setMember(MEMBER);
+    __seed(COLLECTION, [{ _id: 'rec-1', memberId: MEMBER_ID, restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false }]);
+    __setUpdateError(COLLECTION, new Error('Update failed'));
+    const result = await saveNotificationPreferences({ restock: false, orderUpdate: false, promo: true, cfPlus: false, sms: true });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+});
+
+describe('unsubscribeAll — wixData error', () => {
+  it('returns success: false when wixData.insert throws', async () => {
+    __setMember(MEMBER);
+    __seed(COLLECTION, []);
+    __setInsertError(COLLECTION, new Error('Insert failed'));
     const result = await unsubscribeAll();
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
