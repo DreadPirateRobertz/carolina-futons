@@ -3,6 +3,7 @@
 // mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
 import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
+import { getActiveAnnouncementBars } from 'backend/announcementBarService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
@@ -224,7 +225,7 @@ function initEnhancedNavigation() {
 // Rotating promotional messages at top of site
 
 async function initAnnouncementBar() {
-  const messages = [
+  const staticMessages = [
     // 'Free Shipping on Orders Over $999!', // Disabled: free shipping currently inactive
     'Visit Our Showroom: Wed–Sat 10–5 | 824 Locust St, Hendersonville NC | (828) 252-9449',
     'Over 700 Fabric Swatches Available In-Store',
@@ -232,16 +233,38 @@ async function initAnnouncementBar() {
     'Family Owned Since 1991 — Carolina Futons',
   ];
 
+  // Fetch CMS announcement bars (highest priority first)
+  let cmsBars = [];
+  try {
+    cmsBars = await getActiveAnnouncementBars();
+  } catch (_) {
+    // CMS fetch failed — continue with static messages
+  }
+
   // Prepend active flash sale messages for urgency
+  const flashMessages = [];
   try {
     const flashSales = await getFlashSales();
     const { buildAnnouncementMessage } = await import('public/flashSaleHelpers');
     for (const deal of flashSales) {
       const msg = buildAnnouncementMessage(deal);
-      if (msg) messages.unshift(msg);
+      if (msg) flashMessages.push(msg);
     }
   } catch (_) {
-    // Flash sales fetch failed — continue with static messages
+    // Flash sales fetch failed — continue without
+  }
+
+  // Build final message list: flash sales → CMS bars → static fallbacks
+  const cmsMessages = cmsBars.map(b => b.message).filter(Boolean);
+  const messages = [...flashMessages, ...cmsMessages, ...staticMessages];
+
+  // Apply first CMS bar's styles to the announcement bar container
+  if (cmsBars.length > 0) {
+    try {
+      const bar = cmsBars[0];
+      if (bar.backgroundColor) $w('#announcementBar').style.backgroundColor = bar.backgroundColor;
+      if (bar.textColor) $w('#announcementText').style.color = bar.textColor;
+    } catch (_) {}
   }
 
   try {
