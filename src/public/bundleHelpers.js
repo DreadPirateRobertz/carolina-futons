@@ -80,11 +80,13 @@ export function findBrokenBundles(cartItems) {
 /**
  * Format bundle savings for display.
  * @param {{ savings: number, bundlePrice: number }} bundle
- * @returns {string} e.g. 'Save $75 (12% off)' or 'Bundle price' when savings <= 0
+ * @returns {string} 'Save $N (P% off)' when savings are positive,
+ *   or 'Bundle price' when savings are zero, absent, or inputs are non-numeric.
  */
 export function formatBundleSavings({ savings, bundlePrice }) {
   if (!savings || savings <= 0) return 'Bundle price';
-  const originalPrice = bundlePrice + savings;
-  const pct = originalPrice > 0 ? Math.round((savings / originalPrice) * 100) : 0;
+  const originalPrice = Number(bundlePrice) + savings;
+  if (!Number.isFinite(originalPrice) || originalPrice <= 0) return 'Bundle price';
+  const pct = Math.round((savings / originalPrice) * 100);
   return `Save $${savings} (${pct}% off)`;
 }

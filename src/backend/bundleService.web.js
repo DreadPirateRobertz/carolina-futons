@@ -118,7 +118,8 @@ export const getBundlesByFrame = webMethod(
  * @param {string} bundleId - CMS _id of the bundle record
  * @returns {Promise<{success: boolean, bundleTag?: string, productsAdded?: number,
  *   bundlePrice?: number, savings?: number, displayName?: string,
- *   error?: string, errorCode?: string}>}
+ *   error?: string, errorCode?: 'BUNDLE_NOT_FOUND'|'BUNDLE_INCOMPLETE'}>}
+ *   errorCode is only present on named error cases; general failures omit it.
  */
 export const addBundle = webMethod(
   Permissions.Anyone,
@@ -184,15 +185,20 @@ export const validateBundleCohesion = webMethod(
       return { valid: true, brokenBundles: [] };
     }
 
-    const broken = findBrokenBundles(cartItems);
-    const brokenBundles = broken.map(b => ({
-      ...b,
-      message: `Bundle is incomplete: ${b.componentCount} of ${b.expectedCount} items present. Removing part of a bundle may affect bundle pricing.`,
-    }));
+    try {
+      const broken = findBrokenBundles(cartItems);
+      const brokenBundles = broken.map(b => ({
+        ...b,
+        message: `Bundle is incomplete: ${b.componentCount} of ${b.expectedCount} items present. Removing part of a bundle may affect bundle pricing.`,
+      }));
 
-    return {
-      valid: brokenBundles.length === 0,
-      brokenBundles,
-    };
+      return {
+        valid: brokenBundles.length === 0,
+        brokenBundles,
+      };
+    } catch (err) {
+      logError('bundleService.validateBundleCohesion', err);
+      return { valid: true, brokenBundles: [] };
+    }
   }
 );

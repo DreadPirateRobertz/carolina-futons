@@ -77,9 +77,9 @@ const BUNDLES = [
 function makeBundleLineItems(bundleId, bundle) {
   const tag = `bundle:${bundleId}`;
   return [
-    { productId: bundle.frameProductId, customTextFields: [{ title: 'bundleTag', value: tag }] },
-    { productId: bundle.mattressProductId, customTextFields: [{ title: 'bundleTag', value: tag }] },
-    { productId: bundle.coverProductId, customTextFields: [{ title: 'bundleTag', value: tag }] },
+    { productId: bundle.frameProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
+    { productId: bundle.mattressProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
+    { productId: bundle.coverProductId, quantity: 1, customTextFields: [{ title: 'bundleTag', value: tag }] },
   ];
 }
 
@@ -137,6 +137,17 @@ describe('getBundlesByFrame', () => {
     for (const bundle of result.bundles) {
       expect(bundle.savings).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it('components[].productId values match the CMS product ID fields', async () => {
+    const result = await getBundlesByFrame('frame-sunset-full');
+    const bundle = result.bundles.find(b => b._id === 'bundle-001');
+    const frame = bundle.components.find(c => c.type === 'frame');
+    const mattress = bundle.components.find(c => c.type === 'mattress');
+    const cover = bundle.components.find(c => c.type === 'cover');
+    expect(frame.productId).toBe('frame-sunset-full');
+    expect(mattress.productId).toBe('mattress-sunset-6in');
+    expect(cover.productId).toBe('cover-sunset-cotton');
   });
 
   it('returns error for empty frameId', async () => {

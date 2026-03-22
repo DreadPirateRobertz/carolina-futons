@@ -173,4 +173,9 @@ describe('formatBundleSavings', () => {
   it('returns "Bundle price" for negative savings', () => {
     expect(formatBundleSavings({ savings: -10, bundlePrice: 300 })).toBe('Bundle price');
   });
+
+  it('returns "Bundle price" when bundlePrice is undefined (NaN guard)', () => {
+    // undefined + savings = NaN — should not produce "Save $75 (0% off)"
+    expect(formatBundleSavings({ savings: 75, bundlePrice: undefined })).toBe('Bundle price');
+  });
 });
