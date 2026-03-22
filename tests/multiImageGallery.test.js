@@ -328,11 +328,13 @@ describe('initThumbnailScroll', () => {
   beforeEach(async () => {
     $w = create$w();
     vi.clearAllMocks();
-    // vi.clearAllMocks() clears call records but NOT mockReturnValue overrides.
-    // Tests like 'hides scroll buttons' set thumbnailCount: 6, which causes
-    // 'wires prev/next buttons' and 'sets ARIA labels' to fail when they run
-    // after it in a shuffled order (5 images ≤ 6 → early return, no onClick/ARIA).
+    // vi.clearAllMocks() clears spy state (calls, instances, results) but NOT
+    // mockReturnValue overrides. The test 'hides scroll buttons' sets
+    // thumbnailCount: 6, which causes 'wires prev/next buttons' and
+    // 'sets ARIA labels' to fail when they run after it in a shuffled order
+    // (5 images ≤ 6 → early return, no onClick/ARIA).
     // Restore the factory default here so every test starts from a known state.
+    // Keep in sync with the vi.mock factory at the top of this file.
     const { getGalleryConfig } = await import('public/galleryConfig.js');
     getGalleryConfig.mockReturnValue({
       thumbnailCount: 4, enableZoom: true, enableLightbox: true,
