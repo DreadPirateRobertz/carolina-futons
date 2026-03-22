@@ -108,7 +108,7 @@ export const getProductSocialProof = webMethod(
         config: getConfig(),
       };
     } catch (err) {
-      console.error('Error getting social proof:', err);
+      logError('socialProof.getSocialProof', err);
       return { notifications: [], config: getConfig() };
     }
   }
@@ -155,7 +155,7 @@ export const getCategorySocialProof = webMethod(
         config: getConfig(),
       };
     } catch (err) {
-      console.error('Error getting category social proof:', err);
+      logError('socialProof.getCategorySocialProof', err);
       return { recentSalesCount: 0, lowStockProducts: [], config: getConfig() };
     }
   }

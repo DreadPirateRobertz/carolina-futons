@@ -12,6 +12,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import wixData from './__mocks__/wix-data.js';
 import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { logError } from 'backend/utils/errorHandler';
+
+vi.mock('backend/utils/errorHandler', () => ({ logError: vi.fn() }));
+vi.mock('backend/utils/sanitize', () => ({ sanitize: vi.fn((str) => str) }));
 import {
   getProductSocialProof,
   getCategorySocialProof,
@@ -36,6 +40,14 @@ describe('error path — getProductSocialProof outer catch (line 108)', () => {
     expect(result.notifications).toEqual([]);
     expect(result.config).toBeDefined();
     expect(result.config.maxPerSession).toBe(5);
+  });
+
+  it('calls logError with socialProof.getSocialProof context when outer catch fires', async () => {
+    // sanitize throws before any helper try-catch, so the outer catch is reached
+    const { sanitize } = await import('backend/utils/sanitize');
+    vi.mocked(sanitize).mockImplementationOnce(() => { throw new Error('sanitize boom'); });
+    await getProductSocialProof('prod-xyz');
+    expect(logError).toHaveBeenCalledWith('socialProof.getSocialProof', expect.any(Error));
   });
 });
 
@@ -389,6 +401,7 @@ describe('getCategorySocialProof error path', () => {
     expect(result.recentSalesCount).toBe(0);
     expect(result.lowStockProducts).toEqual([]);
     expect(result.config).toBeDefined();
+    expect(logError).toHaveBeenCalledWith('socialProof.getCategorySocialProof', expect.any(Error));
   });
 
   it('uses default productName "This item" when productName is missing', async () => {
