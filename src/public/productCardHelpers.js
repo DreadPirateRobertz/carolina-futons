@@ -130,14 +130,15 @@ const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
  */
 export function getLifestyleImage(product) {
   const mediaItems = product?.mediaItems;
+  const fallback = product?.mainMedia || '';
   if (Array.isArray(mediaItems) && mediaItems.length > 0) {
     const keywordMatch = mediaItems.find(item => {
       const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
       return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
     });
-    if (keywordMatch) return keywordMatch.url || keywordMatch.src || product?.mainMedia || '';
+    if (keywordMatch) return keywordMatch.url || keywordMatch.src || fallback;
   }
-  return product?.mainMedia || '';
+  return fallback;
 }
 
 /**
