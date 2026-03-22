@@ -222,6 +222,14 @@ describe('RoomGallery', () => {
       expect($item('#roomGalleryLikeBtn').accessibility.ariaPressed).toBe(false);
     });
 
+    it('sets aria-label on like button with member display name', () => {
+      const photo = makePhoto({ memberDisplayName: 'Jane Doe' });
+      const cb = getOnItemReadyCb([photo]);
+      const $item = create$w();
+      cb($item, photo);
+      expect($item('#roomGalleryLikeBtn').accessibility.ariaLabel).toContain('Jane Doe');
+    });
+
     it('like button click calls voteForPhoto with photoId', async () => {
       const photo = makePhoto({ _id: 'photo-abc' });
       const cb = getOnItemReadyCb([photo]);

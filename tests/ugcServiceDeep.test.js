@@ -362,6 +362,17 @@ describe('voteForPhoto', () => {
     const r = await mod.voteForPhoto('photo1');
     expect(r.voteCount).toBe(1);
   });
+
+  it('treats duplicate insert (concurrent TOCTOU) as success with voted:true', async () => {
+    __seed('UGCPhotos', [{ _id: 'photo1', voteCount: 3 }]);
+    __seed('UGCVotes', []);
+    const wixData = await import('wix-data');
+    vi.spyOn(wixData.default, 'insert').mockRejectedValueOnce(new Error('duplicate key constraint'));
+    const r = await mod.voteForPhoto('photo1');
+    expect(r.success).toBe(true);
+    expect(r.voted).toBe(true);
+    expect(r.voteCount).toBe(3);
+  });
 });
 
 // ── reportPhoto ───────────────────────────────────────────────────

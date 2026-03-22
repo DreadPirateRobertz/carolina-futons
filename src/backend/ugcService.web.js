@@ -279,12 +279,19 @@ export const voteForPhoto = webMethod(
         voted = false;
         voteCount = photo.voteCount;
       } else {
-        // Add vote (toggle on)
-        await wixData.insert('UGCVotes', {
-          memberId: member._id,
-          photoId: cleanId,
-          createdAt: new Date(),
-        });
+        // Add vote (toggle on) — insert may fail if a concurrent request
+        // already inserted (TOCTOU). Treat duplicate as vote-already-counted.
+        try {
+          await wixData.insert('UGCVotes', {
+            memberId: member._id,
+            photoId: cleanId,
+            createdAt: new Date(),
+          });
+        } catch (dupErr) {
+          // Unique constraint violation — vote already counted by concurrent request
+          console.warn('[ugcService] duplicate vote insert (concurrent), treating as voted', dupErr?.message);
+          return { success: true, voted: true, voteCount: photo.voteCount || 0 };
+        }
         photo.voteCount = (photo.voteCount || 0) + 1;
         await wixData.update('UGCPhotos', photo);
         voted = true;
@@ -411,12 +418,17 @@ export const getUGCStats = webMethod(
         .eq('status', 'featured')
         .count();
 
+      const roomTypeCounts = await Promise.all(
+        VALID_ROOM_TYPES.map(roomType =>
+          wixData.query('UGCPhotos')
+            .hasSome('status', ['approved', 'featured'])
+            .eq('roomType', roomType)
+            .count()
+            .then(count => ({ roomType, count }))
+        )
+      );
       const byRoomType = {};
-      for (const roomType of VALID_ROOM_TYPES) {
-        const count = await wixData.query('UGCPhotos')
-          .hasSome('status', ['approved', 'featured'])
-          .eq('roomType', roomType)
-          .count();
+      for (const { roomType, count } of roomTypeCounts) {
         if (count > 0) byRoomType[roomType] = count;
       }
 

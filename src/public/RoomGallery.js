@@ -64,6 +64,7 @@ export function renderRoomPhotos($w, photos) {
     const originalCount = String(itemData.voteCount ?? 0);
     $item('#roomGalleryLikeCount').text = originalCount;
     $item('#roomGalleryLikeBtn').accessibility.ariaPressed = false;
+    $item('#roomGalleryLikeBtn').accessibility.ariaLabel = `Like photo by ${itemData.memberDisplayName || 'member'}`;
 
     $item('#roomGalleryLikeBtn').onClick(async () => {
       try {
