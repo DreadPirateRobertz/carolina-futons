@@ -2,7 +2,7 @@
  * Tests for ProductInfoModal.js
  *
  * Covers: initProductInfoModal, care guide rendering, dimensions rendering,
- * room fit calculator (fits/tight/too-big/invalid), element nicknames,
+ * room fit calculator (fits/tight/too-big/invalid/unknown), element nicknames,
  * accessibility setup, and missing-data fallbacks.
  *
  * See CF-b2x2 for original specification.
@@ -35,16 +35,11 @@ function createMockElement() {
   return {
     text: '',
     value: '',
-    label: '',
-    style: {},
     accessibility: {},
     collapse: vi.fn(() => Promise.resolve()),
     expand: vi.fn(() => Promise.resolve()),
     show: vi.fn(() => Promise.resolve()),
     hide: vi.fn(() => Promise.resolve()),
-    enable: vi.fn(),
-    disable: vi.fn(),
-    focus: vi.fn(),
     onClick: vi.fn(),
     onChange: vi.fn(),
   };
@@ -52,12 +47,10 @@ function createMockElement() {
 
 function createMock$w() {
   const elements = {};
-  const $w = vi.fn((selector) => {
+  return vi.fn((selector) => {
     if (!elements[selector]) elements[selector] = createMockElement();
     return elements[selector];
   });
-  $w._elements = elements;
-  return $w;
 }
 
 function createMockState(overrides = {}) {
@@ -79,12 +72,17 @@ function mockSpecsSuccess(specs = FULL_SPECS) {
   getProductSpecs.mockResolvedValue({ success: true, data: specs });
 }
 
-function mockSpecsNotFound() {
-  getProductSpecs.mockResolvedValue({ success: true, data: null });
-}
-
 function mockSpecsError() {
   getProductSpecs.mockRejectedValue(new Error('CMS unavailable'));
+}
+
+function standardSetup() {
+  vi.clearAllMocks();
+  const $w = createMock$w();
+  const state = createMockState();
+  const mockDialog = { open: vi.fn(), close: vi.fn() };
+  setupAccessibleDialog.mockReturnValue(mockDialog);
+  return { $w, state, mockDialog };
 }
 
 // ── initProductInfoModal — setup ──────────────────────────────────────
@@ -93,10 +91,7 @@ describe('initProductInfoModal — setup', () => {
   let $w, state;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    setupAccessibleDialog.mockReturnValue({ open: vi.fn(), close: vi.fn() });
+    ({ $w, state } = standardSetup());
     mockSpecsSuccess();
   });
 
@@ -193,11 +188,7 @@ describe('careGuideBtn click — lazy load', () => {
   let $w, state, mockDialog;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    mockDialog = { open: vi.fn(), close: vi.fn() };
-    setupAccessibleDialog.mockReturnValue(mockDialog);
+    ({ $w, state, mockDialog } = standardSetup());
     mockSpecsSuccess();
     await initProductInfoModal($w, state);
   });
@@ -233,13 +224,13 @@ describe('careGuideBtn click — lazy load', () => {
     expect($w('#careGuideText').text).toBe('Spot clean with mild soap. Do not machine wash.');
   });
 
-  it('populates dimensionsText with width, depth, height, weight', async () => {
+  it('populates dimensionsText with width, depth, height, weight including units', async () => {
     await clickCareGuideBtn();
     const text = $w('#dimensionsText').text;
-    expect(text).toContain('54');
-    expect(text).toContain('32');
-    expect(text).toContain('36');
-    expect(text).toContain('85');
+    expect(text).toContain('54"');
+    expect(text).toContain('32"');
+    expect(text).toContain('36"');
+    expect(text).toContain('85 lbs');
   });
 
   it('retries getProductSpecs if first click throws (initialized resets on failure)', async () => {
@@ -249,19 +240,29 @@ describe('careGuideBtn click — lazy load', () => {
     await clickCareGuideBtn(); // retries
     expect(getProductSpecs).toHaveBeenCalledTimes(2);
   });
+
+  it('retries getProductSpecs if first response was success: false (soft failure allows retry)', async () => {
+    getProductSpecs.mockResolvedValueOnce({ success: false, error: 'CMS error' });
+    await clickCareGuideBtn(); // success:false — initialized stays false
+    mockSpecsSuccess();
+    await clickCareGuideBtn(); // retries
+    expect(getProductSpecs).toHaveBeenCalledTimes(2);
+  });
+
+  it('announces error to screen readers when onClick throws', async () => {
+    getProductSpecs.mockRejectedValueOnce(new Error('CMS unavailable'));
+    await clickCareGuideBtn();
+    expect(announce).toHaveBeenCalledWith($w, expect.stringContaining('could not be loaded'));
+  });
 });
 
 // ── care guide rendering ──────────────────────────────────────────────
 
 describe('care guide rendering', () => {
-  let $w, state, mockDialog;
+  let $w, state;
 
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    mockDialog = { open: vi.fn(), close: vi.fn() };
-    setupAccessibleDialog.mockReturnValue(mockDialog);
+  beforeEach(() => {
+    ({ $w, state } = standardSetup());
   });
 
   async function init(specs) {
@@ -304,14 +305,10 @@ describe('care guide rendering', () => {
 // ── dimensions rendering ──────────────────────────────────────────────
 
 describe('dimensions rendering', () => {
-  let $w, state, mockDialog;
+  let $w, state;
 
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    mockDialog = { open: vi.fn(), close: vi.fn() };
-    setupAccessibleDialog.mockReturnValue(mockDialog);
+  beforeEach(() => {
+    ({ $w, state } = standardSetup());
   });
 
   async function init(specs) {
@@ -350,19 +347,23 @@ describe('dimensions rendering', () => {
     await init({ ...FULL_SPECS, dimensions: { width: null, depth: null, height: null, weight: null } });
     expect($w('#dimensionsText').text).toContain('not available');
   });
+
+  it('shows fallback text when getProductSpecs returns success: false', async () => {
+    getProductSpecs.mockResolvedValue({ success: false, error: 'CMS error' });
+    await initProductInfoModal($w, state);
+    const [handler] = $w('#careGuideBtn').onClick.mock.calls[0];
+    await handler();
+    expect($w('#dimensionsText').text).toContain('not available');
+  });
 });
 
 // ── room fit calculator ───────────────────────────────────────────────
 
 describe('room fit calculator', () => {
-  let $w, state, mockDialog;
+  let $w, state;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    mockDialog = { open: vi.fn(), close: vi.fn() };
-    setupAccessibleDialog.mockReturnValue(mockDialog);
+    ({ $w, state } = standardSetup());
     mockSpecsSuccess();
     await initProductInfoModal($w, state);
     // Click care guide to trigger lazy-load; specs must be loaded before checkRoomFitBtn handler reads them.
@@ -384,26 +385,25 @@ describe('room fit calculator', () => {
     expect($w('#fitResult').text).toContain('fits');
   });
 
-  it('shows "tight" result when clearance is less than 2 inches', () => {
-    triggerFitCheck(55, 33); // 1" width clearance, 1" depth clearance
-    expect($w('#fitResult').text).toContain('Tight');
-  });
-
   it('shows "too big" result when product wider than room', () => {
     triggerFitCheck(40, 60); // 40" room width < 54" product width
-    expect($w('#fitResult').text).toContain('won\'t fit');
+    expect($w('#fitResult').text).toContain("won't fit");
   });
 
   it('shows "too big" result when product deeper than room', () => {
     triggerFitCheck(72, 20); // 20" room length < 32" product depth
-    expect($w('#fitResult').text).toContain('won\'t fit');
+    expect($w('#fitResult').text).toContain("won't fit");
+  });
+
+  it('reports both dimensions in "too big" message when both are too small', () => {
+    triggerFitCheck(40, 20); // both width and length too small
+    const text = $w('#fitResult').text;
+    expect(text).toContain('width');
+    expect(text).toContain('length');
   });
 
   it('shows invalid input message for non-numeric input', () => {
-    $w('#roomWidthInput').value = 'abc';
-    $w('#roomLengthInput').value = '60';
-    const [handler] = $w('#checkRoomFitBtn').onClick.mock.calls[0];
-    handler();
+    triggerFitCheck('abc', 60);
     expect($w('#fitResult').text).toContain('valid');
   });
 
@@ -417,16 +417,9 @@ describe('room fit calculator', () => {
     expect($w('#fitResult').text).toContain('valid');
   });
 
-  it('shows unknown message when product dimensions are unavailable', async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    setupAccessibleDialog.mockReturnValue(mockDialog);
-    getProductSpecs.mockResolvedValue({ success: true, data: { ...FULL_SPECS, dimensions: null } });
-    await initProductInfoModal($w, state);
-    const [clickHandler] = $w('#careGuideBtn').onClick.mock.calls[0];
-    await clickHandler();
-    triggerFitCheck(72, 60);
-    expect($w('#fitResult').text).toContain('not available');
+  it('shows invalid input message for negative room width', () => {
+    triggerFitCheck(-10, 60);
+    expect($w('#fitResult').text).toContain('valid');
   });
 
   it('makes fitResult visible after check', () => {
@@ -439,9 +432,9 @@ describe('room fit calculator', () => {
     expect($w('#fitResult').accessibility.ariaLive).toBe('polite');
   });
 
-  it('shows invalid input message for negative room width', () => {
-    triggerFitCheck(-10, 60);
-    expect($w('#fitResult').text).toContain('valid');
+  it('sets ariaLabel on fitResult after a "fits" result', () => {
+    triggerFitCheck(72, 60);
+    expect($w('#fitResult').accessibility.ariaLabel).toBe('Room fit result: fits');
   });
 
   it('shows "tight" result when clearance is exactly zero (product exactly fills room)', () => {
@@ -455,23 +448,70 @@ describe('room fit calculator', () => {
   });
 
   it('shows "tight" result when clearance is 1 inch (one below CLEARANCE_GOOD threshold)', () => {
-    triggerFitCheck(55, 33); // 1" width clearance, 1" depth clearance
+    triggerFitCheck(55, 33); // 1" clearance on both sides — below CLEARANCE_GOOD
     expect($w('#fitResult').text).toContain('Tight');
   });
+});
 
-  it('shows "not available" when checkRoomFitBtn clicked before lazy-load (specs = null)', async () => {
-    // Wire a fresh modal without triggering lazy-load (careGuideBtn never clicked)
-    vi.clearAllMocks();
-    const freshW = createMock$w();
-    setupAccessibleDialog.mockReturnValue(mockDialog);
-    mockSpecsSuccess();
-    await initProductInfoModal(freshW, createMockState());
-    // Invoke checkRoomFitBtn directly — specs are still null
-    freshW('#roomWidthInput').value = '72';
-    freshW('#roomLengthInput').value = '60';
-    const [handler] = freshW('#checkRoomFitBtn').onClick.mock.calls[0];
+// ── room fit — unknown product dimensions ─────────────────────────────
+
+describe('room fit calculator — unknown product dimensions', () => {
+  let $w, state;
+
+  beforeEach(() => {
+    ({ $w, state } = standardSetup());
+  });
+
+  async function initWithDims(dimensions) {
+    getProductSpecs.mockResolvedValue({ success: true, data: { ...FULL_SPECS, dimensions } });
+    await initProductInfoModal($w, state);
+    const [clickHandler] = $w('#careGuideBtn').onClick.mock.calls[0];
+    await clickHandler();
+    $w('#roomWidthInput').value = '72';
+    $w('#roomLengthInput').value = '60';
+    const [handler] = $w('#checkRoomFitBtn').onClick.mock.calls[0];
     handler();
-    expect(freshW('#fitResult').text).toContain('not available');
+  }
+
+  it('shows unknown message when product dimensions are null', async () => {
+    await initWithDims(null);
+    expect($w('#fitResult').text).toContain('not available');
+  });
+
+  it('shows unknown message when product depth is null (asymmetric partial dims)', async () => {
+    await initWithDims({ width: 54, depth: null });
+    expect($w('#fitResult').text).toContain('not available');
+  });
+
+  it('shows unknown message when product width is null (asymmetric partial dims)', async () => {
+    await initWithDims({ width: null, depth: 32 });
+    expect($w('#fitResult').text).toContain('not available');
+  });
+
+  it('shows unknown message when product dimensions are non-numeric strings', async () => {
+    await initWithDims({ width: 'N/A', depth: 'N/A' });
+    expect($w('#fitResult').text).toContain('not available');
+  });
+});
+
+// ── room fit — before lazy-load ───────────────────────────────────────
+
+describe('room fit calculator — before lazy-load', () => {
+  let $w, state;
+
+  beforeEach(async () => {
+    ({ $w, state } = standardSetup());
+    mockSpecsSuccess();
+    await initProductInfoModal($w, state);
+    // Intentionally NOT clicking careGuideBtn — specs remain null
+  });
+
+  it('shows "not available" when checkRoomFitBtn clicked before lazy-load (specs = null)', () => {
+    $w('#roomWidthInput').value = '72';
+    $w('#roomLengthInput').value = '60';
+    const [handler] = $w('#checkRoomFitBtn').onClick.mock.calls[0];
+    handler();
+    expect($w('#fitResult').text).toContain('not available');
   });
 });
 
@@ -481,10 +521,7 @@ describe('element nicknames — all required IDs are addressed', () => {
   let $w, state;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
-    $w = createMock$w();
-    state = createMockState();
-    setupAccessibleDialog.mockReturnValue({ open: vi.fn(), close: vi.fn() });
+    ({ $w, state } = standardSetup());
     mockSpecsSuccess();
     await initProductInfoModal($w, state);
     const [handler] = $w('#careGuideBtn').onClick.mock.calls[0];
@@ -499,12 +536,12 @@ describe('element nicknames — all required IDs are addressed', () => {
     expect($w).toHaveBeenCalledWith('#dimensionsModal');
   });
 
-  it('addresses #roomWidthInput via focusableIds or checkRoomFitBtn wiring', async () => {
+  it('addresses #roomWidthInput via focusableIds', () => {
     const config = setupAccessibleDialog.mock.calls[0][1];
     expect(config.focusableIds).toContain('#roomWidthInput');
   });
 
-  it('addresses #roomLengthInput via focusableIds', async () => {
+  it('addresses #roomLengthInput via focusableIds', () => {
     const config = setupAccessibleDialog.mock.calls[0][1];
     expect(config.focusableIds).toContain('#roomLengthInput');
   });

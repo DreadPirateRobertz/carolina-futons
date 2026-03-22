@@ -9,8 +9,8 @@
 //   careGuideText         — care instructions text
 //   checkRoomFitBtn       — room fit calculator submit button
 //   dimensionsModal       — modal/overlay container
-//   dimensionsModalClose  — modal close button
-//   dimensionsModalTitle  — modal title (for ARIA labelledby)
+//   dimensionsModalClose  — modal close button (managed by setupAccessibleDialog)
+//   dimensionsModalTitle  — modal title for ARIA labelledby (managed by setupAccessibleDialog)
 //   dimensionsText        — dimensions text block
 //   fitResult             — room fit result display
 //   roomLengthInput       — room length input (inches)
@@ -20,7 +20,7 @@ import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { getProductSpecs } from 'backend/catalogContent.web.js';
 import wixLocation from 'wix-location';
 
-// Minimum clearance (inches, each side) for a 'fits' result. Below this = 'tight'.
+// Minimum total clearance per axis (inches) for a 'fits' result. Below this threshold = 'tight'.
 const CLEARANCE_GOOD = 2;
 
 // ── initProductInfoModal ──────────────────────────────────────────────
@@ -85,12 +85,14 @@ export async function initProductInfoModal($w, state) {
       try {
         if (!initialized) {
           specs = await _loadSpecs($w, state.product.slug);
-          initialized = true;
+          if (specs !== null) initialized = true;
+          // specs === null (success:false / data absent): leave initialized=false to allow retry
         }
         announce($w, 'Care guide opened');
         dialog.open();
       } catch (e) {
         console.error('[ProductInfoModal] onClick failed:', e);
+        try { announce($w, 'Product information could not be loaded. Please try again.'); } catch (_) {}
         // initialized stays false — next click will retry
       }
     });
@@ -125,7 +127,8 @@ export async function initProductInfoModal($w, state) {
  *
  * @param {Function} $w
  * @param {string} slug - Product URL slug
- * @returns {Object|null} Raw specs object from CMS (as returned by getProductSpecs), or null if unavailable
+ * @returns {Object|null} Raw specs object from CMS, or null if success:false or data missing
+ * @throws {Error} Re-throws if getProductSpecs itself throws (renders fallbacks first; onClick catch keeps initialized=false for retry)
  */
 async function _loadSpecs($w, slug) {
   let specs = null;
@@ -135,7 +138,7 @@ async function _loadSpecs($w, slug) {
     if (success && data) {
       specs = data;
     } else if (!success) {
-      console.warn('[ProductInfoModal] getProductSpecs returned failure for slug:', slug, '— error:', error);
+      console.error('[ProductInfoModal] getProductSpecs returned failure for slug:', slug, '— error:', error);
     }
   } catch (e) {
     console.error('[ProductInfoModal] getProductSpecs failed for slug:', slug, '—', e);
@@ -176,18 +179,11 @@ function _renderCareGuide($w, careGuide) {
  * @param {Object|null} dims - Dimensions object { width, depth, height, weight, ... }
  */
 function _renderDimensions($w, dims) {
-  if (!dims) {
-    try { $w('#dimensionsText').text = 'Dimensions not available for this product.'; } catch (e) {
-      console.warn('[ProductInfoModal] dimensionsText fallback failed:', e?.message);
-    }
-    return;
-  }
-
   const lines = [];
-  if (dims.width  != null) lines.push(`Width:  ${dims.width}"`);
-  if (dims.depth  != null) lines.push(`Depth:  ${dims.depth}"`);
-  if (dims.height != null) lines.push(`Height: ${dims.height}"`);
-  if (dims.weight != null) lines.push(`Weight: ${dims.weight} lbs`);
+  if (dims?.width  != null) lines.push(`Width:  ${dims.width}"`);
+  if (dims?.depth  != null) lines.push(`Depth:  ${dims.depth}"`);
+  if (dims?.height != null) lines.push(`Height: ${dims.height}"`);
+  if (dims?.weight != null) lines.push(`Weight: ${dims.weight} lbs`);
 
   const text = lines.length > 0
     ? lines.join('\n')
@@ -210,7 +206,7 @@ function _renderDimensions($w, dims) {
  *   fits    — both dimensions have ≥ CLEARANCE_GOOD inches clearance
  *   tight   — fits but < CLEARANCE_GOOD inches clearance on at least one side
  *   too-big — room too small in at least one dimension
- *   invalid — one or more room dimensions are 0, non-numeric, or > 600"
+ *   invalid — one or more room dimensions are non-positive, non-numeric, non-finite, or > 600"
  *   unknown — product dimensions unavailable or non-numeric in specs
  *
  * @param {Function} $w
@@ -235,7 +231,7 @@ function _checkRoomFit($w, specs) {
   }
 
   const dims = specs?.dimensions;
-  if (!dims?.width || !dims?.depth) {
+  if (dims?.width == null || dims?.depth == null) {
     _setFitResult($w, 'Product dimensions not available — cannot calculate fit.', 'unknown');
     return;
   }
@@ -252,8 +248,10 @@ function _checkRoomFit($w, specs) {
   const lengthClearance = roomLength - productDepth;
 
   if (widthClearance < 0 || lengthClearance < 0) {
-    const dim = widthClearance < 0 ? `width (needs ${productWidth}", room is ${roomWidth}")` : `length (needs ${productDepth}", room is ${roomLength}")`;
-    _setFitResult($w, `✗ Too big — product won't fit. Check ${dim}.`, 'too-big');
+    const failing = [];
+    if (widthClearance < 0) failing.push(`width (needs ${productWidth}", room is ${roomWidth}")`);
+    if (lengthClearance < 0) failing.push(`length (needs ${productDepth}", room is ${roomLength}")`);
+    _setFitResult($w, `✗ Too big — product won't fit. Check ${failing.join(' and ')}.`, 'too-big');
     return;
   }
 
