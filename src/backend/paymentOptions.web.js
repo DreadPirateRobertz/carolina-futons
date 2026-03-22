@@ -126,9 +126,11 @@ export const getBatchPaymentBadges = webMethod(
         }
 
         if (financing.eligible) {
+          const bestTierData = financing.tiers.find(t => t.months === financing.bestTier.months);
+          const monthly = bestTierData?.monthlyPayment ?? (price / financing.bestTier.months);
           badgeList.push({
             type: 'financing',
-            label: `As low as $${Math.ceil(price / financing.bestTier.months)}/mo`,
+            label: `As low as $${Math.ceil(monthly)}/mo`,
             color: colors.sandLight,
             textColor: colors.espresso,
           });
@@ -358,9 +360,11 @@ function getPaymentBadges(price) {
 
   const financing = getFinancingInfo(price);
   if (financing.eligible) {
+    const bestTierData = financing.tiers.find(t => t.months === financing.bestTier.months);
+    const monthly = bestTierData?.monthlyPayment ?? (price / financing.bestTier.months);
     badges.push({
       type: 'financing',
-      label: `As low as $${Math.ceil(price / financing.bestTier.months)}/mo`,
+      label: `As low as $${Math.ceil(monthly)}/mo`,
       icon: 'calendar',
       color: colors.sandLight,
     });
