@@ -120,8 +120,15 @@ export async function get_productSitemap() {
       { loc: '/newsletter', priority: '0.5', changefreq: 'monthly' },
     ];
 
-    // Fetch all products for dynamic URLs (paginated — no 200 limit)
-    const productItems = await fetchAllProducts();
+    // Fetch all products for dynamic URLs (paginated — no 200 limit).
+    // Fail gracefully: if the product query throws, serve static pages only
+    // rather than returning a 500 that would block Google from crawling.
+    let productItems = [];
+    try {
+      productItems = await fetchAllProducts();
+    } catch (err) {
+      console.warn('[productSitemap] Product fetch failed, serving static pages only:', err?.message ?? err);
+    }
 
     const productUrls = productItems.map(p => ({
       loc: `/product-page/${encodeURIComponent(p.slug)}`,

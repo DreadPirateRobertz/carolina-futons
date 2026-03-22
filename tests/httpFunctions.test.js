@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __onUpdate } from './__mocks__/wix-data.js';
+import { __seed, __onUpdate, __setQueryError } from './__mocks__/wix-data.js';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import {
@@ -136,6 +136,16 @@ describe('get_productSitemap', () => {
     expect(result.status).toBe(200);
     // Should still have static pages
     expect(result.body).toContain('<loc>https://www.carolinafutons.com/</loc>');
+  });
+
+  it('returns 200 with static pages when wixData query fails (graceful degradation)', async () => {
+    __setQueryError('Stores/Products', new Error('Wix Data unavailable'));
+    const result = await get_productSitemap();
+    expect(result.status).toBe(200);
+    expect(result.body).toContain('<?xml version="1.0"');
+    expect(result.body).toContain('<loc>https://www.carolinafutons.com/</loc>');
+    // No product URLs when DB is down
+    expect(result.body).not.toContain('/product-page/');
   });
 });
 
