@@ -3107,7 +3107,7 @@ Action buttons (right):
     ]
   },
   // ═══════════════════════════════════════════════════════════════════════
-  // DASHBOARD & ADMIN INTEGRATIONS (v0.10.0+)
+  // DASHBOARD & ADMIN INTEGRATIONS (v1.0.0+)
   // These pages connect to backend web modules for analytics, content
   // management, and account features. Each exposes admin endpoints that
   // need editor-side UI elements for display.
@@ -3893,6 +3893,96 @@ SHARING:
 </ul>`, elements: [
         ["showroomBadge","Text","See It In Store badge (repeater child)"]
       ]}
+    ]
+  },
+  // ═══════════════════════════════════════════════════════════════════════
+  // SPRINT 4 ADDITIONS (v1.0.0+, merged 2026-03-20-21)
+  // New backend modules requiring editor hookup or page creation.
+  // ═══════════════════════════════════════════════════════════════════════
+  {
+    name: "Sprint 4 — Pages Needing Creation", file: "Multiple (see below)", priority: "P1", est: "60 min",
+    sections: [
+      { name: "Style Quiz S2 (CF-g5fa)", impl: `<h4>🎯 Implementation — Style Quiz S2</h4>
+<p><strong>PR #517</strong>: Full S2 frontend shipped. Backend: <code>styleQuiz.web.js</code>. Frontend: <code>src/public/styleQuiz.js</code>.</p>
+<ul>
+  <li>Full quiz state machine — question flow, scoring, product recommendation matching.</li>
+  <li>Needs a Wix dynamic page wired to the quiz logic. Clone FAQ page (repeater + progress bar).</li>
+  <li><strong>#quizSection</strong>: Container for quiz UI.</li>
+  <li><strong>#quizQuestion</strong>: Text — current question.</li>
+  <li><strong>#quizAnswerRepeater</strong>: Repeater — answer choices.</li>
+  <li><strong>#quizProgress</strong>: Progress bar element.</li>
+  <li><strong>#quizResults</strong>: Box — hidden by default, shown after quiz completes with product recommendations.</li>
+  <li><strong>#quizResultsRepeater</strong>: Repeater inside results box — recommended products.</li>
+</ul>`, elements: [
+        ["quizSection","Section","Quiz container"],
+        ["quizQuestion","Text","Current question text"],
+        ["quizAnswerRepeater","Repeater","Answer choices"],
+        ["quizProgress","ProgressBar","Quiz progress"],
+        ["quizResults","Box","Results container (hidden by default)"],
+        ["quizResultsRepeater","Repeater","Recommended products"]
+      ], children: [
+        ["answerText","Text","Answer choice label"],
+        ["answerBtn","Button","Answer choice button"],
+        ["resultImage","Image","Product image"],
+        ["resultName","Text","Product name"],
+        ["resultCta","Button","Shop Now"]
+      ]},
+      { name: "Topic Cluster Pages /guides/{slug} (CF-kj47)", impl: `<h4>📚 Implementation — Topic Cluster Dynamic Pages</h4>
+<p><strong>PR #513</strong>: Backend HTTP endpoint + CMS done. Needs a Wix dynamic page at <code>/guides/{slug}</code>.</p>
+<ul>
+  <li><strong>Backend</strong>: <code>topicClusterService.web.js</code> — <code>getTopicCluster(slug)</code> returns pillarContent, internalLinks, metadata.</li>
+  <li>Create a Wix dynamic page connected to the TopicClusters CMS collection. Route: <code>/guides/{slug}</code>.</li>
+  <li><strong>#clusterTitle</strong>: Text — pillar content page H1.</li>
+  <li><strong>#clusterBody</strong>: RichContent or HtmlComponent — pillar content body.</li>
+  <li><strong>#clusterInternalLinks</strong>: Repeater — internal link cards pointing to related pages.</li>
+  <li><strong>#clusterMeta</strong>: Hidden container — code sets SEO meta via wix-seo API.</li>
+</ul>`, elements: [
+        ["clusterTitle","Text","H1 pillar page title"],
+        ["clusterBody","HtmlComponent","Pillar content body"],
+        ["clusterInternalLinks","Repeater","Related links"],
+        ["clusterMeta","Box","SEO meta (hidden)"]
+      ], children: [
+        ["linkTitle","Text","Link anchor text"],
+        ["linkDesc","Text","Link description"],
+        ["linkBtn","Button","Read more"]
+      ]},
+      { name: "Exit Intent Capture (CF-vzn1)", impl: `<h4>🚪 Implementation — Exit Intent Email Capture</h4>
+<p><strong>Backend</strong>: <code>exitIntentCaptureService.web.js</code>. <strong>Frontend</strong>: <code>src/public/exitIntentCapture.js</code>.</p>
+<ul>
+  <li>Desktop: mouseleave trigger. Mobile: scroll velocity trigger.</li>
+  <li>Offers 10% discount code WELCOME10. sessionStorage prevents re-show.</li>
+  <li>Rate-limited. Tests in <code>tests/exitIntentCapture.test.js</code>.</li>
+  <li><strong>#exitIntentLightbox</strong>: Lightbox (modal) — hidden by default, shown on exit intent.</li>
+  <li><strong>#exitEmailInput</strong>: Input — email field.</li>
+  <li><strong>#exitSubmitBtn</strong>: Button — "Get 10% Off".</li>
+  <li><strong>#exitSuccessMsg</strong>: Text — hidden by default, shown after successful submit with coupon code.</li>
+  <li><strong>#exitCloseBtn</strong>: Button/X — close lightbox.</li>
+</ul>`, elements: [
+        ["exitIntentLightbox","Lightbox","Exit intent modal (hidden by default)"],
+        ["exitEmailInput","Input","Email capture field"],
+        ["exitSubmitBtn","Button","Submit / Get Discount"],
+        ["exitSuccessMsg","Text","Success + coupon code (hidden by default)"],
+        ["exitCloseBtn","Button","Close modal"]
+      ]},
+      { name: "Rate Limiting — Security Note (v1.0.0)", impl: `<h4>🔒 Rate Limiting Architecture (v1.0.0 security hardening)</h4>
+<p><strong>Utility</strong>: <code>src/backend/utils/rateLimit.js</code> — <code>checkRateLimit(collection, key, opts)</code></p>
+<ul>
+  <li>DB-backed sliding window. Fail-open: DB errors never block users.</li>
+  <li>Clock injection via <code>opts.now</code> for test seams. <strong>NEVER expose opts on Permissions.Anyone webMethods</strong> — would allow attackers to inject <code>now=0</code> to bypass rate limit windows.</li>
+  <li>Default: 3 requests / 60 minutes per key.</li>
+  <li><strong>Security fix (v1.0.0)</strong>: Anonymous bucket DoS patched — keys use caller email/memberId, never <code>'anonymous'</code> as shared bucket.</li>
+</ul>
+<table style="width:100%;border-collapse:collapse;font-size:0.85em;margin-top:8px;">
+  <thead><tr style="background:#f5f0e8;"><th style="padding:4px 8px;text-align:left;">Collection</th><th style="padding:4px 8px;text-align:left;">Endpoint</th><th style="padding:4px 8px;text-align:left;">Limit</th></tr></thead>
+  <tbody>
+    <tr><td style="padding:3px 8px;"><code>EmailRateLimit</code></td><td style="padding:3px 8px;">sendEmail (contactForm), submitSwatchRequest</td><td style="padding:3px 8px;">3/hr per email</td></tr>
+    <tr><td style="padding:3px 8px;"><code>DeliveryRateLimit</code></td><td style="padding:3px 8px;">scheduleDelivery</td><td style="padding:3px 8px;">3/hr per email</td></tr>
+    <tr><td style="padding:3px 8px;"><code>QARateLimit</code></td><td style="padding:3px 8px;">insertGuestQuestion</td><td style="padding:3px 8px;">3/hr per email</td></tr>
+    <tr><td style="padding:3px 8px;"><code>ReviewRateLimit</code></td><td style="padding:3px 8px;">submitReview</td><td style="padding:3px 8px;">3/hr per email</td></tr>
+    <tr><td style="padding:3px 8px;"><code>PromoRateLimit</code></td><td style="padding:3px 8px;">redeemPromoCode</td><td style="padding:3px 8px;">3/hr per email</td></tr>
+    <tr><td style="padding:3px 8px;"><code>TrackingRateLimit</code></td><td style="padding:3px 8px;">subscribeToNotifications</td><td style="padding:3px 8px;">5/hr per email</td></tr>
+  </tbody>
+</table>`, elements: []}
     ]
   },
   {

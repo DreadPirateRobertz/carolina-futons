@@ -34,14 +34,54 @@ All required dashboard/API configurations are now in place for editor hookup:
 - `src/public/premiumMembershipHelpers.js` — Premium display helpers
 - Plans expect slugs `cf-plus-monthly` and `cf-plus-annual` (now created on staging)
 
-**Current Dev Release**: v0.10.0 (2026-03-16) — 23,178 tests, 545 files
-- Dev: [carolina-futons v0.10.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v0.10.0)
-- Velo: [carolina-futons-stage3-velo v0.9.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v0.9.0) (sync pending — accumulating sizable release)
+**Current Dev Release**: v1.0.0 (2026-03-17) — 26,942 tests, 638 files, 65 src files
+- Dev: [carolina-futons v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons/releases/tag/v1.0.0)
+- Velo: [carolina-futons-stage3-velo v1.0.0](https://github.com/DreadPirateRobertz/carolina-futons-stage3-velo/releases/tag/v1.0.0) (synced 2026-03-17)
 - Pages synced to Wix page ID format (19 pages)
-- 47+ src files synced (backend, public, pages, styles, assets)
+- 65 src files synced (backend, public, pages, styles, assets)
 - **New PDP modules**: ProductOptions (variant swatches), ProductFinancing (BNPL), ProductReviews (full review system), ProductSizeGuide (dimensions + room fit checker)
 - **New Homepage modules (v0.10.0)**: SocialFeedEmbed (Instagram/TikTok/Pinterest), HomeBlogTeasers (3 recent posts)
 - **New backend (v0.10.0)**: blogService.web.js (web module wrapper for blog content)
+
+**Sprint 4 modules (merged 2026-03-20-21):**
+- `src/backend/socialStoryService.web.js` — scheduled social story cron (Twitter/FB/IG/Pinterest)
+- `src/backend/facebookCatalogAlertService.web.js` — FB catalog staleness cron + alerts
+- `src/backend/cartRecoveryService.web.js` — per-cart recovery coupons (generateRecoveryCoupon + sendRecoveryEmail)
+- `src/backend/topicClusterService.web.js` — /guides/{slug} HTTP endpoint + CMS-driven topic cluster pages
+- `src/backend/loyaltyService.web.js` — loyalty points endpoint with IDOR guard
+- `src/backend/referralService.web.js` — referral endpoints with anti-hijack guard
+- `src/backend/transactionalEmailService.web.js` — order confirmation/shipping/delivery transactional emails
+- `src/backend/exitIntentCaptureService.web.js` — exit intent email capture (desktop + mobile)
+- `src/public/exitIntentCapture.js` — exit intent popup logic (shouldShowExitIntent, validateCaptureEmail, submitExitCapture)
+- `src/backend/styleQuiz.web.js` — S2 implementation (quiz state, scoring, recommendations)
+- `src/backend/blogService.web.js` — CMS-driven blog listing via wix-blog-backend (getPublishedBlogPosts)
+- `src/backend/pinterestService.web.js` — Pinterest Rich Pins og:tag validation
+
+---
+
+## Rate Limiting Architecture (added v1.0.0 — security hardening)
+
+All write endpoints with `Permissions.Anyone` are rate-limited using the shared `checkRateLimit` utility.
+
+**Utility**: `src/backend/utils/rateLimit.js`
+- `checkRateLimit(collection, key, opts)` — DB-backed sliding window
+- Fail-open: DB errors never block users (legitimate service outage tolerance)
+- Clock injection: `opts.now` for test seams (NEVER pass from frontend — webMethods strip this)
+- Default: 3 requests per 60 minutes, configurable via `opts.max` and `opts.windowMs`
+
+**CRITICAL SECURITY RULE**: Never expose `opts` or `_opts` parameters on `Permissions.Anyone` webMethods. This would allow attackers to inject `now=0` to bypass rate limit windows.
+
+**Rate-limited endpoints by collection:**
+| Collection | Endpoint | Limit |
+|---|---|---|
+| `EmailRateLimit` | `sendEmail` (contactForm), `submitSwatchRequest` | 3/hr per email |
+| `DeliveryRateLimit` | `scheduleDelivery` | 3/hr per email |
+| `QARateLimit` | `insertGuestQuestion` | 3/hr per email |
+| `ReviewRateLimit` | `submitReview` | 3/hr per email |
+| `PromoRateLimit` | `redeemPromoCode` | 3/hr per email |
+| `TrackingRateLimit` | `subscribeToNotifications` | 5/hr per email |
+
+**Security fix applied (v1.0.0)**: Anonymous bucket DoS vector was patched — rate limit keys now use the caller's email/memberId, never `'anonymous'` as a fallback that creates a shared bucket across all callers.
 
 ---
 
@@ -1781,6 +1821,35 @@ Dynamic via `wix-seo` API only — no HtmlComponent needed. Valid: OG tags + tit
 Added to product page via `initProduct360Viewer`. Elements live on **Product Page**:
 
 `viewer360Section` (Box), `viewer360Container` (Box), `viewer360Embed` (HtmlComponent), `view360Btn` (Button), `viewer360Title` (Text), `viewer360Hint` (Text)
+
+## Sprint 4 Feature Additions (2026-03-20-21, v1.0.0+)
+
+### Social Media Automation
+- **Social story cron** (`socialStoryService.web.js`): Generates + posts scheduled content to Twitter/FB/IG/Pinterest via platform APIs. Runs via Wix cron job.
+- **Facebook catalog alert** (`facebookCatalogAlertService.web.js`): Monitors FB product catalog freshness, sends admin alerts when catalog sync lags > threshold.
+- **Pinterest Rich Pins** (`pinterestService.web.js`): Validates og:type/og:price/og:availability meta tags on product pages for Pinterest Rich Pin eligibility. Tests in `tests/pinterestRichPins.test.js`.
+
+### Email Automation
+- **Transactional emails** (`transactionalEmailService.web.js`): Order confirmation, shipping notification, delivery confirmation using Wix triggered emails. Templates: `order_confirm`, `order_shipped`, `order_delivered`. 62 tests in `tests/transactionalEmail.test.js`.
+- **Exit intent capture** (`src/public/exitIntentCapture.js` + `exitIntentCaptureService.web.js`): Desktop (mouseleave) + mobile (scroll velocity) exit intent popup. Offers 10% discount code WELCOME10. Rate-limited, sessionStorage prevents re-show. Tests in `tests/exitIntentCapture.test.js`.
+- **Cart recovery** (`cartRecoveryService.web.js`): `generateRecoveryCoupon()` + `sendRecoveryEmail()` — per-cart unique coupons, 10% discount, 24hr expiry. Used by abandoned cart flow.
+
+### Commerce
+- **Cart recovery per-cart coupons** (`cartRecoveryService.web.js`): Each recovery email gets a unique coupon code tied to that specific cart ID, preventing coupon sharing. See `tests/cartRecovery.test.js`.
+- **Loyalty endpoint** (`loyaltyService.web.js`): Points balance, earn, redeem — all with IDOR guard (member can only access own points). CF-b0u3. See `tests/loyaltyService.test.js`.
+- **Referral endpoints** (`referralService.web.js`): Referral link generation, tracking, reward — anti-hijack guard prevents referral farming. CF-kt9w. See `tests/referralService.test.js`.
+
+### Content & SEO
+- **Topic cluster pages** (`topicClusterService.web.js` + HTTP endpoint): `/guides/{slug}` CMS-driven pillar content pages. Topic clusters with internalLinks and pillarContent fields. CF-kj47.
+- **Blog CMS listing** (`blogService.web.js` updated): `getPublishedBlogPosts(page, perPage)` queries `wix-blog-backend` for live CMS content instead of static data. `Blog.js` wired to live data.
+- **Style Quiz S2** (`styleQuiz.web.js` + `src/public/styleQuiz.js`): Full quiz state machine — question flow, scoring, product recommendation matching. CF-g5fa.
+
+### Wix Dashboard Integrations (tracked 2026-03-21)
+- **TikTok Pixel**: Installed via Wix Marketing Integrations (PR #505)
+- **Pinterest Tag**: Installed via Wix Marketing Integrations (PR #505)
+- **Google Analytics 4**: Connected via Wix Analytics (requires Premium for full event tracking)
+- **Facebook Pixel**: Configured (requires Premium/Go-live for production events)
+- All pixels blocked on staging — need Premium upgrade + custom domain for production tracking
 
 ---
 
