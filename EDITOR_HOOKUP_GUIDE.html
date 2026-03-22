@@ -4906,74 +4906,61 @@ SHARING:
     ]
   },
   {
-    name: "Bundle Builder", file: "bundleBuilder.web.js (/bundle page)", priority: "P1", est: "60 min",
+    name: "Bundle Builder", file: "Bundle.js (/bundle page) ✅ PR #677 merged", priority: "P1", est: "60 min",
     sections: [
       { name: "Main Layout", impl: `<h4>🛒 Implementation — Bundle Builder Main Layout (/bundle)</h4>
-<p><strong>Backend:</strong> <code>bundleBuilder.web.js</code> — <code>addToBundle()</code>, <code>calculateBundleQuote()</code>, <code>submitBundleOrder()</code>.</p>
-<p><strong>Cart API:</strong> Uses <code>wix-ecom-backend cart.addProducts(lineItems[])</code> — single call for entire bundle, treated as atomic.</p>
+<p><strong>Status: ✅ Merged (PR #677)</strong></p>
+<p><strong>Backend:</strong> <code>bundleBuilder.web.js</code> — <code>getBundleProducts()</code>, <code>submitBundleOrder()</code>. Cart uses <code>wix-ecom-backend cart.addProducts(lineItems[])</code> — single atomic call for entire bundle.</p>
+<p><strong>NaN guard:</strong> <code>bundleTotalPrice</code> uses <code>Number.isFinite()</code> with fallback to sum of individual prices if API returns NaN.</p>
 <ul>
-  <li><strong>#bundleSection</strong>: Box — main bundle page container.</li>
-  <li><strong>#bundleProductsRepeater</strong>: Repeater — current bundle items.</li>
-  <li><strong>#bundleAddProductBtn</strong>: Button — opens product picker panel.</li>
-  <li><strong>#bundleSummarySection</strong>: Box — subtotal + shipping + total panel.</li>
-  <li><strong>#bundleSubtotalText</strong>: Text — product subtotal (assembled by frontend from product prices).</li>
-  <li><strong>#bundleTotalText</strong>: Text — grand total including shipping + handling.</li>
-  <li><strong>#bundleCheckoutBtn</strong>: Button — "Add Bundle to Cart". Calls <code>addProducts()</code> array in one call.</li>
-  <li><strong>#bundleEmptyState</strong>: Box — shown when no items added yet.</li>
-  <li><strong>#bundleErrorText</strong>: Text — error state.</li>
-  <li><strong>#bundleSaveBtn</strong>: Button — save bundle config for sharing/reuse (stores to BundleConfigs CMS).</li>
-  <li><strong>#bundleShareBtn</strong>: Button — share bundle link.</li>
+  <li><strong>#bundleHeroSection</strong>: Box — hero/intro section at top of bundle page.</li>
+  <li><strong>#bundleLoader</strong>: Box — loading state, shown while fetching products.</li>
+  <li><strong>#bundleSummarySection</strong>: Box — selected items + total panel (collapsed when empty).</li>
+  <li><strong>#bundleTotalPrice</strong>: Text — "Bundle Total: $X.XX" with NaN guard.</li>
+  <li><strong>#bundleDiscountBadge</strong>: Box — discount badge (hidden when no discount applies).</li>
+  <li><strong>#bundleAddToCartBtn</strong>: Button — "Add Bundle to Cart (N items)". Disabled when 0 items selected. Label updates with count.</li>
+  <li><strong>#bundleEmptyState</strong>: Box — shown when 0 products selected.</li>
+  <li><strong>#bundleError</strong>: Text — error message (shown on add-to-cart failure).</li>
 </ul>`, elements: [
-        ["bundleSection","Box","Main bundle container"],
-        ["bundleAddProductBtn","Button","Open product picker"],
-        ["bundleSummarySection","Box","Subtotal + shipping panel"],
-        ["bundleSubtotalText","Text","Product subtotal"],
-        ["bundleTotalText","Text","Grand total"],
-        ["bundleCheckoutBtn","Button","Add Bundle to Cart"],
-        ["bundleEmptyState","Box","Empty state"],
-        ["bundleErrorText","Text","Error state"],
-        ["bundleSaveBtn","Button","Save bundle config"],
-        ["bundleShareBtn","Button","Share bundle link"]
+        ["bundleHeroSection","Box","Hero/intro section"],
+        ["bundleLoader","Box","Loading state"],
+        ["bundleSummarySection","Box","Selected items + total panel"],
+        ["bundleTotalPrice","Text","Bundle total with NaN guard"],
+        ["bundleDiscountBadge","Box","Discount badge"],
+        ["bundleAddToCartBtn","Button","Add Bundle to Cart"],
+        ["bundleEmptyState","Box","Empty state (0 selected)"],
+        ["bundleError","Text","Error message"]
       ]},
-      { name: "Bundle Items", repeater: "bundleProductsRepeater", impl: `<h4>📋 Implementation — Bundle Items Repeater</h4>
+      { name: "Product Picker Repeater", repeater: "bundleProductRepeater", impl: `<h4>📋 Implementation — Bundle Product Picker Repeater</h4>
+<p><strong>Note:</strong> <code>onItemReady</code> is registered BEFORE <code>.data</code> assignment (Wix Velo requirement).</p>
 <ul>
-  <li><strong>#bundleProductsRepeater</strong>: Repeater — one card per item in the bundle.</li>
-  <li><strong>#bundleItemImage</strong>: Image — product thumbnail.</li>
-  <li><strong>#bundleItemName</strong>: Text — product name.</li>
-  <li><strong>#bundleItemPrice</strong>: Text — unit price.</li>
-  <li><strong>#bundleItemQty</strong>: Input (number) — quantity selector.</li>
-  <li><strong>#bundleItemWeight</strong>: Text — "X lbs" per-item weight (transparency).</li>
-  <li><strong>#bundleItemRemoveBtn</strong>: Button — remove from bundle (X button).</li>
-  <li><strong>#bundleItemPalletBadge</strong>: Box — "Pallet Required" badge shown when <code>requiresPallet: true</code>.</li>
+  <li><strong>#bundleProductRepeater</strong>: Repeater — all available products to select for bundle.</li>
+  <li><strong>#bundleProductImage</strong>: Image — product thumbnail (src from <code>mainMedia.url</code>).</li>
+  <li><strong>#bundleProductName</strong>: Text — product name.</li>
+  <li><strong>#bundleProductPrice</strong>: Text — formatted price.</li>
+  <li><strong>#bundleSelectBtn</strong>: Button — "Select" / "Deselect". <code>aria-pressed='true'/'false'</code> toggles on click.</li>
+  <li><strong>#bundleSelectedBadge</strong>: Box — "Selected" badge overlay (shown when item is in bundle).</li>
 </ul>`, elements: [
-        ["bundleProductsRepeater","Repeater","Bundle items list"]
+        ["bundleProductRepeater","Repeater","Product selection list"]
       ], children: [
-        ["bundleItemImage","Image","Product thumbnail"],
-        ["bundleItemName","Text","Product name"],
-        ["bundleItemPrice","Text","Unit price"],
-        ["bundleItemQty","Input","Quantity selector"],
-        ["bundleItemWeight","Text","Per-item weight"],
-        ["bundleItemRemoveBtn","Button","Remove from bundle"],
-        ["bundleItemPalletBadge","Box","Pallet Required badge"]
+        ["bundleProductImage","Image","Product thumbnail"],
+        ["bundleProductName","Text","Product name"],
+        ["bundleProductPrice","Text","Formatted price"],
+        ["bundleSelectBtn","Button","Select/Deselect (aria-pressed)"],
+        ["bundleSelectedBadge","Box","Selected badge overlay"]
       ]},
-      { name: "Product Picker", repeater: "bundlePickerRepeater", impl: `<h4>🔍 Implementation — Product Picker Panel</h4>
+      { name: "Summary Repeater", repeater: "bundleSummaryRepeater", impl: `<h4>📋 Implementation — Bundle Summary Repeater (selected items)</h4>
 <ul>
-  <li><strong>#bundlePickerSection</strong>: Box — product picker panel (shown on "Add Product" click, hidden otherwise).</li>
-  <li><strong>#bundlePickerSearchInput</strong>: Input — search/filter products.</li>
-  <li><strong>#bundlePickerRepeater</strong>: Repeater — available products to add.</li>
-  <li><strong>#bundlePickerCloseBtn</strong>: Button — close picker panel.</li>
+  <li><strong>#bundleSummaryRepeater</strong>: Repeater — one row per selected product in the summary panel.</li>
+  <li><strong>#bundleSummaryName</strong>: Text — product name in summary.</li>
+  <li><strong>#bundleSummaryPrice</strong>: Text — formatted price in summary.</li>
+  <li><strong>#bundleSummaryRemoveBtn</strong>: Button — remove this item from bundle.</li>
 </ul>`, elements: [
-        ["bundlePickerSection","Box","Product picker panel"],
-        ["bundlePickerSearchInput","Input","Product search filter"],
-        ["bundlePickerCloseBtn","Button","Close picker"]
-      ]},
-      { name: "Picker Items", repeater: "bundlePickerRepeater", impl: ``, elements: [
-        ["bundlePickerRepeater","Repeater","Pickable products"]
+        ["bundleSummaryRepeater","Repeater","Selected items summary"]
       ], children: [
-        ["bundlePickerItemName","Text","Product name"],
-        ["bundlePickerItemPrice","Text","Product price"],
-        ["bundlePickerItemImage","Image","Product thumbnail"],
-        ["bundlePickerAddBtn","Button","Add to bundle"]
+        ["bundleSummaryName","Text","Product name in summary"],
+        ["bundleSummaryPrice","Text","Price in summary"],
+        ["bundleSummaryRemoveBtn","Button","Remove from bundle"]
       ]}
     ]
   },
@@ -5005,6 +4992,37 @@ SHARING:
         ["notifyMeBtn","Button","Notify Me When Available"],
         ["notifyMeSuccess","Text","Confirmation message"],
         ["notifyMeError","Text","Error message"]
+      ]}
+    ]
+  },
+  {
+    name: "Product Q&A Widget", file: "ProductQnA.js (Product Page additions) ✅ PR #678 merged", priority: "P1", est: "30 min",
+    sections: [
+      { name: "Q&A Section (Product Page)", impl: `<h4>❓ Implementation — Product Q&A Widget (Product Page)</h4>
+<p><strong>Status: ✅ Merged (PR #678)</strong></p>
+<p><strong>Backend:</strong> <code>productQnA.web.js</code> — <code>getQnA(productId, page)</code>, <code>submitQuestion(productId, text)</code>.</p>
+<p><strong>Accordion pattern:</strong> Each question button's <code>ariaControls</code> is paired with the answer panel's <code>id</code> attribute. Focus is trapped within the widget for keyboard navigation. Empty catch blocks all log via <code>console.error('[ProductQnA]', e)</code>.</p>
+<ul>
+  <li><strong>#qnaSection</strong>: Box — full Q&A widget container (shown on Product Page).</li>
+  <li><strong>#qnaAccordion</strong>: Repeater — one accordion item per Q&A pair.</li>
+  <li><strong>#qnaEmpty</strong>: Box — "No questions yet. Be the first to ask!" (shown when 0 items).</li>
+  <li><strong>#qnaLoadMore</strong>: Button — "Load More Questions" (hidden when all pages loaded). Page calc uses <code>Number.isFinite()</code> guard.</li>
+  <li><strong>#qnaQuestion</strong>: Text — question text (inside repeater, acts as accordion toggle button with role=button, aria-expanded).</li>
+  <li><strong>#qnaAnswer</strong>: Box — answer panel (inside repeater). Has <code>id</code> attribute matching question's <code>ariaControls</code> value.</li>
+  <li><strong>#qnaQuestionInput</strong>: TextInput — new question text input.</li>
+  <li><strong>#qnaSubmitBtn</strong>: Button — "Submit Question".</li>
+  <li><strong>#qnaThankYou</strong>: Box — "Thanks! Your question has been submitted." confirmation (shown after submit, hides after 3s).</li>
+</ul>`, elements: [
+        ["qnaSection","Box","Q&A widget container"],
+        ["qnaAccordion","Repeater","Q&A accordion list"],
+        ["qnaEmpty","Box","Empty state"],
+        ["qnaLoadMore","Button","Load More Questions"],
+        ["qnaQuestionInput","TextInput","New question input"],
+        ["qnaSubmitBtn","Button","Submit Question"],
+        ["qnaThankYou","Box","Thank you confirmation"]
+      ], children: [
+        ["qnaQuestion","Text","Question toggle (role=button, aria-expanded)"],
+        ["qnaAnswer","Box","Answer panel (id matches ariaControls)"]
       ]}
     ]
   },
