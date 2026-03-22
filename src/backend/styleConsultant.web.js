@@ -12,8 +12,7 @@
  *
  * @requires wix-web-module
  * @requires wix-data
- * @requires wix-fetch  (dynamic import — Claude API calls)
- * @requires wix-secrets-backend  (dynamic import — ANTHROPIC_API_KEY)
+ * @requires wix-fetch  (for Claude API call — wired after zhora confirms rate limit strategy)
  *
  * @setup
  * Create CMS collection `StyleConsultantSessions` with the following fields:
@@ -33,10 +32,9 @@
  * Add to Wix Secrets Manager:
  *   ANTHROPIC_API_KEY — Claude API key (claude-sonnet-4-6, vision-capable)
  *
- * Rate limiting: CMS-backed per-session sliding window.
- *   RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
- *   Session lookup failure (CMS error — thrown or malformed response) returns
- *   AI_ERROR to the caller; the rate limit is never bypassed on lookup failure.
+ * Rate limiting: pending zhora (gastown) review.
+ *   Current placeholder: RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS per sessionKey.
+ *   Strategy TBD: per-session sliding window (CMS-backed) vs. global token bucket.
  *
  * @see jobs.config — no scheduled job required for this module.
  */
@@ -55,77 +53,7 @@ const TEXT_MAX = 1000;        // Max characters for free-text description
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-// Product recommendation settings
-const MAX_RECS = 6;
-
-/**
- * Maps Claude-inferred style tags to Wix Stores product category slugs.
- * Each entry lists the categories most relevant to that style.
- * Category slugs match those used in Stores/Products.categories field.
- */
-const STYLE_CATEGORY_MAP = {
-  'modern':      ['futon-frames', 'wall-huggers', 'platform-beds'],
-  'minimalist':  ['wall-huggers', 'platform-beds'],
-  'industrial':  ['futon-frames', 'platform-beds'],
-  'mid-century': ['futon-frames', 'platform-beds'],
-  'coastal':     ['futon-frames', 'wall-huggers'],
-  'traditional': ['futon-frames', 'murphy-cabinet-beds', 'platform-beds'],
-  'rustic':      ['futon-frames'],
-  'bohemian':    ['futon-frames'],
-  // Functional tags (may also come from Claude)
-  'sleeping':    ['platform-beds', 'futon-frames', 'murphy-cabinet-beds'],
-  'sitting':     ['futon-frames', 'wall-huggers'],
-  'space-saving':['wall-huggers', 'murphy-cabinet-beds'],
-};
-
-// Claude API configuration
-const CLAUDE_API_URL = 'https://api.anthropic.com/v1/messages';
-const CLAUDE_MODEL = 'claude-sonnet-4-6';
-const CLAUDE_MAX_TOKENS = 512;
-const CLAUDE_ANTHROPIC_VERSION = '2023-06-01';
-
-const STYLE_SYSTEM_PROMPT = `You are a furniture and home decor style analyst for Carolina Futons.
-Analyze the provided room photo and/or text description to infer style preferences and furniture needs.
-
-Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
-{
-  "styleTags": ["tag1", "tag2"],
-  "explanation": "Brief 1-2 sentence explanation of the style analysis."
-}
-
-Valid style tags — pick 1-4 most relevant:
-modern, minimalist, industrial, mid-century, coastal, traditional, rustic, bohemian,
-sleeping, sitting, space-saving`;
-
 // ── Helpers ──────────────────────────────────────────────────────────
-
-/**
- * Convert a Wix Media URI to a publicly accessible CDN URL suitable
- * for inclusion in Claude API image content blocks.
- *
- * - wix:image://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
- * - wix:video://v1/{mediaId}/... → https://static.wixstatic.com/media/{mediaId}
- * - Recognized Wix CDN domains (wixstatic.com, wixmp.com) are returned as-is.
- * - Any other input returns null.
- *
- * Domain restriction is intentional: only Wix-hosted media should be passed to
- * the Claude API image block. Non-Wix URLs are blocked here as a defence-in-depth
- * measure — `isWixMediaUrl` at the webMethod boundary is the primary gate.
- *
- * @param {string} wixUrl
- * @returns {string|null} Public Wix CDN URL, or null if conversion fails
- */
-export function _wixMediaToCdnUrl(wixUrl) {
-  if (typeof wixUrl !== 'string' || !wixUrl.trim()) return null;
-  const url = wixUrl.trim();
-  // Recognized Wix CDN domains — pass through directly
-  if (/^https:\/\/static\.wixstatic\.com\//i.test(url)) return url;
-  if (/^https:\/\/[^/]*\.wixmp\.com\//i.test(url)) return url;
-  // wix:image://v1/{mediaId}/filename.jpg#...  or  wix:video://v1/...
-  const match = url.match(/^wix:(?:image|video):\/\/v1\/([^/#?]+)/);
-  if (!match) return null;
-  return `https://static.wixstatic.com/media/${match[1]}`;
-}
 
 /**
  * Validate the session key format.
@@ -144,33 +72,23 @@ function validateSessionKey(key) {
 /**
  * Fetch existing StyleConsultantSessions record for the given sessionKey,
  * or return null if not found.
- *
- * Throws if the CMS returns a malformed response (missing `items` array) rather
- * than silently returning null — this prevents a malformed response from being
- * mistaken for a new (never-seen) session, which would bypass rate limiting.
- *
  * @param {string} sessionKey - Validated 64-char hex key
- * @returns {Promise<Object|null>} Session record, or null if definitively not found
- * @throws {Error} If the CMS query fails or returns a malformed response
+ * @returns {Promise<Object|null>}
  */
 async function lookupSession(sessionKey) {
   const result = await wixData.query(SESSION_COLLECTION)
     .eq('sessionKey', sessionKey)
     .find();
-  if (!result || !Array.isArray(result.items)) {
-    throw new Error('cms_malformed_response');
-  }
   return result.items.length > 0 ? result.items[0] : null;
 }
 
 /**
- * Check per-session rate limit using a CMS-backed sliding window.
- * Returns allowed=true if the call may proceed; false if the quota is exhausted.
+ * Check and update per-session rate limit using a sliding window.
+ * Returns true if the call is allowed; false if the session is rate-limited.
  *
- * A null session (first call — no existing record) is always allowed.
- * CMS lookup failures must be handled by the caller before invoking this
- * function; they must never reach here as a null session.
- * The window resets when windowAge >= RATE_LIMIT_WINDOW_MS.
+ * TODO(CF-vu30): zhora to review — replace with confirmed strategy before
+ *   wiring the Claude API call. Current implementation: simple CMS-backed
+ *   sliding window with RATE_LIMIT_MAX calls per RATE_LIMIT_WINDOW_MS.
  *
  * @param {Object|null} session - Existing session record, or null for new sessions
  * @returns {{ allowed: boolean, updatedCounts: { windowStart: Date, windowCallCount: number } }}
@@ -179,7 +97,7 @@ function checkRateLimit(session) {
   const now = new Date();
 
   if (!session) {
-    // First call (no existing session record) — always allowed
+    // First call — always allowed
     return {
       allowed: true,
       updatedCounts: { windowStart: now, windowCallCount: 1 },
@@ -254,158 +172,41 @@ async function upsertSession(existing, sessionKey, updatedCounts, textInput, pho
 
 /**
  * Call Claude vision API to analyze the user's style from photo and/or text.
- * Loads ANTHROPIC_API_KEY from Wix Secrets Manager, converts the Wix Media URI
- * to a CDN URL, then calls claude-sonnet-4-6 via wix-fetch.
+ * Returns an array of style tags and a natural-language explanation.
  *
- * Throws named errors: claude_rate_limited, claude_auth_error, claude_bad_request,
- * claude_api_error_{status}, claude_empty_response, claude_parse_error.
+ * TODO(CF-vu30): STUB — wire actual Claude API call after zhora confirms
+ *   rate limit strategy and model selection. Blocked on cross-rig review.
  *
  * @param {string} photoUrl - Validated Wix Media URL (empty string if text-only)
  * @param {string} textInput - Sanitized free-text description (empty string if photo-only)
  * @returns {Promise<{ styleTags: string[], explanation: string }>}
  */
-// Test injection hook — allows tests to mock the AI call without network access.
-// Set via _setCallClaudeVision(fn) in beforeEach; clear with _setCallClaudeVision(null).
-let _callClaudeVisionImpl = null;
-
 async function callClaudeVision(photoUrl, textInput) {
-  if (_callClaudeVisionImpl) {
-    return _callClaudeVisionImpl(photoUrl, textInput);
-  }
-
-  // Load API key from Wix Secrets Manager (errors here are config failures, not AI failures)
-  const { getSecret } = await import('wix-secrets-backend');
-  const apiKey = await getSecret('ANTHROPIC_API_KEY');
-
-  // Build user content blocks — image first (if provided), then text prompt
-  const contentBlocks = [];
-  let hasImage = false;
-
-  if (photoUrl) {
-    const cdnUrl = _wixMediaToCdnUrl(photoUrl);
-    if (cdnUrl) {
-      contentBlocks.push({
-        type: 'image',
-        source: { type: 'url', url: cdnUrl },
-      });
-      hasImage = true;
-    } else {
-      console.warn('[styleConsultant] Could not convert photo URL to CDN URL — proceeding text-only:', photoUrl);
-    }
-  }
-
-  const textPrompt = textInput
-    ? `Analyze this room for furniture style. The customer says: "${textInput}"`
-    : hasImage
-      ? 'Analyze this room photo for furniture style preferences.'
-      : 'Suggest furniture styles based on the customer description.';
-  contentBlocks.push({ type: 'text', text: textPrompt });
-
-  // Call Claude API via wix-fetch
-  const { fetch } = await import('wix-fetch');
-  const res = await fetch(CLAUDE_API_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': CLAUDE_ANTHROPIC_VERSION,
-    },
-    body: JSON.stringify({
-      model: CLAUDE_MODEL,
-      max_tokens: CLAUDE_MAX_TOKENS,
-      system: STYLE_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: contentBlocks }],
-    }),
-  });
-
-  if (!res.ok) {
-    const status = res.status;
-    if (status === 429) throw new Error('claude_rate_limited');
-    if (status === 401) throw new Error('claude_auth_error');
-    if (status === 400) throw new Error('claude_bad_request');
-    throw new Error(`claude_api_error_${status}`);
-  }
-
-  const data = await res.json();
-  const raw = data?.content?.[0]?.text;
-  if (typeof raw !== 'string' || !raw.trim()) throw new Error('claude_empty_response');
-
-  // Parse JSON — Claude may occasionally wrap in a markdown code fence
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (_) {
-    const fence = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (!fence) throw new Error('claude_parse_error');
-    try {
-      parsed = JSON.parse(fence[1]);
-    } catch (__) {
-      throw new Error('claude_parse_error');
-    }
-  }
-
-  const styleTags = Array.isArray(parsed?.styleTags) ? parsed.styleTags : [];
-  const explanation = typeof parsed?.explanation === 'string' ? parsed.explanation : '';
-
-  return { styleTags, explanation };
+  // STUB: replace with real implementation after zhora review
+  // Expected implementation outline:
+  //   1. Fetch ANTHROPIC_API_KEY from wixSecretsManager
+  //   2. Build Claude messages array:
+  //      - system: style analysis prompt scoped to futon/furniture
+  //      - user: text + optional image_url content block
+  //   3. Call claude-sonnet-4-6 via fetch (wix-fetch)
+  //   4. Parse response: extract style tags + explanation
+  //   5. Handle errors: rate limit (429), context length, content policy
+  throw new Error('Claude vision call not yet implemented — pending zhora rate limit review (CF-vu30)');
 }
 
 /**
  * Query the Wix Stores catalog for products matching the given style tags.
- * Derives target categories from STYLE_CATEGORY_MAP, fetches matching products
- * via wixData, scores each by category overlap with the tag-derived set,
- * and returns up to MAX_RECS sorted by score descending then salesRank ascending.
+ * Returns up to MAX_RECS products scored by tag overlap.
  *
- * @param {string[]} styleTags - Style tags inferred from Claude analysis
- * @returns {Promise<Array<{
- *   productId: string,
- *   name: string,
- *   price: number,
- *   formattedPrice: string,
- *   imageUrl: string,
- *   score: number,
- *   matchedTags: string[]
- * }>>}
+ * @param {string[]} styleTags - Style tags from Claude analysis
+ * @returns {Promise<Array<{ productId: string, name: string, score: number, matchedTags: string[] }>>}
  */
 async function getProductRecommendations(styleTags) {
-  if (!Array.isArray(styleTags) || styleTags.length === 0) return [];
-
-  // Build the union of target categories from all matched style tags
-  const targetCategories = [...new Set(
-    styleTags.flatMap(tag => STYLE_CATEGORY_MAP[tag] || [])
-  )];
-
-  if (targetCategories.length === 0) return [];
-
-  const result = await wixData.query('Stores/Products')
-    .hasSome('categories', targetCategories)
-    .ascending('salesRank')
-    .limit(MAX_RECS * 3)  // Over-fetch to allow scoring + trim
-    .find();
-
-  const items = Array.isArray(result?.items) ? result.items : [];
-
-  // Score each product by how many target categories it matches
-  const scored = items.map(p => {
-    const productCats = Array.isArray(p.categories) ? p.categories : [];
-    const matchedCats = productCats.filter(c => targetCategories.includes(c));
-    return {
-      productId: p._id,
-      name: p.name || '',
-      price: p.price || 0,
-      formattedPrice: p.formattedPrice || (p.price ? `$${p.price}` : ''),
-      imageUrl: p.mainMedia || '',
-      score: matchedCats.length,
-      matchedTags: styleTags.filter(tag =>
-        (STYLE_CATEGORY_MAP[tag] || []).some(c => matchedCats.includes(c))
-      ),
-    };
-  });
-
-  // Sort: highest score first, then salesRank (ascending, already from query)
-  scored.sort((a, b) => b.score - a.score);
-
-  return scored.slice(0, MAX_RECS);
+  // TODO(CF-vu30): implement catalog query by style tags
+  // Pattern: query Products collection filtered by style/category tags,
+  // score by number of matched tags, return top MAX_RECS.
+  // Placeholder: returns empty array until wired.
+  return [];
 }
 
 // ── Exported webMethod ────────────────────────────────────────────────
@@ -475,6 +276,7 @@ export const getStyleConsultation = webMethod(
     }
 
     // 4. Call Claude vision API
+    // TODO(CF-vu30): remove this guard once callClaudeVision is implemented
     let styleTags, explanation;
     try {
       const aiResult = await callClaudeVision(photoUrl, textInput);
@@ -514,16 +316,3 @@ export const getStyleConsultation = webMethod(
     };
   },
 );
-
-// ── Export internals for testing ─────────────────────────────────────
-export { getProductRecommendations as _getProductRecommendations };
-export { callClaudeVision as _callClaudeVision };
-
-/**
- * Inject a mock implementation for callClaudeVision in tests.
- * Call with null to restore the default (stubbed) behaviour.
- * @param {Function|null} fn
- */
-export function _setCallClaudeVision(fn) {
-  _callClaudeVisionImpl = fn;
-}
