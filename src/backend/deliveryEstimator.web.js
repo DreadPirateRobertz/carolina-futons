@@ -15,7 +15,6 @@
  *
  * @requires backend/ups-shipping.web  - getUPSRates, getPackageDimensions
  * @requires backend/utils/errorHandler - logError
- * @requires public/sharedTokens.js    - shippingConfig.freeThreshold
  */
 
 import { Permissions, webMethod } from 'wix-web-module';
@@ -140,6 +139,7 @@ export const getDeliveryEstimate = webMethod(
       );
 
       if (!rates || rates.length === 0) {
+        logError('deliveryEstimator.getDeliveryEstimate', new Error('UPS returned no rates'), { zip });
         circuitOpenUntil = Date.now() + CIRCUIT_TIMEOUT_MS;
         return buildFallback();
       }

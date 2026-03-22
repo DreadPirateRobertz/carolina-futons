@@ -17,7 +17,7 @@
  *  - service field: populated from UPS rate, null on fallback
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -30,28 +30,8 @@ vi.mock('backend/ups-shipping.web', () => ({
   getPackageDimensions: mockGetPackageDimensions,
 }));
 
-vi.mock('wix-data', () => ({
-  default: {
-    query: vi.fn(() => ({
-      hasSome: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      find: vi.fn().mockResolvedValue({ items: [] }),
-    })),
-  },
-}));
-
 vi.mock('backend/utils/errorHandler', () => ({
   logError: vi.fn(),
-}));
-
-vi.mock('public/sharedTokens.js', () => ({
-  shippingConfig: { freeThreshold: 999 },
-  brand: { name: 'Carolina Futons' },
-  business: { address: { street: '123 Main St', city: 'Hendersonville', state: 'NC', zip: '28792' } },
-}));
-
-vi.mock('backend/utils/sanitize', () => ({
-  sanitize: vi.fn((v) => v),
 }));
 
 // ── Import SUT ─────────────────────────────────────────────────────────────────
@@ -165,6 +145,14 @@ describe('getDeliveryEstimate — UPS live response', () => {
     const result = await getDeliveryEstimate('28792', ['p1']);
     expect(result.minDays).toBe(5);
     expect(result.maxDays).toBe(7);
+  });
+
+  it('parses single-day format "1 business day" → minDays=maxDays=1', async () => {
+    mockGetUPSRates.mockResolvedValueOnce([{ ...UPS_GROUND_RATE, estimatedDelivery: '1 business day' }]);
+    const result = await getDeliveryEstimate('28792', ['p1']);
+    expect(result.minDays).toBe(1);
+    expect(result.maxDays).toBe(1);
+    expect(result.estimate).toBe('1 business day');
   });
 
   it('includes minDate and maxDate as ISO date strings', async () => {
