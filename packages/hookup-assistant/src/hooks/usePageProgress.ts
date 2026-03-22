@@ -116,3 +116,8 @@ export function usePageProgress(pageName: string) {
 
   return { hookedIds, skippedIds, markHooked, markSkipped, undoLast, canUndo: history.length > 0, resetPage };
 }
+
+/** Read the hooked element count for a page directly from localStorage (no React state). */
+export function readPageHookedCount(pageName: string): number {
+  return loadIds(pageName, 'hooked').length;
+}
