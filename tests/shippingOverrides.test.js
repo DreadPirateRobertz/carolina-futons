@@ -275,21 +275,17 @@ describe('applyOverrides — CMS miss / fail-open', () => {
 
 describe('applyOverrides — caching', () => {
   it('does not re-query CMS on the second call within TTL', async () => {
-    let queryCount = 0;
-    // Seed with a spy: track queries by counting seeded-collection hits
-    // We use __setQueryError after first call to prove cache is used
+    // First call: seed free-shipping rule, result should apply it (cost 0)
     __seed('ShippingOverrides', [makeRule({ action: { freeShipping: true } })]);
+    const first = await applyOverrides(makeOptions(), makeContext());
+    expect(first[0].cost).toBe(0); // free shipping applied
 
-    await applyOverrides(makeOptions(), makeContext());
-
-    // Replace collection with a query error — if cache works, result is still free shipping
-    _invalidateCache(); // force re-read for next test only (reset between tests normally)
+    // Poison the CMS — if the second call hits it, it will throw
     resetWixData();
-    __setQueryError('ShippingOverrides', new Error('no second query expected'));
+    __setQueryError('ShippingOverrides', new Error('second CMS query must not happen'));
 
-    // This call should use cache — but since we invalidated it, it will fail-open
-    const result = await applyOverrides(makeOptions(), makeContext());
-    // Fail-open: options unchanged when CMS throws
-    expect(result[0].cost).toBe(49);
+    // Second call within TTL: must use cached rules, not re-query CMS
+    const second = await applyOverrides(makeOptions(), makeContext());
+    expect(second[0].cost).toBe(0); // still free shipping from cache, not fail-open (49)
   });
 });

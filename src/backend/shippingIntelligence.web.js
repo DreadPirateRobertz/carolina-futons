@@ -143,7 +143,12 @@ export const getShippingEstimate = webMethod(
         requiresFreight: profile?.requiresFreight || false,
       }];
 
-      return await buildShippingResponse(zip, packages, 0, 1);
+      return await buildShippingResponse(zip, packages, 0, 1, {
+        zip,
+        products: [{ productId }],
+        orderSubtotal: 0,
+        memberId: null,
+      });
     } catch (err) {
       logError('shippingIntelligence.getShippingEstimate', err);
       return { success: false, error: 'Estimate unavailable', options: [] };
@@ -215,7 +220,12 @@ export const calculateBundleQuote = webMethod(
         }
       }
 
-      return await buildShippingResponse(zip, packages, orderSubtotal, items.length);
+      return await buildShippingResponse(zip, packages, orderSubtotal, items.length, {
+        zip,
+        products: items.map(item => ({ productId: item.productId })),
+        orderSubtotal,
+        memberId: null,
+      });
     } catch (err) {
       logError('shippingIntelligence.calculateBundleQuote', err);
       return { success: false, error: 'Quote unavailable', options: [] };
