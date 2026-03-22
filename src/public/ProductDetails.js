@@ -13,7 +13,7 @@ import { getCategoryFromCollections, addBusinessDays } from 'public/productPageU
 import { trackSocialShare } from 'public/engagementTracker';
 import { makeClickable } from 'public/a11yHelpers';
 import { colors } from 'public/designTokens.js';
-import { estimateDelivery } from 'public/DeliveryEstimator.js';
+import { getDeliveryEstimate } from 'backend/deliveryEstimator.web';
 import { validateEmail } from 'public/validators.js';
 
 // --- Breadcrumbs ---
@@ -165,8 +165,7 @@ export function initSocialShare($w, state) {
  */
 export function initDeliveryEstimate($w, state) {
   try {
-    const el = $w('#deliveryEstimate');
-    if (!el || !state.product) return;
+    if (!state.product) return;
     showDefaultEstimate($w, state);
     initZipCodeInput($w, state);
   } catch (e) {}
@@ -174,13 +173,12 @@ export function initDeliveryEstimate($w, state) {
 
 function showDefaultEstimate($w, state) {
   try {
-    const el = $w('#deliveryEstimate');
     const today = new Date();
     const opts = { month: 'short', day: 'numeric' };
     const early = addBusinessDays(today, 5).toLocaleDateString('en-US', opts);
     const late = addBusinessDays(today, 10).toLocaleDateString('en-US', opts);
-    el.text = `Estimated delivery: ${early} \u2013 ${late}`;
-    el.show();
+    try { $w('#deliveryEstimateText').text = `Estimated delivery: ${early} \u2013 ${late}`; } catch (e) {}
+    try { $w('#deliveryEstimateBox').show(); } catch (e) {}
     try {
       const isLarge = state.product.weight > 50 ||
         (state.product.collections || []).some(c => /murphy|platform|futon|frame/i.test(c));
@@ -219,33 +217,25 @@ async function updateEstimateForZip($w, state, rawZip) {
     }
     try { $w('#deliveryEstimateError').hide(); } catch (e) {}
 
-    // Call the DeliveryEstimator module for live UPS rates with fallback
-    const result = await estimateDelivery(zip, state.product);
+    const productIds = state.product?._id ? [state.product._id] : [];
+    const result = await getDeliveryEstimate(zip, productIds);
     if (!result.success) {
       try { $w('#deliveryEstimateError').text = result.error || 'Unable to estimate delivery'; $w('#deliveryEstimateError').show(); } catch (e) {}
       return;
     }
 
-    // Update delivery estimate display
-    try {
-      const el = $w('#deliveryEstimate');
-      el.text = result.deliveryText;
-      el.show();
-    } catch (e) {}
-    try {
-      const resultEl = $w('#deliveryEstimateResult');
-      if (resultEl) { resultEl.text = result.shippingText; resultEl.show(); }
-    } catch (e) {}
-
-    // White-glove note
-    try {
-      if (result.whiteGloveText) {
-        const note = $w('#whiteGloveNote');
-        if (note) { note.text = result.whiteGloveText; note.show(); }
-      } else {
-        try { $w('#whiteGloveNote').hide(); } catch (e) {}
-      }
-    } catch (e) {}
+    // Format date range from ISO strings when UPS returns them; fall back to estimate text
+    let estimateText;
+    if (result.minDate && result.maxDate) {
+      const opts = { month: 'short', day: 'numeric' };
+      const early = new Date(result.minDate).toLocaleDateString('en-US', opts);
+      const late = new Date(result.maxDate).toLocaleDateString('en-US', opts);
+      estimateText = `Estimated delivery: ${early} \u2013 ${late}`;
+    } else {
+      estimateText = `Estimated delivery: ${result.estimate}`;
+    }
+    try { $w('#deliveryEstimateText').text = estimateText; } catch (e) {}
+    try { $w('#deliveryEstimateBox').show(); } catch (e) {}
   } catch (e) {}
 }
 

@@ -49,12 +49,16 @@ vi.mock('public/designTokens.js', () => ({
   shadows: { nav: '0 2px 4px rgba(0,0,0,0.1)' },
 }));
 
-vi.mock('public/DeliveryEstimator.js', () => ({
-  estimateDelivery: vi.fn().mockResolvedValue({
+vi.mock('backend/deliveryEstimator.web', () => ({
+  getDeliveryEstimate: vi.fn().mockResolvedValue({
     success: true,
-    deliveryText: 'Delivered by Mar 25 – Mar 30',
-    shippingText: 'UPS Ground — $49.99',
-    whiteGloveText: null,
+    estimate: '5-7 business days',
+    minDays: 5,
+    maxDays: 7,
+    minDate: '2026-03-27',
+    maxDate: '2026-03-31',
+    source: 'ups',
+    service: 'UPS Ground',
   }),
 }));
 
@@ -63,7 +67,7 @@ vi.mock('public/validators.js', () => ({
 }));
 
 import { initBreadcrumbs, initProductInfoAccordion, initSocialShare, initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA } from '../src/public/ProductDetails.js';
-import { estimateDelivery } from 'public/DeliveryEstimator.js';
+import { getDeliveryEstimate } from 'backend/deliveryEstimator.web';
 
 function createMockElement() {
   return {
@@ -242,8 +246,8 @@ describe('ProductDetails', () => {
   describe('initDeliveryEstimate', () => {
     it('shows delivery estimate text', () => {
       initDeliveryEstimate($w, state);
-      expect($w('#deliveryEstimate').text).toContain('Estimated delivery:');
-      expect($w('#deliveryEstimate').show).toHaveBeenCalled();
+      expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
+      expect($w('#deliveryEstimateBox').show).toHaveBeenCalled();
     });
 
     it('shows white-glove note for large furniture', () => {
@@ -255,7 +259,7 @@ describe('ProductDetails', () => {
     it('returns early when product is null', () => {
       state.product = null;
       initDeliveryEstimate($w, state);
-      expect($w('#deliveryEstimate').show).not.toHaveBeenCalled();
+      expect($w('#deliveryEstimateBox').show).not.toHaveBeenCalled();
     });
 
     it('does not show white-glove note for light products', () => {
@@ -469,12 +473,12 @@ describe('ProductDetails', () => {
       expect($w('#whiteGloveNote').show).toHaveBeenCalled();
     });
 
-    it('zip button calls estimateDelivery for valid zip', async () => {
+    it('zip button calls getDeliveryEstimate for valid zip', async () => {
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '28801';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+      expect(getDeliveryEstimate).toHaveBeenCalledWith('28801', [state.product._id]);
     });
 
     it('shows error for invalid short zip code', async () => {
@@ -498,19 +502,35 @@ describe('ProductDetails', () => {
       $w('#deliveryZipInput').value = '28-801';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+      expect(getDeliveryEstimate).toHaveBeenCalledWith('28801', [state.product._id]);
     });
 
-    it('updates delivery estimate text from result', async () => {
+    it('updates delivery estimate text from UPS minDate/maxDate', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '5-7 business days', minDays: 5, maxDays: 7,
+        minDate: '2026-03-27', maxDate: '2026-03-31', source: 'ups', service: 'UPS Ground',
+      });
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '28801';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect($w('#deliveryEstimate').text).toBe('Delivered by Mar 25 – Mar 30');
+      expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
+      expect($w('#deliveryEstimateBox').show).toHaveBeenCalled();
     });
 
-    it('shows error when estimateDelivery fails', async () => {
-      estimateDelivery.mockResolvedValueOnce({ success: false, error: 'Service unavailable' });
+    it('uses estimate text directly on fallback (no minDate/maxDate)', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '2-5 business days', source: 'fallback', service: null,
+      });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateText').text).toContain('2-5 business days');
+    });
+
+    it('shows error when getDeliveryEstimate fails', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({ success: false, error: 'Service unavailable' });
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '90210';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
@@ -518,26 +538,12 @@ describe('ProductDetails', () => {
       expect($w('#deliveryEstimateError').text).toContain('Service unavailable');
     });
 
-    it('shows white-glove text from estimateDelivery result', async () => {
-      estimateDelivery.mockResolvedValueOnce({
-        success: true,
-        deliveryText: 'Delivered by Mar 22 – Mar 27',
-        shippingText: 'Free shipping',
-        whiteGloveText: 'White-glove delivery: $149',
-      });
-      initDeliveryEstimate($w, state);
-      $w('#deliveryZipInput').value = '28801';
-      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
-      await clickHandler();
-      expect($w('#whiteGloveNote').text).toBe('White-glove delivery: $149');
-    });
-
-    it('Enter key on zip input triggers estimate', async () => {
+    it('Enter key on zip input triggers getDeliveryEstimate', async () => {
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '28801';
       const keyHandler = $w('#deliveryZipInput').onKeyPress.mock.calls[0][0];
       await keyHandler({ key: 'Enter' });
-      expect(estimateDelivery).toHaveBeenCalled();
+      expect(getDeliveryEstimate).toHaveBeenCalled();
     });
 
     it('sets aria label on zip button', () => {

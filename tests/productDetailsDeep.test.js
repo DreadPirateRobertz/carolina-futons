@@ -49,12 +49,16 @@ vi.mock('public/designTokens.js', () => ({
   shadows: { nav: '0 2px 4px rgba(0,0,0,0.1)' },
 }));
 
-vi.mock('public/DeliveryEstimator.js', () => ({
-  estimateDelivery: vi.fn().mockResolvedValue({
+vi.mock('backend/deliveryEstimator.web', () => ({
+  getDeliveryEstimate: vi.fn().mockResolvedValue({
     success: true,
-    deliveryText: 'Delivered by Mar 25 – Mar 30',
-    shippingText: 'UPS Ground — $49.99',
-    whiteGloveText: null,
+    estimate: '5-7 business days',
+    minDays: 5,
+    maxDays: 7,
+    minDate: '2026-04-01',
+    maxDate: '2026-04-05',
+    source: 'ups',
+    service: 'UPS Ground',
   }),
 }));
 
@@ -67,7 +71,7 @@ import {
   initDeliveryEstimate, injectProductSchema, initSwatchRequest, initSwatchCTA,
 } from '../src/public/ProductDetails.js';
 import { submitSwatchRequest } from 'backend/emailService.web';
-import { estimateDelivery } from 'public/DeliveryEstimator.js';
+import { getDeliveryEstimate } from 'backend/deliveryEstimator.web';
 import { trackSocialShare } from 'public/engagementTracker';
 
 function createMockElement() {
@@ -397,34 +401,26 @@ describe('ProductDetails — deep coverage', () => {
 
   // ── Delivery estimate — hide white-glove when null ──
 
-  describe('delivery estimate zip — white-glove null hides note', () => {
-    it('hides white-glove note when result has no whiteGloveText', async () => {
-      estimateDelivery.mockResolvedValueOnce({
-        success: true,
-        deliveryText: 'Delivered by Apr 1 – Apr 5',
-        shippingText: 'UPS Ground — Free',
-        whiteGloveText: null,
-      });
+  describe('delivery estimate zip — UPS response handling', () => {
+    it('shows deliveryEstimateText and deliveryEstimateBox on success', async () => {
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '10001';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect($w('#whiteGloveNote').hide).toHaveBeenCalled();
+      expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
+      expect($w('#deliveryEstimateBox').show).toHaveBeenCalled();
     });
 
-    it('shows shipping text in deliveryEstimateResult', async () => {
-      estimateDelivery.mockResolvedValueOnce({
-        success: true,
-        deliveryText: 'Delivered by Apr 1 – Apr 5',
-        shippingText: 'UPS Ground — $29.99',
-        whiteGloveText: null,
+    it('formats estimate text from minDate/maxDate when UPS responds', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '5-7 business days', minDays: 5, maxDays: 7,
+        minDate: '2026-04-01', maxDate: '2026-04-05', source: 'ups', service: 'UPS Ground',
       });
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '10001';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect($w('#deliveryEstimateResult').text).toBe('UPS Ground — $29.99');
-      expect($w('#deliveryEstimateResult').show).toHaveBeenCalled();
+      expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
     });
 
     it('hides error on valid zip before fetching', async () => {
@@ -448,11 +444,11 @@ describe('ProductDetails — deep coverage', () => {
       $w('#deliveryZipInput').value = '288011234';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
-      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+      expect(getDeliveryEstimate).toHaveBeenCalledWith('28801', [state.product._id]);
     });
 
-    it('shows default error message when estimateDelivery returns no error', async () => {
-      estimateDelivery.mockResolvedValueOnce({ success: false });
+    it('shows default error message when getDeliveryEstimate returns no error field', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({ success: false });
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '90210';
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
@@ -469,12 +465,12 @@ describe('ProductDetails — deep coverage', () => {
       expect($w('#deliveryZipSubmit').onClick).toHaveBeenCalled();
     });
 
-    it('deliveryZipSubmit triggers estimate', async () => {
+    it('deliveryZipSubmit triggers getDeliveryEstimate', async () => {
       initDeliveryEstimate($w, state);
       $w('#deliveryZipInput').value = '28801';
       const clickHandler = $w('#deliveryZipSubmit').onClick.mock.calls[0][0];
       await clickHandler();
-      expect(estimateDelivery).toHaveBeenCalledWith('28801', state.product);
+      expect(getDeliveryEstimate).toHaveBeenCalledWith('28801', [state.product._id]);
     });
   });
 
@@ -497,19 +493,18 @@ describe('ProductDetails — deep coverage', () => {
   // ── initDeliveryEstimate — missing element guard ──
 
   describe('delivery estimate missing elements', () => {
-    it('returns early when deliveryEstimate element is missing', () => {
+    it('does not throw when deliveryEstimateBox element is missing', () => {
       const nullW = (sel) => {
-        if (sel === '#deliveryEstimate') return null;
+        if (sel === '#deliveryEstimateBox') return null;
         return create$w()(sel);
       };
-      initDeliveryEstimate(nullW, state);
-      // Should not throw
+      expect(() => initDeliveryEstimate(nullW, state)).not.toThrow();
     });
 
     it('returns early when product is null', () => {
       state.product = null;
       initDeliveryEstimate($w, state);
-      expect($w('#deliveryEstimate').show).not.toHaveBeenCalled();
+      expect($w('#deliveryEstimateBox').show).not.toHaveBeenCalled();
     });
   });
 
