@@ -13,8 +13,8 @@
 //   updatedAt   (Date)    — last updated
 
 import { Permissions, webMethod } from 'wix-web-module';
+import { currentMember } from 'wix-members-backend';
 import wixData from 'wix-data';
-import { validateId } from 'backend/utils/sanitize';
 
 const COLLECTION = 'MemberNotificationPrefs';
 
@@ -38,12 +38,12 @@ const DEFAULT_PREFS = {
  *   prefs: { restock, orderUpdate, promo, cfPlus, sms }
  */
 export const getNotificationPreferences = webMethod(
-  Permissions.Member,
-  async (memberId) => {
+  Permissions.SiteMember,
+  async () => {
     try {
-      if (!memberId) return { success: false, error: 'Member ID required' };
-      const cleanId = validateId(memberId);
-      if (!cleanId) return { success: false, error: 'Invalid member ID' };
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Not authenticated.' };
+      const cleanId = member._id;
 
       const result = await wixData.query(COLLECTION)
         .eq('memberId', cleanId)
@@ -82,12 +82,12 @@ export const getNotificationPreferences = webMethod(
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const saveNotificationPreferences = webMethod(
-  Permissions.Member,
-  async (memberId, prefs) => {
+  Permissions.SiteMember,
+  async (prefs) => {
     try {
-      if (!memberId) return { success: false, error: 'Member ID required' };
-      const cleanId = validateId(memberId);
-      if (!cleanId) return { success: false, error: 'Invalid member ID' };
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Not authenticated.' };
+      const cleanId = member._id;
       if (!prefs || typeof prefs !== 'object') return { success: false, error: 'Preferences required' };
 
       const existing = await wixData.query(COLLECTION)
@@ -128,12 +128,12 @@ export const saveNotificationPreferences = webMethod(
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const unsubscribeAll = webMethod(
-  Permissions.Member,
-  async (memberId) => {
+  Permissions.SiteMember,
+  async () => {
     try {
-      if (!memberId) return { success: false, error: 'Member ID required' };
-      const cleanId = validateId(memberId);
-      if (!cleanId) return { success: false, error: 'Invalid member ID' };
+      const member = await currentMember.getMember();
+      if (!member?._id) return { success: false, error: 'Not authenticated.' };
+      const cleanId = member._id;
 
       const allOff = {
         restock:     false,

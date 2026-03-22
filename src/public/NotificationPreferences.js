@@ -141,11 +141,11 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
   try {
     $w('#notifUnsubscribeConfirmBtn').onClick(async () => {
       try {
-        const result = await unsubscribeAllBackend(memberId);
+        const result = await unsubscribeAllBackend();
         if (result?.success) {
           dialog.close();
           announce($w, 'You have been unsubscribed from all notifications');
-          await _loadAndPopulate($w, memberId);
+          await _loadAndPopulate($w);
         } else {
           _showSaveError($w, result?.error || 'Failed to unsubscribe. Please try again.');
           logError({ context: 'NotifPrefs.unsubscribeAll', message: result?.error || 'unsubscribeAll failed' });
@@ -175,7 +175,7 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
 
       try {
         const prefs = _gatherPrefs($w);
-        const result = await saveNotificationPreferences(memberId, prefs);
+        const result = await saveNotificationPreferences(prefs);
 
         if (result?.success) {
           try { $w('#notifSaveSuccess').show(); } catch (e) {
@@ -204,7 +204,7 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
   }
 
   // ── Load and populate current preferences ─────────────────────────
-  await _loadAndPopulate($w, memberId);
+  await _loadAndPopulate($w);
 
   return null;
 }
@@ -218,9 +218,9 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
  * @param {Function} $w
  * @param {string} memberId
  */
-async function _loadAndPopulate($w, memberId) {
+async function _loadAndPopulate($w) {
   try {
-    const response = await getNotificationPreferences(memberId);
+    const response = await getNotificationPreferences();
     if (!response?.success) {
       console.error('[NotifPrefs] getNotificationPreferences returned failure:', response?.error);
       logError({ context: 'NotifPrefs.loadPrefs', message: response?.error || 'load failed' });

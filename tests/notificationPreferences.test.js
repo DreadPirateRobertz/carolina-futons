@@ -138,8 +138,8 @@ describe('initNotificationPreferences — loads and populates prefs', () => {
     await initNotificationPreferences($w, MEMBER_ID);
   });
 
-  it('calls getNotificationPreferences with memberId', () => {
-    expect(getNotificationPreferences).toHaveBeenCalledWith(MEMBER_ID);
+  it('calls getNotificationPreferences (server derives member ID)', () => {
+    expect(getNotificationPreferences).toHaveBeenCalled();
   });
 
   it('shows notifPageSection', () => {
@@ -297,10 +297,9 @@ describe('initNotificationPreferences — save happy path', () => {
     expect($w('#notifSaveSpinner').hide).toHaveBeenCalled();
   });
 
-  it('calls saveNotificationPreferences with memberId and toggle states', async () => {
+  it('calls saveNotificationPreferences with toggle states (server derives member ID)', async () => {
     await getClickHandler($w('#notifSaveBtn'))();
     expect(saveNotificationPreferences).toHaveBeenCalledWith(
-      MEMBER_ID,
       expect.objectContaining({
         restock:     expect.any(Boolean),
         orderUpdate: expect.any(Boolean),
@@ -443,7 +442,7 @@ describe('initNotificationPreferences — unsubscribe confirm + success', () => 
 
   it('calls unsubscribeAll backend when confirm button clicked', async () => {
     await getClickHandler($w('#notifUnsubscribeConfirmBtn'))();
-    expect(unsubscribeAll).toHaveBeenCalledWith(MEMBER_ID);
+    expect(unsubscribeAll).toHaveBeenCalled();
   });
 
   it('closes dialog after successful unsubscribe', async () => {
