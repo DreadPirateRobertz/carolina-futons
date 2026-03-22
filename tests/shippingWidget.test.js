@@ -396,6 +396,49 @@ describe('initShippingWidget', () => {
     expect($w.__els['#shippingErrorText'].show).toHaveBeenCalled();
   });
 
+  // ── Enter key ───────────────────────────────────────────────────────
+
+  it('triggers calculate when Enter is pressed on #shippingZipInput', async () => {
+    getShippingEstimate.mockResolvedValue(BASE_RESULT);
+    const storage = makeStorage();
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage });
+    const keyHandler = $w.__els['#shippingZipInput'].onKeyPress.mock.calls[0][0];
+    await keyHandler({ key: 'Enter' });
+    expect(getShippingEstimate).toHaveBeenCalledWith('prod-1', '28701');
+  });
+
+  it('does not trigger calculate for non-Enter keys', async () => {
+    const storage = makeStorage();
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage });
+    const keyHandler = $w.__els['#shippingZipInput'].onKeyPress.mock.calls[0][0];
+    await keyHandler({ key: 'Tab' });
+    expect(getShippingEstimate).not.toHaveBeenCalled();
+  });
+
+  // ── storage not written on failure ──────────────────────────────────
+
+  it('does not write to storage when API returns success:false', async () => {
+    getShippingEstimate.mockResolvedValue({ success: false, error: 'Service unavailable' });
+    const storage = makeStorage();
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage });
+    const handler = $w.__els['#shippingCalculateBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not write to storage when API throws', async () => {
+    getShippingEstimate.mockRejectedValue(new Error('network failure'));
+    const storage = makeStorage();
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage });
+    const handler = $w.__els['#shippingCalculateBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
   // ── null safety ─────────────────────────────────────────────────────
 
   it('does not throw when $w returns null for all elements', async () => {

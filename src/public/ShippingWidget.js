@@ -6,20 +6,19 @@
  * CF-o0va
  *
  * Elements expected on the Product Page:
- *   #shippingEstimateSection  — outer container
  *   #shippingZipInput         — text input for destination zip
  *   #shippingCalculateBtn     — button to trigger calculation
  *   #shippingOptionsSection   — container shown after successful fetch
  *   #shippingOptionsRepeater  — repeater for rate options
  *   #shippingLoadingText      — Text element shown while API is in flight
  *   #shippingErrorText        — Text element for validation / API errors
- *   #shippingFreightNote      — Text/box shown when any option requiresFreight
- *   #shippingOriginText       — Text element showing ship-from location
- *   #shippingHandlingNote     — Text/box shown when handlingFee_usd > 0
+ *   #shippingFreightNote      — shown when any option requiresFreight
+ *   #shippingOriginText       — static ship-from location text
+ *   #shippingHandlingNote     — shown when handlingFee_usd > 0
  *
- * Repeater item elements:
- *   #shippingOptionTitle      — carrier + service name
- *   #shippingOptionCost       — formatted cost
+ * Repeater item elements (both optional — widget null-guards each):
+ *   #shippingOptionTitle      — carrier + service name (with "(estimated)" suffix when isEstimate)
+ *   #shippingOptionCost       — formatted cost, e.g. "$49.99"
  */
 import { getShippingEstimate } from 'backend/shippingIntelligence.web';
 import { logError } from 'backend/errorMonitoring.web';
@@ -35,50 +34,52 @@ export function isValidZip(zip) {
 }
 
 // ── safeGet ──────────────────────────────────────────────────────────────────
+// Returns null when the element is not found (normal on pages where the widget
+// is partially rendered). Warns on unexpected runtime errors so they are not
+// silently swallowed.
 
 function safeGet($wFn, sel) {
   try {
     return $wFn(sel) || null;
   } catch (err) {
+    const msg = err?.message ?? '';
+    if (!msg.includes('not found') && !msg.includes('Cannot read'))
+      console.warn('[ShippingWidget] safeGet unexpected error:', sel, msg);
     return null;
   }
 }
 
 // ── initShippingWidget ───────────────────────────────────────────────────────
-
+/**
+ * Initialize the shipping estimate widget on the Product Page.
+ *
+ * @param {Function} $wFn  - Wix $w selector function (injectable for testing)
+ * @param {string}   productId - Wix product _id to pass to getShippingEstimate
+ * @param {object}   [opts]
+ * @param {object}   [opts.storage] - Storage adapter with getItem/setItem
+ *   (defaults to wix-storage-frontend `local`). Inject in tests via makeStorage().
+ */
 export async function initShippingWidget($wFn, productId, opts = {}) {
   const storage = opts.storage ?? (await import('wix-storage-frontend').then(m => m.local));
 
-  // Origin text
   const originEl = safeGet($wFn, '#shippingOriginText');
   if (originEl) originEl.text = ORIGIN_TEXT;
 
-  // Pre-populate zip from storage
   const savedZip = storage.getItem(STORAGE_KEY);
   const zipInput = safeGet($wFn, '#shippingZipInput');
   if (zipInput && savedZip) zipInput.value = savedZip;
 
-  // Hide error on init
   const errorEl = safeGet($wFn, '#shippingErrorText');
   if (errorEl) errorEl.hide();
 
-  // Wire calculate button
-  const btn = safeGet($wFn, '#shippingCalculateBtn');
-  if (btn) btn.onClick(handleCalculate);
-
-  // Wire Enter key on zip input
-  if (zipInput) {
-    zipInput.onKeyPress(event => {
-      if (event?.key === 'Enter') handleCalculate();
-    });
-  }
+  let inflight = false;
 
   async function handleCalculate() {
+    if (inflight) return;
     const zip = safeGet($wFn, '#shippingZipInput')?.value || '';
     const errEl = safeGet($wFn, '#shippingErrorText');
     const loadEl = safeGet($wFn, '#shippingLoadingText');
 
-    // Hide previous error
     if (errEl) errEl.hide();
 
     if (!isValidZip(zip)) {
@@ -89,6 +90,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
       return;
     }
 
+    inflight = true;
     if (loadEl) loadEl.show();
 
     try {
@@ -102,45 +104,58 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
         return;
       }
 
-      storage.setItem(STORAGE_KEY, zip);
       renderResults($wFn, result);
+      storage.setItem(STORAGE_KEY, zip);
 
       const optionsSection = safeGet($wFn, '#shippingOptionsSection');
       if (optionsSection) optionsSection.show();
     } catch (err) {
-      logError({ context: 'ShippingWidget.calculate', error: err, productId, zip });
+      logError({
+        message: err?.message ?? String(err),
+        context: 'ShippingWidget.calculate',
+        stack: err?.stack,
+      });
       if (errEl) {
         errEl.text = 'Unable to calculate shipping. Please try again.';
         errEl.show();
       }
     } finally {
+      inflight = false;
       if (loadEl) loadEl.hide();
     }
+  }
+
+  const btn = safeGet($wFn, '#shippingCalculateBtn');
+  if (btn) btn.onClick(handleCalculate);
+
+  if (zipInput) {
+    zipInput.onKeyPress(event => {
+      if (event?.key === 'Enter') handleCalculate();
+    });
   }
 }
 
 // ── renderResults ────────────────────────────────────────────────────────────
 
 function renderResults($wFn, result) {
-  const options = result.options || [];
+  const options = Array.isArray(result.options) ? result.options : [];
 
-  // Freight note
   const hasFreight = options.some(o => o.requiresFreight);
   const freightNote = safeGet($wFn, '#shippingFreightNote');
   if (freightNote) {
     if (hasFreight) freightNote.show(); else freightNote.hide();
   }
 
-  // Handling fee note
   const handlingNote = safeGet($wFn, '#shippingHandlingNote');
   if (handlingNote) {
     if (result.handlingFee_usd > 0) handlingNote.show(); else handlingNote.hide();
   }
 
-  // Repeater — onItemReady BEFORE .data
   const repeater = safeGet($wFn, '#shippingOptionsRepeater');
   if (!repeater) return;
 
+  // onItemReady MUST be registered before setting .data — Wix fires it synchronously
+  // when .data is assigned; registering after means items render blank.
   repeater.onItemReady(($item, itemData) => {
     const titleEl = $item('#shippingOptionTitle');
     const costEl = $item('#shippingOptionCost');
