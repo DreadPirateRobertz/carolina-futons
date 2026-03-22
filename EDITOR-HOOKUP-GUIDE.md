@@ -822,6 +822,7 @@ For each section below:
 **↳ Inside `collectionRepeater`:** `collectionImage` (Image), `collectionName` (Text), `collectionPrice` (Text)
 
 ### Recently Viewed ⚠️ REPEATER
+*Source: `src/public/ProductHistory.js` — `trackView(productId)` on page load, `getRecentlyViewed()` to populate repeater*
 | Element ID | Wix Element | Notes |
 |---|---|---|
 | `recentlyViewedSection` | Section | Collapsible |
@@ -1172,8 +1173,14 @@ Backend utility for social media story generation — no editor elements needed.
 **↳ Inside:** `sugImage` (Image), `sugName` (Text), `sugPrice` (Text), `sugAddBtn` (Button)
 
 ### Recently Viewed ⚠️ REPEATER
+*Source: `src/public/ProductHistory.js` — `getRecentlyViewed()`*
 `cartRecentSection` (Section), `cartRecentRepeater` (Repeater)
 **↳ Inside:** `cartRecentImage` (Image), `cartRecentName` (Text), `cartRecentPrice` (Text)
+
+### You Might Also Like ⚠️ REPEATER
+*Source: `src/public/ProductHistory.js` — `getRecentlyViewed()` (repurposed for upsell slot)*
+`youMightAlsoLikeSection` (Section), `youMightAlsoLikeRepeater` (Repeater)
+**↳ Inside:** `ymalImage` (Image), `ymalName` (Text), `ymalPrice` (Text), `ymalAddBtn` (Button)
 
 ### Financing
 `cartFinancingSection` (Section), `financingThreshold` (Text), `cartFinancingTeaser` (Text), `cartAfterpayMessage` (Text)
