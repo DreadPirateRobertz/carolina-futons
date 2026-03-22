@@ -71,7 +71,7 @@ export async function checkRateLimit(collection, key, opts = {}) {
     });
     return { allowed: true };
   } catch (err) {
-    console.warn(`[rateLimit] Check failed for ${collection}, allowing request:`, err.message);
+    console.warn(`[rateLimit] Check failed for ${collection}, allowing request:`, err.message, err.stack);
     return { allowed: true }; // Fail open — don't block on DB errors
   }
 }

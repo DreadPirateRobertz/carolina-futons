@@ -147,6 +147,7 @@ describe('subscribeToNotifications — rate limiting', () => {
     expect(result.success).toBe(true);
     expect(insertedCollection).toBe('TrackingNotifications');
     expect(insertedItem.email).toBe('buyer@example.com');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String), expect.any(String));
     warnSpy.mockRestore();
   });
 
@@ -234,6 +235,7 @@ describe('unsubscribeFromNotifications — rate limiting', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/rateLimit/i), expect.any(String), expect.any(String));
     warnSpy.mockRestore();
   });
 
@@ -241,6 +243,27 @@ describe('unsubscribeFromNotifications — rate limiting', () => {
     seedSubscription();
     __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 10)]);
     const result = await unsubscribeFromNotifications('ORD-001', 'BUYER@EXAMPLE.COM');
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
+  });
+
+  it('isolates rate limits per email — different emails not blocked by same count', async () => {
+    __seed('TrackingNotifications', [
+      { _id: 'tn-1', email: 'buyer1@example.com', orderNumber: 'ORD-001', enabled: true },
+      { _id: 'tn-2', email: 'buyer2@example.com', orderNumber: 'ORD-002', enabled: true },
+    ]);
+    // buyer1 is blocked (current window)
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer1@example.com', 10)]);
+    // buyer2 should not be blocked
+    const result = await unsubscribeFromNotifications('ORD-002', 'buyer2@example.com');
+    expect(result.success).toBe(true);
+  });
+
+  it('rate limit applies before TrackingNotifications lookup', async () => {
+    // No subscription seeded — if rate limit fires first, returns rate-limit error, not success
+    __seed('TrackingNotifications', []);
+    __seed(TRACKING_RATE_COLLECTION, [makeRateLimitRecord('buyer@example.com', 10)]);
+    const result = await unsubscribeFromNotifications('ORD-001', 'buyer@example.com');
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });
