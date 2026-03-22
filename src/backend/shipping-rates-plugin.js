@@ -31,7 +31,7 @@ import { business, shippingConfig, internationalShippingConfig } from 'public/sh
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
 
-const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, localZones, zones } = shippingConfig;
+const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD } = whiteGlove;
 
 /**

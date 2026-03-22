@@ -28,7 +28,7 @@
 
 import { Permissions, webMethod } from 'wix-web-module';
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
-import { getLTLRates, getLTLFallbackRates, shouldUseLTL, LTL_THRESHOLDS } from 'backend/wwex-freight.web';
+import { getLTLRates, getLTLFallbackRates, shouldUseLTL } from 'backend/wwex-freight.web';
 import { shippingConfig } from 'public/sharedTokens.js';
 import wixData from 'wix-data';
 import { currentMember } from 'wix-members-backend';
@@ -97,7 +97,7 @@ async function getCurrentMemberId() {
 export const getShippingEstimate = webMethod(
   Permissions.Anyone,
   async (productId, zip) => {
-    if (!productId || !zip || !/^\d{5}$/.test(zip)) {
+    if (!productId || typeof productId !== 'string' || !zip || !/^\d{5}$/.test(zip)) {
       return { success: false, error: 'Valid product ID and 5-digit ZIP required', options: [] };
     }
 
@@ -137,7 +137,7 @@ export const getShippingEstimate = webMethod(
 
       return await buildShippingResponse(zip, packages, 0, 1);
     } catch (err) {
-      console.error('shippingIntelligence getShippingEstimate error:', err);
+      logError('shippingIntelligence.getShippingEstimate', err);
       return { success: false, error: 'Estimate unavailable', options: [] };
     }
   }
@@ -207,7 +207,7 @@ export const calculateBundleQuote = webMethod(
 
       return await buildShippingResponse(zip, packages, orderSubtotal, items.length);
     } catch (err) {
-      console.error('shippingIntelligence calculateBundleQuote error:', err);
+      logError('shippingIntelligence.calculateBundleQuote', err);
       return { success: false, error: 'Quote unavailable', options: [] };
     }
   }
