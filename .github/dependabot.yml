@@ -12,6 +12,7 @@ updates:
     labels:
       - dependencies
     open-pull-requests-limit: 10
+    rebase-strategy: auto
     groups:
       # Group dev-dependency bumps into a single PR
       dev-dependencies:
@@ -20,8 +21,24 @@ updates:
           - minor
           - patch
       # Security patches always get their own PR (ungrouped)
-    # Ignore major bumps — those need manual review
+    # Ignore major bumps only for known-stable packages that haven't updated their
+    # transitive deps to support new major versions. Remove a package from this list
+    # once the parent dep is known to support the new major.
+    #
+    # Note: @wix/cli@1.x transitively requires node-gyp@8 → tar@^6 (CVEs open).
+    # Wix has not yet released a @wix/cli version that uses node-gyp@12 (tar@^7).
+    # Until then, the tar vulnerabilities remain open — the npm overrides in
+    # package.json pin tar@^7.5.12 to suppress the advisory scanner.
     ignore:
-      - dependency-name: "*"
+      - dependency-name: "@wix/cli"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@wix/*"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "vite"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "vitest"
         update-types:
           - version-update:semver-major
