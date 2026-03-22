@@ -27,6 +27,7 @@ import {
   getQuantitySpinnerStyles,
 } from 'public/cartStyles.js';
 import { buildRoomBundles, initCrossSellWidget } from 'public/crossSellWidget.js';
+import { initCartDelivery } from 'public/CartDeliveryEstimates.js';
 
 let _sideCartEscapeRegistered = false;
 
@@ -308,6 +309,10 @@ async function refreshSideCart() {
         };
       });
     }
+
+    // Per-item delivery estimates (zip read from #sideCartZipInput if present)
+    const zip = $w('#sideCartZipInput')?.value || null;
+    initCartDelivery($w, currentCart.lineItems, zip);
 
     // Update totals
     if (currentCart.totals) {
