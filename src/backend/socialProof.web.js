@@ -169,6 +169,91 @@ export const getSocialProofConfig = webMethod(
   () => getConfig()
 );
 
+// ── ViewerCount webMethods (CF-ej3t) ─────────────────────────────────
+
+const VIEWER_COLLECTION = 'ViewerCount';
+
+/**
+ * Get viewer count and recent sales count for a product.
+ * Returns zeros on any CMS error (fail-open — callers must hide badges
+ * gracefully rather than showing stale/incorrect data).
+ *
+ * @function getViewerCount
+ * @param {string} productId
+ * @returns {Promise<{ viewCount: number, lastSold24h: number }>}
+ * @permission Anyone
+ */
+export const getViewerCount = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    if (!productId) return { viewCount: 0, lastSold24h: 0 };
+    const id = sanitize(productId, 50);
+    try {
+      const result = await wixData.query(VIEWER_COLLECTION)
+        .eq('productId', id)
+        .find();
+      if (!result.items || result.items.length === 0) {
+        return { viewCount: 0, lastSold24h: 0 };
+      }
+      const record = result.items[0];
+      return {
+        viewCount:   Math.max(0, record.viewCount   || 0),
+        lastSold24h: Math.max(0, record.lastSold24h || 0),
+      };
+    } catch (err) {
+      console.error('[socialProof] getViewerCount failed:', err?.message ?? err);
+      return { viewCount: 0, lastSold24h: 0 };
+    }
+  }
+);
+
+/**
+ * Increment the viewer count for a product by 1.
+ * Upserts the ViewerCount record; creates it on first call.
+ * Session-level rate limiting (1 call per product per session) is enforced
+ * client-side — this method always increments when called.
+ *
+ * Returns { ok: true } on success, { ok: false } on CMS error.
+ *
+ * @function incrementViewerCount
+ * @param {string} productId
+ * @returns {Promise<{ ok: boolean }>}
+ * @permission Anyone
+ */
+export const incrementViewerCount = webMethod(
+  Permissions.Anyone,
+  async (productId) => {
+    if (!productId) return { ok: false };
+    const id = sanitize(productId, 50);
+    try {
+      const result = await wixData.query(VIEWER_COLLECTION)
+        .eq('productId', id)
+        .find();
+
+      const now = new Date();
+      if (result.items && result.items.length > 0) {
+        const existing = result.items[0];
+        await wixData.update(VIEWER_COLLECTION, {
+          ...existing,
+          viewCount: (existing.viewCount || 0) + 1,
+          updatedAt: now,
+        });
+      } else {
+        await wixData.insert(VIEWER_COLLECTION, {
+          productId: id,
+          viewCount:   1,
+          lastSold24h: 0,
+          updatedAt:   now,
+        });
+      }
+      return { ok: true };
+    } catch (err) {
+      console.error('[socialProof] incrementViewerCount failed:', err?.message ?? err);
+      return { ok: false };
+    }
+  }
+);
+
 // ── Internal helpers ──────────────────────────────────────────────────
 
 function getConfig() {
