@@ -144,7 +144,7 @@ jobs:
 
       - name: Check for failures and create issue
         if: steps.integration.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const fs = require('fs');
