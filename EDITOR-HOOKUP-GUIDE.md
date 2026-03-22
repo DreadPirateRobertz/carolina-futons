@@ -681,7 +681,7 @@ For each section below:
 |---|---|---|
 | `announcementBar` | Box | Container — bg color set from CMS |
 | `announcementText` | Text | Message text — rotates through active bars |
-| `announcementLink` | Button | CTA link (linkUrl from CMS, optional) |
+| `announcementBarLink` | Button | CTA link — shown when CMS bar has `linkUrl` (HTTPS-only), hidden otherwise. **Updated PR #658 / CF-qw65** |
 | `announcementDismiss` | Button | Dismiss button |
 
 ### Sticky Nav / Back to Top

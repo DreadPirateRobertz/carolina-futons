@@ -880,11 +880,13 @@ Off-canvas (right side):
     <br>• "Request FREE fabric swatches - shipped to your door!"
     <br>• "Family Owned Since 1991 - Carolina Futons"
     <br>Flash sale messages are prepended dynamically (urgent promos appear first).</li>
+  <li><strong>#announcementBarLink</strong>: Button/Link. <span class="impl-warn">Hidden by default</span> — shown only when the active CMS bar has a <code>linkUrl</code> (HTTPS-only; HTTP URLs are rejected). Href set to the CMS <code>linkUrl</code> value. Hidden when no linkUrl present. <strong>NEW PR #658 / CF-qw65.</strong></li>
   <li><strong>#announcementDismiss</strong>: Dismiss Button (X) to close the bar. Sets session flag so it won't reappear.</li>
 </ul>
 <p><strong>Animation</strong>: Text fades between messages every 5 seconds. Bar itself is static.</p>`, elements: [
         ["announcementBar","Box","Announcement container"],
         ["announcementText","Text","Announcement text"],
+        ["announcementBarLink","Button","CTA link — shown when CMS bar has linkUrl (HTTPS-only)"],
         ["announcementDismiss","Button","Dismiss button"]
       ]},
       { name: "Sticky Nav / Back to Top", impl: `<h4>📌 Implementation — Sticky Nav / Back to Top</h4>
