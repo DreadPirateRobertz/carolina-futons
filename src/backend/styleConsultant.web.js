@@ -53,6 +53,29 @@ const TEXT_MAX = 1000;        // Max characters for free-text description
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
+// Product recommendation settings
+const MAX_RECS = 6;
+
+/**
+ * Maps Claude-inferred style tags to Wix Stores product category slugs.
+ * Each entry lists the categories most relevant to that style.
+ * Category slugs match those used in Stores/Products.categories field.
+ */
+const STYLE_CATEGORY_MAP = {
+  'modern':      ['futon-frames', 'wall-huggers', 'platform-beds'],
+  'minimalist':  ['wall-huggers', 'platform-beds'],
+  'industrial':  ['futon-frames', 'platform-beds'],
+  'mid-century': ['futon-frames', 'platform-beds'],
+  'coastal':     ['futon-frames', 'wall-huggers'],
+  'traditional': ['futon-frames', 'murphy-cabinet-beds', 'platform-beds'],
+  'rustic':      ['futon-frames'],
+  'bohemian':    ['futon-frames'],
+  // Functional tags (may also come from Claude)
+  'sleeping':    ['platform-beds', 'futon-frames', 'murphy-cabinet-beds'],
+  'sitting':     ['futon-frames', 'wall-huggers'],
+  'space-saving':['wall-huggers', 'murphy-cabinet-beds'],
+};
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -196,17 +219,60 @@ async function callClaudeVision(photoUrl, textInput) {
 
 /**
  * Query the Wix Stores catalog for products matching the given style tags.
- * Returns up to MAX_RECS products scored by tag overlap.
+ * Derives target categories from STYLE_CATEGORY_MAP, fetches matching products
+ * via wixData, scores each by category overlap with the tag-derived set,
+ * and returns up to MAX_RECS sorted by score descending then salesRank ascending.
  *
- * @param {string[]} styleTags - Style tags from Claude analysis
- * @returns {Promise<Array<{ productId: string, name: string, score: number, matchedTags: string[] }>>}
+ * @param {string[]} styleTags - Style tags inferred from Claude analysis
+ * @returns {Promise<Array<{
+ *   productId: string,
+ *   name: string,
+ *   price: number,
+ *   formattedPrice: string,
+ *   imageUrl: string,
+ *   score: number,
+ *   matchedTags: string[]
+ * }>>}
  */
 async function getProductRecommendations(styleTags) {
-  // TODO(CF-vu30): implement catalog query by style tags
-  // Pattern: query Products collection filtered by style/category tags,
-  // score by number of matched tags, return top MAX_RECS.
-  // Placeholder: returns empty array until wired.
-  return [];
+  if (!Array.isArray(styleTags) || styleTags.length === 0) return [];
+
+  // Build the union of target categories from all matched style tags
+  const targetCategories = [...new Set(
+    styleTags.flatMap(tag => STYLE_CATEGORY_MAP[tag] || [])
+  )];
+
+  if (targetCategories.length === 0) return [];
+
+  const result = await wixData.query('Stores/Products')
+    .hasSome('categories', targetCategories)
+    .ascending('salesRank')
+    .limit(MAX_RECS * 3)  // Over-fetch to allow scoring + trim
+    .find();
+
+  const items = Array.isArray(result?.items) ? result.items : [];
+
+  // Score each product by how many target categories it matches
+  const scored = items.map(p => {
+    const productCats = Array.isArray(p.categories) ? p.categories : [];
+    const matchedCats = productCats.filter(c => targetCategories.includes(c));
+    return {
+      productId: p._id,
+      name: p.name || '',
+      price: p.price || 0,
+      formattedPrice: p.formattedPrice || (p.price ? `$${p.price}` : ''),
+      imageUrl: p.mainMedia || '',
+      score: matchedCats.length,
+      matchedTags: styleTags.filter(tag =>
+        (STYLE_CATEGORY_MAP[tag] || []).some(c => matchedCats.includes(c))
+      ),
+    };
+  });
+
+  // Sort: highest score first, then salesRank (ascending, already from query)
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, MAX_RECS);
 }
 
 // ── Exported webMethod ────────────────────────────────────────────────
@@ -316,3 +382,6 @@ export const getStyleConsultation = webMethod(
     };
   },
 );
+
+// ── Export internals for testing ─────────────────────────────────────
+export { getProductRecommendations as _getProductRecommendations };

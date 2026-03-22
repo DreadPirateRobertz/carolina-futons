@@ -21,7 +21,7 @@ import {
   __getInserted,
 } from './__mocks__/wix-data.js';
 
-import { getStyleConsultation } from '../src/backend/styleConsultant.web.js';
+import { getStyleConsultation, _getProductRecommendations } from '../src/backend/styleConsultant.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
 
@@ -161,5 +161,94 @@ describe('getStyleConsultation — session persistence', () => {
 
     await getStyleConsultation(VALID_KEY, { textDescription: VALID_TEXT });
     expect(inserts).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 4. Product recommendations (catalog query)
+// ═══════════════════════════════════════════════════════════════════════
+
+function makeProduct(overrides = {}) {
+  return {
+    _id: 'prod-001',
+    name: 'Sunset Full Futon Frame',
+    price: 499,
+    formattedPrice: '$499',
+    mainMedia: 'wix:image://v1/abc~mv2.jpg/frame.jpg',
+    salesRank: 1,
+    categories: ['futon-frames'],
+    ...overrides,
+  };
+}
+
+describe('_getProductRecommendations', () => {
+  beforeEach(() => resetData());
+
+  it('returns empty array for empty styleTags', async () => {
+    expect(await _getProductRecommendations([])).toEqual([]);
+  });
+
+  it('returns empty array for unknown style tags', async () => {
+    __seed('Stores/Products', [makeProduct()]);
+    expect(await _getProductRecommendations(['unknown-tag'])).toEqual([]);
+  });
+
+  it('returns matching products for known style tag', async () => {
+    __seed('Stores/Products', [
+      makeProduct({ _id: 'p1', name: 'Modern Frame', categories: ['futon-frames'] }),
+      makeProduct({ _id: 'p2', name: 'Platform Bed', categories: ['platform-beds'] }),
+      makeProduct({ _id: 'p3', name: 'Mattress', categories: ['mattresses'] }),
+    ]);
+
+    const recs = await _getProductRecommendations(['modern']);
+    const ids = recs.map(r => r.productId);
+    expect(ids).toContain('p1');
+    expect(ids).toContain('p2');
+    expect(ids).not.toContain('p3'); // mattresses not in modern category map
+  });
+
+  it('scores products higher when they match more tags', async () => {
+    __seed('Stores/Products', [
+      makeProduct({ _id: 'p-both', name: 'Multi-cat', categories: ['futon-frames', 'wall-huggers'] }),
+      makeProduct({ _id: 'p-one', name: 'Single-cat', categories: ['futon-frames'] }),
+    ]);
+
+    const recs = await _getProductRecommendations(['modern', 'coastal']);
+    // p-both matches futon-frames (modern+coastal) and wall-huggers (modern+coastal) — higher score
+    const topId = recs[0].productId;
+    expect(topId).toBe('p-both');
+  });
+
+  it('returns at most MAX_RECS (6) products', async () => {
+    const manyProducts = Array.from({ length: 20 }, (_, i) =>
+      makeProduct({ _id: `p${i}`, name: `Product ${i}`, categories: ['futon-frames'] })
+    );
+    __seed('Stores/Products', manyProducts);
+
+    const recs = await _getProductRecommendations(['modern']);
+    expect(recs.length).toBeLessThanOrEqual(6);
+  });
+
+  it('maps matched tags onto each recommendation', async () => {
+    __seed('Stores/Products', [
+      makeProduct({ _id: 'p1', categories: ['futon-frames'] }),
+    ]);
+
+    const recs = await _getProductRecommendations(['modern', 'rustic']);
+    expect(recs[0].matchedTags).toContain('modern');
+    expect(recs[0].matchedTags).toContain('rustic');
+  });
+
+  it('shapes each recommendation correctly', async () => {
+    __seed('Stores/Products', [makeProduct()]);
+
+    const [rec] = await _getProductRecommendations(['modern']);
+    expect(rec).toMatchObject({
+      productId: expect.any(String),
+      name: expect.any(String),
+      price: expect.any(Number),
+      score: expect.any(Number),
+      matchedTags: expect.any(Array),
+    });
   });
 });
