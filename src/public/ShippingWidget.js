@@ -60,12 +60,29 @@ function safeGet($wFn, sel) {
  *   (defaults to wix-storage-frontend `local`). Inject in tests via makeStorage().
  */
 export async function initShippingWidget($wFn, productId, opts = {}) {
-  const storage = opts.storage ?? (await import('wix-storage-frontend').then(m => m.local));
+  if (!productId) {
+    logError({
+      message: 'ShippingWidget: productId missing at init — widget not wired',
+      context: 'ShippingWidget.init',
+    });
+    return;
+  }
+
+  // Dynamic import guarded: if wix-storage-frontend is unavailable (e.g. outside
+  // Wix runtime) fall back to a no-op stub so zip caching degrades gracefully.
+  const NOOP_STORAGE = { getItem: () => null, setItem: () => {} };
+  let storage;
+  try {
+    storage = opts.storage ?? (await import('wix-storage-frontend').then(m => m.local));
+  } catch {
+    storage = NOOP_STORAGE;
+  }
 
   const originEl = safeGet($wFn, '#shippingOriginText');
   if (originEl) originEl.text = ORIGIN_TEXT;
 
-  const savedZip = storage.getItem(STORAGE_KEY);
+  let savedZip = null;
+  try { savedZip = storage.getItem(STORAGE_KEY); } catch { /* storage unavailable */ }
   const zipInput = safeGet($wFn, '#shippingZipInput');
   if (zipInput && savedZip) zipInput.value = savedZip;
 
@@ -105,7 +122,7 @@ export async function initShippingWidget($wFn, productId, opts = {}) {
       }
 
       renderResults($wFn, result);
-      storage.setItem(STORAGE_KEY, zip);
+      try { storage.setItem(STORAGE_KEY, zip); } catch { /* storage unavailable — zip caching degrades gracefully */ }
 
       const optionsSection = safeGet($wFn, '#shippingOptionsSection');
       if (optionsSection) optionsSection.show();

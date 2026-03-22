@@ -439,6 +439,44 @@ describe('initShippingWidget', () => {
     expect(storage.setItem).not.toHaveBeenCalled();
   });
 
+  // ── empty productId guard ────────────────────────────────────────────
+
+  it('calls logError and skips wiring when productId is empty string', async () => {
+    const storage = makeStorage();
+    const $w = makeWixEnv();
+    await initShippingWidget($w, '', { storage });
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'ShippingWidget.init' }),
+    );
+    expect($w.__els['#shippingCalculateBtn'].onClick).not.toHaveBeenCalled();
+  });
+
+  it('calls logError and skips wiring when productId is null', async () => {
+    const storage = makeStorage();
+    const $w = makeWixEnv();
+    await initShippingWidget($w, null, { storage });
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'ShippingWidget.init' }),
+    );
+    expect($w.__els['#shippingCalculateBtn'].onClick).not.toHaveBeenCalled();
+  });
+
+  // ── storage degradation ──────────────────────────────────────────────
+
+  it('renders rates and shows options even when storage throws on every call', async () => {
+    getShippingEstimate.mockResolvedValue(BASE_RESULT);
+    const throwingStorage = {
+      getItem: vi.fn(() => { throw new Error('storage unavailable'); }),
+      setItem: vi.fn(() => { throw new Error('storage unavailable'); }),
+    };
+    const $w = makeWixEnv({ '#shippingZipInput': makeEl({ value: '28701' }) });
+    await initShippingWidget($w, 'prod-1', { storage: throwingStorage });
+    const handler = $w.__els['#shippingCalculateBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect(getShippingEstimate).toHaveBeenCalledWith('prod-1', '28701');
+    expect($w.__els['#shippingOptionsSection'].show).toHaveBeenCalled();
+  });
+
   // ── null safety ─────────────────────────────────────────────────────
 
   it('does not throw when $w returns null for all elements', async () => {
