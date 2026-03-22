@@ -35,6 +35,7 @@ import { currentMember } from 'wix-members-backend';
 import { checkRateLimit } from 'backend/utils/rateLimit';
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
+import { applyOverrides, getMatchingActions } from 'backend/shippingOverrides.web';
 
 // localZones accessed via matchLocalZone from backend/utils/shippingZones
 
@@ -142,7 +143,12 @@ export const getShippingEstimate = webMethod(
         requiresFreight: profile?.requiresFreight || false,
       }];
 
-      return await buildShippingResponse(zip, packages, 0, 1);
+      return await buildShippingResponse(zip, packages, 0, 1, {
+        zip,
+        products: [{ productId }],
+        orderSubtotal: 0,
+        memberId: null,
+      });
     } catch (err) {
       logError('shippingIntelligence.getShippingEstimate', err);
       return { success: false, error: 'Estimate unavailable', options: [] };
@@ -214,7 +220,12 @@ export const calculateBundleQuote = webMethod(
         }
       }
 
-      return await buildShippingResponse(zip, packages, orderSubtotal, items.length);
+      return await buildShippingResponse(zip, packages, orderSubtotal, items.length, {
+        zip,
+        products: items.map(item => ({ productId: item.productId })),
+        orderSubtotal,
+        memberId: null,
+      });
     } catch (err) {
       logError('shippingIntelligence.calculateBundleQuote', err);
       return { success: false, error: 'Quote unavailable', options: [] };
@@ -230,14 +241,18 @@ export const calculateBundleQuote = webMethod(
  *
  * @private
  */
-async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
+async function buildShippingResponse(zip, packages, orderSubtotal, itemCount, overrideContext) {
   const options = [];
   const stateForZone = guessStateFromZip(zip);
   const zone = matchLocalZone(zip, stateForZone);
 
+  // ── Pre-routing: check override rules for forceLTL ───────────────
+  const ctx = overrideContext || { zip, products: [], orderSubtotal, memberId: null };
+  const preActions = await getMatchingActions(ctx);
+
   // ── Carrier routing ──────────────────────────────────────────────
   // Honor CMS flags (requiresPallet / requiresFreight) alongside weight/dimension check
-  const forceFreight = packages.some(p => p.requiresPallet || p.requiresFreight);
+  const forceFreight = packages.some(p => p.requiresPallet || p.requiresFreight) || !!preActions.forceLTL;
   if (forceFreight || shouldUseLTL(packages)) {
     // Large items → WWEX LTL freight
     const ltlResult = await getLTLRates('28792', zip, packages);
@@ -356,7 +371,10 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
     return { success: false, error: 'No shipping options available for this destination', options: [] };
   }
 
-  return { success: true, options };
+  // ── Post-routing: apply cost overrides (freeShipping, discountShipping, freeWhiteGlove) ──
+  const finalOptions = await applyOverrides(options, ctx);
+
+  return { success: true, options: finalOptions };
 }
 
 /**

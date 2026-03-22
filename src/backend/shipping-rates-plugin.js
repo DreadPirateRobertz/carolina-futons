@@ -31,6 +31,8 @@ import { shouldUseLTL, getLTLRates, getLTLFallbackRates, requiresLiftgate } from
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
+import { applyOverrides } from 'backend/shippingOverrides.web';
+import wixData from 'wix-data';
 
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD } = whiteGlove;
@@ -70,16 +72,21 @@ export const getShippingRates = async (options) => {
     let orderSubtotal = 0;
     const packages = [];
 
+    // Batch-fetch all shipping profiles upfront (prevent N+1 CMS queries per item)
+    const productIds = lineItems
+      .map(item => item.catalogReference?.catalogItemId)
+      .filter(Boolean);
+    const profileMap = await batchFetchProfiles(productIds);
+
     for (const item of lineItems) {
       const quantity = item.quantity || 1;
       const price = Math.max(0, parseFloat(item.price) || 0);
       orderSubtotal += price * quantity;
 
-      // Determine package dimensions based on product category
-      // In Wix Stores, lineItems don't include physical dimensions,
-      // so we map from product data or use category defaults
-      const category = detectCategory(item);
-      // getPackageDimensions is a webMethod (async) - must await
+      // Resolve category from pre-fetched profile map; fall back to name matching.
+      const productId = item.catalogReference?.catalogItemId;
+      const profile = profileMap.get(productId);
+      const category = resolveCategory(item, profile);
       const dims = await getPackageDimensions(category);
 
       // Murphy beds and platform beds always require freight regardless of weight
@@ -274,7 +281,20 @@ export const getShippingRates = async (options) => {
       deliveryRate.whiteGloveInstructions = wgInstructions;
     }
 
-    return { shippingRates };
+    // ── Override rules (CMS-driven, fail-open) ───────────────────────────
+    const products = [...productIds.map(id => ({ productId: id }))];
+    const overrideContext = { zip: destination.postalCode, products, orderSubtotal, memberId: null };
+    // applyOverrides expects {cost: number} — adapt Wix format in/out
+    const internalRates = shippingRates.map(r => ({ ...r, cost: parseFloat(r.cost.price) || 0 }));
+    const overridden = await applyOverrides(internalRates, overrideContext);
+    // Use Map for O(1) lookup and correctness when duplicate codes exist
+    const ratesByCode = new Map(shippingRates.map(r => [r.code, r]));
+    const finalRates = overridden.map(r => ({
+      ...r,
+      cost: { ...(ratesByCode.get(r.code)?.cost || {}), price: r.cost.toFixed(2) },
+    }));
+
+    return { shippingRates: finalRates };
 
   } catch (err) {
     logError('shipping-rates-plugin.getShippingRates', err);
@@ -305,16 +325,38 @@ export const getShippingRates = async (options) => {
 };
 
 /**
- * Detect product category from line item data for package sizing.
- * Uses name/SKU (Stock Keeping Unit) keyword matching because Wix checkout
- * line items don't carry a structured category field.
+ * Batch-fetch ProductShippingProfiles for a set of product IDs.
+ * Returns a Map<productId, profile> for O(1) lookup in the item loop.
+ * Fails open (empty Map) on CMS error — caller falls back to name matching.
  *
- * @param {Object} item - Wix line item with name and sku fields
+ * @param {string[]} productIds
+ * @returns {Promise<Map<string, Object>>}
+ */
+async function batchFetchProfiles(productIds) {
+  if (!productIds.length) return new Map();
+  try {
+    const result = await wixData.query('ProductShippingProfiles')
+      .hasSome('productId', productIds)
+      .limit(productIds.length)
+      .find({ suppressAuth: true });
+    return new Map(result.items.map(p => [p.productId, p]));
+  } catch {
+    return new Map();
+  }
+}
+
+/**
+ * Resolve product category from a pre-fetched CMS profile (if available)
+ * or fall back to name/SKU keyword matching.
+ *
+ * @param {Object} item    - Wix line item with name field
+ * @param {Object|undefined} profile - CMS profile from batchFetchProfiles (may be undefined)
  * @returns {string} Category key matching PACKAGE_DEFAULTS in ups-shipping.web
  */
-function detectCategory(item) {
-  const name = (item.name || '').toLowerCase();
+function resolveCategory(item, profile) {
+  if (profile?.category) return profile.category;
 
+  const name = (item.name || '').toLowerCase();
   if (name.includes('murphy') || name.includes('cabinet bed')) return 'murphy-bed';
   if (name.includes('platform') || name.includes('nomad') || name.includes('lexington') ||
       name.includes('charleston') || name.includes('ekko')) return 'platform-bed';
