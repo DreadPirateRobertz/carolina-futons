@@ -30,8 +30,8 @@ import wixData, { __reset, __seed } from 'wix-data';
 // ─── Constants ──────────────────────────────────────────────────
 
 describe('MAX_COMPARE', () => {
-  it('limits to 4 products', () => {
-    expect(MAX_COMPARE).toBe(4);
+  it('limits to 3 products', () => {
+    expect(MAX_COMPARE).toBe(3);
   });
 });
 
@@ -356,7 +356,34 @@ describe('getComparisonData', () => {
     const ids = [futonFrame._id, wallHuggerFrame._id, metalFrame._id, outdoorFrame._id, futonMattress._id];
     const result = await getComparisonData(ids);
     expect(result.success).toBe(true);
-    expect(result.products.length).toBeLessThanOrEqual(4);
+    expect(result.products.length).toBeLessThanOrEqual(3);
+  });
+
+  it('returns rate-limited error when ComparisonRateLimit record is at max', async () => {
+    __seed('ComparisonRateLimit', [{
+      _id: 'rl-1',
+      key: 'session:tok-abc',
+      count: 10,
+      windowStart: new Date(Date.now() - 1_000), // within window
+    }]);
+    __seed('Stores/Products', [futonFrame, wallHuggerFrame]);
+
+    const result = await getComparisonData([futonFrame._id, wallHuggerFrame._id], 'tok-abc');
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Rate limited');
+  });
+
+  it('passes through when under rate limit', async () => {
+    __seed('ComparisonRateLimit', [{
+      _id: 'rl-1',
+      key: 'session:tok-ok',
+      count: 3,
+      windowStart: new Date(Date.now() - 1_000),
+    }]);
+    __seed('Stores/Products', [futonFrame, wallHuggerFrame]);
+
+    const result = await getComparisonData([futonFrame._id, wallHuggerFrame._id], 'tok-ok');
+    expect(result.success).toBe(true);
   });
 
   it('returns product summaries with expected fields', async () => {
@@ -412,11 +439,11 @@ describe('buildShareableUrl', () => {
     expect(url).toBe('/compare?ids=prod-1,prod-2');
   });
 
-  it('limits to 4 products', async () => {
+  it('limits to 3 products', async () => {
     const ids = ['prod-1', 'prod-2', 'prod-3', 'prod-4', 'prod-5'];
     const url = await buildShareableUrl(ids);
     const resultIds = url.replace('/compare?ids=', '').split(',');
-    expect(resultIds.length).toBeLessThanOrEqual(4);
+    expect(resultIds.length).toBeLessThanOrEqual(3);
   });
 
   it('returns empty for less than 2 IDs', async () => {
@@ -554,6 +581,30 @@ describe('trackComparison', () => {
   it('limits to MAX_COMPARE products', async () => {
     const ids = [futonFrame._id, wallHuggerFrame._id, metalFrame._id, outdoorFrame._id, futonMattress._id];
     const result = await trackComparison(ids);
+    expect(result).toBe(true); // first 3 valid IDs used
+  });
+
+  it('returns false when rate limited', async () => {
+    __seed('ComparisonRateLimit', [{
+      _id: 'rl-t1',
+      key: 'session:track-tok',
+      count: 20,
+      windowStart: new Date(Date.now() - 1_000),
+    }]);
+
+    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id], 'track-tok');
+    expect(result).toBe(false);
+  });
+
+  it('allows tracking when under rate limit', async () => {
+    __seed('ComparisonRateLimit', [{
+      _id: 'rl-t2',
+      key: 'session:track-ok',
+      count: 5,
+      windowStart: new Date(Date.now() - 1_000),
+    }]);
+
+    const result = await trackComparison([futonFrame._id, wallHuggerFrame._id], 'track-ok');
     expect(result).toBe(true);
   });
 });

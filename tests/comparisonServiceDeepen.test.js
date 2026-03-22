@@ -416,9 +416,9 @@ describe('trackComparison deepened', () => {
     __seed('CompareHistory', []);
     await trackComparison(['e-id', 'd-id', 'c-id', 'b-id', 'a-id']);
     const record = _collections.CompareHistory[0];
-    // Should only include first 4 (e, d, c, b) then sorted
-    expect(record.productIds.length).toBe(4);
-    expect(record.productIds).toEqual(['b-id', 'c-id', 'd-id', 'e-id']);
+    // Should only include first 3 (e, d, c) then sorted
+    expect(record.productIds.length).toBe(3);
+    expect(record.productIds).toEqual(['c-id', 'd-id', 'e-id']);
   });
 
   it('returns false for null input', async () => {
@@ -503,15 +503,15 @@ describe('buildShareableUrl deepened', () => {
     expect(await buildShareableUrl(undefined)).toBe('');
   });
 
-  it('builds URL with exactly 4 IDs (MAX_COMPARE)', async () => {
-    const url = await buildShareableUrl(['a', 'b', 'c', 'd']);
-    expect(url).toBe('/compare?ids=a,b,c,d');
+  it('builds URL with exactly 3 IDs (MAX_COMPARE)', async () => {
+    const url = await buildShareableUrl(['a', 'b', 'c']);
+    expect(url).toBe('/compare?ids=a,b,c');
   });
 
-  it('truncates to 4 IDs when given 5', async () => {
+  it('truncates to 3 IDs when given 5', async () => {
     const url = await buildShareableUrl(['a', 'b', 'c', 'd', 'e']);
     const ids = url.split('ids=')[1].split(',');
-    expect(ids).toEqual(['a', 'b', 'c', 'd']);
+    expect(ids).toEqual(['a', 'b', 'c']);
   });
 
   it('returns empty when only 1 valid ID remains after filtering', async () => {
@@ -549,7 +549,7 @@ describe('getComparisonData deepened', () => {
       makeProduct({ _id: 'good-1', price: 100 }),
       makeProduct({ _id: 'good-2', price: 200 }),
     ]);
-    const result = await getComparisonData(['<script>alert(1)</script>', 'good-1', '', 'good-2']);
+    const result = await getComparisonData(['good-1', '<script>alert(1)</script>', 'good-2']);
     expect(result.success).toBe(true);
     expect(result.products).toHaveLength(2);
   });
