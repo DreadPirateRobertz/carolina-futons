@@ -297,7 +297,17 @@ describe('initShippingIntelligence', () => {
     getShippingEstimate.mockRejectedValue(new Error('network timeout'));
     const $w = makeWixEnv();
     await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
-    expect(logError).toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'ShippingIntelligence.init' }),
+    );
+  });
+
+  it('sets a fallback error message in the catch block', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    getShippingEstimate.mockRejectedValue(new Error('network timeout'));
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect($w.__els['#shippingEstimateError'].text).toBeTruthy();
   });
 
   it('shows error and hides spinner when API returns success:false', async () => {
@@ -329,6 +339,53 @@ describe('initShippingIntelligence', () => {
     await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
     expect($w.__els['#shippingEstimateError'].show).toHaveBeenCalled();
     expect($w.__els['#shippingEstimateBox'].show).not.toHaveBeenCalled();
+  });
+
+  it('shows error when API resolves to null', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    getShippingEstimate.mockResolvedValue(null);
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect($w.__els['#shippingEstimateError'].show).toHaveBeenCalled();
+    expect($w.__els['#shippingEstimateBox'].show).not.toHaveBeenCalled();
+  });
+
+  it('shows error when result.options is absent', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    getShippingEstimate.mockResolvedValue({ success: true });
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect($w.__els['#shippingEstimateError'].show).toHaveBeenCalled();
+  });
+
+  it('shows white glove upsell banner without mutating text when local option has no upsellMessage', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    const noUpsellLocal = { ...LOCAL_OPTION, upsellMessage: null };
+    getShippingEstimate.mockResolvedValue({ success: true, options: [noUpsellLocal] });
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect($w.__els['#whiteGloveUpsellBanner'].show).toHaveBeenCalled();
+    expect($w.__els['#whiteGloveUpsellText'].text).toBe(''); // unchanged
+  });
+
+  it('calls logError when setupAccessibleDialog throws', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    getShippingEstimate.mockResolvedValue({ success: true, options: STANDARD_OPTIONS });
+    setupAccessibleDialog.mockImplementationOnce(() => { throw new Error('Wix element not found'); });
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ context: 'ShippingIntelligence.dialogSetup' }),
+    );
+  });
+
+  it('continues loading data even when setupAccessibleDialog throws', async () => {
+    session.setItem(POSTAL_CODE_KEY, POSTAL_CODE);
+    getShippingEstimate.mockResolvedValue({ success: true, options: STANDARD_OPTIONS });
+    setupAccessibleDialog.mockImplementationOnce(() => { throw new Error('Wix element not found'); });
+    const $w = makeWixEnv();
+    await initShippingIntelligence($w, PRODUCT_ID, { storage: session });
+    expect($w.__els['#shippingEstimateBox'].show).toHaveBeenCalled();
   });
 
   // ── guards ───────────────────────────────────────────────────────────

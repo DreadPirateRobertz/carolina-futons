@@ -23,10 +23,13 @@
  *   whiteGloveModalContent  → #whiteGloveModalContent   (Text — in-home setup description)
  *
  * @example
- *   // In Product Page code:
+ *   // In Product Page code (inside $w.onReady + dataset onReady):
  *   import { initShippingIntelligence } from 'public/ShippingIntelligence';
  *   $w.onReady(() => {
- *     initShippingIntelligence($w, $w('#productPage').getProduct()._id);
+ *     $w('#productDataset').onReady(() => {
+ *       const product = $w('#productDataset').getCurrentItem();
+ *       initShippingIntelligence($w, product?._id);
+ *     });
  *   });
  */
 
@@ -39,6 +42,11 @@ const POSTAL_CODE_KEY = 'cf_postal_code';
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
 
+/** Returns true if `o` is a local-delivery or highlighted option. */
+function isLocalOption(o) {
+  return o.code.startsWith('local-delivery-') || o.highlight === true;
+}
+
 /**
  * Returns true when the options list contains at least one local delivery option.
  * Local zone is indicated by a code starting with 'local-delivery-' or highlight:true.
@@ -47,7 +55,7 @@ const POSTAL_CODE_KEY = 'cf_postal_code';
  * @returns {boolean}
  */
 export function isLocalZone(options) {
-  return options.some(o => o.code.startsWith('local-delivery-') || o.highlight === true);
+  return options.some(isLocalOption);
 }
 
 /**
@@ -64,8 +72,18 @@ export function getPrimaryOption(options) {
 
 // ── DOM helpers ────────────────────────────────────────────────────────────
 
+// Intentionally silent: Wix $w() throws for unknown selectors at runtime.
+// Returning null lets callers degrade gracefully without polluting logs for
+// every optional element that happens not to be on the current page variant.
 function safeGet($wFn, sel) {
   try { return $wFn(sel) || null; } catch (_) { return null; }
+}
+
+function showError($wFn, msg) {
+  const errEl = safeGet($wFn, '#shippingEstimateError');
+  if (!errEl) return;
+  if (msg) errEl.text = msg;
+  errEl.show();
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
@@ -91,28 +109,25 @@ export async function initShippingIntelligence($wFn, productId, opts = {}) {
 
   // Wire accessible modal regardless of whether data loads — elements may be
   // pre-hidden by design and should still respond to keyboard navigation.
-  const dialog = setupAccessibleDialog($wFn, {
-    panelId:  '#whiteGloveModal',
-    closeId:  '#whiteGloveModalClose',
-  });
+  let dialog = { open: () => {}, close: () => {} };
+  try {
+    dialog = setupAccessibleDialog($wFn, {
+      panelId: '#whiteGloveModal',
+      closeId: '#whiteGloveModalClose',
+    });
+  } catch (err) {
+    logError({ message: err?.message ?? String(err), context: 'ShippingIntelligence.dialogSetup', stack: err?.stack });
+  }
 
   const learnMoreBtn = safeGet($wFn, '#whiteGloveLearnMoreBtn');
   if (learnMoreBtn) learnMoreBtn.onClick(() => dialog.open());
 
   // Guard: productId required
-  if (!productId) {
-    const errEl = safeGet($wFn, '#shippingEstimateError');
-    if (errEl) errEl.show();
-    return;
-  }
+  if (!productId) { showError($wFn); return; }
 
   // Read stored postal code
   const postalCode = storage.getItem(POSTAL_CODE_KEY);
-  if (!postalCode) {
-    const errEl = safeGet($wFn, '#shippingEstimateError');
-    if (errEl) errEl.show();
-    return;
-  }
+  if (!postalCode) { showError($wFn); return; }
 
   // Show loading state
   const spinner = safeGet($wFn, '#shippingEstimateSpinner');
@@ -124,10 +139,7 @@ export async function initShippingIntelligence($wFn, productId, opts = {}) {
     const result = await getShippingEstimate(productId, postalCode);
 
     if (!result.success || !result.options?.length) {
-      const msg = result.error || 'Unable to load shipping estimate. Please try again.';
-      const errEl = safeGet($wFn, '#shippingEstimateError');
-      if (errEl) { errEl.text = msg; errEl.show(); }
-      if (spinner) spinner.hide();
+      showError($wFn, result.error || 'Unable to load shipping estimate. Please try again.');
       return;
     }
 
@@ -150,13 +162,9 @@ export async function initShippingIntelligence($wFn, productId, opts = {}) {
     const upsellBanner = safeGet($wFn, '#whiteGloveUpsellBanner');
     if (upsellBanner) {
       if (isLocalZone(result.options)) {
-        const localOpt = result.options.find(
-          o => o.code.startsWith('local-delivery-') || o.highlight,
-        );
+        const localOpt = result.options.find(isLocalOption);
         const upsellText = safeGet($wFn, '#whiteGloveUpsellText');
-        if (upsellText && localOpt?.upsellMessage) {
-          upsellText.text = localOpt.upsellMessage;
-        }
+        if (upsellText && localOpt?.upsellMessage) upsellText.text = localOpt.upsellMessage;
         upsellBanner.show();
       } else {
         upsellBanner.hide();
@@ -164,12 +172,11 @@ export async function initShippingIntelligence($wFn, productId, opts = {}) {
     }
 
     // Reveal result panel
-    if (spinner) spinner.hide();
     if (box) box.show();
   } catch (err) {
     logError({ message: err?.message ?? String(err), context: 'ShippingIntelligence.init', stack: err?.stack });
-    const errEl = safeGet($wFn, '#shippingEstimateError');
-    if (errEl) errEl.show();
+    showError($wFn, 'Unable to load shipping estimate. Please try again.');
+  } finally {
     if (spinner) spinner.hide();
   }
 }
