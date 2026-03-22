@@ -4,8 +4,6 @@
  * up orders by order number + email, view UPS tracking status with timeline,
  * and opt in/out of shipping notification emails.
  *
- * @requires wix-web-module
- * @requires wix-data
  *
  * @setup
  * Uses existing collections:
@@ -48,6 +46,8 @@ const TIMELINE_STEPS = [
 ];
 
 // ── lookupOrder ─────────────────────────────────────────────────────
+// No rate limiting: read-only query, no CMS writes. Email + order number
+// must match before any data is returned (implicit ownership check).
 
 export const lookupOrder = webMethod(
   Permissions.Anyone,
@@ -180,6 +180,7 @@ export const subscribeToNotifications = webMethod(
         return { success: false, error: 'Valid order number and email required' };
       }
 
+      // 5/hr: prevents spam-insert abuse on an anonymous write endpoint.
       const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { max: 5 });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again in 1 hour.' };
@@ -252,6 +253,7 @@ export const unsubscribeFromNotifications = webMethod(
         return { success: false, error: 'Order number and email required' };
       }
 
+      // 10/hr: lower than subscribe (update not insert); still blocks enumeration abuse.
       const { allowed } = await checkRateLimit('TrackingRateLimit', cleanEmail, { max: 10 });
       if (!allowed) {
         return { success: false, error: 'Too many requests. Please try again in 1 hour.' };
