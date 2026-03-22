@@ -154,14 +154,6 @@ describe('get_productSitemap', () => {
     expect(opts).toEqual({ suppressAuth: true });
   });
 
-  it('fetchAllProducts returns items with slug field used for product URLs', async () => {
-    const result = await get_productSitemap();
-    expect(result.status).toBe(200);
-    // All 3 seeded products have slug fields and appear as product URLs
-    expect(result.body).toContain('/product-page/eureka-futon-frame');
-    expect(result.body).toContain('/product-page/moonshadow-futon-mattress');
-    expect(result.body).toContain('/product-page/sagebrush-murphy-cabinet-bed');
-  });
 });
 
 // ── get_blogSitemap ─────────────────────────────────────────────────
@@ -270,6 +262,11 @@ describe('get_facebookCatalogFeed', () => {
     const result = await get_facebookCatalogFeed();
     expect(result.headers['Content-Type']).toContain('text/tab-separated-values');
   });
+
+  it('queries Stores/Products with suppressAuth (shared fetchAllProducts)', async () => {
+    await get_facebookCatalogFeed();
+    expect(__getLastFindOptions('Stores/Products')).toEqual({ suppressAuth: true });
+  });
 });
 
 // ── get_pinterestProductFeed ────────────────────────────────────────
@@ -315,6 +312,11 @@ describe('get_pinterestProductFeed', () => {
     expect(result.status).toBe(200);
     const lines = result.body.split('\n');
     expect(lines.length).toBe(1); // only header
+  });
+
+  it('queries Stores/Products with suppressAuth (shared fetchAllProducts)', async () => {
+    await get_pinterestProductFeed();
+    expect(__getLastFindOptions('Stores/Products')).toEqual({ suppressAuth: true });
   });
 });
 

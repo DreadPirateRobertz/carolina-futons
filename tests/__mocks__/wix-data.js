@@ -244,7 +244,8 @@ const wixData = {
   },
 };
 
-// Return options last passed to find() for a collection (e.g. { suppressAuth: true })
+// Return options last passed to find() for a collection (e.g. { suppressAuth: true }).
+// Returns undefined if find() has not been called for that collection, or after __reset().
 export function __getLastFindOptions(collection) {
   return _lastFindOptions[collection];
 }
