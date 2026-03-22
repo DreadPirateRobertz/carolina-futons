@@ -34,6 +34,7 @@ import { saveForLater } from 'public/SaveForLater.js';
 import { initCartDeliveryEstimate, updateCartDeliveryEstimate } from 'public/cartDeliveryEstimate.js';
 import { initCouponCodeInput } from 'public/CouponCodeInput.js';
 import { initPageSeo } from 'public/pageSeo.js';
+import { initCartRecentlyViewed } from 'public/CartRecentlyViewed.js';
 
 $w.onReady(async function () {
   initPageSeo('cart');
@@ -82,6 +83,7 @@ async function initCartPage() {
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
     renderRecentlyViewedWidget($w).catch((e) => console.warn('[RecentlyViewedWidget] render error on Cart Page', e));
+    initCartRecentlyViewed($w, cart.lineItems);
     initQuantityControls();
     initCouponCodeInput($w, {
       appliedCoupon: cart.appliedCoupon || null,
@@ -525,6 +527,7 @@ function initCartListeners() {
         updateCartDeliveryEstimate($w, cart);
         loadCartSuggestions(cart);
         loadRecentlyViewed(cart);
+        initCartRecentlyViewed($w, cart?.lineItems || []);
       } catch (e) {
         console.error('Error refreshing cart on change:', e);
       }
