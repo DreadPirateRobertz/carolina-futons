@@ -3,14 +3,14 @@
  * CF-st0c: Live Inventory Low Stock badges
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __reset as resetData, __seed, __onInsert, __onUpdate } from './__mocks__/wix-data.js';
-import { products as mockProducts, __reset as resetStores, __setProducts, __setQueryError } from './__mocks__/wix-stores-backend.js';
+import { __reset as resetData, __seed, __onInsert, __onUpdate, __setInsertError } from './__mocks__/wix-data.js';
+import { products as mockProducts, __reset as resetStores, __setProducts, __setPages, __setQueryError } from './__mocks__/wix-stores-backend.js';
 
 import {
   syncInventoryFromStore,
+  triggerInventorySync,
   _computeProductStock,
-  _BATCH_SIZE,
-  _PAGE_SIZE,
+  _buildLowStockAlert,
 } from '../src/backend/inventorySync.web.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -120,6 +120,14 @@ describe('computeProductStock', () => {
     ]);
     expect(_computeProductStock(product)).toBe(0);
   });
+
+  it('skips variants whose stock object has no quantity key', () => {
+    const product = makeVariantProduct([
+      { _id: 'v1', sku: 'A', stock: {} },
+      { _id: 'v2', sku: 'B', stock: { quantity: 4 } },
+    ]);
+    expect(_computeProductStock(product)).toBe(4);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -180,7 +188,7 @@ describe('syncInventoryFromStore — happy path', () => {
     expect(alertInserts[0].status).toBe('active');
   });
 
-  it('sets thresholdType to out_of_stock when quantity is 0', async () => {
+  it('creates alert with thresholdType reorder when quantity is 0', async () => {
     const product = makeProduct({ stock: { trackInventory: true, quantity: 0 }, variants: [] });
     __setProducts([product]);
 
@@ -188,7 +196,20 @@ describe('syncInventoryFromStore — happy path', () => {
     __onInsert((collection, item) => { if (collection === 'LowStockAlerts') alertInserts.push(item); });
 
     await syncInventoryFromStore();
-    expect(alertInserts[0].thresholdType).toBe('out_of_stock');
+    expect(alertInserts).toHaveLength(1);
+    expect(alertInserts[0].thresholdType).toBe('reorder');
+  });
+
+  it('sets reorderAlertSent to true on new threshold when stock at or below reorder threshold', async () => {
+    const product = makeProduct({ stock: { trackInventory: true, quantity: 5 }, variants: [] });
+    __setProducts([product]);
+
+    const inserts = [];
+    __onInsert((collection, item) => { if (collection === 'InventoryThresholds') inserts.push(item); });
+
+    await syncInventoryFromStore();
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0].reorderAlertSent).toBe(true);
   });
 
   it('updates existing InventoryThresholds without raising duplicate alert', async () => {
@@ -277,26 +298,69 @@ describe('syncInventoryFromStore — error handling', () => {
 
   it('counts individual product errors without aborting the batch', async () => {
     const p1 = makeProduct({ _id: 'p1', stock: { trackInventory: true, quantity: 5 }, variants: [] });
-    const p2 = makeProduct({ _id: 'p2-bad', name: null, stock: null, variants: [] }); // stock=null will cause upsert to fail
+    const p2 = makeProduct({ _id: 'p2-bad', stock: { trackInventory: true, quantity: 20 }, variants: [] });
     const p3 = makeProduct({ _id: 'p3', stock: { trackInventory: true, quantity: 20 }, variants: [] });
+    // Seed thresholds for p1 and p3 so they do CMS updates; p2 is new and will attempt an insert
+    __seed('InventoryThresholds', [
+      makeThresholdRecord({ _id: 'thresh-p1', productId: 'p1', currentStock: 10, reorderAlertSent: false }),
+      makeThresholdRecord({ _id: 'thresh-p3', productId: 'p3', currentStock: 10, reorderAlertSent: false }),
+    ]);
+    // Force p2's threshold insert to fail — simulates a transient CMS write error
+    __setInsertError('InventoryThresholds', new Error('CMS write failed'));
     __setProducts([p1, p2, p3]);
 
     const result = await syncInventoryFromStore();
-    expect(result.synced).toBeGreaterThanOrEqual(2); // p1 and p3 succeed
-    expect(result.success).toBe(true); // does not abort
+    expect(result.errors).toBe(1);       // p2 failed
+    expect(result.synced).toBe(2);       // p1 and p3 succeeded
+    expect(result.success).toBe(true);   // does not abort
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 4. Constants sanity
+// 4. Pagination
 // ═══════════════════════════════════════════════════════════════════════
 
-describe('module constants', () => {
-  it('BATCH_SIZE is a positive integer', () => {
-    expect(Number.isInteger(_BATCH_SIZE) && _BATCH_SIZE > 0).toBe(true);
+describe('syncInventoryFromStore — pagination', () => {
+  beforeEach(() => {
+    resetData();
+    resetStores();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('PAGE_SIZE is a positive integer', () => {
-    expect(Number.isInteger(_PAGE_SIZE) && _PAGE_SIZE > 0).toBe(true);
+  it('processes all products across multiple pages', async () => {
+    const page1 = [
+      makeProduct({ _id: 'p1', name: 'P1', stock: { trackInventory: true, quantity: 20 }, variants: [] }),
+      makeProduct({ _id: 'p2', name: 'P2', stock: { trackInventory: true, quantity: 20 }, variants: [] }),
+    ];
+    const page2 = [
+      makeProduct({ _id: 'p3', name: 'P3', stock: { trackInventory: true, quantity: 20 }, variants: [] }),
+    ];
+    __setPages([page1, page2]);
+
+    const result = await syncInventoryFromStore();
+    expect(result.synced).toBe(3);
+    expect(result.success).toBe(true);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 5. triggerInventorySync webMethod
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('triggerInventorySync', () => {
+  beforeEach(() => {
+    resetData();
+    resetStores();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('delegates to syncInventoryFromStore and returns the same result shape', async () => {
+    const product = makeProduct({ stock: { trackInventory: true, quantity: 20 }, variants: [] });
+    __setProducts([product]);
+
+    const result = await triggerInventorySync();
+    expect(result).toMatchObject({ success: true, synced: 1, alertsCreated: 0, errors: 0 });
   });
 });

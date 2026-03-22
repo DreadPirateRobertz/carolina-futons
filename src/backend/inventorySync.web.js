@@ -71,8 +71,36 @@ export function computeProductStock(product) {
 }
 
 /**
+ * Build the LowStockAlerts insert payload for a product.
+ * thresholdType is always 'reorder' (schema: "urgency" | "reorder").
+ *
+ * @param {string} productId
+ * @param {string} sku
+ * @param {string} productName
+ * @param {number} stock
+ * @returns {Object}
+ */
+function buildLowStockAlert(productId, sku, productName, stock) {
+  return {
+    productId,
+    sku,
+    productName,
+    stockLevel: stock,
+    thresholdType: 'reorder',
+    status: 'active',
+    acknowledgedBy: '',
+    acknowledgedAt: null,
+  };
+}
+
+/**
  * Upsert one product's stock into InventoryThresholds and raise a
  * LowStockAlerts entry if the product newly crosses below reorderThreshold.
+ *
+ * Alert dedup: controlled by the `reorderAlertSent` boolean on the threshold
+ * record. Flag is set to true in a single CMS write before the alert is
+ * inserted (prefer missing one alert over infinite spam on insert failure).
+ * Flag is cleared when stock recovers above reorderThreshold.
  *
  * @param {Object} product - Wix Stores product
  * @param {number} stock - Computed stock level
@@ -98,34 +126,22 @@ async function upsertProductThreshold(product, stock, now) {
     const reorderThreshold = config.reorderThreshold != null
       ? config.reorderThreshold
       : DEFAULT_REORDER_THRESHOLD;
+    const shouldAlert = stock <= reorderThreshold && !config.reorderAlertSent;
+    const shouldReset = stock > reorderThreshold && config.reorderAlertSent;
 
-    config.currentStock = stock;
-    config.lastChecked = now;
-    if (productName) config.productName = productName;
+    // Compute new flag value and persist in a single update
+    const newAlertSent = shouldAlert ? true : (shouldReset ? false : config.reorderAlertSent);
+    await wixData.update(THRESHOLDS_COLLECTION, {
+      ...config,
+      currentStock: stock,
+      lastChecked: now,
+      productName: productName || config.productName,
+      reorderAlertSent: newAlertSent,
+    });
 
-    // Reset reorderAlertSent flag when stock recovers above threshold
-    if (stock > reorderThreshold && config.reorderAlertSent) {
-      config.reorderAlertSent = false;
-    }
-
-    await wixData.update(THRESHOLDS_COLLECTION, config);
-
-    // Raise alert on first crossing below reorder threshold.
-    // Note: reorderAlertSent may have been cleared above (stock recovery path),
-    // so this guard reads the flag state after any reset in this same call.
-    if (stock <= reorderThreshold && !config.reorderAlertSent) {
-      await wixData.insert(ALERTS_COLLECTION, {
-        productId,
-        sku: config.sku || sku,
-        productName: config.productName || productName,
-        stockLevel: stock,
-        thresholdType: stock <= 0 ? 'out_of_stock' : 'reorder',
-        status: 'active',
-        acknowledgedBy: '',
-        acknowledgedAt: null,
-      });
-      config.reorderAlertSent = true;
-      await wixData.update(THRESHOLDS_COLLECTION, config);
+    if (shouldAlert) {
+      await wixData.insert(ALERTS_COLLECTION,
+        buildLowStockAlert(productId, config.sku || sku, config.productName || productName, stock));
       alertCreated = true;
     }
   } else {
@@ -133,6 +149,9 @@ async function upsertProductThreshold(product, stock, now) {
     const reorderThreshold = DEFAULT_REORDER_THRESHOLD;
     const needsAlert = stock <= reorderThreshold;
 
+    // Insert threshold with reorderAlertSent=true before the alert insert so
+    // a partial failure (threshold inserted, alert fails) leaves the flag set
+    // and prevents infinite spam — prefer missing one alert over infinite noise.
     await wixData.insert(THRESHOLDS_COLLECTION, {
       productId,
       sku,
@@ -145,16 +164,7 @@ async function upsertProductThreshold(product, stock, now) {
     });
 
     if (needsAlert) {
-      await wixData.insert(ALERTS_COLLECTION, {
-        productId,
-        sku,
-        productName,
-        stockLevel: stock,
-        thresholdType: stock <= 0 ? 'out_of_stock' : 'reorder',
-        status: 'active',
-        acknowledgedBy: '',
-        acknowledgedAt: null,
-      });
+      await wixData.insert(ALERTS_COLLECTION, buildLowStockAlert(productId, sku, productName, stock));
       alertCreated = true;
     }
   }
@@ -250,6 +260,4 @@ export const triggerInventorySync = webMethod(
 
 // ── Export internals for testing ─────────────────────────────────────
 export const _computeProductStock = computeProductStock;
-export const _upsertProductThreshold = upsertProductThreshold;
-export const _BATCH_SIZE = BATCH_SIZE;
-export const _PAGE_SIZE = PAGE_SIZE;
+export const _buildLowStockAlert = buildLowStockAlert;
