@@ -19,6 +19,20 @@ export const STORE_ADDRESS = {
 };
 export const STORE_GEO = { latitude: 35.3162, longitude: -82.4609 };
 export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
+
+/**
+ * Approximate city-center geo coordinates for each /near/[city] page.
+ * Used in LocalBusiness JSON-LD `geo` to signal proximity to the city served.
+ * Falls back to STORE_GEO for any slug not listed here.
+ */
+export const CITY_GEO = {
+  'hendersonville-nc': STORE_GEO, // home city — same as store coordinates
+  'asheville-nc':      { latitude: 35.5951, longitude: -82.5515 },
+  'charlotte-nc':      { latitude: 35.2271, longitude: -80.8431 },
+  'greenville-sc':     { latitude: 34.8526, longitude: -82.3940 },
+  'spartanburg-sc':    { latitude: 34.9496, longitude: -81.9320 },
+  'boone-nc':          { latitude: 36.2168, longitude: -81.6746 },
+};
 // Static Google Maps directions URL — store is always the destination.
 export const STORE_DIRECTIONS_URL = 'https://maps.google.com/maps/dir//carolina+futons+hendersonville+nc';
 
