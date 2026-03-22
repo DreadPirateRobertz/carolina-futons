@@ -28,7 +28,14 @@ const BADGES_COLLECTION = 'ProductBadges';
 const LOW_STOCK_THRESHOLD = 5;
 const MAX_PRODUCT_IDS = 50;
 
-/** Badge display config: label, background color, text color. */
+/**
+ * Badge display config: label, background color, text color.
+ *
+ * Security note: CF_PLUS_EXCLUSIVE is returned to all callers (Permissions.Anyone).
+ * This is intentional — the badge name is informational ("CF+ Exclusive"), not a
+ * security boundary. It signals that a product requires CF+ membership to purchase,
+ * but it does not gate access to product data. Enforcement happens at checkout.
+ */
 const BADGE_CONFIG = {
   NEW:              { label: 'New',          bgColor: colors.mountainBlue, textColor: colors.white },
   BESTSELLER:       { label: 'Bestseller',   bgColor: colors.espresso,     textColor: colors.white },
@@ -175,9 +182,11 @@ export const getBatchProductBadges = webMethod(
 
       if (cleanIds.length === 0) return { success: true, badges: {} };
 
-      // Up to 50 products × 5 badge types = 250 rows max; limit(1000) prevents silent truncation
+      // Pre-filter active=true in query to reduce row count and prevent silent truncation.
+      // Expired entries are still filtered by isBadgeActive() after fetch.
       const result = await wixData.query(BADGES_COLLECTION)
         .hasSome('productId', cleanIds)
+        .eq('active', true)
         .limit(1000)
         .find();
 
