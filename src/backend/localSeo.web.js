@@ -6,7 +6,7 @@
  * @requires backend/utils/localSeoData
  */
 
-import { SITE_URL, STORE_PHONE, STORE_GEO } from 'backend/utils/localSeoData';
+import { SITE_URL, STORE_PHONE, STORE_GEO, CITY_GEO } from 'backend/utils/localSeoData';
 
 const SCHEMA_ADDRESS = {
   '@type': 'PostalAddress',
@@ -47,6 +47,10 @@ export function generateLocalBusinessSchema(city, products = []) {
     ? `${city.city}, ${city.state || 'NC'}`
     : 'Hendersonville, NC';
 
+  // Use per-city geo coordinates when available — signals proximity to the
+  // served city for local search. Falls back to store coords (Hendersonville).
+  const cityGeo = (hasCity && city.slug && CITY_GEO[city.slug]) || STORE_GEO;
+
   const schema = {
     '@context': 'https://schema.org',
     '@type': ['LocalBusiness', 'FurnitureStore'],
@@ -56,8 +60,8 @@ export function generateLocalBusinessSchema(city, products = []) {
     address: SCHEMA_ADDRESS,
     geo: {
       '@type': 'GeoCoordinates',
-      latitude: STORE_GEO.latitude,
-      longitude: STORE_GEO.longitude,
+      latitude: cityGeo.latitude,
+      longitude: cityGeo.longitude,
     },
     openingHours: SCHEMA_OPENING_HOURS,
     areaServed,

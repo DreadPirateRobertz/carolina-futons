@@ -48,8 +48,11 @@ export const getLocalPage = webMethod(
 
       const canonicalUrl = `${SITE_URL}/near/${cityData.slug}`;
 
-      const faqs = Array.isArray(cityData.faqs) ? cityData.faqs : [];
+      const faqItems = Array.isArray(cityData.faqs) ? cityData.faqs : [];
       const breadcrumbs = buildBreadcrumbList(cityData, SITE_URL);
+      const localBusinessSchema = generateLocalBusinessSchema(cityData);
+      const faqSchema = buildFaqSchema(faqItems);
+      const breadcrumbSchema = buildBreadcrumbSchema(cityData, SITE_URL);
 
       return {
         success: true,
@@ -67,11 +70,19 @@ export const getLocalPage = webMethod(
           storeHours: SCHEMA_OPENING_HOURS,
           storeHoursDisplay: STORE_HOURS_DISPLAY,
           categoryRecommendations: Array.isArray(cityData.categoryRecommendations) ? cityData.categoryRecommendations : [],
-          faqs,
+          faqItems,
+          // Legacy alias — prefer faqItems
+          faqs: faqItems,
           breadcrumbs,
-          jsonLd: generateLocalBusinessSchema(cityData),
-          breadcrumbSchema: buildBreadcrumbSchema(cityData, SITE_URL),
-          faqSchema: buildFaqSchema(faqs),
+          jsonLd: localBusinessSchema,
+          breadcrumbSchema,
+          faqSchema,
+          // Combined structured data bundle for page <head> injection
+          schemaData: {
+            localBusiness: localBusinessSchema,
+            faqPage: faqSchema,
+            breadcrumb: breadcrumbSchema,
+          },
           featuredProducts: Array.isArray(cityData.featuredProducts) ? cityData.featuredProducts : [],
           mapEmbedUrl: cityData.mapEmbedUrl || '',
           directionsUrl: STORE_DIRECTIONS_URL,
