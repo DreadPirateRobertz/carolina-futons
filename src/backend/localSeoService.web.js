@@ -19,6 +19,44 @@ import {
 import { generateLocalBusinessSchema, SCHEMA_OPENING_HOURS, STORE_HOURS_DISPLAY } from 'backend/localSeo.web';
 import { buildBreadcrumbSchema, buildBreadcrumbList, buildFaqSchema } from 'public/localSeoHelpers';
 
+const CMS_COLLECTION = 'LocalSeoCities';
+
+// ── CMS helpers ───────────────────────────────────────────────────────
+
+/**
+ * Parse a JSON string field into an array. Returns [] on any failure.
+ * Accepts already-parsed arrays for defensive use with mixed CMS field types.
+ */
+function _parseJsonField(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
+/**
+ * Map a LocalSeoCities CMS record to the cityData shape used by getLocalPage.
+ */
+function _normalizeCmsCity(item) {
+  return {
+    slug: item.slug,
+    city: item.city,
+    state: item.state,
+    headline: item.headline || '',
+    heroDescription: item.heroDescription || '',
+    neighborhoodContext: item.neighborhoodContext || '',
+    metaTitle: item.metaTitle || null,
+    metaDescription: item.metaDescription || null,
+    preferredCategories: Array.isArray(item.preferredCategories) ? item.preferredCategories : [],
+    categoryRecommendations: _parseJsonField(item.categoryRecommendations),
+    faqs: _parseJsonField(item.faqs),
+    distance: item.distance || '',
+    isHomeCity: Boolean(item.isHomeCity),
+    nearbyAreas: Array.isArray(item.nearbyAreas) ? item.nearbyAreas : [],
+    mapEmbedUrl: item.mapEmbedUrl || '',
+    directions: item.directions || '',
+  };
+}
+
 // ── getLocalPage ──────────────────────────────────────────────────────
 
 /**
@@ -39,7 +77,19 @@ export const getLocalPage = webMethod(
         return { success: false, error: 'Slug is required.', page: null };
       }
 
-      const cityData = LOCAL_PAGES[cleanSlug];
+      // CMS-primary: query LocalSeoCities first, fall through to static on miss or error
+      let cityData = null;
+      try {
+        const cmsResult = await wixData.query(CMS_COLLECTION).eq('slug', cleanSlug).find();
+        if (cmsResult.items.length > 0) {
+          cityData = _normalizeCmsCity(cmsResult.items[0]);
+        }
+      } catch {
+        // CMS unavailable — fall through to static
+      }
+      if (!cityData) {
+        cityData = LOCAL_PAGES[cleanSlug] || null;
+      }
       if (!cityData) {
         return { success: true, page: null };
       }
@@ -261,7 +311,16 @@ export const getAllLocalSlugs = webMethod(
   Permissions.Anyone,
   async () => {
     try {
-      return { success: true, slugs: Object.keys(LOCAL_PAGES) };
+      let cmsSlugs = [];
+      try {
+        const cmsResult = await wixData.query(CMS_COLLECTION).find();
+        cmsSlugs = (cmsResult.items || []).map(i => i.slug).filter(Boolean);
+      } catch {
+        // CMS unavailable — return static only
+      }
+      const staticSlugs = Object.keys(LOCAL_PAGES);
+      const allSlugs = [...new Set([...staticSlugs, ...cmsSlugs])];
+      return { success: true, slugs: allSlugs };
     } catch (err) {
       console.error('[localSeoService] Error getting local slugs:', err.name, err.message, err);
       return { success: false, slugs: [] };

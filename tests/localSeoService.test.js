@@ -6,7 +6,7 @@
  * nearby areas resolution, and the home city (Hendersonville NC).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { __reset, __seed } from './__mocks__/wix-data.js';
+import { __reset, __seed, __setQueryError } from './__mocks__/wix-data.js';
 
 // ── Mock Wix modules ────────────────────────────────────────────────────
 vi.mock('wix-web-module', () => ({
@@ -275,5 +275,184 @@ describe('getLocalPage — South Carolina cities', () => {
       const { page } = await getLocalPage(slug);
       expect(page.isHomeCity).toBe(false);
     }
+  });
+});
+
+// ── CMS city path (LocalSeoCities collection) ─────────────────────────────────
+// New cities are added via CMS. Static cities remain unchanged as fallback.
+
+const CMS_CITY_BREVARD = {
+  _id: 'cms-brevard',
+  slug: 'brevard-nc',
+  city: 'Brevard',
+  state: 'NC',
+  headline: 'Carolina Futons near Brevard, NC',
+  heroDescription: 'Shop futons and mattresses near Brevard in Transylvania County.',
+  neighborhoodContext: 'Brevard is the gateway to Pisgah National Forest.',
+  metaTitle: 'Futon Store near Brevard NC | Carolina Futons',
+  metaDescription: 'Shop futons and murphy beds near Brevard, NC. Carolina Futons in Hendersonville — 45 min away.',
+  preferredCategories: ['futon-frames', 'mattresses'],
+  featuredProducts: ['futon-frames'],
+  categoryRecommendations: JSON.stringify([
+    { category: 'futon-frames', label: 'Futon Frames', reason: 'Great selection near Brevard' },
+  ]),
+  faqs: JSON.stringify([
+    { question: 'Do you deliver to Brevard?', answer: 'Yes, we deliver to the Brevard area.' },
+    { question: 'How far is your store from Brevard?', answer: 'About 45 minutes from downtown Brevard.' },
+  ]),
+  distance: '45 min',
+  isHomeCity: false,
+};
+
+describe('getLocalPage — CMS city (LocalSeoCities)', () => {
+  beforeEach(() => {
+    __seed('LocalSeoCities', [CMS_CITY_BREVARD]);
+  });
+
+  it('returns success:true for a CMS-only city slug', async () => {
+    const result = await getLocalPage('brevard-nc');
+    expect(result.success).toBe(true);
+  });
+
+  it('returns a non-null page for a CMS city', async () => {
+    const result = await getLocalPage('brevard-nc');
+    expect(result.page).not.toBeNull();
+  });
+
+  it('page has correct slug, city, state from CMS', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.slug).toBe('brevard-nc');
+    expect(page.city).toBe('Brevard');
+    expect(page.state).toBe('NC');
+  });
+
+  it('page headline comes from CMS', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.headline).toBe('Carolina Futons near Brevard, NC');
+  });
+
+  it('page heroDescription comes from CMS', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.heroDescription).toContain('Brevard');
+  });
+
+  it('page metaTitle contains city name', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.metaTitle).toContain('Brevard');
+  });
+
+  it('page metaDescription contains city name', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.metaDescription).toContain('Brevard');
+  });
+
+  it('page canonicalUrl points to /near/brevard-nc', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.canonicalUrl).toContain('/near/brevard-nc');
+  });
+
+  it('isHomeCity is false for CMS city', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.isHomeCity).toBe(false);
+  });
+
+  it('faqItems are parsed from JSON field', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(Array.isArray(page.faqItems)).toBe(true);
+    expect(page.faqItems).toHaveLength(2);
+    expect(page.faqItems[0].question).toBe('Do you deliver to Brevard?');
+  });
+
+  it('categoryRecommendations are parsed from JSON field', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(Array.isArray(page.categoryRecommendations)).toBe(true);
+    expect(page.categoryRecommendations[0].category).toBe('futon-frames');
+  });
+
+  it('page has schemaData with localBusiness, faqPage, breadcrumb', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.schemaData).toBeDefined();
+    expect(page.schemaData.localBusiness).toBeDefined();
+    expect(page.schemaData.breadcrumb).toBeDefined();
+  });
+
+  it('page has directionsUrl as non-empty string', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(page.directionsUrl).toBeTruthy();
+  });
+
+  it('page has nearbyAreas as array (empty for CMS city with no nearbyAreas field)', async () => {
+    const { page } = await getLocalPage('brevard-nc');
+    expect(Array.isArray(page.nearbyAreas)).toBe(true);
+  });
+
+  it('static city still returned when CMS has a different city', async () => {
+    const result = await getLocalPage('asheville-nc');
+    expect(result.success).toBe(true);
+    expect(result.page.city).toBe('Asheville');
+  });
+
+  it('CMS city not returned for static slug (no overlap — CMS is checked first then static)', async () => {
+    // brevard-nc is CMS-only; asheville-nc is static-only
+    const asheville = await getLocalPage('asheville-nc');
+    expect(asheville.page.city).toBe('Asheville'); // static, not CMS
+  });
+
+  it('returns page:null for unknown slug even with CMS seeded', async () => {
+    const result = await getLocalPage('unknown-city-zz');
+    expect(result.success).toBe(true);
+    expect(result.page).toBeNull();
+  });
+
+  it('CMS query error falls through to static data gracefully', async () => {
+    __setQueryError('LocalSeoCities', new Error('CMS unavailable'));
+    // asheville-nc is in static data, so it should still return
+    const result = await getLocalPage('asheville-nc');
+    expect(result.success).toBe(true);
+    expect(result.page.city).toBe('Asheville');
+  });
+
+  it('CMS query error returns null for truly unknown slug (no static fallback)', async () => {
+    __setQueryError('LocalSeoCities', new Error('CMS unavailable'));
+    const result = await getLocalPage('brevard-nc');
+    // CMS errored and brevard-nc not in static — page null
+    expect(result.success).toBe(true);
+    expect(result.page).toBeNull();
+  });
+});
+
+// ── getAllLocalSlugs — CMS union ──────────────────────────────────────────────
+
+describe('getAllLocalSlugs — CMS union', () => {
+  it('includes CMS slugs in addition to static slugs', async () => {
+    __seed('LocalSeoCities', [CMS_CITY_BREVARD]);
+    const { slugs } = await getAllLocalSlugs();
+    expect(slugs).toContain('brevard-nc');
+    expect(slugs).toContain('asheville-nc'); // static still included
+  });
+
+  it('returns 7 slugs when one CMS city is added', async () => {
+    __seed('LocalSeoCities', [CMS_CITY_BREVARD]);
+    const { slugs } = await getAllLocalSlugs();
+    expect(slugs).toHaveLength(7);
+  });
+
+  it('returns exactly 6 slugs when no CMS cities are seeded', async () => {
+    // default beforeEach has no LocalSeoCities seed
+    const { slugs } = await getAllLocalSlugs();
+    expect(slugs).toHaveLength(6);
+  });
+
+  it('does not duplicate slugs when CMS has no overlap with static', async () => {
+    __seed('LocalSeoCities', [CMS_CITY_BREVARD]);
+    const { slugs } = await getAllLocalSlugs();
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it('CMS query error returns static slugs only', async () => {
+    __setQueryError('LocalSeoCities', new Error('CMS unavailable'));
+    const { slugs } = await getAllLocalSlugs();
+    expect(slugs).toHaveLength(6);
+    expect(slugs).toContain('asheville-nc');
   });
 });
