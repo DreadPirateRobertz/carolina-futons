@@ -34,6 +34,14 @@ $w.onReady(async function () {
   try {
     // ── Load Blog Posts (CMS-driven via Wix Blog backend) ───────────
     const blogResult = await getPublishedBlogPosts(1, ITEMS_PER_PAGE * 3);
+
+    if (blogResult.error) {
+      try { $w('#blogCmsError').expand(); } catch (e) {}
+      try { $w('#blogListRepeater').collapse(); } catch (e) {}
+      return;
+    }
+    try { $w('#blogCmsError').collapse(); } catch (e) {}
+
     _allPosts = blogResult.posts || [];
 
     // ── Featured Post Hero ──────────────────────────────────────────

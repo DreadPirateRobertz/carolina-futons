@@ -584,4 +584,31 @@ describe('Blog page handlers', () => {
       expect(getEl('#blogNewsletterError').show).toHaveBeenCalled();
     });
   });
+
+  // ── CMS error state ───────────────────────────────────────────────
+
+  describe('CMS unavailable error state', () => {
+    it('expands #blogCmsError when getPublishedBlogPosts returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').expand).toHaveBeenCalled();
+    });
+
+    it('collapses #blogListRepeater when CMS returns error', async () => {
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0,
+        hasNextPage: false, hasPrevPage: false, error: true,
+      });
+      await onReadyHandler();
+      expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();
+    });
+
+    it('collapses #blogCmsError when CMS succeeds', async () => {
+      await onReadyHandler();
+      expect(getEl('#blogCmsError').collapse).toHaveBeenCalled();
+    });
+  });
 });
