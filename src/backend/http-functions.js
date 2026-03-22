@@ -36,10 +36,11 @@ async function fetchAllProducts() {
     const result = await wixData.query('Stores/Products')
       .limit(PAGE_SIZE)
       .skip(skip)
-      .find();
-    allItems = allItems.concat(result.items);
+      .find({ suppressAuth: true });
+    const items = result.items ?? [];
+    allItems = allItems.concat(items);
     skip += PAGE_SIZE;
-    hasMore = result.items.length === PAGE_SIZE;
+    hasMore = items.length === PAGE_SIZE;
   }
 
   return allItems;
@@ -127,7 +128,7 @@ export async function get_productSitemap() {
     try {
       productItems = await fetchAllProducts();
     } catch (err) {
-      console.warn('[productSitemap] Product fetch failed, serving static pages only:', err?.message ?? err);
+      console.error('[productSitemap] Product fetch failed — serving static pages only, all product URLs missing:', err?.message ?? err);
     }
 
     const productUrls = productItems.map(p => ({
