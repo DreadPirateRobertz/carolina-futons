@@ -16,6 +16,7 @@ import {
   shouldUseLTL,
   getLTLFallbackRates,
   getLTLRates,
+  requiresLiftgate,
   LTL_THRESHOLDS,
 } from '../src/backend/wwex-freight.web.js';
 
@@ -278,5 +279,164 @@ describe('getLTLRates — HTTP error fallback', () => {
     const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
     expect(result.success).toBe(false);
     expect(result.fallback).toBeDefined();
+  });
+});
+
+// ── NMFC freight class defaults ───────────────────────────────────────────────
+
+describe('NMFC freight class defaults — by category', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  const CATEGORIES = [
+    { category: 'futon-frame',    expected: '150' },
+    { category: 'futon-mattress', expected: '200' },
+    { category: 'murphy-bed',     expected: '150' },
+    { category: 'accessory',      expected: '250' },
+  ];
+
+  for (const { category, expected } of CATEGORIES) {
+    it(`${category} → FreightClass ${expected} in SOAP body`, async () => {
+      let capturedBody = null;
+      __setHandler((url, options) => {
+        capturedBody = options.body;
+        return { ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } };
+      });
+      await getLTLRates('28792', '28701', [{ weight: 200, length: 48, width: 24, height: 6, category }]);
+      expect(capturedBody).toContain(`<FreightClass>${expected}</FreightClass>`);
+    });
+  }
+
+  it('direct freightClass on package overrides category lookup', async () => {
+    let capturedBody = null;
+    __setHandler((url, options) => {
+      capturedBody = options.body;
+      return { ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } };
+    });
+    // futon-frame would normally be 150 but we override with freightClass: '125'
+    await getLTLRates('28792', '28701', [
+      { weight: 200, length: 48, width: 24, height: 6, category: 'futon-frame', freightClass: '125' },
+    ]);
+    expect(capturedBody).toContain('<FreightClass>125</FreightClass>');
+  });
+});
+
+// ── requiresLiftgate ──────────────────────────────────────────────────────────
+
+describe('requiresLiftgate', () => {
+  it('returns false for empty packages', () => {
+    expect(requiresLiftgate([])).toBe(false);
+  });
+
+  it('returns false for null', () => {
+    expect(requiresLiftgate(null)).toBe(false);
+  });
+
+  it('returns false when total weight ≤ 300 lbs and no single item > 100 lbs', () => {
+    expect(requiresLiftgate([{ weight: 80 }, { weight: 80 }])).toBe(false);
+  });
+
+  it('returns true when total weight exceeds 300 lbs', () => {
+    expect(requiresLiftgate([{ weight: 150 }, { weight: 160 }])).toBe(true);
+  });
+
+  it('returns true when a single item exceeds 100 lbs', () => {
+    expect(requiresLiftgate([{ weight: 101 }])).toBe(true);
+  });
+
+  it('returns false at exactly 100 lbs single item', () => {
+    expect(requiresLiftgate([{ weight: 100 }])).toBe(false);
+  });
+});
+
+describe('requiresLiftgate — propagated to rate objects', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  it('rate has requiresLiftgate:false for light shipment', async () => {
+    __setHandler(() => ({ ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } }));
+    const result = await getLTLRates('28792', '28701', [{ weight: 80, length: 48, width: 24, height: 6 }]);
+    expect(result.success).toBe(true);
+    expect(result.rates[0].requiresLiftgate).toBe(false);
+  });
+
+  it('rate has requiresLiftgate:true for heavy shipment (> 300 lbs total)', async () => {
+    __setHandler(() => ({ ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } }));
+    const result = await getLTLRates('28792', '28701', [{ weight: 350, length: 72, width: 36, height: 12 }]);
+    expect(result.success).toBe(true);
+    expect(result.rates[0].requiresLiftgate).toBe(true);
+  });
+
+  it('rate has carrier: "WWEX"', async () => {
+    __setHandler(() => ({ ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } }));
+    const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
+    expect(result.success).toBe(true);
+    expect(result.rates[0].carrier).toBe('WWEX');
+  });
+
+  it('fallback rates include requiresLiftgate and carrier fields', () => {
+    const rates = getLTLFallbackRates('28701', [{ weight: 400 }]);
+    expect(rates[0].requiresLiftgate).toBe(true);
+    expect(rates[0].carrier).toBe('WWEX');
+  });
+});
+
+// ── extractXmlValue — multiline content ───────────────────────────────────────
+
+const SOAP_RESPONSE_MULTILINE = `<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <RateQuoteResponse>
+      <RateQuote>
+        <ServiceCode>STD</ServiceCode>
+        <ServiceName>Standard LTL</ServiceName>
+        <TotalCharge>
+          325.00
+        </TotalCharge>
+        <TransitDays>3</TransitDays>
+      </RateQuote>
+    </RateQuoteResponse>
+  </soap:Body>
+</soap:Envelope>`;
+
+describe('getLTLRates — multiline SOAP response', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  it('parses TotalCharge with surrounding whitespace/newlines', async () => {
+    __setHandler(() => ({
+      ok: true,
+      status: 200,
+      async text() { return SOAP_RESPONSE_MULTILINE; },
+    }));
+    const result = await getLTLRates('28792', '28701', VALID_PACKAGES);
+    expect(result.success).toBe(true);
+    expect(result.rates).toHaveLength(1);
+    expect(result.rates[0].cost).toBe(325);
+  });
+});
+
+// ── dead freightClass param removed ─────────────────────────────────────────
+
+describe('getLTLRates — per-package FreightClass, no top-level param', () => {
+  beforeEach(() => {
+    __setSecrets({ WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+  });
+
+  it('two packages with different categories get distinct FreightClass values', async () => {
+    let capturedBody = null;
+    __setHandler((url, options) => {
+      capturedBody = options.body;
+      return { ok: true, status: 200, async text() { return SOAP_RESPONSE_ONE_RATE; } };
+    });
+    await getLTLRates('28792', '28701', [
+      { weight: 100, length: 48, width: 24, height: 6, category: 'futon-mattress' }, // class 200
+      { weight: 100, length: 48, width: 24, height: 6, category: 'futon-frame' },    // class 150
+    ]);
+    expect(capturedBody).toContain('<FreightClass>200</FreightClass>');
+    expect(capturedBody).toContain('<FreightClass>150</FreightClass>');
   });
 });

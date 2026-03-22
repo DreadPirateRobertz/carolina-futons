@@ -46,13 +46,41 @@ export const LTL_THRESHOLDS = {
  * @see http://www.nmfta.org/pages/nmfc
  */
 const FREIGHT_CLASS = {
-  'murphy-bed': '125',    // Cabinet beds with mechanisms
+  'murphy-bed': '150',    // Cabinet beds with mechanisms (NMFC class 150)
   'platform-bed': '100',  // Knocked-down wood furniture
   'futon-frame': '150',   // Metal/wood frames, flat-packed
   'futon-mattress': '200', // Dense compressed foam
+  'accessory': '250',     // Small accessories — low density, high class
   'casegoods': '85',      // Dressers, nightstands — dense
   'default': '100',
 };
+
+/**
+ * Determine whether a shipment requires a liftgate at delivery.
+ * Required when total weight exceeds 300 lbs or any single package exceeds 100 lbs
+ * (typical residential / dock-less delivery threshold).
+ *
+ * @param {Array<{weight?: number}>} packages
+ * @returns {boolean}
+ */
+export function requiresLiftgate(packages) {
+  if (!packages || packages.length === 0) return false;
+  const totalWeight = packages.reduce((sum, p) => sum + (p.weight || 0), 0);
+  const hasSingleHeavyItem = packages.some(p => (p.weight || 0) > 100);
+  return totalWeight > 300 || hasSingleHeavyItem;
+}
+
+/**
+ * Resolve freight class for a package.
+ * Prefers explicit freightClass field; falls back to category lookup; defaults to '100'.
+ *
+ * @param {{freightClass?: string, category?: string}} pkg
+ * @returns {string}
+ */
+function resolveFreightClass(pkg) {
+  if (pkg.freightClass) return pkg.freightClass;
+  return FREIGHT_CLASS[pkg.category || 'default'] || FREIGHT_CLASS['default'];
+}
 
 /**
  * Determine whether a set of packages should route to LTL vs parcel.
@@ -92,7 +120,6 @@ export async function getLTLRates(originZip, destZip, packages) {
 
     // Build WWEX SpeedFreight SOAP request
     const totalWeight = packages.reduce((sum, p) => sum + (p.weight || 0), 0);
-    const freightClass = FREIGHT_CLASS[packages[0]?.category || 'default'];
 
     const soapBody = buildWWEXSoapRequest({
       username,
@@ -101,7 +128,6 @@ export async function getLTLRates(originZip, destZip, packages) {
       originZip,
       destZip,
       totalWeight,
-      freightClass,
       packages,
     });
 
@@ -124,7 +150,8 @@ export async function getLTLRates(originZip, destZip, packages) {
     }
 
     const xml = await response.text();
-    const rates = parseWWEXResponse(xml);
+    const needsLiftgate = requiresLiftgate(packages);
+    const rates = parseWWEXResponse(xml, needsLiftgate);
 
     return { success: true, rates };
 
@@ -142,7 +169,7 @@ export async function getLTLRates(originZip, destZip, packages) {
  * Build the WWEX SpeedFreight SOAP request XML.
  * @private
  */
-function buildWWEXSoapRequest({ username, password, accountNumber, originZip, destZip, totalWeight, freightClass, packages }) {
+function buildWWEXSoapRequest({ username, password, accountNumber, originZip, destZip, totalWeight, packages }) {
   const packageItems = packages.map((p, i) => `
     <HandlingUnit>
       <Sequence>${i + 1}</Sequence>
@@ -150,7 +177,7 @@ function buildWWEXSoapRequest({ username, password, accountNumber, originZip, de
       <Length>${Math.ceil(p.length || 48)}</Length>
       <Width>${Math.ceil(p.width || 24)}</Width>
       <Height>${Math.ceil(p.height || 6)}</Height>
-      <FreightClass>${FREIGHT_CLASS[p.category || 'default']}</FreightClass>
+      <FreightClass>${resolveFreightClass(p)}</FreightClass>
     </HandlingUnit>`).join('');
 
   return `<?xml version="1.0" encoding="utf-8"?>
@@ -177,9 +204,11 @@ function buildWWEXSoapRequest({ username, password, accountNumber, originZip, de
 /**
  * Parse WWEX SOAP response XML into normalized rate objects.
  * @private
- * @returns {Array<{code: string, title: string, cost: number, estimatedDays: string, currency: string, icon: string, badge: string}>}
+ * @param {string} xml
+ * @param {boolean} needsLiftgate
+ * @returns {Array<{code: string, title: string, cost: number, estimatedDays: string, carrier: string, requiresLiftgate: boolean, isLTL: boolean}>}
  */
-function parseWWEXResponse(xml) {
+function parseWWEXResponse(xml, needsLiftgate = false) {
   const rates = [];
 
   // Extract rate quotes from WWEX response
@@ -200,9 +229,11 @@ function parseWWEXResponse(xml) {
       title: `🚛 ${serviceName || 'LTL Freight'} (WWEX)`,
       cost: totalCharge,
       estimatedDays: transitDays ? `${transitDays} business days` : '5-10 business days',
+      carrier: 'WWEX',
       currency: 'USD',
       icon: '🚛',
       badge: null,
+      requiresLiftgate: needsLiftgate,
       upsellMessage: 'Full-service freight delivery — contact us to schedule your delivery window',
       isLTL: true,
     });
@@ -243,9 +274,11 @@ export function getLTLFallbackRates(destZip, packages) {
     title: '🚛 LTL Freight (Estimated)',
     cost: total,
     estimatedDays: '5-10 business days',
+    carrier: 'WWEX',
     currency: 'USD',
     icon: '🚛',
     badge: null,
+    requiresLiftgate: requiresLiftgate(packages || []),
     upsellMessage: 'Large item freight delivery — contact us to schedule',
     isLTL: true,
     isEstimate: true,
@@ -264,6 +297,6 @@ function escapeXml(str) {
 
 /** Extract text content of a single XML element by tag name */
 function extractXmlValue(xml, tag) {
-  const match = xml.match(new RegExp(`<${tag}>(.*?)<\/${tag}>`));
+  const match = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`));
   return match ? match[1].trim() : null;
 }
