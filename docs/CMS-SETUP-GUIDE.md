@@ -334,6 +334,49 @@ Create in this order (dependencies flow downward):
 
 ---
 
+## ProductShippingProfiles
+
+**Module:** `shippingIntelligence.web.js` — per-product shipping dimensions and routing overrides.
+Queried on every call to `getShippingEstimate` and `calculateBundleQuote`. Products without a profile fall back to category defaults in `ups-shipping.web.js`.
+
+**Permissions:** Admin read/write. Backend reads with `suppressAuth: true`.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| productId | Text | Yes | **Index** (unique) — Wix catalog `_id` |
+| weight_lbs | Number | Yes | Packed weight including packaging |
+| length_in | Number | Yes | Longest dimension |
+| width_in | Number | Yes | |
+| height_in | Number | Yes | |
+| freightClass | Text | No | NMFC class — "100", "150", "200", "250". If absent: category default (futon-frame=150, futon-mattress=200, murphy-bed=150, accessory=250) |
+| requiresPallet | Boolean | No | Forces LTL routing regardless of weight. Default false. |
+| requiresFreight | Boolean | No | Always route to freight, never UPS parcel. Default false. |
+| customItemFlag | Boolean | No | Triggers manual pricing review path. Default false. |
+| handlingFee_usd | Number | No | Flat per-order surcharge added to shipping cost. Default 0. |
+| packagingNotes | Text | No | e.g. "Ships in 2 boxes", "mattress compressed in roll" |
+
+**Routing rules** (applied by `_routeToCarrier`):
+- `requiresPallet === true` OR `requiresFreight === true` → **WWEX LTL**
+- `totalWeight > 150 lbs` → **WWEX LTL**
+- Otherwise → **UPS parcel**
+
+**Seed data:** Top 20 products should have profiles. Run `scripts/seed-shipping-profiles.mjs` or add via CMS dashboard. Example record:
+```json
+{
+  "productId": "<wix-product-id>",
+  "weight_lbs": 45,
+  "length_in": 72,
+  "width_in": 24,
+  "height_in": 6,
+  "freightClass": "150",
+  "requiresPallet": false,
+  "requiresFreight": false,
+  "handlingFee_usd": 0
+}
+```
+
+---
+
 ## Index Summary
 
 These fields should be indexed in Wix CMS for query performance:

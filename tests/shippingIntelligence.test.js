@@ -7,7 +7,10 @@
  *  - getShippingEstimate: input validation, UPS routing, LTL routing, local zone appended
  *  - calculateBundleQuote: input validation, multi-item aggregation, subtotal affects free delivery
  *  - buildShippingResponse: UPS path, LTL path, WWEX fallback, empty options guard
- *  - getProductShippingProfile: CMS hit, CMS miss → null, query error → null
+ *  - _resolveProfile: CMS hit, CMS miss → null, null productId → null, query error → null
+ *  - _routeToCarrier: weight thresholds, requiresPallet, requiresFreight flags
+ *  - Response shape: cost (number), estimatedDelivery, carrier, requiresLiftgate on all options
+ *  - ZIP edge cases: PR, GU, 4-digit, 6-digit, alpha
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -49,7 +52,7 @@ vi.mock('backend/wwex-freight.web', () => ({
   LTL_THRESHOLDS: { maxParcelWeightLbs: 150, maxParcelLengthIn: 108, minLTLWeightLbs: 100 },
 }));
 
-import { getShippingEstimate, calculateBundleQuote } from '../src/backend/shippingIntelligence.web.js';
+import { getShippingEstimate, calculateBundleQuote, _resolveProfile, _routeToCarrier } from '../src/backend/shippingIntelligence.web.js';
 import { shouldUseLTL, getLTLRates, getLTLFallbackRates } from '../src/backend/wwex-freight.web.js';
 import { getUPSRates, getPackageDimensions } from '../src/backend/ups-shipping.web.js';
 
@@ -248,5 +251,213 @@ describe('calculateBundleQuote — multi-item aggregation', () => {
     );
     const [, , orderSubtotal] = getUPSRates.mock.calls[0];
     expect(orderSubtotal).toBe(250);
+  });
+});
+
+// ── _resolveProfile ────────────────────────────────────────────────────────────
+
+describe('_resolveProfile', () => {
+  it('returns CMS record when productId matches', async () => {
+    __seed('ProductShippingProfiles', [
+      { productId: 'prod-abc', weight_lbs: 45, length_in: 72, width_in: 24, height_in: 6 },
+    ]);
+    const profile = await _resolveProfile('prod-abc');
+    expect(profile).not.toBeNull();
+    expect(profile.weight_lbs).toBe(45);
+  });
+
+  it('returns null when productId has no matching CMS record', async () => {
+    __seed('ProductShippingProfiles', []);
+    const profile = await _resolveProfile('nonexistent-prod');
+    expect(profile).toBeNull();
+  });
+
+  it('returns null when productId is null', async () => {
+    const profile = await _resolveProfile(null);
+    expect(profile).toBeNull();
+  });
+
+  it('returns null when productId is undefined', async () => {
+    const profile = await _resolveProfile(undefined);
+    expect(profile).toBeNull();
+  });
+
+  it('returns null (and warns) when CMS query throws', async () => {
+    __setQueryError('ProductShippingProfiles', new Error('CMS unavailable'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const profile = await _resolveProfile('prod-abc');
+    expect(profile).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('ProductShippingProfiles lookup failed'),
+      'prod-abc',
+      expect.any(String)
+    );
+    warnSpy.mockRestore();
+  });
+
+  it('returns first item only when multiple records match', async () => {
+    __seed('ProductShippingProfiles', [
+      { productId: 'prod-dup', weight_lbs: 10 },
+      { productId: 'prod-dup', weight_lbs: 99 },
+    ]);
+    const profile = await _resolveProfile('prod-dup');
+    expect(profile.weight_lbs).toBe(10);
+  });
+});
+
+// ── _routeToCarrier ────────────────────────────────────────────────────────────
+
+describe('_routeToCarrier', () => {
+  it('returns "ups" for weight under 150 lbs with no flags', () => {
+    expect(_routeToCarrier(100, [{}])).toBe('ups');
+  });
+
+  it('returns "ups" for weight exactly 150 lbs', () => {
+    expect(_routeToCarrier(150, [{}])).toBe('ups');
+  });
+
+  it('returns "ltl" for weight over 150 lbs', () => {
+    expect(_routeToCarrier(151, [{}])).toBe('ltl');
+  });
+
+  it('returns "ltl" when any profile has requiresPallet=true', () => {
+    expect(_routeToCarrier(50, [{ requiresPallet: true }])).toBe('ltl');
+  });
+
+  it('returns "ltl" when any profile has requiresFreight=true', () => {
+    expect(_routeToCarrier(50, [{ requiresFreight: true }])).toBe('ltl');
+  });
+
+  it('returns "ltl" when requiresPallet is on one of many profiles', () => {
+    expect(_routeToCarrier(80, [{ requiresPallet: false }, { requiresPallet: true }])).toBe('ltl');
+  });
+
+  it('returns "ups" for empty profiles array below threshold', () => {
+    expect(_routeToCarrier(100, [])).toBe('ups');
+  });
+
+  it('returns "ups" when profiles is array of nulls', () => {
+    expect(_routeToCarrier(100, [null, null])).toBe('ups');
+  });
+});
+
+// ── Response shape — cost / estimatedDelivery / carrier / requiresLiftgate ─────
+
+describe('UPS option response shape', () => {
+  it('includes cost as a number (not just price string)', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '10001');
+    expect(result.success).toBe(true);
+    const upsOpt = result.options.find(o => o.carrier === 'UPS');
+    expect(upsOpt).toBeDefined();
+    expect(typeof upsOpt.cost).toBe('number');
+    expect(upsOpt.cost).toBe(49.99);
+  });
+
+  it('includes estimatedDelivery string on UPS options', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '10001');
+    const upsOpt = result.options.find(o => o.carrier === 'UPS');
+    expect(upsOpt.estimatedDelivery).toBe('5-7 business days');
+  });
+
+  it('includes carrier="UPS" on parcel options', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '10001');
+    const upsOpt = result.options.find(o => o.code === 'ups-ground');
+    expect(upsOpt.carrier).toBe('UPS');
+  });
+
+  it('includes requiresLiftgate=false on UPS parcel options', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '10001');
+    const upsOpt = result.options.find(o => o.carrier === 'UPS');
+    expect(upsOpt.requiresLiftgate).toBe(false);
+  });
+});
+
+describe('LTL option response shape', () => {
+  it('includes cost as a number on LTL options', async () => {
+    shouldUseLTL.mockReturnValue(true);
+    const result = await getShippingEstimate('prod-heavy', '10001');
+    expect(result.success).toBe(true);
+    const ltlOpt = result.options.find(o => o.isLTL);
+    expect(typeof ltlOpt.cost).toBe('number');
+    expect(ltlOpt.cost).toBe(299);
+  });
+
+  it('includes carrier="WWEX" on LTL options', async () => {
+    shouldUseLTL.mockReturnValue(true);
+    const result = await getShippingEstimate('prod-heavy', '10001');
+    const ltlOpt = result.options.find(o => o.isLTL);
+    expect(ltlOpt.carrier).toBe('WWEX');
+  });
+
+  it('includes requiresLiftgate=true on LTL options (default)', async () => {
+    shouldUseLTL.mockReturnValue(true);
+    const result = await getShippingEstimate('prod-heavy', '10001');
+    const ltlOpt = result.options.find(o => o.isLTL);
+    expect(ltlOpt.requiresLiftgate).toBe(true);
+  });
+
+  it('includes estimatedDelivery string on LTL options', async () => {
+    shouldUseLTL.mockReturnValue(true);
+    const result = await getShippingEstimate('prod-heavy', '10001');
+    const ltlOpt = result.options.find(o => o.isLTL);
+    expect(ltlOpt.estimatedDelivery).toBe('5-7 business days');
+  });
+});
+
+describe('local delivery option response shape', () => {
+  it('includes carrier="Carolina Futons" on local delivery option', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    // NC zip → local zone
+    const result = await getShippingEstimate('prod-1', '28701');
+    const localOpt = result.options.find(o => o.code && o.code.startsWith('local-delivery-'));
+    expect(localOpt).toBeDefined();
+    expect(localOpt.carrier).toBe('Carolina Futons');
+  });
+
+  it('includes carrier="Carolina Futons" on white glove option', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '28701');
+    const wgOpt = result.options.find(o => o.code && o.code.startsWith('white-glove-'));
+    expect(wgOpt).toBeDefined();
+    expect(wgOpt.carrier).toBe('Carolina Futons');
+  });
+
+  it('includes requiresLiftgate=false on local options', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '28701');
+    const localOpts = result.options.filter(o => o.carrier === 'Carolina Futons');
+    expect(localOpts.length).toBeGreaterThan(0);
+    localOpts.forEach(o => expect(o.requiresLiftgate).toBe(false));
+  });
+});
+
+// ── ZIP edge cases ─────────────────────────────────────────────────────────────
+
+describe('getShippingEstimate — ZIP edge cases', () => {
+  it('rejects 4-digit ZIP', async () => {
+    const result = await getShippingEstimate('prod-1', '2870');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects 6-digit ZIP', async () => {
+    const result = await getShippingEstimate('prod-1', '287010');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects alpha ZIP', async () => {
+    const result = await getShippingEstimate('prod-1', 'ABCDE');
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts PR ZIP 00900 (5-digit numeric, no local zone)', async () => {
+    shouldUseLTL.mockReturnValue(false);
+    const result = await getShippingEstimate('prod-1', '00900');
+    expect(result.success).toBe(true);
+    // No local zone for PR
+    expect(result.options.some(o => o.carrier === 'Carolina Futons')).toBe(false);
   });
 });
