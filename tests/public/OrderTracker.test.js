@@ -29,7 +29,9 @@ function makeEl(overrides = {}) {
     text: '',
     value: '',
     link: '',
+    target: '',
     disabled: false,
+    accessibility: { ariaLabel: '', ariaCurrent: '' },
     show: vi.fn().mockResolvedValue(undefined),
     hide: vi.fn().mockResolvedValue(undefined),
     onClick: vi.fn(),
@@ -601,6 +603,59 @@ describe('initOrderTracker', () => {
     await clearResult();
     expect($w.__els['#orderNumberInput'].value).toBe('');
     expect($w.__els['#orderEmailInput'].value).toBe('');
+  });
+
+  // ── tracking link target ─────────────────────────────────────────────
+
+  it('sets orderTrackingLink.target to _blank', async () => {
+    lookupOrder.mockResolvedValue(BASE_ORDER);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderTrackingLink'].target).toBe('_blank');
+  });
+
+  // ── accessibility ─────────────────────────────────────────────────────
+
+  it('sets ariaLabel on orderNumberInput', async () => {
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    expect($w.__els['#orderNumberInput'].accessibility.ariaLabel).toBeTruthy();
+  });
+
+  it('sets ariaLabel on orderEmailInput', async () => {
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    expect($w.__els['#orderEmailInput'].accessibility.ariaLabel).toBeTruthy();
+  });
+
+  it('sets ariaLabel on orderStatusBadge with full status text on result', async () => {
+    lookupOrder.mockResolvedValue(BASE_ORDER);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderStatusBadge'].accessibility.ariaLabel).toContain('In Transit');
+  });
+
+  it('sets aria-current=step on active progress steps', async () => {
+    const delivered = { ...BASE_ORDER, order: { ...BASE_ORDER.order, fulfillmentStatus: 'DELIVERED', status: 'Delivered' } };
+    lookupOrder.mockResolvedValue(delivered);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderStep4'].accessibility.ariaCurrent).toBe('step');
+  });
+
+  it('clears aria-current on inactive progress steps', async () => {
+    lookupOrder.mockResolvedValue(BASE_ORDER); // IN_TRANSIT → steps 1-3 active
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderStep4'].accessibility.ariaCurrent).toBe('');
   });
 
   // ── null safety ──────────────────────────────────────────────────────

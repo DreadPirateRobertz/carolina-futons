@@ -120,6 +120,12 @@ export async function initOrderTracker($wFn) {
   safeGet($wFn, '#orderLookupSpinner')?.hide();
   safeGet($wFn, '#orderResultSection')?.hide();
 
+  // ── Accessibility labels ────────────────────────────────────────────
+  const numInput = safeGet($wFn, '#orderNumberInput');
+  if (numInput?.accessibility) numInput.accessibility.ariaLabel = 'Order number';
+  const emailInput = safeGet($wFn, '#orderEmailInput');
+  if (emailInput?.accessibility) emailInput.accessibility.ariaLabel = 'Email address used for this order';
+
   // ── Submit handler ─────────────────────────────────────────────────
   async function handleSubmit() {
     const orderNumber = (safeGet($wFn, '#orderNumberInput')?.value ?? '').trim();
@@ -189,6 +195,9 @@ function renderResult($wFn, data) {
   const statusText = safeGet($wFn, '#orderStatusText');
   if (statusText) statusText.text = order.status;
 
+  const statusBadge = safeGet($wFn, '#orderStatusBadge');
+  if (statusBadge?.accessibility) statusBadge.accessibility.ariaLabel = `Order status: ${order.status}`;
+
   // Carrier + tracking
   const carrierEl = safeGet($wFn, '#orderCarrierText');
   if (carrierEl) carrierEl.text = shipping.carrier || '';
@@ -203,6 +212,7 @@ function renderResult($wFn, data) {
       : null;
     if (carrierUrl) {
       trackLink.link = carrierUrl;
+      trackLink.target = '_blank';
       trackLink.show();
     } else {
       trackLink.hide();
@@ -233,7 +243,12 @@ function renderProgressBar($wFn, fulfillmentStatus) {
     const el = safeGet($wFn, `#orderStep${i}`);
     if (!el) continue;
     el.removeCssClass(CSS_STEP_ACTIVE);
-    if (i <= active) el.addCssClass(CSS_STEP_ACTIVE);
+    if (i <= active) {
+      el.addCssClass(CSS_STEP_ACTIVE);
+      if (el.accessibility) el.accessibility.ariaCurrent = 'step';
+    } else {
+      if (el.accessibility) el.accessibility.ariaCurrent = '';
+    }
   }
 }
 

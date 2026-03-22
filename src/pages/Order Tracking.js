@@ -2,6 +2,7 @@
 // Order lookup by order number + email, real-time UPS tracking with timeline,
 // delivery activity history, and notification opt-in/out
 import { lookupOrder, subscribeToNotifications, unsubscribeFromNotifications, getTrackingTimeline } from 'backend/orderTracking.web';
+import { initOrderTracker } from 'public/OrderTracker';
 import { trackEvent } from 'public/engagementTracker';
 import { announce } from 'public/a11yHelpers';
 import { colors, typography } from 'public/designTokens.js';
@@ -18,6 +19,10 @@ $w.onReady(async function () {
   initResultsSection();
   prefillFromQueryParams();
   trackEvent('page_view', { page: 'order_tracking' });
+
+  // CF-vp8k: Order Tracker widget wires the new element set
+  // (#orderLookupForm, #orderResultSection, etc.) alongside the legacy elements.
+  await initOrderTracker($w);
 });
 
 // ── Lookup Form ────────────────────────────────────────────────────

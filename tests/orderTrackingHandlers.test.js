@@ -82,6 +82,10 @@ vi.mock('wix-location-frontend', () => ({
   query: {},
 }));
 
+vi.mock('public/OrderTracker', () => ({
+  initOrderTracker: vi.fn(() => Promise.resolve({ clearResult: vi.fn() })),
+}));
+
 // ── Import Mock Refs ────────────────────────────────────────────────
 
 const { lookupOrder, subscribeToNotifications, unsubscribeFromNotifications, getTrackingTimeline } = await import('backend/orderTracking.web');
