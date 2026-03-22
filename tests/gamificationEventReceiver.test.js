@@ -21,7 +21,6 @@ import {
   __setQueryError,
   __setInsertError,
   __getInserted,
-  __getUpdated,
   __onUpdate,
 } from './__mocks__/wix-data.js';
 import { receiveGamificationEvent } from '../src/backend/gamificationEventReceiver.web.js';
@@ -30,18 +29,6 @@ beforeEach(() => {
   __reset();
   vi.clearAllMocks();
 });
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function memberRecord(memberId, totalPoints) {
-  const { getTierForPoints } = require('../src/public/gamificationTokens.js');
-  return {
-    _id: `mp-${memberId}`,
-    memberId,
-    totalPoints,
-    tier: getTierForPoints(totalPoints),
-  };
-}
 
 // ── Input validation ──────────────────────────────────────────────────────────
 
