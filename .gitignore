@@ -36,3 +36,26 @@ PRODUCT-PAGE-BUILD-SPEC.md
 
 # AI agent instruction files — not for public repo (overseer directive 2026-03-12)
 CLAUDE.md
+
+# Cross-repo links — never track these in the dev repo
+carolina-futons-stage3-velo/
+wix-velo-mcp/
+
+# Internal Gas Town / crew artifacts — not for public repo
+memory.md
+s0-recon-findings.md
+content-qa-report-*.md
+element-priority-audit.md
+
+# Stale site snapshots — point-in-time research, not source of truth
+cms-snapshot.md
+code-panel-snapshot.md
+current-state.md
+editor-snapshot.md
+live-homepage-snapshot.md
+media-manager-state.md
+meta-pixel-search.md
+blog-search-results.md
+staging-site-vision.md
+css-tricks-notes.md
+wix-browser-tricks.md
