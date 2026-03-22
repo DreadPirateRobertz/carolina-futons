@@ -69,6 +69,9 @@ vi.mock('backend/promotions.web', () => ({
   getActivePromotion: vi.fn().mockResolvedValue(null),
   getFlashSales: vi.fn().mockResolvedValue([]),
 }));
+vi.mock('backend/announcementBarService.web', () => ({
+  getActiveAnnouncementBars: vi.fn().mockResolvedValue([]),
+}));
 vi.mock('backend/contactSubmissions.web', () => ({
   submitContactForm: vi.fn().mockResolvedValue({}),
 }));
@@ -91,6 +94,7 @@ vi.mock('public/cartService', () => ({
 import { getCurrentCart, onCartChanged, getShippingProgress } from 'public/cartService';
 import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion } from 'backend/promotions.web';
+import { getActiveAnnouncementBars } from 'backend/announcementBarService.web';
 import { reportMetrics } from 'backend/coreWebVitals.web';
 import { isInstalledPWA, canShowInstallPrompt } from 'public/pwaHelpers';
 import { submitContactForm } from 'backend/contactSubmissions.web';
@@ -2446,6 +2450,79 @@ describe('masterPage.js', () => {
       await vi.advanceTimersByTimeAsync(50);
 
       expect(getEl('#exitIntentPopup').hide).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── CMS Announcement Bar integration ────────────────────────────────
+
+  describe('initAnnouncementBar — CMS integration', () => {
+    it('calls getActiveAnnouncementBars on page load', async () => {
+      await onReadyHandler();
+      await vi.waitFor(() => expect(getActiveAnnouncementBars).toHaveBeenCalled());
+    });
+
+    it('prepends CMS bar messages before static messages', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Spring Sale — 20% off all frames!', linkUrl: null, backgroundColor: null, textColor: null, priority: 10 },
+        { message: 'Free shipping this weekend', linkUrl: null, backgroundColor: null, textColor: null, priority: 5 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        const text = getEl('#announcementText').text;
+        expect(text).toBe('Spring Sale — 20% off all frames!');
+      });
+    });
+
+    it('applies backgroundColor from first CMS bar to announcementBar container', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Limited time offer!', linkUrl: null, backgroundColor: '#3A2518', textColor: '#FAF7F2', priority: 10 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBar').style.backgroundColor).toBe('#3A2518');
+        expect(getEl('#announcementText').style.color).toBe('#FAF7F2');
+      });
+    });
+
+    it('falls back to static messages when CMS returns empty array', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
+    });
+
+    it('continues with static messages when getActiveAnnouncementBars rejects', async () => {
+      getActiveAnnouncementBars.mockRejectedValueOnce(new Error('CMS unavailable'));
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+      });
+    });
+
+    it('does not set backgroundColor when CMS bar has null backgroundColor', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Visit us!', linkUrl: null, backgroundColor: null, textColor: '#3A2518', priority: 1 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementText').text).toBeTruthy();
+        // backgroundColor guard — element style should remain at default (empty string)
+        expect(getEl('#announcementBar').style.backgroundColor).toBe('');
+        // textColor should still be applied independently
+        expect(getEl('#announcementText').style.color).toBe('#3A2518');
+      });
+    });
+
+    it('does not set textColor when CMS bar has null textColor', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Visit us!', linkUrl: null, backgroundColor: '#E8D5B7', textColor: null, priority: 1 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBar').style.backgroundColor).toBe('#E8D5B7');
+        expect(getEl('#announcementText').style.color).toBe('');
+      });
     });
   });
 

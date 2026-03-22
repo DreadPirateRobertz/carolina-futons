@@ -3,6 +3,7 @@
 // mega menu, breadcrumbs, back-to-top, and side cart auto-open on add-to-cart
 import { getBusinessSchema, getWebSiteSchema } from 'backend/seoHelpers.web';
 import { getActivePromotion, getFlashSales } from 'backend/promotions.web';
+import { getActiveAnnouncementBars } from 'backend/announcementBarService.web';
 import { submitContactForm } from 'backend/contactSubmissions.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { getCurrentCart, onCartChanged, getShippingProgress, isFreeShippingEnabled } from 'public/cartService';
@@ -221,10 +222,11 @@ function initEnhancedNavigation() {
 }
 
 // ── Announcement Bar ────────────────────────────────────────────────
-// Rotating promotional messages at top of site
+// Three-source message rotation: flash sales → CMS AnnouncementBars → static fallbacks.
+// First CMS bar's colors are applied to the container; all bar messages rotate on a timer.
 
 async function initAnnouncementBar() {
-  const messages = [
+  const staticMessages = [
     // 'Free Shipping on Orders Over $999!', // Disabled: free shipping currently inactive
     'Visit Our Showroom: Wed–Sat 10–5 | 824 Locust St, Hendersonville NC | (828) 252-9449',
     'Over 700 Fabric Swatches Available In-Store',
@@ -232,16 +234,39 @@ async function initAnnouncementBar() {
     'Family Owned Since 1991 — Carolina Futons',
   ];
 
+  // Fetch CMS announcement bars (highest priority first)
+  let cmsBars = [];
+  try {
+    cmsBars = await getActiveAnnouncementBars();
+  } catch (e) {
+    console.warn('[masterPage] announcementBar CMS fetch failed:', e.message);
+    // Continue with static messages
+  }
+
   // Prepend active flash sale messages for urgency
+  const flashMessages = [];
   try {
     const flashSales = await getFlashSales();
     const { buildAnnouncementMessage } = await import('public/flashSaleHelpers');
     for (const deal of flashSales) {
       const msg = buildAnnouncementMessage(deal);
-      if (msg) messages.unshift(msg);
+      if (msg) flashMessages.push(msg);
     }
   } catch (_) {
-    // Flash sales fetch failed — continue with static messages
+    // Flash sales fetch failed — continue without
+  }
+
+  // Build final message list: flash sales → CMS bars → static fallbacks
+  const cmsMessages = cmsBars.map(b => b.message).filter(Boolean);
+  const messages = [...flashMessages, ...cmsMessages, ...staticMessages];
+
+  // Apply first CMS bar's styles to the announcement bar container
+  const [firstBar] = cmsBars;
+  if (firstBar) {
+    try {
+      if (firstBar.backgroundColor) $w('#announcementBar').style.backgroundColor = firstBar.backgroundColor;
+      if (firstBar.textColor) $w('#announcementText').style.color = firstBar.textColor;
+    } catch (e) { console.warn('[masterPage] announcementBar style apply failed:', e.message); }
   }
 
   try {
