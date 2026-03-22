@@ -65,6 +65,7 @@ export function syncStickyBarState($wFn, state) {
         btn.label = LABEL_OOS;
       } else {
         btn.enable();
+        btn.label = LABEL_DEFAULT;
       }
     }
   } catch (_) { /* element may not be on this page */ }
@@ -143,7 +144,7 @@ export async function handleStickyAtcClick($wFn, state, opts = {}) {
  * @param {Object} [opts]
  * @param {Function} [opts.addToCart]       - Injectable cart function for testing
  * @param {Function} [opts.onScroll]        - Injectable scroll event (replaces wixWindowFrontend)
- * @param {Function} [opts.getBoundingRect] - Injectable getBoundingRect (replaces DOM call)
+ * @param {Function} [opts.getBoundingRect] - Injectable zero-arg async factory → { top: number }; replaces direct DOM call for testability
  */
 export function initStickyAtcBar($wFn, state, opts = {}) {
   try {
@@ -170,7 +171,11 @@ export function initStickyAtcBar($wFn, state, opts = {}) {
           barVisible = false;
           hideStickyBar($wFn);
         }
-      } catch (_) {}
+      } catch (err) {
+        console.error('[StickyAtcBar] scroll handler error:', err?.message ?? err);
+      }
     });
-  } catch (_) {}
+  } catch (err) {
+    console.error('[StickyAtcBar] init error:', err?.message ?? err);
+  }
 }

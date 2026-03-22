@@ -99,6 +99,14 @@ describe('syncStickyBarState', () => {
     expect(els.btn.label).toMatch(/out of stock/i);
   });
 
+  it('resets button label to default when switching from out-of-stock to in-stock', () => {
+    const els = makeElements();
+    const $wFn = make$wFromElements(els);
+    syncStickyBarState($wFn, makeState({ isOutOfStock: true }));
+    syncStickyBarState($wFn, makeState({ isOutOfStock: false }));
+    expect(els.btn.label).toBe('Add to Cart');
+  });
+
   it('does not throw when product is null', () => {
     expect(() => syncStickyBarState(make$wFromElements(), makeState({ product: null }))).not.toThrow();
   });
@@ -143,6 +151,10 @@ describe('hideStickyBar', () => {
 describe('handleStickyAtcClick', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('calls addToCart with productId and selectedQuantity', async () => {
@@ -195,6 +207,12 @@ describe('handleStickyAtcClick', () => {
     expect(els.btn.label).toBe('Add to Cart');
   });
 
+  it('does nothing when addToCart is absent from opts', async () => {
+    const els = makeElements();
+    await handleStickyAtcClick(make$wFromElements(els), makeState(), {});
+    expect(els.btn.disable).not.toHaveBeenCalled();
+  });
+
   it('does nothing when product is null (no productId)', async () => {
     const addToCart = vi.fn(async () => {});
     const els = makeElements();
@@ -220,7 +238,6 @@ describe('initStickyAtcBar', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     els = makeElements();
-    // #addToCartButton needed for getBoundingRect
     const mainBtn = makeElement();
     $wFn = make$w({
       '#stickyAtcBar':         els.bar,
@@ -289,6 +306,14 @@ describe('initStickyAtcBar', () => {
     expect(els.bar.show).toHaveBeenCalledTimes(1);
   });
 
+  it('hides bar when ATC button top is exactly 0 (at viewport edge)', async () => {
+    const opts = makeOpts(100);
+    initStickyAtcBar($wFn, state, opts);
+    await fireScroll(opts, -5); // show
+    await fireScroll(opts, 0);  // top === 0 satisfies >= 0 → hide
+    expect(els.bar.hide).toHaveBeenCalledTimes(2);
+  });
+
   it('does not re-hide bar while already hidden', async () => {
     const opts = makeOpts(100);
     initStickyAtcBar($wFn, state, opts);
@@ -326,5 +351,9 @@ describe('initStickyAtcBar', () => {
 
   it('does not throw when state.product is null', () => {
     expect(() => initStickyAtcBar($wFn, makeState({ product: null }), makeOpts())).not.toThrow();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 });
