@@ -603,17 +603,20 @@ async function loadPopularChips() {
     let queryStrings = fallbackQueries;
     try {
       const trending = await getTrendingSearches();
-      if (trending?.terms?.length > 0) {
+      if (trending?.success && trending?.terms?.length > 0) {
         queryStrings = trending.terms;
       } else {
         const { queries = [] } = await getPopularSearches(8) || {};
         if (queries.length > 0) queryStrings = queries.map(q => q.query);
       }
     } catch (e) {
+      console.error('[Search Results] getTrendingSearches threw:', e);
       try {
         const { queries = [] } = await getPopularSearches(8) || {};
         if (queries.length > 0) queryStrings = queries.map(q => q.query);
-      } catch (e2) {}
+      } catch (e2) {
+        console.error('[Search Results] getPopularSearches fallback also failed:', e2);
+      }
     }
     const chips = buildSearchChips(queryStrings, 8);
 

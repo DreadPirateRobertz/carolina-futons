@@ -156,13 +156,10 @@ describe('Search Results page — trending searches wiring (CF-ts4n)', () => {
     await expect(triggerPageLoad()).resolves.not.toThrow();
   });
 
-  it('uses terms from success:false response if terms are populated', async () => {
-    const fallbackTerms = ['futon frames', 'platform beds'];
-    mockGetTrendingSearches.mockResolvedValue({ success: false, terms: fallbackTerms, error: 'DB error' });
+  it('falls back to getPopularSearches when getTrendingSearches returns success: false with terms', async () => {
+    mockGetTrendingSearches.mockResolvedValue({ success: false, terms: ['futon frames'], error: 'DB error' });
+    mockGetPopularSearches.mockResolvedValue({ queries: [{ query: 'platform beds' }] });
     await triggerPageLoad();
-    const chipCalls = mockBuildSearchChips.mock.calls;
-    expect(chipCalls.some(([terms]) =>
-      Array.isArray(terms) && terms[0] === 'futon frames'
-    )).toBe(true);
+    expect(mockGetPopularSearches).toHaveBeenCalled();
   });
 });

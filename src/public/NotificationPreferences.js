@@ -216,7 +216,6 @@ export async function initNotificationPreferences($w, memberId, options = {}) {
  * Calls logError on failure; does not throw.
  *
  * @param {Function} $w
- * @param {string} memberId
  */
 async function _loadAndPopulate($w) {
   try {

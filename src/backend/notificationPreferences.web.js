@@ -33,7 +33,6 @@ const DEFAULT_PREFS = {
  * Load notification preferences for a member.
  * Returns defaults if no record exists.
  *
- * @param {string} memberId
  * @returns {Promise<{success: boolean, prefs: Object, error?: string}>}
  *   prefs: { restock, orderUpdate, promo, cfPlus, sms }
  */
@@ -77,7 +76,6 @@ export const getNotificationPreferences = webMethod(
 /**
  * Save notification preferences for a member (upsert).
  *
- * @param {string} memberId
  * @param {Object} prefs - { restock, orderUpdate, promo, cfPlus, sms }
  * @returns {Promise<{success: boolean, error?: string}>}
  */
@@ -124,7 +122,6 @@ export const saveNotificationPreferences = webMethod(
 /**
  * Opt a member out of all notification types at once.
  *
- * @param {string} memberId
  * @returns {Promise<{success: boolean, error?: string}>}
  */
 export const unsubscribeAll = webMethod(
