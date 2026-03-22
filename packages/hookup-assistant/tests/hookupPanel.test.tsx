@@ -25,6 +25,7 @@ const {
   mockUseRepeaterGuard,
   mockUseConflictDetector,
   mockDetectConflict,
+  mockUseSessionTimer,
 } = vi.hoisted(() => ({
   mockUseElementDetection: vi.fn(),
   mockUsePageNavigator: vi.fn(),
@@ -33,6 +34,7 @@ const {
   mockUseRepeaterGuard: vi.fn(),
   mockUseConflictDetector: vi.fn(),
   mockDetectConflict: vi.fn(),
+  mockUseSessionTimer: vi.fn(),
 }));
 
 vi.mock('../src/hooks/useElementDetection.js', () => ({
@@ -57,6 +59,11 @@ vi.mock('../src/hooks/useKeyboardShortcuts.js', () => ({
 vi.mock('../src/hooks/useConflictDetector.js', () => ({
   useConflictDetector: mockUseConflictDetector,
   detectConflict: mockDetectConflict,
+}));
+vi.mock('../src/hooks/useSessionTimer.js', () => ({
+  useSessionTimer: mockUseSessionTimer,
+  formatElapsed: (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`,
+  loadHistory: () => [],
 }));
 
 import { HookupPanel } from '../src/components/HookupPanel.js';
@@ -95,6 +102,14 @@ function setupDefaults({
     clearConflict: vi.fn(),
   });
   mockDetectConflict.mockReturnValue({ type: 'none' });
+  mockUseSessionTimer.mockReturnValue({
+    started: false,
+    elapsed: 0,
+    applyCount: 0,
+    paused: false,
+    pace: 0,
+    recordApply: vi.fn(),
+  });
 }
 
 beforeEach(() => {
@@ -218,6 +233,40 @@ describe('HookupPanel — footer', () => {
     render(<HookupPanel />);
     // 0 hookedIds + 0 skippedIds = 0 addressed
     expect(screen.getByText(/0\s*\/\s*\d+\s*addressed/i)).toBeInTheDocument();
+  });
+});
+
+// ── Session timer display (S9) ────────────────────────────────────────────────
+
+describe('HookupPanel — session timer (S9)', () => {
+  it('shows no timer in footer when elapsed is 0', () => {
+    render(<HookupPanel />);
+    expect(screen.queryByText(/⏱|⏸/)).not.toBeInTheDocument();
+  });
+
+  it('shows elapsed time in footer when timer has started', () => {
+    mockUseSessionTimer.mockReturnValue({
+      started: true, elapsed: 90000, applyCount: 3, paused: false, pace: 0, recordApply: vi.fn(),
+    });
+    render(<HookupPanel />);
+    expect(screen.getByText(/⏱/)).toBeInTheDocument();
+    expect(screen.getByText(/1:30/)).toBeInTheDocument();
+  });
+
+  it('shows pause icon when paused', () => {
+    mockUseSessionTimer.mockReturnValue({
+      started: true, elapsed: 60000, applyCount: 1, paused: true, pace: 0, recordApply: vi.fn(),
+    });
+    render(<HookupPanel />);
+    expect(screen.getByText(/⏸/)).toBeInTheDocument();
+  });
+
+  it('shows pace when pace > 0', () => {
+    mockUseSessionTimer.mockReturnValue({
+      started: true, elapsed: 60000, applyCount: 5, paused: false, pace: 12.5, recordApply: vi.fn(),
+    });
+    render(<HookupPanel />);
+    expect(screen.getByText(/12\.5\/hr/)).toBeInTheDocument();
   });
 });
 
