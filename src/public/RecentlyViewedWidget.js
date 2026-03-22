@@ -36,11 +36,11 @@ function _readHistory() {
 }
 
 function _writeHistory(ids) {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(ids)); } catch { /* private browsing */ }
+  try { localStorage.setItem(LS_KEY, JSON.stringify(ids)); } catch (e) { console.error('[RecentlyViewedWidget]', e); }
 }
 
 function _clearHistory() {
-  try { localStorage.removeItem(LS_KEY); } catch { /* noop */ }
+  try { localStorage.removeItem(LS_KEY); } catch (e) { console.error('[RecentlyViewedWidget]', e); }
 }
 
 // ── trackView ─────────────────────────────────────────────────────────
@@ -109,15 +109,19 @@ export async function renderWidget($w, opts = {}) {
 
   // onItemReady MUST be registered before .data assignment
   $w('#recentlyViewedRepeater').onItemReady(($item, itemData) => {
-    try { $item('#recentItemImage').src = itemData.mainMedia || ''; } catch { /* noop */ }
-    try { $item('#recentItemImage').alt = itemData.name || ''; } catch { /* noop */ }
-    try { $item('#recentItemName').text = itemData.name || ''; } catch { /* noop */ }
-    try { $item('#recentItemPrice').text = itemData.formattedPrice || String(itemData.price ?? ''); } catch { /* noop */ }
+    try { $item('#recentItemImage').src = itemData.mainMedia || ''; } catch (e) { console.error('[RecentlyViewedWidget]', e); }
+    try { $item('#recentItemImage').alt = itemData.name || ''; } catch (e) { console.error('[RecentlyViewedWidget]', e); }
+    try { $item('#recentItemName').text = itemData.name || ''; } catch (e) { console.error('[RecentlyViewedWidget]', e); }
     try {
+      const price = itemData.formattedPrice || (Number.isFinite(itemData.price) ? String(itemData.price) : '');
+      $item('#recentItemPrice').text = price;
+    } catch (e) { console.error('[RecentlyViewedWidget]', e); }
+    try {
+      $item('#recentItemLink').accessibility.ariaLabel = `View ${itemData.name}`;
       $item('#recentItemLink').onClick(() => {
         if (itemData.slug) to(`/product-page/${itemData.slug}`);
       });
-    } catch { /* noop */ }
+    } catch (e) { console.error('[RecentlyViewedWidget]', e); }
   });
 
   $w('#recentlyViewedRepeater').data = data;

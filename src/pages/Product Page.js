@@ -72,7 +72,7 @@ async function initProductPage() {
     }
 
     trackProductView(state.product);
-    import('public/RecentlyViewedWidget.js').then(({ trackView }) => trackView(state.product._id)).catch(() => {});
+    import('public/RecentlyViewedWidget.js').then(({ trackView }) => trackView(state.product._id)).catch((e) => console.error('[RecentlyViewed]', e));
     cacheProduct(state.product);
 
     // Call-for-price products use a $1.00 Wix placeholder — hide price, disable purchase
