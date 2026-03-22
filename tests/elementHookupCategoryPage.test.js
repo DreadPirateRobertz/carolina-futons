@@ -673,7 +673,7 @@ describe('Category Page — recently viewed element hookup', () => {
   });
 
   it('shows section and sets title when items exist', async () => {
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getProductBadge: vi.fn(() => null),
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Vienna Frame', slug: 'vienna-frame', price: '$399', mainMedia: 'v.jpg' },
@@ -689,7 +689,7 @@ describe('Category Page — recently viewed element hookup', () => {
   });
 
   it('populates recently viewed repeater data', async () => {
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getProductBadge: vi.fn(() => null),
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Vienna Frame', slug: 'vienna-frame', price: '$399', mainMedia: 'v.jpg' },
@@ -706,7 +706,7 @@ describe('Category Page — recently viewed element hookup', () => {
   });
 
   it('sets recentName and recentPrice in repeater item', async () => {
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getProductBadge: vi.fn(() => null),
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Kodiak Frame', slug: 'kodiak-frame', price: '$599', mainMedia: 'k.jpg' },
@@ -726,7 +726,7 @@ describe('Category Page — recently viewed element hookup', () => {
   });
 
   it('registers makeClickable on recentImage', async () => {
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getProductBadge: vi.fn(() => null),
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Vienna Frame', slug: 'vienna-frame', price: '$399', mainMedia: 'v.jpg' },
@@ -744,7 +744,7 @@ describe('Category Page — recently viewed element hookup', () => {
   });
 
   it('registers makeClickable on recentName', async () => {
-    vi.doMock('public/galleryHelpers', () => ({
+    vi.doMock('public/galleryHelpers', () => ({  // vi-domock-legacy
       getProductBadge: vi.fn(() => null),
       getRecentlyViewed: vi.fn(() => [
         { _id: 'rv1', name: 'Vienna Frame', slug: 'vienna-frame', price: '$399', mainMedia: 'v.jpg' },
@@ -890,7 +890,7 @@ describe('Category Page — flash sale banner hookup', () => {
   });
 
   it('calls initFlashSaleBanner when deals exist', async () => {
-    vi.doMock('backend/promotions.web', () => ({
+    vi.doMock('backend/promotions.web', () => ({  // vi-domock-legacy
       getFlashSales: vi.fn(() => Promise.resolve([{ _id: 'd1', name: 'Summer Sale', endsAt: new Date() }])),
     }));
 

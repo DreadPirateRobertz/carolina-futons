@@ -609,7 +609,7 @@ describe('shipping progress (deep)', () => {
   });
 
   it('hides shipping bars when threshold is disabled (vi.doMock)', async () => {
-    vi.doMock('public/cartService', () => ({
+    vi.doMock('public/cartService', () => ({  // vi-domock-legacy
       getCurrentCart: vi.fn().mockResolvedValue(mockCart),
       addToCart: vi.fn(),
       updateCartItemQuantity: vi.fn(),

@@ -198,7 +198,7 @@ describe('markExitIntentDismissed — blocks future cursor-leave', () => {
 describe('submitExitCapture — email without @ is rejected', () => {
   beforeEach(() => {
     globalThis.sessionStorage.clear();
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
       captureExitIntentEmail: vi.fn().mockResolvedValue({ success: true }),
     }));
@@ -235,7 +235,7 @@ describe('submitExitCapture — email without @ is rejected', () => {
 
 describe('submitExitIntentEmail — success flow', () => {
   beforeEach(() => {
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
     }));
   });
@@ -251,7 +251,7 @@ describe('submitExitIntentEmail — success flow', () => {
 describe('submitExitCapture — discountCode from newsletter', () => {
   beforeEach(() => {
     globalThis.sessionStorage.clear();
-    vi.doMock('backend/newsletterService.web', () => ({
+    vi.doMock('backend/newsletterService.web', () => ({  // vi-domock-legacy
       subscribeToNewsletter: vi.fn().mockResolvedValue({ success: true, discountCode: 'WELCOME10' }),
       captureExitIntentEmail: vi.fn().mockResolvedValue({ success: true }),
     }));

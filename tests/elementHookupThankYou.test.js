@@ -274,7 +274,7 @@ describe('Thank You Page — testimonial elements', () => {
     await loadPage();
 
     // Mock the dynamic import
-    vi.doMock('backend/testimonialService.web', () => ({
+    vi.doMock('backend/testimonialService.web', () => ({  // vi-domock-legacy
       submitTestimonial: vi.fn(() => Promise.resolve({ success: true })),
     }));
 
@@ -296,7 +296,7 @@ describe('Thank You Page — testimonial elements', () => {
   it('shows error message and re-enables button on failed submission', async () => {
     await loadPage();
 
-    vi.doMock('backend/testimonialService.web', () => ({
+    vi.doMock('backend/testimonialService.web', () => ({  // vi-domock-legacy
       submitTestimonial: vi.fn(() => Promise.resolve({
         success: false,
         error: 'Submission failed. Please try again.',
@@ -319,7 +319,7 @@ describe('Thank You Page — testimonial elements', () => {
   it('disables submit button during submission', async () => {
     await loadPage();
 
-    vi.doMock('backend/testimonialService.web', () => ({
+    vi.doMock('backend/testimonialService.web', () => ({  // vi-domock-legacy
       submitTestimonial: vi.fn(() => Promise.resolve({ success: true })),
     }));
 
@@ -342,7 +342,7 @@ describe('Thank You Page — testimonial elements', () => {
   it('announces success via a11y helper', async () => {
     await loadPage();
 
-    vi.doMock('backend/testimonialService.web', () => ({
+    vi.doMock('backend/testimonialService.web', () => ({  // vi-domock-legacy
       submitTestimonial: vi.fn(() => Promise.resolve({ success: true })),
     }));
 

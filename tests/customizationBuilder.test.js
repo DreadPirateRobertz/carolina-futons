@@ -446,7 +446,7 @@ describe('CustomizationBuilder', () => {
     });
 
     it('renders saved config list via onItemReady', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
+      vi.doMock('wix-storage-frontend', () => ({  // vi-domock-legacy
         default: {
           local: {
             getItem: vi.fn(() => JSON.stringify([
@@ -475,7 +475,7 @@ describe('CustomizationBuilder', () => {
     });
 
     it('shows Untitled for config with no name', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
+      vi.doMock('wix-storage-frontend', () => ({  // vi-domock-legacy
         default: {
           local: {
             getItem: vi.fn(() => JSON.stringify([
@@ -496,7 +496,7 @@ describe('CustomizationBuilder', () => {
     });
 
     it('load button click applies saved config to state', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
+      vi.doMock('wix-storage-frontend', () => ({  // vi-domock-legacy
         default: {
           local: {
             getItem: vi.fn(() => JSON.stringify([
@@ -526,7 +526,7 @@ describe('CustomizationBuilder', () => {
     it('applySavedConfig announces loaded config name', async () => {
       const { announce } = await import('public/a11yHelpers.js');
 
-      vi.doMock('wix-storage-frontend', () => ({
+      vi.doMock('wix-storage-frontend', () => ({  // vi-domock-legacy
         default: {
           local: {
             getItem: vi.fn(() => JSON.stringify([
@@ -550,7 +550,7 @@ describe('CustomizationBuilder', () => {
     });
 
     it('filters local configs by productId', async () => {
-      vi.doMock('wix-storage-frontend', () => ({
+      vi.doMock('wix-storage-frontend', () => ({  // vi-domock-legacy
         default: {
           local: {
             getItem: vi.fn(() => JSON.stringify([
