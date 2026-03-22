@@ -8,8 +8,7 @@ const RATE_LIMIT_MS = 60_000; // one submit per minute per session
 
 // Module-level state (reset via destroy / _resetForTest)
 let _lastSubmitAt = 0;
-
-// ─── Public API ──────────────────────────────────────────────────────────────
+let _submitting = false; // prevents concurrent insert race on double-tap
 
 /**
  * Load the first page of approved Q&A items for a product.
@@ -17,11 +16,12 @@ let _lastSubmitAt = 0;
  * @returns {{ items: object[], hasMore: boolean, error: boolean }}
  */
 export async function loadQnA(productId) {
+  if (!productId) return { items: [], hasMore: false, error: false };
   try {
     const { items, hasMore } = await _queryQnA(productId, 0);
     return { items, hasMore, error: false };
   } catch (e) {
-    console.error('[ProductQnA] loadQnA failed:', e.message);
+    console.error('[ProductQnA] loadQnA failed:', e);
     return { items: [], hasMore: false, error: true };
   }
 }
@@ -52,7 +52,7 @@ export function renderQnA($w, items, hasMore) {
     });
     accordion.data = items;
   } catch (e) {
-    console.error('[ProductQnA] renderQnA repeater failed:', e.message);
+    console.error('[ProductQnA] renderQnA repeater failed:', e);
   }
 
   // Pagination control
@@ -69,7 +69,7 @@ export function renderQnA($w, items, hasMore) {
  * Append the next page of items to the accordion without re-rendering existing ones.
  * @param {Function} $w
  * @param {string} productId
- * @param {number} currentPage - 1-based page that was last loaded
+ * @param {number} currentPage - 1-based index of the last loaded page; must be >= 1
  * @returns {{ appended: number, hasMore: boolean }}
  */
 export async function loadMore($w, productId, currentPage) {
@@ -91,18 +91,23 @@ export async function loadMore($w, productId, currentPage) {
 
     return { appended: newItems.length, hasMore };
   } catch (e) {
-    console.error('[ProductQnA] loadMore failed:', e.message);
-    return { appended: 0, hasMore: false };
+    console.error('[ProductQnA] loadMore failed:', e);
+    // Keep the button visible so the user can retry — do not report hasMore:false on error.
+    try { $w('#qnaLoadMore').show(); } catch (_) {}
+    return { appended: 0, hasMore: true };
   }
 }
 
 /**
  * Submit a customer question (pending approval).
- * Applies a client-side rate limit (one per RATE_LIMIT_MS).
+ * Applies a client-side rate limit (one per RATE_LIMIT_MS) and a
+ * concurrent-call guard so double-tap cannot produce two CMS inserts.
  * @param {Function} $w
  * @param {string} productId
  */
 export async function submitQuestion($w, productId) {
+  if (!productId) return;
+
   const input = $w('#qnaQuestionInput');
   const submitBtn = $w('#qnaSubmitBtn');
   const thankYou = $w('#qnaThankYou');
@@ -110,13 +115,21 @@ export async function submitQuestion($w, productId) {
   const questionText = (input.value || '').trim();
   if (!questionText) return;
 
-  // Client-side rate limit
-  const now = Date.now();
-  if (now - _lastSubmitAt < RATE_LIMIT_MS) {
+  // Concurrent-call guard (e.g. double-tap before the first insert resolves)
+  if (_submitting) {
+    // Defensive re-enable: a previous call may have left the button disabled.
     try { submitBtn.enable(); } catch (e) {}
     return;
   }
 
+  // Client-side rate limit
+  if (Date.now() - _lastSubmitAt < RATE_LIMIT_MS) {
+    // Defensive re-enable: same as above.
+    try { submitBtn.enable(); } catch (e) {}
+    return;
+  }
+
+  _submitting = true;
   try { submitBtn.disable(); } catch (e) {}
 
   try {
@@ -132,10 +145,11 @@ export async function submitQuestion($w, productId) {
     input.value = '';
     try { thankYou.show(); } catch (e) {}
   } catch (e) {
-    console.error('[ProductQnA] submitQuestion failed:', e.message);
+    console.error('[ProductQnA] submitQuestion failed:', e);
+  } finally {
+    _submitting = false;
+    try { submitBtn.enable(); } catch (e) {}
   }
-
-  try { submitBtn.enable(); } catch (e) {}
 }
 
 /**
@@ -143,6 +157,7 @@ export async function submitQuestion($w, productId) {
  */
 export function destroy() {
   _lastSubmitAt = 0;
+  _submitting = false;
 }
 
 // ─── Test-only reset ─────────────────────────────────────────────────────────
@@ -176,7 +191,7 @@ async function _queryQnA(productId, skip) {
 }
 
 function _renderItem($item, itemData) {
-  const answerId = `qna-answer-${itemData._id}`;
+  const answerId = `qna-answer-${itemData._id || 'unknown'}`;
   let isExpanded = false;
 
   // Question text + ARIA
@@ -187,20 +202,24 @@ function _renderItem($item, itemData) {
     qEl.accessibility.ariaControls = answerId;
     qEl.accessibility.ariaLabel = `Question: ${itemData.question || ''}`;
 
-    // Accordion toggle
+    // Accordion toggle — flip ariaExpanded only after the DOM call succeeds
     qEl.onClick(() => {
-      isExpanded = !isExpanded;
-      qEl.accessibility.ariaExpanded = isExpanded;
+      const next = !isExpanded;
       try {
-        if (isExpanded) {
+        if (next) {
           $item('#qnaAnswer').expand();
         } else {
           $item('#qnaAnswer').collapse();
         }
-      } catch (e) {}
+        isExpanded = next;
+        qEl.accessibility.ariaExpanded = isExpanded;
+      } catch (e) {
+        // DOM call failed — do not update ARIA state to avoid mismatch
+        console.error('[ProductQnA] accordion toggle failed:', e);
+      }
     });
   } catch (e) {
-    console.error('[ProductQnA] _renderItem question failed:', e.message);
+    console.error('[ProductQnA] _renderItem question failed:', e);
   }
 
   // Answer text + collapsed by default
@@ -211,6 +230,6 @@ function _renderItem($item, itemData) {
     aEl.accessibility.role = 'region';
     aEl.collapse();
   } catch (e) {
-    console.error('[ProductQnA] _renderItem answer failed:', e.message);
+    console.error('[ProductQnA] _renderItem answer failed:', e);
   }
 }

@@ -127,6 +127,12 @@ describe('loadQnA', () => {
     expect(dates[0]).toBeGreaterThanOrEqual(dates[1]);
   });
 
+  it('returns empty result when productId is undefined', async () => {
+    const result = await loadQnA(undefined);
+    expect(result.items).toHaveLength(0);
+    expect(result.error).toBe(false);
+  });
+
   it('returns error=true on wixData failure', async () => {
     __setQueryError('ProductQnA', new Error('DB unavailable'));
     const result = await loadQnA('p1');
@@ -291,14 +297,17 @@ describe('loadMore', () => {
     expect($w._els.qnaLoadMore.show).toHaveBeenCalled();
   });
 
-  it('handles wixData error on loadMore without throwing', async () => {
+  it('on error returns { appended: 0, hasMore: true } and keeps load-more visible', async () => {
     __setQueryError('ProductQnA', new Error('timeout'));
     const $w = makeW();
     $w._els.qnaAccordion.data = APPROVED_ITEMS.slice();
 
-    await expect(loadMore($w, 'p1', 1)).resolves.not.toThrow();
+    const result = await loadMore($w, 'p1', 1);
+    expect(result).toEqual({ appended: 0, hasMore: true });
     // Existing data unchanged
     expect($w._els.qnaAccordion.data).toHaveLength(5);
+    // Button stays visible so user can retry
+    expect($w._els.qnaLoadMore.show).toHaveBeenCalled();
   });
 });
 
@@ -374,6 +383,31 @@ describe('submitQuestion', () => {
     expect(insertSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('does not insert when productId is undefined', async () => {
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'What colors?';
+    await submitQuestion($w, undefined);
+    expect(__getInserted('ProductQnA')).toHaveLength(0);
+  });
+
+  it('does not insert when productId is null', async () => {
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'What colors?';
+    await submitQuestion($w, null);
+    expect(__getInserted('ProductQnA')).toHaveLength(0);
+  });
+
+  it('concurrent calls do not produce duplicate inserts', async () => {
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'Concurrent question?';
+    // Fire two concurrent calls before either resolves
+    await Promise.all([
+      submitQuestion($w, 'p1'),
+      submitQuestion($w, 'p1'),
+    ]);
+    expect(__getInserted('ProductQnA')).toHaveLength(1);
+  });
+
   it('re-enables submit after rate-limit rejection', async () => {
     const $w = makeW();
     $w._els.qnaQuestionInput.value = 'First?';
@@ -389,6 +423,20 @@ describe('submitQuestion', () => {
 // ─── destroy ─────────────────────────────────────────────────────────────────
 
 describe('destroy', () => {
+  it('clears _submitting flag so next call proceeds', async () => {
+    // Simulate a stuck _submitting state by having the first call fail mid-way
+    __setInsertError('ProductQnA', new Error('network'));
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'Question?';
+    await submitQuestion($w, 'p1'); // fails but finally block clears _submitting
+
+    // After failure, a new question should go through
+    wixDataReset();
+    $w._els.qnaQuestionInput.value = 'Follow-up?';
+    await submitQuestion($w, 'p1');
+    expect(__getInserted('ProductQnA').some(i => i.question === 'Follow-up?')).toBe(true);
+  });
+
   it('resets module state (rate limit timer clears)', async () => {
     const $w = makeW();
     $w._els.qnaQuestionInput.value = 'First?';
