@@ -236,7 +236,9 @@ export const business = {
 /**
  * Domestic shipping rate configuration.
  *
- * Zones are determined by the first 3 digits of the destination ZIP code.
+ * Zone determination: local uses ZIP prefix (first 3 digits); regional uses
+ * state code (see zones.regional.states). ZIP prefixes are retained for the
+ * dynamic pricing system only — not for shipping eligibility.
  * "WNC" = Western North Carolina (local delivery area).
  * White-glove service includes in-home delivery and assembly.
  *

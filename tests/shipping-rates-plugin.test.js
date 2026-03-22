@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { __setSecrets } from './__mocks__/wix-secrets-backend.js';
 import { __setHandler } from './__mocks__/wix-fetch.js';
 import { getShippingRates } from '../src/backend/shipping-rates-plugin.js';
+
+vi.mock('backend/utils/errorHandler', () => ({
+  logError: vi.fn(),
+}));
 
 beforeEach(() => {
   __setSecrets({
@@ -136,6 +140,68 @@ describe('getShippingRates', () => {
     // 294 is in zone2 prefixes, SC is in zone2 states
     const codes = result.shippingRates.map(r => r.code);
     expect(codes).toContain('local-delivery-zone2');
+  });
+
+  it('adds local delivery for VA (new state in this PR)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '22201', city: 'Arlington', subdivision: 'VA', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    // 22201 → zip3=222 in zone4 (VA in zone4.states) → local-delivery-zone4
+    expect(codes).toContain('local-delivery-zone4');
+    expect(codes).toContain('white-glove-zone4');
+  });
+
+  it('does NOT add local delivery for FL (excluded — was falsely included by old zip-range check)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '33101', city: 'Miami', subdivision: 'FL', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('does NOT add local delivery for AL (excluded — was falsely included by old zip-range check)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '35004', city: 'Moody', subdivision: 'AL', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('does NOT add local delivery for MS (excluded — was falsely included by old zip-range check)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '39530', city: 'Biloxi', subdivision: 'MS', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes).not.toContain('local-delivery');
+    expect(codes).not.toContain('white-glove');
+  });
+
+  it('handles Wix US-XX subdivision format for regional states', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '29201', city: 'Columbia', subdivision: 'US-SC', country: 'US' },
+      },
+    });
+    const codes = result.shippingRates.map(r => r.code);
+    // 29201 → zip3=292 in zone3 (SC in zone3.states), US-SC strips to SC
+    expect(codes).toContain('local-delivery-zone3');
+    expect(codes).toContain('white-glove-zone3');
   });
 
   it('does NOT add local pickup for non-local zip codes', async () => {

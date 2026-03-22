@@ -28,6 +28,7 @@
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
+import { logError } from 'backend/utils/errorHandler';
 
 const { freeThreshold: FREE_SHIPPING_THRESHOLD, whiteGlove, localZones, zones } = shippingConfig;
 const { freeThreshold: WHITE_GLOVE_FREE_THRESHOLD, terrainSurcharge } = whiteGlove;
@@ -184,7 +185,11 @@ export const getShippingRates = async (options) => {
 
     // ── Local delivery zone matching ──────────────────────────────────────
     const zip3 = parseInt((destination.postalCode || '').substring(0, 3), 10);
-    const stateCode = destination.state;
+    // Wix subdivisions may be 'NC' or 'US-NC' — normalise to 2-letter code
+    const stateCode = (destination.state || '').replace(/^US-/, '');
+    if (!stateCode && destination.postalCode) {
+      logError('shipping-rates-plugin', new Error(`No state code for ZIP ${destination.postalCode} — local delivery options suppressed`), { silent: true });
+    }
 
     // In-store pickup — local (WNC) zone only
     if (zip3 >= zones.local.prefixMin && zip3 <= zones.local.prefixMax) {
@@ -279,9 +284,14 @@ export const getShippingRates = async (options) => {
     return { shippingRates };
 
   } catch (err) {
-    console.error('Shipping rates plugin error:', err);
+    logError('shipping-rates-plugin.getShippingRates', err);
 
-    // Return estimated flat rates as fallback
+    // Return conservative flat rates as fallback when UPS API is unavailable.
+    // Rates are deliberately set above typical ground rates (CF avg: ~$38 ground,
+    // ~$72 express) so the store does not under-collect. Titles include "(Estimated)"
+    // to signal to the customer that these are not live-calculated rates.
+    // Alternative: return { shippingRates: [] } to block checkout on UPS failure —
+    // rejected because it prevents customers from completing orders during outages.
     return {
       shippingRates: [
         {
