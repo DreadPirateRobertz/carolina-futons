@@ -161,11 +161,15 @@ async function initProductPage() {
           m.injectSchema($w, productId);
 
           let currentPage = page;
-          $w('#qnaLoadMore').onClick(async () => {
-            const result = await m.loadMore($w, productId, currentPage);
-            if (result.appended > 0) currentPage++;
-          });
-          $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, productId));
+          try {
+            $w('#qnaLoadMore').onClick(async () => {
+              const result = await m.loadMore($w, productId, currentPage);
+              if (result.appended > 0) currentPage++;
+            });
+          } catch (e) { console.error('[ProductQnA] qnaLoadMore wiring failed:', e); }
+          try {
+            $w('#qnaSubmitBtn').onClick(() => m.submitQuestion($w, productId));
+          } catch (e) { console.error('[ProductQnA] qnaSubmitBtn wiring failed:', e); }
         },
       },
       { name: 'feelAndComfort', init: async () => { const m = await import('public/FeelAndComfort.js'); m.initFeelAndComfort($w, state); }, critical: false },

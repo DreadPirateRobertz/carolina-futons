@@ -4,6 +4,7 @@
 import { getProductQuestions, submitQuestion as submitQuestionBackend, voteHelpful, flagQuestion, getQASchema } from 'backend/productQA.web';
 
 const PAGE_SIZE = 5;
+const EMPTY_RESULT = { items: [], hasMore: false, totalCount: 0, pageSize: PAGE_SIZE, page: 1, error: false };
 
 // Module-level state (reset via destroy / _resetForTest)
 let _submitting = false; // prevents concurrent insert race on double-tap
@@ -16,15 +17,15 @@ let _submitting = false; // prevents concurrent insert race on double-tap
  * @returns {{ items: object[], hasMore: boolean, totalCount: number, pageSize: number, page: number, error: boolean }}
  */
 export async function loadQnA(productId) {
-  if (!productId) return { items: [], hasMore: false, totalCount: 0, pageSize: PAGE_SIZE, page: 1, error: false };
+  if (!productId) return EMPTY_RESULT;
   try {
     const result = await getProductQuestions(productId, { page: 1, pageSize: PAGE_SIZE });
-    if (!result.success) return { items: [], hasMore: false, totalCount: 0, pageSize: PAGE_SIZE, page: 1, error: true };
+    if (!result.success) return { ...EMPTY_RESULT, error: true };
     const { questions, totalCount, pageSize, page } = result.data;
     return { items: questions, hasMore: questions.length < totalCount, totalCount, pageSize, page, error: false };
   } catch (e) {
     console.error('[ProductQnA] loadQnA failed:', e);
-    return { items: [], hasMore: false, totalCount: 0, pageSize: PAGE_SIZE, page: 1, error: true };
+    return { ...EMPTY_RESULT, error: true };
   }
 }
 
@@ -54,9 +55,7 @@ export function renderQnA($w, items, { hasMore = false, totalCount = 0 } = {}) {
   // Accordion repeater — onItemReady MUST precede .data assignment
   try {
     const accordion = $w('#qnaAccordion');
-    accordion.onItemReady(($item, itemData) => {
-      _renderItem($item, itemData);
-    });
+    accordion.onItemReady(_renderItem);
     accordion.data = items;
   } catch (e) {
     console.error('[ProductQnA] renderQnA repeater failed:', e);
