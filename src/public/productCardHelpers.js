@@ -119,14 +119,15 @@ const LIFESTYLE_KEYWORDS = ['lifestyle', 'room', 'scene'];
 /**
  * Select the best image for a product card — lifestyle room shot preferred over
  * white-background product shots. Checks mediaItems title/alt/url for lifestyle
- * keywords; falls back to mainMedia when no match.
+ * keywords; falls back to mainMedia when no match or when matched item has no url/src.
  *
  * Keywords aligned with batchAltText.web.js + imageAltText.web.js convention.
  * No index-based fallback — mediaItems[1] is not guaranteed to be a lifestyle
  * shot (could be a back view, dimension diagram, or detail photo).
  *
  * @param {Object} product - Wix product with mainMedia and optional mediaItems array
- * @returns {string} Image URL — keyword-matched lifestyle shot if found, else mainMedia
+ * @returns {string} Image URL — keyword-matched lifestyle shot (url or src) if found
+ *   and non-empty; else mainMedia; empty string if neither is available
  */
 export function getLifestyleImage(product) {
   const mediaItems = product?.mediaItems;
@@ -136,7 +137,11 @@ export function getLifestyleImage(product) {
       const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
       return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
     });
-    if (keywordMatch) return keywordMatch.url || keywordMatch.src || fallback;
+    if (keywordMatch) {
+      const url = keywordMatch.url || keywordMatch.src || '';
+      if (!url) console.warn('[getLifestyleImage] keyword match has no url/src:', keywordMatch.title || keywordMatch.alt);
+      return url || fallback;
+    }
   }
   return fallback;
 }
