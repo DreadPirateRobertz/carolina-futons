@@ -2129,18 +2129,26 @@ All major pages now have both backend and frontend code. The following are in de
 
 > **Tier routing:** total weight < 150 lbs AND no pallet flag → UPS parcel. Over 150 lbs OR `requiresPallet` → WWEX SpeedFreight 2.0 LTL.
 
-### Shipping Estimate Widget (Product Page — `shippingIntelligence.web.js`)
+### Shipping Intelligence Layer (Product Page — `ShippingIntelligence.js`) ✅ MERGED PR #674
 
-`shippingEstimateSection` (Section/Box), `shippingZipInput` (Input), `shippingCalculateBtn` (Button), `shippingOptionsSection` (Box), `shippingOptionsRepeater` (Repeater), `shippingLoadingText` (Text), `shippingErrorText` (Text), `shippingFreightNote` (Text)
+*Source: `src/public/ShippingIntelligence.js` + `src/backend/shippingIntelligence.web.js`*
 
-**↳ Inside `shippingOptionsRepeater`:** `shippingOptionTitle` (Text), `shippingOptionCost` (Text), `shippingOptionDelivery` (Text), `shippingCarrierLabel` (Text)
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `shippingEstimateBox` | Box | Container — **hidden by default**, shown after successful API call |
+| `deliveryEstimateText` | Text | Delivery window, e.g. "Wed Apr 2" or "3–5 business days" |
+| `deliveryZoneText` | Text | Option title, e.g. "🚚 Zone 1 Delivery (Free)" or "UPS Ground" |
+| `shippingRateBadge` | Text | Badge copy, e.g. "Free Delivery" — hidden when no badge |
+| `shippingEstimateSpinner` | Box | Loading indicator — shown during API call |
+| `shippingEstimateError` | Text | Error message — **hidden by default** |
+| `whiteGloveUpsellBanner` | Box | Upgrade CTA — **hidden by default**, shown for local delivery options |
+| `whiteGloveUpsellText` | Text | Upsell copy from `upsellMessage`, e.g. "Upgrade to White Glove (+$99)" |
+| `whiteGloveLearnMoreBtn` | Button | Opens white glove modal via accessible dialog |
+| `whiteGloveModal` | Box | Modal overlay — **hidden by default**, managed by `setupAccessibleDialog` |
+| `whiteGloveModalClose` | Button | Close X inside modal — wired by `setupAccessibleDialog` |
+| `whiteGloveModalContent` | Text | In-home setup description copy |
 
-**Behavior:**
-- Zip input accepts 5-digit US zip. PR/GU/APO handled gracefully.
-- On "Calculate Shipping" click → calls `getShippingEstimate(productId, zip)` → shows all available service tiers with cost + estimated delivery.
-- If `requiresFreight: true` → shows `shippingFreightNote`: "This item ships freight. A carrier will contact you to schedule delivery."
-- `shippingLoadingText` shown during API call; `shippingErrorText` shown on failure with fallback copy.
-- Attribution line: "Ships from Hendersonville, NC"
+**Behavior:** On product page load, calls `getShippingEstimate(productId, postalCode)` using stored ZIP (session storage or prompt if missing). Shows spinner → replaces with estimate + zone text. If local zone returned, shows white glove upsell banner. Modal is accessible (focus trap, ESC close, ARIA dialog role).
 
 ### Bundle Builder Shipping (Bundle Builder Page)
 
@@ -2232,5 +2240,5 @@ All major pages now have both backend and frontend code. The following are in de
 | Local SEO | ✅ Frontend + backend complete | S2 (schema + FAQ) in progress |
 | Bundle Builder | 🔲 Backend exists, frontend pending | `/bundle` — Sprint 5 |
 | Customer Room Gallery | 🔲 Not started | `/rooms` — Sprint 5 |
-| Shipping Intelligence Widget | 🔲 Backend spec written | Product page additions — Sprint 5 |
+| Shipping Intelligence Widget | ✅ Frontend + backend complete | Product page — PR #674 merged 2026-03-22 |
 | Charcoal | `#2C2C2C` | Body text |
