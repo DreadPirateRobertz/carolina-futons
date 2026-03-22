@@ -113,7 +113,8 @@ export function buildJsonLdScript(schema) {
   try {
     const json = JSON.stringify(schema);
     return `<script type="application/ld+json">${json}</script>`;
-  } catch {
+  } catch (err) {
+    console.error('[localSeoHelpers] buildJsonLdScript: JSON.stringify failed:', err.message, schema?.['@type']);
     return '';
   }
 }

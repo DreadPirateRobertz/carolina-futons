@@ -49,7 +49,11 @@ export function generateLocalBusinessSchema(city, products = []) {
 
   // Per-city geo for local search proximity signal. Falls back to store coords
   // (Hendersonville) when city is null, slug is missing, or slug is not in CITY_GEO.
-  const cityGeo = (hasCity && city.slug && CITY_GEO[city.slug]) || STORE_GEO;
+  const cityGeoEntry = hasCity && city.slug ? CITY_GEO[city.slug] : null;
+  if (hasCity && city.slug && !cityGeoEntry) {
+    console.warn('[localSeo] generateLocalBusinessSchema: no CITY_GEO entry for slug:', city.slug, '— falling back to STORE_GEO');
+  }
+  const cityGeo = cityGeoEntry || STORE_GEO;
 
   const schema = {
     '@context': 'https://schema.org',

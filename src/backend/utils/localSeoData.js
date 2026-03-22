@@ -26,7 +26,7 @@ export const STORE_HOURS = ['Mo-Fr 10:00-18:00', 'Sa 10:00-17:00'];
  * Falls back to STORE_GEO for any slug not listed here.
  */
 export const CITY_GEO = {
-  'hendersonville-nc': { latitude: 35.3162, longitude: -82.4609 },
+  'hendersonville-nc': STORE_GEO, // home city — same as store coordinates
   'asheville-nc':      { latitude: 35.5951, longitude: -82.5515 },
   'charlotte-nc':      { latitude: 35.2271, longitude: -80.8431 },
   'greenville-sc':     { latitude: 34.8526, longitude: -82.3940 },
