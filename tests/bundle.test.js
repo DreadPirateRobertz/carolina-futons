@@ -258,6 +258,11 @@ describe('initBundle — product repeater item rendering', () => {
     const $item = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
     expect($item('#bundleSelectBtn').onClick).toHaveBeenCalled();
   });
+
+  it('sets ariaPressed to "false" on bundleSelectBtn initially', () => {
+    const $item = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
+    expect($item('#bundleSelectBtn').accessibility.ariaPressed).toBe('false');
+  });
 });
 
 // ── selection state ───────────────────────────────────────────────────
@@ -289,6 +294,19 @@ describe('initBundle — selection', () => {
     const $item = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
     await getClickHandler($item('#bundleSelectBtn'))();
     expect($item('#bundleSelectedBadge').show).toHaveBeenCalled();
+  });
+
+  it('sets ariaPressed to "true" when item is selected', async () => {
+    const $item = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
+    await getClickHandler($item('#bundleSelectBtn'))();
+    expect($item('#bundleSelectBtn').accessibility.ariaPressed).toBe('true');
+  });
+
+  it('sets ariaPressed back to "false" when item is deselected', async () => {
+    const $item = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
+    await getClickHandler($item('#bundleSelectBtn'))(); // select
+    await getClickHandler($item('#bundleSelectBtn'))(); // deselect
+    expect($item('#bundleSelectBtn').accessibility.ariaPressed).toBe('false');
   });
 
   it('hides bundleSelectedBadge when item is deselected', async () => {
@@ -447,6 +465,33 @@ describe('initBundle — pricing', () => {
     const $item1 = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
     await getClickHandler($item1('#bundleSelectBtn'))();
     expect(calculateBundlePrice).not.toHaveBeenCalled();
+  });
+
+  it('falls back to sum of individual prices when bundlePrice is NaN', async () => {
+    const { $w } = standardSetup();
+    mockProducts();
+    calculateBundlePrice.mockResolvedValue({ success: true, bundlePrice: NaN, savings: NaN, discountPercent: 10 });
+    await initBundle($w);
+    const $item1 = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
+    const $item2 = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[1]);
+    await getClickHandler($item1('#bundleSelectBtn'))();
+    await getClickHandler($item2('#bundleSelectBtn'))();
+    // Should show $498.00 (299 + 199), not "$NaN"
+    expect($w('#bundleTotalPrice').text).toMatch(/\$\d+\.\d{2}/);
+    expect($w('#bundleTotalPrice').text).not.toContain('NaN');
+  });
+
+  it('falls back to sum of individual prices when bundlePrice is Infinity', async () => {
+    const { $w } = standardSetup();
+    mockProducts();
+    calculateBundlePrice.mockResolvedValue({ success: true, bundlePrice: Infinity, discountPercent: 0 });
+    await initBundle($w);
+    const $item1 = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[0]);
+    const $item2 = callItemReady($w('#bundleProductRepeater'), MOCK_PRODUCTS[1]);
+    await getClickHandler($item1('#bundleSelectBtn'))();
+    await getClickHandler($item2('#bundleSelectBtn'))();
+    expect($w('#bundleTotalPrice').text).not.toContain('Infinity');
+    expect($w('#bundleTotalPrice').text).toMatch(/\$\d+\.\d{2}/);
   });
 
   it('hides discount badge when calculateBundlePrice returns no discount', async () => {

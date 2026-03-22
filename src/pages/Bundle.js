@@ -154,12 +154,19 @@ export async function initBundle($w) {
           try { $item('#bundleSelectedBadge').hide(); } catch (e) {
             console.error('[Bundle] bundleSelectedBadge hide failed:', e?.message);
           }
+          // Initial aria-pressed state (false — not selected on load).
+          try { $item('#bundleSelectBtn').accessibility.ariaPressed = 'false'; } catch (e) {
+            console.error('[Bundle] bundleSelectBtn ariaPressed init failed:', e?.message);
+          }
           try {
             $item('#bundleSelectBtn').onClick(async () => {
               if (selected.has(itemData._id)) {
                 selected.delete(itemData._id);
                 try { $item('#bundleSelectedBadge').hide(); } catch (e) {
                   console.error('[Bundle] bundleSelectedBadge hide on deselect failed:', e?.message);
+                }
+                try { $item('#bundleSelectBtn').accessibility.ariaPressed = 'false'; } catch (e) {
+                  console.error('[Bundle] bundleSelectBtn ariaPressed deselect failed:', e?.message);
                 }
                 announce($w, `${itemData.name || 'Item'} removed`);
               } else {
@@ -170,6 +177,9 @@ export async function initBundle($w) {
                 selected.add(itemData._id);
                 try { $item('#bundleSelectedBadge').show(); } catch (e) {
                   console.error('[Bundle] bundleSelectedBadge show failed:', e?.message);
+                }
+                try { $item('#bundleSelectBtn').accessibility.ariaPressed = 'true'; } catch (e) {
+                  console.error('[Bundle] bundleSelectBtn ariaPressed select failed:', e?.message);
                 }
                 announce($w, `${itemData.name || 'Item'} added to bundle`);
               }
@@ -306,8 +316,10 @@ async function _refreshPricing($w, selectedIds, selectedProducts) {
       }
     }
 
-    const total = pricing?.bundlePrice != null
-      ? pricing.bundlePrice
+    // Guard against NaN/non-finite from backend — fall back to sum of individual prices.
+    const rawTotal = pricing?.bundlePrice;
+    const total = Number.isFinite(rawTotal)
+      ? rawTotal
       : selectedProducts.reduce((sum, p) => sum + (p.price || 0), 0);
 
     try {
