@@ -27,6 +27,7 @@
 
 import { getUPSRates, getPackageDimensions } from 'backend/ups-shipping.web';
 import { getInternationalShippingRates } from 'backend/internationalShipping.web';
+import { shouldUseLTL, getLTLRates, getLTLFallbackRates, requiresLiftgate } from 'backend/wwex-freight.web';
 import { business, shippingConfig, internationalShippingConfig } from 'public/sharedTokens.js';
 import { logError } from 'backend/utils/errorHandler';
 import { matchLocalZone, getTerrainSurcharge } from 'backend/utils/shippingZones';
@@ -81,6 +82,9 @@ export const getShippingRates = async (options) => {
       // getPackageDimensions is a webMethod (async) - must await
       const dims = await getPackageDimensions(category);
 
+      // Murphy beds and platform beds always require freight regardless of weight
+      const requiresFreight = category === 'murphy-bed' || category === 'platform-bed';
+
       // One package per unit for furniture items
       for (let i = 0; i < quantity; i++) {
         packages.push({
@@ -88,6 +92,8 @@ export const getShippingRates = async (options) => {
           width: dims.width,
           height: dims.height,
           weight: item.physicalProperties?.weight || dims.weight,
+          category,
+          requiresFreight,
           description: item.name || 'Furniture',
         });
       }
@@ -133,22 +139,51 @@ export const getShippingRates = async (options) => {
       };
     }
 
-    // Get live UPS rates
-    const rates = await getUPSRates(destination, packages, orderSubtotal);
+    // ── Carrier routing: LTL freight takes priority over UPS parcel ──────────
+    // Murphy beds, platform beds, and multi-item heavy orders exceed UPS parcel
+    // limits and must ship via WWEX LTL freight.
+    // Note: local delivery options are still appended below for local-zone ZIPs —
+    // customers near Hendersonville see both freight rates AND local delivery.
+    const needsFreight = packages.some(p => p.requiresFreight || p.requiresPallet) || shouldUseLTL(packages);
+    let shippingRates;
 
-    // Transform to Wix shipping rates format
-    const shippingRates = rates.map(rate => ({
-      code: rate.code,
-      title: rate.title,
-      logistics: {
-        deliveryTime: rate.estimatedDelivery || '',
-      },
-      cost: {
-        price: String(rate.cost.toFixed(2)),
-        currency: rate.currency || 'USD',
-        additionalCharges: [],
-      },
-    }));
+    if (needsFreight) {
+      const ltlResult = await getLTLRates('28792', destination.postalCode, packages);
+      const ltlRates = ltlResult.success ? ltlResult.rates : getLTLFallbackRates(destination.postalCode, packages);
+      const needsLiftgate = requiresLiftgate(packages);
+
+      shippingRates = ltlRates.map(rate => ({
+        code: rate.code,
+        title: rate.title,
+        logistics: {
+          deliveryTime: rate.estimatedDays || rate.estimatedDelivery || '5-10 business days',
+          instructions: needsLiftgate
+            ? 'Large item freight delivery. Liftgate service included. We will call to schedule your delivery window.'
+            : 'Large item freight delivery. We will call to schedule your delivery window.',
+        },
+        cost: {
+          price: String((Number(rate.cost) || 0).toFixed(2)),
+          currency: rate.currency || 'USD',
+          additionalCharges: [],
+        },
+      }));
+    } else {
+      // Get live UPS rates (parcel — items that passed the freight threshold check above)
+      const rates = await getUPSRates(destination, packages, orderSubtotal);
+
+      shippingRates = rates.map(rate => ({
+        code: rate.code,
+        title: rate.title,
+        logistics: {
+          deliveryTime: rate.estimatedDelivery || '',
+        },
+        cost: {
+          price: String(rate.cost.toFixed(2)),
+          currency: rate.currency || 'USD',
+          additionalCharges: [],
+        },
+      }));
+    }
 
     // ── Local delivery zone matching ──────────────────────────────────────
     const zip3 = parseInt((destination.postalCode || '').substring(0, 3), 10);
