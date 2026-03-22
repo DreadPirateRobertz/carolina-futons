@@ -543,6 +543,22 @@ describe('getLifestyleImage', () => {
     expect(getLifestyleImage(null)).toBe('');
   });
 
+  it('skips null items in mediaItems array without throwing', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [null, { title: 'lifestyle shot', url: 'https://img.com/ls.jpg' }],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/ls.jpg');
+  });
+
+  it('returns mainMedia when all mediaItems are null', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [null, null],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
   it('matches on alt field keyword', () => {
     const product = {
       mainMedia: 'https://img.com/main.jpg',
