@@ -540,7 +540,7 @@ describe('E2E: Payment badges on category grid', () => {
     expect(badges001).toBeDefined();
     expect(badges001.some(b => b.type === 'afterpay')).toBe(true);
     const apBadge = badges001.find(b => b.type === 'afterpay');
-    expect(apBadge.label).toContain('$');
+    expect(apBadge.label).toBe('Pay in 4 with Afterpay');
 
     // $1,500 should NOT have Afterpay but should have financing
     const badges002 = result.badges['prod-002'];
