@@ -17,6 +17,8 @@
  *  - Auto-dismisses after 8s (fake timers)
  *  - Close button dismisses immediately
  *  - Replaces existing auto-dismiss timer on new add
+ *  - onItemReady registered once in init, not re-registered on each cart change
+ *  - Concurrency guard: overlapping onCartChanged calls are dropped while busy
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -444,5 +446,50 @@ describe('CartUpsell', () => {
 
     vi.advanceTimersByTime(4000); // now the new 8s timer fires
     expect($w('#upsellDrawer').hide).toHaveBeenCalled();
+  });
+
+  // ── Single onItemReady registration ───────────────────────────────
+
+  it('onItemReady is registered exactly once on init, not re-registered on cart events', async () => {
+    initCartUpsell($w);
+
+    // Trigger multiple cart adds
+    getCurrentCart.mockResolvedValueOnce(makeCart([]));
+    await cartChangedCallback();
+
+    getCurrentCart.mockResolvedValueOnce(makeCart([makeLineItem('prod-1')]));
+    await cartChangedCallback();
+
+    getCurrentCart.mockResolvedValueOnce(makeCart([makeLineItem('prod-1', 2)]));
+    await cartChangedCallback();
+
+    // onItemReady must have been called exactly once (in initCartUpsell)
+    expect($w('#upsellRepeater').onItemReady).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Concurrency guard ─────────────────────────────────────────────
+
+  it('concurrency guard drops overlapping onCartChanged calls while busy', async () => {
+    // Hold getCurrentCart resolution so we can fire concurrent events
+    let resolveCart;
+    getCurrentCart.mockImplementationOnce(() => new Promise(r => { resolveCart = r; }));
+
+    initCartUpsell($w);
+
+    // Start first event — it will be pending in getCurrentCart
+    const first = cartChangedCallback();
+
+    // Fire second event while first is still in-flight — should be dropped
+    const second = cartChangedCallback();
+    await second; // resolves immediately (busy guard returns)
+
+    // Now let the first event complete with a baseline cart
+    resolveCart(makeCart([]));
+    await first;
+
+    // Drawer should NOT have been shown (first event was just baseline)
+    expect($w('#upsellDrawer').show).not.toHaveBeenCalled();
+    // getRecommendations should NOT have been called
+    expect(getRecommendations).not.toHaveBeenCalled();
   });
 });

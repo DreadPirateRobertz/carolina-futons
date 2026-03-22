@@ -31,9 +31,12 @@ const UPSELL_COUNT = 3;
 let _prevCount = null;
 let _prevItems = [];
 let _dismissTimer = null;
+let _sourceProductId = null; // tracks current upsell context for onItemReady handler
+let _busy = false;           // concurrency guard: prevents overlapping _showUpsellDrawer calls
 
 /**
  * Initialise the cart upsell drawer. Call once from masterPage.js.
+ * Registers onItemReady ONCE to avoid handler stacking on repeated cart events.
  * Registers an onCartChanged listener; on each item addition fetches
  * recommendations for the added product and shows the drawer.
  *
@@ -43,8 +46,38 @@ export function initCartUpsell($w) {
   _prevCount = null;
   _prevItems = [];
   _dismissTimer = null;
+  _sourceProductId = null;
+  _busy = false;
+
+  // Register onItemReady ONCE — Wix Velo stacks handlers; re-registering on
+  // every cart add would multiply click handlers and duplicate tracking events.
+  $w('#upsellRepeater').onItemReady(($item, itemData) => {
+    $item('#upsellItemImage').src = itemData.mainMedia || '';
+    $item('#upsellItemImage').alt = itemData.name || '';
+    $item('#upsellItemName').text = itemData.name || '';
+    $item('#upsellItemPrice').text = itemData.price ? `$${Number(itemData.price).toFixed(2)}` : '';
+
+    $item('#upsellAddBtn').onClick(async () => {
+      try {
+        await addToCart(itemData._id, 1);
+        trackEvent('upsell_add_to_cart', {
+          upsellProductId: itemData._id,
+          sourceProductId: _sourceProductId,
+        });
+        await fireCustomEvent('upsell_conversion', {
+          upsellProductId: itemData._id,
+          sourceProductId: _sourceProductId,
+        });
+      } catch (e) {
+        console.warn('[CartUpsell] upsellAddBtn addToCart failed:', e?.message ?? e);
+      }
+    });
+  });
 
   onCartChanged(async () => {
+    // Concurrency guard: drop rapid overlapping cart events while a drawer is loading
+    if (_busy) return;
+    _busy = true;
     try {
       const cart = await getCurrentCart();
       const items = cart?.lineItems || [];
@@ -60,12 +93,15 @@ export function initCartUpsell($w) {
       _prevItems = items;
     } catch (e) {
       console.warn('[CartUpsell] onCartChanged handler error:', e?.message ?? e);
+    } finally {
+      _busy = false;
     }
   });
 }
 
 /**
  * Fetch recommendations and render the upsell drawer.
+ * onItemReady is already registered — only update .data to refresh item rendering.
  *
  * @param {Function} $w
  * @param {string}   sourceProductId - The product just added to cart
@@ -77,31 +113,11 @@ async function _showUpsellDrawer($w, sourceProductId) {
 
     const products = result.products.slice(0, UPSELL_COUNT);
 
-    // Populate repeater
-    const repeater = $w('#upsellRepeater');
-    repeater.data = products.map(p => ({ _id: p._id, ...p }));
-    repeater.onItemReady(($item, itemData) => {
-      $item('#upsellItemImage').src = itemData.mainMedia || '';
-      $item('#upsellItemImage').alt = itemData.name || '';
-      $item('#upsellItemName').text = itemData.name || '';
-      $item('#upsellItemPrice').text = itemData.price ? `$${Number(itemData.price).toFixed(2)}` : '';
+    // Update module-level source so onItemReady's onClick closure has current context
+    _sourceProductId = sourceProductId;
 
-      $item('#upsellAddBtn').onClick(async () => {
-        try {
-          await addToCart(itemData._id, 1);
-          trackEvent('upsell_add_to_cart', {
-            upsellProductId: itemData._id,
-            sourceProductId,
-          });
-          await fireCustomEvent('upsell_conversion', {
-            upsellProductId: itemData._id,
-            sourceProductId,
-          });
-        } catch (e) {
-          console.warn('[CartUpsell] upsellAddBtn addToCart failed:', e?.message ?? e);
-        }
-      });
-    });
+    // Updating .data triggers onItemReady for each item (already registered in init)
+    $w('#upsellRepeater').data = products.map(p => ({ _id: p._id, ...p }));
 
     // Show drawer
     try {
