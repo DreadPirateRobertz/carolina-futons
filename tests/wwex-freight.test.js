@@ -41,8 +41,12 @@ describe('shouldUseLTL', () => {
     expect(shouldUseLTL([{ weight: 80, length: 72 }])).toBe(false);
   });
 
-  it('returns false at exactly the weight threshold (150 lbs)', () => {
-    expect(shouldUseLTL([{ weight: LTL_THRESHOLDS.maxParcelWeightLbs, length: 72 }])).toBe(false);
+  it('returns true at exactly the weight threshold (150 lbs) — inclusive boundary', () => {
+    expect(shouldUseLTL([{ weight: LTL_THRESHOLDS.maxParcelWeightLbs, length: 72 }])).toBe(true);
+  });
+
+  it('returns false just below the weight threshold (149 lbs)', () => {
+    expect(shouldUseLTL([{ weight: 149, length: 72 }])).toBe(false);
   });
 
   it('returns true when a single item exceeds max parcel weight (151 lbs)', () => {
@@ -57,8 +61,8 @@ describe('shouldUseLTL', () => {
     expect(shouldUseLTL([{ weight: 50, length: LTL_THRESHOLDS.maxParcelLengthIn }])).toBe(false);
   });
 
-  it('returns true when total weight of multiple parcels exceeds threshold', () => {
-    // Three 60-lb items = 180 lbs total > 150 threshold
+  it('returns true when total weight of multiple parcels meets or exceeds threshold', () => {
+    // Three 60-lb items = 180 lbs total >= 150 threshold
     const packages = [{ weight: 60 }, { weight: 60 }, { weight: 60 }];
     expect(shouldUseLTL(packages)).toBe(true);
   });

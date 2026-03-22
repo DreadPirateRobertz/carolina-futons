@@ -514,3 +514,75 @@ describe('getShippingRates — LTL freight routing (CF-6p04)', () => {
     expect(codes.some(c => c.startsWith('local-delivery'))).toBe(true);
   });
 });
+
+// ── CF-wo5f follow-up tests ───────────────────────────────────────────────────
+
+describe('getShippingRates — mixed cart always routes to LTL (CF-wo5f)', () => {
+  beforeEach(async () => {
+    const { __reset: rf } = await import('./__mocks__/wix-fetch.js');
+    const { __reset: rs } = await import('./__mocks__/wix-secrets-backend.js');
+    rf();
+    rs();
+  });
+
+  it('murphy bed + accessory together → entire order routes to LTL, no UPS rates', async () => {
+    const { __setSecrets: ss } = await import('./__mocks__/wix-secrets-backend.js');
+    ss({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'x', UPS_ACCOUNT_NUMBER: 'x', UPS_SANDBOX: 'true', WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+    const { __setHandler: sh } = await import('./__mocks__/wix-fetch.js');
+    sh((url) => {
+      if (url.includes('SpeedFreight')) {
+        return { ok: true, async text() { return WWEX_SOAP_RESPONSE; }, async json() { return {}; } };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await getShippingRates({
+      lineItems: [
+        { name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1299' },
+        { name: 'Pillow Set', quantity: 2, price: '29' },
+      ],
+      shippingDestination: {
+        address: { postalCode: '10001', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    // Entire cart routes to LTL — no carrier split
+    expect(codes.some(c => c.includes('ltl') || c.includes('wwex'))).toBe(true);
+    expect(codes.some(c => c.startsWith('ups-'))).toBe(false);
+  });
+});
+
+describe('getShippingRates — WWEX fault fallback (CF-wo5f)', () => {
+  beforeEach(async () => {
+    const { __reset: rf } = await import('./__mocks__/wix-fetch.js');
+    const { __reset: rs } = await import('./__mocks__/wix-secrets-backend.js');
+    rf();
+    rs();
+  });
+
+  it('returns fallback LTL rates (isEstimate) when WWEX API returns HTTP 500', async () => {
+    const { __setSecrets: ss } = await import('./__mocks__/wix-secrets-backend.js');
+    ss({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'x', UPS_ACCOUNT_NUMBER: 'x', UPS_SANDBOX: 'true', WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+    const { __setHandler: sh } = await import('./__mocks__/wix-fetch.js');
+    sh((url) => {
+      if (url.includes('SpeedFreight')) {
+        return { ok: false, status: 500, async text() { return ''; }, async json() { return {}; } };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1299' }],
+      shippingDestination: {
+        address: { postalCode: '10001', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    // Must still return shipping options (fail-open — never block checkout)
+    expect(result.shippingRates.length).toBeGreaterThan(0);
+    const ltlRate = result.shippingRates.find(r => r.code.includes('ltl') || r.code.includes('wwex'));
+    expect(ltlRate).toBeDefined();
+    expect(ltlRate.cost.price).toBeTruthy();
+  });
+});
