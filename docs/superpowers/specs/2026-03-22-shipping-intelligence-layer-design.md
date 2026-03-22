@@ -57,6 +57,7 @@ Backend
 | `requiresPallet` | boolean | Forces LTL routing regardless of weight |
 | `requiresFreight` | boolean | Always route to freight, never parcel |
 | `customItemFlag` | boolean | Triggers manual pricing review path |
+| `handlingFee_usd` | number | Flat per-order handling charge for this product (e.g. pallet build fee, oversized surcharge). Added to shipping cost before displaying to customer. Default 0. |
 | `packagingNotes` | string | "Ships in 2 boxes", "mattress compressed" |
 
 **Fallback chain:** product profile → category default in `ups-shipping.web.js` → `'default'` dims.

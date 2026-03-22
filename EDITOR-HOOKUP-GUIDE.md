@@ -1808,4 +1808,141 @@ All major pages now have both backend and frontend code. The following are in de
 | Sand Light | `#FAF7F2` | Page backgrounds |
 | Sand Medium | `#F5F0E8` | Card backgrounds |
 | Cream | `#FFF8F0` | Alternate section bg |
+
+---
+
+## SPRINT 5 FEATURES — Element Reference (2026-03-22+)
+
+> Sprint 5 adds five new capabilities: Shipping Intelligence Layer, Bundle Builder, Live Inventory + Low Stock, Customer Room Gallery UGC, and AI Style Consultant. All backend specs in `docs/superpowers/specs/`.
+
+---
+
+## SHIPPING INTELLIGENCE LAYER (Sprint 5 — Product Page + Bundle Builder)
+
+**Spec:** `docs/superpowers/specs/2026-03-22-shipping-intelligence-layer-design.md`
+**Backend:** `shippingIntelligence.web.js`, `wwex-freight.web.js`
+**New CMS collection:** `ProductShippingProfiles` — per-product weight, dims, freight class, handling fee
+
+### ProductShippingProfiles CMS Fields (for reference — edited directly in Wix CMS)
+
+| Field | Type | Notes |
+|---|---|---|
+| `productId` | string | Wix product `_id` — unique index |
+| `weight_lbs` | number | Actual packed weight |
+| `length_in` | number | Longest box dimension |
+| `width_in` | number | Box width |
+| `height_in` | number | Box height |
+| `freightClass` | string | NMFC class (`"150"`, `"200"`) — required for LTL quotes |
+| `requiresPallet` | boolean | Forces LTL routing regardless of weight |
+| `requiresFreight` | boolean | Always route to freight, never parcel |
+| `handlingFee_usd` | number | Per-order handling charge (pallet build, oversized surcharge). Added to displayed shipping cost. Default 0. |
+| `customItemFlag` | boolean | Triggers manual pricing review path |
+| `packagingNotes` | string | e.g. "Ships in 2 boxes", "mattress compressed" |
+
+> **Tier routing:** total weight < 150 lbs AND no pallet flag → UPS parcel. Over 150 lbs OR `requiresPallet` → WWEX SpeedFreight 2.0 LTL.
+
+### Shipping Estimate Widget (Product Page — `shippingIntelligence.web.js`)
+
+`shippingEstimateSection` (Section/Box), `shippingZipInput` (Input), `shippingCalculateBtn` (Button), `shippingOptionsSection` (Box), `shippingOptionsRepeater` (Repeater), `shippingLoadingText` (Text), `shippingErrorText` (Text), `shippingFreightNote` (Text)
+
+**↳ Inside `shippingOptionsRepeater`:** `shippingOptionTitle` (Text), `shippingOptionCost` (Text), `shippingOptionDelivery` (Text), `shippingCarrierLabel` (Text)
+
+**Behavior:**
+- Zip input accepts 5-digit US zip. PR/GU/APO handled gracefully.
+- On "Calculate Shipping" click → calls `getShippingEstimate(productId, zip)` → shows all available service tiers with cost + estimated delivery.
+- If `requiresFreight: true` → shows `shippingFreightNote`: "This item ships freight. A carrier will contact you to schedule delivery."
+- `shippingLoadingText` shown during API call; `shippingErrorText` shown on failure with fallback copy.
+- Attribution line: "Ships from Hendersonville, NC"
+
+### Bundle Builder Shipping (Bundle Builder Page)
+
+`bundleShippingSection` (Box), `bundleShippingZip` (Input), `bundleShippingBtn` (Button), `bundleShippingResult` (Box), `bundleShippingOptions` (Repeater), `bundleFreightNote` (Text)
+
+**↳ Inside `bundleShippingOptions`:** `bundleOptionTitle` (Text), `bundleOptionCost` (Text), `bundleOptionDelivery` (Text)
+
+---
+
+## BUNDLE BUILDER (Sprint 5 — `/bundle`)
+
+**Backend:** `bundleBuilder.web.js` (extended with `calculateBundleQuote`)
+
+### Main Layout
+`bundleSection` (Box), `bundleProductsRepeater` (Repeater), `bundleAddProductBtn` (Button), `bundleSummarySection` (Box), `bundleSubtotalText` (Text), `bundleShippingSection` (Box), `bundleTotalText` (Text), `bundleCheckoutBtn` (Button), `bundleEmptyState` (Box), `bundleErrorText` (Text)
+
+**↳ Inside `bundleProductsRepeater`:** `bundleItemName` (Text), `bundleItemPrice` (Text), `bundleItemQty` (Input), `bundleItemRemoveBtn` (Button), `bundleItemImage` (Image)
+
+### Product Selector ⚠️ REPEATER
+`bundlePickerSection` (Box), `bundlePickerRepeater` (Repeater), `bundlePickerSearchInput` (Input)
+
+**↳ Inside `bundlePickerRepeater`:** `bundlePickerItemName` (Text), `bundlePickerItemPrice` (Text), `bundlePickerAddBtn` (Button), `bundlePickerImage` (Image)
+
+---
+
+## LIVE INVENTORY + LOW STOCK (Sprint 5 — Product Page additions)
+
+**Backend:** `inventoryService.web.js` (new)
+
+### Product Page Elements (added alongside existing product page)
+`stockStatusBadge` (Box), `stockStatusText` (Text), `lowStockWarning` (Box), `lowStockCount` (Text), `outOfStockOverlay` (Box), `notifyMeSection` (Box), `notifyMeInput` (Input), `notifyMeBtn` (Button), `notifyMeSuccess` (Text), `notifyMeError` (Text)
+
+**Behavior:**
+- `stockStatusBadge` shows "In Stock" / "Low Stock" / "Out of Stock" — color-coded (green/coral/gray).
+- `lowStockWarning` + `lowStockCount` visible when qty ≤ threshold (e.g. "Only 3 left!").
+- `outOfStockOverlay` disables Add to Cart when qty = 0.
+- `notifyMeSection` shown when out of stock — captures email for restock notification.
+
+---
+
+## CUSTOMER ROOM GALLERY UGC (Sprint 5 — `/rooms`)
+
+**Backend:** `roomGallery.web.js` (new)
+
+### Gallery Grid
+`roomGallerySection` (Box), `roomGalleryRepeater` (Repeater), `roomGalleryLoadMoreBtn` (Button), `roomGalleryEmptyState` (Box), `roomGalleryFilterSection` (Box), `roomStyleFilter` (Dropdown), `roomProductFilter` (Dropdown)
+
+**↳ Inside `roomGalleryRepeater`:** `roomPhotoImage` (Image), `roomPhotoCaption` (Text), `roomPhotoProduct` (Text), `roomPhotoLikeBtn` (Button), `roomPhotoLikeCount` (Text), `roomPhotoOwner` (Text)
+
+### Submission Form
+`roomSubmitSection` (Box), `roomPhotoUpload` (UploadButton), `roomSubmitCaption` (Input), `roomSubmitProduct` (Dropdown), `roomSubmitStyle` (Dropdown), `roomSubmitEmail` (Input), `roomSubmitBtn` (Button), `roomSubmitSuccess` (Box), `roomSubmitError` (Text), `roomSubmitTerms` (Checkbox)
+
+---
+
+## AI STYLE CONSULTANT (Sprint 5 — Style Quiz Enhancements `/style-quiz`)
+
+**Backend:** `styleConsultant.web.js` (new — extends existing Style Quiz backend)
+
+### AI Results Section (added to existing Style Quiz results area)
+`aiConsultSection` (Box), `aiConsultTitle` (Text), `aiConsultResponse` (RichTextBox), `aiConsultShippingEstimate` (Text), `aiConsultLoadingState` (Box), `aiConsultLoadingText` (Text), `aiConsultErrorText` (Text), `aiRecommendedRepeater` (Repeater), `aiConsultShareBtn` (Button), `aiConsultSaveBtn` (Button)
+
+**↳ Inside `aiRecommendedRepeater`:** `aiProductImage` (Image), `aiProductName` (Text), `aiProductPrice` (Text), `aiProductAddBtn` (Button)
+
+**Behavior:**
+- After quiz completion, AI analyzes answers + budget + room size → generates personalized recommendation narrative.
+- `aiConsultShippingEstimate` shows: "Ships to [zip] in 3–5 days for $X (UPS Ground)" — fed from `calculateBundleQuote`.
+- `aiConsultShareBtn` generates shareable link (extends existing share feature).
+- `aiConsultSaveBtn` saves consultation to account (if logged in) or prompts email capture.
+
+---
+
+## CMS COLLECTIONS — Sprint 5 New Collections
+
+| Collection | Purpose | Key Fields |
+|---|---|---|
+| `ProductShippingProfiles` | Per-product packaging data for accurate shipping | productId, weight_lbs, dims, freightClass, handlingFee_usd, requiresPallet |
+| `BundleConfigs` | Saved bundle configurations (for sharing + reuse) | bundleId, items[], totalWeight, lastShippingQuote |
+| `CustomerRoomPhotos` | UGC room photos + metadata | photoUrl, caption, productId, style, status, likes |
+| `ShippingRateCache` | Cached UPS/WWEX rate results (TTL 15min) | productId+zip key, rates[], cachedAt |
+
+## PAGES THAT NEED CREATING (updated Sprint 5)
+
+| Page | Status | Notes |
+|---|---|---|
+| Style Quiz | ✅ Frontend + backend complete | S5 AI enhancements in progress |
+| Blog | ✅ Frontend + backend complete | — |
+| Room Planner | ✅ Frontend + backend complete (S1–S7) | — |
+| Gift Cards | ✅ Frontend + backend complete | — |
+| Local SEO | ✅ Frontend + backend complete | S2 (schema + FAQ) in progress |
+| Bundle Builder | 🔲 Backend exists, frontend pending | `/bundle` — Sprint 5 |
+| Customer Room Gallery | 🔲 Not started | `/rooms` — Sprint 5 |
+| Shipping Intelligence Widget | 🔲 Backend spec written | Product page additions — Sprint 5 |
 | Charcoal | `#2C2C2C` | Body text |
