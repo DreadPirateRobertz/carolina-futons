@@ -1415,6 +1415,17 @@ Right column:
         ["deliveryEstimateText","Text","Delivery window display"],
         ["deliveryEstimateError","Text","Error message (hidden by default)"],
         ["whiteGloveNote","Text","White-glove delivery note"]
+      ]},
+      { name: "Product Badge System (NEW v1.2.0+)", impl: `<h4>🏷️ Implementation — CMS Badge System (NEW v1.2.0+ / CF-p56i)</h4>
+<p><em>Backend: <code>src/backend/badgeService.web.js</code> — <code>getProductBadges(productId, productData)</code></em><br>
+<em>Public helper: <code>src/public/badgeHelpers.js</code> — <code>initCmsBadgePDP($w, state)</code></em></p>
+<p>CMS collection <strong>ProductBadges</strong> drives badge display. Fallbacks: LOW_STOCK when inventory &lt; 5, SALE when comparePrice is set.</p>
+<ul>
+  <li><strong>#pdpBadgeContainer</strong>: Box element wrapping the badge. Code sets <code>backgroundColor</code> from badge config and toggles visibility. <span class="impl-warn">Must be collapsed/hidden by default in editor.</span></li>
+  <li><strong>#pdpBadgeText</strong>: Text element inside <code>#pdpBadgeContainer</code>. Code sets text (e.g., "New", "Bestseller", "CF+ Exclusive") and <code>color</code>.</li>
+</ul>`, elements: [
+        ["pdpBadgeContainer","Box","Badge wrapper — hidden by default; code shows/styles it"],
+        ["pdpBadgeText","Text","Badge label text (New, Bestseller, Low Stock, Sale, CF+ Exclusive)"]
       ]}
     ]
   },
@@ -1446,7 +1457,8 @@ Right column:
 #gridCard — Box container (white bg, 12px radius, shadow via styleCardContainer)
   #gridImage          — Product image (top, lazy-loaded)
   OVERLAY BADGES (on top of image):
-    #gridBadge        — Corner badge (New/Bestseller/Sale)
+    #gridBadge        — Corner badge (legacy computed: New/Bestseller/Sale)
+    #productBadgeRepeater — CMS-driven badge (NEW v1.2.0+, CF-p56i)
     #gridRibbon       — Sidebar ribbon (Featured/New)
     #gridLifestyleBadge — "See It In a Room" overlay
   BELOW IMAGE:
@@ -1477,7 +1489,7 @@ Right column:
         ["gridCard","Box","Card"],["gridImage","Image","Image"],
         ["gridName","Text","Name"],["gridPrice","Text","Price"],
         ["gridOrigPrice","Text","Original price"],["gridSaleBadge","Text","Sale badge"],
-        ["gridBadge","Text","Badge"],["gridBrand","Text","Brand"],
+        ["gridBadge","Text","Badge (legacy)"],["productBadgeRepeater","Box","CMS badge Box (v1.2.0+) — must be Box, not Text, for backgroundColor styling"],["gridBrand","Text","Brand"],
         ["gridRibbon","Text","Ribbon"],["gridFabricBadge","Text","Fabric badge"],
         ["gridLifestyleBadge","Text","Lifestyle"],["gridCompareBtn","Button","Compare"],
         ["quickViewBtn","Button","Quick view"],["gridSwatchPreview","Box","Swatch preview"]
