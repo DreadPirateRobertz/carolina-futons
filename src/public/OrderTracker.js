@@ -25,7 +25,7 @@
  *   orderItemsRepeater    → #orderItemsRepeater     (Repeater — line items)
  *   orderProgressBar      → #orderProgressBar       (Box — 4-step progress indicator)
  *   orderStep1            → #orderStep1             (Box — Ordered)
- *   orderStep2            → #orderStep2             (Box — Processing/Label Created)
+ *   orderStep2            → #orderStep2             (Box — Label Created)
  *   orderStep3            → #orderStep3             (Box — Shipped/In Transit)
  *   orderStep4            → #orderStep4             (Box — Delivered)
  *
@@ -55,9 +55,11 @@ const CARRIER_URLS = {
   USPS:  tn => `https://tools.usps.com/go/TrackConfirmAction?tLabels=${tn}`,
 };
 
+// Returns null for unknown carriers so the tracking link is hidden rather than
+// pointing to a wrong carrier's site.
 function buildCarrierUrl(carrier, trackingNumber) {
   const builder = CARRIER_URLS[(carrier || '').toUpperCase()];
-  return builder ? builder(trackingNumber) : `https://www.ups.com/track?tracknum=${trackingNumber}`;
+  return builder ? builder(trackingNumber) : null;
 }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────
@@ -196,8 +198,11 @@ function renderResult($wFn, data) {
 
   const trackLink = safeGet($wFn, '#orderTrackingLink');
   if (trackLink) {
-    if (shipping.trackingNumber) {
-      trackLink.link = buildCarrierUrl(shipping.carrier, shipping.trackingNumber);
+    const carrierUrl = shipping.trackingNumber
+      ? buildCarrierUrl(shipping.carrier, shipping.trackingNumber)
+      : null;
+    if (carrierUrl) {
+      trackLink.link = carrierUrl;
       trackLink.show();
     } else {
       trackLink.hide();

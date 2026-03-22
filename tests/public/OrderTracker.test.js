@@ -104,7 +104,7 @@ function makeWixEnv(overrides = {}) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
 });
 
 // ── getActiveSteps ─────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ describe('initOrderTracker', () => {
     await initOrderTracker($w);
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect($w.__els['#orderEstimatedDelivery'].text).toBeTruthy();
+    expect($w.__els['#orderEstimatedDelivery'].text).toContain('Estimated delivery:');
   });
 
   it('sets orderCarrierText from shipping.carrier', async () => {
@@ -367,6 +367,48 @@ describe('initOrderTracker', () => {
     expect($w.__els['#orderTrackingLink'].hide).toHaveBeenCalled();
   });
 
+  it('sets FedEx tracking URL for FEDEX carrier', async () => {
+    const fedex = {
+      ...BASE_ORDER,
+      shipping: { ...BASE_ORDER.shipping, carrier: 'FEDEX', trackingNumber: 'TRK123' },
+    };
+    lookupOrder.mockResolvedValue(fedex);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderTrackingLink'].link).toContain('fedex.com');
+    expect($w.__els['#orderTrackingLink'].link).toContain('TRK123');
+  });
+
+  it('sets USPS tracking URL for USPS carrier', async () => {
+    const usps = {
+      ...BASE_ORDER,
+      shipping: { ...BASE_ORDER.shipping, carrier: 'USPS', trackingNumber: 'TRK456' },
+    };
+    lookupOrder.mockResolvedValue(usps);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderTrackingLink'].link).toContain('usps.com');
+    expect($w.__els['#orderTrackingLink'].link).toContain('TRK456');
+  });
+
+  it('hides orderTrackingLink for unknown carrier (no wrong-carrier fallback)', async () => {
+    const unknown = {
+      ...BASE_ORDER,
+      shipping: { ...BASE_ORDER.shipping, carrier: 'DHL', trackingNumber: 'TRK789' },
+    };
+    lookupOrder.mockResolvedValue(unknown);
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderTrackingLink'].hide).toHaveBeenCalled();
+    expect($w.__els['#orderTrackingLink'].show).not.toHaveBeenCalled();
+  });
+
   // ── progress bar ─────────────────────────────────────────────────────
 
   it('activates all 4 steps for DELIVERED', async () => {
@@ -376,10 +418,10 @@ describe('initOrderTracker', () => {
     await initOrderTracker($w);
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep2'].addCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep3'].addCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep4'].addCssClass).toHaveBeenCalled();
+    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep2'].addCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep3'].addCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep4'].addCssClass).toHaveBeenCalledWith('order-step-active');
   });
 
   it('activates steps 1–3 for IN_TRANSIT (step 4 inactive)', async () => {
@@ -388,9 +430,9 @@ describe('initOrderTracker', () => {
     await initOrderTracker($w);
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep2'].addCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep3'].addCssClass).toHaveBeenCalled();
+    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep2'].addCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep3'].addCssClass).toHaveBeenCalledWith('order-step-active');
     expect($w.__els['#orderStep4'].addCssClass).not.toHaveBeenCalled();
   });
 
@@ -401,7 +443,7 @@ describe('initOrderTracker', () => {
     await initOrderTracker($w);
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalled();
+    expect($w.__els['#orderStep1'].addCssClass).toHaveBeenCalledWith('order-step-active');
     expect($w.__els['#orderStep2'].addCssClass).not.toHaveBeenCalled();
     expect($w.__els['#orderStep3'].addCssClass).not.toHaveBeenCalled();
     expect($w.__els['#orderStep4'].addCssClass).not.toHaveBeenCalled();
@@ -413,8 +455,8 @@ describe('initOrderTracker', () => {
     await initOrderTracker($w);
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
-    expect($w.__els['#orderStep1'].removeCssClass).toHaveBeenCalled();
-    expect($w.__els['#orderStep4'].removeCssClass).toHaveBeenCalled();
+    expect($w.__els['#orderStep1'].removeCssClass).toHaveBeenCalledWith('order-step-active');
+    expect($w.__els['#orderStep4'].removeCssClass).toHaveBeenCalledWith('order-step-active');
   });
 
   // ── line items repeater ──────────────────────────────────────────────
@@ -492,6 +534,15 @@ describe('initOrderTracker', () => {
     const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
     await handler();
     expect($w.__els['#orderLookupError'].text).toBe('Order not found.');
+  });
+
+  it('uses fallback message when success:false has no error field', async () => {
+    lookupOrder.mockResolvedValue({ success: false });
+    const $w = makeWixEnv();
+    await initOrderTracker($w);
+    const handler = $w.__els['#orderLookupBtn'].onClick.mock.calls[0][0];
+    await handler();
+    expect($w.__els['#orderLookupError'].text).toBe('Order not found. Please check your details.');
   });
 
   it('hides spinner on API not-found response', async () => {
