@@ -79,10 +79,10 @@ export const getShippingEstimate = webMethod(
       const dims = profile || await getPackageDimensions(profile?.category || 'default');
 
       const packages = [{
-        length: dims.length,
-        width: dims.width,
-        height: dims.height,
-        weight: dims.weight,
+        length: dims.length_in ?? dims.length,
+        width: dims.width_in ?? dims.width,
+        height: dims.height_in ?? dims.height,
+        weight: dims.weight_lbs ?? dims.weight,
         category: dims.category || profile?.category || 'default',
         description: profile?.productName || 'Furniture',
       }];
@@ -127,10 +127,10 @@ export const calculateBundleQuote = webMethod(
 
         for (let i = 0; i < quantity; i++) {
           packages.push({
-            length: dims.length,
-            width: dims.width,
-            height: dims.height,
-            weight: dims.weight,
+            length: dims.length_in ?? dims.length,
+            width: dims.width_in ?? dims.width,
+            height: dims.height_in ?? dims.height,
+            weight: dims.weight_lbs ?? dims.weight,
             category: dims.category || profile?.category || 'default',
           });
         }
@@ -252,7 +252,7 @@ async function buildShippingResponse(zip, packages, orderSubtotal, itemCount) {
  * Look up per-product shipping profile from ProductShippingProfiles CMS.
  * Returns null if product has no profile (use category defaults).
  *
- * CMS fields: productId, productName, category, weight, length, width, height,
+ * CMS fields: productId, productName, category, weight_lbs, length_in, width_in, height_in,
  *             handlingFee_usd, carrierOverride, ltlRequired
  *
  * @private
