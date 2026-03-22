@@ -5097,67 +5097,66 @@ SHARING:
     ]
   },
   {
-    name: "Customer Room Gallery", file: "roomGallery.web.js (/rooms)", priority: "P2", est: "60 min",
+    name: "Customer Room Gallery", file: "RoomGallery.js (/rooms)", priority: "P2", est: "60 min",
     sections: [
       { name: "Gallery Grid", impl: `<h4>🏠 Implementation — Customer Room Gallery Grid (/rooms)</h4>
-<p><strong>Backend:</strong> <code>roomGallery.web.js</code> — <code>getApprovedPhotos()</code>, <code>submitRoomPhoto()</code>, <code>likePhoto()</code>.</p>
-<p><strong>CMS:</strong> <code>CustomerRoomPhotos</code> — photos require staff approval before appearing in grid.</p>
+<p><strong>Backend:</strong> <code>ugcService.web.js</code> — <code>getApprovedPhotos()</code>, <code>submitUGCPhoto()</code>, <code>voteForPhoto()</code>.</p>
+<p><strong>CMS:</strong> <code>UGCPhotos</code> — photos require staff approval before appearing in grid.</p>
 <ul>
-  <li><strong>#roomGallerySection</strong>: Box — main gallery container.</li>
-  <li><strong>#roomGalleryRepeater</strong>: Repeater — approved UGC photos in masonry/grid layout.</li>
-  <li><strong>#roomGalleryLoadMoreBtn</strong>: Button — pagination ("Load More").</li>
-  <li><strong>#roomGalleryEmptyState</strong>: Box — shown when no approved photos yet.</li>
-  <li><strong>#roomStyleFilter</strong>: Dropdown — filter by style (Modern, Rustic, Minimalist, Bohemian).</li>
-  <li><strong>#roomProductFilter</strong>: Dropdown — filter by product type (Futon Frame, Murphy Bed, etc.).</li>
+  <li><strong>#roomGallerySection</strong>: Box — main gallery container (expand/collapse).</li>
+  <li><strong>#roomGalleryEmptyState</strong>: Box — shown when no approved photos (expand/collapse).</li>
+  <li><strong>#roomGalleryRepeater</strong>: Repeater — approved UGC photo cards.</li>
 </ul>`, elements: [
-        ["roomGallerySection","Box","Gallery container"],
-        ["roomGalleryLoadMoreBtn","Button","Load More pagination"],
-        ["roomGalleryEmptyState","Box","Empty state"],
-        ["roomStyleFilter","Dropdown","Style filter"],
-        ["roomProductFilter","Dropdown","Product type filter"]
+        ["roomGallerySection","Box","Gallery container (expand/collapse)"],
+        ["roomGalleryEmptyState","Box","Empty state (expand/collapse)"],
+        ["roomGalleryRepeater","Repeater","Photo grid"]
       ]},
       { name: "Gallery Photos", repeater: "roomGalleryRepeater", impl: `<h4>🖼️ Implementation — Gallery Photo Cards</h4>
 <ul>
-  <li><strong>#roomGalleryRepeater</strong>: Repeater — photo cards.</li>
-  <li><strong>#roomPhotoImage</strong>: Image — customer's room photo.</li>
-  <li><strong>#roomPhotoCaption</strong>: Text — customer-submitted caption.</li>
-  <li><strong>#roomPhotoProduct</strong>: Text — tagged product name (e.g. "Blue Ridge Futon").</li>
-  <li><strong>#roomPhotoLikeBtn</strong>: Button — heart/like button.</li>
-  <li><strong>#roomPhotoLikeCount</strong>: Text — like count.</li>
-  <li><strong>#roomPhotoOwner</strong>: Text — display name (e.g. "Sarah M., Asheville NC").</li>
+  <li><strong>#roomGalleryImage</strong>: Image — customer's room photo. alt set from caption or "Customer room photo".</li>
+  <li><strong>#roomGalleryCaption</strong>: Text — customer-submitted caption.</li>
+  <li><strong>#roomGallerySubmitter</strong>: Text — member display name.</li>
+  <li><strong>#roomGalleryLikeBtn</strong>: Button — like/vote button. onClick calls voteForPhoto.</li>
+  <li><strong>#roomGalleryLikeCount</strong>: Text — vote count (defaults to "0").</li>
 </ul>`, elements: [
         ["roomGalleryRepeater","Repeater","Photo grid cards"]
       ], children: [
-        ["roomPhotoImage","Image","Customer room photo"],
-        ["roomPhotoCaption","Text","Photo caption"],
-        ["roomPhotoProduct","Text","Tagged product name"],
-        ["roomPhotoLikeBtn","Button","Like button"],
-        ["roomPhotoLikeCount","Text","Like count"],
-        ["roomPhotoOwner","Text","Customer display name"]
+        ["roomGalleryImage","Image","Customer room photo"],
+        ["roomGalleryCaption","Text","Photo caption"],
+        ["roomGallerySubmitter","Text","Member display name"],
+        ["roomGalleryLikeBtn","Button","Like/vote button"],
+        ["roomGalleryLikeCount","Text","Vote count"]
+      ]},
+      { name: "Room Type Filter Tabs", impl: `<h4>🗂️ Implementation — Room Type Filter Tabs</h4>
+<p>Each tab calls <code>onFilterChange(roomType)</code>. "All" tab passes <code>null</code>.</p>
+<ul>
+  <li><strong>#roomFilterAll</strong>: Button — "All" tab (passes null to filter callback).</li>
+  <li><strong>#roomFilterLivingRoom</strong>: Button — "Living Room" (passes "living-room").</li>
+  <li><strong>#roomFilterBedroom</strong>: Button — "Bedroom" (passes "bedroom").</li>
+  <li><strong>#roomFilterOffice</strong>: Button — "Office" (passes "office").</li>
+  <li><strong>#roomFilterDorm</strong>: Button — "Dorm" (passes "dorm").</li>
+  <li><strong>#roomFilterPorch</strong>: Button — "Porch" (passes "porch").</li>
+</ul>`, elements: [
+        ["roomFilterAll","Button","All rooms tab"],
+        ["roomFilterLivingRoom","Button","Living Room filter tab"],
+        ["roomFilterBedroom","Button","Bedroom filter tab"],
+        ["roomFilterOffice","Button","Office filter tab"],
+        ["roomFilterDorm","Button","Dorm filter tab"],
+        ["roomFilterPorch","Button","Porch filter tab"]
       ]},
       { name: "Submission Form", impl: `<h4>📤 Implementation — Photo Submission Form</h4>
 <ul>
-  <li><strong>#roomSubmitSection</strong>: Box — submission form panel.</li>
-  <li><strong>#roomPhotoUpload</strong>: UploadButton — photo upload (JPG/PNG, max 10MB).</li>
-  <li><strong>#roomSubmitCaption</strong>: Input — caption text entry.</li>
-  <li><strong>#roomSubmitProduct</strong>: Dropdown — which CF product is in the photo.</li>
-  <li><strong>#roomSubmitStyle</strong>: Dropdown — room style tag.</li>
-  <li><strong>#roomSubmitEmail</strong>: Input — for notification when photo is approved.</li>
-  <li><strong>#roomSubmitBtn</strong>: Button — "Share Your Room".</li>
-  <li><strong>#roomSubmitSuccess</strong>: Box — "Thanks! Your photo is under review."</li>
-  <li><strong>#roomSubmitError</strong>: Text — error message.</li>
-  <li><strong>#roomSubmitTerms</strong>: Checkbox — permission to use photo on site.</li>
+  <li><strong>#roomSubmitBtn</strong>: Button — "Share Your Room". Disabled during submission, re-enabled after.</li>
+  <li><strong>#roomPhotoUpload</strong>: UploadButton — photo upload. value must be non-empty.</li>
+  <li><strong>#roomCaptionInput</strong>: Input — caption text entry. value must be non-empty.</li>
+  <li><strong>#roomRoomTypeDropdown</strong>: Dropdown — room type selector. value must be non-empty.</li>
+  <li><strong>#roomSubmitStatus</strong>: Text — shows validation errors, success, or backend errors.</li>
 </ul>`, elements: [
-        ["roomSubmitSection","Box","Submission form panel"],
+        ["roomSubmitBtn","Button","Submit button (disabled during upload)"],
         ["roomPhotoUpload","UploadButton","Photo file upload"],
-        ["roomSubmitCaption","Input","Caption input"],
-        ["roomSubmitProduct","Dropdown","Product tag selector"],
-        ["roomSubmitStyle","Dropdown","Style tag selector"],
-        ["roomSubmitEmail","Input","Notification email"],
-        ["roomSubmitBtn","Button","Share Your Room"],
-        ["roomSubmitSuccess","Box","Success confirmation"],
-        ["roomSubmitError","Text","Error message"],
-        ["roomSubmitTerms","Checkbox","Usage rights checkbox"]
+        ["roomCaptionInput","Input","Caption input"],
+        ["roomRoomTypeDropdown","Dropdown","Room type selector"],
+        ["roomSubmitStatus","Text","Status/error message"]
       ]}
     ]
   },
