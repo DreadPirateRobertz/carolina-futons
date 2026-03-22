@@ -7,7 +7,7 @@
     "notes": "Maps our BUILD-SPEC element IDs to template nicknames. Melania renames template elements to match our code via documentServices API. Items marked MISMATCH require architectural decisions before mapping."
   },
   "masterPage_header": {
-    "_comment": "Header elements — masterPage section3",
+    "_comment": "Header elements \u2014 masterPage section3",
     "siteLogo": {
       "templateNickname": "vectorImage10",
       "templateType": "VectorImage",
@@ -17,13 +17,18 @@
     "announcementBar": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Announcement bar container — used for backgroundColor/style from CMS AnnouncementBars"
+      "note": "Announcement bar container \u2014 used for backgroundColor/style from CMS AnnouncementBars"
     },
     "announcementText": {
       "templateNickname": "text42",
       "templateType": "WRichText",
       "confidence": "HIGH",
       "note": "Free Shipping announcement bar text"
+    },
+    "announcementBarLink": {
+      "templateNickname": null,
+      "confidence": "MISSING",
+      "note": "Optional CTA link in announcement bar \u2014 shown/hidden based on CMS bar.linkUrl (https-only)"
     },
     "cartIcon": {
       "templateNickname": "shoppingCartIcon1",
@@ -34,51 +39,51 @@
     "cartBadge": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "No separate cart badge element in template — badge is part of shoppingCartIcon1 TPAWidget"
+      "note": "No separate cart badge element in template \u2014 badge is part of shoppingCartIcon1 TPAWidget"
     },
     "headerSearchInput": {
       "templateNickname": "searchButton2",
       "templateType": "SearchButton",
       "confidence": "MEDIUM",
-      "note": "Template has SearchButton widget, not a bare input. Our code does $w('#headerSearchInput').role = 'search' — may need API adjustment"
+      "note": "Template has SearchButton widget, not a bare input. Our code does $w('#headerSearchInput').role = 'search' \u2014 may need API adjustment"
     },
     "productTitle": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Product title text — referenced in masterPage for side cart display. Must be on Product Page, not masterPage template"
+      "note": "Product title text \u2014 referenced in masterPage for side cart display. Must be on Product Page, not masterPage template"
     },
     "sideCartPanel": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "No side cart panel in template — must be added as new element"
+      "note": "No side cart panel in template \u2014 must be added as new element"
     },
     "justAddedHighlight": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Part of side cart — not in template"
+      "note": "Part of side cart \u2014 not in template"
     },
     "a11yLiveRegion": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Accessibility live region — must be added as hidden text element"
+      "note": "Accessibility live region \u2014 must be added as hidden text element"
     }
   },
   "masterPage_mobile_menu": {
     "_comment": "Mobile hamburger menu elements",
     "_templateElements": {
-      "hamburgerOpenButton1": "HamburgerMenuRoot — mobile menu trigger",
-      "hamburgerOverlay1": "HamburgerOverlay — backdrop",
-      "hamburgerMenuContainer1": "HamburgerMenuContainer — drawer",
-      "hamburgerCloseButton1": "HamburgerCloseButton — close X",
-      "expandableMenu2": "ExpandableMenu — mobile nav links",
-      "button6": "StylableButton — mobile Shop button",
-      "accountNavBar2": "LoginSocialBar — mobile login",
+      "hamburgerOpenButton1": "HamburgerMenuRoot \u2014 mobile menu trigger",
+      "hamburgerOverlay1": "HamburgerOverlay \u2014 backdrop",
+      "hamburgerMenuContainer1": "HamburgerMenuContainer \u2014 drawer",
+      "hamburgerCloseButton1": "HamburgerCloseButton \u2014 close X",
+      "expandableMenu2": "ExpandableMenu \u2014 mobile nav links",
+      "button6": "StylableButton \u2014 mobile Shop button",
+      "accountNavBar2": "LoginSocialBar \u2014 mobile login",
       "box43": "Container for mobile nav content"
     },
     "_note": "Our code uses initMobileDrawer() from navigationHelpers.js which creates a custom drawer. Template has built-in Wix hamburger menu. Decision needed: use template's built-in mobile menu OR add custom elements."
   },
   "masterPage_footer": {
-    "_comment": "Footer elements — masterPage section2",
+    "_comment": "Footer elements \u2014 masterPage section2",
     "newsletterTitle": {
       "templateNickname": "text25",
       "templateType": "WRichText",
@@ -94,12 +99,12 @@
     "newsletterEmail": {
       "templateNickname": null,
       "confidence": "MISMATCH",
-      "note": "Template has form2 (TPAWidget newsletter form) — our code expects separate input + submit. Need to decide: use Wix form widget or add bare elements"
+      "note": "Template has form2 (TPAWidget newsletter form) \u2014 our code expects separate input + submit. Need to decide: use Wix form widget or add bare elements"
     },
     "newsletterSubmit": {
       "templateNickname": null,
       "confidence": "MISMATCH",
-      "note": "See newsletterEmail — part of form2 TPAWidget"
+      "note": "See newsletterEmail \u2014 part of form2 TPAWidget"
     },
     "newsletterSection": {
       "templateNickname": "box33",
@@ -110,26 +115,26 @@
     "newsletterError": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Validation error text — must be added"
+      "note": "Validation error text \u2014 must be added"
     },
     "newsletterSuccess": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Success message — must be added"
+      "note": "Success message \u2014 must be added"
     },
     "businessSchemaHtml": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Hidden HtmlComponent for JSON-LD schema — must be added"
+      "note": "Hidden HtmlComponent for JSON-LD schema \u2014 must be added"
     },
     "websiteSchemaHtml": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Hidden HtmlComponent for website schema — must be added"
+      "note": "Hidden HtmlComponent for website schema \u2014 must be added"
     }
   },
   "home_hero": {
-    "_comment": "Hero section — section1 (Welcome/Hero)",
+    "_comment": "Hero section \u2014 section1 (Welcome/Hero)",
     "heroSection": {
       "templateNickname": "section1",
       "templateType": "Section",
@@ -164,11 +169,11 @@
       "templateNickname": "box28",
       "templateType": "Container",
       "confidence": "MEDIUM",
-      "note": "Hero text overlay container — box28 is 'Hero text container' (child of box29 outer wrapper). Chosen over box29 because overlay refers to the text content layer, not the full-width wrapper."
+      "note": "Hero text overlay container \u2014 box28 is 'Hero text container' (child of box29 outer wrapper). Chosen over box29 because overlay refers to the text content layer, not the full-width wrapper."
     }
   },
   "home_categories": {
-    "_comment": "Store Categories — section10",
+    "_comment": "Store Categories \u2014 section10",
     "categoryRepeater": {
       "templateNickname": null,
       "confidence": "MISMATCH",
@@ -177,7 +182,7 @@
     "categorySkeleton": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Skeleton loader — must be added"
+      "note": "Skeleton loader \u2014 must be added"
     },
     "_templateCategoryCards": {
       "box26": "Category card 1 container (Futon Frames)",
@@ -188,15 +193,15 @@
       "text13": "Card 2 label",
       "text12": "Card 3 label",
       "text11": "Card 4 label",
-      "image26": "Card 1 image (guessed — may be imageX26 or different)",
-      "image24": "Card 2 image (guessed — may be imageX24 or different)",
-      "image22": "Card 3 image (guessed — may be imageX22 or different)",
-      "image20": "Card 4 image (guessed — may be imageX20 or different)",
+      "image26": "Card 1 image (guessed \u2014 may be imageX26 or different)",
+      "image24": "Card 2 image (guessed \u2014 may be imageX24 or different)",
+      "image22": "Card 3 image (guessed \u2014 may be imageX22 or different)",
+      "image20": "Card 4 image (guessed \u2014 may be imageX20 or different)",
       "_note": "Image element IDs are guessed from Wix convention (imageN for boxN). Code also tries box.background.src as fallback. Verify in Wix Studio editor."
     }
   },
   "home_featured_products": {
-    "_comment": "Best Sellers — section6 (Products Gallery / Best Sellers)",
+    "_comment": "Best Sellers \u2014 section6 (Products Gallery / Best Sellers)",
     "featuredTitle": {
       "templateNickname": "text5",
       "templateType": "WRichText",
@@ -206,7 +211,7 @@
     "featuredSubtitle": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "No subtitle in template section — must be added"
+      "note": "No subtitle in template section \u2014 must be added"
     },
     "featuredRepeater": {
       "templateNickname": "gridGallery1",
@@ -216,46 +221,46 @@
     "featuredSkeleton": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Skeleton loader — must be added"
+      "note": "Skeleton loader \u2014 must be added"
     },
     "featuredQuickViewModal": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view modal — must be added as overlay/lightbox"
+      "note": "Quick view modal \u2014 must be added as overlay/lightbox"
     },
     "featuredQvImage": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view product image — part of modal"
+      "note": "Quick view product image \u2014 part of modal"
     },
     "featuredQvName": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view product name — part of modal"
+      "note": "Quick view product name \u2014 part of modal"
     },
     "featuredQvPrice": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view product price — part of modal"
+      "note": "Quick view product price \u2014 part of modal"
     },
     "featuredQvAddToCart": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view add to cart button — part of modal"
+      "note": "Quick view add to cart button \u2014 part of modal"
     },
     "featuredQvViewFull": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view 'view full details' link — part of modal"
+      "note": "Quick view 'view full details' link \u2014 part of modal"
     },
     "featuredQvClose": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Quick view close button — part of modal"
+      "note": "Quick view close button \u2014 part of modal"
     }
   },
   "home_sale_products": {
-    "_comment": "New In — section8 (Products - New In)",
+    "_comment": "New In \u2014 section8 (Products - New In)",
     "saleSection": {
       "templateNickname": "section8",
       "templateType": "Section",
@@ -265,21 +270,21 @@
     "saleRepeater": {
       "templateNickname": "gridGallery2",
       "confidence": "MISMATCH",
-      "note": "*** CRITICAL: Same as featuredRepeater — TPAWidget Pro Gallery, NOT Repeater ***"
+      "note": "*** CRITICAL: Same as featuredRepeater \u2014 TPAWidget Pro Gallery, NOT Repeater ***"
     },
     "saleSkeleton": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Skeleton loader — must be added"
+      "note": "Skeleton loader \u2014 must be added"
     }
   },
   "home_promotional": {
-    "_comment": "Promotional — section9",
+    "_comment": "Promotional \u2014 section9",
     "swatchPromoSection": {
       "templateNickname": "section9",
       "templateType": "Section",
       "confidence": "MEDIUM",
-      "note": "Promotional section — template shows generic promo, our code has swatch promo"
+      "note": "Promotional section \u2014 template shows generic promo, our code has swatch promo"
     },
     "swatchPromoTitle": {
       "templateNickname": "text10",
@@ -301,8 +306,8 @@
     }
   },
   "home_about": {
-    "_comment": "About — section7",
-    "_note": "Template about section has text + images + Learn More CTA. Our code doesn't reference these IDs directly in Home.js — the About section is handled by About page. These map for completeness.",
+    "_comment": "About \u2014 section7",
+    "_note": "Template about section has text + images + Learn More CTA. Our code doesn't reference these IDs directly in Home.js \u2014 the About section is handled by About page. These map for completeness.",
     "_templateElements": {
       "section7": "About section container",
       "text6": "About text paragraph",
@@ -313,43 +318,43 @@
     }
   },
   "home_press": {
-    "_comment": "Press / As Seen In — section4",
+    "_comment": "Press / As Seen In \u2014 section4",
     "section4": {
       "templateNickname": "section4",
       "templateType": "Section",
       "confidence": "HIGH",
-      "note": "Press / As Seen In section — collapsed to hide Tera template logos (CF-xc7t)"
+      "note": "Press / As Seen In section \u2014 collapsed to hide Tera template logos (CF-xc7t)"
     },
     "testimonialRepeater": {
       "templateNickname": "repeater1",
       "templateType": "Repeater",
       "confidence": "MISMATCH",
-      "note": "Template's repeater1 is for PRESS LOGOS (As Seen In), but our code uses testimonialRepeater for customer testimonials. Content-type mismatch — press logos vs reviews. Need separate repeater for testimonials."
+      "note": "Template's repeater1 is for PRESS LOGOS (As Seen In), but our code uses testimonialRepeater for customer testimonials. Content-type mismatch \u2014 press logos vs reviews. Need separate repeater for testimonials."
     },
     "testimonialSection": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Testimonial section — template has Press/As Seen In section instead. Need to add testimonial section or repurpose"
+      "note": "Testimonial section \u2014 template has Press/As Seen In section instead. Need to add testimonial section or repurpose"
     },
     "testimonialSlideshow": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Testimonial slideshow — must be added"
+      "note": "Testimonial slideshow \u2014 must be added"
     },
     "testimonialPauseBtn": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Slideshow pause button — must be added"
+      "note": "Slideshow pause button \u2014 must be added"
     },
     "testimonialSchemaScript": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Hidden script for testimonial schema — must be added"
+      "note": "Hidden script for testimonial schema \u2014 must be added"
     }
   },
   "home_instagram": {
-    "_comment": "Instagram — section5",
-    "_note": "Template has gallery1 (TPAWidget Instagram gallery). Our code doesn't reference Instagram section elements in Home.js — this is handled by external widget.",
+    "_comment": "Instagram \u2014 section5",
+    "_note": "Template has gallery1 (TPAWidget Instagram gallery). Our code doesn't reference Instagram section elements in Home.js \u2014 this is handled by external widget.",
     "_templateElements": {
       "section5": "Instagram section",
       "text4": "FOLLOW US heading",
@@ -361,17 +366,17 @@
     "ridgelineHeader": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Mountain ridgeline SVG header decoration — must be added as HtmlComponent"
+      "note": "Mountain ridgeline SVG header decoration \u2014 must be added as HtmlComponent"
     },
     "trustBar": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Trust signals bar (Free Shipping, Warranty, etc.) — must be added"
+      "note": "Trust signals bar (Free Shipping, Warranty, etc.) \u2014 must be added"
     },
     "videoShowcaseSection": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Video showcase section — must be added"
+      "note": "Video showcase section \u2014 must be added"
     },
     "videoShowcaseTitle": {
       "templateNickname": null,
@@ -391,7 +396,7 @@
     "quizCTASection": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Style quiz CTA section — must be added"
+      "note": "Style quiz CTA section \u2014 must be added"
     },
     "quizCTATitle": {
       "templateNickname": null,
@@ -411,11 +416,11 @@
     "recentSection": {
       "templateNickname": null,
       "confidence": "MISSING",
-      "note": "Recently viewed products section — must be added"
+      "note": "Recently viewed products section \u2014 must be added"
     }
   },
   "masterPage_promo_exit": {
-    "_comment": "Promo lightbox + exit-intent popup — masterPage overlays, no template equivalent",
+    "_comment": "Promo lightbox + exit-intent popup \u2014 masterPage overlays, no template equivalent",
     "_note": "These are overlay/modal elements that don't exist in the template. All must be added as new elements: lightbox containers, overlay backgrounds, text elements, buttons, form inputs.",
     "promoLightbox": {
       "templateNickname": null,
@@ -604,21 +609,21 @@
     }
   },
   "_summary": {
-    "totalCodeElements": 96,
+    "totalCodeElements": 97,
     "highConfidence": 13,
     "mediumConfidence": 7,
     "mismatch": 6,
-    "missing": 70,
+    "missing": 71,
     "notReferenced_templateOnly": 18,
-    "_countNote": "13 HIGH + 7 MEDIUM + 6 MISMATCH + 70 MISSING = 96 total. notReferenced_templateOnly counts template elements with no code counterpart (separate from code element mapping).",
+    "_countNote": "13 HIGH + 7 MEDIUM + 6 MISMATCH + 71 MISSING = 97 total. notReferenced_templateOnly counts template elements with no code counterpart (separate from code element mapping).",
     "criticalMismatches": [
-      "featuredRepeater → gridGallery1: Pro Gallery, not Repeater. Code uses .onItemReady() which only works on Repeaters.",
-      "saleRepeater → gridGallery2: Same Pro Gallery vs Repeater mismatch.",
-      "categoryRepeater → 4 individual cards: No repeater at all — template has static containers.",
-      "testimonialRepeater → repeater1: Content-type mismatch — template repeater is for press logos, our code expects customer testimonials.",
-      "newsletterEmail/Submit → form2: Template uses TPAWidget form, code expects bare input+button.",
-      "headerSearchInput → searchButton2: Template has SearchButton widget, code expects text input."
+      "featuredRepeater \u2192 gridGallery1: Pro Gallery, not Repeater. Code uses .onItemReady() which only works on Repeaters.",
+      "saleRepeater \u2192 gridGallery2: Same Pro Gallery vs Repeater mismatch.",
+      "categoryRepeater \u2192 4 individual cards: No repeater at all \u2014 template has static containers.",
+      "testimonialRepeater \u2192 repeater1: Content-type mismatch \u2014 template repeater is for press logos, our code expects customer testimonials.",
+      "newsletterEmail/Submit \u2192 form2: Template uses TPAWidget form, code expects bare input+button.",
+      "headerSearchInput \u2192 searchButton2: Template has SearchButton widget, code expects text input."
     ],
-    "recommendation": "Phase the hookup: (1) Rename 12 HIGH-confidence elements via documentServices API immediately. (2) Decide on Repeater vs Pro Gallery strategy for product grids — this is the biggest architectural question. (3) Add the 72 missing elements in batches, starting with must-haves (schema, a11y, skeleton loaders) and deferring nice-to-haves (promo lightbox, exit intent, video showcase)."
+    "recommendation": "Phase the hookup: (1) Rename 12 HIGH-confidence elements via documentServices API immediately. (2) Decide on Repeater vs Pro Gallery strategy for product grids \u2014 this is the biggest architectural question. (3) Add the 72 missing elements in batches, starting with must-haves (schema, a11y, skeleton loaders) and deferring nice-to-haves (promo lightbox, exit intent, video showcase)."
   }
 }

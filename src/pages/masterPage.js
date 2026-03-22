@@ -225,7 +225,7 @@ function initEnhancedNavigation() {
 
 // ── Announcement Bar ────────────────────────────────────────────────
 // Three-source message rotation: flash sales → CMS AnnouncementBars → static fallbacks.
-// First CMS bar's colors are applied to the container; all bar messages rotate on a timer.
+// First CMS bar's colors and linkUrl are applied to the container; all bar messages rotate on a timer.
 
 async function initAnnouncementBar() {
   const staticMessages = [
@@ -254,27 +254,35 @@ async function initAnnouncementBar() {
       const msg = buildAnnouncementMessage(deal);
       if (msg) flashMessages.push(msg);
     }
-  } catch (_) {
-    // Flash sales fetch failed — continue without
+  } catch (e) {
+    console.warn('[masterPage] announcementBar flash sales fetch failed:', e.message);
   }
 
   // Build final message list: flash sales → CMS bars → static fallbacks
   const cmsMessages = cmsBars.map(b => b.message).filter(Boolean);
   const messages = [...flashMessages, ...cmsMessages, ...staticMessages];
 
-  // Apply first CMS bar's styles to the announcement bar container
+  // Apply first CMS bar's styles + linkUrl to the announcement bar container; show link if https linkUrl present, hide otherwise
   const [firstBar] = cmsBars;
   if (firstBar) {
     try {
       if (firstBar.backgroundColor) $w('#announcementBar').style.backgroundColor = firstBar.backgroundColor;
       if (firstBar.textColor) $w('#announcementText').style.color = firstBar.textColor;
+      const link = $w('#announcementBarLink');
+      if (link) {
+        const safeUrl = typeof firstBar.linkUrl === 'string' && firstBar.linkUrl.startsWith('https://') ? firstBar.linkUrl : null;
+        if (safeUrl) { link.href = safeUrl; link.show(); }
+        else { link.hide(); }
+      } else if (firstBar.linkUrl) {
+        console.warn('[masterPage] #announcementBarLink element missing from page; linkUrl will not be shown');
+      }
     } catch (e) { console.warn('[masterPage] announcementBar style apply failed:', e.message); }
   }
 
   try {
     initAnnouncementBarHelper($w, messages, { interval: 5000 });
   } catch (e) {
-    // Announcement bar may not be on all pages
+    console.warn('[masterPage] initAnnouncementBar helper failed (bar may not be on this page):', e.message);
   }
 }
 

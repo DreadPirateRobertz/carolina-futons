@@ -2524,6 +2524,69 @@ describe('masterPage.js', () => {
         expect(getEl('#announcementText').style.color).toBe('');
       });
     });
+
+    it('wires linkUrl to #announcementBarLink and shows it when present', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Shop the sale!', linkUrl: 'https://carolinafutons.com/sale', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').href).toBe('https://carolinafutons.com/sale');
+        expect(getEl('#announcementBarLink').show).toHaveBeenCalled();
+      });
+    });
+
+    it('hides #announcementBarLink when first CMS bar has no linkUrl', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Visit our showroom!', linkUrl: null, backgroundColor: null, textColor: null, priority: 5 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').hide).toHaveBeenCalled();
+      });
+    });
+
+    it('hides #announcementBarLink for non-https linkUrl (security guard)', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Click me!', linkUrl: 'javascript:alert(1)', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').hide).toHaveBeenCalled();
+        expect(getEl('#announcementBarLink').show).not.toHaveBeenCalled();
+      });
+    });
+
+    it('does not throw and warns when #announcementBarLink element is absent from page', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const origW = globalThis.$w;
+      globalThis.$w = Object.assign(
+        (sel) => (sel === '#announcementBarLink' ? null : getEl(sel)),
+        { onReady: origW.onReady }
+      );
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Sale!', linkUrl: 'https://carolinafutons.com/sale', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await expect(onReadyHandler()).resolves.not.toThrow();
+      await vi.waitFor(() => {
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('#announcementBarLink'));
+      });
+      globalThis.$w = origW;
+      warnSpy.mockRestore();
+    });
+
+    it('logs console.warn when CMS fetch rejects (flash sales path)', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      getActiveAnnouncementBars.mockRejectedValueOnce(new Error('DB timeout'));
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('[masterPage] announcementBar'),
+          expect.stringContaining('DB timeout')
+        );
+      });
+      warnSpy.mockRestore();
+    });
   });
 
   // ── GDPR: TikTok PageView consent gate ──────────────────────────────
