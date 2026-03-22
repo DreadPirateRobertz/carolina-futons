@@ -6,9 +6,12 @@
  *
  * See CF-n3px for original specification.
  */
-import { describe, it, expect, beforeEach } from 'vitest';
-import { __seed, __reset as resetData } from './__mocks__/wix-data.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { __seed, __reset as resetData, __setQueryError, __setInsertError, __setUpdateError } from './__mocks__/wix-data.js';
 import { __setMember, __reset as resetMember } from './__mocks__/wix-members-backend.js';
+
+vi.mock('backend/errorMonitoring.web.js', () => ({ logError: vi.fn().mockResolvedValue(undefined) }));
+import { logError } from 'backend/errorMonitoring.web.js';
 import {
   getNotificationPreferences,
   saveNotificationPreferences,
@@ -31,6 +34,7 @@ const DEFAULT_PREFS = {
 beforeEach(() => {
   resetData();
   resetMember();
+  logError.mockClear();
 });
 
 // ── getNotificationPreferences ────────────────────────────────────────
@@ -225,5 +229,41 @@ describe('unsubscribeAll', () => {
     const result = await unsubscribeAll();
     expect(result.success).toBe(false);
     expect(result.error).toBeTruthy();
+  });
+});
+
+// ── logError integration ──────────────────────────────────────────────
+
+describe('logError called on wixData errors', () => {
+  it('calls logError when getNotificationPreferences wixData throws', async () => {
+    __setMember(MEMBER);
+    __setQueryError(COLLECTION, new Error('DB down'));
+    await getNotificationPreferences();
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.getNotificationPreferences',
+      severity: 'error',
+    }));
+  });
+
+  it('calls logError when saveNotificationPreferences wixData throws', async () => {
+    __setMember(MEMBER);
+    __seed(COLLECTION, []);
+    __setInsertError(COLLECTION, new Error('DB down'));
+    await saveNotificationPreferences({ restock: true, orderUpdate: true, promo: false, cfPlus: true, sms: false });
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.saveNotificationPreferences',
+      severity: 'error',
+    }));
+  });
+
+  it('calls logError when unsubscribeAll wixData throws', async () => {
+    __setMember(MEMBER);
+    __seed(COLLECTION, []);
+    __setInsertError(COLLECTION, new Error('DB down'));
+    await unsubscribeAll();
+    expect(logError).toHaveBeenCalledWith(expect.objectContaining({
+      context: 'notificationPreferences.unsubscribeAll',
+      severity: 'error',
+    }));
   });
 });
