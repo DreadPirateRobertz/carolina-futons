@@ -963,6 +963,23 @@ For each section below:
 **Size Comparison:** ⚠️ REPEATER
 `sizeCompareSection` (Section), `sizeCompareTitle` (Text), `sizeCompareRepeater` (Repeater), `sizeComparisonTitle` (Text), `sizeComparisonVisual` (HtmlComponent)
 
+### Delivery Estimator (NEW v1.1.0+ — PR #649)
+*Source: `src/public/ProductDetails.js` — `initDeliveryEstimate()` + `updateEstimateForZip()`*
+*Backend: `src/backend/shippingIntelligence.web.js` — `getDeliveryEstimate(zip, productIds[])`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `deliveryZipInput` | Input | ZIP code entry field |
+| `deliveryZipBtn` | Button | "Check Delivery" action button |
+| `deliveryEstimateBox` | Box | Container — hidden until result ready |
+| `deliveryEstimateText` | Text | Delivery window display (e.g. "Mon Jun 2 – Wed Jun 4") |
+| `deliveryEstimateError` | Text | Error message (hidden by default) |
+| `whiteGloveNote` | Text | White-glove delivery note (shown when applicable) |
+
+**Behaviour**: ZIP entry → calls `getDeliveryEstimate` → shows estimated delivery window in `deliveryEstimateBox`. White-glove note visible when carrier returns white-glove service. UPS fallback: "2–5 business days". `deliveryEstimateBox` hidden until user submits a ZIP.
+
+---
+
 ### Promo Banner Carousel (NEW v0.9.0+)
 *Source: `src/public/promoBannerCarousel.js`*
 
