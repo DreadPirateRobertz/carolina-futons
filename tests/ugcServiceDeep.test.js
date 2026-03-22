@@ -59,6 +59,20 @@ function buildQueryChain(collection) {
       if (filters._limit) items = items.slice(0, filters._limit);
       return { items, totalCount: items.length };
     },
+    count: async () => {
+      let items = [...(_collections[collection] || [])];
+      for (const [key, f] of Object.entries(filters)) {
+        if (key === '_limit') continue;
+        const fld = f.field || key;
+        if (f.type === 'eq') items = items.filter(i => i[fld] === f.value);
+        if (f.type === 'hasSome') items = items.filter(i => {
+          if (Array.isArray(i[f.field])) return i[f.field].some(v => f.value.includes(v));
+          return f.value.includes(i[f.field]);
+        });
+        if (f.type === 'ne') items = items.filter(i => i[f.field] !== f.value);
+      }
+      return items.length;
+    },
   };
   return chain;
 }
@@ -347,6 +361,17 @@ describe('voteForPhoto', () => {
     __seed('UGCVotes', []);
     const r = await mod.voteForPhoto('photo1');
     expect(r.voteCount).toBe(1);
+  });
+
+  it('treats duplicate insert (concurrent TOCTOU) as success with voted:true', async () => {
+    __seed('UGCPhotos', [{ _id: 'photo1', voteCount: 3 }]);
+    __seed('UGCVotes', []);
+    const wixData = await import('wix-data');
+    vi.spyOn(wixData.default, 'insert').mockRejectedValueOnce(new Error('duplicate key constraint'));
+    const r = await mod.voteForPhoto('photo1');
+    expect(r.success).toBe(true);
+    expect(r.voted).toBe(true);
+    expect(r.voteCount).toBe(3);
   });
 });
 

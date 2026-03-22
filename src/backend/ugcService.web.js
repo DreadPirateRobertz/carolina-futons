@@ -33,6 +33,8 @@
  *     memberId (Text, indexed) - Voter member ID
  *     photoId (Text, indexed) - Photo being voted on
  *     createdAt (Date) - Vote timestamp
+ *   REQUIRED: Add a unique constraint on (memberId, photoId) in the UGCVotes
+ *   collection to prevent duplicate votes under concurrent requests (TOCTOU).
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -277,12 +279,19 @@ export const voteForPhoto = webMethod(
         voted = false;
         voteCount = photo.voteCount;
       } else {
-        // Add vote (toggle on)
-        await wixData.insert('UGCVotes', {
-          memberId: member._id,
-          photoId: cleanId,
-          createdAt: new Date(),
-        });
+        // Add vote (toggle on) — insert may fail if a concurrent request
+        // already inserted (TOCTOU). Treat duplicate as vote-already-counted.
+        try {
+          await wixData.insert('UGCVotes', {
+            memberId: member._id,
+            photoId: cleanId,
+            createdAt: new Date(),
+          });
+        } catch (dupErr) {
+          // Unique constraint violation — vote already counted by concurrent request
+          console.warn('[ugcService] duplicate vote insert (concurrent), treating as voted', dupErr?.message);
+          return { success: true, voted: true, voteCount: photo.voteCount || 0 };
+        }
         photo.voteCount = (photo.voteCount || 0) + 1;
         await wixData.update('UGCPhotos', photo);
         voted = true;
@@ -401,20 +410,26 @@ export const getUGCStats = webMethod(
   Permissions.Anyone,
   async () => {
     try {
-      const result = await wixData.query('UGCPhotos')
+      const total = await wixData.query('UGCPhotos')
         .hasSome('status', ['approved', 'featured'])
-        .limit(1000)
-        .find();
+        .count();
 
-      const photos = result.items;
-      const total = photos.length;
-      const featured = photos.filter((p) => p.status === 'featured').length;
+      const featured = await wixData.query('UGCPhotos')
+        .eq('status', 'featured')
+        .count();
 
+      const roomTypeCounts = await Promise.all(
+        VALID_ROOM_TYPES.map(roomType =>
+          wixData.query('UGCPhotos')
+            .hasSome('status', ['approved', 'featured'])
+            .eq('roomType', roomType)
+            .count()
+            .then(count => ({ roomType, count }))
+        )
+      );
       const byRoomType = {};
-      for (const photo of photos) {
-        if (photo.roomType) {
-          byRoomType[photo.roomType] = (byRoomType[photo.roomType] || 0) + 1;
-        }
+      for (const { roomType, count } of roomTypeCounts) {
+        if (count > 0) byRoomType[roomType] = count;
       }
 
       return {
