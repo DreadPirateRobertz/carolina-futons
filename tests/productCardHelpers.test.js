@@ -526,4 +526,17 @@ describe('getLifestyleImage', () => {
   it('returns empty string for null product', () => {
     expect(getLifestyleImage(null)).toBe('');
   });
+
+  it('returns mainMedia when mediaItems is not an array', () => {
+    const product = { mainMedia: 'https://img.com/main.jpg', mediaItems: 'not-an-array' };
+    expect(getLifestyleImage(product)).toBe('https://img.com/main.jpg');
+  });
+
+  it('does not throw when mediaItems contains null/undefined entries', () => {
+    const product = {
+      mainMedia: 'https://img.com/main.jpg',
+      mediaItems: [null, undefined, { url: 'https://img.com/lifestyle.jpg', title: 'lifestyle', alt: '' }],
+    };
+    expect(getLifestyleImage(product)).toBe('https://img.com/lifestyle.jpg');
+  });
 });

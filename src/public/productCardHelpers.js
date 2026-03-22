@@ -134,6 +134,7 @@ export function getLifestyleImage(product) {
   const fallback = product?.mainMedia || '';
   if (Array.isArray(mediaItems) && mediaItems.length > 0) {
     const keywordMatch = mediaItems.find(item => {
+      if (!item) return false;
       const searchable = `${item.title || ''} ${item.alt || ''} ${item.url || ''} ${item.src || ''}`.toLowerCase();
       return LIFESTYLE_KEYWORDS.some(kw => searchable.includes(kw));
     });
