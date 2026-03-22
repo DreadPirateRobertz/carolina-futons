@@ -47,10 +47,19 @@ vi.mock('backend/productRecommendations.web', () => ({
   ])),
 }));
 
+vi.mock('backend/blogService.web', () => ({
+  getPublishedBlogPosts: vi.fn(() => Promise.resolve({
+    posts: [{ _id: 'p1', title: 'Post 1', slug: 'post-1', excerpt: 'Excerpt', category: 'Guides', publishedDate: '2026-01-15', coverImageUrl: '', authorName: 'CF Team' }],
+    total: 1, page: 1, perPage: 27, totalPages: 1, hasNextPage: false, hasPrevPage: false,
+  })),
+  fetchAllBlogPosts: vi.fn(() => Promise.resolve([])),
+  fetchBlogPost: vi.fn(() => Promise.resolve(null)),
+  fetchBlogSlugs: vi.fn(() => Promise.resolve([])),
+  fetchBlogFaqs: vi.fn(() => Promise.resolve([])),
+}));
+
 vi.mock('backend/blogContent', () => ({
-  getAllBlogPosts: vi.fn(() => [
-    { title: 'Post 1', slug: 'post-1', excerpt: 'Excerpt', category: 'Guides', publishDate: '2026-01-15' },
-  ]),
+  getAllBlogPosts: vi.fn(() => []),
 }));
 
 vi.mock('wix-location-frontend', () => ({
@@ -117,7 +126,7 @@ vi.mock('backend/newsletterService.web', () => ({
 // ── Import mock refs ─────────────────────────────────────────────────
 
 let initBackToTop, trackEvent, fireCustomEvent, makeClickable, announce,
-  initPageSeo, getBusinessSchema, getFeaturedProducts, getAllBlogPosts,
+  initPageSeo, getBusinessSchema, getFeaturedProducts, getPublishedBlogPosts,
   getFeaturedPost, getCategories, filterPostsByCategory, estimateReadingTime,
   formatPublishDate, buildAuthorBio, limitForViewport, subscribeToNewsletter;
 
@@ -129,7 +138,7 @@ beforeAll(async () => {
   ({ initPageSeo } = await import('public/pageSeo.js'));
   ({ getBusinessSchema } = await import('backend/seoHelpers.web'));
   ({ getFeaturedProducts } = await import('backend/productRecommendations.web'));
-  ({ getAllBlogPosts } = await import('backend/blogContent'));
+  ({ getPublishedBlogPosts } = await import('backend/blogService.web'));
   ({ getFeaturedPost, getCategories, filterPostsByCategory, estimateReadingTime, formatPublishDate, buildAuthorBio } = await import('public/blogHelpers'));
   ({ limitForViewport } = await import('public/mobileHelpers'));
   ({ subscribeToNewsletter } = await import('backend/newsletterService.web'));
@@ -164,9 +173,9 @@ describe('Blog page handlers', () => {
       expect(trackEvent).toHaveBeenCalledWith('page_view', { page: 'blog' });
     });
 
-    it('calls getAllBlogPosts', async () => {
+    it('calls getPublishedBlogPosts to load CMS posts', async () => {
       await onReadyHandler();
-      expect(getAllBlogPosts).toHaveBeenCalled();
+      expect(getPublishedBlogPosts).toHaveBeenCalled();
     });
 
     it('posts SEO schema to #blogSeoSchema', async () => {
@@ -363,7 +372,9 @@ describe('Blog page handlers', () => {
     });
 
     it('collapses grid and expands empty state when no posts', async () => {
-      getAllBlogPosts.mockReturnValueOnce([]);
+      getPublishedBlogPosts.mockResolvedValueOnce({
+        posts: [], total: 0, page: 1, perPage: 27, totalPages: 0, hasNextPage: false, hasPrevPage: false,
+      });
       await onReadyHandler();
       expect(getEl('#blogEmptyState').expand).toHaveBeenCalled();
       expect(getEl('#blogListRepeater').collapse).toHaveBeenCalled();

@@ -3,8 +3,7 @@
 // reading time badges, SEO schema, social sharing, and related products sidebar
 import { getBusinessSchema } from 'backend/seoHelpers.web';
 import { getFeaturedProducts } from 'backend/productRecommendations.web';
-// eslint-disable-next-line @wix/cli/no-invalid-backend-import
-import { getAllBlogPosts } from 'backend/blogContent';
+import { getPublishedBlogPosts } from 'backend/blogService.web';
 import wixLocationFrontend from 'wix-location-frontend';
 import { limitForViewport, initBackToTop, onViewportChange } from 'public/mobileHelpers';
 import { trackEvent } from 'public/engagementTracker';
@@ -33,8 +32,9 @@ $w.onReady(async function () {
   initPageSeo('blog');
   trackEvent('page_view', { page: 'blog' });
   try {
-    // ── Load Blog Posts ─────────────────────────────────────────────
-    _allPosts = getAllBlogPosts() || [];
+    // ── Load Blog Posts (CMS-driven via Wix Blog backend) ───────────
+    const blogResult = await getPublishedBlogPosts(1, ITEMS_PER_PAGE * 3);
+    _allPosts = blogResult.posts || [];
 
     // ── Featured Post Hero ──────────────────────────────────────────
     initFeaturedHero(_allPosts);
