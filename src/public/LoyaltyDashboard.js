@@ -1,24 +1,18 @@
 /**
  * @module LoyaltyDashboard
  * @description Velo frontend module for the loyalty tier progress bar,
- * tier badge, and animated tier-up milestone popup on the Member Page.
+ * tier badge, and tier-up milestone popup on the Member Page.
  *
  * Calls getMyLoyaltyAccount() once on page load, then updates:
  *   #loyaltyProgressBar  — Wix ProgressBar (.progress 0–100)
  *   #loyaltyTierBadge    — Text element showing icon + tier name
- *   #tierUpModal         — Container shown on tier-up milestone
+ *   #tierUpModal         — Container revealed on tier-up milestone
  *   #tierUpModalText     — Text element inside the modal
  *
  * Tier-up detection uses sessionStorage so the popup fires only once per
  * browser session on the first visit after earning a new tier.
  *
  * CF-gkgv: Loyalty tier progress bar + milestone popups
- *
- * Editor nickname → element ID mapping (Member Page):
- *   loyaltyProgressBar → #loyaltyProgressBar
- *   loyaltyTierBadge   → #loyaltyTierBadge
- *   tierUpModal        → #tierUpModal
- *   tierUpModalText    → #tierUpModalText
  *
  * @example
  *   // In Member Page code (page file):
@@ -58,7 +52,9 @@ function get$w(opts) {
 
 /**
  * Resolve injectable sessionStorage from opts or fall back to the global.
- * Returns null if sessionStorage is unavailable (SSR / private browsing).
+ * Returns null if sessionStorage is unavailable (SSR context or blocked
+ * cross-origin iframe). Modern browsers expose sessionStorage in private
+ * browsing, so null here indicates a non-browser environment.
  * @param {Object} opts
  * @returns {Object|null}
  */
@@ -81,7 +77,9 @@ function getAccountFn(opts) {
 /**
  * Update the #loyaltyProgressBar element.
  * Sets .progress (0–100) and .label to the human-readable progress text.
- * No-ops silently if the element does not exist on this page.
+ * No-ops if the element does not exist on this page ($wFn returns null) or
+ * if $wFn itself throws (element not yet mounted). Unexpected errors are
+ * logged before being swallowed so production issues remain diagnosable.
  *
  * @param {Function} $wFn
  * @param {Object} account - Loyalty account from getMyLoyaltyAccount
@@ -92,13 +90,16 @@ export function renderProgressBar($wFn, account) {
     if (!bar) return;
     bar.progress = getProgressPercent(account);
     bar.label    = formatProgressText(account);
-  } catch (_) { /* element may not exist on this page */ }
+  } catch (err) {
+    console.warn('[LoyaltyDashboard] renderProgressBar failed:', err?.message ?? err);
+  }
 }
 
 /**
  * Update the #loyaltyTierBadge text element.
  * Renders the tier icon + tier name; sets font color to the tier colour.
- * No-ops silently if the element does not exist on this page.
+ * No-ops if the element does not exist on this page or if $wFn throws.
+ * Unexpected errors are logged before being swallowed.
  *
  * @param {Function} $wFn
  * @param {Object} account - Loyalty account from getMyLoyaltyAccount
@@ -108,16 +109,22 @@ export function renderTierBadge($wFn, account) {
     const badge = $wFn('#loyaltyTierBadge');
     if (!badge) return;
     const tier = account?.tier || 'Bronze';
-    badge.text        = `${getTierIcon(account)} ${tier}`;
+    badge.text        = `${getTierIcon(tier)} ${tier}`;
     badge.style.color = getTierColor(tier);
-  } catch (_) { /* element may not exist on this page */ }
+  } catch (err) {
+    console.warn('[LoyaltyDashboard] renderTierBadge failed:', err?.message ?? err);
+  }
 }
 
 /**
  * Check whether the member has just crossed a tier threshold this session.
  * Compares the stored previous tier (sessionStorage) to the current tier.
- * On a tier-up, shows the #tierUpModal popup and updates the stored value.
- * Always updates the stored tier regardless of whether a tier-up occurred.
+ * On a tier-up, shows the #tierUpModal popup.
+ *
+ * Storage writes are attempted independently of the tier comparison so a
+ * write failure (e.g. quota exceeded) does not suppress the popup.
+ * Skips gracefully when account.tier is absent, storage is unavailable, or
+ * the stored value is not a recognised tier name.
  *
  * @param {Function} $wFn
  * @param {Object} account - Loyalty account from getMyLoyaltyAccount
@@ -127,10 +134,7 @@ export function checkTierUp($wFn, account, storage) {
   const currentTier = account?.tier;
   if (!currentTier) return;
 
-  if (!storage) {
-    // No storage — can't detect tier-up; skip gracefully
-    return;
-  }
+  if (!storage) return; // No storage — tier-up detection not possible
 
   let prevTier = null;
   try {
@@ -140,16 +144,18 @@ export function checkTierUp($wFn, account, storage) {
     return;
   }
 
-  // Persist current tier independently so a write failure (quota exceeded)
-  // does not prevent a legitimate tier-up popup from showing.
+  // Persist current tier independently — write failure must not block popup.
   try {
     storage.setItem(TIER_KEY, currentTier);
-  } catch (_) { /* storage write failed — non-fatal, popup still fires */ }
+  } catch (_) { /* non-fatal — popup fires regardless */ }
 
   if (!prevTier) return; // First visit — no previous tier to compare
 
   const prevIdx    = TIER_ORDER.indexOf(prevTier);
   const currentIdx = TIER_ORDER.indexOf(currentTier);
+
+  // Skip if either tier is unrecognised (stale storage from a renamed tier).
+  if (prevIdx < 0 || currentIdx < 0) return;
 
   if (currentIdx > prevIdx) {
     showTierUpModal($wFn, currentTier);
@@ -158,10 +164,12 @@ export function checkTierUp($wFn, account, storage) {
 
 /**
  * Show the tier-up celebration modal with the appropriate message.
- * No-ops silently if the modal elements do not exist on this page.
+ * No-ops if either modal element is absent. Accepts any tier name; uses a
+ * generic fallback message for tiers not in TIER_UP_MESSAGES.
+ * Unexpected errors are logged before being swallowed.
  *
  * @param {Function} $wFn
- * @param {string} tier - The new tier name ('Silver' or 'Gold')
+ * @param {string} tier - The new tier name (e.g. 'Silver', 'Gold')
  */
 export function showTierUpModal($wFn, tier) {
   try {
@@ -170,7 +178,9 @@ export function showTierUpModal($wFn, tier) {
     if (!modal || !text) return;
     text.text = TIER_UP_MESSAGES[tier] || `You've reached ${tier}!`;
     modal.show();
-  } catch (_) { /* elements may not exist on this page */ }
+  } catch (err) {
+    console.warn('[LoyaltyDashboard] showTierUpModal failed:', err?.message ?? err);
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────

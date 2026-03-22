@@ -135,6 +135,20 @@ describe('renderTierBadge', () => {
     expect(badge.text).toContain('Bronze');
   });
 
+  it('shows the star icon (⭐) for Silver tier', () => {
+    const badge = makeElement();
+    const $wFn  = make$w({ '#loyaltyTierBadge': badge });
+    renderTierBadge($wFn, makeSilverAccount());
+    expect(badge.text).toContain('⭐');
+  });
+
+  it('shows the trophy icon (🏆) for Gold tier', () => {
+    const badge = makeElement();
+    const $wFn  = make$w({ '#loyaltyTierBadge': badge });
+    renderTierBadge($wFn, makeGoldAccount());
+    expect(badge.text).toContain('🏆');
+  });
+
   it('does not throw when #loyaltyTierBadge is absent', () => {
     expect(() => renderTierBadge(make$w(), makeSilverAccount())).not.toThrow();
   });
@@ -229,6 +243,23 @@ describe('checkTierUp', () => {
     const $wFn    = make$w({ '#tierUpModal': modal });
     const storage = makeStorage({ cf_loyalty_tier: 'Bronze' });
     checkTierUp($wFn, {}, storage);
+    expect(modal.show).not.toHaveBeenCalled();
+  });
+
+  it('does not show modal when stored tier is an unrecognised/corrupted string', () => {
+    const modal   = makeElement();
+    const $wFn    = make$w({ '#tierUpModal': modal, '#tierUpModalText': makeElement() });
+    // Stale storage from a renamed or unknown tier — indexOf returns -1
+    const storage = makeStorage({ cf_loyalty_tier: 'Platinum' });
+    checkTierUp($wFn, makeBronzeAccount(), storage);
+    expect(modal.show).not.toHaveBeenCalled();
+  });
+
+  it('does not show modal when current tier is unrecognised', () => {
+    const modal   = makeElement();
+    const $wFn    = make$w({ '#tierUpModal': modal, '#tierUpModalText': makeElement() });
+    const storage = makeStorage({ cf_loyalty_tier: 'Bronze' });
+    checkTierUp($wFn, { tier: 'Platinum' }, storage);
     expect(modal.show).not.toHaveBeenCalled();
   });
 });
