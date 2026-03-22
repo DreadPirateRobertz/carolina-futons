@@ -21,6 +21,7 @@ import {
   __onUpdate,
   __setInsertError,
   __setQueryError,
+  __setUpdateError,
 } from './__mocks__/wix-data.js';
 
 import {
@@ -166,6 +167,14 @@ describe('incrementViewerCount', () => {
     __onInsert((col, item) => { if (col === 'ViewerCount') inserts.push(item); });
     await incrementViewerCount('prod-001');
     expect(inserts[0].updatedAt).toBeInstanceOf(Date);
+  });
+
+  it('returns { ok: false } when wixData.update throws', async () => {
+    __seed('ViewerCount', [makeViewerRecord({ viewCount: 5 })]);
+    __setUpdateError('ViewerCount', new Error('Update failed'));
+    const result = await incrementViewerCount('prod-001');
+    expect(result.ok).toBe(false);
+    expect(console.error).toHaveBeenCalled();
   });
 });
 
@@ -332,7 +341,7 @@ describe('initSocialProof', () => {
       incrementViewerCount: mockIncrementViewerCount,
     });
     // Allow fire-and-forget to settle
-    await new Promise(r => setTimeout(r, 10));
+    await new Promise(r => setTimeout(r, 50));
     expect(mockIncrementViewerCount).toHaveBeenCalledWith('prod-001');
   });
 
@@ -406,5 +415,25 @@ describe('initSocialProof', () => {
       getViewerCount: mockGetViewerCount,
       incrementViewerCount: vi.fn(async () => { throw new Error('Network'); }),
     })).resolves.not.toThrow();
+  });
+
+  it('session is marked even when increment fails (no retry within session)', async () => {
+    const failingIncrement = vi.fn(async () => { throw new Error('Network'); });
+    await initSocialProof('prod-001', {
+      $w: $wFn, storage,
+      getViewerCount: mockGetViewerCount,
+      incrementViewerCount: failingIncrement,
+    });
+    await new Promise(r => setTimeout(r, 50));
+    // Confirm flag is set despite the increment failing
+    expect(hasIncrementedThisSession(storage, 'prod-001')).toBe(true);
+    // Second call must not retry
+    await initSocialProof('prod-001', {
+      $w: $wFn, storage,
+      getViewerCount: mockGetViewerCount,
+      incrementViewerCount: failingIncrement,
+    });
+    await new Promise(r => setTimeout(r, 50));
+    expect(failingIncrement).toHaveBeenCalledTimes(1);
   });
 });

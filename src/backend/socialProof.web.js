@@ -10,7 +10,8 @@
  *
  * @setup
  * Uses existing CMS collections: Orders (Wix Stores), InventoryLevels.
- * No new collections required.
+ * New collection (CF-ej3t): ViewerCount — fields: productId (text), viewCount (number),
+ * lastSold24h (number), updatedAt (date). Create manually in Wix CMS before deploying.
  */
 import { Permissions, webMethod } from 'wix-web-module';
 import wixData from 'wix-data';
@@ -175,8 +176,8 @@ const VIEWER_COLLECTION = 'ViewerCount';
 
 /**
  * Get viewer count and recent sales count for a product.
- * Returns zeros on any CMS error (fail-open — callers must hide badges
- * gracefully rather than showing stale/incorrect data).
+ * Returns zeros on any CMS error (fail-safe — callers must hide badges
+ * rather than showing stale/incorrect data).
  *
  * @function getViewerCount
  * @param {string} productId
@@ -209,7 +210,8 @@ export const getViewerCount = webMethod(
 
 /**
  * Increment the viewer count for a product by 1.
- * Upserts the ViewerCount record; creates it on first call.
+ * Upserts the ViewerCount record; creates it on first call with lastSold24h: 0
+ * (lastSold24h is managed separately by the order-processing pipeline).
  * Session-level rate limiting (1 call per product per session) is enforced
  * client-side — this method always increments when called.
  *

@@ -8,7 +8,7 @@
  *   #socialProofSection — hidden when both badges are hidden or on CMS error
  *
  * Increments the viewer count once per product per browser session via
- * sessionStorage rate limiting (key: cf_vcount_<productId>). Fail-open:
+ * sessionStorage rate limiting (key: cf_vcount_<productId>). Fail-safe:
  * any CMS error hides the section rather than showing stale data.
  *
  * CF-ej3t: Social Proof Widget
@@ -167,7 +167,7 @@ export function markIncrementedThisSession(storage, productId) {
  *    incrementViewerCount (fire-and-forget — does not block render).
  * 2. Fetches current viewCount + lastSold24h via getViewerCount.
  * 3. Renders both badges; hides section if both are hidden.
- * 4. On any CMS error: hides the entire section (fail-open).
+ * 4. On any CMS error: hides the entire section (fail-safe).
  *
  * @param {string} productId - The product ID from the PDP dataset
  * @param {Object} [opts]
@@ -188,10 +188,13 @@ export async function initSocialProof(productId, opts = {}) {
     return null;
   }
 
-  // Fire-and-forget increment — rate limited per session per product
+  // Fire-and-forget increment — rate limited per session per product.
+  // Mark is set before the async call so rapid re-renders in the same session
+  // don't each trigger an increment while the first is still in flight.
+  // Trade-off: a failed increment is not retried within that session.
   if (!hasIncrementedThisSession(storage, productId)) {
     markIncrementedThisSession(storage, productId);
-    increment(productId).catch(() => { /* non-fatal */ });
+    increment(productId).catch(() => { /* non-fatal — count accuracy is best-effort */ });
   }
 
   // Fetch current counts
