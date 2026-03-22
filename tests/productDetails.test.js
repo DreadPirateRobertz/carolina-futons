@@ -518,6 +518,31 @@ describe('ProductDetails', () => {
       expect($w('#deliveryEstimateBox').show).toHaveBeenCalled();
     });
 
+    it('appends service name to estimate text when UPS returns a service', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '5-7 business days', minDays: 5, maxDays: 7,
+        minDate: '2026-03-27', maxDate: '2026-03-31', source: 'ups', service: 'UPS Ground',
+      });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateText').text).toContain('via UPS Ground');
+      expect($w('#whiteGloveNote').show).toHaveBeenCalled();
+    });
+
+    it('hides whiteGloveNote and omits service when UPS returns fallback (service null)', async () => {
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '2-5 business days', source: 'fallback', service: null,
+      });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#deliveryEstimateText').text).not.toContain('via');
+      expect($w('#whiteGloveNote').hide).toHaveBeenCalled();
+    });
+
     it('uses estimate text directly on fallback (no minDate/maxDate)', async () => {
       getDeliveryEstimate.mockResolvedValueOnce({
         success: true, estimate: '2-5 business days', source: 'fallback', service: null,

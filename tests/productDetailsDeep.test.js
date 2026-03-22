@@ -421,6 +421,19 @@ describe('ProductDetails — deep coverage', () => {
       const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
       await clickHandler();
       expect($w('#deliveryEstimateText').text).toContain('Estimated delivery:');
+      expect($w('#deliveryEstimateText').text).toContain('via UPS Ground');
+    });
+
+    it('shows #whiteGloveNote when UPS returns a service; hides it on fallback', async () => {
+      // fallback (service null) → hide
+      getDeliveryEstimate.mockResolvedValueOnce({
+        success: true, estimate: '2-5 business days', source: 'fallback', service: null,
+      });
+      initDeliveryEstimate($w, state);
+      $w('#deliveryZipInput').value = '28801';
+      const clickHandler = $w('#deliveryZipBtn').onClick.mock.calls[0][0];
+      await clickHandler();
+      expect($w('#whiteGloveNote').hide).toHaveBeenCalled();
     });
 
     it('hides error on valid zip before fetching', async () => {

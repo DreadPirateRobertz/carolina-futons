@@ -233,11 +233,18 @@ async function updateEstimateForZip($w, state, rawZip) {
       const early = new Date(result.minDate).toLocaleDateString('en-US', opts);
       const late = new Date(result.maxDate).toLocaleDateString('en-US', opts);
       estimateText = `Estimated delivery: ${early} \u2013 ${late}`;
+      if (result.service) estimateText += ` via ${result.service}`;
     } else {
       estimateText = `Estimated delivery: ${result.estimate}`;
     }
     try { $w('#deliveryEstimateText').text = estimateText; } catch (e) {}
     try { $w('#deliveryEstimateBox').show(); } catch (e) {}
+
+    // Show white-glove note when UPS confirms a real service; hide for fallback estimates
+    try {
+      const note = $w('#whiteGloveNote');
+      if (note) { if (result.service) { note.show(); } else { note.hide(); } }
+    } catch (e) {}
   } catch (e) {}
 }
 
