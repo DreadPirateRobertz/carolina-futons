@@ -1634,6 +1634,29 @@ Right column:
         ["noMatchesTitle","Text","Heading"],["noMatchesMessage","Text","Message"],
         ["noMatchesSuggestion","Text","Suggestion"]
       ]},
+      { name: "Swatch Filter (NEW — CF-wigv)", impl: `<h4>🎨 Implementation — Swatch Filter (NEW)</h4>
+<p><em>Source: <code>src/public/SwatchFilter.js</code> — <code>initSwatchFilter($w, allProducts, { storage? })</code></em></p>
+<p><strong>Layout: Color/fabric chip strip above product grid — clientside multi-select filter, no page reload.</strong></p>
+<ul>
+  <li><strong>#swatchFilterSection</strong>: Box. Container for the entire filter strip. May be collapsed if category has no fabric data.</li>
+  <li><strong>#swatchFilterRepeater</strong>: Repeater. One item per unique fabric/color value. <code>initSwatchFilter</code> registers <code>onItemReady</code> first, then sets <code>.data</code> with unique fabrics + counts (Wix Velo requirement: <code>onItemReady</code> must be registered before <code>.data</code>).</li>
+  <li><strong>#swatchChip</strong> (per item): Box. Active state toggled via CSS class <code>swatch-active</code>. Click toggles this fabric in/out of the active filter set (multi-select union).</li>
+  <li><strong>#swatchLabel</strong> (per item): Text. Displays the fabric/color name (e.g. "Chocolate").</li>
+  <li><strong>#swatchCount</strong> (per item): Text. Displays the product count "(12)".</li>
+  <li><strong>#clearFilterBtn</strong>: Button. <span class="impl-warn">Hidden when no filter active</span> — shown whenever ≥1 chip is selected. Clears all active filters and resets grid to full list.</li>
+  <li><strong>#filterResultCount</strong>: Text. Live count — "Showing 12 of 88 products". Always visible, updated on every filter change.</li>
+  <li><strong>#productGridRepeater</strong>: Repeater. <code>initSwatchFilter</code> sets <code>.data</code> to the filtered product list on every change.</li>
+</ul>
+<p>Active filter set persisted to sessionStorage (<code>cf_swatch_filter</code>) — restored on back-navigation. Fabric source: product's <code>fabric</code> field from Wix Stores custom fields.</p>`, elements: [
+        ["swatchFilterSection","Box","Filter strip container"],
+        ["swatchFilterRepeater","Repeater","Color chip strip — initSwatchFilter sets .data"],
+        ["clearFilterBtn","Button","Reset all — hidden when no filter active"],
+        ["filterResultCount","Text","Live count: 'Showing X of Y products'"]
+      ], children: [
+        ["swatchChip","Box","Chip container — CSS class swatch-active when selected"],
+        ["swatchLabel","Text","Fabric/color name"],
+        ["swatchCount","Text","Product count '(12)'"]
+      ]},
       { name: "Comparison Tray (NEW v1.2.0+ — PR #667 / CF-r0dr)", impl: `<h4>⚖️ Implementation — Comparison Tray (NEW v1.2.0+)</h4>
 <p><em>Source: <code>src/public/ComparisonTray.js</code> — <code>initComparisonTray($w, { navigate })</code> + <code>addToCompareTray($w, product)</code></em></p>
 <p><strong>⚠️ REPLACES old Compare Bar (compareBar/compareRepeater). Use new nicknames below.</strong></p>
