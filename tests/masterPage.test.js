@@ -2545,6 +2545,17 @@ describe('masterPage.js', () => {
         expect(getEl('#announcementBarLink').hide).toHaveBeenCalled();
       });
     });
+
+    it('hides #announcementBarLink for non-https linkUrl (security guard)', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Click me!', linkUrl: 'javascript:alert(1)', backgroundColor: null, textColor: null, priority: 10 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBarLink').hide).toHaveBeenCalled();
+        expect(getEl('#announcementBarLink').show).not.toHaveBeenCalled();
+      });
+    });
   });
 
   // ── GDPR: TikTok PageView consent gate ──────────────────────────────

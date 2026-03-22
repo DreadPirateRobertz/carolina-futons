@@ -255,7 +255,7 @@ async function initAnnouncementBar() {
       if (msg) flashMessages.push(msg);
     }
   } catch (e) {
-    console.warn('[masterPage] announcementBar flash sales fetch failed:', e?.message);
+    console.warn('[masterPage] announcementBar flash sales fetch failed:', e.message);
   }
 
   // Build final message list: flash sales → CMS bars → static fallbacks
@@ -270,7 +270,8 @@ async function initAnnouncementBar() {
       if (firstBar.textColor) $w('#announcementText').style.color = firstBar.textColor;
       const link = $w('#announcementBarLink');
       if (link) {
-        if (firstBar.linkUrl) { link.href = firstBar.linkUrl; link.show(); }
+        const safeUrl = typeof firstBar.linkUrl === 'string' && firstBar.linkUrl.startsWith('https://') ? firstBar.linkUrl : null;
+        if (safeUrl) { link.href = safeUrl; link.show(); }
         else { link.hide(); }
       }
     } catch (e) { console.warn('[masterPage] announcementBar style apply failed:', e.message); }
@@ -279,7 +280,7 @@ async function initAnnouncementBar() {
   try {
     initAnnouncementBarHelper($w, messages, { interval: 5000 });
   } catch (e) {
-    console.warn('[masterPage] initAnnouncementBar helper failed (bar may not be on this page):', e?.message);
+    console.warn('[masterPage] initAnnouncementBar helper failed (bar may not be on this page):', e.message);
   }
 }
 
