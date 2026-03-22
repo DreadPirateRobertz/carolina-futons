@@ -10,8 +10,9 @@
  *  - Max 6 items cap
  *  - excludeId passed through to getRecentlyViewed
  *  - onItemReady sets image src/alt, name, price, link onClick
- *  - Price fallback: formattedPrice → computed $N.NN → empty string
- *  - Link onClick navigates to /product-page/<slug>
+ *  - Price: itemData.price (pre-formatted string) used directly; '' when absent
+ *  - Link onClick navigates to /product-page/<slug> via safeSlug
+ *  - Undefined/invalid slug → navigation skipped
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -32,13 +33,16 @@ import { to } from 'wix-location-frontend';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Reflects the actual shape stored by trackProductView:
+ * price is a pre-formatted string (e.g. '$599.00'), no formattedPrice field.
+ */
 function makeProduct(overrides = {}) {
   return {
     _id: 'prod-1',
     name: 'Sedona Futon Frame',
     slug: 'sedona-futon-frame',
-    price: 599,
-    formattedPrice: '$599.00',
+    price: '$599.00',
     mainMedia: 'https://example.com/sedona.jpg',
     ...overrides,
   };
@@ -133,11 +137,10 @@ describe('ContinueShoppingSection', () => {
 
   // ── onItemReady ────────────────────────────────────────────────────
 
-  it('onItemReady sets image src, alt, name, and price', () => {
+  it('onItemReady sets image src, alt, name, and price from stored fields', () => {
     const product = makeProduct({
       name: 'Sedona Frame',
-      price: 599,
-      formattedPrice: '$599.00',
+      price: '$599.00',
       mainMedia: 'https://example.com/sedona.jpg',
     });
     getRecentlyViewed.mockReturnValue([product]);
@@ -153,20 +156,8 @@ describe('ContinueShoppingSection', () => {
     expect($item('#continueShoppingPrice').text).toBe('$599.00');
   });
 
-  it('falls back to computed price when formattedPrice is absent', () => {
-    const product = makeProduct({ price: 349, formattedPrice: undefined });
-    getRecentlyViewed.mockReturnValue([product]);
-    initContinueShoppingSection($w);
-
-    const onItemReadyCb = $w('#continueShoppingRepeater').onItemReady.mock.calls[0][0];
-    const $item = create$w();
-    onItemReadyCb($item, product);
-
-    expect($item('#continueShoppingPrice').text).toBe('$349.00');
-  });
-
-  it('shows empty price string when both formattedPrice and price are absent', () => {
-    const product = makeProduct({ price: undefined, formattedPrice: undefined });
+  it('shows empty price string when price is absent', () => {
+    const product = makeProduct({ price: undefined });
     getRecentlyViewed.mockReturnValue([product]);
     initContinueShoppingSection($w);
 
@@ -204,5 +195,36 @@ describe('ContinueShoppingSection', () => {
     clickHandler();
 
     expect(to).toHaveBeenCalledWith('/product-page/sedona-futon-frame');
+  });
+
+  it('link onClick does not navigate when slug is undefined', () => {
+    const product = makeProduct({ slug: undefined });
+    getRecentlyViewed.mockReturnValue([product]);
+    initContinueShoppingSection($w);
+
+    const onItemReadyCb = $w('#continueShoppingRepeater').onItemReady.mock.calls[0][0];
+    const $item = create$w();
+    onItemReadyCb($item, product);
+
+    const clickHandler = $item('#continueShoppingLink').onClick.mock.calls[0][0];
+    clickHandler();
+
+    expect(to).not.toHaveBeenCalled();
+  });
+
+  it('link onClick does not navigate when slug is invalid', () => {
+    const product = makeProduct({ slug: 'bad slug with spaces!' });
+    getRecentlyViewed.mockReturnValue([product]);
+    initContinueShoppingSection($w);
+
+    const onItemReadyCb = $w('#continueShoppingRepeater').onItemReady.mock.calls[0][0];
+    const $item = create$w();
+    onItemReadyCb($item, product);
+
+    const clickHandler = $item('#continueShoppingLink').onClick.mock.calls[0][0];
+    clickHandler();
+
+    // safeSlug strips non-[a-z0-9-] chars — spaces and '!' removed
+    expect(to).toHaveBeenCalledWith('/product-page/badslugwithspaces');
   });
 });
