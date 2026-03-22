@@ -86,7 +86,7 @@ describe('getShippingRates', () => {
     expect(pickup.cost.price).toBe('0.00');
   });
 
-  it('adds local delivery option for Southeast (270-399)', async () => {
+  it('adds local delivery option for Southeast (zone-based code)', async () => {
     const result = await getShippingRates({
       lineItems: [
         { name: 'Futon Frame', quantity: 1, price: '499' },
@@ -97,7 +97,7 @@ describe('getShippingRates', () => {
     });
 
     const codes = result.shippingRates.map(r => r.code);
-    expect(codes).toContain('local-delivery');
+    expect(codes).toContain('local-delivery-zone3');
   });
 
   it('does NOT add local pickup for non-local zip codes', async () => {
@@ -200,7 +200,10 @@ describe('getShippingRates', () => {
 
   // ── White Glove Delivery ────────────────────────────────────────────
 
-  it('adds white-glove option for Southeast ZIP codes', async () => {
+  // ── White-glove as additionalCharge (CF-pp4g) ─────────────────────
+  // White-glove is NOT a standalone rate — it's an upgrade add-on on local delivery.
+
+  it('white-glove appears as additionalCharge on local delivery rate, NOT a standalone option', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
@@ -209,10 +212,16 @@ describe('getShippingRates', () => {
     });
 
     const codes = result.shippingRates.map(r => r.code);
-    expect(codes).toContain('white-glove');
+    // No standalone white-glove rate
+    expect(codes.some(c => c.startsWith('white-glove'))).toBe(false);
+    // Local delivery has white-glove as an additionalCharge
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone2');
+    expect(local).toBeDefined();
+    expect(local.cost.additionalCharges).toHaveLength(1);
+    expect(local.cost.additionalCharges[0].code).toBe('white-glove');
   });
 
-  it('charges $149 for local white-glove (ZIP 287-289)', async () => {
+  it('white-glove additionalCharge price = $99 for zone1 (Hendersonville exact ZIPs)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
@@ -220,12 +229,27 @@ describe('getShippingRates', () => {
       },
     });
 
-    const wg = result.shippingRates.find(r => r.code === 'white-glove');
-    expect(wg).toBeDefined();
-    expect(wg.cost.price).toBe('149.00');
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone1');
+    expect(local).toBeDefined();
+    const wgCharge = local.cost.additionalCharges.find(c => c.code === 'white-glove');
+    expect(wgCharge).toBeDefined();
+    expect(wgCharge.price).toBe('99.00');
   });
 
-  it('charges $249 for regional white-glove (ZIP 270-286, 290-399)', async () => {
+  it('white-glove additionalCharge price = $149 for zone2 (Asheville metro, prefix 287-289)', async () => {
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
+      shippingDestination: {
+        address: { postalCode: '28801', city: 'Asheville', subdivision: 'NC', country: 'US' },
+      },
+    });
+
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone2');
+    const wgCharge = local.cost.additionalCharges.find(c => c.code === 'white-glove');
+    expect(wgCharge.price).toBe('149.00');
+  });
+
+  it('white-glove additionalCharge price = $199 for zone3 (Atlanta)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
@@ -233,12 +257,12 @@ describe('getShippingRates', () => {
       },
     });
 
-    const wg = result.shippingRates.find(r => r.code === 'white-glove');
-    expect(wg).toBeDefined();
-    expect(wg.cost.price).toBe('249.00');
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone3');
+    const wgCharge = local.cost.additionalCharges.find(c => c.code === 'white-glove');
+    expect(wgCharge.price).toBe('199.00');
   });
 
-  it('does NOT offer free white-glove at $2100 (free shipping disabled)', async () => {
+  it('white-glove additionalCharge is NOT free at $2100 (free threshold disabled)', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '2100' }],
       shippingDestination: {
@@ -246,9 +270,9 @@ describe('getShippingRates', () => {
       },
     });
 
-    const wg = result.shippingRates.find(r => r.code === 'white-glove');
-    expect(wg).toBeDefined();
-    expect(wg.cost.price).not.toBe('0.00');
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone2');
+    const wgCharge = local.cost.additionalCharges.find(c => c.code === 'white-glove');
+    expect(wgCharge.price).not.toBe('0.00');
   });
 
   it('does NOT offer white-glove for non-Southeast ZIP codes', async () => {
@@ -260,7 +284,9 @@ describe('getShippingRates', () => {
     });
 
     const codes = result.shippingRates.map(r => r.code);
-    expect(codes).not.toContain('white-glove');
+    expect(codes.some(c => c.startsWith('white-glove'))).toBe(false);
+    // No local delivery rate either
+    expect(codes.some(c => c.startsWith('local-delivery'))).toBe(false);
   });
 
   it('does NOT offer free local delivery at $1899 (free shipping disabled)', async () => {
@@ -271,12 +297,12 @@ describe('getShippingRates', () => {
       },
     });
 
-    const local = result.shippingRates.find(r => r.code === 'local-delivery');
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone2');
     expect(local).toBeDefined();
     expect(local.cost.price).not.toBe('0.00');
   });
 
-  it('charges $49.99 local delivery for orders < $999', async () => {
+  it('charges zone-based delivery price for Asheville (zone2 = $69) for orders < free threshold', async () => {
     const result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
@@ -284,9 +310,9 @@ describe('getShippingRates', () => {
       },
     });
 
-    const local = result.shippingRates.find(r => r.code === 'local-delivery');
+    const local = result.shippingRates.find(r => r.code === 'local-delivery-zone2');
     expect(local).toBeDefined();
-    expect(local.cost.price).toBe('49.99');
+    expect(local.cost.price).toBe('69.00');
   });
 
   it('rejects negative item prices — treats them as zero', async () => {
@@ -321,24 +347,24 @@ describe('getShippingRates', () => {
     expect(codes).not.toContain('free-ground');
   });
 
-  it('white-glove has shorter delivery time for local ZIP codes', async () => {
-    const localResult = await getShippingRates({
+  it('local delivery rate uses zone-specific delivery days (zone1=2–4, zone3=5–7)', async () => {
+    const zone1Result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
         address: { postalCode: '28792', subdivision: 'NC', country: 'US' },
       },
     });
 
-    const regionalResult = await getShippingRates({
+    const zone3Result = await getShippingRates({
       lineItems: [{ name: 'Futon Frame', quantity: 1, price: '499' }],
       shippingDestination: {
         address: { postalCode: '30301', subdivision: 'GA', country: 'US' },
       },
     });
 
-    const localWg = localResult.shippingRates.find(r => r.code === 'white-glove');
-    const regionalWg = regionalResult.shippingRates.find(r => r.code === 'white-glove');
-    expect(localWg.logistics.deliveryTime).toBe('3-5 business days');
-    expect(regionalWg.logistics.deliveryTime).toBe('5-10 business days');
+    const zone1Rate = zone1Result.shippingRates.find(r => r.code === 'local-delivery-zone1');
+    const zone3Rate = zone3Result.shippingRates.find(r => r.code === 'local-delivery-zone3');
+    expect(zone1Rate.logistics.deliveryTime).toBe('2–4');
+    expect(zone3Rate.logistics.deliveryTime).toBe('5–7');
   });
 });

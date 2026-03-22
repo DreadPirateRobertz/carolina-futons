@@ -70,8 +70,6 @@ describe('shippingConfig', () => {
 
   it('has white glove pricing', () => {
     expect(shippingConfig.whiteGlove.freeThreshold).toBe(999999);
-    expect(shippingConfig.whiteGlove.localPrice).toBe(149);
-    expect(shippingConfig.whiteGlove.regionalPrice).toBe(249);
   });
 
   it('has ZIP zone definitions', () => {

@@ -253,27 +253,18 @@ export const getShippingRates = async (options) => {
         ? `Includes in-home placement, packaging removal, and basic assembly. Mountain area surcharge $${terrainFee} applied. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`
         : `Includes in-home placement, packaging removal, and basic assembly. We'll call to schedule a delivery window (Wed-Sat, 9am-5pm).`;
 
-      const wgRate = {
-        code: `white-glove-${zone.code}`,
+      // White-glove is an upgrade add-on to local delivery, not a standalone rate.
+      // Attach it as an additionalCharge on the delivery rate so the customer sees
+      // one option with an optional upgrade — not two competing shipping choices.
+      const whiteGloveCharge = {
+        code: 'white-glove',
         title: whiteGloveLabel,
-        logistics: {
-          deliveryTime: zone.deliveryDays,
-          instructions: wgInstructions,
-        },
-        cost: {
-          price: String(whiteGlovePrice.toFixed(2)),
-          currency: 'USD',
-          additionalCharges: [],
-        },
+        price: String(whiteGlovePrice.toFixed(2)),
+        currency: 'USD',
       };
-      if (zone.whiteGloveBadge) {
-        wgRate.badge = zone.whiteGloveBadge;
-        wgRate.badgeStyle = 'premium';
-      }
-      if (zone.whiteGloveUpsell) wgRate.upsellMessage = zone.whiteGloveUpsell;
-      wgRate.highlight = zone.whiteGloveHighlight || false;
-      if (terrainFee > 0) wgRate.terrainSurcharge = terrainFee;
-      shippingRates.push(wgRate);
+      if (terrainFee > 0) whiteGloveCharge.terrainSurcharge = terrainFee;
+      deliveryRate.cost.additionalCharges = [whiteGloveCharge];
+      deliveryRate.whiteGloveInstructions = wgInstructions;
     }
 
     return { shippingRates };
