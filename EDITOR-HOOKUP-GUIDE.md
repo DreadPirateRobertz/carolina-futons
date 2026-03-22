@@ -1,6 +1,6 @@
 # Editor Hookup Guide — Element ID Map & Manual Work Queue
 
-**Generated**: 2026-03-15 | **Last Updated**: 2026-03-22 (Added Editor Hookup Steps — per-page 6-step coordination flow between Stilgar and melania)
+**Generated**: 2026-03-15 | **Last Updated**: 2026-03-22 (Added Editor Hookup Steps; Product Badge System nicknames — pdpBadgeContainer, pdpBadgeText, productBadgeRepeater; QuickView modal; CartUpsell; Social Proof; CF+ Upgrade Prompt Modal — membershipPromptModal, membershipPromptClose, membershipPromptTitle, membershipPromptBenefits, membershipUpgradeBtn [Member Page + Product Page]; Continue Shopping — continueShoppingSection, continueShoppingRepeater [PR #665]; Comparison Tray — comparisonTray, comparisonSlot1-3, comparisonSlotImage/Name/Remove1-3, compareNowBtn, clearComparisonBtn, comparisonCount [PR #667])
 **Purpose**: Persistent reference for wiring Wix Studio editor elements to Velo code
 **Approach**: Skeleton-first — place elements with correct IDs, code + CSS + CMS handle the rest
 
@@ -515,6 +515,19 @@ For each section below:
 **↳ Repeater children (shared pattern):**
 `recentImage` (Image), `recentName` (Text), `recentPrice` (Text), `recentAddToCart` (Button)
 
+### Continue Shopping (NEW v1.2.0+ — PR #665 / CF-ku3x) ⚠️ REPEATER
+*Source: `src/public/ContinueShoppingSection.js` — `initContinueShoppingSection($w, { excludeId })`*
+*No backend call — reads `ProductHistory` LRU from sessionStorage.*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `continueShoppingSection` | Section | **Collapsed/hidden by default** — code shows only when browsing history exists. First-time visitors never see it. |
+| `continueShoppingTitle` | Text | Section heading — code sets to "Continue Shopping" |
+| `continueShoppingRepeater` | **Repeater** | Horizontal scroll strip — last 1–6 viewed products |
+
+**↳ Inside `continueShoppingRepeater` item template:**
+`continueShoppingImage` (Image), `continueShoppingName` (Text), `continueShoppingPrice` (Text), `continueShoppingLink` (Button — navigates to product page)
+
 ### Video Showcase
 | Element ID | Wix Element | Notes |
 |---|---|---|
@@ -967,6 +980,27 @@ For each section below:
 **Size Comparison:** ⚠️ REPEATER
 `sizeCompareSection` (Section), `sizeCompareTitle` (Text), `sizeCompareRepeater` (Repeater), `sizeComparisonTitle` (Text), `sizeComparisonVisual` (HtmlComponent)
 
+### Sticky Add-to-Cart Bar (NEW v1.2.0+ — PR #664 / CF-gj26)
+*Source: `src/public/StickyAtcBar.js` — `initStickyAtcBar($w, state)`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `stickyAtcBar` | Box | **Fixed bottom overlay** — set to Fixed position in editor. Hidden by default; slides in when `#addToCartButton` scrolls out of view. |
+| `stickyAtcProductName` | Text | Product name — pre-populated on init |
+| `stickyAtcPrice` | Text | Formatted price — pre-populated on init |
+| `stickyAtcBtn` | Button | "Add to Cart" CTA — mirrors primary button state (disabled + "Out of Stock" label when unavailable) |
+
+### Product Badge (NEW v1.2.0+ — PR #657 / CF-p56i)
+*Source: `src/public/badgeHelpers.js` — `initCmsBadgePDP($w, state)`*
+*Backend: `src/backend/badgeService.web.js` — `getProductBadges(productId, productData)`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `pdpBadgeContainer` | Box | Badge wrapper — **hidden by default**; code shows/styles it. Sets `backgroundColor` from badge config. |
+| `pdpBadgeText` | Text | Badge label (e.g. "New", "Bestseller", "CF+ Exclusive", "Low Stock", "Sale") |
+
+**CMS collection**: `ProductBadges` (productId, badgeType, active, expiresAt). Computed fallbacks: LOW_STOCK when inventory < 5, SALE when comparePrice is set. Priority: CF_PLUS_EXCLUSIVE > BESTSELLER > NEW > SALE > LOW_STOCK.
+
 ### Delivery Estimator (NEW v1.1.0+ — PR #649)
 *Source: `src/public/ProductDetails.js` — `initDeliveryEstimate()` + `updateEstimateForZip()`*
 *Backend: `src/backend/shippingIntelligence.web.js` — `getDeliveryEstimate(zip, productIds[])`*
@@ -1025,6 +1059,15 @@ Generates empty state HTML with mountain illustrations for injection via `$w('#e
 
 Backend utility for social media story generation — no editor elements needed.
 
+### CF+ Upgrade Prompt Modal — Product Page Instance (NEW v1.2.0+ — PR #666 / CF-llrd)
+*Source: `src/public/MembershipPrompt.js` — same 5 elements as Member Page instance*
+*Triggered for `swatch-request` and `price-match` contexts on PDP.*
+
+Place the same 5 elements on the Product Page canvas:
+`membershipPromptModal` (Box, hidden), `membershipPromptClose` (Button), `membershipPromptTitle` (Text), `membershipPromptBenefits` (Text), `membershipUpgradeBtn` (Button)
+
+> See **Member Page → CF+ Upgrade Prompt Modal** for full nickname/type table.
+
 ---
 
 ## CATEGORY PAGE (`Category Page.u0gn0.js`)
@@ -1056,7 +1099,8 @@ Backend utility for social media story generation — no editor elements needed.
 | `gridPrice` | Text |
 | `gridOrigPrice` | Text |
 | `gridSaleBadge` | Text |
-| `gridBadge` | Text |
+| `gridBadge` | Text | Legacy computed badge (New/Bestseller/Sale) |
+| `productBadgeRepeater` | **Box** | CMS-driven badge (v1.2.0+ / CF-p56i) — **must be Box**, not Text, for `backgroundColor` styling |
 | `gridBrand` | Text |
 | `gridRibbon` | Text |
 | `gridFabricBadge` | Text |
@@ -1126,14 +1170,30 @@ Backend utility for social media story generation — no editor elements needed.
 | `noMatchesMessage` | Text | Message |
 | `noMatchesSuggestion` | Text | Suggestion |
 
-### Compare Bar ⚠️ REPEATER
+### Comparison Tray (NEW v1.2.0+ — PR #667 / CF-r0dr) — REPLACES Compare Bar
+*Source: `src/public/ComparisonTray.js` — `initComparisonTray($w, { navigate })` + `addToCompareTray($w, product)`*
+*Fixed overlay tray — up to 3 products. State persisted in sessionStorage across collection pages. Navigates to `/compare?ids=...`.*
+
+> **⚠️ Note**: This replaces the old `compareBar`/`compareRepeater` placeholder. Use the new nicknames below.
+
 | Element ID | Wix Element | Notes |
 |---|---|---|
-| `compareBar` | Box | Sticky compare bar |
-| `compareRepeater` | **Repeater** | Compare thumbnails |
-| `compareViewBtn` | Button | View comparison |
-
-**↳ Inside `compareRepeater`:** `compareThumb` (Image), `compareName` (Text), `comparePrice` (Text), `compareRemove` (Button)
+| `comparisonTray` | Box | Fixed overlay tray — **hidden by default**, shown when 1+ products added |
+| `comparisonSlot1` | Box | Slot 1 container — hidden when empty |
+| `comparisonSlot2` | Box | Slot 2 container — hidden when empty |
+| `comparisonSlot3` | Box | Slot 3 container — hidden when empty |
+| `comparisonSlotImage1` | Image | Product image for slot 1 |
+| `comparisonSlotImage2` | Image | Product image for slot 2 |
+| `comparisonSlotImage3` | Image | Product image for slot 3 |
+| `comparisonSlotName1` | Text | Product name for slot 1 |
+| `comparisonSlotName2` | Text | Product name for slot 2 |
+| `comparisonSlotName3` | Text | Product name for slot 3 |
+| `comparisonSlotRemove1` | Button | Remove product from slot 1 |
+| `comparisonSlotRemove2` | Button | Remove product from slot 2 |
+| `comparisonSlotRemove3` | Button | Remove product from slot 3 |
+| `compareNowBtn` | Button | Primary CTA — disabled until 2+ products. Navigates to `/compare?ids=...` |
+| `clearComparisonBtn` | Button | Clears all slots, hides tray |
+| `comparisonCount` | Text | Badge — "N products" (e.g. "2 products") |
 
 ### Recently Viewed
 | Element ID | Wix Element | Notes |
@@ -1341,6 +1401,20 @@ Backend utility for social media story generation — no editor elements needed.
 ### Account / Address / Prefs
 `logoutBtn` (Button), `accountSettings` (Section), `addressBook` (Box), `addressRepeater` (Repeater), `addressEmptyState` (Box), `commPrefs` (Box), `prefNewsletter` (Toggle), `prefSaleAlerts` (Toggle), `prefBackInStock` (Toggle)
 **↳ Inside `addressRepeater`:** `addressText` (Text)
+
+### CF+ Upgrade Prompt Modal (NEW v1.2.0+ — PR #666 / CF-llrd)
+*Source: `src/public/MembershipPrompt.js` — `initMembershipPrompt($w)` + `showMembershipPrompt($w, context, dialog)`*
+*Triggered when anonymous or non-CF+ user hits a gated feature (wishlist alerts, swatch request, price match). One-time per browser session.*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `membershipPromptModal` | Box | Modal/overlay container — **collapsed/hidden by default** (`collapse()` on init) |
+| `membershipPromptClose` | Button | Close button — dismisses modal and announces to screen reader |
+| `membershipPromptTitle` | Text | Context-specific headline (e.g. "Get back-in-stock alerts — exclusive to CF+ members") |
+| `membershipPromptBenefits` | Text | CF+ benefits list — rendered once at init from `getBenefitsList()` |
+| `membershipUpgradeBtn` | Button | Upgrade CTA — links to `/pricing-plans` (set once at init) |
+
+> **⚠️ Placement**: This modal must be placed on every page that gates CF+ features. Currently used on **Member Page** (wishlist-alerts context) and **Product Page** (swatch-request, price-match contexts). Add the same 5 elements to each page's canvas.
 
 ---
 

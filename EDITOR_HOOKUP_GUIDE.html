@@ -1452,6 +1452,22 @@ Right column:
 </ul>`, elements: [
         ["pdpBadgeContainer","Box","Badge wrapper — hidden by default; code shows/styles it"],
         ["pdpBadgeText","Text","Badge label text (New, Bestseller, Low Stock, Sale, CF+ Exclusive)"]
+      ]},
+      { name: "CF+ Upgrade Prompt Modal — Product Page Instance (NEW v1.2.0+ — PR #666 / CF-llrd)", impl: `<h4>💎 Implementation — CF+ Upgrade Prompt Modal (Product Page Instance)</h4>
+<p><em>Source: <code>src/public/MembershipPrompt.js</code> — same module as Member Page instance</em></p>
+<p><strong>Triggered for <code>swatch-request</code> and <code>price-match</code> contexts on PDP. One-time per browser session.</strong></p>
+<ul>
+  <li><strong>#membershipPromptModal</strong>: Box. Modal container — <span class="impl-warn">collapsed/hidden by default</span> via code. Must be visible in editor to assign nickname.</li>
+  <li><strong>#membershipPromptClose</strong>: Button. Close button. Dismisses modal + announces to screen reader.</li>
+  <li><strong>#membershipPromptTitle</strong>: Text. Context-specific headline (e.g. "Price match guarantee — exclusive to CF+ members"). Set dynamically.</li>
+  <li><strong>#membershipPromptBenefits</strong>: Text. Benefits list rendered at init.</li>
+  <li><strong>#membershipUpgradeBtn</strong>: Button. Upgrade CTA — links to <code>/pricing-plans</code>.</li>
+</ul>`, elements: [
+        ["membershipPromptModal","Box","Modal container — collapsed/hidden by default"],
+        ["membershipPromptClose","Button","Close button — dismisses modal"],
+        ["membershipPromptTitle","Text","Context headline — set dynamically"],
+        ["membershipPromptBenefits","Text","CF+ benefits bullet list — set at init"],
+        ["membershipUpgradeBtn","Button","Upgrade CTA — links to /pricing-plans"]
       ]}
     ]
   },
@@ -1618,21 +1634,36 @@ Right column:
         ["noMatchesTitle","Text","Heading"],["noMatchesMessage","Text","Message"],
         ["noMatchesSuggestion","Text","Suggestion"]
       ]},
-      { name: "Compare Bar", repeater: "compareRepeater", impl: `<h4>⚖️ Implementation — Compare Bar</h4>
-<p><strong>Layout: Sticky bottom bar with selected product thumbnails + compare CTA</strong></p>
+      { name: "Comparison Tray (NEW v1.2.0+ — PR #667 / CF-r0dr)", impl: `<h4>⚖️ Implementation — Comparison Tray (NEW v1.2.0+)</h4>
+<p><em>Source: <code>src/public/ComparisonTray.js</code> — <code>initComparisonTray($w, { navigate })</code> + <code>addToCompareTray($w, product)</code></em></p>
+<p><strong>⚠️ REPLACES old Compare Bar (compareBar/compareRepeater). Use new nicknames below.</strong></p>
+<p><strong>Layout: Fixed overlay tray — up to 3 product slots, persistent sessionStorage state, navigates to /compare?ids=...</strong></p>
 <ul>
-  <li><strong>#compareBar</strong>: Sticky Box at the bottom of the page. <span class="impl-warn">Hidden when no items selected (0 items)</span>. Slides up from bottom (200ms) when items are added, slides down (200ms) when cleared.</li>
-  <li><strong>#compareRepeater</strong>: Horizontal row of mini product cards (thumbnails). Each has image, name, price, and remove button.</li>
-  <li><strong>#compareViewBtn</strong>: "Compare N Items" Button (right-aligned). Label updates with item count. <span class="impl-warn">Disabled if fewer than 2 items selected</span> — requires minimum 2 to compare. Clicking navigates to comparison view.</li>
-  <li><strong>Per card</strong>: Thumbnail image (small) + name + price + "X" remove button.</li>
-  <li>Refreshes whenever the compare list changes (add/remove from grid cards).</li>
+  <li><strong>#comparisonTray</strong>: Box. Fixed overlay tray. <span class="impl-warn">Hidden by default</span> — shown when first product added.</li>
+  <li><strong>#comparisonSlot1/2/3</strong>: Box. One slot per product position. Hidden when empty, shown when a product fills that slot.</li>
+  <li><strong>#comparisonSlotImage1/2/3</strong>: Image. Product mainMedia image for each slot.</li>
+  <li><strong>#comparisonSlotName1/2/3</strong>: Text. Product name for each slot.</li>
+  <li><strong>#comparisonSlotRemove1/2/3</strong>: Button. "X" remove button per slot — removes that product from tray.</li>
+  <li><strong>#compareNowBtn</strong>: Button (primary CTA). <span class="impl-warn">Disabled until 2+ products</span>. Navigates to <code>/compare?ids=id1,id2[,id3]</code>.</li>
+  <li><strong>#clearComparisonBtn</strong>: Button. Clears all slots and hides tray.</li>
+  <li><strong>#comparisonCount</strong>: Text badge — "1 product" / "2 products" / "3 products". Updated on each add/remove.</li>
 </ul>`, elements: [
-        ["compareBar","Box","Sticky compare bar"],
-        ["compareRepeater","Repeater","Compare thumbs"],
-        ["compareViewBtn","Button","View comparison"]
-      ], children: [
-        ["compareThumb","Image","Thumbnail"],["compareName","Text","Name"],
-        ["comparePrice","Text","Price"],["compareRemove","Button","Remove"]
+        ["comparisonTray","Box","Fixed overlay tray — hidden by default"],
+        ["comparisonSlot1","Box","Slot 1 container — hidden when empty"],
+        ["comparisonSlot2","Box","Slot 2 container — hidden when empty"],
+        ["comparisonSlot3","Box","Slot 3 container — hidden when empty"],
+        ["comparisonSlotImage1","Image","Product image slot 1"],
+        ["comparisonSlotImage2","Image","Product image slot 2"],
+        ["comparisonSlotImage3","Image","Product image slot 3"],
+        ["comparisonSlotName1","Text","Product name slot 1"],
+        ["comparisonSlotName2","Text","Product name slot 2"],
+        ["comparisonSlotName3","Text","Product name slot 3"],
+        ["comparisonSlotRemove1","Button","Remove slot 1"],
+        ["comparisonSlotRemove2","Button","Remove slot 2"],
+        ["comparisonSlotRemove3","Button","Remove slot 3"],
+        ["compareNowBtn","Button","Compare CTA — disabled until 2+ products"],
+        ["clearComparisonBtn","Button","Clear all — hides tray"],
+        ["comparisonCount","Text","Count badge (e.g. '2 products')"]
       ]},
       { name: "Recently Viewed", impl: `<h4>👁️ Implementation — Recently Viewed (Category Page)</h4>
 <p><strong>Layout: Horizontal carousel of up to 6 recently browsed products (deferred)</strong></p>
@@ -2286,7 +2317,23 @@ Action buttons (right):
         ["addressEmptyState","Box","Empty"],["commPrefs","Box","Preferences"],
         ["prefNewsletter","Toggle","Newsletter"],["prefSaleAlerts","Toggle","Sale alerts"],
         ["prefBackInStock","Toggle","Back in stock"]
-      ], children: [["addressText","Text","Address text"]]}
+      ], children: [["addressText","Text","Address text"]]},
+      { name: "CF+ Upgrade Prompt Modal (NEW v1.2.0+ — PR #666 / CF-llrd)", impl: `<h4>💎 Implementation — CF+ Upgrade Prompt Modal</h4>
+<p><strong>Layout: Full-page overlay modal — hidden by default, shown once per session when user hits a gated CF+ feature</strong></p>
+<ul>
+  <li><strong>#membershipPromptModal</strong>: Box. Overlay/modal container. Code calls <code>collapse()</code> on init — <strong>must be visible in editor to assign nickname</strong>, then code hides it. Set ARIA <code>role='dialog'</code>, <code>ariaModal=true</code>.</li>
+  <li><strong>#membershipPromptClose</strong>: Button. Close/X button in top-right of modal. <code>ariaLabel='Close membership prompt'</code>. Calls dialog.close() and announces to screen reader.</li>
+  <li><strong>#membershipPromptTitle</strong>: Text. Context-specific headline (e.g. "Get back-in-stock alerts — exclusive to CF+ members"). Set dynamically by <code>showMembershipPrompt()</code>.</li>
+  <li><strong>#membershipPromptBenefits</strong>: Text. CF+ benefits bullet list — set once at init from <code>getBenefitsList()</code>. Format: "• Free shipping\\n• 10% member discount\\n• Early access to sales".</li>
+  <li><strong>#membershipUpgradeBtn</strong>: Button. Upgrade CTA. Code sets <code>link='/pricing-plans'</code> at init. <code>ariaLabel='Upgrade to CF+ membership'</code>.</li>
+</ul>
+<p><strong>⚠️ Note:</strong> Place this same set of 5 elements on every page that gates CF+ features. The Product Page also needs these elements (for swatch-request and price-match contexts).</p>`, elements: [
+        ["membershipPromptModal","Box","Modal container — collapsed/hidden by default"],
+        ["membershipPromptClose","Button","Close button — dismisses modal"],
+        ["membershipPromptTitle","Text","Context headline — set dynamically"],
+        ["membershipPromptBenefits","Text","CF+ benefits bullet list — set at init"],
+        ["membershipUpgradeBtn","Button","Upgrade CTA — links to /pricing-plans"]
+      ]}
     ]
   },
   {
