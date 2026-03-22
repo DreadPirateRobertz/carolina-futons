@@ -37,6 +37,7 @@ import {
   showSocialProofSection,
   hasIncrementedThisSession,
   markIncrementedThisSession,
+  getOrCreateSessionToken,
 } from '../src/public/SocialProof.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -193,6 +194,46 @@ describe('incrementViewerCount', () => {
     const result = await incrementViewerCount('../../etc/passwd');
     expect(result.ok).toBe(false);
   });
+
+  it('returns { ok: false } when called again within TTL window (server-side rate limit)', async () => {
+    // Seed a recent RateLimitSessions record (< 60s old)
+    __seed('RateLimitSessions', [{
+      _id: 'rl-001',
+      productId: 'prod-001',
+      sessionToken: 'tok-abc',
+      createdAt: new Date(), // now = within TTL
+    }]);
+    const result = await incrementViewerCount('prod-001', 'tok-abc');
+    expect(result.ok).toBe(false);
+  });
+
+  it('allows increment when rate limit record is outside TTL window', async () => {
+    // Seed a stale RateLimitSessions record (> 60s old)
+    __seed('RateLimitSessions', [{
+      _id: 'rl-001',
+      productId: 'prod-001',
+      sessionToken: 'tok-abc',
+      createdAt: new Date(Date.now() - 120000), // 2 min ago — expired
+    }]);
+    const result = await incrementViewerCount('prod-001', 'tok-abc');
+    expect(result.ok).toBe(true);
+  });
+
+  it('allows increment for a different session token (independent rate limits)', async () => {
+    __seed('RateLimitSessions', [{
+      _id: 'rl-001',
+      productId: 'prod-001',
+      sessionToken: 'tok-abc',
+      createdAt: new Date(),
+    }]);
+    const result = await incrementViewerCount('prod-001', 'tok-xyz');
+    expect(result.ok).toBe(true);
+  });
+
+  it('proceeds with increment when sessionToken is absent (no server-side rate check)', async () => {
+    const result = await incrementViewerCount('prod-001');
+    expect(result.ok).toBe(true);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -324,6 +365,35 @@ describe('session rate limiting', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
+// 6b. getOrCreateSessionToken
+// ═══════════════════════════════════════════════════════════════════════
+
+describe('getOrCreateSessionToken', () => {
+  it('returns a non-empty string on first call', () => {
+    const token = getOrCreateSessionToken(makeStorage());
+    expect(typeof token).toBe('string');
+    expect(token.length).toBeGreaterThan(0);
+  });
+
+  it('returns the same token on repeated calls (stable within session)', () => {
+    const storage = makeStorage();
+    const t1 = getOrCreateSessionToken(storage);
+    const t2 = getOrCreateSessionToken(storage);
+    expect(t1).toBe(t2);
+  });
+
+  it('returns different tokens for independent storage instances', () => {
+    const t1 = getOrCreateSessionToken(makeStorage());
+    const t2 = getOrCreateSessionToken(makeStorage());
+    expect(t1).not.toBe(t2);
+  });
+
+  it('returns null for null storage', () => {
+    expect(getOrCreateSessionToken(null)).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // 7. initSocialProof — integration
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -359,7 +429,7 @@ describe('initSocialProof', () => {
     });
     // Allow fire-and-forget to settle
     await new Promise(r => setTimeout(r, 50));
-    expect(mockIncrementViewerCount).toHaveBeenCalledWith('prod-001');
+    expect(mockIncrementViewerCount).toHaveBeenCalledWith('prod-001', expect.any(String));
   });
 
   it('does not call incrementViewerCount on repeat visit (rate limited)', async () => {
@@ -369,7 +439,7 @@ describe('initSocialProof', () => {
       getViewerCount: mockGetViewerCount,
       incrementViewerCount: mockIncrementViewerCount,
     });
-    await new Promise(r => setTimeout(r, 10));
+    await new Promise(r => setTimeout(r, 50));
     expect(mockIncrementViewerCount).not.toHaveBeenCalled();
   });
 
@@ -434,7 +504,7 @@ describe('initSocialProof', () => {
     })).resolves.not.toThrow();
   });
 
-  it('session is marked even when increment fails (no retry within session)', async () => {
+  it('session flag is NOT set when increment fails — allows retry on next visit', async () => {
     const failingIncrement = vi.fn(async () => { throw new Error('Network'); });
     await initSocialProof('prod-001', {
       $w: $wFn, storage,
@@ -442,15 +512,28 @@ describe('initSocialProof', () => {
       incrementViewerCount: failingIncrement,
     });
     await new Promise(r => setTimeout(r, 50));
-    // Confirm flag is set despite the increment failing
-    expect(hasIncrementedThisSession(storage, 'prod-001')).toBe(true);
-    // Second call must not retry
+    // Mark should NOT be set — increment failed, so next visit should retry
+    expect(hasIncrementedThisSession(storage, 'prod-001')).toBe(false);
+  });
+
+  it('session flag IS set after successful increment (.then() path)', async () => {
     await initSocialProof('prod-001', {
       $w: $wFn, storage,
       getViewerCount: mockGetViewerCount,
-      incrementViewerCount: failingIncrement,
+      incrementViewerCount: mockIncrementViewerCount,
     });
     await new Promise(r => setTimeout(r, 50));
-    expect(failingIncrement).toHaveBeenCalledTimes(1);
+    expect(hasIncrementedThisSession(storage, 'prod-001')).toBe(true);
+  });
+
+  it('passes a session token to incrementViewerCount', async () => {
+    await initSocialProof('prod-001', {
+      $w: $wFn, storage,
+      getViewerCount: mockGetViewerCount,
+      incrementViewerCount: mockIncrementViewerCount,
+    });
+    await new Promise(r => setTimeout(r, 50));
+    // incrementViewerCount should have been called with (productId, sessionToken)
+    expect(mockIncrementViewerCount).toHaveBeenCalledWith('prod-001', expect.any(String));
   });
 });

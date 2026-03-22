@@ -30,6 +30,9 @@ import { getViewerCount, incrementViewerCount } from 'backend/socialProof.web';
 /** sessionStorage key prefix for per-product session rate limiting. */
 const SESSION_KEY_PREFIX = 'cf_vcount_';
 
+/** sessionStorage key for the per-browser-session token sent to the backend rate limiter. */
+const SESSION_TOKEN_KEY = 'cf_session_token';
+
 /** Minimum viewCount to show the "people viewing" badge. */
 const MIN_VIEWERS_TO_SHOW = 2;
 
@@ -50,6 +53,26 @@ function getIncrementFn(opts) {
 
 function getCountFn(opts) {
   return opts.getViewerCount || getViewerCount;
+}
+
+/**
+ * Get or create a stable session token for backend rate limiting.
+ * Token is stored in sessionStorage so it persists across page navigations
+ * within the same browser session but resets on new sessions.
+ * Returns null if storage is unavailable.
+ * @param {Object|null} storage
+ * @returns {string|null}
+ */
+export function getOrCreateSessionToken(storage) {
+  if (!storage) return null;
+  try {
+    let token = storage.getItem(SESSION_TOKEN_KEY);
+    if (!token) {
+      token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      storage.setItem(SESSION_TOKEN_KEY, token);
+    }
+    return token;
+  } catch (_) { return null; }
 }
 
 /** Safely hide an element — no-op if absent or $w throws. */
@@ -188,12 +211,14 @@ export async function initSocialProof(productId, opts = {}) {
   }
 
   // Fire-and-forget increment — rate limited per session per product.
-  // Mark is set before the async call so rapid re-renders in the same session
-  // don't each trigger an increment while the first is still in flight.
-  // Trade-off: a failed increment is not retried within that session.
+  // Mark moves into .then() so a failed increment is retried on the next page visit.
+  // The backend enforces a 60s server-side cooldown via RateLimitSessions, preventing
+  // duplicate counts even if the client fires multiple calls before the mark is set.
   if (!hasIncrementedThisSession(storage, productId)) {
-    markIncrementedThisSession(storage, productId);
-    increment(productId).catch(() => { /* non-fatal — count accuracy is best-effort */ });
+    const sessionToken = getOrCreateSessionToken(storage);
+    increment(productId, sessionToken)
+      .then(() => markIncrementedThisSession(storage, productId))
+      .catch(() => { /* non-fatal — count accuracy is best-effort */ });
   }
 
   // Fetch current counts
