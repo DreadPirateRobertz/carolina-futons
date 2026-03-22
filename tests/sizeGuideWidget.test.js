@@ -212,10 +212,42 @@ describe('initSizeGuide', () => {
     expect(queen.openH).toBe('~18"');
   });
 
+  it('Twin row has correct dimensions in static data', async () => {
+    let capturedData;
+    const repeater = {
+      onItemReady: vi.fn(),
+      get data() { return capturedData; },
+      set data(v) { capturedData = v; },
+    };
+    const $w = makeWixEnv({ '#sizeGuideRepeater': repeater });
+    initSizeGuide($w);
+    const twin = capturedData.find(r => r.name === 'Twin');
+    expect(twin).toBeDefined();
+    expect(twin.width).toBe('39"');
+    expect(twin.length).toBe('75"');
+    expect(twin.foldedH).toBe('~35"');
+    expect(twin.openH).toBe('~16"');
+  });
+
   // ── null safety ──────────────────────────────────────────────────────
 
-  it('does not throw when $w returns null for all elements', async () => {
+  it('does not throw when $w returns null for all elements', () => {
     const $w = vi.fn(() => null);
-    await expect(initSizeGuide($w)).resolves.not.toThrow();
+    expect(() => initSizeGuide($w)).not.toThrow();
+  });
+
+  it('does not throw when $item returns null for child elements in onItemReady', () => {
+    let capturedCallback;
+    const repeater = makeEl({
+      onItemReady: vi.fn(cb => { capturedCallback = cb; }),
+    });
+    const $w = makeWixEnv({ '#sizeGuideRepeater': repeater });
+    initSizeGuide($w);
+
+    const $item = vi.fn(() => null);
+    expect(() => capturedCallback($item, {
+      _id: 'row-0', name: 'Full', width: '54"', length: '75"',
+      foldedH: '~35"', openH: '~16"',
+    })).not.toThrow();
   });
 });
