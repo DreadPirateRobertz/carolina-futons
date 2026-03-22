@@ -493,6 +493,70 @@ describe('getShippingRates — LTL freight routing (CF-6p04)', () => {
     expect(ltlRate.cost.price).toBe('325.00');
   });
 
+  it('mixed cart (murphy bed + futon cover) routes entire order to LTL — no UPS rates', async () => {
+    const { __setSecrets: ss } = await import('./__mocks__/wix-secrets-backend.js');
+    ss({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'x', UPS_ACCOUNT_NUMBER: 'x', UPS_SANDBOX: 'true', WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+    const { __setHandler: sh } = await import('./__mocks__/wix-fetch.js');
+    sh((url) => {
+      if (url.includes('SpeedFreight')) {
+        return { ok: true, async text() { return WWEX_SOAP_RESPONSE; }, async json() { return {}; } };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await getShippingRates({
+      lineItems: [
+        { name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1299' },
+        { name: 'Futon Cover', quantity: 1, price: '49' },
+      ],
+      shippingDestination: {
+        address: { postalCode: '10001', city: 'New York', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    const codes = result.shippingRates.map(r => r.code);
+    // Entire order routes to LTL — no UPS parcel rates
+    expect(codes.some(c => c.includes('ltl') || c.includes('wwex'))).toBe(true);
+    expect(codes.some(c => c.startsWith('ups-'))).toBe(false);
+  });
+
+  it('WWEX SOAP fault → getLTLFallbackRates returns valid non-empty rates', async () => {
+    const { __setSecrets: ss } = await import('./__mocks__/wix-secrets-backend.js');
+    ss({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'x', UPS_ACCOUNT_NUMBER: 'x', UPS_SANDBOX: 'true', WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });
+    const { __setHandler: sh } = await import('./__mocks__/wix-fetch.js');
+    const SOAP_FAULT = `<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <soap:Fault>
+      <faultcode>soap:Server</faultcode>
+      <faultstring>Internal Server Error</faultstring>
+    </soap:Fault>
+  </soap:Body>
+</soap:Envelope>`;
+    sh((url) => {
+      if (url.includes('SpeedFreight')) {
+        return { ok: true, async text() { return SOAP_FAULT; }, async json() { return {}; } };
+      }
+      return { ok: true, async json() { return {}; }, async text() { return ''; } };
+    });
+
+    const result = await getShippingRates({
+      lineItems: [{ name: 'Sagebrush Murphy Cabinet Bed', quantity: 1, price: '1299' }],
+      shippingDestination: {
+        address: { postalCode: '10001', city: 'New York', subdivision: 'NY', country: 'US' },
+      },
+    });
+
+    // Fallback rates must be present — freight customers can't be left with no options
+    expect(result.shippingRates.length).toBeGreaterThan(0);
+    const codes = result.shippingRates.map(r => r.code);
+    expect(codes.some(c => c.includes('ltl') || c.includes('wwex'))).toBe(true);
+    // Prices must be numeric strings, not $0.00
+    result.shippingRates.forEach(r => {
+      expect(parseFloat(r.cost.price)).toBeGreaterThan(0);
+    });
+  });
+
   it('murphy bed in local zone gets both LTL freight and local delivery options', async () => {
     const { __setSecrets: ss } = await import('./__mocks__/wix-secrets-backend.js');
     ss({ UPS_CLIENT_ID: 'x', UPS_CLIENT_SECRET: 'x', UPS_ACCOUNT_NUMBER: 'x', UPS_SANDBOX: 'true', WWEX_USERNAME: 'u', WWEX_PASSWORD: 'p', WWEX_ACCOUNT_NUMBER: 'a' });

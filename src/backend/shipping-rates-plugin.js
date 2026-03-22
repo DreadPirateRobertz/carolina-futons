@@ -152,21 +152,25 @@ export const getShippingRates = async (options) => {
       const ltlRates = ltlResult.success ? ltlResult.rates : getLTLFallbackRates(destination.postalCode, packages);
       const needsLiftgate = requiresLiftgate(packages);
 
-      shippingRates = ltlRates.map(rate => ({
-        code: rate.code,
-        title: rate.title,
-        logistics: {
-          deliveryTime: rate.estimatedDays || rate.estimatedDelivery || '5-10 business days',
-          instructions: needsLiftgate
-            ? 'Large item freight delivery. Liftgate service included. We will call to schedule your delivery window.'
-            : 'Large item freight delivery. We will call to schedule your delivery window.',
-        },
-        cost: {
-          price: String((Number(rate.cost) || 0).toFixed(2)),
-          currency: rate.currency || 'USD',
-          additionalCharges: [],
-        },
-      }));
+      shippingRates = ltlRates.map(rate => {
+        const cost = Number(rate.cost);
+        if (!cost) logError('shipping-rates-plugin.ltlRateMapping', `LTL rate ${rate.code} has falsy cost: ${rate.cost}`);
+        return {
+          code: rate.code,
+          title: rate.title,
+          logistics: {
+            deliveryTime: rate.estimatedDays || rate.estimatedDelivery || '5-10 business days',
+            instructions: needsLiftgate
+              ? 'Large item freight delivery. Liftgate service included. We will call to schedule your delivery window.'
+              : 'Large item freight delivery. We will call to schedule your delivery window.',
+          },
+          cost: {
+            price: String((cost || 0).toFixed(2)),
+            currency: rate.currency || 'USD',
+            additionalCharges: [],
+          },
+        };
+      });
     } else {
       // Get live UPS rates (parcel — items that passed the freight threshold check above)
       const rates = await getUPSRates(destination, packages, orderSubtotal);
