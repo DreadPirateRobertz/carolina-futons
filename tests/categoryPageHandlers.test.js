@@ -100,6 +100,10 @@ vi.mock('backend/promotions.web', () => ({
   getFlashSales: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock('backend/paymentOptions.web', () => ({
+  getBatchPaymentBadges: vi.fn().mockResolvedValue({ success: true, badges: {} }),
+}));
+
 // ── Mock Public Modules ─────────────────────────────────────────────
 
 vi.mock('public/galleryHelpers', () => ({
@@ -207,6 +211,7 @@ vi.mock('public/productCardHelpers.js', () => ({
   initCardHover: vi.fn(),
   formatCardPrice: vi.fn().mockReturnValue(''),
   setCardImage: vi.fn(),
+  renderCardFinancingBadge: vi.fn(),
 }));
 
 vi.mock('public/galleryConfig.js', () => ({

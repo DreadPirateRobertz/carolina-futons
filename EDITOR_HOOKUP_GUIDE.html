@@ -4545,6 +4545,307 @@ SHARING:
         ["viewer360Hint","Text","Drag to rotate hint"]
       ]}
     ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SPRINT 5 FEATURES (2026-03-22+)
+  // Spec: docs/superpowers/specs/2026-03-22-shipping-intelligence-layer-design.md
+  // ═══════════════════════════════════════════════════════════════
+
+  {
+    name: "Shipping Intelligence Widget", file: "shippingIntelligence.web.js (Product Page + Bundle)", priority: "P1", est: "45 min",
+    sections: [
+      { name: "Shipping Estimate — Product Page", impl: `<h4>🚚 Implementation — Shipping Intelligence Widget (Product Page)</h4>
+<p><strong>Backend:</strong> <code>shippingIntelligence.web.js</code> → <code>getShippingEstimate(productId, zip)</code></p>
+<p><strong>Routing:</strong> weight &lt; 150 lbs + no pallet flag → UPS parcel. Over 150 lbs OR <code>requiresPallet</code> → WWEX SpeedFreight 2.0 LTL.</p>
+<p><strong>Multi-box:</strong> <code>ProductShippingProfiles</code> CMS holds per-product dims + weight. Products with multiple boxes have <code>packagingNotes</code> ("Ships in 2 boxes") and combined weight is used for tier routing. Each box is a separate package object in the UPS/WWEX rate call.</p>
+<ul>
+  <li><strong>#shippingEstimateSection</strong>: Box — full shipping panel container on product page.</li>
+  <li><strong>#shippingZipInput</strong>: Input — 5-digit US zip entry. PR/GU/APO handled gracefully.</li>
+  <li><strong>#shippingCalculateBtn</strong>: Button — "Calculate Shipping". Triggers <code>getShippingEstimate</code>.</li>
+  <li><strong>#shippingOptionsSection</strong>: Box — shown after successful rate call.</li>
+  <li><strong>#shippingOptionsRepeater</strong>: Repeater — one row per available service tier (UPS Ground, UPS 2-Day, LTL Standard, LTL Guaranteed, etc.).</li>
+  <li><strong>#shippingLoadingText</strong>: Text — shown during API call ("Getting rates…").</li>
+  <li><strong>#shippingErrorText</strong>: Text — shown on failure with fallback copy.</li>
+  <li><strong>#shippingFreightNote</strong>: Text — "This item ships freight. A carrier will contact you to schedule delivery." Shown when <code>requiresFreight: true</code>.</li>
+  <li><strong>#shippingOriginText</strong>: Text — "Ships from Hendersonville, NC" attribution.</li>
+  <li><strong>#shippingHandlingNote</strong>: Text — "Handling fee included" note when <code>handlingFee_usd &gt; 0</code> for the product.</li>
+</ul>`, elements: [
+        ["shippingEstimateSection","Box","Shipping panel container"],
+        ["shippingZipInput","Input","Zip code entry"],
+        ["shippingCalculateBtn","Button","Calculate Shipping trigger"],
+        ["shippingOptionsSection","Box","Rate results container"],
+        ["shippingLoadingText","Text","Loading indicator"],
+        ["shippingErrorText","Text","Error / fallback message"],
+        ["shippingFreightNote","Text","Freight delivery notice"],
+        ["shippingOriginText","Text","Ships from Hendersonville NC"],
+        ["shippingHandlingNote","Text","Handling fee included note"]
+      ]},
+      { name: "Options", repeater: "shippingOptionsRepeater", impl: `<h4>📦 Implementation — Shipping Options Repeater</h4>
+<ul>
+  <li><strong>#shippingOptionsRepeater</strong>: Repeater — all available service tiers returned by the rate call. Sorted by cost ascending.</li>
+  <li><strong>#shippingOptionTitle</strong>: Text — service name (e.g. "UPS Ground", "LTL Freight (XPO)").</li>
+  <li><strong>#shippingOptionCost</strong>: Text — formatted cost (e.g. "$89.00").</li>
+  <li><strong>#shippingOptionDelivery</strong>: Text — estimated delivery (e.g. "3–5 business days", "Mar 26–28").</li>
+  <li><strong>#shippingCarrierLabel</strong>: Text — carrier name badge (UPS / XPO / Estes etc.).</li>
+  <li><strong>#shippingLiftgateIcon</strong>: Image/Icon — shown when <code>requiresLiftgate: true</code>.</li>
+</ul>`, elements: [
+        ["shippingOptionsRepeater","Repeater","Available shipping service tiers"]
+      ], children: [
+        ["shippingOptionTitle","Text","Service name"],
+        ["shippingOptionCost","Text","Formatted cost"],
+        ["shippingOptionDelivery","Text","Estimated delivery range"],
+        ["shippingCarrierLabel","Text","Carrier name badge"],
+        ["shippingLiftgateIcon","Image","Liftgate required indicator"]
+      ]},
+      { name: "Bundle Builder Shipping", impl: `<h4>🛒 Implementation — Bundle Builder Shipping Section</h4>
+<p>These elements live on the Bundle Builder page and feed from <code>calculateBundleQuote(items[], zip)</code>. Bundle quote handles mixed orders: UPS parcel for light items, automatic LTL upgrade when combined weight exceeds 150 lbs or any item requires pallet.</p>
+<ul>
+  <li><strong>#bundleShippingSection</strong>: Box — shipping panel within bundle builder.</li>
+  <li><strong>#bundleShippingZip</strong>: Input — zip for bundle quote.</li>
+  <li><strong>#bundleShippingBtn</strong>: Button — "Get Shipping Quote".</li>
+  <li><strong>#bundleShippingResult</strong>: Box — shown after quote resolves.</li>
+  <li><strong>#bundleShippingOptions</strong>: Repeater — same shape as product page options repeater.</li>
+  <li><strong>#bundleFreightNote</strong>: Text — shown when bundle triggers LTL: "This order ships freight. A carrier will contact you to schedule delivery."</li>
+  <li><strong>#bundleTotalWeight</strong>: Text — "Combined weight: X lbs" (transparency for customer).</li>
+  <li><strong>#bundleHandlingTotal</strong>: Text — "Handling: $X" — sum of all per-product <code>handlingFee_usd</code> values.</li>
+</ul>`, elements: [
+        ["bundleShippingSection","Box","Bundle shipping panel"],
+        ["bundleShippingZip","Input","Zip for bundle quote"],
+        ["bundleShippingBtn","Button","Get Shipping Quote"],
+        ["bundleShippingResult","Box","Quote results container"],
+        ["bundleFreightNote","Text","Freight order notice"],
+        ["bundleTotalWeight","Text","Combined weight display"],
+        ["bundleHandlingTotal","Text","Total handling fees"]
+      ]},
+      { name: "Bundle Options", repeater: "bundleShippingOptions", impl: `<h4>📦 Implementation — Bundle Shipping Options Repeater</h4>
+<ul>
+  <li><strong>#bundleShippingOptions</strong>: Repeater — shipping tiers for the full bundle.</li>
+  <li><strong>#bundleOptionTitle</strong>: Text — service name.</li>
+  <li><strong>#bundleOptionCost</strong>: Text — cost.</li>
+  <li><strong>#bundleOptionDelivery</strong>: Text — estimated delivery.</li>
+</ul>`, elements: [
+        ["bundleShippingOptions","Repeater","Bundle shipping service tiers"]
+      ], children: [
+        ["bundleOptionTitle","Text","Service name"],
+        ["bundleOptionCost","Text","Cost"],
+        ["bundleOptionDelivery","Text","Estimated delivery"]
+      ]}
+    ]
+  },
+  {
+    name: "Bundle Builder", file: "bundleBuilder.web.js (/bundle page)", priority: "P1", est: "60 min",
+    sections: [
+      { name: "Main Layout", impl: `<h4>🛒 Implementation — Bundle Builder Main Layout (/bundle)</h4>
+<p><strong>Backend:</strong> <code>bundleBuilder.web.js</code> — <code>addToBundle()</code>, <code>calculateBundleQuote()</code>, <code>submitBundleOrder()</code>.</p>
+<p><strong>Cart API:</strong> Uses <code>wix-ecom-backend cart.addProducts(lineItems[])</code> — single call for entire bundle, treated as atomic.</p>
+<ul>
+  <li><strong>#bundleSection</strong>: Box — main bundle page container.</li>
+  <li><strong>#bundleProductsRepeater</strong>: Repeater — current bundle items.</li>
+  <li><strong>#bundleAddProductBtn</strong>: Button — opens product picker panel.</li>
+  <li><strong>#bundleSummarySection</strong>: Box — subtotal + shipping + total panel.</li>
+  <li><strong>#bundleSubtotalText</strong>: Text — product subtotal (assembled by frontend from product prices).</li>
+  <li><strong>#bundleTotalText</strong>: Text — grand total including shipping + handling.</li>
+  <li><strong>#bundleCheckoutBtn</strong>: Button — "Add Bundle to Cart". Calls <code>addProducts()</code> array in one call.</li>
+  <li><strong>#bundleEmptyState</strong>: Box — shown when no items added yet.</li>
+  <li><strong>#bundleErrorText</strong>: Text — error state.</li>
+  <li><strong>#bundleSaveBtn</strong>: Button — save bundle config for sharing/reuse (stores to BundleConfigs CMS).</li>
+  <li><strong>#bundleShareBtn</strong>: Button — share bundle link.</li>
+</ul>`, elements: [
+        ["bundleSection","Box","Main bundle container"],
+        ["bundleAddProductBtn","Button","Open product picker"],
+        ["bundleSummarySection","Box","Subtotal + shipping panel"],
+        ["bundleSubtotalText","Text","Product subtotal"],
+        ["bundleTotalText","Text","Grand total"],
+        ["bundleCheckoutBtn","Button","Add Bundle to Cart"],
+        ["bundleEmptyState","Box","Empty state"],
+        ["bundleErrorText","Text","Error state"],
+        ["bundleSaveBtn","Button","Save bundle config"],
+        ["bundleShareBtn","Button","Share bundle link"]
+      ]},
+      { name: "Bundle Items", repeater: "bundleProductsRepeater", impl: `<h4>📋 Implementation — Bundle Items Repeater</h4>
+<ul>
+  <li><strong>#bundleProductsRepeater</strong>: Repeater — one card per item in the bundle.</li>
+  <li><strong>#bundleItemImage</strong>: Image — product thumbnail.</li>
+  <li><strong>#bundleItemName</strong>: Text — product name.</li>
+  <li><strong>#bundleItemPrice</strong>: Text — unit price.</li>
+  <li><strong>#bundleItemQty</strong>: Input (number) — quantity selector.</li>
+  <li><strong>#bundleItemWeight</strong>: Text — "X lbs" per-item weight (transparency).</li>
+  <li><strong>#bundleItemRemoveBtn</strong>: Button — remove from bundle (X button).</li>
+  <li><strong>#bundleItemPalletBadge</strong>: Box — "Pallet Required" badge shown when <code>requiresPallet: true</code>.</li>
+</ul>`, elements: [
+        ["bundleProductsRepeater","Repeater","Bundle items list"]
+      ], children: [
+        ["bundleItemImage","Image","Product thumbnail"],
+        ["bundleItemName","Text","Product name"],
+        ["bundleItemPrice","Text","Unit price"],
+        ["bundleItemQty","Input","Quantity selector"],
+        ["bundleItemWeight","Text","Per-item weight"],
+        ["bundleItemRemoveBtn","Button","Remove from bundle"],
+        ["bundleItemPalletBadge","Box","Pallet Required badge"]
+      ]},
+      { name: "Product Picker", repeater: "bundlePickerRepeater", impl: `<h4>🔍 Implementation — Product Picker Panel</h4>
+<ul>
+  <li><strong>#bundlePickerSection</strong>: Box — product picker panel (shown on "Add Product" click, hidden otherwise).</li>
+  <li><strong>#bundlePickerSearchInput</strong>: Input — search/filter products.</li>
+  <li><strong>#bundlePickerRepeater</strong>: Repeater — available products to add.</li>
+  <li><strong>#bundlePickerCloseBtn</strong>: Button — close picker panel.</li>
+</ul>`, elements: [
+        ["bundlePickerSection","Box","Product picker panel"],
+        ["bundlePickerSearchInput","Input","Product search filter"],
+        ["bundlePickerCloseBtn","Button","Close picker"]
+      ]},
+      { name: "Picker Items", repeater: "bundlePickerRepeater", impl: ``, elements: [
+        ["bundlePickerRepeater","Repeater","Pickable products"]
+      ], children: [
+        ["bundlePickerItemName","Text","Product name"],
+        ["bundlePickerItemPrice","Text","Product price"],
+        ["bundlePickerItemImage","Image","Product thumbnail"],
+        ["bundlePickerAddBtn","Button","Add to bundle"]
+      ]}
+    ]
+  },
+  {
+    name: "Live Inventory + Low Stock", file: "inventoryService.web.js (Product Page additions)", priority: "P1", est: "30 min",
+    sections: [
+      { name: "Stock Status (Product Page)", impl: `<h4>📊 Implementation — Live Inventory + Low Stock (Product Page)</h4>
+<p><strong>Backend:</strong> <code>inventoryService.web.js</code> → <code>getStockStatus(productId)</code>. Returns <code>{ status: 'inStock'|'lowStock'|'outOfStock', qty: number, threshold: number }</code>.</p>
+<p><strong>These elements are added to the existing Product Page.</strong></p>
+<ul>
+  <li><strong>#stockStatusBadge</strong>: Box — "In Stock" (green) / "Low Stock" (coral) / "Out of Stock" (gray). Color-coded via CSS class toggle.</li>
+  <li><strong>#stockStatusText</strong>: Text — status label text.</li>
+  <li><strong>#lowStockWarning</strong>: Box — shown when qty ≤ low-stock threshold. Hidden otherwise.</li>
+  <li><strong>#lowStockCount</strong>: Text — "Only 3 left!" urgency copy.</li>
+  <li><strong>#outOfStockOverlay</strong>: Box — semi-transparent overlay that disables Add to Cart when qty = 0.</li>
+  <li><strong>#notifyMeSection</strong>: Box — restock notification form. Shown when out of stock.</li>
+  <li><strong>#notifyMeInput</strong>: Input — email for restock notification.</li>
+  <li><strong>#notifyMeBtn</strong>: Button — "Notify Me When Available".</li>
+  <li><strong>#notifyMeSuccess</strong>: Text — "You're on the list! We'll email you when it's back."</li>
+  <li><strong>#notifyMeError</strong>: Text — error message.</li>
+</ul>`, elements: [
+        ["stockStatusBadge","Box","Stock status badge (green/coral/gray)"],
+        ["stockStatusText","Text","Status label"],
+        ["lowStockWarning","Box","Low stock warning panel"],
+        ["lowStockCount","Text","Only X left copy"],
+        ["outOfStockOverlay","Box","Disables Add to Cart when OOS"],
+        ["notifyMeSection","Box","Restock notification form"],
+        ["notifyMeInput","Input","Email for restock notification"],
+        ["notifyMeBtn","Button","Notify Me When Available"],
+        ["notifyMeSuccess","Text","Confirmation message"],
+        ["notifyMeError","Text","Error message"]
+      ]}
+    ]
+  },
+  {
+    name: "Customer Room Gallery", file: "roomGallery.web.js (/rooms)", priority: "P2", est: "60 min",
+    sections: [
+      { name: "Gallery Grid", impl: `<h4>🏠 Implementation — Customer Room Gallery Grid (/rooms)</h4>
+<p><strong>Backend:</strong> <code>roomGallery.web.js</code> — <code>getApprovedPhotos()</code>, <code>submitRoomPhoto()</code>, <code>likePhoto()</code>.</p>
+<p><strong>CMS:</strong> <code>CustomerRoomPhotos</code> — photos require staff approval before appearing in grid.</p>
+<ul>
+  <li><strong>#roomGallerySection</strong>: Box — main gallery container.</li>
+  <li><strong>#roomGalleryRepeater</strong>: Repeater — approved UGC photos in masonry/grid layout.</li>
+  <li><strong>#roomGalleryLoadMoreBtn</strong>: Button — pagination ("Load More").</li>
+  <li><strong>#roomGalleryEmptyState</strong>: Box — shown when no approved photos yet.</li>
+  <li><strong>#roomStyleFilter</strong>: Dropdown — filter by style (Modern, Rustic, Minimalist, Bohemian).</li>
+  <li><strong>#roomProductFilter</strong>: Dropdown — filter by product type (Futon Frame, Murphy Bed, etc.).</li>
+</ul>`, elements: [
+        ["roomGallerySection","Box","Gallery container"],
+        ["roomGalleryLoadMoreBtn","Button","Load More pagination"],
+        ["roomGalleryEmptyState","Box","Empty state"],
+        ["roomStyleFilter","Dropdown","Style filter"],
+        ["roomProductFilter","Dropdown","Product type filter"]
+      ]},
+      { name: "Gallery Photos", repeater: "roomGalleryRepeater", impl: `<h4>🖼️ Implementation — Gallery Photo Cards</h4>
+<ul>
+  <li><strong>#roomGalleryRepeater</strong>: Repeater — photo cards.</li>
+  <li><strong>#roomPhotoImage</strong>: Image — customer's room photo.</li>
+  <li><strong>#roomPhotoCaption</strong>: Text — customer-submitted caption.</li>
+  <li><strong>#roomPhotoProduct</strong>: Text — tagged product name (e.g. "Blue Ridge Futon").</li>
+  <li><strong>#roomPhotoLikeBtn</strong>: Button — heart/like button.</li>
+  <li><strong>#roomPhotoLikeCount</strong>: Text — like count.</li>
+  <li><strong>#roomPhotoOwner</strong>: Text — display name (e.g. "Sarah M., Asheville NC").</li>
+</ul>`, elements: [
+        ["roomGalleryRepeater","Repeater","Photo grid cards"]
+      ], children: [
+        ["roomPhotoImage","Image","Customer room photo"],
+        ["roomPhotoCaption","Text","Photo caption"],
+        ["roomPhotoProduct","Text","Tagged product name"],
+        ["roomPhotoLikeBtn","Button","Like button"],
+        ["roomPhotoLikeCount","Text","Like count"],
+        ["roomPhotoOwner","Text","Customer display name"]
+      ]},
+      { name: "Submission Form", impl: `<h4>📤 Implementation — Photo Submission Form</h4>
+<ul>
+  <li><strong>#roomSubmitSection</strong>: Box — submission form panel.</li>
+  <li><strong>#roomPhotoUpload</strong>: UploadButton — photo upload (JPG/PNG, max 10MB).</li>
+  <li><strong>#roomSubmitCaption</strong>: Input — caption text entry.</li>
+  <li><strong>#roomSubmitProduct</strong>: Dropdown — which CF product is in the photo.</li>
+  <li><strong>#roomSubmitStyle</strong>: Dropdown — room style tag.</li>
+  <li><strong>#roomSubmitEmail</strong>: Input — for notification when photo is approved.</li>
+  <li><strong>#roomSubmitBtn</strong>: Button — "Share Your Room".</li>
+  <li><strong>#roomSubmitSuccess</strong>: Box — "Thanks! Your photo is under review."</li>
+  <li><strong>#roomSubmitError</strong>: Text — error message.</li>
+  <li><strong>#roomSubmitTerms</strong>: Checkbox — permission to use photo on site.</li>
+</ul>`, elements: [
+        ["roomSubmitSection","Box","Submission form panel"],
+        ["roomPhotoUpload","UploadButton","Photo file upload"],
+        ["roomSubmitCaption","Input","Caption input"],
+        ["roomSubmitProduct","Dropdown","Product tag selector"],
+        ["roomSubmitStyle","Dropdown","Style tag selector"],
+        ["roomSubmitEmail","Input","Notification email"],
+        ["roomSubmitBtn","Button","Share Your Room"],
+        ["roomSubmitSuccess","Box","Success confirmation"],
+        ["roomSubmitError","Text","Error message"],
+        ["roomSubmitTerms","Checkbox","Usage rights checkbox"]
+      ]}
+    ]
+  },
+  {
+    name: "AI Style Consultant (S5)", file: "styleConsultant.web.js (Style Quiz enhancements)", priority: "P2", est: "45 min",
+    sections: [
+      { name: "AI Results Section (Style Quiz additions)", impl: `<h4>🤖 Implementation — AI Style Consultant (Style Quiz Page additions)</h4>
+<p><strong>Backend:</strong> <code>styleConsultant.web.js</code> — <code>getAIRecommendation(quizAnswers, zip)</code>. Feeds from existing quiz results. Calls <code>calculateBundleQuote</code> for shipping estimate in response.</p>
+<p><strong>These elements are added to the existing Style Quiz results area.</strong></p>
+<ul>
+  <li><strong>#aiConsultSection</strong>: Box — AI consultant panel, shown after quiz completes.</li>
+  <li><strong>#aiConsultTitle</strong>: Text — "Your Personalized Recommendation" heading.</li>
+  <li><strong>#aiConsultResponse</strong>: RichTextBox — AI-generated narrative (e.g. "Based on your modern aesthetic and 120 sq ft space, we recommend the Blue Ridge Futon Frame…"). Rendered from Wix rich text, not raw HTML.</li>
+  <li><strong>#aiConsultShippingEstimate</strong>: Text — "Ships to [zip] in 3–5 days for $X (UPS Ground)" — inline shipping estimate from <code>calculateBundleQuote</code>.</li>
+  <li><strong>#aiConsultLoadingState</strong>: Box — loading overlay shown while AI generates response.</li>
+  <li><strong>#aiConsultLoadingText</strong>: Text — "Crafting your recommendation…"</li>
+  <li><strong>#aiConsultErrorText</strong>: Text — fallback on AI failure.</li>
+  <li><strong>#aiConsultShareBtn</strong>: Button — generate shareable link (extends existing share feature).</li>
+  <li><strong>#aiConsultSaveBtn</strong>: Button — save consultation to account, or triggers email capture if logged out.</li>
+</ul>`, elements: [
+        ["aiConsultSection","Box","AI consultant panel"],
+        ["aiConsultTitle","Text","Personalized recommendation heading"],
+        ["aiConsultResponse","RichTextBox","AI-generated narrative"],
+        ["aiConsultShippingEstimate","Text","Inline shipping estimate"],
+        ["aiConsultLoadingState","Box","Loading overlay"],
+        ["aiConsultLoadingText","Text","Loading copy"],
+        ["aiConsultErrorText","Text","Fallback error message"],
+        ["aiConsultShareBtn","Button","Share recommendation link"],
+        ["aiConsultSaveBtn","Button","Save to account / email capture"]
+      ]},
+      { name: "AI Product Recommendations", repeater: "aiRecommendedRepeater", impl: `<h4>🛍️ Implementation — AI Product Recommendations Repeater</h4>
+<ul>
+  <li><strong>#aiRecommendedRepeater</strong>: Repeater — AI-selected products for the customer's setup. Typically 2–4 items (frame + mattress + accessories).</li>
+  <li><strong>#aiProductImage</strong>: Image — product thumbnail.</li>
+  <li><strong>#aiProductName</strong>: Text — product name.</li>
+  <li><strong>#aiProductPrice</strong>: Text — price.</li>
+  <li><strong>#aiProductAddBtn</strong>: Button — "Add to Cart" or "Add to Bundle".</li>
+  <li><strong>#aiWhyText</strong>: Text — one-line AI rationale ("Chosen for your small-space modern setup").</li>
+</ul>`, elements: [
+        ["aiRecommendedRepeater","Repeater","AI-selected product cards"]
+      ], children: [
+        ["aiProductImage","Image","Product thumbnail"],
+        ["aiProductName","Text","Product name"],
+        ["aiProductPrice","Text","Price"],
+        ["aiProductAddBtn","Button","Add to Cart or Bundle"],
+        ["aiWhyText","Text","AI rationale line"]
+      ]}
+    ]
   }
 ];
 

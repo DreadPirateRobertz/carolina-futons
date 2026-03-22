@@ -22,10 +22,11 @@ import { buildGridAlt, detectProductBrand, isCallForPrice, CALL_FOR_PRICE_TEXT }
 import { announce, makeClickable, createFocusTrap, setupAccessibleDialog } from 'public/a11yHelpers.js';
 import { initCategorySocialProof } from 'public/socialProofToast';
 import { getFlashSales } from 'backend/promotions.web';
+import { getBatchPaymentBadges } from 'backend/paymentOptions.web';
 import { initFlashSaleBanner } from 'public/flashSaleHelpers';
 import { initCardWishlistButton, batchCheckWishlistStatus } from 'public/WishlistCardButton';
 import { batchLoadRatings, renderCardStarRating, _resetCache as resetRatingsCache } from 'public/StarRatingCard';
-import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage } from 'public/productCardHelpers.js';
+import { styleCardContainer, styleBadge, initCardHover, formatCardPrice, setCardImage, renderCardFinancingBadge } from 'public/productCardHelpers.js';
 import { getImageDimensions } from 'public/galleryConfig.js';
 import { getLifestyleOverlay } from 'public/lifestyleImages.js';
 
@@ -546,6 +547,23 @@ function initProductGrid() {
       console.warn('[CategoryPage] ratings batch init failed:', e?.message);
     }
 
+    // Pre-batch financing badges for priced products only (price > 0); call-for-price items excluded
+    // let (not const) — assigned inside try/catch; null means no priced products
+    let _financingBadgesPromise = null;
+    try {
+      const allProducts = (repeater.data || [])
+        .filter(p => p._id && p.price > 0)
+        .map(p => ({ productId: p._id, price: p.price }));
+      if (allProducts.length > 0) {
+        _financingBadgesPromise = getBatchPaymentBadges(allProducts).then(r => r.badges ?? {}).catch((e) => {
+          console.warn('[CategoryPage] getBatchPaymentBadges failed:', e?.message);
+          return {};
+        });
+      }
+    } catch (e) {
+      console.warn('[CategoryPage] financing batch init failed:', e?.message);
+    }
+
     repeater.onItemReady(($item, itemData) => {
       if (!itemData) return;
       // Card container structure: white bg, 12px radius, shadow, hover
@@ -657,6 +675,19 @@ function initProductGrid() {
         batchLoadRatings([itemData._id]).then(singleMap => {
           renderCardStarRating($item, itemData._id, singleMap);
         }).catch(() => {});
+      }
+
+      // Financing badge (Afterpay / monthly financing) below price
+      if (_financingBadgesPromise) {
+        _financingBadgesPromise.then(badgesMap => {
+          renderCardFinancingBadge($item('#gridFinancingBadge'), badgesMap[itemData._id] || null);
+        }).catch((e) => {
+          console.warn('[CategoryPage] financing badge render failed for', itemData._id, ':', e?.message);
+        });
+      } else {
+        try { $item('#gridFinancingBadge').hide(); } catch (e) {
+          console.warn('[CategoryPage] could not hide #gridFinancingBadge:', e?.message);
+        }
       }
 
       // Quick view button (keyboard-accessible)
