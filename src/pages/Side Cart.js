@@ -311,11 +311,8 @@ async function refreshSideCart() {
     }
 
     // Per-item delivery estimates (zip read from #sideCartZipInput if present)
-    try {
-      const zipEl = $w('#sideCartZipInput');
-      const zip = zipEl?.value || null;
-      initCartDelivery($w, currentCart.lineItems, zip);
-    } catch (e) {}
+    const zip = $w('#sideCartZipInput')?.value || null;
+    initCartDelivery($w, currentCart.lineItems, zip);
 
     // Update totals
     if (currentCart.totals) {

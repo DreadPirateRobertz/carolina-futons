@@ -30,6 +30,13 @@ const NO_ZIP_TEXT = 'Enter your zip for delivery estimate';
 /** Product names matching this pattern are routed to freight. */
 const FREIGHT_NAME_PATTERN = /murphy|platform bed|bunk bed/i;
 
+/** Fallback delivery days by zone when shippingConfig is unavailable. */
+const FALLBACK_DAYS = {
+  local: '3-5 business days',
+  regional: '5-8 business days',
+  national: '7-12 business days',
+};
+
 /**
  * Returns true if the cart item requires freight (LTL) shipping based on
  * product name matching.
@@ -41,15 +48,15 @@ function isFreightItem(item) {
 }
 
 /**
- * Returns the delivery days string for a given zone from shippingConfig.
+ * Returns the delivery days string for a given zone from shippingConfig,
+ * falling back to static values if config is unavailable.
  * @param {'local'|'regional'|'national'} zone
  * @returns {string}
  */
 function deliveryDaysForZone(zone) {
   return shippingConfig?.zones?.[zone]?.deliveryDays
-    || (zone === 'local' ? '3-5 business days'
-      : zone === 'regional' ? '5-8 business days'
-      : '7-12 business days');
+    || FALLBACK_DAYS[zone]
+    || FALLBACK_DAYS.national;
 }
 
 /**

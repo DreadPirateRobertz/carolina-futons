@@ -82,11 +82,8 @@ async function initCartPage() {
     await initCartDeliveryEstimate($w, cart);
 
     // Per-item delivery estimates in cart repeater (zip from #cartZipInput if present)
-    try {
-      const zipEl = $w('#cartZipInput');
-      const zip = zipEl?.value || null;
-      initCartDelivery($w, cart.lineItems, zip, { repeaterSelector: '#cartItemsRepeater' });
-    } catch (e) {}
+    const cartZip = $w('#cartZipInput')?.value || null;
+    initCartDelivery($w, cart.lineItems, cartZip, { repeaterSelector: '#cartItemsRepeater' });
 
     await loadCartSuggestions(cart);
     loadRecentlyViewedFromCart(cart);
