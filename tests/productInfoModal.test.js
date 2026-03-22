@@ -397,13 +397,28 @@ describe('room fit calculator', () => {
     expect($w('#fitResult').show).toHaveBeenCalled();
   });
 
-  it('sets ariaLive polite on fitResult for screen readers', () => {
-    triggerFitCheck(72, 60);
+  it('sets ariaLive polite on fitResult at init time (before any fit check)', () => {
+    // ariaLive must be set at init so screen readers catch the first announcement
     expect($w('#fitResult').accessibility.ariaLive).toBe('polite');
+  });
+
+  it('shows invalid input message for negative room width', () => {
+    triggerFitCheck(-10, 60);
+    expect($w('#fitResult').text).toContain('valid');
   });
 
   it('shows "tight" result when clearance is exactly zero (product exactly fills room)', () => {
     triggerFitCheck(54, 32); // 0" clearance on both sides — tight, not too-big
+    expect($w('#fitResult').text).toContain('Tight');
+  });
+
+  it('shows "fits" result when clearance is exactly CLEARANCE_GOOD (2 inches)', () => {
+    triggerFitCheck(56, 34); // exactly 2" clearance on both sides
+    expect($w('#fitResult').text).toContain('fits');
+  });
+
+  it('shows "tight" result when clearance is 1 inch (one below CLEARANCE_GOOD threshold)', () => {
+    triggerFitCheck(55, 33); // 1" width clearance, 1" depth clearance
     expect($w('#fitResult').text).toContain('Tight');
   });
 });

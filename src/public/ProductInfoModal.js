@@ -5,11 +5,16 @@
 // backend web method (backend/catalogContent.web.js).
 //
 // Element nicknames:
-//   careGuideBtn     — trigger button
-//   dimensionsModal  — modal/overlay container
-//   roomWidthInput   — room width input (inches)
-//   roomLengthInput  — room length input (inches)
-//   fitResult        — fit result text display
+//   careGuideBtn          — trigger button
+//   careGuideText         — care instructions text
+//   checkRoomFitBtn       — room fit calculator submit button
+//   dimensionsModal       — modal/overlay container
+//   dimensionsModalClose  — modal close button
+//   dimensionsModalTitle  — modal title (for ARIA labelledby)
+//   dimensionsText        — dimensions text block
+//   fitResult             — room fit result display
+//   roomLengthInput       — room length input (inches)
+//   roomWidthInput        — room width input (inches)
 
 import { setupAccessibleDialog, announce } from 'public/a11yHelpers.js';
 import { getProductSpecs } from 'backend/catalogContent.web.js';
@@ -94,6 +99,11 @@ export async function initProductInfoModal($w, state) {
       });
     } catch (e) {
       console.warn('[ProductInfoModal] checkRoomFitBtn wire failed:', e?.message);
+    }
+
+    // Set ariaLive at init so screen readers announce fit result changes immediately.
+    try { $w('#fitResult').accessibility.ariaLive = 'polite'; } catch (e) {
+      console.warn('[ProductInfoModal] fitResult ariaLive init failed:', e?.message);
     }
   } catch (e) {
     console.error('[ProductInfoModal] Init failed:', e?.message || e);
@@ -256,9 +266,6 @@ function _checkRoomFit($w, specs) {
 function _setFitResult($w, message, category) {
   try { $w('#fitResult').text = message; } catch (e) {
     console.warn('[ProductInfoModal] fitResult text failed:', e?.message);
-  }
-  try { $w('#fitResult').accessibility.ariaLive = 'polite'; } catch (e) {
-    console.warn('[ProductInfoModal] fitResult ariaLive failed:', e?.message);
   }
   try { $w('#fitResult').show(); } catch (e) {
     console.warn('[ProductInfoModal] fitResult show failed:', e?.message);
