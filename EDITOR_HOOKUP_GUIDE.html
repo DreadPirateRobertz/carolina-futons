@@ -610,6 +610,24 @@ const PAGES = [
         ["recentPrice","Text","Price"],
         ["recentAddToCart","Button","Add to cart"]
       ]},
+      { name: "Continue Shopping", repeater: "continueShoppingRepeater", impl: `<h4>🛍️ Implementation — Continue Shopping</h4>
+<p><strong>Layout: Section heading + horizontal scroll strip of recently viewed product cards</strong></p>
+<ul>
+  <li><strong>#continueShoppingSection</strong>: Section or Box. <span class="impl-warn">Hidden/collapsed by default</span> — code expands it only if the visitor has browsing history. First-time visitors never see it.</li>
+  <li><strong>#continueShoppingTitle</strong>: Text heading — code sets it to "Continue Shopping".</li>
+  <li><strong>#continueShoppingRepeater</strong>: Horizontal scroll layout. Populated from session-backed product view history (last 1–6 products). No backend call.</li>
+  <li><strong>Per card</strong>: Image → name → price → link button. Clicking the link navigates to <code>/product-page/&lt;slug&gt;</code>.</li>
+  <li>On PDPs, pass <code>excludeId</code> to hide the current product from the strip.</li>
+  <li>Deferred section (below-fold).</li>
+</ul>`, elements: [
+        ["continueShoppingSection","Section","Collapsed by default"],
+        ["continueShoppingTitle","Text","Section heading"]
+      ], children: [
+        ["continueShoppingImage","Image","Product image"],
+        ["continueShoppingName","Text","Product name"],
+        ["continueShoppingPrice","Text","Price"],
+        ["continueShoppingLink","Button","Navigate to product page"]
+      ]},
       { name: "Video Showcase", impl: `<h4>🎬 Implementation — Video Showcase</h4>
 <p><strong>Layout: Section header + 3 video thumbnails in a row + CTA</strong></p>
 <ul>
