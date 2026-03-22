@@ -417,8 +417,8 @@ describe('setCardImage', () => {
 describe('renderCardFinancingBadge', () => {
   it('shows badge element with first badge label when badges provided', () => {
     const el = mockElement();
-    renderCardFinancingBadge(el, [{ label: '4 payments of $149.75', type: 'afterpay' }]);
-    expect(el.text).toBe('4 payments of $149.75');
+    renderCardFinancingBadge(el, [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }]);
+    expect(el.text).toBe('Pay in 4 with Afterpay');
     expect(el.show).toHaveBeenCalled();
     expect(el.hide).not.toHaveBeenCalled();
   });
@@ -426,10 +426,10 @@ describe('renderCardFinancingBadge', () => {
   it('uses first badge when multiple badges present', () => {
     const el = mockElement();
     renderCardFinancingBadge(el, [
-      { label: '4 payments of $149.75', type: 'afterpay' },
+      { label: 'Pay in 4 with Afterpay', type: 'afterpay' },
       { label: '6 months interest-free', type: 'financing' },
     ]);
-    expect(el.text).toBe('4 payments of $149.75');
+    expect(el.text).toBe('Pay in 4 with Afterpay');
     expect(el.show).toHaveBeenCalled();
   });
 
@@ -462,7 +462,7 @@ describe('renderCardFinancingBadge', () => {
   });
 
   it('does not throw when element is null', () => {
-    expect(() => renderCardFinancingBadge(null, [{ label: '4 payments of $100', type: 'afterpay' }])).not.toThrow();
+    expect(() => renderCardFinancingBadge(null, [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }])).not.toThrow();
   });
 
   it('does not throw when element hide/show throws', () => {

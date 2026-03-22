@@ -272,7 +272,7 @@ describe('Category Page — financing badge (CF-3dz8)', () => {
   it('passes badge array to renderCardFinancingBadge in onItemReady', async () => {
     getBatchPaymentBadgesMock.mockResolvedValue({
       success: true,
-      badges: { 'prod-1': [{ label: '4 payments of $124.75', type: 'afterpay' }] },
+      badges: { 'prod-1': [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }] },
     });
 
     const repeater = setupRepeaterWithProducts([
@@ -290,7 +290,7 @@ describe('Category Page — financing badge (CF-3dz8)', () => {
 
     expect(renderCardFinancingBadgeMock).toHaveBeenCalledWith(
       expect.anything(),
-      [{ label: '4 payments of $124.75', type: 'afterpay' }]
+      [{ label: 'Pay in 4 with Afterpay', type: 'afterpay' }]
     );
   });
 
