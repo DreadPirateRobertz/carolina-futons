@@ -430,12 +430,26 @@ describe('Clock-injection audit: Permissions.Anyone webMethods (CF-xz8y)', () =>
 
   it('no Permissions.Anyone webMethod forwards handler opts to checkRateLimit', () => {
     const files = getBackendWebFiles();
+    // Fail explicitly if BACKEND_DIR resolved to an empty directory — no silent pass-with-zero
+    expect(files.length).toBeGreaterThan(0);
+
     const allViolations = [];
+    const readErrors = [];
 
     for (const file of files) {
-      const source = readFileSync(file.path, 'utf8');
+      let source;
+      try {
+        source = readFileSync(file.path, 'utf8');
+      } catch (e) {
+        readErrors.push(`  ${file.name}: ${e.message}`);
+        continue; // don't abort remaining files
+      }
       const violations = findClockInjectionViolations(source, file.name);
       allViolations.push(...violations);
+    }
+
+    if (readErrors.length > 0) {
+      expect.fail(`Could not read ${readErrors.length} file(s) — fix paths or permissions:\n${readErrors.join('\n')}`);
     }
 
     if (allViolations.length > 0) {
