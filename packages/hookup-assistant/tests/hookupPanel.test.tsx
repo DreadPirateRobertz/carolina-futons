@@ -65,6 +65,21 @@ vi.mock('../src/hooks/useSessionTimer.js', () => ({
   formatElapsed: (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`,
   loadHistory: () => [],
 }));
+vi.mock('../src/hooks/useProgressDashboard.js', () => ({
+  useProgressDashboard: vi.fn(() => ({
+    pages: [],
+    totalHooked: 0,
+    totalElements: 0,
+    sessionHooked: 0,
+    resetPage: vi.fn(),
+    resetAll: vi.fn(),
+    refresh: vi.fn(),
+  })),
+}));
+// Stub ProgressDashboard so HookupPanel tests don't depend on its internals
+vi.mock('../src/components/ProgressDashboard.js', () => ({
+  ProgressDashboard: () => <div data-testid="progress-dashboard">Progress Dashboard</div>,
+}));
 
 import { HookupPanel } from '../src/components/HookupPanel.js';
 
@@ -278,5 +293,37 @@ describe('HookupPanel — auto page switch via detectedPageName', () => {
     render(<HookupPanel />);
     const select = screen.getByRole('combobox', { name: /select page/i });
     expect((select as HTMLSelectElement).value).toBe('Product Page');
+  });
+});
+
+// ── S8: Progress Dashboard toggle ─────────────────────────────────────────────
+
+describe('HookupPanel — progress dashboard toggle', () => {
+  it('renders the Progress Dashboard button', () => {
+    render(<HookupPanel />);
+    expect(
+      screen.getByRole('button', { name: /toggle progress dashboard/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows progress dashboard when Progress button is clicked', () => {
+    render(<HookupPanel />);
+    const btn = screen.getByRole('button', { name: /toggle progress dashboard/i });
+    fireEvent.click(btn);
+    expect(screen.getByTestId('progress-dashboard')).toBeInTheDocument();
+  });
+
+  it('hides progress dashboard when Progress button is clicked again', () => {
+    render(<HookupPanel />);
+    const btn = screen.getByRole('button', { name: /toggle progress dashboard/i });
+    fireEvent.click(btn);
+    expect(screen.getByTestId('progress-dashboard')).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(screen.queryByTestId('progress-dashboard')).not.toBeInTheDocument();
+  });
+
+  it('dashboard is not shown by default', () => {
+    render(<HookupPanel />);
+    expect(screen.queryByTestId('progress-dashboard')).not.toBeInTheDocument();
   });
 });

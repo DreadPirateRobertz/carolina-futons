@@ -22,6 +22,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.js';
 import { detectConflict, useConflictDetector } from '../hooks/useConflictDetector.js';
 import { ManualModePanel } from './ManualModePanel.js';
 import { HelpOverlay } from './HelpOverlay.js';
+import { ProgressDashboard } from './ProgressDashboard.js';
 import type { PageDef } from '../types/index.js';
 import { buildExportPayload, triggerJsonDownload, triggerTextDownload } from '../utils/exportReport.js';
 import { parseImportPayload, applyImportPayload } from '../utils/importReport.js';
@@ -36,6 +37,7 @@ export function HookupPanel() {
   const [manualMode, setManualMode] = useState(true); // Default on for Phase 1
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   // S15: import status feedback ('idle' | 'success' | 'error')
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -170,6 +172,7 @@ export function HookupPanel() {
   }, [editorAvailable, selected, currentElement, handleApplyId, handleMarkDone]);
   const handleToggleManual = useCallback(() => setManualMode((v) => !v), []);
   const handleToggleHelp = useCallback(() => setShowHelp((v) => !v), []);
+  const handleToggleProgress = useCallback(() => setShowProgress((v) => !v), []);
 
   // S12: undo — reverses last progress action; if it was an auto-applied ID,
   // clears the editor nickname via postMessage (setNickname(compRef, '')).
@@ -247,6 +250,14 @@ export function HookupPanel() {
         </div>
         <div style={s.headerRight}>
           {manualMode && <span style={s.manualBadge}>Manual Mode</span>}
+          <button
+            style={{ ...s.settingsBtn, ...(showProgress ? s.settingsBtnActive : {}) }}
+            onClick={handleToggleProgress}
+            aria-label="Toggle progress dashboard"
+            title="Progress Dashboard"
+          >
+            📊
+          </button>
           <button
             style={s.settingsBtn}
             onClick={() => setShowSettings((v) => !v)}
@@ -392,7 +403,12 @@ export function HookupPanel() {
 
       {/* Main content */}
       <main style={s.body}>
-        {manualMode ? (
+        {showProgress ? (
+          <ProgressDashboard
+            currentPageName={selectedPageName}
+            onCurrentPageReset={resetPage}
+          />
+        ) : manualMode ? (
           <ManualModePanel
             pageName={selectedPageName}
             currentElement={currentElement}
@@ -574,6 +590,9 @@ const s: Record<string, React.CSSProperties> = {
     padding: '0 2px',
     color: '#7a92a5',
     lineHeight: 1,
+  },
+  settingsBtnActive: {
+    color: '#162d3d',
   },
   divider: { height: '1px', backgroundColor: '#dfe5eb' },
   settings: {
