@@ -981,6 +981,27 @@ For each section below:
 
 ---
 
+### Product Info Modal — Care Guide + Dimensions (NEW v1.1.0+ — PR #651)
+*Source: `src/public/ProductInfoModal.js` — `initProductInfoModal($w, state)`*
+*Backend: `src/backend/catalogContent.web.js` — `getProductSpecs(slug)`*
+
+| Element ID | Wix Element | Notes |
+|---|---|---|
+| `careGuideBtn` | Button | Opens care guide + dimensions modal |
+| `careGuideText` | Text | Short care summary shown below button |
+| `dimensionsModal` | Box | Modal overlay container — starts collapsed |
+| `dimensionsModalTitle` | Text | Modal title heading |
+| `dimensionsModalClose` | Button | Close (X) — keyboard accessible, focus trap |
+| `dimensionsText` | Text | Full dimensions + care instructions content |
+| `roomWidthInput` | Input | Room width (inches) for fit calculator |
+| `roomLengthInput` | Input | Room length (inches) for fit calculator |
+| `checkRoomFitBtn` | Button | "Check Fit" — triggers room fit calculation |
+| `fitResult` | Text | Fit verdict: ✅ Fits well / ⚠️ Tight / ❌ Too large |
+
+**Behaviour**: Lazy-loads CMS `ProductSpecs` data on first open. Room fit compares product dimensions against inputs, reports clearance. Modal uses `setupAccessibleDialog` with ARIA role="dialog", ariaModal, focus trap.
+
+---
+
 ### Promo Banner Carousel (NEW v0.9.0+)
 *Source: `src/public/promoBannerCarousel.js`*
 
