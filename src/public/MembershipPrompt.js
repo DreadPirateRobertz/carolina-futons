@@ -43,7 +43,6 @@ export function initMembershipPrompt($w) {
       console.warn('[MembershipPrompt] collapse failed:', e?.message);
     }
 
-    // ARIA attributes
     try { $w('#membershipPromptModal').accessibility.role = 'dialog'; } catch (e) {
       console.warn('[MembershipPrompt] ARIA role failed:', e?.message);
     }
@@ -95,7 +94,7 @@ export function initMembershipPrompt($w) {
  */
 export function showMembershipPrompt($w, context, dialog) {
   try {
-    // One-time per session guard.
+    // One-time per session guard — uses SESSION_KEY in wix-storage-frontend session scope.
     if (session.getItem(SESSION_KEY)) return;
     session.setItem(SESSION_KEY, '1');
 

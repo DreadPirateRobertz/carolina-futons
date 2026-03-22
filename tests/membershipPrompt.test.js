@@ -27,7 +27,6 @@ vi.mock('wix-storage-frontend', () => ({
   session: {
     getItem: vi.fn(() => null),
     setItem: vi.fn(),
-    removeItem: vi.fn(),
   },
 }));
 
@@ -103,6 +102,8 @@ describe('initMembershipPrompt — modal setup', () => {
     const text = $w('#membershipPromptBenefits').text;
     expect(text).toContain('Free shipping');
     expect(text).toContain('10% member discount');
+    expect(text).toMatch(/^• /);
+    expect(text).toContain('\n• ');
   });
 
   it('calls setupAccessibleDialog with correct panel and close IDs', () => {
@@ -128,6 +129,21 @@ describe('initMembershipPrompt — modal setup', () => {
     expect(result).toBe(mockDialog);
   });
 
+  it('returns null when setupAccessibleDialog returns null', () => {
+    setupAccessibleDialog.mockReturnValue(null);
+    const result = initMembershipPrompt($w);
+    expect(result).toBeNull();
+  });
+
+  it('returns null and logs error when setupAccessibleDialog throws', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    setupAccessibleDialog.mockImplementation(() => { throw new Error('dialog setup failed'); });
+    const result = initMembershipPrompt($w);
+    expect(result).toBeNull();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
   it('addresses #membershipPromptModal', () => {
     initMembershipPrompt($w);
     expect($w).toHaveBeenCalledWith('#membershipPromptModal');
@@ -137,12 +153,6 @@ describe('initMembershipPrompt — modal setup', () => {
     initMembershipPrompt($w);
     const config = setupAccessibleDialog.mock.calls[0][1];
     expect(config.closeId).toBe('#membershipPromptClose');
-  });
-
-  it('addresses #membershipPromptTitle', () => {
-    initMembershipPrompt($w);
-    showMembershipPrompt($w, 'wishlist-alerts', mockDialog);
-    expect($w).toHaveBeenCalledWith('#membershipPromptTitle');
   });
 
   it('addresses #membershipPromptBenefits', () => {
@@ -172,6 +182,11 @@ describe('showMembershipPrompt — context titles', () => {
     session.getItem.mockReturnValue(null);
   });
 
+  it('addresses #membershipPromptTitle', () => {
+    showMembershipPrompt($w, 'wishlist-alerts', mockDialog);
+    expect($w).toHaveBeenCalledWith('#membershipPromptTitle');
+  });
+
   it('sets context-specific title for wishlist-alerts', () => {
     showMembershipPrompt($w, 'wishlist-alerts', mockDialog);
     expect($w('#membershipPromptTitle').text).toBeTruthy();
@@ -192,7 +207,7 @@ describe('showMembershipPrompt — context titles', () => {
 
   it('uses fallback title for unknown context', () => {
     showMembershipPrompt($w, 'unknown-context', mockDialog);
-    expect($w('#membershipPromptTitle').text).toBeTruthy();
+    expect($w('#membershipPromptTitle').text).toMatch(/unlock|exclusive|CF\+/i);
   });
 
   it('opens the dialog', () => {
@@ -207,6 +222,11 @@ describe('showMembershipPrompt — context titles', () => {
 
   it('does not throw when dialog is null', () => {
     expect(() => showMembershipPrompt($w, 'wishlist-alerts', null)).not.toThrow();
+  });
+
+  it('still announces when dialog is null', () => {
+    showMembershipPrompt($w, 'wishlist-alerts', null);
+    expect(announce).toHaveBeenCalled();
   });
 });
 
@@ -228,7 +248,7 @@ describe('showMembershipPrompt — one-time session guard', () => {
 
   it('sets session flag on first show', () => {
     showMembershipPrompt($w, 'wishlist-alerts', mockDialog);
-    expect(session.setItem).toHaveBeenCalled();
+    expect(session.setItem).toHaveBeenCalledWith('cf_membership_prompt_shown', expect.any(String));
   });
 
   it('does not open dialog when session flag is already set', () => {
@@ -256,6 +276,11 @@ describe('showMembershipPrompt — one-time session guard', () => {
     session.getItem.mockReturnValue('1');
     showMembershipPrompt($w, 'swatch-request', mockDialog);
     expect(mockDialog.open).toHaveBeenCalledTimes(1); // still 1
+  });
+
+  it('does not throw when session.getItem throws', () => {
+    session.getItem.mockImplementation(() => { throw new Error('storage unavailable'); });
+    expect(() => showMembershipPrompt($w, 'wishlist-alerts', mockDialog)).not.toThrow();
   });
 
   it('reads session storage with the correct key', () => {
