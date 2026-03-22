@@ -259,12 +259,12 @@ async function initAnnouncementBar() {
   const messages = [...flashMessages, ...cmsMessages, ...staticMessages];
 
   // Apply first CMS bar's styles to the announcement bar container
-  if (cmsBars.length > 0) {
+  const [firstBar] = cmsBars;
+  if (firstBar) {
     try {
-      const bar = cmsBars[0];
-      if (bar.backgroundColor) $w('#announcementBar').style.backgroundColor = bar.backgroundColor;
-      if (bar.textColor) $w('#announcementText').style.color = bar.textColor;
-    } catch (_) {}
+      if (firstBar.backgroundColor) $w('#announcementBar').style.backgroundColor = firstBar.backgroundColor;
+      if (firstBar.textColor) $w('#announcementText').style.color = firstBar.textColor;
+    } catch (e) { console.warn('[masterPage] announcementBar style apply failed:', e.message); }
   }
 
   try {
