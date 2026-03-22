@@ -155,7 +155,8 @@ async function initProductPage() {
         init: async () => {
           const productId = state.product?._id;
           const m = await import('public/ProductQnA.js');
-          const { items, hasMore, totalCount, page } = await m.loadQnA(productId);
+          const { items, hasMore, totalCount, page, error } = await m.loadQnA(productId);
+          if (error) console.error('[ProductQnA] loadQnA returned error for product:', productId);
           m.renderQnA($w, items, { hasMore, totalCount });
           m.initSearch($w, productId);
           m.injectSchema($w, productId);

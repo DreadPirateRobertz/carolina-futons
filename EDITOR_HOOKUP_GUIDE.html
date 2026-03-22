@@ -3300,7 +3300,7 @@ Action buttons (right):
   <li><strong>#qnaAccordion</strong>: Repeater. <span class="impl-warn">⚠️ <code>onItemReady</code> MUST be registered before setting <code>.data</code> (Wix requirement).</span> Each item toggles expand/collapse on click with full ARIA support (<code>ariaExpanded</code>, <code>ariaControls</code>).</li>
   <li><strong>#qnaPending</strong>: Badge shown when a question is awaiting an answer. Hidden when <code>status === 'answered'</code>.</li>
   <li><strong>#qnaAnswerSection</strong>: Container for the answer text + #qnaAnsweredBy credit. Hidden when unanswered.</li>
-  <li><strong>#qnaHelpfulBtn / #qnaHelpfulCount</strong>: Optional voting elements. Silently skipped if absent. Count updates optimistically on success.</li>
+  <li><strong>#qnaHelpfulBtn / #qnaHelpfulCount</strong>: Optional voting elements. Silently skipped if absent. Count updates after server confirms the vote.</li>
   <li><strong>#qnaFlagBtn</strong>: Optional report button. Disabled after first click. Silently skipped if absent.</li>
   <li><strong>#qnaLoadMore</strong>: Shown when more pages exist. Hidden after final page loads. Stays visible on network error (allows retry).</li>
   <li><strong>#qnaSchemaScript</strong>: Optional HtmlComponent for FAQ JSON-LD schema injection. Silently skipped if absent.</li>

@@ -40,7 +40,7 @@ export function renderQnA($w, items, { hasMore = false, totalCount = 0 } = {}) {
   // Count display (optional element)
   try {
     $w('#qnaCount').text = totalCount === 1 ? '1 question' : `${totalCount} questions`;
-  } catch (e) {}
+  } catch (e) { console.error('[ProductQnA] qnaCount update failed:', e); }
 
   if (items.length === 0) {
     try { $w('#qnaSection').hide(); } catch (e) { console.error('[ProductQnA] hide qnaSection failed:', e); }
@@ -310,7 +310,7 @@ function _renderItem($item, q) {
         } else {
           helpfulBtn.label = 'Voted';
         }
-      } catch (e) { /* non-critical action — silent */ }
+      } catch (e) { console.error('[ProductQnA] voteHelpful failed:', e); }
     });
   } catch (e) { /* #qnaHelpfulBtn not in this layout */ }
 
@@ -325,7 +325,7 @@ function _renderItem($item, q) {
           flagBtn.label = 'Reported';
           flagBtn.disable();
         }
-      } catch (e) { /* non-critical action — silent */ }
+      } catch (e) { console.error('[ProductQnA] flagQuestion failed:', e); }
     });
   } catch (e) { /* #qnaFlagBtn not in this layout */ }
 }

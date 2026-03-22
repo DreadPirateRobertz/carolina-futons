@@ -237,6 +237,16 @@ describe('accordion item rendering', () => {
     expect($item('#qnaPending').show).toHaveBeenCalled();
   });
 
+  it('treats item with answer text but status !== answered as pending', () => {
+    const $w = makeW();
+    const cb = captureCallback($w);
+    const $item = makeItem();
+    // answer present but status is not 'answered' — should show pending badge
+    cb($item, { _id: 'q9', question: 'Pending?', answer: 'Draft answer', status: 'pending' });
+    expect($item('#qnaAnswerSection').hide).toHaveBeenCalled();
+    expect($item('#qnaPending').show).toHaveBeenCalled();
+  });
+
   it('sets aria-expanded=false initially', () => {
     const $w = makeW();
     const cb = captureCallback($w);
@@ -296,6 +306,14 @@ describe('accordion item rendering', () => {
     const $item = makeItem();
     cb($item, ITEMS[0]);
     expect($item('#qnaAnsweredBy').text).toBe('— Store');
+  });
+
+  it('falls back to Carolina Futons when answeredBy absent', () => {
+    const $w = makeW();
+    const cb = captureCallback($w);
+    const $item = makeItem();
+    cb($item, { _id: 'q8', question: 'Q?', answer: 'A.', status: 'answered' });
+    expect($item('#qnaAnsweredBy').text).toBe('— Carolina Futons');
   });
 
   it('wires helpful vote button', () => {
@@ -425,12 +443,36 @@ describe('submitQuestion', () => {
     expect($w._els.qnaThankYou.show).not.toHaveBeenCalled();
   });
 
+  it('sets error text from backend message on !success', async () => {
+    mockSubmitQuestion.mockResolvedValueOnce({ success: false, error: 'Rate limited' });
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'What colors?';
+    await submitQuestion($w, 'p1');
+    expect($w._els.qnaFormError.text).toBe('Rate limited');
+  });
+
+  it('uses fallback error text when backend message absent', async () => {
+    mockSubmitQuestion.mockResolvedValueOnce({ success: false });
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'What colors?';
+    await submitQuestion($w, 'p1');
+    expect($w._els.qnaFormError.text).toBe('Failed to submit. Please try again.');
+  });
+
   it('shows error element on thrown exception', async () => {
     mockSubmitQuestion.mockRejectedValueOnce(new Error('network'));
     const $w = makeW();
     $w._els.qnaQuestionInput.value = 'What colors?';
     await submitQuestion($w, 'p1');
     expect($w._els.qnaFormError.show).toHaveBeenCalled();
+  });
+
+  it('shows static fallback text on thrown exception', async () => {
+    mockSubmitQuestion.mockRejectedValueOnce(new Error('network'));
+    const $w = makeW();
+    $w._els.qnaQuestionInput.value = 'What colors?';
+    await submitQuestion($w, 'p1');
+    expect($w._els.qnaFormError.text).toBe('Something went wrong. Please try again.');
   });
 
   it('skips insert when question text is empty', async () => {
