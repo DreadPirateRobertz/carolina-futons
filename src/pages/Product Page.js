@@ -214,6 +214,11 @@ async function initProductPage() {
       }, critical: false },
       // CF-75d1: Style Quiz CTA — nudges shoppers to the quiz when browsing products
       { name: 'quizCTA', init: () => initProductPageQuizCTA($w), critical: false },
+      // CF-o0va: Shipping estimate widget — zip input + rate display
+      { name: 'shippingWidget', init: async () => {
+        const { initShippingWidget } = await import('public/ShippingWidget.js');
+        await initShippingWidget($w, state.product?._id || '');
+      }, critical: false },
     ];
 
     const { critical: criticalResults } = await prioritizeSections(sections, {
