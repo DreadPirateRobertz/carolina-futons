@@ -16,9 +16,15 @@ import { useElementDetection } from '../src/hooks/useElementDetection.js';
 
 // ── Control knobs ────────────────────────────────────────────────────────────
 
-const mockOnSelectionChanged = vi.fn();
-const mockGetType = vi.fn();
-const mockGetNickname = vi.fn();
+const {
+  mockOnSelectionChanged,
+  mockGetType,
+  mockGetNickname,
+} = vi.hoisted(() => ({
+  mockOnSelectionChanged: vi.fn(),
+  mockGetType: vi.fn(),
+  mockGetNickname: vi.fn(),
+}));
 
 vi.mock('@wix/editor', () => ({
   selection: { onSelectionChanged: mockOnSelectionChanged },
