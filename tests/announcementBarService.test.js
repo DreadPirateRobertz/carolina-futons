@@ -140,6 +140,12 @@ describe('getActiveAnnouncementBars', () => {
       const result = await getActiveAnnouncementBars();
       expect(result[0].priority).toBe(0);
     });
+
+    it('preserves explicit priority of 0 (not coerced by ||)', async () => {
+      mockFind.mockResolvedValueOnce({ items: [{ message: 'Hello', priority: 0 }] });
+      const result = await getActiveAnnouncementBars();
+      expect(result[0].priority).toBe(0);
+    });
   });
 
   describe('error handling', () => {
@@ -156,6 +162,13 @@ describe('getActiveAnnouncementBars', () => {
     it('does not throw when wixData fails', async () => {
       mockFind.mockRejectedValueOnce(new Error('Timeout'));
       await expect(getActiveAnnouncementBars()).resolves.toEqual([]);
+    });
+
+    it('returns empty array when wixData returns object without items', async () => {
+      mockFind.mockResolvedValueOnce({});
+      const result = await getActiveAnnouncementBars();
+      expect(result).toEqual([]);
+      expect(logError).toHaveBeenCalled();
     });
   });
 });

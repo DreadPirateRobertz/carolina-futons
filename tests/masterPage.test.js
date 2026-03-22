@@ -2500,14 +2500,28 @@ describe('masterPage.js', () => {
       });
     });
 
-    it('skips styling when CMS bar has no backgroundColor', async () => {
+    it('does not set backgroundColor when CMS bar has null backgroundColor', async () => {
       getActiveAnnouncementBars.mockResolvedValueOnce([
-        { message: 'Visit us!', linkUrl: null, backgroundColor: null, textColor: null, priority: 1 },
+        { message: 'Visit us!', linkUrl: null, backgroundColor: null, textColor: '#3A2518', priority: 1 },
       ]);
       await onReadyHandler();
       await vi.waitFor(() => {
-        // Should not throw and announcement text should be set
         expect(getEl('#announcementText').text).toBeTruthy();
+        // backgroundColor guard — element style should remain at default (empty string)
+        expect(getEl('#announcementBar').style.backgroundColor).toBe('');
+        // textColor should still be applied independently
+        expect(getEl('#announcementText').style.color).toBe('#3A2518');
+      });
+    });
+
+    it('does not set textColor when CMS bar has null textColor', async () => {
+      getActiveAnnouncementBars.mockResolvedValueOnce([
+        { message: 'Visit us!', linkUrl: null, backgroundColor: '#E8D5B7', textColor: null, priority: 1 },
+      ]);
+      await onReadyHandler();
+      await vi.waitFor(() => {
+        expect(getEl('#announcementBar').style.backgroundColor).toBe('#E8D5B7');
+        expect(getEl('#announcementText').style.color).toBe('');
       });
     });
   });

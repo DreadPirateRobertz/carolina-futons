@@ -40,7 +40,7 @@ export const getActiveAnnouncementBars = webMethod(
         linkUrl: bar.linkUrl || null,
         backgroundColor: bar.backgroundColor || null,
         textColor: bar.textColor || null,
-        priority: bar.priority || 0,
+        priority: bar.priority ?? 0,
       }));
     } catch (e) {
       logError('announcementBarService.getActiveAnnouncementBars', e);
