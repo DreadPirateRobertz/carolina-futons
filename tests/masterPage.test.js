@@ -2557,7 +2557,8 @@ describe('masterPage.js', () => {
       });
     });
 
-    it('does not throw when #announcementBarLink element is absent from page', async () => {
+    it('does not throw and warns when #announcementBarLink element is absent from page', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const origW = globalThis.$w;
       globalThis.$w = Object.assign(
         (sel) => (sel === '#announcementBarLink' ? null : getEl(sel)),
@@ -2567,7 +2568,11 @@ describe('masterPage.js', () => {
         { message: 'Sale!', linkUrl: 'https://carolinafutons.com/sale', backgroundColor: null, textColor: null, priority: 10 },
       ]);
       await expect(onReadyHandler()).resolves.not.toThrow();
+      await vi.waitFor(() => {
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('#announcementBarLink'));
+      });
       globalThis.$w = origW;
+      warnSpy.mockRestore();
     });
 
     it('logs console.warn when CMS fetch rejects (flash sales path)', async () => {

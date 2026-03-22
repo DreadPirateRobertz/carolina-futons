@@ -273,6 +273,8 @@ async function initAnnouncementBar() {
         const safeUrl = typeof firstBar.linkUrl === 'string' && firstBar.linkUrl.startsWith('https://') ? firstBar.linkUrl : null;
         if (safeUrl) { link.href = safeUrl; link.show(); }
         else { link.hide(); }
+      } else if (firstBar.linkUrl) {
+        console.warn('[masterPage] #announcementBarLink element missing from page; linkUrl will not be shown');
       }
     } catch (e) { console.warn('[masterPage] announcementBar style apply failed:', e.message); }
   }
